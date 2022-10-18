@@ -334,6 +334,16 @@ void CppPreprocessor::clearProjectIncludePaths()
     mProjectIncludePathList.clear();
 }
 
+void CppPreprocessor::clearScannedFiles()
+{
+    mScannedFiles.clear();
+}
+
+void CppPreprocessor::clearIncludeList()
+{
+    mIncludesList.clear();
+}
+
 QString CppPreprocessor::getNextPreprocessor()
 {
     skipToPreprocessor(); // skip until # at start of line
@@ -457,26 +467,27 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     QStringList includes;
     QStringList projectIncludes;
     bool found;
-    if (fromNext && mIncludePaths.contains(currentDir))
-        found = false;
-    else
-        found = true;
-    foreach(const QString& s, mIncludePathList) {
-        if (found) {
-            includes.append(s);
+    if (fromNext && mIncludePaths.contains(currentDir)) {
+        foreach(const QString& s, mIncludePathList) {
+            if (found) {
+                includes.append(s);
+                continue;
+            } else if (s == currentDir)
+                found = true;
         }
-        if (s == currentDir)
-            found = true;
-    }
-    if (fromNext && mProjectIncludePaths.contains(currentDir))
-        found = false;
-    else
-        found = true;
-    foreach(const QString& s, mProjectIncludePathList) {
-        if (found)
-            projectIncludes.append(s);
-        if (s == currentDir)
-            found = true;
+        projectIncludes = mProjectIncludePathList;
+    } else if (fromNext && mProjectIncludePaths.contains(currentDir)) {
+        includes = mIncludePathList;
+        foreach(const QString& s, mProjectIncludePathList) {
+            if (found) {
+                includes.append(s);
+                continue;
+            } else if (s == currentDir)
+                found = true;
+        }
+    } else {
+        includes = mIncludePathList;
+        projectIncludes = mProjectIncludePathList;
     }
     fileName = getHeaderFilename(
                 file->fileName,

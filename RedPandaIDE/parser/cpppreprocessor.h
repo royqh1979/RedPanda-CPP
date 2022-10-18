@@ -75,6 +75,8 @@ public:
     void addProjectIncludePath(const QString& fileName);
     void clearIncludePaths();
     void clearProjectIncludePaths();
+    void clearScannedFiles();
+    void clearIncludeList();
     QStringList result() const;
 
     QHash<QString, PFileIncludes> &includesList();
@@ -216,5 +218,7 @@ private:
     bool mParseLocal;
     QSet<QString> mScannedFiles;
 };
+
+using PCppPreprocessor = std::shared_ptr<CppPreprocessor>;
 
 #endif // CPPPREPROCESSOR_H

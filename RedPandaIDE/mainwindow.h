@@ -279,6 +279,8 @@ private:
     void setProjectViewCurrentNode(std::shared_ptr<ProjectModelNode> node);
     void setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit);
 
+    void reparseNonProjectEditors();
+
 private slots:
     void onProjectViewNodeRenamed();
     void setDockExplorerToArea(const Qt::DockWidgetArea &area);

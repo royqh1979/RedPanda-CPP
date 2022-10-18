@@ -133,7 +133,7 @@ DWORD ExecuteCommand(string& command,bool reInp) {
     }
     WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
     if ( bSuccess == FALSE ) {
-        printf( "AssignProcessToJobObject failed: error %d\n", GetLastError() );
+        printf( "AssignProcessToJobObject failed: error %u\n", GetLastError() );
         return 0;
     }
 

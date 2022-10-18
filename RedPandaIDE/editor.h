@@ -199,7 +199,7 @@ public:
     void checkSyntaxInBack();
     void gotoDeclaration(const QSynedit::BufferCoord& pos);
     void gotoDefinition(const QSynedit::BufferCoord& pos);
-    void reparse();
+    void reparse(bool resetParser);
     void reparseTodo();
     void insertString(const QString& value, bool moveCursor);
     void insertCodeSnippet(const QString& code);
@@ -277,7 +277,7 @@ private:
 
     TipType getTipType(QPoint point, QSynedit::BufferCoord& pos);
     void cancelHint();
-    QString getFileHint(const QString& s);
+    QString getFileHint(const QString& s, bool fromNext);
     QString getParserHint(const QStringList& expression,const QString& s, int line);
     void showDebugHint(const QString& s,int line);
     QString getErrorHint(const PSyntaxIssue& issue);

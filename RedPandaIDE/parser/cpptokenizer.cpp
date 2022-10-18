@@ -29,6 +29,7 @@ void CppTokenizer::reset()
     mTokenList.clear();
     mBuffer.clear();
     mBufferStr.clear();
+    mLastToken.clear();
 }
 
 void CppTokenizer::tokenize(const QStringList &buffer)

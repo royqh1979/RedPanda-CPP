@@ -25,6 +25,10 @@ Red Panda C++ Version 1.5
   - fix: project files openned by double click in bookmark/breakpoint panel may cause app crash when closed.
   - fix: When open a project that's already openned, shouldn't close it.
   - enhancement: When open a project, let user choose weither open it in new window or replace the already openned project
+  - fix: editor tooltip for #include_next is not correctly calculated
+  - fix: ctrl+click on #include_next header name doesn't open the right file
+  - enhancement: parser used for non-project C files won't find header files in C++ include folders.
+  - fix: when physical memory is less than 16G or "Auto clearn
 
 Red Panda C++ Version 1.4
 

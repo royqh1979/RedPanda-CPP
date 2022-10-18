@@ -1394,7 +1394,7 @@ void MainWindow::changeOptions(const QString &widgetName, const QString &groupNa
     } else if (mProject && e && e->inProject()) {
         scanActiveProject(true);
     } else if (e) {
-        e->reparse();
+        reparseNonProjectEditors();
     }
 
 }
@@ -2254,7 +2254,7 @@ void MainWindow::scanActiveProject(bool parse)
 
     //UpdateClassBrowsing;
     if (parse) {
-        resetCppParser(mProject->cppParser(),mProject->options().compilerSet);
+        resetCppParser(mProject->cppParser(), mProject->options().compilerSet);
         mProject->resetParserProjectFiles();
         parseFileList(mProject->cppParser());
     } else {
@@ -4815,26 +4815,28 @@ void MainWindow::onCompilerSetChanged(int index)
 {
     if (index<0)
         return;
-    if (mProject) {
-        Editor *e = mEditorList->getEditor();
-        if (!e || e->inProject()) {
-            if(QMessageBox::warning(
-                        e,
-                        tr("Change Project Compiler Set"),
-                        tr("Change the project's compiler set will lose all custom compiler set options.")
-                        +"<br />"
-                        + tr("Do you really want to do that?"),
-                        QMessageBox::Yes | QMessageBox::No,
-                        QMessageBox::No) != QMessageBox::Yes) {
-                return;
-            }
-            mProject->setCompilerSet(index);
-            mProject->saveOptions();
+    Editor *e = mEditorList->getEditor();
+    if (mProject && (!e || e->inProject())) {
+        if(QMessageBox::warning(
+                    e,
+                    tr("Change Project Compiler Set"),
+                    tr("Change the project's compiler set will lose all custom compiler set options.")
+                    +"<br />"
+                    + tr("Do you really want to do that?"),
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::No) != QMessageBox::Yes) {
             return;
         }
+        mProject->setCompilerSet(index);
+        mProject->saveOptions();
+        scanActiveProject(true);
+        return;
     }
+
     pSettings->compilerSets().setDefaultIndex(index);
     pSettings->compilerSets().saveDefaultIndex();
+
+    reparseNonProjectEditors();
 }
 
 void MainWindow::logToolsOutput(const QString& msg)
@@ -6501,6 +6503,19 @@ void MainWindow::setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit) {
     }
 }
 
+void MainWindow::reparseNonProjectEditors()
+{
+    for (int i=0;i<mEditorList->pageCount();i++) {
+        Editor* e=(*mEditorList)[i];
+        if (!e->inProject()) {
+            if (!pSettings->codeCompletion().clearWhenEditorHidden() || e->isVisible()) {
+                e->reparse(true);
+                e->checkSyntaxInBack();
+            }
+        }
+    }
+}
+
 void MainWindow::onProjectViewNodeRenamed()
 {
     updateProjectView();
@@ -6807,8 +6822,8 @@ void MainWindow::on_actionRename_Symbol_triggered()
     CppRefacter refactor;
 
     refactor.renameSymbol(editor,oldCaretXY,newWord);
-    editor->reparse();
-
+    editor->reparse(true);
+    editor->checkSyntaxInBack();
 }
 
 

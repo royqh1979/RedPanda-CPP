@@ -79,6 +79,9 @@ const StatementMap &StatementModel::childrenStatements(std::weak_ptr<Statement> 
 void StatementModel::clear() {
     mCount=0;
     mGlobalStatements.clear();
+#ifdef QT_DEBUG
+    mAllStatements.clear();
+#endif
 }
 
 void StatementModel::dump(const QString &logFile)

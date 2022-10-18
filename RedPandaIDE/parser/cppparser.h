@@ -97,10 +97,11 @@ public:
     QSet<QString> getFileIncludes(const QString& filename);
     QSet<QString> getFileUsings(const QString& filename);
 
-    QString getHeaderFileName(const QString& relativeTo, const QString& line);// both
+    QString getHeaderFileName(const QString& relativeTo, const QString& headerName, bool fromNext=false);// both
 
     void invalidateFile(const QString& fileName);
     bool isIncludeLine(const QString &line);
+    bool isIncludeNextLine(const QString &line);
     bool isProjectHeaderFile(const QString& fileName);
     bool isSystemHeaderFile(const QString& fileName);
     void parseFile(const QString& fileName, bool inProject,
@@ -108,7 +109,7 @@ public:
     void parseFileList(bool updateView = true);
     void parseHardDefines();
     bool parsing() const;
-    void reset();
+    void resetParser();
     void unFreeze(); // UnFree/UnLock (reparse while searching)
     QSet<QString> scannedFiles();
 
@@ -534,7 +535,7 @@ private:
     //It's used in preprocessor, so we can't use fIncludeList instead
 
     CppTokenizer mTokenizer;
-    CppPreprocessor mPreprocessor;
+    PCppPreprocessor mPreprocessor;
     //{ List of current project's file }
     QSet<QString> mProjectFiles;
     QVector<int> mBlockBeginSkips; //list of for/catch block begin token index;

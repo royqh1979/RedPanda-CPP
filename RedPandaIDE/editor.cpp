@@ -223,7 +223,7 @@ void Editor::loadFile(QString filename) {
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
     if (highlighter()) {
-        reparse();
+        reparse(true);
         if (pSettings->editor().syntaxCheckWhenLineChanged()) {
             checkSyntaxInBack();
         }
@@ -278,7 +278,7 @@ bool Editor::save(bool force, bool doReparse) {
     }
 
     if (doReparse && mParser) {
-        reparse();
+        reparse(false);
     }
     if (doReparse && pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
@@ -387,7 +387,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
     applyColorScheme(pSettings->editor().colorScheme());
 
-    reparse();
+    reparse(false);
 
     if (pSettings->editor().syntaxCheckWhenSave())
         pMainWindow->checkSyntaxInBack(this);
@@ -1054,6 +1054,7 @@ bool Editor::event(QEvent *event)
 
         // Get subject
         bool isIncludeLine = false;
+        bool isIncludeNextLine = false;
         QSynedit::BufferCoord pBeginPos,pEndPos;
         QString s;
         QStringList expression;
@@ -1061,8 +1062,10 @@ bool Editor::event(QEvent *event)
         case TipType::Preprocessor:
             // When hovering above a preprocessor line, determine if we want to show an include or a identifier hint
             s = document()->getString(p.line - 1);
-            isIncludeLine = mParser->isIncludeLine(s);
-            if (!isIncludeLine)
+            isIncludeNextLine = mParser->isIncludeNextLine(s);
+            if (!isIncludeNextLine)
+                isIncludeLine = mParser->isIncludeLine(s);
+            if (!isIncludeNextLine &&!isIncludeLine)
                 s = wordAtRowCol(p);
             break;
         case TipType::Identifier:
@@ -1116,9 +1119,9 @@ bool Editor::event(QEvent *event)
         QString hint = "";
         switch (reason) {
         case TipType::Preprocessor:
-            if (isIncludeLine) {
+            if (isIncludeNextLine || isIncludeLine) {
                 if (pSettings->editor().enableHeaderToolTips())
-                    hint = getFileHint(s);
+                    hint = getFileHint(s, isIncludeNextLine);
             } else if (//devEditor.ParserHints and
                      !mCompletionPopup->isVisible()
                      && !mHeaderCompletionPopup->isVisible()) {
@@ -1204,7 +1207,14 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
         QSynedit::BufferCoord p;
         if (pointToCharLine(event->pos(),p)) {
             QString s = document()->getString(p.line - 1);
-            if (mParser->isIncludeLine(s)) {
+            if (mParser->isIncludeNextLine(s)) {
+                QString filename = mParser->getHeaderFileName(mFilename,s, true);
+                Editor * e = pMainWindow->editorList()->getEditorByFilename(filename);
+                if (e) {
+                    e->setCaretPositionAndActivate(1,1);
+                    return;
+                }
+            } if (mParser->isIncludeLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s);
                 Editor * e = pMainWindow->editorList()->getEditorByFilename(filename);
                 if (e) {
@@ -1288,8 +1298,7 @@ void Editor::showEvent(QShowEvent */*event*/)
                 &CppParser::onEndParsing,
                 this,
                 &QSynedit::SynEdit::invalidate);
-        resetCppParser(mParser);
-        reparse();
+        reparse(false);
     }
     pMainWindow->debugger()->setIsForProject(inProject());
     pMainWindow->bookmarkModel()->setIsForProject(inProject());
@@ -1303,16 +1312,17 @@ void Editor::showEvent(QShowEvent */*event*/)
 
 void Editor::hideEvent(QHideEvent */*event*/)
 {
+    if (pSettings->codeCompletion().clearWhenEditorHidden()
+            && !inProject() && mParser
+            && !pMainWindow->isMinimized()) {
+        //recreate a parser, to totally clean memories the parse uses;
+        initParser();
+    }
     if (mParser) {
         disconnect(mParser.get(),
                 &CppParser::onEndParsing,
                 this,
                 &QSynedit::SynEdit::invalidate);
-    }
-    if (pSettings->codeCompletion().clearWhenEditorHidden()
-            && !inProject() && mParser
-            && !pMainWindow->isMinimized()) {
-        mParser->reset();
     }
     setHideTime(QDateTime::currentDateTime());
 }
@@ -1548,7 +1558,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             && changes.testFlag(QSynedit::StatusChange::scCaretY))) {
         mCurrentLineModified = false;
         if (!changes.testFlag(QSynedit::StatusChange::scOpenFile))
-            reparse();
+            reparse(false);
 //        if (pSettings->codeCompletion().clearWhenEditorHidden()
 //                && changes.testFlag(SynStatusChange::scOpenFile)) {
 //        } else{
@@ -2681,7 +2691,7 @@ Editor::QuoteStatus Editor::getQuoteStatus()
     return Result;
 }
 
-void Editor::reparse()
+void Editor::reparse(bool resetParser)
 {
     if (!pSettings->codeCompletion().enabled())
         return;
@@ -2698,6 +2708,8 @@ void Editor::reparse()
     ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
     if (language!=mParser->language() && !inProject()) {
         mParser->setLanguage(language);
+        resetCppParser(mParser);
+    } else if (resetParser && !inProject()) {
         resetCppParser(mParser);
     }
     parseFile(mParser,mFilename, inProject());
@@ -3438,9 +3450,9 @@ void Editor::cancelHint()
     updateMouseCursor();
 }
 
-QString Editor::getFileHint(const QString &s)
+QString Editor::getFileHint(const QString &s, bool fromNext)
 {
-    QString fileName = mParser->getHeaderFileName(mFilename, s);
+    QString fileName = mParser->getHeaderFileName(mFilename, s, fromNext);
     if (fileExists(fileName)) {
         return fileName + " - " + tr("Ctrl+click for more info");
     }
@@ -4333,7 +4345,7 @@ void Editor::reformat()
     setTopLine(oldTopLine);
     setOptions(oldOptions);
     endUndoBlock();
-    reparse();
+    reparse(true);
     checkSyntaxInBack();
     reparseTodo();
     pMainWindow->updateEditorActions();

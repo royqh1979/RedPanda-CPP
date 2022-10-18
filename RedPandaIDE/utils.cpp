@@ -280,7 +280,7 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
     if (!parser)
         return;
     // Configure parser
-    parser->reset();
+    parser->resetParser();
     //paser->enabled = pSettings-> devCodeCompletion.Enabled;
 //    CppParser.ParseLocalHeaders := devCodeCompletion.ParseLocalHeaders;
 //    CppParser.ParseGlobalHeaders := devCodeCompletion.ParseGlobalHeaders;
@@ -288,21 +288,25 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
     parser->setParseGlobalHeaders(true);
     parser->setParseLocalHeaders(true);
     // Set options depending on the current compiler set
-    // TODO: do this every time OnCompilerSetChanged
     if (compilerSetIndex<0) {
         compilerSetIndex=pSettings->compilerSets().defaultIndex();
     }
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
     parser->clearIncludePaths();
+    bool isCpp = parser->language()==ParserLanguage::CPlusPlus;
     if (compilerSet) {
-        foreach  (const QString& file,compilerSet->CppIncludeDirs()) {
-            parser->addIncludePath(file);
+        if (isCpp) {
+            foreach  (const QString& file,compilerSet->CppIncludeDirs()) {
+                parser->addIncludePath(file);
+            }
         }
         foreach  (const QString& file,compilerSet->CIncludeDirs()) {
             parser->addIncludePath(file);
         }
-        foreach  (const QString& file,compilerSet->defaultCppIncludeDirs()) {
-            parser->addIncludePath(file);
+        if (isCpp) {
+            foreach  (const QString& file,compilerSet->defaultCppIncludeDirs()) {
+                parser->addIncludePath(file);
+            }
         }
         foreach  (const QString& file,compilerSet->defaultCIncludeDirs()) {
             parser->addIncludePath(file);

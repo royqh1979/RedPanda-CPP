@@ -94,4 +94,6 @@ private:
     TokenList mTokenList;
 };
 
+using PCppTokenizer = std::shared_ptr<CppTokenizer>;
+
 #endif // CPPTOKENIZER_H
