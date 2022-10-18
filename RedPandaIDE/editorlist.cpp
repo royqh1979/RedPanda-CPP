@@ -357,11 +357,6 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename)
     return nullptr;
 }
 
-Editor *EditorList::getEditorByFilename(QString filename)
-{
-    return pMainWindow->openFile(filename,false);
-}
-
 bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList &buffer)
 {
     Editor * e= getOpenedEditorByFilename(filename);

@@ -893,12 +893,12 @@ void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
 {
     removeActiveBreakpoints();
     // Then active the current line in the current file
-    Editor *e = mEditorList->getEditorByFilename(FileName);
+    Editor *e = openFile(FileName);
     if (e!=nullptr) {
         e->setActiveBreakpointFocus(Line,setFocus);
     }
     if (setFocus) {
-        this->activateWindow();
+        activateWindow();
     }
 }
 
@@ -3475,9 +3475,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         ui->btnRemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         if (problem && !problem->answerProgram.isEmpty()) {
-            Editor * editor =editorList()->getEditorByFilename(problem->answerProgram);
-            if (editor)
-                editor->activate();
+            openFile(problem->answerProgram);
         }
         mOJProblemModel.setProblem(problem);
         updateProblemTitle();
@@ -3851,10 +3849,7 @@ void MainWindow::onProblemOpenSource()
     if (!problem)
         return;
     if (!problem->answerProgram.isEmpty()) {
-        Editor * editor = editorList()->getEditorByFilename(problem->answerProgram);
-        if (editor) {
-            editor->activate();
-        }
+        openFile(problem->answerProgram);
     }
 }
 
@@ -4010,7 +4005,7 @@ void MainWindow::onClassBrowserGotoDefinition()
     int line;
     filename = statement->definitionFileName;
     line = statement->definitionLine;
-    Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
+    Editor* e=openFile(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);
     }
@@ -5219,7 +5214,7 @@ void MainWindow::on_tableIssues_doubleClicked(const QModelIndex &index)
     if (!issue)
         return;
 
-    Editor * editor = mEditorList->getEditorByFilename(issue->filename);
+    Editor * editor = openFile(issue->filename);
     if (editor == nullptr)
         return;
 
@@ -5902,7 +5897,7 @@ void MainWindow::on_searchView_doubleClicked(const QModelIndex &index)
     int start;
     if (mSearchResultTreeModel->getItemFileAndLineChar(
                 index,filename,line,start)) {
-        Editor *e = mEditorList->getEditorByFilename(filename);
+        Editor *e = openFile(filename);
         if (e) {
             e->setCaretPositionAndActivate(line,start);
         }
@@ -5914,7 +5909,7 @@ void MainWindow::on_tblStackTrace_doubleClicked(const QModelIndex &index)
 {
     PTrace trace = mDebugger->backtraceModel()->backtrace(index.row());
     if (trace) {
-        Editor *e = mEditorList->getEditorByFilename(trace->filename);
+        Editor *e = openFile(trace->filename);
         if (e) {
             e->setCaretPositionAndActivate(trace->line,1);
         }
@@ -5934,7 +5929,7 @@ void MainWindow::on_tblBreakpoints_doubleClicked(const QModelIndex &index)
                 index.row(),
                 mDebugger->isForProject());
     if (breakpoint) {
-        Editor * e = mEditorList->getEditorByFilename(breakpoint->filename);
+        Editor * e = openFile(breakpoint->filename);
         if (e) {
             e->setCaretPositionAndActivate(breakpoint->line,1);
         }
@@ -6232,7 +6227,7 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     int line;
     filename = statement->fileName;
     line = statement->line;
-    Editor* e = pMainWindow->editorList()->getEditorByFilename(filename);
+    Editor* e = openFile(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);
     }
@@ -6950,7 +6945,7 @@ void MainWindow::on_btnReplace_clicked()
     QString newWord = ui->cbReplaceInHistory->currentText();
     foreach (const PSearchResultTreeItem& file, results->results) {
         QStringList contents;
-        Editor* editor = mEditorList->getEditorByFilename(file->filename);
+        Editor* editor = openFile(file->filename);
         if (!editor) {
             QMessageBox::critical(this,
                                   tr("Replace Error"),
@@ -7123,7 +7118,7 @@ void MainWindow::on_tableBookmark_doubleClicked(const QModelIndex &index)
         return;
     PBookmark bookmark = mBookmarkModel->bookmark(index.row());
     if (bookmark) {
-        Editor *editor= mEditorList->getEditorByFilename(bookmark->filename);
+        Editor *editor= openFile(bookmark->filename);
         if (editor) {
             editor->setCaretPositionAndActivate(bookmark->line,1);
         }
@@ -7380,7 +7375,7 @@ void MainWindow::on_btnOpenProblemAnswer_clicked()
     POJProblem problem = mOJProblemModel.problem();
     if (!problem || problem->answerProgram.isEmpty())
         return;
-    Editor *e = mEditorList->getEditorByFilename(problem->answerProgram);
+    Editor *e = openFile(problem->answerProgram);
     if (e) {
         e->activate();
     }
@@ -7636,10 +7631,7 @@ void MainWindow::on_actionNew_Header_triggered()
         setProjectViewCurrentUnit(newUnit);
         updateProjectView();
 
-        Editor * editor = mEditorList->getEditorByFilename(headerFilename);
-        if (editor){
-            editor->activate();
-        }
+        openFile(headerFilename);
     }
     pSettings->ui().setNewClassDialogWidth(dialog.width());
     pSettings->ui().setNewClassDialogHeight(dialog.height());
@@ -7709,11 +7701,8 @@ void MainWindow::on_actionNew_Class_triggered()
         parseFileList(mProject->cppParser());
         updateProjectView();
 
-        Editor * editor = mEditorList->getEditorByFilename(headerFilename);
-        if (editor){
-            editor->activate();
-        }
-        editor = mEditorList->getEditorByFilename(sourceFilename);
+        openFile(headerFilename);
+        openFile(sourceFilename,false);
     }
     pSettings->ui().setNewHeaderDialogWidth(dialog.width());
     pSettings->ui().setNewHeaderDialogHeight(dialog.height());

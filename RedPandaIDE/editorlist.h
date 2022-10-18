@@ -55,8 +55,6 @@ public:
 
     Editor* getOpenedEditorByFilename(QString filename);
 
-    Editor* getEditorByFilename(QString filename);
-
     bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer);
 
     void getVisibleEditors(Editor*& left, Editor*& right);
