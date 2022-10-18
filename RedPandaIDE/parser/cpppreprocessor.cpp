@@ -460,7 +460,7 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     QString currentDir = includeTrailingPathDelimiter(extractFileDir(file->fileName));
     QStringList includes;
     QStringList projectIncludes;
-    bool found;
+    bool found=false;
     if (fromNext && mIncludePaths.contains(currentDir)) {
         foreach(const QString& s, mIncludePathList) {
             if (found) {
@@ -499,18 +499,28 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
 
 void CppPreprocessor::handlePreprocessor(const QString &value)
 {
-    if (value.startsWith("define"))
-        handleDefine(value);
-    else if (value.startsWith("undef"))
-        handleUndefine(value);
-    else if (value.startsWith("if")
-             || value.startsWith("else") || value.startsWith("elif")
-             || value.startsWith("endif"))
-        handleBranch(value);
-    else if (value.startsWith("include_next"))
-        handleInclude(value,true);
-    else if (value.startsWith("include"))
-        handleInclude(value);
+    switch(value[0].unicode()) {
+    case 'd':
+        if (value.startsWith("define"))
+            handleDefine(value);
+        break;
+    case 'e':
+        if (value.startsWith("else") || value.startsWith("elif")
+            || value.startsWith("endif"))
+            handleBranch(value);
+        break;
+    case 'i':
+        if (value.startsWith("if"))
+            handleBranch(value);
+        else if (value.startsWith("include"))
+            handleInclude(value, value.startsWith("include_next"));
+        break;
+    case 'u':
+        if (value.startsWith("undef"))
+            handleUndefine(value);
+        break;
+
+    }
 }
 
 void CppPreprocessor::handleUndefine(const QString &line)

@@ -1243,6 +1243,8 @@ void MainWindow::openFiles(const QStringList &files)
 
 Editor* MainWindow::openFile(const QString &filename, bool activate, QTabWidget* page)
 {
+    if (filename.isEmpty())
+        return nullptr;
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
         if (activate) {

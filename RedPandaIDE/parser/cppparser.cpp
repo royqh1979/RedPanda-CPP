@@ -709,7 +709,7 @@ QString CppParser::getHeaderFileName(const QString &relativeTo, const QString &h
     QString currentDir = includeTrailingPathDelimiter(extractFileDir(relativeTo));
     QStringList includes;
     QStringList projectIncludes;
-    bool found;
+    bool found=false;
     if (fromNext && mPreprocessor->includePaths().contains(currentDir)) {
         foreach(const QString& s, mPreprocessor->includePathList()) {
             if (found) {

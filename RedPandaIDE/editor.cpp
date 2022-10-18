@@ -1210,9 +1210,11 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             if (mParser->isIncludeNextLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s, true);
                 pMainWindow->openFile(filename);
+                return;
             } if (mParser->isIncludeLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s);
                 pMainWindow->openFile(filename);
+                return;
             } else {
                 gotoDefinition(p);
                 return;
