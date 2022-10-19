@@ -67,8 +67,8 @@ public:
     void clear();
     int count() const;
     CodeFoldingRanges();
-    PCodeFoldingRange addByParts(PCodeFoldingRange aParent, PCodeFoldingRanges aAllFold,
-                               int aFromLine, PCodeFoldingDefine aFoldRegion, int aToLine);
+    PCodeFoldingRange addByParts(PCodeFoldingRange parent, PCodeFoldingRanges allFold,
+                               int fromLine, int toLine);
 
     void insert(int index, PCodeFoldingRange range);
     void remove(int index);
@@ -84,12 +84,11 @@ public:
     int linesCollapsed; // Number of collapsed lines
     PCodeFoldingRanges subFoldRanges; // Sub fold ranges
     bool collapsed; // Is collapsed?
-    std::weak_ptr<CodeFoldingDefine> foldRegion; // FoldRegion
     int hintMarkLeft;
     std::weak_ptr<CodeFoldingRange> parent;
     bool parentCollapsed();
     void move(int count);
-    explicit CodeFoldingRange(PCodeFoldingRange aParent, int aFromLine, PCodeFoldingDefine aFoldRegion, int aToLine);
+    explicit CodeFoldingRange(PCodeFoldingRange parent, int fromLine, int toLine);
 };
 
 }

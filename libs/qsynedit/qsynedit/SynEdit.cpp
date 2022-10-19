@@ -3705,7 +3705,6 @@ void SynEdit::findSubFoldRange(PCodeFoldingRanges TopFoldRanges, int FoldIndex,P
                       Parent,
                       TopFoldRanges,
                       Line + 1,
-                      mCodeFolding.foldRegions.get(FoldIndex),
                       Line + 1);
                     parentFoldRanges = Parent->subFoldRanges;
                 }
@@ -3734,7 +3733,6 @@ void SynEdit::findSubFoldRange(PCodeFoldingRanges TopFoldRanges, int FoldIndex,P
                           Parent,
                           TopFoldRanges,
                           Line + 1,
-                          mCodeFolding.foldRegions.get(FoldIndex),
                           Line + 1);
                         parentFoldRanges = Parent->subFoldRanges;
 

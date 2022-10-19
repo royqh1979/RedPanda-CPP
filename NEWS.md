@@ -29,6 +29,8 @@ Red Panda C++ Version 1.5
   - fix: ctrl+click on #include_next header name doesn't open the right file
   - enhancement: parser used for non-project C files won't search header files in C++ include folders.
   - fix: toggle block comment/delete to word begin/delete to word end are not correctly disabled when editor not open
+  - fix: index out of range in cpp highlighter
+  - fix: memory leak in code folding processing
 
 Red Panda C++ Version 1.4
 

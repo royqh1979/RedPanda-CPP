@@ -72,16 +72,15 @@ void CodeFoldingRange::move(int count)
     toLine += count;
 }
 
-CodeFoldingRange::CodeFoldingRange(PCodeFoldingRange aParent,
-                                   int aFromLine,
-                                   PCodeFoldingDefine aFoldRegion, int aToLine):
-    fromLine(aFromLine),
-    toLine(aToLine),
+CodeFoldingRange::CodeFoldingRange(PCodeFoldingRange parent,
+                                   int fromLine,
+                                   int toLine):
+    fromLine(fromLine),
+    toLine(toLine),
     linesCollapsed(0),
     collapsed(false),
-    foldRegion(aFoldRegion),
     hintMarkLeft(0),
-    parent(aParent)
+    parent(parent)
 {
     subFoldRanges = std::make_shared<CodeFoldingRanges>();
 }
@@ -107,16 +106,15 @@ CodeFoldingRanges::CodeFoldingRanges()
 
 }
 
-PCodeFoldingRange CodeFoldingRanges::addByParts(PCodeFoldingRange aParent,
-                                                PCodeFoldingRanges aAllFold,
-                                                int aFromLine,
-                                                PCodeFoldingDefine aFoldRegion,
-                                                int aToLine)
+PCodeFoldingRange CodeFoldingRanges::addByParts(PCodeFoldingRange parent,
+                                                PCodeFoldingRanges allFold,
+                                                int fromLine,
+                                                int toLine)
 {
-    PCodeFoldingRange range=std::make_shared<CodeFoldingRange>(aParent, aFromLine,aFoldRegion,aToLine);
+    PCodeFoldingRange range=std::make_shared<CodeFoldingRange>(parent, fromLine,toLine);
     mRanges.append(range);
-    if (aAllFold && aAllFold.get()!=this) {
-        aAllFold->add(range);
+    if (allFold && allFold.get()!=this) {
+        allFold->add(range);
     }
     return range;
 }
