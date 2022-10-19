@@ -6135,7 +6135,11 @@ void MainWindow::on_actionAdd_to_project_triggered()
                 QModelIndex parentIndex = mProject->model()->getParentIndex(newUnit->node().get());
                 parentIndex = mProjectProxyModel->mapFromSource(parentIndex);
                 if (parentIndex.isValid()) {
-                    ui->projectView->expandRecursively(index);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+                    ui->projectView->expandRecursively(parentIndex);
+#else
+                    ui->projectView->expand(parentIndex);
+#endif
                 }
                 if (index.isValid()) {
                     ui->projectView->setCurrentIndex(index);
@@ -6532,7 +6536,11 @@ void MainWindow::setProjectViewCurrentNode(PProjectModelNode node)
         QModelIndex parentIndex = mProject->model()->getParentIndex(node.get());
         parentIndex = mProjectProxyModel->mapFromSource(parentIndex);
         if (parentIndex.isValid()) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
             ui->projectView->expandRecursively(parentIndex);
+#else
+            ui->projectView->expand(parentIndex);
+#endif
         }
         QModelIndex index = mProject->model()->getNodeIndex(node.get());
         index = mProjectProxyModel->mapFromSource(index);
