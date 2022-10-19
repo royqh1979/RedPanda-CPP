@@ -55,16 +55,19 @@ msvc {
 
 CONFIG(debug_and_release_target) {
     CONFIG(debug, debug|release) {
-        OBJ_OUT_PWD = debug
+        OBJ_OUT_PWD = debug/
     }
     CONFIG(release, debug|release) {
-        OBJ_OUT_PWD = release
+        OBJ_OUT_PWD = release/
     }
 }
 
 INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils
-LIBS += $$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD}libqsynedit.a
+
+gcc | clang {
+LIBS += $$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD}libqsynedit.a \
         $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}libredpanda_qt_utils.a
+}
 
 SOURCES += \
     HighlighterManager.cpp \
