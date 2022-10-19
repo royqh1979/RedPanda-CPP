@@ -275,19 +275,20 @@ TokenKind CppHighlighter::getTokenId()
 void CppHighlighter::andSymbolProc()
 {
     mTokenId = TokenId::Symbol;
-    switch (mLine[mRun+1].unicode()) {
-    case '=':
-        mRun+=2;
-        mExtTokenId = ExtTokenId::AndAssign;
-        break;
-    case '&':
-        mRun+=2;
-        mExtTokenId = ExtTokenId::LogAnd;
-        break;
-    default:
-        mRun+=1;
-        mExtTokenId = ExtTokenId::And;
+    if (mRun+1<mLineSize) {
+        switch (mLine[mRun+1].unicode()) {
+        case '=':
+            mRun+=2;
+            mExtTokenId = ExtTokenId::AndAssign;
+            return;
+        case '&':
+            mRun+=2;
+            mExtTokenId = ExtTokenId::LogAnd;
+            return;
+        }
     }
+    mRun+=1;
+    mExtTokenId = ExtTokenId::And;
 }
 
 void CppHighlighter::ansiCppProc()
@@ -317,10 +318,10 @@ void CppHighlighter::ansiCProc()
         nullProc();
         return;
     }
-    while (mRun<=mLineSize) {
+    while (mRun<mLineSize) {
         switch(mLine[mRun].unicode()) {
         case '*':
-            if (mLine[mRun+1] == '/') {
+            if (mRun+1<mLineSize && mLine[mRun+1] == '/') {
                 mRun += 2;
                 if (mRange.state == RangeState::rsAnsiCAsm) {
                     mRange.state = RangeState::rsAsm;
@@ -349,7 +350,7 @@ void CppHighlighter::asciiCharProc()
     mTokenId = TokenId::Char;
     do {
         if (mLine[mRun] == '\\') {
-            if (mLine[mRun+1] == '\'' || mLine[mRun+1] == '\\') {
+            if (mRun+1<mLineSize && (mLine[mRun+1] == '\'' || mLine[mRun+1] == '\\')) {
                 mRun+=1;
             }
         }
@@ -416,13 +417,13 @@ void CppHighlighter::braceOpenProc()
 void CppHighlighter::colonProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mLine[mRun+1]==':') {
+
+    if (mRun+1<mLineSize && mLine[mRun+1]==':') {
         mRun+=2;
         mExtTokenId = ExtTokenId::ScopeResolution;
-    } else {
-        mRun+=1;
-        mExtTokenId = ExtTokenId::Colon;
     }
+    mRun+=1;
+    mExtTokenId = ExtTokenId::Colon;
 }
 
 void CppHighlighter::commaProc()
@@ -475,13 +476,15 @@ void CppHighlighter::defineRemainingProc()
     do {
         switch(mLine[mRun].unicode()) {
         case '/': //comment?
-            switch (mLine[mRun+1].unicode()) {
-            case '/': // is end of directive as well
-                mRange.state = RangeState::rsUnknown;
-                return;
-            case '*': // might be embeded only
-                mRange.state = RangeState::rsDirectiveComment;
-                return;
+            if (mRun+1<mLineSize) {
+                switch (mLine[mRun+1].unicode()) {
+                case '/': // is end of directive as well
+                    mRange.state = RangeState::rsUnknown;
+                    return;
+                case '*': // might be embeded only
+                    mRange.state = RangeState::rsDirectiveComment;
+                    return;
+                }
             }
             break;
         case '\\': // yet another line?
@@ -508,13 +511,15 @@ void CppHighlighter::directiveEndProc()
     do {
         switch(mLine[mRun].unicode()) {
         case '/': //comment?
-            switch (mLine[mRun+1].unicode()) {
-            case '/': // is end of directive as well
-                mRange.state = RangeState::rsUnknown;
-                return;
-            case '*': // might be embeded only
-                mRange.state = RangeState::rsDirectiveComment;
-                return;
+            if (mRun+1<mLineSize) {
+                switch (mLine[mRun+1].unicode()) {
+                case '/': // is end of directive as well
+                    mRange.state = RangeState::rsUnknown;
+                    return;
+                case '*': // might be embeded only
+                    mRange.state = RangeState::rsDirectiveComment;
+                    return;
+                }
             }
             break;
         case '\\': // yet another line?
@@ -532,7 +537,7 @@ void CppHighlighter::directiveEndProc()
 void CppHighlighter::equalProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mLine[mRun+1] == '=') {
+    if (mRun+1<mLineSize && mLine[mRun+1] == '=') {
         mRun += 2;
         mExtTokenId = ExtTokenId::LogEqual;
     } else {
@@ -544,24 +549,25 @@ void CppHighlighter::equalProc()
 void CppHighlighter::greaterProc()
 {
     mTokenId = TokenId::Symbol;
-    switch (mLine[mRun + 1].unicode()) {
-    case '=':
-        mRun += 2;
-        mExtTokenId = ExtTokenId::GreaterThanEqual;
-        break;
-    case '>':
-        if (mLine[mRun+2] == '=') {
-            mRun+=3;
-            mExtTokenId = ExtTokenId::ShiftRightAssign;
-        } else {
+    if (mRun+1<mLineSize) {
+        switch (mLine[mRun+1].unicode()) {
+        case '=':
             mRun += 2;
-            mExtTokenId = ExtTokenId::ShiftRight;
+            mExtTokenId = ExtTokenId::GreaterThanEqual;
+            return;
+        case '>':
+            if (mRun+2<mLineSize && mLine[mRun+2] == '=') {
+                mRun+=3;
+                mExtTokenId = ExtTokenId::ShiftRightAssign;
+            } else {
+                mRun += 2;
+                mExtTokenId = ExtTokenId::ShiftRight;
+            }
+            return;
         }
-        break;
-    default:
-        mRun+=1;
-        mExtTokenId = ExtTokenId::GreaterThan;
     }
+    mRun+=1;
+    mExtTokenId = ExtTokenId::GreaterThan;
 }
 
 void CppHighlighter::identProc()
@@ -585,62 +591,62 @@ void CppHighlighter::identProc()
 void CppHighlighter::lowerProc()
 {
     mTokenId = TokenId::Symbol;
-    switch(mLine[mRun+1].unicode()) {
-    case '=':
-        mRun+=2;
-        mExtTokenId = ExtTokenId::LessThanEqual;
-        break;
-    case '<':
-        if (mLine[mRun+2] == '=') {
-            mRun+=3;
-            mExtTokenId = ExtTokenId::ShiftLeftAssign;
-        } else {
+    if (mRun<mLineSize) {
+        switch(mLine[mRun+1].unicode()) {
+        case '=':
             mRun+=2;
-            mExtTokenId = ExtTokenId::ShiftLeft;
+            mExtTokenId = ExtTokenId::LessThanEqual;
+            return;
+        case '<':
+            if (mRun+2<mLineSize && mLine[mRun+2] == '=') {
+                mRun+=3;
+                mExtTokenId = ExtTokenId::ShiftLeftAssign;
+            } else {
+                mRun+=2;
+                mExtTokenId = ExtTokenId::ShiftLeft;
+            }
+            return;
         }
-        break;
-    default:
-        mRun+=1;
-        mExtTokenId = ExtTokenId::LessThan;
     }
+    mRun+=1;
+    mExtTokenId = ExtTokenId::LessThan;
 }
 
 void CppHighlighter::minusProc()
 {
     mTokenId = TokenId::Symbol;
-    switch(mLine[mRun+1].unicode()) {
-    case '=':
-        mRun += 2;
-        mExtTokenId = ExtTokenId::SubtractAssign;
-        break;
-    case '-':
-        mRun += 2;
-        mExtTokenId = ExtTokenId::Decrement;
-        break;
-    case '>':
-        if (mLine[mRun+2]=='*') {
-            mRun += 3;
-            mExtTokenId = ExtTokenId::PointerToMemberOfPointer;
-        } else {
+    if (mRun+1<mLineSize) {
+        switch(mLine[mRun+1].unicode()) {
+        case '=':
             mRun += 2;
-            mExtTokenId = ExtTokenId::Arrow;
+            mExtTokenId = ExtTokenId::SubtractAssign;
+            return;
+        case '-':
+            mRun += 2;
+            mExtTokenId = ExtTokenId::Decrement;
+            return;
+        case '>':
+            if (mRun+2<mLineSize && mLine[mRun+2]=='*') {
+                mRun += 3;
+                mExtTokenId = ExtTokenId::PointerToMemberOfPointer;
+            } else {
+                mRun += 2;
+                mExtTokenId = ExtTokenId::Arrow;
+            }
+            return;
         }
-        break;
-    default:
-        mRun += 1;
-        mExtTokenId = ExtTokenId::Subtract;
     }
+    mRun += 1;
+    mExtTokenId = ExtTokenId::Subtract;
 }
 
 void CppHighlighter::modSymbolProc()
 {
     mTokenId = TokenId::Symbol;
-    switch(mLine[mRun + 1].unicode()) {
-    case '=':
+    if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
         mRun += 2;
         mExtTokenId = ExtTokenId::ModAssign;
-        break;
-    default:
+    } else {
         mRun += 1;
         mExtTokenId = ExtTokenId::Mod;
     }
@@ -649,12 +655,10 @@ void CppHighlighter::modSymbolProc()
 void CppHighlighter::notSymbolProc()
 {
     mTokenId = TokenId::Symbol;
-    switch(mLine[mRun + 1].unicode()) {
-    case '=':
+    if (mRun<mLineSize && mLine[mRun+1]=='=') {
         mRun+=2;
         mExtTokenId = ExtTokenId::NotEqual;
-        break;
-    default:
+    } else {
         mRun+=1;
         mExtTokenId = ExtTokenId::LogComplement;
     }
@@ -689,7 +693,7 @@ void CppHighlighter::numberProc()
             }
             break;
         case '.':
-            if (mLine[mRun+1] == '.') {
+            if (mRun+1<mLineSize && mLine[mRun+1] == '.') {
                 mRun+=2;
                 mTokenId = TokenId::Unknown;
                 return;
@@ -706,7 +710,7 @@ void CppHighlighter::numberProc()
                 return;
             if (mLine[mRun-1]!= 'e' && mLine[mRun-1]!='E')  // number = float, but no exponent. an arithmetic operator
                 return;
-            if (mLine[mRun+1]<'0' || mLine[mRun+1]>'9')  {// invalid
+            if (mRun+1<mLineSize && (mLine[mRun+1]<'0' || mLine[mRun+1]>'9'))  {// invalid
                 mRun+=1;
                 mTokenId = TokenId::Unknown;
                 return;
@@ -753,7 +757,7 @@ void CppHighlighter::numberProc()
                             return;
                         }
                     }
-                    if (mLine[mRun+1]!='+' && mLine[mRun+1]!='-' && !(mLine[mRun+1]>='0' && mLine[mRun+1]<='9')) {
+                    if (mRun+1<mLineSize && mLine[mRun+1]!='+' && mLine[mRun+1]!='-' && !(mLine[mRun+1]>='0' && mLine[mRun+1]<='9')) {
                         return;
                     } else {
                         mTokenId = TokenId::Float;
@@ -820,6 +824,7 @@ void CppHighlighter::numberProc()
         case 'x':
         case 'X':
             if ((mRun == idx1+1) && (mLine[idx1]=='0') &&
+                    mRun+1<mLineSize &&
                     ((mLine[mRun+1]>='0' && mLine[mRun+1]<='9')
                      || (mLine[mRun+1]>='a' && mLine[mRun+1]<='f')
                      || (mLine[mRun+1]>='A' && mLine[mRun+1]<='F')) ) {
@@ -846,49 +851,51 @@ void CppHighlighter::numberProc()
 void CppHighlighter::orSymbolProc()
 {
     mTokenId = TokenId::Symbol;
-    switch ( mLine[mRun+1].unicode()) {
-    case '=':
-        mRun+=2;
-        mExtTokenId = ExtTokenId::IncOrAssign;
-        break;
-    case '|':
-        mRun+=2;
-        mExtTokenId = ExtTokenId::LogOr;
-        break;
-    default:
-        mRun+=1;
-        mExtTokenId = ExtTokenId::IncOr;
+    if (mRun+1<=mLineSize) {
+        switch ( mLine[mRun+1].unicode()) {
+        case '=':
+            mRun+=2;
+            mExtTokenId = ExtTokenId::IncOrAssign;
+            return;
+        case '|':
+            mRun+=2;
+            mExtTokenId = ExtTokenId::LogOr;
+            return;
+        }
     }
+    mRun+=1;
+    mExtTokenId = ExtTokenId::IncOr;
 }
 
 void CppHighlighter::plusProc()
 {
     mTokenId = TokenId::Symbol;
-    switch(mLine[mRun+1].unicode()){
-    case '=':
-        mRun+=2;
-        mExtTokenId = ExtTokenId::AddAssign;
-        break;
-    case '+':
-        mRun+=2;
-        mExtTokenId = ExtTokenId::Increment;
-        break;
-    default:
-        mRun+=1;
-        mExtTokenId = ExtTokenId::Add;
+    if (mRun+1<mLineSize) {
+        switch(mLine[mRun+1].unicode()){
+        case '=':
+            mRun+=2;
+            mExtTokenId = ExtTokenId::AddAssign;
+            return;
+        case '+':
+            mRun+=2;
+            mExtTokenId = ExtTokenId::Increment;
+            return;
+        }
     }
+    mRun+=1;
+    mExtTokenId = ExtTokenId::Add;
 }
 
 void CppHighlighter::pointProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mLine[mRun+1] == '*' ) {
+    if (mRun+1<mLineSize && mLine[mRun+1] == '*' ) {
         mRun+=2;
         mExtTokenId = ExtTokenId::PointerToMemberOfObject;
-    } else if (mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
+    } else if (mRun+2<mLineSize && mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
         mRun+=3;
         mExtTokenId = ExtTokenId::Ellipse;
-    } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='9') {
+    } else if (mRun+1<mLineSize && mLine[mRun+1]>='0' && mLine[mRun+1]<='9') {
         numberProc();
     } else {
         mRun+=1;
@@ -963,37 +970,38 @@ void CppHighlighter::semiColonProc()
 
 void CppHighlighter::slashProc()
 {
-    switch(mLine[mRun+1].unicode()) {
-    case '/': // Cpp style comment
-        mTokenId = TokenId::Comment;
-        mRun+=2;
-        mRange.state = RangeState::rsCppComment;
-        return;
-    case '*': // C style comment
-        mTokenId = TokenId::Comment;
-        if (mRange.state == RangeState::rsAsm) {
-            mRange.state = RangeState::rsAnsiCAsm;
-        } else if (mRange.state == RangeState::rsAsmBlock) {
-            mRange.state = RangeState::rsAnsiCAsmBlock;
-        } else if (mRange.state == RangeState::rsDirective) {
-            mRange.state = RangeState::rsDirectiveComment;
-        } else {
-            mRange.state = RangeState::rsAnsiC;
+    if (mRun+1<mLineSize) {
+        switch(mLine[mRun+1].unicode()) {
+        case '/': // Cpp style comment
+            mTokenId = TokenId::Comment;
+            mRun+=2;
+            mRange.state = RangeState::rsCppComment;
+            return;
+        case '*': // C style comment
+            mTokenId = TokenId::Comment;
+            if (mRange.state == RangeState::rsAsm) {
+                mRange.state = RangeState::rsAnsiCAsm;
+            } else if (mRange.state == RangeState::rsAsmBlock) {
+                mRange.state = RangeState::rsAnsiCAsmBlock;
+            } else if (mRange.state == RangeState::rsDirective) {
+                mRange.state = RangeState::rsDirectiveComment;
+            } else {
+                mRange.state = RangeState::rsAnsiC;
+            }
+            mRun += 2;
+            if (mRun < mLineSize)
+                ansiCProc();
+            return;
+        case '=':
+            mRun+=2;
+            mTokenId = TokenId::Symbol;
+            mExtTokenId = ExtTokenId::DivideAssign;
+            return;
         }
-        mRun += 2;
-        if (mRun < mLineSize)
-            ansiCProc();
-        break;
-    case '=':
-        mRun+=2;
-        mTokenId = TokenId::Symbol;
-        mExtTokenId = ExtTokenId::DivideAssign;
-        break;
-    default:
-        mRun += 1;
-        mTokenId = TokenId::Symbol;
-        mExtTokenId = ExtTokenId::Divide;
     }
+    mRun += 1;
+    mTokenId = TokenId::Symbol;
+    mExtTokenId = ExtTokenId::Divide;
 }
 
 void CppHighlighter::backSlashProc()
@@ -1039,7 +1047,7 @@ void CppHighlighter::squareOpenProc()
 void CppHighlighter::starProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mLine[mRun+1] == '=') {
+    if (mRun<=mLineSize && mLine[mRun+1] == '=') {
         mRun += 2;
         mExtTokenId = ExtTokenId::MultiplyAssign;
     } else {
@@ -1062,39 +1070,41 @@ void CppHighlighter::stringEndProc()
             mRun += 1;
             break;
         }
-        if (mLine[mRun].unicode()=='\\') {
+        if (mLine[mRun]=='\\') {
             if (mRun == mLineSize-1) {
                 mRun+=1;
                 mRange.state = RangeState::rsMultiLineString;
                 return;
             }
-            switch(mLine[mRun+1].unicode()) {
-            case '\'':
-            case '"':
-            case '\\':
-            case '?':
-            case 'a':
-            case 'b':
-            case 'f':
-            case 'n':
-            case 'r':
-            case 't':
-            case 'v':
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case 'x':
-            case 'u':
-            case 'U':
-                mRange.state = RangeState::rsMultiLineStringEscapeSeq;
-                return;
+            if (mRun+1<mLineSize) {
+                switch(mLine[mRun+1].unicode()) {
+                case '\'':
+                case '"':
+                case '\\':
+                case '?':
+                case 'a':
+                case 'b':
+                case 'f':
+                case 'n':
+                case 'r':
+                case 't':
+                case 'v':
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case 'x':
+                case 'u':
+                case 'U':
+                    mRange.state = RangeState::rsMultiLineStringEscapeSeq;
+                    return;
+                }
             }
         }
         mRun += 1;
@@ -1196,39 +1206,41 @@ void CppHighlighter::stringProc()
             mRun+=1;
             break;
         }
-        if (mLine[mRun].unicode()=='\\') {
+        if (mLine[mRun]=='\\') {
             if (mRun == mLineSize-1) {
                 mRun+=1;
                 mRange.state = RangeState::rsMultiLineString;
                 return;
             }
-            switch(mLine[mRun+1].unicode()) {
-            case '\'':
-            case '"':
-            case '\\':
-            case '?':
-            case 'a':
-            case 'b':
-            case 'f':
-            case 'n':
-            case 'r':
-            case 't':
-            case 'v':
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case 'x':
-            case 'u':
-            case 'U':
-                mRange.state = RangeState::rsStringEscapeSeq;
-                return;
+            if (mRun+1<mLineSize) {
+                switch(mLine[mRun+1].unicode()) {
+                case '\'':
+                case '"':
+                case '\\':
+                case '?':
+                case 'a':
+                case 'b':
+                case 'f':
+                case 'n':
+                case 'r':
+                case 't':
+                case 'v':
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case 'x':
+                case 'u':
+                case 'U':
+                    mRange.state = RangeState::rsStringEscapeSeq;
+                    return;
+                }
             }
         }
         mRun+=1;
@@ -1263,7 +1275,7 @@ void CppHighlighter::unknownProc()
 void CppHighlighter::xorSymbolProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mLine[mRun+1]=='=') {
+    if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
         mRun+=2;
         mExtTokenId = ExtTokenId::XorAssign;
     } else {
@@ -1549,13 +1561,13 @@ void CppHighlighter::next()
             break;
         default:
             mRange.state = RangeState::rsUnknown;
-            if (mLine[mRun] == 'R' && mLine[mRun+1] == '"') {
+            if (mLine[mRun] == 'R' && mRun+1<mLineSize && mLine[mRun+1] == '"') {
                 mRun+=2;
                 rawStringProc();
             } else if ((mLine[mRun] == 'L' || mLine[mRun] == 'u' || mLine[mRun]=='U') && mLine[mRun+1]=='\"') {
                 mRun+=1;
                 stringStartProc();
-            } else if (mLine[mRun] == 'u' && mLine[mRun+1] == '8' && mLine[mRun+2]=='\"') {
+            } else if (mLine[mRun] == 'u' && mRun+2<mLineSize && mLine[mRun+1] == '8' && mLine[mRun+2]=='\"') {
                 mRun+=2;
                 stringStartProc();
             } else
