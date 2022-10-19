@@ -154,8 +154,7 @@ private:
     bool mAsmStart;
     HighlighterState mRange;
 //    SynRangeState mSpaceRange;
-    QString mLineString;
-    QChar* mLine;
+    QString mLine;
     int mLineSize;
     int mRun;
     int mStringLen;

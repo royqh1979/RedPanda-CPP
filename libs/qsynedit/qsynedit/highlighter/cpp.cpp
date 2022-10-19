@@ -293,18 +293,18 @@ void CppHighlighter::andSymbolProc()
 void CppHighlighter::ansiCppProc()
 {
     mTokenId = TokenId::Comment;
-    if (mLine[mRun]==0) {
+    if (mRun>=mLineSize) {
         nullProc();
         if  ( (mRun<1)  || (mLine[mRun-1]!='\\')) {
             mRange.state = RangeState::rsUnknown;
             return;
         }
     }
-    while (mLine[mRun]!=0) {
+    while (mRun<mLineSize) {
         mRun+=1;
     }
     mRange.state = RangeState::rsCppCommentEnded;
-    if (mLine[mRun-1] == '\\' && mLine[mRun]==0) { // continues on next line
+    if (mLine[mRun-1] == '\\' && mRun == mLineSize-1) { // continues on next line
         mRange.state = RangeState::rsCppComment;
     }
 }
@@ -313,11 +313,11 @@ void CppHighlighter::ansiCProc()
 {
     bool finishProcess = false;
     mTokenId = TokenId::Comment;
-    if (mLine[mRun].unicode() == 0) {
+    if (mRun>=mLineSize) {
         nullProc();
         return;
     }
-    while (mLine[mRun]!=0) {
+    while (mRun<=mLineSize) {
         switch(mLine[mRun].unicode()) {
         case '*':
             if (mLine[mRun+1] == '/') {
@@ -327,7 +327,7 @@ void CppHighlighter::ansiCProc()
                 } else if (mRange.state == RangeState::rsAnsiCAsmBlock){
                     mRange.state = RangeState::rsAsmBlock;
                 } else if (mRange.state == RangeState::rsDirectiveComment &&
-                           mLine[mRun] != 0 && mLine[mRun]!='\r' && mLine[mRun]!='\n') {
+                            mRun<mLineSize && mLine[mRun]!='\r' && mLine[mRun]!='\n') {
                     mRange.state = RangeState::rsMultiLineDirective;
                 } else {
                     mRange.state = RangeState::rsUnknown;
@@ -354,7 +354,7 @@ void CppHighlighter::asciiCharProc()
             }
         }
         mRun+=1;
-    } while (mLine[mRun]!=0 && mLine[mRun]!='\'');
+    } while (mRun < mLineSize && mLine[mRun]!='\'');
     if (mLine[mRun] == '\'')
         mRun+=1;
     mRange.state = RangeState::rsUnknown;
@@ -434,7 +434,7 @@ void CppHighlighter::commaProc()
 
 void CppHighlighter::directiveProc()
 {
-    QString preContents = mLineString.left(mRun).trimmed();
+    QString preContents = mLine.left(mRun).trimmed();
     if (!preContents.isEmpty()) { // '#' is not first non-space char on the line, treat it as an invalid char
        mTokenId = TokenId::Unknown;
        mRun+=1;
@@ -443,17 +443,17 @@ void CppHighlighter::directiveProc()
     mTokenId = TokenId::Directive;
     mRun+=1;
     //skip spaces
-    while (mLine[mRun]!=0 && isSpaceChar(mLine[mRun])) {
+    while (mRun < mLineSize && isSpaceChar(mLine[mRun])) {
         mRun+=1;
     }
 
     QString directive;
-    while (mLine[mRun]!=0 && isIdentChar(mLine[mRun])) {
+    while (mRun < mLineSize && isIdentChar(mLine[mRun])) {
         directive+=mLine[mRun];
         mRun+=1;
     }
     if (directive == "define") {
-        while(mLine[mRun]!=0 && isSpaceChar(mLine[mRun]))
+        while(mRun < mLineSize && isSpaceChar(mLine[mRun]))
             mRun++;
         mRange.state = RangeState::rsDefineIdentifier;
         return;
@@ -464,7 +464,7 @@ void CppHighlighter::directiveProc()
 void CppHighlighter::defineIdentProc()
 {
     mTokenId = TokenId::Identifier;
-    while(mLine[mRun]!=0 && isIdentChar(mLine[mRun]))
+    while(mRun < mLineSize && isIdentChar(mLine[mRun]))
         mRun++;
     mRange.state = RangeState::rsDefineRemaining;
 }
@@ -485,7 +485,7 @@ void CppHighlighter::defineRemainingProc()
             }
             break;
         case '\\': // yet another line?
-            if (mLine[mRun+1] == 0) {
+            if (mRun == mLineSize-1) {
                 mRun+=1;
                 mRange.state = RangeState::rsMultiLineDirective;
                 return;
@@ -493,14 +493,14 @@ void CppHighlighter::defineRemainingProc()
             break;
         }
         mRun+=1;
-    } while (mLine[mRun]!=0);
+    } while (mRun<mLineSize);
     mRange.state=RangeState::rsUnknown;
 }
 
 void CppHighlighter::directiveEndProc()
 {
     mTokenId = TokenId::Directive;
-    if (mLine[mRun] == 0) {
+    if (mRun >= mLineSize) {
         nullProc();
         return;
     }
@@ -518,7 +518,7 @@ void CppHighlighter::directiveEndProc()
             }
             break;
         case '\\': // yet another line?
-              if (mLine[mRun+1] == 0) {
+              if (mRun == mLineSize-1) {
                   mRun+=1;
                   mRange.state = RangeState::rsMultiLineDirective;
                   return;
@@ -526,7 +526,7 @@ void CppHighlighter::directiveEndProc()
             break;
         }
         mRun+=1;
-    } while (mLine[mRun]!=0);
+    } while (mRun < mLineSize);
 }
 
 void CppHighlighter::equalProc()
@@ -570,7 +570,7 @@ void CppHighlighter::identProc()
     while (isIdentChar(mLine[wordEnd])) {
         wordEnd+=1;
     }
-    QString word = mLineString.mid(mRun,wordEnd-mRun);
+    QString word = mLine.mid(mRun,wordEnd-mRun);
     mRun=wordEnd;
     if (isKeyword(word)) {
         mTokenId = TokenId::Key;
@@ -680,7 +680,7 @@ void CppHighlighter::numberProc()
     mRun+=1;
     mTokenId = TokenId::Number;
     bool shouldExit = false;
-    while (mLine[mRun]!=0) {
+    while (mRun<mLineSize) {
         switch(mLine[mRun].unicode()) {
         case '\'':
             if (mTokenId != TokenId::Number) {
@@ -911,7 +911,7 @@ void CppHighlighter::rawStringProc()
     mTokenId = TokenId::RawString;
     mRange.state = RangeState::rsRawString;
 
-    while (mLine[mRun]!=0) {
+    while (mRun<mLineSize) {
         if ((!noEscaping) && (mLine[mRun]=='"')) {
             mRun+=1;
             break;
@@ -981,7 +981,7 @@ void CppHighlighter::slashProc()
             mRange.state = RangeState::rsAnsiC;
         }
         mRun += 2;
-        if (mLine[mRun]!=0)
+        if (mRun < mLineSize)
             ansiCProc();
         break;
     case '=':
@@ -998,7 +998,7 @@ void CppHighlighter::slashProc()
 
 void CppHighlighter::backSlashProc()
 {
-    if (mLine[mRun+1]==0) {
+    if (mRun+1==mLineSize-1) {
         mTokenId = TokenId::Symbol;
         mExtTokenId = ExtTokenId::BackSlash;
     } else {
@@ -1051,18 +1051,23 @@ void CppHighlighter::starProc()
 void CppHighlighter::stringEndProc()
 {
     mTokenId = TokenId::String;
-    if (mLine[mRun]==0) {
+    if (mRun>=mLineSize) {
         nullProc();
         return;
     }
     mRange.state = RangeState::rsUnknown;
 
-    while (mLine[mRun]!=0) {
+    while (mRun<mLineSize) {
         if (mLine[mRun]=='"') {
             mRun += 1;
             break;
         }
         if (mLine[mRun].unicode()=='\\') {
+            if (mRun == mLineSize-1) {
+                mRun+=1;
+                mRange.state = RangeState::rsMultiLineString;
+                return;
+            }
             switch(mLine[mRun+1].unicode()) {
             case '\'':
             case '"':
@@ -1089,10 +1094,6 @@ void CppHighlighter::stringEndProc()
             case 'u':
             case 'U':
                 mRange.state = RangeState::rsMultiLineStringEscapeSeq;
-                return;
-            case 0:
-                mRun+=1;
-                mRange.state = RangeState::rsMultiLineString;
                 return;
             }
         }
@@ -1184,18 +1185,23 @@ void CppHighlighter::stringEscapeSeqProc()
 
 void CppHighlighter::stringProc()
 {
-    if (mLine[mRun] == 0) {
+    if (mRun >= mLineSize) {
         mRange.state = RangeState::rsUnknown;
         return;
     }
     mTokenId = TokenId::String;
     mRange.state = RangeState::rsString;
-    while (mLine[mRun]!=0) {
+    while (mRun < mLineSize) {
         if (mLine[mRun]=='"') {
             mRun+=1;
             break;
         }
         if (mLine[mRun].unicode()=='\\') {
+            if (mRun == mLineSize-1) {
+                mRun+=1;
+                mRange.state = RangeState::rsMultiLineString;
+                return;
+            }
             switch(mLine[mRun+1].unicode()) {
             case '\'':
             case '"':
@@ -1223,10 +1229,6 @@ void CppHighlighter::stringProc()
             case 'U':
                 mRange.state = RangeState::rsStringEscapeSeq;
                 return;
-            case 0:
-                mRun+=1;
-                mRange.state = RangeState::rsMultiLineString;
-                return;
             }
         }
         mRun+=1;
@@ -1238,7 +1240,7 @@ void CppHighlighter::stringStartProc()
 {
     mTokenId = TokenId::String;
     mRun += 1;
-    if (mLine[mRun]==0) {
+    if (mRun>=mLineSize) {
         mRange.state = RangeState::rsUnknown;
         return;
     }
@@ -1272,120 +1274,121 @@ void CppHighlighter::xorSymbolProc()
 
 void CppHighlighter::processChar()
 {
-    switch(mLine[mRun].unicode()) {
-    case '&':
-        andSymbolProc();
-        break;
-    case '\'':
-        asciiCharProc();
-        break;
-    case '@':
-        atSymbolProc();
-        break;
-    case '}':
-        braceCloseProc();
-        break;
-    case '{':
-        braceOpenProc();
-        break;
-    case '\r':
-    case '\n':
-        spaceProc();
-        break;
-    case ':':
-        colonProc();
-        break;
-    case ',':
-        commaProc();
-        break;
-    case '#':
-        directiveProc();
-        break;
-    case '=':
-        equalProc();
-        break;
-    case '>':
-        greaterProc();
-        break;
-    case '?':
-        questionProc();
-        break;
-    case '<':
-        lowerProc();
-        break;
-    case '-':
-        minusProc();
-        break;
-    case '%':
-        modSymbolProc();
-        break;
-    case '!':
-        notSymbolProc();
-        break;
-    case '\\':
-        backSlashProc();
-        break;
-    case 0:
+    if (mRun>=mLineSize) {
         nullProc();
-        break;
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-        numberProc();
-        break;
-    case '|':
-        orSymbolProc();
-        break;
-    case '+':
-        plusProc();
-        break;
-    case '.':
-        pointProc();
-        break;
-    case ')':
-        roundCloseProc();
-        break;
-    case '(':
-        roundOpenProc();
-        break;
-    case ';':
-        semiColonProc();
-        break;
-    case '/':
-        slashProc();
-        break;
-    case ']':
-        squareCloseProc();
-        break;
-    case '[':
-        squareOpenProc();
-        break;
-    case '*':
-        starProc();
-        break;
-    case '"':
-        stringStartProc();
-        break;
-    case '~':
-        tildeProc();
-        break;
-    case '^':
-        xorSymbolProc();
-        break;
-    default:
-        if (isIdentChar(mLine[mRun])) {
-            identProc();
-        } else if (isSpaceChar(mLine[mRun])) {
+    } else {
+        switch(mLine[mRun].unicode()) {
+        case '&':
+            andSymbolProc();
+            break;
+        case '\'':
+            asciiCharProc();
+            break;
+        case '@':
+            atSymbolProc();
+            break;
+        case '}':
+            braceCloseProc();
+            break;
+        case '{':
+            braceOpenProc();
+            break;
+        case '\r':
+        case '\n':
             spaceProc();
-        } else {
-            unknownProc();
+            break;
+        case ':':
+            colonProc();
+            break;
+        case ',':
+            commaProc();
+            break;
+        case '#':
+            directiveProc();
+            break;
+        case '=':
+            equalProc();
+            break;
+        case '>':
+            greaterProc();
+            break;
+        case '?':
+            questionProc();
+            break;
+        case '<':
+            lowerProc();
+            break;
+        case '-':
+            minusProc();
+            break;
+        case '%':
+            modSymbolProc();
+            break;
+        case '!':
+            notSymbolProc();
+            break;
+        case '\\':
+            backSlashProc();
+            break;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            numberProc();
+            break;
+        case '|':
+            orSymbolProc();
+            break;
+        case '+':
+            plusProc();
+            break;
+        case '.':
+            pointProc();
+            break;
+        case ')':
+            roundCloseProc();
+            break;
+        case '(':
+            roundOpenProc();
+            break;
+        case ';':
+            semiColonProc();
+            break;
+        case '/':
+            slashProc();
+            break;
+        case ']':
+            squareCloseProc();
+            break;
+        case '[':
+            squareOpenProc();
+            break;
+        case '*':
+            starProc();
+            break;
+        case '"':
+            stringStartProc();
+            break;
+        case '~':
+            tildeProc();
+            break;
+        case '^':
+            xorSymbolProc();
+            break;
+        default:
+            if (isIdentChar(mLine[mRun])) {
+                identProc();
+            } else if (isSpaceChar(mLine[mRun])) {
+                spaceProc();
+            } else {
+                unknownProc();
+            }
         }
     }
 }
@@ -1443,7 +1446,7 @@ bool CppHighlighter::eol() const
 
 QString CppHighlighter::getToken() const
 {
-    return mLineString.mid(mTokenPos,mRun-mTokenPos);
+    return mLine.mid(mTokenPos,mRun-mTokenPos);
 }
 
 PHighlighterAttribute CppHighlighter::getTokenAttribute() const
@@ -1563,8 +1566,8 @@ void CppHighlighter::next()
 
 void CppHighlighter::setLine(const QString &newLine, int lineNumber)
 {
-    mLineString = newLine;
-    mLine = mLineString.data();
+    mLine = newLine;
+    mLineSize = mLine.size();
     mLineNumber = lineNumber;
     mRun = 0;
     mRange.leftBraces = 0;
