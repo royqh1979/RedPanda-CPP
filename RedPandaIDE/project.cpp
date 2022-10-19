@@ -50,6 +50,7 @@ Project::Project(const QString &filename, const QString &name,
                  QObject *parent) :
     QObject(parent),
     mName(name),
+    mModified(false),
     mModel(this),
     mEditorList(editorList),
     mFileSystemWatcher(fileSystemWatcher)
