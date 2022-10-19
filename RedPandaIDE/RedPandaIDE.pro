@@ -63,9 +63,8 @@ CONFIG(debug_and_release_target) {
 }
 
 INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils
-LIBS += -L$$OUT_PWD/../libs/redpanda_qt_utils/$$OBJ_OUT_PWD \
-    -L$$OUT_PWD/../libs/qsynedit/$$OBJ_OUT_PWD \
-    -lqsynedit -lredpanda_qt_utils
+LIBS += $$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD}libqsynedit.a
+        $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}libredpanda_qt_utils.a
 
 SOURCES += \
     HighlighterManager.cpp \

@@ -252,7 +252,7 @@ void SynEditTextPainter::computeSelectionInfo()
     BufferCoord vEnd;
     bAnySelection = false;
     // Only if selection is visible anyway.
-    if (!edit->mHideSelection || edit->hasFocus()) {
+    if (edit->hasFocus()) {
         bAnySelection = true;
         // Get the *real* start of the selected area.
         if (edit->mBlockBegin.line < edit->mBlockEnd.line) {

@@ -1722,7 +1722,8 @@ void DebugReader::run()
     }
 }
 
-BreakpointModel::BreakpointModel(QObject *parent):QAbstractTableModel(parent)
+BreakpointModel::BreakpointModel(QObject *parent):QAbstractTableModel(parent),
+    mIsForProject(false)
 {
 
 }

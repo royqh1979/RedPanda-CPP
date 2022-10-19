@@ -680,8 +680,7 @@ private:
     PUndoList mUndoList;
     PRedoList mRedoList;
     QPoint mMouseDownPos;
-    bool mHideSelection;
-    int mMouseWheelAccumulator;
+   int mMouseWheelAccumulator;
     EditCaretType mOverwriteCaret;
     EditCaretType  mInsertCaret;
     QPoint mCaretOffset;

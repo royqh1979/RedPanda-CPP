@@ -94,7 +94,7 @@ int ExecuteCommand(vector<string>& command,bool reInp) {
             command_begin = 0;
         }
         argv = (char * *)malloc(sizeof(char *)*command_size);
-        for (int i=command_begin;i<command.size();i++) {
+        for (size_t i=command_begin;i<command.size();i++) {
             argv[i-command_begin] = (char *)command[i].c_str();
         }
         argv[command.size()-command_begin]=NULL;
@@ -114,6 +114,7 @@ int ExecuteCommand(vector<string>& command,bool reInp) {
             free(current_dir);
             exit(-1);
         }
+        free(argv);
     } else {
         int status;
         pid_t w;
