@@ -3591,12 +3591,12 @@ void SynEdit::rescanForFoldRanges()
         CodeFoldingRanges ranges=mAllFoldRanges;
         mAllFoldRanges.clear();
         // Add folds to a separate list
-        PCodeFoldingRanges TemporaryAllFoldRanges = std::make_shared<CodeFoldingRanges>();
-        scanForFoldRanges(TemporaryAllFoldRanges);
+        PCodeFoldingRanges temporaryAllFoldRanges = std::make_shared<CodeFoldingRanges>();
+        scanForFoldRanges(temporaryAllFoldRanges);
 
         // Combine new with old folds, preserve parent order
-        for (int i = 0; i< TemporaryAllFoldRanges->count();i++) {
-            PCodeFoldingRange tempFoldRange=TemporaryAllFoldRanges->range(i);
+        for (int i = 0; i< temporaryAllFoldRanges->count();i++) {
+            PCodeFoldingRange tempFoldRange=temporaryAllFoldRanges->range(i);
             int j=0;
             while (j <ranges.count()) {
                 PCodeFoldingRange foldRange = ranges[j];
