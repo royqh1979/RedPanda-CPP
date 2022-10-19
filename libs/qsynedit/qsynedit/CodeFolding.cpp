@@ -55,13 +55,13 @@ CodeFoldingOptions::CodeFoldingOptions():
 
 bool CodeFoldingRange::parentCollapsed()
 {
-    PCodeFoldingRange parentFold = parent;
+    PCodeFoldingRange parentFold = parent.lock();
     // Find first parent that is collapsed
     while (parentFold) {
         if (parentFold->collapsed) {
             return true;
         }
-        parentFold = parentFold->parent;
+        parentFold = parentFold->parent.lock();
     }
     return false;
 }
@@ -73,14 +73,12 @@ void CodeFoldingRange::move(int count)
 }
 
 CodeFoldingRange::CodeFoldingRange(PCodeFoldingRange aParent,
-                                   PCodeFoldingRanges aAllFold,
                                    int aFromLine,
                                    PCodeFoldingDefine aFoldRegion, int aToLine):
     fromLine(aFromLine),
     toLine(aToLine),
     linesCollapsed(0),
     collapsed(false),
-    allFoldRanges(aAllFold),
     foldRegion(aFoldRegion),
     hintMarkLeft(0),
     parent(aParent)
@@ -115,7 +113,7 @@ PCodeFoldingRange CodeFoldingRanges::addByParts(PCodeFoldingRange aParent,
                                                 PCodeFoldingDefine aFoldRegion,
                                                 int aToLine)
 {
-    PCodeFoldingRange range=std::make_shared<CodeFoldingRange>(aParent,aAllFold, aFromLine,aFoldRegion,aToLine);
+    PCodeFoldingRange range=std::make_shared<CodeFoldingRange>(aParent, aFromLine,aFoldRegion,aToLine);
     mRanges.append(range);
     if (aAllFold && aAllFold.get()!=this) {
         aAllFold->add(range);

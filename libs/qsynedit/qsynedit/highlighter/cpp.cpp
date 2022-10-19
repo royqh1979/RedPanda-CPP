@@ -18,6 +18,7 @@
 #include "../Constants.h"
 
 #include <QFont>
+#include <QDebug>
 
 namespace QSynedit {
 
@@ -296,16 +297,16 @@ void CppHighlighter::ansiCppProc()
     mTokenId = TokenId::Comment;
     if (mRun>=mLineSize) {
         nullProc();
-        if  ( (mRun<1)  || (mLine[mRun-1]!='\\')) {
+        if  ( (mRun-1<0)  || (mLine[mRun-1]!='\\')) {
             mRange.state = RangeState::rsUnknown;
-            return;
         }
+        return;
     }
     while (mRun<mLineSize) {
         mRun+=1;
     }
     mRange.state = RangeState::rsCppCommentEnded;
-    if (mLine[mRun-1] == '\\' && mRun == mLineSize-1) { // continues on next line
+    if (mRun == mLineSize-1 && mLine[mRun-1] == '\\' ) { // continues on next line
         mRange.state = RangeState::rsCppComment;
     }
 }
@@ -356,7 +357,7 @@ void CppHighlighter::asciiCharProc()
         }
         mRun+=1;
     } while (mRun < mLineSize && mLine[mRun]!='\'');
-    if (mLine[mRun] == '\'')
+    if (mRun<mLineSize && mLine[mRun] == '\'')
         mRun+=1;
     mRange.state = RangeState::rsUnknown;
 }
@@ -573,7 +574,7 @@ void CppHighlighter::greaterProc()
 void CppHighlighter::identProc()
 {
     int wordEnd = mRun;
-    while (isIdentChar(mLine[wordEnd])) {
+    while (wordEnd<mLineSize && isIdentChar(mLine[wordEnd])) {
         wordEnd+=1;
     }
     QString word = mLine.mid(mRun,wordEnd-mRun);
@@ -591,7 +592,7 @@ void CppHighlighter::identProc()
 void CppHighlighter::lowerProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mRun<mLineSize) {
+    if (mRun+1<mLineSize) {
         switch(mLine[mRun+1].unicode()) {
         case '=':
             mRun+=2;
@@ -655,7 +656,7 @@ void CppHighlighter::modSymbolProc()
 void CppHighlighter::notSymbolProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mRun<mLineSize && mLine[mRun+1]=='=') {
+    if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
         mRun+=2;
         mExtTokenId = ExtTokenId::NotEqual;
     } else {
@@ -666,12 +667,15 @@ void CppHighlighter::notSymbolProc()
 
 void CppHighlighter::nullProc()
 {
-    if ((mRun-1>=0) && isSpaceChar(mLine[mRun-1]) &&
+    if (
     (mRange.state == RangeState::rsCppComment
      || mRange.state == RangeState::rsDirective
      || mRange.state == RangeState::rsString
      || mRange.state == RangeState::rsMultiLineString
-     || mRange.state == RangeState::rsMultiLineDirective) ) {
+     || mRange.state == RangeState::rsMultiLineDirective)
+            && (mRun-1>=0)
+            && (mRun-1<mLineSize)
+            && isSpaceChar(mLine[mRun-1]) ) {
         mRange.state = RangeState::rsUnknown;
     } else
         mTokenId = TokenId::Null;
@@ -708,7 +712,7 @@ void CppHighlighter::numberProc()
         case '+':
             if (mTokenId != TokenId::Float) // number <> float. an arithmetic operator
                 return;
-            if (mLine[mRun-1]!= 'e' && mLine[mRun-1]!='E')  // number = float, but no exponent. an arithmetic operator
+            if (mRun-1>=0 && mLine[mRun-1]!= 'e' && mLine[mRun-1]!='E')  // number = float, but no exponent. an arithmetic operator
                 return;
             if (mRun+1<mLineSize && (mLine[mRun+1]<'0' || mLine[mRun+1]>'9'))  {// invalid
                 mRun+=1;
@@ -749,7 +753,7 @@ void CppHighlighter::numberProc()
         case 'e':
         case 'E':
             if (mTokenId!=TokenId::Hex) {
-                if (mLine[mRun-1]>='0' || mLine[mRun-1]<='9' ) {//exponent
+                if (mRun-1>=0 && (mLine[mRun-1]>='0' || mLine[mRun-1]<='9') ) {//exponent
                     for (int i=idx1;i<mRun;i++) {
                         if (mLine[i] == 'e' || mLine[i]=='E') { // too many exponents
                             mRun+=1;
@@ -780,7 +784,7 @@ void CppHighlighter::numberProc()
                     }
                 }
                 if (mTokenId == TokenId::Float) {
-                    if (mLine[mRun-1]=='l' || mLine[mRun-1]=='L') {
+                    if (mRun-1>=0 && (mLine[mRun-1]=='l' || mLine[mRun-1]=='L')) {
                         mRun+=1;
                         mTokenId = TokenId::Unknown;
                         return;
@@ -843,7 +847,7 @@ void CppHighlighter::numberProc()
         }
         mRun+=1;        
     }
-    if (mLine[mRun-1] == '\'') {
+    if (mRun-1>=0 && mLine[mRun-1] == '\'') {
         mTokenId = TokenId::Unknown;
     }
 }
@@ -851,7 +855,7 @@ void CppHighlighter::numberProc()
 void CppHighlighter::orSymbolProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mRun+1<=mLineSize) {
+    if (mRun+1<mLineSize) {
         switch ( mLine[mRun+1].unicode()) {
         case '=':
             mRun+=2;
@@ -1019,7 +1023,7 @@ void CppHighlighter::spaceProc()
 {
     mRun += 1;
     mTokenId = TokenId::Space;
-    while (mLine[mRun]>=1 && mLine[mRun]<=32)
+    while (mRun<mLineSize && mLine[mRun]>=1 && mLine[mRun]<=32)
         mRun+=1;
     mRange.state = RangeState::rsUnknown;
 }
@@ -1047,7 +1051,7 @@ void CppHighlighter::squareOpenProc()
 void CppHighlighter::starProc()
 {
     mTokenId = TokenId::Symbol;
-    if (mRun<=mLineSize && mLine[mRun+1] == '=') {
+    if (mRun+1<mLineSize && mLine[mRun+1] == '=') {
         mRun += 2;
         mExtTokenId = ExtTokenId::MultiplyAssign;
     } else {
@@ -1115,77 +1119,79 @@ void CppHighlighter::stringEscapeSeqProc()
 {
     mTokenId = TokenId::StringEscapeSeq;
     mRun+=1;
-    switch(mLine[mRun].unicode()) {
-    case '\'':
-    case '"':
-    case '?':
-    case 'a':
-    case 'b':
-    case 'f':
-    case 'n':
-    case 'r':
-    case 't':
-    case 'v':
-    case '\\':
-        mRun+=1;
-        break;
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-        for (int i=0;i<3;i++) {
-            if (mLine[mRun]<'0' || mLine[mRun]>'7')
-                break;
+    if (mRun<mLineSize) {
+        switch(mLine[mRun].unicode()) {
+        case '\'':
+        case '"':
+        case '?':
+        case 'a':
+        case 'b':
+        case 'f':
+        case 'n':
+        case 'r':
+        case 't':
+        case 'v':
+        case '\\':
             mRun+=1;
-        }
-        break;
-    case '8':
-    case '9':
-        mTokenId = TokenId::Unknown;
-        mRun+=1;
-        break;
-    case 'x':
-        mRun+=1;
-        if ( !(
-                 (mLine[mRun]>='0' && mLine[mRun]<='9')
-               ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
-               ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
-                )) {
-            mTokenId = TokenId::Unknown;
-        } else {
-            while (
-                   (mLine[mRun]>='0' && mLine[mRun]<='9')
-                 ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
-                 ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
-                   )  {
+            break;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+            for (int i=0;i<3;i++) {
+                if (mRun>=mLineSize || mLine[mRun]<'0' || mLine[mRun]>'7')
+                    break;
                 mRun+=1;
             }
-        }
-        break;
-    case 'u':
-        mRun+=1;
-        for (int i=0;i<4;i++) {
-            if (mLine[mRun]<'0' || mLine[mRun]>'7') {
-                mTokenId = TokenId::Unknown;
-                return;
-            }
+            break;
+        case '8':
+        case '9':
+            mTokenId = TokenId::Unknown;
             mRun+=1;
-        }
-        break;
-    case 'U':
-        mRun+=1;
-        for (int i=0;i<8;i++) {
-            if (mLine[mRun]<'0' || mLine[mRun]>'7') {
-                mTokenId = TokenId::Unknown;
-                return;
-            }
+            break;
+        case 'x':
             mRun+=1;
+            if (mRun>=mLineSize || !(
+                     (mLine[mRun]>='0' && mLine[mRun]<='9')
+                   ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
+                   ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
+                    )) {
+                mTokenId = TokenId::Unknown;
+            } else {
+                while (mRun<mLineSize && (
+                       (mLine[mRun]>='0' && mLine[mRun]<='9')
+                     ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
+                     ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
+                       ))  {
+                    mRun+=1;
+                }
+            }
+            break;
+        case 'u':
+            mRun+=1;
+            for (int i=0;i<4;i++) {
+                if (mRun>=mLineSize || mLine[mRun]<'0' || mLine[mRun]>'7') {
+                    mTokenId = TokenId::Unknown;
+                    return;
+                }
+                mRun+=1;
+            }
+            break;
+        case 'U':
+            mRun+=1;
+            for (int i=0;i<8;i++) {
+                if (mRun>=mLineSize || mLine[mRun]<'0' || mLine[mRun]>'7') {
+                    mTokenId = TokenId::Unknown;
+                    return;
+                }
+                mRun+=1;
+            }
+            break;
         }
-        break;
     }
     if (mRange.state == RangeState::rsMultiLineStringEscapeSeq)
         mRange.state = RangeState::rsMultiLineString;
@@ -1522,30 +1528,40 @@ void CppHighlighter::next()
         case RangeState::rsAnsiCAsm:
         case RangeState::rsAnsiCAsmBlock:
         case RangeState::rsDirectiveComment:
+            //qDebug()<<"*0-0-0*";
             ansiCProc();
             break;
         case RangeState::rsString:
+            //qDebug()<<"*1-0-0*";
             stringProc();
             break;
         case RangeState::rsCppComment:
+            //qDebug()<<"*2-0-0*";
             ansiCppProc();
             break;
         case RangeState::rsMultiLineDirective:
+            //qDebug()<<"*3-0-0*";
             directiveEndProc();
             break;
         case RangeState::rsMultiLineString:
+            //qDebug()<<"*4-0-0*";
             stringEndProc();
             break;
         case RangeState::rsRawStringEscaping:
         case RangeState::rsRawStringNotEscaping:
+            //qDebug()<<"*5-0-0*";
             rawStringProc();
             break;
         case RangeState::rsStringEscapeSeq:
         case RangeState::rsMultiLineStringEscapeSeq:
+            //qDebug()<<"*6-0-0*";
             stringEscapeSeqProc();
             break;
         case RangeState::rsChar:
-            if (mLine[mRun]=='\'') {
+            //qDebug()<<"*7-0-0*";
+            if (mRun>=mLineSize) {
+                nullProc();
+            } else if (mLine[mRun]=='\'') {
                 mRange.state = rsUnknown;
                 mTokenId = TokenId::Char;
                 mRun+=1;
@@ -1554,26 +1570,38 @@ void CppHighlighter::next()
             }
             break;
         case RangeState::rsDefineIdentifier:
+            //qDebug()<<"*8-0-0*";
             defineIdentProc();
             break;
         case RangeState::rsDefineRemaining:
+            //qDebug()<<"*9-0-0*";
             defineRemainingProc();
             break;
         default:
+            //qDebug()<<"*a-0-0*";
             mRange.state = RangeState::rsUnknown;
-            if (mLine[mRun] == 'R' && mRun+1<mLineSize && mLine[mRun+1] == '"') {
+            if (mRun>=mLineSize) {
+                //qDebug()<<"*b-0-0*";
+                nullProc();
+            } else if (mRun+1<mLineSize && mLine[mRun] == 'R' && mLine[mRun+1] == '"') {
+                //qDebug()<<"*c-0-0*";
                 mRun+=2;
                 rawStringProc();
-            } else if ((mLine[mRun] == 'L' || mLine[mRun] == 'u' || mLine[mRun]=='U') && mLine[mRun+1]=='\"') {
+            } else if (mRun+1<mLineSize && (mLine[mRun] == 'L' || mLine[mRun] == 'u' || mLine[mRun]=='U') && mLine[mRun+1]=='\"') {
+                //qDebug()<<"*d-0-0*";
                 mRun+=1;
                 stringStartProc();
-            } else if (mLine[mRun] == 'u' && mRun+2<mLineSize && mLine[mRun+1] == '8' && mLine[mRun+2]=='\"') {
+            } else if (mRun+2<mLineSize && mLine[mRun] == 'u' && mLine[mRun+1] == '8' && mLine[mRun+2]=='\"') {
+                //qDebug()<<"*e-0-0*";
                 mRun+=2;
                 stringStartProc();
-            } else
+            } else {
+                //qDebug()<<"*f-0-0*";
                 processChar();
+            }
         }
     } while (mTokenId!=TokenId::Null && mRun<=mTokenPos);
+    //qDebug()<<"1-1-1";
 }
 
 void CppHighlighter::setLine(const QString &newLine, int lineNumber)

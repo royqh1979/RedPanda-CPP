@@ -3689,7 +3689,7 @@ void SynEdit::findSubFoldRange(PCodeFoldingRanges TopFoldRanges, int FoldIndex,P
                     // Stop the recursion if we find a closing char, and return to our parent
                     if (Parent) {
                       Parent->toLine = Line + 1;
-                      Parent = Parent->parent;
+                      Parent = Parent->parent.lock();
                       if (!Parent) {
                           parentFoldRanges = TopFoldRanges;
                       } else {
@@ -3749,7 +3749,7 @@ void SynEdit::findSubFoldRange(PCodeFoldingRanges TopFoldRanges, int FoldIndex,P
                         // Stop the recursion if we find a closing char, and return to our parent
                         if (Parent) {
                           Parent->toLine = Line + 1;
-                          Parent = Parent->parent;
+                          Parent = Parent->parent.lock();
                           if (!Parent) {
                               parentFoldRanges = TopFoldRanges;
                           } else {

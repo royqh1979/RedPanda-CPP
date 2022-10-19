@@ -38,7 +38,6 @@ typedef std::shared_ptr<CodeFoldingDefines> PSynFoldRegions;
 
 struct CodeFoldingDefine {
     bool addEnding;
-    CodeFoldingDefines subFoldRegions;
     QChar openSymbol;
     QChar closeSymbol;
     QString highlight;
@@ -85,14 +84,12 @@ public:
     int linesCollapsed; // Number of collapsed lines
     PCodeFoldingRanges subFoldRanges; // Sub fold ranges
     bool collapsed; // Is collapsed?
-    PCodeFoldingRanges allFoldRanges;// TAllFoldRanges pointer
-    PCodeFoldingDefine foldRegion; // FoldRegion
+    std::weak_ptr<CodeFoldingDefine> foldRegion; // FoldRegion
     int hintMarkLeft;
-    PCodeFoldingRange parent;
+    std::weak_ptr<CodeFoldingRange> parent;
     bool parentCollapsed();
     void move(int count);
-    explicit CodeFoldingRange(PCodeFoldingRange aParent, PCodeFoldingRanges aAllFold,
-                      int aFromLine, PCodeFoldingDefine aFoldRegion, int aToLine);
+    explicit CodeFoldingRange(PCodeFoldingRange aParent, int aFromLine, PCodeFoldingDefine aFoldRegion, int aToLine);
 };
 
 }
