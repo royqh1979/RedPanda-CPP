@@ -97,6 +97,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mSaving(false),
   mHoverModifiedLine(-1)
 {
+    mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
+    mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
     mCurrentLineModified = false;
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
