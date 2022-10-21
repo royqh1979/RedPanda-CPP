@@ -194,14 +194,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
 Editor::~Editor() {
     //qDebug()<<"editor "<<mFilename<<" deleted";
-    if (mParentPageControl) {
-        pMainWindow->fileSystemWatcher()->removePath(mFilename);
-        pMainWindow->caretList().removeEditor(this);
-        pMainWindow->updateCaretActions();
-        int index = mParentPageControl->indexOf(this);
-        mParentPageControl->removeTab(index);
-        this->setParent(nullptr);
-    }
 }
 
 void Editor::loadFile(QString filename) {
@@ -4359,8 +4351,7 @@ void Editor::checkSyntaxInBack()
         return;
     if (highlighter()->language()!=QSynedit::HighlighterLanguage::Cpp)
         return;
-    if(pSettings->editor().syntaxCheck())
-        pMainWindow->checkSyntaxInBack(this);
+    pMainWindow->checkSyntaxInBack(this);
 }
 
 const PCppParser &Editor::parser()

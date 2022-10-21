@@ -89,6 +89,7 @@ private:
     QTabWidget* getNewEditorPageControl() const;
     QTabWidget* getFocusedPageControl() const;
     void showLayout(LayoutShowType layout);
+    void doRemoveEditor(Editor* e);
 private slots:
     void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
 private:

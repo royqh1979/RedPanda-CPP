@@ -113,6 +113,18 @@ void EditorList::showLayout(LayoutShowType layout)
     }
 }
 
+void EditorList::doRemoveEditor(Editor *e)
+{
+    QTabWidget* parentPage=e->pageControl();
+    int index = parentPage->indexOf(e);
+    parentPage->removeTab(index);
+    pMainWindow->fileSystemWatcher()->removePath(e->filename());
+    pMainWindow->caretList().removeEditor(e);
+    pMainWindow->updateCaretActions();
+    e->setParent(nullptr);
+    delete e;
+}
+
 void EditorList::onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave)
 {
     emit editorRenamed(oldFilename, newFilename, firstSave);
@@ -178,7 +190,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         if (pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
             pMainWindow->rebuildOpenedFileHisotryMenu();
         }
-        delete editor;
+        doRemoveEditor(editor);
     }
     updateLayout();
     if (!force && transferFocus) {
@@ -370,6 +382,7 @@ bool EditorList::closeAll(bool force) {
 void EditorList::forceCloseEditor(Editor *editor)
 {
     beginUpdate();
+    doRemoveEditor(editor);
     delete editor;
     // Force layout update when creating, destroying or moving editors
     updateLayout();
@@ -385,6 +398,8 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename)
     QString fullname = fileInfo.absoluteFilePath();
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
+        if (!e)
+            continue;
         if (e->filename().compare(filename, PATH_SENSITIVITY)==0 ||
                 e->filename().compare(fullname, PATH_SENSITIVITY)==0) {
             return e;
@@ -392,6 +407,8 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename)
     }
     for (int i=0;i<mRightPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
+        if (!e)
+            continue;
         if (e->filename().compare(filename)==0 || e->filename().compare(fullname)==0) {
             return e;
         }
