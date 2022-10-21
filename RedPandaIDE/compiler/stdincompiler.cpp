@@ -21,12 +21,19 @@
 #include <QTextCodec>
 #include "qt_utils/charsetinfo.h"
 
+static int counter=0;
 StdinCompiler::StdinCompiler(const QString &filename,const QByteArray& encoding, const QString& content,bool silent, bool onlyCheckSyntax):
     Compiler(filename,silent, onlyCheckSyntax),
     mContent(content),
     mEncoding(encoding)
 {
+    counter++;
+}
 
+StdinCompiler::~StdinCompiler()
+{
+    counter--;
+    qDebug()<<"stdin compiler exited: "<<counter;
 }
 
 bool StdinCompiler::prepareForCompile()

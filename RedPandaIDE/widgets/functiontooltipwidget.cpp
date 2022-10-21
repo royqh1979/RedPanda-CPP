@@ -37,6 +37,7 @@ FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) :
     mDownButton->setArrowType(Qt::DownArrow);
     mDownButton->setFixedSize(16, 16);
     mDownButton->setAutoRaise(true);
+    mInfoIndex=0;
 
     this->setLayout(new QHBoxLayout());
     layout()->setContentsMargins(0,0,0,0);
@@ -65,6 +66,7 @@ void FunctionTooltipWidget::addTip(const QString &name, const QString& fullname,
 
 void FunctionTooltipWidget::clearTips()
 {
+    mInfoIndex=0;
     mInfos.clear();
     hide();
 }
