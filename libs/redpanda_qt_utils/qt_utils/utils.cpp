@@ -656,3 +656,8 @@ bool isInFolder(const QString &folderpath, const QString &filepath)
     QFileInfo fileInfo(filepath);
     return fileInfo.absoluteFilePath().startsWith(includeTrailingPathDelimiter(folder.absolutePath()));
 }
+
+void createFile(const QString &fileName)
+{
+    stringToFile("",fileName);
+}

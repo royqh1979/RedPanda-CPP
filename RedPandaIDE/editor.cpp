@@ -265,6 +265,7 @@ bool Editor::save(bool force, bool doReparse) {
 //                                     tr("File %1 is not writable!").arg(mFilename));
 //            return false;
 //        }
+//        qDebug()<<"saving "<<mFilename;
         saveFile(mFilename);
         pMainWindow->fileSystemWatcher()->addPath(mFilename);
         setModified(false);
@@ -279,12 +280,11 @@ bool Editor::save(bool force, bool doReparse) {
         return false;
     }
 
-    if (doReparse && mParser) {
+    if (doReparse && isVisible()) {
         reparse(false);
-    }
-    if (doReparse && pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
-    reparseTodo();
+        reparseTodo();
+    }
     return true;
 }
 
@@ -1302,7 +1302,11 @@ void Editor::showEvent(QShowEvent */*event*/)
 //            && !inProject()) {
 //        reparse();
 //    }
-    reparseTodo();
+    if (!pMainWindow->isClosingAll()
+                && !pMainWindow->isQuitting()) {
+        checkSyntaxInBack();
+        reparseTodo();
+    }
     setHideTime(QDateTime());
 }
 
@@ -1553,16 +1557,16 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             && !changes.testFlag(QSynedit::StatusChange::scReadOnly)
             && changes.testFlag(QSynedit::StatusChange::scCaretY))) {
         mCurrentLineModified = false;
-        if (!changes.testFlag(QSynedit::StatusChange::scOpenFile))
+        if (!changes.testFlag(QSynedit::StatusChange::scOpenFile)) {
             reparse(false);
+            checkSyntaxInBack();
+            reparseTodo();
+        }
 //        if (pSettings->codeCompletion().clearWhenEditorHidden()
 //                && changes.testFlag(SynStatusChange::scOpenFile)) {
 //        } else{
 //            reparse();
 //        }
-        if (pSettings->editor().syntaxCheckWhenLineChanged())
-            checkSyntaxInBack();
-        reparseTodo();
     }
     mLineCount = document()->count();
     if (changes.testFlag(QSynedit::scModifyChanged)) {

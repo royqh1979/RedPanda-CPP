@@ -31,6 +31,8 @@ Red Panda C++ Version 1.5
   - fix: toggle block comment/delete to word begin/delete to word end are not correctly disabled when editor not open
   - fix: index out of range in cpp highlighter
   - fix: memory leak in code folding processing
+  - change: add/remove/new project file won't save all openned project files.
+  - fix: save all project files shouldn't trigger syntax check in inactive editors 
 
 Red Panda C++ Version 1.4
 

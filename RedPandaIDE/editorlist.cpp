@@ -214,6 +214,48 @@ bool EditorList::swapEditor(Editor *editor)
     return true;
 }
 
+void EditorList::saveAll()
+{
+    for (int i=0;i<pageCount();i++) {
+        Editor * e= (*this)[i];
+        if (e->modified())
+            e->save();
+    }
+}
+
+bool EditorList::saveAllForProject()
+{
+    for (int i=0;i<pageCount();i++) {
+        Editor * e= (*this)[i];
+        if (e->modified() && e->inProject()) {
+            if (!e->save())
+                return false;
+        }
+    }
+    return true;
+}
+
+bool EditorList::projectEditorsModified()
+{
+    for (int i=0;i<pageCount();i++) {
+        Editor * e= (*this)[i];
+        if (e->modified() && e->inProject()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void EditorList::clearProjectEditorsModified()
+{
+    for (int i=0;i<pageCount();i++) {
+        Editor * e= (*this)[i];
+        if (e->inProject()) {
+            e->setModified(false);
+        }
+    }
+}
+
 void EditorList::beginUpdate() {
     if (mUpdateCount==0) {
         mPanel->setUpdatesEnabled(false);

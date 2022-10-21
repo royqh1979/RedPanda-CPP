@@ -49,6 +49,12 @@ public:
 
     bool swapEditor(Editor* editor);
 
+    void saveAll();
+    bool saveAllForProject();
+
+    bool projectEditorsModified();
+    void clearProjectEditorsModified();
+
     bool closeAll(bool force = false);
 
     void forceCloseEditor(Editor* editor);

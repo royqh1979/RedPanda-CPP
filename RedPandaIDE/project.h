@@ -79,8 +79,6 @@ public:
     Project* parent() const;
     const QString &fileName() const;
     void setFileName(QString newFileName);
-    bool isNew() const;
-    void setNew(bool newNew);
     const QString &folder() const;
     void setFolder(const QString &newFolder);
     bool compile() const;
@@ -97,9 +95,6 @@ public:
     void setPriority(int newPriority);
     const QByteArray &encoding() const;
     void setEncoding(const QByteArray &newEncoding);
-    bool modified() const;
-    void setModified(bool value);
-    bool save();
 
     PProjectModelNode &node();
     void setNode(const PProjectModelNode &newNode);
@@ -107,11 +102,13 @@ public:
     bool FileMissing() const;
     void setFileMissing(bool newDontSave);
 
+    void setNew(bool newNew);
+
 private:
     Project* mParent;
     QString mFileName;
-    bool mNew;
     QString mFolder;
+    bool mNew;
     bool mCompile;
     bool mCompileCpp;
     bool mOverrideBuildCmd;

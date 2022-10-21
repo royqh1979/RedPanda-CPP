@@ -1685,8 +1685,10 @@ bool MainWindow::compile(bool rebuild)
     mCompilerManager->stopPausing();
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project) {
-        if (mProject->modified())
+        if (mProject->modified()) {
             mProject->saveAll();
+        }
+        mEditorList->saveAll();
         clearIssues();
 
         // Increment build number automagically
@@ -1813,7 +1815,7 @@ void MainWindow::runExecutable(RunType runType)
                     tr("Rebuild Project"),
                     tr("Project has been modified, do you want to rebuild it?")
                                                       ) == QMessageBox::Yes) {
-            mProject->saveAll();
+            //mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
             mCompileSuccessionTask->execName=mProject->executable();
@@ -4397,8 +4399,11 @@ void MainWindow::closeProject(bool refreshEditor)
         auto action = finally([&,this]{
             mFileSystemWatcher.blockSignals(oldBlock);
         });
+
+        //save all files
+
         // TODO: should we save watches?
-        if (mProject->modified()) {
+        if (mEditorList->projectEditorsModified()) {
             QString s;
             if (mProject->name().isEmpty()) {
                 s = mProject->filename();
@@ -4407,6 +4412,7 @@ void MainWindow::closeProject(bool refreshEditor)
             }
             if (mSystemTurnedOff) {
                 mProject->saveAll();
+                mEditorList->saveAllForProject();
             } else {
                 int answer = QMessageBox::question(
                             this,
@@ -4419,8 +4425,10 @@ void MainWindow::closeProject(bool refreshEditor)
                 switch (answer) {
                 case QMessageBox::Yes:
                     mProject->saveAll();
+                    mEditorList->saveAllForProject();
                     break;
                 case QMessageBox::No:
+                    mEditorList->clearProjectEditorsModified();
                     mProject->setModified(false);
                     mProject->saveLayout();
                     break;
@@ -4878,6 +4886,11 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
 void MainWindow::clearToolsOutput()
 {
     ui->txtToolsOutput->clear();
+}
+
+void MainWindow::clearTodos()
+{
+    mTodoModel.clear();
 }
 
 void MainWindow::onCompileStarted()
@@ -6085,13 +6098,7 @@ void MainWindow::on_actionSaveAll_triggered()
     }
 
     // Make changes to files
-    for (int i=0;i<mEditorList->pageCount();i++) {
-        Editor * e= (*mEditorList)[i];
-        if (e->modified() && !e->inProject()) {
-            if (!e->save())
-                break;
-        }
-    }
+    mEditorList->saveAll();
     updateAppTitle();
 }
 
@@ -6435,6 +6442,9 @@ void MainWindow::newProjectUnitFile()
         QMessageBox::critical(this,tr("File Already Exists!"),
                               tr("File '%1' already exists!").arg(newFileName));
         return;
+    } else {
+        //create an empty file
+        createFile(newFileName);
     }
     newUnit = mProject->newUnit(
                     pNode,newFileName);
@@ -7756,7 +7766,9 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
             vcsManager.add(mProject->folder(),extractRelativePath(mProject->folder(),pUnit->fileName()),output);
         }
         //update project view
-        mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode());
+        QString ignoreFile=includeTrailingPathDelimiter(mProject->folder())+".gitignore";
+        mProject->addUnit(ignoreFile, mProject->rootNode());
+        createFile(ignoreFile);
         mProject->saveAll();
         if (mProject->folder() == mFileSystemModel.rootPath()
                 || mFileSystemModel.rootPath().startsWith(includeTrailingPathDelimiter(mProject->folder()), PATH_SENSITIVITY)) {

@@ -208,6 +208,7 @@ public slots:
     void logToolsOutput(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
     void clearToolsOutput();
+    void clearTodos();
     void onCompileStarted();
     void onCompileFinished(bool isCheckSyntax);
     void onCompileErrorOccured(const QString& reason);

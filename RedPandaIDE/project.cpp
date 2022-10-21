@@ -158,17 +158,18 @@ QString Project::makeFileName()
 
 bool Project::modified() const
 {
+    return mModified;
     // Project file modified? Done
-    if (mModified)
-        return true;// quick exit avoids loop over all units
+//    if (mModified)
+//        return true;// quick exit avoids loop over all units
 
-    // Otherwise, check all units
-    foreach (const PProjectUnit& unit, mUnits){
-        if (unit->modified()) {
-            return true;
-        }
-    }
-    return false;
+//    // Otherwise, check all units
+//    foreach (const PProjectUnit& unit, mUnits){
+//        if (unit->modified()) {
+//            return true;
+//        }
+//    }
+//    return false;
 }
 
 void Project::open()
@@ -224,7 +225,6 @@ void Project::open()
         if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
             newUnit->setEncoding(ENCODING_AUTO_DETECT);
         }
-        newUnit->setNew(false);
         PProjectModelNode parentNode;
         if (mOptions.modelType==ProjectModelType::FileSystem) {
             parentNode = getParentFileSystemFolderNode(newUnit->fileName());
@@ -341,7 +341,6 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
 
     // Set all properties
     newUnit->setFileName(s);
-    newUnit->setNew(true);
     newUnit->setFolder(getNodePath(parentNode));
     PProjectModelNode node = makeNewFileNode(newUnit,newUnit->priority(),parentNode);
     newUnit->setNode(node);
@@ -372,7 +371,6 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     newUnit->setPriority(1000);
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
-    newUnit->setModified(true);
     newUnit->setEncoding(toByteArray(mOptions.encoding));
     return newUnit;
 }
@@ -394,7 +392,7 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
         }
         QByteArray encoding;
         encoding = unit->encoding();
-        editor = mEditorList->newEditor(unit->fileName(), encoding, this, unit->isNew());
+        editor = mEditorList->newEditor(unit->fileName(), encoding, this, false);
         if (editor) {
             //editor->setProject(this);
             //unit->setEncoding(encoding);
@@ -421,7 +419,7 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
         }
         QByteArray encoding;
         encoding = unit->encoding();
-        editor = mEditorList->newEditor(unit->fileName(), encoding, this, unit->isNew());
+        editor = mEditorList->newEditor(unit->fileName(), encoding, this, false);
         if (editor) {
             //editor->setInProject(true);
             editor->setCaretY(layout->caretY);
@@ -678,16 +676,14 @@ void Project::renameUnit(PProjectUnit& unit, const QString &sFileName)
     if (sFileName.compare(unit->fileName(),PATH_SENSITIVITY)==0)
         return;
 
-    if (fileExists(unit->fileName())) {
-        unit->setNew(false);
-    }
-
     Editor * editor=unitEditor(unit);
     if (editor) {
         //prevent recurse
         editor->saveAs(sFileName,true);
+    } else {
+        copyFile(unit->fileName(),sFileName,true);
     }
-    removeUnit(unit,false,false);
+    removeUnit(unit,false,true);
     PProjectModelNode parentNode = unit->node()->parent.lock();
     unit = addUnit(sFileName,parentNode);
     setModified(true);
@@ -706,23 +702,23 @@ bool Project::saveUnits()
     foreach (const PProjectUnit& unit, mUnits) {
         i++;
         QByteArray groupName = toByteArray(QString("Unit%1").arg(i));
-        if (!unit->FileMissing()) {
-            bool rd_only = false;
-            if (unit->modified() && fileExists(unit->fileName())
-                && isReadOnly(unit->fileName())) {
-                // file is read-only
-                QMessageBox::critical(nullptr,
-                                      tr("Can't save file"),
-                                      tr("Can't save file '%1'").arg(unit->fileName()),
-                                      QMessageBox::Ok
-                                      );
-                rd_only = true;
-            }
-            if (!rd_only) {
-                if (!unit->save() && unit->isNew())
-                    return false;
-            }
-        }
+//        if (!unit->FileMissing()) {
+//            bool rd_only = false;
+//            if (unit->modified() && fileExists(unit->fileName())
+//                && isReadOnly(unit->fileName())) {
+//                // file is read-only
+//                QMessageBox::critical(nullptr,
+//                                      tr("Can't save file"),
+//                                      tr("Can't save file '%1'").arg(unit->fileName()),
+//                                      QMessageBox::Ok
+//                                      );
+//                rd_only = true;
+//            }
+//            if (!rd_only) {
+//                if (!unit->save() && unit->isNew())
+//                    return false;
+//            }
+//        }
 
         // saved new file or an existing file add to project file
         ini.SetValue(
@@ -745,7 +741,6 @@ bool Project::saveUnits()
         default:
             break;
         }
-        unit->setNew(false);
         ini.SetValue(groupName,"Folder", toByteArray(unit->folder()));
         ini.SetLongValue(groupName,"Compile", unit->compile());
         ini.SetLongValue(groupName,"Link", unit->link());
@@ -1187,7 +1182,6 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
 
     // Set all properties
     newUnit->setFileName(QDir(directory()).filePath(inFileName));
-    newUnit->setNew(false);
     Editor * e= unitEditor(newUnit);
     if (e) {
         newUnit->setEncoding(e->fileEncoding());
@@ -2261,6 +2255,7 @@ ProjectUnit::ProjectUnit(Project* parent)
     mParent = parent;
     mFileMissing = false;
     mPriority=0;
+    mNew = true;
 }
 
 Project *ProjectUnit::parent() const
@@ -2282,11 +2277,6 @@ void ProjectUnit::setFileName(QString newFileName)
             mNode->text = extractFileName(mFileName);
         }
     }
-}
-
-bool ProjectUnit::isNew() const
-{
-    return mNew;
 }
 
 void ProjectUnit::setNew(bool newNew)
@@ -2382,51 +2372,6 @@ void ProjectUnit::setEncoding(const QByteArray &newEncoding)
         }
         mEncoding = newEncoding;
     }
-}
-
-bool ProjectUnit::modified() const
-{
-    Editor * editor=mParent->unitEditor(this);
-    if (editor) {
-        return editor->modified();
-    } else {
-        return false;
-    }
-}
-
-void ProjectUnit::setModified(bool value)
-{
-    Editor * editor=mParent->unitEditor(this);
-    // Mark the change in the coupled editor
-    if (editor) {
-        return editor->setModified(value);
-    }
-
-    // If modified is set to true, mark project as modified too
-    if (value) {
-        mParent->setModified(true);
-    }
-}
-
-bool ProjectUnit::save()
-{
-    bool previous=mParent->fileSystemWatcher()->blockSignals(true);
-    auto action = finally([&previous,this](){
-        mParent->fileSystemWatcher()->blockSignals(previous);
-    });
-    bool result=true;
-    Editor * editor=mParent->unitEditor(this);
-    if (!editor && !fileExists(mFileName)) {
-        // file is neither open, nor saved
-        QStringList temp;
-        stringsToFile(temp,mFileName);
-    } else if (editor && editor->modified()) {
-        result = editor->save();
-    }
-    if (mNode) {
-        mNode->text = extractFileName(mFileName);
-    }
-    return result;
 }
 
 PProjectModelNode &ProjectUnit::node()
