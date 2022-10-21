@@ -1609,7 +1609,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             // Is there a bracket char before us?
             int lineLength = lineText().length();
             int ch = caretX() - 2;
-            QSynedit::BufferCoord coord;
+            QSynedit::BufferCoord coord{0,0};
             if (ch>=0 && ch<lineLength &&  isBraceChar(lineText()[ch]) ) {
                 coord.ch = ch+1;
                 coord.line = caretY();

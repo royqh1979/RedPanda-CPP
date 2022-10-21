@@ -6129,16 +6129,16 @@ void SynEdit::resizeEvent(QResizeEvent *)
 {
     //resize the cache image
     qreal dpr = devicePixelRatioF();
-    std::shared_ptr<QImage> image = std::make_shared<QImage>(clientWidth()*dpr,clientHeight()*dpr,
+    mContentImage = std::make_shared<QImage>(clientWidth()*dpr,clientHeight()*dpr,
                                                             QImage::Format_ARGB32);
-    image->setDevicePixelRatio(dpr);
-    QRect newRect = image->rect().intersected(mContentImage->rect());
+    mContentImage->setDevicePixelRatio(dpr);
+//    QRect newRect = image->rect().intersected(mContentImage->rect());
 
-    QPainter painter(image.get());
+//    QPainter painter(image.get());
 
-    painter.drawImage(newRect,*mContentImage);
+    //painter.drawImage(newRect,*mContentImage);
 
-    mContentImage = image;
+//    mContentImage = image;
 
     onSizeOrFontChanged(false);
 }
