@@ -383,7 +383,6 @@ void EditorList::forceCloseEditor(Editor *editor)
 {
     beginUpdate();
     doRemoveEditor(editor);
-    delete editor;
     // Force layout update when creating, destroying or moving editors
     updateLayout();
     endUpdate();
