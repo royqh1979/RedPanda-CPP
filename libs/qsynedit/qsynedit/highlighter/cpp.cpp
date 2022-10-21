@@ -418,13 +418,13 @@ void CppHighlighter::braceOpenProc()
 void CppHighlighter::colonProc()
 {
     mTokenId = TokenId::Symbol;
-
     if (mRun+1<mLineSize && mLine[mRun+1]==':') {
         mRun+=2;
         mExtTokenId = ExtTokenId::ScopeResolution;
+    } else {
+        mRun+=1;
+        mExtTokenId = ExtTokenId::Colon;
     }
-    mRun+=1;
-    mExtTokenId = ExtTokenId::Colon;
 }
 
 void CppHighlighter::commaProc()
