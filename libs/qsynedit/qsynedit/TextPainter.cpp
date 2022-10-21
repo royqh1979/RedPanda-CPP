@@ -248,8 +248,8 @@ QColor SynEditTextPainter::colEditorBG()
 
 void SynEditTextPainter::computeSelectionInfo()
 {
-    BufferCoord vStart;
-    BufferCoord vEnd;
+    BufferCoord vStart{0,0};
+    BufferCoord vEnd{0,0};
     bAnySelection = false;
     // Only if selection is visible anyway.
     if (edit->hasFocus()) {
