@@ -134,8 +134,8 @@ using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
 using StatementMap = QMultiMap<QString, PStatement>;
 struct Statement {
-    Statement();
-    ~Statement();
+//    Statement();
+//    ~Statement();
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
     QString type; // type "int"
     QString command; // identifier/name of statement "foo"

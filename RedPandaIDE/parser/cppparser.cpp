@@ -2615,7 +2615,6 @@ void CppParser::handlePreprocessor()
       QString name,args,value;
       mPreprocessor.getDefineParts(s,name,args,value);
 
-      qDebug()<<"add define "<<name<<mCurrentFile<<mTokenizer[mIndex]->line<<mIndex;
       addStatement(
         nullptr, // defines don't belong to any scope
         mCurrentFile,

@@ -667,14 +667,14 @@ bool isCppControlKeyword(const QString &word)
     return CppControlKeyWords.contains(word);
 }
 
-static int counter=0;
-Statement::Statement()
-{
-    counter++;
-}
+//static int counter=0;
+//Statement::Statement()
+//{
+//    counter++;
+//}
 
-Statement::~Statement()
-{
-    counter--;
-    qDebug()<<"statement deleted:"<<counter<<fullName<<kind<<extractFileName(fileName)<<line;
-}
+//Statement::~Statement()
+//{
+//    counter--;
+//    qDebug()<<"statement deleted:"<<counter<<fullName<<kind<<extractFileName(fileName)<<line;
+//}
