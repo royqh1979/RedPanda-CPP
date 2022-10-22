@@ -75,6 +75,7 @@ public:
     void addProjectIncludePath(const QString& fileName);
     void clearIncludePaths();
     void clearProjectIncludePaths();
+    void removeScannedFile(const QString& filename);
 
     QStringList result() const;
 
@@ -91,6 +92,8 @@ public:
     const QList<QString> &includePathList() const;
 
     const QList<QString> &projectIncludePathList() const;
+    void setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream);
+
 private:
     void preprocessBuffer();
     void skipToEndOfPreprocessor();
@@ -221,6 +224,8 @@ private:
 
     bool mParseSystem;
     bool mParseLocal;
+
+    GetFileStreamCallBack mOnGetFileStream;
 };
 
 using PCppPreprocessor = std::shared_ptr<CppPreprocessor>;

@@ -22,6 +22,8 @@
 #include <QVector>
 #include <memory>
 
+using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
+
 enum class ParserLanguage {
     C,
     CPlusPlus
@@ -111,15 +113,6 @@ enum class MemberOperatorType {
   otOther
 };
 
-struct RemovedStatement{
-  QString type; // type "int"
-  QString command; // identifier/name of statement "foo"
-  int definitionLine; // definition
-  QString definitionFileName; // definition
-  QString fullName; // fullname(including class and namespace)
-  QString noNameArgs; // Args without name
-};
-
 enum class EvalStatementKind {
     Namespace,
     Type,
@@ -127,8 +120,6 @@ enum class EvalStatementKind {
     Literal,
     Function
 };
-
-using PRemovedStatement = std::shared_ptr<RemovedStatement>;
 
 struct StatementMatchPosition{
     int start;
@@ -143,6 +134,8 @@ using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
 using StatementMap = QMultiMap<QString, PStatement>;
 struct Statement {
+    Statement();
+    ~Statement();
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
     QString type; // type "int"
     QString command; // identifier/name of statement "foo"
@@ -234,8 +227,6 @@ struct FileIncludes {
     StatementMap statements; // but we don't save temporary statements (full name as key)
     StatementMap declaredStatements; // statements declared in this file (full name as key)
     CppScopes scopes; // int is start line of the statement scope
-    QSet<QString> dependingFiles; // The files I depeneds on
-    QSet<QString> dependedFiles; // the files depends on me
 };
 using PFileIncludes = std::shared_ptr<FileIncludes>;
 

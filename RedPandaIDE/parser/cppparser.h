@@ -29,7 +29,6 @@ class CppParser : public QObject
 {
     Q_OBJECT
 
-    using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
 public:
     explicit CppParser(QObject *parent = nullptr);
     ~CppParser();
@@ -189,6 +188,8 @@ private:
     int skipBracket(int startAt);
 
     void internalClear();
+
+    QStringList sortFilesByIncludeRelations(const QSet<QString> &files);
 
     bool checkForCatchBlock();
     bool checkForEnum();

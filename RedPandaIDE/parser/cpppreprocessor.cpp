@@ -249,28 +249,12 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
         #else
                          <<endl;
         #endif
-            foreach (const QString& s,fileIncludes->dependingFiles) {
-                stream<<"\t^^"+s
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
-            }
             stream<<"\t**depended by:**"
         #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
                          <<endl;
         #endif
-            foreach (const QString& s,fileIncludes->dependedFiles) {
-                stream<<"\t&&"+s
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
-            }
             stream<<"\t**using:**"
         #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
@@ -490,7 +474,11 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
         return;
 
     PFileIncludes oldCurrentIncludes = mCurrentIncludes;
-    openInclude(fileName);
+    QStringList buffer;
+    if (mOnGetFileStream) {
+        mOnGetFileStream(fileName,buffer);
+    }
+    openInclude(fileName, buffer);
     //oldCurrentIncludes->includeFiles.insert(fileName,true);
 }
 
@@ -745,7 +733,6 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         //mCurrentIncludes->includeFiles;
         //mCurrentIncludes->usings;
         //mCurrentIncludes->statements;
-        //mCurrentIncludes->declaredStatements;
         //mCurrentIncludes->scopes;
         //mCurrentIncludes->dependedFiles;
         //mCurrentIncludes->dependingFiles;
@@ -755,7 +742,7 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
     parsedFile->fileIncludes = mCurrentIncludes;
 
     // Don't parse stuff we have already parsed
-    if ((!bufferedText.isEmpty()) || !mScannedFiles.contains(fileName)) {
+    if (!mScannedFiles.contains(fileName)) {
         // Parse ONCE
         //if not Assigned(Stream) then
         mScannedFiles.insert(fileName);
@@ -1840,6 +1827,11 @@ int CppPreprocessor::evaluateExpression(QString line)
     if (skipSpaces(line,pos))
         return -1;
     return result;
+}
+
+void CppPreprocessor::setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream)
+{
+    mOnGetFileStream = newOnGetFileStream;
 }
 
 const QList<QString> &CppPreprocessor::projectIncludePathList() const
