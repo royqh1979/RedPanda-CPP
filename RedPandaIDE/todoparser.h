@@ -41,6 +41,7 @@ public:
                  int ch, const QString& line);
     void removeTodosForFile(const QString& filename);
     void clear();
+    void clear(bool forProject);
     PTodoItem getItem(const QModelIndex& index);
 private:
     QList<PTodoItem> &getItems(bool forProject);

@@ -595,12 +595,12 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
                 realEncoding = ENCODING_ASCII;
             return;
         }
-         realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
+        realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
+        if (tryLoadFileByEncoding(realEncoding,file)) {
+            return;
+        }
         QList<PCharsetInfo> charsets = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
         if (!charsets.isEmpty()) {
-            if (tryLoadFileByEncoding(realEncoding,file)) {
-                return;
-            }
 
             QSet<QByteArray> encodingSet;
             for (int i=0;i<charsets.size();i++) {

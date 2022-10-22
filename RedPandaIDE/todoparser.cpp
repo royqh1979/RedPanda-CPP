@@ -131,11 +131,10 @@ void TodoThread::doParseFile(const QString &filename, QSynedit::PHighlighter hig
             attr = highlighter->getTokenAttribute();
             if (attr == commentAttr) {
                 QString token = highlighter->getToken();
-                qDebug()<<token;
                 int pos = token.indexOf("TODO:",0,Qt::CaseInsensitive);
                 if (pos>=0) {
                     emit todoFound(
-                                mFilename,
+                                filename,
                                 i+1,
                                 pos+highlighter->getTokenPos(),
                                 lines[i].trimmed()
@@ -194,6 +193,16 @@ void TodoModel::clear()
     QList<PTodoItem> &items=getItems(mIsForProject);
     items.clear();
     endResetModel();
+}
+
+void TodoModel::clear(bool forProject)
+{
+    if (mIsForProject == forProject)
+        beginResetModel();
+    QList<PTodoItem> &items=getItems(forProject);
+    items.clear();
+    if (mIsForProject == forProject)
+        endResetModel();
 }
 
 PTodoItem TodoModel::getItem(const QModelIndex &index)

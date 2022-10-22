@@ -310,6 +310,12 @@ void Debugger::setIsForProject(bool newIsForProject)
     }
 }
 
+void Debugger::clearForProject()
+{
+    mBreakpointModel->clear(true);
+    mWatchModel->clear(true);
+}
+
 void Debugger::addBreakpoint(int line, const Editor* editor)
 {
     addBreakpoint(line,editor->filename(), editor->inProject());
@@ -2195,6 +2201,16 @@ void WatchModel::clear()
     QList<PWatchVar> &vars=(mIsForProject?mProjectWatchVars:mWatchVars);
     vars.clear();
     endResetModel();
+}
+
+void WatchModel::clear(bool forProject)
+{
+    if (mIsForProject == forProject)
+        beginResetModel();
+    QList<PWatchVar> &vars=(forProject?mProjectWatchVars:mWatchVars);
+    vars.clear();
+    if (mIsForProject == forProject)
+        endResetModel();
 }
 
 const QList<PWatchVar> &WatchModel::watchVars() const

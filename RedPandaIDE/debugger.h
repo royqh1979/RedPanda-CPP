@@ -196,6 +196,7 @@ public:
     void removeWatchVar(const QString& expression);
     void removeWatchVar(const QModelIndex& index);
     void clear();
+    void clear(bool forProject);
     PWatchVar findWatchVar(const QModelIndex& index);
     PWatchVar findWatchVar(const QString& expr);
     void resetAllVarInfos();
@@ -307,6 +308,7 @@ public:
 
     bool isForProject() const;
     void setIsForProject(bool newIsForProject);
+    void clearForProject();
 
     //breakpoints
     void addBreakpoint(int line, const Editor* editor);

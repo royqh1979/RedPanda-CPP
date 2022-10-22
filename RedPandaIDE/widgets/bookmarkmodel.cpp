@@ -194,37 +194,31 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
 {
     bool forProject = !projectFolder.isEmpty();
     qint64 t,fileTimestamp;
-    QList<PBookmark> bookmarks;
+    QHash<QString,int> compareHash;
+    QList<PBookmark> &list=forProject?mProjectBookmarks:mBookmarks;
     if (forProject) {
         t=mLastLoadProjectBookmarksTimestamp;
-        foreach (const PBookmark& bookmark, mProjectBookmarks) {
-            PBookmark newBookmark=std::make_shared<Bookmark>();
-            newBookmark->description = bookmark->description;
-            newBookmark->filename = extractRelativePath(projectFolder, bookmark->filename);
-            newBookmark->line = bookmark->line;
-            newBookmark->timestamp = bookmark->timestamp;
-            bookmarks.append(newBookmark);
-        }
     } else {
         t=mLastLoadBookmarksTimestamp;
-        bookmarks = mBookmarks;
+    }
+    for (int i=0;i<list.count();i++) {
+        const PBookmark& bookmark=list[i];
+        QString filename = forProject?extractRelativePath(projectFolder, bookmark->filename):bookmark->filename;
+        QString key = QString("%1-%2").arg(filename).arg(bookmark->line);
+        compareHash.insert(key,i);
     }
     QList<PBookmark> fileBookmarks=load(filename, t,&fileTimestamp);
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {        
-        QHash<QString,int> compareHash;
+
         QList<PBookmark> saveBookmarks;
-        for (int i=0; i<bookmarks.count(); i++) {
-            PBookmark& bookmark=bookmarks[i];
-            QString key = QString("%1-%2").arg(bookmark->filename).arg(bookmark->line);
-            compareHash.insert(key,i);;
-        }
+
         QDir dir(projectFolder);
         foreach (const PBookmark& bookmark, fileBookmarks) {
             QString key = QString("%1-%2").arg(bookmark->filename).arg(bookmark->line);
             int idx = compareHash.value(key,-1);
             if (idx<0) {
-                int count=forProject?mProjectBookmarks.count():mBookmarks.count();
+                int count=list.count();
                 compareHash.insert(key,count);
                 if (forProject == mIsForProject) {
                     beginInsertRows(QModelIndex(),count,count);
@@ -232,12 +226,11 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
                 if (forProject) {
                     bookmark->filename = dir.absoluteFilePath(bookmark->filename);
                 }
-                QList<PBookmark> &list=forProject?mProjectBookmarks:mBookmarks;
+
                 list.append(bookmark);
                 if (forProject == mIsForProject)
                     endInsertRows();
             } else {
-                const QList<PBookmark> &list=forProject?mProjectBookmarks:mBookmarks;
                 PBookmark pTemp = list[idx];
                 if (pTemp->timestamp<=bookmark->timestamp) {
                     bookmark->description = pTemp->timestamp;
@@ -258,10 +251,10 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
         QJsonObject rootObj;
         rootObj["timestamp"]=QString("%1").arg(saveTime);
         QJsonArray array;
-        const QList<PBookmark> &list=forProject?mProjectBookmarks:mBookmarks;
         foreach (const PBookmark& bookmark, list) {
             QJsonObject obj;
-            obj["filename"]=bookmark->filename;
+            QString filename = forProject?extractRelativePath(projectFolder, bookmark->filename):bookmark->filename;
+            obj["filename"]=filename;
             obj["line"]=bookmark->line;
             obj["description"]=bookmark->description;
             obj["timestamp"]=QString("%1").arg(bookmark->timestamp);
@@ -298,7 +291,7 @@ QList<PBookmark> BookmarkModel::load(const QString& filename, qint64 criteriaTim
                             .arg(error.offset)
                             .arg(error.errorString()));
         }
-        QJsonObject rootObj;
+        QJsonObject rootObj=doc.object();
         bool ok;
         qint64 timestamp = rootObj["timestamp"].toString().toLongLong(&ok);
         if (!ok || timestamp<=criteriaTimestamp)
@@ -309,6 +302,7 @@ QList<PBookmark> BookmarkModel::load(const QString& filename, qint64 criteriaTim
             QJsonValue value = array[i];
             QJsonObject obj=value.toObject();
             qint64 bookmarkTimestamp = obj["timestamp"].toString().toULongLong(&ok);
+            qDebug()<<bookmarkTimestamp<<"??"<<criteriaTimestamp;
             if (ok && bookmarkTimestamp>criteriaTimestamp) {
                 PBookmark bookmark = std::make_shared<Bookmark>();
                 bookmark->filename = obj["filename"].toString();
@@ -338,7 +332,9 @@ void BookmarkModel::loadProjectBookmarks(const QString &filename, const QString&
     mLastLoadProjectBookmarksTimestamp = QDateTime::currentMSecsSinceEpoch();
     mProjectBookmarks = load(filename,0,&t);
     QDir folder(projectFolder);
+    qDebug()<<"load books"<<filename;
     foreach (PBookmark bookmark, mProjectBookmarks) {
+        qDebug()<<bookmark->filename;
         bookmark->filename=folder.absoluteFilePath(bookmark->filename);
     }
     if (mIsForProject)

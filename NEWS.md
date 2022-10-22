@@ -2,6 +2,7 @@ Red Panda C++ Version 2.0
 
   - redesign the project parser, more efficient and correct
   - enhancement: todo parser for project
+  - fix: save/load bookmark doesn't work
 
 Red Panda C++ Version 1.5
 

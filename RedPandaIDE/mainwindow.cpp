@@ -4474,8 +4474,11 @@ void MainWindow::closeProject(bool refreshEditor)
         mClassBrowserModel.endUpdate();
 
         if (!mQuitting) {
+            mBookmarkModel->clear(true);
             mBookmarkModel->setIsForProject(false);
+            mDebugger->clearForProject();
             mDebugger->setIsForProject(false);
+            mTodoModel.clear(true);
             mTodoModel.setIsForProject(false);
             // Clear error browser
             clearIssues();

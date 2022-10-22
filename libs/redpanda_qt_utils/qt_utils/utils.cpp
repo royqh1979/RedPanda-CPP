@@ -37,6 +37,7 @@
 #include <QMimeDatabase>
 #include <windows.h>
 #endif
+#include "charsetinfo.h"
 
 BaseError::BaseError(const QString &reason):
 mReason(reason)
@@ -301,51 +302,68 @@ void readFileToLines(const QString &fileName, QTextCodec *codec, LineProcessFunc
     }
 }
 
+static QStringList tryLoadFileByEncoding(QByteArray encodingName, QFile& file, bool* isOk) {
+    QStringList result;
+    *isOk=false;
+    QTextCodec* codec = QTextCodec::codecForName(encodingName);
+    if (!codec)
+        return result;
+    file.reset();
+    QTextCodec::ConverterState state;
+    while (true) {
+        if (file.atEnd()){
+            break;
+        }
+        QByteArray line = file.readLine();
+        if (line.endsWith("\r\n")) {
+            line.remove(line.length()-2,2);
+        } else if (line.endsWith("\r")) {
+            line.remove(line.length()-1,1);
+        } else if (line.endsWith("\n")){
+            line.remove(line.length()-1,1);
+        }
+        QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
+        if (state.invalidChars>0) {
+            return QStringList();
+        }
+        result.append(newLine);
+    }
+    *isOk=true;
+    return result;
+}
+
 QStringList readFileToLines(const QString &fileName)
 {
     QFile file(fileName);
     if (file.size()<=0)
         return QStringList();
-    QTextCodec* codec = QTextCodec::codecForLocale();
     QStringList result;
-    QTextCodec::ConverterState state;
-    bool ok = true;
     if (file.open(QFile::ReadOnly)) {
-        while (!file.atEnd()) {
-            QByteArray array = file.readLine();
-            QString s = codec->toUnicode(array,array.length(),&state);
-            if (state.invalidChars>0) {
-                ok=false;
-                break;
-            }
-            if (s.endsWith("\r\n")) {
-                s.remove(s.length()-2,2);
-            } else if (s.endsWith("\r")) {
-                s.remove(s.length()-1,1);
-            } else if (s.endsWith("\n")){
-                s.remove(s.length()-1,1);
-            }
-            result.append(s);
+        bool ok;
+        result = tryLoadFileByEncoding("UTF-8",file,&ok);
+        if (ok) {
+            return result;
         }
-        if (!ok) {
-            file.seek(0);
-            result.clear();
-            codec = QTextCodec::codecForName("UTF-8");
-            while (!file.atEnd()) {
-                QByteArray array = file.readLine();
-                QString s = codec->toUnicode(array,array.length(),&state);
-                if (state.invalidChars>0) {
-                    result.clear();
-                    break;
+
+        QByteArray realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
+        result = tryLoadFileByEncoding(realEncoding,file,&ok);
+        if (ok) {
+            return result;
+        }
+        QList<PCharsetInfo> charsets = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
+        if (!charsets.isEmpty()) {
+            QSet<QByteArray> encodingSet;
+            for (int i=0;i<charsets.size();i++) {
+                encodingSet.insert(charsets[i]->name);
+            }
+            encodingSet.remove(realEncoding);
+            foreach (const QByteArray& encodingName,encodingSet) {
+                if (encodingName == ENCODING_UTF8)
+                    continue;
+                result = tryLoadFileByEncoding("UTF-8",file,&ok);
+                if (ok) {
+                    return result;
                 }
-                if (s.endsWith("\r\n")) {
-                    s.remove(s.length()-2,2);
-                } else if (s.endsWith("\r")) {
-                    s.remove(s.length()-1,1);
-                } else if (s.endsWith("\n")){
-                    s.remove(s.length()-1,1);
-                }
-                result.append(s);
             }
         }
     }
