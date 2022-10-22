@@ -1155,7 +1155,6 @@ PStatement CppParser::addInheritedStatement(const PStatement& derived, const PSt
       access,
       true,
       inherit->isStatic);
-    statement->inheritanceList.append(inherit->inheritanceList),
     statement->isInherited = true;
     return statement;
 }
@@ -1243,7 +1242,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
     result->noNameArgs = noNameArgs;
     result->value = value;
     result->kind = kind;
-    //result->inheritanceList;
     result->scope = scope;
     result->classScope = classScope;
     result->hasDefinition = isDefinition;
@@ -1288,7 +1286,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
 void CppParser::setInheritance(int index, const PStatement& classStatement, bool isStruct)
 {
     // Clear it. Assume it is assigned
-    classStatement->inheritanceList.clear();
     StatementClassScope lastInheritScopeType = StatementClassScope::scsNone;
     // Assemble a list of statements in text form we inherit from
     while (true) {
@@ -1308,7 +1305,6 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
                 PStatement statement = findStatementOf(mCurrentFile,basename,
                                                        classStatement->parentScope.lock(),true);
                 if (statement && statement->kind == StatementKind::skClass) {
-                    classStatement->inheritanceList.append(statement);
                     inheritClassStatement(classStatement,isStruct,statement,lastInheritScopeType);
                 }
             }

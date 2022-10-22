@@ -97,7 +97,6 @@ private:
     void skipToEndOfPreprocessor();
     void skipToPreprocessor();
     QString getNextPreprocessor();
-    void simplify(QString& output);
     void handleBranch(const QString& line);
     void handleDefine(const QString& line);
     void handleInclude(const QString& line, bool fromNext=false);

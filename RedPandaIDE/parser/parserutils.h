@@ -149,7 +149,6 @@ struct Statement {
     QString args; // args "(int a,float b)"
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
     StatementKind kind; // kind of statement class/variable/function/etc
-    QList<std::weak_ptr<Statement>> inheritanceList; // list of statements this one inherits from, can be nil
     StatementScope scope; // global/local/classlocal
     StatementClassScope classScope; // protected/private/public
     bool hasDefinition; // definiton line/filename is valid
