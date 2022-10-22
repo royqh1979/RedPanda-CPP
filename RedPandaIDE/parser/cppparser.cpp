@@ -976,7 +976,7 @@ void CppParser::resetParser()
         mInlineNamespaces.clear();
 
         mPreprocessor.clear();
-        mTokenizer.reset();
+        mTokenizer.clear();
 
     }
 }
@@ -3260,8 +3260,7 @@ void CppParser::internalParse(const QString &fileName)
     // Preprocess the file...
     {
         auto action = finally([this]{
-            mPreprocessor.reset();
-            mTokenizer.reset();
+            mTokenizer.clear();
         });
         // Let the preprocessor augment the include records
 //        mPreprocessor.setIncludesList(mIncludesList);
@@ -3273,7 +3272,7 @@ void CppParser::internalParse(const QString &fileName)
 
         QStringList preprocessResult = mPreprocessor.result();
         //reduce memory usage
-        mPreprocessor.clearResult();
+        mPreprocessor.clearTempResults();
 #ifdef QT_DEBUG
 //        stringsToFile(mPreprocessor.result(),"r:\\preprocess.txt");
 //        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
@@ -3301,7 +3300,7 @@ void CppParser::internalParse(const QString &fileName)
 //      mStatementList.dumpAll("r:\\all-stats.txt");
 #endif
         //reduce memory usage
-        mTokenizer.reset();
+        mTokenizer.clear();
     }
 }
 

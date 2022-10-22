@@ -585,7 +585,7 @@ void Project::resetParserProjectFiles()
     mParser->clearProjectFiles();
     mParser->clearProjectIncludePaths();
     foreach (const PProjectUnit& unit, mUnits) {
-        mParser->addFileToScan(unit->fileName());
+        mParser->addFileToScan(unit->fileName(),true);
     }
     foreach (const QString& s, mOptions.includeDirs) {
         mParser->addProjectIncludePath(s);

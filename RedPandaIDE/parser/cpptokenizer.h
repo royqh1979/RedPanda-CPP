@@ -31,7 +31,7 @@ public:
     using TokenList = QVector<PToken>;
     explicit CppTokenizer();
 
-    void reset();
+    void clear();
     void tokenize(const QStringList& buffer);
     void dumpTokens(const QString& fileName);
     const TokenList& tokens();

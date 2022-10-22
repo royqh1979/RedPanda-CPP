@@ -29,7 +29,7 @@ CppPreprocessor::CppPreprocessor()
 void CppPreprocessor::clear()
 {
     //don't use reset(), it will reset(add) defines.
-    clearResult();
+    clearTempResults();
 
     //Result across processings.
     //used by parser even preprocess finished
@@ -48,7 +48,7 @@ void CppPreprocessor::clear()
     mIncludePaths.clear();
 }
 
-void CppPreprocessor::clearResult()
+void CppPreprocessor::clearTempResults()
 {    
     //temporary data when preprocessing single file
     mFileName="";
@@ -159,13 +159,6 @@ PDefine CppPreprocessor::getHardDefine(const QString &name)
     return mHardDefines.value(name,PDefine());
 }
 
-void CppPreprocessor::reset()
-{
-    clearResult();
-    // Clear extracted data
-    resetDefines(); // do not throw away hardcoded
-}
-
 void CppPreprocessor::resetDefines()
 {
     mDefines = mHardDefines;
@@ -182,8 +175,9 @@ void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
 
 void CppPreprocessor::preprocess(const QString &fileName, QStringList buffer)
 {
+    clearTempResults();
     mFileName = fileName;
-    reset();
+    mDefines = mHardDefines;
     openInclude(fileName, buffer);
     //    StringsToFile(mBuffer,"f:\\buffer.txt");
     preprocessBuffer();
@@ -340,14 +334,11 @@ void CppPreprocessor::clearProjectIncludePaths()
     mProjectIncludePathList.clear();
 }
 
-void CppPreprocessor::clearScannedFiles()
+void CppPreprocessor::removeScannedFile(const QString &filename)
 {
-    mScannedFiles.clear();
-}
-
-void CppPreprocessor::clearIncludeList()
-{
-    mIncludesList.clear();
+    mScannedFiles.remove(filename);
+    mIncludesList.remove(filename);
+    mFileDefines.remove(filename);
 }
 
 QString CppPreprocessor::getNextPreprocessor()

@@ -24,7 +24,7 @@ CppTokenizer::CppTokenizer()
 
 }
 
-void CppTokenizer::reset()
+void CppTokenizer::clear()
 {
     mTokenList.clear();
     mBuffer.clear();
@@ -34,7 +34,7 @@ void CppTokenizer::reset()
 
 void CppTokenizer::tokenize(const QStringList &buffer)
 {
-    reset();
+    clear();
 
     mBuffer = buffer;
     if (mBuffer.isEmpty())

@@ -62,10 +62,10 @@ public:
 
     explicit CppPreprocessor();
     void clear();
-    void clearResult();
+
+    void clearTempResults();
     void getDefineParts(const QString& input, QString &name, QString &args, QString &value);
     void addHardDefineByLine(const QString& line);
-    void reset(); //reset but don't clear generated defines
     void setScanOptions(bool parseSystem, bool parseLocal);
     void preprocess(const QString& fileName, QStringList buffer = QStringList());
 
@@ -75,8 +75,7 @@ public:
     void addProjectIncludePath(const QString& fileName);
     void clearIncludePaths();
     void clearProjectIncludePaths();
-    void clearScannedFiles();
-    void clearIncludeList();
+
     QStringList result() const;
 
     QHash<QString, PFileIncludes> &includesList();
