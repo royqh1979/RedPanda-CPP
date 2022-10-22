@@ -1358,6 +1358,8 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
     mDebugger->loadForProject(
                 changeFileExt(mProject->filename(), PROJECT_DEBUG_EXT),
                 mProject->directory());
+    mTodoModel.setIsForProject(true);
+    mTodoParser->parseFiles(mProject->unitFiles());
 
     if (openFiles) {
         PProjectUnit unit = mProject->doAutoOpen();
@@ -4358,12 +4360,16 @@ void MainWindow::enableDebugActions()
     }
 }
 
-void MainWindow::onTodoParseStarted(const QString&)
+void MainWindow::onTodoParsingFile(const QString& filename)
+{
+    mTodoModel.removeTodosForFile(filename);
+}
+void MainWindow::onTodoParseStarted()
 {
     mTodoModel.clear();
 }
 
-void MainWindow::onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line)
+void MainWindow::onTodoFound(const QString& filename, int lineNo, int ch, const QString& line)
 {
     mTodoModel.addItem(filename,lineNo,ch,line);
 }
@@ -4470,6 +4476,7 @@ void MainWindow::closeProject(bool refreshEditor)
         if (!mQuitting) {
             mBookmarkModel->setIsForProject(false);
             mDebugger->setIsForProject(false);
+            mTodoModel.setIsForProject(false);
             // Clear error browser
             clearIssues();
             updateProjectView();
@@ -7109,6 +7116,11 @@ void MainWindow::on_actionEGE_Manual_triggered()
 const PBookmarkModel &MainWindow::bookmarkModel() const
 {
     return mBookmarkModel;
+}
+
+TodoModel *MainWindow::todoModel()
+{
+    return &mTodoModel;
 }
 
 

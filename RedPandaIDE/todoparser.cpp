@@ -18,8 +18,6 @@
 #include "mainwindow.h"
 #include "editor.h"
 #include "editorlist.h"
-#include "HighlighterManager.h"
-#include "qsynedit/Constants.h"
 
 TodoParser::TodoParser(QObject *parent) : QObject(parent),
     mMutex(QMutex::Recursive)
@@ -27,7 +25,7 @@ TodoParser::TodoParser(QObject *parent) : QObject(parent),
     mThread = nullptr;
 }
 
-void TodoParser::parseFile(const QString &filename)
+void TodoParser::parseFile(const QString &filename,bool isForProject)
 {
     QMutexLocker locker(&mMutex);
     if (mThread) {
@@ -42,10 +40,40 @@ void TodoParser::parseFile(const QString &filename)
             mThread = nullptr;
         }
     });
+    if (!isForProject) {
+        connect(mThread, &TodoThread::parseStarted,
+            pMainWindow, &MainWindow::onTodoParseStarted);
+    }
+    connect(mThread, &TodoThread::parsingFile,
+            pMainWindow, &MainWindow::onTodoParsingFile);
+    connect(mThread, &TodoThread::todoFound,
+            pMainWindow, &MainWindow::onTodoFound);
+    connect(mThread, &TodoThread::parseFinished,
+            pMainWindow, &MainWindow::onTodoParseFinished);
+    mThread->start();
+}
+
+void TodoParser::parseFiles(const QStringList &files)
+{
+    QMutexLocker locker(&mMutex);
+    if (mThread) {
+        return;
+    }
+    mThread = new TodoThread(files);
+    connect(mThread,&QThread::finished,
+            [this] {
+        QMutexLocker locker(&mMutex);
+        if (mThread) {
+            mThread->deleteLater();
+            mThread = nullptr;
+        }
+    });
     connect(mThread, &TodoThread::parseStarted,
             pMainWindow, &MainWindow::onTodoParseStarted);
+    connect(mThread, &TodoThread::parsingFile,
+            pMainWindow, &MainWindow::onTodoParsingFile);
     connect(mThread, &TodoThread::todoFound,
-            pMainWindow, &MainWindow::onTodoParsing);
+            pMainWindow, &MainWindow::onTodoFound);
     connect(mThread, &TodoThread::parseFinished,
             pMainWindow, &MainWindow::onTodoParseFinished);
     mThread->start();
@@ -56,21 +84,42 @@ bool TodoParser::parsing() const
     return (mThread!=nullptr);
 }
 
-TodoThread::TodoThread(const QString& filename, QObject *parent): QThread(parent)
+TodoThread::TodoThread(const QString &filename, QObject *parent): QThread(parent)
 {
     mFilename = filename;
+    mParseFiles = false;
 }
 
-void TodoThread::run()
+TodoThread::TodoThread(const QStringList &files, QObject *parent): QThread(parent)
+{
+    mFiles = files;
+    mParseFiles = true;
+}
+
+void TodoThread::parseFile()
 {
     QSynedit::PHighlighter highlighter = highlighterManager.getCppHighlighter();
-    emit parseStarted(mFilename);
-    auto action = finally([this]{
-        emit parseFinished();
-    });
+    emit parseStarted();
+    doParseFile(mFilename,highlighter);
+    emit parseFinished();
+}
+
+void TodoThread::parseFiles()
+{
+    QSynedit::PHighlighter highlighter = highlighterManager.getCppHighlighter();
+    emit parseStarted();
+    foreach(const QString& filename,mFiles) {
+        doParseFile(filename,highlighter);
+    }
+    emit parseFinished();
+}
+
+void TodoThread::doParseFile(const QString &filename, QSynedit::PHighlighter highlighter)
+{
+    emit parsingFile(filename);
     QStringList lines;
-    if (!pMainWindow->editorList()->getContentFromOpenedEditor(mFilename,lines)) {
-        return;
+    if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,lines)) {
+        lines = readFileToLines(filename);
     }
     QSynedit::PHighlighterAttribute commentAttr = highlighter->getAttribute(SYNS_AttrComment);
 
@@ -82,6 +131,7 @@ void TodoThread::run()
             attr = highlighter->getTokenAttribute();
             if (attr == commentAttr) {
                 QString token = highlighter->getToken();
+                qDebug()<<token;
                 int pos = token.indexOf("TODO:",0,Qt::CaseInsensitive);
                 if (pos>=0) {
                     emit todoFound(
@@ -95,29 +145,54 @@ void TodoThread::run()
             highlighter->next();
         }
     }
+
+}
+
+void TodoThread::run()
+{
+    if (mParseFiles) {
+        parseFiles();
+    } else {
+        parseFile();
+    }
 }
 
 TodoModel::TodoModel(QObject *parent) : QAbstractListModel(parent)
 {
-
+    mIsForProject=false;
 }
 
 void TodoModel::addItem(const QString &filename, int lineNo, int ch, const QString &line)
 {
-    beginInsertRows(QModelIndex(),mItems.count(),mItems.count());
+    QList<PTodoItem> &items=getItems(mIsForProject);
+    beginInsertRows(QModelIndex(),items.count(),items.count());
     PTodoItem item = std::make_shared<TodoItem>();
     item->filename = filename;
     item->lineNo = lineNo;
     item->ch = ch;
     item->line = line;
-    mItems.append(item);
+    items.append(item);
     endInsertRows();
+}
+
+void TodoModel::removeTodosForFile(const QString &filename)
+{
+    QList<PTodoItem> &items=getItems(mIsForProject);
+    for(int i=items.count()-1;i>=0;i--) {
+        PTodoItem item = items[i];
+        if (item->filename==filename) {
+            beginRemoveRows(QModelIndex(),i,i);
+            items.removeAt(i);
+            endRemoveRows();
+        }
+    }
 }
 
 void TodoModel::clear()
 {
     beginResetModel();
-    mItems.clear();
+    QList<PTodoItem> &items=getItems(mIsForProject);
+    items.clear();
     endResetModel();
 }
 
@@ -125,20 +200,46 @@ PTodoItem TodoModel::getItem(const QModelIndex &index)
 {
     if (!index.isValid())
         return PTodoItem();
-    return mItems[index.row()];
+    return getItems(mIsForProject)[index.row()];
+}
+
+QList<PTodoItem> &TodoModel::getItems(bool forProject)
+{
+    return forProject?mProjectItems:mItems;
+}
+
+const QList<PTodoItem> &TodoModel::getConstItems(bool forProject) const
+{
+    return forProject?mProjectItems:mItems;
+}
+
+bool TodoModel::isForProject() const
+{
+    return mIsForProject;
+}
+
+void TodoModel::setIsForProject(bool newIsForProject)
+{
+    if (mIsForProject!=newIsForProject) {
+        beginResetModel();
+        mIsForProject = newIsForProject;
+        endResetModel();
+    }
 }
 
 int TodoModel::rowCount(const QModelIndex &) const
 {
-    return mItems.count();
+    const QList<PTodoItem> &items=getConstItems(mIsForProject);
+    return items.count();
 }
 
 QVariant TodoModel::data(const QModelIndex &index, int role) const
 {
+    const QList<PTodoItem> &items=getConstItems(mIsForProject);
     if (!index.isValid())
         return QVariant();
     if (role==Qt::DisplayRole) {
-        PTodoItem item = mItems[index.row()];
+        PTodoItem item = items[index.row()];
         switch(index.column()) {
         case 0:
             return item->filename;

@@ -1290,6 +1290,8 @@ void Editor::showEvent(QShowEvent */*event*/)
     }
     pMainWindow->debugger()->setIsForProject(inProject());
     pMainWindow->bookmarkModel()->setIsForProject(inProject());
+    pMainWindow->todoModel()->setIsForProject(inProject());
+
 //    if (pSettings->codeCompletion().clearWhenEditorHidden()
 //            && !inProject()) {
 //        reparse();
@@ -2711,7 +2713,7 @@ void Editor::reparseTodo()
 {
     if (!highlighter())
         return;
-    pMainWindow->todoParser()->parseFile(mFilename);
+    pMainWindow->todoParser()->parseFile(mFilename, inProject());
 }
 
 void Editor::insertString(const QString &value, bool moveCursor)

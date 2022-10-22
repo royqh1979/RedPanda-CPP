@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.0
+
+  - redesign the project parser, more efficient and correct
+  - enhancement: todo parser for project
+
 Red Panda C++ Version 1.5
 
   - fix: project files that lies in project include folder is wrongly openned in Read-only mode

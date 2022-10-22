@@ -456,6 +456,15 @@ QList<PProjectUnit> Project::unitList()
     return units;
 }
 
+QStringList Project::unitFiles()
+{
+    QStringList units;
+    foreach(PProjectUnit unit, mUnits) {
+        units.append(unit->fileName());
+    }
+    return units;
+}
+
 void Project::rebuildNodes()
 {
     mModel.beginUpdate();

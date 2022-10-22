@@ -196,6 +196,8 @@ public:
 
     const PBookmarkModel &bookmarkModel() const;
 
+    TodoModel* todoModel();
+
     Editor* openFile(const QString& filename, bool activate=true, QTabWidget* page=nullptr);
     void openProject(const QString& filename, bool openFiles = true);
     void changeOptions(const QString& widgetName=QString(), const QString& groupName=QString());
@@ -235,8 +237,9 @@ public slots:
     void onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint& pos);
     void disableDebugActions();
     void enableDebugActions();
-    void onTodoParseStarted(const QString& filename);
-    void onTodoParsing(const QString& filename, int lineNo, int ch, const QString& line);
+    void onTodoParsingFile(const QString& filename);
+    void onTodoParseStarted();
+    void onTodoFound(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
     void updateDPI(int oldDPI, int newDPI);

@@ -230,6 +230,7 @@ public:
     Editor* unitEditor(const ProjectUnit* unit) const;
 
     QList<PProjectUnit> unitList();
+    QStringList unitFiles();
 
     PProjectModelNode pointerToNode(ProjectModelNode * p, PProjectModelNode parent=PProjectModelNode());
     void rebuildNodes();

@@ -21,6 +21,8 @@
 #include <QThread>
 #include <QMutex>
 #include <QAbstractListModel>
+#include "HighlighterManager.h"
+#include "qsynedit/Constants.h"
 
 struct TodoItem {
     QString filename;
@@ -37,20 +39,25 @@ public:
     explicit TodoModel(QObject* parent=nullptr);
     void addItem(const QString& filename, int lineNo,
                  int ch, const QString& line);
+    void removeTodosForFile(const QString& filename);
     void clear();
     PTodoItem getItem(const QModelIndex& index);
 private:
+    QList<PTodoItem> &getItems(bool forProject);
+    const QList<PTodoItem> &getConstItems(bool forProject) const;
+private:
     QList<PTodoItem> mItems;
+    QList<PTodoItem> mProjectItems;
+    bool mIsForProject;
 
     // QAbstractItemModel interface
 public:
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-
-    // QAbstractItemModel interface
-public:
     int columnCount(const QModelIndex &parent) const override;
+    bool isForProject() const;
+    void setIsForProject(bool newIsForProject);
 };
 
 class TodoThread: public QThread
@@ -58,12 +65,20 @@ class TodoThread: public QThread
     Q_OBJECT
 public:
     explicit TodoThread(const QString& filename, QObject* parent = nullptr);
+    explicit TodoThread(const QStringList& files, QObject* parent = nullptr);
 signals:
-    void parseStarted(const QString& filename);
+    void parseStarted();
+    void parsingFile(const QString& fileName);
     void todoFound(const QString& filename, int lineNo, int ch, const QString& line);
     void parseFinished();
 private:
+    void parseFile();
+    void parseFiles();
+    void doParseFile(const QString& filename, QSynedit::PHighlighter highlighter);
+private:
     QString mFilename;
+    QStringList mFiles;
+    bool mParseFiles;
 
     // QThread interface
 protected:
@@ -77,7 +92,8 @@ class TodoParser : public QObject
     Q_OBJECT
 public:
     explicit TodoParser(QObject *parent = nullptr);
-    void parseFile(const QString& filename);
+    void parseFile(const QString& filename,bool isForProject);
+    void parseFiles(const QStringList& files);
     bool parsing() const;
 
 private:
