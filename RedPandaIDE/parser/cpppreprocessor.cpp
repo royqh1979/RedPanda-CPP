@@ -28,22 +28,33 @@ CppPreprocessor::CppPreprocessor()
 
 void CppPreprocessor::clear()
 {
-    mIncludes.clear();
-    mDefines.clear();
-    mHardDefines.clear();
-    mProcessed.clear();
-    mFileDefines.clear();
-    mBranchResults.clear();
-    mResult.clear();
-    mCurrentIncludes.reset();
+    //don't use reset(), it will reset(add) defines.
+    clearResult();
+
+    //Result across processings.
+    //used by parser even preprocess finished
+    mIncludesList.clear();
+    mFileDefines.clear(); //dictionary to save defines for each headerfile;
+    mScannedFiles.clear();
+
+    //option data for the parser
+    //{ List of current project's include path }
+    mHardDefines.clear(); // set by "cpp -dM -E -xc NUL"
+    mProjectIncludePaths.clear();
+    //we also need include paths in order (for #include_next)
+    mIncludePathList.clear();
+    mProjectIncludePathList.clear();
+    //{ List of current compiler set's include path}
+    mIncludePaths.clear();
 }
 
 void CppPreprocessor::clearResult()
-{
-    mFileName.clear();
+{    
+    //temporary data when preprocessing single file
+    mFileName="";
     mBuffer.clear();
     mResult.clear();
-    mCurrentIncludes = nullptr;
+    mCurrentIncludes=nullptr;
     mIncludes.clear(); // stack of files we've stepped into. last one is current file, first one is source file
     mBranchResults.clear();// stack of branch results (boolean). last one is current branch, first one is outermost branch
     mDefines.clear(); // working set, editable
@@ -150,13 +161,8 @@ PDefine CppPreprocessor::getHardDefine(const QString &name)
 
 void CppPreprocessor::reset()
 {
-    mResult.clear();
-
+    clearResult();
     // Clear extracted data
-    mIncludes.clear();
-    mBranchResults.clear();
-    mCurrentIncludes.reset();
-    mProcessed.clear();
     resetDefines(); // do not throw away hardcoded
 }
 

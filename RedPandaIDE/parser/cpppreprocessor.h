@@ -190,22 +190,29 @@ private:
 
     int evaluateExpression(QString line);
 private:
-    int mIndex; // points to current file buffer. do not free
-    QString mFileName; // idem
-    QStringList mBuffer; // idem
+
+    //temporary data when preprocessing single file
+    int mIndex; // points to current file buffer.
+    QString mFileName;
+    QStringList mBuffer;
     QStringList mResult;
     PFileIncludes mCurrentIncludes;
-    int mPreProcIndex;
+    int mPreProcIndex;    
     QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
     QList<bool> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
     DefineMap mDefines; // working set, editable
     QSet<QString> mProcessed; // dictionary to save filename already processed
 
+
+    //Result across processings.
     //used by parser even preprocess finished
-    DefineMap mHardDefines; // set by "cpp -dM -E -xc NUL"
     QHash<QString,PFileIncludes> mIncludesList;
     QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
+    QSet<QString> mScannedFiles;
+
+    //option data for the parser
     //{ List of current project's include path }
+    DefineMap mHardDefines; // set by "cpp -dM -E -xc NUL"
     QSet<QString> mProjectIncludePaths;
     //we also need include paths in order (for #include_next)
     QList<QString> mIncludePathList;
@@ -215,7 +222,6 @@ private:
 
     bool mParseSystem;
     bool mParseLocal;
-    QSet<QString> mScannedFiles;
 };
 
 using PCppPreprocessor = std::shared_ptr<CppPreprocessor>;

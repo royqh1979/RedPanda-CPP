@@ -207,7 +207,7 @@ private:
     bool checkForUsing();
     bool checkForVar();
     QString expandMacroType(const QString& name);
-    //{procedure ResetDefines;}
+
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
                              const PStatement& scopeStatement, QStringList& list);
@@ -535,7 +535,7 @@ private:
     //It's used in preprocessor, so we can't use fIncludeList instead
 
     CppTokenizer mTokenizer;
-    PCppPreprocessor mPreprocessor;
+    CppPreprocessor mPreprocessor;
     QSet<QString> mProjectFiles;
     QVector<int> mBlockBeginSkips; //list of for/catch block begin token index;
     QVector<int> mBlockEndSkips; //list of for/catch block end token index;
