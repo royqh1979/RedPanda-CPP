@@ -872,19 +872,6 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
         return;
     mProcessed.insert(fileName);
 
-    //todo: why test this?
-    if (!mScannedFiles.contains(fileName))
-        return;
-
-    //May be redefined, so order is important
-    //first add the defines in the files it included
-    PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
-    if (fileIncludes) {
-        foreach (const QString& s,fileIncludes->includeFiles.keys()) {
-            addDefinesInFile(s);
-        }
-    }
-
     // then add the defines defined in it
     PDefineMap defineList = mFileDefines.value(fileName, PDefineMap());
     if (defineList) {
