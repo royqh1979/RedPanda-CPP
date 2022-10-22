@@ -259,7 +259,7 @@ Qt::DropActions OJProblemSetModel::supportedDropActions() const
     return Qt::DropAction::MoveAction;
 }
 
-bool OJProblemSetModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild)
+bool OJProblemSetModel::moveRows(const QModelIndex &/*sourceParent*/, int sourceRow, int count, const QModelIndex &/*destinationParent*/, int destinationChild)
 {
     if (sourceRow < 0
         || sourceRow + count - 1 >= mProblemSet.problems.count()
@@ -507,7 +507,7 @@ Qt::DropActions OJProblemModel::supportedDropActions() const
     return Qt::DropAction::MoveAction;
 }
 
-bool OJProblemModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+bool OJProblemModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int /* column */, const QModelIndex &parent)
 {
     mMoveTargetRow=row;
     if (mMoveTargetRow==-1)
@@ -515,12 +515,12 @@ bool OJProblemModel::dropMimeData(const QMimeData *data, Qt::DropAction action, 
     return  QAbstractTableModel::dropMimeData(data,action,row,0,parent);
 }
 
-bool OJProblemModel::insertRows(int row, int count, const QModelIndex &parent)
+bool OJProblemModel::insertRows(int /* row */, int /*count*/, const QModelIndex &/*parent*/)
 {
     return true;
 }
 
-bool OJProblemModel::removeRows(int row, int count, const QModelIndex &parent)
+bool OJProblemModel::removeRows(int row, int count, const QModelIndex &/*parent*/)
 {
     int sourceRow = row;
     int destinationChild = mMoveTargetRow;
