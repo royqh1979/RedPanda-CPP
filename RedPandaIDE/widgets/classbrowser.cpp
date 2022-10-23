@@ -351,19 +351,18 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
         ClassBrowserNode *parentNode=node;
         // we only test and handle orphan statements in the top level (node->statement is null)
         PStatement parentScope = statement->parentScope.lock();
-        if ( (mClassBrowserType==ProjectClassBrowserType::CurrentFile)
-                && (parentScope!=node->statement)
+        if ( (parentScope!=node->statement)
                 && (!parentScope || !node->statement
                     || parentScope->fullName!=node->statement->fullName)) {
 //          //should not happend, just in case of error
-            if (!parentScope)
-                continue;
+//            if (!parentScope)
+//                continue;
 
             // Processing the orphan statement
                 //the statement's parent is in this file, so it's not a real orphan
-            if ((parentScope->fileName==mCurrentFile)
-                    ||(parentScope->definitionFileName==mCurrentFile))
-                continue;
+//            if ((parentScope->fileName==mCurrentFile)
+//                    ||(parentScope->definitionFileName==mCurrentFile))
+//                continue;
 
             ClassBrowserNode *dummyNode = getParentNode(parentScope,1);
             if (dummyNode)
@@ -371,15 +370,12 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
         }
         if (statement->kind == StatementKind::skNamespace || statement->kind == StatementKind::skClass) {
             //PStatement dummy = mDummyStatements.value(statement->fullName,PStatement());
-            PClassBrowserNode dummyNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
-            if (dummyNode) {
-                filterChildren(dummyNode.get(),statement->children);
-                continue;
-            } else {
+            PClassBrowserNode scopeNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
+            if (!scopeNode) {
                 PStatement dummy = createDummy(statement);
-                dummy->children = statement->children;
-                dummyNode = addChild(parentNode,dummy);
+                scopeNode = addChild(parentNode,dummy);
             }
+            filterChildren(scopeNode.get(),statement->children);
         } else {
             addChild(parentNode,statement);
         }
