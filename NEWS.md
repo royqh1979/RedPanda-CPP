@@ -11,6 +11,7 @@ Red Panda C++ Version 2.0
   - fix: correctly display statements whose parent is not in the current file
   - fix: statements is the class browser is correctly sorted
   - enhancement: Weither double click on the class browser should goto definition/declaration,  depends on the current cursor position
+  - enhancement: keep current position in the class browser after contents modified
 
 Red Panda C++ Version 1.5
 

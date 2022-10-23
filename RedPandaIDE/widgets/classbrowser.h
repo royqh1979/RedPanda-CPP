@@ -65,6 +65,10 @@ public:
     const QStringList &currentFiles() const;
     void setCurrentFiles(const QStringList &newCurrentFiles);
 
+    QModelIndex modelIndexForStatement(const QString& fullname);
+signals:
+    void refreshStarted();
+    void refreshEnd();
 public slots:
     void fillStatements();
 private:
@@ -78,6 +82,8 @@ private:
     ClassBrowserNode * mRoot;
     QHash<QString,PStatement> mDummyStatements;
     QHash<QString,PClassBrowserNode> mScopeNodes;
+    QHash<QString,PClassBrowserNode> mNodeIndex;
+    QSet<Statement*> mProcessedStatements;
     QVector<PClassBrowserNode> mNodes;
     PCppParser mParser;
     bool mUpdating;

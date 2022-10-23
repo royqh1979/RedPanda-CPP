@@ -205,6 +205,8 @@ void ClassBrowserModel::clear()
     beginResetModel();
     mRoot->children.clear();
     mNodes.clear();
+    mNodeIndex.clear();
+    mProcessedStatements.clear();
     mDummyStatements.clear();
     mScopeNodes.clear();
     endResetModel();
@@ -218,12 +220,14 @@ void ClassBrowserModel::fillStatements()
             return;
         mUpdating = true;
     }
+    emit refreshStarted();
     beginResetModel();
     clear();
     {
         auto action = finally([this]{
             endResetModel();
             mUpdating = false;
+            emit refreshEnd();
         });
         if (!mParser)
             return;
@@ -247,6 +251,8 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
 //    newNode->childrenFetched = false;
     node->children.append(newNode.get());
     mNodes.append(newNode);
+    mNodeIndex.insert(statement->fullName,newNode);
+    mProcessedStatements.insert(statement.get());
     if (statement->kind == StatementKind::skClass
             || statement->kind == StatementKind::skNamespace)
         mScopeNodes.insert(statement->fullName,newNode);
@@ -312,6 +318,10 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
         if (mClassBrowserType==ProjectClassBrowserType::WholeProject
                 && !statement->inProject)
             continue;
+
+        if (mProcessedStatements.contains(statement.get()))
+            continue;
+
         if (statement->kind == StatementKind::skBlock)
             continue;
         if (statement->isInherited && !pSettings->ui().classBrowserShowInherited())
@@ -421,6 +431,24 @@ void ClassBrowserModel::setCurrentFiles(const QStringList &newCurrentFiles)
     mCurrentFiles = newCurrentFiles;
 }
 
+QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &fullname)
+{
+    QMutexLocker locker(&mMutex);
+    if (mUpdating)
+        return QModelIndex();
+    PClassBrowserNode node=mNodeIndex.value(fullname,PClassBrowserNode());
+    if (!node)
+        return QModelIndex();
+
+    ClassBrowserNode *parentNode=node->parent;
+    if (!parentNode)
+        return QModelIndex();
+    int row=parentNode->children.indexOf(node.get());
+    if (row<0)
+        return QModelIndex();
+    return createIndex(row,0,node.get());
+}
+
 ProjectClassBrowserType ClassBrowserModel::classBrowserType() const
 {
     return mClassBrowserType;
@@ -465,7 +493,7 @@ void ClassBrowserModel::endUpdate()
     mUpdateCount--;
     if (mUpdateCount == 0) {
         if (mParser && !mParser->parsing()) {
-            this->fillStatements();
+            fillStatements();
         }
     }
 }

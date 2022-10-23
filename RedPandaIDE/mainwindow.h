@@ -348,6 +348,8 @@ private slots:
     void onClassBrowserSortByType();
     void onClassBrowserSortByName();
     void onClassBrowserChangeScope();
+    void onClassBrowserRefreshStart();
+    void onClassBrowserRefreshEnd();
 
     void onProjectSwitchCustomViewMode();
     void onProjectSwitchFileSystemViewMode();
@@ -766,6 +768,8 @@ private:
     OJProblemSetModel mOJProblemSetModel;
     OJProblemModel mOJProblemModel;
     int mOJProblemSetNameCounter;
+
+    QString mClassBrowserCurrentStatement;
 
     bool mCheckSyntaxInBack;
     bool mShouldRemoveAllSettings;

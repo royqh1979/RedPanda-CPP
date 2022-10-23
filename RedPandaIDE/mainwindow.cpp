@@ -362,6 +362,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->classBrowser->setModel(&mClassBrowserModel);
     delete m;
 
+    connect(&mClassBrowserModel, &ClassBrowserModel::refreshStarted,
+            this, &MainWindow::onClassBrowserRefreshStart);
+    connect(&mClassBrowserModel, &ClassBrowserModel::refreshEnd,
+            this, &MainWindow::onClassBrowserRefreshEnd);
+
     connect(&mFileSystemWatcher,&QFileSystemWatcher::fileChanged,
             this, &MainWindow::onFileChanged);
 
@@ -4120,6 +4125,33 @@ void MainWindow::onClassBrowserChangeScope()
     if (editor && editor->inProject() &&
             mClassBrowserModel.classBrowserType()!=classBrowserType) {
         mClassBrowserModel.setClassBrowserType(classBrowserType);
+    }
+}
+
+void MainWindow::onClassBrowserRefreshStart()
+{
+    mClassBrowserCurrentStatement="";
+    QModelIndex index = ui->classBrowser->currentIndex();
+    if (!index.isValid())
+        return ;
+    ClassBrowserNode * node = static_cast<ClassBrowserNode*>(index.internalPointer());
+    if (!node)
+        return ;
+    PStatement statement = node->statement;
+    if (!statement) {
+        return;
+    }
+    mClassBrowserCurrentStatement=statement->fullName;
+}
+
+void MainWindow::onClassBrowserRefreshEnd()
+{
+    QModelIndex index = mClassBrowserModel.modelIndexForStatement(mClassBrowserCurrentStatement);
+    if (index.isValid()) {
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
+        ui->classBrowser->expandRecursively(index);
+#endif
+        ui->classBrowser->setCurrentIndex(index);
     }
 }
 
