@@ -1138,6 +1138,13 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
             return;
         }
 
+        if (editor->inProject() && !mProject) {
+            //project is in creation
+            mClassBrowserModel.setCurrentFile(editor->filename());
+            return;
+        }
+
+
         mClassBrowserModel.beginUpdate();
         mClassBrowserModel.setParser(editor->parser());
         if (editor->inProject()) {
@@ -6197,6 +6204,8 @@ void MainWindow::on_actionNew_Project_triggered()
         mProject->saveAll();
         updateProjectView();
         scanActiveProject(true);
+        Editor* editor = mEditorList->getEditor();
+        updateClassBrowserForEditor(editor);
     }
     pSettings->ui().setNewProjectDialogWidth(dialog.width());
     pSettings->ui().setNewProjectDialogHeight(dialog.height());
