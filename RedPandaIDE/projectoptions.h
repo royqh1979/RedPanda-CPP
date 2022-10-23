@@ -25,6 +25,11 @@ enum class ProjectModelType {
     Custom
 };
 
+enum class ProjectClassBrowserType {
+    CurrentFile,
+    WholeProject
+};
+
 enum class ProjectType {
     GUI=0,
     Console=1,
@@ -92,5 +97,6 @@ struct ProjectOptions{
     QByteArray execEncoding;
     QString encoding;
     ProjectModelType modelType;
+    ProjectClassBrowserType classBrowserType;
 };
 #endif // PROJECTOPTIONS_H

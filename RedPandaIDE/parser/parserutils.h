@@ -69,25 +69,25 @@ enum class SkipType {
 
 enum StatementKind  {
   skUnknown,
+  skNamespace,
+  skNamespaceAlias,
+  skClass,
   skPreprocessor,
   skEnumType,
   skEnumClassType,
-  skEnum,
   skTypedef,
-  skClass,
   skFunction,
+  skVariable,
+  skGlobalVariable,
+  skLocalVariable,
+  skEnum,
   skOperator,
   skConstructor,
   skDestructor,
-  skVariable,
   skParameter,
-  skNamespace,
-  skNamespaceAlias,
   skBlock,
   skUserCodeSnippet,  // user code template
   skKeyword, // keywords
-  skGlobalVariable,
-  skLocalVariable,
   skAlias
 };
 

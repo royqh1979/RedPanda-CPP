@@ -2593,7 +2593,8 @@ void CppParser::handlePreprocessor()
         if (delimPos>=0) {
             mCurrentFile = s.mid(0,delimPos).trimmed();
             mIsSystemHeader = isSystemHeaderFile(mCurrentFile) || isProjectHeaderFile(mCurrentFile);
-            mIsProjectFile = mProjectFiles.contains(mCurrentFile);             mIsHeader = isHFile(mCurrentFile);
+            mIsProjectFile = mProjectFiles.contains(mCurrentFile);
+            mIsHeader = isHFile(mCurrentFile);
 
             // Mention progress to user if we enter a NEW file
             bool ok;

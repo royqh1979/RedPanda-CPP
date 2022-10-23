@@ -5,6 +5,12 @@ Red Panda C++ Version 2.0
   - fix: save/load bookmark doesn't work
   - fix: if project has custom makefile but not enabled, project won't auto generate makefile.
   - fix: File path of Issues in project compilation is relative, and can't be correctly marked in the editors.
+  - fix: editor & class browser not correct updated when editor is switched but not focused
+  - enhancement: show all project statements in the class browser
+  - fix: namespace members defined in multiple places not correctly merged in the class browser
+  - fix: correctly display statements whose parent is not in the current file
+  - fix: statements is the class browser is correctly sorted
+  - enhancement: Weither double click on the class browser should goto definition/declaration,  depends on the current cursor position
 
 Red Panda C++ Version 1.5
 

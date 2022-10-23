@@ -347,6 +347,8 @@ private slots:
     void onClassBrowserShowInherited();
     void onClassBrowserSortByType();
     void onClassBrowserSortByName();
+    void onClassBrowserChangeScope();
+
     void onProjectSwitchCustomViewMode();
     void onProjectSwitchFileSystemViewMode();
     void onProjectRemoveFolder();
@@ -814,6 +816,8 @@ private:
     QAction * mClassBrowser_Show_Inherited;
     QAction * mClassBrowser_goto_declaration;
     QAction * mClassBrowser_goto_definition;
+    QAction * mClassBrowser_Show_CurrentFile;
+    QAction * mClassBrowser_Show_WholeProject;
     QWidget * mClassBrowserToolbar;
 
     //actions for files view

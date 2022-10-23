@@ -4529,6 +4529,14 @@
         <source>Can&apos;t open last open information file &apos;%1&apos; for write!</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>In current file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In current project</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -4778,14 +4786,6 @@
     <name>Project</name>
     <message>
         <source>untitled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t save file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t save file &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

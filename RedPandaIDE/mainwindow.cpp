@@ -1117,30 +1117,47 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
 
 void MainWindow::updateClassBrowserForEditor(Editor *editor)
 {
-    if (!editor) {
+    if (mQuitting) {
         mClassBrowserModel.setParser(nullptr);
         mClassBrowserModel.setCurrentFile("");
         return;
     }
-    if (mQuitting)
-        return;
-//    if not devCodeCompletion.Enabled then
-//      Exit;
-    if ((mClassBrowserModel.currentFile() == editor->filename())
-         && (mClassBrowserModel.parser() == editor->parser()))
-            return;
 
-    mClassBrowserModel.beginUpdate();
-    {
-        auto action = finally([this] {
-            mClassBrowserModel.endUpdate();
-        });
+    if (editor) {
+        if ((mClassBrowserModel.currentFile() == editor->filename())
+             && (mClassBrowserModel.parser() == editor->parser()))
+                return;
+
+        if (mClassBrowserModel.parser() == editor->parser() && mClassBrowserModel.classBrowserType()==ProjectClassBrowserType::WholeProject) {
+            mClassBrowserModel.setCurrentFile(editor->filename());
+            return;
+        }
+
+        mClassBrowserModel.beginUpdate();
         mClassBrowserModel.setParser(editor->parser());
-//              if e.InProject then begin
-//                ClassBrowser.StatementsType := devClassBrowsing.StatementsType;
-//              end else
-//                ClassBrowser.StatementsType := cbstFile;
+        if (editor->inProject()) {
+            mClassBrowserModel.setClassBrowserType(mProject->options().classBrowserType);
+            mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
+        } else
+            mClassBrowserModel.setClassBrowserType(ProjectClassBrowserType::CurrentFile);
         mClassBrowserModel.setCurrentFile(editor->filename());
+        mClassBrowserModel.endUpdate();
+    } else if (mProject) {
+        if (mClassBrowserModel.parser() == mProject->cppParser()) {
+            mClassBrowserModel.setCurrentFile("");
+            return;
+        }
+
+        mClassBrowserModel.beginUpdate();
+        mClassBrowserModel.setParser(mProject->cppParser());
+        mClassBrowserModel.setClassBrowserType(mProject->options().classBrowserType);
+        mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
+        mClassBrowserModel.setCurrentFile("");
+        mClassBrowserModel.endUpdate();
+    } else {
+        mClassBrowserModel.setParser(nullptr);
+        mClassBrowserModel.setCurrentFile("");
+        return;
     }
 }
 
@@ -2757,6 +2774,14 @@ void MainWindow::buildContextMenus()
     mClassBrowser_goto_definition = createActionFor(
                 tr("Goto definition"),
                 ui->tabStructure);
+    mClassBrowser_Show_CurrentFile = createActionFor(
+                tr("In current file"),
+                ui->tabStructure);
+    mClassBrowser_Show_CurrentFile->setCheckable(true);
+    mClassBrowser_Show_WholeProject = createActionFor(
+                tr("In current project"),
+                ui->tabStructure);
+    mClassBrowser_Show_WholeProject->setCheckable(true);
 
     mClassBrowser_Sort_By_Name->setChecked(pSettings->ui().classBrowserSortAlpha());
     mClassBrowser_Sort_By_Type->setChecked(pSettings->ui().classBrowserSortType());
@@ -2773,6 +2798,12 @@ void MainWindow::buildContextMenus()
 
     connect(mClassBrowser_goto_declaration,&QAction::triggered,
             this, &MainWindow::onClassBrowserGotoDeclaration);
+
+    connect(mClassBrowser_Show_CurrentFile,&QAction::triggered,
+            this, &MainWindow::onClassBrowserChangeScope);
+
+    connect(mClassBrowser_Show_WholeProject,&QAction::triggered,
+            this, &MainWindow::onClassBrowserChangeScope);
 
     //toolbar for class browser
     mClassBrowserToolbar = new QWidget();
@@ -3272,6 +3303,16 @@ void MainWindow::onClassBrowserContextMenu(const QPoint &pos)
     menu.addAction(mClassBrowser_Sort_By_Name);
     menu.addAction(mClassBrowser_Sort_By_Type);
     menu.addAction(mClassBrowser_Show_Inherited);
+    Editor * editor = mEditorList->getEditor();
+    if (editor) {
+        menu.addSeparator();
+        menu.addAction(mClassBrowser_Show_CurrentFile);
+        menu.addAction(mClassBrowser_Show_WholeProject);
+        if (mProject) {
+            mClassBrowser_Show_CurrentFile->setChecked(mProject->options().classBrowserType==ProjectClassBrowserType::CurrentFile);
+            mClassBrowser_Show_WholeProject->setChecked(mProject->options().classBrowserType==ProjectClassBrowserType::WholeProject);
+        }
+    }
 
     menu.exec(ui->projectView->mapToGlobal(pos));
 }
@@ -4000,7 +4041,24 @@ void MainWindow::onFilesViewOpen()
 
 void MainWindow::onClassBrowserGotoDeclaration()
 {
-    on_classBrowser_doubleClicked(ui->classBrowser->currentIndex());
+    QModelIndex index = ui->classBrowser->currentIndex();
+    if (!index.isValid())
+        return ;
+    ClassBrowserNode * node = static_cast<ClassBrowserNode*>(index.internalPointer());
+    if (!node)
+        return ;
+    PStatement statement = node->statement;
+    if (!statement) {
+        return;
+    }
+    QString filename;
+    int line;
+    filename = statement->fileName;
+    line = statement->line;
+    Editor* e=openFile(filename);
+    if (e) {
+        e->setCaretPositionAndActivate(line,1);
+    }
 }
 
 void MainWindow::onClassBrowserGotoDefinition()
@@ -4044,6 +4102,25 @@ void MainWindow::onClassBrowserSortByName()
     pSettings->ui().setClassBrowserSortAlpha(mClassBrowser_Sort_By_Name->isChecked());
     pSettings->ui().save();
     mClassBrowserModel.fillStatements();
+}
+
+void MainWindow::onClassBrowserChangeScope()
+{
+    if (!mProject)
+        return;
+    ProjectClassBrowserType classBrowserType;
+    if (mProject->options().classBrowserType==ProjectClassBrowserType::CurrentFile) {
+        classBrowserType=ProjectClassBrowserType::WholeProject;
+    } else {
+        classBrowserType=ProjectClassBrowserType::CurrentFile;
+    }
+    mProject->options().classBrowserType=classBrowserType;
+    mProject->saveOptions();
+    Editor* editor = mEditorList->getEditor();
+    if (editor && editor->inProject() &&
+            mClassBrowserModel.classBrowserType()!=classBrowserType) {
+        mClassBrowserModel.setClassBrowserType(classBrowserType);
+    }
 }
 
 void MainWindow::onProjectSwitchCustomViewMode()
@@ -6256,8 +6333,27 @@ void MainWindow::on_classBrowser_doubleClicked(const QModelIndex &index)
     }
     QString filename;
     int line;
-    filename = statement->fileName;
-    line = statement->line;
+    Editor* currentEditor = mEditorList->getEditor();
+    if (currentEditor) {
+        if (statement->fileName == currentEditor->filename()
+                && statement->definitionFileName!=currentEditor->filename()) {
+            filename = statement->definitionFileName;
+            line = statement->definitionLine;
+        } else if (statement->fileName != currentEditor->filename()
+                && statement->definitionFileName==currentEditor->filename()) {
+            filename = statement->fileName;
+            line = statement->line;
+        } else if (currentEditor->caretY()==statement->line) {
+            filename = statement->definitionFileName;
+            line = statement->definitionLine;
+        } else {
+            filename = statement->fileName;
+            line = statement->line;
+        }
+    } else {
+        filename = statement->fileName;
+        line = statement->line;
+    }
     Editor* e = openFile(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);

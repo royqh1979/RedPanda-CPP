@@ -4676,6 +4676,14 @@
         <source>Can&apos;t open last open information file &apos;%1&apos; for write!</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>In current file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In current project</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -4933,11 +4941,11 @@
     </message>
     <message>
         <source>Can&apos;t save file</source>
-        <translation>Impossível salvar arquivo</translation>
+        <translation type="vanished">Impossível salvar arquivo</translation>
     </message>
     <message>
         <source>Can&apos;t save file &apos;%1&apos;</source>
-        <translation>Impossível salvar arquivo &apos;%1&apos;</translation>
+        <translation type="vanished">Impossível salvar arquivo &apos;%1&apos;</translation>
     </message>
     <message>
         <source>Error Load File</source>

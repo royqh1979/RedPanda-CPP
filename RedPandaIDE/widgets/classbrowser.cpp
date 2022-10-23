@@ -206,6 +206,7 @@ void ClassBrowserModel::clear()
     mRoot->children.clear();
     mNodes.clear();
     mDummyStatements.clear();
+    mScopeNodes.clear();
     endResetModel();
 }
 
@@ -230,25 +231,15 @@ void ClassBrowserModel::fillStatements()
             return;
         if (!mParser->freeze())
             return;
-        {
-            auto action2 = finally([this]{
-                mParser->unFreeze();
-            });
-            QString mParserSerialId = mParser->serialId();
-            if (!mCurrentFile.isEmpty()) {
-                // QSet<QString> includedFiles = mParser->getFileIncludes(mCurrentFile);
-
-                addMembers();
-                // Remember selection
-//                  if fLastSelection <> '' then
-//                    ReSelect;
-            }
-
+        QString mParserSerialId = mParser->serialId();
+        if (!mCurrentFile.isEmpty()) {
+            addMembers();
         }
+        mParser->unFreeze();
     }
 }
 
-void ClassBrowserModel::addChild(ClassBrowserNode *node, PStatement statement)
+PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PStatement& statement)
 {
     PClassBrowserNode newNode = std::make_shared<ClassBrowserNode>();
     newNode->parent = node;
@@ -256,23 +247,71 @@ void ClassBrowserModel::addChild(ClassBrowserNode *node, PStatement statement)
 //    newNode->childrenFetched = false;
     node->children.append(newNode.get());
     mNodes.append(newNode);
+    if (statement->kind == StatementKind::skClass
+            || statement->kind == StatementKind::skNamespace)
+        mScopeNodes.insert(statement->fullName,newNode);
     //don't show enum type's children values (they are displayed in parent scope)
-    if (statement->kind != StatementKind::skEnumType)
+    if (statement->kind != StatementKind::skEnumType) {
         filterChildren(newNode.get(), statement->children);
+    }
+    return newNode;
 }
 
 void ClassBrowserModel::addMembers()
 {
-    // show statements in the file
-    PFileIncludes p = mParser->findFileIncludes(mCurrentFile);
-    if (!p)
-        return;
-    filterChildren(mRoot,p->statements);
+    if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
+        // show statements in the file
+        PFileIncludes p = mParser->findFileIncludes(mCurrentFile);
+        if (!p)
+            return;
+        filterChildren(mRoot,p->statements);
+    } else {
+        foreach(const QString& file,mCurrentFiles) {
+            PFileIncludes p = mParser->findFileIncludes(file);
+            if (!p)
+                return;
+            filterChildren(mRoot,p->statements);
+        }
+    }
+    sortNode(mRoot);
+}
+
+void ClassBrowserModel::sortNode(ClassBrowserNode *node)
+{
+    if (pSettings->ui().classBrowserSortAlpha()
+            && pSettings->ui().classBrowserSortType()) {
+        std::sort(node->children.begin(),node->children.end(),
+                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+            if (node1->statement->kind < node2->statement->kind) {
+                return true;
+            } else if (node1->statement->kind == node2->statement->kind) {
+                return node1->statement->command.toLower() < node2->statement->command.toLower();
+            } else {
+                return false;
+            }
+        });
+    } else if (pSettings->ui().classBrowserSortAlpha()) {
+        std::sort(node->children.begin(),node->children.end(),
+                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+            return node1->statement->command.toLower() < node2->statement->command.toLower();
+        });
+    } else if (pSettings->ui().classBrowserSortType()) {
+        std::sort(node->children.begin(),node->children.end(),
+                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+            return node1->statement->kind < node2->statement->kind;
+        });
+    }
+    foreach(ClassBrowserNode* child,node->children) {
+        sortNode(child);
+    }
 }
 
 void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMap &statements)
 {
     for (PStatement statement:statements) {
+        if (mClassBrowserType==ProjectClassBrowserType::WholeProject
+                && !statement->inProject)
+            continue;
         if (statement->kind == StatementKind::skBlock)
             continue;
         if (statement->isInherited && !pSettings->ui().classBrowserShowInherited())
@@ -284,91 +323,51 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
         if (statement->scope == StatementScope::ssLocal)
             continue;
 
+        if (pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine()
+                && statement->command.startsWith("__"))
+            continue;
 
-//        if (fStatementsType = cbstProject) then begin
-//          if not Statement^._InProject then
-//            Continue;
-//          if Statement^._Static and not SameText(Statement^._FileName,fCurrentFile)
-//            and not SameText(Statement^._FileName,fCurrentFile) then
-//            Continue;
-//        end;
+        if (pSettings->codeCompletion().hideSymbolsStartsWithUnderLine()
+                && statement->command.startsWith('_'))
+            continue;
 
         // we only test and handle orphan statements in the top level (node->statement is null)
         PStatement parentScope = statement->parentScope.lock();
-        if ((parentScope!=node->statement) && (!node->statement)) {
-
-//          // we only handle orphan statements when type is cbstFile
-//          if fStatementsType <> cbstFile then
-//            Continue;
-
+        if ( (mClassBrowserType==ProjectClassBrowserType::CurrentFile)
+                && (parentScope!=node->statement)
+                && (!parentScope || !node->statement
+                    || parentScope->fullName!=node->statement->fullName)) {
 //          //should not happend, just in case of error
             if (!parentScope)
                 continue;
 
             // Processing the orphan statement
-            while (statement) {
                 //the statement's parent is in this file, so it's not a real orphan
-                if ((parentScope->fileName==mCurrentFile)
-                        ||(parentScope->definitionFileName==mCurrentFile))
-                    break;
-
-                PStatement dummyParent = mDummyStatements.value(parentScope->fullName,PStatement());
-                if (dummyParent) {
-                    dummyParent->children.insert(statement->command,statement);
-                    break;
-                }
-                dummyParent = createDummy(parentScope);
-                dummyParent->children.insert(statement->command,statement);
-                //we are adding an orphan statement, just add it
-                statement = dummyParent;
-                parentScope = statement->parentScope.lock();
-                if (!parentScope) {
-                    addChild(node,statement);
-
-                    break;
-                }
-            }
-        } else if (statement->kind == StatementKind::skNamespace) {
-            PStatement dummy = mDummyStatements.value(statement->fullName,PStatement());
-            if (dummy) {
-                for (PStatement child: statement->children) {
-                    dummy->children.insert(child->command,child);
-                }
+            if ((parentScope->fileName==mCurrentFile)
+                    ||(parentScope->definitionFileName==mCurrentFile))
                 continue;
+
+            ClassBrowserNode *dummyNode = getParentNode(parentScope,1);
+            if (dummyNode)
+                addChild(dummyNode,statement);
+        } else if (statement->kind == StatementKind::skNamespace) {
+            //PStatement dummy = mDummyStatements.value(statement->fullName,PStatement());
+            PClassBrowserNode dummyNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
+            if (dummyNode) {
+                filterChildren(dummyNode.get(),statement->children);
+                continue;
+            } else {
+                PStatement dummy = createDummy(statement);
+                dummy->children = statement->children;
+                dummyNode = addChild(node,dummy);
             }
-            dummy = createDummy(statement);
-            dummy->children = statement->children;
-            addChild(node,dummy);
         } else {
             addChild(node,statement);
         }
     }
-    if (pSettings->ui().classBrowserSortAlpha()
-            && pSettings->ui().classBrowserSortType()) {
-        std::sort(node->children.begin(),node->children.end(),
-                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-            if (node1->statement->kind < node2->statement->kind) {
-                return true;
-            } else if (node1->statement->kind == node2->statement->kind) {
-                return node1->statement->command < node2->statement->command;
-            } else {
-                return false;
-            }
-        });
-    } else if (pSettings->ui().classBrowserSortAlpha()) {
-        std::sort(node->children.begin(),node->children.end(),
-                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-            return node1->statement->command < node2->statement->command;
-        });
-    } else if (pSettings->ui().classBrowserSortType()) {
-        std::sort(node->children.begin(),node->children.end(),
-                  [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
-            return node1->statement->kind < node2->statement->kind;
-        });
-    }
 }
 
-PStatement ClassBrowserModel::createDummy(PStatement statement)
+PStatement ClassBrowserModel::createDummy(const PStatement& statement)
 {
     PStatement result = std::make_shared<Statement>();
     result->parentScope = statement->parentScope;
@@ -391,6 +390,49 @@ PStatement ClassBrowserModel::createDummy(PStatement statement)
     result->definitionLine = 0;
     mDummyStatements.insert(result->fullName,result);
     return result;
+}
+
+ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentStatement, int depth)
+{
+    if (depth>10)
+        return nullptr;
+    if (!parentStatement)
+        return mRoot;
+    if (parentStatement->kind!=skClass
+            && parentStatement->kind!=skNamespace)
+        return mRoot;
+    PClassBrowserNode parentNode = mScopeNodes.value(parentStatement->fullName,PClassBrowserNode());
+    if (!parentNode) {
+        PStatement dummyParent = createDummy(parentStatement);
+        //todo: find the correct parent node
+        ClassBrowserNode *grandNode = getParentNode(parentStatement->parentScope.lock(), depth+1);
+        parentNode = addChild(grandNode,dummyParent);
+    }
+    return parentNode.get();
+}
+
+const QStringList &ClassBrowserModel::currentFiles() const
+{
+    return mCurrentFiles;
+}
+
+void ClassBrowserModel::setCurrentFiles(const QStringList &newCurrentFiles)
+{
+    mCurrentFiles = newCurrentFiles;
+}
+
+ProjectClassBrowserType ClassBrowserModel::classBrowserType() const
+{
+    return mClassBrowserType;
+}
+
+void ClassBrowserModel::setClassBrowserType(ProjectClassBrowserType newClassBrowserType)
+{
+    if (mClassBrowserType != newClassBrowserType) {
+        beginUpdate();
+        mClassBrowserType = newClassBrowserType;
+        endUpdate();
+    }
 }
 
 const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &ClassBrowserModel::colors() const
