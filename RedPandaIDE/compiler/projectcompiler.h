@@ -50,6 +50,10 @@ private:
 protected:
     bool prepareForCompile() override;
     bool prepareForRebuild() override;
+
+    // Compiler interface
+protected:
+    QString getFileNameFromOutputLine(QString &line) override;
 };
 
 #endif // PROJECTCOMPILER_H

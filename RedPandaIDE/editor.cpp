@@ -535,21 +535,12 @@ void Editor::wheelEvent(QWheelEvent *event) {
 void Editor::focusInEvent(QFocusEvent *event)
 {
     SynEdit::focusInEvent(event);
-    pMainWindow->updateAppTitle();
-    pMainWindow->updateEditorActions();
-    pMainWindow->updateForEncodingInfo();
-    pMainWindow->updateStatusbarForLineCol();
-    pMainWindow->updateForStatusbarModeInfo();
-    pMainWindow->updateClassBrowserForEditor(this);
 }
 
 void Editor::focusOutEvent(QFocusEvent *event)
 {
     SynEdit::focusOutEvent(event);
     //pMainWindow->updateClassBrowserForEditor(nullptr);
-    pMainWindow->updateForEncodingInfo();
-    pMainWindow->updateStatusbarForLineCol();
-    pMainWindow->updateForStatusbarModeInfo();
     pMainWindow->functionTip()->hide();
 }
 
@@ -1301,7 +1292,14 @@ void Editor::showEvent(QShowEvent */*event*/)
         checkSyntaxInBack();
         reparseTodo();
     }
-    setHideTime(QDateTime());
+    pMainWindow->updateClassBrowserForEditor(this);
+    pMainWindow->updateAppTitle();
+    pMainWindow->updateEditorActions();
+    pMainWindow->updateForEncodingInfo();
+    pMainWindow->updateStatusbarForLineCol();
+    pMainWindow->updateForStatusbarModeInfo();
+
+    setHideTime(QDateTime::currentDateTime());
 }
 
 void Editor::hideEvent(QHideEvent */*event*/)
@@ -1318,6 +1316,10 @@ void Editor::hideEvent(QHideEvent */*event*/)
                 this,
                 &QSynedit::SynEdit::invalidate);
     }
+    pMainWindow->updateForEncodingInfo();
+    pMainWindow->updateStatusbarForLineCol();
+    pMainWindow->updateForStatusbarModeInfo();
+
     setHideTime(QDateTime::currentDateTime());
 }
 

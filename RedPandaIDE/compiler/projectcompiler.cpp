@@ -33,7 +33,7 @@ ProjectCompiler::ProjectCompiler(std::shared_ptr<Project> project, bool silent, 
 void ProjectCompiler::buildMakeFile()
 {
     //we are using custom make file, don't overwrite it
-    if (!mProject->options().customMakefile.isEmpty())
+    if (mProject->options().useCustomMakefile && !mProject->options().customMakefile.isEmpty())
         return;
 
     switch(mProject->options().type) {
@@ -510,6 +510,12 @@ bool ProjectCompiler::prepareForRebuild()
 {
     //we use make argument to clean
     return true;
+}
+
+QString ProjectCompiler::getFileNameFromOutputLine(QString &line)
+{
+    QString temp=Compiler::getFileNameFromOutputLine(line);
+    return QDir(mDirectory).absoluteFilePath(temp);
 }
 
 bool ProjectCompiler::prepareForCompile()

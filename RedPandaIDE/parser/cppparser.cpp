@@ -4269,14 +4269,31 @@ void CppParser::internalInvalidateFile(const QString &fileName)
     if (fileName.isEmpty())
         return;
 
-    //remove all statements in the file
+    // remove its include files list
+    PFileIncludes p = findFileIncludes(fileName, true);
+    if (p) {
+        //fPreprocessor.InvalidDefinesInFile(FileName); //we don't need this, since we reset defines after each parse
+        //p->includeFiles.clear();
+        //p->usings.clear();
+        for (PStatement& statement:p->statements) {
+            if (statement->fileName==fileName) {
+                mStatementList.deleteStatement(statement);
+            } else {
+                statement->hasDefinition=false;
+                statement->definitionFileName = statement->fileName;
+                statement->definitionLine = statement->line;
+            }
+        }
+        p->statements.clear();
+    }
+
+    //remove all statements from namespace cache
     const QList<QString>& keys=mNamespaces.keys();
     for (const QString& key:keys) {
         PStatementList statements = mNamespaces.value(key);
         for (int i=statements->size()-1;i>=0;i--) {
             PStatement statement = statements->at(i);
-            if (statement->fileName == fileName
-                    || statement->definitionFileName == fileName) {
+            if (statement->fileName == fileName) {
                 statements->removeAt(i);
             }
         }
@@ -4285,17 +4302,6 @@ void CppParser::internalInvalidateFile(const QString &fileName)
         }
     }
 
-    // remove its include files list
-    PFileIncludes p = findFileIncludes(fileName, true);
-    if (p) {
-        //fPreprocessor.InvalidDefinesInFile(FileName); //we don't need this, since we reset defines after each parse
-        //p->includeFiles.clear();
-        //p->usings.clear();
-        for (PStatement& statement:p->statements) {
-            mStatementList.deleteStatement(statement);
-        }
-        p->statements.clear();
-    }
     // delete it from scannedfiles
     mPreprocessor.removeScannedFile(fileName);
 }

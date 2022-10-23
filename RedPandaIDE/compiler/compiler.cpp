@@ -100,10 +100,15 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
             break;
         }
 
-        if (QFileInfo(temp).fileName() == QLatin1String("ld.exe")) { // skip ld.exe
+        QFileInfo fileInfo(temp);
+        if (fileInfo.fileName() == QLatin1String("ld.exe")) { // skip ld.exe
             continue;
-        } else if (QFileInfo(temp).suffix()=="o") { // skip obj file
-                continue;
+        } else if (fileInfo.fileName() == QLatin1String("make")) { // skip make.exe
+            continue;
+        } else if (fileInfo.fileName() == QLatin1String("mingw32-make")) { // skip mingw32-make.exe
+            continue;
+        } else if (fileInfo.suffix()=="o") { // skip obj file
+            continue;
         } else {
             break;
         }

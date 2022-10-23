@@ -3,6 +3,8 @@ Red Panda C++ Version 2.0
   - redesign the project parser, more efficient and correct
   - enhancement: todo parser for project
   - fix: save/load bookmark doesn't work
+  - fix: if project has custom makefile but not enabled, project won't auto generate makefile.
+  - fix: File path of Issues in project compilation is relative, and can't be correctly marked in the editors.
 
 Red Panda C++ Version 1.5
 
