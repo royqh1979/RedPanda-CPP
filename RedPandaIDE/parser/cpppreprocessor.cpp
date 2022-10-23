@@ -479,7 +479,6 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
         mOnGetFileStream(fileName,buffer);
     }
     openInclude(fileName, buffer);
-    //oldCurrentIncludes->includeFiles.insert(fileName,true);
 }
 
 void CppPreprocessor::handlePreprocessor(const QString &value)
@@ -730,12 +729,6 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         // do NOT create a new item for a file that's already in the list
         mCurrentIncludes = std::make_shared<FileIncludes>();
         mCurrentIncludes->baseFile = fileName;
-        //mCurrentIncludes->includeFiles;
-        //mCurrentIncludes->usings;
-        //mCurrentIncludes->statements;
-        //mCurrentIncludes->scopes;
-        //mCurrentIncludes->dependedFiles;
-        //mCurrentIncludes->dependingFiles;
         mIncludesList.insert(fileName,mCurrentIncludes);
     }
 
@@ -748,7 +741,7 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         mScannedFiles.insert(fileName);
 
         // Only load up the file if we are allowed to parse it
-        bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths);
+        bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths) || isSystemHeaderFile(fileName, mProjectIncludePaths);
         if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
             if (!bufferedText.isEmpty()) {
                 parsedFile->buffer  = bufferedText;
@@ -764,9 +757,6 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
             foreach (const QString& incFile,fileIncludes->includeFiles.keys()) {
                 file->fileIncludes->includeFiles.insert(incFile,false);
             }
-//            file->fileIncludes->includeFiles =
-//                    file->fileIncludes->includeFiles.unite(fileIncludes->includeFiles);
-            // file->fileIncludes->includeFiles.insert(fileIncludes->includeFiles);
         }
     }
     mIncludes.append(parsedFile);

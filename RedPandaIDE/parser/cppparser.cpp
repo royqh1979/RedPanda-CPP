@@ -814,28 +814,40 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
         if (onlyIfNotParsed && mPreprocessor.scannedFiles().contains(fName))
             return;
 
-        QSet<QString> filesToReparsed = calculateFilesToBeReparsed(fileName);
-        internalInvalidateFiles(filesToReparsed);
+        if (inProject) {
+            QSet<QString> filesToReparsed = calculateFilesToBeReparsed(fileName);
+            internalInvalidateFiles(filesToReparsed);
 
-        QStringList files = sortFilesByIncludeRelations(filesToReparsed);
+            QStringList files = sortFilesByIncludeRelations(filesToReparsed);
 
-        if (inProject)
-            mProjectFiles.insert(fileName);
-        else {
-            mProjectFiles.remove(fileName);
+            mFilesToScanCount = files.count();
+            mFilesScannedCount = 0;
+
+            foreach (const QString& file,files) {
+                mFilesScannedCount++;
+                emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
+                if (!mPreprocessor.scannedFiles().contains(file)) {
+                    internalParse(file);
+                }
+            }
+        } else {
+            internalInvalidateFile(fileName);
+            mFilesToScanCount = 1;
+            mFilesScannedCount = 0;
+
+            mFilesScannedCount++;
+            emit onProgress(fileName,mFilesToScanCount,mFilesScannedCount);
+            internalParse(fileName);
         }
+
+//        if (inProject)
+//            mProjectFiles.insert(fileName);
+//        else {
+//            mProjectFiles.remove(fileName);
+//        }
 
         // Parse from disk or stream
-        mFilesToScanCount = files.count();
-        mFilesScannedCount = 0;
 
-        foreach (const QString& file,files) {
-            mFilesScannedCount++;
-            emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
-            if (!mPreprocessor.scannedFiles().contains(file)) {
-                internalParse(file);
-            }
-        }
     }
 }
 
@@ -1442,7 +1454,8 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
         if (mOnGetFileStream) {
             mOnGetFileStream(file,buffer);
         }
-        mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
+        //we only use local include relations
+        mPreprocessor.setScanOptions(false, true);
         mPreprocessor.preprocess(file,buffer);
         mPreprocessor.clearTempResults();
     }
@@ -4324,10 +4337,11 @@ QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
         return QSet<QString>();
     QSet<QString> result;
     result.insert(fileName);
-    foreach (const QString& file,mPreprocessor.includesList().keys()) {
+    foreach (const QString& file, mProjectFiles) {
         PFileIncludes fileIncludes = mPreprocessor.includesList()[file];
-        if (fileIncludes->includeFiles.contains(fileName))
+        if (fileIncludes->includeFiles.contains(fileName)) {
             result.insert(file);
+        }
     }
     return result;
 }
