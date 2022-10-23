@@ -1125,6 +1125,7 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
     if (mQuitting) {
         mClassBrowserModel.setParser(nullptr);
         mClassBrowserModel.setCurrentFile("");
+        mClassBrowserModel.setCurrentFiles(QStringList());
         return;
     }
 
@@ -1150,8 +1151,10 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
         if (editor->inProject()) {
             mClassBrowserModel.setClassBrowserType(mProject->options().classBrowserType);
             mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
-        } else
+        } else {
             mClassBrowserModel.setClassBrowserType(ProjectClassBrowserType::CurrentFile);
+            mClassBrowserModel.setCurrentFiles(QStringList());
+        }
         mClassBrowserModel.setCurrentFile(editor->filename());
         mClassBrowserModel.endUpdate();
     } else if (mProject) {
@@ -1169,6 +1172,7 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
     } else {
         mClassBrowserModel.setParser(nullptr);
         mClassBrowserModel.setCurrentFile("");
+        mClassBrowserModel.setCurrentFiles(QStringList());
         return;
     }
 }
@@ -4148,7 +4152,10 @@ void MainWindow::onClassBrowserRefreshStart()
     if (!statement) {
         return;
     }
-    mClassBrowserCurrentStatement=statement->fullName;
+    mClassBrowserCurrentStatement=QString("%1+%2+%3")
+            .arg(statement->fullName)
+            .arg(statement->noNameArgs)
+            .arg((int)statement->kind);
 }
 
 void MainWindow::onClassBrowserRefreshEnd()

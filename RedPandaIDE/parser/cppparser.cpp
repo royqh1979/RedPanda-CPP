@@ -1430,6 +1430,9 @@ void CppParser::internalClear()
 QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
 {
     QStringList result;
+    QSet<QString> saveScannedFiles;
+
+    saveScannedFiles=mPreprocessor.scannedFiles();
 
     //rebuild file include relations
     foreach(const QString& file, files) {
@@ -1440,7 +1443,7 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
             mOnGetFileStream(file,buffer);
         }
         mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
-        mPreprocessor.preprocess(file);
+        mPreprocessor.preprocess(file,buffer);
         mPreprocessor.clearTempResults();
     }
 
@@ -1470,8 +1473,10 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
             }
         }
     }
-    foreach(const QString& file, files) {
-        mPreprocessor.removeScannedFile(file);
+    QSet<QString> newScannedFiles = mPreprocessor.scannedFiles();
+    foreach(const QString& file, newScannedFiles) {
+        if (!saveScannedFiles.contains(file))
+            mPreprocessor.removeScannedFile(file);
     }
     return result;
 }

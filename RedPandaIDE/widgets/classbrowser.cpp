@@ -236,9 +236,7 @@ void ClassBrowserModel::fillStatements()
         if (!mParser->freeze())
             return;
         QString mParserSerialId = mParser->serialId();
-        if (!mCurrentFile.isEmpty()) {
-            addMembers();
-        }
+        addMembers();
         mParser->unFreeze();
     }
 }
@@ -251,11 +249,16 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
 //    newNode->childrenFetched = false;
     node->children.append(newNode.get());
     mNodes.append(newNode);
-    mNodeIndex.insert(statement->fullName,newNode);
+    mNodeIndex.insert(
+                QString("%1+%2+%3")
+                .arg(statement->fullName)
+                .arg(statement->noNameArgs)
+                .arg((int)statement->kind),newNode);
     mProcessedStatements.insert(statement.get());
     if (statement->kind == StatementKind::skClass
-            || statement->kind == StatementKind::skNamespace)
+            || statement->kind == StatementKind::skNamespace) {
         mScopeNodes.insert(statement->fullName,newNode);
+    }
     //don't show enum type's children values (they are displayed in parent scope)
     if (statement->kind != StatementKind::skEnumType) {
         filterChildren(newNode.get(), statement->children);
@@ -266,12 +269,16 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
 void ClassBrowserModel::addMembers()
 {
     if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
+        if (mCurrentFile.isEmpty())
+            return;
         // show statements in the file
         PFileIncludes p = mParser->findFileIncludes(mCurrentFile);
         if (!p)
             return;
         filterChildren(mRoot,p->statements);
     } else {
+        if (mCurrentFiles.isEmpty())
+            return;
         foreach(const QString& file,mCurrentFiles) {
             PFileIncludes p = mParser->findFileIncludes(file);
             if (!p)
@@ -341,6 +348,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
                 && statement->command.startsWith('_'))
             continue;
 
+        ClassBrowserNode *parentNode=node;
         // we only test and handle orphan statements in the top level (node->statement is null)
         PStatement parentScope = statement->parentScope.lock();
         if ( (mClassBrowserType==ProjectClassBrowserType::CurrentFile)
@@ -359,8 +367,9 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
 
             ClassBrowserNode *dummyNode = getParentNode(parentScope,1);
             if (dummyNode)
-                addChild(dummyNode,statement);
-        } else if (statement->kind == StatementKind::skNamespace) {
+                parentNode = dummyNode;
+        }
+        if (statement->kind == StatementKind::skNamespace || statement->kind == StatementKind::skClass) {
             //PStatement dummy = mDummyStatements.value(statement->fullName,PStatement());
             PClassBrowserNode dummyNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
             if (dummyNode) {
@@ -369,10 +378,10 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
             } else {
                 PStatement dummy = createDummy(statement);
                 dummy->children = statement->children;
-                dummyNode = addChild(node,dummy);
+                dummyNode = addChild(parentNode,dummy);
             }
         } else {
-            addChild(node,statement);
+            addChild(parentNode,statement);
         }
     }
 }
@@ -409,12 +418,12 @@ ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentState
     if (!parentStatement)
         return mRoot;
     if (parentStatement->kind!=skClass
-            && parentStatement->kind!=skNamespace)
+            && parentStatement->kind!=skNamespace) {
         return mRoot;
+    }
     PClassBrowserNode parentNode = mScopeNodes.value(parentStatement->fullName,PClassBrowserNode());
     if (!parentNode) {
         PStatement dummyParent = createDummy(parentStatement);
-        //todo: find the correct parent node
         ClassBrowserNode *grandNode = getParentNode(parentStatement->parentScope.lock(), depth+1);
         parentNode = addChild(grandNode,dummyParent);
     }
@@ -431,12 +440,12 @@ void ClassBrowserModel::setCurrentFiles(const QStringList &newCurrentFiles)
     mCurrentFiles = newCurrentFiles;
 }
 
-QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &fullname)
+QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key)
 {
     QMutexLocker locker(&mMutex);
     if (mUpdating)
         return QModelIndex();
-    PClassBrowserNode node=mNodeIndex.value(fullname,PClassBrowserNode());
+    PClassBrowserNode node=mNodeIndex.value(key,PClassBrowserNode());
     if (!node)
         return QModelIndex();
 

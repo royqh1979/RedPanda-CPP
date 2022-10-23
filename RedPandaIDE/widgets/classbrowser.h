@@ -65,7 +65,7 @@ public:
     const QStringList &currentFiles() const;
     void setCurrentFiles(const QStringList &newCurrentFiles);
 
-    QModelIndex modelIndexForStatement(const QString& fullname);
+    QModelIndex modelIndexForStatement(const QString& key);
 signals:
     void refreshStarted();
     void refreshEnd();
