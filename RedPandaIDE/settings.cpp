@@ -5308,14 +5308,6 @@ void Settings::UI::doSave()
     saveValue("show_bookmark", mShowBookmark);
     saveValue("show_problem", mShowProblem);
 
-    saveValue("show_issues", mIssuesOrder);
-    saveValue("show_compile_log", mShowCompileLog);
-    saveValue("show_debug", mShowDebug);
-    saveValue("show_search", mShowSearch);
-    saveValue("show_todo", mShowTODO);
-    saveValue("show_bookmark", mShowBookmark);
-    saveValue("show_problem", mShowProblem);
-
     saveValue("project_order", mProjectOrder);
     saveValue("watch_order", mWatchOrder);
     saveValue("structure_order", mStructureOrder);
