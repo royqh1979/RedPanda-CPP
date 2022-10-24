@@ -1289,8 +1289,10 @@ void Editor::showEvent(QShowEvent */*event*/)
 //    }
     if (!pMainWindow->isClosingAll()
                 && !pMainWindow->isQuitting()) {
-        checkSyntaxInBack();
-        reparseTodo();
+        if (!inProject() || !pMainWindow->closingProject()) {
+            checkSyntaxInBack();
+            reparseTodo();
+        }
     }
     pMainWindow->updateClassBrowserForEditor(this);
     pMainWindow->updateAppTitle(this);
@@ -1298,7 +1300,7 @@ void Editor::showEvent(QShowEvent */*event*/)
     pMainWindow->updateForEncodingInfo(this);
     pMainWindow->updateStatusbarForLineCol(this);
     pMainWindow->updateForStatusbarModeInfo(this);
-    if (inProject()) {
+    if (inProject() && !pMainWindow->closingProject()) {
         pMainWindow->setProjectCurrentFile(mFilename);
     }
 

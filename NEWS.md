@@ -21,6 +21,7 @@ Red Panda C++ Version 2.0
   - enhancement: separate compiler's language standard option for C / C++
   - fix: compiler settings not correctly handled when create makefile
   - enhancement: auto locate current open file in the project view panel
+  - enhancement: when closing project, prevent all editors that belongs to the project check syntax and parse todos.
 
 Red Panda C++ Version 1.5
 

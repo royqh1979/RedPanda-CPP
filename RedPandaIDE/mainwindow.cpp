@@ -109,6 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       mSearchDialog(nullptr),
       mQuitting(false),
+      mClosingProject(false),
       mCheckSyntaxInBack(false),
       mShouldRemoveAllSettings(false),
       mClosing(false),
@@ -4602,6 +4603,7 @@ void MainWindow::closeProject(bool refreshEditor)
         } else
             mProject->saveLayout(); // always save layout, but not when SaveAll has been called
 
+        mClosingProject=true;
         mBookmarkModel->saveProjectBookmarks(
                     changeFileExt(mProject->filename(), PROJECT_BOOKMARKS_EXT),
                     mProject->directory());
@@ -4640,6 +4642,7 @@ void MainWindow::closeProject(bool refreshEditor)
             clearIssues();
             updateProjectView();
         }
+        mClosingProject=false;
     }
 }
 
@@ -8579,6 +8582,11 @@ void MainWindow::on_actionNew_Template_triggered()
                     dialog.getCategory()
                     );
     }
+}
+
+bool MainWindow::closingProject() const
+{
+    return mClosingProject;
 }
 
 const std::shared_ptr<VisitHistoryManager> &MainWindow::visitHistoryManager() const

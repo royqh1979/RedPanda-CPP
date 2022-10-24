@@ -746,6 +746,7 @@ private:
     CPUDialog *mCPUDialog;
     SearchDialog *mSearchDialog;
     bool mQuitting;
+    bool mClosingProject;
     QElapsedTimer mParserTimer;
     QFileSystemWatcher mFileSystemWatcher;
     std::shared_ptr<Project> mProject;
@@ -880,6 +881,7 @@ public:
     bool isClosingAll() const;
     bool isQuitting() const;
     const std::shared_ptr<VisitHistoryManager> &visitHistoryManager() const;
+    bool closingProject() const;
 };
 
 extern MainWindow* pMainWindow;
