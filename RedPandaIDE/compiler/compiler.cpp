@@ -113,8 +113,7 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
             break;
         }
     }
-    QFileInfo info(temp);
-    return info.isAbsolute()?cleanPath(temp):absolutePath(mDirectory,temp);
+    return temp;
 }
 
 int Compiler::getLineNumberFromOutputLine(QString &line)
@@ -389,8 +388,9 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
         if (pOption && pOption->isC && !pOption->isLinker) {
             if (pOption->choices.isEmpty())
                 result += " " + pOption->setting;
-            else
-                result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
+            else {
+                result += " " + pOption->setting + compileOptions[key];
+            }
         }
     }
 
@@ -432,7 +432,7 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
             if (pOption->choices.isEmpty())
                 result += " " + pOption->setting;
             else
-                result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
+                result += " " + pOption->setting + compileOptions[key];
         }
     }
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
@@ -544,10 +544,9 @@ QString Compiler::getLibraryArguments(FileType fileType)
             if (pOption->choices.isEmpty())
                 result += " " + pOption->setting;
             else
-                result += " " + pOption->setting + compilerSet()->getCompileOptionValue(key);
+                result += " " + pOption->setting + compileOptions[key];
         }
     }
-
 
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {

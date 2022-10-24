@@ -68,27 +68,30 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Debug (g)","g"));
     addOption(CC_CMD_OPT_OPTIMIZE, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", sl);
 
-    // Language Standards
+    // C++ Language Standards
     sl.clear();
-    sl.append(QPair<QString,QString>("ISO C90","c90"));
-    sl.append(QPair<QString,QString>("ISO C99","c99"));
-    sl.append(QPair<QString,QString>("ISO C11","c11"));
-    sl.append(QPair<QString,QString>("ISO C17","c17"));
     sl.append(QPair<QString,QString>("ISO C++","c++98"));
     sl.append(QPair<QString,QString>("ISO C++11","c++11"));
     sl.append(QPair<QString,QString>("ISO C++14","c++14"));
     sl.append(QPair<QString,QString>("ISO C++17","c++17"));
     sl.append(QPair<QString,QString>("ISO C++20","c++2a"));
-    sl.append(QPair<QString,QString>("GNU C90","gnu90"));
-    sl.append(QPair<QString,QString>("GNU C99","gnu99"));
-    sl.append(QPair<QString,QString>("GNU C11","gnu11"));
-    sl.append(QPair<QString,QString>("GNU C17","gnu17"));
     sl.append(QPair<QString,QString>("GNU C++","gnu++98"));
     sl.append(QPair<QString,QString>("GNU C++11","gnu++11"));
     sl.append(QPair<QString,QString>("GNU C++14","gnu++14"));
     sl.append(QPair<QString,QString>("GNU C++17","gnu++17"));
     sl.append(QPair<QString,QString>("GNU C++20","gnu++2a"));
-    addOption(CC_CMD_OPT_STD, QObject::tr("Language standard (-std)"), groupName, true, true, false, "-std=", sl);
+    addOption(CC_CMD_OPT_STD, QObject::tr("C++ Language standard (-std)"), groupName, false, true, false, "-std=", sl);
+
+    sl.clear();
+    sl.append(QPair<QString,QString>("ISO C90","c90"));
+    sl.append(QPair<QString,QString>("ISO C99","c99"));
+    sl.append(QPair<QString,QString>("ISO C11","c11"));
+    sl.append(QPair<QString,QString>("ISO C17","c17"));
+    sl.append(QPair<QString,QString>("GNU C90","gnu90"));
+    sl.append(QPair<QString,QString>("GNU C99","gnu99"));
+    sl.append(QPair<QString,QString>("GNU C11","gnu11"));
+    sl.append(QPair<QString,QString>("GNU C17","gnu17"));
+    addOption(C_CMD_OPT_STD, QObject::tr("C Language standard (-std)"), groupName, true, false, false, "-std=", sl);
 
     // Optimization for cpu type
     sl.clear();

@@ -17,6 +17,9 @@ Red Panda C++ Version 2.0
   - enhancement: refresh project view for git status won't redraw project structure
   - enhancement: auto save project options after the compilerset option for project resetted 
   - enhancement: "." and ".." in paths of issues not correctly handled
+  - enhancement: auto locate the last opened file in the project view after project creation
+  - enhancement: separate compiler's language standard option for C / C++
+  - fix: compiler settings not correctly handled when create makefile
 
 Red Panda C++ Version 1.5
 

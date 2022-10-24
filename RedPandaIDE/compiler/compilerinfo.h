@@ -9,6 +9,8 @@
 #define COMPILER_GCC "GCC"
 #define COMPILER_GCC_UTF8 "GCC_UTF8"
 
+#define C_CMD_OPT_STD "c_cmd_opt_std"
+
 #define CC_CMD_OPT_ANSI "cc_cmd_opt_ansi"
 #define CC_CMD_OPT_NO_ASM "cc_cmd_opt_no_asm"
 #define CC_CMD_OPT_TRADITIONAL_CPP "cc_cmd_opt_traditional_cpp"

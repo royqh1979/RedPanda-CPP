@@ -4893,6 +4893,126 @@ void Settings::UI::setDebugPanelIndex(int newDebugPanelIndex)
     mDebugPanelIndex = newDebugPanelIndex;
 }
 
+int Settings::UI::problemOrder() const
+{
+    return mProblemOrder;
+}
+
+void Settings::UI::setProblemOrder(int newProblemOrder)
+{
+    mProblemOrder = newProblemOrder;
+}
+
+int Settings::UI::bookmarkOrder() const
+{
+    return mBookmarkOrder;
+}
+
+void Settings::UI::setBookmarkOrder(int newBookmarkOrder)
+{
+    mBookmarkOrder = newBookmarkOrder;
+}
+
+int Settings::UI::TODOOrder() const
+{
+    return mTODOOrder;
+}
+
+void Settings::UI::setTODOOrder(int newTODOOrder)
+{
+    mTODOOrder = newTODOOrder;
+}
+
+int Settings::UI::searchOrder() const
+{
+    return mSearchOrder;
+}
+
+void Settings::UI::setSearchOrder(int newSearchOrder)
+{
+    mSearchOrder = newSearchOrder;
+}
+
+int Settings::UI::debugOrder() const
+{
+    return mDebugOrder;
+}
+
+void Settings::UI::setDebugOrder(int newDebugOrder)
+{
+    mDebugOrder = newDebugOrder;
+}
+
+int Settings::UI::compileLogOrder() const
+{
+    return mCompileLogOrder;
+}
+
+void Settings::UI::setCompileLogOrder(int newCompileLogOrder)
+{
+    mCompileLogOrder = newCompileLogOrder;
+}
+
+int Settings::UI::issuesOrder() const
+{
+    return mIssuesOrder;
+}
+
+void Settings::UI::setIssuesOrder(int newIssuesOrder)
+{
+    mIssuesOrder = newIssuesOrder;
+}
+
+int Settings::UI::problemSetOrder() const
+{
+    return mProblemSetOrder;
+}
+
+void Settings::UI::setProblemSetOrder(int newProblemSetOrder)
+{
+    mProblemSetOrder = newProblemSetOrder;
+}
+
+int Settings::UI::filesOrder() const
+{
+    return mFilesOrder;
+}
+
+void Settings::UI::setFilesOrder(int newFilesOrder)
+{
+    mFilesOrder = newFilesOrder;
+}
+
+int Settings::UI::structureOrder() const
+{
+    return mStructureOrder;
+}
+
+void Settings::UI::setStructureOrder(int newStructureOrder)
+{
+    mStructureOrder = newStructureOrder;
+}
+
+int Settings::UI::watchOrder() const
+{
+    return mWatchOrder;
+}
+
+void Settings::UI::setWatchOrder(int newWatchOrder)
+{
+    mWatchOrder = newWatchOrder;
+}
+
+int Settings::UI::projectOrder() const
+{
+    return mProjectOrder;
+}
+
+void Settings::UI::setProjectOrder(int newProjectOrder)
+{
+    mProjectOrder = newProjectOrder;
+}
+
 const QSize &Settings::UI::explorerTabsSize() const
 {
     return mExplorerTabsSize;
@@ -5188,6 +5308,27 @@ void Settings::UI::doSave()
     saveValue("show_bookmark", mShowBookmark);
     saveValue("show_problem", mShowProblem);
 
+    saveValue("show_issues", mIssuesOrder);
+    saveValue("show_compile_log", mShowCompileLog);
+    saveValue("show_debug", mShowDebug);
+    saveValue("show_search", mShowSearch);
+    saveValue("show_todo", mShowTODO);
+    saveValue("show_bookmark", mShowBookmark);
+    saveValue("show_problem", mShowProblem);
+
+    saveValue("project_order", mProjectOrder);
+    saveValue("watch_order", mWatchOrder);
+    saveValue("structure_order", mStructureOrder);
+    saveValue("files_order", mFilesOrder);
+    saveValue("problemset_order", mProblemSetOrder);
+    saveValue("issues_order", mIssuesOrder);
+    saveValue("compilelog_order", mCompileLogOrder);
+    saveValue("debug_order", mDebugOrder);
+    saveValue("search_order", mSearchOrder);
+    saveValue("todo_order", mTODOOrder);
+    saveValue("bookmark_order", mBookmarkOrder);
+    saveValue("problem_order", mProblemOrder);
+
     //dialogs
     saveValue("cpu_dialog_width", mCPUDialogWidth);
     saveValue("cpu_dialog_height", mCPUDialogHeight);
@@ -5238,6 +5379,20 @@ void Settings::UI::doLoad()
     mShowTODO = boolValue("show_todo",true);
     mShowBookmark = boolValue("show_bookmark",true);
     mShowProblem = boolValue("show_problem",true);
+
+    mProjectOrder = intValue("project_order",1);
+    mWatchOrder = intValue("watch_order",2);
+    mStructureOrder = intValue("structure_order",3);
+    mFilesOrder = intValue("files_order",0);
+    mProblemSetOrder = intValue("problemset_order",4);
+
+    mIssuesOrder = intValue("issues_order",0);
+    mCompileLogOrder = intValue("compilelog_order",1);
+    mDebugOrder = intValue("debug_order",2);
+    mSearchOrder = intValue("search_order",3);
+    mTODOOrder = intValue("todo_order",4);
+    mBookmarkOrder = intValue("bookmark_order",5);
+    mProblemOrder = intValue("problem_order",6);
 
     //dialogs
     mCPUDialogWidth = intValue("cpu_dialog_width",977*qApp->desktop()->width()/1920);

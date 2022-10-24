@@ -478,6 +478,9 @@
     <property name="usesScrollButtons">
      <bool>true</bool>
     </property>
+    <property name="movable">
+     <bool>true</bool>
+    </property>
     <widget class="QWidget" name="tabFiles">
      <property name="autoFillBackground">
       <bool>true</bool>

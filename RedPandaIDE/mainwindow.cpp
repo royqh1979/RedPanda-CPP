@@ -1383,11 +1383,6 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
     //stretchExplorerPanel(true);
     if (openFiles)
         ui->tabExplorer->setCurrentWidget(ui->tabProject);
-//    {
-//    LeftPageControl.ActivePage := LeftProjectSheet;
-//    fLeftPageControlChanged := False;
-//    ClassBrowser.TabVisible:= False;
-//    }
 
     // Only update class browser once
     mClassBrowserModel.beginUpdate();
@@ -6239,6 +6234,17 @@ void MainWindow::on_actionNew_Project_triggered()
         scanActiveProject(true);
         Editor* editor = mEditorList->getEditor();
         updateClassBrowserForEditor(editor);
+        if (editor) {
+            PProjectUnit unit=mProject->findUnit(editor);
+            if (unit) {
+                QModelIndex index=mProject->model()->getNodeIndex(unit->node().get());
+                index = mProjectProxyModel->mapFromSource(index);
+                ui->projectView->expand(index);
+                ui->projectView->setCurrentIndex(index);
+            }
+        }
+        if (pSettings->ui().showProject())
+            ui->tabExplorer->setCurrentWidget(ui->tabProject);
     }
     pSettings->ui().setNewProjectDialogWidth(dialog.width());
     pSettings->ui().setNewProjectDialogHeight(dialog.height());
@@ -6513,6 +6519,16 @@ void MainWindow::showHideMessagesTab(QWidget *widget, bool show)
 
 void MainWindow::prepareTabInfosData()
 {
+//    QHash<int,QWidget*> tabOrders;
+//    tabOrders.insert(pSettings->ui().projectOrder(), ui->tabProject);
+//    tabOrders.insert(pSettings->ui().watchOrder(), ui->tabWatch);
+//    tabOrders.insert(pSettings->ui().structureOrder(), ui->tabStructure);
+//    tabOrders.insert(pSettings->ui().filesOrder(), ui->tabFiles);
+//    tabOrders.insert(pSettings->ui().problemSetOrder(), ui->tabProblemSet);
+
+//    for (int i=1;i<tabOrders.count();i++) {
+
+//    }
     for (int i=0;i<ui->tabExplorer->count();i++) {
         QWidget* widget = ui->tabExplorer->widget(i);
         PTabWidgetInfo info = std::make_shared<TabWidgetInfo>();
@@ -6525,6 +6541,14 @@ void MainWindow::prepareTabInfosData()
 
 void MainWindow::prepareTabMessagesData()
 {
+//    QHash<int,QWidget*> tabOrders;
+//    tabOrders.insert(pSettings->ui().issuesOrder(), ui->tabIssues);
+//    tabOrders.insert(pSettings->ui().compileLogOrder(), ui->tabToolsOutput);
+//    tabOrders.insert(pSettings->ui().debugOrder(), ui->tabDebug);
+//    tabOrders.insert(pSettings->ui().searchOrder(), ui->tabSearch);
+//    tabOrders.insert(pSettings->ui().TODOOrder(), ui->tabTODO);
+//    tabOrders.insert(pSettings->ui().bookmarkOrder(), ui->tabBookmark);
+
     for (int i=0;i<ui->tabMessages->count();i++) {
         QWidget* widget = ui->tabMessages->widget(i);
         PTabWidgetInfo info = std::make_shared<TabWidgetInfo>();

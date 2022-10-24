@@ -1025,6 +1025,42 @@ public:
         int debugPanelIndex() const;
         void setDebugPanelIndex(int newDebugPanelIndex);
 
+        int projectOrder() const;
+        void setProjectOrder(int newProjectOrder);
+
+        int watchOrder() const;
+        void setWatchOrder(int newWatchOrder);
+
+        int structureOrder() const;
+        void setStructureOrder(int newStructureOrder);
+
+        int filesOrder() const;
+        void setFilesOrder(int newFilesOrder);
+
+        int problemSetOrder() const;
+        void setProblemSetOrder(int newProblemSetOrder);
+
+        int issuesOrder() const;
+        void setIssuesOrder(int newIssuesOrder);
+
+        int compileLogOrder() const;
+        void setCompileLogOrder(int newCompileLogOrder);
+
+        int debugOrder() const;
+        void setDebugOrder(int newDebugOrder);
+
+        int searchOrder() const;
+        void setSearchOrder(int newSearchOrder);
+
+        int TODOOrder() const;
+        void setTODOOrder(int newTODOOrder);
+
+        int bookmarkOrder() const;
+        void setBookmarkOrder(int newBookmarkOrder);
+
+        int problemOrder() const;
+        void setProblemOrder(int newProblemOrder);
+
     private:
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
@@ -1049,6 +1085,11 @@ public:
         bool mShowStructure;
         bool mShowFiles;
         bool mShowProblemSet;
+        int mProjectOrder;
+        int mWatchOrder;
+        int mStructureOrder;
+        int mFilesOrder;
+        int mProblemSetOrder;
 
         bool mShowIssues;
         bool mShowCompileLog;
@@ -1057,6 +1098,13 @@ public:
         bool mShowTODO;
         bool mShowBookmark;
         bool mShowProblem;
+        int mIssuesOrder;
+        int mCompileLogOrder;
+        int mDebugOrder;
+        int mSearchOrder;
+        int mTODOOrder;
+        int mBookmarkOrder;
+        int mProblemOrder;
 
         //dialogs
         int mCPUDialogWidth;
