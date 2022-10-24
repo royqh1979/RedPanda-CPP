@@ -194,7 +194,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 
     // Mention progress in the logs
     if (!ObjResFile.isEmpty()) {
-        log(tr("- Resource File: %1").arg(QDir(mProject->directory()).absoluteFilePath(ObjResFile)));
+        log(tr("- Resource File: %1").arg(absolutePath(mProject->directory(),ObjResFile)));
     }
     log("");
 
@@ -515,7 +515,7 @@ bool ProjectCompiler::prepareForRebuild()
 QString ProjectCompiler::getFileNameFromOutputLine(QString &line)
 {
     QString temp=Compiler::getFileNameFromOutputLine(line);
-    return QDir(mDirectory).absoluteFilePath(temp);
+    return absolutePath(mDirectory,temp);
 }
 
 bool ProjectCompiler::prepareForCompile()

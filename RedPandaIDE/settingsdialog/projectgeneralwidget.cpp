@@ -112,7 +112,7 @@ void ProjectGeneralWidget::doSave()
 #endif
         project->options().icon = "";
     } else {
-        QString iconPath = QFileInfo(project->filename()).absoluteDir().absoluteFilePath("app.ico");
+        QString iconPath =  absolutePath(project->directory(),"app.ico");
         if (iconPath!=mIconPath) {
             if (QFile(iconPath).exists()) {
                 if (!QFile::remove(iconPath)) {

@@ -116,7 +116,7 @@ void GitRepository::convertFilesListToSet(const QStringList &filesList, QSet<QSt
     set.clear();
     QDir dir(mRealFolder);
     foreach (const QString& s, filesList) {
-        set.insert(dir.absoluteFilePath(s));
+        set.insert(cleanPath(dir.absoluteFilePath(s)));
     }
 }
 

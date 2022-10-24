@@ -224,7 +224,7 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
                     beginInsertRows(QModelIndex(),count,count);
                 }
                 if (forProject) {
-                    bookmark->filename = dir.absoluteFilePath(bookmark->filename);
+                    bookmark->filename = cleanPath(dir.absoluteFilePath(bookmark->filename));
                 }
 
                 list.append(bookmark);
@@ -332,7 +332,7 @@ void BookmarkModel::loadProjectBookmarks(const QString &filename, const QString&
     mProjectBookmarks = load(filename,0,&t);
     QDir folder(projectFolder);
     foreach (PBookmark bookmark, mProjectBookmarks) {
-        bookmark->filename=folder.absoluteFilePath(bookmark->filename);
+        bookmark->filename=cleanPath(folder.absoluteFilePath(bookmark->filename));
     }
     if (mIsForProject)
         endResetModel();

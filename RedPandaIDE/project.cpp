@@ -197,8 +197,8 @@ void Project::open()
         PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
         QByteArray groupName = toByteArray(QString("Unit%1").arg(i+1));
         newUnit->setFileName(
-                    dir.absoluteFilePath(
-                        fromByteArray(ini.GetValue(groupName,"FileName",""))));
+                    cleanPath(dir.absoluteFilePath(
+                        fromByteArray(ini.GetValue(groupName,"FileName","")))));
 //        if (!QFileInfo(newUnit->fileName()).exists()) {
 //            QMessageBox::critical(nullptr,
 //                                  tr("File Not Found"),
@@ -328,10 +328,10 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     // Find unused 'new' filename
     if (customFileName.isEmpty()) {
         do {
-            s = dir.absoluteFilePath(tr("untitled")+QString("%1").arg(getNewFileNumber()));
+            s = cleanPath(dir.absoluteFilePath(tr("untitled")+QString("%1").arg(getNewFileNumber())));
         } while (fileExists(s));
     } else {
-        s = dir.absoluteFilePath(customFileName);
+        s = cleanPath(dir.absoluteFilePath(customFileName));
     }
     if (mOptions.modelType == ProjectModelType::FileSystem) {
         // in file system mode, parentNode is determined by file's path
@@ -896,9 +896,9 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
 
     // Copy icon to project directory
     if (!mOptions.icon.isEmpty()) {
-        QString originIcon = QFileInfo(aTemplate->fileName()).absoluteDir().absoluteFilePath(mOptions.icon);
+        QString originIcon = cleanPath(QFileInfo(aTemplate->fileName()).absoluteDir().absoluteFilePath(mOptions.icon));
         if (fileExists(originIcon)) {
-            QString destIcon = QFileInfo(mFilename).absoluteDir().absoluteFilePath("app.ico");
+            QString destIcon = cleanPath(QFileInfo(mFilename).absoluteDir().absoluteFilePath("app.ico"));
             QFile::copy(originIcon,destIcon);
             mOptions.icon = destIcon;
         } else {
@@ -917,7 +917,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 if (!templateUnit->Target.isEmpty())
                     target = templateUnit->Target;
                 QFile::copy(
-                            dir.absoluteFilePath(templateUnit->Source),
+                            cleanPath(dir.absoluteFilePath(templateUnit->Source)),
                             includeTrailingPathDelimiter(this->directory())+target);
                 unit = newUnit(mRootNode, target);
             } else {
@@ -937,7 +937,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                             this,
                             true);
 
-                QString s2 = dir.absoluteFilePath(s);
+                QString s2 = cleanPath(dir.absoluteFilePath(s));
                 if (fileExists(s2) && !s.isEmpty()) {
                     try {
                         editor->loadFile(s2);
@@ -973,7 +973,7 @@ bool Project::saveAsTemplate(const QString &templateFolder,
         return false;
     }
 
-    QString fileName = dir.absoluteFilePath(TEMPLATE_INFO_FILE);
+    QString fileName = cleanPath(dir.absoluteFilePath(TEMPLATE_INFO_FILE));
     PSimpleIni ini = std::make_shared<SimpleIni>();
 
     ini->SetLongValue("Template","Ver",3);
@@ -983,7 +983,7 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     ini->SetValue("Template", "Description", description.toUtf8());
     if (fileExists(mOptions.icon)) {
         QString iconName = extractFileName(mOptions.icon);
-        copyFile(mOptions.icon, dir.absoluteFilePath(iconName),true);
+        copyFile(mOptions.icon, cleanPath(dir.absoluteFilePath(iconName)),true);
         if (dir.exists(iconName))
             ini->SetValue("Template", "Icon", iconName.toUtf8());
     }
@@ -1033,10 +1033,10 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     foreach (const PProjectUnit &unit, mUnits) {
         QString unitName = extractFileName(unit->fileName());
         QByteArray section = toByteArray(QString("Unit%1").arg(i));
-        if (!copyFile(unit->fileName(), dir.absoluteFilePath(unitName),true)) {
+        if (!copyFile(unit->fileName(), cleanPath(dir.absoluteFilePath(unitName)),true)) {
             QMessageBox::warning(nullptr,
                                   tr("Warning"),
-                                  tr("Can't save file %1").arg(dir.absoluteFilePath(unitName)),
+                                  tr("Can't save file %1").arg(cleanPath(dir.absoluteFilePath(unitName))),
                                   QMessageBox::Ok);
         }
         switch(getFileType(unit->fileName())) {
@@ -1429,7 +1429,7 @@ void Project::buildPrivateResource(bool forceSave)
         contents.append("}");
     }
 
-    rcFile = QDir(directory()).absoluteFilePath(rcFile);
+    rcFile = absolutePath(directory(),rcFile);
     if (contents.count() > 3) {
         stringsToFile(contents,rcFile);
         mOptions.privateResource = extractRelativePath(directory(), rcFile);
@@ -1864,7 +1864,7 @@ void Project::loadOptions(SimpleIni& ini)
     if (icon.isEmpty()) {
         mOptions.icon = "";
     } else {
-        mOptions.icon = QDir(directory()).absoluteFilePath(icon);
+        mOptions.icon = absolutePath(directory(),icon);
     }
     mOptions.version = ini.GetLongValue("Project", "Ver", 0);
     if (mOptions.version > 0) { // ver > 0 is at least a v5 project
@@ -1962,6 +1962,7 @@ void Project::loadOptions(SimpleIni& ini)
                         QMessageBox::Ok
                                   );
             setCompilerSet(pSettings->compilerSets().defaultIndex());
+            saveOptions();
         }
 
         Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
@@ -2609,7 +2610,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
                 return false;
             QString oldName = unit->fileName();
             QString curDir = extractFilePath(oldName);
-            newName = QDir(curDir).absoluteFilePath(newName);
+            newName = absolutePath(curDir,newName);
             // Only continue if the user says so...
             if (fileExists(newName) && newName.compare(oldName, PATH_SENSITIVITY)!=0) {
                 // don't remove when changing case for example
@@ -2682,6 +2683,42 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
 
     }
     return false;
+}
+
+void ProjectModel::refreshIcon(const QModelIndex &index, bool update)
+{
+    if (!index.isValid())
+        return;
+    if (update)
+        mIconProvider->update();
+    QVector<int> roles;
+    roles.append(Qt::DecorationRole);
+    emit dataChanged(index,index, roles);
+}
+
+void ProjectModel::refreshIcon(const QString &filename)
+{
+    PProjectUnit unit=mProject->findUnit(filename);
+    if (!unit)
+        return;
+    PProjectModelNode node=unit->node();
+    QModelIndex index = getNodeIndex(node.get());
+    refreshIcon(index);
+}
+
+void ProjectModel::refreshIcons()
+{
+    mIconProvider->update();
+    mProject->rootNode();
+}
+
+void ProjectModel::refreshNodeIconRecursive(PProjectModelNode node)
+{
+    QModelIndex index=getNodeIndex(node.get());
+    refreshIcon(index,false);
+    foreach( PProjectModelNode child, node->children) {
+        refreshNodeIconRecursive(child);
+    }
 }
 
 QModelIndex ProjectModel::getNodeIndex(ProjectModelNode *node) const

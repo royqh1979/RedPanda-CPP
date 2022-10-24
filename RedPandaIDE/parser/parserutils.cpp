@@ -401,7 +401,7 @@ QString getLocalHeaderFilename(const QString &relativeTo, const QString &fileNam
     QDir dir = relativeFile.dir();
     // Search local directory
     if (dir.exists(fileName)) {
-        return QDir::cleanPath(dir.absoluteFilePath(fileName));
+        return cleanPath(dir.absoluteFilePath(fileName));
     }
     return "";
 }
@@ -413,7 +413,7 @@ QString getSystemHeaderFilename(const QString &fileName, const QStringList& incl
     for (const QString& path:includePaths) {
         QDir dir(path);
         if (dir.exists(fileName)) {
-            return QDir::cleanPath(dir.absoluteFilePath(fileName));
+            return cleanPath(dir.absoluteFilePath(fileName));
         }
     }
     //not found

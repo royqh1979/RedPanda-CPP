@@ -20,6 +20,7 @@
 #include <QFileInfo>
 #include <QVBoxLayout>
 #include <QDebug>
+#include "../utils.h"
 
 HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget(parent)
 {
@@ -231,7 +232,7 @@ void HeaderCompletionPopup::addFile(const QDir& dir, const QFileInfo& fileInfo, 
     PHeaderCompletionListItem item = std::make_shared<HeaderCompletionListItem>();
     item->filename = fileName;
     item->itemType = type;
-    item->fullpath = dir.absoluteFilePath(fileName);
+    item->fullpath = cleanPath(dir.absoluteFilePath(fileName));
     item->usageCount = mHeaderUsageCounts.value(item->fullpath,0);
     item->isFolder = fileInfo.isDir();
     mFullCompletionList.insert(fileName,item);

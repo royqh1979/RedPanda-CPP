@@ -944,8 +944,7 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
     if (pSettings->vcs().gitOk()) {
         QString branch;
         if (inProject && mProject && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
-            mProject->model()->beginUpdate();
-            mProject->model()->endUpdate();
+            mProject->model()->refreshIcon(path);
         }
         QModelIndex index =  mFileSystemModel.index(path);
         if (index.isValid()) {
@@ -4663,6 +4662,7 @@ void MainWindow::updateProjectView()
 
 void MainWindow::onFileChanged(const QString &path)
 {
+    qDebug()<<path<<"modified";
     if (mFilesChangedNotifying.contains(path))
         return;
     mFilesChangedNotifying.insert(path);
@@ -6591,7 +6591,7 @@ void MainWindow::newProjectUnitFile()
         if (newProjectUnitDialog.exec()!=QDialog::Accepted) {
             return;
         }
-        newFileName=QDir(newProjectUnitDialog.folder()).absoluteFilePath(newProjectUnitDialog.filename());
+        newFileName= absolutePath(newProjectUnitDialog.folder(),newProjectUnitDialog.filename());
         if (newFileName.isEmpty())
             return;
     } else {
@@ -6610,7 +6610,7 @@ void MainWindow::newProjectUnitFile()
                     newFileName);
         if (newFileName.isEmpty())
             return;
-        newFileName = QDir(mProject->directory()).absoluteFilePath(newFileName);
+        newFileName = absolutePath(mProject->directory(),newFileName);
     }
     if (fileExists(newFileName)) {
         QMessageBox::critical(this,tr("File Already Exists!"),
@@ -6633,8 +6633,7 @@ void MainWindow::newProjectUnitFile()
     if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
         QString output;
         mProject->model()->iconProvider()->VCSRepository()->add(newFileName,output);
-        mProject->model()->beginUpdate();
-        mProject->model()->endUpdate();
+        mProject->model()->refreshIcon(newFileName);
     }
     updateProjectView();
 }
@@ -7928,8 +7927,7 @@ void MainWindow::on_actionGit_Create_Repository_triggered()
         if (mProject && mProject->folder() == mFileSystemModel.rootPath()) {
             mProject->addUnit(includeTrailingPathDelimiter(mProject->folder())+".gitignore", mProject->rootNode());
         } else if (mProject && mFileSystemModel.index(mProject->folder()).isValid()) {
-            mProject->model()->beginUpdate();
-            mProject->model()->endUpdate();
+            mProject->model()->refreshIcons();
         }
     } else if (ui->projectView->isVisible() && mProject) {
         GitManager vcsManager;
@@ -7988,13 +7986,10 @@ void MainWindow::on_actionGit_Add_Files_triggered()
                 QString output;
                 vcsManager.add(info.absolutePath(),info.fileName(),output);
             }
+            mProject->model()->refreshIcon(index);
         }
     }
-    //update icons in project view
-    if (mProject) {
-        mProject->model()->beginUpdate();
-        mProject->model()->endUpdate();
-    }
+
     //update icons in files view too
     mFileSystemModelIconProvider.update();
     mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
@@ -8046,8 +8041,7 @@ void MainWindow::on_actionGit_Commit_triggered()
     if (vcsManager.commit(folder,message,true,output)) {
         //update project view
         if (mProject) {
-            mProject->model()->beginUpdate();
-            mProject->model()->endUpdate();
+            mProject->model()->refreshIcons();
         }
         //update files view
         mFileSystemModelIconProvider.update();
@@ -8076,8 +8070,7 @@ void MainWindow::on_actionGit_Restore_triggered()
 
         //update project view
         if (mProject) {
-            mProject->model()->beginUpdate();
-            mProject->model()->endUpdate();
+            mProject->model()->refreshIcons();
         }
         //update files view
         mFileSystemModelIconProvider.update();
@@ -8114,8 +8107,7 @@ void MainWindow::on_actionGit_Branch_triggered()
     if (dialog.exec()==QDialog::Accepted) {
         //update project view
         if (mProject) {
-            mProject->model()->beginUpdate();
-            mProject->model()->endUpdate();
+            mProject->model()->refreshIcons();
         }
         //update files view
         setFilesViewRoot(pSettings->environment().currentFolder());
@@ -8137,8 +8129,7 @@ void MainWindow::on_actionGit_Merge_triggered()
     if (dialog.exec()==QDialog::Accepted) {
         //update project view
         if (mProject) {
-            mProject->model()->beginUpdate();
-            mProject->model()->endUpdate();
+            mProject->model()->refreshIcons();
         }
         //update files view
         setFilesViewRoot(pSettings->environment().currentFolder());
@@ -8160,8 +8151,7 @@ void MainWindow::on_actionGit_Log_triggered()
     if (dialog.exec()==QDialog::Accepted) {
         //update project view
         if (mProject) {
-            mProject->model()->beginUpdate();
-            mProject->model()->endUpdate();
+            mProject->model()->refreshIcons();
         }
         //update files view
         setFilesViewRoot(pSettings->environment().currentFolder());

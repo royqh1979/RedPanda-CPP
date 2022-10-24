@@ -679,3 +679,13 @@ void createFile(const QString &fileName)
 {
     stringToFile("",fileName);
 }
+
+QString cleanPath(const QString &dirPath)
+{
+    return QDir::cleanPath(dirPath);
+}
+
+QString absolutePath(const QString &dirPath, const QString &relativePath)
+{
+    return QDir::cleanPath(QDir(dirPath).absoluteFilePath(relativePath));
+}

@@ -447,9 +447,8 @@ void Debugger::loadForProject(const QString &filename, const QString &projectFol
     mProjectLastLoadtime = 0;
     PDebugConfig pConfig = load(filename, forProject);
     if (pConfig->timestamp>0) {
-        QDir dir(projectFolder);
         foreach (const PBreakpoint& breakpoint, pConfig->breakpoints) {
-            breakpoint->filename = dir.absoluteFilePath(breakpoint->filename);
+            breakpoint->filename = absolutePath(projectFolder,breakpoint->filename);
         }
         mBreakpointModel->setBreakpoints(pConfig->breakpoints,forProject);
         mWatchModel->setWatchVars(pConfig->watchVars,forProject);
@@ -685,13 +684,12 @@ void Debugger::save(const QString &filename, const QString& projectFolder)
     std::shared_ptr<DebugConfig> pConfig = load(filename, forProject);
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-        QDir folder(projectFolder);
         foreach (const PBreakpoint& breakpoint, pConfig->breakpoints) {
             QString key = QString("%1-%2").arg(breakpoint->filename).arg(breakpoint->line);
             if (!breakpointCompareSet.contains(key)) {
                 breakpointCompareSet.insert(key);
                 if (forProject)
-                    breakpoint->filename=folder.absoluteFilePath(breakpoint->filename);
+                    breakpoint->filename=absolutePath(projectFolder,breakpoint->filename);
                 mBreakpointModel->addBreakpoint(breakpoint,forProject);
             }
         }

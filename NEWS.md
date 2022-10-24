@@ -14,6 +14,9 @@ Red Panda C++ Version 2.0
   - enhancement: keep current position in the class browser after contents modified
   - fix: "." and ".." in included header paths not correctly handled
   - reduce memory usage when deciding file types
+  - enhancement: refresh project view for git status won't redraw project structure
+  - enhancement: auto save project options after the compilerset option for project resetted 
+  - enhancement: "." and ".." in paths of issues not correctly handled
 
 Red Panda C++ Version 1.5
 

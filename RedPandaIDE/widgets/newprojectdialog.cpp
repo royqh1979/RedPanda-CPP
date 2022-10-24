@@ -145,7 +145,7 @@ void NewProjectDialog::readTemplateDir(const QString& folderPath)
         } else if (fileInfo.isDir()) {
             QDir subDir(fileInfo.absoluteFilePath());
             if (subDir.exists(TEMPLATE_INFO_FILE)) {
-                addTemplate(subDir.absoluteFilePath(TEMPLATE_INFO_FILE));
+                addTemplate(cleanPath(subDir.absoluteFilePath(TEMPLATE_INFO_FILE)));
             }
         }
     }
@@ -186,7 +186,7 @@ void NewProjectDialog::updateView()
         QString tabText = mTemplatesTabBar->tabText(index);
         if (category == tabText) {
             QListWidgetItem * item;
-            QString iconFilename = QFileInfo(t->fileName()).absoluteDir().absoluteFilePath(t->icon());
+            QString iconFilename = cleanPath(QFileInfo(t->fileName()).absoluteDir().absoluteFilePath(t->icon()));
             QIcon icon=QIcon(iconFilename);
             if (icon.isNull()) {
                 //todo : use an default icon

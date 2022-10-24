@@ -74,7 +74,7 @@ void NewTemplateDialog::readTemplateCategoriesInDir(const QString &folderPath, Q
             readTemplateCategory(fileInfo.absoluteFilePath(),categories);
         } else if (fileInfo.isDir()) {
             QDir subDir(fileInfo.absoluteFilePath());
-            readTemplateCategory(subDir.absoluteFilePath(TEMPLATE_INFO_FILE),categories);
+            readTemplateCategory(cleanPath(subDir.absoluteFilePath(TEMPLATE_INFO_FILE)),categories);
         }
     }
 

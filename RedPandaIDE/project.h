@@ -146,6 +146,10 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+    void refreshIcon(const QModelIndex& index, bool update=true);
+    void refreshIcon(const QString& filename);
+    void refreshIcons();
+    void refreshNodeIconRecursive(PProjectModelNode node);
 
     QModelIndex getNodeIndex(ProjectModelNode *node) const;
     QModelIndex getParentIndex(ProjectModelNode * node) const;
