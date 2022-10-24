@@ -1298,6 +1298,9 @@ void Editor::showEvent(QShowEvent */*event*/)
     pMainWindow->updateForEncodingInfo(this);
     pMainWindow->updateStatusbarForLineCol(this);
     pMainWindow->updateForStatusbarModeInfo(this);
+    if (inProject()) {
+        pMainWindow->setProjectCurrentFile(mFilename);
+    }
 
     setHideTime(QDateTime::currentDateTime());
 }

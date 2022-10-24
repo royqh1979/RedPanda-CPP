@@ -20,6 +20,7 @@ Red Panda C++ Version 2.0
   - enhancement: auto locate the last opened file in the project view after project creation
   - enhancement: separate compiler's language standard option for C / C++
   - fix: compiler settings not correctly handled when create makefile
+  - enhancement: auto locate current open file in the project view panel
 
 Red Panda C++ Version 1.5
 

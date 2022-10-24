@@ -114,6 +114,7 @@ public:
     void updateForStatusbarModeInfo(bool clear=false);
     void updateForStatusbarModeInfo(const Editor* editor, bool clear=false);
     void updateStatusbarMessage(const QString& s);
+    void setProjectCurrentFile(const QString& filename);
     void updateEditorSettings();
     void updateEditorBookmarks();
     void updateEditorBreakpoints();

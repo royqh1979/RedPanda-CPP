@@ -512,12 +512,6 @@ bool ProjectCompiler::prepareForRebuild()
     return true;
 }
 
-QString ProjectCompiler::getFileNameFromOutputLine(QString &line)
-{
-    QString temp=Compiler::getFileNameFromOutputLine(line);
-    return absolutePath(mDirectory,temp);
-}
-
 bool ProjectCompiler::prepareForCompile()
 {
     if (!mProject)

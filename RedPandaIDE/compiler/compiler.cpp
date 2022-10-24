@@ -113,7 +113,8 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
             break;
         }
     }
-    return temp;
+    QFileInfo info(temp);
+    return info.isRelative()?absolutePath(mDirectory,temp):cleanPath(temp);
 }
 
 int Compiler::getLineNumberFromOutputLine(QString &line)

@@ -1271,6 +1271,21 @@ void MainWindow::updateStatusbarMessage(const QString &s)
     ui->statusbar->showMessage(s);
 }
 
+void MainWindow::setProjectCurrentFile(const QString &filename)
+{
+    if (!mProject)
+        return;
+    PProjectUnit unit = mProject->findUnit(filename);
+    if (!unit)
+        return;
+    QModelIndex index = mProject->model()->getNodeIndex(unit->node().get());
+    index = mProjectProxyModel->mapFromSource(index);
+    if (index.isValid()) {
+        ui->projectView->expand(index);
+        ui->projectView->setCurrentIndex(index);
+    }
+}
+
 void MainWindow::openFiles(const QStringList &files)
 {
     mEditorList->beginUpdate();
@@ -6304,12 +6319,8 @@ void MainWindow::on_actionAdd_to_project_triggered()
             if (newUnit) {
                 QModelIndex index = mProject->model()->getNodeIndex(newUnit->node().get());
                 index = mProjectProxyModel->mapFromSource(index);
-                QModelIndex parentIndex = mProject->model()->getParentIndex(newUnit->node().get());
-                parentIndex = mProjectProxyModel->mapFromSource(parentIndex);
-                if (parentIndex.isValid()) {
-                    ui->projectView->expand(parentIndex);
-                }
                 if (index.isValid()) {
+                    ui->projectView->expand(index);
                     ui->projectView->setCurrentIndex(index);
                 }
             }
@@ -6740,14 +6751,10 @@ void MainWindow::onProjectViewNodeRenamed()
 void MainWindow::setProjectViewCurrentNode(PProjectModelNode node)
 {
     if (node) {
-        QModelIndex parentIndex = mProject->model()->getParentIndex(node.get());
-        parentIndex = mProjectProxyModel->mapFromSource(parentIndex);
-        if (parentIndex.isValid()) {
-            ui->projectView->expand(parentIndex);
-        }
         QModelIndex index = mProject->model()->getNodeIndex(node.get());
         index = mProjectProxyModel->mapFromSource(index);
         if (index.isValid()) {
+            ui->projectView->expand(index);
             ui->projectView->setCurrentIndex(index);
         }
     }
