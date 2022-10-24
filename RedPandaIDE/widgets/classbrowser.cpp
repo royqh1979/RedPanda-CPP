@@ -28,6 +28,7 @@
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent),
     mMutex(QMutex::Recursive)
 {
+    mClassBrowserType = ProjectClassBrowserType::CurrentFile;
     mRoot = new ClassBrowserNode();
     mRoot->parent = nullptr;
     mRoot->statement = PStatement();

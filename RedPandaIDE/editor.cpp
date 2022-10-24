@@ -1293,11 +1293,11 @@ void Editor::showEvent(QShowEvent */*event*/)
         reparseTodo();
     }
     pMainWindow->updateClassBrowserForEditor(this);
-    pMainWindow->updateAppTitle();
-    pMainWindow->updateEditorActions();
-    pMainWindow->updateForEncodingInfo();
-    pMainWindow->updateStatusbarForLineCol();
-    pMainWindow->updateForStatusbarModeInfo();
+    pMainWindow->updateAppTitle(this);
+    pMainWindow->updateEditorActions(this);
+    pMainWindow->updateForEncodingInfo(this);
+    pMainWindow->updateStatusbarForLineCol(this);
+    pMainWindow->updateForStatusbarModeInfo(this);
 
     setHideTime(QDateTime::currentDateTime());
 }
@@ -2550,20 +2550,21 @@ bool Editor::handleCodeCompletion(QChar key)
 
 void Editor::initParser()
 {
-    mParser = std::make_shared<CppParser>();
-    if (mUseCppSyntax) {
-        mParser->setLanguage(ParserLanguage::CPlusPlus);
-    } else {
-        mParser->setLanguage(ParserLanguage::C);
-    }
-    mParser->setOnGetFileStream(
-                std::bind(
-                    &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
-                    std::placeholders::_1, std::placeholders::_2));
-    resetCppParser(mParser);
-    mParser->setEnabled(
-                pSettings->codeCompletion().enabled() &&
-                (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter));
+    mParser=nullptr;
+//    mParser = std::make_shared<CppParser>();
+//    if (mUseCppSyntax) {
+//        mParser->setLanguage(ParserLanguage::CPlusPlus);
+//    } else {
+//        mParser->setLanguage(ParserLanguage::C);
+//    }
+//    mParser->setOnGetFileStream(
+//                std::bind(
+//                    &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+//                    std::placeholders::_1, std::placeholders::_2));
+//    resetCppParser(mParser);
+//    mParser->setEnabled(
+//                pSettings->codeCompletion().enabled() &&
+//                (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -4427,7 +4428,7 @@ void Editor::removeBookmark(int line)
     invalidateGutterLine(line);
 }
 
-bool Editor::hasBookmark(int line)
+bool Editor::hasBookmark(int line) const
 {
     return mBookmarkLines.contains(line);
 }

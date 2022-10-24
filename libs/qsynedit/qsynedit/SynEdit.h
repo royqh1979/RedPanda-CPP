@@ -360,11 +360,11 @@ public:
     SelectionMode selectionMode() const;
     void setSelectionMode(SelectionMode value);
 
-    QString selText();
+    QString selText() const;
 
     QStringList getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const;
 
-    QString lineBreak();
+    QString lineBreak() const;
 
     EditorOptions getOptions() const;
     void setOptions(const EditorOptions &Value);

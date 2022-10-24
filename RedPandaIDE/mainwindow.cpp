@@ -421,8 +421,13 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::updateForEncodingInfo(bool clear) {
+void MainWindow::updateForEncodingInfo(bool clear)
+{
     Editor * editor = mEditorList->getEditor();
+    updateForEncodingInfo(editor,clear);
+}
+
+void MainWindow::updateForEncodingInfo(const Editor* editor, bool clear) {
     if (!clear && editor!=NULL) {
         if (editor->encodingOption() != editor->fileEncoding()) {
             mFileEncodingStatus->setText(
@@ -446,6 +451,12 @@ void MainWindow::updateForEncodingInfo(bool clear) {
         ui->actionEncode_in_UTF_8->setChecked(false);
         ui->actionEncode_in_UTF_8_BOM->setChecked(false);
     }
+}
+
+void MainWindow::updateStatusbarForLineCol(bool clear)
+{
+    Editor* e = mEditorList->getEditor();
+    updateStatusbarForLineCol(e,clear);
 }
 
 void MainWindow::updateEditorSettings()
@@ -473,6 +484,11 @@ void MainWindow::updateEditorBreakpoints()
 void MainWindow::updateEditorActions()
 {
     Editor* e = mEditorList->getEditor();
+    updateEditorActions(e);
+}
+
+void MainWindow::updateEditorActions(const Editor *e)
+{
     if (e==nullptr) {
         ui->actionAuto_Detect->setEnabled(false);
         ui->actionEncode_in_ANSI->setEnabled(false);
@@ -586,6 +602,7 @@ void MainWindow::updateEditorActions()
     updateCompileActions();
     updateCompilerSet();
 }
+
 
 void MainWindow::updateProjectActions()
 {
@@ -950,8 +967,13 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
 
 void MainWindow::updateAppTitle()
 {
-    QString appName=tr("Red Panda C++");
     Editor *e = mEditorList->getEditor();
+    updateAppTitle(e);
+}
+
+void MainWindow::updateAppTitle(const Editor *e)
+{
+    QString appName=tr("Red Panda C++");
     QCoreApplication *app = QApplication::instance();
     if (e && !e->inProject()) {
         QString str;
@@ -1206,9 +1228,8 @@ QMenuBar *MainWindow::menuBar() const
     return ui->menubar;
 }
 
-void MainWindow::updateStatusbarForLineCol(bool clear)
+void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
 {
-    Editor* e = mEditorList->getEditor();
     if (!clear && e!=nullptr) {
         int col = e->charToColumn(e->caretY(),e->caretX());
         QString msg = tr("Line:%1 Col:%2 Selected:%3 Lines:%4 Length:%5")
@@ -1226,6 +1247,11 @@ void MainWindow::updateStatusbarForLineCol(bool clear)
 void MainWindow::updateForStatusbarModeInfo(bool clear)
 {
     Editor* e = mEditorList->getEditor();
+    updateForStatusbarModeInfo(e,clear);
+}
+
+void MainWindow::updateForStatusbarModeInfo(const Editor* e, bool clear)
+{
     if (!clear && e!=nullptr) {
         QString msg;
         if (e->readOnly()) {

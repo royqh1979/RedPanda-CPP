@@ -1533,7 +1533,7 @@ void SynEdit::doExpandSelection(const BufferCoord &pos)
     }
 }
 
-void SynEdit::doShrinkSelection(const BufferCoord &pos)
+void SynEdit::doShrinkSelection(const BufferCoord &/*pos*/)
 {
     //todo
 }
@@ -4658,7 +4658,7 @@ void SynEdit::setSelectionMode(SelectionMode value)
     }
 }
 
-QString SynEdit::selText()
+QString SynEdit::selText() const
 {
     if (!selAvail()) {
         return "";
@@ -4800,7 +4800,7 @@ QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, Select
     return result;
 }
 
-QString SynEdit::lineBreak()
+QString SynEdit::lineBreak() const
 {
     return mDocument->lineBreak();
 }

@@ -816,9 +816,8 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
 
         if (inProject) {
             QSet<QString> filesToReparsed = calculateFilesToBeReparsed(fileName);
-            internalInvalidateFiles(filesToReparsed);
-
             QStringList files = sortFilesByIncludeRelations(filesToReparsed);
+            internalInvalidateFiles(filesToReparsed);
 
             mFilesToScanCount = files.count();
             mFilesScannedCount = 0;
@@ -1448,6 +1447,8 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
 
     //rebuild file include relations
     foreach(const QString& file, files) {
+        if (mPreprocessor.scannedFiles().contains(file))
+            continue;
         //already removed in interalInvalidateFiles
         //mPreprocessor.removeScannedFile(file);
         QStringList buffer;

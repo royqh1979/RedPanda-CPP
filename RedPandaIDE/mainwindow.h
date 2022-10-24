@@ -108,13 +108,17 @@ public:
     ~MainWindow();
 
     void updateForEncodingInfo(bool clear=false);
+    void updateForEncodingInfo(const Editor* editor, bool clear=false);
     void updateStatusbarForLineCol(bool clear=false);
+    void updateStatusbarForLineCol(const Editor* editor, bool clear=false);
     void updateForStatusbarModeInfo(bool clear=false);
+    void updateForStatusbarModeInfo(const Editor* editor, bool clear=false);
     void updateStatusbarMessage(const QString& s);
     void updateEditorSettings();
     void updateEditorBookmarks();
     void updateEditorBreakpoints();
     void updateEditorActions();
+    void updateEditorActions(const Editor *e);
     void updateProjectActions();
     void updateCompileActions();
     void updateEditorColorSchemes();
@@ -142,6 +146,7 @@ public:
 
     void removeActiveBreakpoints();
     void updateAppTitle();
+    void updateAppTitle(const Editor* e);
     void addDebugOutput(const QString& text);
     void changeDebugOutputLastline(const QString& text);
     void updateDebugEval(const QString& value);
