@@ -13,6 +13,7 @@ Red Panda C++ Version 2.0
   - enhancement: Weither double click on the class browser should goto definition/declaration,  depends on the current cursor position
   - enhancement: keep current position in the class browser after contents modified
   - fix: "." and ".." in included header paths not correctly handled
+  - reduce memory usage when deciding file types
 
 Red Panda C++ Version 1.5
 

@@ -2550,21 +2550,21 @@ bool Editor::handleCodeCompletion(QChar key)
 
 void Editor::initParser()
 {
-    mParser=nullptr;
-//    mParser = std::make_shared<CppParser>();
-//    if (mUseCppSyntax) {
-//        mParser->setLanguage(ParserLanguage::CPlusPlus);
-//    } else {
-//        mParser->setLanguage(ParserLanguage::C);
-//    }
-//    mParser->setOnGetFileStream(
-//                std::bind(
-//                    &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
-//                    std::placeholders::_1, std::placeholders::_2));
-//    resetCppParser(mParser);
-//    mParser->setEnabled(
-//                pSettings->codeCompletion().enabled() &&
-//                (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter));
+//    mParser=nullptr;
+    mParser = std::make_shared<CppParser>();
+    if (mUseCppSyntax) {
+        mParser->setLanguage(ParserLanguage::CPlusPlus);
+    } else {
+        mParser->setLanguage(ParserLanguage::C);
+    }
+    mParser->setOnGetFileStream(
+                std::bind(
+                    &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                    std::placeholders::_1, std::placeholders::_2));
+    resetCppParser(mParser);
+    mParser->setEnabled(
+                pSettings->codeCompletion().enabled() &&
+                (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -3458,6 +3458,8 @@ QString Editor::getFileHint(const QString &s, bool fromNext)
 
 QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/, int line)
 {
+    if (!mParser)
+        return "";
     // This piece of code changes the parser database, possibly making hints and code completion invalid...
     QString result;
     // Exit early, don't bother creating a stream (which is slow)

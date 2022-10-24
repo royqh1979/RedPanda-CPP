@@ -140,10 +140,9 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".dat",PATH_SENSITIVITY)) {
         return FileType::Text;
     }
-    QMimeDatabase db;
-    QMimeType mimeType=db.mimeTypeForFile(filename);
-    if (mimeType.isValid() && mimeType.name().startsWith("text/")) {
-        return FileType::Text;
+    QFileInfo info(filename);
+    if (info.suffix().isEmpty()) {
+        return FileType::Other;
     }
     return FileType::Other;
 }
