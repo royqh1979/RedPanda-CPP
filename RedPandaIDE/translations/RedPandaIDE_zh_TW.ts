@@ -5725,10 +5725,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Language standard (-std)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Warnings</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5882,6 +5878,14 @@
     </message>
     <message>
         <source>Leaving those directories will lead to problems during compilation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>C++ Language standard (-std)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>C Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

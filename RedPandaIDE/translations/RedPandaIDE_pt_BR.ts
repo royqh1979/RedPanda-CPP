@@ -5905,7 +5905,7 @@
     </message>
     <message>
         <source>Language standard (-std)</source>
-        <translation>Linguagem padrão (-std)</translation>
+        <translation type="vanished">Linguagem padrão (-std)</translation>
     </message>
     <message>
         <source>Warnings</source>
@@ -6093,6 +6093,14 @@
     </message>
     <message>
         <source>Compiler set not configuared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>C++ Language standard (-std)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>C Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
