@@ -3838,6 +3838,25 @@ void MainWindow::onShowInsertCodeSnippetMenu()
 
 }
 
+void MainWindow::onFilesViewCreateFolderFolderLoaded(const QString& path)
+{
+
+    if (mFilesViewNewCreatedFolder.isEmpty())
+        return;
+
+    if (path!=extractFilePath(mFilesViewNewCreatedFolder))
+        return;
+
+    disconnect(&mFileSystemModel,&QFileSystemModel::directoryLoaded,
+            this,&MainWindow::onFilesViewCreateFolderFolderLoaded);
+    QModelIndex newIndex = mFileSystemModel.index(mFilesViewNewCreatedFolder);
+    if (newIndex.isValid()) {
+        ui->treeFiles->setCurrentIndex(newIndex);
+        ui->treeFiles->edit(newIndex);
+    }
+    mFilesViewNewCreatedFolder="";
+}
+
 void MainWindow::onFilesViewCreateFolder()
 {
     QModelIndex index = ui->treeFiles->currentIndex();
@@ -3852,7 +3871,7 @@ void MainWindow::onFilesViewCreateFolder()
             dir = mFileSystemModel.fileInfo(index).absoluteDir();
             parentIndex = mFileSystemModel.index(dir.absolutePath());
         }
-        ui->treeFiles->expand(index);
+        //ui->treeFiles->expand(index);
     } else {
         dir = mFileSystemModel.rootDirectory();
         parentIndex=mFileSystemModel.index(dir.absolutePath());
@@ -3864,8 +3883,18 @@ void MainWindow::onFilesViewCreateFolder()
         folderName = tr("New Folder %1").arg(count);
     }
     QModelIndex newIndex = mFileSystemModel.mkdir(parentIndex,folderName);
-    ui->treeFiles->setCurrentIndex(newIndex);
-    ui->treeFiles->edit(newIndex);
+    if (newIndex.isValid()) {
+        if (ui->treeFiles->isExpanded(parentIndex)) {
+            ui->treeFiles->setCurrentIndex(newIndex);
+            ui->treeFiles->edit(newIndex);
+        } else {
+            connect(&mFileSystemModel,&QFileSystemModel::directoryLoaded,
+                    this,&MainWindow::onFilesViewCreateFolderFolderLoaded);
+            ui->treeFiles->expand(parentIndex);
+            mFilesViewNewCreatedFolder=mFileSystemModel.filePath(newIndex);
+        }
+
+    }
 }
 
 void MainWindow::onFilesViewCreateFile()

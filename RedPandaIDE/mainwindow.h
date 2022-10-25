@@ -329,6 +329,7 @@ private slots:
 
     void onShowInsertCodeSnippetMenu();
 
+    void onFilesViewCreateFolderFolderLoaded(const QString& path);
     void onFilesViewCreateFolder();
     void onFilesViewCreateFile();
     void onFilesViewRemoveFiles();
@@ -777,6 +778,7 @@ private:
     int mOJProblemSetNameCounter;
 
     QString mClassBrowserCurrentStatement;
+    QString mFilesViewNewCreatedFolder;
 
     bool mCheckSyntaxInBack;
     bool mShouldRemoveAllSettings;
