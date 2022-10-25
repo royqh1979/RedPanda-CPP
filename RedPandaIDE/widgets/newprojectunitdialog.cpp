@@ -57,7 +57,7 @@ void NewProjectUnitDialog::setFolder(const QString &folderName)
                 ext = QFileInfo(filename()).suffix();
             }
             do {
-                newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
+                newFileName = QString("untitled%1").arg(getNewFileNumber());
                 if (!ext.isEmpty())
                     newFileName += "." + ext;
             } while (dir.exists(newFileName));
@@ -74,6 +74,12 @@ QString NewProjectUnitDialog::filename() const
 void NewProjectUnitDialog::setFilename(const QString &filename)
 {
     ui->txtFilename->setText(filename);
+    ui->txtFilename->setFocus();
+    int pos = filename.lastIndexOf('.');
+    if (pos>=0)
+        ui->txtFilename->setSelection(0,pos);
+    else
+        ui->txtFilename->selectAll();
 }
 
 void NewProjectUnitDialog::onUpdateIcons()

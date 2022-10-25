@@ -3865,6 +3865,7 @@ void MainWindow::onFilesViewCreateFolder()
     }
     QModelIndex newIndex = mFileSystemModel.mkdir(parentIndex,folderName);
     ui->treeFiles->setCurrentIndex(newIndex);
+    ui->treeFiles->edit(newIndex);
 }
 
 void MainWindow::onFilesViewCreateFile()
@@ -7830,7 +7831,7 @@ void MainWindow::on_actionNew_Header_triggered()
     QString newFileName;
     int i=1;
     do {
-        newFileName = tr("untitled")+QString("%1").arg(i);
+        newFileName = QString("untitled%1").arg(i);
         newFileName += ".h";
         i++;
     } while (QDir(mProject->directory()).exists(newFileName));

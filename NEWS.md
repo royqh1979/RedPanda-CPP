@@ -26,6 +26,11 @@ Red Panda C++ Version 2.0
   - enhancement: use "todo" and "fixme" as the keyword for TODO comments
   - fix: rules for obj missing in the makefile generated for project 
   - enhancement: before run a project'executable, check if there's project file  newer than the executable
+  - enhancement: when create a new folder in the files view, auto select that folder and rename it
+  - enhancement: when new header in the project view, auto select basename in the filename dialog
+  - enhancement: when add file in the project view, auto select basename in the filename dialog
+  - change: Don't generate localized filename when new header/add file in the project view
+
 
 Red Panda C++ Version 1.5
 

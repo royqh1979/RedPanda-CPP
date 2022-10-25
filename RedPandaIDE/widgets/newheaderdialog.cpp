@@ -52,7 +52,11 @@ QString NewHeaderDialog::path() const
 void NewHeaderDialog::setHeaderName(const QString &name)
 {
     ui->txtHeader->setText(name);
-    ui->txtHeader->selectAll();
+    int pos = name.lastIndexOf('.');
+    if (pos>=0)
+        ui->txtHeader->setSelection(0,pos);
+    else
+        ui->txtHeader->selectAll();
 }
 
 void NewHeaderDialog::setPath(const QString &location)
