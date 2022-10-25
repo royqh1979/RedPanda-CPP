@@ -1880,7 +1880,9 @@ void MainWindow::runExecutable(RunType runType)
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project) {
         QStringList binDirs = mProject->binDirs();
-        if (mProject->modified()  &&
+        QFileInfo execInfo(mProject->executable());
+        QDateTime execModTime = execInfo.lastModified();
+        if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)  &&
                 QMessageBox::question(
                     this,
                     tr("Rebuild Project"),

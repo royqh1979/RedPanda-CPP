@@ -156,6 +156,18 @@ QString Project::makeFileName()
         return QDir(directory()).filePath(MAKEFILE_NAME);
 }
 
+bool Project::unitsModifiedSince(const QDateTime& time)
+{
+    foreach(const PProjectUnit& unit, mUnits) {
+        QFileInfo info(unit->fileName());
+        if (info.lastModified()>time) {
+            qDebug()<<info.lastModified()<<time;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool Project::modified() const
 {
     return mModified;

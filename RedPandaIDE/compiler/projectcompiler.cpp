@@ -323,7 +323,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
     if (mProject->options().usePrecompiledHeader)
         precompileStr = " $(PCH) ";
 
-    QList<PProjectUnit> projectUnits;
+    QList<PProjectUnit> projectUnits=mProject->unitList();
     foreach(const PProjectUnit &unit, projectUnits) {
         FileType fileType = getFileType(unit->fileName());
         // Only process source files

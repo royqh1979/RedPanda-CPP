@@ -210,6 +210,7 @@ public:
     QString directory() const;
     QString executable() const;
     QString makeFileName();
+    bool unitsModifiedSince(const QDateTime& time);
     bool modified() const;
     void setFileName(QString value);
     void setModified(bool value);
