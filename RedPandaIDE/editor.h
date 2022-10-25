@@ -195,7 +195,7 @@ public:
     void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
     QString getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord& p);
-    void reformat();
+    void reformat(bool doReparse=true);
     void checkSyntaxInBack();
     void gotoDeclaration(const QSynedit::BufferCoord& pos);
     void gotoDefinition(const QSynedit::BufferCoord& pos);

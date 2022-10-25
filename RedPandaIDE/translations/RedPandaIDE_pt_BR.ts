@@ -1431,6 +1431,10 @@
         <source>MB</source>
         <translation type="unfinished">MB</translation>
     </message>
+    <message>
+        <source>Auto reformat code before saving files</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorSnippetWidget</name>

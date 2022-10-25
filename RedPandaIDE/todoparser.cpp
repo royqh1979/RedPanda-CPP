@@ -19,6 +19,10 @@
 #include "editor.h"
 #include "editorlist.h"
 
+#include <QRegularExpression>
+
+
+static QRegularExpression todoReg("\\b(todo|fixme)\\b", QRegularExpression::CaseInsensitiveOption);
 TodoParser::TodoParser(QObject *parent) : QObject(parent),
     mMutex(QMutex::Recursive)
 {
@@ -131,7 +135,7 @@ void TodoThread::doParseFile(const QString &filename, QSynedit::PHighlighter hig
             attr = highlighter->getTokenAttribute();
             if (attr == commentAttr) {
                 QString token = highlighter->getToken();
-                int pos = token.indexOf("TODO:",0,Qt::CaseInsensitive);
+                int pos = token.indexOf(todoReg);
                 if (pos>=0) {
                     emit todoFound(
                                 filename,

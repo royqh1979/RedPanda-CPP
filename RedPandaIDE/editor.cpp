@@ -251,13 +251,9 @@ bool Editor::save(bool force, bool doReparse) {
     //is this file writable;
     pMainWindow->fileSystemWatcher()->removePath(mFilename);
     try {
-//        QFileInfo info(mFilename);
-//        if (!force && !info.isWritable()) {
-//            QMessageBox::critical(pMainWindow,tr("Error"),
-//                                     tr("File %1 is not writable!").arg(mFilename));
-//            return false;
-//        }
-//        qDebug()<<"saving "<<mFilename;
+        if (pSettings->editor().autoFormatWhenSaved()) {
+            reformat(false);
+        }
         saveFile(mFilename);
         pMainWindow->fileSystemWatcher()->addPath(mFilename);
         setModified(false);
@@ -342,6 +338,10 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (pSettings->codeCompletion().enabled() && mParser) {
         mParser->invalidateFile(mFilename);
     }
+
+    if (pSettings->editor().autoFormatWhenSaved()) {
+        reformat(false);
+    }
     try {
         mFilename = newName;
         saveFile(mFilename);
@@ -386,7 +386,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (pSettings->editor().syntaxCheckWhenSave())
         pMainWindow->checkSyntaxInBack(this);
     reparseTodo();
-
 
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
@@ -4303,7 +4302,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
     return result;
 }
 
-void Editor::reformat()
+void Editor::reformat(bool doReparse)
 {
     if (readOnly())
         return;
@@ -4349,10 +4348,14 @@ void Editor::reformat()
     setTopLine(oldTopLine);
     setOptions(oldOptions);
     endUndoBlock();
-    reparse(true);
-    checkSyntaxInBack();
-    reparseTodo();
-    pMainWindow->updateEditorActions();
+
+    if (doReparse && !pMainWindow->isQuitting() && !pMainWindow->isClosingAll()
+            && !(inProject() && pMainWindow->closingProject())) {
+        reparse(true);
+        checkSyntaxInBack();
+        reparseTodo();
+        pMainWindow->updateEditorActions();
+    }
 }
 
 void Editor::checkSyntaxInBack()

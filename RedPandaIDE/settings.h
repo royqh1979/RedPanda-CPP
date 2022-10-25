@@ -370,6 +370,9 @@ public:
         int undoMemoryUsage() const;
         void setUndoMemoryUsage(int newUndoMemoryUsage);
 
+        bool autoFormatWhenSaved() const;
+        void setAutoFormatWhenSaved(bool newAutoFormatWhenSaved);
+
     private:
         //General
         // indents
@@ -478,6 +481,7 @@ public:
         bool mDefaultFileCpp;
         int mUndoLimit;
         int mUndoMemoryUsage;
+        bool mAutoFormatWhenSaved;
 
 
         //hints tooltip

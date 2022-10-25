@@ -655,6 +655,16 @@ void Settings::Editor::setUndoMemoryUsage(int newUndoMemoryUsage)
     mUndoMemoryUsage = newUndoMemoryUsage;
 }
 
+bool Settings::Editor::autoFormatWhenSaved() const
+{
+    return mAutoFormatWhenSaved;
+}
+
+void Settings::Editor::setAutoFormatWhenSaved(bool newAutoFormatWhenSaved)
+{
+    mAutoFormatWhenSaved = newAutoFormatWhenSaved;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1235,6 +1245,7 @@ void Settings::Editor::doSave()
     saveValue("auto_detect_file_encoding",mAutoDetectFileEncoding);
     saveValue("undo_limit",mUndoLimit);
     saveValue("undo_memory_usage", mUndoMemoryUsage);
+    saveValue("auto_format_when_saved", mAutoFormatWhenSaved);
 
     //tooltips
     saveValue("enable_tooltips",mEnableTooltips);
@@ -1377,6 +1388,7 @@ void Settings::Editor::doLoad()
     mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
     mUndoLimit = intValue("undo_limit",0);
     mUndoMemoryUsage = intValue("undo_memory_usage", 10);
+    mAutoFormatWhenSaved = boolValue("auto_format_when_saved", false);
 
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);
