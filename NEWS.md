@@ -24,6 +24,7 @@ Red Panda C++ Version 2.0
   - enhancement: when closing project, prevent all editors that belongs to the project check syntax and parse todos.
   - enhancement: add "auto reformat when saving codes" in "Options" / "Editor" / "Misc" (off by default)
   - enhancement: use "todo" and "fixme" as the keyword for TODO comments
+  - fix: rules for obj missed in makefile generated for project 
 
 Red Panda C++ Version 1.5
 

@@ -4675,7 +4675,6 @@ void MainWindow::updateProjectView()
 
 void MainWindow::onFileChanged(const QString &path)
 {
-    qDebug()<<path<<"modified";
     if (mFilesChangedNotifying.contains(path))
         return;
     mFilesChangedNotifying.insert(path);
