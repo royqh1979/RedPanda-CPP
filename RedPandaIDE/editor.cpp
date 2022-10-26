@@ -205,7 +205,8 @@ void Editor::loadFile(QString filename) {
     }
     //this->setModified(false);
     updateCaption();
-    pMainWindow->updateForEncodingInfo(this);
+    if (mParentPageControl)
+        pMainWindow->updateForEncodingInfo(this);
     switch(getFileType(mFilename)) {
     case FileType::CppSource:
         mUseCppSyntax = true;
@@ -235,7 +236,7 @@ void Editor::saveFile(QString filename) {
     this->document()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
                               mFileEncoding);
-    if (isVisible())
+    if (isVisible() && mParentPageControl)
         pMainWindow->updateForEncodingInfo(this);
     emit fileSaved(filename, inProject());
 }
@@ -385,8 +386,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
 
     reparse(false);
 
-    if (pSettings->editor().syntaxCheckWhenSave())
-        pMainWindow->checkSyntaxInBack(this);
+    checkSyntaxInBack();
     reparseTodo();
 
     if (!shouldOpenInReadonly()) {
@@ -400,7 +400,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
 
 void Editor::activate()
 {
-    if (mParentPageControl!=nullptr)
+    if (mParentPageControl)
         mParentPageControl->setCurrentWidget(this);
     setFocus();
 }
@@ -414,7 +414,7 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
     mEncodingOption = encoding;
     if (!isNew())
         loadFile();
-    else
+    else if (mParentPageControl)
         pMainWindow->updateForEncodingInfo(this);
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
@@ -450,7 +450,7 @@ void Editor::setPageControl(QTabWidget *newPageControl)
 {
     if (mParentPageControl==newPageControl)
         return;
-    if (mParentPageControl!=nullptr) {
+    if (mParentPageControl) {
         int index = findWidgetInPageControl(mParentPageControl,this);
         if (index>=0)
             mParentPageControl->removeTab(index);
@@ -1259,9 +1259,11 @@ void Editor::closeEvent(QCloseEvent *)
         mCompletionPopup->hide();
     if (pMainWindow->functionTip())
         pMainWindow->functionTip()->hide();
-    pMainWindow->updateForEncodingInfo(true);
-    pMainWindow->updateStatusbarForLineCol(true);
-    pMainWindow->updateForStatusbarModeInfo(true);
+    if (mParentPageControl) {
+        pMainWindow->updateForEncodingInfo(true);
+        pMainWindow->updateStatusbarForLineCol(true);
+        pMainWindow->updateForStatusbarModeInfo(true);
+    }
 }
 
 void Editor::showEvent(QShowEvent */*event*/)
@@ -1280,14 +1282,12 @@ void Editor::showEvent(QShowEvent */*event*/)
                 &QSynedit::SynEdit::invalidate);
         reparse(false);
     }
-    pMainWindow->debugger()->setIsForProject(inProject());
-    pMainWindow->bookmarkModel()->setIsForProject(inProject());
-    pMainWindow->todoModel()->setIsForProject(inProject());
+    if (mParentPageControl) {
+        pMainWindow->debugger()->setIsForProject(inProject());
+        pMainWindow->bookmarkModel()->setIsForProject(inProject());
+        pMainWindow->todoModel()->setIsForProject(inProject());
+    }
 
-//    if (pSettings->codeCompletion().clearWhenEditorHidden()
-//            && !inProject()) {
-//        reparse();
-//    }
     if (!pMainWindow->isClosingAll()
                 && !pMainWindow->isQuitting()) {
         if (!inProject() || !pMainWindow->closingProject()) {
@@ -1295,12 +1295,14 @@ void Editor::showEvent(QShowEvent */*event*/)
             reparseTodo();
         }
     }
-    pMainWindow->updateClassBrowserForEditor(this);
-    pMainWindow->updateAppTitle(this);
-    pMainWindow->updateEditorActions(this);
-    pMainWindow->updateForEncodingInfo(this);
-    pMainWindow->updateStatusbarForLineCol(this);
-    pMainWindow->updateForStatusbarModeInfo(this);
+    if (mParentPageControl) {
+        pMainWindow->updateClassBrowserForEditor(this);
+        pMainWindow->updateAppTitle(this);
+        pMainWindow->updateEditorActions(this);
+        pMainWindow->updateForEncodingInfo(this);
+        pMainWindow->updateStatusbarForLineCol(this);
+        pMainWindow->updateForStatusbarModeInfo(this);
+    }
     if (inProject() && !pMainWindow->closingProject()) {
         pMainWindow->setProjectCurrentFile(mFilename);
     }
@@ -1576,7 +1578,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
     }
     if (changes.testFlag(QSynedit::scModified)) {
         mCurrentLineModified = true;
-        if (mParentPageControl!=nullptr)
+        if (mParentPageControl)
             mCanAutoSave = true;
     }
 
@@ -2696,6 +2698,8 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 
 void Editor::reparse(bool resetParser)
 {
+    if (!mParentPageControl)
+        return;
     if (!pSettings->codeCompletion().enabled())
         return;
     if (!highlighter())
@@ -2720,6 +2724,8 @@ void Editor::reparse(bool resetParser)
 
 void Editor::reparseTodo()
 {
+    if (!mParentPageControl)
+        return;
     if (!highlighter())
         return;
     pMainWindow->todoParser()->parseFile(mFilename, inProject());
@@ -4364,6 +4370,8 @@ void Editor::reformat(bool doReparse)
 
 void Editor::checkSyntaxInBack()
 {
+    if (!mParentPageControl)
+        return;
     if (readOnly())
         return;
     if (!highlighter())
@@ -4678,7 +4686,7 @@ void Editor::applyColorScheme(const QString& schemeName)
 }
 
 void Editor::updateCaption(const QString& newCaption) {
-    if (mParentPageControl==nullptr) {
+    if (!mParentPageControl) {
         return;
     }
     int index = mParentPageControl->indexOf(this);

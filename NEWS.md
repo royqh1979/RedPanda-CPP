@@ -35,6 +35,8 @@ Red Panda C++ Version 2.0
   - enhancement: auto sort TODO items 
   - fix: Correctly set file's real encoding to ASCII after saving
   - fix: selection's position not correctly set after input a char / insert string (and causes error under OVERWRITE mode)
+  - fix: editors that not in the editing panel should not be syntax checked/ todo parsed/ code analyzed
+  - fix: editors that not in the editing panel should not trigger breakpoint/bookmark/watch switch
 
 Red Panda C++ Version 1.5
 
