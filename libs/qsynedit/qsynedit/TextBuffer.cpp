@@ -657,8 +657,6 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
         throw FileError(tr("Can't open file '%1' for save!").arg(file.fileName()));
     if (mLines.isEmpty())
         return;
-    bool allAscii = true;
-
     QTextCodec* codec;
     realEncoding = encoding;
     if (realEncoding == ENCODING_UTF8_BOM) {
@@ -675,6 +673,7 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     } else {
         codec = QTextCodec::codecForName(realEncoding);
     }
+    bool allAscii = true;
     for (PDocumentLine& line:mLines) {
         if (allAscii) {
             allAscii = isTextAllAscii(line->fString);
@@ -686,10 +685,10 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
         }
         file.write(lineBreak().toLatin1());
     }
-    if (encoding == ENCODING_AUTO_DETECT) {
-        if (allAscii)
-            realEncoding = ENCODING_ASCII;
-        else if (codec->name() == "System") {
+    if (allAscii) {
+        realEncoding = ENCODING_ASCII;
+    } else if (encoding == ENCODING_AUTO_DETECT) {
+        if (codec->name() == "System") {
             realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
         } else {
             realEncoding = codec->name();

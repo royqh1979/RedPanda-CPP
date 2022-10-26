@@ -231,9 +231,12 @@ void Editor::saveFile(QString filename) {
     QByteArray encoding = mFileEncoding;
     if (mEncodingOption!=ENCODING_AUTO_DETECT || mFileEncoding==ENCODING_ASCII)
         encoding = mEncodingOption;
+
     this->document()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
                               mFileEncoding);
+    if (isVisible())
+        pMainWindow->updateForEncodingInfo(this);
     emit fileSaved(filename, inProject());
 }
 
@@ -258,7 +261,7 @@ bool Editor::save(bool force, bool doReparse) {
         pMainWindow->fileSystemWatcher()->addPath(mFilename);
         setModified(false);
         mIsNew = false;
-        this->updateCaption();
+        updateCaption();
     }  catch (SaveException& exception) {
         if (!force) {
             QMessageBox::critical(pMainWindow,tr("Error"),
@@ -347,7 +350,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         saveFile(mFilename);
         mIsNew = false;
         setModified(false);
-        this->updateCaption();
     }  catch (SaveException& exception) {
         QMessageBox::critical(pMainWindow,tr("Error"),
                                  exception.reason());
@@ -390,7 +392,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
     }
-    pMainWindow->updateForEncodingInfo(this);
     updateCaption();
 
     emit renamed(oldName, newName , firstSave);
