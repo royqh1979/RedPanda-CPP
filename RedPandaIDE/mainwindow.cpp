@@ -1493,9 +1493,9 @@ void MainWindow::updateCompilerSet()
         if ( !e || e->inProject()) {
             index = mProject->options().compilerSet;
         }
-    }
-    if (index < 0 || index>=mCompilerSet->count()) {
-        index = pSettings->compilerSets().defaultIndex();
+        if (index < 0 || index>=mCompilerSet->count()) {
+            index = pSettings->compilerSets().defaultIndex();
+        }
     }
     mCompilerSet->setCurrentIndex(index);
     mCompilerSet->blockSignals(false);
@@ -5030,7 +5030,10 @@ void MainWindow::onCompilerSetChanged(int index)
     if (index<0)
         return;
     Editor *e = mEditorList->getEditor();
-    if (mProject && (!e || e->inProject())) {
+    if ( mProject && (!e || e->inProject())
+         ) {
+        if (index==mProject->options().compilerSet)
+            return;
         if(QMessageBox::warning(
                     e,
                     tr("Change Project Compiler Set"),
@@ -5039,9 +5042,10 @@ void MainWindow::onCompilerSetChanged(int index)
                     + tr("Do you really want to do that?"),
                     QMessageBox::Yes | QMessageBox::No,
                     QMessageBox::No) != QMessageBox::Yes) {
+            mCompilerSet->setCurrentIndex(mProject->options().compilerSet);
             return;
         }
-        mProject->setCompilerSet(index);
+        mProject->setCompilerSet(mProject->options().compilerSet);
         mProject->saveOptions();
         scanActiveProject(true);
         return;
