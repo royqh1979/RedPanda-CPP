@@ -33,6 +33,7 @@ Red Panda C++ Version 2.0
   - fix: Restore project's original compiler set if user choose 'No' in the confirm project compiler set change dialog.
   - fix: Encoding info in the status bar not correctly updated when save a new file
   - enhancement: auto sort TODO items 
+  - fix: Correctly set file's real encoding to ASCII after saving
 
 Red Panda C++ Version 1.5
 
