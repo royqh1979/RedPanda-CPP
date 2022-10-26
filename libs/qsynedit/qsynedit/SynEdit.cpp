@@ -4887,7 +4887,7 @@ void SynEdit::commandProcessor(EditCommand Command, QChar AChar, void *pData)
     // first the program event handler gets a chance to process the command
     onProcessCommand(Command, AChar, pData);
     if (Command != EditCommand::ecNone)
-        ExecuteCommand(Command, AChar, pData);
+        executeCommand(Command, AChar, pData);
     onCommandProcessed(Command, AChar, pData);
 }
 
@@ -5469,6 +5469,7 @@ void SynEdit::doInsertText(const BufferCoord& pos,
         break;
     }
     internalSetCaretXY(newPos);
+    setBlockBegin(newPos);
     ensureCursorPosVisible();
 }
 
@@ -5721,7 +5722,7 @@ void SynEdit::onCommandProcessed(EditCommand , QChar , void *)
 
 }
 
-void SynEdit::ExecuteCommand(EditCommand Command, QChar AChar, void *pData)
+void SynEdit::executeCommand(EditCommand Command, QChar AChar, void *pData)
 {
     hideCaret();
     incPaintLock();

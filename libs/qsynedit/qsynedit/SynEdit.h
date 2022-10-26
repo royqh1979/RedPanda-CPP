@@ -468,7 +468,7 @@ protected:
             FontStyles& style, QColor& foreground, QColor& background);
     virtual void onProcessCommand(EditCommand Command, QChar AChar, void * pData);
     virtual void onCommandProcessed(EditCommand Command, QChar AChar, void * pData);
-    virtual void ExecuteCommand(EditCommand Command, QChar AChar, void * pData);
+    virtual void executeCommand(EditCommand Command, QChar AChar, void * pData);
     virtual void onEndFirstPaintLock();
     virtual void onBeginFirstPaintLock();
 

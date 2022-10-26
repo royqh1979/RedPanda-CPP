@@ -34,6 +34,7 @@ Red Panda C++ Version 2.0
   - fix: Encoding info in the status bar not correctly updated when save a new file
   - enhancement: auto sort TODO items 
   - fix: Correctly set file's real encoding to ASCII after saving
+  - fix: selection's position not correctly set after input a char / insert string (and causes error under OVERWRITE mode)
 
 Red Panda C++ Version 1.5
 
