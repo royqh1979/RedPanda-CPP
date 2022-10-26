@@ -143,6 +143,7 @@ void TodoThread::doParseFile(const QString &filename, QSynedit::PHighlighter hig
                                 pos+highlighter->getTokenPos(),
                                 lines[i].trimmed()
                                 );
+                    break;
                 }
             }
             highlighter->next();
@@ -168,13 +169,29 @@ TodoModel::TodoModel(QObject *parent) : QAbstractListModel(parent)
 void TodoModel::addItem(const QString &filename, int lineNo, int ch, const QString &line)
 {
     QList<PTodoItem> &items=getItems(mIsForProject);
-    beginInsertRows(QModelIndex(),items.count(),items.count());
+    int pos=-1;
+    for (int i=0;i<items.count();i++) {
+        int comp=QString::compare(filename,items[i]->filename);
+        if (comp<0) {
+            pos=i;
+            break;
+        } else if (comp==0) {
+            if (lineNo<items[i]->lineNo)  {
+                pos=i;
+                break;
+            }
+        }
+    }
+    if (pos<0) {
+        pos=items.count();
+    }
+    beginInsertRows(QModelIndex(),pos,pos);
     PTodoItem item = std::make_shared<TodoItem>();
     item->filename = filename;
     item->lineNo = lineNo;
     item->ch = ch;
     item->line = line;
-    items.append(item);
+    items.insert(pos,item);
     endInsertRows();
 }
 
@@ -259,8 +276,6 @@ QVariant TodoModel::data(const QModelIndex &index, int role) const
         case 1:
             return item->lineNo;
         case 2:
-            return item->ch;
-        case 3:
             return item->line;
         }
     }
@@ -276,8 +291,6 @@ QVariant TodoModel::headerData(int section, Qt::Orientation orientation, int rol
         case 1:
             return tr("Line");
         case 2:
-            return tr("Column");
-        case 3:
             return tr("Content");
         }
     }
@@ -286,5 +299,5 @@ QVariant TodoModel::headerData(int section, Qt::Orientation orientation, int rol
 
 int TodoModel::columnCount(const QModelIndex &) const
 {
-    return 4;
+    return 3;
 }

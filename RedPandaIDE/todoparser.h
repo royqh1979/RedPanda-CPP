@@ -59,6 +59,7 @@ public:
     int columnCount(const QModelIndex &parent) const override;
     bool isForProject() const;
     void setIsForProject(bool newIsForProject);
+
 };
 
 class TodoThread: public QThread

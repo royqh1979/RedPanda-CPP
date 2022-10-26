@@ -4565,7 +4565,6 @@ void MainWindow::onTodoFound(const QString& filename, int lineNo, int ch, const 
 
 void MainWindow::onTodoParseFinished()
 {
-
 }
 
 void MainWindow::prepareProjectForCompile()
@@ -6284,6 +6283,7 @@ void MainWindow::on_actionNew_Project_triggered()
         }
         mProject->saveAll();
         updateProjectView();
+        mTodoParser->parseFiles(mProject->unitFiles());
         scanActiveProject(true);
         Editor* editor = mEditorList->getEditor();
         updateClassBrowserForEditor(editor);
