@@ -97,7 +97,7 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
         line=line.trimmed();
         if (temp.compare("<stdin>", Qt::CaseInsensitive)==0 ) {
             temp = mFilename;
-            break;
+            return temp;
         }
 
         QFileInfo fileInfo(temp);
@@ -113,8 +113,11 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
             break;
         }
     }
-    QFileInfo info(temp);
-    return info.isRelative()?absolutePath(mDirectory,temp):cleanPath(temp);
+    if (!mDirectory.isEmpty()) {
+        QFileInfo info(temp);
+        return info.isRelative()?absolutePath(mDirectory,temp):cleanPath(temp);
+    }
+    return temp;
 }
 
 int Compiler::getLineNumberFromOutputLine(QString &line)
