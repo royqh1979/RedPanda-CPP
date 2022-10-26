@@ -1,3 +1,9 @@
+Red Panda C++ Version 2.1
+
+  - editors that not in the editing panel shouldn't trigger switch breakpoint
+  - editors that not in the editing panel shouldn't show context menu
+
+
 Red Panda C++ Version 2.0
 
   - redesign the project parser, more efficient and correct

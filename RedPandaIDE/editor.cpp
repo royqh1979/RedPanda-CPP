@@ -147,7 +147,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
     //mLineAfterTabStop = "";
 
     connect(this,&SynEdit::statusChanged,this,&Editor::onStatusChanged);
-    connect(this,&SynEdit::gutterClicked,this,&Editor::onGutterClicked);
+
+    if (mParentPageControl)
+        connect(this,&SynEdit::gutterClicked,this,&Editor::onGutterClicked);
 
     onStatusChanged(QSynedit::StatusChange::scOpenFile);
 
@@ -159,7 +161,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
             this, &Editor::onLinesInserted);
 
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &QWidget::customContextMenuRequested,
+
+    if (mParentPageControl)
+        connect(this, &QWidget::customContextMenuRequested,
             pMainWindow, &MainWindow::onEditorContextMenu);
 
     mCanAutoSave = false;
@@ -171,19 +175,23 @@ Editor::Editor(QWidget *parent, const QString& filename,
             mCanAutoSave = true;
         }
     }
-    if (!isNew && parentPageControl!=nullptr) {
+    if (!isNew && parentPageControl) {
         resetBookmarks();
         resetBreakpoints();
     }
+
     mStatementColors = pMainWindow->statementColors();
-    if (mParentPageControl!=nullptr) {
+    if (mParentPageControl) {
         mParentPageControl->addTab(this,"");
         updateCaption();
     }
+
     if (mParentPageControl==nullptr) {
         setExtraKeystrokes();
     }
-    connect(&mFunctionTipTimer, &QTimer::timeout,
+
+    if (mParentPageControl)
+        connect(&mFunctionTipTimer, &QTimer::timeout,
             this, &Editor::onFunctionTipsTimer);
 
     connect(horizontalScrollBar(), &QScrollBar::valueChanged,
