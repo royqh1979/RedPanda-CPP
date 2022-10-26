@@ -429,7 +429,7 @@ void MainWindow::updateForEncodingInfo(bool clear)
 }
 
 void MainWindow::updateForEncodingInfo(const Editor* editor, bool clear) {
-    if (!clear && editor!=NULL) {
+    if (!clear && editor!=nullptr) {
         if (editor->encodingOption() != editor->fileEncoding()) {
             mFileEncodingStatus->setText(
                         QString("%1(%2)")
@@ -1778,7 +1778,7 @@ bool MainWindow::compile(bool rebuild)
         updateAppTitle();
     } else {
         Editor * editor = mEditorList->getEditor();
-        if (editor != NULL ) {
+        if (editor) {
             clearIssues();
             if (editor->modified() || editor->isNew()) {
                 if (!editor->save(false,false))
@@ -1902,7 +1902,7 @@ void MainWindow::runExecutable(RunType runType)
                       binDirs);
     } else {
         Editor * editor = mEditorList->getEditor();
-        if (editor != NULL ) {
+        if (editor) {
             if (editor->modified() || editor->isNew()) {
                 if (!editor->save(false,false))
                     return;
@@ -4997,7 +4997,7 @@ bool MainWindow::event(QEvent *event)
 void MainWindow::on_actionSave_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL) {
+    if (editor) {
         try {
             editor->save();
 //            if (editor->inProject() && (mProject))
@@ -5011,7 +5011,7 @@ void MainWindow::on_actionSave_triggered()
 void MainWindow::on_actionSaveAs_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL) {
+    if (editor) {
         try {
             editor->saveAs();
         } catch(FileError e) {
@@ -5334,7 +5334,7 @@ void MainWindow::on_actionRun_triggered()
 void MainWindow::on_actionUndo_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->undo();
     }
 }
@@ -5342,7 +5342,7 @@ void MainWindow::on_actionUndo_triggered()
 void MainWindow::on_actionRedo_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->redo();
     }
 }
@@ -5350,7 +5350,7 @@ void MainWindow::on_actionRedo_triggered()
 void MainWindow::on_actionCut_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->cutToClipboard();
     }
 }
@@ -5358,7 +5358,7 @@ void MainWindow::on_actionCut_triggered()
 void MainWindow::on_actionSelectAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->selectAll();
     }
 }
@@ -5366,7 +5366,7 @@ void MainWindow::on_actionSelectAll_triggered()
 void MainWindow::on_actionCopy_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->copyToClipboard();
     }
 }
@@ -5379,7 +5379,7 @@ void MainWindow::on_actionPaste_triggered()
         return;
     if (data->hasText()) {
         Editor * editor = mEditorList->getEditor();
-        if (editor != NULL ) {
+        if (editor) {
             editor->pasteFromClipboard();
             editor->activate();
         }
@@ -5399,7 +5399,7 @@ void MainWindow::on_actionPaste_triggered()
 void MainWindow::on_actionIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->tab();
     }
 }
@@ -5407,7 +5407,7 @@ void MainWindow::on_actionIndent_triggered()
 void MainWindow::on_actionUnIndent_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->shifttab();
     }
 }
@@ -5415,7 +5415,7 @@ void MainWindow::on_actionUnIndent_triggered()
 void MainWindow::on_actionToggleComment_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->toggleComment();
     }
 }
@@ -5423,7 +5423,7 @@ void MainWindow::on_actionToggleComment_triggered()
 void MainWindow::on_actionUnfoldAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->unCollpaseAll();
     }
 }
@@ -5431,7 +5431,7 @@ void MainWindow::on_actionUnfoldAll_triggered()
 void MainWindow::on_actionFoldAll_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->collapseAll();
     }
 }
@@ -8352,7 +8352,7 @@ void MainWindow::on_actionFilesView_Hide_Non_Support_Files_toggled(bool /* arg1 
 void MainWindow::on_actionToggle_Block_Comment_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->toggleBlockComment();
     }
 }
@@ -8361,7 +8361,7 @@ void MainWindow::on_actionToggle_Block_Comment_triggered()
 void MainWindow::on_actionMatch_Bracket_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->matchBracket();
     }
 }
@@ -8475,7 +8475,7 @@ void MainWindow::on_txtProblemCaseInput_cursorPositionChanged()
 void MainWindow::on_actionMove_Selection_Up_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->moveSelUp();
     }
 }
@@ -8484,7 +8484,7 @@ void MainWindow::on_actionMove_Selection_Up_triggered()
 void MainWindow::on_actionMove_Selection_Down_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    if (editor != NULL ) {
+    if (editor) {
         editor->moveSelDown();
     }
 }

@@ -31,7 +31,7 @@ Red Panda C++ Version 2.0
   - enhancement: when add file in the project view, auto select basename in the filename dialog
   - change: Don't generate localized filename when new header/add file in the project view
   - fix: Restore project's original compiler set if user choose 'No' in the confirm project compiler set change dialog.
-
+  - fix: Encoding info in the status bar not correctly updated when save a new file
 
 Red Panda C++ Version 1.5
 

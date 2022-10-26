@@ -159,7 +159,7 @@ Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
 }
 
 bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
-    if (editor == NULL)
+    if (editor == nullptr)
         return false;
     if (force) {
         editor->save(true,false);

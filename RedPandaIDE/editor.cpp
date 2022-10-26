@@ -205,7 +205,7 @@ void Editor::loadFile(QString filename) {
     }
     //this->setModified(false);
     updateCaption();
-    pMainWindow->updateForEncodingInfo();
+    pMainWindow->updateForEncodingInfo(this);
     switch(getFileType(mFilename)) {
     case FileType::CppSource:
         mUseCppSyntax = true;
@@ -389,8 +389,9 @@ bool Editor::saveAs(const QString &name, bool fromProject){
 
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
-        updateCaption();
     }
+    pMainWindow->updateForEncodingInfo(this);
+    updateCaption();
 
     emit renamed(oldName, newName , firstSave);
     return true;
@@ -413,7 +414,7 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
     if (!isNew())
         loadFile();
     else
-        pMainWindow->updateForEncodingInfo();
+        pMainWindow->updateForEncodingInfo(this);
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
         if (unit) {
@@ -1320,9 +1321,9 @@ void Editor::hideEvent(QHideEvent */*event*/)
                 this,
                 &QSynedit::SynEdit::invalidate);
     }
-    pMainWindow->updateForEncodingInfo();
-    pMainWindow->updateStatusbarForLineCol();
-    pMainWindow->updateForStatusbarModeInfo();
+    pMainWindow->updateForEncodingInfo(nullptr);
+    pMainWindow->updateStatusbarForLineCol(nullptr);
+    pMainWindow->updateForStatusbarModeInfo(nullptr);
 
     setHideTime(QDateTime::currentDateTime());
 }

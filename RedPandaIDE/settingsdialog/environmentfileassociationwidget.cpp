@@ -123,7 +123,7 @@ void FileAssociationModel::saveAssociations()
             );
         }
         if (!ok) {
-            QMessageBox::critical(NULL,
+            QMessageBox::critical(nullptr,
                                   tr("Register File Association Error"),
                                   tr("Don't have privilege to register file types!"));
             return;
@@ -142,7 +142,7 @@ void FileAssociationModel::saveAssociations()
             ok = unregisterFileType(fileType);
         }
         if (!ok) {
-            QMessageBox::critical(NULL,
+            QMessageBox::critical(nullptr,
                                   tr("Register File Type Error"),
                                   tr("Don't have privilege to register file types!"));
             return;
