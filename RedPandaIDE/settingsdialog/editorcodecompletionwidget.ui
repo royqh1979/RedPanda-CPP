@@ -75,6 +75,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="chkEditorShareCodeParser">
+        <property name="text">
+         <string>Editors share one code parser</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="chkClearWhenEditorHidden">
         <property name="text">
          <string>Clear all parsed symbols when editor is hidden</string>

@@ -602,7 +602,7 @@ public:
         bool showCodeIns() const;
         void setShowCodeIns(bool newShowCodeIns);
 
-        bool clearWhenEditorHidden() const;
+        bool clearWhenEditorHidden();
         void setClearWhenEditorHidden(bool newClearWhenEditorHidden);
 
         int minCharRequired() const;
@@ -613,6 +613,9 @@ public:
 
         bool hideSymbolsStartsWithTwoUnderLine() const;
         void setHideSymbolsStartsWithTwoUnderLine(bool newHideSymbolsStartsWithTwoUnderLine);
+
+        bool shareParser();
+        void setShareParser(bool newShareParser);
 
     private:
         int mWidth;
@@ -627,10 +630,11 @@ public:
         bool mIgnoreCase;
         bool mAppendFunc;
         bool mShowCodeIns;
-        bool mClearWhenEditorHidden;
         int mMinCharRequired;
         bool mHideSymbolsStartsWithTwoUnderLine;
         bool mHideSymbolsStartsWithUnderLine;
+        bool mClearWhenEditorHidden;
+        bool mShareParser;
 
         // _Base interface
     protected:

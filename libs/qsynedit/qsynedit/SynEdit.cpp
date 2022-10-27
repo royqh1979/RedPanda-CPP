@@ -5054,6 +5054,64 @@ void SynEdit::moveCaretToLineEnd(bool isSelection)
     moveCaretAndSelection(caretXY(), BufferCoord{vNewX, mCaretY}, isSelection);
 }
 
+void SynEdit::doGotoBlockStart(bool isSelection)
+{
+    if (mCaretY<0 || mCaretY>document()->count())
+        return;
+    HighlighterState state = document()->ranges(mCaretY-1);
+    //todo: handle block other than {}
+    if (document()->braceLevels(mCaretY-1)==0) {
+        doGotoEditorStart(isSelection);
+    } else if (document()->leftBraces(mCaretY-1)==0){
+        int line=mCaretY-1;
+        while (line>=1) {
+            if (document()->leftBraces(line-1)>document()->rightBraces(line-1)) {
+                moveCaretVert(line+1-mCaretY, isSelection);
+                moveCaretToLineStart(isSelection);
+                setTopLine(line-1);
+                return;
+            }
+            line--;
+        }
+    }
+}
+
+void SynEdit::doGotoBlockEnd(bool isSelection)
+{
+    if (mCaretY<0 || mCaretY>document()->count())
+        return;
+    HighlighterState state = document()->ranges(mCaretY-1);
+    //todo: handle block other than {}
+    if (document()->braceLevels(mCaretY-1)==0) {
+        doGotoEditorEnd(isSelection);
+    } else if (document()->rightBraces(mCaretY-1)==0){
+        int line=mCaretY+1;
+        while (line<=document()->count()) {
+            if (document()->rightBraces(line-1)>document()->leftBraces(line-1)) {
+                moveCaretVert(line-1-mCaretY, isSelection);
+                moveCaretToLineStart(isSelection);
+                setTopLine(line-mLinesInWindow+1);
+                return;
+            }
+            line++;
+        }
+    }
+}
+
+void SynEdit::doGotoEditorStart(bool isSelection)
+{
+    moveCaretVert(1-mCaretY, isSelection);
+    moveCaretToLineStart(isSelection);
+}
+
+void SynEdit::doGotoEditorEnd(bool isSelection)
+{
+    if (!mDocument->empty()) {
+        moveCaretVert(mDocument->count()-mCaretY, isSelection);
+        moveCaretToLineEnd(isSelection);
+    }
+}
+
 void SynEdit::setSelectedTextEmpty()
 {
     BufferCoord startPos=blockBegin();
@@ -5722,7 +5780,7 @@ void SynEdit::onCommandProcessed(EditCommand , QChar , void *)
 
 }
 
-void SynEdit::executeCommand(EditCommand Command, QChar AChar, void *pData)
+void SynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
 {
     hideCaret();
     incPaintLock();
@@ -5731,40 +5789,40 @@ void SynEdit::executeCommand(EditCommand Command, QChar AChar, void *pData)
         decPaintLock();
         showCaret();
     });
-    switch(Command) {
+    switch(command) {
     //horizontal caret movement or selection
     case EditCommand::ecLeft:
     case EditCommand::ecSelLeft:
-        moveCaretHorz(-1, Command == EditCommand::ecSelLeft);
+        moveCaretHorz(-1, command == EditCommand::ecSelLeft);
         break;
     case EditCommand::ecRight:
     case EditCommand::ecSelRight:
-        moveCaretHorz(1, Command == EditCommand::ecSelRight);
+        moveCaretHorz(1, command == EditCommand::ecSelRight);
         break;
     case EditCommand::ecPageLeft:
     case EditCommand::ecSelPageLeft:
-        moveCaretHorz(-mCharsInWindow, Command == EditCommand::ecSelPageLeft);
+        moveCaretHorz(-mCharsInWindow, command == EditCommand::ecSelPageLeft);
         break;
     case EditCommand::ecPageRight:
     case EditCommand::ecSelPageRight:
-        moveCaretHorz(mCharsInWindow, Command == EditCommand::ecSelPageRight);
+        moveCaretHorz(mCharsInWindow, command == EditCommand::ecSelPageRight);
         break;
     case EditCommand::ecLineStart:
     case EditCommand::ecSelLineStart:
-        moveCaretToLineStart(Command == EditCommand::ecSelLineStart);
+        moveCaretToLineStart(command == EditCommand::ecSelLineStart);
         break;
     case EditCommand::ecLineEnd:
     case EditCommand::ecSelLineEnd:
-        moveCaretToLineEnd(Command == EditCommand::ecSelLineEnd);
+        moveCaretToLineEnd(command == EditCommand::ecSelLineEnd);
         break;
     // vertical caret movement or selection
     case EditCommand::ecUp:
     case EditCommand::ecSelUp:
-        moveCaretVert(-1, Command == EditCommand::ecSelUp);
+        moveCaretVert(-1, command == EditCommand::ecSelUp);
         break;
     case EditCommand::ecDown:
     case EditCommand::ecSelDown:
-        moveCaretVert(1, Command == EditCommand::ecSelDown);
+        moveCaretVert(1, command == EditCommand::ecSelDown);
         break;
     case EditCommand::ecPageUp:
     case EditCommand::ecSelPageUp:
@@ -5779,51 +5837,55 @@ void SynEdit::executeCommand(EditCommand Command, QChar AChar, void *pData)
         }
         if (counter<0)
             break;
-        if (Command == EditCommand::ecPageUp || Command == EditCommand::ecSelPageUp) {
+        if (command == EditCommand::ecPageUp || command == EditCommand::ecSelPageUp) {
             counter = -counter;
         }
-        moveCaretVert(counter, Command == EditCommand::ecSelPageUp || Command == EditCommand::ecSelPageDown);
+        moveCaretVert(counter, command == EditCommand::ecSelPageUp || command == EditCommand::ecSelPageDown);
         break;
     }
     case EditCommand::ecPageTop:
     case EditCommand::ecSelPageTop:
-        moveCaretVert(mTopLine-mCaretY, Command == EditCommand::ecSelPageTop);
+        moveCaretVert(mTopLine-mCaretY, command == EditCommand::ecSelPageTop);
         break;
     case EditCommand::ecPageBottom:
     case EditCommand::ecSelPageBottom:
-        moveCaretVert(mTopLine+mLinesInWindow-1-mCaretY, Command == EditCommand::ecSelPageBottom);
+        moveCaretVert(mTopLine+mLinesInWindow-1-mCaretY, command == EditCommand::ecSelPageBottom);
         break;
     case EditCommand::ecEditorStart:
     case EditCommand::ecSelEditorStart:
-        moveCaretVert(1-mCaretY, Command == EditCommand::ecSelEditorStart);
-        moveCaretToLineStart(Command == EditCommand::ecSelEditorStart);
+        doGotoEditorStart(command == EditCommand::ecSelEditorStart);
         break;
     case EditCommand::ecEditorEnd:
     case EditCommand::ecSelEditorEnd:
-        if (!mDocument->empty()) {
-            moveCaretVert(mDocument->count()-mCaretY, Command == EditCommand::ecSelEditorEnd);
-            moveCaretToLineEnd(Command == EditCommand::ecSelEditorEnd);
-        }
+        doGotoEditorEnd(command == EditCommand::ecSelEditorEnd);
+        break;
+    case EditCommand::ecBlockStart:
+    case EditCommand::ecSelBlockStart:
+        doGotoBlockStart(command == EditCommand::ecSelBlockStart);
+        break;
+    case EditCommand::ecBlockEnd:
+    case EditCommand::ecSelBlockEnd:
+        doGotoBlockEnd(command == EditCommand::ecSelBlockEnd);
         break;
     // goto special line / column position
     case EditCommand::ecGotoXY:
     case EditCommand::ecSelGotoXY:
         if (pData)
-            moveCaretAndSelection(caretXY(), *((BufferCoord *)(pData)), Command == EditCommand::ecSelGotoXY);
+            moveCaretAndSelection(caretXY(), *((BufferCoord *)(pData)), command == EditCommand::ecSelGotoXY);
         break;
     // word selection
     case EditCommand::ecWordLeft:
     case EditCommand::ecSelWordLeft:
     {
         BufferCoord CaretNew = prevWordPos();
-        moveCaretAndSelection(caretXY(), CaretNew, Command == EditCommand::ecSelWordLeft);
+        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::ecSelWordLeft);
         break;
     }
     case EditCommand::ecWordRight:
     case EditCommand::ecSelWordRight:
     {
         BufferCoord CaretNew = nextWordPos();
-        moveCaretAndSelection(caretXY(), CaretNew, Command == EditCommand::ecSelWordRight);
+        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::ecSelWordRight);
         break;
     }
     case EditCommand::ecSelWord:
@@ -5895,7 +5957,7 @@ void SynEdit::executeCommand(EditCommand Command, QChar AChar, void *pData)
         doShiftTabKey();
         break;
     case EditCommand::ecChar:
-        doAddChar(AChar);
+        doAddChar(ch);
         break;
     case EditCommand::ecInsertMode:
         if (!mReadOnly)

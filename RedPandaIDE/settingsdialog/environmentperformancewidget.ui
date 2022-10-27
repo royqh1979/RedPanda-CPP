@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>431</width>
     <height>300</height>
    </rect>
   </property>
@@ -20,10 +20,17 @@
       <string>Reduce Memory Usage</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
+      <item row="1" column="0">
        <widget class="QCheckBox" name="chkClearWhenEditorHidden">
         <property name="text">
          <string>Auto clear parsed symbols when editor hidden</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="chkEditorsShareParser">
+        <property name="text">
+         <string>Editors share one code parser</string>
         </property>
        </widget>
       </item>

@@ -62,6 +62,8 @@ enum class EditCommand {
     ecEditorStart       = 15,   // Move cursor to absolute beginning
     ecEditorEnd    = 16,   // Move cursor to absolute end
     ecGotoXY          = 17,   // Move cursor to specific coordinates, Data = PPoint
+    ecBlockStart      = 18,   // Move cursor to begin of block
+    ecBlockEnd        = 19,   // Move cursor to end of block
 
 //******************************************************************************
 // Maybe the command processor should just take a boolean that signifies if
@@ -89,6 +91,8 @@ enum class EditCommand {
     ecSelEditorStart    = ecEditorStart + ecSelection,
     ecSelEditorEnd = ecEditorEnd + ecSelection,
     ecSelGotoXY       = ecGotoXY + ecSelection,  // Data = PPoint
+    ecSelBlockStart      = ecBlockStart + ecSelection,   // Move cursor to begin of scope
+    ecSelBlockEnd        = ecBlockEnd + ecSelection,   // Move cursor to end of scope
 
 
     ecCopy            = 201,  // Copy selection to clipboard

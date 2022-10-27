@@ -69,6 +69,8 @@ const char* SaveException::what() const noexcept {
     return mReasonBuffer;
 }
 
+std::weak_ptr<CppParser> Editor::mSharedParser;
+
 Editor::Editor(QWidget *parent):
     Editor(parent,QObject::tr("untitled"),ENCODING_AUTO_DETECT,nullptr,true,nullptr)
 {
@@ -1321,6 +1323,7 @@ void Editor::showEvent(QShowEvent */*event*/)
 void Editor::hideEvent(QHideEvent */*event*/)
 {
     if (pSettings->codeCompletion().clearWhenEditorHidden()
+            && !pSettings->codeCompletion().shareParser()
             && !inProject() && mParser
             && !pMainWindow->isMinimized()) {
         //recreate a parser, to totally clean memories the parse uses;
@@ -1831,6 +1834,16 @@ void Editor::deleteToEOL()
 void Editor::deleteToBOL()
 {
     commandProcessor(QSynedit::EditCommand::ecDeleteBOL,QChar(),nullptr);
+}
+
+void Editor::gotoBlockStart()
+{
+    commandProcessor(QSynedit::EditCommand::ecBlockStart,QChar(),nullptr);
+}
+
+void Editor::gotoBlockEnd()
+{
+    commandProcessor(QSynedit::EditCommand::ecBlockEnd,QChar(),nullptr);
 }
 
 QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
@@ -2567,6 +2580,15 @@ bool Editor::handleCodeCompletion(QChar key)
 void Editor::initParser()
 {
 //    mParser=nullptr;
+    if (pSettings->codeCompletion().shareParser()) {
+        if (pSettings->codeCompletion().enabled()
+            && (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter)
+            ) {
+            mParser = sharedParser();
+        }
+        return;
+    }
+
     mParser = std::make_shared<CppParser>();
     if (mUseCppSyntax) {
         mParser->setLanguage(ParserLanguage::CPlusPlus);
@@ -2721,11 +2743,13 @@ void Editor::reparse(bool resetParser)
         return;
     //mParser->setEnabled(pSettings->codeCompletion().enabled());
     ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
-    if (language!=mParser->language() && !inProject()) {
-        mParser->setLanguage(language);
-        resetCppParser(mParser);
-    } else if (resetParser && !inProject()) {
-        resetCppParser(mParser);
+    if (!inProject() && !pSettings->codeCompletion().shareParser()) {
+        if (language!=mParser->language()) {
+            mParser->setLanguage(language);
+            resetCppParser(mParser);
+        } else if (resetParser) {
+            resetCppParser(mParser);
+        }
     }
     parseFile(mParser,mFilename, inProject());
 }
@@ -3916,6 +3940,23 @@ void Editor::onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int
 void Editor::onScrollBarValueChanged()
 {
     pMainWindow->functionTip()->hide();
+}
+
+PCppParser Editor::sharedParser()
+{
+    PCppParser parser=mSharedParser.lock();
+    if (!parser) {
+        parser=std::make_shared<CppParser>();
+        parser->setLanguage(ParserLanguage::CPlusPlus);
+        parser->setOnGetFileStream(
+                    std::bind(
+                        &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                        std::placeholders::_1, std::placeholders::_2));
+        resetCppParser(parser);
+        parser->setEnabled(true);
+        mSharedParser=parser;
+    }
+    return parser;
 }
 
 bool Editor::canAutoSave() const

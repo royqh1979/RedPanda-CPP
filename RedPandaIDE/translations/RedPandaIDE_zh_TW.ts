@@ -1076,6 +1076,10 @@
         <source>Completion suggestion window height:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Editors share one code parser</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorColorSchemeWidget</name>
@@ -1598,6 +1602,10 @@
     </message>
     <message>
         <source>Auto clear parsed symbols when editor hidden</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Editors share one code parser</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4541,6 +4549,22 @@
         <source>In current project</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Goto block start</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Up</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto block end</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Down</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -4687,10 +4711,6 @@
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>untitled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6382,10 +6402,6 @@
     </message>
     <message>
         <source>Line</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Column</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

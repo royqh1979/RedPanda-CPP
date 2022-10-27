@@ -3691,8 +3691,14 @@ void Settings::CodeCompletion::setShowCodeIns(bool newShowCodeIns)
     mShowCodeIns = newShowCodeIns;
 }
 
-bool Settings::CodeCompletion::clearWhenEditorHidden() const
+bool Settings::CodeCompletion::clearWhenEditorHidden()
 {
+    MEMORYSTATUSEX statex;
+#ifdef Q_OS_WIN
+    if (statex.ullTotalPhys < (long long int)2*1024*1024*1024) {
+        mClearWhenEditorHidden = true;
+    }
+#endif
     return mClearWhenEditorHidden;
 }
 
@@ -3719,6 +3725,23 @@ bool Settings::CodeCompletion::hideSymbolsStartsWithTwoUnderLine() const
 void Settings::CodeCompletion::setHideSymbolsStartsWithTwoUnderLine(bool newHideSymbolsStartsWithTwoUnderLine)
 {
     mHideSymbolsStartsWithTwoUnderLine = newHideSymbolsStartsWithTwoUnderLine;
+}
+
+bool Settings::CodeCompletion::shareParser()
+{
+
+#ifdef Q_OS_WIN
+    MEMORYSTATUSEX statex;
+    if (statex.ullTotalPhys < (long long int)1024*1024*1024) {
+        mShareParser = true;
+    }
+#endif
+    return mShareParser;
+}
+
+void Settings::CodeCompletion::setShareParser(bool newShareParser)
+{
+    mShareParser = newShareParser;
 }
 
 bool Settings::CodeCompletion::hideSymbolsStartsWithUnderLine() const
@@ -3859,6 +3882,7 @@ void Settings::CodeCompletion::doSave()
     saveValue("min_char_required",mMinCharRequired);
     saveValue("hide_symbols_start_with_two_underline", mHideSymbolsStartsWithTwoUnderLine);
     saveValue("hide_symbols_start_with_underline", mHideSymbolsStartsWithUnderLine);
+    saveValue("share_parser",mShareParser);
 }
 
 
@@ -3896,11 +3920,18 @@ void Settings::CodeCompletion::doLoad()
 
     mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
 
+    bool shouldShare=true;
+
 #ifdef Q_OS_WIN
-    if (statex.ullAvailPhys < (long long int)1024*1024*1024) {
-        mClearWhenEditorHidden = true;
+    statex.dwLength = sizeof (statex);
+
+    GlobalMemoryStatusEx (&statex);
+    if (statex.ullAvailPhys > (long long int)4*1024*1024*1024) {
+        shouldShare = false;
     }
 #endif
+
+    mShareParser = boolValue("share_parser",shouldShare);
 }
 
 Settings::CodeFormatter::CodeFormatter(Settings *settings):

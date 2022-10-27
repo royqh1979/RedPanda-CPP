@@ -728,6 +728,10 @@ private slots:
 
     void on_actionNew_Template_triggered();
 
+    void on_actionGoto_block_start_triggered();
+
+    void on_actionGoto_block_end_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

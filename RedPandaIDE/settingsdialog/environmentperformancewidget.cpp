@@ -39,17 +39,26 @@ void EnvironmentPerformanceWidget::doLoad()
     statex.dwLength = sizeof (statex);
 
     GlobalMemoryStatusEx (&statex);
-    if (statex.ullAvailPhys < (long long int)1024*1024*1024) {
+    if (statex.ullTotalPhys < (long long int)2*1024*1024*1024) {
         ui->chkClearWhenEditorHidden->setEnabled(false);
         ui->chkClearWhenEditorHidden->setChecked(true);
         pSettings->codeCompletion().setClearWhenEditorHidden(true);
+        pSettings->codeCompletion().save();
+    }
+    if (statex.ullTotalPhys < (long long int)1024*1024*1024) {
+        ui->chkEditorsShareParser->setEnabled(false);
+        ui->chkEditorsShareParser->setChecked(true);
+        pSettings->codeCompletion().setShareParser(true);
+        pSettings->codeCompletion().save();
     }
 #endif
+    ui->chkEditorsShareParser->setChecked(pSettings->codeCompletion().shareParser());
 }
 
 void EnvironmentPerformanceWidget::doSave()
 {
     pSettings->codeCompletion().setClearWhenEditorHidden(ui->chkClearWhenEditorHidden->isChecked());
+    pSettings->codeCompletion().setShareParser(ui->chkEditorsShareParser->isChecked());
 
     pSettings->codeCompletion().save();
 }

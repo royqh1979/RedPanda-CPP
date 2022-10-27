@@ -221,6 +221,8 @@
     <addaction name="separator"/>
     <addaction name="actionMatch_Bracket"/>
     <addaction name="actionGo_to_Line"/>
+    <addaction name="actionGoto_block_start"/>
+    <addaction name="actionGoto_block_end"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_bookmark"/>
     <addaction name="actionRemove_Bookmark"/>
@@ -3235,6 +3237,22 @@
    </property>
    <property name="toolTip">
     <string>New Template from Project</string>
+   </property>
+  </action>
+  <action name="actionGoto_block_start">
+   <property name="text">
+    <string>Goto block start</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Up</string>
+   </property>
+  </action>
+  <action name="actionGoto_block_end">
+   <property name="text">
+    <string>Goto block end</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Down</string>
    </property>
   </action>
  </widget>

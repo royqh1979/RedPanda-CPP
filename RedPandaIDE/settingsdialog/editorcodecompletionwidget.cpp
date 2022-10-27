@@ -54,6 +54,7 @@ void EditorCodeCompletionWidget::doLoad()
     ui->chkHideSymbolsStartWithTwoUnderline->setChecked(pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine());
     ui->chkHideSymbolsStartWithUnderline->setChecked(pSettings->codeCompletion().hideSymbolsStartsWithUnderLine());
 
+    ui->chkEditorShareCodeParser->setChecked(pSettings->codeCompletion().shareParser());
     ui->spinMinCharRequired->setValue(pSettings->codeCompletion().minCharRequired());
 }
 
@@ -81,6 +82,8 @@ void EditorCodeCompletionWidget::doSave()
 
     pSettings->codeCompletion().setHideSymbolsStartsWithTwoUnderLine(ui->chkHideSymbolsStartWithTwoUnderline->isChecked());
     pSettings->codeCompletion().setHideSymbolsStartsWithUnderLine(ui->chkHideSymbolsStartWithUnderline->isChecked());
+
+    pSettings->codeCompletion().setShareParser(ui->chkEditorShareCodeParser->isChecked());
 
     pSettings->codeCompletion().save();
 }

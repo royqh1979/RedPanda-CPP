@@ -8639,3 +8639,19 @@ bool MainWindow::isClosingAll() const
     return mClosingAll;
 }
 
+
+void MainWindow::on_actionGoto_block_start_triggered()
+{
+    Editor* editor=mEditorList->getEditor();
+    if (editor)
+        editor->gotoBlockStart();
+}
+
+
+void MainWindow::on_actionGoto_block_end_triggered()
+{
+    Editor* editor=mEditorList->getEditor();
+    if (editor)
+        editor->gotoBlockEnd();
+}
+

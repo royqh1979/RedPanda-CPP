@@ -198,6 +198,11 @@ void EditKeyStrokes::resetDefaults()
     add(EditCommand::ecWordRight, Qt::Key_Right, Qt::ControlModifier);
     add(EditCommand::ecSelWordRight, Qt::Key_Right, Qt::ShiftModifier|Qt::ControlModifier);
 
+    add(EditCommand::ecBlockStart, Qt::Key_Up, Qt::MetaModifier|Qt::ControlModifier);
+    add(EditCommand::ecSelBlockStart, Qt::Key_Up, Qt::ShiftModifier|Qt::ControlModifier|Qt::MetaModifier);
+    add(EditCommand::ecBlockEnd, Qt::Key_Down, Qt::MetaModifier|Qt::ControlModifier);
+    add(EditCommand::ecSelBlockEnd, Qt::Key_Down, Qt::ShiftModifier|Qt::ControlModifier|Qt::MetaModifier);
+
 //    add(SynEditorCommand::ecExpandSelection, Qt::Key_Right, Qt::ShiftModifier|Qt::AltModifier);
 //    add(SynEditorCommand::ecShrinkSelection, Qt::Key_Left, Qt::ShiftModifier | Qt::AltModifier);
 

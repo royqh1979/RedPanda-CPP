@@ -1179,6 +1179,10 @@
         <source>Enable code competion</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Editors share one code parser</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorColorSchemeWidget</name>
@@ -1706,6 +1710,10 @@
     <message>
         <source>Auto clear parsed symbols when editor hidden</source>
         <translation>Limpar automaticamente símbolos verificados quando editor oculto</translation>
+    </message>
+    <message>
+        <source>Editors share one code parser</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4688,6 +4696,22 @@
         <source>In current project</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Goto block start</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Up</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto block end</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Down</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -4838,7 +4862,7 @@
     </message>
     <message>
         <source>untitled</source>
-        <translation>sem nome</translation>
+        <translation type="vanished">sem nome</translation>
     </message>
     <message>
         <source>Choose directory</source>
@@ -6623,7 +6647,7 @@
     </message>
     <message>
         <source>Column</source>
-        <translation>Coluna</translation>
+        <translation type="vanished">Coluna</translation>
     </message>
     <message>
         <source>Content</source>

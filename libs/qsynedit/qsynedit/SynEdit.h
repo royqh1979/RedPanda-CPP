@@ -466,9 +466,9 @@ protected:
     virtual void onPreparePaintHighlightToken(int line,
             int aChar, const QString& token, PHighlighterAttribute attr,
             FontStyles& style, QColor& foreground, QColor& background);
-    virtual void onProcessCommand(EditCommand Command, QChar AChar, void * pData);
-    virtual void onCommandProcessed(EditCommand Command, QChar AChar, void * pData);
-    virtual void executeCommand(EditCommand Command, QChar AChar, void * pData);
+    virtual void onProcessCommand(EditCommand command, QChar car, void * pData);
+    virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
+    virtual void executeCommand(EditCommand command, QChar ch, void * pData);
     virtual void onEndFirstPaintLock();
     virtual void onBeginFirstPaintLock();
 
@@ -540,6 +540,10 @@ private:
                                bool isSelection);
     void moveCaretToLineStart(bool isSelection);
     void moveCaretToLineEnd(bool isSelection);
+    void doGotoBlockStart(bool isSelection);
+    void doGotoBlockEnd(bool isSelection);
+    void doGotoEditorStart(bool isSelection);
+    void doGotoEditorEnd(bool isSelection);
     void setSelectedTextEmpty();
     void setSelTextPrimitive(const QStringList& text);
     void setSelTextPrimitiveEx(SelectionMode PasteMode,

@@ -216,6 +216,8 @@ public:
     void duplicateLine();
     void deleteToEOL();
     void deleteToBOL();
+    void gotoBlockStart();
+    void gotoBlockEnd();
 
     QStringList getOwnerExpressionAndMemberAtPositionForCompletion(
             const QSynedit::BufferCoord& pos,
@@ -290,6 +292,7 @@ private:
     void onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString& token,
         QSynedit::PHighlighterAttribute &attr);
     void onScrollBarValueChanged();
+    static PCppParser sharedParser();
 private:
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
@@ -339,6 +342,8 @@ private:
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
     QTimer mFunctionTipTimer;
     int mHoverModifiedLine;
+
+    static std::weak_ptr<CppParser> mSharedParser;
 
     // QWidget interface
 protected:

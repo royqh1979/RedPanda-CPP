@@ -1,7 +1,10 @@
 Red Panda C++ Version 2.1
 
-  - editors that not in the editing panel shouldn't trigger switch breakpoint
-  - editors that not in the editing panel shouldn't show context menu
+  - fix: editors that not in the editing panel shouldn't trigger switch breakpoint
+  - fix:editors that not in the editing panel shouldn't show context menu
+  - enhancement: add "editors share one code parser" in "options" / "editor" / "code completion", to reduce memory usage.
+        Turned off by default on PCs with memory > 4G; Force turned on PCs with memory < 1G.
+  - enhancement: add "goto block start"/"goto block end" in "Code" menu
 
 
 Red Panda C++ Version 2.0
