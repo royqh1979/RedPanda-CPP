@@ -292,7 +292,7 @@ private:
     void onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString& token,
         QSynedit::PHighlighterAttribute &attr);
     void onScrollBarValueChanged();
-    static PCppParser sharedParser();
+    static PCppParser sharedParser(ParserLanguage language);
 private:
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
@@ -343,7 +343,7 @@ private:
     QTimer mFunctionTipTimer;
     int mHoverModifiedLine;
 
-    static std::weak_ptr<CppParser> mSharedParser;
+    static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
 
     // QWidget interface
 protected:

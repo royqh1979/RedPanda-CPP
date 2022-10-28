@@ -3926,7 +3926,7 @@ void Settings::CodeCompletion::doLoad()
     statex.dwLength = sizeof (statex);
 
     GlobalMemoryStatusEx (&statex);
-    if (statex.ullAvailPhys > (long long int)4*1024*1024*1024) {
+    if (statex.ullAvailPhys > (long long int)8*1024*1024*1024) {
         shouldShare = false;
     }
 #endif

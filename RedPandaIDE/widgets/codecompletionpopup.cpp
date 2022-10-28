@@ -181,14 +181,9 @@ void CodeCompletionPopup::addChildren(PStatement scopeStatement, const QString &
             if (childStatement->fileName.isEmpty()) {
                 // hard defines
                 addStatement(childStatement,fileName,-1);
-            } else if (!( childStatement->kind == StatementKind::skConstructor
-                          || childStatement->kind == StatementKind::skDestructor
-                          || childStatement->kind == StatementKind::skBlock)
-                       && (!mAddedStatements.contains(childStatement->command))
-                       && (
-                           isIncluded(childStatement->fileName)
-                           || isIncluded(childStatement->definitionFileName)
-                           )
+            } else if (
+                       isIncluded(childStatement->fileName)
+                       || isIncluded(childStatement->definitionFileName)
                        ) {
                 //we must check if the statement is included by the file
                 addStatement(childStatement,fileName,line);
@@ -196,11 +191,7 @@ void CodeCompletionPopup::addChildren(PStatement scopeStatement, const QString &
         }
     } else {
         for (const PStatement& childStatement: children) {
-            if (!( childStatement->kind == StatementKind::skConstructor
-                                      || childStatement->kind == StatementKind::skDestructor
-                                      || childStatement->kind == StatementKind::skBlock)
-                                   && (!mAddedStatements.contains(childStatement->command)))
-                addStatement(childStatement,fileName,line);
+            addStatement(childStatement,fileName,line);
         }
     }
 }
@@ -208,6 +199,10 @@ void CodeCompletionPopup::addChildren(PStatement scopeStatement, const QString &
 void CodeCompletionPopup::addStatement(PStatement statement, const QString &fileName, int line)
 {
     if (mAddedStatements.contains(statement->command))
+        return;
+    if (statement->kind == StatementKind::skConstructor
+            || statement->kind == StatementKind::skDestructor
+            || statement->kind == StatementKind::skBlock)
         return;
     if ((line!=-1)
             && (line < statement->line)
@@ -409,9 +404,9 @@ void CodeCompletionPopup::filterList(const QString &member)
         int totalPos = 0;
         statement->matchPositions.clear();
         if (hideSymbolsTwoUnderline && statement->command.startsWith("__")) {
-
+            continue;
         } else if (hideSymbolsUnderline && statement->command.startsWith("_")) {
-
+            continue;
         } else {
             foreach (const QChar& ch, member) {
                 if (mIgnoreCase)

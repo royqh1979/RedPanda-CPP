@@ -1188,6 +1188,9 @@ PStatement CppParser::addStatement(const PStatement& parent,
         newType += newCommand.front();
         newCommand.remove(0,1); // remove first
     }
+//    if (newCommand.startsWith("::") && parent && kind!=StatementKind::skBlock ) {
+//        qDebug()<<command<<fileName<<line<<kind<<parent->fullName;
+//    }
 
     QString noNameArgs = "";
     if (kind == StatementKind::skConstructor
@@ -3334,13 +3337,14 @@ void CppParser::internalParse(const QString &fileName)
             if (!handleStatement())
                 break;
         }
-        //reduce memory usage
-        internalClear();
 #ifdef QT_DEBUG
-//      mTokenizer.dumpTokens("r:\\tokens.txt");
+//      mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 //
 //      mStatementList.dumpAll("r:\\all-stats.txt");
 #endif
+        //reduce memory usage
+        internalClear();
+
     }
 }
 

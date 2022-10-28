@@ -69,7 +69,7 @@ const char* SaveException::what() const noexcept {
     return mReasonBuffer;
 }
 
-std::weak_ptr<CppParser> Editor::mSharedParser;
+QHash<ParserLanguage,std::weak_ptr<CppParser>> Editor::mSharedParsers;
 
 Editor::Editor(QWidget *parent):
     Editor(parent,QObject::tr("untitled"),ENCODING_AUTO_DETECT,nullptr,true,nullptr)
@@ -2584,7 +2584,7 @@ void Editor::initParser()
         if (pSettings->codeCompletion().enabled()
             && (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter)
             ) {
-            mParser = sharedParser();
+            mParser = sharedParser(mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C);
         }
         return;
     }
@@ -2743,12 +2743,19 @@ void Editor::reparse(bool resetParser)
         return;
     //mParser->setEnabled(pSettings->codeCompletion().enabled());
     ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
-    if (!inProject() && !pSettings->codeCompletion().shareParser()) {
-        if (language!=mParser->language()) {
-            mParser->setLanguage(language);
-            resetCppParser(mParser);
-        } else if (resetParser) {
-            resetCppParser(mParser);
+    if (!inProject()) {
+        if (pSettings->codeCompletion().shareParser()) {
+            if (language!=mParser->language()) {
+                mParser->invalidateFile(mFilename);
+                mParser=sharedParser(language);
+            }
+        } else {
+            if (language!=mParser->language()) {
+                mParser->setLanguage(language);
+                resetCppParser(mParser);
+            } else if (resetParser) {
+                resetCppParser(mParser);
+            }
         }
     }
     parseFile(mParser,mFilename, inProject());
@@ -3942,19 +3949,22 @@ void Editor::onScrollBarValueChanged()
     pMainWindow->functionTip()->hide();
 }
 
-PCppParser Editor::sharedParser()
+PCppParser Editor::sharedParser(ParserLanguage language)
 {
-    PCppParser parser=mSharedParser.lock();
+    PCppParser parser;
+    if (mSharedParsers.contains(language)) {
+        std::weak_ptr<CppParser> weakParser=mSharedParsers[language].lock();
+    }
     if (!parser) {
         parser=std::make_shared<CppParser>();
-        parser->setLanguage(ParserLanguage::CPlusPlus);
+        parser->setLanguage(language);
         parser->setOnGetFileStream(
                     std::bind(
                         &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
                         std::placeholders::_1, std::placeholders::_2));
         resetCppParser(parser);
         parser->setEnabled(true);
-        mSharedParser=parser;
+        mSharedParsers.insert(language,parser);
     }
     return parser;
 }

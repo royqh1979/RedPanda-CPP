@@ -24,7 +24,7 @@
 
 using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
 
-enum class ParserLanguage {
+enum ParserLanguage {
     C,
     CPlusPlus
 };
