@@ -3,6 +3,10 @@ CONFIG -= qt
 CONFIG += c++11
 CONFIG -= app_bundle
 
+msvc {
+    LIBS += advapi32.lib shell32.lib comdlg32.lib user32.lib gdi32.lib ws2_32.lib
+}
+
 DEFINES -= UNICODE
 
 isEmpty(APP_NAME) {

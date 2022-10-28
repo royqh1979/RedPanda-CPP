@@ -35,6 +35,10 @@ AboutDialog::AboutDialog(QWidget *parent) :
             .arg(QString("GCC %1.%2")
                  .arg(__GNUC__)
                  .arg(__GNUC_MINOR__)));
+#elif defined(_MSC_VER)
+    ui->lblQt->setText(ui->lblQt->text()
+            .arg(qVersion())
+            .arg(tr("Microsoft Visual C++")));
 #else
     ui->lblQt->setText(ui->lblQt->text()
             .arg(qVersion())

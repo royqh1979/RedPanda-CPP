@@ -7,6 +7,7 @@ Red Panda C++ Version 2.1
   - enhancement: add "goto block start"/"goto block end" in "Code" menu
   - add fmtlib to the gcc compiler's lib distributed with RedPanda IDE windows version
   - add default autolink for fmtlib in Windows 
+  - reduce size of the executable of win-git-askpass tool
 
 Red Panda C++ Version 2.0
 

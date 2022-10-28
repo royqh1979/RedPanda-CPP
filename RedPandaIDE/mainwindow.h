@@ -67,7 +67,7 @@ class CPUDialog;
 class QPlainTextEdit;
 class SearchDialog;
 class Project;
-class ProjectModelNode;
+struct ProjectModelNode;
 class ProjectUnit;
 class ColorSchemeItem;
 class VisitHistoryManager;

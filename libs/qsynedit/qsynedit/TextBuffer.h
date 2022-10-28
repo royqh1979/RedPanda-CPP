@@ -250,8 +250,8 @@ protected:
     QVector<PUndoItem> mItems;
     int mMaxUndoActions;
     int mMaxMemoryUsage;
-    size_t mNextChangeNumber;
-    size_t mInitialChangeNumber;
+    unsigned int mNextChangeNumber;
+    unsigned int mInitialChangeNumber;
     bool mInsideRedo;
 };
 
