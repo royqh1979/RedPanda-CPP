@@ -3695,8 +3695,15 @@ bool Settings::CodeCompletion::clearWhenEditorHidden()
 {
     MEMORYSTATUSEX statex;
 #ifdef Q_OS_WIN
+    statex.dwLength = sizeof (statex);
+
+    GlobalMemoryStatusEx (&statex);
     if (statex.ullTotalPhys < (long long int)2*1024*1024*1024) {
         mClearWhenEditorHidden = true;
+    }
+
+    if (statex.ullAvailPhys < (long long int)2*1024*1024*1024) {
+        return true;
     }
 #endif
     return mClearWhenEditorHidden;
@@ -3732,8 +3739,16 @@ bool Settings::CodeCompletion::shareParser()
 
 #ifdef Q_OS_WIN
     MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof (statex);
+
+    GlobalMemoryStatusEx (&statex);
+
     if (statex.ullTotalPhys < (long long int)1024*1024*1024) {
         mShareParser = true;
+    }
+
+    if (statex.ullAvailPhys < (long long int)1*1024*1024*1024) {
+        return true;
     }
 #endif
     return mShareParser;
@@ -3906,6 +3921,7 @@ void Settings::CodeCompletion::doLoad()
     mHideSymbolsStartsWithUnderLine = boolValue("hide_symbols_start_with_underline", false);
 
     bool doClear = true;
+    bool shouldShare=true;
 
 #ifdef Q_OS_WIN
     MEMORYSTATUSEX statex;
@@ -3913,24 +3929,15 @@ void Settings::CodeCompletion::doLoad()
     statex.dwLength = sizeof (statex);
 
     GlobalMemoryStatusEx (&statex);
-    if (statex.ullAvailPhys > (long long int)10*1024*1024*1024) {
+    if (statex.ullAvailPhys > (long long int)16*1024*1024*1024) {
         doClear = false;
     }
-#endif
-
-    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
-
-    bool shouldShare=true;
-
-#ifdef Q_OS_WIN
-    statex.dwLength = sizeof (statex);
-
-    GlobalMemoryStatusEx (&statex);
-    if (statex.ullAvailPhys > (long long int)8*1024*1024*1024) {
+    if (statex.ullAvailPhys > (long long int)10*1024*1024*1024) {
         shouldShare = false;
     }
 #endif
 
+    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
     mShareParser = boolValue("share_parser",shouldShare);
 }
 

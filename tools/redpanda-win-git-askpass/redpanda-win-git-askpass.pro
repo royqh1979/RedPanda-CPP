@@ -1,13 +1,5 @@
-#win32-msvc{
-#    CONFIG += c++11
-#    CONFIG -= app_bundle
-#} else {
-#    TEMPLATE = app
-
-#    CONFIG += windows
-#    CONFIG -= app_bundle
-#    CONFIG -= qt
-#}
+CONFIG += windows
+CONFIG -= qt
 CONFIG += c++11
 CONFIG -= app_bundle
 

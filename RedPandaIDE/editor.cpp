@@ -3953,7 +3953,7 @@ PCppParser Editor::sharedParser(ParserLanguage language)
 {
     PCppParser parser;
     if (mSharedParsers.contains(language)) {
-        std::weak_ptr<CppParser> weakParser=mSharedParsers[language].lock();
+        parser=mSharedParsers[language].lock();
     }
     if (!parser) {
         parser=std::make_shared<CppParser>();

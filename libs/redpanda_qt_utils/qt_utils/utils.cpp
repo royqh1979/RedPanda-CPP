@@ -452,7 +452,7 @@ bool copyFile(const QString &fromPath, const QString &toPath, bool overwrite)
     if (!toFile.open(QFile::WriteOnly | QFile::Truncate))
         return false;
 
-    int bufferSize=64*1024;
+    constexpr int bufferSize=64*1024;
     char buffer[bufferSize];
 
     while (!fromFile.atEnd()) {
