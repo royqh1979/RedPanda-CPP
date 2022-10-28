@@ -3693,8 +3693,8 @@ void Settings::CodeCompletion::setShowCodeIns(bool newShowCodeIns)
 
 bool Settings::CodeCompletion::clearWhenEditorHidden()
 {
-    MEMORYSTATUSEX statex;
 #ifdef Q_OS_WIN
+    MEMORYSTATUSEX statex;
     statex.dwLength = sizeof (statex);
 
     GlobalMemoryStatusEx (&statex);
