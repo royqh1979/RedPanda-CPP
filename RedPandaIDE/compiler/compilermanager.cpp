@@ -270,18 +270,18 @@ void CompilerManager::run(
                         .arg(consolePauserPath)
                         .arg(consoleFlag)
                         .arg(sharedMemoryId)
-                        .arg(redirectInputFilename)
-                        .arg(localizePath(filename))
+                        .arg(escapeSpacesInString(redirectInputFilename))
+                        .arg(localizePath(escapeSpacesInString(filename)))
                         .arg(arguments);
             } else {
                 newArguments = QString(" -e \"%1\" %2 %3 \"%4\" %5")
                     .arg(consolePauserPath)
                     .arg(consoleFlag)
-                    .arg(sharedMemoryId,localizePath(filename)).arg(arguments);
+                    .arg(sharedMemoryId,localizePath(escapeSpacesInString(filename))).arg(arguments);
             }
         } else {
             newArguments = QString(" -e \"%1\" %2")
-                .arg(localizePath(filename)).arg(arguments);
+                .arg(localizePath(escapeSpacesInString(filename))).arg(arguments);
         }
         execRunner = new ExecutableRunner(pSettings->environment().terminalPath(),newArguments,workDir);
         execRunner->setShareMemoryId(sharedMemoryId);

@@ -130,6 +130,7 @@ QString extractFilePath(const QString& filePath);
 QString extractAbsoluteFilePath(const QString& filePath);
 QString cleanPath(const QString& dirPath);
 QString absolutePath(const QString& dirPath, const QString& relativePath);
+QString escapeSpacesInString(const QString& str);
 
 
 bool isReadOnly(const QString& filename);

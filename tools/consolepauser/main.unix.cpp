@@ -68,6 +68,21 @@ vector<string> GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit)
     return result;
 }
 
+string unescapeSpaces(const string& s) {
+    string result;
+    int i=0;
+    while(i<s.length()) {
+        if (s[i]=='%' && (i+2)<s.length() && s[i+1]=='2' && s[i+2]=='0') {
+            result.push_back(' ');
+            i+=3;
+        } else {
+            result.push_back(s[i]);
+            i++;
+        }
+    }
+    return result;
+}
+
 int ExecuteCommand(vector<string>& command,bool reInp) {
     pid_t pid = fork();
     if (pid == 0) {
@@ -80,8 +95,8 @@ int ExecuteCommand(vector<string>& command,bool reInp) {
                 printf("not enough arguments1!\n");
                 exit(-1);
             }
-            freopen(command[0].c_str(),"r",stdin);
-            path_to_command = command[1];
+            freopen(unescapeSpaces(command[0]).c_str(),"r",stdin);
+            path_to_command = unescapeSpaces(command[1]);
             command_size = command.size()+1;
             command_begin = 1;
         } else {
@@ -89,7 +104,7 @@ int ExecuteCommand(vector<string>& command,bool reInp) {
                 printf("not enough arguments2!\n");
                 exit(-1);
             }
-            path_to_command = command[0];
+            path_to_command = unescapeSpaces(command[0]);
             command_size = command.size()+1;
             command_begin = 0;
         }

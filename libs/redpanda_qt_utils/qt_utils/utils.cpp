@@ -689,3 +689,9 @@ QString absolutePath(const QString &dirPath, const QString &relativePath)
 {
     return QDir::cleanPath(QDir(dirPath).absoluteFilePath(relativePath));
 }
+
+QString escapeSpacesInString(const QString &str)
+{
+    QString result=str;
+    return result.replace(' ',"%20");
+}

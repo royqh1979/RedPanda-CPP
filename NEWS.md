@@ -8,6 +8,8 @@ Red Panda C++ Version 2.1
   - add fmtlib to the gcc compiler's lib distributed with RedPanda IDE windows version
   - add default autolink for fmtlib in Windows 
   - reduce size of the executable of win-git-askpass tool
+  - change: remove "Optimize for the following machine" and "Optimize less, while maintaining full compatibility" options in the compiler setting panel, which are obseleted.
+  - change: escape spaces in the executabe path under linux.
 
 Red Panda C++ Version 2.0
 
