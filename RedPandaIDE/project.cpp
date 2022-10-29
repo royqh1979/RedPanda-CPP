@@ -164,6 +164,9 @@ bool Project::unitsModifiedSince(const QDateTime& time)
             qDebug()<<info.lastModified()<<time;
             return true;
         }
+        Editor * e=unitEditor(unit);
+        if (e && e->modified())
+            return true;
     }
     return false;
 }

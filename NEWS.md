@@ -10,6 +10,7 @@ Red Panda C++ Version 2.1
   - reduce size of the executable of win-git-askpass tool
   - change: remove "Optimize for the following machine" and "Optimize less, while maintaining full compatibility" options in the compiler setting panel, which are obseleted.
   - change: escape spaces in the executabe path under linux.
+  - fix: Before run  a project's executable, we should check timestamp for project files AND modification states of files openned in editor.
 
 Red Panda C++ Version 2.0
 
