@@ -50,14 +50,14 @@ void CompilerInfo::init()
 void CompilerInfo::prepareCompilerOptions()
 {
     QList<QPair<QString,QString>> sl;
-    // C options
-    QString groupName = QObject::tr("C options");
+    QString groupName;
+//    // C options
+    groupName = QObject::tr("C options");
     addOption(CC_CMD_OPT_ANSI, QObject::tr("Support all ANSI standard C programs (-ansi)"), groupName, true, true, false, "-ansi");
     addOption(CC_CMD_OPT_NO_ASM, QObject::tr("Do not recognize asm,inline or typeof as a keyword (-fno-asm)"), groupName, true, true, false, "-fno-asm");
     addOption(CC_CMD_OPT_TRADITIONAL_CPP, QObject::tr("Imitate traditional C preprocessors (-traditional-cpp)"), groupName, true, true, false, "-traditional-cpp");
 
     groupName = QObject::tr("Code Generation");
-    addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
     // Optimization
     sl.clear();
     sl.append(QPair<QString,QString>("Low","1"));
@@ -149,6 +149,7 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("64bit","64"));
     addOption(CC_CMD_OPT_POINTER_SIZE, QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, "-m", sl);
 
+    addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
     addOption(CC_CMD_OPT_PROFILE_INFO, QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
 
     // Warnings

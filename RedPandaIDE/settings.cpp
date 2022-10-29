@@ -2551,7 +2551,7 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
 static void setDebugOptions(Settings::PCompilerSet pSet) {
     pSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL, COMPILER_OPTION_ON);
-    pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA, COMPILER_OPTION_ON);
+    //pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
 
 #ifdef Q_OS_LINUX

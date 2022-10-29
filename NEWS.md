@@ -11,6 +11,7 @@ Red Panda C++ Version 2.1
   - change: remove "Optimize for the following machine" and "Optimize less, while maintaining full compatibility" options in the compiler setting panel, which are obseleted.
   - change: escape spaces in the executabe path under linux.
   - fix: Before run  a project's executable, we should check timestamp for project files AND modification states of files openned in editor.
+  - change: Don't turn on "Show some more warnings (-Wextra)" option by default for DEBUG compiler set 
 
 Red Panda C++ Version 2.0
 
