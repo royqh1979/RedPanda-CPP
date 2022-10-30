@@ -72,12 +72,12 @@ void CompilerSetOptionWidget::init()
 
 
 static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSetOptionWidget* ui) {
-    ui->chkAutoAddCharset->setEnabled(pSet->compilerType() != COMPILER_CLANG);
-    ui->chkAutoAddCharset->setVisible(pSet->compilerType() != COMPILER_CLANG);
-    ui->cbEncoding->setEnabled(pSet->compilerType() != COMPILER_CLANG);
-    ui->cbEncoding->setVisible(pSet->compilerType() != COMPILER_CLANG);
-    ui->cbEncodingDetails->setEnabled(pSet->compilerType() != COMPILER_CLANG);
-    ui->cbEncodingDetails->setVisible(pSet->compilerType() != COMPILER_CLANG);
+    ui->chkAutoAddCharset->setEnabled(pSet->compilerType() != CompilerType::Clang);
+    ui->chkAutoAddCharset->setVisible(pSet->compilerType() != CompilerType::Clang);
+    ui->cbEncoding->setEnabled(pSet->compilerType() != CompilerType::Clang);
+    ui->cbEncoding->setVisible(pSet->compilerType() != CompilerType::Clang);
+    ui->cbEncodingDetails->setEnabled(pSet->compilerType() != CompilerType::Clang);
+    ui->cbEncodingDetails->setVisible(pSet->compilerType() != CompilerType::Clang);
 
     ui->chkUseCustomCompilerParams->setChecked(pSet->useCustomCompileParams());
     ui->txtCustomCompileParams->setPlainText(pSet->customCompileParams());

@@ -341,7 +341,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileTyp
 
     }
     if ((forceExecUTF8 || compilerSet()->autoAddCharsetParams()) && encoding != ENCODING_ASCII
-            && compilerSet()->compilerType()!=COMPILER_CLANG) {
+            && compilerSet()->compilerType()!=CompilerType::Clang) {
         QString encodingName;
         QString execEncodingName;
         QString compilerSetExecCharset = compilerSet()->execCharset();
@@ -674,13 +674,13 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
                         errorOccurred= true;
                     });
     process.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
-        if (compilerSet()->compilerType() == COMPILER_CLANG)
+        if (compilerSet()->compilerType() == CompilerType::Clang)
             this->error(QString::fromUtf8(process.readAllStandardError()));
         else
             this->error(QString::fromLocal8Bit( process.readAllStandardError()));
     });
     process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this](){
-        if (compilerSet()->compilerType() == COMPILER_CLANG)
+        if (compilerSet()->compilerType() == CompilerType::Clang)
             this->log(QString::fromUtf8(process.readAllStandardOutput()));
         else
             this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));

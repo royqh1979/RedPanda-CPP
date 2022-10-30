@@ -19,6 +19,7 @@
 
 #include <QMap>
 #include <QWidget>
+#include "compiler/compilerinfo.h"
 
 enum class ProjectModelType {
     FileSystem,
@@ -88,7 +89,7 @@ struct ProjectOptions{
     bool includeVersionInfo;
     bool supportXPThemes;
     int compilerSet;
-    int compilerSetType;
+    CompilerSetType compilerSetType;
     QMap<QString,QString> compilerOptions;
     ProjectVersionInfo versionInfo;
     QString cmdLineArgs;

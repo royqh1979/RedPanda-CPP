@@ -2024,7 +2024,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir, const QString& 
     targetStr = "clang version ";
     delimPos1 = output.indexOf(targetStr);
     if (delimPos1>=0) {
-        mCompilerType = COMPILER_CLANG;
+        mCompilerType = CompilerType::Clang;
         delimPos1+=strlen(targetStr);
         delimPos2 = delimPos1;
         while (delimPos2<output.length() && !isNonPrintableAsciiChar(output[delimPos2]))
@@ -2033,7 +2033,7 @@ void Settings::CompilerSet::setProperties(const QString &binDir, const QString& 
 
         mName = "Clang " + mVersion;
     } else {
-        mCompilerType = COMPILER_GCC;
+        mCompilerType = CompilerType::GCC;
         targetStr = "gcc version ";
         delimPos1 = output.indexOf(targetStr);
         if (delimPos1<0)
@@ -2044,6 +2044,18 @@ void Settings::CompilerSet::setProperties(const QString &binDir, const QString& 
             delimPos2++;
         mVersion = output.mid(delimPos1,delimPos2-delimPos1);
 
+        int majorVersion;
+        if (mVersion.indexOf('.')>0) {
+            bool ok;
+            majorVersion=mVersion.left(mVersion.indexOf('.')).toInt(&ok);
+            if (!ok)
+                majorVersion=-1;
+        } else {
+            bool ok;
+            majorVersion=mVersion.toInt(&ok);
+            if (!ok)
+                majorVersion=-1;
+        }
 //        //fix for mingw64 gcc
 //        double versionValue;
 //        bool ok;
@@ -2060,6 +2072,8 @@ void Settings::CompilerSet::setProperties(const QString &binDir, const QString& 
             delimPos2++;
         mType = output.mid(delimPos1 + 1, delimPos2 - delimPos1 - 1);
 
+        if (majorVersion>=12 && mType.contains("MSYS2"))
+            mCompilerType = CompilerType::GCC_UTF8;
         // Assemble user friendly name if we don't have one yet
         if (mName == "") {
             if (mType.contains("tdm64")) {
@@ -2153,7 +2167,7 @@ void Settings::CompilerSet::setDefines() {
 
 void Settings::CompilerSet::setExecutables()
 {
-    if (mCompilerType == COMPILER_CLANG) {
+    if (mCompilerType == CompilerType::Clang) {
         mCCompiler =  findProgramInBinDirs(CLANG_PROGRAM);
         mCppCompiler = findProgramInBinDirs(CLANG_CPP_PROGRAM);
         mDebugger = findProgramInBinDirs(GDB_PROGRAM);
@@ -2177,11 +2191,11 @@ void Settings::CompilerSet::setExecutables()
     mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
 }
 
-void Settings::CompilerSet::setDirectories(const QString& binDir,const QString& compilerType)
+void Settings::CompilerSet::setDirectories(const QString& binDir,CompilerType compilerType)
 {
     QString folder = QFileInfo(binDir).absolutePath();
     QString cc_prog;
-    if (compilerType==COMPILER_CLANG)
+    if (compilerType==CompilerType::Clang)
         cc_prog = CLANG_PROGRAM;
     else
         cc_prog = GCC_PROGRAM;
@@ -2472,22 +2486,22 @@ void Settings::CompilerSet::setDebugServer(const QString &newDebugServer)
     mDebugServer = newDebugServer;
 }
 
-int Settings::CompilerSet::compilerSetType() const
+CompilerSetType Settings::CompilerSet::compilerSetType() const
 {
     return mCompilerSetType;
 }
 
-void Settings::CompilerSet::setCompilerSetType(int newCompilerSetType)
+void Settings::CompilerSet::setCompilerSetType(CompilerSetType newCompilerSetType)
 {
     mCompilerSetType = newCompilerSetType;
 }
 
-void Settings::CompilerSet::setCompilerType(const QString &newCompilerType)
+void Settings::CompilerSet::setCompilerType(CompilerType newCompilerType)
 {
     mCompilerType = newCompilerType;
 }
 
-const QString &Settings::CompilerSet::compilerType() const
+CompilerType Settings::CompilerSet::compilerType() const
 {
     return mCompilerType;
 }
@@ -2524,7 +2538,7 @@ Settings::PCompilerSet Settings::CompilerSets::addSet()
 Settings::PCompilerSet Settings::CompilerSets::addSet(const QString &folder, const QString& cc_prog)
 {
     PCompilerSet p=std::make_shared<CompilerSet>(folder,cc_prog);
-    if (cc_prog==GCC_PROGRAM && p->compilerType()==COMPILER_CLANG)
+    if (cc_prog==GCC_PROGRAM && p->compilerType()==CompilerType::Clang)
         return PCompilerSet();
     mList.push_back(p);
     return p;
@@ -2576,13 +2590,13 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& cc_pr
             PCompilerSet set= addSet(baseSet);
             platformName = "32-bit";
             set->setName(baseName + " " + platformName + " Release");
-            set->setCompilerSetType(CompilerSetType::CST_RELEASE);
+            set->setCompilerSetType(CompilerSetType::RELEASE);
             set64_32Options(set);
             setReleaseOptions(set);
 
             set = addSet(baseSet);
             set->setName(baseName + " " + platformName + " Debug");
-            set->setCompilerSetType(CompilerSetType::CST_DEBUG);
+            set->setCompilerSetType(CompilerSetType::DEBUG);
             set64_32Options(set);
             setDebugOptions(set);
         }
@@ -2594,11 +2608,11 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& cc_pr
 
     PCompilerSet set = addSet(baseSet);
     set->setName(baseName + " " + platformName + " Debug");
-    set->setCompilerSetType(CompilerSetType::CST_DEBUG);
+    set->setCompilerSetType(CompilerSetType::DEBUG);
     setDebugOptions(set);
 
     baseSet->setName(baseName + " " + platformName + " Release");
-    baseSet->setCompilerSetType(CompilerSetType::CST_RELEASE);
+    baseSet->setCompilerSetType(CompilerSetType::RELEASE);
     setReleaseOptions(baseSet);
 
 //    baseSet = addSet(folder);
@@ -2902,8 +2916,8 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("Type", pSet->type());
     mSettings->mSettings.setValue("Name", pSet->name());
     mSettings->mSettings.setValue("Target", pSet->target());
-    mSettings->mSettings.setValue("CompilerType", pSet->compilerType());
-    mSettings->mSettings.setValue("CompilerSetType", pSet->compilerSetType());
+    mSettings->mSettings.setValue("CompilerType", (int)pSet->compilerType());
+    mSettings->mSettings.setValue("CompilerSetType", (int)pSet->compilerSetType());
 
     // Paths
     savePathList("Bins",pSet->binDirs());
@@ -2955,8 +2969,19 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setType(mSettings->mSettings.value("Type").toString());
     pSet->setName(mSettings->mSettings.value("Name").toString());
     pSet->setTarget(mSettings->mSettings.value("Target").toString());
-    pSet->setCompilerType(mSettings->mSettings.value("CompilerType").toString());
-    pSet->setCompilerSetType(mSettings->mSettings.value("CompilerSetType").toInt());
+    //compatibility
+    QString temp = mSettings->mSettings.value("CompilerType").toString();
+    if (temp==COMPILER_CLANG) {
+        pSet->setCompilerType(CompilerType::Clang);
+    } else if (temp==COMPILER_GCC) {
+        pSet->setCompilerType(CompilerType::GCC);
+    } else if (temp==COMPILER_GCC_UTF8) {
+        pSet->setCompilerType(CompilerType::GCC_UTF8);
+    } else {
+        pSet->setCompilerType((CompilerType)mSettings->mSettings.value("CompilerType").toInt());
+    }
+
+    pSet->setCompilerSetType((CompilerSetType)mSettings->mSettings.value("CompilerSetType").toInt());
 
     // Load extra 'general' options
     pSet->setUseCustomCompileParams(mSettings->mSettings.value("useCustomCompileParams", false).toBool());

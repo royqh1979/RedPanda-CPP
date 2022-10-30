@@ -343,7 +343,7 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     // Find unused 'new' filename
     if (customFileName.isEmpty()) {
         do {
-            s = cleanPath(dir.absoluteFilePath(tr("untitled")+QString("%1").arg(getNewFileNumber())));
+            s = cleanPath(dir.absoluteFilePath(QString("untitled%1").arg(getNewFileNumber())));
         } while (fileExists(s));
     } else {
         s = cleanPath(dir.absoluteFilePath(customFileName));
@@ -1123,7 +1123,7 @@ void Project::saveOptions()
     ini.SetLongValue("Project","IncludeVersionInfo", mOptions.includeVersionInfo);
     ini.SetLongValue("Project","SupportXPThemes", mOptions.supportXPThemes);
     ini.SetLongValue("Project","CompilerSet", mOptions.compilerSet);
-    ini.SetLongValue("Project","CompilerSetType", mOptions.compilerSetType);
+    ini.SetLongValue("Project","CompilerSetType", (int)mOptions.compilerSetType);
     ini.Delete("Project","CompilerSettings"); // remove old compiler settings
     ini.Delete("CompilerSettings",nullptr); // remove old compiler settings
     foreach (const QString& key, mOptions.compilerOptions.keys()) {
@@ -2043,8 +2043,11 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.execEncoding = ini.GetValue("Project","ExecEncoding", ENCODING_SYSTEM_DEFAULT);
         mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
 
-        if (mOptions.compilerSetType<0) {
+        int val=ini.GetLongValue("Project","CompilerSetType",-1);
+        if (val<0) {
             updateCompilerSetType();
+        } else {
+            mOptions.compilerSetType=(CompilerSetType)val;
         }
         bool useUTF8 = ini.GetBoolValue("Project", "UseUTF8", false);
         if (useUTF8) {
@@ -2179,7 +2182,7 @@ void Project::updateCompilerSetType()
         mOptions.staticLink = defaultSet->staticLink();
         mOptions.compilerOptions = defaultSet->compileOptions();
     } else {
-        mOptions.compilerSetType=CST_DEBUG;
+        mOptions.compilerSetType=CompilerSetType::DEBUG;
         mOptions.staticLink = false;
     }
 }

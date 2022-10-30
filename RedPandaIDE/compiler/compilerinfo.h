@@ -45,6 +45,18 @@
 
 #define COMPILER_OPTION_ON "on"
 
+enum class CompilerSetType {
+    RELEASE,
+    DEBUG,
+    PROFILING
+};
+
+enum class CompilerType {
+    GCC,
+    GCC_UTF8,
+    Clang
+};
+
 using CompileOptionChoiceList = QList<QPair<QString,QString>>;
 
 typedef struct {
@@ -73,6 +85,7 @@ public:
 
     virtual bool supportConvertingCharset()=0;
     virtual bool forceUTF8InDebugger()=0;
+    virtual bool forceUTF8InMakefile()=0;
 protected:
     void addOption(const QString& key,
                    const QString& name,
@@ -98,17 +111,17 @@ using PCompilerInfoManager = std::shared_ptr<CompilerInfoManager>;
 class CompilerInfoManager {
 public:
     CompilerInfoManager();
-    static PCompilerInfo getInfo(const QString& compilerType);
-    static bool hasCompilerOption(const QString& compilerType, const QString& optKey);
-    static PCompilerOption getCompilerOption(const QString& compilerType, const QString& optKey);
-    static QList<PCompilerOption> getCompilerOptions(const QString& compilerType);
-    static bool supportCovertingCharset(const QString& compilerType);
-    static bool forceUTF8InDebugger(const QString& compilerType);
+    static PCompilerInfo getInfo(CompilerType compilerType);
+    static bool hasCompilerOption(CompilerType compilerType, const QString& optKey);
+    static PCompilerOption getCompilerOption(CompilerType compilerType, const QString& optKey);
+    static QList<PCompilerOption> getCompilerOptions(CompilerType compilerType);
+    static bool supportCovertingCharset(CompilerType compilerType);
+    static bool forceUTF8InDebugger(CompilerType compilerType);
     static PCompilerInfoManager getInstance();
-    static void addInfo(const QString& name, PCompilerInfo info);
+    static void addInfo(CompilerType compilerType, PCompilerInfo info);
 private:
     static PCompilerInfoManager instance;
-    QMap<QString,PCompilerInfo> mInfos;
+    QMap<CompilerType,PCompilerInfo> mInfos;
 };
 
 class ClangCompilerInfo: public CompilerInfo{
@@ -116,6 +129,7 @@ public:
     ClangCompilerInfo();
     bool supportConvertingCharset() override;
     bool forceUTF8InDebugger() override;
+    bool forceUTF8InMakefile() override;
 };
 
 class GCCCompilerInfo: public CompilerInfo{
@@ -123,6 +137,7 @@ public:
     GCCCompilerInfo();
     bool supportConvertingCharset() override;
     bool forceUTF8InDebugger() override;
+    bool forceUTF8InMakefile() override;
 };
 
 class GCCUTF8CompilerInfo: public CompilerInfo{
@@ -130,6 +145,7 @@ public:
     GCCUTF8CompilerInfo();
     bool supportConvertingCharset() override;
     bool forceUTF8InDebugger() override;
+    bool forceUTF8InMakefile() override;
 };
 
 

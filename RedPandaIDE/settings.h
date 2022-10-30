@@ -53,12 +53,6 @@ extern const char ValueToChar[28];
 
 class Settings;
 
-enum CompilerSetType {
-    CST_RELEASE,
-    CST_DEBUG,
-    CST_PROFILING
-};
-
 class Settings
 {
 private:
@@ -1294,12 +1288,12 @@ public:
 
         static int charToValue(char valueChar);
         static char valueToChar(int val);
-        const QString &compilerType() const;
+        CompilerType compilerType() const;
 
-        void setCompilerType(const QString &newCompilerType);
+        void setCompilerType(CompilerType newCompilerType);
 
-        int compilerSetType() const;
-        void setCompilerSetType(int newCompilerSetType);
+        CompilerSetType compilerSetType() const;
+        void setCompilerSetType(CompilerSetType newCompilerSetType);
 
         const QString &execCharset() const;
         void setExecCharset(const QString &newExecCharset);
@@ -1325,7 +1319,7 @@ public:
         bool isOutputExecutable();
 
     private:
-        void setDirectories(const QString& binDir, const QString& mCompilerType);
+        void setDirectories(const QString& binDir, CompilerType mCompilerType);
         //load hard defines
         void setDefines();
         void setExecutables();
@@ -1363,8 +1357,8 @@ public:
         QStringList mCppDefines; // list of predefined constants
         QStringList mCDefines; // list of predefined constants
         QString mTarget; // 'X86_64' / 'i686'
-        QString mCompilerType; // 'Clang' / 'GCC'
-        int mCompilerSetType; // RELEASE/ DEBUG/ Profile
+        CompilerType mCompilerType; // 'Clang' / 'GCC'
+        CompilerSetType mCompilerSetType; // RELEASE/ DEBUG/ Profile
 
         // User settings
         bool mUseCustomCompileParams;

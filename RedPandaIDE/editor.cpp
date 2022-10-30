@@ -72,7 +72,7 @@ const char* SaveException::what() const noexcept {
 QHash<ParserLanguage,std::weak_ptr<CppParser>> Editor::mSharedParsers;
 
 Editor::Editor(QWidget *parent):
-    Editor(parent,QObject::tr("untitled"),ENCODING_AUTO_DETECT,nullptr,true,nullptr)
+    Editor(parent,"untitled",ENCODING_AUTO_DETECT,nullptr,true,nullptr)
 {
 }
 
@@ -104,7 +104,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mCurrentLineModified = false;
     mUseCppSyntax = pSettings->editor().defaultFileCpp();
     if (mFilename.isEmpty()) {
-        mFilename = tr("untitled")+QString("%1").arg(getNewFileNumber());
+        mFilename = QString("untitled%1").arg(getNewFileNumber());
     }
     QFileInfo fileInfo(mFilename);
     QSynedit::PHighlighter highlighter;

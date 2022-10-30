@@ -3916,11 +3916,11 @@ void MainWindow::onFilesViewCreateFile()
         suffix=".cpp";
     else
         suffix=".c";
-    QString fileName = tr("untitled")+suffix;
+    QString fileName = QString("untitled")+suffix;
     int count = 0;
     while (dir.exists(fileName)) {
         count++;
-        fileName = tr("untitled%1").arg(count)+suffix;
+        fileName = QString("untitled%1").arg(count)+suffix;
     }
     QFile file(dir.filePath(fileName));
     file.open(QFile::NewOnly);
@@ -5044,7 +5044,7 @@ void MainWindow::onCompilerSetChanged(int index)
             mCompilerSet->setCurrentIndex(mProject->options().compilerSet);
             return;
         }
-        mProject->setCompilerSet(mProject->options().compilerSet);
+        mProject->setCompilerSet(index);
         mProject->saveOptions();
         scanActiveProject(true);
         return;
@@ -6669,7 +6669,7 @@ void MainWindow::newProjectUnitFile()
             return;
     } else {
         do {
-            newFileName = tr("untitled")+QString("%1").arg(getNewFileNumber());
+            newFileName = QString("untitled")+QString("%1").arg(getNewFileNumber());
             if (mProject->options().isCpp)
                 newFileName += ".cpp";
             else

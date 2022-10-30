@@ -192,7 +192,7 @@ void SynExporter::setTitle(const QString &Value)
       if (!Value.isEmpty())
           mTitle = Value;
       else
-          mTitle = QObject::tr("Untitled");
+          mTitle = "Untitled";
     }
 }
 

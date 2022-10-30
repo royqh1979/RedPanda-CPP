@@ -180,16 +180,17 @@ void CompilerInfo::prepareCompilerOptions()
 
 CompilerInfoManager::CompilerInfoManager()
 {
-    mInfos.insert(COMPILER_CLANG, std::make_shared<ClangCompilerInfo>());
-    mInfos.insert(COMPILER_GCC, std::make_shared<GCCCompilerInfo>());
+    mInfos.insert(CompilerType::Clang, std::make_shared<ClangCompilerInfo>());
+    mInfos.insert(CompilerType::GCC, std::make_shared<GCCCompilerInfo>());
+    mInfos.insert(CompilerType::GCC_UTF8, std::make_shared<GCCUTF8CompilerInfo>());
 }
 
-PCompilerInfo CompilerInfoManager::getInfo(const QString &compilerType)
+PCompilerInfo CompilerInfoManager::getInfo(CompilerType compilerType)
 {
     return getInstance()->mInfos.value(compilerType,PCompilerInfo());
 }
 
-bool CompilerInfoManager::hasCompilerOption(const QString &compilerType, const QString &optKey)
+bool CompilerInfoManager::hasCompilerOption(CompilerType compilerType, const QString &optKey)
 {
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
@@ -197,7 +198,7 @@ bool CompilerInfoManager::hasCompilerOption(const QString &compilerType, const Q
     return pInfo->hasCompilerOption(optKey);
 }
 
-PCompilerOption CompilerInfoManager::getCompilerOption(const QString &compilerType, const QString &optKey)
+PCompilerOption CompilerInfoManager::getCompilerOption(CompilerType compilerType, const QString &optKey)
 {
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
@@ -205,7 +206,7 @@ PCompilerOption CompilerInfoManager::getCompilerOption(const QString &compilerTy
     return pInfo->getCompilerOption(optKey);
 }
 
-QList<PCompilerOption> CompilerInfoManager::getCompilerOptions(const QString &compilerType)
+QList<PCompilerOption> CompilerInfoManager::getCompilerOptions(CompilerType compilerType)
 {
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
@@ -213,7 +214,7 @@ QList<PCompilerOption> CompilerInfoManager::getCompilerOptions(const QString &co
     return pInfo->compilerOptions();
 }
 
-bool CompilerInfoManager::supportCovertingCharset(const QString &compilerType)
+bool CompilerInfoManager::supportCovertingCharset(CompilerType compilerType)
 {
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
@@ -221,7 +222,7 @@ bool CompilerInfoManager::supportCovertingCharset(const QString &compilerType)
     return pInfo->supportConvertingCharset();
 }
 
-bool CompilerInfoManager::forceUTF8InDebugger(const QString &compilerType)
+bool CompilerInfoManager::forceUTF8InDebugger(CompilerType compilerType)
 {
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
@@ -239,9 +240,9 @@ PCompilerInfoManager CompilerInfoManager::getInstance()
     return instance;
 }
 
-void CompilerInfoManager::addInfo(const QString &name, PCompilerInfo info)
+void CompilerInfoManager::addInfo(CompilerType compilerType, PCompilerInfo info)
 {
-    getInstance()->mInfos.insert(name,info);
+    getInstance()->mInfos.insert(compilerType,info);
 }
 
 ClangCompilerInfo::ClangCompilerInfo():CompilerInfo(COMPILER_CLANG)
@@ -258,6 +259,11 @@ bool ClangCompilerInfo::forceUTF8InDebugger()
     return true;
 }
 
+bool ClangCompilerInfo::forceUTF8InMakefile()
+{
+    return false;
+}
+
 GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
 {
 }
@@ -272,6 +278,11 @@ bool GCCCompilerInfo::forceUTF8InDebugger()
     return false;
 }
 
+bool GCCCompilerInfo::forceUTF8InMakefile()
+{
+    return false;
+}
+
 GCCUTF8CompilerInfo::GCCUTF8CompilerInfo():CompilerInfo(COMPILER_GCC_UTF8)
 {
 }
@@ -282,6 +293,11 @@ bool GCCUTF8CompilerInfo::supportConvertingCharset()
 }
 
 bool GCCUTF8CompilerInfo::forceUTF8InDebugger()
+{
+    return true;
+}
+
+bool GCCUTF8CompilerInfo::forceUTF8InMakefile()
 {
     return true;
 }

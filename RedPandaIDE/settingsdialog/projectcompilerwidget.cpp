@@ -38,7 +38,7 @@ void ProjectCompilerWidget::refreshOptions()
     Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!pSet)
         return;
-    ui->panelAddCharset->setVisible(pSet->compilerType()!=COMPILER_CLANG);
+    ui->panelAddCharset->setVisible(pSet->compilerType()!=CompilerType::Clang);
     //ui->chkAddCharset->setEnabled(pSet->compilerType()!=COMPILER_CLANG);
     mOptions = pMainWindow->project()->options().compilerOptions;
     if (mOptions.isEmpty())
@@ -87,7 +87,7 @@ void ProjectCompilerWidget::doSave()
 
     pMainWindow->project()->setCompilerSet(ui->cbCompilerSet->currentIndex());
     pMainWindow->project()->options().compilerOptions = ui->tabOptions->arguments(true);
-    if (pSet->compilerType()!=COMPILER_CLANG)
+    if (pSet->compilerType()!=CompilerType::Clang)
         pMainWindow->project()->options().addCharset = ui->chkAddCharset->isChecked();
     pMainWindow->project()->options().staticLink = ui->chkStaticLink->isChecked();
 

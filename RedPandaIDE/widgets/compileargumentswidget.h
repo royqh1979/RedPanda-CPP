@@ -40,7 +40,7 @@ public:
     void setBoolArgument(const QString &argKey, bool checked);
 
 private:
-    QString mCompilerType;
+    CompilerType mCompilerType;
 };
 
 #endif // COMPILEARGUMENTSWIDGET_H

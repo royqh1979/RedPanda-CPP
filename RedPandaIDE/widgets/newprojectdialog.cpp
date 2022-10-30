@@ -43,7 +43,7 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     location = excludeTrailingPathDelimiter(pSettings->dirs().projectDir());
     while (true) {
         i++;
-        projectName = tr("Project%1").arg(i);
+        projectName = QString("Project%1").arg(i);
         QString tempLocation = includeTrailingPathDelimiter(location)+projectName;
         if (!QDir(tempLocation).exists())
             break;
