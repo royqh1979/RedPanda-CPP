@@ -2024,7 +2024,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>New Source File</string>
+    <string>New File</string>
    </property>
    <property name="toolTip">
     <string>New Source File</string>

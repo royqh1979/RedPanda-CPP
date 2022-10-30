@@ -55,6 +55,10 @@
         <source>Website: &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</source>
         <translation>Website: &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</translation>
     </message>
+    <message>
+        <source>Microsoft Visual C++</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AppTheme</name>
@@ -932,7 +936,7 @@
     <name>Editor</name>
     <message>
         <source>untitled</source>
-        <translation>sem nome</translation>
+        <translation type="vanished">sem nome</translation>
     </message>
     <message>
         <source>Error</source>
@@ -4398,7 +4402,7 @@
     </message>
     <message>
         <source>untitled</source>
-        <translation>sem nome</translation>
+        <translation type="vanished">sem nome</translation>
     </message>
     <message>
         <source>New Project File Name</source>
@@ -4618,7 +4622,7 @@
     </message>
     <message>
         <source>untitled%1</source>
-        <translation>sem nome%1</translation>
+        <translation type="vanished">sem nome%1</translation>
     </message>
     <message>
         <source>Selection</source>
@@ -4823,7 +4827,7 @@
     </message>
     <message>
         <source>Project%1</source>
-        <translation>Projeto%1</translation>
+        <translation type="vanished">Projeto%1</translation>
     </message>
     <message>
         <source>Default</source>
@@ -4965,7 +4969,7 @@
     <name>Project</name>
     <message>
         <source>untitled</source>
-        <translation>sem nome</translation>
+        <translation type="vanished">sem nome</translation>
     </message>
     <message>
         <source>Can&apos;t save file</source>
@@ -5809,7 +5813,7 @@
     </message>
     <message>
         <source>untitled</source>
-        <translation>sem nome</translation>
+        <translation type="vanished">sem nome</translation>
     </message>
     <message>
         <source>Save</source>
@@ -5913,11 +5917,11 @@
     </message>
     <message>
         <source>Optimize for the following machine (-march)</source>
-        <translation>Otimizar para a seguinte máquina (-march)</translation>
+        <translation type="vanished">Otimizar para a seguinte máquina (-march)</translation>
     </message>
     <message>
         <source>Optimize less, while maintaining full compatibility (-tune)</source>
-        <translation>Otimizar menor, porém mantendo completa compatibilidade (-tune)</translation>
+        <translation type="vanished">Otimizar menor, porém mantendo completa compatibilidade (-tune)</translation>
     </message>
     <message>
         <source>Enable use of specific instructions (-mx)</source>
@@ -6105,7 +6109,7 @@
     </message>
     <message>
         <source>This CPU</source>
-        <translation>Essa CPU</translation>
+        <translation type="vanished">Essa CPU</translation>
     </message>
     <message>
         <source>Do not compile, stop after the preprocessing stage (-E)</source>

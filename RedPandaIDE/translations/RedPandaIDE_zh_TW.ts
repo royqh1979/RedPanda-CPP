@@ -51,6 +51,10 @@
         <source>Website: &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Microsoft Visual C++</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AppTheme</name>
@@ -831,10 +835,6 @@
 </context>
 <context>
     <name>Editor</name>
-    <message>
-        <source>untitled</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Error</source>
         <translation type="unfinished"></translation>
@@ -4278,10 +4278,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>untitled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>New Project File Name</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4482,10 +4478,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>untitled%1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Selection</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4675,10 +4667,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Project%1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4808,10 +4796,6 @@
 </context>
 <context>
     <name>Project</name>
-    <message>
-        <source>untitled</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Error Load File</source>
         <translation type="unfinished"></translation>
@@ -5637,10 +5621,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>untitled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5726,14 +5706,6 @@
     </message>
     <message>
         <source>Code Generation</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Optimize for the following machine (-march)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Optimize less, while maintaining full compatibility (-tune)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5894,10 +5866,6 @@
     </message>
     <message>
         <source>Can&apos;t parse problem set file &apos;%1&apos;:%2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This CPU</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
