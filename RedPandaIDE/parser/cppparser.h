@@ -160,6 +160,7 @@ private:
             const QString& aType, // "Type" is already in use
             const QString& command,
             const QString& args,
+            const QString& noNameArgs,
             const QString& value,
             int line,
             StatementKind kind,
@@ -173,6 +174,21 @@ private:
             const QString &aType, // "Type" is already in use
             const QString &command,
             const QString &args,
+            const QString &noNameArgs,
+            const QString& value,
+            int line,
+            StatementKind kind,
+            const StatementScope& scope,
+            const StatementClassScope& classScope,
+            bool isDefinition,
+            bool isStatic);
+    PStatement addStatement(
+            const PStatement& parent,
+            const QString &fileName,
+            const QString &aType, // "Type" is already in use
+            const QString &command,
+            int argStart,
+            int argEnd,
             const QString& value,
             int line,
             StatementKind kind,
@@ -195,8 +211,8 @@ private:
     bool checkForEnum();
     bool checkForForBlock();
     bool checkForKeyword();
-    bool checkForMethod(QString &sType, QString &sName, QString &sArgs,
-                        bool &isStatic, bool &isFriend); // caching of results
+    bool checkForMethod(QString &sType, QString &sName, int &argStartIndex,
+                        int &argEndIndex, bool &isStatic, bool &isFriend); // caching of results
     bool checkForNamespace();
     bool checkForPreprocessor();
     bool checkForScope();
@@ -343,7 +359,7 @@ private:
             int& pointerLevel);
 
     int getBracketEnd(const QString& s, int startAt);
-    StatementClassScope getClassScope(int index);
+    StatementClassScope getClassScope(const QString& text);
     int getCurrentBlockBeginSkip();
     int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
@@ -376,7 +392,8 @@ private:
     void handleMethod(
             const QString& sType,
             const QString& sName,
-            const QString& sArgs,
+            int argStart,
+            int argEnd,
             bool isStatic,
             bool isFriend);
     void handleNamespace();
@@ -410,7 +427,8 @@ private:
 //    }
     void scanMethodArgs(
             const PStatement& functionStatement,
-            const QString& argStr);
+            int argStart,
+            int argEnd);
     QString splitPhrase(const QString& phrase, QString& sClazz,
                 QString& sOperator, QString &sMember);
 
@@ -493,7 +511,7 @@ private:
         return ch=='\n' || ch=='\r';
     }
 
-    bool isNotFuncArgs(const QString& args);
+    bool isNotFuncArgs(int startIndex, int endIndex);
 
     /**
      * @brief Test if a statement is a class/struct/union/namespace/function

@@ -22,10 +22,22 @@
 
 class CppTokenizer
 {
+    enum class TokenType {
+        Normal,
+        LeftBrace,
+        RightBrace,
+        LeftParenthesis,
+        RightParenthesis,
+        LeftBracket,
+        RightBracket,
+        Assignment,
+    };
+
 public:
     struct Token {
       QString text;
       int line;
+      int matchIndex;
     };
     using PToken = std::shared_ptr<Token>;
     using TokenList = QVector<PToken>;
@@ -39,7 +51,7 @@ public:
     int tokenCount();
     bool isIdentChar(const QChar& ch);
 private:
-    void addToken(const QString& sText, int iLine);
+    void addToken(const QString& sText, int iLine, TokenType tokenType);
     void advance();
     void countLines();
     PToken getToken(int index);
@@ -47,7 +59,7 @@ private:
     QString getArguments();
     QString getForInit();
     QString getNextToken(
-            bool bSkipParenthesis = false,
+            TokenType *pTokenType,
             bool bSkipArray = false,
             bool bSkipBlock = false);
     QString getNumber();
@@ -92,6 +104,9 @@ private:
     int mCurrentLine;
     QString mLastToken;
     TokenList mTokenList;
+    QList<int> mUnmatchedBraces; // stack of indices for unmatched '{'
+    QList<int> mUnmatchedBrackets; // stack of indices for unmatched '['
+    QList<int> mUnmatchedParenthesis;// stack of indices for unmatched '('
 };
 
 using PCppTokenizer = std::shared_ptr<CppTokenizer>;

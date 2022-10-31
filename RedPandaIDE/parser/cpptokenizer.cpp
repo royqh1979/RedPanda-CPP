@@ -30,6 +30,9 @@ void CppTokenizer::clear()
     mBuffer.clear();
     mBufferStr.clear();
     mLastToken.clear();
+    mUnmatchedBraces.clear();
+    mUnmatchedBrackets.clear();
+    mUnmatchedParenthesis.clear();
 }
 
 void CppTokenizer::tokenize(const QStringList &buffer)
@@ -48,16 +51,26 @@ void CppTokenizer::tokenize(const QStringList &buffer)
     mCurrent = mStart;
     mLineCount = mStart;
     QString s = "";
-    bool bSkipBlocks = false;
     mCurrentLine = 1;
+
+    TokenType tokenType;
     while (true) {
         mLastToken = s;
-        s = getNextToken(true, true, bSkipBlocks);
+        s = getNextToken(&tokenType, true, false);
         simplify(s);
         if (s.isEmpty())
             break;
         else
-            addToken(s,mCurrentLine);
+            addToken(s,mCurrentLine,tokenType);
+    }
+    while (!mUnmatchedBraces.isEmpty()) {
+        mTokenList[mUnmatchedBraces.back()]->matchIndex=mTokenList.count()-1;
+    }
+    while (!mUnmatchedBrackets.isEmpty()) {
+        mTokenList[mUnmatchedBrackets.back()]->matchIndex=mTokenList.count()-1;
+    }
+    while (!mUnmatchedParenthesis.isEmpty()) {
+        mTokenList[mUnmatchedParenthesis.back()]->matchIndex=mTokenList.count()-1;
     }
 }
 
@@ -68,7 +81,7 @@ void CppTokenizer::dumpTokens(const QString &fileName)
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QTextStream stream(&file);
         foreach (const PToken& token,mTokenList) {
-            stream<<QString("%1,%2").arg(token->line).arg(token->text)
+            stream<<QString("%1,%2,%3").arg(token->line).arg(token->text).arg(token->matchIndex)
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                  <<Qt::endl;
 #else
@@ -93,11 +106,55 @@ int CppTokenizer::tokenCount()
     return mTokenList.count();
 }
 
-void CppTokenizer::addToken(const QString &sText, int iLine)
+void CppTokenizer::addToken(const QString &sText, int iLine, TokenType tokenType)
 {
     PToken token = std::make_shared<Token>();
     token->text = sText;
     token->line = iLine;
+    switch(tokenType) {
+    case TokenType::LeftBrace:
+        token->matchIndex=-1;
+        mUnmatchedBraces.push_back(mTokenList.count());
+        break;
+    case TokenType::RightBrace:
+        if (mUnmatchedBraces.isEmpty()) {
+            token->matchIndex=-1;
+        } else {
+            token->matchIndex = mUnmatchedBraces.last();
+            mTokenList[token->matchIndex]->matchIndex=mTokenList.count();
+            mUnmatchedBraces.pop_back();
+        }
+        break;
+    case TokenType::LeftBracket:
+        token->matchIndex=-1;
+        mUnmatchedBrackets.push_back(mTokenList.count());
+        break;
+    case TokenType::RightBracket:
+        if (mUnmatchedBrackets.isEmpty()) {
+            token->matchIndex=-1;
+        } else {
+            token->matchIndex = mUnmatchedBrackets.last();
+            mTokenList[token->matchIndex]->matchIndex=mTokenList.count();
+            mUnmatchedBrackets.pop_back();
+        }
+        break;
+    case TokenType::LeftParenthesis:
+        token->matchIndex=-1;
+        mUnmatchedParenthesis.push_back(mTokenList.count());
+        break;
+    case TokenType::RightParenthesis:
+        if (mUnmatchedParenthesis.isEmpty()) {
+            token->matchIndex=-1;
+        } else {
+            token->matchIndex = mUnmatchedParenthesis.last();
+            mTokenList[token->matchIndex]->matchIndex=mTokenList.count();
+            mUnmatchedParenthesis.pop_back();
+        }
+        break;
+    default:
+        break;
+    }
+
     mTokenList.append(token);
 }
 
@@ -139,12 +196,13 @@ QString CppTokenizer::getForInit()
     // Step into the init statement
     mCurrent++;
 
+    TokenType tokenType;
     // Process until ; or end of file
     while (true) {
-        QString s = getNextToken(true, true, false);
+        QString s = getNextToken(&tokenType, true, false);
         simplify(s);
         if (!s.isEmpty())
-            addToken(s,mCurrentLine);
+            addToken(s,mCurrentLine,tokenType);
         if ( (s == "") || (s == ";") || (s==":"))
             break;
         // : is used in for-each loop
@@ -156,10 +214,11 @@ QString CppTokenizer::getForInit()
     return "";
 }
 
-QString CppTokenizer::getNextToken(bool /* bSkipParenthesis */, bool bSkipArray, bool bSkipBlock)
+QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool bSkipBlock)
 {
     QString result;
     bool done = false;
+    *pTokenType=TokenType::Normal;
     while (true) {
         skipToNextToken();
         if (*mCurrent == 0)
@@ -179,10 +238,10 @@ QString CppTokenizer::getNextToken(bool /* bSkipParenthesis */, bool bSkipArray,
             countLines();
             result = getForInit();
             done = (result != "");
-        } else if (isArguments()) {
-            countLines();
-            result = getArguments();
-            done = (result != "");
+//        } else if (isArguments()) {
+//            countLines();
+//            result = getArguments();
+//            done = (result != "");
         } else if (isWord()) {
             countLines();
             result = getWord(false, bSkipArray, bSkipBlock);
@@ -214,7 +273,33 @@ QString CppTokenizer::getNextToken(bool /* bSkipParenthesis */, bool bSkipArray,
                 }
                 break;
             case '{':
+                *pTokenType=TokenType::LeftBrace;
+                countLines();
+                result = *mCurrent;
+                advance();
+                done = true;
+                break;
             case '}':
+                *pTokenType=TokenType::RightBrace;
+                countLines();
+                result = *mCurrent;
+                advance();
+                done = true;
+                break;
+            case '(':
+                *pTokenType=TokenType::LeftParenthesis;
+                countLines();
+                result = *mCurrent;
+                advance();
+                done = true;
+                break;
+            case ')':
+                *pTokenType=TokenType::RightParenthesis;
+                countLines();
+                result = *mCurrent;
+                advance();
+                done = true;
+                break;
             case ';':
             case ',':   //just return the brace or the ';'
                 countLines();
@@ -625,7 +710,7 @@ void CppTokenizer::advance()
     case '=': {
         if (mTokenList.size()>2
                 && mTokenList[mTokenList.size()-2]->text == "using") {
-            addToken("=",mCurrentLine);
+            addToken("=", mCurrentLine, TokenType::Normal);
             mCurrent++;
         } else
             skipAssignment();
