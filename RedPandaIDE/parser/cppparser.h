@@ -200,30 +200,26 @@ private:
     bool isCurrentScope(const QString& command);
     void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock = true); // adds new solo level
     void removeScopeLevel(int line); // removes level
-    int skipBraces(int startAt);
-    int skipBracket(int startAt);
+    int skipBraces(int startAt) {
+        return mTokenizer[startAt]->matchIndex;
+    }
 
     void internalClear();
 
     QStringList sortFilesByIncludeRelations(const QSet<QString> &files);
 
-    bool checkForCatchBlock();
-    bool checkForEnum();
-    bool checkForForBlock();
-    bool checkForKeyword();
+    bool checkForKeyword(SkipType &skipType);
     bool checkForMethod(QString &sType, QString &sName, int &argStartIndex,
                         int &argEndIndex, bool &isStatic, bool &isFriend); // caching of results
-    bool checkForNamespace();
+    bool checkForNamespace(SkipType skipType);
     bool checkForPreprocessor();
-    bool checkForScope();
+    bool checkForScope(SkipType skipType);
     void checkForSkipStatement();
-    bool checkForStructs();
-    bool checkForTypedef();
+    bool checkForStructs(SkipType skipType);
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
-    bool checkForUsing();
-    bool checkForVar();
-    QString expandMacroType(const QString& name);
+    bool checkForUsing(SkipType skipType);
+    bool checkForVar(bool& isFunctionPointer);
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
@@ -388,7 +384,7 @@ private:
     void handleCatchBlock();
     void handleEnum();
     void handleForBlock();
-    void handleKeyword();
+    void handleKeyword(SkipType skipType);
     void handleMethod(
             const QString& sType,
             const QString& sName,
@@ -396,14 +392,14 @@ private:
             int argEnd,
             bool isStatic,
             bool isFriend);
-    void handleNamespace();
+    void handleNamespace(SkipType skipType);
     void handleOtherTypedefs();
     void handlePreprocessor();
     void handleScope();
     bool handleStatement();
     void handleStructs(bool isTypedef = false);
     void handleUsing();
-    void handleVar();
+    void handleVar(bool isFunctionPointer);
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(

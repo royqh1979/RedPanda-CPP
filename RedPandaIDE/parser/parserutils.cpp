@@ -179,28 +179,25 @@ void initParser()
     // it's part of type info
     CppKeywords.insert("const",SkipType::skNone);
     CppKeywords.insert("extern",SkipType::skNone);
-    CppKeywords.insert("inline",SkipType::skNone);
 
     // handled elsewhere
     CppKeywords.insert("class",SkipType::skNone);
-    CppKeywords.insert("enum",SkipType::skNone);
-    CppKeywords.insert("friend",SkipType::skNone);
-    CppKeywords.insert("operator",SkipType::skNone);
-    CppKeywords.insert("private",SkipType::skNone);
-    CppKeywords.insert("protected",SkipType::skNone);
-    CppKeywords.insert("public",SkipType::skNone);
+    CppKeywords.insert("operator",SkipType::skNone);    
     CppKeywords.insert("static",SkipType::skNone);
     CppKeywords.insert("struct",SkipType::skNone);
-    CppKeywords.insert("typedef",SkipType::skNone);
     CppKeywords.insert("union",SkipType::skNone);
-    // namespace
-    CppKeywords.insert("namespace",SkipType::skNone);
-    CppKeywords.insert("using",SkipType::skNone);
 
-    CppKeywords.insert("for",SkipType::skNone);
-    CppKeywords.insert("catch",SkipType::skNone);
-
-
+    CppKeywords.insert("for",SkipType::skFor);
+    CppKeywords.insert("catch",SkipType::skCatch);
+    CppKeywords.insert("private",SkipType::skScope);
+    CppKeywords.insert("public",SkipType::skScope);
+    CppKeywords.insert("enum",SkipType::skEnum);
+    CppKeywords.insert("namespace",SkipType::skNamespace);
+    CppKeywords.insert("inline",SkipType::skInline);
+    CppKeywords.insert("typedef",SkipType::skTypedef);
+    CppKeywords.insert("using",SkipType::skUsing);
+    CppKeywords.insert("protected",SkipType::skProtected);
+    CppKeywords.insert("friend",SkipType::skFriend);
 
     // nullptr is value
     CppKeywords.insert("nullptr",SkipType::skNone);

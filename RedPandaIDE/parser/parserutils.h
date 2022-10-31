@@ -63,6 +63,16 @@ enum class SkipType {
     skToRightParenthesis, // skip to )
     skToLeftBrace,// Skip to {
     skToRightBrace, // skip to }
+    skFor, //for
+    skCatch, //catch
+    skScope, // public/private
+    skProtected,
+    skFriend,
+    skEnum, //enum
+    skInline, // inline
+    skNamespace, //namespace
+    skTypedef, //typedef
+    skUsing, //using
     skNone // It's a keyword but don't process here
 };
 

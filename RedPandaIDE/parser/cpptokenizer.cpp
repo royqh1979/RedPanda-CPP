@@ -64,13 +64,13 @@ void CppTokenizer::tokenize(const QStringList &buffer)
             addToken(s,mCurrentLine,tokenType);
     }
     while (!mUnmatchedBraces.isEmpty()) {
-        mTokenList[mUnmatchedBraces.back()]->matchIndex=mTokenList.count()-1;
+        addToken("}",mCurrentLine,TokenType::RightBrace);
     }
     while (!mUnmatchedBrackets.isEmpty()) {
-        mTokenList[mUnmatchedBrackets.back()]->matchIndex=mTokenList.count()-1;
+        addToken("]",mCurrentLine,TokenType::RightBrace);
     }
     while (!mUnmatchedParenthesis.isEmpty()) {
-        mTokenList[mUnmatchedParenthesis.back()]->matchIndex=mTokenList.count()-1;
+        addToken(")",mCurrentLine,TokenType::RightBrace);
     }
 }
 
