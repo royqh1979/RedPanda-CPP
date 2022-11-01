@@ -1797,78 +1797,6 @@ bool CppParser::checkForUsing(KeywordType keywordType)
 
 }
 
-bool CppParser::checkForVar()
-{
-    int indexBackup=mIndex;
-    // Be pessimistic
-    bool result = false;
-
-    // Store old index
-    KeywordType keywordType;
-
-    // Use mIndex so we can reuse checking functions
-    if (mIndex + 1 < mTokenizer.tokenCount()) {
-        // Check the current and the next token
-        for (int i = 0; i<=1; i++) {
-            if (checkForKeyword(keywordType)
-                    || isInvalidVarPrefixChar(mTokenizer[mIndex]->text.front())
-                    || (mTokenizer[mIndex]->text.back() == '.')
-                    || (
-                        (mTokenizer[mIndex]->text.length() > 1) &&
-                        (mTokenizer[mIndex]->text[mTokenizer[mIndex]->text.length() - 2] == '-') &&
-                        (mTokenizer[mIndex]->text[mTokenizer[mIndex]->text.length() - 1] == '>'))
-                    ) {
-                    // Reset index and fail
-                    mIndex = indexBackup;
-                    return false;
-            } // Could be a function pointer?
-            else if (mTokenizer[mIndex]->text == '(') {
-                int nextIndex = mTokenizer[mIndex]->matchIndex+1;
-                if ( (nextIndex >= mTokenizer.tokenCount())
-                     || (mTokenizer[nextIndex]->text != '(')
-                     || !mTokenizer[mIndex+1]->text.startsWith('*')) {
-                    // Reset index and fail
-                    mIndex = indexBackup;
-                    return false;
-                } else {
-                    nextIndex = mTokenizer[nextIndex]->matchIndex+1;
-                    if (mTokenizer[mIndex]->text!=';') {
-                        mIndex = indexBackup;
-                        return false;
-                    }
-                    isFunctionPointer=true;
-                    mIndex = indexBackup;
-                    return true;
-                }
-            }
-            mIndex++;
-        }
-    }
-
-    // Fail if we do not find a comma or a semicolon or a ( (inline constructor)
-    while (mIndex < mTokenizer.tokenCount()) {
-        if (mTokenizer[mIndex]->text.front() == '#'
-                || mTokenizer[mIndex]->text == '}'
-                || checkForKeyword(keywordType)) {
-            break; // fail
-        } else if (mTokenizer[mIndex]->text.front() == ','
-                   || mTokenizer[mIndex]->text.front() == ';'
-                   || mTokenizer[mIndex]->text.front() == '{') {
-            result = true;
-            break;
-        }
-        //skip '(' ')'
-        if (mTokenizer[mIndex]->text=='(' || mTokenizer[mIndex]->text=='[')
-            mIndex=mTokenizer[mIndex]->matchIndex;
-        else
-            mIndex++;
-    }
-
-    // Revert to the point we started at
-    mIndex = indexBackup;
-    return result;
-}
-
 int CppParser::getCurrentBlockEndSkip()
 {
     if (mBlockEndSkips.isEmpty())
@@ -2826,8 +2754,8 @@ bool CppParser::handleStatement()
         handleStructs(false);
     } else if (checkForMethod(funcType, funcName, argStart,argEnd, isStatic, isFriend)) {
         handleMethod(funcType, funcName, argStart, argEnd, isStatic, isFriend); // don't recalculate parts
-    } else if (checkForVar()) {
-        handleVar();
+    } else if (tryHandleVar()) {
+        //do nothing
     } else
         mIndex++;
 
@@ -3199,81 +3127,78 @@ void CppParser::handleUsing()
     }
 }
 
-void CppParser::handleVar()
+bool CppParser::tryHandleVar()
 {
     int indexBackup=mIndex;
-    // Keep going and stop on top of the variable name
-    QString lastType = "";
+    KeywordType keywordType;
+    QString varType=mTokenizer[mIndex]->text;
     bool isExtern = false;
     bool isStatic = false;
-    bool varAdded = false;
+    QString lastType;
+    if (isInvalidVarPrefixChar(mTokenizer[mIndex]->text.front())
+            || (mTokenizer[mIndex]->text.back() == '.')
+            || (mTokenizer[mIndex]->text.back() == '>'))
+        //failed to handle
+        return false;
+    if (varType=="extern") {
+        lastType=varType;
+        isExtern=true;
+    } else if (varType=="static") {
+        lastType=varType;
+        isStatic=true;
+    }
+    mIndex++;
 
-    if (checkForKeyword(keywordType)
+    //we only check the first token to reduce calculations
+    if (mIndex>=mTokenizer.tokenCount()
+            || checkForKeyword(keywordType)
             || isInvalidVarPrefixChar(mTokenizer[mIndex]->text.front())
             || (mTokenizer[mIndex]->text.back() == '.')
-            || (
-                (mTokenizer[mIndex]->text.length() > 1) &&
-                (mTokenizer[mIndex]->text[mTokenizer[mIndex]->text.length() - 2] == '-') &&
-                (mTokenizer[mIndex]->text[mTokenizer[mIndex]->text.length() - 1] == '>'))
-            ) {
-            // Reset index and fail
-            mIndex = indexBackup;
-            return false;
-
-    if (!isFunctionPointer) {
-
-        while (true) {
-            if ((mIndex + 1 < mTokenizer.tokenCount())
-                       && (mTokenizer[mIndex + 1]->text=='('
-                           || mTokenizer[mIndex + 1]->text==','
-                           || mTokenizer[mIndex + 1]->text==';'
-                           || mTokenizer[mIndex + 1]->text.front()==':'
-                           || mTokenizer[mIndex + 1]->text=='}'
-                           || mTokenizer[mIndex + 1]->text.front()=='#'
-                           || mTokenizer[mIndex + 1]->text=='{')) {
-                break;
-            }
-
-            // struct/class/union is part of the type signature
-            // but we dont store it in the type cache, so must trim it to find the type info
-            if (mTokenizer[mIndex]->text!="struct"
-                    && mTokenizer[mIndex]->text!="class"
-                    && mTokenizer[mIndex]->text!="union") {
-                if (mTokenizer[mIndex]->text == ':') {
-                    lastType += ':';
-                } else {
-                    QString s=mTokenizer[mIndex]->text;
-                    if (s == "extern") {
-                        isExtern = true;
-                    } else {
-                        if (!s.isEmpty())
-                            lastType += ' '+s;
-                        if (s == "static")
-                            isStatic = true;
-                    }
-                }
-            }
-            mIndex++;
-            if(mIndex >= mTokenizer.tokenCount())
-                break;
-        }
-        lastType = lastType.trimmed();
-    } else {
-        QString s=mTokenizer[mIndex]->text;
-        if (s == "extern") {
-            isExtern = true;
-        } else if (s=="static") {
-            isStatic = true;
-        } else
-            lastType=s;
+            || (mTokenizer[mIndex]->text.back() == '>'))  {
+        //failed to handle
+        mIndex=indexBackup;
+        return false;
     }
 
-    // Don't bother entering the scanning loop when we have failed
-    if (mIndex >= mTokenizer.tokenCount())
-        return;
+    while (mIndex+1<mTokenizer.tokenCount()) {
+        if (mTokenizer[mIndex]->text=='('
+                && mTokenizer[mIndex]->matchIndex<=mTokenizer.tokenCount()
+                && mTokenizer[mTokenizer[mIndex]->matchIndex]->text=='(') {
+            //function pointer
+            break;
+        } else if (mTokenizer[mIndex + 1]->text=='('
+                    || mTokenizer[mIndex + 1]->text==','
+                    || mTokenizer[mIndex + 1]->text==';'
+                    || mTokenizer[mIndex + 1]->text.front()==':'
+                    || mTokenizer[mIndex + 1]->text=='}'
+                    || mTokenizer[mIndex + 1]->text.front()=='#'
+                   || mTokenizer[mIndex + 1]->text=='{') {
+            //end of type info
+            break;
+        }
+        if (mTokenizer[mIndex]->text!="struct"
+                && mTokenizer[mIndex]->text!="class"
+                && mTokenizer[mIndex]->text!="union") {
+            QString s=mTokenizer[mIndex]->text;
+            if (s == "extern") {
+                isExtern = true;
+            } else if (s == "static") {
+                isStatic = true;
+            } else
+                lastType += ' '+s;
+        }
+        mIndex++;
+    }
 
-    // Find the variable name
-    while (true) {
+    if (mIndex+1 >= mTokenizer.tokenCount() || lastType.isEmpty()
+            || lastType.endsWith(':')) {
+        mIndex=indexBackup;
+        return false;
+    }
+
+    bool varAdded = false;
+    QString tempType;
+    while(true) {
         // Skip bit identifiers,
         // e.g.:
         // handle
@@ -3288,46 +3213,52 @@ void CppParser::handleVar()
                         ))
                 mIndex++;
         }
-        // Skip inline constructors,
-        // e.g.:
-        // handle
-        // int a(3)
-        // as
-        // int a
-        if (!isFunctionPointer &&
-                mIndex < mTokenizer.tokenCount() &&
-                mTokenizer[mIndex]->text == '(') {
-            mIndex=mTokenizer[mIndex]->matchIndex+1;
-        }
-
-        // Did we stop on top of the variable name?
-        if (mIndex < mTokenizer.tokenCount()) {
-            if (mTokenizer[mIndex]->text.front()!=','
-                    && mTokenizer[mIndex]->text.front()!=';') {
-                QString cmd;
+        if (mTokenizer[mIndex]->text=='('
+                && mTokenizer[mIndex]->matchIndex+1<mTokenizer.tokenCount()
+                && mTokenizer[mTokenizer[mIndex]->matchIndex+1]->text=='(') {
+            //function pointer
+            QString cmd=mTokenizer[mIndex]->text;
+            int argStart=mTokenizer[mIndex]->matchIndex+1;
+            int argEnd=mTokenizer[argStart]->matchIndex;
+            if (cmd.startsWith('*'))
+                cmd=cmd.mid(1);
+            if (!cmd.isEmpty()) {
+                addChildStatement(
+                            getCurrentScope(),
+                            mCurrentFile,
+                            lastType,
+                            cmd,
+                            mergeArgs(argStart,argEnd),
+                            "",
+                            "",
+                            mTokenizer[mIndex]->line,
+                            StatementKind::skVariable,
+                            getScope(),
+                            mClassScope,
+                            //True,
+                            !isExtern,
+                            isStatic); // TODO: not supported to pass list
+                varAdded = true;
+                tempType="";
+            }
+            mIndex=argEnd+1;
+        } else if (isWordChar(mTokenizer[mIndex]->text[0])) {
+            QString cmd=mTokenizer[mIndex]->text;
+            while (cmd.startsWith('*')) {
+                cmd=cmd.mid(1);
+            }
+            if (cmd=="const") {
+                tempType=mTokenizer[mIndex]->text;
+            } else {
+                QString suffix;
                 QString args;
-                if (isFunctionPointer) {
-                        QString s = mTokenizer[mIndex+1]->text;
-                        cmd = s.mid(1); // (*foo) -> foo
-                        //TODO: parse args
-                        args = mTokenizer[mIndex + 1]->text; // (int a,int b)
-                        lastType += "(*)" + args; // void(int a,int b)
-                        mIndex++;
-                } else if (mTokenizer[mIndex]->text.back() == ']') { //array; break args
-                    int pos = mTokenizer[mIndex]->text.indexOf('[');
-                    cmd = mTokenizer[mIndex]->text.mid(0,pos);
-                    args = mTokenizer[mIndex]->text.mid(pos);
-                } else {
-                    cmd = mTokenizer[mIndex]->text;
-                    args = "";
-                }
-
-                // Add a statement for every struct we are in
-                if (!lastType.isEmpty()) {
+                cmd=mTokenizer[mIndex]->text;
+                parseCommandTypeAndArgs(cmd,suffix,args);
+                if (!cmd.isEmpty()) {
                     addChildStatement(
                                 getCurrentScope(),
                                 mCurrentFile,
-                                lastType,
+                                (lastType+' '+tempType+suffix).trimmed(),
                                 cmd,
                                 args,
                                 "",
@@ -3340,32 +3271,25 @@ void CppParser::handleVar()
                                 !isExtern,
                                 isStatic); // TODO: not supported to pass list
                     varAdded = true;
+                    tempType="";
                 }
             }
-
-            // Step over the variable name
-            if (isblockChar(mTokenizer[mIndex]->text.front())) {
-                break;
-            }
+            mIndex++;
+        } else if (mTokenizer[mIndex]->text==';') {
+            break;
+        } else if (mTokenizer[mIndex]->text=='(') {
+            mIndex=mTokenizer[mIndex]->matchIndex+1;
+        } else if (mTokenizer[mIndex]->text=='{') {
+            mIndex=mTokenizer[mIndex]->matchIndex+1;
+        } else {
+            tempType="";
             mIndex++;
         }
-        if (mIndex >= mTokenizer.tokenCount())
-            break;
-        if (isblockChar(mTokenizer[mIndex]->text.front()))
-            break;
     }
-    if (varAdded && (mIndex < mTokenizer.tokenCount())
-            && (mTokenizer[mIndex]->text == '{')) {
-        // skip { } like A x {new A};
-        int i=indexOfMatchingBrace(mIndex);
-        if (i!=mIndex)
-            mIndex = i+1;
-    }
-    // Skip ; and ,
-    if ( (mIndex < mTokenizer.tokenCount()) &&
-         (mTokenizer[mIndex]->text.front() == ';'
-          || mTokenizer[mIndex]->text.front() == ','))
-        mIndex++;
+    // Skip ;
+    mIndex++;
+
+    return true;
 }
 
 void CppParser::internalParse(const QString &fileName)
@@ -4436,236 +4360,39 @@ int CppParser::calcKeyLenForStruct(const QString &word)
 
 void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart, int argEnd)
 {
-    // Split up argument string by ,
-    int i = argStart+1; // assume it starts with ( and ends with )
-    int paramStart = i;
+    int paramStart = argStart+1;
+    int i = paramStart ; // assume it starts with ( and ends with )
     // Keep going and stop on top of the variable name
-    QString lastType = "";
-    bool isFunctionPointer = false;
-    bool varAdded = false;
+    QString varType = "";
     while (i < argEnd) {
-        if ((argStr[i] == ',') ||
-                ((i == argStr.length()-1) && (argStr[i] == ')'))) {
-            // We've found "int* a" for example
-            QString s = argStr.mid(paramStart,i-paramStart);
+        if (mTokenizer[i]->text=='('
+                && mTokenizer[i]->matchIndex+1<argEnd
+                && mTokenizer[mTokenizer[i]->matchIndex+1]->text=='(') {
+            //function pointer
+            int argStart=mTokenizer[i]->matchIndex+1;
+            int argEnd=mTokenizer[argStart]->matchIndex;
+            i=
+        } else if (mTokenizer[i]->text=='{') {
+            i=mTokenizer[i]->matchIndex+1;
+        } else if (mTokenizer[i]->text=='(') {
+            i=mTokenizer[i]->matchIndex+1;
+        } else if (isWordChar(mTokenizer[i]->text[0])) {
+            if (varType.isEmpty()) {
 
-            //remove default value
-            int assignPos = s.indexOf('=');
-            if (assignPos >= 0) {
-                s.truncate(assignPos);
-                s = s.trimmed();
-            }
-            //todo: we don't support function pointer parameters now, till we can tokenize function parameters
-
-            //skip []
-            int varEndPos = s.length()-1;
-            int bracketLevel = 0;
-            while (varEndPos>=0) {
-                switch(s[varEndPos].unicode()) {
-                case ']':
-                    bracketLevel++;
-                    break;
-                case '[':
-                    bracketLevel--;
-                    varEndPos--;
-                    break;
-                }
-                if (bracketLevel==0)
-                    break;
-                varEndPos--;
-            }
-            int varStartPos = varEndPos;
-            if (varEndPos>=0) {
-                while (varStartPos-1>=0) {
-                    if (!mTokenizer.isIdentChar(s[varStartPos-1]))
-                            break;
-                    varStartPos--;
+            } else if
+            QString cmd=mTokenizer[i]->text;
+            if () {
+                QString args,suffix;
+                parseCommandTypeAndArgs(cmd,suffix,args);
+                if (!cmd.isEmpty()) {
+                    PStatement statement=findStatementOf(mCurrentFile,cmd,functionStatement,true);
+                    if (!statement || !isTypeStatement(statement->kind)) {
+                    }
                 }
             }
-            if (varStartPos>=0) {
-                if (varEndPos+1<s.length())
-                    args=s.mid(varEndPos+1);
-                addStatement(
-                            functionStatement,
-                            mCurrentFile,
-                            s.mid(0,varStartPos), // 'int*'
-                            s.mid(varStartPos,varEndPos-varStartPos+1), // a
-                            args,
-                            "",
-                            functionStatement->definitionLine,
-                            StatementKind::skParameter,
-                            StatementScope::Local,
-                            StatementClassScope::None,
-                            true,
-                            false);
-            }
-            if (varStartPos<s.length()) {
-                args = "";
-                int bracketPos = s.indexOf('[');
-                if (bracketPos >= 0) {
-                    args = s.mid(bracketPos);
-                    s.truncate(bracketPos);
-                }
-            }
-            paramStart = i + 1; // step over ,
         }
-        i++;
     }
 
-    while (true) {
-        if ((mIndex + 2 < mTokenizer.tokenCount())
-                && (mTokenizer[mIndex + 1]->text.front() == '(')
-                && (mTokenizer[mIndex + 2]->text.front() == '(')) {
-            isFunctionPointer = mTokenizer[mIndex + 1]->text.indexOf('*') >= 0;
-            if (!isFunctionPointer)
-                break; // inline constructor
-        } else if ((mIndex + 1 < mTokenizer.tokenCount())
-                   && (mTokenizer[mIndex + 1]->text.front()=='('
-                       || mTokenizer[mIndex + 1]->text.front()==','
-                       || mTokenizer[mIndex + 1]->text.front()==';'
-                       || mTokenizer[mIndex + 1]->text.front()==':'
-                       || mTokenizer[mIndex + 1]->text.front()=='}'
-                       || mTokenizer[mIndex + 1]->text.front()=='#'
-                       || mTokenizer[mIndex + 1]->text.front()=='{')) {
-            break;
-        }
-
-
-        // we've made a mistake, this is a typedef , not a variable definition.
-        if (mTokenizer[mIndex]->text == "typedef")
-            return;
-
-        // struct/class/union is part of the type signature
-        // but we dont store it in the type cache, so must trim it to find the type info
-        if (mTokenizer[mIndex]->text!="struct"
-                && mTokenizer[mIndex]->text!="class"
-                && mTokenizer[mIndex]->text!="union") {
-            if (mTokenizer[mIndex]->text == ':') {
-                lastType += ':';
-            } else {
-                QString s=mTokenizer[mIndex]->text;
-                if (s == "extern") {
-                    isExtern = true;
-                } else {
-                    if (!s.isEmpty())
-                        lastType += ' '+s;
-                    if (s == "static")
-                        isStatic = true;
-                }
-            }
-        }
-        mIndex++;
-        if(mIndex >= mTokenizer.tokenCount())
-            break;
-        if (isFunctionPointer)
-            break;
-    }
-    lastType = lastType.trimmed();
-
-    // Don't bother entering the scanning loop when we have failed
-    if (mIndex >= mTokenizer.tokenCount())
-        return;
-
-    // Find the variable name
-    while (true) {
-
-        // Skip bit identifiers,
-        // e.g.:
-        // handle
-        // unsigned short bAppReturnCode:8,reserved:6,fBusy:1,fAck:1
-        // as
-        // unsigned short bAppReturnCode,reserved,fBusy,fAck
-        if ( (mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() == ':')) {
-            while ( (mIndex < mTokenizer.tokenCount())
-                    && !(
-                        mTokenizer[mIndex]->text.front() == ','
-                        || isblockChar(';')
-                        ))
-                mIndex++;
-        }
-
-        // Skip inline constructors,
-        // e.g.:
-        // handle
-        // int a(3)
-        // as
-        // int a
-        if (!isFunctionPointer &&
-                mIndex < mTokenizer.tokenCount() &&
-                mTokenizer[mIndex]->text.front() == '(') {
-            while ((mIndex < mTokenizer.tokenCount())
-                    && !(
-                        mTokenizer[mIndex]->text.front() == ','
-                        || isblockChar(mTokenizer[mIndex]->text.front())
-                        ))
-                mIndex++;
-        }
-
-        // Did we stop on top of the variable name?
-        if (mIndex < mTokenizer.tokenCount()) {
-            if (mTokenizer[mIndex]->text.front()!=','
-                    && mTokenizer[mIndex]->text.front()!=';') {
-                QString cmd;
-                QString args;
-                if (isFunctionPointer && (mIndex + 1 < mTokenizer.tokenCount())) {
-                        QString s = mTokenizer[mIndex]->text;
-                        cmd = s.mid(2,s.length()-3).trimmed(); // (*foo) -> foo
-                        args = mTokenizer[mIndex + 1]->text; // (int a,int b)
-                        lastType += "(*)" + args; // void(int a,int b)
-                        mIndex++;
-                } else if (mTokenizer[mIndex]->text.back() == ']') { //array; break args
-                    int pos = mTokenizer[mIndex]->text.indexOf('[');
-                    cmd = mTokenizer[mIndex]->text.mid(0,pos);
-                    args = mTokenizer[mIndex]->text.mid(pos);
-                } else {
-                    cmd = mTokenizer[mIndex]->text;
-                    args = "";
-                }
-
-                // Add a statement for every struct we are in
-                if (!lastType.isEmpty()) {
-                    addChildStatement(
-                                getCurrentScope(),
-                                mCurrentFile,
-                                lastType,
-                                cmd,
-                                args,
-                                "",
-                                "",
-                                mTokenizer[mIndex]->line,
-                                StatementKind::skVariable,
-                                getScope(),
-                                mClassScope,
-                                //True,
-                                !isExtern,
-                                isStatic); // TODO: not supported to pass list
-                    varAdded = true;
-                }
-            }
-
-            // Step over the variable name
-            if (isblockChar(mTokenizer[mIndex]->text.front())) {
-                break;
-            }
-            mIndex++;
-        }
-        if (mIndex >= mTokenizer.tokenCount())
-            break;
-        if (isblockChar(mTokenizer[mIndex]->text.front()))
-            break;
-    }
-    if (varAdded && (mIndex < mTokenizer.tokenCount())
-            && (mTokenizer[mIndex]->text == '{')) {
-        // skip { } like A x {new A};
-        int i=indexOfMatchingBrace(mIndex);
-        if (i!=mIndex)
-            mIndex = i+1;
-    }
-    // Skip ; and ,
-    if ( (mIndex < mTokenizer.tokenCount()) &&
-         (mTokenizer[mIndex]->text.front() == ';'
-          || mTokenizer[mIndex]->text.front() == ','))
-        mIndex++;
 
 }
 

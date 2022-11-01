@@ -220,7 +220,6 @@ private:
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
     bool checkForUsing(KeywordType keywordType);
-    bool checkForVar();
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
@@ -414,7 +413,7 @@ private:
     bool handleStatement();
     void handleStructs(bool isTypedef = false);
     void handleUsing();
-    void handleVar();
+    bool tryHandleVar();
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(
