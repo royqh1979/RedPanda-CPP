@@ -200,7 +200,8 @@ private:
     bool isCurrentScope(const QString& command);
     void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock = true); // adds new solo level
     void removeScopeLevel(int line); // removes level
-    int skipBraces(int startAt) {
+
+    int indexOfMatchingBrace(int startAt) {
         return mTokenizer[startAt]->matchIndex;
     }
 
@@ -208,17 +209,17 @@ private:
 
     QStringList sortFilesByIncludeRelations(const QSet<QString> &files);
 
-    bool checkForKeyword(SkipType &skipType);
+    bool checkForKeyword(KeywordType &keywordType);
     bool checkForMethod(QString &sType, QString &sName, int &argStartIndex,
                         int &argEndIndex, bool &isStatic, bool &isFriend); // caching of results
-    bool checkForNamespace(SkipType skipType);
+    bool checkForNamespace(KeywordType keywordType);
     bool checkForPreprocessor();
-    bool checkForScope(SkipType skipType);
+    bool checkForScope(KeywordType keywordType);
     void checkForSkipStatement();
-    bool checkForStructs(SkipType skipType);
+    bool checkForStructs(KeywordType keywordType);
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
-    bool checkForUsing(SkipType skipType);
+    bool checkForUsing(KeywordType keywordType);
     bool checkForVar(bool& isFunctionPointer);
 
     void fillListOfFunctions(const QString& fileName, int line,
@@ -356,6 +357,7 @@ private:
 
     int getBracketEnd(const QString& s, int startAt);
     StatementClassScope getClassScope(const QString& text);
+    StatementClassScope getClassScope(KeywordType keywordType);
     int getCurrentBlockBeginSkip();
     int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
@@ -384,7 +386,7 @@ private:
     void handleCatchBlock();
     void handleEnum();
     void handleForBlock();
-    void handleKeyword(SkipType skipType);
+    void handleKeyword(KeywordType skipType);
     void handleMethod(
             const QString& sType,
             const QString& sName,
@@ -392,10 +394,10 @@ private:
             int argEnd,
             bool isStatic,
             bool isFriend);
-    void handleNamespace(SkipType skipType);
+    void handleNamespace(KeywordType skipType);
     void handleOtherTypedefs();
     void handlePreprocessor();
-    void handleScope();
+    void handleScope(KeywordType keywordType);
     bool handleStatement();
     void handleStructs(bool isTypedef = false);
     void handleUsing();
@@ -465,6 +467,10 @@ private:
         }
     }
 
+    bool isLeftParenthesis(const QString& text) const {
+        return text=="(";
+    }
+
     /*';', '{', '}'*/
     bool isblockChar(const QChar& ch) const {
         switch(ch.unicode()){
@@ -525,7 +531,11 @@ private:
 
     void updateSerialId();
 
-
+    int indexOfNextSemicolon(int index);
+    int indexOfNextColon(int index);
+    int indexOfNextLeftBrace(int index);
+    int indexPassParenthesis(int index);
+    int indexPassBraces(int index);
 private:
     int mParserId;
     ParserLanguage mLanguage;
@@ -568,7 +578,7 @@ private:
 
     QMutex mMutex;
     GetFileStreamCallBack mOnGetFileStream;
-    QMap<QString,SkipType> mCppKeywords;
+    QMap<QString,KeywordType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;
 };
 using PCppParser = std::shared_ptr<CppParser>;

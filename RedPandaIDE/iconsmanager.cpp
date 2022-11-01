@@ -296,18 +296,18 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
     case StatementKind::skFunction:
     case StatementKind::skConstructor:
     case StatementKind::skDestructor:
-        if (statement->scope == StatementScope::ssGlobal)
+        if (statement->scope == StatementScope::Global)
             return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_METHOD));
         if (statement->isInherited) {
-            if (statement->classScope == StatementClassScope::scsProtected) {
+            if (statement->classScope == StatementClassScope::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
-            } else if (statement->classScope == StatementClassScope::scsPublic) {
+            } else if (statement->classScope == StatementClassScope::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_METHOD));
             }
         } else {
-            if (statement->classScope == StatementClassScope::scsProtected) {
+            if (statement->classScope == StatementClassScope::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_METHOD));
-            } else if (statement->classScope == StatementClassScope::scsPublic) {
+            } else if (statement->classScope == StatementClassScope::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_METHOD));
             } else {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_METHOD));
@@ -320,15 +320,15 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
         return *(pIconsManager->getPixmap(IconsManager::PARSER_LOCAL_VAR));
     case StatementKind::skVariable:
         if (statement->isInherited) {
-            if (statement->classScope == StatementClassScope::scsProtected) {
+            if (statement->classScope == StatementClassScope::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
-            } else if (statement->classScope == StatementClassScope::scsPublic) {
+            } else if (statement->classScope == StatementClassScope::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_VAR));
             }
         } else {
-            if (statement->classScope == StatementClassScope::scsProtected) {
+            if (statement->classScope == StatementClassScope::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_VAR));
-            } else if (statement->classScope == StatementClassScope::scsPublic) {
+            } else if (statement->classScope == StatementClassScope::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_VAR));
             } else {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_VAR));

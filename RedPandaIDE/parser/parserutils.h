@@ -56,24 +56,25 @@ using PDefine = std::shared_ptr<Define>;
 using DefineMap = QHash<QString,PDefine>;
 using PDefineMap = std::shared_ptr<DefineMap>;
 
-enum class SkipType {
-    skItself,  // skip itself
-    skToSemicolon, // skip to ;
-    skToColon, // skip to :
-    skToRightParenthesis, // skip to )
-    skToLeftBrace,// Skip to {
-    skToRightBrace, // skip to }
-    skFor, //for
-    skCatch, //catch
-    skScope, // public/private
-    skProtected,
-    skFriend,
-    skEnum, //enum
-    skInline, // inline
-    skNamespace, //namespace
-    skTypedef, //typedef
-    skUsing, //using
-    skNone // It's a keyword but don't process here
+enum class KeywordType {
+    SkipItself,  // skip itself
+    SkipAfterSemicolon, // skip to ;
+    SkipAfterColon, // skip to :
+    SkipAfterParenthesis, // skip to )
+    SkipToLeftBrace,// Skip to {
+    SkipAfterBrace, // skip to }
+    For, //for
+    Catch, //catch
+    Public, // public
+    Private,
+    Protected,
+    Friend,
+    Enum, //enum
+    Inline, // inline
+    Namespace, //namespace
+    Typedef, //typedef
+    Using, //using
+    None // It's a keyword but don't process here
 };
 
 
@@ -104,23 +105,23 @@ enum StatementKind  {
 using StatementKindSet = QSet<StatementKind>;
 
 enum class StatementScope {
-    ssGlobal,
-    ssLocal,
-    ssClassLocal
+    Global,
+    Local,
+    ClassLocal
 };
 
 enum class StatementClassScope {
-  scsNone,
-  scsPrivate,
-  scsProtected,
-  scsPublic
+  None,
+  Private,
+  Protected,
+  Public
 };
 
 enum class MemberOperatorType {
-  otArrow,
-  otDot,
-  otDColon,
-  otOther
+  Arrow,
+  Dot,
+  DColon,
+  Other
 };
 
 enum class EvalStatementKind {
@@ -242,7 +243,7 @@ using PFileIncludes = std::shared_ptr<FileIncludes>;
 
 extern QStringList CppDirectives;
 extern QStringList JavadocTags;
-extern QMap<QString,SkipType> CppKeywords;
+extern QMap<QString,KeywordType> CppKeywords;
 extern QSet<QString> CppControlKeyWords;
 extern QSet<QString> CKeywords;
 extern QSet<QString> CppTypeKeywords;

@@ -338,7 +338,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
         if (statement == node->statement) // prevent infinite recursion
             continue;
 
-        if (statement->scope == StatementScope::ssLocal)
+        if (statement->scope == StatementScope::Local)
             continue;
 
         if (pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine()
