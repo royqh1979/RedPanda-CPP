@@ -220,7 +220,7 @@ private:
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
     bool checkForUsing(KeywordType keywordType);
-    bool checkForVar(bool& isFunctionPointer);
+    bool checkForVar();
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
@@ -325,6 +325,19 @@ private:
                 && !token.contains('\"'));
     }
 
+    bool isIdentifierOrPointer(const QString& term) const {
+        switch(term[0].unicode()) {
+        case '*':
+            return true;
+        case '\"':
+        case '\'':
+            return false;
+        default:
+            return isLetterChar(term[0]);
+        }
+    }
+
+
     bool isIntegerLiteral(const QString& token) const {
         if (token.isEmpty())
             return false;
@@ -384,7 +397,7 @@ private:
     PStatement getTypeDef(const PStatement& statement,
                           const QString& fileName, const QString& aType);
     void handleCatchBlock();
-    void handleEnum();
+    void handleEnum(bool isTypedef);
     void handleForBlock();
     void handleKeyword(KeywordType skipType);
     void handleMethod(
@@ -401,7 +414,7 @@ private:
     bool handleStatement();
     void handleStructs(bool isTypedef = false);
     void handleUsing();
-    void handleVar(bool isFunctionPointer);
+    void handleVar();
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(
@@ -536,6 +549,10 @@ private:
     int indexOfNextLeftBrace(int index);
     int indexPassParenthesis(int index);
     int indexPassBraces(int index);
+    QString mergeArgs(int startIndex, int endIndex);
+    void parseCommandTypeAndArgs(QString& command,
+                                 QString& typeSuffix,
+                                 QString& args);
 private:
     int mParserId;
     ParserLanguage mLanguage;
