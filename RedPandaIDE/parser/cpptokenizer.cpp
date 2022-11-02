@@ -18,6 +18,7 @@
 
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
 
 CppTokenizer::CppTokenizer()
 {
@@ -154,7 +155,6 @@ void CppTokenizer::addToken(const QString &sText, int iLine, TokenType tokenType
     default:
         break;
     }
-
     mTokenList.append(token);
 }
 
@@ -165,6 +165,15 @@ void CppTokenizer::countLines()
             mCurrentLine ++;
         mLineCount++;
     }
+}
+
+QString CppTokenizer::getLambdaCaptures()
+{
+    QChar* offset = mCurrent;
+    skipPair('[', ']');
+    QString result(offset,mCurrent-offset);
+    skipToNextToken();
+    return result;
 }
 
 QString CppTokenizer::getForInit()
@@ -195,6 +204,7 @@ QString CppTokenizer::getForInit()
 QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool bSkipBlock)
 {
     QString result;
+    int backupIndex;
     bool done = false;
     *pTokenType=TokenType::Normal;
     while (true) {
@@ -246,6 +256,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
                     countLines();
                     mCurrent+=2;
                     result = "::";
+                    skipToNextToken();
                     // Append next token to this one
                     if (isIdentChar(*mCurrent))
                         result+=getWord(true, bSkipArray, bSkipBlock);
@@ -278,6 +289,34 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
                 advance();
                 done = true;
                 break;
+            case '[':
+            {
+//                QChar* backup=mCurrent;
+//                skipPair('[',']');
+//                skipToNextToken();
+//                qDebug()<<*mCurrent;
+//                if (*mCurrent!='(') {
+//                    mCurrent=backup;
+//                    advance();
+//                } else {
+//                    mCurrent=backup;
+//                    skipPair('[',']');
+//                    *pTokenType=TokenType::LambdaCaptures;
+//                    countLines();
+//                    result = QString(backup,mCurrent-backup);
+//                    done = true;
+//                    qDebug()<<"yes"<<result;
+//                }
+
+                *pTokenType=TokenType::LambdaCaptures;
+                countLines();
+                QChar* backup=mCurrent;
+                skipPair('[',']');
+                result = QString(backup,mCurrent-backup);
+                done = true;
+//                qDebug()<<"yes"<<result;
+                break;
+            }
             case ')':
                 *pTokenType=TokenType::RightParenthesis;
                 countLines();
@@ -425,6 +464,7 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
             if (result != "using") {
                 result+=QString(mCurrent,2);
                 mCurrent+=2;
+                skipToNextToken();
                 if (isIdentChar(*mCurrent)) {
                     // Append next token to this one
                     QString s = getWord(bSkipParenthesis, bSkipArray, bSkipBlock);
@@ -765,7 +805,7 @@ bool CppTokenizer::isLineChar(const QChar &ch)
 
 bool CppTokenizer::isBlankChar(const QChar &ch)
 {
-    return (ch<=32);
+    return (ch<=32) && (ch>0);
 }
 
 bool CppTokenizer::isOperatorChar(const QChar &ch)

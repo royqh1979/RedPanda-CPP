@@ -650,6 +650,8 @@ StatementKind getKindOfStatement(const PStatement& statement)
         } else {
             return StatementKind::skVariable;
         }
+    } else if (statement->kind == StatementKind::skParameter) {
+        return StatementKind::skLocalVariable;
     }
     return statement->kind;
 }

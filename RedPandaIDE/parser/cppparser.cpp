@@ -1394,11 +1394,20 @@ bool CppParser::isCurrentScope(const QString &command)
         return false;
     QString s = command;
     // remove template staff
-    int i= command.indexOf('<');
-    if (i>=0) {
-        s.truncate(i);
+    if (s.endsWith('>')) {
+        int i= command.indexOf('<');
+        if (i>=0) {
+            s.truncate(i);
+        }
     }
-    return (statement->command == s);
+    QString s2 = statement->command;
+    if (s2.endsWith('>')) {
+        int i= s2.indexOf('<');
+        if (i>=0) {
+            s2.truncate(i);
+        }
+    }
+    return (s2 == s);
 }
 
 void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock)
@@ -1437,6 +1446,7 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
     else
         mClassScope = StatementClassScope::Public; // structs are public by default
     mCurrentClassScope.append(mClassScope);
+    //qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 }
 
 void CppParser::removeScopeLevel(int line)
@@ -1444,6 +1454,7 @@ void CppParser::removeScopeLevel(int line)
     // Remove class list
     if (mCurrentScope.isEmpty())
         return; // TODO: should be an exception
+    //qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
     PStatement currentScope = getCurrentScope();
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
     if (currentScope && (currentScope->kind == StatementKind::skBlock)) {
@@ -1604,6 +1615,9 @@ bool CppParser::checkForMethod(QString &sType, QString &sName, int &argStartInde
             //it's not a function define
             if (indexAfter>=mTokenizer.tokenCount())
                 break;
+            //it's not a function define;
+            if (isInvalidFunctionArgsSuffixChar(mTokenizer[indexAfter]->text[0]))
+                break;
             //it's not a function define
             if (mTokenizer[indexAfter]->text[0] == ';') {
                 //function can only be defined in global/namespaces/classes
@@ -1626,12 +1640,11 @@ bool CppParser::checkForMethod(QString &sType, QString &sName, int &argStartInde
             bTypeOK = !sType.isEmpty();
             bNameOK = !sName.isEmpty();
             bArgsOK = true;
-            mIndex = argEndIndex+1;
 
             // Allow constructor/destructor too
             if (!bTypeOK) {
                 // Check for constructor/destructor outside class body
-                int delimPos = sName.indexOf("::");
+                int delimPos = sName.lastIndexOf("::");
                 if (delimPos >= 0) {
                     bTypeOK = true;
                     sType = sName.mid(0, delimPos);
@@ -1652,6 +1665,7 @@ bool CppParser::checkForMethod(QString &sType, QString &sName, int &argStartInde
                     sType.remove(0,1);
                 bTypeOK = isCurrentScope(sType); // constructor/destructor
             }
+            mIndex = argEndIndex+1;
             break;
         } else {
             //if IsValidIdentifier(mTokenizer[mIndex]->text) then
@@ -1692,6 +1706,13 @@ bool CppParser::checkForNamespace(KeywordType keywordType)
 bool CppParser::checkForPreprocessor()
 {
     return (mTokenizer[mIndex]->text.startsWith('#'));
+}
+
+bool CppParser::checkForLambda()
+{
+    return (mIndex+1<mTokenizer.tokenCount()
+            && mTokenizer[mIndex]->text.startsWith('[')
+            && mTokenizer[mIndex+1]->text=='(');
 }
 
 bool CppParser::checkForScope(KeywordType keywordType)
@@ -1970,8 +1991,7 @@ void CppParser::handleCatchBlock()
                 true,
                 false);
     addSoloScopeLevel(block,startLine);
-    if (!mTokenizer[mIndex+1]->text.contains("..."))
-        scanMethodArgs(block,mIndex, mTokenizer[mIndex]->matchIndex);
+    scanMethodArgs(block,mIndex, mTokenizer[mIndex]->matchIndex);
     mIndex=mTokenizer[mIndex]->matchIndex+1;
 }
 
@@ -2237,6 +2257,37 @@ void CppParser::handleKeyword(KeywordType skipType)
     }
 }
 
+void CppParser::handleLambda()
+{
+    int startLine=mTokenizer[mIndex]->line;
+    int argStart=mIndex+1;
+    int argEnd= mTokenizer[argStart]->matchIndex;
+    int blockLine=mTokenizer[argStart]->line;
+    //TODO: parse captures
+    int bodyStart=indexOfNextLeftBrace(argEnd+1);
+    if (bodyStart>=mTokenizer.tokenCount()) {
+        mIndex=argEnd+1; // skip ();
+        return;
+    }
+    PStatement lambdaBlock = addStatement(
+                getCurrentScope(),
+                mCurrentFile,
+                "",
+                "",
+                "",
+                "",
+                "",
+                startLine,
+                StatementKind::skBlock,
+                StatementScope::Local,
+                StatementClassScope::None,
+                true,
+                false);
+    scanMethodArgs(lambdaBlock,argStart,argEnd);
+    addSoloScopeLevel(lambdaBlock,blockLine);
+    mIndex=bodyStart+1; // skip '{'
+}
+
 void CppParser::handleMethod(const QString &sType, const QString &sName, int argStart, int argEnd, bool isStatic, bool isFriend)
 {
     bool isValid = true;
@@ -2247,26 +2298,42 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, int arg
         return;
 
     PStatement functionClass = getCurrentScope();
+
+    //find start of the function body;
+    bool foundColon=false;
+    while ((mIndex < mTokenizer.tokenCount()) && !isblockChar(mTokenizer[mIndex]->text.front())) {
+        if (mTokenizer[mIndex]->text=='(') {
+            mIndex=mTokenizer[mIndex]->matchIndex+1;
+        }else if (mTokenizer[mIndex]->text==':') {
+            foundColon=true;
+            break;
+        } else
+            mIndex++;
+    }
+    if (foundColon) {
+        mIndex++;
+        while ((mIndex < mTokenizer.tokenCount()) && !isblockChar(mTokenizer[mIndex]->text.front())) {
+            if (isWordChar(mTokenizer[mIndex]->text[0])
+                    && mIndex+1<mTokenizer.tokenCount()
+                    && mTokenizer[mIndex+1]->text=='{') {
+                //skip parent {}intializer
+                mIndex=mTokenizer[mIndex+1]->matchIndex+1;
+            } else if (mTokenizer[mIndex]->text=='(') {
+                mIndex=mTokenizer[mIndex]->matchIndex+1;
+            }else if (mTokenizer[mIndex]->text==':') {
+                foundColon=true;
+                break;
+            } else
+                mIndex++;
+        }
+
+
+    }
+
     // Check if this is a prototype
     if (mTokenizer[mIndex]->text.startsWith(';')
             || mTokenizer[mIndex]->text.startsWith('}')) {// prototype
         isDeclaration = true;
-    } else {
-        // Find the function body start after the inherited constructor
-        if ((mIndex < mTokenizer.tokenCount()) && mTokenizer[mIndex]->text.startsWith(':')) {
-            while ((mIndex < mTokenizer.tokenCount()) && !isblockChar(mTokenizer[mIndex]->text.front())) {
-                if (mTokenizer[mIndex]->text=='(')
-                    mIndex=mTokenizer[mIndex]->matchIndex+1;
-                else
-                    mIndex++;
-            }
-        }
-
-        // Still a prototype
-        if ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.startsWith(';')
-                || mTokenizer[mIndex]->text.startsWith('}'))) {// prototype
-              isDeclaration = true;
-        }
     }
 
     QString scopelessName;
@@ -2728,6 +2795,10 @@ bool CppParser::handleStatement()
         mIndex++;
     } else if (checkForPreprocessor()) {
         handlePreprocessor();
+    } else if (checkForLambda()) { // is lambda
+        handleLambda();
+    } else if (!isLetterChar(mTokenizer[mIndex]->text[0])) {
+        mIndex++;
     } else if (checkForKeyword(keywordType)) { // includes template now
         handleKeyword(keywordType);
     } else if (keywordType==KeywordType::For) { // (for/catch)
@@ -3138,8 +3209,8 @@ bool CppParser::tryHandleVar()
     bool isStatic = false;
     QString lastType;
     if (isInvalidVarPrefixChar(mTokenizer[mIndex]->text.front())
-            || (mTokenizer[mIndex]->text.back() == '.')
-            || (mTokenizer[mIndex]->text.back() == '>'))
+            || mTokenizer[mIndex]->text.endsWith('.')
+            || mTokenizer[mIndex]->text.endsWith("->"))
         //failed to handle
         return false;
     if (varType=="extern") {
@@ -3155,19 +3226,23 @@ bool CppParser::tryHandleVar()
     if (mIndex>=mTokenizer.tokenCount()
             || checkForKeyword(keywordType)
             || isInvalidVarPrefixChar(mTokenizer[mIndex]->text.front())
-            || (mTokenizer[mIndex]->text.back() == '.')
-            || (mTokenizer[mIndex]->text.back() == '>'))  {
+            || mTokenizer[mIndex]->text.endsWith('.')
+            || mTokenizer[mIndex]->text.endsWith("->"))  {
         //failed to handle
         mIndex=indexBackup;
         return false;
     }
 
     while (mIndex+1<mTokenizer.tokenCount()) {
-        if (mTokenizer[mIndex]->text=='('
-                && mTokenizer[mIndex]->matchIndex<=mTokenizer.tokenCount()
+        if (mTokenizer[mIndex]->text=='(') {
+            if ( mTokenizer[mIndex]->matchIndex<=mTokenizer.tokenCount()
                 && mTokenizer[mTokenizer[mIndex]->matchIndex]->text=='(') {
-            //function pointer
-            break;
+                //function pointer
+                break;
+            }
+            //error break;
+            mIndex=indexBackup;
+            return false;
         } else if (mTokenizer[mIndex + 1]->text=='('
                     || mTokenizer[mIndex + 1]->text==','
                     || mTokenizer[mIndex + 1]->text==';'
@@ -3320,7 +3395,6 @@ void CppParser::internalParse(const QString &fileName)
         mPreprocessor.preprocess(fileName, buffer);
 
         QStringList preprocessResult = mPreprocessor.result();
-        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
 #ifdef QT_DEBUG
 //        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
 //        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
@@ -3335,19 +3409,17 @@ void CppParser::internalParse(const QString &fileName)
         preprocessResult.clear();
         if (mTokenizer.tokenCount() == 0)
             return;
-
+#ifdef QT_DEBUG
+//        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+#endif
         // Process the token list
         while(true) {
             if (!handleStatement())
                 break;
         }
-        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
-        //mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #ifdef QT_DEBUG
-//      mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
-//
-//      mStatementList.dumpAll("r:\\all-stats.txt");
+//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
         //reduce memory usage
         internalClear();
@@ -4647,8 +4719,12 @@ bool CppParser::isNotFuncArgs(int startIndex, int endIndex)
             return true;
         if (isLetterChar(ch)) {
             QString currentText=mTokenizer[i]->text;
+            while (currentText.startsWith('*')
+                   || currentText.startsWith('&'))
+                currentText.remove(0,1);
             if (!mCppTypeKeywords.contains(currentText)) {
-                if (currentText=="true" || currentText=="false" || currentText=="nullptr" )
+                if (currentText=="true" || currentText=="false" || currentText=="nullptr" ||
+                        currentText=='this')
                     return true;
                 if (currentText=="const" )
                     return false;

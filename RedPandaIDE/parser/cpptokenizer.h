@@ -31,6 +31,7 @@ class CppTokenizer
         LeftBracket,
         RightBracket,
         Assignment,
+        LambdaCaptures
     };
 
 public:
@@ -55,6 +56,7 @@ private:
     void advance();
     void countLines();
     PToken getToken(int index);
+    QString getLambdaCaptures();
 
     QString getForInit();
     QString getNextToken(

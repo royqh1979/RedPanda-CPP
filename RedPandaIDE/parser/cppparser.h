@@ -214,6 +214,7 @@ private:
                         int &argEndIndex, bool &isStatic, bool &isFriend); // caching of results
     bool checkForNamespace(KeywordType keywordType);
     bool checkForPreprocessor();
+    bool checkForLambda();
     bool checkForScope(KeywordType keywordType);
     void checkForSkipStatement();
     bool checkForStructs(KeywordType keywordType);
@@ -399,6 +400,7 @@ private:
     void handleEnum(bool isTypedef);
     void handleForBlock();
     void handleKeyword(KeywordType skipType);
+    void handleLambda();
     void handleMethod(
             const QString& sType,
             const QString& sName,
@@ -462,6 +464,23 @@ private:
 
     bool isDigitChar(const QChar& ch) const {
         return (ch>='0' && ch<='9');
+    }
+
+    bool isInvalidFunctionArgsSuffixChar(const QChar& ch) const {
+        switch(ch.unicode()){
+        case '.':
+        case '-':
+        case '+':
+        case '/':
+        case '%':
+        case '&':
+        case '*':
+        case '|':
+        case '?':
+            return true;
+        default:
+            return false;
+        }
     }
 
     /*'(', ';', ':', '{', '}', '#' */
