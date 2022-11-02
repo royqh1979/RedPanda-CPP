@@ -77,7 +77,7 @@ enum class KeywordType {
     None // It's a keyword but don't process here
 };
 
-
+//It will be used as hash key. DONT make it enum class!!!!!
 enum StatementKind  {
   skUnknown,
   skNamespace,

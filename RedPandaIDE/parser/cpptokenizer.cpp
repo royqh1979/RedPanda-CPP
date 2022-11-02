@@ -67,10 +67,10 @@ void CppTokenizer::tokenize(const QStringList &buffer)
         addToken("}",mCurrentLine,TokenType::RightBrace);
     }
     while (!mUnmatchedBrackets.isEmpty()) {
-        addToken("]",mCurrentLine,TokenType::RightBrace);
+        addToken("]",mCurrentLine,TokenType::RightBracket);
     }
     while (!mUnmatchedParenthesis.isEmpty()) {
-        addToken(")",mCurrentLine,TokenType::RightBrace);
+        addToken(")",mCurrentLine,TokenType::RightParenthesis);
     }
 }
 
@@ -167,28 +167,6 @@ void CppTokenizer::countLines()
     }
 }
 
-QString CppTokenizer::getArguments()
-{
-    QChar* offset = mCurrent;
-    skipPair('(', ')');
-    QString result(offset,mCurrent-offset);
-    simplifyArgs(result);
-    if ((*mCurrent == '.') || ((*mCurrent == '-') && (*(mCurrent + 1) == '>'))) {
-        // skip '.' and '->'
-        while ( !( *mCurrent == 0
-                   || *mCurrent == '('
-                   || *mCurrent == ';'
-                   || *mCurrent == '{'
-                   || *mCurrent == '}'
-                   || *mCurrent == ')'
-                 || isLineChar(*mCurrent)
-                 || isSpaceChar(*mCurrent)) )
-            mCurrent++;
-    }
-    skipToNextToken();
-    return result;
-}
-
 QString CppTokenizer::getForInit()
 {
     QChar* startOffset = mCurrent;
@@ -262,8 +240,10 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
                 if (*(mCurrent + 1) == ':') {
                     countLines();
                     mCurrent+=2;
+                    result = "::";
                     // Append next token to this one
-                    result = "::"+getWord(true, bSkipArray, bSkipBlock);
+                    if (isIdentChar(*mCurrent))
+                        result+=getWord(true, bSkipArray, bSkipBlock);
                     done = true;
                 } else {
                     countLines();
@@ -436,13 +416,15 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
         } else if ((*mCurrent == '-') && (*(mCurrent + 1) == '>')) {
             result+=QString(mCurrent,2);
             mCurrent+=2;
-        } else if ((*mCurrent == ':') && (*(mCurrent + 1) == ':')) {
+        } else if ((*mCurrent == ':') && (*(mCurrent + 1) == ':') ) {
             if (result != "using") {
                 result+=QString(mCurrent,2);
                 mCurrent+=2;
-                // Append next token to this one
-                QString s = getWord(bSkipParenthesis, bSkipArray, bSkipBlock);
-                result += s;
+                if (isIdentChar(*mCurrent)) {
+                    // Append next token to this one
+                    QString s = getWord(bSkipParenthesis, bSkipArray, bSkipBlock);
+                    result += s;
+                }
             }
         }
     }

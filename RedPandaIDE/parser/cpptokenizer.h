@@ -56,7 +56,6 @@ private:
     void countLines();
     PToken getToken(int index);
 
-    QString getArguments();
     QString getForInit();
     QString getNextToken(
             TokenType *pTokenType,
