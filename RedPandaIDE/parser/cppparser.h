@@ -467,13 +467,14 @@ private:
     }
 
     bool isInvalidFunctionArgsSuffixChar(const QChar& ch) const {
+
+        // &&
         switch(ch.unicode()){
         case '.':
         case '-':
         case '+':
         case '/':
         case '%':
-        case '&':
         case '*':
         case '|':
         case '?':
@@ -563,6 +564,7 @@ private:
     void updateSerialId();
 
     int indexOfNextSemicolon(int index);
+    int indexOfNextSemicolonOrLeftBrace(int index);
     int indexOfNextColon(int index);
     int indexOfNextLeftBrace(int index);
     int indexPassParenthesis(int index);

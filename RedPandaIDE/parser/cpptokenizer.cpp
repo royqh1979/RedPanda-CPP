@@ -735,8 +735,10 @@ void CppTokenizer::advance()
             mCurrent++;
         break;
     case '=': {
-        if (mTokenList.size()>2
-                && mTokenList[mTokenList.size()-2]->text == "using") {
+        if (mTokenList.size()>=2
+                &&( mTokenList[mTokenList.size()-2]->text == "using"
+                    || mTokenList[mTokenList.size()-2]->text == "namespace")
+                ) {
             addToken("=", mCurrentLine, TokenType::Normal);
             mCurrent++;
         } else

@@ -1446,7 +1446,7 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
     else
         mClassScope = StatementClassScope::Public; // structs are public by default
     mCurrentClassScope.append(mClassScope);
-    //qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
+    qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 }
 
 void CppParser::removeScopeLevel(int line)
@@ -1454,7 +1454,7 @@ void CppParser::removeScopeLevel(int line)
     // Remove class list
     if (mCurrentScope.isEmpty())
         return; // TODO: should be an exception
-    //qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
+    qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
     PStatement currentScope = getCurrentScope();
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
     if (currentScope && (currentScope->kind == StatementKind::skBlock)) {
@@ -2320,9 +2320,6 @@ void CppParser::handleMethod(const QString &sType, const QString &sName, int arg
                 mIndex=mTokenizer[mIndex+1]->matchIndex+1;
             } else if (mTokenizer[mIndex]->text=='(') {
                 mIndex=mTokenizer[mIndex]->matchIndex+1;
-            }else if (mTokenizer[mIndex]->text==':') {
-                foundColon=true;
-                break;
             } else
                 mIndex++;
         }
@@ -2534,10 +2531,13 @@ void CppParser::handleNamespace(KeywordType skipType)
                     mClassScope,
                     true,
                     false);
-        addSoloScopeLevel(namespaceStatement,startLine);
 
-        // Skip pass next '{'
-        mIndex = indexOfNextLeftBrace(mIndex)+1;
+        // find next '{' or ';'
+        mIndex = indexOfNextSemicolonOrLeftBrace(mIndex);
+        if (mTokenizer[mIndex]->text=='{')
+            addSoloScopeLevel(namespaceStatement,startLine);
+        //skip it
+        mIndex++;
     }
 }
 
@@ -2667,6 +2667,7 @@ void CppParser::handlePreprocessor()
             goto handlePreprocessorEnd;
         int delimPos = s.lastIndexOf(':');
         if (delimPos>=0) {
+            qDebug()<<mCurrentScope.size()<<mCurrentFile<<mTokenizer[mIndex]->line<<s.mid(0,delimPos).trimmed();
             mCurrentFile = s.mid(0,delimPos).trimmed();
             mIsSystemHeader = isSystemHeaderFile(mCurrentFile) || isProjectHeaderFile(mCurrentFile);
             mIsProjectFile = mProjectFiles.contains(mCurrentFile);
@@ -3396,7 +3397,7 @@ void CppParser::internalParse(const QString &fileName)
 
         QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-//        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
 //        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
@@ -3410,7 +3411,7 @@ void CppParser::internalParse(const QString &fileName)
         if (mTokenizer.tokenCount() == 0)
             return;
 #ifdef QT_DEBUG
-//        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
         // Process the token list
         while(true) {
@@ -3418,8 +3419,8 @@ void CppParser::internalParse(const QString &fileName)
                 break;
         }
 #ifdef QT_DEBUG
-//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
         //reduce memory usage
         internalClear();
@@ -4779,6 +4780,23 @@ int CppParser::indexOfNextSemicolon(int index)
     while (index<mTokenizer.tokenCount()) {
         switch(mTokenizer[index]->text[0].unicode()) {
         case ';':
+            return index;
+        case '(':
+            index = mTokenizer[index]->matchIndex+1;
+            break;
+        default:
+            index++;
+        }
+    }
+    return index;
+}
+
+int CppParser::indexOfNextSemicolonOrLeftBrace(int index)
+{
+    while (index<mTokenizer.tokenCount()) {
+        switch(mTokenizer[index]->text[0].unicode()) {
+        case ';':
+        case '{':
             return index;
         case '(':
             index = mTokenizer[index]->matchIndex+1;

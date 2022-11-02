@@ -1,3 +1,10 @@
+Red Panda C++ Version 2.2
+
+  - enhancement: basic code completion support for C++ lambda
+  - enhancement: slightly reduce parsing time
+  - fix: Wrong charset name returned when saveing file
+  - fix: 'using =' / 'namespace =' not correctly handled
+
 Red Panda C++ Version 2.1
 
   - fix: editors that not in the editing panel shouldn't trigger switch breakpoint
