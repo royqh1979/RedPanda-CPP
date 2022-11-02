@@ -223,6 +223,11 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
         } else if (isWord()) {
             countLines();
             result = getWord(false, bSkipArray, bSkipBlock);
+//            if (result=="noexcept" || result == "throw") {
+//                result="";
+//                if (*mCurrent=='(')
+//                    skipPair('(',')');
+//            }
             done = (result != "");
         } else if (isNumber()) {
             countLines();
