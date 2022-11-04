@@ -58,11 +58,11 @@ using PDefineMap = std::shared_ptr<DefineMap>;
 
 enum class KeywordType {
     SkipItself,  // skip itself
-    SkipAfterSemicolon, // skip to ;
-    SkipAfterColon, // skip to :
-    SkipAfterParenthesis, // skip to )
-    SkipToLeftBrace,// Skip to {
-    SkipAfterBrace, // skip to }
+    SkipNextSemicolon, // move to ; and skip it
+    SkipNextColon, // move to : and skip it
+    SkipNextParenthesis, // move to ) and skip it
+    MoveToLeftBrace,// move to {
+    MoveToRightBrace, // move to }
     For, //for
     Catch, //catch
     Public, // public
@@ -74,7 +74,8 @@ enum class KeywordType {
     Namespace, //namespace
     Typedef, //typedef
     Using, //using
-    None // It's a keyword but don't process here
+    None, // It's a keyword but don't process here
+    NotKeyword
 };
 
 //It will be used as hash key. DONT make it enum class!!!!!

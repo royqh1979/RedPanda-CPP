@@ -2338,7 +2338,7 @@ bool Editor::handleBracketSkip()
 
 bool Editor::handleMultilineCommentCompletion()
 {
-    if ((caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
+    if ((caretX()-2>=0) && (caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
         QString text=selText();
         beginUpdate();
         beginUndoBlock();

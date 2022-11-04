@@ -4,6 +4,7 @@ Red Panda C++ Version 2.2
   - enhancement: slightly reduce parsing time
   - fix: Wrong charset name returned when saveing file
   - fix: 'using =' / 'namespace =' not correctly handled
+  - fix: Pressing '*' at begin of line will crash app
 
 Red Panda C++ Version 2.1
 

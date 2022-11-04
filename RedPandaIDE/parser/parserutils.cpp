@@ -79,7 +79,6 @@ void initParser()
     CppKeywords.insert("or_eq",KeywordType::SkipItself);
     CppKeywords.insert("register",KeywordType::SkipItself);
     CppKeywords.insert("reinterpret_cast",KeywordType::SkipItself);
-    CppKeywords.insert("static_assert",KeywordType::SkipItself);
     CppKeywords.insert("static_cast",KeywordType::SkipItself);
     CppKeywords.insert("template",KeywordType::SkipItself);
     //CppKeywords.insert("this",SkipType::skItself);
@@ -97,32 +96,34 @@ void initParser()
     CppKeywords.insert("try",KeywordType::SkipItself);
 
     // Skip to ;
-    CppKeywords.insert("delete",KeywordType::SkipAfterSemicolon);
-    CppKeywords.insert("delete[]",KeywordType::SkipAfterSemicolon);
-    CppKeywords.insert("goto",KeywordType::SkipAfterSemicolon);
-    CppKeywords.insert("new",KeywordType::SkipAfterSemicolon);
-    CppKeywords.insert("return",KeywordType::SkipAfterSemicolon);
-    CppKeywords.insert("throw",KeywordType::SkipAfterSemicolon);
+    CppKeywords.insert("delete",KeywordType::SkipNextSemicolon);
+    CppKeywords.insert("delete[]",KeywordType::SkipNextSemicolon);
+    CppKeywords.insert("goto",KeywordType::SkipNextSemicolon);
+    CppKeywords.insert("new",KeywordType::SkipNextSemicolon);
+    CppKeywords.insert("return",KeywordType::SkipNextSemicolon);
+    CppKeywords.insert("throw",KeywordType::SkipNextSemicolon);
   //  CppKeywords.insert("using",SkipType::skToSemicolon); //won't use it
 
     // Skip to :
-    CppKeywords.insert("case",KeywordType::SkipAfterColon);
-    CppKeywords.insert("default",KeywordType::SkipAfterColon);
+    CppKeywords.insert("case",KeywordType::SkipNextColon);
+    CppKeywords.insert("default",KeywordType::SkipNextColon);
 
     // Skip to )
-    CppKeywords.insert("__attribute__",KeywordType::SkipAfterParenthesis);
-    CppKeywords.insert("alignas",KeywordType::SkipAfterParenthesis);  // not right
-    CppKeywords.insert("alignof",KeywordType::SkipAfterParenthesis);  // not right
-    CppKeywords.insert("decltype",KeywordType::SkipAfterParenthesis); // not right
-    CppKeywords.insert("if",KeywordType::SkipAfterParenthesis);
-    CppKeywords.insert("sizeof",KeywordType::SkipAfterParenthesis);
-    CppKeywords.insert("switch",KeywordType::SkipAfterParenthesis);
-    CppKeywords.insert("typeid",KeywordType::SkipAfterParenthesis);
-    CppKeywords.insert("while",KeywordType::SkipAfterParenthesis);
+    CppKeywords.insert("__attribute__",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("__attribute",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("alignas",KeywordType::SkipNextParenthesis);  // not right
+    CppKeywords.insert("alignof",KeywordType::SkipNextParenthesis);  // not right
+    CppKeywords.insert("decltype",KeywordType::SkipNextParenthesis); // not right
+    CppKeywords.insert("if",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("sizeof",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("switch",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("typeid",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("while",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("static_assert",KeywordType::SkipNextParenthesis);
 
     // Skip to }
-    CppKeywords.insert("asm",KeywordType::SkipAfterBrace);
-    //CppKeywords.insert("namespace",SkipType::skToLeftBrace); // won't process it
+    CppKeywords.insert("asm",KeywordType::MoveToRightBrace);
+    CppKeywords.insert("__asm",KeywordType::MoveToRightBrace);
     // Skip to {
 
     // wont handle

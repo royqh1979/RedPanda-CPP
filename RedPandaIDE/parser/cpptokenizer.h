@@ -56,7 +56,6 @@ private:
     void advance();
     void countLines();
     PToken getToken(int index);
-    QString getLambdaCaptures();
 
     QString getForInit();
     QString getNextToken(
@@ -79,6 +78,7 @@ private:
     void skipAssignment();
     void skipDoubleQuotes();
     void skipPair(const QChar& cStart, const QChar cEnd, const QSet<QChar>& failChars = QSet<QChar>());
+    bool skipAngleBracketPair();
     void skipRawString();
     void skipSingleQuote();
     void skipSplitLine();

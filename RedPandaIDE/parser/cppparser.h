@@ -214,13 +214,15 @@ private:
                         int &argEndIndex, bool &isStatic, bool &isFriend); // caching of results
     bool checkForNamespace(KeywordType keywordType);
     bool checkForPreprocessor();
-    bool checkForLambda();
+//    bool checkForLambda();
     bool checkForScope(KeywordType keywordType);
     void checkForSkipStatement();
     bool checkForStructs(KeywordType keywordType);
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
     bool checkForUsing(KeywordType keywordType);
+
+    void checkAndHandleMethodOrVar();
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
@@ -321,7 +323,7 @@ private:
     void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol);
 
     bool isIdentifier(const QString& token) const {
-        return (!token.isEmpty() && isLetterChar(token.front())
+        return (!token.isEmpty() && isIdentChar(token.front())
                 && !token.contains('\"'));
     }
 
@@ -333,7 +335,7 @@ private:
         case '\'':
             return false;
         default:
-            return isLetterChar(term[0]);
+            return isIdentChar(term[0]);
         }
     }
 
@@ -361,6 +363,16 @@ private:
             return false;
         return (token.startsWith('\''));
     }
+
+    bool isKeyword(const QString& token) const {
+        return mCppKeywords.contains(token);
+    }
+
+    bool tokenIsIdentifier(const QString& token) const {
+        //token won't be empty
+        return isIdentChar(token[0]);
+    }
+
     PStatement doParseEvalTypeInfo(
             const QString& fileName,
             const PStatement& scope,
@@ -402,10 +414,10 @@ private:
     void handleKeyword(KeywordType skipType);
     void handleLambda();
     void handleMethod(
+            StatementKind functionKind,
             const QString& sType,
             const QString& sName,
             int argStart,
-            int argEnd,
             bool isStatic,
             bool isFriend);
     void handleNamespace(KeywordType skipType);
@@ -415,7 +427,7 @@ private:
     bool handleStatement();
     void handleStructs(bool isTypedef = false);
     void handleUsing();
-    bool tryHandleVar();
+    void handleVar(const QString& typePrefix,bool isExtern,bool isStatic);
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(
@@ -443,8 +455,9 @@ private:
             int argEnd);
     QString splitPhrase(const QString& phrase, QString& sClazz,
                 QString& sOperator, QString &sMember);
+    QString removeTemplateParams(const QString& phrase);
 
-    QString removeArgNames(const QString& args);
+    bool splitLastMember(const QString& token, QString& lastMember, QString& remaining);
 
     bool isSpaceChar(const QChar& ch) const {
         return ch==' ' || ch =='\t';
@@ -457,7 +470,14 @@ private:
                 || ch == '&';
     }
 
-    bool isLetterChar(const QChar& ch) const {
+    bool isIdentifier(const QChar& ch) const {
+        return ch.isLetter()
+                || ch == '_'
+                || ch == '~'
+                ;
+    }
+
+    bool isIdentChar(const QChar& ch) const {
         return ch.isLetter()
                 || ch == '_';
     }
@@ -497,10 +517,6 @@ private:
         default:
             return false;
         }
-    }
-
-    bool isLeftParenthesis(const QString& text) const {
-        return text=="(";
     }
 
     /*';', '{', '}'*/
@@ -545,7 +561,7 @@ private:
         return ch=='\n' || ch=='\r';
     }
 
-    bool isNotFuncArgs(int startIndex, int endIndex);
+    bool isNotFuncArgs(int startIndex);
 
     /**
      * @brief Test if a statement is a class/struct/union/namespace/function
@@ -569,6 +585,8 @@ private:
     int indexOfNextLeftBrace(int index);
     int indexPassParenthesis(int index);
     int indexPassBraces(int index);
+    void skipNextSemicolon(int index);
+    void skipParenthesis(int index);
     QString mergeArgs(int startIndex, int endIndex);
     void parseCommandTypeAndArgs(QString& command,
                                  QString& typeSuffix,
