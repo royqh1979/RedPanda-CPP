@@ -74,6 +74,7 @@ enum class KeywordType {
     Namespace, //namespace
     Typedef, //typedef
     Using, //using
+    DeclType, // decltype
     None, // It's a keyword but don't process here
     NotKeyword
 };

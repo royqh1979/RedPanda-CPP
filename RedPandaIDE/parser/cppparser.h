@@ -222,7 +222,7 @@ private:
     bool checkForTypedefStruct();
     bool checkForUsing(KeywordType keywordType);
 
-    void checkAndHandleMethodOrVar();
+    void checkAndHandleMethodOrVar(KeywordType keywordType);
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
@@ -412,7 +412,7 @@ private:
     void handleEnum(bool isTypedef);
     void handleForBlock();
     void handleKeyword(KeywordType skipType);
-    void handleLambda();
+    void handleLambda(int index);
     void handleMethod(
             StatementKind functionKind,
             const QString& sType,
@@ -586,6 +586,7 @@ private:
     int indexPassParenthesis(int index);
     int indexPassBraces(int index);
     void skipNextSemicolon(int index);
+    void moveToNextBraceOrSkipNextSemicolon(int index);
     void skipParenthesis(int index);
     QString mergeArgs(int startIndex, int endIndex);
     void parseCommandTypeAndArgs(QString& command,

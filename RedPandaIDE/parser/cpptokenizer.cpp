@@ -34,6 +34,7 @@ void CppTokenizer::clear()
     mUnmatchedBraces.clear();
     mUnmatchedBrackets.clear();
     mUnmatchedParenthesis.clear();
+    mLambdas.clear();
 }
 
 void CppTokenizer::tokenize(const QStringList &buffer)
@@ -153,6 +154,8 @@ void CppTokenizer::addToken(const QString &sText, int iLine, TokenType tokenType
             mUnmatchedParenthesis.pop_back();
         }
         break;
+    case TokenType::LambdaCaptures:
+        mLambdas.push_back(mTokenList.count());
     default:
         break;
     }
@@ -570,18 +573,18 @@ void CppTokenizer::skipDoubleQuotes()
     }
 }
 
-void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QChar>& failChars)
+void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, bool keepLambda)
 {
     mCurrent++;
     while (*mCurrent != 0) {
-        if ((*mCurrent == '(') && !failChars.contains('(')) {
-            skipPair('(', ')', failChars);
-        } else if ((*mCurrent == '[') && !failChars.contains('[')) {
-            skipPair('[', ']', failChars);
-        } else if ((*mCurrent == '{') && !failChars.contains('{')) {
-            skipPair('{', '}', failChars);
+        if (*mCurrent == '(') {
+            skipPair('(', ')',keepLambda);
+        } else if (*mCurrent == '[') {
+            skipPair('[', ']',keepLambda);
+        } else if (*mCurrent == '{') {
+            skipPair('{', '}',keepLambda);
         } else if (*mCurrent ==  cStart) {
-            skipPair(cStart, cEnd, failChars);
+            skipPair(cStart, cEnd);
         } else if (*mCurrent == cEnd) {
             mCurrent++; // skip over end
             break;
@@ -743,6 +746,21 @@ void CppTokenizer::skipToNextToken()
 bool CppTokenizer::isIdentChar(const QChar &ch)
 {
     return ch=='_' || ch.isLetter() ;
+}
+
+int CppTokenizer::lambdasCount() const
+{
+    return mLambdas.count();
+}
+
+int CppTokenizer::indexOfFirstLambda() const
+{
+    return mLambdas.front();
+}
+
+void CppTokenizer::removeFirstLambda()
+{
+    mLambdas.pop_front();
 }
 
 void CppTokenizer::advance()

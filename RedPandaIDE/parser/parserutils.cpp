@@ -113,7 +113,6 @@ void initParser()
     CppKeywords.insert("__attribute",KeywordType::SkipNextParenthesis);
     CppKeywords.insert("alignas",KeywordType::SkipNextParenthesis);  // not right
     CppKeywords.insert("alignof",KeywordType::SkipNextParenthesis);  // not right
-    CppKeywords.insert("decltype",KeywordType::SkipNextParenthesis); // not right
     CppKeywords.insert("if",KeywordType::SkipNextParenthesis);
     CppKeywords.insert("sizeof",KeywordType::SkipNextParenthesis);
     CppKeywords.insert("switch",KeywordType::SkipNextParenthesis);
@@ -199,6 +198,8 @@ void initParser()
     CppKeywords.insert("using",KeywordType::Using);
     CppKeywords.insert("protected",KeywordType::Protected);
     CppKeywords.insert("friend",KeywordType::Friend);
+    CppKeywords.insert("decltype",KeywordType::DeclType); // not right
+
 
     // nullptr is value
     CppKeywords.insert("nullptr",KeywordType::None);

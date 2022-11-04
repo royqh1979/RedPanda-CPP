@@ -51,6 +51,10 @@ public:
     PToken operator[](int i);
     int tokenCount();
     bool isIdentChar(const QChar& ch);
+    int lambdasCount() const;
+    int indexOfFirstLambda() const;
+    void removeFirstLambda();
+
 private:
     void addToken(const QString& sText, int iLine, TokenType tokenType);
     void advance();
@@ -77,7 +81,7 @@ private:
     void simplifyArgs(QString& output);
     void skipAssignment();
     void skipDoubleQuotes();
-    void skipPair(const QChar& cStart, const QChar cEnd, const QSet<QChar>& failChars = QSet<QChar>());
+    void skipPair(const QChar& cStart, const QChar cEnd);
     bool skipAngleBracketPair();
     void skipRawString();
     void skipSingleQuote();
@@ -105,9 +109,10 @@ private:
     int mCurrentLine;
     QString mLastToken;
     TokenList mTokenList;
-    QList<int> mUnmatchedBraces; // stack of indices for unmatched '{'
-    QList<int> mUnmatchedBrackets; // stack of indices for unmatched '['
-    QList<int> mUnmatchedParenthesis;// stack of indices for unmatched '('
+    QList<int> mLambdas;
+    QVector<int> mUnmatchedBraces; // stack of indices for unmatched '{'
+    QVector<int> mUnmatchedBrackets; // stack of indices for unmatched '['
+    QVector<int> mUnmatchedParenthesis;// stack of indices for unmatched '('
 };
 
 using PCppTokenizer = std::shared_ptr<CppTokenizer>;
