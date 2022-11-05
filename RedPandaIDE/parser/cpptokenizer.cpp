@@ -245,9 +245,6 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
             case 0:
                 done = true;
                 break;
-            case '/':
-                advance();
-                break;
             case ':':
                 if (*(mCurrent + 1) == ':') {
                     countLines();
@@ -261,7 +258,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
                 } else {
                     countLines();
                     result = *mCurrent;
-                    advance();
+                    mCurrent++;
                     done = true;
                 }
                 break;
@@ -269,21 +266,21 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
                 *pTokenType=TokenType::LeftBrace;
                 countLines();
                 result = *mCurrent;
-                advance();
+                mCurrent++;
                 done = true;
                 break;
             case '}':
                 *pTokenType=TokenType::RightBrace;
                 countLines();
                 result = *mCurrent;
-                advance();
+                mCurrent++;
                 done = true;
                 break;
             case '(':
                 *pTokenType=TokenType::LeftParenthesis;
                 countLines();
                 result = *mCurrent;
-                advance();
+                mCurrent++;
                 done = true;
                 break;
             case '[':
@@ -296,40 +293,51 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
                     done = true;
                 } else {
                     skipPair('[',']'); // attribute, skipit
-                    advance();
                 }
                 break;
             case ')':
                 *pTokenType=TokenType::RightParenthesis;
                 countLines();
                 result = *mCurrent;
-                advance();
+                mCurrent++;
                 done = true;
                 break;
             case ';':
             case ',':   //just return the brace or the ';'
                 countLines();
                 result = *mCurrent;
-                advance();
+                mCurrent++;
                 done = true;
                 break;
             case '>':  // keep stream operators
                 if (*(mCurrent + 1) == '>') {
                   countLines();
                   result = ">>";
-                  advance();
+                  mCurrent+=2;
                   done = true;
                 } else
-                  advance();
+                  mCurrent+=1;
                 break;
             case '<':
                 if (*(mCurrent + 1) == '<') {
                     countLines();
                     result = "<<";
-                    advance();
+                    mCurrent+=2;
+                    done = true;
+                } else
+                    mCurrent+=1;
+                break;
+            case '=': {
+                int lastIndex=mTokenList.count()-2;
+                if (lastIndex>=0 && (mTokenList[lastIndex]->text=="using"
+                        || mTokenList[lastIndex]->text=="namespace")) {
+                    countLines();
+                    result = *mCurrent;
+                    mCurrent++;
                     done = true;
                 } else
                     advance();
+            }
                 break;
             default:
                 advance();
@@ -347,7 +355,8 @@ QString CppTokenizer::getNumber()
 
     if (isDigitChar(*mCurrent)) {
         while (isDigitChar(*mCurrent) || isHexChar(*mCurrent)) {
-            advance();
+            mCurrent++;
+            //advance();
         }
     }
 
@@ -754,7 +763,7 @@ void CppTokenizer::skipToEOL()
 void CppTokenizer::skipToNextToken()
 {
     while (isSpaceChar(*mCurrent) || isLineChar(*mCurrent))
-        advance();
+        mCurrent++;
 }
 
 bool CppTokenizer::isIdentChar(const QChar &ch)
@@ -787,20 +796,13 @@ void CppTokenizer::advance()
         skipSingleQuote();
         break;
     case '/':
-        if (*(mCurrent + 1) == '=')
+        if (*(mCurrent + 1) == '=') {
             skipAssignment();
-        else
+        } else
             mCurrent++;
         break;
     case '=': {
-        if (mTokenList.size()>=2
-                &&( mTokenList[mTokenList.size()-2]->text == "using"
-                    || mTokenList[mTokenList.size()-2]->text == "namespace")
-                ) {
-            addToken("=", mCurrentLine, TokenType::Normal);
-            mCurrent++;
-        } else
-            skipAssignment();
+        skipAssignment();
         break;
     }
     case '&':
