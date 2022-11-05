@@ -3255,6 +3255,14 @@
     <string>Ctrl+Alt+Down</string>
    </property>
   </action>
+  <action name="actionSwitchHeaderSource">
+   <property name="text">
+    <string>Switch header/source</string>
+   </property>
+   <property name="toolTip">
+    <string>Switch Header/Source</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

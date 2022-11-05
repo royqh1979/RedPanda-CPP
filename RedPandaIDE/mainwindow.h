@@ -290,6 +290,7 @@ private:
     void setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit);
 
     void reparseNonProjectEditors();
+    QString switchHeaderSourceTarget(Editor *editor);
 
 private slots:
     void onProjectViewNodeRenamed();
@@ -731,6 +732,8 @@ private slots:
     void on_actionGoto_block_start_triggered();
 
     void on_actionGoto_block_end_triggered();
+
+    void on_actionSwitchHeaderSource_triggered();
 
 private:
     Ui::MainWindow *ui;
