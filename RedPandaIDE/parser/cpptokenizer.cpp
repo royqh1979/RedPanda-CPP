@@ -328,16 +328,36 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
                     mCurrent+=1;
                 break;
             case '=': {
-                int lastIndex=mTokenList.count()-2;
-                if (lastIndex>=0 && (mTokenList[lastIndex]->text=="using"
-                        || mTokenList[lastIndex]->text=="namespace")) {
+                if (*(mCurrent+1)=='=') {
+                    // skip '=='
+                    skipAssignment();
+                } else {
                     countLines();
-                    result = *mCurrent;
-                    mCurrent++;
+                    mCurrent+=1;
+                    result = "=";
                     done = true;
-                } else
-                    advance();
+                }
+                break;
             }
+                break;
+            case '!':
+                if (*(mCurrent+1)=='=') {
+                    skipAssignment();
+                } else
+                    mCurrent++;
+                break;
+            case '/':
+            case '%':
+            case '&':
+            case '*':
+            case '|':
+            case '+':
+            case '-':
+            case '~':
+                if (*(mCurrent + 1) == '=') {
+                    skipAssignment();
+                } else
+                    mCurrent++;
                 break;
             default:
                 advance();
@@ -795,39 +815,20 @@ void CppTokenizer::advance()
     case '\'':
         skipSingleQuote();
         break;
-    case '/':
-        if (*(mCurrent + 1) == '=') {
-            skipAssignment();
-        } else
-            mCurrent++;
-        break;
-    case '=': {
-        skipAssignment();
-        break;
-    }
-    case '&':
-    case '*':
-    case '!':
-    case '|':
-    case '+':
-    case '-':
-    case '~':
-        if (*(mCurrent + 1) == '=')
-            skipAssignment();
-        else
-            mCurrent++;
-        break;
     case '\\':
         if (isLineChar(*(mCurrent + 1)))
             skipSplitLine();
         else
             mCurrent++;
         break;
-    default:
-        if ((*mCurrent == 'R') && (*(mCurrent+1) == '"'))
+    case 'R':
+        if (*(mCurrent+1) == '"')
             skipRawString();
         else
             mCurrent++;
+        break;
+    default:
+        mCurrent++;
     }
 }
 

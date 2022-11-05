@@ -372,6 +372,14 @@ private:
         return isIdentChar(token[0]);
     }
 
+    bool tokenIsTypeOrNonKeyword(const QString& token) const {
+        return tokenIsIdentifier(token) &&
+                (mCppTypeKeywords.contains(token)
+                 || !mCppKeywords.contains(token)
+                 || token=="const");
+
+    }
+
     PStatement doParseEvalTypeInfo(
             const QString& fileName,
             const PStatement& scope,
@@ -411,7 +419,7 @@ private:
     void handleEnum(bool isTypedef);
     void handleForBlock();
     void handleKeyword(KeywordType skipType);
-    void handleLambda(int index);
+    void handleLambda(int index, int endIndex);
     void handleMethod(
             StatementKind functionKind,
             const QString& sType,
@@ -577,14 +585,15 @@ private:
 
     void updateSerialId();
 
-    int indexOfNextSemicolon(int index);
+    int indexOfNextSemicolon(int index, int endIndex=-1);
     int indexOfNextSemicolonOrLeftBrace(int index);
     int indexOfNextColon(int index);
     int indexOfNextLeftBrace(int index);
     int indexPassParenthesis(int index);
     int indexPassBraces(int index);
+    int skipAssignment(int index, int endIndex);
     void skipNextSemicolon(int index);
-    void moveToNextBraceOrSkipNextSemicolon(int index);
+    int moveToNextBraceOrSkipNextSemicolon(int index, bool checkLambda, int endIndex=-1);
     void skipParenthesis(int index);
     QString mergeArgs(int startIndex, int endIndex);
     void parseCommandTypeAndArgs(QString& command,
