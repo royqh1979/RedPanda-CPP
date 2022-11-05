@@ -1,8 +1,8 @@
 Red Panda C++ Version 2.2
 
-  - enhancement: basic code completion support for C++ lambda
+  - enhancement: basic code completion support for C++ lambdas
   - enhancement: slightly reduce parsing time
-  - fix: Wrong charset name returned when saveing file
+  - fix: Wrong charset name returned when saving file
   - fix: 'using =' / 'namespace =' not correctly handled
   - fix: Pressing '*' at begin of line will crash app
 

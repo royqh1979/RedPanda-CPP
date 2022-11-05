@@ -113,7 +113,9 @@ void CppTokenizer::addToken(const QString &sText, int iLine, TokenType tokenType
     PToken token = std::make_shared<Token>();
     token->text = sText;
     token->line = iLine;
+#ifdef Q_DEBUG
     token->matchIndex = 1000000000;
+#endif
     switch(tokenType) {
     case TokenType::LeftBrace:
         token->matchIndex=-1;
@@ -573,16 +575,16 @@ void CppTokenizer::skipDoubleQuotes()
     }
 }
 
-void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, bool keepLambda)
+void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd)
 {
     mCurrent++;
     while (*mCurrent != 0) {
         if (*mCurrent == '(') {
-            skipPair('(', ')',keepLambda);
+            skipPair('(', ')');
         } else if (*mCurrent == '[') {
-            skipPair('[', ']',keepLambda);
+            skipPair('[', ']');
         } else if (*mCurrent == '{') {
-            skipPair('{', '}',keepLambda);
+            skipPair('{', '}');
         } else if (*mCurrent ==  cStart) {
             skipPair(cStart, cEnd);
         } else if (*mCurrent == cEnd) {
@@ -603,8 +605,6 @@ void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, bool keepLamb
                 skipSingleQuote(); // don't do it inside AnsiString!
             else
                 mCurrent++;
-        } else if (failChars.contains(*mCurrent)) {
-            break;
         } else {
             mCurrent++;
         }
@@ -614,26 +614,40 @@ void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, bool keepLamb
 bool CppTokenizer::skipAngleBracketPair()
 {
     QChar* backup=mCurrent;
-    int level=0;
+    QVector<QChar> stack;
     while (*mCurrent != '\0') {
         switch((*mCurrent).unicode()) {
         case '<':
         case '(':
         case '[':
-            level++;
+            stack.push_back(*mCurrent);
             break;
         case ')':
-        case ']':
-            level--;
-            if (level==0) {
+            while (!stack.isEmpty() && stack.back()!='(') {
+                stack.pop_back();
+            }
+            //pop up '('
+            if (stack.isEmpty()) {
                 mCurrent=backup;
                 return false;
             }
+            stack.pop_back();
+            break;
+        case ']':
+            while (!stack.isEmpty() && stack.back()!='[')
+                stack.pop_back();
+            //pop up '['
+            if (stack.isEmpty()) {
+                mCurrent=backup;
+                return false;
+            }
+            stack.pop_back();
             break;
         case '>':
-            level--;
-            if (level==0) {
-                mCurrent++; //skip over >
+            if (stack.back()=='<')
+                stack.pop_back();
+            if (stack.isEmpty()) {
+                mCurrent++;
                 return true;
             }
             break;
@@ -766,9 +780,11 @@ void CppTokenizer::removeFirstLambda()
 void CppTokenizer::advance()
 {
     switch(mCurrent->unicode()) {
-    case '\"': skipDoubleQuotes();
+    case '\"':
+        skipDoubleQuotes();
         break;
-    case '\'': skipSingleQuote();
+    case '\'':
+        skipSingleQuote();
         break;
     case '/':
         if (*(mCurrent + 1) == '=')

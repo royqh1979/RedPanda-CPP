@@ -216,7 +216,6 @@ private:
     bool checkForPreprocessor();
 //    bool checkForLambda();
     bool checkForScope(KeywordType keywordType);
-    void checkForSkipStatement();
     bool checkForStructs(KeywordType keywordType);
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
@@ -451,8 +450,7 @@ private:
 //    }
     void scanMethodArgs(
             const PStatement& functionStatement,
-            int argStart,
-            int argEnd);
+            int argStart);
     QString splitPhrase(const QString& phrase, QString& sClazz,
                 QString& sOperator, QString &sMember);
     QString removeTemplateParams(const QString& phrase);
@@ -608,9 +606,6 @@ private:
     QVector<PStatement> mCurrentScope;
     QVector<StatementClassScope> mCurrentClassScope;
 
-//  the start index in tokens to skip to ; when parsing typedef struct we need to skip
-//   the names after the closing bracket because we have processed it
-    QVector<int> mSkipList; // TList<Integer>
     StatementClassScope mClassScope;
     StatementModel mStatementList;
     //It's used in preprocessor, so we can't use fIncludeList instead

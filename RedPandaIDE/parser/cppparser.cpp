@@ -957,7 +957,6 @@ void CppParser::resetParser()
 
         mCurrentScope.clear();
         mCurrentClassScope.clear();
-        mSkipList.clear();
         mStatementList.clear();
 
         mProjectFiles.clear();
@@ -1460,15 +1459,19 @@ void CppParser::removeScopeLevel(int line)
 //        qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
     PStatement currentScope = getCurrentScope();
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
-    if (currentScope && (currentScope->kind == StatementKind::skBlock)) {
-        if (currentScope->children.isEmpty()) {
-            // remove no children block
-            if (fileIncludes) {
-                fileIncludes->scopes.removeLastScope();
+    if (currentScope) {
+        if (currentScope->kind == StatementKind::skBlock) {
+            if (currentScope->children.isEmpty()) {
+                // remove no children block
+                if (fileIncludes) {
+                    fileIncludes->scopes.removeLastScope();
+                }
+                mStatementList.deleteStatement(currentScope);
+            } else {
+                fileIncludes->statements.insert(currentScope->fullName,currentScope);
             }
-            mStatementList.deleteStatement(currentScope);
-        } else {
-            fileIncludes->statements.insert(currentScope->fullName,currentScope);
+        } else if (currentScope->kind == StatementKind::skClass) {
+            mIndex=indexOfNextSemicolon(mIndex);
         }
     }
     mCurrentScope.pop_back();
@@ -1494,7 +1497,6 @@ void CppParser::internalClear()
     mCurrentClassScope.clear();
     mIndex = 0;
     mClassScope = StatementClassScope::None;
-    mSkipList.clear();
     mBlockBeginSkips.clear();
     mBlockEndSkips.clear();
     mInlineNamespaceEndSkips.clear();
@@ -1727,14 +1729,6 @@ bool CppParser::checkForScope(KeywordType keywordType)
             && mIndex+1 < mTokenizer.tokenCount()
             && mTokenizer[mIndex + 1]->text == ':'
                 );
-}
-
-void CppParser::checkForSkipStatement()
-{
-    if ((mSkipList.count()>0) && (mIndex == mSkipList.back())) { // skip to next ';'
-        skipNextSemicolon(mIndex);
-        mSkipList.pop_back();
-    }
 }
 
 bool CppParser::checkForStructs(KeywordType keywordType)
@@ -2181,7 +2175,7 @@ void CppParser::handleCatchBlock()
                 true,
                 false);
     addSoloScopeLevel(block,startLine);
-    scanMethodArgs(block,mIndex, mTokenizer[mIndex]->matchIndex);
+    scanMethodArgs(block,mIndex);
     mIndex=mTokenizer[mIndex]->matchIndex+1;
 }
 
@@ -2450,8 +2444,9 @@ void CppParser::handleKeyword(KeywordType skipType)
 void CppParser::handleLambda(int index)
 {
     Q_ASSERT(mTokenizer[index]->text.startsWith('['));
+    Q_ASSERT(mTokenizer[index+1]->text.startsWith('('));
     int startLine=mTokenizer[index]->line;
-    int argStart=index;
+    int argStart=index+1;
     int argEnd= mTokenizer[argStart]->matchIndex;
     int blockLine=mTokenizer[argStart]->line;
     //TODO: parse captures
@@ -2473,7 +2468,7 @@ void CppParser::handleLambda(int index)
                 StatementClassScope::None,
                 true,
                 false);
-    scanMethodArgs(lambdaBlock,argStart,argEnd);
+    scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,blockLine);
 }
 
@@ -2536,7 +2531,6 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
         scopeStatement->friends.insert(scopelessName);
     } else if (isValid) {
         // Use the class the function belongs to as the parent ID if the function is declared outside of the class body
-        int delimPos = sName.lastIndexOf("::");
         QString scopelessName;
         QString parentClassName;
         if (splitLastMember(sName,scopelessName,parentClassName)) {
@@ -2563,7 +2557,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         mClassScope,
                         true,
                         isStatic);
-            scanMethodArgs(functionStatement, argStart,argEnd);
+            scanMethodArgs(functionStatement, argStart);
             // add variable this to the class function
             if (scopeStatement && scopeStatement->kind == StatementKind::skClass &&
                     !isStatic) {
@@ -3031,10 +3025,10 @@ bool CppParser::handleStatement()
     }
     Q_ASSERT(mIndex<999999);
 
-    while (mTokenizer.lambdasCount()>0 && mTokenizer.indexOfFirstLambda()<mIndex) {
-        handleLambda(mTokenizer.indexOfFirstLambda());
-        mTokenizer.removeFirstLambda();
-    }
+//    while (mTokenizer.lambdasCount()>0 && mTokenizer.indexOfFirstLambda()<mIndex) {
+//        handleLambda(mTokenizer.indexOfFirstLambda());
+//        mTokenizer.removeFirstLambda();
+//    }
 //    else if (checkForMethod(funcType, funcName, argStart,argEnd, isStatic, isFriend)) {
 //        handleMethod(funcType, funcName, argStart, argEnd, isStatic, isFriend); // don't recalculate parts
 //    } else if (tryHandleVar()) {
@@ -3043,7 +3037,7 @@ bool CppParser::handleStatement()
 //        mIndex++;
 
     //todo: remove mSkipList (we can check '}''s statement type instead)
-    checkForSkipStatement();
+//    checkForSkipStatement();
 
     return mIndex < mTokenizer.tokenCount();
 
@@ -3210,7 +3204,6 @@ void CppParser::handleStructs(bool isTypedef)
                         mTokenizer[i + 1]->text.front() == ';'
                         || mTokenizer[i + 1]->text.front() ==  '}')) {
                 // When encountering names again after struct body scanning, skip it
-                mSkipList.append(i+1); // add first name to skip statement so that we can skip it until the next ;
                 QString command = "";
                 QString args = "";
 
@@ -3599,7 +3592,7 @@ void CppParser::internalParse(const QString &fileName)
 
         QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+//        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
 //        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
@@ -3613,7 +3606,7 @@ void CppParser::internalParse(const QString &fileName)
         if (mTokenizer.tokenCount() == 0)
             return;
 #ifdef QT_DEBUG
-        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+//        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
         // Process the token list
         while(true) {
@@ -3621,8 +3614,8 @@ void CppParser::internalParse(const QString &fileName)
                 break;
         }
 #ifdef QT_DEBUG
-        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
         //reduce memory usage
         internalClear();
@@ -4637,8 +4630,10 @@ int CppParser::calcKeyLenForStruct(const QString &word)
     return -1;
 }
 
-void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart, int argEnd)
+void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart)
 {
+    Q_ASSERT(mTokenizer[argStart]->text=='(');
+    int argEnd=mTokenizer[argStart]->matchIndex;
     int paramStart = argStart+1;
     int i = paramStart ; // assume it starts with ( and ends with )
     // Keep going and stop on top of the variable name
