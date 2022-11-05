@@ -208,7 +208,7 @@ void ASResource::buildAssignmentOperators(vector<const string*>* assignmentOpera
 	assignmentOperators->emplace_back(&AS_LS_LS_LS_ASSIGN);
 
 	assert(assignmentOperators->size() < elements);
-	sort(assignmentOperators->begin(), assignmentOperators->end(), sortOnLength);
+    sort(assignmentOperators->begin(), assignmentOperators->end(), sortOnLength);
 }
 
 /**
@@ -228,7 +228,7 @@ void ASResource::buildCastOperators(vector<const string*>* castOperators)
 	castOperators->emplace_back(&AS_STATIC_CAST);
 
 	assert(castOperators->size() < elements);
-	sort(castOperators->begin(), castOperators->end(), sortOnName);
+    sort(castOperators->begin(), castOperators->end(), sortOnName);
 }
 
 /**
@@ -295,7 +295,7 @@ void ASResource::buildHeaders(vector<const string*>* headers, int fileType, bool
 	}
 
 	assert(headers->size() < elements);
-	sort(headers->begin(), headers->end(), sortOnName);
+    sort(headers->begin(), headers->end(), sortOnName);
 }
 
 /**
@@ -369,7 +369,7 @@ void ASResource::buildNonAssignmentOperators(vector<const string*>* nonAssignmen
 	nonAssignmentOperators->emplace_back(&AS_LAMBDA);
 
 	assert(nonAssignmentOperators->size() < elements);
-	sort(nonAssignmentOperators->begin(), nonAssignmentOperators->end(), sortOnLength);
+    sort(nonAssignmentOperators->begin(), nonAssignmentOperators->end(), sortOnLength);
 }
 
 /**
@@ -425,7 +425,7 @@ void ASResource::buildNonParenHeaders(vector<const string*>* nonParenHeaders, in
 	}
 
 	assert(nonParenHeaders->size() < elements);
-	sort(nonParenHeaders->begin(), nonParenHeaders->end(), sortOnName);
+    sort(nonParenHeaders->begin(), nonParenHeaders->end(), sortOnName);
 }
 
 /**
@@ -489,7 +489,7 @@ void ASResource::buildOperators(vector<const string*>* operators, int fileType)
 	}
 
 	assert(operators->size() < elements);
-	sort(operators->begin(), operators->end(), sortOnLength);
+    sort(operators->begin(), operators->end(), sortOnLength);
 }
 
 /**
@@ -527,7 +527,7 @@ void ASResource::buildPreBlockStatements(vector<const string*>* preBlockStatemen
 	}
 
 	assert(preBlockStatements->size() < elements);
-	sort(preBlockStatements->begin(), preBlockStatements->end(), sortOnName);
+    sort(preBlockStatements->begin(), preBlockStatements->end(), sortOnName);
 }
 
 /**
@@ -567,7 +567,7 @@ void ASResource::buildPreCommandHeaders(vector<const string*>* preCommandHeaders
 	}
 
 	assert(preCommandHeaders->size() < elements);
-	sort(preCommandHeaders->begin(), preCommandHeaders->end(), sortOnName);
+    sort(preCommandHeaders->begin(), preCommandHeaders->end(), sortOnName);
 }
 
 /**
@@ -604,7 +604,7 @@ void ASResource::buildPreDefinitionHeaders(vector<const string*>* preDefinitionH
 	}
 
 	assert(preDefinitionHeaders->size() < elements);
-	sort(preDefinitionHeaders->begin(), preDefinitionHeaders->end(), sortOnName);
+    sort(preDefinitionHeaders->begin(), preDefinitionHeaders->end(), sortOnName);
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

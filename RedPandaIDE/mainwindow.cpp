@@ -7963,7 +7963,7 @@ void MainWindow::on_actionNew_Class_triggered()
 {
     if (!mProject)
         return;
-    NewClassDialog dialog;
+    NewClassDialog dialog(mProject->cppParser());
     dialog.setPath(mProject->folder());
     if (dialog.exec()==QDialog::Accepted) {
         QDir dir(dialog.path());
@@ -7997,7 +7997,14 @@ void MainWindow::on_actionNew_Class_triggered()
         header.append(QString("#ifndef %1").arg(header_macro));
         header.append(QString("#define %1").arg(header_macro));
         header.append("");
-        header.append(QString("class %1 {").arg(dialog.className()));
+        if (dialog.baseClass()) {
+            header.append(QString("#include \"%1\"").arg(extractRelativePath(mProject->directory(),
+                                                                             dialog.baseClass()->fileName)));
+            header.append("");
+            header.append(QString("class %1 : public %2 {").arg(dialog.className(),
+                                                                dialog.baseClass()->fullName));
+        } else
+            header.append(QString("class %1 {").arg(dialog.className()));
         header.append("public:");
         header.append("");
         header.append("private:");

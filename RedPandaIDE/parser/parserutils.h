@@ -149,7 +149,7 @@ using StatementMap = QMultiMap<QString, PStatement>;
 struct Statement {
 //    Statement();
 //    ~Statement();
-    std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
+    std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, use weak pointer to prevent circular reference
     QString type; // type "int"
     QString command; // identifier/name of statement "foo"
     QString args; // args "(int a,float b)"

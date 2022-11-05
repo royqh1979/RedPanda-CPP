@@ -5,7 +5,8 @@ Red Panda C++ Version 2.2
   - fix: Wrong charset name returned when saving file
   - fix: 'using =' / 'namespace =' not correctly handled
   - fix: Pressing '*' at begin of line will crash app
-  - enhancement: switch header/source
+  - enhancement: switch header/source in editor's context menu
+  - enhancement: base class dropdown list in new class dialog now works 
 
 Red Panda C++ Version 2.1
 
