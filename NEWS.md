@@ -7,6 +7,8 @@ Red Panda C++ Version 2.2
   - fix: Pressing '*' at begin of line will crash app
   - enhancement: switch header/source in editor's context menu
   - enhancement: base class dropdown list in new class dialog now works 
+  - fix: Edting / show context menu when code analysis is turned on may crash app.
+  - fix: Show context menu when edting non c/c++ file may crash app.
 
 Red Panda C++ Version 2.1
 

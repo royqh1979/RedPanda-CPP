@@ -4424,10 +4424,12 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         //mouse on editing area
         menu.addAction(ui->actionCompile_Run);
         menu.addAction(ui->actionDebug);
-        menu.addSeparator();
-        menu.addAction(ui->actionGoto_Declaration);
-        menu.addAction(ui->actionGoto_Definition);
-        menu.addAction(ui->actionFind_references);
+        if (editor->parser() && editor->parser()->enabled()) {
+            menu.addSeparator();
+            menu.addAction(ui->actionGoto_Declaration);
+            menu.addAction(ui->actionGoto_Definition);
+            menu.addAction(ui->actionFind_references);
+        }
 
         menu.addSeparator();
         menu.addAction(ui->actionOpen_Containing_Folder);
@@ -4454,9 +4456,11 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionFile_Properties);
 
         //these actions needs parser
-        ui->actionGoto_Declaration->setEnabled(!editor->parser()->parsing());
-        ui->actionGoto_Definition->setEnabled(!editor->parser()->parsing());
-        ui->actionFind_references->setEnabled(!editor->parser()->parsing());
+        if (editor->parser() && editor->parser()->enabled()) {
+            ui->actionGoto_Declaration->setEnabled(!editor->parser()->parsing());
+            ui->actionGoto_Definition->setEnabled(!editor->parser()->parsing());
+            ui->actionFind_references->setEnabled(!editor->parser()->parsing());
+        }
     } else {
         //mouse on gutter
 
