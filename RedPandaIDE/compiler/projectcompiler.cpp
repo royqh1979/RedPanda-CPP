@@ -210,6 +210,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
         cCompileArguments += " -D__DEBUG__";
         cppCompileArguments+= " -D__DEBUG__";
     }
+
     writeln(file,"CPP      = " + extractFileName(compilerSet()->cppCompiler()));
     writeln(file,"CC       = " + extractFileName(compilerSet()->CCompiler()));
 #ifdef Q_OS_WIN
@@ -407,9 +408,10 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     }
                 } else if (unit->encoding()==ENCODING_SYSTEM_DEFAULT) {
                     sourceEncoding = defaultSystemEncoding;
-                } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()
-                           && unit->encoding()!=targetEncoding) {
+                } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()) {
                     sourceEncoding = unit->encoding();
+                } else {
+                    sourceEncoding = targetEncoding;
                 }
 
                 if (sourceEncoding!=targetEncoding) {
@@ -421,14 +423,14 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 
             if (mOnlyCheckSyntax) {
                 if (unit->compileCpp())
-                    writeln(file, "\t$(CPP) -c " + genMakePath1(unit->fileName()) + " $(CXXFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " $(CXXFLAGS) " + encodingStr);
                 else
-                    writeln(file, "\t(CC) -c " + genMakePath1(unit->fileName()) + " $(CFLAGS) " + encodingStr);
+                    writeln(file, "\t(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
             } else {
                 if (unit->compileCpp())
-                    writeln(file, "\t$(CPP) -c " + genMakePath1(unit->fileName()) + " -o " + ObjFileName2 + " $(CXXFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName2 + " $(CXXFLAGS) " + encodingStr);
                 else
-                    writeln(file, "\t$(CC) -c " + genMakePath1(unit->fileName()) + " -o " + ObjFileName2 + " $(CFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName2 + " $(CFLAGS) " + encodingStr);
             }
         }
     }
@@ -526,16 +528,29 @@ bool ProjectCompiler::prepareForCompile()
     buildMakeFile();
 
     mCompiler = compilerSet()->make();
+
+    QString parallelParam;
+    if (mProject->options().allowParallelBuilding) {
+        if (mProject->options().parellelBuildingJobs==0) {
+            parallelParam = " --jobs";
+        } else {
+            parallelParam = QString(" -j%1").arg(mProject->options().parellelBuildingJobs);
+        }
+    }
+
     if (mOnlyClean) {
-        mArguments = QString("-f \"%1\" clean").arg(extractRelativePath(
+        mArguments = QString(" %1 -f \"%2\" clean").arg(parallelParam,
+                                                        extractRelativePath(
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
     } else if (mRebuild) {
-        mArguments = QString("-f \"%1\" clean all").arg(extractRelativePath(
+        mArguments = QString(" %1 -f \"%2\" clean all").arg(parallelParam,
+                                                            extractRelativePath(
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
     } else {
-        mArguments = QString("-f \"%1\" all").arg(extractRelativePath(
+        mArguments = QString(" %1 -f \"%2\" all").arg(parallelParam,
+                                                      extractRelativePath(
                                                       mProject->directory(),
                                                       mProject->makeFileName()));
     }

@@ -20,6 +20,10 @@
 #include "../project.h"
 #include "../iconsmanager.h"
 
+#ifdef Q_OS_WIN
+#include <sysinfoapi.h>
+#endif
+
 #include <QFileDialog>
 
 ProjectCompileParamatersWidget::ProjectCompileParamatersWidget(const QString &name, const QString &group, QWidget *parent) :
@@ -27,6 +31,11 @@ ProjectCompileParamatersWidget::ProjectCompileParamatersWidget(const QString &na
     ui(new Ui::ProjectCompileParamatersWidget)
 {
     ui->setupUi(this);
+#ifdef Q_OS_WIN
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    ui->spinParallelJobs->setMaximum(info.dwNumberOfProcessors);
+#endif
 }
 
 ProjectCompileParamatersWidget::~ProjectCompileParamatersWidget()
@@ -39,6 +48,8 @@ void ProjectCompileParamatersWidget::doLoad()
     ui->txtCCompiler->setPlainText(pMainWindow->project()->options().compilerCmd);
     ui->txtCPPCompiler->setPlainText(pMainWindow->project()->options().cppCompilerCmd);
     ui->txtLinker->setPlainText(pMainWindow->project()->options().linkerCmd);
+    ui->grpAllowParallelBuilding->setChecked(pMainWindow->project()->options().allowParallelBuilding);
+    ui->spinParallelJobs->setValue(pMainWindow->project()->options().parellelBuildingJobs);
 }
 
 void ProjectCompileParamatersWidget::doSave()
@@ -46,6 +57,8 @@ void ProjectCompileParamatersWidget::doSave()
     pMainWindow->project()->options().compilerCmd = ui->txtCCompiler->toPlainText();
     pMainWindow->project()->options().cppCompilerCmd = ui->txtCPPCompiler->toPlainText();
     pMainWindow->project()->options().linkerCmd = ui->txtLinker->toPlainText();
+    pMainWindow->project()->options().allowParallelBuilding = ui->grpAllowParallelBuilding->isChecked();
+    pMainWindow->project()->options().parellelBuildingJobs = ui->spinParallelJobs->value();
     pMainWindow->project()->saveOptions();
 }
 

@@ -97,6 +97,14 @@ void CppParser::addIncludePath(const QString &value)
     mPreprocessor.addIncludePath(includeTrailingPathDelimiter(value));
 }
 
+void CppParser::removeProjectFile(const QString &value)
+{
+    QMutexLocker locker(&mMutex);
+
+    mProjectFiles.remove(value);
+    mFilesToScan.remove(value);
+}
+
 void CppParser::addProjectIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
@@ -1126,7 +1134,6 @@ void CppParser::addFileToScan(const QString& value, bool inProject)
     if (!mPreprocessor.scannedFiles().contains(value)) {
         mFilesToScan.insert(value);
     }
-
 }
 
 PStatement CppParser::addInheritedStatement(const PStatement& derived, const PStatement& inherit, StatementClassScope access)
@@ -4719,8 +4726,8 @@ QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
     QSet<QString> result;
     result.insert(fileName);
     foreach (const QString& file, mProjectFiles) {
-        PFileIncludes fileIncludes = mPreprocessor.includesList()[file];
-        if (fileIncludes->includeFiles.contains(fileName)) {
+        PFileIncludes fileIncludes = mPreprocessor.includesList().value(file,PFileIncludes());
+        if (fileIncludes && fileIncludes->includeFiles.contains(fileName)) {
             result.insert(file);
         }
     }

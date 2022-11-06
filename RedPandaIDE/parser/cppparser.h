@@ -36,6 +36,7 @@ public:
     void addHardDefineByLine(const QString& line);
     void addFileToScan(const QString& value, bool inProject = false);
     void addIncludePath(const QString& value);
+    void removeProjectFile(const QString& value);
     void addProjectIncludePath(const QString& value);
     void clearIncludePaths();
     void clearProjectIncludePaths();

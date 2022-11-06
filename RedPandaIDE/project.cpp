@@ -699,13 +699,20 @@ void Project::renameUnit(PProjectUnit& unit, const QString &sFileName)
         return;
     if (sFileName.compare(unit->fileName(),PATH_SENSITIVITY)==0)
         return;
-
+    if (mParser) {
+        mParser->removeProjectFile(unit->fileName());
+        mParser->addFileToScan(sFileName,true);
+    }
     Editor * editor=unitEditor(unit);
     if (editor) {
         //prevent recurse
         editor->saveAs(sFileName,true);
     } else {
+        if (mParser)
+            mParser->invalidateFile(unit->fileName());
         copyFile(unit->fileName(),sFileName,true);
+        if (mParser)
+            mParser->parseFile(sFileName,true);
     }
     removeUnit(unit,false,true);
     PProjectModelNode parentNode = unit->node()->parent.lock();
@@ -1135,6 +1142,10 @@ void Project::saveOptions()
     ini.SetValue("Project","Encoding",toByteArray(mOptions.encoding));
     ini.SetLongValue("Project","ModelType", (int)mOptions.modelType);
     ini.SetLongValue("Project","ClassBrowserType", (int)mOptions.classBrowserType);
+    ini.SetBoolValue("Project","AllowParallelBuilding",mOptions.allowParallelBuilding);
+    ini.SetLongValue("Project","ParellelBuildingJobs",mOptions.parellelBuildingJobs);
+
+
     //for Red Panda Dev C++ 6 compatibility
     ini.SetLongValue("Project","UseUTF8",mOptions.encoding == ENCODING_UTF8);
 
@@ -2055,6 +2066,10 @@ void Project::loadOptions(SimpleIni& ini)
         } else {
             mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_AUTO_DETECT));
         }
+
+        mOptions.allowParallelBuilding = ini.GetBoolValue("Project","AllowParallelBuilding");
+        mOptions.parellelBuildingJobs = ini.GetLongValue("Project","ParellelBuildingJobs");
+
 
         mOptions.versionInfo.major = ini.GetLongValue("VersionInfo", "Major", 0);
         mOptions.versionInfo.minor = ini.GetLongValue("VersionInfo", "Minor", 1);

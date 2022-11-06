@@ -6354,7 +6354,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
         PProjectModelNode folderNode =  mProject->pointerToNode(node);
         foreach (const QString& filename, dialog.selectedFiles()) {
             PProjectUnit newUnit = mProject->addUnit(filename,folderNode);
-            mProject->cppParser()->addFileToScan(filename);
+            mProject->cppParser()->addFileToScan(filename,true);
             QString branch;
             if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
                 QString output;
@@ -6372,6 +6372,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
                 }
             }
         }
+        mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
         mProject->saveAll();
         updateProjectView();
         parseFileList(mProject->cppParser());
@@ -6399,8 +6400,15 @@ void MainWindow::on_actionRemove_from_project_triggered()
         if (!folderNode)
             continue;
         PProjectUnit unit = folderNode->pUnit.lock();
+        if (mProject->cppParser()) {
+            mProject->cppParser()->invalidateFile(unit->fileName());
+            mProject->cppParser()->removeProjectFile(unit->fileName());
+        }
         mProject->removeUnit(unit, true, removeFile);
     };
+    mClassBrowserModel.beginUpdate();
+    mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
+    mClassBrowserModel.endUpdate();
     ui->projectView->selectionModel()->clearSelection();
     mProject->saveAll();
     updateProjectView();
@@ -6708,6 +6716,9 @@ void MainWindow::newProjectUnitFile()
     setProjectViewCurrentUnit(newUnit);
 
     mProject->saveAll();
+    if (mProject->cppParser())
+        mProject->cppParser()->addFileToScan(newFileName,true);
+    mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
     Editor * editor = mProject->openUnit(newUnit, false);
     if (editor)
         editor->activate();
@@ -6837,6 +6848,7 @@ QString MainWindow::switchHeaderSourceTarget(Editor *editor)
 
 void MainWindow::onProjectViewNodeRenamed()
 {
+    mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
     updateProjectView();
 }
 
@@ -7950,8 +7962,11 @@ void MainWindow::on_actionNew_Header_triggered()
         stringsToFile(header, headerFilename);
 
         PProjectUnit newUnit=mProject->addUnit(headerFilename,mProject->rootNode());
-        mProject->cppParser()->addFileToScan(headerFilename);
         mProject->saveAll();
+
+        mProject->cppParser()->addFileToScan(headerFilename,true);
+        mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
+
         parseFileList(mProject->cppParser());
         setProjectViewCurrentUnit(newUnit);
         updateProjectView();
@@ -8024,12 +8039,16 @@ void MainWindow::on_actionNew_Class_triggered()
         stringsToFile(source, sourceFilename);
 
         PProjectUnit newUnit=mProject->addUnit(headerFilename,mProject->rootNode());
-        mProject->cppParser()->addFileToScan(headerFilename);
+
         setProjectViewCurrentUnit(newUnit);
         newUnit=mProject->addUnit(sourceFilename,mProject->rootNode());
-        mProject->cppParser()->addFileToScan(sourceFilename);
         setProjectViewCurrentUnit(newUnit);
         mProject->saveAll();
+
+        mProject->cppParser()->addFileToScan(sourceFilename,true);
+        mProject->cppParser()->addFileToScan(headerFilename,true);
+        mClassBrowserModel.setCurrentFiles(mProject->unitFiles());
+
         parseFileList(mProject->cppParser());
         updateProjectView();
 

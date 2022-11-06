@@ -422,6 +422,8 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename)
 
 bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList &buffer)
 {
+    if (pMainWindow->isQuitting())
+        return false;
     Editor * e= getOpenedEditorByFilename(filename);
     if (!e)
         return false;

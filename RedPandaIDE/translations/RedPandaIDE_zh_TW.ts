@@ -4915,10 +4915,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Additional build options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>C Compiler</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4936,6 +4932,14 @@
     </message>
     <message>
         <source>Library Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Parallel Build</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Parallel Jobs(0 means infinite):</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -5103,7 +5103,7 @@
     </message>
     <message>
         <source>Additional build options:</source>
-        <translation>Opções de montagem adicionais:</translation>
+        <translation type="vanished">Opções de montagem adicionais:</translation>
     </message>
     <message>
         <source>C Compiler</source>
@@ -5124,6 +5124,14 @@
     <message>
         <source>Library Files</source>
         <translation>Arquivos de bibliotecas</translation>
+    </message>
+    <message>
+        <source>Parallel Build</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Parallel Jobs(0 means infinite):</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

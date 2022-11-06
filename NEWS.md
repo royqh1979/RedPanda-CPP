@@ -1,3 +1,12 @@
+Red Panda C++ Version 2.3
+
+  - fix: When start parsing and exit app, app may crash
+  - enhancement: add "Allow parallel build" option in project option dialog's custom compile options page
+  - fix: crash when rename project file
+  - fix: When remove project file, symbols in it not correctly removed from code parser
+  - fix: infos in class browser (structure panel) not correctly updated when add/create/remove/rename project files
+
+
 Red Panda C++ Version 2.2
 
   - enhancement: basic code completion support for C++ lambdas
@@ -10,9 +19,11 @@ Red Panda C++ Version 2.2
   - fix: Edting / show context menu when code analysis is turned on may crash app.
   - fix: Show context menu when edting non c/c++ file may crash app.
   - fix: Project Options Dialog's Files panel will crash app.
-  - fix: Memory usage of undo system is not correctly calculated
-  - fix: Set max undo memory usage to 0 don't really remove limit of undo
-  - fix: Set max undo times to 0 don't really remove limit of undo
+  - fix: Memory usage of undo system is not correctly calculated, which may cause undo items lost
+  - fix: Set max undo memory usage to 0 don't really remove the limit for undo
+  - fix: Set max undo times to 0 don't really remove the limit for undo
+  - fix: Keep the newest undo info regardless of undo memory usage
+  
 
 Red Panda C++ Version 2.1
 

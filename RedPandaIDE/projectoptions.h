@@ -99,5 +99,7 @@ struct ProjectOptions{
     QString encoding;
     ProjectModelType modelType;
     ProjectClassBrowserType classBrowserType;
+    bool allowParallelBuilding;
+    int parellelBuildingJobs;
 };
 #endif // PROJECTOPTIONS_H
