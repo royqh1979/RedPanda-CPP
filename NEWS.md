@@ -10,6 +10,9 @@ Red Panda C++ Version 2.2
   - fix: Edting / show context menu when code analysis is turned on may crash app.
   - fix: Show context menu when edting non c/c++ file may crash app.
   - fix: Project Options Dialog's Files panel will crash app.
+  - fix: Memory usage of undo system is not correctly calculated
+  - fix: Set max undo memory usage to 0 don't really remove limit of undo
+  - fix: Set max undo times to 0 don't really remove limit of undo
 
 Red Panda C++ Version 2.1
 
