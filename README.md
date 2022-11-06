@@ -6,7 +6,7 @@ Simplified Chinese Website: [https://royqh1979.gitee.io/redpandacpp/](https://ro
 English Website: [https://sourceforge.net/projects/redpanda-cpp](https://sourceforge.net/projects/redpanda-cpp)
 
 New Features (Compared with Red Panda Dev-C++ 6):
-* Cross Platform (Windows/Linux)
+* Cross Platform (Windows/Linux/MacOS)
 * Problem Set (run and test program against predefined input / expected output data)
 * Competitve Companion support ( It's an chrome/firefox extension that can fetch problems from OJ websites)
 * Find symbol occurrences
@@ -36,5 +36,6 @@ Code Intellisense Improvements:
 * Support C++ 14 using type alias
 * Support C-Style enum variable definitions
 * Support MACRO with arguments
+* Support C++ lambdas
 
 And many other improvements and bug fixes. See NEWS.md for full informantion.
