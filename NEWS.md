@@ -9,6 +9,7 @@ Red Panda C++ Version 2.2
   - enhancement: base class dropdown list in new class dialog now works 
   - fix: Edting / show context menu when code analysis is turned on may crash app.
   - fix: Show context menu when edting non c/c++ file may crash app.
+  - fix: Project Options Dialog's Files panel will crash app.
 
 Red Panda C++ Version 2.1
 

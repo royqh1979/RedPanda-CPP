@@ -99,6 +99,7 @@ void ProjectFilesWidget::copyUnits()
         unitCopy->setOverrideBuildCmd(unit->overrideBuildCmd());
         unitCopy->setBuildCmd(unit->buildCmd());
         unitCopy->setEncoding(unit->encoding());
+        unitCopy->setFileName(unit->fileName());
         mUnits.append(unitCopy);
     }
 }
