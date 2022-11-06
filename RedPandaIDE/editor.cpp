@@ -915,7 +915,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (token.isEmpty())
         return;
 
-    if (mParser && mParser->enabled() && highlighter()) {
+    if (mParser && highlighter()) {
         QString lineText = document()->getString(line-1);
         if (mParser->isIncludeLine(lineText)) {
             if (cursor() == Qt::PointingHandCursor) {
@@ -932,7 +932,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                     }
                 }
             }
-        } else if (attr == highlighter()->identifierAttribute()) {
+        } else if (mParser->enabled() && attr == highlighter()->identifierAttribute()) {
             QSynedit::BufferCoord p{aChar,line};
     //        BufferCoord pBeginPos,pEndPos;
     //        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
@@ -1057,18 +1057,19 @@ bool Editor::event(QEvent *event)
         switch (reason) {
         case TipType::Preprocessor:
             // When hovering above a preprocessor line, determine if we want to show an include or a identifier hint
-            s = document()->getString(p.line - 1);
-            isIncludeNextLine = mParser->isIncludeNextLine(s);
-            if (!isIncludeNextLine)
-                isIncludeLine = mParser->isIncludeLine(s);
-            if (!isIncludeNextLine &&!isIncludeLine)
-                s = wordAtRowCol(p);
+            if (mParser) {
+                s = document()->getString(p.line - 1);
+                isIncludeNextLine = mParser->isIncludeNextLine(s);
+                if (!isIncludeNextLine)
+                    isIncludeLine = mParser->isIncludeLine(s);
+                if (!isIncludeNextLine &&!isIncludeLine)
+                    s = wordAtRowCol(p);
+            }
             break;
         case TipType::Identifier:
             if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning())
                 s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
-            else if (//devEditor.ParserHints and
-                     !mCompletionPopup->isVisible()
+            else if (!mCompletionPopup->isVisible()
                      && !mHeaderCompletionPopup->isVisible()) {
                 expression = getExpressionAtPosition(p);
                 s = expression.join(""); // information during coding
@@ -1090,7 +1091,9 @@ bool Editor::event(QEvent *event)
 
         s = s.trimmed();
         if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
-            if (qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
+            if (mParser
+                    && mParser->enabled()
+                    && qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
                 if (!hasFocus())
                     activate();
                 setCursor(Qt::PointingHandCursor);
@@ -1148,7 +1151,9 @@ bool Editor::event(QEvent *event)
         if (!hint.isEmpty()) {
             //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
             //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
-            if (qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
+            if (mParser
+                    && mParser->enabled()
+                    && qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
                 if (!hasFocus())
                     activate();
                 setCursor(Qt::PointingHandCursor);
@@ -1201,7 +1206,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             && (event->button() == Qt::LeftButton)) {
 
         QSynedit::BufferCoord p;
-        if (pointToCharLine(event->pos(),p)) {
+        if (mParser && pointToCharLine(event->pos(),p)) {
             QString s = document()->getString(p.line - 1);
             if (mParser->isIncludeNextLine(s)) {
                 QString filename = mParser->getHeaderFileName(mFilename,s, true);
@@ -1211,7 +1216,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
                 QString filename = mParser->getHeaderFileName(mFilename,s);
                 pMainWindow->openFile(filename);
                 return;
-            } else {
+            } else if (mParser->enabled()) {
                 gotoDefinition(p);
                 return;
             }
@@ -2338,7 +2343,7 @@ bool Editor::handleBracketSkip()
 
 bool Editor::handleMultilineCommentCompletion()
 {
-    if ((caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
+    if ((caretX()-2>=0) && (caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
         QString text=selText();
         beginUpdate();
         beginUndoBlock();
@@ -3457,7 +3462,7 @@ bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
 Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
 {
     // Only allow in the text area...
-    if (pointToCharLine(point, pos)) {
+    if (pointToCharLine(point, pos) && highlighter()) {
         if (!pMainWindow->debugger()->executing()
                 && getSyntaxIssueAtPosition(pos)) {
             return TipType::Error;
@@ -3626,6 +3631,9 @@ void Editor::updateFunctionTip(bool showTip)
         return;
     }
     if (!highlighter())
+        return;
+
+    if (!mParser || !mParser->enabled())
         return;
 
     bool isFunction = false;

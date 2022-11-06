@@ -278,11 +278,11 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
     if (statement1->inSystemHeader != statement2->inSystemHeader)
         return !(statement1->inSystemHeader);
         // Show local statements first
-    if (statement1->scope != StatementScope::ssGlobal
-               && statement2->scope == StatementScope::ssGlobal ) {
+    if (statement1->scope != StatementScope::Global
+               && statement2->scope == StatementScope::Global ) {
         return true;
-    } else if (statement1->scope == StatementScope::ssGlobal
-               && statement2->scope != StatementScope::ssGlobal ) {
+    } else if (statement1->scope == StatementScope::Global
+               && statement2->scope != StatementScope::Global ) {
         return false;
     } else
         return nameComparator(statement1,statement2);
@@ -359,11 +359,11 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
     if (statement1->inSystemHeader != statement2->inSystemHeader)
         return !(statement1->inSystemHeader);
         // Show local statements first
-    if (statement1->scope != StatementScope::ssGlobal
-               && statement2->scope == StatementScope::ssGlobal ) {
+    if (statement1->scope != StatementScope::Global
+               && statement2->scope == StatementScope::Global ) {
         return true;
-    } else if (statement1->scope == StatementScope::ssGlobal
-               && statement2->scope != StatementScope::ssGlobal ) {
+    } else if (statement1->scope == StatementScope::Global
+               && statement2->scope != StatementScope::Global ) {
         return false;
     } else
         return nameComparator(statement1,statement2);
@@ -712,7 +712,7 @@ void CodeCompletionPopup::getCompletionFor(
                     if (children.isEmpty())
                         return;
                     foreach (const PStatement& childStatement, children) {
-                        if ((childStatement->classScope==StatementClassScope::scsPublic)
+                        if ((childStatement->classScope==StatementClassScope::Public)
                                 && !(
                                     childStatement->kind == StatementKind::skConstructor
                                     || childStatement->kind == StatementKind::skDestructor)
@@ -769,7 +769,7 @@ void CodeCompletionPopup::getCompletionFor(
                                 || childStatement->kind == StatementKind::skEnumClassType
                                 || childStatement->kind == StatementKind::skEnumType
                                    )) {
-                                if (childStatement->classScope == StatementClassScope::scsPublic)
+                                if (childStatement->classScope == StatementClassScope::Public)
                                     addStatement(childStatement,fileName,-1);
                             }
                         }

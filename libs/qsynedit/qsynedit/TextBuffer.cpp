@@ -688,7 +688,7 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     if (allAscii) {
         realEncoding = ENCODING_ASCII;
     } else if (encoding == ENCODING_AUTO_DETECT) {
-        if (codec->name().compare("System",Qt::CaseInsensitive)) {
+        if (codec->name().compare("System",Qt::CaseInsensitive)==0) {
             realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
         } else {
             realEncoding = codec->name();
@@ -989,9 +989,9 @@ PUndoItem UndoList::popItem()
 //        qDebug()<<"popped"<<item->changeNumber()<<item->changeText()<<(int)item->changeReason()<<mLastPoppedItemChangeNumber;
         if (mLastPoppedItemChangeNumber!=item->changeNumber() && item->changeReason()!=ChangeReason::GroupBreak) {
             mBlockCount--;
+            Q_ASSERT(mBlockCount>=0);
 //            qDebug()<<"pop"<<mBlockCount;
             if (mBlockCount<0) {
-                qDebug()<<"block count calculation error";
                 mBlockCount=0;
             }
         }
@@ -1059,13 +1059,22 @@ bool UndoList::fullUndoImposible() const
 
 void UndoList::ensureMaxEntries()
 {
-    if (mMaxUndoActions>0 && (mBlockCount > mMaxUndoActions || mMemoryUsage>mMaxMemoryUsage)){
+    if (mItems.isEmpty())
+        return;
+//    qDebug()<<QString("-- List Memory: %1 %2").arg(mMemoryUsage).arg(mMaxMemoryUsage);
+    if ((mMaxUndoActions >0 && mBlockCount > mMaxUndoActions)
+         || (mMaxMemoryUsage>0 && mMemoryUsage>mMaxMemoryUsage)){
+        PUndoItem lastItem = mItems.back();
         mFullUndoImposible = true;
-        while ((mBlockCount > mMaxUndoActions || mMemoryUsage>mMaxMemoryUsage)
+        while (((mMaxUndoActions >0 && mBlockCount > mMaxUndoActions)
+               || (mMaxMemoryUsage>0 && mMemoryUsage>mMaxMemoryUsage))
                && !mItems.isEmpty()) {
             //remove all undo item in block
             PUndoItem item = mItems.front();
             size_t changeNumber = item->changeNumber();
+            //we shouldn't drop the newest changes;
+            if (changeNumber == lastItem->changeNumber())
+                break;
             while (mItems.count()>0) {
                 item = mItems.front();
                 if (item->changeNumber()!=changeNumber)
@@ -1077,6 +1086,7 @@ void UndoList::ensureMaxEntries()
                 mBlockCount--;
       }
     }
+//    qDebug()<<QString("++ List Memory: %1").arg(mMemoryUsage);
 }
 
 SelectionMode UndoItem::changeSelMode() const
@@ -1123,8 +1133,9 @@ UndoItem::UndoItem(ChangeReason reason, SelectionMode selMode,
     foreach (const QString& s, text) {
         length+=s.length();
     }
-    mMemoryUsage -=  length * sizeof(QChar) + text.length() * sizeof(QString)
+    mMemoryUsage =  length * sizeof(QChar) + text.length() * sizeof(QString)
             + sizeof(UndoItem);
+//    qDebug()<<mMemoryUsage;
 }
 
 ChangeReason UndoItem::changeReason() const

@@ -4557,6 +4557,14 @@
         <source>Ctrl+Alt+Down</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Switch header/source</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Switch Header/Source</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

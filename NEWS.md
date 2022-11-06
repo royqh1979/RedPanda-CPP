@@ -1,3 +1,19 @@
+Red Panda C++ Version 2.2
+
+  - enhancement: basic code completion support for C++ lambdas
+  - enhancement: slightly reduce parsing time
+  - fix: Wrong charset name returned when saving file
+  - fix: 'using =' / 'namespace =' not correctly handled
+  - fix: Pressing '*' at begin of line will crash app
+  - enhancement: switch header/source in editor's context menu
+  - enhancement: base class dropdown list in new class dialog now works 
+  - fix: Edting / show context menu when code analysis is turned on may crash app.
+  - fix: Show context menu when edting non c/c++ file may crash app.
+  - fix: Project Options Dialog's Files panel will crash app.
+  - fix: Memory usage of undo system is not correctly calculated
+  - fix: Set max undo memory usage to 0 don't really remove limit of undo
+  - fix: Set max undo times to 0 don't really remove limit of undo
+
 Red Panda C++ Version 2.1
 
   - fix: editors that not in the editing panel shouldn't trigger switch breakpoint

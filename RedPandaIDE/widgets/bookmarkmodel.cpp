@@ -431,13 +431,13 @@ void BookmarkModel::sort(int column, Qt::SortOrder order)
     case 0:
         if (order == Qt::SortOrder::AscendingOrder) {
             auto sorter=[](PBookmark b1,PBookmark b2) {
-                return QString::compare(b1->description,b2->description);
+                return b1->description < b2->description;
             };
             std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
             std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
         } else {
             auto sorter=[](PBookmark b1,PBookmark b2) {
-                return QString::compare(b2->description,b1->description);
+                return b2->description<b1->description;
             };
             std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
             std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
@@ -446,13 +446,13 @@ void BookmarkModel::sort(int column, Qt::SortOrder order)
     case 1:
         if (order == Qt::SortOrder::AscendingOrder) {
             auto sorter=[](PBookmark b1,PBookmark b2) {
-                return QString::compare(b1->filename,b2->filename);
+                return b1->filename<b2->filename;
             };
             std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
             std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
         } else {
             auto sorter=[](PBookmark b1,PBookmark b2) {
-                return QString::compare(b2->filename,b1->filename);
+                return b2->filename<b1->filename;
             };
             std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
             std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
@@ -461,13 +461,13 @@ void BookmarkModel::sort(int column, Qt::SortOrder order)
     case 2:
         if (order == Qt::SortOrder::AscendingOrder) {
             auto sorter=[](PBookmark b1,PBookmark b2) {
-                return b1->line-b2->line;
+                return b1->line<b2->line;
             };
             std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
             std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);
         } else {
             auto sorter=[](PBookmark b1,PBookmark b2) {
-                return b2->line-b1->line;
+                return b2->line<b1->line;
             };
             std::sort(mBookmarks.begin(),mBookmarks.end(),sorter);
             std::sort(mProjectBookmarks.begin(),mProjectBookmarks.end(),sorter);

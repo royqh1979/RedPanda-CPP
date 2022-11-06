@@ -4416,13 +4416,20 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     int line;
     if (editor->getPositionOfMouse(p)) {
         line=p.line;
+        if (!switchHeaderSourceTarget(editor).isEmpty()) {
+
+            menu.addAction(ui->actionSwitchHeaderSource);
+            menu.addSeparator();
+        }
         //mouse on editing area
         menu.addAction(ui->actionCompile_Run);
         menu.addAction(ui->actionDebug);
-        menu.addSeparator();
-        menu.addAction(ui->actionGoto_Declaration);
-        menu.addAction(ui->actionGoto_Definition);
-        menu.addAction(ui->actionFind_references);
+        if (editor->parser() && editor->parser()->enabled()) {
+            menu.addSeparator();
+            menu.addAction(ui->actionGoto_Declaration);
+            menu.addAction(ui->actionGoto_Definition);
+            menu.addAction(ui->actionFind_references);
+        }
 
         menu.addSeparator();
         menu.addAction(ui->actionOpen_Containing_Folder);
@@ -4449,9 +4456,11 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionFile_Properties);
 
         //these actions needs parser
-        ui->actionGoto_Declaration->setEnabled(!editor->parser()->parsing());
-        ui->actionGoto_Definition->setEnabled(!editor->parser()->parsing());
-        ui->actionFind_references->setEnabled(!editor->parser()->parsing());
+        if (editor->parser() && editor->parser()->enabled()) {
+            ui->actionGoto_Declaration->setEnabled(!editor->parser()->parsing());
+            ui->actionGoto_Definition->setEnabled(!editor->parser()->parsing());
+            ui->actionFind_references->setEnabled(!editor->parser()->parsing());
+        }
     } else {
         //mouse on gutter
 
@@ -6781,6 +6790,51 @@ void MainWindow::reparseNonProjectEditors()
     }
 }
 
+QString MainWindow::switchHeaderSourceTarget(Editor *editor)
+{
+    QString filename=editor->filename();
+    if (getFileType(filename)==FileType::CHeader
+            || getFileType(filename)==FileType::CppHeader) {
+        QStringList lst;
+        lst.push_back("c");
+        lst.push_back("cc");
+        lst.push_back("cpp");
+        lst.push_back("cxx");
+        lst.push_back("C");
+        lst.push_back("CC");
+        foreach(const QString& suffix,lst) {
+            QString newFile=changeFileExt(filename,suffix);
+            if (fileExists(newFile)) {
+                return newFile;
+            }
+        }
+    } else if (getFileType(filename)==FileType::CSource) {
+        QStringList lst;
+        lst.push_back("h");
+        foreach(const QString& suffix,lst) {
+            QString newFile=changeFileExt(filename,suffix);
+            if (fileExists(newFile)) {
+                return newFile;
+            }
+        }
+    } else if (getFileType(filename)==FileType::CppSource) {
+        QStringList lst;
+        lst.push_back("h");
+        lst.push_back("hpp");
+        lst.push_back("hxx");
+        lst.push_back("HH");
+        lst.push_back("H");
+
+        foreach(const QString& suffix,lst) {
+            QString newFile=changeFileExt(filename,suffix);
+            if (fileExists(newFile)) {
+                return newFile;
+            }
+        }
+    }
+    return QString();
+}
+
 void MainWindow::onProjectViewNodeRenamed()
 {
     updateProjectView();
@@ -7913,7 +7967,7 @@ void MainWindow::on_actionNew_Class_triggered()
 {
     if (!mProject)
         return;
-    NewClassDialog dialog;
+    NewClassDialog dialog(mProject->cppParser());
     dialog.setPath(mProject->folder());
     if (dialog.exec()==QDialog::Accepted) {
         QDir dir(dialog.path());
@@ -7947,7 +8001,14 @@ void MainWindow::on_actionNew_Class_triggered()
         header.append(QString("#ifndef %1").arg(header_macro));
         header.append(QString("#define %1").arg(header_macro));
         header.append("");
-        header.append(QString("class %1 {").arg(dialog.className()));
+        if (dialog.baseClass()) {
+            header.append(QString("#include \"%1\"").arg(extractRelativePath(mProject->directory(),
+                                                                             dialog.baseClass()->fileName)));
+            header.append("");
+            header.append(QString("class %1 : public %2 {").arg(dialog.className(),
+                                                                dialog.baseClass()->fullName));
+        } else
+            header.append(QString("class %1 {").arg(dialog.className()));
         header.append("public:");
         header.append("");
         header.append("private:");
@@ -8642,7 +8703,7 @@ bool MainWindow::isClosingAll() const
 
 void MainWindow::on_actionGoto_block_start_triggered()
 {
-    Editor* editor=mEditorList->getEditor();
+    Editor *editor=mEditorList->getEditor();
     if (editor)
         editor->gotoBlockStart();
 }
@@ -8650,8 +8711,18 @@ void MainWindow::on_actionGoto_block_start_triggered()
 
 void MainWindow::on_actionGoto_block_end_triggered()
 {
-    Editor* editor=mEditorList->getEditor();
+    Editor *editor=mEditorList->getEditor();
     if (editor)
         editor->gotoBlockEnd();
+}
+
+
+void MainWindow::on_actionSwitchHeaderSource_triggered()
+{
+    Editor *editor=mEditorList->getEditor();
+    QString file=switchHeaderSourceTarget(editor);
+    if (!file.isEmpty()) {
+        openFile(file);
+    }
 }
 

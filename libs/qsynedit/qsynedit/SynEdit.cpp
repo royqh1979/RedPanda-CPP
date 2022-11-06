@@ -6599,16 +6599,16 @@ bool SynEdit::modified() const
     return mModified;
 }
 
-void SynEdit::setModified(bool Value)
+void SynEdit::setModified(bool value)
 {
-    if (Value) {
+    if (value) {
         mLastModifyTime = QDateTime::currentDateTime();
         emit statusChanged(StatusChange::scModified);
     }
-    if (Value != mModified) {
-        mModified = Value;
+    if (value != mModified) {
+        mModified = value;
 
-        if (Value) {
+        if (value) {
             mUndoList->clear();
             mRedoList->clear();
         } else {
@@ -6649,6 +6649,7 @@ void SynEdit::setUndoLimit(int size)
 void SynEdit::setUndoMemoryUsage(int size)
 {
     mUndoList->setMaxMemoryUsage(size*1024*1024);
+//        mUndoList->setMaxMemoryUsage(size*1024);
 }
 
 int SynEdit::charsInWindow() const

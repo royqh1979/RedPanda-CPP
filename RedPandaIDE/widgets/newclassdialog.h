@@ -18,21 +18,42 @@
 #define NEWCLASSDIALOG_H
 
 #include <QDialog>
+#include "../parser/cppparser.h"
+#include <QAbstractListModel>
 
 namespace Ui {
 class NewClassDialog;
 }
+
+class NewClassCandidatesModel: public QAbstractListModel {
+    Q_OBJECT
+public:
+    explicit NewClassCandidatesModel(PCppParser parser);
+    PStatement getCandidate(int row) const;
+private:
+    void fillClasses();
+    void fillClassesInNamespace(PStatement ns);
+private:
+    PCppParser mParser;
+    QVector<PStatement> mCandidates;
+    QSet<QString> mClassNames;
+
+    // QAbstractItemModel interface
+public:
+    int rowCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+};
 
 class NewClassDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit NewClassDialog(QWidget *parent = nullptr);
+    explicit NewClassDialog(PCppParser parser, QWidget *parent = nullptr);
     ~NewClassDialog();
 
     QString className() const;
-    QString baseClass() const;
+    PStatement baseClass() const;
     QString headerName() const;
     QString sourceName() const;
     QString path() const;
@@ -49,7 +70,8 @@ private slots:
 
 private:
     Ui::NewClassDialog *ui;
-
+    QList<PStatement> mClasses;
+    NewClassCandidatesModel mModel;
 private:
     void onUpdateIcons();
 

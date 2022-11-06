@@ -18,6 +18,7 @@
 
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
 
 CppTokenizer::CppTokenizer()
 {
@@ -30,6 +31,10 @@ void CppTokenizer::clear()
     mBuffer.clear();
     mBufferStr.clear();
     mLastToken.clear();
+    mUnmatchedBraces.clear();
+    mUnmatchedBrackets.clear();
+    mUnmatchedParenthesis.clear();
+    mLambdas.clear();
 }
 
 void CppTokenizer::tokenize(const QStringList &buffer)
@@ -48,16 +53,26 @@ void CppTokenizer::tokenize(const QStringList &buffer)
     mCurrent = mStart;
     mLineCount = mStart;
     QString s = "";
-    bool bSkipBlocks = false;
     mCurrentLine = 1;
+
+    TokenType tokenType;
     while (true) {
         mLastToken = s;
-        s = getNextToken(true, true, bSkipBlocks);
+        s = getNextToken(&tokenType, true, false);
         simplify(s);
         if (s.isEmpty())
             break;
         else
-            addToken(s,mCurrentLine);
+            addToken(s,mCurrentLine,tokenType);
+    }
+    while (!mUnmatchedBraces.isEmpty()) {
+        addToken("}",mCurrentLine,TokenType::RightBrace);
+    }
+    while (!mUnmatchedBrackets.isEmpty()) {
+        addToken("]",mCurrentLine,TokenType::RightBracket);
+    }
+    while (!mUnmatchedParenthesis.isEmpty()) {
+        addToken(")",mCurrentLine,TokenType::RightParenthesis);
     }
 }
 
@@ -68,7 +83,7 @@ void CppTokenizer::dumpTokens(const QString &fileName)
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QTextStream stream(&file);
         foreach (const PToken& token,mTokenList) {
-            stream<<QString("%1,%2").arg(token->line).arg(token->text)
+            stream<<QString("%1,%2,%3").arg(token->line).arg(token->text).arg(token->matchIndex)
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                  <<Qt::endl;
 #else
@@ -93,11 +108,59 @@ int CppTokenizer::tokenCount()
     return mTokenList.count();
 }
 
-void CppTokenizer::addToken(const QString &sText, int iLine)
+void CppTokenizer::addToken(const QString &sText, int iLine, TokenType tokenType)
 {
     PToken token = std::make_shared<Token>();
     token->text = sText;
     token->line = iLine;
+#ifdef Q_DEBUG
+    token->matchIndex = 1000000000;
+#endif
+    switch(tokenType) {
+    case TokenType::LeftBrace:
+        token->matchIndex=-1;
+        mUnmatchedBraces.push_back(mTokenList.count());
+        break;
+    case TokenType::RightBrace:
+        if (mUnmatchedBraces.isEmpty()) {
+            token->matchIndex=-1;
+        } else {
+            token->matchIndex = mUnmatchedBraces.last();
+            mTokenList[token->matchIndex]->matchIndex=mTokenList.count();
+            mUnmatchedBraces.pop_back();
+        }
+        break;
+    case TokenType::LeftBracket:
+        token->matchIndex=-1;
+        mUnmatchedBrackets.push_back(mTokenList.count());
+        break;
+    case TokenType::RightBracket:
+        if (mUnmatchedBrackets.isEmpty()) {
+            token->matchIndex=-1;
+        } else {
+            token->matchIndex = mUnmatchedBrackets.last();
+            mTokenList[token->matchIndex]->matchIndex=mTokenList.count();
+            mUnmatchedBrackets.pop_back();
+        }
+        break;
+    case TokenType::LeftParenthesis:
+        token->matchIndex=-1;
+        mUnmatchedParenthesis.push_back(mTokenList.count());
+        break;
+    case TokenType::RightParenthesis:
+        if (mUnmatchedParenthesis.isEmpty()) {
+            token->matchIndex=-1;
+        } else {
+            token->matchIndex = mUnmatchedParenthesis.last();
+            mTokenList[token->matchIndex]->matchIndex=mTokenList.count();
+            mUnmatchedParenthesis.pop_back();
+        }
+        break;
+    case TokenType::LambdaCaptures:
+        mLambdas.push_back(mTokenList.count());
+    default:
+        break;
+    }
     mTokenList.append(token);
 }
 
@@ -110,28 +173,6 @@ void CppTokenizer::countLines()
     }
 }
 
-QString CppTokenizer::getArguments()
-{
-    QChar* offset = mCurrent;
-    skipPair('(', ')');
-    QString result(offset,mCurrent-offset);
-    simplifyArgs(result);
-    if ((*mCurrent == '.') || ((*mCurrent == '-') && (*(mCurrent + 1) == '>'))) {
-        // skip '.' and '->'
-        while ( !( *mCurrent == 0
-                   || *mCurrent == '('
-                   || *mCurrent == ';'
-                   || *mCurrent == '{'
-                   || *mCurrent == '}'
-                   || *mCurrent == ')'
-                 || isLineChar(*mCurrent)
-                 || isSpaceChar(*mCurrent)) )
-            mCurrent++;
-    }
-    skipToNextToken();
-    return result;
-}
-
 QString CppTokenizer::getForInit()
 {
     QChar* startOffset = mCurrent;
@@ -139,12 +180,13 @@ QString CppTokenizer::getForInit()
     // Step into the init statement
     mCurrent++;
 
+    TokenType tokenType;
     // Process until ; or end of file
     while (true) {
-        QString s = getNextToken(true, true, false);
+        QString s = getNextToken(&tokenType, true, false);
         simplify(s);
         if (!s.isEmpty())
-            addToken(s,mCurrentLine);
+            addToken(s,mCurrentLine,tokenType);
         if ( (s == "") || (s == ";") || (s==":"))
             break;
         // : is used in for-each loop
@@ -156,10 +198,12 @@ QString CppTokenizer::getForInit()
     return "";
 }
 
-QString CppTokenizer::getNextToken(bool /* bSkipParenthesis */, bool bSkipArray, bool bSkipBlock)
+QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool bSkipBlock)
 {
     QString result;
+    int backupIndex;
     bool done = false;
+    *pTokenType=TokenType::Normal;
     while (true) {
         skipToNextToken();
         if (*mCurrent == 0)
@@ -179,13 +223,18 @@ QString CppTokenizer::getNextToken(bool /* bSkipParenthesis */, bool bSkipArray,
             countLines();
             result = getForInit();
             done = (result != "");
-        } else if (isArguments()) {
-            countLines();
-            result = getArguments();
-            done = (result != "");
+//        } else if (isArguments()) {
+//            countLines();
+//            result = getArguments();
+//            done = (result != "");
         } else if (isWord()) {
             countLines();
             result = getWord(false, bSkipArray, bSkipBlock);
+//            if (result=="noexcept" || result == "throw") {
+//                result="";
+//                if (*mCurrent=='(')
+//                    skipPair('(',')');
+//            }
             done = (result != "");
         } else if (isNumber()) {
             countLines();
@@ -196,49 +245,119 @@ QString CppTokenizer::getNextToken(bool /* bSkipParenthesis */, bool bSkipArray,
             case 0:
                 done = true;
                 break;
-            case '/':
-                advance();
-                break;
             case ':':
                 if (*(mCurrent + 1) == ':') {
                     countLines();
                     mCurrent+=2;
+                    result = "::";
+                    skipToNextToken();
                     // Append next token to this one
-                    result = "::"+getWord(true, bSkipArray, bSkipBlock);
+                    if (isIdentChar(*mCurrent))
+                        result+=getWord(true, bSkipArray, bSkipBlock);
                     done = true;
                 } else {
                     countLines();
                     result = *mCurrent;
-                    advance();
+                    mCurrent++;
                     done = true;
                 }
                 break;
             case '{':
+                *pTokenType=TokenType::LeftBrace;
+                countLines();
+                result = *mCurrent;
+                mCurrent++;
+                done = true;
+                break;
             case '}':
+                *pTokenType=TokenType::RightBrace;
+                countLines();
+                result = *mCurrent;
+                mCurrent++;
+                done = true;
+                break;
+            case '(':
+                *pTokenType=TokenType::LeftParenthesis;
+                countLines();
+                result = *mCurrent;
+                mCurrent++;
+                done = true;
+                break;
+            case '[':
+                if (*(mCurrent+1)!='[') {
+                    *pTokenType=TokenType::LambdaCaptures;
+                    countLines();
+                    QChar* backup=mCurrent;
+                    skipPair('[',']');
+                    result = QString(backup,mCurrent-backup);
+                    done = true;
+                } else {
+                    skipPair('[',']'); // attribute, skipit
+                }
+                break;
+            case ')':
+                *pTokenType=TokenType::RightParenthesis;
+                countLines();
+                result = *mCurrent;
+                mCurrent++;
+                done = true;
+                break;
             case ';':
             case ',':   //just return the brace or the ';'
                 countLines();
                 result = *mCurrent;
-                advance();
+                mCurrent++;
                 done = true;
                 break;
             case '>':  // keep stream operators
                 if (*(mCurrent + 1) == '>') {
                   countLines();
                   result = ">>";
-                  advance();
+                  mCurrent+=2;
                   done = true;
                 } else
-                  advance();
+                  mCurrent+=1;
                 break;
             case '<':
                 if (*(mCurrent + 1) == '<') {
                     countLines();
                     result = "<<";
-                    advance();
+                    mCurrent+=2;
                     done = true;
                 } else
-                    advance();
+                    mCurrent+=1;
+                break;
+            case '=': {
+                if (*(mCurrent+1)=='=') {
+                    // skip '=='
+                    skipAssignment();
+                } else {
+                    countLines();
+                    mCurrent+=1;
+                    result = "=";
+                    done = true;
+                }
+                break;
+            }
+                break;
+            case '!':
+                if (*(mCurrent+1)=='=') {
+                    skipAssignment();
+                } else
+                    mCurrent++;
+                break;
+            case '/':
+            case '%':
+            case '&':
+            case '*':
+            case '|':
+            case '+':
+            case '-':
+            case '~':
+                if (*(mCurrent + 1) == '=') {
+                    skipAssignment();
+                } else
+                    mCurrent++;
                 break;
             default:
                 advance();
@@ -256,7 +375,8 @@ QString CppTokenizer::getNumber()
 
     if (isDigitChar(*mCurrent)) {
         while (isDigitChar(*mCurrent) || isHexChar(*mCurrent)) {
-            advance();
+            mCurrent++;
+            //advance();
         }
     }
 
@@ -321,10 +441,11 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
 
         // Skip template contents, but keep template variable types
         if (*mCurrent == '<') {
-            offset = mCurrent; //we don't skip
-            skipTemplateArgs();
+            offset = mCurrent;
 
-            if (!bFoundTemplate) {
+            if (bFoundTemplate) {
+                skipTemplateArgs();
+            } else if (skipAngleBracketPair()){
                 result += QString(offset, mCurrent-offset);
                 skipToNextToken();
             }
@@ -351,13 +472,16 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
         } else if ((*mCurrent == '-') && (*(mCurrent + 1) == '>')) {
             result+=QString(mCurrent,2);
             mCurrent+=2;
-        } else if ((*mCurrent == ':') && (*(mCurrent + 1) == ':')) {
+        } else if ((*mCurrent == ':') && (*(mCurrent + 1) == ':') ) {
             if (result != "using") {
                 result+=QString(mCurrent,2);
                 mCurrent+=2;
-                // Append next token to this one
-                QString s = getWord(bSkipParenthesis, bSkipArray, bSkipBlock);
-                result += s;
+                skipToNextToken();
+                if (isIdentChar(*mCurrent)) {
+                    // Append next token to this one
+                    QString s = getWord(bSkipParenthesis, bSkipArray, bSkipBlock);
+                    result += s;
+                }
             }
         }
     }
@@ -480,18 +604,18 @@ void CppTokenizer::skipDoubleQuotes()
     }
 }
 
-void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QChar>& failChars)
+void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd)
 {
     mCurrent++;
     while (*mCurrent != 0) {
-        if ((*mCurrent == '(') && !failChars.contains('(')) {
-            skipPair('(', ')', failChars);
-        } else if ((*mCurrent == '[') && !failChars.contains('[')) {
-            skipPair('[', ']', failChars);
-        } else if ((*mCurrent == '{') && !failChars.contains('{')) {
-            skipPair('{', '}', failChars);
+        if (*mCurrent == '(') {
+            skipPair('(', ')');
+        } else if (*mCurrent == '[') {
+            skipPair('[', ']');
+        } else if (*mCurrent == '{') {
+            skipPair('{', '}');
         } else if (*mCurrent ==  cStart) {
-            skipPair(cStart, cEnd, failChars);
+            skipPair(cStart, cEnd);
         } else if (*mCurrent == cEnd) {
             mCurrent++; // skip over end
             break;
@@ -510,12 +634,79 @@ void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd, const QSet<QC
                 skipSingleQuote(); // don't do it inside AnsiString!
             else
                 mCurrent++;
-        } else if (failChars.contains(*mCurrent)) {
-            break;
         } else {
             mCurrent++;
         }
     }
+}
+
+bool CppTokenizer::skipAngleBracketPair()
+{
+    QChar* backup=mCurrent;
+    QVector<QChar> stack;
+    while (*mCurrent != '\0') {
+        switch((*mCurrent).unicode()) {
+        case '<':
+        case '(':
+        case '[':
+            stack.push_back(*mCurrent);
+            break;
+        case ')':
+            while (!stack.isEmpty() && stack.back()!='(') {
+                stack.pop_back();
+            }
+            //pop up '('
+            if (stack.isEmpty()) {
+                mCurrent=backup;
+                return false;
+            }
+            stack.pop_back();
+            break;
+        case ']':
+            while (!stack.isEmpty() && stack.back()!='[')
+                stack.pop_back();
+            //pop up '['
+            if (stack.isEmpty()) {
+                mCurrent=backup;
+                return false;
+            }
+            stack.pop_back();
+            break;
+        case '>':
+            if (stack.back()=='<')
+                stack.pop_back();
+            if (stack.isEmpty()) {
+                mCurrent++;
+                return true;
+            }
+            break;
+        case '{':
+        case '}':
+        case ';':
+        case '"':
+        case '\'':
+            mCurrent=backup;
+            return false;
+        case '-':
+            if (*(mCurrent+1)=='>') {
+                mCurrent=backup;
+                return false;
+            }
+            break;
+        case '.':
+            if (*(mCurrent+1)!='.') {
+                mCurrent=backup;
+                return false;
+            }
+            // skip
+            while (*(mCurrent+1)=='.')
+                mCurrent++;
+            break;
+        }
+        mCurrent++;
+    }
+    mCurrent=backup;
+    return false;
 }
 
 void CppTokenizer::skipRawString()
@@ -566,17 +757,8 @@ void CppTokenizer::skipTemplateArgs()
 {
     if (*mCurrent != '<')
         return;
-    QChar* start = mCurrent;
 
-    QSet<QChar> failSet;
-    failSet.insert('{');
-    failSet.insert('}');
-    failSet.insert(';');
-    skipPair('<', '>', failSet);
-
-    // if we failed, return to where we came from
-    if (start!=mCurrent && *(mCurrent - 1) != '>')
-        mCurrent = start;
+    skipPair('<', '>');
 }
 
 void CppTokenizer::skipToEOL()
@@ -601,7 +783,7 @@ void CppTokenizer::skipToEOL()
 void CppTokenizer::skipToNextToken()
 {
     while (isSpaceChar(*mCurrent) || isLineChar(*mCurrent))
-        advance();
+        mCurrent++;
 }
 
 bool CppTokenizer::isIdentChar(const QChar &ch)
@@ -609,39 +791,29 @@ bool CppTokenizer::isIdentChar(const QChar &ch)
     return ch=='_' || ch.isLetter() ;
 }
 
+int CppTokenizer::lambdasCount() const
+{
+    return mLambdas.count();
+}
+
+int CppTokenizer::indexOfFirstLambda() const
+{
+    return mLambdas.front();
+}
+
+void CppTokenizer::removeFirstLambda()
+{
+    mLambdas.pop_front();
+}
+
 void CppTokenizer::advance()
 {
     switch(mCurrent->unicode()) {
-    case '\"': skipDoubleQuotes();
+    case '\"':
+        skipDoubleQuotes();
         break;
-    case '\'': skipSingleQuote();
-        break;
-    case '/':
-        if (*(mCurrent + 1) == '=')
-            skipAssignment();
-        else
-            mCurrent++;
-        break;
-    case '=': {
-        if (mTokenList.size()>2
-                && mTokenList[mTokenList.size()-2]->text == "using") {
-            addToken("=",mCurrentLine);
-            mCurrent++;
-        } else
-            skipAssignment();
-        break;
-    }
-    case '&':
-    case '*':
-    case '!':
-    case '|':
-    case '+':
-    case '-':
-    case '~':
-        if (*(mCurrent + 1) == '=')
-            skipAssignment();
-        else
-            mCurrent++;
+    case '\'':
+        skipSingleQuote();
         break;
     case '\\':
         if (isLineChar(*(mCurrent + 1)))
@@ -649,11 +821,14 @@ void CppTokenizer::advance()
         else
             mCurrent++;
         break;
-    default:
-        if ((*mCurrent == 'R') && (*(mCurrent+1) == '"'))
+    case 'R':
+        if (*(mCurrent+1) == '"')
             skipRawString();
         else
             mCurrent++;
+        break;
+    default:
+        mCurrent++;
     }
 }
 
@@ -693,7 +868,7 @@ bool CppTokenizer::isLineChar(const QChar &ch)
 
 bool CppTokenizer::isBlankChar(const QChar &ch)
 {
-    return (ch<=32);
+    return (ch<=32) && (ch>0);
 }
 
 bool CppTokenizer::isOperatorChar(const QChar &ch)

@@ -22,10 +22,23 @@
 
 class CppTokenizer
 {
+    enum class TokenType {
+        Normal,
+        LeftBrace,
+        RightBrace,
+        LeftParenthesis,
+        RightParenthesis,
+        LeftBracket,
+        RightBracket,
+        Assignment,
+        LambdaCaptures
+    };
+
 public:
     struct Token {
       QString text;
       int line;
+      int matchIndex;
     };
     using PToken = std::shared_ptr<Token>;
     using TokenList = QVector<PToken>;
@@ -38,16 +51,19 @@ public:
     PToken operator[](int i);
     int tokenCount();
     bool isIdentChar(const QChar& ch);
+    int lambdasCount() const;
+    int indexOfFirstLambda() const;
+    void removeFirstLambda();
+
 private:
-    void addToken(const QString& sText, int iLine);
+    void addToken(const QString& sText, int iLine, TokenType tokenType);
     void advance();
     void countLines();
     PToken getToken(int index);
 
-    QString getArguments();
     QString getForInit();
     QString getNextToken(
-            bool bSkipParenthesis = false,
+            TokenType *pTokenType,
             bool bSkipArray = false,
             bool bSkipBlock = false);
     QString getNumber();
@@ -65,7 +81,8 @@ private:
     void simplifyArgs(QString& output);
     void skipAssignment();
     void skipDoubleQuotes();
-    void skipPair(const QChar& cStart, const QChar cEnd, const QSet<QChar>& failChars = QSet<QChar>());
+    void skipPair(const QChar& cStart, const QChar cEnd);
+    bool skipAngleBracketPair();
     void skipRawString();
     void skipSingleQuote();
     void skipSplitLine();
@@ -92,6 +109,10 @@ private:
     int mCurrentLine;
     QString mLastToken;
     TokenList mTokenList;
+    QList<int> mLambdas;
+    QVector<int> mUnmatchedBraces; // stack of indices for unmatched '{'
+    QVector<int> mUnmatchedBrackets; // stack of indices for unmatched '['
+    QVector<int> mUnmatchedParenthesis;// stack of indices for unmatched '('
 };
 
 using PCppTokenizer = std::shared_ptr<CppTokenizer>;

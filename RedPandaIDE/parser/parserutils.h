@@ -56,17 +56,30 @@ using PDefine = std::shared_ptr<Define>;
 using DefineMap = QHash<QString,PDefine>;
 using PDefineMap = std::shared_ptr<DefineMap>;
 
-enum class SkipType {
-    skItself,  // skip itself
-    skToSemicolon, // skip to ;
-    skToColon, // skip to :
-    skToRightParenthesis, // skip to )
-    skToLeftBrace,// Skip to {
-    skToRightBrace, // skip to }
-    skNone // It's a keyword but don't process here
+enum class KeywordType {
+    SkipItself,  // skip itself
+    SkipNextSemicolon, // move to ; and skip it
+    SkipNextColon, // move to : and skip it
+    SkipNextParenthesis, // move to ) and skip it
+    MoveToLeftBrace,// move to {
+    MoveToRightBrace, // move to }
+    For, //for
+    Catch, //catch
+    Public, // public
+    Private,
+    Protected,
+    Friend,
+    Enum, //enum
+    Inline, // inline
+    Namespace, //namespace
+    Typedef, //typedef
+    Using, //using
+    DeclType, // decltype
+    None, // It's a keyword but don't process here
+    NotKeyword
 };
 
-
+//It will be used as hash key. DONT make it enum class!!!!!
 enum StatementKind  {
   skUnknown,
   skNamespace,
@@ -94,23 +107,23 @@ enum StatementKind  {
 using StatementKindSet = QSet<StatementKind>;
 
 enum class StatementScope {
-    ssGlobal,
-    ssLocal,
-    ssClassLocal
+    Global,
+    Local,
+    ClassLocal
 };
 
 enum class StatementClassScope {
-  scsNone,
-  scsPrivate,
-  scsProtected,
-  scsPublic
+  None,
+  Private,
+  Protected,
+  Public
 };
 
 enum class MemberOperatorType {
-  otArrow,
-  otDot,
-  otDColon,
-  otOther
+  Arrow,
+  Dot,
+  DColon,
+  Other
 };
 
 enum class EvalStatementKind {
@@ -136,7 +149,7 @@ using StatementMap = QMultiMap<QString, PStatement>;
 struct Statement {
 //    Statement();
 //    ~Statement();
-    std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, don't use auto pointer to prevent circular reference
+    std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, use weak pointer to prevent circular reference
     QString type; // type "int"
     QString command; // identifier/name of statement "foo"
     QString args; // args "(int a,float b)"
@@ -232,7 +245,7 @@ using PFileIncludes = std::shared_ptr<FileIncludes>;
 
 extern QStringList CppDirectives;
 extern QStringList JavadocTags;
-extern QMap<QString,SkipType> CppKeywords;
+extern QMap<QString,KeywordType> CppKeywords;
 extern QSet<QString> CppControlKeyWords;
 extern QSet<QString> CKeywords;
 extern QSet<QString> CppTypeKeywords;

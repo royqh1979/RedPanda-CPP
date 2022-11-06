@@ -160,6 +160,7 @@ private:
             const QString& aType, // "Type" is already in use
             const QString& command,
             const QString& args,
+            const QString& noNameArgs,
             const QString& value,
             int line,
             StatementKind kind,
@@ -173,6 +174,21 @@ private:
             const QString &aType, // "Type" is already in use
             const QString &command,
             const QString &args,
+            const QString &noNameArgs,
+            const QString& value,
+            int line,
+            StatementKind kind,
+            const StatementScope& scope,
+            const StatementClassScope& classScope,
+            bool isDefinition,
+            bool isStatic);
+    PStatement addStatement(
+            const PStatement& parent,
+            const QString &fileName,
+            const QString &aType, // "Type" is already in use
+            const QString &command,
+            int argStart,
+            int argEnd,
             const QString& value,
             int line,
             StatementKind kind,
@@ -182,32 +198,30 @@ private:
             bool isStatic);
     void setInheritance(int index, const PStatement& classStatement, bool isStruct);
     bool isCurrentScope(const QString& command);
-    void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock = true); // adds new solo level
+    void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock=false); // adds new solo level
     void removeScopeLevel(int line); // removes level
-    int skipBraces(int startAt);
-    int skipBracket(int startAt);
+
+    int indexOfMatchingBrace(int startAt) {
+        return mTokenizer[startAt]->matchIndex;
+    }
 
     void internalClear();
 
     QStringList sortFilesByIncludeRelations(const QSet<QString> &files);
 
-    bool checkForCatchBlock();
-    bool checkForEnum();
-    bool checkForForBlock();
-    bool checkForKeyword();
-    bool checkForMethod(QString &sType, QString &sName, QString &sArgs,
-                        bool &isStatic, bool &isFriend); // caching of results
-    bool checkForNamespace();
+    bool checkForKeyword(KeywordType &keywordType);
+    bool checkForMethod(QString &sType, QString &sName, int &argStartIndex,
+                        int &argEndIndex, bool &isStatic, bool &isFriend); // caching of results
+    bool checkForNamespace(KeywordType keywordType);
     bool checkForPreprocessor();
-    bool checkForScope();
-    void checkForSkipStatement();
-    bool checkForStructs();
-    bool checkForTypedef();
+//    bool checkForLambda();
+    bool checkForScope(KeywordType keywordType);
+    bool checkForStructs(KeywordType keywordType);
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
-    bool checkForUsing();
-    bool checkForVar();
-    QString expandMacroType(const QString& name);
+    bool checkForUsing(KeywordType keywordType);
+
+    void checkAndHandleMethodOrVar(KeywordType keywordType);
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
@@ -308,9 +322,22 @@ private:
     void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol);
 
     bool isIdentifier(const QString& token) const {
-        return (!token.isEmpty() && isLetterChar(token.front())
+        return (!token.isEmpty() && isIdentChar(token.front())
                 && !token.contains('\"'));
     }
+
+    bool isIdentifierOrPointer(const QString& term) const {
+        switch(term[0].unicode()) {
+        case '*':
+            return true;
+        case '\"':
+        case '\'':
+            return false;
+        default:
+            return isIdentChar(term[0]);
+        }
+    }
+
 
     bool isIntegerLiteral(const QString& token) const {
         if (token.isEmpty())
@@ -335,6 +362,24 @@ private:
             return false;
         return (token.startsWith('\''));
     }
+
+    bool isKeyword(const QString& token) const {
+        return mCppKeywords.contains(token);
+    }
+
+    bool tokenIsIdentifier(const QString& token) const {
+        //token won't be empty
+        return isIdentChar(token[0]);
+    }
+
+    bool tokenIsTypeOrNonKeyword(const QString& token) const {
+        return tokenIsIdentifier(token) &&
+                (mCppTypeKeywords.contains(token)
+                 || !mCppKeywords.contains(token)
+                 || token=="const");
+
+    }
+
     PStatement doParseEvalTypeInfo(
             const QString& fileName,
             const PStatement& scope,
@@ -343,7 +388,8 @@ private:
             int& pointerLevel);
 
     int getBracketEnd(const QString& s, int startAt);
-    StatementClassScope getClassScope(int index);
+    StatementClassScope getClassScope(const QString& text);
+    StatementClassScope getClassScope(KeywordType keywordType);
     int getCurrentBlockBeginSkip();
     int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
@@ -370,23 +416,25 @@ private:
     PStatement getTypeDef(const PStatement& statement,
                           const QString& fileName, const QString& aType);
     void handleCatchBlock();
-    void handleEnum();
+    void handleEnum(bool isTypedef);
     void handleForBlock();
-    void handleKeyword();
+    void handleKeyword(KeywordType skipType);
+    void handleLambda(int index, int endIndex);
     void handleMethod(
+            StatementKind functionKind,
             const QString& sType,
             const QString& sName,
-            const QString& sArgs,
+            int argStart,
             bool isStatic,
             bool isFriend);
-    void handleNamespace();
+    void handleNamespace(KeywordType skipType);
     void handleOtherTypedefs();
     void handlePreprocessor();
-    void handleScope();
+    void handleScope(KeywordType keywordType);
     bool handleStatement();
     void handleStructs(bool isTypedef = false);
     void handleUsing();
-    void handleVar();
+    void handleVar(const QString& typePrefix,bool isExtern,bool isStatic);
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(
@@ -410,11 +458,12 @@ private:
 //    }
     void scanMethodArgs(
             const PStatement& functionStatement,
-            const QString& argStr);
+            int argStart);
     QString splitPhrase(const QString& phrase, QString& sClazz,
                 QString& sOperator, QString &sMember);
+    QString removeTemplateParams(const QString& phrase);
 
-    QString removeArgNames(const QString& args);
+    bool splitLastMember(const QString& token, QString& lastMember, QString& remaining);
 
     bool isSpaceChar(const QChar& ch) const {
         return ch==' ' || ch =='\t';
@@ -427,13 +476,38 @@ private:
                 || ch == '&';
     }
 
-    bool isLetterChar(const QChar& ch) const {
+    bool isIdentifier(const QChar& ch) const {
+        return ch.isLetter()
+                || ch == '_'
+                || ch == '~'
+                ;
+    }
+
+    bool isIdentChar(const QChar& ch) const {
         return ch.isLetter()
                 || ch == '_';
     }
 
     bool isDigitChar(const QChar& ch) const {
         return (ch>='0' && ch<='9');
+    }
+
+    bool isInvalidFunctionArgsSuffixChar(const QChar& ch) const {
+
+        // &&
+        switch(ch.unicode()){
+        case '.':
+        case '-':
+        case '+':
+        case '/':
+        case '%':
+        case '*':
+        case '|':
+        case '?':
+            return true;
+        default:
+            return false;
+        }
     }
 
     /*'(', ';', ':', '{', '}', '#' */
@@ -493,7 +567,7 @@ private:
         return ch=='\n' || ch=='\r';
     }
 
-    bool isNotFuncArgs(const QString& args);
+    bool isNotFuncArgs(int startIndex);
 
     /**
      * @brief Test if a statement is a class/struct/union/namespace/function
@@ -511,7 +585,20 @@ private:
 
     void updateSerialId();
 
-
+    int indexOfNextSemicolon(int index, int endIndex=-1);
+    int indexOfNextSemicolonOrLeftBrace(int index);
+    int indexOfNextColon(int index);
+    int indexOfNextLeftBrace(int index);
+    int indexPassParenthesis(int index);
+    int indexPassBraces(int index);
+    int skipAssignment(int index, int endIndex);
+    void skipNextSemicolon(int index);
+    int moveToNextBraceOrSkipNextSemicolon(int index, bool checkLambda, int endIndex=-1);
+    void skipParenthesis(int index);
+    QString mergeArgs(int startIndex, int endIndex);
+    void parseCommandTypeAndArgs(QString& command,
+                                 QString& typeSuffix,
+                                 QString& args);
 private:
     int mParserId;
     ParserLanguage mLanguage;
@@ -528,9 +615,6 @@ private:
     QVector<PStatement> mCurrentScope;
     QVector<StatementClassScope> mCurrentClassScope;
 
-//  the start index in tokens to skip to ; when parsing typedef struct we need to skip
-//   the names after the closing bracket because we have processed it
-    QVector<int> mSkipList; // TList<Integer>
     StatementClassScope mClassScope;
     StatementModel mStatementList;
     //It's used in preprocessor, so we can't use fIncludeList instead
@@ -554,7 +638,7 @@ private:
 
     QMutex mMutex;
     GetFileStreamCallBack mOnGetFileStream;
-    QMap<QString,SkipType> mCppKeywords;
+    QMap<QString,KeywordType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;
 };
 using PCppParser = std::shared_ptr<CppParser>;
