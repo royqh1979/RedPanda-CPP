@@ -7,6 +7,7 @@ Red Panda C++ Version 2.4
   - enhancement: Add the "parsing TODOs" option in Options Dialog / Editor / Misc
   - enhancement: Remove todos/bookmarks/breakpoints when deleting file from project
   - enhancement: Rename filenames in todos/bookmarks/breakpoints  when renaming project file
+  - enhancement: Rename filenames in bookmarks/breakpoints after a file is save-ased.
 
 Red Panda C++ Version 2.3
 
