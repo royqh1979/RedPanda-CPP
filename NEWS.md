@@ -2,6 +2,7 @@ Red Panda C++ Version 2.4
 
   - fix: Contents in class browser not correctly updated when close the last editor for project. 
   - fix: When all editors closed, switch browser mode dosen't correct update the class browser;
+  - fix: "check when open/save" and "check when caret line changed" in Options Dialog / Editor / Syntax Check don't work
 
 Red Panda C++ Version 2.3
 
@@ -21,7 +22,7 @@ Red Panda C++ Version 2.2
   - fix: Pressing '*' at begin of line will crash app
   - enhancement: switch header/source in editor's context menu
   - enhancement: base class dropdown list in new class dialog now works 
-  - fix: Edting / show context menu when code analysis is turned on may crash app.
+  - fix: Edting / show context menu when code analyzer is turned off may crash app.
   - fix: Show context menu when edting non c/c++ file may crash app.
   - fix: Project Options Dialog's Files panel will crash app.
   - fix: Memory usage of undo system is not correctly calculated, which may cause undo items lost
