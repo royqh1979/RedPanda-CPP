@@ -34,7 +34,7 @@ public:
     ~CppParser();
 
     void addHardDefineByLine(const QString& line);
-    void addFileToScan(const QString& value, bool inProject = false);
+    void addProjectFile(const QString &fileName, bool needScan);
     void addIncludePath(const QString& value);
     void removeProjectFile(const QString& value);
     void addProjectIncludePath(const QString& value);
@@ -142,6 +142,8 @@ public:
 
     ParserLanguage language() const;
     void setLanguage(ParserLanguage newLanguage);
+
+    const QSet<QString> &projectFiles() const;
 
 signals:
     void onProgress(const QString& fileName, int total, int current);

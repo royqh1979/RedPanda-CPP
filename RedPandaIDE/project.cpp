@@ -527,6 +527,18 @@ void Project::rebuildNodes()
 
 bool Project::removeUnit(PProjectUnit& unit, bool doClose , bool removeFile)
 {
+    bool result=internalRemoveUnit(unit,doClose,removeFile);
+
+    if (result) {
+        mParser->invalidateFile(unit->fileName());
+        mParser->removeProjectFile(unit->fileName());
+        emit unitRemoved(unit->fileName());
+    }
+    return result;
+}
+
+bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeFile)
+{
     if (!unit)
         return false;
 
@@ -609,7 +621,7 @@ void Project::resetParserProjectFiles()
     mParser->clearProjectFiles();
     mParser->clearProjectIncludePaths();
     foreach (const PProjectUnit& unit, mUnits) {
-        mParser->addFileToScan(unit->fileName(),true);
+        mParser->addProjectFile(unit->fileName(),true);
     }
     foreach (const QString& s, mOptions.includeDirs) {
         mParser->addProjectIncludePath(s);
@@ -693,32 +705,37 @@ void Project::saveLayout()
     }
 }
 
-void Project::renameUnit(PProjectUnit& unit, const QString &sFileName)
+void Project::renameUnit(PProjectUnit& unit, const QString &newFileName)
 {
     if (!unit)
         return;
-    if (sFileName.compare(unit->fileName(),PATH_SENSITIVITY)==0)
+    if (newFileName.compare(unit->fileName(),PATH_SENSITIVITY)==0)
         return;
+
     if (mParser) {
         mParser->removeProjectFile(unit->fileName());
-        mParser->addFileToScan(sFileName,true);
+        mParser->addProjectFile(newFileName,true);
     }
+
     Editor * editor=unitEditor(unit);
     if (editor) {
         //prevent recurse
-        editor->saveAs(sFileName,true);
+        editor->saveAs(newFileName,true);
     } else {
         if (mParser)
             mParser->invalidateFile(unit->fileName());
-        copyFile(unit->fileName(),sFileName,true);
+        copyFile(unit->fileName(),newFileName,true);
         if (mParser)
-            mParser->parseFile(sFileName,true);
+            mParser->parseFile(newFileName,true);
     }
-    removeUnit(unit,false,true);
+
+    internalRemoveUnit(unit,false,true);
+
     PProjectModelNode parentNode = unit->node()->parent.lock();
-    unit = addUnit(sFileName,parentNode);
+    internalAddUnit(newFileName,parentNode);
     setModified(true);
 
+    emit unitRenamed(unit->fileName(),newFileName);
     emit nodeRenamed();
 }
 
@@ -1202,6 +1219,16 @@ PProjectModelNode Project::addFolder(PProjectModelNode parentFolder,const QStrin
 }
 
 PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode parentNode)
+{
+    PProjectUnit newUnit=internalAddUnit(inFileName, parentNode);
+    if (newUnit) {
+        mParser->addProjectFile(newUnit->fileName(),true);
+        emit unitAdded(newUnit->fileName());
+    }
+    return newUnit;
+}
+
+PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNode parentNode)
 {
     // Don't add if it already exists
     if (fileAlreadyExists(inFileName)) {

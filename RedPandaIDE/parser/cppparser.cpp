@@ -1121,18 +1121,17 @@ int CppParser::getFirstTemplateParamEnd(const QString &s, int startAt)
     return startAt;
 }
 
-void CppParser::addFileToScan(const QString& value, bool inProject)
+void CppParser::addProjectFile(const QString &fileName, bool needScan)
 {
     QMutexLocker locker(&mMutex);
     //value.replace('/','\\'); // only accept full file names
 
     // Update project listing
-    if (inProject)
-        mProjectFiles.insert(value);
+        mProjectFiles.insert(fileName);
 
     // Only parse given file
-    if (!mPreprocessor.scannedFiles().contains(value)) {
-        mFilesToScan.insert(value);
+    if (needScan && !mPreprocessor.scannedFiles().contains(fileName)) {
+        mFilesToScan.insert(fileName);
     }
 }
 
@@ -5271,6 +5270,11 @@ void CppParser::parseCommandTypeAndArgs(QString &command, QString &typeSuffix, Q
         args="";
     }
 
+}
+
+const QSet<QString> &CppParser::projectFiles() const
+{
+    return mProjectFiles;
 }
 
 ParserLanguage CppParser::language() const

@@ -278,9 +278,9 @@ void ClassBrowserModel::addMembers()
             return;
         filterChildren(mRoot,p->statements);
     } else {
-        if (mCurrentFiles.isEmpty())
+        if (mParser->projectFiles().isEmpty())
             return;
-        foreach(const QString& file,mCurrentFiles) {
+        foreach(const QString& file,mParser->projectFiles()) {
             PFileIncludes p = mParser->findFileIncludes(file);
             if (!p)
                 return;
@@ -425,16 +425,6 @@ ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentState
         parentNode = addChild(grandNode,dummyParent);
     }
     return parentNode.get();
-}
-
-const QStringList &ClassBrowserModel::currentFiles() const
-{
-    return mCurrentFiles;
-}
-
-void ClassBrowserModel::setCurrentFiles(const QStringList &newCurrentFiles)
-{
-    mCurrentFiles = newCurrentFiles;
 }
 
 QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key)

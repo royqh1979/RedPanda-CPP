@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.4
+
+  - fix: Contents in class browser not correctly updated when close the last editor for project. 
+  - fix: When all editors closed, switch browser mode dosen't correct update the class browser;
+
 Red Panda C++ Version 2.3
 
   - fix: When start parsing and exit app, app may crash

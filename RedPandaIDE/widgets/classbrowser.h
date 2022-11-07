@@ -62,9 +62,6 @@ public:
     ProjectClassBrowserType classBrowserType() const;
     void setClassBrowserType(ProjectClassBrowserType newClassBrowserType);
 
-    const QStringList &currentFiles() const;
-    void setCurrentFiles(const QStringList &newCurrentFiles);
-
     QModelIndex modelIndexForStatement(const QString& key);
 signals:
     void refreshStarted();
@@ -90,7 +87,6 @@ private:
     int mUpdateCount;
     QMutex mMutex;
     QString mCurrentFile;
-    QStringList mCurrentFiles;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
     ProjectClassBrowserType mClassBrowserType;
 

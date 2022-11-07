@@ -290,10 +290,17 @@ public:
     void renameFolderNode(PProjectModelNode node, const QString newName);
     void loadUnitLayout(Editor *e);
 signals:
+    void unitRemoved(const QString& fileName);
+    void unitAdded(const QString& fileName);
+    void unitRenamed(const QString& oldFileName, const QString& newFileName);
     void nodeRenamed();
     void modifyChanged(bool value);
 
 private:
+    bool internalRemoveUnit(PProjectUnit& unit, bool doClose, bool removeFile);
+    PProjectUnit internalAddUnit(const QString& inFileName,
+                PProjectModelNode parentNode);
+
     bool assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, bool useCpp);
     void checkProjectFileForUpdate(SimpleIni& ini);
     void createFolderNodes();
