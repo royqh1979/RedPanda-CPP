@@ -387,6 +387,9 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     newUnit->setOverrideBuildCmd(false);
     newUnit->setBuildCmd("");
     newUnit->setEncoding(toByteArray(mOptions.encoding));
+
+    mParser->addProjectFile(newUnit->fileName(),true);
+    emit unitAdded(newUnit->fileName());
     return newUnit;
 }
 
