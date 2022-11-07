@@ -1843,6 +1843,29 @@ void BreakpointModel::removeBreakpoint(int row, bool forProject)
         endRemoveRows();
 }
 
+void BreakpointModel::removeBreakpointsInFile(const QString &fileName, bool forProject)
+{
+    QList<PBreakpoint> & lst=forProject?mProjectBreakpoints:mBreakpoints;
+    for (int i=lst.count()-1;i>=0;i--) {
+        if (lst[i]->filename==fileName)
+            removeBreakpoint(i,forProject);
+    }
+}
+
+void BreakpointModel::renameBreakpointFilenames(const QString &oldFileName, const QString &newFileName, bool forProject)
+{
+    QList<PBreakpoint> & lst=forProject?mProjectBreakpoints:mBreakpoints;
+    for (int i=lst.count()-1;i>=0;i--) {
+        if (lst[i]->filename==oldFileName) {
+            lst[i]->filename=newFileName;
+            if (forProject == mIsForProject) {
+                QModelIndex index=createIndex(i,0);
+                emit dataChanged(index,index);
+            }
+        }
+    }
+}
+
 void BreakpointModel::invalidateAllBreakpointNumbers()
 {
     foreach (PBreakpoint bp,mBreakpoints) {

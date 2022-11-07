@@ -1127,7 +1127,7 @@ void MainWindow::rebuildOpenedFileHisotryMenu()
             //menu takes the ownership
             QAction* action = new QAction(filename,mMenuRecentProjects);
             connect(action, &QAction::triggered, [filename,this](bool){
-                this->openProject(filename);
+                openProject(filename);
             });
             mMenuRecentProjects->addAction(action);
         }
@@ -1430,7 +1430,8 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
                 changeFileExt(mProject->filename(), PROJECT_DEBUG_EXT),
                 mProject->directory());
     mTodoModel.setIsForProject(true);
-    mTodoParser->parseFiles(mProject->unitFiles());
+    if (pSettings->editor().parseTodos())
+        mTodoParser->parseFiles(mProject->unitFiles());
 
     if (openFiles) {
         PProjectUnit unit = mProject->doAutoOpen();
@@ -1455,6 +1456,7 @@ void MainWindow::openProject(const QString &filename, bool openFiles)
     mClassBrowserModel.endUpdate();
     if (oldEditor)
         mEditorList->closeEditor(oldEditor);
+    setupSlotsForProject();
     //updateForEncodingInfo();
 }
 
@@ -4565,6 +4567,7 @@ void MainWindow::onTodoParsingFile(const QString& filename)
 {
     mTodoModel.removeTodosForFile(filename);
 }
+
 void MainWindow::onTodoParseStarted()
 {
     mTodoModel.clear();
@@ -6295,8 +6298,6 @@ void MainWindow::on_actionNew_Project_triggered()
         }
         mProject->saveAll();
         updateProjectView();
-        mTodoParser->parseFiles(mProject->unitFiles());
-        scanActiveProject(true);
         Editor* editor = mEditorList->getEditor();
         updateClassBrowserForEditor(editor);
         if (editor) {
@@ -6308,8 +6309,12 @@ void MainWindow::on_actionNew_Project_triggered()
                 ui->projectView->setCurrentIndex(index);
             }
         }
+        scanActiveProject(true);
+        if (pSettings->editor().parseTodos())
+            mTodoParser->parseFiles(mProject->unitFiles());
         if (pSettings->ui().showProject())
             ui->tabExplorer->setCurrentWidget(ui->tabProject);
+        setupSlotsForProject();
     }
     pSettings->ui().setNewProjectDialogWidth(dialog.width());
     pSettings->ui().setNewProjectDialogHeight(dialog.height());
@@ -6842,6 +6847,49 @@ QString MainWindow::switchHeaderSourceTarget(Editor *editor)
     return QString();
 }
 
+void MainWindow::setupSlotsForProject()
+{
+    connect(mProject.get(), &Project::unitAdded,
+            this, &MainWindow::onProjectUnitAdded);
+    connect(mProject.get(), &Project::unitRemoved,
+            this, &MainWindow::onProjectUnitRemoved);
+    connect(mProject.get(), &Project::unitRenamed,
+            this, &MainWindow::onProjectUnitRenamed);
+}
+
+void MainWindow::onProjectUnitAdded(const QString &filename)
+{
+    mProject->cppParser()->addProjectFile(filename,true);
+    if (pSettings->editor().parseTodos()) {
+        mTodoParser->parseFile(filename,true);
+    }
+}
+
+void MainWindow::onProjectUnitRemoved(const QString &filename)
+{
+    mProject->cppParser()->invalidateFile(filename);
+    mProject->cppParser()->removeProjectFile(filename);
+    if (pSettings->editor().parseTodos()) {
+        mTodoModel.removeTodosForFile(filename);
+    }
+    mDebugger->breakpointModel()->removeBreakpointsInFile(filename,true);
+    mBookmarkModel->removeBookmarks(filename,true);
+}
+
+void MainWindow::onProjectUnitRenamed(const QString &oldFilename, const QString &newFilename)
+{
+    mProject->cppParser()->invalidateFile(oldFilename);
+    mProject->cppParser()->removeProjectFile(oldFilename);
+    mProject->cppParser()->addProjectFile(newFilename,true);
+    parseFileList(mProject->cppParser());
+    if (pSettings->editor().parseTodos()) {
+        mTodoModel.removeTodosForFile(oldFilename);
+        mTodoParser->parseFile(newFilename,true);
+    }
+    mBookmarkModel->renameBookmarkFile(oldFilename,newFilename,true);
+    mDebugger->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,true);
+}
+
 void MainWindow::onProjectViewNodeRenamed()
 {
     updateProjectView();
@@ -7023,6 +7071,11 @@ void MainWindow::onEditorRenamed(const QString &oldFilename, const QString &newF
 {
     if (firstSave)
         mOJProblemSetModel.updateProblemAnswerFilename(oldFilename, newFilename);
+    Editor * editor=mEditorList->getOpenedEditorByFilename(newFilename);
+    if (editor && !editor->inProject()) {
+        mBookmarkModel->renameBookmarkFile(oldFilename,newFilename,false);
+        mDebugger->breakpointModel()->renameBreakpointFilenames(oldFilename,newFilename,false);
+    }
 }
 
 void MainWindow::on_EditorTabsLeft_currentChanged(int)

@@ -665,6 +665,16 @@ void Settings::Editor::setAutoFormatWhenSaved(bool newAutoFormatWhenSaved)
     mAutoFormatWhenSaved = newAutoFormatWhenSaved;
 }
 
+bool Settings::Editor::parseTodos() const
+{
+    return mParseTodos;
+}
+
+void Settings::Editor::setParseTodos(bool newParseTodos)
+{
+    mParseTodos = newParseTodos;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1246,6 +1256,7 @@ void Settings::Editor::doSave()
     saveValue("undo_limit",mUndoLimit);
     saveValue("undo_memory_usage", mUndoMemoryUsage);
     saveValue("auto_format_when_saved", mAutoFormatWhenSaved);
+    saveValue("parse_todos",mParseTodos);
 
     //tooltips
     saveValue("enable_tooltips",mEnableTooltips);
@@ -1389,6 +1400,8 @@ void Settings::Editor::doLoad()
     mUndoLimit = intValue("undo_limit",0);
     mUndoMemoryUsage = intValue("undo_memory_usage", 10);
     mAutoFormatWhenSaved = boolValue("auto_format_when_saved", false);
+    mParseTodos = boolValue("parse_todos",true);
+
 
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);

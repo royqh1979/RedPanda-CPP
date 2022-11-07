@@ -29,9 +29,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkAutoDetectFileEncoding">
+    <widget class="QCheckBox" name="chkParseTodos">
      <property name="text">
-      <string>Auto detect encoding when openning files</string>
+      <string>Parse TODOs</string>
      </property>
     </widget>
    </item>
@@ -145,6 +145,13 @@
        </spacer>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="chkAutoDetectFileEncoding">
+     <property name="text">
+      <string>Auto detect encoding when openning files</string>
+     </property>
     </widget>
    </item>
    <item>

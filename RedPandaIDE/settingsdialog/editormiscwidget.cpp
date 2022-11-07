@@ -67,6 +67,7 @@ void EditorMiscWidget::doLoad()
     ui->spinMaxUndo->setValue(pSettings->editor().undoLimit());
     ui->spinMaxUndoMemory->setValue(pSettings->editor().undoMemoryUsage());
     ui->chkAutoReformat->setChecked(pSettings->editor().autoFormatWhenSaved());
+    ui->chkParseTodos->setChecked(pSettings->editor().parseTodos());
 }
 
 void EditorMiscWidget::doSave()
@@ -84,6 +85,8 @@ void EditorMiscWidget::doSave()
     pSettings->editor().setUndoLimit(ui->spinMaxUndo->value());
     pSettings->editor().setUndoMemoryUsage(ui->spinMaxUndoMemory->value());
     pSettings->editor().setAutoFormatWhenSaved(ui->chkAutoReformat->isChecked());
+    pSettings->editor().setParseTodos(ui->chkParseTodos->isChecked());
+
 
     pSettings->editor().save();
     pMainWindow->updateEditorSettings();

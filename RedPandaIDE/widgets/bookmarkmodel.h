@@ -43,6 +43,7 @@ public:
     PBookmark bookmark(const QString&filename, int line);
     bool removeBookmark(const QString&filename, int line, bool forProject);
     void removeBookmarks(const QString& filename, bool forProject);
+    void renameBookmarkFile(const QString& oldFilename, const QString& newFilename, bool forProject);
     void clear(bool forProject);
     bool updateDescription(const QString&filename, int line, const QString& description, bool forProject);
     bool updateDescription(const QString&filename, int line, const QString& description);

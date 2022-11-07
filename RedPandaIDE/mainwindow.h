@@ -293,14 +293,18 @@ private:
     QString switchHeaderSourceTarget(Editor *editor);
 
 private slots:
+    void setupSlotsForProject();
+    void onProjectUnitAdded(const QString &filename);
+    void onProjectUnitRemoved(const QString &filename);
+    void onProjectUnitRenamed(const QString &oldFilename, const QString& newFilename);
     void onProjectViewNodeRenamed();
     void setDockExplorerToArea(const Qt::DockWidgetArea &area);
     void setDockMessagesToArea(const Qt::DockWidgetArea &area);
     void updateVCSActions();
     void invalidateProjectProxyModel();
-    void onEditorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
+    void onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave);
     void onAutoSaveTimeout();
-    void onFileChanged(const QString& path);
+    void onFileChanged(const QString &path);
     void onFilesViewPathChanged();
     void onWatchViewContextMenu(const QPoint& pos);
     void onBookmarkContextMenu(const QPoint& pos);

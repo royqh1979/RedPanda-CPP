@@ -329,8 +329,6 @@ PProjectModelNode Project::makeProjectNode()
 
 PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& customFileName)
 {
-    PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
-
     // Select folder to add unit to
     if (!parentNode)
         parentNode = mRootNode; // project root node
@@ -348,47 +346,7 @@ PProjectUnit Project::newUnit(PProjectModelNode parentNode, const QString& custo
     } else {
         s = cleanPath(dir.absoluteFilePath(customFileName));
     }
-    if (mOptions.modelType == ProjectModelType::FileSystem) {
-        // in file system mode, parentNode is determined by file's path
-        parentNode = getParentFileSystemFolderNode(s);
-    }
-    // Add
-
-    // Set all properties
-    newUnit->setFileName(s);
-    newUnit->setFolder(getNodePath(parentNode));
-    PProjectModelNode node = makeNewFileNode(newUnit,newUnit->priority(),parentNode);
-    newUnit->setNode(node);
-    mUnits.insert(newUnit->fileName(), newUnit);
-
-    //parentNode.Expand(True);
-    switch(getFileType(customFileName)) {
-    case FileType::CSource:
-        newUnit->setCompile(true);
-        newUnit->setCompileCpp(false);
-        newUnit->setLink(true);
-        break;
-    case FileType::CppSource:
-        newUnit->setCompile(true);
-        newUnit->setCompileCpp(true);
-        newUnit->setLink(true);
-        break;
-    case FileType::WindowsResourceSource:
-        newUnit->setCompile(true);
-        newUnit->setCompileCpp(mOptions.isCpp);
-        newUnit->setLink(false);
-        break;
-    default:
-        newUnit->setCompile(false);
-        newUnit->setCompileCpp(false);
-        newUnit->setLink(false);
-    }
-    newUnit->setPriority(1000);
-    newUnit->setOverrideBuildCmd(false);
-    newUnit->setBuildCmd("");
-    newUnit->setEncoding(toByteArray(mOptions.encoding));
-
-    mParser->addProjectFile(newUnit->fileName(),true);
+    PProjectUnit newUnit = internalAddUnit(s,parentNode);
     emit unitAdded(newUnit->fileName());
     return newUnit;
 }
@@ -533,8 +491,6 @@ bool Project::removeUnit(PProjectUnit& unit, bool doClose , bool removeFile)
     bool result=internalRemoveUnit(unit,doClose,removeFile);
 
     if (result) {
-        mParser->invalidateFile(unit->fileName());
-        mParser->removeProjectFile(unit->fileName());
         emit unitRemoved(unit->fileName());
     }
     return result;
@@ -1225,7 +1181,6 @@ PProjectUnit Project::addUnit(const QString &inFileName, PProjectModelNode paren
 {
     PProjectUnit newUnit=internalAddUnit(inFileName, parentNode);
     if (newUnit) {
-        mParser->addProjectFile(newUnit->fileName(),true);
         emit unitAdded(newUnit->fileName());
     }
     return newUnit;

@@ -216,6 +216,8 @@ public:
     void setModified(bool value);
 
     PProjectModelNode addFolder(PProjectModelNode parentFolder, const QString& s);
+    PProjectUnit  newUnit(PProjectModelNode parentNode,
+                 const QString& customFileName="");
     PProjectUnit addUnit(const QString& inFileName,
                 PProjectModelNode parentNode);
     QString folder();
@@ -227,8 +229,6 @@ public:
     QString getNodePath(PProjectModelNode node);
     void incrementBuildNumber();
 
-    PProjectUnit  newUnit(PProjectModelNode parentNode,
-                 const QString& customFileName="");
     Editor* openUnit(PProjectUnit& unit, bool forceOpen=true);
     Editor* openUnit(PProjectUnit& unit, const PProjectEditorLayout& layout);
     Editor* unitEditor(const PProjectUnit& unit) const;

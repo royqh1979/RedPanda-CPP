@@ -130,6 +130,8 @@ public:
     void addBreakpoint(PBreakpoint p, bool forProject);
     void clear(bool forProject);
     void removeBreakpoint(int index, bool forProject);
+    void removeBreakpointsInFile(const QString& fileName, bool forProject);
+    void renameBreakpointFilenames(const QString& oldFileName,const QString& newFileName, bool forProject);
     PBreakpoint setBreakPointCondition(int index, const QString& condition, bool forProject);
     const QList<PBreakpoint>& breakpoints(bool forProject) const {
         return forProject?mProjectBreakpoints:mBreakpoints;

@@ -367,6 +367,9 @@ public:
         bool autoFormatWhenSaved() const;
         void setAutoFormatWhenSaved(bool newAutoFormatWhenSaved);
 
+        bool parseTodos() const;
+        void setParseTodos(bool newParseTodos);
+
     private:
         //General
         // indents
@@ -476,6 +479,7 @@ public:
         int mUndoLimit;
         int mUndoMemoryUsage;
         bool mAutoFormatWhenSaved;
+        bool mParseTodos;
 
 
         //hints tooltip

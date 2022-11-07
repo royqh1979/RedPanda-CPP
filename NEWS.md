@@ -3,6 +3,10 @@ Red Panda C++ Version 2.4
   - fix: Contents in class browser not correctly updated when close the last editor for project. 
   - fix: When all editors closed, switch browser mode dosen't correct update the class browser;
   - fix: "check when open/save" and "check when caret line changed" in Options Dialog / Editor / Syntax Check don't work
+  - fix: Crash when editing a function at the end of file without ; or {
+  - enhancement: Add the "parsing TODOs" option in Options Dialog / Editor / Misc
+  - enhancement: Remove todos/bookmarks/breakpoints when deleting file from project
+  - enhancement: Rename filenames in todos/bookmarks/breakpoints  when renaming project file
 
 Red Panda C++ Version 2.3
 

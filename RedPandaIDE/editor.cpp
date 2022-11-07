@@ -350,7 +350,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
 
     clearSyntaxIssues();
     pMainWindow->fileSystemWatcher()->removePath(mFilename);
-    if (pSettings->codeCompletion().enabled() && mParser) {
+    if (pSettings->codeCompletion().enabled() && mParser && !inProject()) {
         mParser->invalidateFile(mFilename);
     }
 
@@ -395,11 +395,14 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
     applyColorScheme(pSettings->editor().colorScheme());
 
-    reparse(false);
+    if (!inProject())
+        reparse(false);
 
     if (pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
-    reparseTodo();
+
+    if (!inProject())
+        reparseTodo();
 
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
@@ -2775,7 +2778,8 @@ void Editor::reparseTodo()
         return;
     if (!highlighter())
         return;
-    pMainWindow->todoParser()->parseFile(mFilename, inProject());
+    if (pSettings->editor().parseTodos())
+        pMainWindow->todoParser()->parseFile(mFilename, inProject());
 }
 
 void Editor::insertString(const QString &value, bool moveCursor)

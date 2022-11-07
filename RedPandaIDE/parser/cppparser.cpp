@@ -2619,9 +2619,10 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
             } else
                 mIndex++;
         }
-
-
     }
+
+    if (mIndex>=mTokenizer.tokenCount())
+        return;
 
     // Check if this is a prototype
     if (mTokenizer[mIndex]->text.startsWith(';')
