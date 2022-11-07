@@ -1336,6 +1336,10 @@
         <source>Auto reformat code before saving files</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Parse TODOs</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorSnippetWidget</name>
