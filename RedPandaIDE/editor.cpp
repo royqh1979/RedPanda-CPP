@@ -284,7 +284,8 @@ bool Editor::save(bool force, bool doReparse) {
 
     if (doReparse && isVisible()) {
         reparse(false);
-        checkSyntaxInBack();
+        if (pSettings->editor().syntaxCheckWhenSave())
+            checkSyntaxInBack();
         reparseTodo();
     }
     return true;
@@ -396,7 +397,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
 
     reparse(false);
 
-    checkSyntaxInBack();
+    if (pSettings->editor().syntaxCheckWhenSave())
+        checkSyntaxInBack();
     reparseTodo();
 
     if (!shouldOpenInReadonly()) {
@@ -1579,7 +1581,8 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         mCurrentLineModified = false;
         if (!changes.testFlag(QSynedit::StatusChange::scOpenFile)) {
             reparse(false);
-            checkSyntaxInBack();
+            if (pSettings->editor().syntaxCheckWhenLineChanged())
+                checkSyntaxInBack();
             reparseTodo();
         }
 //        if (pSettings->codeCompletion().clearWhenEditorHidden()
