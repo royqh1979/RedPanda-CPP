@@ -8,6 +8,7 @@ Red Panda C++ Version 2.4
   - enhancement: Remove todos/bookmarks/breakpoints when deleting file from project
   - enhancement: Rename filenames in todos/bookmarks/breakpoints  when renaming project file
   - enhancement: Rename filenames in bookmarks/breakpoints after a file is save-ased.
+  - fix: Can't goto definition of classes and namespaces displayed in the class browser on whole project mode.
 
 Red Panda C++ Version 2.3
 

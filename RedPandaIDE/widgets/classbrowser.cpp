@@ -400,10 +400,10 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
     result->inSystemHeader = statement->inSystemHeader;
     result->isStatic = statement->isStatic;
     result->isInherited = statement->isInherited;
-    result->fileName = mCurrentFile;
-    result->definitionFileName = mCurrentFile;
-    result->line = 0;
-    result->definitionLine = 0;
+    result->fileName= statement->fileName;
+    result->line = statement->line;
+    result->definitionFileName = statement->fileName;
+    result->definitionLine = statement->definitionLine;
     mDummyStatements.insert(result->fullName,result);
     return result;
 }
