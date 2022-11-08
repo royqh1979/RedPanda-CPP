@@ -121,7 +121,6 @@ private:
     // include stuff
     PFileIncludes getFileIncludesEntry(const QString& FileName);
     void addDefinesInFile(const QString& fileName);
-    void resetDefines();
     void addDefineByParts(const QString& name, const QString& args,
                           const QString& value, bool hardCoded);
     void addDefineByLine(const QString& line, bool hardCoded);

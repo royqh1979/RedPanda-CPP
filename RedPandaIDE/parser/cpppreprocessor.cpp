@@ -159,14 +159,6 @@ PDefine CppPreprocessor::getHardDefine(const QString &name)
     return mHardDefines.value(name,PDefine());
 }
 
-void CppPreprocessor::resetDefines()
-{
-    mDefines = mHardDefines;
-//    mDefines.clear();
-
-//    mDefines.insert(mHardDefines);
-}
-
 void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
 {
     mParseSystem = parseSystem;
@@ -846,12 +838,18 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
         return;
     mProcessed.insert(fileName);
 
+    qDebug()<<fileName;
     // then add the defines defined in it
     PDefineMap defineList = mFileDefines.value(fileName, PDefineMap());
     if (defineList) {
         foreach (const PDefine& define, defineList->values()) {
             mDefines.insert(define->name,define);
         }
+    }
+
+    PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
+    foreach (const QString& file, fileIncludes->includeFiles.keys()) {
+        addDefinesInFile(file);
     }
 }
 
