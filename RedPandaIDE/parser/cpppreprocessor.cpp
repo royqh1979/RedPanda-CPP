@@ -838,7 +838,6 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
         return;
     mProcessed.insert(fileName);
 
-    qDebug()<<fileName;
     // then add the defines defined in it
     PDefineMap defineList = mFileDefines.value(fileName, PDefineMap());
     if (defineList) {
