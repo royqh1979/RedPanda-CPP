@@ -1281,8 +1281,8 @@ PStatement CppParser::addStatement(const PStatement& parent,
 PStatement CppParser::addStatement(const PStatement &parent, const QString &fileName, const QString &aType, const QString &command, int argStart, int argEnd, const QString &value, int line, StatementKind kind, const StatementScope &scope, const StatementClassScope &classScope, bool isDefinition, bool isStatic)
 {
     Q_ASSERT(mTokenizer[argStart]->text=='(');
-    QString args("(");
-    QString noNameArgs("(");
+    QString args;
+    QString noNameArgs;
 
     int start=argStart+1;
     bool typeGetted = false;
@@ -1336,8 +1336,8 @@ PStatement CppParser::addStatement(const PStatement &parent, const QString &file
         args+=mTokenizer[i]->text;
     }
 
-    args.push_back(")");
-    noNameArgs.push_back(")");
+    args="("+args.trimmed()+")";
+    noNameArgs="("+noNameArgs.trimmed()+")";
     return addStatement(
                 parent,
                 fileName,
