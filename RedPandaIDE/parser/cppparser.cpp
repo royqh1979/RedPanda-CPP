@@ -1293,7 +1293,7 @@ PStatement CppParser::addStatement(const PStatement &parent, const QString &file
         if (this->isIdentChar(ch)) {
             QString spaces=(i>argStart)?" ":"";
             args+=spaces;
-            word += mTokenizer[i]->text[0];
+            word += mTokenizer[i]->text;
             if (!typeGetted) {
                 noNameArgs+=spaces+word;
                 if (mCppTypeKeywords.contains(word) || !isCppKeyword(word))
@@ -1900,7 +1900,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
             }
 
             // function call, skip it
-            mIndex=moveToNextBraceOrSkipNextSemicolon(mIndex,true);
+            mIndex=moveToEndOfStatement(mIndex,true);
         }
     } else if (mTokenizer[mIndex]->text.startsWith('*')
                || mTokenizer[mIndex]->text.startsWith('&')
@@ -2573,11 +2573,7 @@ void CppParser::handleLambda(int index, int endIndex)
 
             }
         }
-        i=moveToNextBraceOrSkipNextSemicolon(i, true, bodyEnd);
-        if (i<bodyEnd && mTokenizer[i]->text=='{') {
-            //skip '}'
-            i=mTokenizer[i]->matchIndex+1;
-        }
+        i=moveToEndOfStatement(i, true, bodyEnd);
     }
     removeScopeLevel(mTokenizer[bodyEnd]->line);
 }
@@ -3095,13 +3091,14 @@ bool CppParser::handleStatement()
             handleMethod(StatementKind::skDestructor, "", '~'+mTokenizer[mIndex]->text, mIndex+1, false, false);
         } else {
             //error
-            mIndex=moveToNextBraceOrSkipNextSemicolon(mIndex,false);
+            mIndex=moveToEndOfStatement(mIndex,false);
         }
     } else if (!isIdentChar(mTokenizer[mIndex]->text[0])) {
-        mIndex=moveToNextBraceOrSkipNextSemicolon(mIndex,false);
+        mIndex=moveToEndOfStatement(mIndex,true);
     } else if (mTokenizer[mIndex]->text.endsWith('.')
                || mTokenizer[mIndex]->text.endsWith("->")) {
-        mIndex=moveToNextBraceOrSkipNextSemicolon(mIndex,true);
+        mIndex=moveToEndOfStatement(mIndex,true);
+
     } else if (checkForKeyword(keywordType)) { // includes template now
         handleKeyword(keywordType);
     } else if (keywordType==KeywordType::For) { // (for/catch)
@@ -3581,7 +3578,6 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
 //        return false;
 //    }
 
-    bool varAdded = false;
     QString tempType;
     while(mIndex<mTokenizer.tokenCount()) {
         // Skip bit identifiers,
@@ -3600,54 +3596,25 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                 mIndex++;
         } else if (mTokenizer[mIndex]->text==';') {
             break;
-        } else if (mTokenizer[mIndex]->text=='('
-                && mTokenizer[mIndex]->matchIndex+1<mTokenizer.tokenCount()
-                && mTokenizer[mTokenizer[mIndex]->matchIndex+1]->text=='(') {
-            //function pointer
-            QString cmd=mTokenizer[mIndex]->text;
-            int argStart=mTokenizer[mIndex]->matchIndex+1;
-            int argEnd=mTokenizer[argStart]->matchIndex;
-            if (cmd.startsWith('*'))
-                cmd=cmd.mid(1);
-            if (!cmd.isEmpty()) {
-                addChildStatement(
-                            getCurrentScope(),
-                            mCurrentFile,
-                            lastType,
-                            cmd,
-                            mergeArgs(argStart,argEnd),
-                            "",
-                            "",
-                            mTokenizer[mIndex]->line,
-                            StatementKind::skVariable,
-                            getScope(),
-                            mClassScope,
-                            //True,
-                            !isExtern,
-                            isStatic); // TODO: not supported to pass list
-                varAdded = true;
-                tempType="";
-            }
-            mIndex=argEnd+1;
         } else if (isWordChar(mTokenizer[mIndex]->text[0])) {
             QString cmd=mTokenizer[mIndex]->text;
-            while (cmd.startsWith('*')) {
-                cmd=cmd.mid(1);
-            }
-            if (cmd=="const") {
-                tempType=mTokenizer[mIndex]->text;
-            } else {
-                QString suffix;
-                QString args;
-                cmd=mTokenizer[mIndex]->text;
-                parseCommandTypeAndArgs(cmd,suffix,args);
+            if (mTokenizer[mIndex+1]->text=='('
+                    && mTokenizer[mIndex+1]->matchIndex+1<mTokenizer.tokenCount()
+                    && mTokenizer[mTokenizer[mIndex+1]->matchIndex+1]->text=='(') {
+                        //function pointer
+                cmd = mTokenizer[mIndex+2]->text;
+                int argStart=mTokenizer[mIndex+1]->matchIndex+1;
+                int argEnd=mTokenizer[argStart]->matchIndex;
+                if (cmd.startsWith("*"))
+                    cmd = cmd.mid(1);
                 if (!cmd.isEmpty()) {
+                    QString type=lastType;
                     addChildStatement(
                                 getCurrentScope(),
                                 mCurrentFile,
-                                (lastType+' '+tempType+suffix).trimmed(),
+                                (lastType+" "+tempType+" "+mTokenizer[mIndex]->text).trimmed(),
                                 cmd,
-                                args,
+                                mergeArgs(argStart,argEnd),
                                 "",
                                 "",
                                 mTokenizer[mIndex]->line,
@@ -3656,12 +3623,43 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                 mClassScope,
                                 //True,
                                 !isExtern,
-                                isStatic); // TODO: not supported to pass list
-                    varAdded = true;
-                    tempType="";
+                                isStatic);
                 }
+                tempType="";
+                mIndex=indexOfNextSemicolonOrLeftBrace(argEnd+1);
+            }  else {
+                //normal var
+                while (cmd.startsWith('*')) {
+                    cmd=cmd.mid(1);
+                }
+                if (cmd=="const") {
+                    tempType=mTokenizer[mIndex]->text;
+                } else {
+                    QString suffix;
+                    QString args;
+                    cmd=mTokenizer[mIndex]->text;
+                    parseCommandTypeAndArgs(cmd,suffix,args);
+                    if (!cmd.isEmpty()) {
+                        addChildStatement(
+                                    getCurrentScope(),
+                                    mCurrentFile,
+                                    (lastType+' '+tempType+suffix).trimmed(),
+                                    cmd,
+                                    args,
+                                    "",
+                                    "",
+                                    mTokenizer[mIndex]->line,
+                                    StatementKind::skVariable,
+                                    getScope(),
+                                    mClassScope,
+                                    //True,
+                                    !isExtern,
+                                    isStatic);
+                        tempType="";
+                    }
+                }
+                mIndex++;
             }
-            mIndex++;
         } else if (mTokenizer[mIndex]->text=='(') {
             mIndex=mTokenizer[mIndex]->matchIndex+1;
         } else if (mTokenizer[mIndex]->text=='=') {
@@ -5073,6 +5071,25 @@ int CppParser::indexOfNextSemicolon(int index, int endIndex)
     return index;
 }
 
+int CppParser::indexOfNextPeriodOrSemicolon(int index, int endIndex)
+{
+    if (endIndex<0)
+        endIndex=mTokenizer.tokenCount();
+    while (index<endIndex) {
+        switch(mTokenizer[index]->text[0].unicode()) {
+        case ';':
+        case ',':
+            return index;
+        case '(':
+            index = mTokenizer[index]->matchIndex+1;
+            break;
+        default:
+            index++;
+        }
+    }
+    return index;
+}
+
 int CppParser::indexOfNextSemicolonOrLeftBrace(int index)
 {
     while (index<mTokenizer.tokenCount()) {
@@ -5169,29 +5186,81 @@ void CppParser::skipNextSemicolon(int index)
     }
 }
 
-int CppParser::moveToNextBraceOrSkipNextSemicolon(int index, bool checkLambda, int endIndex)
+//int CppParser::moveToEndOfStatement(int index, bool checkLambda, int endIndex)
+//{
+//    int startIndex=index;
+//    if (endIndex<0)
+//        endIndex=mTokenizer.tokenCount();
+//    bool stop=false;
+//    while (index<endIndex && !stop) {
+//        switch(mTokenizer[index]->text[0].unicode()) {
+//        case ';':
+//            index++;
+//            stop=true;
+//            break;
+//        case '{':
+//            //skip '}'
+//            index = mTokenizer[index]->matchIndex+1;
+//            stop = true;
+//            break;
+//        case '(':
+//            index = mTokenizer[index]->matchIndex+1;
+//            break;
+//        default:
+//            index++;
+//        }
+//    }
+//    if (stop && checkLambda) {
+//        while (mTokenizer.lambdasCount()>0 && mTokenizer.indexOfFirstLambda()<index) {
+//            int i=mTokenizer.indexOfFirstLambda();
+//            mTokenizer.removeFirstLambda();
+//            if (i>=startIndex) {
+//                handleLambda(i,index);
+//            }
+//        }
+//    }
+//    return index;
+//}
+
+int CppParser::moveToEndOfStatement(int index, bool checkLambda, int endIndex)
 {
     int startIndex=index;
     if (endIndex<0)
         endIndex=mTokenizer.tokenCount();
-    bool stop=false;
-    while (index<endIndex && !stop) {
-        switch(mTokenizer[index]->text[0].unicode()) {
-        case ';':
-            index++;
-            stop=true;
-            break;
-        case '{':
-            stop=true;
-            break;
-        case '(':
-            index = mTokenizer[index]->matchIndex+1;
-            break;
-        default:
-            index++;
+    if (index>=endIndex)
+        return index;
+    index--; // compensate for the first loop
+
+    bool skip=true;
+    do {
+        index++;
+        bool stop = false;
+        while (index<endIndex && !stop) {
+            switch(mTokenizer[index]->text[0].unicode()) {
+            case ';':
+                stop=true;
+                break;
+            case '=':
+                stop=true;
+                break;
+            case '}':
+                stop=true;
+                skip=false; //don't skip the orphan '}' that we found
+                break;
+            case '{':
+                //move to '}'
+                index=mTokenizer[index]->matchIndex;
+                stop=true;
+                break;
+            case '(':
+                index = mTokenizer[index]->matchIndex+1;
+                break;
+            default:
+                index++;
+            }
         }
-    }
-    if (stop && checkLambda) {
+    } while (index<mTokenizer.tokenCount() && mTokenizer[index]->text=='=');
+    if (index<endIndex && checkLambda) {
         while (mTokenizer.lambdasCount()>0 && mTokenizer.indexOfFirstLambda()<index) {
             int i=mTokenizer.indexOfFirstLambda();
             mTokenizer.removeFirstLambda();
@@ -5200,6 +5269,8 @@ int CppParser::moveToNextBraceOrSkipNextSemicolon(int index, bool checkLambda, i
             }
         }
     }
+    if (skip)
+        index++;
     return index;
 }
 

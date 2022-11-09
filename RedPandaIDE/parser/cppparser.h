@@ -589,6 +589,7 @@ private:
     void updateSerialId();
 
     int indexOfNextSemicolon(int index, int endIndex=-1);
+    int indexOfNextPeriodOrSemicolon(int index, int endIndex=-1);
     int indexOfNextSemicolonOrLeftBrace(int index);
     int indexOfNextColon(int index);
     int indexOfNextLeftBrace(int index);
@@ -596,7 +597,8 @@ private:
     int indexPassBraces(int index);
     int skipAssignment(int index, int endIndex);
     void skipNextSemicolon(int index);
-    int moveToNextBraceOrSkipNextSemicolon(int index, bool checkLambda, int endIndex=-1);
+    int moveToEndOfStatement(int index, bool checkLambda, int endIndex=-1);
+//    int moveToNextAssignmentOrEndOfStatement(int index, bool checkLambda, int endIndex=-1);
     void skipParenthesis(int index);
     QString mergeArgs(int startIndex, int endIndex);
     void parseCommandTypeAndArgs(QString& command,

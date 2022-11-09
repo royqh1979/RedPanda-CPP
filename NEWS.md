@@ -10,6 +10,9 @@ Red Panda C++ Version 2.4
   - enhancement: Rename filenames in bookmarks/breakpoints after a file is save-ased.
   - fix: Can't goto definition of classes and namespaces displayed in the class browser on whole project mode.
   - fix: macro defines parsed before not correctly applied in the succeeding parse.
+  - fix: function pointers not correctly handle in code parser;
+  - fix: var assignment not correctly handled in code parser;
+  - fix: function args not correctly handled in code parser;
 
 Red Panda C++ Version 2.3
 
