@@ -50,7 +50,6 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     mRecordUsage = false;
     mSortByScope = true;
 
-    mOnlyGlobals = false;
     mShowCount = 1000;
     mShowCodeSnippets = true;
 
@@ -940,16 +939,6 @@ bool CodeCompletionPopup::recordUsage() const
 void CodeCompletionPopup::setRecordUsage(bool newRecordUsage)
 {
     mRecordUsage = newRecordUsage;
-}
-
-bool CodeCompletionPopup::onlyGlobals() const
-{
-    return mOnlyGlobals;
-}
-
-void CodeCompletionPopup::setOnlyGlobals(bool newOnlyGlobals)
-{
-    mOnlyGlobals = newOnlyGlobals;
 }
 
 int CodeCompletionPopup::showCount() const

@@ -91,9 +91,6 @@ public:
     int showCount() const;
     void setShowCount(int newShowCount);
 
-    bool onlyGlobals() const;
-    void setOnlyGlobals(bool newOnlyGlobals);
-
     bool recordUsage() const;
     void setRecordUsage(bool newRecordUsage);
 
@@ -158,7 +155,6 @@ private:
     PCppParser mParser;
     PStatement mCurrentStatement;
     int mShowCount;
-    bool mOnlyGlobals;
     bool mRecordUsage;
     bool mShowKeywords;
     bool mShowCodeSnippets;
