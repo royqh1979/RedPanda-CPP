@@ -146,7 +146,11 @@ private:
     bool mAppendNewLineAtEOF;
     int mIndexOfLongestLine;
     int mUpdateCount;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    QRecursiveMutex mMutex;
+#else
     QMutex mMutex;
+#endif
 
     int calculateLineColumns(int Index);
 };

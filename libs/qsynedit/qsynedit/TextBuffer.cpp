@@ -35,7 +35,11 @@ Document::Document(const QFont& font, const QFont& nonAsciiFont, QObject *parent
       mFontMetrics(font),
       mNonAsciiFontMetrics(nonAsciiFont),
       mTabWidth(4),
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+      mMutex()
+#else
       mMutex(QMutex::Recursive)
+#endif
 {
 
     mAppendNewLineAtEOF = true;

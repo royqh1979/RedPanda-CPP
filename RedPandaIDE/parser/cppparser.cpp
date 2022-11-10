@@ -28,7 +28,11 @@
 
 static QAtomicInt cppParserCount(0);
 CppParser::CppParser(QObject *parent) : QObject(parent),
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    mMutex()
+#else
     mMutex(QMutex::Recursive)
+#endif
 {
     mParserId = cppParserCount.fetchAndAddRelaxed(1);
     mLanguage = ParserLanguage::CPlusPlus;

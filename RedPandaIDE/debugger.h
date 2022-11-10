@@ -559,7 +559,11 @@ private slots:
 private:
     Debugger *mDebugger;
     QString mDebuggerPath;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    QRecursiveMutex mCmdQueueMutex;
+#else
     QMutex mCmdQueueMutex;
+#endif
     QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
     bool mErrorOccured;

@@ -641,7 +641,11 @@ private:
     QHash<QString,PStatementList> mNamespaces;  // namespace and the statements in its scope
     QSet<QString> mInlineNamespaces;
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    QRecursiveMutex mMutex;
+#else
     QMutex mMutex;
+#endif
     GetFileStreamCallBack mOnGetFileStream;
     QMap<QString,KeywordType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;

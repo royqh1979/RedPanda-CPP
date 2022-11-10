@@ -741,9 +741,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             handled=true;
                             return;
                         }
+                        PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
+                        while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                            currentScope = currentScope->parentScope.lock();
+                        }
+                        if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
+
+                            return;
+                        }
+
                         //last word is a type keyword, this is a var or param define, and dont show suggestion
-  //                  if devEditor.UseTabnine then
-  //                    ShowTabnineCompletion;
                         return;
                     }
                     PStatement statement = mParser->findStatementOf(
@@ -756,8 +763,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             || kind == StatementKind::skEnumType
                             || kind == StatementKind::skTypedef) {
                         //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
-  //                      if devEditor.UseTabnine then
-  //                        ShowTabnineCompletion;
                         return;
                     }
                 }

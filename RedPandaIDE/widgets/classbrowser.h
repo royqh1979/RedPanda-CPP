@@ -85,7 +85,11 @@ private:
     PCppParser mParser;
     bool mUpdating;
     int mUpdateCount;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    QRecursiveMutex mMutex;
+#else
     QMutex mMutex;
+#endif
     QString mCurrentFile;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
     ProjectClassBrowserType mClassBrowserType;

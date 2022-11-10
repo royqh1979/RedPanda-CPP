@@ -83,9 +83,15 @@ private:
     int mSyntaxCheckIssueCount;
     Compiler* mBackgroundSyntaxChecker;
     Runner* mRunner;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    QRecursiveMutex mCompileMutex;
+    QRecursiveMutex mBackgroundSyntaxCheckMutex;
+    QRecursiveMutex mRunnerMutex;
+#else
     QMutex mCompileMutex;
     QMutex mBackgroundSyntaxCheckMutex;
     QMutex mRunnerMutex;
+#endif
 };
 
 class CompileError : public BaseError {

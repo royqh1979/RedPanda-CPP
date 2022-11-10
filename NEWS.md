@@ -13,6 +13,7 @@ Red Panda C++ Version 2.4
   - fix: function pointers not correctly handle in code parser;
   - fix: var assignment not correctly handled in code parser;
   - fix: function args not correctly handled in code parser;
+  - fix: crash when alt+mouse drag selection
 
 Red Panda C++ Version 2.3
 

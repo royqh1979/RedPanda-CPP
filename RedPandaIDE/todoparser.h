@@ -100,7 +100,11 @@ public:
 
 private:
     TodoThread* mThread;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    QRecursiveMutex mMutex;
+#else
     QMutex mMutex;
+#endif
 };
 
 using PTodoParser = std::shared_ptr<TodoParser>;

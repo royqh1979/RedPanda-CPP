@@ -893,7 +893,11 @@ bool Debugger::executing() const
 }
 
 DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    mCmdQueueMutex(),
+#else
     mCmdQueueMutex(QMutex::Recursive),
+#endif
     mStartSemaphore(0)
 {
     mDebugger = debugger;
