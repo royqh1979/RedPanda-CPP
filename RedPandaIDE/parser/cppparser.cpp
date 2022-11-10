@@ -4943,12 +4943,6 @@ bool CppParser::splitLastMember(const QString &token, QString &lastMember, QStri
     return true;
 }
 
-static  bool isIdentChar(const QChar& ch) {
-    return ch.isLetter()
-            || ch == '_'
-            || ch.isDigit();
-}
-
 //static void appendArgWord(QString& args, const QString& word) {
 //    QString s=word.trimmed();
 //    if (s.isEmpty())

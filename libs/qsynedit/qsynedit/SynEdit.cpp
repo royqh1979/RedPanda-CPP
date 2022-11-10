@@ -1957,23 +1957,6 @@ void SynEdit::doMouseScroll(bool isDragging)
     }
     BufferCoord vCaret = displayToBufferPos(C);
     if ((caretX() != vCaret.ch) || (caretY() != vCaret.line)) {
-//        if (mActiveSelectionMode == SelectionMode::Column) {
-//            int startLine=std::min(mBlockBegin.line,mBlockEnd.line);
-//            startLine = std::min(startLine,vCaret.line);
-//            int endLine=std::max(mBlockBegin.line,mBlockEnd.line);
-//            endLine = std::max(endLine,vCaret.line);
-
-//            int currentCol=displayXY().Column;
-//            for (int i=startLine;i<=endLine;i++) {
-//                QString s = mDocument->getString(i-1);
-//                int cols = stringColumns(s,0);
-//                if (cols+1<currentCol) {
-//                    computeScroll(isDragging);
-//                    return;
-//                }
-//            }
-
-//        }
         // changes to line / column in one go
         incPaintLock();
         auto action = finally([this]{
