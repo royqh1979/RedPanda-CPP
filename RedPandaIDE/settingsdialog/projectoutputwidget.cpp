@@ -59,35 +59,47 @@ void ProjectOutputWidget::doSave()
 
 void ProjectOutputWidget::on_btnOutputDir_clicked()
 {
+    QString currentName = ui->txtOutputDir->text();
+    if (currentName.isEmpty())
+        currentName = pMainWindow->project()->directory();
     QString dirName = QFileDialog::getExistingDirectory(
                 this,
                 tr("Executable output directory"),
-                pMainWindow->project()->directory());
+                currentName);
     if (!dirName.isEmpty())
-        ui->txtOutputDir->setText(extractRelativePath(pMainWindow->project()->folder(),dirName));
+        ui->txtOutputDir->setText(dirName);
 }
 
 
 void ProjectOutputWidget::on_btnObjOutputDir_clicked()
 {
+    QString currentName = ui->txtObjOutputDir->text();
+    if (currentName.isEmpty())
+        currentName = pMainWindow->project()->directory();
     QString dirName = QFileDialog::getExistingDirectory(
                 this,
                 tr("Object files output directory"),
-                pMainWindow->project()->directory());
+                currentName);
     if (!dirName.isEmpty())
-        ui->txtObjOutputDir->setText(extractRelativePath(pMainWindow->project()->folder(),dirName));
+        ui->txtObjOutputDir->setText(dirName);
 }
 
 
 void ProjectOutputWidget::on_btnCompileLog_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(
+    QString currentFile=ui->txtCompileLog->text();
+    if (currentFile.isEmpty()) {
+        currentFile = pMainWindow->project()->directory();
+    }
+    QString fileName = QFileDialog::getSaveFileName(
                 this,
                 tr("Log file"),
-                pMainWindow->project()->directory(),
-                tr("All files (%1)").arg(ALL_FILE_WILDCARD));
+                currentFile,
+                tr("All files (%1)").arg(ALL_FILE_WILDCARD),
+                nullptr,
+                QFileDialog::Options() | QFileDialog::DontConfirmOverwrite);
     if (!fileName.isEmpty() ) {
-        ui->txtCompileLog->setText(extractRelativePath(pMainWindow->project()->folder(),fileName));
+        ui->txtCompileLog->setText(fileName);
     }
 }
 

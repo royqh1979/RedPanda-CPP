@@ -1009,11 +1009,11 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     if (mOptions.supportXPThemes)
         ini->SetBoolValue("Project", "SupportXPThemes", true);
     if (!mOptions.exeOutput.isEmpty())
-        ini->SetValue("Project", "ExeOutput", mOptions.exeOutput.toUtf8());
+        ini->SetValue("Project", "ExeOutput", extractRelativePath(directory(),mOptions.exeOutput).toUtf8());
     if (!mOptions.objectOutput.isEmpty())
-        ini->SetValue("Project", "ObjectOutput", mOptions.objectOutput.toUtf8());
+        ini->SetValue("Project", "ObjectOutput", extractRelativePath(directory(),mOptions.objectOutput).toUtf8());
     if (!mOptions.logOutput.isEmpty())
-        ini->SetValue("Project", "LogOutput", mOptions.logOutput.toUtf8());
+        ini->SetValue("Project", "LogOutput", extractRelativePath(directory(),mOptions.logOutput).toUtf8());
     if (mOptions.execEncoding!=ENCODING_SYSTEM_DEFAULT)
         ini->SetValue("Project","ExecEncoding", mOptions.execEncoding);
 
@@ -1089,9 +1089,9 @@ void Project::saveOptions()
     ini.SetValue("Project","Linker", toByteArray(mOptions.linkerCmd));
     ini.SetLongValue("Project","IsCpp", mOptions.isCpp);
     ini.SetValue("Project","Icon", toByteArray(extractRelativePath(directory(), mOptions.icon)));
-    ini.SetValue("Project","ExeOutput", toByteArray(mOptions.exeOutput));
-    ini.SetValue("Project","ObjectOutput", toByteArray(mOptions.objectOutput));
-    ini.SetValue("Project","LogOutput", toByteArray(mOptions.logOutput));
+    ini.SetValue("Project","ExeOutput", toByteArray(extractRelativePath(directory(),mOptions.exeOutput)));
+    ini.SetValue("Project","ObjectOutput", toByteArray(extractRelativePath(directory(),mOptions.objectOutput)));
+    ini.SetValue("Project","LogOutput", toByteArray(extractRelativePath(directory(),mOptions.logOutput)));
     ini.SetLongValue("Project","LogOutputEnabled", mOptions.logOutputEnabled);
     ini.SetLongValue("Project","OverrideOutput", mOptions.overrideOutput);
     ini.SetValue("Project","OverrideOutputName", toByteArray(mOptions.overridenOutput));
@@ -1929,9 +1929,9 @@ void Project::loadOptions(SimpleIni& ini)
 #endif
         ));
         mOptions.isCpp = ini.GetBoolValue("Project", "IsCpp", false);
-        mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
-        mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
-        mOptions.logOutput = fromByteArray(ini.GetValue("Project", "LogOutput", ""));
+        mOptions.exeOutput = absolutePath(directory(), fromByteArray(ini.GetValue("Project", "ExeOutput", "")));
+        mOptions.objectOutput =  absolutePath(directory(), fromByteArray(ini.GetValue("Project", "ObjectOutput", "")));
+        mOptions.logOutput = absolutePath(directory(), fromByteArray(ini.GetValue("Project", "LogOutput", "")));
         mOptions.logOutputEnabled = ini.GetBoolValue("Project", "LogOutputEnabled", false);
         mOptions.overrideOutput = ini.GetBoolValue("Project", "OverrideOutput", false);
         mOptions.overridenOutput = fromByteArray(ini.GetValue("Project", "OverrideOutputName", ""));
@@ -2068,37 +2068,6 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.versionInfo.autoIncBuildNr = ini.GetBoolValue("VersionInfo", "AutoIncBuildNr", false);
         mOptions.versionInfo.syncProduct = ini.GetBoolValue("VersionInfo", "SyncProduct", false);
 
-    } else { // dev-c < 4
-        mOptions.version = 3;
-        if (!ini.GetBoolValue("VersionInfo", "NoConsole", true))
-            mOptions.type = ProjectType::Console;
-        else if (ini.GetBoolValue("VersionInfo", "IsDLL", false))
-            mOptions.type = ProjectType::DynamicLib;
-        else
-            mOptions.type = ProjectType::GUI;
-
-        mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
-        mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-         Qt::SkipEmptyParts
-#else
-         QString::SkipEmptyParts
-#endif
-        );
-        mOptions.includeDirs = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-           Qt::SkipEmptyParts
-#else
-           QString::SkipEmptyParts
-#endif
-        );
-        mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "CompilerOptions", ""));
-        mOptions.isCpp = ini.GetBoolValue("Project", "Use_GPP", false);
-        mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
-        mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
-        mOptions.overrideOutput = ini.GetBoolValue("Project", "OverrideOutput", false);
-        mOptions.overridenOutput = fromByteArray(ini.GetValue("Project", "OverrideOutputName", ""));
-        mOptions.hostApplication = absolutePath(directory(), fromByteArray(ini.GetValue("Project", "HostApplication", "")));
     }
 }
 

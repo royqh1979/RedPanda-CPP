@@ -124,12 +124,14 @@ QString changeFileExt(const QString& filename, QString ext);
 QString localizePath(const QString& path);
 
 QString extractRelativePath(const QString& base, const QString& dest);
+QStringList extractRelativePaths(const QString& base, const QStringList& destList);
 QString extractFileName(const QString& fileName);
 QString extractFileDir(const QString& fileName);
 QString extractFilePath(const QString& filePath);
 QString extractAbsoluteFilePath(const QString& filePath);
 QString cleanPath(const QString& dirPath);
 QString absolutePath(const QString& dirPath, const QString& relativePath);
+QStringList absolutePaths(const QString& dirPath, const QStringList& relativePaths);
 QString escapeSpacesInString(const QString& str);
 
 

@@ -15,6 +15,10 @@ Red Panda C++ Version 2.4
   - fix: function args not correctly handled in code parser;
   - fix: crash when alt+mouse drag selection
   - enhancement: show completion tips for when define a function that already has a declaration.
+  - enhancement: Use relative paths to save project settings
+  - fix: Layout for project options dialog's general page is not correct.
+  - fix: modifitions in the project options dialogs's dll host page is not correctly saved.
+  - enhancement: In the project options dialog, autoset the default folder in the openning dialog when choosing file/directory paths.
 
 Red Panda C++ Version 2.3
 

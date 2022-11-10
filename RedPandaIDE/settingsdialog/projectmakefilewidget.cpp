@@ -58,10 +58,14 @@ void ProjectMakefileWidget::doSave()
 
 void ProjectMakefileWidget::on_btnBrowse_clicked()
 {
+    QString currentFile=ui->txtCustomMakefile->text();
+    if (currentFile.isEmpty()) {
+        currentFile = pMainWindow->project()->directory();
+    }
     QString fileName = QFileDialog::getOpenFileName(
                 this,
                 tr("Custom makefile"),
-                pMainWindow->project()->directory(),
+                currentFile,
                 tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!fileName.isEmpty() && QFileInfo(fileName).exists()) {
         ui->txtCustomMakefile->setText(fileName);

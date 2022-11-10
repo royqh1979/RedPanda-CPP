@@ -49,12 +49,21 @@ void ProjectPreCompileWidget::doSave()
 
 void ProjectPreCompileWidget::on_btnBrowse_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(
+    QString currentFile=ui->txtPrecompileHeader->text();
+    QString currentDir;
+    if (currentFile.isEmpty()) {
+        currentDir = pMainWindow->project()->directory();
+    } else {
+        currentDir = extractFilePath(currentFile);
+    }
+    QString fileName = QFileDialog::getSaveFileName(
                 this,
                 tr("Precompiled header"),
-                pMainWindow->project()->directory(),
-                tr("header files (*.h)"));
-    if (!fileName.isEmpty() && QFileInfo(fileName).exists()) {
+                currentDir,
+                tr("precompiled header files (*.pch)"),
+                nullptr,
+                QFileDialog::Options()|QFileDialog::DontConfirmOverwrite);
+    if (!fileName.isEmpty()) {
         ui->txtPrecompileHeader->setText(fileName);
     }
 }

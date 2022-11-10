@@ -43,14 +43,19 @@ void ProjectDLLHostWidget::doLoad()
 void ProjectDLLHostWidget::doSave()
 {
     pMainWindow->project()->options().hostApplication = ui->txtHost->text();
+    pMainWindow->project()->saveOptions();
 }
 
 void ProjectDLLHostWidget::on_btnBrowse_clicked()
 {
+    QString currentFile=ui->txtHost->text();
+    if (currentFile.isEmpty()) {
+        currentFile = pMainWindow->project()->directory();
+    }
     QString filename = QFileDialog::getOpenFileName(
                 this,
                 tr("Choose host application"),
-                pMainWindow->project()->directory(),
+                currentFile,
                 tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!filename.isEmpty() && fileExists(filename)) {
         ui->txtHost->setText(filename);

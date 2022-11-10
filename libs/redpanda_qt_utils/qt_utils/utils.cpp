@@ -542,6 +542,9 @@ QString changeFileExt(const QString& filename, QString ext)
 
 QString extractRelativePath(const QString &base, const QString &dest)
 {
+    if (dest.isEmpty())
+        return QString();
+
     QFileInfo baseInfo(base);
     QDir baseDir;
     if (baseInfo.isDir()) {
@@ -687,6 +690,8 @@ QString cleanPath(const QString &dirPath)
 
 QString absolutePath(const QString &dirPath, const QString &relativePath)
 {
+    if (relativePath.isEmpty())
+        return QString();
     return QDir::cleanPath(QDir(dirPath).absoluteFilePath(relativePath));
 }
 
@@ -694,4 +699,22 @@ QString escapeSpacesInString(const QString &str)
 {
     QString result=str;
     return result.replace(' ',"%20");
+}
+
+QStringList extractRelativePaths(const QString &base, const QStringList &destList)
+{
+    QStringList list;
+    foreach(const QString& dest,destList) {
+        list.append(extractRelativePath(base,dest));
+    }
+    return list;
+}
+
+QStringList absolutePaths(const QString &dirPath, const QStringList &relativePaths)
+{
+    QStringList list;
+    foreach(const QString& path,relativePaths) {
+        list.append(absolutePath(dirPath,path));
+    }
+    return list;
 }
