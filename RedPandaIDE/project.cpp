@@ -987,16 +987,16 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     }
 
     ini->SetLongValue("Project", "Type", static_cast<int>(mOptions.type));
-    if (!mOptions.objFiles.isEmpty())
-        ini->SetValue("Project", "ObjFiles", mOptions.objFiles.join(";").toUtf8());
     if (!mOptions.includeDirs.isEmpty())
-        ini->SetValue("Project", "Includes", mOptions.includeDirs.join(";").toUtf8());
+        ini->SetValue("Project", "Includes", extractRelativePaths(directory(), mOptions.includeDirs).join(";").toUtf8());
     if (!mOptions.resourceIncludes.isEmpty())
-        ini->SetValue("Project", "ResourceIncludes", mOptions.resourceIncludes.join(";").toUtf8());
+        ini->SetValue("Project", "ResourceIncludes", extractRelativePaths(directory(), mOptions.resourceIncludes).join(";").toUtf8());
+    if (!mOptions.makeIncludes.isEmpty())
+        ini->SetValue("Project", "MakeIncludes", extractRelativePaths(directory(), mOptions.makeIncludes).join(";").toUtf8());
     if (!mOptions.binDirs.isEmpty())
-        ini->SetValue("Project", "Bins", mOptions.binDirs.join(";").toUtf8());
+        ini->SetValue("Project", "Bins", extractRelativePaths(directory(), mOptions.binDirs).join(";").toUtf8());
     if (!mOptions.libDirs.isEmpty())
-        ini->SetValue("Project", "Libs", mOptions.libDirs.join(";").toUtf8());
+        ini->SetValue("Project", "Libs", extractRelativePaths(directory(), mOptions.libDirs).join(";").toUtf8());
     if (!mOptions.compilerCmd.isEmpty())
         ini->SetValue("Project", "Compiler", mOptions.compilerCmd.toUtf8());
     if (!mOptions.cppCompilerCmd.isEmpty())
@@ -1078,13 +1078,12 @@ void Project::saveOptions()
     ini.SetValue("Project","Name", toByteArray(mName));
     ini.SetLongValue("Project","Type", static_cast<int>(mOptions.type));
     ini.SetLongValue("Project","Ver", 3); // Is 3 as of Red Panda C++.0
-    ini.SetValue("Project","ObjFiles", toByteArray(mOptions.objFiles.join(";")));
-    ini.SetValue("Project","Includes", toByteArray(mOptions.includeDirs.join(";")));
-    ini.SetValue("Project","Libs", toByteArray(mOptions.libDirs.join(";")));
-    ini.SetValue("Project","Bins", toByteArray(mOptions.binDirs.join(";")));
+    ini.SetValue("Project","Includes", toByteArray(extractRelativePaths(directory(),mOptions.includeDirs).join(";")));
+    ini.SetValue("Project","Libs", toByteArray(extractRelativePaths(directory(),mOptions.libDirs).join(";")));
+    ini.SetValue("Project","Bins", toByteArray(extractRelativePaths(directory(),mOptions.binDirs).join(";")));
     ini.SetValue("Project","PrivateResource", toByteArray(mOptions.privateResource));
-    ini.SetValue("Project","ResourceIncludes", toByteArray(mOptions.resourceIncludes.join(";")));
-    ini.SetValue("Project","MakeIncludes", toByteArray(mOptions.makeIncludes.join(";")));
+    ini.SetValue("Project","ResourceIncludes", toByteArray(extractRelativePaths(directory(),mOptions.resourceIncludes).join(";")));
+    ini.SetValue("Project","MakeIncludes", toByteArray(extractRelativePaths(directory(),mOptions.makeIncludes).join(";")));
     ini.SetValue("Project","Compiler", toByteArray(mOptions.compilerCmd));
     ini.SetValue("Project","CppCompiler", toByteArray(mOptions.cppCompilerCmd));
     ini.SetValue("Project","Linker", toByteArray(mOptions.linkerCmd));
@@ -1096,11 +1095,11 @@ void Project::saveOptions()
     ini.SetLongValue("Project","LogOutputEnabled", mOptions.logOutputEnabled);
     ini.SetLongValue("Project","OverrideOutput", mOptions.overrideOutput);
     ini.SetValue("Project","OverrideOutputName", toByteArray(mOptions.overridenOutput));
-    ini.SetValue("Project","HostApplication", toByteArray(mOptions.hostApplication));
+    ini.SetValue("Project","HostApplication", toByteArray(extractRelativePath(directory(), mOptions.hostApplication)));
     ini.SetLongValue("Project","UseCustomMakefile", mOptions.useCustomMakefile);
-    ini.SetValue("Project","CustomMakefile", toByteArray(mOptions.customMakefile));
+    ini.SetValue("Project","CustomMakefile", toByteArray(extractRelativePath(directory(),mOptions.customMakefile)));
     ini.SetLongValue("Project","UsePrecompiledHeader", mOptions.usePrecompiledHeader);
-    ini.SetValue("Project","PrecompiledHeader", toByteArray(mOptions.precompiledHeader));
+    ini.SetValue("Project","PrecompiledHeader", toByteArray(extractRelativePath(directory(), mOptions.precompiledHeader)));
     ini.SetValue("Project","CommandLine", toByteArray(mOptions.cmdLineArgs));
     ini.SetValue("Project","Folders", toByteArray(mFolders.join(";")));
     ini.SetLongValue("Project","IncludeVersionInfo", mOptions.includeVersionInfo);
@@ -1893,49 +1892,42 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "Compiler", ""));
         mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", ""));
         mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", ""));
-        mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-         Qt::SkipEmptyParts
-#else
-         QString::SkipEmptyParts
-#endif
-        );
-        mOptions.binDirs = fromByteArray(ini.GetValue("Project", "Bins", "")).split(";",
+        mOptions.binDirs = absolutePaths(directory(), fromByteArray(ini.GetValue("Project", "Bins", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts
 #else
             QString::SkipEmptyParts
 #endif
-        );
-        mOptions.libDirs = fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",
+        ));
+        mOptions.libDirs = absolutePaths(directory(), fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts
 #else
             QString::SkipEmptyParts
 #endif
-        );
-        mOptions.includeDirs = fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",
+        ));
+        mOptions.includeDirs = absolutePaths(directory(), fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts
 #else
             QString::SkipEmptyParts
 #endif
-        );
+        ));
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
-        mOptions.resourceIncludes = fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",
+        mOptions.resourceIncludes = absolutePaths(directory(), fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
          Qt::SkipEmptyParts
 #else
          QString::SkipEmptyParts
 #endif
-        );
-        mOptions.makeIncludes = fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",
+        ));
+        mOptions.makeIncludes = absolutePaths(directory(), fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
          Qt::SkipEmptyParts
 #else
          QString::SkipEmptyParts
 #endif
-        );
+        ));
         mOptions.isCpp = ini.GetBoolValue("Project", "IsCpp", false);
         mOptions.exeOutput = fromByteArray(ini.GetValue("Project", "ExeOutput", ""));
         mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
@@ -1943,11 +1935,11 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.logOutputEnabled = ini.GetBoolValue("Project", "LogOutputEnabled", false);
         mOptions.overrideOutput = ini.GetBoolValue("Project", "OverrideOutput", false);
         mOptions.overridenOutput = fromByteArray(ini.GetValue("Project", "OverrideOutputName", ""));
-        mOptions.hostApplication = fromByteArray(ini.GetValue("Project", "HostApplication", ""));
+        mOptions.hostApplication = absolutePath(directory(), fromByteArray(ini.GetValue("Project", "HostApplication", "")));
         mOptions.useCustomMakefile = ini.GetBoolValue("Project", "UseCustomMakefile", false);
-        mOptions.customMakefile = fromByteArray(ini.GetValue("Project", "CustomMakefile", ""));
+        mOptions.customMakefile = absolutePath(directory(),fromByteArray(ini.GetValue("Project", "CustomMakefile", "")));
         mOptions.usePrecompiledHeader = ini.GetBoolValue("Project", "UsePrecompiledHeader", false);
-        mOptions.precompiledHeader = fromByteArray(ini.GetValue("Project", "PrecompiledHeader", ""));
+        mOptions.precompiledHeader = absolutePath(directory(),fromByteArray(ini.GetValue("Project", "PrecompiledHeader", "")));
         mOptions.cmdLineArgs = fromByteArray(ini.GetValue("Project", "CommandLine", ""));
         mFolders = fromByteArray(ini.GetValue("Project", "Folders", "")).split(";",
         #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
@@ -2093,13 +2085,6 @@ void Project::loadOptions(SimpleIni& ini)
          QString::SkipEmptyParts
 #endif
         );
-        mOptions.objFiles = fromByteArray(ini.GetValue("Project", "ObjFiles", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-         Qt::SkipEmptyParts
-#else
-         QString::SkipEmptyParts
-#endif
-        );
         mOptions.includeDirs = fromByteArray(ini.GetValue("Project", "IncludeDirs", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
            Qt::SkipEmptyParts
@@ -2113,7 +2098,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.objectOutput = fromByteArray(ini.GetValue("Project", "ObjectOutput", ""));
         mOptions.overrideOutput = ini.GetBoolValue("Project", "OverrideOutput", false);
         mOptions.overridenOutput = fromByteArray(ini.GetValue("Project", "OverrideOutputName", ""));
-        mOptions.hostApplication = fromByteArray(ini.GetValue("Project", "HostApplication", ""));
+        mOptions.hostApplication = absolutePath(directory(), fromByteArray(ini.GetValue("Project", "HostApplication", "")));
     }
 }
 

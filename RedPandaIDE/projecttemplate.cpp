@@ -104,13 +104,6 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
 
     mOptions.icon = mIni->GetValue("Project", "Icon", "");
     mOptions.type = static_cast<ProjectType>(mIni->GetLongValue("Project", "Type", 0)); // default = gui
-    mOptions.objFiles  = fromByteArray(mIni->GetValue("Project", "ObjFiles", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-            Qt::SkipEmptyParts
-#else
-            QString::SkipEmptyParts
-#endif
-        );
     mOptions.includeDirs = fromByteArray(mIni->GetValue("Project", "Includes", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
           Qt::SkipEmptyParts

@@ -731,24 +731,28 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
                 if (mParser && !lastWord.isEmpty()) {
                     if (CppTypeKeywords.contains(lastWord)) {
+                        PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
+                        while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                            currentScope = currentScope->parentScope.lock();
+                        }
+                        if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
+                            //may define a function
+                            commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
+                            showCompletion(lastWord,false,CodeCompletionType::FunctionWithoutDefinition);
+                            handled=true;
+                            return;
+                        }
                         if (lastWord == "long" ||
                                 lastWord == "short" ||
                                 lastWord == "signed" ||
                                 lastWord == "unsigned"
                                 ) {
                             commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
-                            showCompletion(lastWord,false);
+                            showCompletion(lastWord,false, CodeCompletionType::TypeKeywordComplex);
                             handled=true;
                             return;
                         }
-                        PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
-                        while(currentScope && currentScope->kind==StatementKind::skBlock) {
-                            currentScope = currentScope->parentScope.lock();
-                        }
-                        if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
 
-                            return;
-                        }
 
                         //last word is a type keyword, this is a var or param define, and dont show suggestion
                         return;
@@ -762,12 +766,41 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             || kind == StatementKind::skEnumClassType
                             || kind == StatementKind::skEnumType
                             || kind == StatementKind::skTypedef) {
+
+                        PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
+                        while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                            currentScope = currentScope->parentScope.lock();
+                        }
+                        if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
+                            //may define a function
+                            commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
+                            showCompletion("",false,CodeCompletionType::FunctionWithoutDefinition);
+                            handled=true;
+                            return;
+                        }
+
                         //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
                         return;
                     }
                 }
+                qDebug()<<"lalalala";
+                lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(caretXY());
+                qDebug()<<lastWord;
+                if (!lastWord.isEmpty()) {
+                    PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
+                    while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                        currentScope = currentScope->parentScope.lock();
+                    }
+                    if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
+                        //may define a function
+                        commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
+                        showCompletion("",false,CodeCompletionType::FunctionWithoutDefinition);
+                        handled=true;
+                        return;
+                    }
+                }
                 commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
-                showCompletion("",false);
+                showCompletion("",false,CodeCompletionType::Normal);
                 handled=true;
                 return;
             }
@@ -779,7 +812,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     && pSettings->codeCompletion().showCompletionWhileInput() ) {
                 mLastIdCharPressed++;
                 commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
-                showCompletion("",false);
+                showCompletion("",false,CodeCompletionType::Normal);
                 handled=true;
                 return;
             }
@@ -791,7 +824,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     && pSettings->codeCompletion().showCompletionWhileInput() ) {
                 mLastIdCharPressed++;
                 commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
-                showCompletion("",false);
+                showCompletion("",false,CodeCompletionType::Normal);
                 handled=true;
                 return;
             }
@@ -1269,7 +1302,7 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
                         return;
                     }
                 }
-                showCompletion("",false);
+                showCompletion("",false,CodeCompletionType::Normal);
                 return;
             }
         }
@@ -2564,20 +2597,20 @@ bool Editor::handleCodeCompletion(QChar key)
         switch(key.unicode()) {
         case '.':
             commandProcessor(QSynedit::EditCommand::ecChar, key);
-            showCompletion("",false);
+            showCompletion("",false,CodeCompletionType::Normal);
             return true;
         case '>':
             commandProcessor(QSynedit::EditCommand::ecChar, key);
             if ((caretX() > 2) && (lineText().length() >= 2) &&
                     (lineText()[caretX() - 3] == '-'))
-                showCompletion("",false);
+                showCompletion("",false,CodeCompletionType::Normal);
             return true;
         case ':':
             commandProcessor(QSynedit::EditCommand::ecChar,':',nullptr);
             //setSelText(key);
             if ((caretX() > 2) && (lineText().length() >= 2) &&
                     (lineText()[caretX() - 3] == ':'))
-                showCompletion("",false);
+                showCompletion("",false,CodeCompletionType::Normal);
             return true;
         case '/':
         case '\\':
@@ -2975,7 +3008,7 @@ void Editor::exportAsHTML(const QString &htmlFilename)
     exporter.SaveToFile(htmlFilename);
 }
 
-void Editor::showCompletion(const QString& preWord,bool autoComplete)
+void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeCompletionType type)
 {
     if (pMainWindow->functionTip()->isVisible()) {
         pMainWindow->functionTip()->hide();
@@ -3089,6 +3122,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
                     memberExpression,
                     mFilename,
                     caretY(),
+                    type,
                     keywords);
     } else {
         QStringList memberExpression;
@@ -3096,7 +3130,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
         mCompletionPopup->prepareSearch(preWord,
                                         QStringList(),
                                         "",
-                                        memberExpression, mFilename, caretY(),keywords);
+                                        memberExpression, mFilename, caretY(),type,keywords);
     }
 
     // Filter the whole statement list
@@ -4387,6 +4421,59 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
             break;
         wordEnd = wordBegin-1;
     }
+    return result;
+}
+
+QString Editor::getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::BufferCoord &p)
+{
+    QString result;
+    if ((p.line<1) || (p.line>document()->count())) {
+        return "";
+    }
+
+    QString s = document()->getString(p.line - 1);
+    int wordBegin;
+    int wordEnd = p.ch-1;
+    if (wordEnd >= s.length())
+        wordEnd = s.length()-1;
+    while (wordEnd > 0 &&  (isIdentChar(s[wordEnd]) || s[wordEnd] == ':')) {
+      wordEnd--;
+    }
+    int bracketLevel=0;
+    while (wordEnd > 0) {
+        if (s[wordEnd] == '>'
+               || s[wordEnd] == ']') {
+            bracketLevel++;
+        } else if (s[wordEnd] == '<'
+                   || s[wordEnd] == '[') {
+            bracketLevel--;
+        } else if (bracketLevel==0) {
+            if (s[wordEnd]=='*' || s[wordEnd]=='&' || s[wordEnd]==' ' || s[wordEnd]=='\t') {
+                //do nothing
+            } else if (isIdentChar(s[wordEnd]))
+                break;
+            else
+                return ""; //error happened
+        }
+        wordEnd--;
+    }
+    if (wordEnd<0)
+        return "";
+
+//        if (!isIdentChar(s[wordEnd]))
+//            return "";
+
+    wordBegin = wordEnd;
+    while ((wordBegin >= 0) && isIdentChar(s[wordBegin]) ) {
+        wordBegin--;
+    }
+    wordBegin++;
+
+    if (s[wordBegin]>='0' && s[wordBegin]<='9') // not valid word
+        return "";
+
+    result = s.mid(wordBegin, wordEnd - wordBegin+1);
+
     return result;
 }
 

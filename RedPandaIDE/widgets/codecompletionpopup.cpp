@@ -80,6 +80,7 @@ void CodeCompletionPopup::prepareSearch(
         const QStringList& memberExpression,
         const QString &filename,
         int line,
+        CodeCompletionType type,
         const QSet<QString>& customKeywords)
 {
     QMutexLocker locker(&mMutex);
@@ -91,11 +92,14 @@ void CodeCompletionPopup::prepareSearch(
 
     mMemberPhrase = memberExpression.join("");
     mMemberOperator = memberOperator;
-    if (preWord.isEmpty()) {
+    if (type == CodeCompletionType::TypeKeywordComplex) {
+        getCompletionListForTypeKeywordComplex(preWord);
+    } else if (type == CodeCompletionType::FunctionWithoutDefinition) {
+        mIncludedFiles = mParser->getFileIncludes(filename);
+        getCompletionForFunctionWithoutDefinition(preWord, ownerExpression,memberOperator,memberExpression, filename,line);
+    } else if (preWord.isEmpty()) {
         mIncludedFiles = mParser->getFileIncludes(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
-    } else {
-        getCompletionListForPreWord(preWord);
     }
 
     setCursor(oldCursor);
@@ -194,6 +198,40 @@ void CodeCompletionPopup::addChildren(PStatement scopeStatement, const QString &
     } else {
         for (const PStatement& childStatement: children) {
             addStatement(childStatement,fileName,line);
+        }
+    }
+}
+
+void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(PStatement scopeStatement, const QString &fileName, int line)
+{
+    if (scopeStatement && !isIncluded(scopeStatement->fileName)
+      && !isIncluded(scopeStatement->definitionFileName))
+        return;
+    const StatementMap& children = mParser->statementList().childrenStatements(scopeStatement);
+    if (children.isEmpty())
+        return;
+
+    for (const PStatement& childStatement: children) {
+        if (childStatement->inSystemHeader)
+            continue;
+        if (childStatement->fileName.isEmpty()) {
+            // hard defines, do nothing
+            continue;
+        }
+        switch(childStatement->kind) {
+        case StatementKind::skConstructor:
+        case StatementKind::skFunction:
+        case StatementKind::skDestructor:
+            if (!childStatement->hasDefinition)
+                addStatement(childStatement,fileName,line);
+            break;
+        case StatementKind::skClass:
+        case StatementKind::skNamespace:
+            if (isIncluded(childStatement->fileName))
+                addStatement(childStatement,fileName,line);
+            break;
+        default:
+            break;
         }
     }
 }
@@ -766,7 +804,84 @@ void CodeCompletionPopup::getCompletionFor(
     }
 }
 
-void CodeCompletionPopup::getCompletionListForPreWord(const QString &preWord)
+void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QString& preWord, const QStringList &ownerExpression, const QString &memberOperator, const QStringList &memberExpression, const QString &fileName, int line)
+{
+    if(!mParser) {
+        return;
+    }
+    if (!mParser->enabled())
+        return;
+    if (memberOperator.isEmpty() && ownerExpression.isEmpty() && memberExpression.isEmpty())
+        return;
+
+    if (!mParser->freeze())
+        return;
+    {
+        auto action = finally([this]{
+            mParser->unFreeze();
+        });
+
+        if (memberOperator.isEmpty()) {
+            getCompletionListForTypeKeywordComplex(preWord);
+            PStatement scopeStatement = mCurrentScope;
+            //add members of current scope that not added before
+            while (scopeStatement && scopeStatement->kind!=StatementKind::skNamespace) {
+                scopeStatement = scopeStatement->parentScope.lock();
+            }
+            if (scopeStatement) {
+                //namespace;
+                PStatementList namespaceStatementsList =
+                        mParser->findNamespace(scopeStatement->fullName);
+                if (namespaceStatementsList) {
+                    foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
+                        addFunctionWithoutDefinitionChildren(namespaceStatement, fileName, line);
+                    }
+                }
+            } else {
+                //global
+                addFunctionWithoutDefinitionChildren(scopeStatement, fileName, line);
+            }
+        } else {
+            if (memberOperator != "::")
+                return;
+            //the identifier to be completed is a member of variable/class
+            if (ownerExpression.isEmpty()) {
+                // start with '::', we only find in global
+                // add all global members and not added before
+                addFunctionWithoutDefinitionChildren(nullptr, fileName, line);
+                return;
+            }
+            if (memberExpression.length()==2 && memberExpression.front()!="~")
+                return;
+            if (memberExpression.length()>2)
+                return;
+
+            PStatement scope = mCurrentScope;//the scope the expression in
+            PStatement parentTypeStatement;
+            PEvalStatement ownerStatement = mParser->evalExpression(fileName,
+                                        ownerExpression,
+                                        scope);
+            if(!ownerStatement  || !ownerStatement->effectiveTypeStatement) {
+                return;
+            }
+            if (ownerStatement->kind==EvalStatementKind::Namespace) {
+                //there might be many statements corresponding to one namespace;
+                PStatementList namespaceStatementsList =
+                        mParser->findNamespace(ownerStatement->baseType);
+                if (namespaceStatementsList) {
+                    foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
+                        addFunctionWithoutDefinitionChildren(namespaceStatement, fileName, line);
+                    }
+                }
+                return;
+            } else if (ownerStatement->effectiveTypeStatement->kind == StatementKind::skClass) {
+                addFunctionWithoutDefinitionChildren(ownerStatement->effectiveTypeStatement, fileName, line);
+            }
+        }
+    }
+}
+
+void CodeCompletionPopup::getCompletionListForTypeKeywordComplex(const QString &preWord)
 {
     mFullCompletionStatementList.clear();
     if (preWord == "long") {

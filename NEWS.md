@@ -14,6 +14,7 @@ Red Panda C++ Version 2.4
   - fix: var assignment not correctly handled in code parser;
   - fix: function args not correctly handled in code parser;
   - fix: crash when alt+mouse drag selection
+  - enhancement: show completion tips for when define a function that already has a declaration.
 
 Red Panda C++ Version 2.3
 

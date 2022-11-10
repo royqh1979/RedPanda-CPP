@@ -39,7 +39,7 @@ private:
 
 enum class CodeCompletionType {
     Normal,
-    ComplexType,
+    TypeKeywordComplex,
     FunctionWithoutDefinition
 };
 
@@ -86,6 +86,7 @@ public:
                        const QStringList& memberExpression,
                        const QString& filename,
                        int line,
+                       CodeCompletionType completionType,
                        const QSet<QString>& customKeywords);
     bool search(const QString& memberPhrase, bool autoHideOnSingleResult);
 
@@ -127,6 +128,8 @@ public:
 private:
     void addChildren(PStatement scopeStatement, const QString& fileName,
                      int line);
+    void addFunctionWithoutDefinitionChildren(PStatement scopeStatement, const QString& fileName,
+                     int line);
     void addStatement(PStatement statement, const QString& fileName, int line);
     void filterList(const QString& member);
     void getCompletionFor(
@@ -136,7 +139,16 @@ private:
             const QString& fileName,
             int line,
             const QSet<QString>& customKeywords);
-    void getCompletionListForPreWord(const QString& preWord);
+
+    void getCompletionForFunctionWithoutDefinition(
+            const QString& preWord,
+            const QStringList& ownerExpression,
+            const QString& memberOperator,
+            const QStringList& memberExpression,
+            const QString& fileName,
+            int line);
+
+    void getCompletionListForTypeKeywordComplex(const QString& preWord);
     void addKeyword(const QString& keyword);
     bool isIncluded(const QString& fileName);
 private:

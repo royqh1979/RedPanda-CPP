@@ -63,7 +63,6 @@ struct ProjectOptions{
     explicit ProjectOptions();
     ProjectType type;
     int version;
-    QStringList objFiles;
     QString compilerCmd;
     QString cppCompilerCmd;
     QString linkerCmd;

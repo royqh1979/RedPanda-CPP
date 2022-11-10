@@ -195,6 +195,7 @@ public:
     void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
     QString getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord& p);
+    QString getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::BufferCoord& p);
     void reformat(bool doReparse=true);
     void checkSyntaxInBack();
     void gotoDeclaration(const QSynedit::BufferCoord& pos);
@@ -264,7 +265,7 @@ private:
     void undoSymbolCompletion(int pos);
     QuoteStatus getQuoteStatus();
 
-    void showCompletion(const QString& preWord, bool autoComplete);
+    void showCompletion(const QString& preWord, bool autoComplete, CodeCompletionType type);
     void showHeaderCompletion(bool autoComplete, bool forceShow=false);
 
     bool testInFunc(int x,int y);
