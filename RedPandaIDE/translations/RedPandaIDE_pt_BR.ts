@@ -5517,7 +5517,11 @@
     </message>
     <message>
         <source>header files (*.h)</source>
-        <translation>arquivos de cabeçalhos (*h)</translation>
+        <translation type="vanished">arquivos de cabeçalhos (*h)</translation>
+    </message>
+    <message>
+        <source>precompiled header files (*.pch)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

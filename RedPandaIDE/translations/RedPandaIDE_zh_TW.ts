@@ -5325,7 +5325,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>header files (*.h)</source>
+        <source>precompiled header files (*.pch)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
