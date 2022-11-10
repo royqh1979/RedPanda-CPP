@@ -3044,13 +3044,12 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete)
         return onCompletionKeyPressed(event);
     });
     mCompletionPopup->setParser(mParser);
-    mCompletionPopup->setUseCppKeyword(mUseCppSyntax);
     pMainWindow->functionTip()->hide();
     mCompletionPopup->show();
 
     // Scan the current function body
-    mCompletionPopup->setCurrentStatement(
-                mParser->findAndScanBlockAt(mFilename, caretY())
+    mCompletionPopup->setCurrentScope(
+                mParser->findScopeStatement(mFilename, caretY())
                 );
 
     QSet<QString> keywords;

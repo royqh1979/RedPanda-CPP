@@ -46,7 +46,6 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     layout()->setMargin(0);
 
     mShowKeywords=true;
-    mUseCppKeyword=true;
     mRecordUsage = false;
     mSortByScope = true;
 
@@ -507,14 +506,6 @@ void CodeCompletionPopup::getCompletionFor(
                 foreach (const QString& keyword,customKeywords) {
                     addKeyword(keyword);
                 }
-            } else if (mUseCppKeyword) {
-                foreach (const QString& keyword,CppKeywords.keys()) {
-                    addKeyword(keyword);
-                }
-            } else {
-                foreach (const QString& keyword,CKeywords) {
-                    addKeyword(keyword);
-                }
             }
         }
         return;
@@ -574,18 +565,10 @@ void CodeCompletionPopup::getCompletionFor(
                     foreach (const QString& keyword,customKeywords) {
                         addKeyword(keyword);
                     }
-                } else if (mUseCppKeyword) {
-                    foreach (const QString& keyword,CppKeywords.keys()) {
-                        addKeyword(keyword);
-                    }
-                } else {
-                    foreach (const QString& keyword,CKeywords) {
-                        addKeyword(keyword);
-                    }
                 }
             }
 
-            PStatement scopeStatement = mCurrentStatement;
+            PStatement scopeStatement = mCurrentScope;
             // repeat until reach global
             while (scopeStatement) {
                 //add members of current scope that not added before
@@ -636,7 +619,7 @@ void CodeCompletionPopup::getCompletionFor(
             if (memberExpression.length()>2)
                 return;
 
-            PStatement scope = mCurrentStatement;//the scope the expression in
+            PStatement scope = mCurrentScope;//the scope the expression in
             PStatement parentTypeStatement;
 //            QString scopeName = ownerExpression.join("");
 //            PStatement ownerStatement = mParser->findStatementOf(
@@ -670,7 +653,7 @@ void CodeCompletionPopup::getCompletionFor(
             }
 
             // find the most inner scope statement that has a name (not a block)
-            PStatement scopeTypeStatement = mCurrentStatement;
+            PStatement scopeTypeStatement = mCurrentScope;
             while (scopeTypeStatement && !isScopeTypeKind(scopeTypeStatement->kind)) {
                 scopeTypeStatement = scopeTypeStatement->parentScope.lock();
             }
@@ -866,29 +849,19 @@ void CodeCompletionPopup::showEvent(QShowEvent *)
     mListView->setFocus();
 }
 
-const PStatement &CodeCompletionPopup::currentStatement() const
+const PStatement &CodeCompletionPopup::currentScope() const
 {
-    return mCurrentStatement;
+    return mCurrentScope;
 }
 
-void CodeCompletionPopup::setCurrentStatement(const PStatement &newCurrentStatement)
+void CodeCompletionPopup::setCurrentScope(const PStatement &newCurrentStatement)
 {
-    mCurrentStatement = newCurrentStatement;
+    mCurrentScope = newCurrentStatement;
 }
 
 const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > >& CodeCompletionPopup::colors() const
 {
     return mColors;
-}
-
-bool CodeCompletionPopup::useCppKeyword() const
-{
-    return mUseCppKeyword;
-}
-
-void CodeCompletionPopup::setUseCppKeyword(bool newUseCppKeyword)
-{
-    mUseCppKeyword = newUseCppKeyword;
 }
 
 bool CodeCompletionPopup::sortByScope() const
@@ -973,7 +946,7 @@ void CodeCompletionPopup::hideEvent(QHideEvent *event)
     mIncludedFiles.clear();
     mUsings.clear();
     mAddedStatements.clear();
-    mCurrentStatement = nullptr;
+    mCurrentScope = nullptr;
     mParser = nullptr;
     QWidget::hideEvent(event);
 }

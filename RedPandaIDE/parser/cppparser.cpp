@@ -159,7 +159,7 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     return result;
 }
 
-PStatement CppParser::findAndScanBlockAt(const QString &filename, int line)
+PStatement CppParser::findScopeStatement(const QString &filename, int line)
 {
     QMutexLocker locker(&mMutex);
     if (mParsing) {
@@ -282,7 +282,7 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return PStatement();
-    return findStatementOf(fileName,phrase,findAndScanBlockAt(fileName,line));
+    return findStatementOf(fileName,phrase,findScopeStatement(fileName,line));
 }
 
 PStatement CppParser::findStatementOf(const QString &fileName,
@@ -500,7 +500,7 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QStringList
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return PStatement();
-    return findStatementOf(fileName,expression,findAndScanBlockAt(fileName,line));
+    return findStatementOf(fileName,expression,findScopeStatement(fileName,line));
 }
 
 PStatement CppParser::findAliasedStatement(const PStatement &statement)

@@ -44,7 +44,7 @@ public:
     QList<PStatement> getListOfFunctions(const QString& fileName,
                              const QString& phrase,
                              int line);
-    PStatement findAndScanBlockAt(const QString& filename, int line);
+    PStatement findScopeStatement(const QString& filename, int line);
     PFileIncludes findFileIncludes(const QString &filename, bool deleteIt = false);
     QString findFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
