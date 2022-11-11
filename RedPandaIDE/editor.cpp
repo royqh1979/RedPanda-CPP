@@ -783,9 +783,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         return;
                     }
                 }
-                qDebug()<<"lalalala";
                 lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(caretXY());
-                qDebug()<<lastWord;
                 if (!lastWord.isEmpty()) {
                     PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
                     while(currentScope && currentScope->kind==StatementKind::skBlock) {

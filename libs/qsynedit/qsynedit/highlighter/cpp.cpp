@@ -1174,7 +1174,11 @@ void CppHighlighter::stringEscapeSeqProc()
         case 'u':
             mRun+=1;
             for (int i=0;i<4;i++) {
-                if (mRun>=mLineSize || mLine[mRun]<'0' || mLine[mRun]>'7') {
+                if (mRun>=mLineSize || !(
+                            (mLine[mRun]>='0' && mLine[mRun]<='9')
+                          ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
+                          ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
+                           )) {
                     mTokenId = TokenId::Unknown;
                     return;
                 }
@@ -1184,7 +1188,11 @@ void CppHighlighter::stringEscapeSeqProc()
         case 'U':
             mRun+=1;
             for (int i=0;i<8;i++) {
-                if (mRun>=mLineSize || mLine[mRun]<'0' || mLine[mRun]>'7') {
+                if (mRun>=mLineSize || !(
+                            (mLine[mRun]>='0' && mLine[mRun]<='9')
+                          ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
+                          ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
+                           )) {
                     mTokenId = TokenId::Unknown;
                     return;
                 }

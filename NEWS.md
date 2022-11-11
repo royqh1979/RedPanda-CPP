@@ -19,6 +19,7 @@ Red Panda C++ Version 2.4
   - fix: Layout for project options dialog's general page is not correct.
   - fix: modifitions in the project options dialogs's dll host page is not correctly saved.
   - enhancement: In the project options dialog, autoset the default folder in the openning dialog when choosing file/directory paths.
+  - fix: Escape suquences like \uxxxx and \Uxxxxxxxx in strings are not correctly highlighted.
 
 Red Panda C++ Version 2.3
 
