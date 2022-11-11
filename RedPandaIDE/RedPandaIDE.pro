@@ -199,7 +199,9 @@ SOURCES += \
     widgets/projectalreadyopendialog.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
+    widgets/replacedialog.cpp \
     widgets/searchdialog.cpp \
+    widgets/searchinfiledialog.cpp \
     widgets/searchresultview.cpp \
     widgets/shortcutinputedit.cpp \
     widgets/shrinkabletabwidget.cpp \
@@ -331,7 +333,9 @@ HEADERS += \
     widgets/projectalreadyopendialog.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
+    widgets/replacedialog.h \
     widgets/searchdialog.h \
+    widgets/searchinfiledialog.h \
     widgets/searchresultview.h \
     widgets/shortcutinputedit.h \
     widgets/shrinkabletabwidget.h \
@@ -395,7 +399,9 @@ FORMS += \
     widgets/newtemplatedialog.ui \
     widgets/ojproblempropertywidget.ui \
     widgets/projectalreadyopendialog.ui \
+    widgets/replacedialog.ui \
     widgets/searchdialog.ui \
+    widgets/searchinfiledialog.ui \
     widgets/signalmessagedialog.ui
 
 win32: {

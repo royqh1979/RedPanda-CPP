@@ -418,6 +418,7 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
     }
     // Append the operator characters and argument list to the operator word
     if ((currentWord == "operator") ||
+            (currentWord == "&operator") ||
             (currentWord == "operator*") ||
             (currentWord == "operator&")) {
         // Spaces between 'operator' and the operator itself are allowed

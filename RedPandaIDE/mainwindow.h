@@ -65,7 +65,9 @@ class Editor;
 class Debugger;
 class CPUDialog;
 class QPlainTextEdit;
+class SearchInFileDialog;
 class SearchDialog;
+class ReplaceDialog;
 class Project;
 struct ProjectModelNode;
 class ProjectUnit;
@@ -173,6 +175,8 @@ public:
 
     EditorList *editorList() const;
 
+    SearchInFileDialog *searchInFilesDialog() const;
+
     SearchDialog *searchDialog() const;
 
     SearchResultModel* searchResultModel();
@@ -252,6 +256,8 @@ public slots:
     void onFileSaved(const QString& path, bool inProject);
 
 private:
+    void prepareSearchDialog();
+    void prepareReplaceDialog();
     void prepareProjectForCompile();
     void closeProject(bool refreshEditor);
     void updateProjectView();
@@ -756,7 +762,9 @@ private:
     std::shared_ptr<CompilerManager> mCompilerManager;
     std::shared_ptr<Debugger> mDebugger;
     CPUDialog *mCPUDialog;
+    SearchInFileDialog *mSearchInFilesDialog;
     SearchDialog *mSearchDialog;
+    ReplaceDialog *mReplaceDialog;
     bool mQuitting;
     bool mClosingProject;
     QElapsedTimer mParserTimer;

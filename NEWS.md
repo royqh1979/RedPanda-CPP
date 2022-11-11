@@ -20,6 +20,11 @@ Red Panda C++ Version 2.4
   - fix: modifitions in the project options dialogs's dll host page is not correctly saved.
   - enhancement: In the project options dialog, autoset the default folder in the openning dialog when choosing file/directory paths.
   - fix: Escape suquences like \uxxxx and \Uxxxxxxxx in strings are not correctly highlighted.
+  - enhancement: Search / replace dialogs redesigned.
+  - fix: inline functions are not correctly parsed;
+  - fix: &operator= functions are not correctly parsed;
+  - fix: Code Formatter's "add indent to continueous lines" option is not correctly saved.
+
 
 Red Panda C++ Version 2.3
 
@@ -46,7 +51,8 @@ Red Panda C++ Version 2.2
   - fix: Set max undo memory usage to 0 don't really remove the limit for undo
   - fix: Set max undo times to 0 don't really remove the limit for undo
   - fix: Keep the newest undo info regardless of undo memory usage
-  
+  - fix: inline functions not correctly handled by parser
+  - fix: &operator= not correctly handled by parser
 
 Red Panda C++ Version 2.1
 

@@ -50,6 +50,9 @@
 #include "widgets/newtemplatedialog.h"
 #include "visithistorymanager.h"
 #include "widgets/projectalreadyopendialog.h"
+#include "widgets/searchdialog.h"
+#include "widgets/replacedialog.h"
+
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -85,7 +88,7 @@
 #include "cpprefacter.h"
 
 #include "widgets/newprojectunitdialog.h"
-#include "widgets/searchdialog.h"
+#include "widgets/searchinfiledialog.h"
 
 #ifdef Q_OS_WIN
 #include <QMimeDatabase>
@@ -107,7 +110,9 @@ MainWindow* pMainWindow;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
+      mSearchInFilesDialog(nullptr),
       mSearchDialog(nullptr),
+      mReplaceDialog(nullptr),
       mQuitting(false),
       mClosingProject(false),
       mCheckSyntaxInBack(false),
@@ -963,6 +968,18 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
         }
     }
     //updateForEncodingInfo();
+}
+
+void MainWindow::prepareSearchDialog()
+{
+    if (!mSearchDialog)
+        mSearchDialog = new SearchDialog(this);
+}
+
+void MainWindow::prepareReplaceDialog()
+{
+    if (!mReplaceDialog)
+        mReplaceDialog = new ReplaceDialog(this);
 }
 
 void MainWindow::updateAppTitle()
@@ -4783,9 +4800,9 @@ const std::shared_ptr<CodeCompletionPopup> &MainWindow::completionPopup() const
     return mCompletionPopup;
 }
 
-SearchDialog *MainWindow::searchDialog() const
+SearchInFileDialog *MainWindow::searchInFilesDialog() const
 {
-    return mSearchDialog;
+    return mSearchInFilesDialog;
 }
 
 SearchResultModel *MainWindow::searchResultModel()
@@ -5771,24 +5788,22 @@ void MainWindow::on_actionFind_triggered()
     Editor *e = mEditorList->getEditor();
     if (!e)
         return;
-    if (mSearchDialog==nullptr) {
-        mSearchDialog = new SearchDialog(this);
-    }
     QString s = e->wordAtCursor();
+    prepareSearchDialog();
     mSearchDialog->find(s);
 }
 
 void MainWindow::on_actionFind_in_files_triggered()
 {
-    if (mSearchDialog==nullptr) {
-        mSearchDialog = new SearchDialog(this);
+    if (mSearchInFilesDialog==nullptr) {
+        mSearchInFilesDialog = new SearchInFileDialog(this);
     }
     Editor *e = mEditorList->getEditor();
     if (e) {
         QString s = e->wordAtCursor();
-        mSearchDialog->findInFiles(s);
+        mSearchInFilesDialog->findInFiles(s);
     } else {
-        mSearchDialog->findInFiles("");
+        mSearchInFilesDialog->findInFiles("");
     }
 }
 
@@ -5797,11 +5812,10 @@ void MainWindow::on_actionReplace_triggered()
     Editor *e = mEditorList->getEditor();
     if (!e)
         return;
-    if (mSearchDialog==nullptr) {
-        mSearchDialog = new SearchDialog(this);
-    }
+
     QString s = e->wordAtCursor();
-    mSearchDialog->replace(s,s);
+    prepareReplaceDialog();
+    mReplaceDialog->replace(s);
 }
 
 void MainWindow::on_actionFind_Next_triggered()
@@ -5841,14 +5855,14 @@ void MainWindow::on_cbSearchHistory_currentIndexChanged(int index)
 
 void MainWindow::on_btnSearchAgain_clicked()
 {
-    if (mSearchDialog==nullptr) {
-        mSearchDialog = new SearchDialog(this);
+    if (mSearchInFilesDialog==nullptr) {
+        mSearchInFilesDialog = new SearchInFileDialog(this);
     }
     PSearchResults results=mSearchResultModel.currentResults();
     if (!results)
         return;
     if (results->searchType == SearchType::Search){
-        mSearchDialog->findInFiles(results->keyword,
+        mSearchInFilesDialog->findInFiles(results->keyword,
                                    results->scope,
                                    results->options);
     } else if (results->searchType == SearchType::FindOccurences) {
@@ -8783,5 +8797,10 @@ void MainWindow::on_actionSwitchHeaderSource_triggered()
     if (!file.isEmpty()) {
         openFile(file);
     }
+}
+
+SearchDialog *MainWindow::searchDialog() const
+{
+    return mSearchDialog;
 }
 

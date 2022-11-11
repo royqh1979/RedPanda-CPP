@@ -1,25 +1,25 @@
-#ifndef SEARCHDIALOG_H
-#define SEARCHDIALOG_H
+#ifndef REPLACEDIALOG_H
+#define REPLACEDIALOG_H
 
 #include <QDialog>
 #include <qsynedit/SearchBase.h>
 
 namespace Ui {
-class SearchDialog;
+class ReplaceDialog;
 }
 
-class SearchDialog : public QDialog
+class ReplaceDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit SearchDialog(QWidget *parent = nullptr);
-    ~SearchDialog();
-    void find(const QString& text);
-    void findNext();
-    void findPrevious();
+    explicit ReplaceDialog(QWidget *parent = nullptr);
+    ~ReplaceDialog();
+    void replace(const QString& text);
 private:
     void doSearch(bool backward);
+    void doReplace(bool replaceAll);
+    void prepareOptions(bool backward);
 private slots:
     void on_cbFind_currentTextChanged(const QString &arg1);
 
@@ -27,14 +27,16 @@ private slots:
 
     void on_btnNext_clicked();
 
-
     void on_btnPrevious_clicked();
+    void on_btnReplace_clicked();
+
+    void on_btnReplaceAll_clicked();
 
 private:
-    Ui::SearchDialog *ui;
+    Ui::ReplaceDialog *ui;
     QSynedit::SearchOptions mSearchOptions;
     QSynedit::PSynSearchBase mBasicSearchEngine;
     QSynedit::PSynSearchBase mRegexSearchEngine;
 };
 
-#endif // SEARCHDIALOG_H
+#endif // REPLACEDIALOG_H

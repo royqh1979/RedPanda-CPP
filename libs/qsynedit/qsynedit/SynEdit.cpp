@@ -5241,6 +5241,7 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sear
             else
                 i = 0;
             // Operate on all results in this line.
+            bool needRefresh = (nInLine>0);
             while (nInLine > 0) {
                 // An occurrence may have been replaced with a text of different length
                 int nFound = searchEngine->result(i) + 1 + iResultOffset;
@@ -5274,26 +5275,25 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sear
                 setBlockBegin(ptCurrent);
 
                 //Be sure to use the Ex version of CursorPos so that it appears in the middle if necessary
-                setCaretXYEx(false, BufferCoord{1, ptCurrent.line});
+                setCaretXYEx(false, BufferCoord{ptCurrent.ch, ptCurrent.line});
                 ensureCursorPosVisibleEx(true);
                 ptCurrent.ch += nSearchLen;
                 setBlockEnd(ptCurrent);
-                //internalSetCaretXY(ptCurrent);
-                if (bBackward)
-                    internalSetCaretXY(blockBegin());
-                else
-                    internalSetCaretXY(ptCurrent);
 
                 QString replaceText = searchEngine->replace(selText(), sReplace);
-                if (matchedCallback && !dobatchReplace) {
+                if (searchAction==SearchAction::ReplaceAndExit) {
+                    searchAction=SearchAction::Exit;
+                } else if (matchedCallback && !dobatchReplace) {
                     searchAction = matchedCallback(sSearch,replaceText,ptCurrent.line,
                                     nFound,nSearchLen);
                 }
                 if (searchAction==SearchAction::Exit) {
+                    invalidateLine(ptCurrent.line);
                     return result;
                 } else if (searchAction == SearchAction::Skip) {
                     continue;
                 } else if (searchAction == SearchAction::Replace
+                           || searchAction == SearchAction::ReplaceAndExit
                            || searchAction == SearchAction::ReplaceAll) {
                     if (!dobatchReplace &&
                             (searchAction == SearchAction::ReplaceAll) ){
@@ -5319,14 +5319,17 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sear
                     mOptions.setFlag(EditorOption::eoAutoIndent,oldAutoIndent);
                 }
             }
+            if (needRefresh)
+                invalidateLine(ptCurrent.line);
+
             // search next / previous line
             if (bBackward)
                 ptCurrent.line--;
             else
                 ptCurrent.line++;
             if (((ptCurrent.line < ptStart.line) || (ptCurrent.line > ptEnd.line))
-                    && bFromCursor && sOptions.testFlag(ssoWrapAround)){
-                if (confirmAroundCallback && !confirmAroundCallback())
+                    && bFromCursor ){
+                if (!sOptions.testFlag(ssoWrapAround) && confirmAroundCallback && !confirmAroundCallback())
                     break;
                 //search start from cursor, search has finished but no result founds
                 bFromCursor = false;

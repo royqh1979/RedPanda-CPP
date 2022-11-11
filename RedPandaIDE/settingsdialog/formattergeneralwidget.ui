@@ -71,7 +71,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -337,7 +337,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="spinMaxContinuationIndent"/>
+           <widget class="QSpinBox" name="spinMaxContinuationIndent">
+            <property name="minimum">
+             <number>40</number>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer_5">
@@ -883,7 +887,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="referenceBtnGroup"/>
   <buttongroup name="pointerBtnGroup"/>
+  <buttongroup name="referenceBtnGroup"/>
  </buttongroups>
 </ui>

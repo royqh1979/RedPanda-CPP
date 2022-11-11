@@ -5909,6 +5909,105 @@
     </message>
 </context>
 <context>
+    <name>ReplaceDialog</name>
+    <message>
+        <source>Replace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text to Find:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replace with:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scope:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Global</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Origin:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>From cursor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Entire scope</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Options:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Whole words only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrap Around</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Regular Expression</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prompt on replace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Case Sensitive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Find Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Find Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replace All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Beginning of file has been reached. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to continue from file&apos;s end?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>End of file has been reached. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to continue from file&apos;s beginning?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SearchDialog</name>
     <message>
         <source>Dialog</source>
@@ -6007,18 +6106,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Replace</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Find in files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Replace in files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Continue Search</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6031,11 +6118,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Replace this occurrence of &apos;&apos;%1&apos;&apos;?</source>
+        <source>Close after search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Continue Replace</source>
+        <source>Find Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Find Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Beginning of file has been reached. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to continue from file&apos;s end?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

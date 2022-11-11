@@ -143,4 +143,8 @@ QByteArray getHTTPBody(const QByteArray& content);
 
 QString getSizeString(int size);
 
+class QComboBox;
+void saveComboHistory(QComboBox* cb,const QString& text);
+
+
 #endif // UTILS_H

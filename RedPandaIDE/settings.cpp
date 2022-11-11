@@ -4793,7 +4793,7 @@ void Settings::CodeFormatter::doLoad()
     mIndentCases = boolValue("indent_cases",false);
     mIndentNamespaces = boolValue("indent_namespaces",true);
     mIndentAfterParens = boolValue("indent_after_parents",false);
-    mIndentContinuation = boolValue("indent_continuation",false);
+    mIndentContinuation = intValue("indent_continuation",1);
     mIndentLabels = boolValue("indent_labels",false);
     mIndentPreprocBlock = boolValue("indent_preproc_block",true);
     mIndentPreprocCond = boolValue("indent_preproc_cond",false);

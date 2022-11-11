@@ -6172,6 +6172,105 @@
     </message>
 </context>
 <context>
+    <name>ReplaceDialog</name>
+    <message>
+        <source>Replace</source>
+        <translation type="unfinished">Substituir</translation>
+    </message>
+    <message>
+        <source>Text to Find:</source>
+        <translation type="unfinished">Texto a procurar:</translation>
+    </message>
+    <message>
+        <source>Replace with:</source>
+        <translation type="unfinished">Substituir por:</translation>
+    </message>
+    <message>
+        <source>Scope:</source>
+        <translation type="unfinished">Escopo:</translation>
+    </message>
+    <message>
+        <source>Global</source>
+        <translation type="unfinished">Global</translation>
+    </message>
+    <message>
+        <source>Selection</source>
+        <translation type="unfinished">Seleção</translation>
+    </message>
+    <message>
+        <source>Origin:</source>
+        <translation type="unfinished">Origem:</translation>
+    </message>
+    <message>
+        <source>From cursor</source>
+        <translation type="unfinished">A partir do cursor</translation>
+    </message>
+    <message>
+        <source>Entire scope</source>
+        <translation type="unfinished">Escopo inteiro</translation>
+    </message>
+    <message>
+        <source>Options:</source>
+        <translation type="unfinished">Opções:</translation>
+    </message>
+    <message>
+        <source>Whole words only</source>
+        <translation type="unfinished">Apenas palavras inteiras</translation>
+    </message>
+    <message>
+        <source>Wrap Around</source>
+        <translation type="unfinished">Wrap Around</translation>
+    </message>
+    <message>
+        <source>Regular Expression</source>
+        <translation type="unfinished">Expressão regular</translation>
+    </message>
+    <message>
+        <source>Prompt on replace</source>
+        <translation type="unfinished">Perguntar ao substituir</translation>
+    </message>
+    <message>
+        <source>Case Sensitive</source>
+        <translation type="unfinished">Sensibilidade a maiúsculas/minúsculas</translation>
+    </message>
+    <message>
+        <source>Find Previous</source>
+        <translation type="unfinished">Procurar anterior</translation>
+    </message>
+    <message>
+        <source>Find Next</source>
+        <translation type="unfinished">Procurar outro</translation>
+    </message>
+    <message>
+        <source>Replace All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Beginning of file has been reached. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to continue from file&apos;s end?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>End of file has been reached. </source>
+        <translation type="unfinished">Encontrado fim de arquivo.</translation>
+    </message>
+    <message>
+        <source>Do you want to continue from file&apos;s beginning?</source>
+        <translation type="unfinished">Quer continuar a partir do início do arquivo?</translation>
+    </message>
+    <message>
+        <source>Continue Search</source>
+        <translation type="unfinished">Continuar a procura</translation>
+    </message>
+</context>
+<context>
     <name>SearchDialog</name>
     <message>
         <source>Dialog</source>
@@ -6271,15 +6370,15 @@
     </message>
     <message>
         <source>Replace</source>
-        <translation>Substituir</translation>
+        <translation type="vanished">Substituir</translation>
     </message>
     <message>
         <source>Find in files</source>
-        <translation>Procurar em arquivos</translation>
+        <translation type="vanished">Procurar em arquivos</translation>
     </message>
     <message>
         <source>Replace in files</source>
-        <translation>Substituir em arquivos</translation>
+        <translation type="vanished">Substituir em arquivos</translation>
     </message>
     <message>
         <source>Continue Search</source>
@@ -6295,11 +6394,74 @@
     </message>
     <message>
         <source>Replace this occurrence of &apos;&apos;%1&apos;&apos;?</source>
-        <translation>Substituir essa ocorrência de &apos;&apos;%1&apos;&apos;?</translation>
+        <translation type="vanished">Substituir essa ocorrência de &apos;&apos;%1&apos;&apos;?</translation>
     </message>
     <message>
         <source>Continue Replace</source>
-        <translation>Continuar a substituir</translation>
+        <translation type="vanished">Continuar a substituir</translation>
+    </message>
+    <message>
+        <source>Close after search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Find Previous</source>
+        <translation type="unfinished">Procurar anterior</translation>
+    </message>
+    <message>
+        <source>Find Next</source>
+        <translation type="unfinished">Procurar outro</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Beginning of file has been reached. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to continue from file&apos;s end?</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SearchInFileDialog</name>
+    <message>
+        <source>Find</source>
+        <translation type="obsolete">Procurar</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation type="obsolete">Substituir</translation>
+    </message>
+    <message>
+        <source>Find in files</source>
+        <translation type="obsolete">Procurar em arquivos</translation>
+    </message>
+    <message>
+        <source>Replace in files</source>
+        <translation type="obsolete">Substituir em arquivos</translation>
+    </message>
+    <message>
+        <source>Continue Search</source>
+        <translation type="obsolete">Continuar a procura</translation>
+    </message>
+    <message>
+        <source>End of file has been reached. </source>
+        <translation type="obsolete">Encontrado fim de arquivo.</translation>
+    </message>
+    <message>
+        <source>Do you want to continue from file&apos;s beginning?</source>
+        <translation type="obsolete">Quer continuar a partir do início do arquivo?</translation>
+    </message>
+    <message>
+        <source>Replace this occurrence of &apos;&apos;%1&apos;&apos;?</source>
+        <translation type="obsolete">Substituir essa ocorrência de &apos;&apos;%1&apos;&apos;?</translation>
+    </message>
+    <message>
+        <source>Continue Replace</source>
+        <translation type="obsolete">Continuar a substituir</translation>
     </message>
 </context>
 <context>

@@ -1456,8 +1456,10 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
     else
         mClassScope = StatementClassScope::Public; // structs are public by default
     mCurrentClassScope.append(mClassScope);
-    //if (mCurrentClassScope.count()==2)
+#ifdef QT_DEBUG
+    //if (mCurrentClassScope.count()==1)
 //        qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
+#endif
 }
 
 void CppParser::removeScopeLevel(int line)
@@ -1465,8 +1467,10 @@ void CppParser::removeScopeLevel(int line)
     // Remove class list
     if (mCurrentScope.isEmpty())
         return; // TODO: should be an exception
-    //if (mCurrentClassScope.count()==2)
+#ifdef QT_DEBUG
+    //if (mCurrentClassScope.count()==1)
 //        qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
+#endif
     PStatement currentScope = getCurrentScope();
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
     if (currentScope) {
@@ -1867,8 +1871,8 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                     && !isIdentChar(currentText[8])) {
                 // operator overloading
                 handleMethod(StatementKind::skFunction,"",
-                             mergeArgs(mIndex+1,mTokenizer[mIndex]->matchIndex-1),
-                             indexAfterParentheis,false,false);
+                             currentText,
+                             mIndex,false,false);
                 return;
             }
             //check for constructor like Foo::Foo()
@@ -1996,7 +2000,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                        ||mTokenizer[mIndex + 1]->text == ';'
                        ||mTokenizer[mIndex + 1]->text == ':'
                        ||mTokenizer[mIndex + 1]->text == '{'
-                       ||mTokenizer[mIndex + 1]->text == '=') {
+                       || mTokenizer[mIndex + 1]->text == '=') {
                 handleVar(sType,isExtern,isStatic);
                 return;
             } else {
@@ -3027,6 +3031,11 @@ void CppParser::handleScope(KeywordType keywordType)
     mIndex+=2; // the scope is followed by a ':'
 }
 
+
+#ifdef QT_DEBUG
+static int lastIndex=-1;
+#endif
+
 bool CppParser::handleStatement()
 {
     QString funcType,funcName;
@@ -3034,6 +3043,11 @@ bool CppParser::handleStatement()
     int idx2=getCurrentBlockBeginSkip();
     int idx3=getCurrentInlineNamespaceEndSkip();
     KeywordType keywordType;
+#ifdef QT_DEBUG
+//    qDebug()<<lastIndex<<mIndex;
+    Q_ASSERT(mIndex>=lastIndex);
+    lastIndex=mIndex;
+#endif
 
     if (mIndex >= idx2) {
         //skip (previous handled) block begin
@@ -3080,7 +3094,7 @@ bool CppParser::handleStatement()
 //    } else if (checkForLambda()) { // is lambda
 //        handleLambda();
     } else if (mTokenizer[mIndex]->text=='(') {
-        if (mTokenizer[mIndex]->text=="operator") {
+        if (mIndex+1<mTokenizer.tokenCount() && mTokenizer[mIndex+1]->text=="operator") {
             // things like (operator int)
             mIndex++; //just skip '('
         } else
@@ -3131,11 +3145,13 @@ bool CppParser::handleStatement()
         handleUsing();
     } else if (checkForStructs(keywordType)) {
         handleStructs(false);
-    } else {
+    } else if (keywordType == KeywordType::Inline) {
+        mIndex++;
+    }else {
         // it should be method/constructor/var
         checkAndHandleMethodOrVar(keywordType);
     }
-    Q_ASSERT(mIndex<999999);
+    //Q_ASSERT(mIndex<999999);
 
 //    while (mTokenizer.lambdasCount()>0 && mTokenizer.indexOfFirstLambda()<mIndex) {
 //        handleLambda(mTokenizer.indexOfFirstLambda());
@@ -3723,6 +3739,9 @@ void CppParser::internalParse(const QString &fileName)
             return;
 #ifdef QT_DEBUG
         mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+#endif
+#ifdef QT_DEBUG
+        lastIndex = -1;
 #endif
         // Process the token list
         while(true) {

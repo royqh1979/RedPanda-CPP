@@ -252,64 +252,62 @@ void SynEditTextPainter::computeSelectionInfo()
     BufferCoord vEnd{0,0};
     bAnySelection = false;
     // Only if selection is visible anyway.
-    if (edit->hasFocus()) {
-        bAnySelection = true;
-        // Get the *real* start of the selected area.
-        if (edit->mBlockBegin.line < edit->mBlockEnd.line) {
-            vStart = edit->mBlockBegin;
-            vEnd = edit->mBlockEnd;
-        } else if (edit->mBlockBegin.line > edit->mBlockEnd.line) {
-            vEnd = edit->mBlockBegin;
-            vStart = edit->mBlockEnd;
-        } else if (edit->mBlockBegin.ch != edit->mBlockEnd.ch) {
-            // it is only on this line.
-            vStart.line = edit->mBlockBegin.line;
-            vEnd.line = vStart.line;
-            if (edit->mBlockBegin.ch < edit->mBlockEnd.ch) {
-                vStart.ch = edit->mBlockBegin.ch;
-                vEnd.ch = edit->mBlockEnd.ch;
-            } else {
-                vStart.ch = edit->mBlockEnd.ch;
-                vEnd.ch = edit->mBlockBegin.ch;
-            }
-        } else
-            bAnySelection = false;
-        if (edit->mInputPreeditString.length()>0) {
-            if (vStart.line == edit->mCaretY && vStart.ch >=edit->mCaretX) {
-                vStart.ch+=edit->mInputPreeditString.length();
-            }
-            if (vEnd.line == edit->mCaretY && vEnd.ch >edit->mCaretX) {
-                vEnd.ch+=edit->mInputPreeditString.length();
-            }
+    bAnySelection = true;
+    // Get the *real* start of the selected area.
+    if (edit->mBlockBegin.line < edit->mBlockEnd.line) {
+        vStart = edit->mBlockBegin;
+        vEnd = edit->mBlockEnd;
+    } else if (edit->mBlockBegin.line > edit->mBlockEnd.line) {
+        vEnd = edit->mBlockBegin;
+        vStart = edit->mBlockEnd;
+    } else if (edit->mBlockBegin.ch != edit->mBlockEnd.ch) {
+        // it is only on this line.
+        vStart.line = edit->mBlockBegin.line;
+        vEnd.line = vStart.line;
+        if (edit->mBlockBegin.ch < edit->mBlockEnd.ch) {
+            vStart.ch = edit->mBlockBegin.ch;
+            vEnd.ch = edit->mBlockEnd.ch;
+        } else {
+            vStart.ch = edit->mBlockEnd.ch;
+            vEnd.ch = edit->mBlockBegin.ch;
         }
-        // If there is any visible selection so far, then test if there is an
-        // intersection with the area to be painted.
+    } else
+        bAnySelection = false;
+    if (edit->mInputPreeditString.length()>0) {
+        if (vStart.line == edit->mCaretY && vStart.ch >=edit->mCaretX) {
+            vStart.ch+=edit->mInputPreeditString.length();
+        }
+        if (vEnd.line == edit->mCaretY && vEnd.ch >edit->mCaretX) {
+            vEnd.ch+=edit->mInputPreeditString.length();
+        }
+    }
+    // If there is any visible selection so far, then test if there is an
+    // intersection with the area to be painted.
+    if (bAnySelection) {
+        // Don't care if the selection is not visible.
+        bAnySelection = (vEnd.line >= vFirstLine) && (vStart.line <= vLastLine);
         if (bAnySelection) {
-            // Don't care if the selection is not visible.
-            bAnySelection = (vEnd.line >= vFirstLine) && (vStart.line <= vLastLine);
-            if (bAnySelection) {
-                // Transform the selection from text space into screen space
-                vSelStart = edit->bufferToDisplayPos(vStart);
-                vSelEnd = edit->bufferToDisplayPos(vEnd);
-                if (edit->mInputPreeditString.length()
-                        && vStart.line == edit->mCaretY) {
-                    QString sLine = edit->lineText().left(edit->mCaretX-1)
-                            + edit->mInputPreeditString
-                            + edit->lineText().mid(edit->mCaretX-1);
-                    vSelStart.Column = edit->charToColumn(sLine,vStart.ch);
-                }
-                if (edit->mInputPreeditString.length()
-                        && vEnd.line == edit->mCaretY) {
-                    QString sLine = edit->lineText().left(edit->mCaretX-1)
-                            + edit->mInputPreeditString
-                            + edit->lineText().mid(edit->mCaretX-1);
-                    vSelEnd.Column = edit->charToColumn(sLine,vEnd.ch);
-                }
-                // In the column selection mode sort the begin and end of the selection,
-                // this makes the painting code simpler.
-                if (edit->mActiveSelectionMode == SelectionMode::Column && vSelStart.Column > vSelEnd.Column)
-                    std::swap(vSelStart.Column, vSelEnd.Column);
+            // Transform the selection from text space into screen space
+            vSelStart = edit->bufferToDisplayPos(vStart);
+            vSelEnd = edit->bufferToDisplayPos(vEnd);
+            if (edit->mInputPreeditString.length()
+                    && vStart.line == edit->mCaretY) {
+                QString sLine = edit->lineText().left(edit->mCaretX-1)
+                        + edit->mInputPreeditString
+                        + edit->lineText().mid(edit->mCaretX-1);
+                vSelStart.Column = edit->charToColumn(sLine,vStart.ch);
             }
+            if (edit->mInputPreeditString.length()
+                    && vEnd.line == edit->mCaretY) {
+                QString sLine = edit->lineText().left(edit->mCaretX-1)
+                        + edit->mInputPreeditString
+                        + edit->lineText().mid(edit->mCaretX-1);
+                vSelEnd.Column = edit->charToColumn(sLine,vEnd.ch);
+            }
+            // In the column selection mode sort the begin and end of the selection,
+            // this makes the painting code simpler.
+            if (edit->mActiveSelectionMode == SelectionMode::Column && vSelStart.Column > vSelEnd.Column)
+                std::swap(vSelStart.Column, vSelEnd.Column);
         }
     }
 }

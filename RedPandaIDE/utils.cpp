@@ -12,6 +12,7 @@
 #include "compiler/executablerunner.h"
 #include <QMimeDatabase>
 #ifdef Q_OS_WIN
+#include <QComboBox>
 #include <windows.h>
 #endif
 
@@ -525,4 +526,16 @@ QString getSizeString(int size)
     } else {
         return QString("%1 ").arg(size / 1024.0 / 1024.0 / 1024.0)+QObject::tr("GB");
     }
+}
+
+void saveComboHistory(QComboBox* cb,const QString& text) {
+    QString s = text.trimmed();
+    if (s.isEmpty())
+        return;
+    int i = cb->findText(s);
+    if (i>=0) {
+        cb->removeItem(i);
+    }
+    cb->insertItem(0,s);
+    cb->setCurrentText(s);
 }

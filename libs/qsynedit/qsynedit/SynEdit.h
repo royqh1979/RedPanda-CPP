@@ -113,6 +113,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(EditorOptions)
 enum class SearchAction {
     Replace,
     ReplaceAll,
+    ReplaceAndExit,
     Skip,
     Exit
 };
