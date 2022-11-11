@@ -5241,7 +5241,6 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sear
             else
                 i = 0;
             // Operate on all results in this line.
-            bool needRefresh = (nInLine>0);
             while (nInLine > 0) {
                 // An occurrence may have been replaced with a text of different length
                 int nFound = searchEngine->result(i) + 1 + iResultOffset;
@@ -5288,7 +5287,6 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sear
                                     nFound,nSearchLen);
                 }
                 if (searchAction==SearchAction::Exit) {
-                    invalidateLine(ptCurrent.line);
                     return result;
                 } else if (searchAction == SearchAction::Skip) {
                     continue;
@@ -5319,8 +5317,6 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sear
                     mOptions.setFlag(EditorOption::eoAutoIndent,oldAutoIndent);
                 }
             }
-            if (needRefresh)
-                invalidateLine(ptCurrent.line);
 
             // search next / previous line
             if (bBackward)
