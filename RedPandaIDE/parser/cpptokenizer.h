@@ -82,6 +82,7 @@ private:
     void skipAssignment();
     void skipDoubleQuotes();
     void skipPair(const QChar& cStart, const QChar cEnd);
+    void skipParenthesis();
     bool skipAngleBracketPair();
     void skipRawString();
     void skipSingleQuote();

@@ -201,7 +201,6 @@ QString CppTokenizer::getForInit()
 QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool bSkipBlock)
 {
     QString result;
-    int backupIndex;
     bool done = false;
     *pTokenType=TokenType::Normal;
     while (true) {
@@ -759,7 +758,28 @@ void CppTokenizer::skipTemplateArgs()
     if (*mCurrent != '<')
         return;
 
-    skipPair('<', '>');
+    if (skipAngleBracketPair())
+        return;
+    QChar* lastBracketPos = mCurrent;
+    bool shouldExit=false;
+    while (true) {
+        switch(mCurrent->unicode()) {
+        case '\0':
+        case ';':
+        case '}':
+        case '{':
+            shouldExit=true;
+            break;
+        case '>':
+            lastBracketPos = mCurrent;
+            break;
+        }
+        if (shouldExit)
+            break;
+        mCurrent++;
+    }
+    if (*lastBracketPos=='>')
+        mCurrent = lastBracketPos+1; //skip '>';
 }
 
 void CppTokenizer::skipToEOL()

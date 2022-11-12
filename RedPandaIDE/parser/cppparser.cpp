@@ -1457,7 +1457,7 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
         mClassScope = StatementClassScope::Public; // structs are public by default
     mCurrentClassScope.append(mClassScope);
 #ifdef QT_DEBUG
-    //if (mCurrentClassScope.count()==1)
+//    if (mCurrentClassScope.count()==1)
 //        qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 #endif
 }
@@ -1468,7 +1468,7 @@ void CppParser::removeScopeLevel(int line)
     if (mCurrentScope.isEmpty())
         return; // TODO: should be an exception
 #ifdef QT_DEBUG
-    //if (mCurrentClassScope.count()==1)
+//    if (mCurrentClassScope.count()==1)
 //        qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 #endif
     PStatement currentScope = getCurrentScope();
@@ -3618,7 +3618,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
             break;
         } else if (isWordChar(mTokenizer[mIndex]->text[0])) {
             QString cmd=mTokenizer[mIndex]->text;
-            if (mTokenizer[mIndex+1]->text=='('
+            if (mIndex+1< mTokenizer.tokenCount() && mTokenizer[mIndex+1]->text=='('
                     && mTokenizer[mIndex+1]->matchIndex+1<mTokenizer.tokenCount()
                     && mTokenizer[mTokenizer[mIndex+1]->matchIndex+1]->text=='(') {
                         //function pointer
