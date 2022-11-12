@@ -24,6 +24,7 @@ Red Panda C++ Version 2.4
   - fix: inline functions are not correctly parsed;
   - fix: &operator= functions are not correctly parsed;
   - fix: Code Formatter's "add indent to continueous lines" option is not correctly saved.
+  - fix: _Pragma is not correctly handled;
 
 
 Red Panda C++ Version 2.3

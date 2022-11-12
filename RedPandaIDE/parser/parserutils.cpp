@@ -119,6 +119,7 @@ void initParser()
     CppKeywords.insert("typeid",KeywordType::SkipNextParenthesis);
     CppKeywords.insert("while",KeywordType::SkipNextParenthesis);
     CppKeywords.insert("static_assert",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("_Pragma",KeywordType::SkipNextParenthesis);
 
     // Skip to }
     CppKeywords.insert("asm",KeywordType::MoveToRightBrace);
@@ -186,6 +187,7 @@ void initParser()
     CppKeywords.insert("static",KeywordType::None);
     CppKeywords.insert("struct",KeywordType::None);
     CppKeywords.insert("union",KeywordType::None);
+
 
     CppKeywords.insert("for",KeywordType::For);
     CppKeywords.insert("catch",KeywordType::Catch);
