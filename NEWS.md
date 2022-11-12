@@ -28,7 +28,7 @@ Red Panda C++ Version 2.4
   - enhancement: improve parse result for STL <random>
   - change:  the default value for UI font size : 11
   - change:  the default value for add leading zeros to line numbers : false
-  - upgrade integrated libturtle. fix: nothing is drawed when set background color to BLACK
+  - upgrade integrated rturtle. fix: nothing is drawed when set background color to BLACK
   - upgrade integrate fmtlib. fix: imcompatible with GBK encoding
 
 Red Panda C++ Version 2.3
