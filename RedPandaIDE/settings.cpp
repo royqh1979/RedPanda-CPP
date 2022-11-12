@@ -1316,7 +1316,7 @@ void Settings::Editor::doLoad()
     mFontName = stringValue("font_name","Dejavu Sans Mono");
     mNonAsciiFontName = stringValue("non_ascii_font_name","Dejavu Sans Mono");
 #endif
-    mFontSize = intValue("font_size",14);
+    mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mEnableLigaturesSupport = boolValue("enable_ligatures_support", false);
 
@@ -1327,7 +1327,7 @@ void Settings::Editor::doLoad()
     mGutterRightOffset = intValue("gutter_right_offset",24);
     mGutterDigitsCount = intValue("gutter_digits_count",1);
     mGutterShowLineNumbers = boolValue("gutter_show_line_numbers",true);
-    mGutterAddLeadingZero = boolValue("gutter_add_leading_zero",true);
+    mGutterAddLeadingZero = boolValue("gutter_add_leading_zero",false);
     mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
     mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
 
@@ -1336,7 +1336,7 @@ void Settings::Editor::doLoad()
 #else
     mGutterFontName = stringValue("gutter_font_name","Dejavu Sans Mono");
 #endif
-    mGutterFontSize = intValue("gutter_font_size",14);
+    mGutterFontSize = intValue("gutter_font_size",12);
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
     //copy
@@ -3110,7 +3110,7 @@ void Settings::Environment::doLoad()
         }
     }
     mInterfaceFont = stringValue("interface_font",defaultFontName);
-    mInterfaceFontSize = intValue("interface_font_size",12);
+    mInterfaceFontSize = intValue("interface_font_size",11);
     mLanguage = stringValue("language", defaultLocaleName);
     mIconSet = stringValue("icon_set","contrast");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
@@ -3489,7 +3489,7 @@ void Settings::Executor::doLoad()
 #else
     mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
 #endif
-    mCaseEditorFontSize = intValue("case_editor_font_size",12);
+    mCaseEditorFontSize = intValue("case_editor_font_size",11);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
     int case_timeout = intValue("case_timeout", -1);
     if (case_timeout>0)
@@ -3696,7 +3696,7 @@ void Settings::Debugger::doLoad()
     mFontName = stringValue("font_name","Dejavu Sans Mono");
 #endif
     mOnlyShowMono = boolValue("only_show_mono",true);
-    mFontSize = intValue("font_size",12);
+    mFontSize = intValue("font_size",14);
     mUseIntelStyle = boolValue("use_intel_style",true);
     mBlendMode = boolValue("blend_mode",true);
     mSkipSystemLibraries = boolValue("skip_system_lib",true);

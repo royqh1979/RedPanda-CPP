@@ -25,6 +25,9 @@ Red Panda C++ Version 2.4
   - fix: &operator= functions are not correctly parsed;
   - fix: Code Formatter's "add indent to continueous lines" option is not correctly saved.
   - fix: _Pragma is not correctly handled;
+  - change:  the default value for UI font size : 11
+  - change:  the default value for add leading zeros to line numbers : false
+
 
 
 Red Panda C++ Version 2.3
