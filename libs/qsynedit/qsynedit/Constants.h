@@ -84,6 +84,7 @@ extern const QChar SoftBreakGlyph;
 #define SYNS_AttrHexadecimal            "Hexadecimal"
 #define SYNS_AttrIcon                   "Icon Reference"
 #define SYNS_AttrIdentifier             "Identifier"
+#define SYNS_AttrReserveWord_Type             "Reserve Word for Types"
 #define SYNS_AttrIllegalChar            "Illegal Char"
 #define SYNS_AttrInclude                "Include"
 #define SYNS_AttrIndicator "Indicator Area"

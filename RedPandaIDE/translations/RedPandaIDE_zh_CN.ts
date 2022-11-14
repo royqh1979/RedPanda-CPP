@@ -1325,10 +1325,10 @@ Are you really want to continue?</oldsource>
         <location filename="../editor.cpp" line="278"/>
         <location filename="../editor.cpp" line="339"/>
         <location filename="../editor.cpp" line="366"/>
-        <location filename="../editor.cpp" line="1403"/>
-        <location filename="../editor.cpp" line="1408"/>
-        <location filename="../editor.cpp" line="1428"/>
-        <location filename="../editor.cpp" line="1433"/>
+        <location filename="../editor.cpp" line="1419"/>
+        <location filename="../editor.cpp" line="1424"/>
+        <location filename="../editor.cpp" line="1444"/>
+        <location filename="../editor.cpp" line="1449"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -1347,34 +1347,34 @@ Are you really want to continue?</oldsource>
         <translation>文件%1已经被打开！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="1404"/>
+        <location filename="../editor.cpp" line="1420"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="1409"/>
+        <location filename="../editor.cpp" line="1425"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="1429"/>
+        <location filename="../editor.cpp" line="1445"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="1434"/>
+        <location filename="../editor.cpp" line="1450"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="2927"/>
+        <location filename="../editor.cpp" line="2943"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="3555"/>
-        <location filename="../editor.cpp" line="3602"/>
-        <location filename="../editor.cpp" line="3647"/>
+        <location filename="../editor.cpp" line="3571"/>
+        <location filename="../editor.cpp" line="3618"/>
+        <location filename="../editor.cpp" line="3663"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
@@ -1383,27 +1383,27 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4485"/>
+        <location filename="../editor.cpp" line="4501"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4486"/>
+        <location filename="../editor.cpp" line="4502"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation>找不到astyle程序&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4645"/>
+        <location filename="../editor.cpp" line="4661"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4646"/>
+        <location filename="../editor.cpp" line="4662"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4864"/>
+        <location filename="../editor.cpp" line="4880"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -2820,150 +2820,150 @@ Are you really want to continue?</oldsource>
         <translation>连续行的最大缩进空格数：</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="362"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="366"/>
         <source>Indentation 2</source>
         <translation>缩进2</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="368"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="372"/>
         <source>Indent labels</source>
         <translation>缩进标签(label)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="375"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="379"/>
         <source>Indent class blocks</source>
         <translation>缩进类定义(class)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="382"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="386"/>
         <source>Indent namespaces</source>
         <translation>缩进命名空间定义(namespace)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="389"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="393"/>
         <source>Indent class access modifiers</source>
         <translation>缩进类访问限制符(&apos;public&apos;,&apos;private&apos;...)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="396"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="400"/>
         <source>Indent after parenthesis &apos;(&apos; or assignment &apos;=&apos;</source>
         <translation>在括号&apos;(&apos;或赋值号&apos;=&apos;后缩进</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="403"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="407"/>
         <source>Indent preprocessor conditional statements</source>
         <translation>缩进预处理条件指令(&apos;#if&apos;,&apos;#else&apos;,...)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="410"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="414"/>
         <source>Indent multi-line preprocessor #define statements</source>
         <translation>缩进多行#define语句</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="417"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="421"/>
         <source>Indent line comments that start in column one</source>
         <translation>缩进在第一列开始的行注释</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="424"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="428"/>
         <source>Indent preprocessor blocks</source>
         <translation>缩进预处理代码段</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="431"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="435"/>
         <source>Indent switch blocks</source>
         <translation>缩进switch语句</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="438"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="442"/>
         <source>Indent cases</source>
         <translation>缩进case语句</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="446"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="450"/>
         <source>Padding 1</source>
         <translation>填充1</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="452"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="456"/>
         <source>Insert spaces around operators</source>
         <translation>在运算符周围插入空格</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="459"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="463"/>
         <source>Insert spaces after commas</source>
         <translation>在逗号后插入空格</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="466"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="470"/>
         <source>Insert spaces after parenthesis headers (&apos;if&apos;,&apos;for&apos;,...)</source>
         <translation>在语句和括号间插入空格(&apos;if&apos;,&apos;for&apos;...)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="473"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="477"/>
         <source>Insert spaces around parenthesis on the outside only</source>
         <translation>在括号外侧加入空格</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="480"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="484"/>
         <source>Insert spaces around parenthesis on the inside only</source>
         <translation>在括号内侧加入空格</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="487"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="491"/>
         <source>Insert empty lines arround unrelated blocks</source>
         <translation>在代码段之间加入空行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="494"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="498"/>
         <source>Insert empty lines around all blocks</source>
         <oldsource>Insert empy lines around all blocks</oldsource>
         <translation>在所有代码段之间加入空格</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="501"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="505"/>
         <source>Insert spaces around first parenthesis in a series on the out side  only</source>
         <translation>在多层嵌套括号的最外侧加入空格</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="508"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="512"/>
         <source>Insert spaces around parenthesis</source>
         <translation>在括号两侧加入空格</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="516"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="520"/>
         <source>Padding 2</source>
         <translation>填充2</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="522"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="526"/>
         <source>Remove all empty lines. It will NOT delete lines added by the padding options.</source>
         <translation>删除所有空行。不影响填充选项自动插入的空行。</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="529"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="533"/>
         <source>Attach a pointer operator to its :</source>
         <translation>将指针运算符(&apos;*&apos;)放在：</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="536"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="540"/>
         <source>Remove all consecutive empty lines. It will NOT delete lines added by the padding options.</source>
         <translation>将连续的多个空行合并成一个。不影响填充选项自动插入的空行。</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="543"/>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="553"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="547"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="557"/>
         <source>type(left)</source>
         <translation>类型侧（左侧）</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="586"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="590"/>
         <source>Fill empty lines with the white space of the previous lines.</source>
         <translation>使用前一行的缩进空格填充空行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="576"/>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="603"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="580"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="607"/>
         <source>middle</source>
         <translation>中间</translation>
     </message>
@@ -2973,124 +2973,124 @@ Are you really want to continue?</oldsource>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;预定义排版方案说明&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="593"/>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="613"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="597"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="617"/>
         <source>name(right)</source>
         <translation>名称侧（右侧）</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="623"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="627"/>
         <source>Remove unnecessary space adding around parenthesis</source>
         <translation>删除括号周围的多余空格</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="630"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="634"/>
         <source>Attach a reference operator to its :</source>
         <translation>将引用运算符(&apos;&amp;&apos;)放在：</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="637"/>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="647"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="641"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="651"/>
         <source>none</source>
         <translation>不变</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="658"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="662"/>
         <source>Other 1</source>
         <translation>其它1</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="664"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="668"/>
         <source>Break one line headers (&apos;if&apos;,&apos;while&apos;,&apos;else&apos;...) from the statement on the same line</source>
         <translation>对单行条件(&apos;if&apos;,&apos;while&apos;,&apos;else&apos;)语句分行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="671"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="675"/>
         <source>Add one line braces to unbraced one line conditional statements</source>
         <translation>用花括号括起单行条件体</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="678"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="682"/>
         <source>Break braces before close headers (&apos;else&apos;,&apos;catch&quot;...)</source>
         <translation>对结束语句(&apos;else&apos;,&apos;catch&apos;)和它之前的花括号断行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="685"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="689"/>
         <source>Remove braces from a braced one line conditional statements</source>
         <translation>删除括起单行条件体语句的花括号</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="692"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="696"/>
         <source>Break &apos;else if&apos; statements into two lines</source>
         <translation>将&apos;else if&apos;语句断成两行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="699"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="703"/>
         <source>Add braces to unbraced one line conditional statements</source>
         <translation>对条件和条件体语句在同一行上的，删除括起条件体语句的花括号</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="707"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="711"/>
         <source>Other 2</source>
         <translation>其它2</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="748"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="752"/>
         <source>Attach return type to the function name in its declaration</source>
         <translation>将函数声明中的函数名和返回值类型放在同一行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="741"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="745"/>
         <source>Break return type from the function name in its declaration</source>
         <translation>将函数声明中的函数名和返回值类型断成两行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="713"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="717"/>
         <source>Break return type from the function name in its definition</source>
         <translation>将函数定义中的函数名和返回值类型断成两行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="727"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="731"/>
         <source>Attach return type to the function name in its definition</source>
         <translation>将函数定义中的函数名和返回值类型放在同一行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="720"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="724"/>
         <source>Don&apos;t break blocks residing completely on one line</source>
         <translation>不对同一行上的多个代码段断行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="734"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="738"/>
         <source>Don&apos;t break multimple statements residing on one line</source>
         <translation>不对同一行上的多条语句断行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="756"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="760"/>
         <source>Other 3</source>
         <translation>其它3</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="843"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="847"/>
         <source>Place the logical conditional to the last on the previous line, when break lines</source>
         <translation>在断行时，将逻辑条件放在前一行的末尾</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="836"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="840"/>
         <source>Close ending angle brackets on template definitions</source>
         <translation>关闭模板定义末尾的尖括号</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="829"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="833"/>
         <source>Remove the leading &apos;*&apos; prefix on multi-line comments and indent the comment text one line indent.</source>
         <translation>删除多行注释前的&apos;*&apos;并缩进注释内容</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="777"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="781"/>
         <source>Break lines exceeds</source>
         <translation>对超过指定长度的行断行</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.ui" line="784"/>
+        <location filename="../settingsdialog/formattergeneralwidget.ui" line="788"/>
         <source>characters</source>
         <translation>字符</translation>
     </message>
@@ -7604,7 +7604,7 @@ Are you really want to continue?</oldsource>
         <translation>所有文件</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="572"/>
+        <location filename="../colorscheme.cpp" line="582"/>
         <location filename="../main.cpp" line="214"/>
         <location filename="../main.cpp" line="221"/>
         <source>Error</source>
@@ -7950,12 +7950,12 @@ Are you really want to continue?</oldsource>
         <translation>GB</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="62"/>
+        <location filename="../colorscheme.cpp" line="68"/>
         <source>Can&apos;t open file &apos;%1&apos; for read</source>
         <translation>无法打开文件&quot;%1&quot;进行读取</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="69"/>
+        <location filename="../colorscheme.cpp" line="75"/>
         <source>Can&apos;t parse json file &apos;%1&apos; at offset %2! Error Code: %3</source>
         <translation>JSON文件&quot;%1&quot;在位置&quot;%2&quot;处无法解析！错误码：%3</translation>
     </message>
@@ -7964,257 +7964,263 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">&quot;%1&quot;不是一个合法的颜色配置文件，无法解析！</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="73"/>
+        <location filename="../colorscheme.cpp" line="79"/>
         <source>Can&apos;t parse json file &apos;%1&apos; is not a color scheme config file!</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="98"/>
+        <location filename="../colorscheme.cpp" line="104"/>
         <source>Can&apos;t open file &apos;%1&apos; for write</source>
         <translation>无法打开文件&quot;%1&quot;写入内容</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="339"/>
+        <location filename="../colorscheme.cpp" line="345"/>
         <source>Can&apos;t Find the color scheme file %1!</source>
         <translation>找不到颜色配置文件%1!</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="343"/>
-        <location filename="../colorscheme.cpp" line="361"/>
-        <location filename="../colorscheme.cpp" line="366"/>
+        <location filename="../colorscheme.cpp" line="349"/>
+        <location filename="../colorscheme.cpp" line="367"/>
+        <location filename="../colorscheme.cpp" line="372"/>
         <source>Can&apos;t remove the color scheme file %1!</source>
         <translation>删不掉颜色配置文件%1!</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="427"/>
+        <location filename="../colorscheme.cpp" line="433"/>
         <source>Assembler</source>
         <translation>汇编</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="428"/>
-        <location filename="../colorscheme.cpp" line="432"/>
-        <location filename="../colorscheme.cpp" line="436"/>
-        <location filename="../colorscheme.cpp" line="440"/>
-        <location filename="../colorscheme.cpp" line="444"/>
-        <location filename="../colorscheme.cpp" line="448"/>
-        <location filename="../colorscheme.cpp" line="452"/>
-        <location filename="../colorscheme.cpp" line="456"/>
-        <location filename="../colorscheme.cpp" line="460"/>
-        <location filename="../colorscheme.cpp" line="464"/>
-        <location filename="../colorscheme.cpp" line="468"/>
-        <location filename="../colorscheme.cpp" line="472"/>
-        <location filename="../colorscheme.cpp" line="476"/>
-        <location filename="../colorscheme.cpp" line="480"/>
-        <location filename="../colorscheme.cpp" line="484"/>
-        <location filename="../colorscheme.cpp" line="488"/>
-        <location filename="../colorscheme.cpp" line="492"/>
-        <location filename="../colorscheme.cpp" line="496"/>
-        <location filename="../colorscheme.cpp" line="500"/>
-        <location filename="../colorscheme.cpp" line="504"/>
+        <location filename="../colorscheme.cpp" line="434"/>
+        <location filename="../colorscheme.cpp" line="438"/>
+        <location filename="../colorscheme.cpp" line="442"/>
+        <location filename="../colorscheme.cpp" line="446"/>
+        <location filename="../colorscheme.cpp" line="450"/>
+        <location filename="../colorscheme.cpp" line="454"/>
+        <location filename="../colorscheme.cpp" line="458"/>
+        <location filename="../colorscheme.cpp" line="462"/>
+        <location filename="../colorscheme.cpp" line="466"/>
+        <location filename="../colorscheme.cpp" line="470"/>
+        <location filename="../colorscheme.cpp" line="474"/>
+        <location filename="../colorscheme.cpp" line="478"/>
+        <location filename="../colorscheme.cpp" line="482"/>
+        <location filename="../colorscheme.cpp" line="486"/>
+        <location filename="../colorscheme.cpp" line="490"/>
+        <location filename="../colorscheme.cpp" line="494"/>
+        <location filename="../colorscheme.cpp" line="498"/>
+        <location filename="../colorscheme.cpp" line="502"/>
+        <location filename="../colorscheme.cpp" line="506"/>
         <location filename="../colorscheme.cpp" line="510"/>
         <location filename="../colorscheme.cpp" line="514"/>
-        <location filename="../colorscheme.cpp" line="518"/>
-        <location filename="../colorscheme.cpp" line="522"/>
+        <location filename="../colorscheme.cpp" line="520"/>
+        <location filename="../colorscheme.cpp" line="524"/>
+        <location filename="../colorscheme.cpp" line="528"/>
+        <location filename="../colorscheme.cpp" line="532"/>
         <source>Syntax</source>
         <translation>语法</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="431"/>
+        <location filename="../colorscheme.cpp" line="437"/>
         <source>Character</source>
         <translation>字符</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="435"/>
+        <location filename="../colorscheme.cpp" line="441"/>
         <source>Comment</source>
         <translation>注释</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="439"/>
+        <location filename="../colorscheme.cpp" line="445"/>
         <source>Class</source>
         <translation>类</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="443"/>
+        <location filename="../colorscheme.cpp" line="449"/>
         <source>Float</source>
         <translation>浮点数</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="447"/>
+        <location filename="../colorscheme.cpp" line="453"/>
         <source>Function</source>
         <translation>函数</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="451"/>
+        <location filename="../colorscheme.cpp" line="457"/>
         <source>Gloabal Variable</source>
         <translation>全局变量</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="455"/>
+        <location filename="../colorscheme.cpp" line="461"/>
         <source>Hexadecimal Integer</source>
         <translation>十六进制数</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="459"/>
+        <location filename="../colorscheme.cpp" line="465"/>
         <source>Identifier</source>
         <translation>标识符</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="463"/>
+        <location filename="../colorscheme.cpp" line="469"/>
         <source>Illegal Char</source>
         <translation>非法字符</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="467"/>
+        <location filename="../colorscheme.cpp" line="473"/>
         <source>Local Variable</source>
         <translation>局部变量</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="471"/>
+        <location filename="../colorscheme.cpp" line="477"/>
         <source>Integer</source>
         <translation>整数</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="475"/>
+        <location filename="../colorscheme.cpp" line="481"/>
         <source>Octal Integer</source>
         <translation>八进制整数</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="479"/>
+        <location filename="../colorscheme.cpp" line="485"/>
         <source>Preprocessor</source>
         <translation>预处理指令</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="483"/>
+        <location filename="../colorscheme.cpp" line="489"/>
         <source>Reserve Word</source>
-        <translation>保留字（关键字）</translation>
+        <translation>关键字</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="487"/>
+        <location filename="../colorscheme.cpp" line="493"/>
+        <source>Reserve Word for Types</source>
+        <translation>类型关键字</translation>
+    </message>
+    <message>
+        <location filename="../colorscheme.cpp" line="497"/>
         <source>Space</source>
         <translation>空格字符</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="491"/>
+        <location filename="../colorscheme.cpp" line="501"/>
         <source>String</source>
         <translation>字符串</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="495"/>
+        <location filename="../colorscheme.cpp" line="505"/>
         <source>Escape Sequences</source>
         <translation>转义序列</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="499"/>
+        <location filename="../colorscheme.cpp" line="509"/>
         <source>Symbol</source>
         <translation>符号</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="503"/>
+        <location filename="../colorscheme.cpp" line="513"/>
         <source>Variable</source>
         <translation>变量</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="509"/>
+        <location filename="../colorscheme.cpp" line="519"/>
         <source>Brace/Bracket/Parenthesis Level 1</source>
         <translation>1级括号</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="513"/>
+        <location filename="../colorscheme.cpp" line="523"/>
         <source>Brace/Bracket/Parenthesis Level 2</source>
         <translation>2级括号</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="517"/>
+        <location filename="../colorscheme.cpp" line="527"/>
         <source>Brace/Bracket/Parenthesis Level 3</source>
         <translation>3级括号</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="521"/>
+        <location filename="../colorscheme.cpp" line="531"/>
         <source>Brace/Bracket/Parenthesis Level 4</source>
         <translation>4级括号</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="527"/>
+        <location filename="../colorscheme.cpp" line="537"/>
         <source>Gutter</source>
         <translation>侧边栏</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="528"/>
-        <location filename="../colorscheme.cpp" line="532"/>
-        <location filename="../colorscheme.cpp" line="537"/>
+        <location filename="../colorscheme.cpp" line="538"/>
         <location filename="../colorscheme.cpp" line="542"/>
         <location filename="../colorscheme.cpp" line="547"/>
         <location filename="../colorscheme.cpp" line="552"/>
         <location filename="../colorscheme.cpp" line="557"/>
         <location filename="../colorscheme.cpp" line="562"/>
         <location filename="../colorscheme.cpp" line="567"/>
+        <location filename="../colorscheme.cpp" line="572"/>
+        <location filename="../colorscheme.cpp" line="577"/>
         <source>Editor</source>
         <translation>编辑器</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="531"/>
+        <location filename="../colorscheme.cpp" line="541"/>
         <source>Gutter Active Line</source>
         <translation>当前行侧边栏</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="536"/>
+        <location filename="../colorscheme.cpp" line="546"/>
         <source>Active Line</source>
         <translation>当前行</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="541"/>
+        <location filename="../colorscheme.cpp" line="551"/>
         <source>Breakpoint</source>
         <translation>断点</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="546"/>
+        <location filename="../colorscheme.cpp" line="556"/>
         <source>Active Breakpoint</source>
         <translation>活动断点</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="551"/>
+        <location filename="../colorscheme.cpp" line="561"/>
         <source>Fold Line</source>
         <translation>代码折叠线</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="556"/>
+        <location filename="../colorscheme.cpp" line="566"/>
         <source>Selection</source>
         <translation>选中文字</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="561"/>
+        <location filename="../colorscheme.cpp" line="571"/>
         <source>Editor Text</source>
         <translation>编辑器缺省</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="566"/>
+        <location filename="../colorscheme.cpp" line="576"/>
         <source>Current Highlighted Word</source>
         <translation>当前高亮单词</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="573"/>
-        <location filename="../colorscheme.cpp" line="577"/>
+        <location filename="../colorscheme.cpp" line="583"/>
+        <location filename="../colorscheme.cpp" line="587"/>
         <source>Syntax Check</source>
         <translation>语法检查</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="576"/>
+        <location filename="../colorscheme.cpp" line="586"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="597"/>
-        <location filename="../colorscheme.cpp" line="603"/>
+        <location filename="../colorscheme.cpp" line="607"/>
+        <location filename="../colorscheme.cpp" line="613"/>
         <source>Rename file &apos;%1&apos; to &apos;%2&apos; failed!</source>
         <translation>将文件&apos;%1&apos;改名为&apos;%2&apos;失败！</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="612"/>
+        <location filename="../colorscheme.cpp" line="622"/>
         <source>Scheme &apos;%1&apos; already exists!</source>
         <translation>配置文件&apos;%1&apos;已经存在！</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="745"/>
+        <location filename="../colorscheme.cpp" line="760"/>
         <source>default</source>
         <translation>缺省</translation>
     </message>
@@ -8420,90 +8426,75 @@ Are you really want to continue?</oldsource>
 <context>
     <name>SearchDialog</name>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="14"/>
         <source>Dialog</source>
-        <translation>对话框</translation>
+        <translation type="vanished">对话框</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="53"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="59"/>
         <source>Text to Find:</source>
         <translation>要查找的关键字</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="98"/>
         <source>Replace with:</source>
-        <translation>替换为：</translation>
+        <translation type="vanished">替换为：</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="167"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="111"/>
         <source>Options:</source>
         <translation>选项：</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="185"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="117"/>
         <source>Case Sensitive</source>
         <translation>区分大小写</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="225"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="124"/>
         <source>Whole words only</source>
         <translation>整个单词</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="192"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="178"/>
         <source>Wrap Around</source>
         <translation>循环查找</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="218"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="152"/>
         <source>Regular Expression</source>
         <translation>正则表达式</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="202"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="188"/>
         <source>Prompt on replace</source>
         <translation>替换时提示</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="94"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="201"/>
         <source>Scope:</source>
         <translation>范围：</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="112"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="207"/>
         <source>Global</source>
         <translation>全局</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="119"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="214"/>
         <source>Selection</source>
         <translation>选中文字</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="129"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="224"/>
         <source>Origin:</source>
         <translation>起点：</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="147"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="230"/>
         <source>From cursor</source>
         <translation>从光标处</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="157"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="240"/>
         <source>Entire scope</source>
         <translation>整个范围</translation>
     </message>
@@ -8528,50 +8519,41 @@ Are you really want to continue?</oldsource>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="268"/>
         <source>Direction:</source>
-        <translation>方向</translation>
+        <translation type="vanished">方向</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="274"/>
         <source>Forward</source>
-        <translation>向后</translation>
+        <translation type="vanished">向后</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="284"/>
         <source>Backward</source>
-        <translation>向前</translation>
+        <translation type="vanished">向前</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="307"/>
         <source>Where:</source>
-        <translation>在哪些文件中查找：</translation>
+        <translation type="vanished">在哪些文件中查找：</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="313"/>
         <source>Current File</source>
-        <translation>当前文件</translation>
+        <translation type="vanished">当前文件</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="323"/>
         <source>Files In Project</source>
-        <translation>项目中的文件</translation>
+        <translation type="vanished">项目中的文件</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="330"/>
         <source>Open Files</source>
-        <translation>已打开的文件</translation>
+        <translation type="vanished">已打开的文件</translation>
     </message>
     <message>
         <location filename="../widgets/searchdialog.ui" line="14"/>
-        <location filename="../widgets/searchinfiledialog.ui" line="397"/>
         <source>Find</source>
         <translation>查找</translation>
     </message>
     <message>
-        <location filename="../widgets/searchinfiledialog.ui" line="404"/>
         <source>Cancel</source>
-        <translation>取消</translation>
+        <translation type="vanished">取消</translation>
     </message>
     <message>
         <source>Find in files</source>
@@ -8626,12 +8608,73 @@ Are you really want to continue?</oldsource>
 <context>
     <name>SearchInFileDialog</name>
     <message>
-        <source>Find</source>
-        <translation type="vanished">查找</translation>
+        <source>Dialog</source>
+        <translation type="obsolete">对话框</translation>
     </message>
     <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="14"/>
+        <source>Search in Files</source>
+        <translation>在文件中查找</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="59"/>
+        <source>Text to Find:</source>
+        <translation>要查找的内容：</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="106"/>
+        <source>Where:</source>
+        <translation>在哪些文件中查找：</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="112"/>
+        <source>Current File</source>
+        <translation>当前文件</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="122"/>
+        <source>Files In Project</source>
+        <translation>项目中的文件</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="129"/>
+        <source>Open Files</source>
+        <translation>已打开的文件</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="142"/>
+        <source>Options:</source>
+        <translation>选项：</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="148"/>
+        <source>Whole words only</source>
+        <translation>整个单词</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="155"/>
+        <source>Case Sensitive</source>
+        <translation>区分大小写</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="186"/>
+        <source>Regular Expression</source>
+        <translation>正则表达式</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="253"/>
+        <source>Find</source>
+        <translation>查找</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="260"/>
         <source>Replace</source>
-        <translation type="vanished">替换</translation>
+        <translation>替换</translation>
+    </message>
+    <message>
+        <location filename="../widgets/searchinfiledialog.ui" line="267"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
     </message>
     <message>
         <source>Find in files</source>

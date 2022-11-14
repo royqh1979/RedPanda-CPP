@@ -26,3 +26,9 @@ author: Alan-CRL
 ### Theme Contrast
 
 author: Alan-CRL
+
+## Color Schemes
+
+### Monokai
+
+author: РЎБъDev

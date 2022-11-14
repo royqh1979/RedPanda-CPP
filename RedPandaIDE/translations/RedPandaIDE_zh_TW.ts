@@ -5896,6 +5896,10 @@
         <source>C Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Reserve Word for Types</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>
@@ -6010,15 +6014,7 @@
 <context>
     <name>SearchDialog</name>
     <message>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Text to Find:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Replace with:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6070,39 +6066,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Direction:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Forward</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Backward</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Where:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Current File</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Files In Project</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Find</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6139,6 +6103,61 @@
     </message>
     <message>
         <source>Do you want to continue from file&apos;s end?</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SearchInFileDialog</name>
+    <message>
+        <source>Text to Find:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Where:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Current File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Files In Project</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Options:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Whole words only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Case Sensitive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Regular Expression</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Find</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in Files</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

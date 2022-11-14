@@ -101,6 +101,7 @@ enum StatementKind  {
   skBlock,
   skUserCodeSnippet,  // user code template
   skKeyword, // keywords
+  skKeywordType, //keywords for type (for color management)
   skAlias
 };
 

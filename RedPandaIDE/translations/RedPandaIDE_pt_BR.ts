@@ -6159,6 +6159,10 @@
         <source>C Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Reserve Word for Types</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>
@@ -6274,7 +6278,7 @@
     <name>SearchDialog</name>
     <message>
         <source>Dialog</source>
-        <translation>Diálogo</translation>
+        <translation type="vanished">Diálogo</translation>
     </message>
     <message>
         <source>Text to Find:</source>
@@ -6282,7 +6286,7 @@
     </message>
     <message>
         <source>Replace with:</source>
-        <translation>Substituir por:</translation>
+        <translation type="vanished">Substituir por:</translation>
     </message>
     <message>
         <source>Options:</source>
@@ -6334,31 +6338,31 @@
     </message>
     <message>
         <source>Direction:</source>
-        <translation>Direção:</translation>
+        <translation type="vanished">Direção:</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation>Avançar</translation>
+        <translation type="vanished">Avançar</translation>
     </message>
     <message>
         <source>Backward</source>
-        <translation>Retroceder</translation>
+        <translation type="vanished">Retroceder</translation>
     </message>
     <message>
         <source>Where:</source>
-        <translation>Onde:</translation>
+        <translation type="vanished">Onde:</translation>
     </message>
     <message>
         <source>Current File</source>
-        <translation>Arquivo atual</translation>
+        <translation type="vanished">Arquivo atual</translation>
     </message>
     <message>
         <source>Files In Project</source>
-        <translation>Arquivos no projeto</translation>
+        <translation type="vanished">Arquivos no projeto</translation>
     </message>
     <message>
         <source>Open Files</source>
-        <translation>Arquivos abertos</translation>
+        <translation type="vanished">Arquivos abertos</translation>
     </message>
     <message>
         <source>Find</source>
@@ -6366,7 +6370,7 @@
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation type="vanished">Cancelar</translation>
     </message>
     <message>
         <source>Replace</source>
@@ -6429,11 +6433,11 @@
     <name>SearchInFileDialog</name>
     <message>
         <source>Find</source>
-        <translation type="obsolete">Procurar</translation>
+        <translation type="unfinished">Procurar</translation>
     </message>
     <message>
         <source>Replace</source>
-        <translation type="obsolete">Substituir</translation>
+        <translation type="unfinished">Substituir</translation>
     </message>
     <message>
         <source>Find in files</source>
@@ -6462,6 +6466,54 @@
     <message>
         <source>Continue Replace</source>
         <translation type="obsolete">Continuar a substituir</translation>
+    </message>
+    <message>
+        <source>Dialog</source>
+        <translation type="obsolete">Diálogo</translation>
+    </message>
+    <message>
+        <source>Text to Find:</source>
+        <translation type="unfinished">Texto a procurar:</translation>
+    </message>
+    <message>
+        <source>Where:</source>
+        <translation type="unfinished">Onde:</translation>
+    </message>
+    <message>
+        <source>Current File</source>
+        <translation type="unfinished">Arquivo atual</translation>
+    </message>
+    <message>
+        <source>Files In Project</source>
+        <translation type="unfinished">Arquivos no projeto</translation>
+    </message>
+    <message>
+        <source>Open Files</source>
+        <translation type="unfinished">Arquivos abertos</translation>
+    </message>
+    <message>
+        <source>Options:</source>
+        <translation type="unfinished">Opções:</translation>
+    </message>
+    <message>
+        <source>Whole words only</source>
+        <translation type="unfinished">Apenas palavras inteiras</translation>
+    </message>
+    <message>
+        <source>Case Sensitive</source>
+        <translation type="unfinished">Sensibilidade a maiúsculas/minúsculas</translation>
+    </message>
+    <message>
+        <source>Regular Expression</source>
+        <translation type="unfinished">Expressão regular</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in Files</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.5
+
+  - enhancement: new color scheme Monokai (contributed by 小龙Dev)
+  - enhancemnet: add "Reserve word for Types" item in color scheme
+
 Red Panda C++ Version 2.4
 
   - fix: Contents in class browser not correctly updated when close the last editor for project. 

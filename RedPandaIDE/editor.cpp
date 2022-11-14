@@ -1023,6 +1023,22 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
     //selection
     if (highlighter() && attr) {
+        if (attr == highlighter()->keywordAttribute()) {
+            if (CppTypeKeywords.contains(token)) {
+                PColorSchemeItem item = mStatementColors->value(StatementKind::skKeywordType,PColorSchemeItem());
+
+                if (item) {
+                    if (item->foreground().isValid())
+                        foreground = item->foreground();
+                    if (item->background().isValid())
+                        background = item->background();
+                    style.setFlag(QSynedit::FontStyle::fsBold,item->bold());
+                    style.setFlag(QSynedit::FontStyle::fsItalic,item->italic());
+                    style.setFlag(QSynedit::FontStyle::fsUnderline,item->underlined());
+                    style.setFlag(QSynedit::FontStyle::fsStrikeOut,item->strikeout());
+                }
+            }
+        }
         if (((attr == highlighter()->identifierAttribute())
                 || (attr == highlighter()->keywordAttribute())
                 || (attr->name() == SYNS_AttrPreprocessor)

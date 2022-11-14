@@ -40,6 +40,12 @@ PColorScheme ColorScheme::fromJson(const QJsonObject &json)
             scheme->mItems[key]=ColorSchemeItem::fromJson(json[key].toObject());
         }
     }
+    //backward compatibility (for config files version < 2.5)
+    if (!scheme->mItems.contains(SYNS_AttrReserveWord_Type)
+            && scheme->mItems.contains(SYNS_AttrIdentifier)) {
+        scheme->mItems.insert(SYNS_AttrReserveWord_Type,
+                              ColorSchemeItem::fromJson(json[SYNS_AttrReservedWord].toObject()));
+    }
     return scheme;
 }
 
@@ -483,6 +489,10 @@ void ColorManager::initItemDefines()
               QObject::tr("Reserve Word"),
               QObject::tr("Syntax"),
               true,true,true);
+    addDefine(SYNS_AttrReserveWord_Type,
+              QObject::tr("Reserve Word for Types"),
+              QObject::tr("Syntax"),
+              true,true,true);
     addDefine(SYNS_AttrSpace,
               QObject::tr("Space"),
               QObject::tr("Syntax"),
@@ -719,6 +729,11 @@ void ColorManager::updateStatementColors(std::shared_ptr<QHash<StatementKind, st
     if (item) {
         statementColors->insert(StatementKind::skKeyword,item);
         statementColors->insert(StatementKind::skUserCodeSnippet,item);
+        statementColors->insert(StatementKind::skKeywordType,item);
+    }
+    item = getItem(schemeName, SYNS_AttrReserveWord_Type);
+    if (item) {
+        statementColors->insert(StatementKind::skKeywordType,item);
     }
     item = getItem(schemeName, SYNS_AttrString);
     if (item) {
