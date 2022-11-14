@@ -1,3 +1,9 @@
+redpanda-cpp (2.4-1) unstable; urgency=medium
+
+  * Update to 2.4
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Sun, 11 Nov 2022 19:58:00 +0800
+
 redpanda-cpp (2.3-1) unstable; urgency=medium
 
   * Update to 2.3

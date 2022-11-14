@@ -10,9 +10,8 @@
 #include "project.h"
 #include "parser/cppparser.h"
 #include "compiler/executablerunner.h"
-#include <QMimeDatabase>
-#ifdef Q_OS_WIN
 #include <QComboBox>
+#ifdef Q_OS_WIN
 #include <windows.h>
 #endif
 
