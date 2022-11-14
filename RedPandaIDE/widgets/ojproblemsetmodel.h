@@ -85,8 +85,10 @@ public:
     void removeProblem(int index);
     bool problemNameUsed(const QString& name);
     void removeAllProblems();
-    void saveToFile(const QString& fileName);
-    void loadFromFile(const QString& fileName);
+    void saveToFile(const QString& fileName, int currentIndex=-1);
+    void loadFromFile(const QString& fileName, int& currentIndex);
+    void load(int& currentIndex);
+    void save(int currentIndex);
     void updateProblemAnswerFilename(const QString& oldFilename, const QString& newFilename);
 
 signals:

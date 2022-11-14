@@ -92,6 +92,8 @@
 #define DEV_BOOKMARK_FILE "bookmarks.json"
 #define DEV_DEBUGGER_FILE "debugger.json"
 #define DEV_HISTORY_FILE "history.json"
+#define DEV_PROBLEM_SET_FILE "problemset.json"
+
 
 #ifdef Q_OS_WIN
 #   define PATH_SENSITIVITY Qt::CaseInsensitive

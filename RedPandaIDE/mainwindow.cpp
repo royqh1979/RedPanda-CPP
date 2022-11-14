@@ -321,9 +321,11 @@ MainWindow::MainWindow(QWidget *parent)
     //problem set
     mOJProblemSetNameCounter=1;
     mOJProblemSetModel.rename(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
+
     m=ui->lstProblemSet->selectionModel();
     ui->lstProblemSet->setModel(&mOJProblemSetModel);
     delete m;
+
     m=ui->tblProblemCases->selectionModel();
     ui->tblProblemCases->setModel(&mOJProblemModel);
     delete m;
@@ -341,6 +343,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(&mOJProblemModel, &OJProblemModel::dataChanged,
             this, &MainWindow::updateProblemTitle);
+    try {
+        int currentIndex=-1;
+        mOJProblemSetModel.load(currentIndex);
+        if (currentIndex>=0) {
+            QModelIndex index = mOJProblemSetModel.index(currentIndex,0);
+            ui->lstProblemSet->setCurrentIndex(index);
+            ui->lstProblemSet->scrollTo(index);
+        }
+    } catch (FileError& e) {
+        QMessageBox::warning(nullptr,
+                             tr("Error"),
+                             e.reason());
+    }
 
     //files view
     m=ui->treeFiles->selectionModel();
@@ -4919,6 +4934,17 @@ void MainWindow::closeEvent(QCloseEvent *event) {
                              e.reason());
         }
 
+        try {
+            int currentIndex=-1;
+            if (ui->lstProblemSet->currentIndex().isValid())
+                currentIndex = ui->lstProblemSet->currentIndex().row();
+            mOJProblemSetModel.save(currentIndex);
+        } catch (FileError& e) {
+            QMessageBox::warning(nullptr,
+                             tr("Save Error"),
+                             e.reason());
+        }
+
         if (pSettings->debugger().autosave()) {
             try {
                 mDebugger->saveForNonproject(includeTrailingPathDelimiter(pSettings->dirs().config())
@@ -7694,7 +7720,10 @@ void MainWindow::on_btnSaveProblemSet_clicked()
         QDir::setCurrent(extractFileDir(fileName));
         try {
             applyCurrentProblemCaseChanges();
-            mOJProblemSetModel.saveToFile(fileName);
+            int currentIndex=-1;
+            if (ui->lstProblemSet->currentIndex().isValid())
+                currentIndex = ui->lstProblemSet->currentIndex().row();
+            mOJProblemSetModel.saveToFile(fileName,currentIndex);
         } catch (FileError& error) {
             QMessageBox::critical(this,tr("Save Error"),
                                   error.reason());
@@ -7713,7 +7742,15 @@ void MainWindow::on_btnLoadProblemSet_clicked()
     if (!fileName.isEmpty()) {
         QDir::setCurrent(extractFileDir(fileName));
         try {
-            mOJProblemSetModel.loadFromFile(fileName);
+            int currentIndex;
+            mOJProblemSetModel.loadFromFile(fileName,currentIndex);
+            if (currentIndex>=0) {
+                if (currentIndex>=0) {
+                    QModelIndex index = mOJProblemSetModel.index(currentIndex,0);
+                    ui->lstProblemSet->setCurrentIndex(index);
+                    ui->lstProblemSet->scrollTo(index);
+                }
+            }
         } catch (FileError& error) {
             QMessageBox::critical(this,tr("Load Error"),
                                   error.reason());

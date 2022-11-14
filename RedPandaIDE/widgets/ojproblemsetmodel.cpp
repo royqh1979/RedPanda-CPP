@@ -16,6 +16,7 @@
  */
 #include "ojproblemsetmodel.h"
 
+#include <QDir>
 #include <QFile>
 #include <QIcon>
 #include <QJsonArray>
@@ -25,6 +26,7 @@
 #include "../utils.h"
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
+#include "../settings.h"
 
 OJProblemSetModel::OJProblemSetModel(QObject *parent) : QAbstractListModel(parent)
 {
@@ -100,7 +102,7 @@ void OJProblemSetModel::removeAllProblems()
     clear();
 }
 
-void OJProblemSetModel::saveToFile(const QString &fileName)
+void OJProblemSetModel::saveToFile(const QString &fileName, int currentIndex)
 {
     QFile file(fileName);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
@@ -138,6 +140,7 @@ void OJProblemSetModel::saveToFile(const QString &fileName)
             problemsArray.append(problemObj);
         }
         obj["problems"]=problemsArray;
+        obj["current_index"]=currentIndex;
         QJsonDocument doc;
         doc.setObject(obj);
         file.write(doc.toJson());
@@ -148,7 +151,7 @@ void OJProblemSetModel::saveToFile(const QString &fileName)
     }
 }
 
-void OJProblemSetModel::loadFromFile(const QString &fileName)
+void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
 {
     QFile file(fileName);
     if (file.open(QFile::ReadOnly)) {
@@ -163,6 +166,7 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
         beginResetModel();
         QJsonObject obj = doc.object();
         mProblemSet.name = obj["name"].toString();
+        currentIndex = obj["current_index"].toInt(-1);
         mProblemSet.problems.clear();
         QJsonArray problemsArray = obj["problems"].toArray();
         foreach (const QJsonValue& problemVal, problemsArray) {
@@ -201,6 +205,21 @@ void OJProblemSetModel::loadFromFile(const QString &fileName)
         throw FileError(QObject::tr("Can't open file '%1' for read.")
                         .arg(fileName));
     }
+}
+
+void OJProblemSetModel::load(int &currentIndex)
+{
+    QDir dir(pSettings->dirs().config());
+    QString filename=dir.filePath(DEV_PROBLEM_SET_FILE);
+    if (fileExists(filename))
+        loadFromFile(filename,currentIndex);
+}
+
+void OJProblemSetModel::save(int currentIndex)
+{
+    QDir dir(pSettings->dirs().config());
+    QString filename=dir.filePath(DEV_PROBLEM_SET_FILE);
+    saveToFile(filename,currentIndex);
 }
 
 void OJProblemSetModel::updateProblemAnswerFilename(const QString &oldFilename, const QString &newFilename)
