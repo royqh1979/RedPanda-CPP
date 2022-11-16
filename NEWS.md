@@ -4,8 +4,7 @@ Red Panda C++ Version 2.5
   - enhancemnet: add "Reserve word for Types" item in color scheme
   - enhancement: auto save / load problem set
   - enhancement: project's custom compile include/lib/bin directory is under folder of the app, save them using the path relative to the app
-
-        
+  - enhancement: slightly reduce memory usage        
 
 Red Panda C++ Version 2.4
 
