@@ -3487,7 +3487,6 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
     if (isIdentChar(ch) || ch == '.'
             || ch =='_' || ch=='+') {
         commandProcessor(QSynedit::EditCommand::ecChar, ch);
-
         phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             WordPurpose::wpHeaderCompletion);
@@ -4483,7 +4482,7 @@ QString Editor::getPreviousWordAtPositionForCompleteFunctionDefinition(const QSy
     }
     wordBegin++;
 
-    if (s[wordBegin]>='0' && s[wordBegin]<='9') // not valid word
+    if (wordBegin<s.length() && s[wordBegin]>='0' && s[wordBegin]<='9') // not valid word
         return "";
 
     result = s.mid(wordBegin, wordEnd - wordBegin+1);
