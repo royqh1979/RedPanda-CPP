@@ -58,7 +58,7 @@ void CppTokenizer::tokenize(const QStringList &buffer)
     TokenType tokenType;
     while (true) {
         mLastToken = s;
-        s = getNextToken(&tokenType, true, false);
+        s = getNextToken(&tokenType);
         simplify(s);
         if (s.isEmpty())
             break;
@@ -183,7 +183,7 @@ QString CppTokenizer::getForInit()
     TokenType tokenType;
     // Process until ; or end of file
     while (true) {
-        QString s = getNextToken(&tokenType, true, false);
+        QString s = getNextToken(&tokenType);
         simplify(s);
         if (!s.isEmpty())
             addToken(s,mCurrentLine,tokenType);
@@ -198,7 +198,7 @@ QString CppTokenizer::getForInit()
     return "";
 }
 
-QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool bSkipBlock)
+QString CppTokenizer::getNextToken(TokenType *pTokenType)
 {
     QString result;
     bool done = false;
@@ -228,7 +228,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
 //            done = (result != "");
         } else if (isWord()) {
             countLines();
-            result = getWord(false, bSkipArray, bSkipBlock);
+            result = getWord(false);
 //            if (result=="noexcept" || result == "throw") {
 //                result="";
 //                if (*mCurrent=='(')
@@ -252,7 +252,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType, bool bSkipArray, bool 
                     skipToNextToken();
                     // Append next token to this one
                     if (isIdentChar(*mCurrent))
-                        result+=getWord(true, bSkipArray, bSkipBlock);
+                        result+=getWord(true);
                     done = true;
                 } else {
                     countLines();
@@ -395,7 +395,7 @@ QString CppTokenizer::getPreprocessor()
     return QString(offset, mCurrent-offset);
 }
 
-QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkipBlock)
+QString CppTokenizer::getWord(bool bSkipParenthesis)
 {
     bool bFoundTemplate = false;
     //  bIsSmartPointer:=False;
@@ -449,7 +449,7 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
                 result += QString(offset, mCurrent-offset);
                 skipToNextToken();
             }
-        } else if (bSkipArray && (*mCurrent == '[')) {
+        } else if (*mCurrent == '[') {
             // Append array stuff
             while(true) {
                 offset = mCurrent;
@@ -460,9 +460,6 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
                 if (*mCurrent!='[') //maybe multi-dimension array
                     break;
             }
-        } else if (bSkipBlock && (*mCurrent == '{')) {
-            skipPair('{', '}');
-            skipToNextToken();
         }
 
         // Keep parent/child operators
@@ -479,7 +476,7 @@ QString CppTokenizer::getWord(bool bSkipParenthesis, bool bSkipArray, bool bSkip
                 skipToNextToken();
                 if (isIdentChar(*mCurrent)) {
                     // Append next token to this one
-                    QString s = getWord(bSkipParenthesis, bSkipArray, bSkipBlock);
+                    QString s = getWord(bSkipParenthesis);
                     result += s;
                 }
             }

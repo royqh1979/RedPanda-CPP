@@ -63,15 +63,11 @@ private:
 
     QString getForInit();
     QString getNextToken(
-            TokenType *pTokenType,
-            bool bSkipArray = false,
-            bool bSkipBlock = false);
+            TokenType *pTokenType);
     QString getNumber();
     QString getPreprocessor();
     QString getWord(
-            bool bSkipParenthesis = false,
-            bool bSkipArray = false,
-            bool bSkipBlock = false);
+            bool bSkipParenthesis);
     bool isArguments();
     bool isForInit();
     bool isNumber();
