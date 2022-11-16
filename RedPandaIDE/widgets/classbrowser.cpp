@@ -328,7 +328,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
 {
     for (PStatement statement:statements) {
         if (mClassBrowserType==ProjectClassBrowserType::WholeProject
-                && !statement->inProject)
+                && !statement->inProject())
             continue;
 
         if (mProcessedStatements.contains(statement.get()))
@@ -336,7 +336,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
 
         if (statement->kind == StatementKind::skBlock)
             continue;
-        if (statement->isInherited && !pSettings->ui().classBrowserShowInherited())
+        if (statement->isInherited() && !pSettings->ui().classBrowserShowInherited())
             continue;
 
         if (statement == node->statement) // prevent infinite recursion
@@ -400,10 +400,7 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
     result->value = statement->value;
     result->scope = statement->scope;
     result->classScope = statement->classScope;
-    result->inProject = statement->inProject;
-    result->inSystemHeader = statement->inSystemHeader;
-    result->isStatic = statement->isStatic;
-    result->isInherited = statement->isInherited;
+    result->properties = statement->properties;
     result->fileName= statement->fileName;
     result->line = statement->line;
     result->definitionFileName = statement->fileName;

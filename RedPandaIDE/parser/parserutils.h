@@ -140,6 +140,24 @@ struct StatementMatchPosition{
     int end;
 };
 
+enum StatementProperty {
+    spNone = 0x0,
+    spStatic = 0x0001,
+    spHasDefinition = 0x0002,
+    spInProject = 0x0004,
+    spInSystemHeader = 0x0008,
+    spInherited = 0x0010,
+    spVirtual = 0x0020,
+    spOverride = 0x0040,
+    spConstexpr = 0x0080
+};
+
+Q_DECLARE_FLAGS(StatementProperties, StatementProperty)
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(StatementProperties)
+
+
+
 using PStatementMathPosition = std::shared_ptr<StatementMatchPosition>;
 
 struct Statement;
@@ -158,20 +176,16 @@ struct Statement {
     StatementKind kind; // kind of statement class/variable/function/etc
     StatementScope scope; // global/local/classlocal
     StatementClassScope classScope; // protected/private/public
-    bool hasDefinition; // definiton line/filename is valid
     int line; // declaration
     int definitionLine; // definition
     QString fileName; // declaration
     QString definitionFileName; // definition
-    bool inProject; // statement in project
-    bool inSystemHeader; // statement in system header (#include <>)
     StatementMap children; // functions can be overloaded,so we use list to save children with the same name
     QSet<QString> friends; // friend class / functions
-    bool isStatic; // static function / variable
-    bool isInherited; // inherted member;
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
     QString noNameArgs;// Args without name
+    StatementProperties properties;
 
     // fields for code completion
     int usageCount; //Usage Count
@@ -180,6 +194,38 @@ struct Statement {
     int firstMatchLength; // length of first match;
     int caseMatched; // if match with case
     QList<PStatementMathPosition> matchPositions;
+
+    // definiton line/filename is valid
+    bool hasDefinition() {
+        return properties.testFlag(StatementProperty::spHasDefinition);
+    };
+    void setHasDefinition(bool on) {
+        properties.setFlag(StatementProperty::spHasDefinition,on);
+    }
+    // statement in project
+    bool inProject() {
+        return properties.testFlag(StatementProperty::spInProject);
+    }
+    void setInProject(bool on) {
+        properties.setFlag(StatementProperty::spInProject, on);
+    }
+    // statement in system header (#include <>)
+    bool inSystemHeader() {
+        return properties.testFlag(StatementProperty::spInSystemHeader);
+    };
+    void setInSystemHeader(bool on) {
+        properties.setFlag(StatementProperty::spInSystemHeader, on);
+    }
+    bool isStatic() {
+        return properties.testFlag(StatementProperty::spStatic);
+    } // static function / variable
+    void setIsStatic(bool on) {
+        properties.setFlag(StatementProperty::spStatic, on);
+    }
+    bool isInherited() {
+        return properties.testFlag(StatementProperty::spInherited);
+    }; // inherted member;
+
 };
 
 struct EvalStatement;

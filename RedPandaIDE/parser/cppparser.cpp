@@ -927,8 +927,7 @@ void CppParser::parseHardDefines()
                         StatementKind::skPreprocessor,
                         StatementScope::Global,
                         StatementClassScope::None,
-                        true,
-                        false);
+                        StatementProperty::spHasDefinition);
         }
     }
 }
@@ -1154,9 +1153,7 @@ PStatement CppParser::addInheritedStatement(const PStatement& derived, const PSt
                 inherit->kind,
                 inherit->scope,
                 access,
-                true,
-                inherit->isStatic);
-    statement->isInherited = true;
+                inherit->properties & StatementProperty::spInherited);
     return statement;
 }
 
@@ -1166,7 +1163,7 @@ PStatement CppParser::addChildStatement(const PStatement& parent, const QString 
                                         const QString& noNameArgs,
                                         const QString &value, int line, StatementKind kind,
                                         const StatementScope& scope, const StatementClassScope& classScope,
-                                        bool isDefinition, bool isStatic)
+                                        StatementProperties properties)
 {
     return addStatement(
                 parent,
@@ -1180,8 +1177,7 @@ PStatement CppParser::addChildStatement(const PStatement& parent, const QString 
                 kind,
                 scope,
                 classScope,
-                isDefinition,
-                isStatic);
+                properties);
 }
 
 PStatement CppParser::addStatement(const PStatement& parent,
@@ -1193,7 +1189,8 @@ PStatement CppParser::addStatement(const PStatement& parent,
                                    const QString &value,
                                    int line, StatementKind kind,
                                    const StatementScope& scope,
-                                   const StatementClassScope& classScope, bool isDefinition, bool isStatic)
+                                   const StatementClassScope& classScope,
+                                   StatementProperties properties)
 {
     // Move '*', '&' to type rather than cmd (it's in the way for code-completion)
     QString newType = aType;
@@ -1212,10 +1209,10 @@ PStatement CppParser::addStatement(const PStatement& parent,
             || kind == StatementKind::skVariable
             ) {
         //find
-        if (isDefinition) {
+        if (properties.testFlag(StatementProperty::spHasDefinition)) {
             PStatement oldStatement = findStatementInScope(newCommand,noNameArgs,kind,parent);
-            if (oldStatement  && !oldStatement->hasDefinition) {
-                oldStatement->hasDefinition = true;
+            if (oldStatement  && !oldStatement->hasDefinition()) {
+                oldStatement->setHasDefinition(true);
                 if (oldStatement->fileName!=fileName) {
                     PFileIncludes fileIncludes=mPreprocessor.includesList().value(fileName);
                     if (fileIncludes) {
@@ -1244,20 +1241,20 @@ PStatement CppParser::addStatement(const PStatement& parent,
     result->kind = kind;
     result->scope = scope;
     result->classScope = classScope;
-    result->hasDefinition = isDefinition;
+    result->properties = properties;
     result->line = line;
     result->definitionLine = line;
     result->fileName = fileName;
     result->definitionFileName = fileName;
-    if (!fileName.isEmpty())
-        result->inProject = mIsProjectFile;
-    else
-        result->inProject = false;
-    result->inSystemHeader = mIsSystemHeader;
+    if (!fileName.isEmpty()) {
+        result->setInProject(mIsProjectFile);
+        result->setInSystemHeader(mIsSystemHeader);
+    } else {
+        result->setInProject(false);
+        result->setInSystemHeader(true);
+    }
     //result->children;
     //result->friends;
-    result->isStatic = isStatic;
-    result->isInherited = false;
     if (scope == StatementScope::Local)
         result->fullName =  newCommand;
     else
@@ -1282,7 +1279,15 @@ PStatement CppParser::addStatement(const PStatement& parent,
     return result;
 }
 
-PStatement CppParser::addStatement(const PStatement &parent, const QString &fileName, const QString &aType, const QString &command, int argStart, int argEnd, const QString &value, int line, StatementKind kind, const StatementScope &scope, const StatementClassScope &classScope, bool isDefinition, bool isStatic)
+PStatement CppParser::addStatement(const PStatement &parent,
+                                   const QString &fileName,
+                                   const QString &aType,
+                                   const QString &command,
+                                   int argStart, int argEnd,
+                                   const QString &value, int line,
+                                   StatementKind kind, const StatementScope &scope,
+                                   const StatementClassScope &classScope,
+                                   StatementProperties properties)
 {
     Q_ASSERT(mTokenizer[argStart]->text=='(');
     QString args;
@@ -1354,8 +1359,7 @@ PStatement CppParser::addStatement(const PStatement &parent, const QString &file
                 kind,
                 scope,
                 classScope,
-                isDefinition,
-                isStatic);
+                properties);
 }
 
 void CppParser::setInheritance(int index, const PStatement& classStatement, bool isStruct)
@@ -2188,8 +2192,7 @@ void CppParser::handleCatchBlock()
                 StatementKind::skBlock,
                 getScope(),
                 mClassScope,
-                true,
-                false);
+                StatementProperty::spHasDefinition);
     addSoloScopeLevel(block,startLine);
     scanMethodArgs(block,mIndex);
     mIndex=mTokenizer[mIndex]->matchIndex+1;
@@ -2256,8 +2259,7 @@ void CppParser::handleEnum(bool isTypedef)
                     StatementKind::skEnumClassType,
                     getScope(),
                     mClassScope,
-                    true,
-                    false);
+                    StatementProperty::spHasDefinition);
     } else {
         enumStatement=addStatement(
                     getCurrentScope(),
@@ -2271,8 +2273,7 @@ void CppParser::handleEnum(bool isTypedef)
                     StatementKind::skEnumType,
                     getScope(),
                     mClassScope,
-                    true,
-                    false);
+                    StatementProperty::spHasDefinition);
     }
     if (isAdhocVar) {
         //Ad-hoc var definition
@@ -2298,8 +2299,7 @@ void CppParser::handleEnum(bool isTypedef)
                                 StatementKind::skVariable,
                                 getScope(),
                                 mClassScope,
-                                true,
-                                false);
+                                StatementProperty::spHasDefinition);
                 }
             } else if (name!=',') {
                 break;
@@ -2339,8 +2339,7 @@ void CppParser::handleEnum(bool isTypedef)
                           StatementKind::skEnum,
                           getScope(),
                           mClassScope,
-                          true,
-                          false);
+                          StatementProperty::spHasDefinition);
                     }
                 } else {
                     if (enumStatement) {
@@ -2356,8 +2355,7 @@ void CppParser::handleEnum(bool isTypedef)
                           StatementKind::skEnum,
                           getScope(),
                           mClassScope,
-                          true,
-                          false);
+                          StatementProperty::spHasDefinition);
                     }
                     addStatement(
                                 getCurrentScope(),
@@ -2371,8 +2369,7 @@ void CppParser::handleEnum(bool isTypedef)
                                 StatementKind::skEnum,
                                 getScope(),
                                 mClassScope,
-                                true,
-                                false);
+                                StatementProperty::spHasDefinition);
                 }
             }
             mIndex ++ ;
@@ -2418,8 +2415,7 @@ void CppParser::handleForBlock()
                 StatementKind::skBlock,
                 getScope(),
                 mClassScope,
-                true,
-                false);
+                StatementProperty::spHasDefinition);
 
     addSoloScopeLevel(block,startLine);
 }
@@ -2486,8 +2482,7 @@ void CppParser::handleLambda(int index, int endIndex)
                 StatementKind::skBlock,
                 StatementScope::Local,
                 StatementClassScope::None,
-                true,
-                false);
+                StatementProperty::spHasDefinition);
     scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,mTokenizer[bodyStart]->line);
     int i=bodyStart+1; // start after '{';
@@ -2560,9 +2555,7 @@ void CppParser::handleLambda(int index, int endIndex)
                                         StatementKind::skVariable,
                                         getScope(),
                                         mClassScope,
-                                        //True,
-                                        false,
-                                        false); // TODO: not supported to pass list
+                                        StatementProperty::spHasDefinition); // TODO: not supported to pass list
                             tempType="";
                         }
                     }
@@ -2670,8 +2663,8 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         functionKind,
                         getScope(),
                         mClassScope,
-                        true,
-                        isStatic);
+                        StatementProperty::spHasDefinition
+                        | (isStatic?StatementProperty::spStatic:StatementProperty::spNone));
             scanMethodArgs(functionStatement, argStart);
             // add variable this to the class function
             if (scopeStatement && scopeStatement->kind == StatementKind::skClass &&
@@ -2689,8 +2682,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                             StatementKind::skVariable,
                             StatementScope::Local,
                             StatementClassScope::None,
-                            true,
-                            false);
+                            StatementProperty::spHasDefinition);
             }
 
             // add "__func__ variable"
@@ -2706,8 +2698,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         StatementKind::skVariable,
                         StatementScope::Local,
                         StatementClassScope::None,
-                        true,
-                        false);
+                        StatementProperty::spHasDefinition);
 
         } else {
             functionStatement = addStatement(
@@ -2723,8 +2714,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         functionKind,
                         getScope(),
                         mClassScope,
-                        false,
-                        isStatic);
+                        (isStatic?StatementProperty::spStatic:StatementProperty::spNone));
         }
 
     }
@@ -2787,8 +2777,7 @@ void CppParser::handleNamespace(KeywordType skipType)
             StatementKind::skNamespaceAlias,
             getScope(),
             mClassScope,
-            true,
-            false);
+            StatementProperty::spHasDefinition);
         mIndex+=2; //skip ;
         return;
     } else if (isInline) {
@@ -2816,8 +2805,7 @@ void CppParser::handleNamespace(KeywordType skipType)
                     StatementKind::skNamespace,
                     getScope(),
                     mClassScope,
-                    true,
-                    false);
+                    StatementProperty::spHasDefinition);
 
         // find next '{' or ';'
         mIndex = indexOfNextSemicolonOrLeftBrace(mIndex);
@@ -2906,8 +2894,7 @@ void CppParser::handleOtherTypedefs()
                         StatementKind::skTypedef,
                         getScope(),
                         mClassScope,
-                        true,
-                        false);
+                        StatementProperty::spHasDefinition);
             }
             mIndex = mTokenizer[paramStart]->matchIndex+1;
         } else if (mTokenizer[mIndex+1]->text.front() ==','
@@ -2929,8 +2916,7 @@ void CppParser::handleOtherTypedefs()
                             StatementKind::skTypedef,
                             getScope(),
                             mClassScope,
-                            true,
-                            false);
+                            StatementProperty::spHasDefinition);
                 newType = "";
                 mIndex++;
         } else {
@@ -2992,8 +2978,7 @@ void CppParser::handlePreprocessor()
                   StatementKind::skPreprocessor,
                   StatementScope::Global,
                   StatementClassScope::None,
-                  true,
-                  false);
+                  StatementProperty::spHasDefinition);
     } // TODO: undef ( define has limited scope)
 handlePreprocessorEnd:
     mIndex++;
@@ -3082,8 +3067,7 @@ bool CppParser::handleStatement()
                     StatementKind::skBlock,
                     getScope(),
                     mClassScope,
-                    true,
-                    false);
+                    StatementProperty::spHasDefinition);
         addSoloScopeLevel(block,mTokenizer[mIndex]->line,true);
         mIndex++;
     } else if (mTokenizer[mIndex]->text[0] == '}') {
@@ -3219,8 +3203,7 @@ void CppParser::handleStructs(bool isTypedef)
                                 StatementKind::skTypedef,
                                 getScope(),
                                 mClassScope,
-                                true,
-                                false);
+                                StatementProperty::spHasDefinition);
                 }
                 mIndex++;
                 if (mIndex >= mTokenizer.tokenCount())
@@ -3279,8 +3262,7 @@ void CppParser::handleStructs(bool isTypedef)
                                     StatementKind::skClass,
                                     getScope(),
                                     mClassScope,
-                                    true,
-                                    false);
+                                    StatementProperty::spHasDefinition);
                         command = "";
                     }
                     mIndex++;
@@ -3304,8 +3286,7 @@ void CppParser::handleStructs(bool isTypedef)
                                     StatementKind::skClass,
                                     getScope(),
                                     mClassScope,
-                                    true,
-                                    false);
+                                    StatementProperty::spHasDefinition);
                         command="";
                     }
                     mIndex+=2;
@@ -3373,8 +3354,7 @@ void CppParser::handleStructs(bool isTypedef)
                                             StatementKind::skClass,
                                             getScope(),
                                             mClassScope,
-                                            true,
-                                            false);
+                                            StatementProperty::spHasDefinition);
                             }
                             if (isTypedef) {
                                 //typedef
@@ -3390,8 +3370,7 @@ void CppParser::handleStructs(bool isTypedef)
                                             StatementKind::skTypedef,
                                             getScope(),
                                             mClassScope,
-                                            true,
-                                            false); // typedef
+                                            StatementProperty::spHasDefinition); // typedef
                             } else {
                                 //variable define
                                 addStatement(
@@ -3406,8 +3385,7 @@ void CppParser::handleStructs(bool isTypedef)
                                   StatementKind::skVariable,
                                   getScope(),
                                   mClassScope,
-                                  true,
-                                  false); // TODO: not supported to pass list
+                                  StatementProperty::spHasDefinition); // TODO: not supported to pass list
                             }
                         }
                         command = "";
@@ -3437,8 +3415,7 @@ void CppParser::handleStructs(bool isTypedef)
                       StatementKind::skBlock,
                       getScope(),
                       mClassScope,
-                      true,
-                      false);
+                      StatementProperty::spHasDefinition);
         }
         addSoloScopeLevel(firstSynonym,startLine);
 
@@ -3482,8 +3459,7 @@ void CppParser::handleUsing()
                     StatementKind::skTypedef,
                     getScope(),
                     mClassScope,
-                    true,
-                    false);
+                    StatementProperty::spHasDefinition);
         // skip ;
         mIndex++;
         return;
@@ -3507,8 +3483,7 @@ void CppParser::handleUsing()
                         StatementKind::skAlias,
                         getScope(),
                         mClassScope,
-                        true,
-                        false);
+                        StatementProperty::spHasDefinition);
         }
         //skip to ; and skip it
         mIndex=indexOfNextSemicolon(mIndex)+1;
@@ -3642,8 +3617,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                 getScope(),
                                 mClassScope,
                                 //True,
-                                !isExtern,
-                                isStatic);
+                                (isExtern?StatementProperty::spNone:StatementProperty::spHasDefinition)
+                                | (isStatic?StatementProperty::spStatic:StatementProperty::spNone));
                 }
                 tempType="";
                 mIndex=indexOfNextSemicolonOrLeftBrace(argEnd+1);
@@ -3673,8 +3648,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                     getScope(),
                                     mClassScope,
                                     //True,
-                                    !isExtern,
-                                    isStatic);
+                                    (isExtern?StatementProperty::spNone:StatementProperty::spHasDefinition)
+                                    | (isStatic?StatementProperty::spStatic:StatementProperty::spNone));
                         tempType="";
                     }
                 }
@@ -4707,7 +4682,7 @@ void CppParser::internalInvalidateFile(const QString &fileName)
             if (statement->fileName==fileName) {
                 mStatementList.deleteStatement(statement);
             } else {
-                statement->hasDefinition=false;
+                statement->setHasDefinition(false);
                 statement->definitionFileName = statement->fileName;
                 statement->definitionLine = statement->line;
             }
@@ -4797,8 +4772,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                             StatementKind::skParameter,
                             StatementScope::Local,
                             StatementClassScope::None,
-                            true,
-                            false);
+                            StatementProperty::spHasDefinition);
             }
             i=argEnd+1;
             varType="";
@@ -4833,8 +4807,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                                         StatementKind::skParameter,
                                         StatementScope::Local,
                                         StatementClassScope::None,
-                                        true,
-                                        false);
+                                        StatementProperty::spHasDefinition);
                         }
                     }
                 }

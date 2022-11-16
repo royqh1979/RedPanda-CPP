@@ -212,7 +212,7 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(PStatement scopeS
         return;
 
     for (const PStatement& childStatement: children) {
-        if (childStatement->inSystemHeader)
+        if (childStatement->inSystemHeader())
             continue;
         if (childStatement->fileName.isEmpty()) {
             // hard defines, do nothing
@@ -222,7 +222,7 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(PStatement scopeS
         case StatementKind::skConstructor:
         case StatementKind::skFunction:
         case StatementKind::skDestructor:
-            if (!childStatement->hasDefinition)
+            if (!childStatement->hasDefinition())
                 addStatement(childStatement,fileName,line);
             break;
         case StatementKind::skClass:
@@ -306,17 +306,17 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
         if (statement2->kind != StatementKind::skKeyword) {
             //s1 keyword / s2 system defines, s1 < s2, should return true
             //s1 keyword / s2 not system defines, s2 < s1, should return false;
-            return  statement2->inSystemHeader;
+            return  statement2->inSystemHeader();
         } else
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::skKeyword) {
         //s1 system defines / s2 keyword, s2 < s1, should return false;
         //s1 not system defines / s2 keyword, s1 < s2, should return true;
-        return  (!statement1->inSystemHeader);
+        return  (!statement1->inSystemHeader());
     }
     // Show stuff from local headers first
-    if (statement1->inSystemHeader != statement2->inSystemHeader)
-        return !(statement1->inSystemHeader);
+    if (statement1->inSystemHeader() != statement2->inSystemHeader())
+        return !(statement1->inSystemHeader());
         // Show local statements first
     if (statement1->scope != StatementScope::Global
                && statement2->scope == StatementScope::Global ) {
@@ -387,17 +387,17 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
         if (statement2->kind != StatementKind::skKeyword) {
             //s1 keyword / s2 system defines, s1 < s2, should return true
             //s1 keyword / s2 not system defines, s2 < s1, should return false;
-            return  statement2->inSystemHeader;
+            return  statement2->inSystemHeader();
         } else
             return statement1->command < statement2->command;
     } else if (statement2->kind == StatementKind::skKeyword) {
         //s1 system defines / s2 keyword, s2 < s1, should return false;
         //s1 not system defines / s2 keyword, s1 < s2, should return true;
-        return  (!statement1->inSystemHeader);
+        return  (!statement1->inSystemHeader());
     }
     // Show stuff from local headers first
-    if (statement1->inSystemHeader != statement2->inSystemHeader)
-        return !(statement1->inSystemHeader);
+    if (statement1->inSystemHeader() != statement2->inSystemHeader())
+        return !(statement1->inSystemHeader());
         // Show local statements first
     if (statement1->scope != StatementScope::Global
                && statement2->scope == StatementScope::Global ) {
@@ -770,7 +770,7 @@ void CodeCompletionPopup::getCompletionFor(
                                 mParser->statementList().childrenStatements(classTypeStatement);
                         foreach (const PStatement& childStatement, children) {
                             if (
-                              (childStatement->isStatic)
+                              (childStatement->isStatic())
                                || (childStatement->kind == StatementKind::skTypedef
                                 || childStatement->kind == StatementKind::skClass
                                 || childStatement->kind == StatementKind::skEnum
@@ -786,7 +786,7 @@ void CodeCompletionPopup::getCompletionFor(
                                 mParser->statementList().childrenStatements(classTypeStatement);
                         foreach (const PStatement& childStatement,children) {
                             if (
-                              (childStatement->isStatic)
+                              (childStatement->isStatic())
                                || (childStatement->kind == StatementKind::skTypedef
                                 || childStatement->kind == StatementKind::skClass
                                 || childStatement->kind == StatementKind::skEnum

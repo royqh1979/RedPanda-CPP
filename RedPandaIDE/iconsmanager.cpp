@@ -298,7 +298,7 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
     case StatementKind::skDestructor:
         if (statement->scope == StatementScope::Global)
             return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_METHOD));
-        if (statement->isInherited) {
+        if (statement->isInherited()) {
             if (statement->classScope == StatementClassScope::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
             } else if (statement->classScope == StatementClassScope::Public) {
@@ -319,7 +319,7 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
     case StatementKind::skLocalVariable:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_LOCAL_VAR));
     case StatementKind::skVariable:
-        if (statement->isInherited) {
+        if (statement->isInherited()) {
             if (statement->classScope == StatementClassScope::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
             } else if (statement->classScope == StatementClassScope::Public) {

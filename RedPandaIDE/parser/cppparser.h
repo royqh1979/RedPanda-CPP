@@ -169,8 +169,7 @@ private:
             StatementKind kind,
             const StatementScope& scope,
             const StatementClassScope& classScope,
-            bool isDefinition,
-            bool isStatic); // TODO: InheritanceList not supported
+            StatementProperties properties); // TODO: InheritanceList not supported
     PStatement addStatement(
             const PStatement& parent,
             const QString &fileName,
@@ -183,8 +182,7 @@ private:
             StatementKind kind,
             const StatementScope& scope,
             const StatementClassScope& classScope,
-            bool isDefinition,
-            bool isStatic);
+            StatementProperties properties);
     PStatement addStatement(
             const PStatement& parent,
             const QString &fileName,
@@ -197,8 +195,7 @@ private:
             StatementKind kind,
             const StatementScope& scope,
             const StatementClassScope& classScope,
-            bool isDefinition,
-            bool isStatic);
+            StatementProperties properties);
     void setInheritance(int index, const PStatement& classStatement, bool isStruct);
     bool isCurrentScope(const QString& command);
     void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock=false); // adds new solo level

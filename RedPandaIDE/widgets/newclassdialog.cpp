@@ -132,7 +132,7 @@ void NewClassCandidatesModel::fillClasses()
         return;
     foreach( const PStatement& s, mParser->statementList().childrenStatements()) {
         if (s->kind==StatementKind::skClass
-                && s->inProject
+                && s->inProject()
                 && !s->command.startsWith("_")
                 && !s->command.contains("<")
                 && !mClassNames.contains(s->fullName)) {
@@ -158,7 +158,7 @@ void NewClassCandidatesModel::fillClassesInNamespace(PStatement ns)
 {
     foreach( const PStatement& s, mParser->statementList().childrenStatements(ns)) {
         if (s->kind==StatementKind::skClass
-                && s->inProject
+                && s->inProject()
                 && !s->command.startsWith("_")
                 && !s->command.contains("<")
                 && !mClassNames.contains(s->fullName)) {
