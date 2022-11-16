@@ -297,6 +297,11 @@ signals:
     void modifyChanged(bool value);
 
 private:
+    QString relativePath(const QString& filename);
+    QStringList relativePaths(const QStringList& files);
+    QString absolutePath(const QString& filename);
+    QStringList absolutePaths(const QStringList& files);
+
     bool internalRemoveUnit(PProjectUnit& unit, bool doClose, bool removeFile);
     PProjectUnit internalAddUnit(const QString& inFileName,
                 PProjectModelNode parentNode);

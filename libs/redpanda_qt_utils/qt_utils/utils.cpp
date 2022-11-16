@@ -688,7 +688,7 @@ QString cleanPath(const QString &dirPath)
     return QDir::cleanPath(dirPath);
 }
 
-QString absolutePath(const QString &dirPath, const QString &relativePath)
+QString generateAbsolutePath(const QString &dirPath, const QString &relativePath)
 {
     if (relativePath.isEmpty())
         return QString();
@@ -714,7 +714,7 @@ QStringList absolutePaths(const QString &dirPath, const QStringList &relativePat
 {
     QStringList list;
     foreach(const QString& path,relativePaths) {
-        list.append(absolutePath(dirPath,path));
+        list.append(generateAbsolutePath(dirPath,path));
     }
     return list;
 }

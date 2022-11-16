@@ -115,7 +115,7 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
     }
     if (!mDirectory.isEmpty()) {
         QFileInfo info(temp);
-        return info.isRelative()?absolutePath(mDirectory,temp):cleanPath(temp);
+        return info.isRelative()?generateAbsolutePath(mDirectory,temp):cleanPath(temp);
     }
     return temp;
 }

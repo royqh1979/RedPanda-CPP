@@ -30,6 +30,20 @@ HighlighterManager::HighlighterManager()
 
 }
 
+QSynedit::PHighlighter HighlighterManager::getHighlighter(QSynedit::HighlighterLanguage language)
+{
+    switch(language) {
+    case QSynedit::HighlighterLanguage::Cpp:
+        return getCppHighlighter();
+    case QSynedit::HighlighterLanguage::Asssembly:
+        return getAsmHighlighter();
+    case QSynedit::HighlighterLanguage::GLSL:
+        return getGLSLHighlighter();
+    default:
+        return QSynedit::PHighlighter();
+    }
+}
+
 QSynedit::PHighlighter HighlighterManager::getHighlighter(const QString &filename)
 {
     QFileInfo info(filename);
@@ -42,6 +56,8 @@ QSynedit::PHighlighter HighlighterManager::getHighlighter(const QString &filenam
         return getCppHighlighter();
     } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
         return getGLSLHighlighter();
+    } else if (suffix == "s" || suffix == "asm") {
+        return getAsmHighlighter();
     }
     return QSynedit::PHighlighter();
 }

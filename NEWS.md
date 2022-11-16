@@ -3,6 +3,9 @@ Red Panda C++ Version 2.5
   - enhancement: new color scheme Monokai (contributed by 小龙Dev(XiaoLoong@github))
   - enhancemnet: add "Reserve word for Types" item in color scheme
   - enhancement: auto save / load problem set
+  - enhancement: project's custom compile include/lib/bin directory is under folder of the app, save them using the path relative to the app
+
+        
 
 Red Panda C++ Version 2.4
 

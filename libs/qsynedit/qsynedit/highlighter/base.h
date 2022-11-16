@@ -68,6 +68,7 @@ enum class HighlighterClass {
 };
 
 enum class HighlighterLanguage {
+    DecideBySuffix,
     Asssembly,
     Cpp,
     GLSL

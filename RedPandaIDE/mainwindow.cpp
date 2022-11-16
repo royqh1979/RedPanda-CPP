@@ -6723,7 +6723,7 @@ void MainWindow::newProjectUnitFile()
         if (newProjectUnitDialog.exec()!=QDialog::Accepted) {
             return;
         }
-        newFileName= absolutePath(newProjectUnitDialog.folder(),newProjectUnitDialog.filename());
+        newFileName= generateAbsolutePath(newProjectUnitDialog.folder(),newProjectUnitDialog.filename());
         if (newFileName.isEmpty())
             return;
     } else {
@@ -6742,7 +6742,7 @@ void MainWindow::newProjectUnitFile()
                     newFileName);
         if (newFileName.isEmpty())
             return;
-        newFileName = absolutePath(mProject->directory(),newFileName);
+        newFileName = generateAbsolutePath(mProject->directory(),newFileName);
     }
     if (fileExists(newFileName)) {
         QMessageBox::critical(this,tr("File Already Exists!"),

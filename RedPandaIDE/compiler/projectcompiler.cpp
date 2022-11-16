@@ -194,7 +194,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 
     // Mention progress in the logs
     if (!ObjResFile.isEmpty()) {
-        log(tr("- Resource File: %1").arg(absolutePath(mProject->directory(),ObjResFile)));
+        log(tr("- Resource File: %1").arg(generateAbsolutePath(mProject->directory(),ObjResFile)));
     }
     log("");
 
