@@ -29,6 +29,7 @@
 #include "editortooltipswidget.h"
 #include "editorautosavewidget.h"
 #include "editorsnippetwidget.h"
+#include "editorcustomctypekeywords.h"
 #include "editormiscwidget.h"
 #include "environmentappearencewidget.h"
 #include "environmentshortcutwidget.h"
@@ -197,6 +198,9 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->addWidget(widget);
 
     widget = new EditorAutoSaveWidget(tr("Auto save"),tr("Editor"));
+    dialog->addWidget(widget);
+
+    widget = new EditorCustomCTypeKeywordsWidget(tr("Custom C/C++ Keywords"),tr("Editor"));
     dialog->addWidget(widget);
 
     widget = new EditorMiscWidget(tr("Misc"),tr("Editor"));

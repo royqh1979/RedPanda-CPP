@@ -6384,6 +6384,10 @@
         <source>There are changes in the settings, do you want to save them before swtich to other page?</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Custom C/C++ Keywords</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsWidget</name>
@@ -6672,6 +6676,33 @@
     </message>
     <message>
         <source>Value</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>editorcustomctypekeywords</name>
+    <message>
+        <source>Custom C/C++ Type Keywords</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Custom C/C++ Type Keywords</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Note: Custom keywords is not recognized by syntax checker.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

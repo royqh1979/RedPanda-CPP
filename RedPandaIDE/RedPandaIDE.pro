@@ -107,6 +107,7 @@ SOURCES += \
     settingsdialog/debuggeneralwidget.cpp \
     settingsdialog/editorautosavewidget.cpp \
     settingsdialog/editorcodecompletionwidget.cpp \
+    settingsdialog/editorcustomctypekeywords.cpp \
     settingsdialog/editormiscwidget.cpp \
     settingsdialog/editorsnippetwidget.cpp \
     settingsdialog/editortooltipswidget.cpp \
@@ -241,6 +242,7 @@ HEADERS += \
     settingsdialog/debuggeneralwidget.h \
     settingsdialog/editorautosavewidget.h \
     settingsdialog/editorcodecompletionwidget.h \
+    settingsdialog/editorcustomctypekeywords.h \
     settingsdialog/editormiscwidget.h \
     settingsdialog/editorsnippetwidget.h \
     settingsdialog/editortooltipswidget.h \
@@ -346,6 +348,7 @@ FORMS += \
     settingsdialog/debuggeneralwidget.ui \
     settingsdialog/editorautosavewidget.ui \
     settingsdialog/editorcodecompletionwidget.ui \
+    settingsdialog/editorcustomctypekeywords.ui \
     settingsdialog/editormiscwidget.ui \
     settingsdialog/editorsnippetwidget.ui \
     settingsdialog/editortooltipswidget.ui \
@@ -464,7 +467,7 @@ RESOURCES += \
 
 RC_ICONS = images/devcpp.ico images/associations/c.ico images/associations/cpp.ico images/associations/dev.ico images/associations/c.ico images/associations/cpp.ico images/associations/h.ico images/associations/hpp.ico
 
-# fixed lrelease.prf
+## fixed lrelease.prf
 qtPrepareTool(QMAKE_LRELEASE, lrelease)
 
 isEmpty(LRELEASE_DIR): LRELEASE_DIR = .qm

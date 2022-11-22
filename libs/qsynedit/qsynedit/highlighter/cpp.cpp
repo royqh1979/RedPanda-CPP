@@ -1441,6 +1441,16 @@ void CppHighlighter::pushIndents(int indentType)
     mRange.indents.push_back(indentType);
 }
 
+const QSet<QString> &CppHighlighter::customTypeKeywords() const
+{
+    return mCustomTypeKeywords;
+}
+
+void CppHighlighter::setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords)
+{
+    mCustomTypeKeywords = newCustomTypeKeywords;
+}
+
 bool CppHighlighter::getTokenFinished() const
 {
     if (mTokenId == TokenId::Comment
@@ -1627,7 +1637,7 @@ void CppHighlighter::setLine(const QString &newLine, int lineNumber)
 
 bool CppHighlighter::isKeyword(const QString &word)
 {
-    return Keywords.contains(word);
+    return Keywords.contains(word) || mCustomTypeKeywords.contains(word);
 }
 
 TokenType CppHighlighter::getTokenType()
@@ -1738,7 +1748,9 @@ bool CppHighlighter::isIdentChar(const QChar &ch) const
 
 QSet<QString> CppHighlighter::keywords() const
 {
-    return Keywords;
+    QSet<QString> set=Keywords;
+    set.unite(mCustomTypeKeywords);
+    return set;
 }
 
 QString CppHighlighter::foldString()

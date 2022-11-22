@@ -64,11 +64,13 @@ private:
         void endGroup();
         void remove(const QString &key);
         void saveValue(const QString &key, const QVariant &value);
+        void saveValue(const QString &key, const QSet<QString>& set);
         QVariant value(const QString &key, const QVariant& defaultValue);
         bool boolValue(const QString &key, bool defaultValue);
         QSize sizeValue(const QString &key);
         int intValue(const QString &key, int defaultValue);
         QStringList stringListValue(const QString &key, const QStringList& defaultValue=QStringList());
+        QSet<QString> stringSetValue(const QString &key);
         QColor colorValue(const QString &key, const QColor& defaultValue);
         QString stringValue(const QString &key, const QString& defaultValue);
         void save();
@@ -370,6 +372,12 @@ public:
         bool parseTodos() const;
         void setParseTodos(bool newParseTodos);
 
+        const QStringList &customCTypeKeywords() const;
+        void setCustomCTypeKeywords(const QStringList &newCustomTypeKeywords);
+
+        bool enableCustomCTypeKeywords() const;
+        void setEnableCustomCTypeKeywords(bool newEnableCustomCTypeKeywords);
+
     private:
         //General
         // indents
@@ -480,6 +488,9 @@ public:
         int mUndoMemoryUsage;
         bool mAutoFormatWhenSaved;
         bool mParseTodos;
+
+        QStringList mCustomCTypeKeywords;
+        bool mEnableCustomCTypeKeywords;
 
 
         //hints tooltip

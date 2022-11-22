@@ -301,6 +301,15 @@ void Settings::_Base::saveValue(const QString &key, const QVariant &value)
     mSettings->saveValue(key,value);
 }
 
+void Settings::_Base::saveValue(const QString &key, const QSet<QString> &set)
+{
+    QStringList val;
+    foreach(const QString& s,set) {
+        val.append(s);
+    }
+    mSettings->saveValue(key,val);
+}
+
 QVariant Settings::_Base::value(const QString &key, const QVariant &defaultValue)
 {
     return mSettings->value(key,defaultValue);
@@ -324,6 +333,15 @@ int Settings::_Base::intValue(const QString &key, int defaultValue)
 QStringList Settings::_Base::stringListValue(const QString &key, const QStringList &defaultValue)
 {
     return value(key,defaultValue).toStringList();
+}
+
+QSet<QString> Settings::_Base::stringSetValue(const QString &key)
+{
+    QStringList lst=value(key,QStringList()).toStringList();
+    QSet<QString> result;
+    foreach(const QString& s, lst)
+        result.insert(s);
+    return result;
 }
 
 QColor Settings::_Base::colorValue(const QString &key, const QColor& defaultValue)
@@ -673,6 +691,26 @@ bool Settings::Editor::parseTodos() const
 void Settings::Editor::setParseTodos(bool newParseTodos)
 {
     mParseTodos = newParseTodos;
+}
+
+const QStringList &Settings::Editor::customCTypeKeywords() const
+{
+    return mCustomCTypeKeywords;
+}
+
+void Settings::Editor::setCustomCTypeKeywords(const QStringList &newCustomTypeKeywords)
+{
+    mCustomCTypeKeywords = newCustomTypeKeywords;
+}
+
+bool Settings::Editor::enableCustomCTypeKeywords() const
+{
+    return mEnableCustomCTypeKeywords;
+}
+
+void Settings::Editor::setEnableCustomCTypeKeywords(bool newEnableCustomCTypeKeywords)
+{
+    mEnableCustomCTypeKeywords = newEnableCustomCTypeKeywords;
 }
 
 bool Settings::Editor::highlightCurrentWord() const
@@ -1258,6 +1296,9 @@ void Settings::Editor::doSave()
     saveValue("auto_format_when_saved", mAutoFormatWhenSaved);
     saveValue("parse_todos",mParseTodos);
 
+    saveValue("custom_c_type_keywords", mCustomCTypeKeywords);
+    saveValue("enable_custom_c_type_keywords",mEnableCustomCTypeKeywords);
+
     //tooltips
     saveValue("enable_tooltips",mEnableTooltips);
     saveValue("enable_debug_tooltips",mEnableDebugTooltips);
@@ -1402,6 +1443,8 @@ void Settings::Editor::doLoad()
     mAutoFormatWhenSaved = boolValue("auto_format_when_saved", false);
     mParseTodos = boolValue("parse_todos",true);
 
+    mCustomCTypeKeywords = stringListValue("custom_c_type_keywords");
+    mEnableCustomCTypeKeywords = boolValue("enable_custom_c_type_keywords",false);
 
     //tooltips
     mEnableTooltips = boolValue("enable_tooltips",true);

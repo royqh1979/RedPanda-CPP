@@ -544,11 +544,9 @@ void CodeCompletionPopup::getCompletionFor(
     if(!mParser) {
         if (mShowKeywords) {
             //add keywords
-            if (!customKeywords.isEmpty()) {
                 foreach (const QString& keyword,customKeywords) {
                     addKeyword(keyword);
                 }
-            }
         }
         return;
     }

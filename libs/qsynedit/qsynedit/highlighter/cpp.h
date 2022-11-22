@@ -166,6 +166,8 @@ private:
     int mLeftBraces;
     int mRightBraces;
 
+    QSet<QString> mCustomTypeKeywords;
+
     PHighlighterAttribute mAsmAttribute;
     PHighlighterAttribute mPreprocessorAttribute;
     PHighlighterAttribute mInvalidAttribute;
@@ -218,6 +220,8 @@ public:
     // SynHighlighter interface
 public:
     QString foldString() override;
+    const QSet<QString> &customTypeKeywords() const;
+    void setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords);
 };
 
 }

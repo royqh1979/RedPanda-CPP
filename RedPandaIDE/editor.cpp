@@ -1024,7 +1024,15 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     //selection
     if (highlighter() && attr) {
         if (attr == highlighter()->keywordAttribute()) {
-            if (CppTypeKeywords.contains(token)) {
+            if (CppTypeKeywords.contains(token)
+                    ||
+                    (
+                        highlighter()->language()==QSynedit::HighlighterLanguage::Cpp
+                        &&
+                        ((QSynedit::CppHighlighter*)highlighter().get())->customTypeKeywords().contains(token)
+                        )
+                )
+            {
                 PColorSchemeItem item = mStatementColors->value(StatementKind::skKeywordType,PColorSchemeItem());
 
                 if (item) {
@@ -3108,12 +3116,19 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     if (highlighter()) {
         if (highlighter()->language() != QSynedit::HighlighterLanguage::Cpp ) {
             keywords = highlighter()->keywords();
-        } else if (mUseCppSyntax) {
-            foreach (const QString& keyword, CppKeywords.keys()) {
-                keywords.insert(keyword);
-            }
         } else {
-            keywords = CKeywords;
+            if (mUseCppSyntax) {
+                foreach (const QString& keyword, CppKeywords.keys()) {
+                    keywords.insert(keyword);
+                }
+            } else {
+                keywords = CKeywords;
+            }
+            if (pSettings->editor().enableCustomCTypeKeywords()) {
+                foreach (const QString& keyword, pSettings->editor().customCTypeKeywords()) {
+                    keywords.insert(keyword);
+                }
+            }
         }
     }
 
@@ -4759,6 +4774,19 @@ void Editor::applySettings()
         setRightEdgeColor(pSettings->editor().rightEdgeLineColor());
     } else {
         setRightEdge(0);
+    }
+
+    if (pSettings->editor().enableCustomCTypeKeywords()) {
+        if (highlighter() && highlighter()->language() == QSynedit::HighlighterLanguage::Cpp) {
+            QSet<QString> set;
+            foreach(const QString& s, pSettings->editor().customCTypeKeywords())
+                set.insert(s);
+            ((QSynedit::CppHighlighter*)(highlighter().get()))->setCustomTypeKeywords(set);
+        }
+    } else {
+        if (highlighter() && highlighter()->language() == QSynedit::HighlighterLanguage::Cpp) {
+            ((QSynedit::CppHighlighter*)(highlighter().get()))->setCustomTypeKeywords(QSet<QString>());
+        }
     }
 
     this->setUndoLimit(pSettings->editor().undoLimit());
