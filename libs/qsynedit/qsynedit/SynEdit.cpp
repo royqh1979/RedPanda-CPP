@@ -518,9 +518,9 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                                 isCommentOrStringOrChar = false;
                                 if (getHighlighterAttriAtRowCol(p, vDummy, attr))
                                     isCommentOrStringOrChar =
-                                        (attr == mHighlighter->stringAttribute()) ||
-                                            (attr == mHighlighter->commentAttribute()) ||
-                                            (attr->name() == SYNS_AttrCharacter);
+                                        (attr->tokenType() == TokenType::String) ||
+                                            (attr->tokenType() == TokenType::Comment) ||
+                                            (attr->tokenType() == TokenType::Character);
                                 if ((Test == BracketInc) && (!isCommentOrStringOrChar))
                                     NumBrackets++;
                                 else if ((Test == BracketDec) && (!isCommentOrStringOrChar)) {
@@ -552,9 +552,9 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                                 isCommentOrStringOrChar = false;
                                 if (getHighlighterAttriAtRowCol(p, vDummy, attr))
                                     isCommentOrStringOrChar =
-                                        (attr == mHighlighter->stringAttribute()) ||
-                                            (attr == mHighlighter->commentAttribute()) ||
-                                            (attr->name() == SYNS_AttrCharacter);
+                                        (attr->tokenType() == TokenType::String) ||
+                                            (attr->tokenType() == TokenType::Comment) ||
+                                            (attr->tokenType() == TokenType::Character);
                                 else
                                     isCommentOrStringOrChar = false;
                                 if ((Test == BracketInc) && (!isCommentOrStringOrChar))
@@ -1294,9 +1294,9 @@ BufferCoord SynEdit::getPreviousLeftBrace(int x, int y)
         if (Test=='{' || Test == '}') {
             if (getHighlighterAttriAtRowCol(p, vDummy, attr)) {
                 isCommentOrStringOrChar =
-                        (attr == mHighlighter->stringAttribute()) ||
-                        (attr == mHighlighter->commentAttribute()) ||
-                        (attr->name() == SYNS_AttrCharacter);
+                        (attr->tokenType() == TokenType::String) ||
+                        (attr->tokenType() == TokenType::Comment) ||
+                        (attr->tokenType() == TokenType::Character);
             } else
                 isCommentOrStringOrChar = false;
             if ((Test == '{') && (! isCommentOrStringOrChar))
@@ -1588,7 +1588,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             HighlighterState rangeAfterFirstToken = mHighlighter->getState();
             QString firstToken = mHighlighter->getToken();
             PHighlighterAttribute attr = mHighlighter->getTokenAttribute();
-            if (attr == mHighlighter->keywordAttribute()
+            if (attr->tokenType() == TokenType::Keyword
                                   &&  lineText.endsWith(':')
                                   && (
                                   firstToken == "public" || firstToken == "private"
@@ -1606,13 +1606,13 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             int additionIndent = 0;
             QVector<int> matchingIndents;
             int l;
-            if (attr == mHighlighter->symbolAttribute()
+            if (attr->tokenType() == TokenType::Operator
                     && (firstToken == '}')) {
                 // current line starts with '}', we should consider it to calc indents
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 indentAdded = true;
                 l = startLine;
-            } else if (attr == mHighlighter->symbolAttribute()
+            } else if (attr->tokenType() == TokenType::Operator
                        && (firstToken == '{')
                        && (rangePreceeding.getLastIndent()==sitStatement)) {
                 // current line starts with '{' and last statement not finished, we should consider it to calc indents
@@ -1724,7 +1724,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 coord.line = startLine;
                 coord.ch = document()->getString(startLine-1).length();
                 if (getHighlighterAttriAtRowCol(coord,token,attr)
-                        && attr == mHighlighter->symbolAttribute()
+                        && attr->tokenType() == QSynedit::TokenType::Operator
                         && token == ":") {
                     indentSpaces += tabWidth();
                     indentAdded = true;

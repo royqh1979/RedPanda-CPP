@@ -972,7 +972,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                     }
                 }
             }
-        } else if (mParser->enabled() && attr == highlighter()->identifierAttribute()) {
+        } else if (mParser->enabled() && attr->tokenType() == QSynedit::TokenType::Identifier) {
             QSynedit::BufferCoord p{aChar,line};
     //        BufferCoord pBeginPos,pEndPos;
     //        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
@@ -1022,7 +1022,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
     //selection
     if (highlighter() && attr) {
-        if (attr == highlighter()->keywordAttribute()) {
+        if (attr->tokenType() == QSynedit::TokenType::Keyword) {
             if (CppTypeKeywords.contains(token)
                     ||
                     (
@@ -1046,9 +1046,9 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 }
             }
         }
-        if (((attr == highlighter()->identifierAttribute())
-                || (attr == highlighter()->keywordAttribute())
-                || (attr->name() == SYNS_AttrPreprocessor)
+        if (((attr->tokenType() == QSynedit::TokenType::Identifier)
+                || (attr->tokenType() == QSynedit::TokenType::Keyword)
+                || (attr->tokenType() == QSynedit::TokenType::Preprocessor)
                 )
             && (token == mCurrentHighlightedWord)) {
             if (mCurrentHighlighWordForeground.isValid())
@@ -1710,7 +1710,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             QSynedit::PHighlighterAttribute attr;
             QString token;
             if (getHighlighterAttriAtRowCol(coord,token,attr)
-                    && attr == highlighter()->symbolAttribute()) {
+                    && attr->tokenType() == QSynedit::TokenType::Operator) {
                 QSynedit::BufferCoord complementCharPos = getMatchingBracketEx(coord);
                 if (!foldHidesLine(coord.line)
                         && !foldHidesLine(complementCharPos.line)) {
@@ -1961,11 +1961,13 @@ QStringList Editor::getExpressionAtPosition(
             QSynedit::PHighlighterAttribute attr = highlighter->getTokenAttribute();
             if ( (line == pos.line-1)
                  && (start<=ch) && (ch<=endPos)) {
-                if (attr==highlighter->commentAttribute() || attr == highlighter->stringAttribute()) {
+                if (attr->tokenType() == QSynedit::TokenType::Comment
+                        || attr->tokenType() == QSynedit::TokenType::String) {
                     return result;
                 }
             }
-            if (attr!=highlighter->commentAttribute() && attr!=highlighter->whitespaceAttribute()){
+            if (attr->tokenType() != QSynedit::TokenType::Comment
+                    && attr->tokenType() != QSynedit::TokenType::Space){
                 tokens.append(token);
             }
             highlighter->next();
@@ -3744,8 +3746,8 @@ void Editor::updateFunctionTip(bool showTip)
             if (start>=currentChar)
                 break;
 
-            if (attr != highlighter()->commentAttribute()
-                    && attr!=highlighter()->whitespaceAttribute()) {
+            if (attr->tokenType() != QSynedit::TokenType::Comment
+                    && attr->tokenType() != QSynedit::TokenType::Space) {
                 if (foundFunctionStart) {
                     if (attr!=highlighter()->identifierAttribute())
                         return; // not a function
@@ -3755,7 +3757,7 @@ void Editor::updateFunctionTip(bool showTip)
                 }
                 tokens.append(token);
                 positions.append(start);
-            } else if (attr == highlighter()->commentAttribute()
+            } else if (attr->tokenType() == QSynedit::TokenType::Comment
                      && currentLine == caretPos.line-1 && start<caretPos.ch
                      && start+token.length()>=caretPos.ch) {
                 return; // in comment, do nothing

@@ -124,12 +124,11 @@ public:
 
     const QSet<QChar>& wordBreakChars() const;
 
-
-    PHighlighterAttribute commentAttribute() const;
-
     PHighlighterAttribute identifierAttribute() const;
 
     PHighlighterAttribute keywordAttribute() const;
+
+    PHighlighterAttribute commentAttribute() const;
 
     PHighlighterAttribute stringAttribute() const;
 

@@ -766,7 +766,7 @@ void SynEditTextPainter::getBraceColorAttr(int level, PHighlighterAttribute &att
 {
     if (!edit->mOptions.testFlag(EditorOption::eoShowRainbowColor))
         return;
-    if (attr != edit->mHighlighter->symbolAttribute())
+    if (!attr || attr->tokenType() != TokenType::Operator)
         return;
     PHighlighterAttribute oldAttr = attr;
     switch(level % 4) {

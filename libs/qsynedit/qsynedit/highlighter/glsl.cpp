@@ -105,9 +105,6 @@ GLSLHighlighter::GLSLHighlighter(): Highlighter()
     mHexAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrHexadecimal,
                                                            TokenType::Number);
     addAttribute(mHexAttribute);
-    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier,
-                                                                  TokenType::Identifier);
-    addAttribute(mIdentifierAttribute);
     mInvalidAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIllegalChar,
                                                                TokenType::Error);
     addAttribute(mInvalidAttribute);
@@ -123,10 +120,6 @@ GLSLHighlighter::GLSLHighlighter(): Highlighter()
     mPreprocessorAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrPreprocessor,
                                                                     TokenType::Preprocessor);
     addAttribute(mPreprocessorAttribute);
-
-    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord,
-                                                               TokenType::Keyword);
-    addAttribute(mKeywordAttribute);
 
     mStringEscapeSequenceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrStringEscapeSequences,
                                                                             TokenType::String);

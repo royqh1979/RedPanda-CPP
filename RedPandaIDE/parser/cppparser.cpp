@@ -4594,9 +4594,8 @@ PStatement CppParser::doParseEvalTypeInfo(
                 pointerLevel++;
             else if (token == "&")
                 pointerLevel--;
-            else if (highlighter.getTokenAttribute() == highlighter.identifierAttribute()) {
-                if (token!= "const")
-                    baseType += token;
+            else if (highlighter.getTokenAttribute()->tokenType() == QSynedit::TokenType::Identifier) {
+                baseType += token;
             } else if (token == "[") {
                 pointerLevel++;
                 bracketLevel++;

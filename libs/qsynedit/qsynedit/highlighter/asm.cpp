@@ -57,22 +57,8 @@ const QSet<QString> ASMHighlighter::Keywords {
 
 ASMHighlighter::ASMHighlighter()
 {
-    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment, TokenType::Comment);
-    mCommentAttribute->setStyles(FontStyle::fsItalic);
-    addAttribute(mCommentAttribute);
-    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier, TokenType::Identifier);
-    addAttribute(mIdentifierAttribute);
-    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord, TokenType::Keyword);
-    mKeywordAttribute->setStyles(FontStyle::fsBold);
-    addAttribute(mKeywordAttribute);
     mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber, TokenType::Number);
     addAttribute(mNumberAttribute);
-    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace, TokenType::Space);
-    addAttribute(mWhitespaceAttribute);
-    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString, TokenType::String);
-    addAttribute(mStringAttribute);
-    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol, TokenType::Operator);
-    addAttribute(mSymbolAttribute);
 }
 
 PHighlighterAttribute ASMHighlighter::numberAttribute()

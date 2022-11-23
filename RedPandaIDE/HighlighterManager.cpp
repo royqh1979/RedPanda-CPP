@@ -17,6 +17,7 @@
 #include "HighlighterManager.h"
 #include <QFileInfo>
 #include <QObject>
+#include "qsynedit/Constants.h"
 #include "qsynedit/highlighter/cpp.h"
 #include "qsynedit/highlighter/asm.h"
 #include "qsynedit/highlighter/glsl.h"
@@ -79,68 +80,18 @@ QSynedit::PHighlighter HighlighterManager::copyHighlighter(QSynedit::PHighlighte
 QSynedit::PHighlighter HighlighterManager::getCppHighlighter()
 {
     std::shared_ptr<QSynedit::CppHighlighter> highlighter = std::make_shared<QSynedit::CppHighlighter>();
-    highlighter->asmAttribute()->setForeground(Qt::blue);
-    highlighter->charAttribute()->setForeground(Qt::black);
-    highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(QSynedit::FontStyle::fsItalic);
-    highlighter->classAttribute()->setForeground(0x008080);
-    highlighter->floatAttribute()->setForeground(Qt::darkMagenta);
-    highlighter->functionAttribute()->setForeground(0x00627A);
-    highlighter->globalVarAttribute()->setForeground(0x660E7A);
-    highlighter->hexAttribute()->setForeground(Qt::darkMagenta);
-    highlighter->identifierAttribute()->setForeground(0x080808);
-    highlighter->invalidAttribute()->setForeground(Qt::red);
-    highlighter->localVarAttribute()->setForeground(Qt::black);
-    highlighter->numberAttribute()->setForeground(0x1750EB);
-    highlighter->octAttribute()->setForeground(Qt::darkMagenta);
-    highlighter->preprocessorAttribute()->setForeground(0x1f542e);
-    highlighter->keywordAttribute()->setForeground(0x0033b3);
-    highlighter->whitespaceAttribute()->setForeground(Qt::lightGray);
-    highlighter->stringAttribute()->setForeground(0x007d17);
-    highlighter->stringEscapeSequenceAttribute()->setForeground(Qt::red);
-    highlighter->symbolAttribute()->setForeground(0xc10000);
-    highlighter->variableAttribute()->setForeground(0x400080);
     return highlighter;
 }
 
 QSynedit::PHighlighter HighlighterManager::getAsmHighlighter()
 {
     std::shared_ptr<QSynedit::ASMHighlighter> highlighter=std::make_shared<QSynedit::ASMHighlighter>();
-    highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(QSynedit::FontStyle::fsItalic);
-    highlighter->identifierAttribute()->setForeground(0x080808);
-    highlighter->keywordAttribute()->setForeground(0x0033b3);
-    highlighter->numberAttribute()->setForeground(0x1750EB);
-    highlighter->whitespaceAttribute()->setForeground(Qt::lightGray);
-    highlighter->stringAttribute()->setForeground(0x007d17);
-    highlighter->symbolAttribute()->setForeground(0xc10000);
     return highlighter;
 }
 
 QSynedit::PHighlighter HighlighterManager::getGLSLHighlighter()
 {
     std::shared_ptr<QSynedit::GLSLHighlighter> highlighter=std::make_shared<QSynedit::GLSLHighlighter>();
-    highlighter->asmAttribute()->setForeground(Qt::blue);
-    highlighter->charAttribute()->setForeground(Qt::black);
-    highlighter->commentAttribute()->setForeground(0x8C8C8C);
-    highlighter->commentAttribute()->setStyles(QSynedit::FontStyle::fsItalic);
-    highlighter->classAttribute()->setForeground(0x008080);
-    highlighter->floatAttribute()->setForeground(Qt::darkMagenta);
-    highlighter->functionAttribute()->setForeground(0x00627A);
-    highlighter->globalVarAttribute()->setForeground(0x660E7A);
-    highlighter->hexAttribute()->setForeground(Qt::darkMagenta);
-    highlighter->identifierAttribute()->setForeground(0x080808);
-    highlighter->invalidAttribute()->setForeground(Qt::red);
-    highlighter->localVarAttribute()->setForeground(Qt::black);
-    highlighter->numberAttribute()->setForeground(0x1750EB);
-    highlighter->octAttribute()->setForeground(Qt::darkMagenta);
-    highlighter->preprocessorAttribute()->setForeground(0x1f542e);
-    highlighter->keywordAttribute()->setForeground(0x0033b3);
-    highlighter->whitespaceAttribute()->setForeground(Qt::lightGray);
-    highlighter->stringAttribute()->setForeground(0x007d17);
-    highlighter->stringEscapeSequenceAttribute()->setForeground(Qt::red);
-    highlighter->symbolAttribute()->setForeground(0xc10000);
-    highlighter->variableAttribute()->setForeground(0x400080);
     return highlighter;
 }
 

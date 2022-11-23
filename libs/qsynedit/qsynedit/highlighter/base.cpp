@@ -22,7 +22,24 @@ Highlighter::Highlighter() :
     mEnabled(true),
     mWordBreakChars{ WordBreakChars }
 {
-
+    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment,
+                                                               TokenType::Comment);
+    addAttribute(mCommentAttribute);
+    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier,
+                                                                  TokenType::Identifier);
+    addAttribute(mIdentifierAttribute);
+    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord,
+                                                               TokenType::Keyword);
+    addAttribute(mKeywordAttribute);
+    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString,
+                                                              TokenType::String);
+    addAttribute(mStringAttribute);
+    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace,
+                                                                   TokenType::Space);
+    addAttribute(mWhitespaceAttribute);
+    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol,
+                                                                 TokenType::Operator);
+    addAttribute(mSymbolAttribute);
 }
 
 const QMap<QString, PHighlighterAttribute>& Highlighter::attributes() const
@@ -35,11 +52,6 @@ const QSet<QChar>& Highlighter::wordBreakChars() const
     return mWordBreakChars;
 }
 
-PHighlighterAttribute Highlighter::commentAttribute() const
-{
-    return mCommentAttribute;
-}
-
 PHighlighterAttribute Highlighter::identifierAttribute() const
 {
     return mIdentifierAttribute;
@@ -48,6 +60,11 @@ PHighlighterAttribute Highlighter::identifierAttribute() const
 PHighlighterAttribute Highlighter::keywordAttribute() const
 {
     return mKeywordAttribute;
+}
+
+PHighlighterAttribute Highlighter::commentAttribute() const
+{
+    return mCommentAttribute;
 }
 
 PHighlighterAttribute Highlighter::stringAttribute() const
