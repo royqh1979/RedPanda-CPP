@@ -1619,13 +1619,13 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 indentAdded = true;
                 l = startLine;
-            } else if (mHighlighter->getClass() == HighlighterClass::CppHighlighter
+            } else if (mHighlighter->language() == HighlighterLanguage::Cpp
                        && trimmedLineText.startsWith('#')
                        && attr == ((CppHighlighter *)mHighlighter.get())->preprocessorAttribute()) {
                 indentAdded = true;
                 indentSpaces=0;
                 l=0;
-            } else if (mHighlighter->getClass() == HighlighterClass::CppHighlighter
+            } else if (mHighlighter->language() == HighlighterLanguage::Cpp
                        && mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
                        ) {
                 // last line is a not finished comment,
@@ -2906,7 +2906,7 @@ void SynEdit::doAddChar(QChar AChar)
         if (mActiveSelectionMode==SelectionMode::Normal
                 && mOptions.testFlag(eoAutoIndent)
                 && mHighlighter
-                && mHighlighter->getClass()==HighlighterClass::CppHighlighter
+                && mHighlighter->language() == HighlighterLanguage::Cpp
                 && (oldCaretY<=mDocument->count()) ) {
 
             //unindent if ':' at end of the line

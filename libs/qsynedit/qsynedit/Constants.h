@@ -58,10 +58,6 @@ extern const QChar SoftBreakGlyph;
 #define SYNS_ExporterFormatRTF "RTF"
 #define SYNS_ExporterFormatTeX "TeX"
 
-#define SYN_HIGHLIGHTER_CPP "SynCppHighlighter"
-#define SYN_HIGHLIGHTER_ASM "SynASMHighlighter"
-#define SYN_HIGHLIGHTER_GLSL "SynGLSLHighlighter"
-
 }
 
 #endif // CONSTANTS_H

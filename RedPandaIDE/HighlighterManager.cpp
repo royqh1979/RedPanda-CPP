@@ -67,11 +67,11 @@ QSynedit::PHighlighter HighlighterManager::copyHighlighter(QSynedit::PHighlighte
 {
     if (!highlighter)
         return QSynedit::PHighlighter();
-    if (highlighter->getName() == SYN_HIGHLIGHTER_CPP)
+    if (highlighter->language() == QSynedit::HighlighterLanguage::Cpp)
         return getCppHighlighter();
-    else if (highlighter->getName() == SYN_HIGHLIGHTER_ASM)
+    else if (highlighter->language() == QSynedit::HighlighterLanguage::Asssembly)
         return getAsmHighlighter();
-    else if (highlighter->getName() == SYN_HIGHLIGHTER_GLSL)
+    else if (highlighter->language() == QSynedit::HighlighterLanguage::GLSL)
         return getGLSLHighlighter();
     //todo
     return QSynedit::PHighlighter();
@@ -99,8 +99,8 @@ void HighlighterManager::applyColorScheme(QSynedit::PHighlighter highlighter, co
 {
     if (!highlighter)
         return;
-    if ( (highlighter->getName() == SYN_HIGHLIGHTER_CPP)
-         || (highlighter->getName() == SYN_HIGHLIGHTER_ASM)
+    if ( (highlighter->language() == QSynedit::HighlighterLanguage::Cpp)
+         || (highlighter->language() == QSynedit::HighlighterLanguage::Asssembly)
          ) {
         for (QString name: highlighter->attributes().keys()) {
             PColorSchemeItem item = pColorManager->getItem(schemeName,name);

@@ -74,18 +74,13 @@ enum class TokenType {
     Embeded  //language embeded in others
     };
 
-enum class HighlighterClass {
-    Composition,
-    CppHighlighter,
-    AsmHighlighter,
-    GLSLHighlighter
-};
-
 enum class HighlighterLanguage {
     DecideBySuffix,
+    Composition,
     Asssembly,
     Cpp,
-    GLSL
+    GLSL,
+    Custom
 };
 
 class HighlighterAttribute {
@@ -137,9 +132,6 @@ public:
     PHighlighterAttribute symbolAttribute() const;
 
     virtual bool isIdentChar(const QChar& ch) const;
-
-    virtual HighlighterClass getClass() const = 0;
-    virtual QString getName() const = 0;
 
     virtual bool getTokenFinished() const = 0;
     virtual bool isLastLineCommentNotFinished(int state) const = 0;

@@ -181,8 +181,6 @@ public:
     bool isKeyword(const QString &word) override;
     void setState(const HighlighterState& rangeState) override;
     void resetState() override;
-    HighlighterClass getClass() const override;
-    QString getName() const override;
 
     QString languageName() override;
     HighlighterLanguage language() override;

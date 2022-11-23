@@ -81,11 +81,6 @@ public:
 
     // SynHighlighter interface
 public:
-    HighlighterClass getClass() const override;
-    QString getName() const override;
-
-    // SynHighlighter interface
-public:
     bool getTokenFinished() const override;
     bool isLastLineCommentNotFinished(int state) const override;
     bool isLastLineStringNotFinished(int state) const override;

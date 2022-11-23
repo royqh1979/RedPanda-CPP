@@ -324,16 +324,6 @@ void ASMHighlighter::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-HighlighterClass ASMHighlighter::getClass() const
-{
-    return HighlighterClass::CppHighlighter;
-}
-
-QString ASMHighlighter::getName() const
-{
-    return SYN_HIGHLIGHTER_CPP;
-}
-
 bool ASMHighlighter::getTokenFinished() const
 {
     return true;

@@ -1447,16 +1447,6 @@ void GLSLHighlighter::resetState()
     mAsmStart = false;
 }
 
-HighlighterClass GLSLHighlighter::getClass() const
-{
-    return HighlighterClass::GLSLHighlighter;
-}
-
-QString GLSLHighlighter::getName() const
-{
-    return SYN_HIGHLIGHTER_GLSL;
-}
-
 QString GLSLHighlighter::languageName()
 {
     return "glsl";

@@ -62,18 +62,5 @@ private slots:
     void MarkerAttriChanged();
 };
 
-
-
-class CompositedHighlighter : public Highlighter
-{
-public:
-    explicit CompositedHighlighter();
-
-    // SynHighligterBase interface
-public:
-    HighlighterClass getClass() const override;
-    QString getName() const override;
-};
-
 }
 #endif // SYNHIGHLIGHTCOMPOSITION_H

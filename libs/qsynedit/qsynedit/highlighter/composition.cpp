@@ -19,21 +19,6 @@
 
 namespace QSynedit {
 
-CompositedHighlighter::CompositedHighlighter()
-{
-
-}
-
-HighlighterClass CompositedHighlighter::getClass() const
-{
-    return HighlighterClass::Composition;
-}
-
-QString CompositedHighlighter::getName() const
-{
-    return "SynHighlightComposition";
-}
-
 HighlighterSchema::HighlighterSchema(QObject *parent):
     QObject(parent),
     mCaseSensitive(true)

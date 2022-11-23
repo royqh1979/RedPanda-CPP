@@ -1607,16 +1607,6 @@ void CppHighlighter::resetState()
     mAsmStart = false;
 }
 
-HighlighterClass CppHighlighter::getClass() const
-{
-    return HighlighterClass::CppHighlighter;
-}
-
-QString CppHighlighter::getName() const
-{
-    return SYN_HIGHLIGHTER_CPP;
-}
-
 QString CppHighlighter::languageName()
 {
     return "cpp";

@@ -390,7 +390,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         setUseCodeFolding(false);
     }
     setHighlighter(newHighlighter);
-    if (!newHighlighter || newHighlighter->getName() != SYN_HIGHLIGHTER_CPP) {
+    if (!newHighlighter || newHighlighter->language() != QSynedit::HighlighterLanguage::Cpp) {
         mSyntaxIssues.clear();
     }
     applyColorScheme(pSettings->editor().colorScheme());
@@ -2650,7 +2650,7 @@ void Editor::initParser()
 {
     if (pSettings->codeCompletion().shareParser()) {
         if (pSettings->codeCompletion().enabled()
-            && (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter)
+            && (highlighter() && highlighter()->language() == QSynedit::HighlighterLanguage::Cpp)
             ) {
             mParser = sharedParser(mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C);
         }
@@ -2670,7 +2670,7 @@ void Editor::initParser()
     resetCppParser(mParser);
     mParser->setEnabled(
                 pSettings->codeCompletion().enabled() &&
-                (highlighter() && highlighter()->getClass() == QSynedit::HighlighterClass::CppHighlighter));
+                (highlighter() && highlighter()->language() == QSynedit::HighlighterLanguage::Cpp));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()

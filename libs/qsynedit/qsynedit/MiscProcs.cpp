@@ -54,11 +54,9 @@ bool internalEnumHighlighterAttris(PHighlighter Highlighter,
     } else {
         HighlighterList.append(Highlighter);
     }
-    if (Highlighter->getClass() == HighlighterClass::Composition) {
-        //todo: handle composition highlighter
-    } else if (Highlighter) {
+    if (Highlighter) {
         for (PHighlighterAttribute pAttr: Highlighter->attributes()){
-            QString UniqueAttriName = Highlighter->getName()
+            QString UniqueAttriName = Highlighter->languageName()
                     +  QString("%1").arg(HighlighterList.indexOf(Highlighter)) + '.'
                     + pAttr->name();
             Result = highlighterAttriProc(Highlighter, pAttr,
