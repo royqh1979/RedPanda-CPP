@@ -27,6 +27,9 @@
 #include <QScreen>
 #include <QDesktopWidget>
 #include <QHash>
+#ifdef Q_OS_LINUX
+#include <sys/sysinfo.h>
+#endif
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -3774,19 +3777,23 @@ void Settings::CodeCompletion::setShowCodeIns(bool newShowCodeIns)
 
 bool Settings::CodeCompletion::clearWhenEditorHidden()
 {
+    if (!mShareParser) {
 #ifdef Q_OS_WIN
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof (statex);
+        MEMORYSTATUSEX statex;
+        statex.dwLength = sizeof (statex);
+        GlobalMemoryStatusEx (&statex);
 
-    GlobalMemoryStatusEx (&statex);
-    if (statex.ullTotalPhys < (long long int)2*1024*1024*1024) {
-        mClearWhenEditorHidden = true;
-    }
-
-    if (statex.ullAvailPhys < (long long int)2*1024*1024*1024) {
-        return true;
-    }
+        if (statex.ullAvailPhys < (long long int)2*1024*1024*1024) {
+            return true;
+        }
+#elif defined(Q_OS_LINUX)
+        struct sysinfo si;
+        sysinfo(&si);
+        if (si.freeram < (long long int)2*1024*1024*1024) {
+            return true;
+        }
 #endif
+    }
     return mClearWhenEditorHidden;
 }
 
@@ -3817,21 +3824,6 @@ void Settings::CodeCompletion::setHideSymbolsStartsWithTwoUnderLine(bool newHide
 
 bool Settings::CodeCompletion::shareParser()
 {
-
-#ifdef Q_OS_WIN
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof (statex);
-
-    GlobalMemoryStatusEx (&statex);
-
-    if (statex.ullTotalPhys < (long long int)1024*1024*1024) {
-        mShareParser = true;
-    }
-
-    if (statex.ullAvailPhys < (long long int)1*1024*1024*1024) {
-        return true;
-    }
-#endif
     return mShareParser;
 }
 
@@ -4001,8 +3993,8 @@ void Settings::CodeCompletion::doLoad()
     mHideSymbolsStartsWithTwoUnderLine = boolValue("hide_symbols_start_with_two_underline", true);
     mHideSymbolsStartsWithUnderLine = boolValue("hide_symbols_start_with_underline", false);
 
-    bool doClear = true;
-    bool shouldShare=true;
+    bool shouldShare= true;
+    bool doClear = false;
 
 #ifdef Q_OS_WIN
     MEMORYSTATUSEX statex;
@@ -4010,14 +4002,25 @@ void Settings::CodeCompletion::doLoad()
     statex.dwLength = sizeof (statex);
 
     GlobalMemoryStatusEx (&statex);
-    if (statex.ullAvailPhys > (long long int)16*1024*1024*1024) {
-        doClear = false;
+
+    if (statex.ullAvailPhys > (long long int)24*1024*1024*1024) {
+        shouldShare = false;
     }
-    if (statex.ullAvailPhys > (long long int)10*1024*1024*1024) {
+
+    if (shouldShare) {
+        SYSTEM_INFO info;
+        GetSystemInfo(&info);
+        if (info.dwNumberOfProcessors>8 && info.dwProcessorType) {
+            doClear = true;
+        }
+    }
+#elif defined(Q_OS_LINUX)
+    struct sysinfo si;
+    sysinfo(&si);
+    if (si.freeram > (long long int)24*1024*1024*1024) {
         shouldShare = false;
     }
 #endif
-
     mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
     mShareParser = boolValue("share_parser",shouldShare);
 }

@@ -52,13 +52,27 @@ struct HighlighterState {
     HighlighterState();
 };
 
-typedef int TokenKind;
-
 enum class TokenType {
-    Default, Space, Comment,
-    PreprocessDirective, String, StringEscapeSequence,
-    Identifier, Symbol,
-    Character, Keyword, Number};
+    Default,
+    Comment, // any comment
+    Space,
+
+    String,   // a string constant: "this is a string"
+    Character, // a character constant: 'c', '\n'
+    Number, // a number constant: 234, 0xff
+
+    Identifier, // any variable name
+
+    Keyword, // any keyword
+
+    Operator, // "sizeof", "+", "*", etc.
+
+    Preprocessor,    //generic Preprocessor
+
+    Error,
+
+    Embeded  //language embeded in others
+    };
 
 enum class HighlighterClass {
     Composition,
@@ -76,10 +90,9 @@ enum class HighlighterLanguage {
 
 class HighlighterAttribute {
 public:
-    explicit HighlighterAttribute(const QString& name);
+    explicit HighlighterAttribute(const QString& name, TokenType mTokenType);
 
     QString name() const;
-    void setName(const QString &name);
 
     FontStyles styles() const;
     void setStyles(const FontStyles &styles);
@@ -90,11 +103,14 @@ public:
     QColor background() const;
     void setBackground(const QColor &background);
 
+    TokenType tokenType() const;
+
 private:
     QColor mForeground;
     QColor mBackground;
     QString mName;
     FontStyles mStyles;
+    TokenType mTokenType;
 };
 
 typedef std::shared_ptr<HighlighterAttribute> PHighlighterAttribute;
@@ -133,8 +149,6 @@ public:
     virtual HighlighterState getState() const = 0;
     virtual QString getToken() const=0;
     virtual PHighlighterAttribute getTokenAttribute() const=0;
-    virtual TokenType getTokenType();
-    virtual TokenKind getTokenKind() = 0;
     virtual int getTokenPos() = 0;
     virtual bool isKeyword(const QString& word);
     virtual void next() = 0;

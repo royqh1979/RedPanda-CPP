@@ -23,8 +23,8 @@ namespace QSynedit {
 
 class CppHighlighter: public Highlighter
 {
-    enum TokenId {
-        Asm = 1,
+    enum class TokenId {
+        Asm,
         Comment,
         Directive,
         Identifier,
@@ -42,20 +42,6 @@ class CppHighlighter: public Highlighter
         HexFloat,
         Octal,
         RawString
-    };
-
-    enum class ExtTokenId {
-        Add, AddAssign, And, AndAssign, Arrow, Assign,
-        BitComplement, BraceClose, BraceOpen, Colon, Comma,
-        Decrement, Divide, DivideAssign, Ellipse, GreaterThan,
-        GreaterThanEqual, IncOr, IncOrAssign, Increment, LessThan,
-        LessThanEqual, LogAnd, LogComplement, LogEqual, LogOr,
-        Mod, ModAssign, MultiplyAssign, NotEqual, Point, PointerToMemberOfObject,
-        PointerToMemberOfPointer,Question,
-        RoundClose, RoundOpen, ScopeResolution, SemiColon, ShiftLeft,
-        ShiftLeftAssign, ShiftRight, ShiftRightAssign, SquareClose,
-        SquareOpen, Star, Subtract, SubtractAssign, Xor,
-        XorAssign, BackSlash
     };
 
     enum RangeState {
@@ -100,8 +86,7 @@ public:
 
     static const QSet<QString> Keywords;
 
-    ExtTokenId getExtTokenId();
-    TokenKind getTokenId();
+    TokenId getTokenId();
 private:
     void andSymbolProc();
     void ansiCppProc();
@@ -160,8 +145,7 @@ private:
     int mStringLen;
     int mToIdent;
     int mTokenPos;
-    int mTokenId;
-    ExtTokenId mExtTokenId;
+    TokenId mTokenId;
     int mLineNumber;
     int mLeftBraces;
     int mRightBraces;
@@ -191,12 +175,10 @@ public:
     bool eol() const override;
     QString getToken() const override;
     PHighlighterAttribute getTokenAttribute() const override;
-    TokenKind getTokenKind() override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
     bool isKeyword(const QString &word) override;
-    TokenType getTokenType() override;
     void setState(const HighlighterState& rangeState) override;
     void resetState() override;
     HighlighterClass getClass() const override;

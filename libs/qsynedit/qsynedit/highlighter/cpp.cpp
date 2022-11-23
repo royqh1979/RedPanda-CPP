@@ -143,47 +143,57 @@ const QSet<QString> CppHighlighter::Keywords {
 };
 CppHighlighter::CppHighlighter(): Highlighter()
 {
-    mAsmAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrAssembler);
+    mAsmAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrAssembler,
+                                                           TokenType::Embeded);
     addAttribute(mAsmAttribute);
-    mCharAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrCharacter);
+    mCharAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrCharacter,
+                                                            TokenType::Character);
     addAttribute(mCharAttribute);
-    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment);
-    addAttribute(mCommentAttribute);
-    mClassAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass);
-    addAttribute(mClassAttribute);
-    mFloatAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFloat);
-    addAttribute(mFloatAttribute);
-    mFunctionAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction);
-    addAttribute(mFunctionAttribute);
-    mGlobalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrGlobalVariable);
-    addAttribute(mGlobalVarAttribute);
-    mHexAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrHexadecimal);
-    addAttribute(mHexAttribute);
-    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier);
-    addAttribute(mIdentifierAttribute);
-    mInvalidAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIllegalChar);
-    addAttribute(mInvalidAttribute);
-    mLocalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrLocalVariable);
-    addAttribute(mLocalVarAttribute);
-    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber);
-    addAttribute(mNumberAttribute);
-    mOctAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrOctal);
-    addAttribute(mOctAttribute);
-    mPreprocessorAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrPreprocessor);
-    addAttribute(mPreprocessorAttribute);
-    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord);
-    addAttribute(mKeywordAttribute);
-    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace);
-    addAttribute(mWhitespaceAttribute);
-    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString);
-    addAttribute(mStringAttribute);
-    mStringEscapeSequenceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrStringEscapeSequences);
-    addAttribute(mStringEscapeSequenceAttribute);
-    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol);
-    addAttribute(mSymbolAttribute);
-    mVariableAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrVariable);
-    addAttribute(mVariableAttribute);
 
+    mClassAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass,
+                                                             TokenType::Identifier);
+    addAttribute(mClassAttribute);
+    mFloatAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFloat,
+                                                             TokenType::Number);
+    addAttribute(mFloatAttribute);
+    mFunctionAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction,
+                                                                TokenType::Identifier);
+    addAttribute(mFunctionAttribute);
+    mGlobalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrGlobalVariable,
+                                                                 TokenType::Identifier);
+    addAttribute(mGlobalVarAttribute);
+    mHexAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrHexadecimal,
+                                                           TokenType::Number);
+    addAttribute(mHexAttribute);
+    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier,
+                                                                  TokenType::Identifier);
+    addAttribute(mIdentifierAttribute);
+    mInvalidAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIllegalChar,
+                                                               TokenType::Error);
+    addAttribute(mInvalidAttribute);
+    mLocalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrLocalVariable,
+                                                                TokenType::Identifier);
+    addAttribute(mLocalVarAttribute);
+    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber,
+                                                              TokenType::Number);
+    addAttribute(mNumberAttribute);
+    mOctAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrOctal,
+                                                           TokenType::Number);
+    addAttribute(mOctAttribute);
+    mPreprocessorAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrPreprocessor,
+                                                                    TokenType::Preprocessor);
+    addAttribute(mPreprocessorAttribute);
+
+    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord,
+                                                               TokenType::Keyword);
+    addAttribute(mKeywordAttribute);
+
+    mStringEscapeSequenceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrStringEscapeSequences,
+                                                                            TokenType::String);
+    addAttribute(mStringEscapeSequenceAttribute);
+    mVariableAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrVariable,
+                                                                TokenType::Identifier);
+    addAttribute(mVariableAttribute);
     resetState();
 }
 
@@ -257,12 +267,7 @@ PHighlighterAttribute CppHighlighter::localVarAttribute() const
     return mLocalVarAttribute;
 }
 
-CppHighlighter::ExtTokenId CppHighlighter::getExtTokenId()
-{
-    return mExtTokenId;
-}
-
-TokenKind CppHighlighter::getTokenId()
+CppHighlighter::TokenId CppHighlighter::getTokenId()
 {
     if ((mRange.state == RangeState::rsAsm || mRange.state == RangeState::rsAsmBlock)
             && !mAsmStart && !(mTokenId == TokenId::Comment || mTokenId == TokenId::Space
@@ -280,16 +285,13 @@ void CppHighlighter::andSymbolProc()
         switch (mLine[mRun+1].unicode()) {
         case '=':
             mRun+=2;
-            mExtTokenId = ExtTokenId::AndAssign;
             return;
         case '&':
             mRun+=2;
-            mExtTokenId = ExtTokenId::LogAnd;
             return;
         }
     }
     mRun+=1;
-    mExtTokenId = ExtTokenId::And;
 }
 
 void CppHighlighter::ansiCppProc()
@@ -372,7 +374,6 @@ void CppHighlighter::braceCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::BraceClose;
     if (mRange.state == RangeState::rsAsmBlock) {
         mRange.state = rsUnknown;
     }
@@ -392,7 +393,6 @@ void CppHighlighter::braceOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::BraceOpen;
     if (mRange.state == RangeState::rsAsm) {
         mRange.state = RangeState::rsAsmBlock;
         mAsmStart = true;
@@ -420,10 +420,8 @@ void CppHighlighter::colonProc()
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]==':') {
         mRun+=2;
-        mExtTokenId = ExtTokenId::ScopeResolution;
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenId::Colon;
     }
 }
 
@@ -431,7 +429,6 @@ void CppHighlighter::commaProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::Comma;
 }
 
 void CppHighlighter::directiveProc()
@@ -540,10 +537,8 @@ void CppHighlighter::equalProc()
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '=') {
         mRun += 2;
-        mExtTokenId = ExtTokenId::LogEqual;
     } else {
         mRun += 1;
-        mExtTokenId = ExtTokenId::Assign;
     }
 }
 
@@ -554,21 +549,17 @@ void CppHighlighter::greaterProc()
         switch (mLine[mRun+1].unicode()) {
         case '=':
             mRun += 2;
-            mExtTokenId = ExtTokenId::GreaterThanEqual;
             return;
         case '>':
             if (mRun+2<mLineSize && mLine[mRun+2] == '=') {
                 mRun+=3;
-                mExtTokenId = ExtTokenId::ShiftRightAssign;
             } else {
                 mRun += 2;
-                mExtTokenId = ExtTokenId::ShiftRight;
             }
             return;
         }
     }
     mRun+=1;
-    mExtTokenId = ExtTokenId::GreaterThan;
 }
 
 void CppHighlighter::identProc()
@@ -596,21 +587,17 @@ void CppHighlighter::lowerProc()
         switch(mLine[mRun+1].unicode()) {
         case '=':
             mRun+=2;
-            mExtTokenId = ExtTokenId::LessThanEqual;
             return;
         case '<':
             if (mRun+2<mLineSize && mLine[mRun+2] == '=') {
                 mRun+=3;
-                mExtTokenId = ExtTokenId::ShiftLeftAssign;
             } else {
                 mRun+=2;
-                mExtTokenId = ExtTokenId::ShiftLeft;
             }
             return;
         }
     }
     mRun+=1;
-    mExtTokenId = ExtTokenId::LessThan;
 }
 
 void CppHighlighter::minusProc()
@@ -620,25 +607,20 @@ void CppHighlighter::minusProc()
         switch(mLine[mRun+1].unicode()) {
         case '=':
             mRun += 2;
-            mExtTokenId = ExtTokenId::SubtractAssign;
             return;
         case '-':
             mRun += 2;
-            mExtTokenId = ExtTokenId::Decrement;
             return;
         case '>':
             if (mRun+2<mLineSize && mLine[mRun+2]=='*') {
                 mRun += 3;
-                mExtTokenId = ExtTokenId::PointerToMemberOfPointer;
             } else {
                 mRun += 2;
-                mExtTokenId = ExtTokenId::Arrow;
             }
             return;
         }
     }
     mRun += 1;
-    mExtTokenId = ExtTokenId::Subtract;
 }
 
 void CppHighlighter::modSymbolProc()
@@ -646,10 +628,8 @@ void CppHighlighter::modSymbolProc()
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
         mRun += 2;
-        mExtTokenId = ExtTokenId::ModAssign;
     } else {
         mRun += 1;
-        mExtTokenId = ExtTokenId::Mod;
     }
 }
 
@@ -658,10 +638,8 @@ void CppHighlighter::notSymbolProc()
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
         mRun+=2;
-        mExtTokenId = ExtTokenId::NotEqual;
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenId::LogComplement;
     }
 }
 
@@ -859,16 +837,13 @@ void CppHighlighter::orSymbolProc()
         switch ( mLine[mRun+1].unicode()) {
         case '=':
             mRun+=2;
-            mExtTokenId = ExtTokenId::IncOrAssign;
             return;
         case '|':
             mRun+=2;
-            mExtTokenId = ExtTokenId::LogOr;
             return;
         }
     }
     mRun+=1;
-    mExtTokenId = ExtTokenId::IncOr;
 }
 
 void CppHighlighter::plusProc()
@@ -878,16 +853,13 @@ void CppHighlighter::plusProc()
         switch(mLine[mRun+1].unicode()){
         case '=':
             mRun+=2;
-            mExtTokenId = ExtTokenId::AddAssign;
             return;
         case '+':
             mRun+=2;
-            mExtTokenId = ExtTokenId::Increment;
             return;
         }
     }
     mRun+=1;
-    mExtTokenId = ExtTokenId::Add;
 }
 
 void CppHighlighter::pointProc()
@@ -895,22 +867,18 @@ void CppHighlighter::pointProc()
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '*' ) {
         mRun+=2;
-        mExtTokenId = ExtTokenId::PointerToMemberOfObject;
     } else if (mRun+2<mLineSize && mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
         mRun+=3;
-        mExtTokenId = ExtTokenId::Ellipse;
     } else if (mRun+1<mLineSize && mLine[mRun+1]>='0' && mLine[mRun+1]<='9') {
         numberProc();
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenId::Point;
     }
 }
 
 void CppHighlighter::questionProc()
 {
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::Question;
     mRun+=1;
 }
 
@@ -944,7 +912,6 @@ void CppHighlighter::roundCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::RoundClose;
     mRange.parenthesisLevel--;
     if (mRange.parenthesisLevel<0)
         mRange.parenthesisLevel=0;
@@ -955,7 +922,6 @@ void CppHighlighter::roundOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::RoundOpen;
     mRange.parenthesisLevel++;
     pushIndents(sitParenthesis);
 }
@@ -964,7 +930,6 @@ void CppHighlighter::semiColonProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::SemiColon;
     if (mRange.state == RangeState::rsAsm)
         mRange.state = RangeState::rsUnknown;
     while (mRange.getLastIndent() == sitStatement) {
@@ -999,20 +964,17 @@ void CppHighlighter::slashProc()
         case '=':
             mRun+=2;
             mTokenId = TokenId::Symbol;
-            mExtTokenId = ExtTokenId::DivideAssign;
             return;
         }
     }
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::Divide;
 }
 
 void CppHighlighter::backSlashProc()
 {
     if (mRun+1==mLineSize-1) {
         mTokenId = TokenId::Symbol;
-        mExtTokenId = ExtTokenId::BackSlash;
     } else {
         mTokenId = TokenId::Unknown;
     }
@@ -1032,7 +994,6 @@ void CppHighlighter::squareCloseProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::SquareClose;
     mRange.bracketLevel--;
     if (mRange.bracketLevel<0)
         mRange.bracketLevel=0;
@@ -1043,7 +1004,6 @@ void CppHighlighter::squareOpenProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::SquareOpen;
     mRange.bracketLevel++;
     pushIndents(sitBracket);
 }
@@ -1053,10 +1013,8 @@ void CppHighlighter::starProc()
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '=') {
         mRun += 2;
-        mExtTokenId = ExtTokenId::MultiplyAssign;
     } else {
         mRun += 1;
-        mExtTokenId = ExtTokenId::Star;
     }
 }
 
@@ -1277,7 +1235,6 @@ void CppHighlighter::tildeProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::BitComplement;
 }
 
 void CppHighlighter::unknownProc()
@@ -1291,10 +1248,8 @@ void CppHighlighter::xorSymbolProc()
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
         mRun+=2;
-        mExtTokenId = ExtTokenId::XorAssign;
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenId::Xor;
     }
 }
 
@@ -1526,11 +1481,6 @@ PHighlighterAttribute CppHighlighter::getTokenAttribute() const
     }
 }
 
-TokenKind CppHighlighter::getTokenKind()
-{
-    return mTokenId;
-}
-
 int CppHighlighter::getTokenPos()
 {
     return mTokenPos;
@@ -1638,58 +1588,6 @@ void CppHighlighter::setLine(const QString &newLine, int lineNumber)
 bool CppHighlighter::isKeyword(const QString &word)
 {
     return Keywords.contains(word) || mCustomTypeKeywords.contains(word);
-}
-
-TokenType CppHighlighter::getTokenType()
-{
-    switch(mTokenId) {
-    case TokenId::Comment:
-        return TokenType::Comment;
-    case TokenId::Directive:
-        return TokenType::PreprocessDirective;
-    case TokenId::Identifier:
-        return TokenType::Identifier;
-    case TokenId::Key:
-        return TokenType::Keyword;
-    case TokenId::Space:
-        switch (mRange.state) {
-        case RangeState::rsAnsiC:
-        case RangeState::rsAnsiCAsm:
-        case RangeState::rsAnsiCAsmBlock:
-        case RangeState::rsAsm:
-        case RangeState::rsAsmBlock:
-        case RangeState::rsDirectiveComment:
-        case RangeState::rsCppComment:
-            return TokenType::Comment;
-        case RangeState::rsDirective:
-        case RangeState::rsMultiLineDirective:
-            return TokenType::PreprocessDirective;
-        case RangeState::rsString:
-        case RangeState::rsMultiLineString:
-        case RangeState::rsStringEscapeSeq:
-        case RangeState::rsMultiLineStringEscapeSeq:
-        case RangeState::rsRawString:
-            return TokenType::String;
-        case RangeState::rsChar :
-            return TokenType::Character;
-        default:
-            return TokenType::Space;
-        }
-    case TokenId::String:
-        return TokenType::String;
-    case TokenId::StringEscapeSeq:
-        return TokenType::StringEscapeSequence;
-    case TokenId::RawString:
-        return TokenType::String;
-    case TokenId::Char:
-        return TokenType::Character;
-    case TokenId::Symbol:
-        return TokenType::Symbol;
-    case TokenId::Number:
-        return TokenType::Number;
-    default:
-        return TokenType::Default;
-    }
 }
 
 void CppHighlighter::setState(const HighlighterState& rangeState)

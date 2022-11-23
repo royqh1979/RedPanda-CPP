@@ -57,21 +57,21 @@ const QSet<QString> ASMHighlighter::Keywords {
 
 ASMHighlighter::ASMHighlighter()
 {
-    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment);
+    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment, TokenType::Comment);
     mCommentAttribute->setStyles(FontStyle::fsItalic);
     addAttribute(mCommentAttribute);
-    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier);
+    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier, TokenType::Identifier);
     addAttribute(mIdentifierAttribute);
-    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord);
+    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord, TokenType::Keyword);
     mKeywordAttribute->setStyles(FontStyle::fsBold);
     addAttribute(mKeywordAttribute);
-    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber);
+    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber, TokenType::Number);
     addAttribute(mNumberAttribute);
-    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace);
+    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace, TokenType::Space);
     addAttribute(mWhitespaceAttribute);
-    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString);
+    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString, TokenType::String);
     addAttribute(mStringAttribute);
-    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol);
+    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol, TokenType::Operator);
     addAttribute(mSymbolAttribute);
 }
 
@@ -257,36 +257,10 @@ PHighlighterAttribute ASMHighlighter::getTokenAttribute() const
         return mSymbolAttribute;
     case TokenId::Unknown:
         return mIdentifierAttribute;
+    default:
+        break;
     }
     return PHighlighterAttribute();
-}
-
-TokenKind ASMHighlighter::getTokenKind()
-{
-    return mTokenID;
-}
-
-TokenType ASMHighlighter::getTokenType()
-{
-    switch(mTokenID) {
-    case TokenId::Comment:
-        return TokenType::Comment;
-    case TokenId::Identifier:
-        return TokenType::Identifier;
-    case TokenId::Key:
-        return TokenType::Keyword;
-    case TokenId::Number:
-        return TokenType::Number;
-    case TokenId::Space:
-        return TokenType::Space;
-    case TokenId::String:
-        return TokenType::String;
-    case TokenId::Symbol:
-        return TokenType::Symbol;
-    case TokenId::Unknown:
-        return TokenType::Default;
-    }
-    return TokenType::Default;
 }
 
 int ASMHighlighter::getTokenPos()

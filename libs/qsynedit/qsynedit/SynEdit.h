@@ -250,11 +250,9 @@ public:
     bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
       PHighlighterAttribute& attri);
     bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
-      bool& tokenFinished, TokenType& tokenType,
-      PHighlighterAttribute& attri);
+      bool& tokenFinished, PHighlighterAttribute& attri);
     bool getHighlighterAttriAtRowColEx(const BufferCoord& pos, QString& token,
-      TokenType& tokenType, TokenKind &tokenKind, int &start,
-      PHighlighterAttribute& attri);
+      int &start, PHighlighterAttribute& attri);
 
     void beginUndoBlock();
     void endUndoBlock();

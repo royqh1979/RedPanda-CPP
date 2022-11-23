@@ -359,12 +359,11 @@ int SynEdit::maxScrollWidth() const
 
 bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, PHighlighterAttribute &attri)
 {
-    TokenType tmpType;
-    int tmpKind, tmpStart;
-    return getHighlighterAttriAtRowColEx(pos, token, tmpType, tmpKind,tmpStart, attri);
+    int tmpStart;
+    return getHighlighterAttriAtRowColEx(pos, token, tmpStart, attri);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, TokenType &tokenType, PHighlighterAttribute &attri)
+bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, PHighlighterAttribute &attri)
 {
     int posX, posY, endPos, start;
     QString line;
@@ -389,7 +388,6 @@ bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token
                         tokenFinished = mHighlighter->getTokenFinished();
                     else
                         tokenFinished = false;
-                    tokenType = mHighlighter->getTokenType();
                     return true;
                 }
                 mHighlighter->next();
@@ -402,7 +400,7 @@ bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token
     return false;
 }
 
-bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &token, TokenType &tokenType, TokenKind &tokenKind, int &start, PHighlighterAttribute &attri)
+bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &token, int &start, PHighlighterAttribute &attri)
 {
     int posX, posY, endPos;
     QString line;
@@ -423,8 +421,6 @@ bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &tok
                 endPos = start + token.length()-1;
                 if ((posX >= start) && (posX <= endPos)) {
                     attri = mHighlighter->getTokenAttribute();
-                    tokenKind = mHighlighter->getTokenKind();
-                    tokenType = mHighlighter->getTokenType();
                     return true;
                 }
                 mHighlighter->next();
@@ -433,8 +429,6 @@ bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &tok
     }
     token = "";
     attri = PHighlighterAttribute();
-    tokenKind = 0;
-    tokenType = TokenType::Default;
     return false;
 }
 

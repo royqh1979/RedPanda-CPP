@@ -65,11 +65,6 @@ PHighlighterAttribute Highlighter::symbolAttribute() const
     return mSymbolAttribute;
 }
 
-TokenType Highlighter::getTokenType()
-{
-    return TokenType::Default;
-}
-
 bool Highlighter::isKeyword(const QString &)
 {
     return false;
@@ -162,13 +157,9 @@ int Highlighter::attributesCount() const
     return mAttributes.size();
 }
 
-PHighlighterAttribute Highlighter::getAttribute(const QString &name) const
+PHighlighterAttribute Highlighter::getAttribute(const QString& name) const
 {
-    auto search = mAttributes.find(name);
-    if (search!=mAttributes.end()) {
-        return search.value();
-    }
-    return PHighlighterAttribute();
+    return mAttributes.value(name,PHighlighterAttribute());
 }
 
 bool Highlighter::enabled() const
@@ -215,23 +206,22 @@ void HighlighterAttribute::setBackground(const QColor &background)
     mBackground = background;
 }
 
+TokenType HighlighterAttribute::tokenType() const
+{
+    return mTokenType;
+}
+
 QString HighlighterAttribute::name() const
 {
     return mName;
 }
 
-void HighlighterAttribute::setName(const QString &name)
-{
-    if (mName!=name) {
-        mName = name;
-    }
-}
-
-HighlighterAttribute::HighlighterAttribute(const QString &name):
+HighlighterAttribute::HighlighterAttribute(const QString &name, TokenType tokenType):
     mForeground(QColor()),
     mBackground(QColor()),
     mName(name),
-    mStyles(FontStyle::fsNone)
+    mStyles(FontStyle::fsNone),
+    mTokenType(tokenType)
 {
 
 }

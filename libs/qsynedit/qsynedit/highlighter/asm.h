@@ -23,7 +23,7 @@ namespace QSynedit {
 
 class ASMHighlighter : public Highlighter
 {
-    enum TokenId {
+    enum class TokenId {
         Comment,
         Identifier,
         Key,
@@ -47,7 +47,7 @@ private:
     int mStringLen;
     QChar mToIdent;
     int mTokenPos;
-    TokenKind mTokenID;
+    TokenId mTokenID;
     PHighlighterAttribute mNumberAttribute;
 
 private:
@@ -75,8 +75,6 @@ public:
     HighlighterLanguage language() override;
     QString getToken() const override;
     PHighlighterAttribute getTokenAttribute() const override;
-    TokenKind getTokenKind() override;
-    TokenType getTokenType() override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;

@@ -83,45 +83,56 @@ const QSet<QString> GLSLHighlighter::Keywords {
 
 GLSLHighlighter::GLSLHighlighter(): Highlighter()
 {
-    mAsmAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrAssembler);
+    mAsmAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrAssembler,
+                                                           TokenType::Embeded);
     addAttribute(mAsmAttribute);
-    mCharAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrCharacter);
+    mCharAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrCharacter,
+                                                            TokenType::Character);
     addAttribute(mCharAttribute);
-    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment);
-    addAttribute(mCommentAttribute);
-    mClassAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass);
+
+    mClassAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass,
+                                                             TokenType::Identifier);
     addAttribute(mClassAttribute);
-    mFloatAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFloat);
+    mFloatAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFloat,
+                                                             TokenType::Number);
     addAttribute(mFloatAttribute);
-    mFunctionAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction);
+    mFunctionAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction,
+                                                                TokenType::Identifier);
     addAttribute(mFunctionAttribute);
-    mGlobalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrGlobalVariable);
+    mGlobalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrGlobalVariable,
+                                                                 TokenType::Identifier);
     addAttribute(mGlobalVarAttribute);
-    mHexAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrHexadecimal);
+    mHexAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrHexadecimal,
+                                                           TokenType::Number);
     addAttribute(mHexAttribute);
-    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier);
+    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier,
+                                                                  TokenType::Identifier);
     addAttribute(mIdentifierAttribute);
-    mInvalidAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIllegalChar);
+    mInvalidAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIllegalChar,
+                                                               TokenType::Error);
     addAttribute(mInvalidAttribute);
-    mLocalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrLocalVariable);
+    mLocalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrLocalVariable,
+                                                                TokenType::Identifier);
     addAttribute(mLocalVarAttribute);
-    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber);
+    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber,
+                                                              TokenType::Number);
     addAttribute(mNumberAttribute);
-    mOctAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrOctal);
+    mOctAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrOctal,
+                                                           TokenType::Number);
     addAttribute(mOctAttribute);
-    mPreprocessorAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrPreprocessor);
+    mPreprocessorAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrPreprocessor,
+                                                                    TokenType::Preprocessor);
     addAttribute(mPreprocessorAttribute);
-    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord);
+
+    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord,
+                                                               TokenType::Keyword);
     addAttribute(mKeywordAttribute);
-    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace);
-    addAttribute(mWhitespaceAttribute);
-    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString);
-    addAttribute(mStringAttribute);
-    mStringEscapeSequenceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrStringEscapeSequences);
+
+    mStringEscapeSequenceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrStringEscapeSequences,
+                                                                            TokenType::String);
     addAttribute(mStringEscapeSequenceAttribute);
-    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol);
-    addAttribute(mSymbolAttribute);
-    mVariableAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrVariable);
+    mVariableAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrVariable,
+                                                                TokenType::Identifier);
     addAttribute(mVariableAttribute);
 
     resetState();
@@ -197,12 +208,7 @@ PHighlighterAttribute GLSLHighlighter::localVarAttribute() const
     return mLocalVarAttribute;
 }
 
-GLSLHighlighter::ExtTokenId GLSLHighlighter::getExtTokenId()
-{
-    return mExtTokenId;
-}
-
-TokenKind GLSLHighlighter::getTokenId()
+GLSLHighlighter::TokenId GLSLHighlighter::getTokenId()
 {
     if ((mRange.state == RangeState::rsAsm || mRange.state == RangeState::rsAsmBlock)
             && !mAsmStart && !(mTokenId == TokenId::Comment || mTokenId == TokenId::Space
@@ -219,15 +225,12 @@ void GLSLHighlighter::andSymbolProc()
     switch (mLine[mRun+1].unicode()) {
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenId::AndAssign;
         break;
     case '&':
         mRun+=2;
-        mExtTokenId = ExtTokenId::LogAnd;
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenId::And;
     }
 }
 
@@ -311,7 +314,6 @@ void GLSLHighlighter::braceCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::BraceClose;
     if (mRange.state == RangeState::rsAsmBlock) {
         mRange.state = rsUnknown;
     }
@@ -331,7 +333,6 @@ void GLSLHighlighter::braceOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::BraceOpen;
     if (mRange.state == RangeState::rsAsm) {
         mRange.state = RangeState::rsAsmBlock;
         mAsmStart = true;
@@ -359,10 +360,8 @@ void GLSLHighlighter::colonProc()
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1]==':') {
         mRun+=2;
-        mExtTokenId = ExtTokenId::ScopeResolution;
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenId::Colon;
     }
 }
 
@@ -370,7 +369,6 @@ void GLSLHighlighter::commaProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::Comma;
 }
 
 void GLSLHighlighter::directiveProc()
@@ -453,10 +451,8 @@ void GLSLHighlighter::equalProc()
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '=') {
         mRun += 2;
-        mExtTokenId = ExtTokenId::LogEqual;
     } else {
         mRun += 1;
-        mExtTokenId = ExtTokenId::Assign;
     }
 }
 
@@ -466,20 +462,16 @@ void GLSLHighlighter::greaterProc()
     switch (mLine[mRun + 1].unicode()) {
     case '=':
         mRun += 2;
-        mExtTokenId = ExtTokenId::GreaterThanEqual;
         break;
     case '>':
         if (mLine[mRun+2] == '=') {
             mRun+=3;
-            mExtTokenId = ExtTokenId::ShiftRightAssign;
         } else {
             mRun += 2;
-            mExtTokenId = ExtTokenId::ShiftRight;
         }
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenId::GreaterThan;
     }
 }
 
@@ -507,20 +499,16 @@ void GLSLHighlighter::lowerProc()
     switch(mLine[mRun+1].unicode()) {
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenId::LessThanEqual;
         break;
     case '<':
         if (mLine[mRun+2] == '=') {
             mRun+=3;
-            mExtTokenId = ExtTokenId::ShiftLeftAssign;
         } else {
             mRun+=2;
-            mExtTokenId = ExtTokenId::ShiftLeft;
         }
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenId::LessThan;
     }
 }
 
@@ -530,24 +518,19 @@ void GLSLHighlighter::minusProc()
     switch(mLine[mRun+1].unicode()) {
     case '=':
         mRun += 2;
-        mExtTokenId = ExtTokenId::SubtractAssign;
         break;
     case '-':
         mRun += 2;
-        mExtTokenId = ExtTokenId::Decrement;
         break;
     case '>':
         if (mLine[mRun+2]=='*') {
             mRun += 3;
-            mExtTokenId = ExtTokenId::PointerToMemberOfPointer;
         } else {
             mRun += 2;
-            mExtTokenId = ExtTokenId::Arrow;
         }
         break;
     default:
         mRun += 1;
-        mExtTokenId = ExtTokenId::Subtract;
     }
 }
 
@@ -557,11 +540,9 @@ void GLSLHighlighter::modSymbolProc()
     switch(mLine[mRun + 1].unicode()) {
     case '=':
         mRun += 2;
-        mExtTokenId = ExtTokenId::ModAssign;
         break;
     default:
         mRun += 1;
-        mExtTokenId = ExtTokenId::Mod;
     }
 }
 
@@ -571,11 +552,9 @@ void GLSLHighlighter::notSymbolProc()
     switch(mLine[mRun + 1].unicode()) {
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenId::NotEqual;
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenId::LogComplement;
     }
 }
 
@@ -768,15 +747,12 @@ void GLSLHighlighter::orSymbolProc()
     switch ( mLine[mRun+1].unicode()) {
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenId::IncOrAssign;
         break;
     case '|':
         mRun+=2;
-        mExtTokenId = ExtTokenId::LogOr;
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenId::IncOr;
     }
 }
 
@@ -786,15 +762,12 @@ void GLSLHighlighter::plusProc()
     switch(mLine[mRun+1].unicode()){
     case '=':
         mRun+=2;
-        mExtTokenId = ExtTokenId::AddAssign;
         break;
     case '+':
         mRun+=2;
-        mExtTokenId = ExtTokenId::Increment;
         break;
     default:
         mRun+=1;
-        mExtTokenId = ExtTokenId::Add;
     }
 }
 
@@ -803,22 +776,18 @@ void GLSLHighlighter::pointProc()
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '*' ) {
         mRun+=2;
-        mExtTokenId = ExtTokenId::PointerToMemberOfObject;
     } else if (mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
         mRun+=3;
-        mExtTokenId = ExtTokenId::Ellipse;
     } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='9') {
         numberProc();
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenId::Point;
     }
 }
 
 void GLSLHighlighter::questionProc()
 {
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::Question;
     mRun+=1;
 }
 
@@ -852,7 +821,6 @@ void GLSLHighlighter::roundCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::RoundClose;
     mRange.parenthesisLevel--;
     if (mRange.parenthesisLevel<0)
         mRange.parenthesisLevel=0;
@@ -863,7 +831,6 @@ void GLSLHighlighter::roundOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::RoundOpen;
     mRange.parenthesisLevel++;
     pushIndents(sitParenthesis);
 }
@@ -872,7 +839,6 @@ void GLSLHighlighter::semiColonProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::SemiColon;
     if (mRange.state == RangeState::rsAsm)
         mRange.state = RangeState::rsUnknown;
     while (mRange.getLastIndent() == sitStatement) {
@@ -906,12 +872,10 @@ void GLSLHighlighter::slashProc()
     case '=':
         mRun+=2;
         mTokenId = TokenId::Symbol;
-        mExtTokenId = ExtTokenId::DivideAssign;
         break;
     default:
         mRun += 1;
         mTokenId = TokenId::Symbol;
-        mExtTokenId = ExtTokenId::Divide;
     }
 }
 
@@ -928,7 +892,6 @@ void GLSLHighlighter::squareCloseProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::SquareClose;
     mRange.bracketLevel--;
     if (mRange.bracketLevel<0)
         mRange.bracketLevel=0;
@@ -939,7 +902,6 @@ void GLSLHighlighter::squareOpenProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::SquareOpen;
     mRange.bracketLevel++;
     pushIndents(sitBracket);
 }
@@ -949,10 +911,8 @@ void GLSLHighlighter::starProc()
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '=') {
         mRun += 2;
-        mExtTokenId = ExtTokenId::MultiplyAssign;
     } else {
         mRun += 1;
-        mExtTokenId = ExtTokenId::Star;
     }
 }
 
@@ -1157,7 +1117,6 @@ void GLSLHighlighter::tildeProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
-    mExtTokenId = ExtTokenId::BitComplement;
 }
 
 void GLSLHighlighter::unknownProc()
@@ -1171,10 +1130,8 @@ void GLSLHighlighter::xorSymbolProc()
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1]=='=') {
         mRun+=2;
-        mExtTokenId = ExtTokenId::XorAssign;
     } else {
         mRun+=1;
-        mExtTokenId = ExtTokenId::Xor;
     }
 }
 
@@ -1392,11 +1349,6 @@ PHighlighterAttribute GLSLHighlighter::getTokenAttribute() const
     }
 }
 
-TokenKind GLSLHighlighter::getTokenKind()
-{
-    return mTokenId;
-}
-
 int GLSLHighlighter::getTokenPos()
 {
     return mTokenPos;
@@ -1476,58 +1428,6 @@ void GLSLHighlighter::setLine(const QString &newLine, int lineNumber)
 bool GLSLHighlighter::isKeyword(const QString &word)
 {
     return Keywords.contains(word);
-}
-
-TokenType GLSLHighlighter::getTokenType()
-{
-    switch(mTokenId) {
-    case TokenId::Comment:
-        return TokenType::Comment;
-    case TokenId::Directive:
-        return TokenType::PreprocessDirective;
-    case TokenId::Identifier:
-        return TokenType::Identifier;
-    case TokenId::Key:
-        return TokenType::Keyword;
-    case TokenId::Space:
-        switch (mRange.state) {
-        case RangeState::rsAnsiC:
-        case RangeState::rsAnsiCAsm:
-        case RangeState::rsAnsiCAsmBlock:
-        case RangeState::rsAsm:
-        case RangeState::rsAsmBlock:
-        case RangeState::rsDirectiveComment:
-        case RangeState::rsCppComment:
-            return TokenType::Comment;
-        case RangeState::rsDirective:
-        case RangeState::rsMultiLineDirective:
-            return TokenType::PreprocessDirective;
-        case RangeState::rsString:
-        case RangeState::rsMultiLineString:
-        case RangeState::rsStringEscapeSeq:
-        case RangeState::rsMultiLineStringEscapeSeq:
-        case RangeState::rsRawString:
-            return TokenType::String;
-        case RangeState::rsChar :
-            return TokenType::Character;
-        default:
-            return TokenType::Space;
-        }
-    case TokenId::String:
-        return TokenType::String;
-    case TokenId::StringEscapeSeq:
-        return TokenType::StringEscapeSequence;
-    case TokenId::RawString:
-        return TokenType::String;
-    case TokenId::Char:
-        return TokenType::Character;
-    case TokenId::Symbol:
-        return TokenType::Symbol;
-    case TokenId::Number:
-        return TokenType::Number;
-    default:
-        return TokenType::Default;
-    }
 }
 
 void GLSLHighlighter::setState(const HighlighterState& rangeState)

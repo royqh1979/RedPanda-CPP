@@ -38,7 +38,8 @@ HighlighterSchema::HighlighterSchema(QObject *parent):
     QObject(parent),
     mCaseSensitive(true)
 {
-    mMarkerAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrMarker);
+    mMarkerAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrMarker,
+                                                              QSynedit::TokenType::Default);
     mMarkerAttribute->setForeground(Qt::yellow);
     mMarkerAttribute->setStyles(FontStyle::fsBold);
 }

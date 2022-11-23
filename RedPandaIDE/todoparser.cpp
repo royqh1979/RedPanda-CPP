@@ -129,15 +129,13 @@ void TodoThread::doParseFile(const QString &filename, QSynedit::PHighlighter hig
     if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,lines)) {
         lines = readFileToLines(filename);
     }
-    QSynedit::PHighlighterAttribute commentAttr = highlighter->getAttribute(SYNS_AttrComment);
-
     highlighter->resetState();
     for (int i =0;i<lines.count();i++) {
         highlighter->setLine(lines[i],i);
         while (!highlighter->eol()) {
             QSynedit::PHighlighterAttribute attr;
             attr = highlighter->getTokenAttribute();
-            if (attr == commentAttr) {
+            if (attr && attr->tokenType() == QSynedit::TokenType::Comment) {
                 QString token = highlighter->getToken();
                 int pos = token.indexOf(todoReg);
                 if (pos>=0) {

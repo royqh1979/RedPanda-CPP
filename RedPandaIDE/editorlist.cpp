@@ -198,14 +198,11 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         if (editor) {
             editor->activate();
             pMainWindow->updateClassBrowserForEditor(editor);
-        } else {
-            pMainWindow->updateClassBrowserForEditor(nullptr);
         }
-    } else {
-        editor = getEditor();
-        if (!editor) {
-            pMainWindow->updateClassBrowserForEditor(nullptr);
-        }
+    }
+    editor = getEditor();
+    if (!editor) {
+        pMainWindow->updateClassBrowserForEditor(nullptr);
     }
     emit editorClosed();
     endUpdate();
