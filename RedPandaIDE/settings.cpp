@@ -2135,13 +2135,15 @@ void Settings::CompilerSet::setProperties(const QString &binDir, const QString& 
             mCompilerType = CompilerType::GCC_UTF8;
         // Assemble user friendly name if we don't have one yet
         if (mName == "") {
-            if (mType.contains("tdm64")) {
+            if (mType.contains("tdm64",Qt::CaseInsensitive)) {
                 mName = "TDM-GCC " + mVersion;
-            } else if (mType.contains("tdm")) {
+            } else if (mType.contains("tdm",Qt::CaseInsensitive)) {
                 mName = "TDM-GCC " + mVersion;
-            } else if (mType.contains("MSYS2")) {
+            } else if (mType.contains("MSYS2",Qt::CaseInsensitive)) {
                 mName = "MinGW-w64 GCC " + mVersion;
-            } else if (mType.contains("GCC")) {
+            } else if (mType.contains("MinGW-W64",Qt::CaseInsensitive)) {
+                mName = "MinGW-w64 GCC " + mVersion;
+            } else if (mType.contains("GCC",Qt::CaseInsensitive)) {
 #ifdef Q_OS_WIN
                 mName = "MinGW GCC " + mVersion;
 #else

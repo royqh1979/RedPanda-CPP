@@ -92,7 +92,7 @@ void CodeCompletionPopup::prepareSearch(
 
     mMemberPhrase = memberExpression.join("");
     mMemberOperator = memberOperator;
-    if (type == CodeCompletionType::TypeKeywordComplex) {
+    if (type == CodeCompletionType::ComplexKeyword) {
         getCompletionListForTypeKeywordComplex(preWord);
     } else if (type == CodeCompletionType::FunctionWithoutDefinition) {
         mIncludedFiles = mParser->getFileIncludes(filename);
@@ -898,6 +898,9 @@ void CodeCompletionPopup::getCompletionListForTypeKeywordComplex(const QString &
         addKeyword("short");
         addKeyword("int");
         addKeyword("char");
+    } else if (preWord == "using") {
+        addKeyword("namespace");
+
     }
 }
 

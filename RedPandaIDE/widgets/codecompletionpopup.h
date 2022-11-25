@@ -39,7 +39,7 @@ private:
 
 enum class CodeCompletionType {
     Normal,
-    TypeKeywordComplex,
+    ComplexKeyword,
     FunctionWithoutDefinition
 };
 

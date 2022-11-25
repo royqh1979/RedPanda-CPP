@@ -728,8 +728,14 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 return;
             } else if (mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()){
                 QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+
                 if (mParser && !lastWord.isEmpty()) {
-                    if (CppTypeKeywords.contains(lastWord)) {
+                    if (lastWord == "using") {
+                        commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
+                        showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
+                        handled=true;
+                        return;
+                    } else if (CppTypeKeywords.contains(lastWord)) {
                         PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
                         while(currentScope && currentScope->kind==StatementKind::skBlock) {
                             currentScope = currentScope->parentScope.lock();
@@ -747,7 +753,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                                 lastWord == "unsigned"
                                 ) {
                             commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
-                            showCompletion(lastWord,false, CodeCompletionType::TypeKeywordComplex);
+                            showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
                             handled=true;
                             return;
                         }

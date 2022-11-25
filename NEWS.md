@@ -8,6 +8,8 @@ Red Panda C++ Version 2.5
   - enhancement: Options -> editor -> custom C/C++ type keywords page
   - change: Default value of option "Editors share one code analyzer" is ON if available physical memory <= 32G
   - change: Default value of option "Auto clear symbols in hidden editors" is ON if number of CPU cores > 8 and "Editors share one code analyzer" is on
+  - enhancement: show completion suggest for "namespace" after "using"
+  - fix: MinGW-w64 gcc displayed as "MinGW GCC"
 
 Red Panda C++ Version 2.4
 
