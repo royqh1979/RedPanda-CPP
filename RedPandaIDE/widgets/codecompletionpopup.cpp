@@ -92,16 +92,22 @@ void CodeCompletionPopup::prepareSearch(
 
     mMemberPhrase = memberExpression.join("");
     mMemberOperator = memberOperator;
-    if (type == CodeCompletionType::ComplexKeyword) {
+    switch(type) {
+    case CodeCompletionType::ComplexKeyword:
         getCompletionListForTypeKeywordComplex(preWord);
-    } else if (type == CodeCompletionType::FunctionWithoutDefinition) {
+        break;
+    case CodeCompletionType::FunctionWithoutDefinition:
         mIncludedFiles = mParser->getFileIncludes(filename);
         getCompletionForFunctionWithoutDefinition(preWord, ownerExpression,memberOperator,memberExpression, filename,line);
-    } else if (preWord.isEmpty()) {
+        break;
+    case CodeCompletionType::Namespaces:
+        mIncludedFiles = mParser->getFileIncludes(filename);
+        getCompletionListForNamespaces(preWord,filename,line);
+        break;
+    default:
         mIncludedFiles = mParser->getFileIncludes(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
     }
-
     setCursor(oldCursor);
 }
 
@@ -900,7 +906,34 @@ void CodeCompletionPopup::getCompletionListForTypeKeywordComplex(const QString &
         addKeyword("char");
     } else if (preWord == "using") {
         addKeyword("namespace");
+    }
+}
 
+void CodeCompletionPopup::getCompletionListForNamespaces(const QString &preWord,
+                                                         const QString& fileName,
+                                                         int line)
+{
+    if (!mParser->enabled())
+        return;
+
+    if (!mParser->freeze())
+        return;
+    {
+        auto action = finally([this]{
+            mParser->unFreeze();
+        });
+        QList<QString> namespaceNames = mParser->namespaces();
+        foreach (const QString& name, namespaceNames) {
+            PStatementList namespaces = mParser->findNamespace(name);
+            foreach(const PStatement& statement, *namespaces) {
+                if (isIncluded(statement->fileName)
+                        || isIncluded(statement->definitionFileName)) {
+                    addStatement(statement,fileName,line);
+                    continue;
+                }
+            }
+
+        }
     }
 }
 

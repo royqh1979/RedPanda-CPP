@@ -149,7 +149,8 @@ enum StatementProperty {
     spInherited = 0x0010,
     spVirtual = 0x0020,
     spOverride = 0x0040,
-    spConstexpr = 0x0080
+    spConstexpr = 0x0080,
+    spFunctionPointer = 0x0100
 };
 
 Q_DECLARE_FLAGS(StatementProperties, StatementProperty)

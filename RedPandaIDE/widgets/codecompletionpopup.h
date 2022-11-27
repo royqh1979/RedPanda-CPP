@@ -40,7 +40,8 @@ private:
 enum class CodeCompletionType {
     Normal,
     ComplexKeyword,
-    FunctionWithoutDefinition
+    FunctionWithoutDefinition,
+    Namespaces
 };
 
 class CodeCompletionListItemDelegate: public QStyledItemDelegate {
@@ -149,6 +150,9 @@ private:
             int line);
 
     void getCompletionListForTypeKeywordComplex(const QString& preWord);
+    void getCompletionListForNamespaces(const QString &preWord,
+                                        const QString& fileName,
+                                        int line);
     void addKeyword(const QString& keyword);
     bool isIncluded(const QString& fileName);
 private:

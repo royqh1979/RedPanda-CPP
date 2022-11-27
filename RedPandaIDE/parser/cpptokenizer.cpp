@@ -187,7 +187,7 @@ QString CppTokenizer::getForInit()
         simplify(s);
         if (!s.isEmpty())
             addToken(s,mCurrentLine,tokenType);
-        if ( (s == "") || (s == ";") || (s==":"))
+        if ( (s == "") || (s == ";") || (s==")") || (s=="("))
             break;
         // : is used in for-each loop
     }

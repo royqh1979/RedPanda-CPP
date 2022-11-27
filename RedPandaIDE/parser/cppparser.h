@@ -145,6 +145,8 @@ public:
 
     const QSet<QString> &projectFiles() const;
 
+    QList<QString> namespaces();
+
 signals:
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
@@ -222,6 +224,10 @@ private:
     bool checkForUsing(KeywordType keywordType);
 
     void checkAndHandleMethodOrVar(KeywordType keywordType);
+
+    QString doFindFirstTemplateParamOf(const QString& fileName,
+                                     const QString& phrase,
+                                     const PStatement& currentScope);
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,

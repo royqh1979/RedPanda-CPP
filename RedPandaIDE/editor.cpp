@@ -735,6 +735,11 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
                         handled=true;
                         return;
+                    } else if (lastWord == "namespace") {
+                        commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
+                        showCompletion(lastWord,false, CodeCompletionType::Namespaces);
+                        handled=true;
+                        return;
                     } else if (CppTypeKeywords.contains(lastWord)) {
                         PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
                         while(currentScope && currentScope->kind==StatementKind::skBlock) {
