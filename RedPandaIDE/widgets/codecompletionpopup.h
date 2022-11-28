@@ -127,11 +127,11 @@ public:
     const QList<PCodeSnippet> &codeSnippets() const;
     void setCodeSnippets(const QList<PCodeSnippet> &newCodeSnippets);
 private:
-    void addChildren(PStatement scopeStatement, const QString& fileName,
+    void addChildren(const PStatement& scopeStatement, const QString& fileName,
                      int line);
-    void addFunctionWithoutDefinitionChildren(PStatement scopeStatement, const QString& fileName,
+    void addFunctionWithoutDefinitionChildren(const PStatement& scopeStatement, const QString& fileName,
                      int line);
-    void addStatement(PStatement statement, const QString& fileName, int line);
+    void addStatement(const PStatement& statement, const QString& fileName, int line);
     void filterList(const QString& member);
     void getCompletionFor(
             const QStringList& ownerExpression,

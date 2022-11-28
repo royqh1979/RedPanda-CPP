@@ -179,7 +179,7 @@ PStatement CodeCompletionPopup::selectedStatement()
         return PStatement();
 }
 
-void CodeCompletionPopup::addChildren(PStatement scopeStatement, const QString &fileName, int line)
+void CodeCompletionPopup::addChildren(const PStatement& scopeStatement, const QString &fileName, int line)
 {
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
       && !isIncluded(scopeStatement->definitionFileName))
@@ -208,7 +208,7 @@ void CodeCompletionPopup::addChildren(PStatement scopeStatement, const QString &
     }
 }
 
-void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(PStatement scopeStatement, const QString &fileName, int line)
+void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement& scopeStatement, const QString &fileName, int line)
 {
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
       && !isIncluded(scopeStatement->definitionFileName))
@@ -242,7 +242,7 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(PStatement scopeS
     }
 }
 
-void CodeCompletionPopup::addStatement(PStatement statement, const QString &fileName, int line)
+void CodeCompletionPopup::addStatement(const PStatement& statement, const QString &fileName, int line)
 {
     if (mAddedStatements.contains(statement->command))
         return;

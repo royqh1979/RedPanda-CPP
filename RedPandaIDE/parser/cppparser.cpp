@@ -173,8 +173,7 @@ PStatement CppParser::findScopeStatement(const QString &filename, int line)
     if (!fileIncludes)
         return PStatement();
 
-    PStatement statement = fileIncludes->scopes.findScopeAtLine(line);
-    return statement;
+    return fileIncludes->scopes.findScopeAtLine(line);
 }
 
 PFileIncludes CppParser::findFileIncludes(const QString &filename, bool deleteIt)
@@ -3531,54 +3530,6 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
 
     PStatement addedVar;
 
-    //we only check the first token to reduce calculations
-//    if (mIndex>=mTokenizer.tokenCount()
-//            || mTokenizer[mIndex]->text.endsWith('.')
-//            || mTokenizer[mIndex]->text.endsWith("->"))  {
-//        //failed to handle
-//        skipNextSemicolon(mIndex);
-//        return ;
-//    }
-
-//    while (mIndex+1<mTokenizer.tokenCount()) {
-//        if (mTokenizer[mIndex]->text=='(') {
-//            if ( mTokenizer[mIndex]->matchIndex<=mTokenizer.tokenCount()
-//                && mTokenizer[mTokenizer[mIndex]->matchIndex]->text=='(') {
-//                //function pointer
-//                break;
-//            }
-//            //error break;
-//            mIndex=indexBackup;
-//            return false;
-//        } else if (mTokenizer[mIndex + 1]->text=='('
-//                    || mTokenizer[mIndex + 1]->text==','
-//                    || mTokenizer[mIndex + 1]->text==';'
-//                    || mTokenizer[mIndex + 1]->text.front()==':'
-//                    || mTokenizer[mIndex + 1]->text=='}'
-//                    || mTokenizer[mIndex + 1]->text.front()=='#'
-//                   || mTokenizer[mIndex + 1]->text=='{') {
-//            //end of type info
-//            break;
-//        } else if (mTokenizer[mIndex]->text!="struct"
-//                && mTokenizer[mIndex]->text!="class"
-//                && mTokenizer[mIndex]->text!="union") {
-//            QString s=mTokenizer[mIndex]->text;
-//            if (s == "extern") {
-//                isExtern = true;
-//            } else if (s == "static") {
-//                isStatic = true;
-//            } else
-//                lastType += ' '+s;
-//        }
-//        mIndex++;
-//    }
-
-//    if (mIndex+1 >= mTokenizer.tokenCount() || lastType.isEmpty()
-//            || lastType.endsWith(':')) {
-//        mIndex=indexBackup;
-//        return false;
-//    }
-
     QString tempType;
     while(mIndex<mTokenizer.tokenCount()) {
         // Skip bit identifiers,
@@ -3588,6 +3539,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
         // as
         // unsigned short bAppReturnCode,reserved,fBusy,fAck
         if (mTokenizer[mIndex]->text.front() == ':') {
+            //handle e.g.: for(auto x:vec)
             if (mIndex+1<mTokenizer.tokenCount()
                     && isIdentifier(mTokenizer[mIndex+1]->text)
                     && isIdentChar(mTokenizer[mIndex+1]->text.back())
@@ -3612,13 +3564,26 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                 }
             }
             addedVar.reset();
-            while ( (mIndex < mTokenizer.tokenCount())
-                    && !(
-                        mTokenizer[mIndex]->text==','
-                        || mTokenizer[mIndex]->text==';'
-                        || mTokenizer[mIndex]->text=='='
-                        ))
-                mIndex++;
+            bool should_exit=false;
+            while (mIndex < mTokenizer.tokenCount()) {
+                switch(mTokenizer[mIndex]->text[0].unicode()) {
+                case ',':
+                case ';':
+                case '=':
+                    should_exit = true;
+                    break;
+                case ')':
+                    mIndex++;
+                    return;
+                case '(':
+                    mIndex=mTokenizer[mIndex]->matchIndex+1;
+                    break;
+                default:
+                    mIndex++;
+                }
+                if (should_exit)
+                    break;
+            }
         } else if (mTokenizer[mIndex]->text==';') {
             break;
         } else if (isWordChar(mTokenizer[mIndex]->text[0])) {
