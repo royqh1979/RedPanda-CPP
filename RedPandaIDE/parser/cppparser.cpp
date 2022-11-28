@@ -2814,7 +2814,7 @@ void CppParser::handleNamespace(KeywordType skipType)
 
         // find next '{' or ';'
         mIndex = indexOfNextSemicolonOrLeftBrace(mIndex);
-        if (mTokenizer[mIndex]->text=='{')
+        if (mIndex<mTokenizer.tokenCount() && mTokenizer[mIndex]->text=='{')
             addSoloScopeLevel(namespaceStatement,startLine);
         //skip it
         mIndex++;

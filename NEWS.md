@@ -11,6 +11,7 @@ Red Panda C++ Version 2.5
   - enhancement: show completion suggest for "namespace" after "using"
   - fix: MinGW-w64 gcc displayed as "MinGW GCC"
   - enhancement: Deduce type info for "auto" in some simple cases.
+  - fix: crash when no semicolon or left brace after the keyword "namespace"
 
 Red Panda C++ Version 2.4
 
