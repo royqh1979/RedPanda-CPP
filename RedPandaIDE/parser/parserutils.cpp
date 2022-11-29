@@ -32,6 +32,7 @@ QSet<QString> CKeywords;
 QSet<QString> STLPointers;
 QSet<QString> STLContainers;
 QSet<QString> STLElementMethods;
+QSet<QString> STLIterators;
 QSet<QString> MemberOperators;
 QSet<QString> IOManipulators;
 
@@ -275,14 +276,20 @@ void initParser()
     STLElementMethods.insert("front");
     STLElementMethods.insert("top");
 
+    //STL iterator
+    STLIterators.insert("iterator");
+    STLIterators.insert("const_iterator");
+    STLIterators.insert("reverse_iterator");
+    STLIterators.insert("const_reverse_iterator");
+
     //STL pointers
     STLPointers.insert("std::unique_ptr");
     STLPointers.insert("std::auto_ptr");
     STLPointers.insert("std::shared_ptr");
     STLPointers.insert("std::weak_ptr");
-    STLPointers.insert("__gnu_cxx::__normal_iterator");
-    STLPointers.insert("std::reverse_iterator");
-    STLPointers.insert("std::iterator");
+    //STLPointers.insert("__gnu_cxx::__normal_iterator");
+    //STLPointers.insert("std::reverse_iterator");
+    //STLPointers.insert("std::iterator");
 
     //C/CPP preprocessor directives
     CppDirectives.append("#include");
@@ -568,14 +575,18 @@ EvalStatement::EvalStatement(
         const QString &baseType,
         EvalStatementKind kind,
         const PStatement &baseStatement,
-        const PStatement &typeStatement,
-        int pointerLevel)
+        const PStatement& typeStatement,
+        const PStatement& effectiveTypeStatement,
+        int pointerLevel,
+        const QString& templateParams)
 {
     this->baseType = baseType;
     this->kind = kind;
     this->baseStatement = baseStatement;
-    this->effectiveTypeStatement = typeStatement;
+    this->typeStatement = typeStatement;
+    this->effectiveTypeStatement = effectiveTypeStatement;
     this->pointerLevel = pointerLevel;
+    this->templateParams = templateParams;
 }
 
 void EvalStatement::assignType(const PEvalStatement &typeStatement)

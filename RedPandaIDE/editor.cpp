@@ -2141,7 +2141,7 @@ QStringList Editor::getExpressionAtPosition(
             case LastSymbolType::MatchingAngleQuotation:
                 if (token=="<") {
                     if (symbolMatchingLevel==0) {
-                        lastSymbolType=LastSymbolType::MatchingAngleQuotation;
+                        lastSymbolType=LastSymbolType::AngleQuotationMatched;
                     } else {
                         symbolMatchingLevel--;
                     }

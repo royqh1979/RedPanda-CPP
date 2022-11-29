@@ -239,16 +239,20 @@ using PEvalStatement = std::shared_ptr<EvalStatement>;
  */
 struct EvalStatement {
     QString baseType; // type "int"
+    QString templateParams;
     EvalStatementKind kind; // namespace / type / variable / function / literal
     int pointerLevel; // 0 for "int", 1 for "int *", 2 for "int **"...
     PStatement baseStatement; // if not literal or primitive type, the base statement
+    PStatement typeStatement;
     PStatement effectiveTypeStatement;
 public:
     EvalStatement (const QString& baseType,
-                      EvalStatementKind kind,
-                      const PStatement& baseStatement,
-                      const PStatement& typeStatement,
-                      int pointerLevel = 0);
+                   EvalStatementKind kind,
+                   const PStatement& baseStatement,
+                   const PStatement& typeStatement,
+                   const PStatement& effectiveTypeStatement,
+                   int pointerLevel=0,
+                   const QString& templateParams=QString());
     void assignType(const PEvalStatement& typeStatement);
 
 };
@@ -300,6 +304,7 @@ extern QSet<QString> CppTypeKeywords;
 extern QSet<QString> STLPointers;
 extern QSet<QString> STLContainers;
 extern QSet<QString> STLElementMethods;
+extern QSet<QString> STLIterators;
 extern QSet<QString> MemberOperators;
 extern QSet<QString> IOManipulators;
 

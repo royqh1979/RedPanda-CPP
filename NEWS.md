@@ -10,8 +10,9 @@ Red Panda C++ Version 2.5
   - change: Default value of option "Auto clear symbols in hidden editors" is ON if number of CPU cores > 8 and "Editors share one code analyzer" is on
   - enhancement: show completion suggest for "namespace" after "using"
   - fix: MinGW-w64 gcc displayed as "MinGW GCC"
-  - enhancement: Deduce type info for "auto" in some simple cases.
+  - enhancement: Deduce type info for "auto" in some simple cases for stl containers.
   - fix: crash when no semicolon or left brace after the keyword "namespace"
+  - fix: can't correctly show completion suggest for type with template parameters
 
 Red Panda C++ Version 2.4
 

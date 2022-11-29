@@ -391,7 +391,9 @@ private:
             const PStatement& scope,
             const QString& type,
             QString& baseType,
-            int& pointerLevel);
+            PStatement& typeStatement,
+            int& pointerLevel,
+            QString& templateParams);
 
     int getBracketEnd(const QString& s, int startAt);
     StatementClassScope getClassScope(const QString& text);

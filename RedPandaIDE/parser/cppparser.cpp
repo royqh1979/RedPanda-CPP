@@ -3685,9 +3685,11 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                         PEvalStatement(),
                                         true);
                 if(aliasStatement) {
-                    if (aliasStatement->effectiveTypeStatement)
+                    if (aliasStatement->effectiveTypeStatement) {
                         addedVar->type = aliasStatement->effectiveTypeStatement->fullName;
-                    else
+                        if (!addedVar->type.endsWith(">"))
+                            addedVar->type += aliasStatement->templateParams;
+                    } else
                         addedVar->type = aliasStatement->baseType;
                     if (aliasStatement->pointerLevel>0)
                         addedVar->type += QString(aliasStatement->pointerLevel,'*');
@@ -3728,9 +3730,11 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                         PEvalStatement(),
                                         true);
                 if(aliasStatement  && aliasStatement->effectiveTypeStatement) {
-                    if (aliasStatement->effectiveTypeStatement)
+                    if (aliasStatement->effectiveTypeStatement) {
                         addedVar->type = aliasStatement->effectiveTypeStatement->fullName;
-                    else
+                        if (!addedVar->type.endsWith(">"))
+                            addedVar->type += aliasStatement->templateParams;
+                    } else
                         addedVar->type = aliasStatement->baseType;
                     if (aliasStatement->pointerLevel>0)
                         addedVar->type += QString(aliasStatement->pointerLevel,'*');
@@ -4102,19 +4106,36 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                     freeScoped);
         if (result) {
             //todo: STL container;
+
             if (result->pointerLevel==0) {
-                PStatement typeStatement = result->effectiveTypeStatement;
-                if ((typeStatement)
+                //STL smart pointers
+                if (result->typeStatement
+                        && STLIterators.contains(result->typeStatement->command)
+                ) {
+                    PStatement parentScope = result->typeStatement->parentScope.lock();
+                    if (STLContainers.contains(parentScope->fullName)) {
+                        QString typeName=findFirstTemplateParamOf(fileName,result->templateParams, parentScope);
+    //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                        PStatement typeStatement=findTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (typeStatement) {
+                            result = doCreateEvalType(fileName,typeStatement);
+                            result->kind = EvalStatementKind::Variable;
+                        }
+                    }
+                } else {
+                    PStatement typeStatement = result->effectiveTypeStatement;
+                    if ((typeStatement)
                         && STLPointers.contains(typeStatement->fullName)
                         && result->kind == EvalStatementKind::Variable
                         && result->baseStatement) {
-                    PStatement parentScope = result->baseStatement->parentScope.lock();
-                    QString typeName=findFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
-//                    qDebug()<<"typeName"<<typeName;
-                    typeStatement=findTypeDefinitionOf(fileName, typeName,parentScope);
-                    if (typeStatement) {
-                        result = doCreateEvalType(fileName,typeStatement);
-                        result->kind = EvalStatementKind::Variable;
+                        PStatement parentScope = result->baseStatement->parentScope.lock();
+                        QString typeName=findFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+    //                    qDebug()<<"typeName"<<typeName;
+                        typeStatement=findTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (typeStatement) {
+                            result = doCreateEvalType(fileName,typeStatement);
+                            result->kind = EvalStatementKind::Variable;
+                        }
                     }
                 }
             } else
@@ -4443,18 +4464,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 if (!previousResult) {
                     statement = findStatementInScope(phraseExpression[pos],PStatement());
                 } else {
-//                    if (previousResult->effectiveTypeStatement) {
-//                        qDebug()<<phraseExpression[pos]<<previousResult->effectiveTypeStatement->fullName;
-//                    } else {
-//                        qDebug()<<phraseExpression[pos]<<"no type";
-//                    }
                     statement = findStatementInScope(phraseExpression[pos],previousResult->effectiveTypeStatement);
-//                    if (!statement) {
-//                        qDebug()<<"not found!";
-//                    } else {
-//                        qDebug()<<statement->fullName;
-//                        qDebug()<<statement->kind;
-//                    }
                 }
             }
             pos++;
@@ -4487,6 +4497,17 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                     break;
                 default:
                     result = PEvalStatement();
+                }
+                if (result
+                        && result->typeStatement
+                        && STLIterators.contains(result->typeStatement->command)
+                        && previousResult) {
+                    PStatement parentStatement = result->typeStatement->parentScope.lock();
+                    if (parentStatement
+                            && STLContainers.contains(parentStatement->fullName)) {
+//                        result->baseType = parentStatement->fullName+previousResult->templateParams+result->typeStatement->command;
+                        result->templateParams = previousResult->templateParams;
+                    }
                 }
             }
         } else if (isIntegerLiteral(phraseExpression[pos])) {
@@ -4525,6 +4546,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
 //    if (!result) {
 //        qDebug()<<"not found !!!!";
 //    }
+
     return result;
 }
 
@@ -4536,6 +4558,7 @@ PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceState
                 namespaceStatement->fullName,
                 EvalStatementKind::Namespace,
                 PStatement(),
+                namespaceStatement,
                 namespaceStatement);
 }
 
@@ -4546,24 +4569,31 @@ PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatem
     if (typeStatement->kind == StatementKind::skTypedef) {
         QString baseType;
         int pointerLevel=0;
-        PStatement statement  = doParseEvalTypeInfo(
+        QString templateParams;
+        PStatement tempStatement;
+        PStatement effetiveTypeStatement  = doParseEvalTypeInfo(
                     fileName,
                     typeStatement->parentScope.lock(),
                     typeStatement->type + typeStatement->args,
                     baseType,
-                    pointerLevel);
+                    tempStatement,
+                    pointerLevel,
+                    templateParams);
         return std::make_shared<EvalStatement>(
                     baseType,
                     EvalStatementKind::Type,
                     PStatement(),
-                    typeStatement,                    
-                    pointerLevel
+                    typeStatement,
+                    effetiveTypeStatement,
+                    pointerLevel,
+                    templateParams
                     );
     } else {
         return std::make_shared<EvalStatement>(
                 typeStatement->fullName,
                 EvalStatementKind::Type,
                 PStatement(),
+                typeStatement,
                 typeStatement);
     }
 }
@@ -4574,6 +4604,7 @@ PEvalStatement CppParser::doCreateEvalType(const QString &primitiveType)
                 primitiveType,
                 EvalStatementKind::Type,
                 PStatement(),
+                PStatement(),
                 PStatement());
 }
 
@@ -4583,19 +4614,25 @@ PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStateme
         return PEvalStatement();
     QString baseType;
     int pointerLevel=0;
-    PStatement typeStatement  = doParseEvalTypeInfo(
+    QString templateParams;
+    PStatement typeStatement;
+    PStatement effetiveTypeStatement  = doParseEvalTypeInfo(
                 fileName,
                 varStatement->parentScope.lock(),
-                varStatement->type+ varStatement->args,
+                varStatement->type+varStatement->args,
                 baseType,
-                pointerLevel);
+                typeStatement,
+                pointerLevel,
+                templateParams);
 //    qDebug()<<"parse ..."<<baseType<<pointerLevel;
     return std::make_shared<EvalStatement>(
                 baseType,
                 EvalStatementKind::Variable,
                 varStatement,
                 typeStatement,
-                pointerLevel
+                effetiveTypeStatement,
+                pointerLevel,
+                templateParams
                 );
 }
 
@@ -4605,18 +4642,24 @@ PEvalStatement CppParser::doCreateEvalFunction(const QString &fileName, PStateme
         return PEvalStatement();
     QString baseType;
     int pointerLevel=0;
-    PStatement typeStatement  = doParseEvalTypeInfo(
+    QString templateParams;
+    PStatement typeStatement;
+    PStatement effetiveTypeStatement = doParseEvalTypeInfo(
                 fileName,
                 funcStatement->parentScope.lock(),
                 funcStatement->type,
                 baseType,
-                pointerLevel);
+                typeStatement,
+                pointerLevel,
+                templateParams);
     return std::make_shared<EvalStatement>(
                 baseType,
                 EvalStatementKind::Function,
                 funcStatement,
                 typeStatement,
-                pointerLevel
+                effetiveTypeStatement,
+                pointerLevel,
+                templateParams
                 );
 }
 
@@ -4625,6 +4668,7 @@ PEvalStatement CppParser::doCreateEvalLiteral(const QString &type)
     return std::make_shared<EvalStatement>(
                 type,
                 EvalStatementKind::Literal,
+                PStatement(),
                 PStatement(),
                 PStatement());
 }
@@ -4652,7 +4696,9 @@ PStatement CppParser::doParseEvalTypeInfo(
         const PStatement &scope,
         const QString &type,
         QString &baseType,
-        int &pointerLevel)
+        PStatement& typeStatement,
+        int &pointerLevel,
+        QString& templateParams)
 {
     // Remove pointer stuff from type
     QString s = type;
@@ -4678,6 +4724,7 @@ PStatement CppParser::doParseEvalTypeInfo(
             } else if (token == "<") {
                 templateLevel++;
                 baseType += token;
+                templateParams += token;
             } else if (token == "::") {
                 baseType += token;
             }
@@ -4694,6 +4741,7 @@ PStatement CppParser::doParseEvalTypeInfo(
                 templateLevel--;
             }
             baseType += token;
+            templateParams += token;
         }
         highlighter.next();
     }
@@ -4705,9 +4753,8 @@ PStatement CppParser::doParseEvalTypeInfo(
         }
         position--;
     }
-    PStatement statement = findStatementOf(fileName,baseType,scope,true);
-    return getTypeDef(statement,fileName,baseType);
-
+    typeStatement = findStatementOf(fileName,baseType,scope,true);
+    return getTypeDef(typeStatement,fileName,baseType);
 }
 
 int CppParser::getBracketEnd(const QString &s, int startAt)
