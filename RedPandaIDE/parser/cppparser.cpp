@@ -3545,7 +3545,9 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                     && isIdentChar(mTokenizer[mIndex+1]->text.back())
                     && addedVar
                     && !(addedVar->properties & StatementProperty::spFunctionPointer)
-                    && addedVar->type == "auto") {
+                    && (addedVar->type == "auto"
+                        || addedVar->type == "const auto"
+                        || addedVar->type == "const auto &")) {
                 QStringList phraseExpression;
                 phraseExpression.append(mTokenizer[mIndex+1]->text);
                 int pos = 0;
@@ -3557,7 +3559,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                         true);
                 if(aliasStatement && aliasStatement->effectiveTypeStatement
                         && STLContainers.contains(aliasStatement->effectiveTypeStatement->fullName)) {
-                    QString type=doFindFirstTemplateParamOf(mCurrentFile,aliasStatement->baseType,
+                    QString type=doFindFirstTemplateParamOf(mCurrentFile,aliasStatement->templateParams,
                                                           getCurrentScope());
                     if (!type.isEmpty())
                         addedVar->type = type;
@@ -3699,7 +3701,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                             }
                         }
                     } else
-                        addedVar->type = aliasStatement->baseType;
+                        addedVar->type = aliasStatement->baseType + aliasStatement->templateParams;
                     if (aliasStatement->pointerLevel>0)
                         addedVar->type += QString(aliasStatement->pointerLevel,'*');
                 }
@@ -3752,7 +3754,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                             }
                         }
                     } else
-                        addedVar->type = aliasStatement->baseType;
+                        addedVar->type = aliasStatement->baseType + aliasStatement->templateParams;
                     if (aliasStatement->pointerLevel>0)
                         addedVar->type += QString(aliasStatement->pointerLevel,'*');
                 }
@@ -4739,7 +4741,6 @@ PStatement CppParser::doParseEvalTypeInfo(
                 bracketLevel++;
             } else if (token == "<") {
                 templateLevel++;
-                baseType += token;
                 templateParams += token;
             } else if (token == "::") {
                 baseType += token;
@@ -4756,7 +4757,6 @@ PStatement CppParser::doParseEvalTypeInfo(
             } else if (token == ">") {
                 templateLevel--;
             }
-            baseType += token;
             templateParams += token;
         }
         highlighter.next();

@@ -279,6 +279,8 @@ void initParser()
     //STL iterator
     STLIterators.insert("iterator");
     STLIterators.insert("const_iterator");
+    STLIterators.insert("const_local_iterator");
+    STLIterators.insert("local_iterator");
     STLIterators.insert("reverse_iterator");
     STLIterators.insert("const_reverse_iterator");
 
