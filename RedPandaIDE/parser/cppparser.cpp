@@ -3689,6 +3689,15 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                         addedVar->type = aliasStatement->effectiveTypeStatement->fullName;
                         if (!addedVar->type.endsWith(">"))
                             addedVar->type += aliasStatement->templateParams;
+                        if (aliasStatement->typeStatement
+                                && STLIterators.contains(aliasStatement->typeStatement->command)
+                                && !aliasStatement->templateParams.isEmpty()) {
+                            PStatement parentStatement = aliasStatement->typeStatement->parentScope.lock();
+                            if (parentStatement
+                                    && STLContainers.contains(parentStatement->fullName)) {
+                                addedVar->type = parentStatement->fullName+aliasStatement->templateParams+"::"+aliasStatement->typeStatement->command;
+                            }
+                        }
                     } else
                         addedVar->type = aliasStatement->baseType;
                     if (aliasStatement->pointerLevel>0)
@@ -3734,6 +3743,14 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                         addedVar->type = aliasStatement->effectiveTypeStatement->fullName;
                         if (!addedVar->type.endsWith(">"))
                             addedVar->type += aliasStatement->templateParams;
+                        if (aliasStatement->typeStatement
+                                && STLIterators.contains(aliasStatement->typeStatement->command)) {
+                            PStatement parentStatement = aliasStatement->typeStatement->parentScope.lock();
+                            if (parentStatement
+                                    && STLContainers.contains(parentStatement->fullName)) {
+                                addedVar->type = parentStatement->fullName+aliasStatement->templateParams+"::"+aliasStatement->typeStatement->command;
+                            }
+                        }
                     } else
                         addedVar->type = aliasStatement->baseType;
                     if (aliasStatement->pointerLevel>0)
@@ -4505,7 +4522,6 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                     PStatement parentStatement = result->typeStatement->parentScope.lock();
                     if (parentStatement
                             && STLContainers.contains(parentStatement->fullName)) {
-//                        result->baseType = parentStatement->fullName+previousResult->templateParams+result->typeStatement->command;
                         result->templateParams = previousResult->templateParams;
                     }
                 }
