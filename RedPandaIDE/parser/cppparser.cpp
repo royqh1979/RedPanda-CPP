@@ -1082,18 +1082,29 @@ QString CppParser::getFirstTemplateParam(const PStatement& statement,
     return findFirstTemplateParamOf(filename,statement->type, currentScope);
 }
 
-int CppParser::getFirstTemplateParamEnd(const QString &s, int startAt)
+int CppParser::getTemplateParamStart(const QString &s, int startAt, int index)
 {
+    int i = startAt+1;
+    int count=0;
+    while (count<index) {
+        i = getTemplateParamEnd(s,i) + 2;
+        count++;
+    }
+    return i;
+}
+
+int CppParser::getTemplateParamEnd(const QString &s, int startAt) {
     int i = startAt;
-    int level = 0; // assume we start on top of '<'
+    int level = 1; // pretend we start on top of '<'
     while (i < s.length()) {
         switch (s[i].unicode()) {
         case '<':
             level++;
             break;
         case ',':
-            if (level == 1)
+            if (level == 1) {
                 return i;
+            }
             break;
         case '>':
             level--;
@@ -2006,12 +2017,19 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
 
 QString CppParser::doFindFirstTemplateParamOf(const QString &fileName, const QString &phrase, const PStatement &currentScope)
 {
+    return doFindTemplateParamOf(fileName,phrase,0,currentScope);
+}
+
+QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString &phrase, int index, const PStatement &currentScope)
+{
     // Remove pointer stuff from type
     QString s = phrase; // 'Type' is a keyword
     int i = s.indexOf('<');
     if (i>=0) {
-        int t=getFirstTemplateParamEnd(s,i);
-        return s.mid(i+1,t-i-1);
+        i=getTemplateParamStart(s,i,index);
+        int t=getTemplateParamEnd(s,i);
+        qDebug()<<index<<s<<s.mid(i,t-i)<<i<<t;
+        return s.mid(i,t-i);
     }
     int position = s.length()-1;
     while ((position >= 0) && (s[position] == '*'
@@ -3545,9 +3563,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                     && isIdentChar(mTokenizer[mIndex+1]->text.back())
                     && addedVar
                     && !(addedVar->properties & StatementProperty::spFunctionPointer)
-                    && (addedVar->type == "auto"
-                        || addedVar->type == "const auto"
-                        || addedVar->type == "const auto &")) {
+                    && AutoTypes.contains(addedVar->type)) {
                 QStringList phraseExpression;
                 phraseExpression.append(mTokenizer[mIndex+1]->text);
                 int pos = 0;
@@ -3559,10 +3575,14 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                         true);
                 if(aliasStatement && aliasStatement->effectiveTypeStatement
                         && STLContainers.contains(aliasStatement->effectiveTypeStatement->fullName)) {
-                    QString type=doFindFirstTemplateParamOf(mCurrentFile,aliasStatement->templateParams,
-                                                          getCurrentScope());
-                    if (!type.isEmpty())
-                        addedVar->type = type;
+                    if (STLMaps.contains(aliasStatement->effectiveTypeStatement->fullName)) {
+                        addedVar->type = "std::pair"+aliasStatement->templateParams;
+                    } else {
+                        QString type=doFindFirstTemplateParamOf(mCurrentFile,aliasStatement->templateParams,
+                                                              getCurrentScope());
+                        if (!type.isEmpty())
+                            addedVar->type = type;
+                    }
                 }
             }
             addedVar.reset();
@@ -3661,7 +3681,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                     && isIdentifier(mTokenizer[mIndex+1]->text)
                     && addedVar
                     && !(addedVar->properties & StatementProperty::spFunctionPointer)
-                    && addedVar->type == "auto") {
+                    && AutoTypes.contains(addedVar->type)) {
                 int pos = 0;
 
                 int endIndex = skipAssignment(mIndex, mTokenizer.tokenCount());
@@ -3716,7 +3736,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                     && isIdentifier(mTokenizer[mIndex+1]->text)
                     && addedVar
                     && !(addedVar->properties & StatementProperty::spFunctionPointer)
-                    && addedVar->type == "auto") {
+                    && AutoTypes.contains(addedVar->type)) {
                 int pos = 0;
                 int endIndex = mTokenizer[mIndex]->matchIndex;
                 QStringList phraseExpression;
@@ -4503,7 +4523,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                     break;
                 case StatementKind::skVariable:
                 case StatementKind::skParameter:
-                    result = doCreateEvalVariable(fileName,statement);
+                    result = doCreateEvalVariable(fileName,statement, previousResult?previousResult->templateParams:"",scope);
                     break;
                 case StatementKind::skEnumType:
                 case StatementKind::skClass:
@@ -4626,7 +4646,11 @@ PEvalStatement CppParser::doCreateEvalType(const QString &primitiveType)
                 PStatement());
 }
 
-PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStatement varStatement)
+PEvalStatement CppParser::doCreateEvalVariable(
+        const QString &fileName,
+        const PStatement& varStatement,
+        const QString& baseTemplateParams,
+        const PStatement& scope)
 {
     if (!varStatement)
         return PEvalStatement();
@@ -4634,7 +4658,29 @@ PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStateme
     int pointerLevel=0;
     QString templateParams;
     PStatement typeStatement;
-    PStatement effetiveTypeStatement  = doParseEvalTypeInfo(
+    PStatement effectiveTypeStatement;
+    //todo: ugly implementation for std::pair
+    if (varStatement->fullName == "std::pair::first") {
+        effectiveTypeStatement = doParseEvalTypeInfo(
+                fileName,
+                scope,
+                doFindFirstTemplateParamOf(fileName,baseTemplateParams,scope),
+                baseType,
+                typeStatement,
+                pointerLevel,
+                templateParams);
+    } else if (varStatement->fullName == "std::pair::second") {
+        effectiveTypeStatement = doParseEvalTypeInfo(
+                fileName,
+                scope,
+                doFindTemplateParamOf(fileName,baseTemplateParams,1,scope),
+                baseType,
+                typeStatement,
+                pointerLevel,
+                templateParams);
+
+    } else {
+        effectiveTypeStatement = doParseEvalTypeInfo(
                 fileName,
                 varStatement->parentScope.lock(),
                 varStatement->type+varStatement->args,
@@ -4642,19 +4688,22 @@ PEvalStatement CppParser::doCreateEvalVariable(const QString &fileName, PStateme
                 typeStatement,
                 pointerLevel,
                 templateParams);
+    }
 //    qDebug()<<"parse ..."<<baseType<<pointerLevel;
     return std::make_shared<EvalStatement>(
                 baseType,
                 EvalStatementKind::Variable,
                 varStatement,
                 typeStatement,
-                effetiveTypeStatement,
+                effectiveTypeStatement,
                 pointerLevel,
                 templateParams
                 );
 }
 
-PEvalStatement CppParser::doCreateEvalFunction(const QString &fileName, PStatement funcStatement)
+PEvalStatement CppParser::doCreateEvalFunction(
+        const QString &fileName,
+        const PStatement& funcStatement)
 {
     if (!funcStatement)
         return PEvalStatement();

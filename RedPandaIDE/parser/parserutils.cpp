@@ -31,10 +31,12 @@ QSet<QString> CppTypeKeywords;
 QSet<QString> CKeywords;
 QSet<QString> STLPointers;
 QSet<QString> STLContainers;
+QSet<QString> STLMaps;
 QSet<QString> STLElementMethods;
 QSet<QString> STLIterators;
 QSet<QString> MemberOperators;
 QSet<QString> IOManipulators;
+QSet<QString> AutoTypes;
 
 Q_GLOBAL_STATIC(QSet<QString>,CppHeaderExts)
 Q_GLOBAL_STATIC(QSet<QString>,CppSourceExts)
@@ -270,6 +272,12 @@ void initParser()
 
     STLContainers.insert("std::span");
 
+    STLMaps.insert("std::map");
+    STLMaps.insert("std::multilist");
+    STLMaps.insert("std::multimap");
+    STLMaps.insert("std::unordered_map");
+    STLMaps.insert("std::unordered_multimap");
+
     //STL element access methods
     STLElementMethods.insert("at");
     STLElementMethods.insert("back");
@@ -292,6 +300,11 @@ void initParser()
     //STLPointers.insert("__gnu_cxx::__normal_iterator");
     //STLPointers.insert("std::reverse_iterator");
     //STLPointers.insert("std::iterator");
+
+    AutoTypes.insert("auto");
+    AutoTypes.insert("auto &");
+    AutoTypes.insert("const auto");
+    AutoTypes.insert("const auto &");
 
     //C/CPP preprocessor directives
     CppDirectives.append("#include");

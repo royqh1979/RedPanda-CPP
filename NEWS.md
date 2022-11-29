@@ -13,6 +13,7 @@ Red Panda C++ Version 2.5
   - enhancement: Deduce type info for "auto" in some simple cases for stl containers.
   - fix: crash when no semicolon or left brace after the keyword "namespace"
   - fix: can't correctly show completion suggest for type with template parameters
+  - enhancement: show compltion suggest for std::pair::first and std::pair second
 
 Red Panda C++ Version 2.4
 

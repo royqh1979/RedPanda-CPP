@@ -228,6 +228,10 @@ private:
     QString doFindFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
                                      const PStatement& currentScope);
+    QString doFindTemplateParamOf(const QString& fileName,
+                                     const QString& phrase,
+                                     int index,
+                                     const PStatement& currentScope);
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
@@ -322,8 +326,12 @@ private:
     PEvalStatement doCreateEvalType(const QString& fileName,const PStatement& typeStatement);
     PEvalStatement doCreateEvalType(const QString& primitiveType);
 
-    PEvalStatement doCreateEvalVariable(const QString& fileName, PStatement varStatement);
-    PEvalStatement doCreateEvalFunction(const QString& fileName, PStatement funcStatement);
+    PEvalStatement doCreateEvalVariable(
+            const QString& fileName,
+            const PStatement& varStatement,
+            const QString& baseTemplateParams,
+            const PStatement& scope);
+    PEvalStatement doCreateEvalFunction(const QString& fileName, const PStatement& funcStatement);
     PEvalStatement doCreateEvalLiteral(const QString& type);
     void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol);
 
@@ -404,7 +412,8 @@ private:
     PStatement getCurrentScope(); // gets last item from last level
     QString getFirstTemplateParam(const PStatement& statement, const QString& filename,
                                   const QString& phrase, const PStatement& currentScope);
-    int getFirstTemplateParamEnd(const QString& s, int startAt);
+    int getTemplateParamStart(const QString& s, int startAt, int index);
+    int getTemplateParamEnd(const QString& s, int startAt);
 
     void getFullNamespace(
             const QString& phrase,

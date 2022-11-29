@@ -303,10 +303,12 @@ extern QSet<QString> CKeywords;
 extern QSet<QString> CppTypeKeywords;
 extern QSet<QString> STLPointers;
 extern QSet<QString> STLContainers;
+extern QSet<QString> STLMaps;
 extern QSet<QString> STLElementMethods;
 extern QSet<QString> STLIterators;
 extern QSet<QString> MemberOperators;
 extern QSet<QString> IOManipulators;
+extern QSet<QString> AutoTypes;
 
 void initParser();
 
