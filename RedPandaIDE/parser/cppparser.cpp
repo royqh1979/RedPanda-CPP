@@ -2028,7 +2028,7 @@ QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString 
     if (i>=0) {
         i=getTemplateParamStart(s,i,index);
         int t=getTemplateParamEnd(s,i);
-        qDebug()<<index<<s<<s.mid(i,t-i)<<i<<t;
+        //qDebug()<<index<<s<<s.mid(i,t-i)<<i<<t;
         return s.mid(i,t-i);
     }
     int position = s.length()-1;
