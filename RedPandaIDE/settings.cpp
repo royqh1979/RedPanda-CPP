@@ -4002,31 +4002,31 @@ void Settings::CodeCompletion::doLoad()
     bool shouldShare= true;
     bool doClear = false;
 
-#ifdef Q_OS_WIN
-    MEMORYSTATUSEX statex;
+//#ifdef Q_OS_WIN
+//    MEMORYSTATUSEX statex;
 
-    statex.dwLength = sizeof (statex);
+//    statex.dwLength = sizeof (statex);
 
-    GlobalMemoryStatusEx (&statex);
+//    GlobalMemoryStatusEx (&statex);
 
-    if (statex.ullAvailPhys > (long long int)24*1024*1024*1024) {
-        shouldShare = false;
-    }
+//    if (statex.ullAvailPhys > (long long int)32*1024*1024*1024) {
+//        shouldShare = false;
+//    }
 
-    if (shouldShare) {
-        SYSTEM_INFO info;
-        GetSystemInfo(&info);
-        if (info.dwNumberOfProcessors>8 && info.dwProcessorType) {
-            doClear = true;
-        }
-    }
-#elif defined(Q_OS_LINUX)
-    struct sysinfo si;
-    sysinfo(&si);
-    if (si.freeram > (long long int)24*1024*1024*1024) {
-        shouldShare = false;
-    }
-#endif
+////    if (shouldShare) {
+////        SYSTEM_INFO info;
+////        GetSystemInfo(&info);
+////        if (info.dwNumberOfProcessors>8 && info.dwProcessorType) {
+////            doClear = true;
+////        }
+////    }
+//#elif defined(Q_OS_LINUX)
+//    struct sysinfo si;
+//    sysinfo(&si);
+//    if (si.freeram > (long long int)24*1024*1024*1024) {
+//        shouldShare = false;
+//    }
+//#endif
     mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
     mShareParser = boolValue("share_parser",shouldShare);
 }

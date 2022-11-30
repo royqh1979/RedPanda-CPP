@@ -6,8 +6,8 @@ Red Panda C++ Version 2.5
   - enhancement: project's custom compile include/lib/bin directory is under folder of the app, save them using the path relative to the app
   - enhancement: slightly reduce memory usage   
   - enhancement: Options -> editor -> custom C/C++ type keywords page
-  - change: Default value of option "Editors share one code analyzer" is ON if available physical memory <= 32G
-  - change: Default value of option "Auto clear symbols in hidden editors" is ON if number of CPU cores > 8 and "Editors share one code analyzer" is on
+  - change: Default value of option "Editors share one code analyzer" is ON
+  - change: Default value of option "Auto clear symbols in hidden editors" is OFF
   - enhancement: show completion suggest for "namespace" after "using"
   - fix: MinGW-w64 gcc displayed as "MinGW GCC"
   - enhancement: Deduce type info for "auto" in some simple cases for stl containers.

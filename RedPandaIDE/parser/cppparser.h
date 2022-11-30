@@ -410,8 +410,8 @@ private:
     int getCurrentBlockEndSkip();
     int getCurrentInlineNamespaceEndSkip();
     PStatement getCurrentScope(); // gets last item from last level
-    QString getFirstTemplateParam(const PStatement& statement, const QString& filename,
-                                  const QString& phrase, const PStatement& currentScope);
+    QString getTemplateParam(const PStatement& statement, const QString& filename,
+                                  const QString& phrase, int index, const PStatement& currentScope);
     int getTemplateParamStart(const QString& s, int startAt, int index);
     int getTemplateParamEnd(const QString& s, int startAt);
 

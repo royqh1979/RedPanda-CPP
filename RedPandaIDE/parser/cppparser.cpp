@@ -1068,10 +1068,11 @@ QString CppParser::prettyPrintStatement(const PStatement& statement, const QStri
     return result;
 }
 
-QString CppParser::getFirstTemplateParam(const PStatement& statement,
-                                         const QString& filename,
-                                         const QString& phrase,
-                                         const PStatement& currentScope)
+QString CppParser::getTemplateParam(const PStatement& statement,
+                                    const QString& filename,
+                                    const QString& phrase,
+                                    int index,
+                                    const PStatement& currentScope)
 {
     if (!statement)
         return "";
@@ -1079,7 +1080,7 @@ QString CppParser::getFirstTemplateParam(const PStatement& statement,
         return "";
     if (statement->type == phrase) // prevent infinite loop
         return "";
-    return findFirstTemplateParamOf(filename,statement->type, currentScope);
+    return doFindTemplateParamOf(filename,statement->type,index,currentScope);
 }
 
 int CppParser::getTemplateParamStart(const QString &s, int startAt, int index)
@@ -2042,7 +2043,7 @@ QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString 
     PStatement scopeStatement = currentScope;
 
     PStatement statement = findStatementOf(fileName,s,currentScope);
-    return getFirstTemplateParam(statement,fileName, phrase, currentScope);
+    return getTemplateParam(statement,fileName, phrase,index, currentScope);
 }
 
 int CppParser::getCurrentBlockEndSkip()
@@ -3248,6 +3249,7 @@ void CppParser::handleStructs(bool isTypedef)
 
         // normal class/struct decl
     } else {
+        bool templateSpecialization=false;
         PStatement firstSynonym;
         // Add class/struct name BEFORE opening brace
         if (mTokenizer[mIndex]->text.front() != '{') {
