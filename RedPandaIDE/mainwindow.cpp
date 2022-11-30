@@ -645,17 +645,31 @@ void MainWindow::updateProjectActions()
 
 void MainWindow::updateCompileActions()
 {
-    bool hasProject = (mProject!=nullptr);
-    bool editorCanCompile = false;
+    bool forProject=false;
+    bool canCompile = false;
+    bool canRun = false;
     Editor * e = mEditorList->getEditor();
     if (e) {
-        FileType fileType = getFileType(e->filename());
-        if (fileType == FileType::CSource
-                || fileType == FileType::CppSource || e->isNew())
-            editorCanCompile = true;
+        if (!e->inProject()) {
+            FileType fileType = getFileType(e->filename());
+            if (fileType == FileType::CSource
+                    || fileType == FileType::CppSource || e->isNew()) {
+                canCompile = true;
+                canRun = true;
+            }
+        } else {
+             forProject = (mProject!=nullptr);
+        }
+    }  else {
+        forProject = (mProject!=nullptr);
+    }
+    if (forProject) {
+        canCompile = true;
+        canRun = (mProject->options().type !=ProjectType::DynamicLib)
+                && (mProject->options().type !=ProjectType::StaticLib);
     }
     if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()
-         || (!hasProject && !editorCanCompile)   ) {
+         || (!canCompile)) {
         ui->actionCompile->setEnabled(false);
         ui->actionCompile_Run->setEnabled(false);
         ui->actionRun->setEnabled(false);
@@ -664,11 +678,11 @@ void MainWindow::updateCompileActions()
         ui->btnRunAllProblemCases->setEnabled(false);
     } else {
         ui->actionCompile->setEnabled(true);
-        ui->actionCompile_Run->setEnabled(true);
-        ui->actionRun->setEnabled(true);
+        ui->actionCompile_Run->setEnabled(canRun);
+        ui->actionRun->setEnabled(canRun);
         ui->actionRebuild->setEnabled(true);
-        ui->actionDebug->setEnabled(true);
-        ui->btnRunAllProblemCases->setEnabled(true);
+        ui->actionDebug->setEnabled(canRun);
+        ui->btnRunAllProblemCases->setEnabled(canRun);
     }
     if (!mDebugger->executing()) {
         disableDebugActions();

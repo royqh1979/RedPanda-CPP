@@ -1,19 +1,20 @@
 Red Panda C++ Version 2.5
 
-  - enhancement: new color scheme Monokai (contributed by 小龙Dev(XiaoLoong@github))
-  - enhancemnet: add "Reserve word for Types" item in color scheme
-  - enhancement: auto save / load problem set
-  - enhancement: project's custom compile include/lib/bin directory is under folder of the app, save them using the path relative to the app
-  - enhancement: slightly reduce memory usage   
+  - enhancement: New color scheme Monokai (contributed by 小龙Dev(XiaoLoong@github))
+  - enhancemnet: Add "Reserve word for Types" item in color scheme
+  - enhancement: Auto save / load problem set
+  - enhancement: Project's custom compile include/lib/bin directory is under folder of the app, save them using the path relative to the app
+  - enhancement: Slightly reduce memory usage   
   - enhancement: Options -> editor -> custom C/C++ type keywords page
   - change: Default value of option "Editors share one code analyzer" is ON
   - change: Default value of option "Auto clear symbols in hidden editors" is OFF
-  - enhancement: show completion suggest for "namespace" after "using"
+  - enhancement: Show completion suggest for "namespace" after "using"
   - fix: MinGW-w64 gcc displayed as "MinGW GCC"
   - enhancement: Deduce type info for "auto" in some simple cases for stl containers.
-  - fix: crash when no semicolon or left brace after the keyword "namespace"
-  - fix: can't correctly show completion suggest for type with template parameters
-  - enhancement: show compltion suggest for std::pair::first and std::pair second
+  - fix: Crash when no semicolon or left brace after the keyword "namespace"
+  - fix: Can't correctly show completion suggest for type with template parameters
+  - enhancement: Show compltion suggest for std::pair::first and std::pair second
+  - enhancement: Disable "run" and "debug" actions when current project is static or dynamic library
 
 Red Panda C++ Version 2.4
 
