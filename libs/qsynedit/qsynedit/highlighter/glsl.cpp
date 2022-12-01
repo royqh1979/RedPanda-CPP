@@ -1471,4 +1471,9 @@ QSet<QString> GLSLHighlighter::keywords() const
 {
     return Keywords;
 }
+
+bool GLSLHighlighter::supportBraceLevel()
+{
+    return true;
+}
 }

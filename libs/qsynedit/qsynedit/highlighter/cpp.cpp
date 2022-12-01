@@ -1399,6 +1399,11 @@ void CppHighlighter::setCustomTypeKeywords(const QSet<QString> &newCustomTypeKey
     mCustomTypeKeywords = newCustomTypeKeywords;
 }
 
+bool CppHighlighter::supportBraceLevel()
+{
+    return true;
+}
+
 bool CppHighlighter::getTokenFinished() const
 {
     if (mTokenId == TokenId::Comment

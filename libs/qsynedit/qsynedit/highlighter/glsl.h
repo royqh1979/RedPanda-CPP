@@ -192,6 +192,10 @@ public:
     // SynHighlighter interface
 public:
     QSet<QString> keywords() const override;
+
+    // Highlighter interface
+public:
+    bool supportBraceLevel() override;
 };
 
 }

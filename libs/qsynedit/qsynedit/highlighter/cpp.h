@@ -202,6 +202,10 @@ public:
     QString foldString() override;
     const QSet<QString> &customTypeKeywords() const;
     void setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords);
+
+    // Highlighter interface
+public:
+    bool supportBraceLevel() override;
 };
 
 }

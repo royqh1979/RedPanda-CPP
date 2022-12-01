@@ -23,15 +23,17 @@ class FileCompiler : public Compiler
 {
     Q_OBJECT
 public:
-    FileCompiler(const QString& filename, const QByteArray& encoding,bool silent,bool onlyCheckSyntax);
+    FileCompiler(const QString& filename, const QByteArray& encoding,
+                 CppCompileType compileType,
+                 bool silent,bool onlyCheckSyntax);
 
-    // Compiler interface
+
 protected:
     bool prepareForCompile() override;
 
 private:
     QByteArray mEncoding;
-
+    CppCompileType mCompileType;
     // Compiler interface
 protected:
     bool prepareForRebuild() override;

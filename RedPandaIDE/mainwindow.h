@@ -129,7 +129,7 @@ public:
     void updateDebuggerSettings();
     void updateActionIcons();
     void checkSyntaxInBack(Editor* e);
-    bool compile(bool rebuild=false);
+    bool compile(bool rebuild=false, CppCompileType compileType=CppCompileType::Normal);
     void runExecutable(
             const QString& exeName,
             const QString& filename,
@@ -281,6 +281,7 @@ private:
     void showSearchReplacePanel(bool show);
     void clearIssues();
     void doCompileRun(RunType runType);
+    void doGenerateAssembly();
     void updateProblemCaseOutput(POJProblemCase problemCase);
     void applyCurrentProblemCaseChanges();
     void showHideInfosTab(QWidget *widget, bool show);
@@ -744,6 +745,8 @@ private slots:
     void on_actionGoto_block_end_triggered();
 
     void on_actionSwitchHeaderSource_triggered();
+
+    void on_actionGenerate_Assembly_triggered();
 
 private:
     Ui::MainWindow *ui;

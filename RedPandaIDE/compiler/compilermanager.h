@@ -23,8 +23,8 @@
 #include "../common.h"
 
 class Runner;
-class Compiler;
 class Project;
+class Compiler;
 struct OJProblemCase;
 using POJProblemCase = std::shared_ptr<OJProblemCase>;
 class CompilerManager : public QObject
@@ -37,8 +37,8 @@ public:
     bool backgroundSyntaxChecking();
     bool running();
 
-    void compile(const QString& filename, const QByteArray& encoding, bool rebuild, bool silent=false,bool onlyCheckSyntax=false);
-    void compileProject(std::shared_ptr<Project> project, bool rebuild, bool silent=false,bool onlyCheckSyntax=false);
+    void compile(const QString& filename, const QByteArray& encoding, bool rebuild, CppCompileType compileType);
+    void compileProject(std::shared_ptr<Project> project, bool rebuild);
     void cleanProject(std::shared_ptr<Project> project);
     void buildProjectMakefile(std::shared_ptr<Project> project);
     void checkSyntax(const QString&filename, const QByteArray& encoding, const QString& content, std::shared_ptr<Project> project);

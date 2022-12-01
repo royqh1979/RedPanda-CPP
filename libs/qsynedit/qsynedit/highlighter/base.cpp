@@ -103,6 +103,11 @@ QString Highlighter::foldString()
     return " ... }";
 }
 
+bool Highlighter::supportBraceLevel()
+{
+    return false;
+}
+
 bool Highlighter::isSpaceChar(const QChar &ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';

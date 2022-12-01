@@ -4728,6 +4728,10 @@
         <source>Switch Header/Source</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Generate Assembly</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

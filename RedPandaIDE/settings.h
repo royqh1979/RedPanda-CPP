@@ -1331,8 +1331,9 @@ public:
         void setCompilationStage(CompilationStage newCompilationStage);
 
         QString getOutputFilename(const QString& sourceFilename);
+        QString getOutputFilename(const QString& sourceFilename,Settings::CompilerSet::CompilationStage stage);
         bool isOutputExecutable();
-
+        bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
     private:
         void setDirectories(const QString& binDir, CompilerType mCompilerType);
         //load hard defines

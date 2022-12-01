@@ -4729,7 +4729,9 @@ void Editor::applySettings()
     options.setFlag(QSynedit::eoScrollByOneLess,pSettings->editor().scrollByOneLess());
     options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
     options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
-    options.setFlag(QSynedit::eoShowRainbowColor, pSettings->editor().rainbowParenthesis());
+    options.setFlag(QSynedit::eoShowRainbowColor,
+                    pSettings->editor().rainbowParenthesis()
+                    && highlighter() && highlighter()->supportBraceLevel());
     setOptions(options);
 
     setTabWidth(pSettings->editor().tabWidth());
@@ -4818,7 +4820,9 @@ static QSynedit::PHighlighterAttribute createRainbowAttribute(const QString& att
 void Editor::applyColorScheme(const QString& schemeName)
 {
     QSynedit::EditorOptions options = getOptions();
-    options.setFlag(QSynedit::EditorOption::eoShowRainbowColor, pSettings->editor().rainbowParenthesis());
+    options.setFlag(QSynedit::EditorOption::eoShowRainbowColor,
+                    pSettings->editor().rainbowParenthesis()
+                    && highlighter() && highlighter()->supportBraceLevel());
     setOptions(options);
     highlighterManager.applyColorScheme(highlighter(),schemeName);
     if (pSettings->editor().rainbowParenthesis()) {

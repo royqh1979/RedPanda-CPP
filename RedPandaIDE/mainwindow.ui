@@ -156,6 +156,7 @@
     <addaction name="actionRun"/>
     <addaction name="actionCompile_Run"/>
     <addaction name="actionRebuild"/>
+    <addaction name="actionGenerate_Assembly"/>
     <addaction name="separator"/>
     <addaction name="actionRun_Parameters"/>
     <addaction name="actionCompiler_Options"/>
@@ -3261,6 +3262,11 @@
    </property>
    <property name="toolTip">
     <string>Switch Header/Source</string>
+   </property>
+  </action>
+  <action name="actionGenerate_Assembly">
+   <property name="text">
+    <string>Generate Assembly</string>
    </property>
   </action>
  </widget>

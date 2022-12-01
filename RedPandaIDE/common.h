@@ -19,6 +19,13 @@
 #include <QString>
 #include <memory>
 #include <QMetaType>
+
+enum class CppCompileType {
+    Normal,
+    PreprocessOnly,
+    GenerateAssemblyOnly
+};
+
 enum class CompileIssueType {
     Other,
     Warning,

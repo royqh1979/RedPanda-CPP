@@ -26,7 +26,7 @@ class ASMHighlighter : public Highlighter
     enum class TokenId {
         Comment,
         Identifier,
-        Key,
+        rainbow,        // add mov etc
         Null,
         Number,
         Space,
@@ -91,6 +91,8 @@ public:
     // SynHighlighter interface
 public:
     QSet<QString> keywords() const override;
+    const PHighlighterAttribute &directiveAttribute() const;
+    const PHighlighterAttribute &labelAttribute() const;
 };
 
 }

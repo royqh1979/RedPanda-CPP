@@ -16,10 +16,34 @@
  */
 #include "asm.h"
 #include "../Constants.h"
+#include <QDebug>
 
 namespace  QSynedit {
 
 const QSet<QString> ASMHighlighter::Keywords {
+    "movb","movw","movl","movq",
+    "leab","leaw","leal","leaq",
+    "incb","incw","incl","incq",
+    "decb","decw","decl","decq",
+    "addb","addw","addl","addq",
+    "subb","subw","subl","subq",
+    "imulb","imulw","imull","imulq",
+    "divb","divw","divl","divq",
+    "xorb","xorw","xorl","xorq",
+    "orb","orw","orl","orq",
+    "andb","andw","andl","andq",
+    "salb","salw","sall","salq",
+    "shlb","shlw","shll","shlq",
+    "sarb","sarw","sarl","sarq",
+    "shrb","shrw","shrl","shrq",
+    "cmpb","cmpw","cmpl","cmpq",
+    "testb","testw","testl","testq",
+    "pushq","popq",
+    "cmove", "cmovz", "cmovne", "cmovnz",
+    "cmovs", "cmovns", "cmovg", "cmovge",
+    "cmovl", "cmovle", "cmova", "cmovae",
+    "cmovb", "cmovbe", "cmovnbe","cmovnb",
+    "cmovnae","cmovna",
     "aaa","aad","aam","adc","add","and","arpl","bound","bsf","bsr","bswap","bt","btc","btr","bts",
     "call","cbw","cdq","clc","cld","cli","clts","cmc","cmp","cmps","cmpsb","cmpsd","cmpsw",
     "cmpxchg","cwd","cwde","daa","das","dec","div","emms","enter","f2xm1","fabs","fadd","faddp","fbld",
@@ -98,7 +122,7 @@ void ASMHighlighter::IdentProc()
     }
     QString s = mLineString.mid(start,mRun-start);
     if (Keywords.contains(s)) {
-        mTokenID = TokenId::Key;
+        mTokenID = TokenId::rainbow;
     } else {
         mTokenID = TokenId::Identifier;
     }
@@ -130,7 +154,8 @@ void ASMHighlighter::NumberProc()
     while (true) {
         QChar ch = mLine[mRun];
         if (!((ch>='0' && ch<='9') || (ch=='.') || (ch >= 'a' && ch<='f')
-              || (ch=='h') || (ch >= 'A' && ch<='F') || (ch == 'H')))
+              || (ch=='h') || (ch >= 'A' && ch<='F') || (ch == 'H')
+              || (ch == 'x')))
             break;
         mRun++;
     }
@@ -181,6 +206,7 @@ void ASMHighlighter::StringProc()
     mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\"') && (mLine[mRun + 2] == '\"'))
         mRun += 2;
+    mRun+=1;
     while (true) {
         if (mLine[mRun] == 0 || mLine[mRun] == '\r' || mLine[mRun] == '\n')
             break;
@@ -231,7 +257,7 @@ PHighlighterAttribute ASMHighlighter::getTokenAttribute() const
         return mCommentAttribute;
     case TokenId::Identifier:
         return mIdentifierAttribute;
-    case TokenId::Key:
+    case TokenId::rainbow:
         return mKeywordAttribute;
     case TokenId::Number:
         return mNumberAttribute;

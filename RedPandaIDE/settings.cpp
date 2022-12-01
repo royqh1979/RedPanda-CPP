@@ -2464,7 +2464,12 @@ void Settings::CompilerSet::setCompilationStage(CompilationStage newCompilationS
 
 QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename)
 {
-    switch(compilationStage()) {
+    return getOutputFilename(sourceFilename, compilationStage());
+}
+
+QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename, CompilationStage stage)
+{
+    switch(stage) {
     case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
         return changeFileExt(sourceFilename, preprocessingSuffix());
     case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
@@ -2479,7 +2484,12 @@ QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename)
 
 bool Settings::CompilerSet::isOutputExecutable()
 {
-    return mCompilationStage == CompilationStage::GenerateExecutable;
+    return isOutputExecutable(mCompilationStage);
+}
+
+bool Settings::CompilerSet::isOutputExecutable(CompilationStage stage)
+{
+    return stage == CompilationStage::GenerateExecutable;
 }
 
 const QString &Settings::CompilerSet::assemblingSuffix() const

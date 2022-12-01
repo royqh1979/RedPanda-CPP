@@ -71,7 +71,7 @@ bool CompilerManager::running()
     return (mRunner!=nullptr && !mRunner->pausing());
 }
 
-void CompilerManager::compile(const QString& filename, const QByteArray& encoding, bool rebuild, bool silent, bool onlyCheckSyntax)
+void CompilerManager::compile(const QString& filename, const QByteArray& encoding, bool rebuild, CppCompileType compileType)
 {
     if (!pSettings->compilerSets().defaultSet()) {
         QMessageBox::critical(pMainWindow,
@@ -87,7 +87,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
         //deleted when thread finished
-        mCompiler = new FileCompiler(filename,encoding,silent,onlyCheckSyntax);
+        mCompiler = new FileCompiler(filename,encoding,compileType,false,false);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
@@ -102,7 +102,7 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
     }
 }
 
-void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebuild, bool silent,bool onlyCheckSyntax)
+void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebuild)
 {
     if (!pSettings->compilerSets().defaultSet()) {
         QMessageBox::critical(pMainWindow,
@@ -118,7 +118,7 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
         //deleted when thread finished
-        mCompiler = new ProjectCompiler(project,silent,onlyCheckSyntax);
+        mCompiler = new ProjectCompiler(project,false,false);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);

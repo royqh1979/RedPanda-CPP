@@ -154,6 +154,7 @@ public:
 
     virtual QString foldString();
 
+    virtual bool supportBraceLevel();
     virtual bool isSpaceChar(const QChar& ch);
     virtual bool isWordBreakChar(const QChar& ch);
     bool enabled() const;

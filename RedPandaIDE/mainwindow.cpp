@@ -674,6 +674,7 @@ void MainWindow::updateCompileActions()
         ui->actionCompile_Run->setEnabled(false);
         ui->actionRun->setEnabled(false);
         ui->actionRebuild->setEnabled(false);
+        ui->actionGenerate_Assembly->setEnabled(false);
         ui->actionDebug->setEnabled(false);
         ui->btnRunAllProblemCases->setEnabled(false);
     } else {
@@ -681,6 +682,7 @@ void MainWindow::updateCompileActions()
         ui->actionCompile_Run->setEnabled(canRun);
         ui->actionRun->setEnabled(canRun);
         ui->actionRebuild->setEnabled(true);
+        ui->actionGenerate_Assembly->setEnabled(!forProject);
         ui->actionDebug->setEnabled(canRun);
         ui->btnRunAllProblemCases->setEnabled(canRun);
     }
@@ -1801,7 +1803,7 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     }
 }
 
-bool MainWindow::compile(bool rebuild)
+bool MainWindow::compile(bool rebuild, CppCompileType compileType)
 {
     mCompilerManager->stopPausing();
     CompileTarget target =getCompileTarget();
@@ -1837,16 +1839,33 @@ bool MainWindow::compile(bool rebuild)
             if (mCompileSuccessionTask) {
                 Settings::PCompilerSet compilerSet =pSettings->compilerSets().defaultSet();
                 if (compilerSet)  {
-                    mCompileSuccessionTask->execName = compilerSet->getOutputFilename(editor->filename());
-                    mCompileSuccessionTask->isExecutable = compilerSet->isOutputExecutable();
+                    Settings::CompilerSet::CompilationStage stage;
+                    switch(compileType) {
+                    case CppCompileType::GenerateAssemblyOnly:
+                        stage = Settings::CompilerSet::CompilationStage::CompilationProperOnly;
+                        break;
+                    case CppCompileType::PreprocessOnly:
+                        stage = Settings::CompilerSet::CompilationStage::PreprocessingOnly;
+                        break;
+                    default:
+                        stage = compilerSet->compilationStage();
+                        break;
+                    }
+                    mCompileSuccessionTask->execName = compilerSet->getOutputFilename(editor->filename(),stage);
+                    mCompileSuccessionTask->isExecutable = compilerSet->isOutputExecutable(stage);
                 } else {
                     mCompileSuccessionTask->execName = changeFileExt(editor->filename(),DEFAULT_EXECUTABLE_SUFFIX);
                     mCompileSuccessionTask->isExecutable = true;
                 }
+                if (!mCompileSuccessionTask->isExecutable) {
+                    Editor *editor = mEditorList->getOpenedEditorByFilename(mCompileSuccessionTask->execName);
+                    if (editor)
+                        mEditorList->closeEditor(editor,false,true);
+                }
             }
             stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
-            mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild);
+            mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild,compileType);
             updateCompileActions();
             updateAppTitle();
             return true;
@@ -1963,7 +1982,7 @@ void MainWindow::runExecutable(RunType runType)
             bool isExecutable;
             if (compilerSet) {
                 exeName = compilerSet->getOutputFilename(editor->filename());
-                isExecutable = compilerSet->compilationStage()==Settings::CompilerSet::CompilationStage::GenerateExecutable;
+                isExecutable = compilerSet->isOutputExecutable();
             } else {
                 exeName = changeFileExt(editor->filename(), DEFAULT_EXECUTABLE_SUFFIX);
                 isExecutable = true;
@@ -2140,7 +2159,7 @@ void MainWindow::debug()
                 bool isExecutable;
                 if (compilerSet) {
                     filePath = compilerSet->getOutputFilename(e->filename());
-                    isExecutable = compilerSet->compilationStage()==Settings::CompilerSet::CompilationStage::GenerateExecutable;
+                    isExecutable = compilerSet->isOutputExecutable();
                 } else {
                     filePath = changeFileExt(e->filename(), DEFAULT_EXECUTABLE_SUFFIX);
                     isExecutable = true;
@@ -7322,6 +7341,20 @@ void MainWindow::doCompileRun(RunType runType)
     compile();
 }
 
+void MainWindow::doGenerateAssembly()
+{
+    CompileTarget target =getCompileTarget();
+    QStringList binDirs;
+    QString execName;
+    if (target == CompileTarget::File) {
+        binDirs = getDefaultCompilerSetBinDirs();
+    }
+    mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
+    mCompileSuccessionTask->binDirs=binDirs;
+    mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+    compile(false,CppCompileType::GenerateAssemblyOnly);
+}
+
 void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 {
     if (problemCase->testState == ProblemCaseTestState::Failed) {
@@ -8853,5 +8886,11 @@ void MainWindow::on_actionSwitchHeaderSource_triggered()
 SearchDialog *MainWindow::searchDialog() const
 {
     return mSearchDialog;
+}
+
+
+void MainWindow::on_actionGenerate_Assembly_triggered()
+{
+    doGenerateAssembly();
 }
 

@@ -15,6 +15,8 @@ Red Panda C++ Version 2.5
   - fix: Can't correctly show completion suggest for type with template parameters
   - enhancement: Show compltion suggest for std::pair::first and std::pair second
   - enhancement: Disable "run" and "debug" actions when current project is static or dynamic library
+  - enhancement: Add "Generate Assembly" in "Run" Menu
+  - enhancement: Improve highlighter for asm
 
 Red Panda C++ Version 2.4
 

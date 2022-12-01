@@ -24,15 +24,33 @@
 #include <QMessageBox>
 
 
-FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,bool silent,bool onlyCheckSyntax):
+FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,
+                           CppCompileType compileType,bool silent,bool onlyCheckSyntax):
     Compiler(filename, silent,onlyCheckSyntax),
-    mEncoding(encoding)
+    mEncoding(encoding),
+    mCompileType(compileType)
 {
 
 }
 
 bool FileCompiler::prepareForCompile()
 {
+    Settings::CompilerSet::CompilationStage oldStage = compilerSet()->compilationStage();
+    auto action = finally([this,oldStage]{
+       compilerSet()->setCompilationStage(oldStage);
+    });
+    Settings::CompilerSet::CompilationStage stage = oldStage;
+    switch(mCompileType) {
+    case CppCompileType::PreprocessOnly:
+        stage = Settings::CompilerSet::CompilationStage::PreprocessingOnly;
+        break;
+    case CppCompileType::GenerateAssemblyOnly:
+        stage = Settings::CompilerSet::CompilationStage::CompilationProperOnly;
+        break;
+    default:
+        stage = oldStage;
+    }
+    compilerSet()->setCompilationStage(stage);
     log(tr("Compiling single file..."));
     log("------------------");
     log(tr("- Filename: %1").arg(mFilename));
