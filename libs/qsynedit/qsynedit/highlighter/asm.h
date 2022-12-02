@@ -26,7 +26,10 @@ class ASMHighlighter : public Highlighter
     enum class TokenId {
         Comment,
         Identifier,
-        rainbow,        // add mov etc
+        Instruction,        // add mov etc
+        Directive, // .section .data etc
+        Label,
+        Register, //EAX EBX etc
         Null,
         Number,
         Space,
@@ -34,11 +37,21 @@ class ASMHighlighter : public Highlighter
         Symbol,
         Unknown
     };
+    enum class IdentPrefix {
+        None,
+        Period,
+        Percent
+    };
+
 public:
     explicit ASMHighlighter();
-    PHighlighterAttribute numberAttribute();
+    const PHighlighterAttribute &numberAttribute() const;
+    const PHighlighterAttribute &directiveAttribute() const;
+    const PHighlighterAttribute &labelAttribute() const;
+    const PHighlighterAttribute &registerAttribute() const;
 
     static const QSet<QString> Keywords;
+    static const QSet<QString> Registers;
 private:
     QChar* mLine;
     QString mLineString;
@@ -49,12 +62,15 @@ private:
     int mTokenPos;
     TokenId mTokenID;
     PHighlighterAttribute mNumberAttribute;
+    PHighlighterAttribute mDirectiveAttribute;
+    PHighlighterAttribute mRegisterAttribute;
+    PHighlighterAttribute mLabelAttribute;
 
 private:
     void CommentProc();
     void CRProc();
     void GreaterProc();
-    void IdentProc();
+    void IdentProc(IdentPrefix prefix);
     void LFProc();
     void LowerProc();
     void NullProc();
@@ -65,7 +81,7 @@ private:
     void StringProc();
     void SymbolProc();
     void UnknownProc();
-
+    bool isIdentStartChar(const QChar& ch);
 
     // SynHighlighter interface
 public:
@@ -88,11 +104,10 @@ public:
     void setState(const HighlighterState& rangeState) override;
     void resetState() override;
 
-    // SynHighlighter interface
+
 public:
     QSet<QString> keywords() const override;
-    const PHighlighterAttribute &directiveAttribute() const;
-    const PHighlighterAttribute &labelAttribute() const;
+
 };
 
 }

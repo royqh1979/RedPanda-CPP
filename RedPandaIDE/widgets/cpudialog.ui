@@ -34,7 +34,7 @@
      <widget class="QWidget" name="widget" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>3</horstretch>
+        <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
@@ -83,7 +83,7 @@
         <widget class="QSynedit::SynEdit" name="txtCode">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
+           <horstretch>3</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
@@ -187,6 +187,12 @@
       </layout>
      </widget>
      <widget class="QTableView" name="lstRegister">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
       </property>

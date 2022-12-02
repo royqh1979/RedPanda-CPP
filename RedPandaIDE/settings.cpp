@@ -3745,7 +3745,6 @@ void Settings::Debugger::doSave()
     saveValue("gdb_server_port",mGDBServerPort);
     saveValue("memory_view_rows",mMemoryViewRows);
     saveValue("memory_view_columns",mMemoryViewColumns);
-
 }
 
 void Settings::Debugger::doLoad()

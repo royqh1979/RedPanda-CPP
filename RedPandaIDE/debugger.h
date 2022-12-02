@@ -113,6 +113,7 @@ public:
     void clear();
 private:
     QStringList mRegisterNames;
+    QHash<int,int> mRegisterNameIndex;
     QHash<int,QString> mRegisterValues;
 };
 

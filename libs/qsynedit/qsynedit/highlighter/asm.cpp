@@ -20,6 +20,23 @@
 
 namespace  QSynedit {
 
+const QSet<QString> ASMHighlighter::Registers {
+    "ah","al","ax","eax",
+    "bh","bl","bx","ebx",
+    "ch","cl","cx","ecx",
+    "dh","dl","dx","edx",
+    "rax","rbx","rcx","rdx","rsi","rdi","rbp",
+    "rsp","r8","r9","r10","r11","r12","r13","r14","r15",
+    "r8h","r8l","r8w","r8d",
+    "r9h","r9l","r9w","r9d",
+    "r10h","r10l","r10w","r10d",
+    "r11h","r11l","r11w","r11d",
+    "r12h","r12l","r12w","r12d",
+    "r13h","r13l","r13w","r13d",
+    "r14h","r14l","r14w","r14d",
+    "r15h","r15l","r15w","r15d"
+};
+
 const QSet<QString> ASMHighlighter::Keywords {
     "movb","movw","movl","movq",
     "leab","leaw","leal","leaq",
@@ -83,11 +100,22 @@ ASMHighlighter::ASMHighlighter()
 {
     mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber, TokenType::Number);
     addAttribute(mNumberAttribute);
+    mDirectiveAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrVariable, TokenType::Keyword);
+    addAttribute(mDirectiveAttribute);
+    mLabelAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction, TokenType::Keyword);
+    addAttribute(mLabelAttribute);
+    mRegisterAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass, TokenType::Keyword);
+    addAttribute(mRegisterAttribute);
 }
 
-PHighlighterAttribute ASMHighlighter::numberAttribute()
+const PHighlighterAttribute &ASMHighlighter::numberAttribute() const
 {
     return mNumberAttribute;
+}
+
+const PHighlighterAttribute &ASMHighlighter::registerAttribute() const
+{
+    return mRegisterAttribute;
 }
 
 void ASMHighlighter::CommentProc()
@@ -114,17 +142,32 @@ void ASMHighlighter::GreaterProc()
         mRun++;
 }
 
-void ASMHighlighter::IdentProc()
+void ASMHighlighter::IdentProc(IdentPrefix prefix)
 {
     int start = mRun;
     while (isIdentChar(mLine[mRun])) {
         mRun++;
     }
-    QString s = mLineString.mid(start,mRun-start);
-    if (Keywords.contains(s)) {
-        mTokenID = TokenId::rainbow;
-    } else {
-        mTokenID = TokenId::Identifier;
+    QString s = mLineString.mid(start,mRun-start).toLower();
+    switch(prefix) {
+    case IdentPrefix::Percent:
+        mTokenID = TokenId::Register;
+        break;
+    case IdentPrefix::Period:
+        if (mLine[mRun]==':')
+            mTokenID = TokenId::Label;
+        else
+            mTokenID = TokenId::Directive;
+        break;
+    default:
+        if (Keywords.contains(s))
+            mTokenID = TokenId::Instruction;
+        else if (Registers.contains(s))
+            mTokenID = TokenId::Register;
+        else if (mLine[mRun]==':')
+            mTokenID = TokenId::Label;
+        else
+            mTokenID = TokenId::Identifier;
     }
 }
 
@@ -206,7 +249,8 @@ void ASMHighlighter::StringProc()
     mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\"') && (mLine[mRun + 2] == '\"'))
         mRun += 2;
-    mRun+=1;
+    else
+        mRun+=1;
     while (true) {
         if (mLine[mRun] == 0 || mLine[mRun] == '\r' || mLine[mRun] == '\n')
             break;
@@ -228,6 +272,20 @@ void ASMHighlighter::UnknownProc()
 {
     mRun++;
     mTokenID = TokenId::Unknown;
+}
+
+bool ASMHighlighter::isIdentStartChar(const QChar &ch)
+{
+    if (ch == '_') {
+        return true;
+    }
+    if ((ch>='a') && (ch <= 'z')) {
+        return true;
+    }
+    if ((ch>='A') && (ch <= 'Z')) {
+        return true;
+    }
+    return false;
 }
 
 bool ASMHighlighter::eol() const
@@ -257,8 +315,14 @@ PHighlighterAttribute ASMHighlighter::getTokenAttribute() const
         return mCommentAttribute;
     case TokenId::Identifier:
         return mIdentifierAttribute;
-    case TokenId::rainbow:
+    case TokenId::Instruction:
         return mKeywordAttribute;
+    case TokenId::Directive:
+        return mDirectiveAttribute;
+    case TokenId::Label:
+        return mLabelAttribute;
+    case TokenId::Register:
+        return mRegisterAttribute;
     case TokenId::Number:
         return mNumberAttribute;
     case TokenId::Space:
@@ -313,6 +377,19 @@ void ASMHighlighter::next()
         CommentProc();
         break;
     case '.':
+        if (isIdentChar(mLine[mRun+1])) {
+            mRun++;
+            IdentProc(IdentPrefix::Period);
+        } else
+            SymbolProc();
+        break;
+    case '%':
+        if (isIdentChar(mLine[mRun+1])) {
+            mRun++;
+            IdentProc(IdentPrefix::Percent);
+        } else
+            UnknownProc();
+        break;
     case ':':
     case '&':
     case '{':
@@ -329,10 +406,8 @@ void ASMHighlighter::next()
     default:
         if (mLine[mRun]>='0' && mLine[mRun]<='9') {
             NumberProc();
-        } else if ((mLine[mRun]>='A' && mLine[mRun]<='Z')
-                   || (mLine[mRun]>='a' && mLine[mRun]<='z')
-                   || (mLine[mRun]=='_')) {
-            IdentProc();
+        } else if (isIdentChar(mLine[mRun])) {
+            IdentProc(IdentPrefix::None);
         } else if (mLine[mRun]<=32) {
             SpaceProc();
         } else {
@@ -383,5 +458,15 @@ void ASMHighlighter::resetState()
 QSet<QString> ASMHighlighter::keywords() const
 {
     return Keywords;
+}
+
+const PHighlighterAttribute &ASMHighlighter::directiveAttribute() const
+{
+    return mDirectiveAttribute;
+}
+
+const PHighlighterAttribute &ASMHighlighter::labelAttribute() const
+{
+    return mLabelAttribute;
 }
 }

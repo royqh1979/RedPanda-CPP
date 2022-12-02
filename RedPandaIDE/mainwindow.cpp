@@ -4925,6 +4925,8 @@ void MainWindow::on_actionOpen_triggered()
 void MainWindow::closeEvent(QCloseEvent *event) {
     mQuitting = true;
     if (!mShouldRemoveAllSettings) {
+        if (mCPUDialog)
+            mCPUDialog->close();
         Settings::UI& settings = pSettings->ui();
         settings.setMainWindowState(saveState());
         settings.setMainWindowGeometry(saveGeometry());

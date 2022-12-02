@@ -42,6 +42,7 @@ private:
     void sendSyntaxCommand();
 private:
     Ui::CPUDialog *ui;
+    bool mInited;
     // QWidget interface
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -52,6 +53,10 @@ private slots:
     void on_btnStepOverInstruction_clicked();
     void on_btnStepIntoInstruction_clicked();
     void onUpdateIcons();
+
+    // QWidget interface
+protected:
+    void showEvent(QShowEvent *event) override;
 };
 
 #endif // CPUDIALOG_H

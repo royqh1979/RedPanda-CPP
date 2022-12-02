@@ -1459,7 +1459,9 @@ void DebugReader::handleRegisterNames(const QList<GDBMIResultParser::ParseValue>
 {
     QStringList nameList;
     foreach (const GDBMIResultParser::ParseValue& nameValue, names) {
-        nameList.append(nameValue.value());
+//        QString text = nameValue.value().trimmed();
+//        if (!text.isEmpty())
+            nameList.append(nameValue.value());
     }
     emit registerNamesUpdated(nameList);
 }
@@ -2605,7 +2607,9 @@ QVariant RegisterModel::data(const QModelIndex &index, int role) const
         case 0:
             return mRegisterNames[index.row()];
         case 1:
-            return mRegisterValues.value(index.row(),"");
+            return mRegisterValues.value(
+                        mRegisterNameIndex.value(index.row(),-1)
+                        ,"");
         default:
             return QVariant();
         }
@@ -2630,7 +2634,15 @@ QVariant RegisterModel::headerData(int section, Qt::Orientation orientation, int
 void RegisterModel::updateNames(const QStringList &regNames)
 {
     beginResetModel();
-    mRegisterNames = regNames;
+    mRegisterNameIndex.clear();
+    mRegisterNames.clear();
+    for (int i=0;i<regNames.length();i++) {
+        QString regName = regNames[i].trimmed();
+        if (!regName.isEmpty()) {
+            mRegisterNames.append(regNames[i]);
+            mRegisterNameIndex.insert(mRegisterNames.count()-1,i);
+        }
+    }
     endResetModel();
 }
 

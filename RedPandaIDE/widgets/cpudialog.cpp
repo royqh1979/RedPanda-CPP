@@ -26,12 +26,13 @@
 
 CPUDialog::CPUDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::CPUDialog)
+    ui(new Ui::CPUDialog),
+    mInited(false)
 {
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
-    ui->txtCode->setHighlighter(highlighterManager.getCppHighlighter());
+    ui->txtCode->setHighlighter(highlighterManager.getAsmHighlighter());
     ui->txtCode->setReadOnly(true);
     ui->txtCode->gutter().setShowLineNumbers(false);
     ui->txtCode->setCaretUseTextColor(true);
@@ -40,6 +41,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     ui->txtCode->codeFolding().fillIndents = false;
     ui->txtCode->setGutterWidth(0);
     ui->txtCode->setUseCodeFolding(false);
+    ui->txtCode->setRightEdge(0);
     highlighterManager.applyColorScheme(ui->txtCode->highlighter(),
                                         pSettings->editor().colorScheme());
     PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
@@ -60,17 +62,11 @@ CPUDialog::CPUDialog(QWidget *parent) :
     delete m;
 
     ui->rdIntel->setChecked(pSettings->debugger().useIntelStyle());
+    if (!ui->rdIntel->isChecked())
+        ui->rdATT->setChecked(true);
     ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());
     resize(pSettings->ui().CPUDialogWidth(),pSettings->ui().CPUDialogHeight());
 
-    QList<int> sizes = ui->splitter->sizes();
-    int tabWidth = pSettings->ui().CPUDialogSplitterPos();
-    int totalSize = sizes[0] + sizes[1];
-    sizes[0] = tabWidth;
-    sizes[1] = std::max(1,totalSize - sizes[0]);
-    ui->splitter->setSizes(sizes);
-
-    onUpdateIcons();
     connect(pIconsManager,&IconsManager::actionIconsUpdated,
             this, &CPUDialog::onUpdateIcons);
 }
@@ -198,5 +194,20 @@ void CPUDialog::onUpdateIcons()
 {
     pIconsManager->setIcon(ui->btnStepIntoInstruction, IconsManager::ACTION_RUN_STEP_INTO_INSTRUCTION);
     pIconsManager->setIcon(ui->btnStepOverInstruction, IconsManager::ACTION_RUN_STEP_OVER_INSTRUCTION);
+}
+
+void CPUDialog::showEvent(QShowEvent *event)
+{
+    QDialog::showEvent(event);
+    if (!mInited) {
+        mInited=true;
+
+        QList<int> sizes = ui->splitter->sizes();
+        int tabWidth = pSettings->ui().CPUDialogSplitterPos();
+        int totalSize = sizes[0] + sizes[1];
+        sizes[0] = tabWidth;
+        sizes[1] = std::max(0,totalSize - sizes[0]);
+        ui->splitter->setSizes(sizes);
+    }
 }
 

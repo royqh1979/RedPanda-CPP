@@ -17,6 +17,11 @@ Red Panda C++ Version 2.5
   - enhancement: Disable "run" and "debug" actions when current project is static or dynamic library
   - enhancement: Add "Generate Assembly" in "Run" Menu
   - enhancement: Improve highlighter for asm
+  - enhancement: Use asm highlighter in cpu window
+  - fix: "AT&T" radio button not correctly checked in cpu window 
+  - enhancement: Remove blank lines in the register list of cpu window.
+  - fix: Cpu window's size not correctly saved, if it is not closed before app exits.
+  - fix: Can't restore cpu window's splitter position.
 
 Red Panda C++ Version 2.4
 
