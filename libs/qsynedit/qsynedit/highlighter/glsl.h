@@ -56,33 +56,33 @@ class GLSLHighlighter: public Highlighter
 public:
     explicit GLSLHighlighter();
 
-    PHighlighterAttribute asmAttribute() const;
+    const PHighlighterAttribute &asmAttribute() const;
 
-    PHighlighterAttribute preprocessorAttribute() const;
+    const PHighlighterAttribute &preprocessorAttribute() const;
 
-    PHighlighterAttribute invalidAttribute() const;
+    const PHighlighterAttribute &invalidAttribute() const;
 
-    PHighlighterAttribute numberAttribute() const;
+    const PHighlighterAttribute &numberAttribute() const;
 
-    PHighlighterAttribute floatAttribute() const;
+    const PHighlighterAttribute &floatAttribute() const;
 
-    PHighlighterAttribute hexAttribute() const;
+    const PHighlighterAttribute &hexAttribute() const;
 
-    PHighlighterAttribute octAttribute() const;
+    const PHighlighterAttribute &octAttribute() const;
 
-    PHighlighterAttribute stringEscapeSequenceAttribute() const;
+    const PHighlighterAttribute &stringEscapeSequenceAttribute() const;
 
-    PHighlighterAttribute charAttribute() const;
+    const PHighlighterAttribute &charAttribute() const;
 
-    PHighlighterAttribute variableAttribute() const;
+    const PHighlighterAttribute &variableAttribute() const;
 
-    PHighlighterAttribute functionAttribute() const;
+    const PHighlighterAttribute &functionAttribute() const;
 
-    PHighlighterAttribute classAttribute() const;
+    const PHighlighterAttribute &classAttribute() const;
 
-    PHighlighterAttribute globalVarAttribute() const;
+    const PHighlighterAttribute &globalVarAttribute() const;
 
-    PHighlighterAttribute localVarAttribute() const;
+    const PHighlighterAttribute &localVarAttribute() const;
 
     static const QSet<QString> Keywords;
 
@@ -170,7 +170,7 @@ public:
     bool isLastLineStringNotFinished(int state) const override;
     bool eol() const override;
     QString getToken() const override;
-    PHighlighterAttribute getTokenAttribute() const override;
+    const PHighlighterAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;

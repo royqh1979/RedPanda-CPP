@@ -92,10 +92,10 @@ public:
     FontStyles styles() const;
     void setStyles(const FontStyles &styles);
 
-    QColor foreground() const;
+    const QColor &foreground() const;
     void setForeground(const QColor &color);
 
-    QColor background() const;
+    const QColor &background() const;
     void setBackground(const QColor &background);
 
     TokenType tokenType() const;
@@ -119,17 +119,17 @@ public:
 
     const QSet<QChar>& wordBreakChars() const;
 
-    PHighlighterAttribute identifierAttribute() const;
+    const PHighlighterAttribute& identifierAttribute() const;
 
-    PHighlighterAttribute keywordAttribute() const;
+    const PHighlighterAttribute& keywordAttribute() const;
 
-    PHighlighterAttribute commentAttribute() const;
+    const PHighlighterAttribute& commentAttribute() const;
 
-    PHighlighterAttribute stringAttribute() const;
+    const PHighlighterAttribute& stringAttribute() const;
 
-    PHighlighterAttribute whitespaceAttribute() const;
+    const PHighlighterAttribute& whitespaceAttribute() const;
 
-    PHighlighterAttribute symbolAttribute() const;
+    const PHighlighterAttribute& symbolAttribute() const;
 
     virtual bool isIdentChar(const QChar& ch) const;
 
@@ -139,7 +139,7 @@ public:
     virtual bool eol() const = 0;
     virtual HighlighterState getState() const = 0;
     virtual QString getToken() const=0;
-    virtual PHighlighterAttribute getTokenAttribute() const=0;
+    virtual const PHighlighterAttribute &getTokenAttribute() const=0;
     virtual int getTokenPos() = 0;
     virtual bool isKeyword(const QString& word);
     virtual void next() = 0;

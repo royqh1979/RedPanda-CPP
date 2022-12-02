@@ -52,32 +52,32 @@ const QSet<QChar>& Highlighter::wordBreakChars() const
     return mWordBreakChars;
 }
 
-PHighlighterAttribute Highlighter::identifierAttribute() const
+const PHighlighterAttribute& Highlighter::identifierAttribute() const
 {
     return mIdentifierAttribute;
 }
 
-PHighlighterAttribute Highlighter::keywordAttribute() const
+const PHighlighterAttribute &Highlighter::keywordAttribute() const
 {
     return mKeywordAttribute;
 }
 
-PHighlighterAttribute Highlighter::commentAttribute() const
+const PHighlighterAttribute &Highlighter::commentAttribute() const
 {
     return mCommentAttribute;
 }
 
-PHighlighterAttribute Highlighter::stringAttribute() const
+const PHighlighterAttribute& Highlighter::stringAttribute() const
 {
     return mStringAttribute;
 }
 
-PHighlighterAttribute Highlighter::whitespaceAttribute() const
+const PHighlighterAttribute& Highlighter::whitespaceAttribute() const
 {
     return mWhitespaceAttribute;
 }
 
-PHighlighterAttribute Highlighter::symbolAttribute() const
+const PHighlighterAttribute& Highlighter::symbolAttribute() const
 {
     return mSymbolAttribute;
 }
@@ -208,7 +208,7 @@ void HighlighterAttribute::setStyles(const FontStyles &styles)
     }
 }
 
-QColor HighlighterAttribute::foreground() const
+const QColor& HighlighterAttribute::foreground() const
 {
     return mForeground;
 }
@@ -218,7 +218,7 @@ void HighlighterAttribute::setForeground(const QColor &color)
     mForeground = color;
 }
 
-QColor HighlighterAttribute::background() const
+const QColor &HighlighterAttribute::background() const
 {
     return mBackground;
 }

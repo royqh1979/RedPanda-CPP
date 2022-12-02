@@ -308,7 +308,7 @@ QString ASMHighlighter::getToken() const
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-PHighlighterAttribute ASMHighlighter::getTokenAttribute() const
+const PHighlighterAttribute &ASMHighlighter::getTokenAttribute() const
 {
     switch(mTokenID) {
     case TokenId::Comment:

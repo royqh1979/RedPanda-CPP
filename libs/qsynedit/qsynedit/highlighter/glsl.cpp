@@ -131,72 +131,72 @@ GLSLHighlighter::GLSLHighlighter(): Highlighter()
     resetState();
 }
 
-PHighlighterAttribute GLSLHighlighter::asmAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::asmAttribute() const
 {
     return mAsmAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::preprocessorAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::preprocessorAttribute() const
 {
     return mPreprocessorAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::invalidAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::invalidAttribute() const
 {
     return mInvalidAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::numberAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::numberAttribute() const
 {
     return mNumberAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::floatAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::floatAttribute() const
 {
     return mFloatAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::hexAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::hexAttribute() const
 {
     return mHexAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::octAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::octAttribute() const
 {
     return mOctAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::stringEscapeSequenceAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::stringEscapeSequenceAttribute() const
 {
     return mStringEscapeSequenceAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::charAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::charAttribute() const
 {
     return mCharAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::variableAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::variableAttribute() const
 {
     return mVariableAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::functionAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::functionAttribute() const
 {
     return mFunctionAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::classAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::classAttribute() const
 {
     return mClassAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::globalVarAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::globalVarAttribute() const
 {
     return mGlobalVarAttribute;
 }
 
-PHighlighterAttribute GLSLHighlighter::localVarAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::localVarAttribute() const
 {
     return mLocalVarAttribute;
 }
@@ -1301,7 +1301,7 @@ QString GLSLHighlighter::getToken() const
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-PHighlighterAttribute GLSLHighlighter::getTokenAttribute() const
+const PHighlighterAttribute &GLSLHighlighter::getTokenAttribute() const
 {
     switch (mTokenId) {
     case TokenId::Asm:

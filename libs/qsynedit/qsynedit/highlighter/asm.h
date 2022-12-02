@@ -90,7 +90,7 @@ public:
     QString languageName() override;
     HighlighterLanguage language() override;
     QString getToken() const override;
-    PHighlighterAttribute getTokenAttribute() const override;
+    const PHighlighterAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
