@@ -334,9 +334,8 @@ const PHighlighterAttribute &ASMHighlighter::getTokenAttribute() const
     case TokenId::Unknown:
         return mIdentifierAttribute;
     default:
-        break;
+        return mIdentifierAttribute;
     }
-    return PHighlighterAttribute();
 }
 
 int ASMHighlighter::getTokenPos()

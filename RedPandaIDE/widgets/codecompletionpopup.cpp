@@ -909,7 +909,7 @@ void CodeCompletionPopup::getCompletionListForTypeKeywordComplex(const QString &
     }
 }
 
-void CodeCompletionPopup::getCompletionListForNamespaces(const QString &preWord,
+void CodeCompletionPopup::getCompletionListForNamespaces(const QString &/*preWord*/,
                                                          const QString& fileName,
                                                          int line)
 {

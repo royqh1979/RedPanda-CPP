@@ -3249,7 +3249,6 @@ void CppParser::handleStructs(bool isTypedef)
 
         // normal class/struct decl
     } else {
-        bool templateSpecialization=false;
         PStatement firstSynonym;
         // Add class/struct name BEFORE opening brace
         if (mTokenizer[mIndex]->text.front() != '{') {
