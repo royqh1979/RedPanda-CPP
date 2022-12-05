@@ -437,6 +437,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    mQuitting=true;
     delete mProjectProxyModel;
     delete mEditorList;
     delete ui;

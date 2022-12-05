@@ -406,10 +406,8 @@ int main(int argc, char *argv[])
         }
 
         int retCode = app.exec();
-        QString configDir = pSettings->dirs().config();
-        // save settings
-        // settings->compilerSets().saveSets();
         if (mainWindow.shouldRemoveAllSettings()) {
+            QString configDir = pSettings->dirs().config();
             settings.release();
             delete pSettings;
             QDir dir(configDir);

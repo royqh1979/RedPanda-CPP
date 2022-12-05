@@ -556,7 +556,8 @@ void Editor::focusOutEvent(QFocusEvent *event)
 {
     SynEdit::focusOutEvent(event);
     //pMainWindow->updateClassBrowserForEditor(nullptr);
-    pMainWindow->functionTip()->hide();
+    if (!pMainWindow->isQuitting())
+        pMainWindow->functionTip()->hide();
 }
 
 void Editor::keyPressEvent(QKeyEvent *event)
