@@ -467,7 +467,7 @@ RESOURCES += \
 
 RC_ICONS = images/devcpp.ico images/associations/c.ico images/associations/cpp.ico images/associations/dev.ico images/associations/c.ico images/associations/cpp.ico images/associations/h.ico images/associations/hpp.ico
 
-## fixed lrelease.prf
+# fixed lrelease.prf
 qtPrepareTool(QMAKE_LRELEASE, lrelease)
 
 isEmpty(LRELEASE_DIR): LRELEASE_DIR = .qm

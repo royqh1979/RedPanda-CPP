@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.6
+
+  - enhancement: Highlighter for makefiles
+
 Red Panda C++ Version 2.5
 
   - enhancement: New color scheme Monokai (contributed by 小龙Dev(XiaoLoong@github))

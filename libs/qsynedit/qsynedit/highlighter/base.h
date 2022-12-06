@@ -80,6 +80,7 @@ enum class HighlighterLanguage {
     Asssembly,
     Cpp,
     GLSL,
+    Makefile,
     Custom
 };
 

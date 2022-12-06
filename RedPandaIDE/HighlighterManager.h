@@ -29,6 +29,7 @@ public:
     QSynedit::PHighlighter getCppHighlighter();
     QSynedit::PHighlighter getAsmHighlighter();
     QSynedit::PHighlighter getGLSLHighlighter();
+    QSynedit::PHighlighter getMakefileHighlighter();
     void applyColorScheme(QSynedit::PHighlighter highlighter, const QString& schemeName);
 };
 

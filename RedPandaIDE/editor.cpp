@@ -52,8 +52,6 @@
 #include "project.h"
 #include <qt_utils/charsetinfo.h>
 
-using namespace std;
-
 SaveException::SaveException(const QString& reason) {
     mReason = reason;
     mReasonBuffer = mReason.toLocal8Bit();
@@ -912,7 +910,7 @@ void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
 {
     areaList.clear();
     if (mTabStopBegin>=0 && mTabStopY == Line) {
-        QSynedit::PEditingArea p = make_shared<QSynedit::EditingArea>();
+        QSynedit::PEditingArea p = std::make_shared<QSynedit::EditingArea>();
         p->type = QSynedit::EditingAreaType::eatRectangleBorder;
 //        int spaceCount = leftSpaces(mLineBeforeTabStop);
 //        int spaceBefore = mLineBeforeTabStop.length()-TrimLeft(mLineBeforeTabStop).length();

@@ -1331,8 +1331,8 @@ void MainWindow::setProjectCurrentFile(const QString &filename)
     if (!unit)
         return;
     QModelIndex index = mProject->model()->getNodeIndex(unit->node().get());
-    index = mProjectProxyModel->mapFromSource(index);
     if (index.isValid()) {
+        index = mProjectProxyModel->mapFromSource(index);
         ui->projectView->expand(index);
         ui->projectView->setCurrentIndex(index);
     }

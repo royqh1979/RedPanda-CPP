@@ -39,7 +39,8 @@ SOURCES += qsynedit/CodeFolding.cpp \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
-    qsynedit/Types.cpp
+    qsynedit/Types.cpp \
+    qsynedit/highlighter/makefilehighlighter.cpp
 
 HEADERS += qsynedit/Search.h \
     qsynedit/SearchBase.h \
@@ -62,5 +63,6 @@ HEADERS += qsynedit/Search.h \
     qsynedit/highlighter/cpp.h \
     qsynedit/highlighter/customhighlighterv1.h \
     qsynedit/highlighter/glsl.h \
+    qsynedit/highlighter/makefilehighlighter.h
 
 INCLUDEPATH += ../redpanda_qt_utils
