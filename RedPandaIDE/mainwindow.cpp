@@ -4309,6 +4309,7 @@ void MainWindow::onClassBrowserRefreshEnd()
 void MainWindow::onProjectSwitchCustomViewMode()
 {
     mProject->setModelType(ProjectModelType::Custom);
+    qDebug()<<"3";
     ui->projectView->expand(
                 mProjectProxyModel->mapFromSource(
                     mProject->model()->rootIndex()));
@@ -4752,8 +4753,8 @@ void MainWindow::closeProject(bool refreshEditor)
             mTodoModel.setIsForProject(false);
             // Clear error browser
             clearIssues();
-            updateProjectView();
         }
+        updateProjectView();
         mClosingProject=false;
     }
 }

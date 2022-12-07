@@ -323,6 +323,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
                     pos++;
                 }
                 dialog.setDefaultSuffix(suffix);
+            } else {
+                dialog.setDefaultSuffix("");
             }
         });
 

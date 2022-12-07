@@ -5533,7 +5533,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     int caretY=pos.line;
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
-        if (!mUndoing && mHighlighter && mOptions.testFlag(eoAutoIndent)) {
+        if (!mUndoing && mHighlighter && mHighlighter->language()==HighlighterLanguage::Cpp && mOptions.testFlag(eoAutoIndent)) {
             QString s = trimLeft(text[0]);
             if (sLeftSide.isEmpty()) {
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
@@ -5563,7 +5563,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             if (i==text.length()-1) {
                 str = sRightSide;
             } else {
-                if (!mUndoing && mHighlighter && mOptions.testFlag(eoAutoIndent) && notInComment) {
+                if (!mUndoing && mHighlighter && mHighlighter->language()==HighlighterLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
                     str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
                 } else {
                     str = "";
@@ -5573,7 +5573,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             str = text[i];
             if (i==text.length()-1)
                 str += sRightSide;
-            if (!mUndoing && mHighlighter && mOptions.testFlag(eoAutoIndent) && notInComment) {
+            if (!mUndoing && mHighlighter && mHighlighter->language()==HighlighterLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
                 int indentSpaces = calcIndentSpaces(caretY,str,true);
                 str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
             }

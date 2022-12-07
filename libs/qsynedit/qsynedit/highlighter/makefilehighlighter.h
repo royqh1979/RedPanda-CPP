@@ -42,7 +42,9 @@ class MakefileHighlighter : public Highlighter
     };
 
     enum RangeState {
-        Unknown, String,
+        Unknown,
+        DQString, // Double Quoted "blahblah"
+        SQString, // Single Quoted 'blahblah'
         /* Targets, */
         Prequisitions,
         Command,
@@ -52,9 +54,14 @@ class MakefileHighlighter : public Highlighter
         Assignment,
     };
 
-    enum ExpressionStartType {
+    enum class ExpressionStartType {
         Parenthesis,
         Brace
+    };
+
+    enum class StringStartType {
+        SingleQuoted,
+        DoubleQuoted
     };
 
 
@@ -85,7 +92,7 @@ private:
     void procNumber();
     void procNull();
     void procString(bool inExpression );
-    void procStringStart();
+    void procStringStart(StringStartType type, bool inExpression);
     void procExpressionStart(ExpressionStartType type);
     void procExpressionEnd();
     void procSymbol();
@@ -99,15 +106,21 @@ private:
     void pushState();
     void popState();
     bool isIdentStartChar(const QChar& ch) {
-        if (ch == '_') {
-            return true;
-        }
         if ((ch>='a') && (ch <= 'z')) {
             return true;
         }
         if ((ch>='A') && (ch <= 'Z')) {
             return true;
         }
+        switch(ch.unicode()) {
+        case '_':
+        case '%':
+        case '.':
+        case '*':
+        case '/':
+            return true;
+        }
+
         return false;
     }
 

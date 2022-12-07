@@ -218,13 +218,16 @@ void MakefileHighlighter::procNull()
 
 void MakefileHighlighter::procString(bool inExpression )
 {
-    mState = RangeState::String;
     mTokenID = TokenId::String;
     while (mLine[mRun] != 0) {
-        if (mLine[mRun] == '\"') {
+        if (mState==RangeState::DQString && mLine[mRun] == '\"') {
             mRun++;
             popState();
             break;
+        } else if (mState==RangeState::SQString && mLine[mRun] == '\'') {
+                mRun++;
+                popState();
+                break;
         } else if (!inExpression && mLine[mRun] == '$') {
             break;
         } else if (isSpaceChar(mLine[mRun])) {
@@ -235,12 +238,19 @@ void MakefileHighlighter::procString(bool inExpression )
 
 }
 
-void MakefileHighlighter::procStringStart()
+void MakefileHighlighter::procStringStart(StringStartType type,bool inExpression )
 {
     mRun++;
     pushState();
-    procString(mState!=RangeState::BraceExpression
-            && mState!=RangeState::ParenthesisExpression);
+    switch(type) {
+    case StringStartType::SingleQuoted:
+        mState = RangeState::SQString;
+        break;
+    case StringStartType::DoubleQuoted:
+        mState = RangeState::DQString;
+        break;
+    }
+    procString(inExpression);
 }
 
 void MakefileHighlighter::procExpressionStart(ExpressionStartType type)
@@ -355,7 +365,8 @@ void MakefileHighlighter::procIdentifier()
         case RangeState::Unknown:
             mTokenID = TokenId::Target;
             break;
-        case RangeState::String:
+        case RangeState::DQString:
+        case RangeState::SQString:
             mTokenID = TokenId::String;
             break;
         }
@@ -378,9 +389,6 @@ void MakefileHighlighter::popState()
 
 bool MakefileHighlighter::isIdentChar(const QChar &ch) const
 {
-    if (ch == '_' || ch =='-') {
-        return true;
-    }
     if ((ch>='0') && (ch <= '9')) {
         return true;
     }
@@ -388,6 +396,16 @@ bool MakefileHighlighter::isIdentChar(const QChar &ch) const
         return true;
     }
     if ((ch>='A') && (ch <= 'Z')) {
+        return true;
+    }
+    switch(ch.unicode()) {
+    case '_':
+    case '%':
+    case '.':
+    case '*':
+    case '-':
+    case '+':
+    case '/':
         return true;
     }
     return false;
@@ -469,7 +487,8 @@ void MakefileHighlighter::next()
         return;
     }
     switch(mState) {
-    case RangeState::String:
+    case RangeState::DQString:
+    case RangeState::SQString:
         if (mLine[mRun] == '$')
             procDollar();
         else
@@ -484,7 +503,10 @@ void MakefileHighlighter::next()
             procDollar();
             break;
         case '\"':
-            procStringStart();
+            procStringStart(StringStartType::DoubleQuoted,false);
+            break;
+        case '\'':
+            procStringStart(StringStartType::SingleQuoted,false);
             break;
         case '#':
             procComment();
@@ -511,6 +533,12 @@ void MakefileHighlighter::next()
             else
                 procSymbol();
             break;
+        case '\"':
+            procStringStart(StringStartType::DoubleQuoted,true);
+            break;
+        case '\'':
+            procStringStart(StringStartType::SingleQuoted,true);
+            break;
         case '}':
             if (mState == RangeState::BraceExpression)
                 procExpressionEnd();
@@ -523,7 +551,6 @@ void MakefileHighlighter::next()
         case '@':
         case '+':
         case '*':
-        case '%':
         case '^':
         case '<':
         case '?':
@@ -533,6 +560,14 @@ void MakefileHighlighter::next()
                 mTokenID = TokenId::Variable;
             } else
                 procSymbol();
+            break;
+        case '%':
+            if (mLine[mRun]=='D' || mLine[mRun]=='F') {
+                //auto variable
+                mRun+=2;
+                mTokenID = TokenId::Variable;
+            } else
+                procIdentifier();
             break;
         default:
             if (mLine[mRun]>='0' && mLine[mRun]<='9') {
@@ -553,7 +588,10 @@ void MakefileHighlighter::next()
             procComment();
             break;
         case '\"':
-            procStringStart();
+            procStringStart(StringStartType::DoubleQuoted,false);
+            break;
+        case '\'':
+            procStringStart(StringStartType::SingleQuoted,false);
             break;
         case '?':
         case '+':

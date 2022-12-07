@@ -54,7 +54,7 @@ QSynedit::PHighlighter HighlighterManager::getHighlighter(const QString &filenam
     QFileInfo info(filename);
     QString suffix = info.suffix();
     QString basename = info.baseName();
-    if (suffix.isEmpty() || suffix == "c" || suffix == "cpp" || suffix == "cxx"
+    if (suffix == "c" || suffix == "cpp" || suffix == "cxx"
             || suffix == "cc" || suffix == "h" || suffix == "hpp"
             || suffix == "hxx" || suffix == "hh" || suffix == "C"
             || suffix == "CPP" || suffix =="H" || suffix == "c++"
@@ -64,8 +64,11 @@ QSynedit::PHighlighter HighlighterManager::getHighlighter(const QString &filenam
         return getGLSLHighlighter();
     } else if (suffix == "s" || suffix == "asm") {
         return getAsmHighlighter();
-    } else if (basename.compare("makefile", Qt::CaseInsensitive)==0)
+    } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
         return getMakefileHighlighter();
+    } else if (suffix.isEmpty()) {
+        return getCppHighlighter();
+    }
     return QSynedit::PHighlighter();
 }
 

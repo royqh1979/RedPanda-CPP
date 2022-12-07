@@ -828,7 +828,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="157"/>
         <source>Statically link libraries</source>
-        <translation>静态链接所有库</translation>
+        <translation>用静态链接方式链接库文件</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="185"/>
