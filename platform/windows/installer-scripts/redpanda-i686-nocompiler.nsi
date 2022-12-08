@@ -1,6 +1,7 @@
 ####################################################################
 # Startup
 
+Unicode True
 !include "config32.nsh"
 !define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win32.No.Compiler.Setup.exe"
 !define DISPLAY_NAME "Red Panda C++ 32bit ${DEVCPP_VERSION}"

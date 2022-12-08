@@ -1,6 +1,6 @@
 ####################################################################
 # Startup
-
+Unicode True
 !include "config32.nsh"
 !define COMPILERFOLDER "MinGW32"
 !define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win32.${COMPILERNAME}.Setup.exe"
