@@ -511,6 +511,12 @@ void MakefileHighlighter::next()
         case '#':
             procComment();
             break;
+        case '-':
+            if (mState == RangeState::Command)
+                procSymbol();
+            else
+                procIdentifier();
+            break;
         default:
             if (mLine[mRun]>='0' && mLine[mRun]<='9') {
                 procNumber();
@@ -606,6 +612,10 @@ void MakefileHighlighter::next()
             if (mLine[mRun+1]=='=') {
                 mRun++;
                 procAssignment();
+            } else if (mLine[mRun+1]==':') {
+                mRun+=2;
+                mTokenID = TokenId::Target;
+                mState = RangeState::Prequisitions;
             } else {
                 mRun++;
                 mTokenID = TokenId::Target;

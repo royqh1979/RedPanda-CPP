@@ -1,6 +1,7 @@
 Red Panda C++ Version 2.6
 
   - enhancement: Highlighter for makefiles
+  - fix: QSortFilterProxyModel not correctly cleared when exiting and project closed. (ASSERT fails in DEBUG mode.)
 
 Red Panda C++ Version 2.5
 
