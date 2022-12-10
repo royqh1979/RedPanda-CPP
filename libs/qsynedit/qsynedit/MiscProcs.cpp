@@ -42,24 +42,24 @@ int getEOL(const QString &Line, int start)
     return Line.size();
 }
 
-static bool internalEnumHighlighterAttris(PSyntaxer syntaxer,
+static bool internalEnumTokenAttributes(PSyntaxer syntaxer,
                                    bool skipDuplicates,
-                                   TokenAttributeProc highlighterAttriProc,
+                                   TokenAttributeProc tokenAttriProc,
                                    std::initializer_list<void *>& params,
-                                   SyntaxerList& highlighterList) {
+                                   SyntaxerList& syntaxerList) {
     bool Result = true;
-    if (highlighterList.indexOf(syntaxer)>0) {
+    if (syntaxerList.indexOf(syntaxer)>0) {
         if (skipDuplicates)
             return Result;
     } else {
-        highlighterList.append(syntaxer);
+        syntaxerList.append(syntaxer);
     }
     if (syntaxer) {
         for (PTokenAttribute pAttr: syntaxer->attributes()){
             QString UniqueAttriName = syntaxer->languageName()
-                    +  QString("%1").arg(highlighterList.indexOf(syntaxer)) + '.'
+                    +  QString("%1").arg(syntaxerList.indexOf(syntaxer)) + '.'
                     + pAttr->name();
-            Result = highlighterAttriProc(syntaxer, pAttr,
+            Result = tokenAttriProc(syntaxer, pAttr,
                                           UniqueAttriName, params);
             if (!Result)
                 break;
@@ -69,16 +69,16 @@ static bool internalEnumHighlighterAttris(PSyntaxer syntaxer,
 }
 
 bool enumTokenAttributes(PSyntaxer syntaxer, bool skipDuplicates,
-                           TokenAttributeProc highlighterAttriProc,
+                           TokenAttributeProc tokenAttriProc,
                            std::initializer_list<void *> params)
 {
-    if (!syntaxer || !highlighterAttriProc) {
+    if (!syntaxer || !tokenAttriProc) {
         return false;
     }
 
     SyntaxerList syntaxerList;
-    return internalEnumHighlighterAttris(syntaxer, skipDuplicates,
-        highlighterAttriProc, params, syntaxerList);
+    return internalEnumTokenAttributes(syntaxer, skipDuplicates,
+        tokenAttriProc, params, syntaxerList);
 }
 
 int mulDiv(int a, int b, int c)

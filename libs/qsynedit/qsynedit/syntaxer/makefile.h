@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MAKEFILE_H
-#define MAKEFILE_H
+#ifndef QSYNEDIT_MAKEFILE_SYNTAXER_H
+#define QSYNEDIT_MAKEFILE_SYNTAXER_H
 
 
 #include "syntaxer.h"

@@ -22,7 +22,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QTextCodec>
-#include "HighlighterManager.h"
+#include "syntaxermanager.h"
 #include "project.h"
 
 CppRefacter::CppRefacter(QObject *parent) : QObject(parent)
@@ -207,7 +207,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         QByteArray encoding;
         editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
-    editor.setHighlighter(HighlighterManager().getCppHighlighter());
+    editor.setSyntaxer(syntaxerManager.getCppSyntaxer());
     int posY = 0;
     while (posY < editor.document()->count()) {
         QString line = editor.document()->getString(posY);
@@ -217,16 +217,16 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         }
 
         if (posY == 0) {
-            editor.highlighter()->resetState();
+            editor.syntaxer()->resetState();
         } else {
-            editor.highlighter()->setState(
+            editor.syntaxer()->setState(
                         editor.document()->ranges(posY-1));
         }
-        editor.highlighter()->setLine(line,posY);
-        while (!editor.highlighter()->eol()) {
-            int start = editor.highlighter()->getTokenPos() + 1;
-            QString token = editor.highlighter()->getToken();
-            QSynedit::PTokenAttribute attr = editor.highlighter()->getTokenAttribute();
+        editor.syntaxer()->setLine(line,posY);
+        while (!editor.syntaxer()->eol()) {
+            int start = editor.syntaxer()->getTokenPos() + 1;
+            QString token = editor.syntaxer()->getToken();
+            QSynedit::PTokenAttribute attr = editor.syntaxer()->getTokenAttribute();
             if (attr && attr->tokenType()==QSynedit::TokenType::Identifier) {
                 if (token == statement->command) {
                     //same name symbol , test if the same statement;
@@ -253,7 +253,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
                     }
                 }
             }
-            editor.highlighter()->next();
+            editor.syntaxer()->next();
         }
         posY++;
     }
@@ -272,22 +272,22 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
     QStringList newContents;
-    editor.setHighlighter(HighlighterManager().getCppHighlighter());
+    editor.setSyntaxer(syntaxerManager.getCppSyntaxer());
     int posY = 0;
     while (posY < editor.document()->count()) {
         QString line = editor.document()->getString(posY);
 
         if (posY == 0) {
-            editor.highlighter()->resetState();
+            editor.syntaxer()->resetState();
         } else {
-            editor.highlighter()->setState(
+            editor.syntaxer()->setState(
                         editor.document()->ranges(posY-1));
         }
-        editor.highlighter()->setLine(line,posY);
+        editor.syntaxer()->setLine(line,posY);
         QString newLine;
-        while (!editor.highlighter()->eol()) {
-            int start = editor.highlighter()->getTokenPos() + 1;
-            QString token = editor.highlighter()->getToken();
+        while (!editor.syntaxer()->eol()) {
+            int start = editor.syntaxer()->getTokenPos() + 1;
+            QString token = editor.syntaxer()->getToken();
             if (token == statement->command) {
                 //same name symbol , test if the same statement;
                 QSynedit::BufferCoord p;
@@ -305,7 +305,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
                 }
             }
             newLine += token;
-            editor.highlighter()->next();
+            editor.syntaxer()->next();
         }
         newContents.append(newLine);
         posY++;

@@ -106,15 +106,15 @@ TodoThread::TodoThread(const QStringList &files, QObject *parent): QThread(paren
 
 void TodoThread::parseFile()
 {
-    QSynedit::PHighlighter highlighter = highlighterManager.getCppHighlighter();
+    QSynedit::PSyntaxer syntaxer = syntaxerManager.getCppSyntaxer();
     emit parseStarted();
-    doParseFile(mFilename,highlighter);
+    doParseFile(mFilename,syntaxer);
     emit parseFinished();
 }
 
 void TodoThread::parseFiles()
 {
-    QSynedit::PHighlighter highlighter = highlighterManager.getCppHighlighter();
+    QSynedit::PSyntaxer highlighter = syntaxerManager.getCppSyntaxer();
     emit parseStarted();
     foreach(const QString& filename,mFiles) {
         doParseFile(filename,highlighter);
@@ -122,33 +122,33 @@ void TodoThread::parseFiles()
     emit parseFinished();
 }
 
-void TodoThread::doParseFile(const QString &filename, QSynedit::PHighlighter highlighter)
+void TodoThread::doParseFile(const QString &filename, QSynedit::PSyntaxer syntaxer)
 {
     emit parsingFile(filename);
     QStringList lines;
     if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,lines)) {
         lines = readFileToLines(filename);
     }
-    highlighter->resetState();
+    syntaxer->resetState();
     for (int i =0;i<lines.count();i++) {
-        highlighter->setLine(lines[i],i);
-        while (!highlighter->eol()) {
+        syntaxer->setLine(lines[i],i);
+        while (!syntaxer->eol()) {
             QSynedit::PTokenAttribute attr;
-            attr = highlighter->getTokenAttribute();
+            attr = syntaxer->getTokenAttribute();
             if (attr && attr->tokenType() == QSynedit::TokenType::Comment) {
-                QString token = highlighter->getToken();
+                QString token = syntaxer->getToken();
                 int pos = token.indexOf(todoReg);
                 if (pos>=0) {
                     emit todoFound(
                                 filename,
                                 i+1,
-                                pos+highlighter->getTokenPos(),
+                                pos+syntaxer->getTokenPos(),
                                 lines[i].trimmed()
                                 );
                     break;
                 }
             }
-            highlighter->next();
+            syntaxer->next();
         }
     }
 

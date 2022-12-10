@@ -75,7 +75,6 @@ LIBS += advapi32.lib user32.lib
 }
 
 SOURCES += \
-    HighlighterManager.cpp \
     autolinkmanager.cpp \
     caretlist.cpp \
     codeformatter.cpp \
@@ -129,6 +128,7 @@ SOURCES += \
     settingsdialog/toolsgitwidget.cpp \
     shortcutmanager.cpp \
     symbolusagemanager.cpp \
+    syntaxermanager.cpp \
     thememanager.cpp \
     todoparser.cpp \
     toolsmanager.cpp \
@@ -209,7 +209,6 @@ SOURCES += \
     widgets/signalmessagedialog.cpp
 
 HEADERS += \
-    HighlighterManager.h \
     SimpleIni.h \
     autolinkmanager.h \
     caretlist.h \
@@ -264,6 +263,7 @@ HEADERS += \
     settingsdialog/toolsgitwidget.h \
     shortcutmanager.h \
     symbolusagemanager.h \
+    syntaxermanager.h \
     thememanager.h \
     todoparser.h \
     toolsmanager.h \

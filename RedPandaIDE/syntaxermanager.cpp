@@ -14,42 +14,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "HighlighterManager.h"
+#include "syntaxermanager.h"
 #include <QFileInfo>
 #include <QObject>
 #include "qsynedit/Constants.h"
-#include "qsynedit/highlighter/cpp.h"
-#include "qsynedit/highlighter/asm.h"
-#include "qsynedit/highlighter/glsl.h"
-#include "qsynedit/highlighter/makefilehighlighter.h"
+#include "qsynedit/syntaxer/cpp.h"
+#include "qsynedit/syntaxer/asm.h"
+#include "qsynedit/syntaxer/glsl.h"
+#include "qsynedit/syntaxer/makefile.h"
 
 #include "qsynedit/Constants.h"
 #include "colorscheme.h"
 
-HighlighterManager highlighterManager;
+SyntaxerManager syntaxerManager;
 
-HighlighterManager::HighlighterManager()
+SyntaxerManager::SyntaxerManager()
 {
 
 }
 
-QSynedit::PHighlighter HighlighterManager::getHighlighter(QSynedit::ProgrammingLanguage language)
+QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage language)
 {
     switch(language) {
     case QSynedit::ProgrammingLanguage::Cpp:
-        return getCppHighlighter();
+        return getCppSyntaxer();
     case QSynedit::ProgrammingLanguage::Asssembly:
-        return getAsmHighlighter();
+        return getAsmSyntaxer();
     case QSynedit::ProgrammingLanguage::Makefile:
-        return getMakefileHighlighter();
+        return getMakefileSyntaxer();
     case QSynedit::ProgrammingLanguage::GLSL:
-        return getGLSLHighlighter();
+        return getGLSLSyntaxer();
     default:
-        return QSynedit::PHighlighter();
+        return QSynedit::PSyntaxer();
     }
 }
 
-QSynedit::PHighlighter HighlighterManager::getHighlighter(const QString &filename)
+QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename)
 {
     QFileInfo info(filename);
     QString suffix = info.suffix();
@@ -59,59 +59,55 @@ QSynedit::PHighlighter HighlighterManager::getHighlighter(const QString &filenam
             || suffix == "hxx" || suffix == "hh" || suffix == "C"
             || suffix == "CPP" || suffix =="H" || suffix == "c++"
             || suffix == "h++") {
-        return getCppHighlighter();
+        return getCppSyntaxer();
     } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
-        return getGLSLHighlighter();
+        return getGLSLSyntaxer();
     } else if (suffix == "s" || suffix == "asm") {
-        return getAsmHighlighter();
+        return getAsmSyntaxer();
     } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
-        return getMakefileHighlighter();
+        return getMakefileSyntaxer();
     } else if (suffix.isEmpty()) {
-        return getCppHighlighter();
+        return getCppSyntaxer();
     }
-    return QSynedit::PHighlighter();
+    return QSynedit::PSyntaxer();
 }
 
-QSynedit::PHighlighter HighlighterManager::copyHighlighter(QSynedit::PHighlighter highlighter)
+QSynedit::PSyntaxer SyntaxerManager::copy(QSynedit::PSyntaxer syntaxer)
 {
-    if (!highlighter)
-        return QSynedit::PHighlighter();
-    return getHighlighter(highlighter->language());
+    if (!syntaxer)
+        return QSynedit::PSyntaxer();
+    return getSyntaxer(syntaxer->language());
 }
 
-QSynedit::PHighlighter HighlighterManager::getCppHighlighter()
+QSynedit::PSyntaxer SyntaxerManager::getCppSyntaxer()
 {
-    std::shared_ptr<QSynedit::CppHighlighter> highlighter = std::make_shared<QSynedit::CppHighlighter>();
-    return highlighter;
+    return std::make_shared<QSynedit::CppSyntaxer>();
 }
 
-QSynedit::PHighlighter HighlighterManager::getAsmHighlighter()
+QSynedit::PSyntaxer SyntaxerManager::getAsmSyntaxer()
 {
-    std::shared_ptr<QSynedit::ASMHighlighter> highlighter=std::make_shared<QSynedit::ASMHighlighter>();
-    return highlighter;
+    return std::make_shared<QSynedit::ASMSyntaxer>();
 }
 
-QSynedit::PHighlighter HighlighterManager::getGLSLHighlighter()
+QSynedit::PSyntaxer SyntaxerManager::getGLSLSyntaxer()
 {
-    std::shared_ptr<QSynedit::GLSLHighlighter> highlighter=std::make_shared<QSynedit::GLSLHighlighter>();
-    return highlighter;
+    return std::make_shared<QSynedit::GLSLSyntaxer>();
 }
 
-QSynedit::PHighlighter HighlighterManager::getMakefileHighlighter()
+QSynedit::PSyntaxer SyntaxerManager::getMakefileSyntaxer()
 {
-    std::shared_ptr<QSynedit::MakefileHighlighter> highlighter=std::make_shared<QSynedit::MakefileHighlighter>();
-    return highlighter;
+    return std::make_shared<QSynedit::MakefileSyntaxer>();
 }
 
-void HighlighterManager::applyColorScheme(QSynedit::PHighlighter highlighter, const QString &schemeName)
+void SyntaxerManager::applyColorScheme(QSynedit::PSyntaxer syntaxer, const QString &schemeName)
 {
-    if (!highlighter)
+    if (!syntaxer)
         return;
 
-    for (QString name: highlighter->attributes().keys()) {
+    for (QString name: syntaxer->attributes().keys()) {
         PColorSchemeItem item = pColorManager->getItem(schemeName,name);
         if (item) {
-            QSynedit::PTokenAttribute attr = highlighter->attributes()[name];
+            QSynedit::PTokenAttribute attr = syntaxer->attributes()[name];
             attr->setBackground(item->background());
             attr->setForeground(item->foreground());
             QSynedit::FontStyles styles = QSynedit::FontStyle::fsNone;

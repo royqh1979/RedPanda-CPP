@@ -30,17 +30,16 @@ SOURCES += qsynedit/CodeFolding.cpp \
     qsynedit/exporter/synexporter.cpp \
     qsynedit/exporter/synhtmlexporter.cpp \
     qsynedit/exporter/synrtfexporter.cpp \
-    qsynedit/highlighter/asm.cpp \
-    qsynedit/highlighter/base.cpp \
-    qsynedit/highlighter/composition.cpp \
-    qsynedit/highlighter/cpp.cpp \
-    qsynedit/highlighter/customhighlighterv1.cpp \
-    qsynedit/highlighter/glsl.cpp \
+    qsynedit/syntaxer/asm.cpp \
+    qsynedit/syntaxer/cpp.cpp \
+    qsynedit/syntaxer/customhighlighterv1.cpp \
+    qsynedit/syntaxer/glsl.cpp \
     qsynedit/Search.cpp \
     qsynedit/SearchBase.cpp \
     qsynedit/SearchRegex.cpp \
     qsynedit/Types.cpp \
-    qsynedit/highlighter/makefilehighlighter.cpp
+    qsynedit/syntaxer/makefile.cpp \
+    qsynedit/syntaxer/syntaxer.cpp
 
 HEADERS += qsynedit/Search.h \
     qsynedit/SearchBase.h \
@@ -57,12 +56,11 @@ HEADERS += qsynedit/Search.h \
     qsynedit/exporter/synexporter.h \
     qsynedit/exporter/synhtmlexporter.h \
     qsynedit/exporter/synrtfexporter.h \
-    qsynedit/highlighter/asm.h \
-    qsynedit/highlighter/base.h \
-    qsynedit/highlighter/composition.h \
-    qsynedit/highlighter/cpp.h \
-    qsynedit/highlighter/customhighlighterv1.h \
-    qsynedit/highlighter/glsl.h \
-    qsynedit/highlighter/makefilehighlighter.h
+    qsynedit/syntaxer/asm.h \
+    qsynedit/syntaxer/cpp.h \
+    qsynedit/syntaxer/customhighlighterv1.h \
+    qsynedit/syntaxer/glsl.h \
+    qsynedit/syntaxer/makefile.h \
+    qsynedit/syntaxer/syntaxer.h
 
 INCLUDEPATH += ../redpanda_qt_utils

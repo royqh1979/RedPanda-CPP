@@ -17,7 +17,7 @@
 #include <QDesktopWidget>
 #include "cpudialog.h"
 #include "ui_cpudialog.h"
-#include "../HighlighterManager.h"
+#include "../syntaxermanager.h"
 #include "../mainwindow.h"
 #include "../debugger.h"
 #include "../settings.h"
@@ -32,7 +32,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
-    ui->txtCode->setHighlighter(highlighterManager.getAsmHighlighter());
+    ui->txtCode->setSyntaxer(syntaxerManager.getAsmSyntaxer());
     ui->txtCode->setReadOnly(true);
     ui->txtCode->gutter().setShowLineNumbers(false);
     ui->txtCode->setCaretUseTextColor(true);
@@ -42,7 +42,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     ui->txtCode->setGutterWidth(0);
     ui->txtCode->setUseCodeFolding(false);
     ui->txtCode->setRightEdge(0);
-    highlighterManager.applyColorScheme(ui->txtCode->highlighter(),
+    syntaxerManager.applyColorScheme(ui->txtCode->syntaxer(),
                                         pSettings->editor().colorScheme());
     PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
     if (item) {

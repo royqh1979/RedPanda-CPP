@@ -131,9 +131,6 @@ using SynPaintTransientProc = std::function<void(const QPaintDevice& paintDevice
 using ProcessCommandProc = std::function<void(EditCommand& command, QChar& AChar, void* data)>;
 using MouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
 using PaintProc = std::function<void(const QPaintDevice& paintDevice )>;
-//using SynPreparePaintHighlightTokenProc = std::function<void(int row,
-//        int column, const QString& token, PSynHighlighterAttribute attr,
-//        FontStyles& style, QColor& foreground, QColor& background)>;
 using SearchMathedProc = std::function<SearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
 using SearchConfirmAroundProc = std::function<bool ()>;
@@ -247,11 +244,11 @@ public:
     int maxScrollWidth() const;
     int maxScrollHeight() const;
 
-    bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
+    bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
       PTokenAttribute& attri);
-    bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
+    bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
       bool& tokenFinished, PTokenAttribute& attri);
-    bool getHighlighterAttriAtRowColEx(const BufferCoord& pos, QString& token,
+    bool getTokenAttriAtRowColEx(const BufferCoord& pos, QString& token,
       int &start, PTokenAttribute& attri);
 
     void beginUndoBlock();
@@ -341,8 +338,8 @@ public:
     bool modified() const;
     void setModified(bool Value);
 
-    PSyntaxer highlighter() const;
-    void setHighlighter(const PSyntaxer &highlighter);
+    PSyntaxer syntaxer() const;
+    void setSyntaxer(const PSyntaxer &syntaxer);
 
     bool useCodeFolding() const;
     void setUseCodeFolding(bool value);
@@ -514,7 +511,7 @@ private:
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
     void scanForFoldRanges(PCodeFoldingRanges topFoldRanges);
-    int lineHasChar(int Line, int startChar, QChar character, const QString& highlighterAttrName);
+    int lineHasChar(int Line, int startChar, QChar character, const QString& tokenAttrName);
     void findSubFoldRange(PCodeFoldingRanges topFoldRanges,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent);
     PCodeFoldingRange collapsedFoldStartAtLine(int Line);
     void initializeCaret();
@@ -667,7 +664,7 @@ private:
     ScrollStyle mScrollBars;
     int mTextHeight;
     int mTopLine;
-    PSyntaxer mHighlighter;
+    PSyntaxer mSyntaxer;
     QColor mSelectedForeground;
     QColor mSelectedBackground;
     QColor mForegroundColor;

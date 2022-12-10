@@ -69,8 +69,8 @@ public:
     QFont font() const;
     void setFont(const QFont &font);
 
-    PSyntaxer highlighter() const;
-    void setHighlighter(PSyntaxer Value);
+    PSyntaxer syntaxer() const;
+    void setSyntaxer(PSyntaxer value);
 
     QString title() const;
     void setTitle(const QString &Value);
@@ -112,7 +112,7 @@ protected:
     QString mDefaultFilter;
     bool mExportAsText;
     QFont mFont;
-    PSyntaxer mHighlighter;
+    PSyntaxer mSyntaxer;
     QColor mLastBG;
     QColor mLastFG;
     FontStyles mLastStyle;

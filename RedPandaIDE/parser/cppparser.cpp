@@ -17,7 +17,7 @@
 #include "cppparser.h"
 #include "parserutils.h"
 #include "../utils.h"
-#include "qsynedit/highlighter/cpp.h"
+#include "qsynedit/syntaxer/cpp.h"
 
 #include <QApplication>
 #include <QDate>
@@ -4772,19 +4772,19 @@ PStatement CppParser::doParseEvalTypeInfo(
     QString s = type;
 //    qDebug()<<"eval type info"<<type;
     int position = s.length()-1;
-    QSynedit::CppHighlighter highlighter;
-    highlighter.resetState();
-    highlighter.setLine(type,0);
+    QSynedit::CppSyntaxer syntaxer;
+    syntaxer.resetState();
+    syntaxer.setLine(type,0);
     int bracketLevel = 0;
     int templateLevel  = 0;
-    while(!highlighter.eol()) {
-        QString token = highlighter.getToken();
+    while(!syntaxer.eol()) {
+        QString token = syntaxer.getToken();
         if (bracketLevel == 0 && templateLevel ==0) {
             if (token == "*")
                 pointerLevel++;
             else if (token == "&")
                 pointerLevel--;
-            else if (highlighter.getTokenAttribute()->tokenType() == QSynedit::TokenType::Identifier) {
+            else if (syntaxer.getTokenAttribute()->tokenType() == QSynedit::TokenType::Identifier) {
                 baseType += token;
             } else if (token == "[") {
                 pointerLevel++;
@@ -4809,7 +4809,7 @@ PStatement CppParser::doParseEvalTypeInfo(
             }
             templateParams += token;
         }
-        highlighter.next();
+        syntaxer.next();
     }
     while ((position >= 0) && (s[position] == '*'
                                || s[position] == ' '

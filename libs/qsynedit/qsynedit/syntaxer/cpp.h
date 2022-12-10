@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef SYNEDITCPPHIGHLIGHTER_H
-#define SYNEDITCPPHIGHLIGHTER_H
+#ifndef QSYNEDIT_CPP_SYNTAXER_H
+#define QSYNEDIT_CPP_SYNTAXER_H
 #include "syntaxer.h"
 #include <QSet>
 

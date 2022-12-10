@@ -61,7 +61,7 @@ void SynExporter::ExportAll(PDocument ALines)
 void SynExporter::ExportRange(PDocument ALines, BufferCoord Start, BufferCoord Stop)
 {
     // abort if not all necessary conditions are met
-    if (!ALines || !mHighlighter || (ALines->count() == 0))
+    if (!ALines || !mSyntaxer || (ALines->count() == 0))
         return;
     Stop.line = std::max(1, std::min(Stop.line, ALines->count()));
     Stop.ch = std::max(1, std::min(Stop.ch, ALines->getString(Stop.line - 1).length() + 1));
@@ -77,9 +77,9 @@ void SynExporter::ExportRange(PDocument ALines, BufferCoord Start, BufferCoord S
     mFirstAttribute = true;
 
     if (Start.line == 1)
-        mHighlighter->resetState();
+        mSyntaxer->resetState();
     else
-        mHighlighter->setState(ALines->ranges(Start.line-2));
+        mSyntaxer->setState(ALines->ranges(Start.line-2));
     for (int i = Start.line; i<=Stop.line; i++) {
         QString Line = ALines->getString(i-1);
         // order is important, since Start.Y might be equal to Stop.Y
@@ -88,17 +88,17 @@ void SynExporter::ExportRange(PDocument ALines, BufferCoord Start, BufferCoord S
 //        if ( (i = Start.Line) && (Start.Char > 1))
 //            Line.remove(0, Start.Char - 1);
         // export the line
-        mHighlighter->setLine(Line, i);
-        while (!mHighlighter->eol()) {
-            PTokenAttribute attri = mHighlighter->getTokenAttribute();
-            int startPos = mHighlighter->getTokenPos();
-            QString token = mHighlighter->getToken();
+        mSyntaxer->setLine(Line, i);
+        while (!mSyntaxer->eol()) {
+            PTokenAttribute attri = mSyntaxer->getTokenAttribute();
+            int startPos = mSyntaxer->getTokenPos();
+            QString token = mSyntaxer->getToken();
             if (i==Start.line && (startPos+token.length() < Start.ch)) {
-                mHighlighter->next();
+                mSyntaxer->next();
                 continue;
             }
             if (i==Stop.line && (startPos >= Stop.ch-1)) {
-                mHighlighter->next();
+                mSyntaxer->next();
                 continue;
             }
             if (i==Stop.line && (startPos+token.length() > Stop.ch)) {
@@ -110,10 +110,10 @@ void SynExporter::ExportRange(PDocument ALines, BufferCoord Start, BufferCoord S
 
             QString Token = ReplaceReservedChars(token);
             if (mOnFormatToken)
-                mOnFormatToken(mHighlighter, i, mHighlighter->getTokenPos()+1, mHighlighter->getToken(),attri);
+                mOnFormatToken(mSyntaxer, i, mSyntaxer->getTokenPos()+1, mSyntaxer->getToken(),attri);
             SetTokenAttribute(attri);
             FormatToken(Token);
-            mHighlighter->next();
+            mSyntaxer->next();
         }
         if (i!=Stop.line)
             FormatNewLine();
@@ -166,18 +166,18 @@ void SynExporter::setFont(const QFont &font)
     mFont = font;
 }
 
-PSyntaxer SynExporter::highlighter() const
+PSyntaxer SynExporter::syntaxer() const
 {
-    return mHighlighter;
+    return mSyntaxer;
 }
 
-void SynExporter::setHighlighter(PSyntaxer Value)
+void SynExporter::setSyntaxer(PSyntaxer value)
 {
-    if (mHighlighter != Value) {
-        mHighlighter = Value;
+    if (mSyntaxer != value) {
+        mSyntaxer = value;
         clear();
-        if ((mHighlighter) && (mHighlighter->whitespaceAttribute()) && mUseBackground)
-            mBackgroundColor = mHighlighter->whitespaceAttribute()->background();
+        if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground)
+            mBackgroundColor = mSyntaxer->whitespaceAttribute()->background();
     }
 }
 
@@ -206,8 +206,8 @@ void SynExporter::setUseBackground(bool Value)
     if (mUseBackground != Value) {
         mUseBackground = Value;
         clear();
-        if ((mHighlighter) && (mHighlighter->whitespaceAttribute()) && mUseBackground)
-            mBackgroundColor = mHighlighter->whitespaceAttribute()->background();
+        if ((mSyntaxer) && (mSyntaxer->whitespaceAttribute()) && mUseBackground)
+            mBackgroundColor = mSyntaxer->whitespaceAttribute()->background();
     }
 }
 

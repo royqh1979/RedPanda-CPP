@@ -619,7 +619,7 @@ void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefo
         foreground = edit->mForegroundColor;
     }
 
-    edit->onPreparePaintHighlightToken(cLine,edit->mHighlighter->getTokenPos()+1,
+    edit->onPreparePaintHighlightToken(cLine,edit->mSyntaxer->getTokenPos()+1,
         Token,p_Attri,style,foreground,background);
 
     // Do we have to paint the old chars first, or can we just append?
@@ -702,17 +702,17 @@ void SynEditTextPainter::paintFoldAttributes()
                 X = TabSteps * edit->mCharWidth + edit->textOffset() - 2;
                 TabSteps+=edit->tabWidth();
                 indentLevel++ ;
-                if (edit->mHighlighter) {
+                if (edit->mSyntaxer) {
                     if (edit->mCodeFolding.indentGuides) {
-                        PTokenAttribute attr = edit->mHighlighter->symbolAttribute();
+                        PTokenAttribute attr = edit->mSyntaxer->symbolAttribute();
                         getBraceColorAttr(indentLevel,attr);
                         paintColor = attr->foreground();
                     }
                     if (edit->mCodeFolding.fillIndents) {
-                        PTokenAttribute attr = edit->mHighlighter->symbolAttribute();
+                        PTokenAttribute attr = edit->mSyntaxer->symbolAttribute();
                         getBraceColorAttr(indentLevel,attr);
                         gradientStart=attr->foreground();
-                        attr = edit->mHighlighter->symbolAttribute();
+                        attr = edit->mSyntaxer->symbolAttribute();
                         getBraceColorAttr(indentLevel+1,attr);
                         gradientStart=attr->foreground();
                     }
@@ -792,7 +792,7 @@ void SynEditTextPainter::paintLines()
     int cRow; // row index for the loop
     int vLine;
     QString sLine; // the current line
-    QString sToken; // highlighter token info
+    QString sToken; // token info
     int nTokenColumnsBefore, nTokenColumnLen;
     PTokenAttribute attr;
     int vFirstChar;
@@ -894,7 +894,7 @@ void SynEditTextPainter::paintLines()
 
         bLineSelected = (!bComplexLine) && (nLineSelStart > 0);
         rcToken = rcLine;
-        if (!edit->mHighlighter || !edit->mHighlighter->enabled()) {
+        if (!edit->mSyntaxer || !edit->mSyntaxer->enabled()) {
               sToken = sLine;
               if (bCurrentLine) {
                   nTokenColumnLen = edit->stringColumns(sLine,0);
@@ -938,12 +938,12 @@ void SynEditTextPainter::paintLines()
             // necessary because we probably did not scan to the end of the last
             // line - the internal highlighter range might be wrong.
             if (vLine == 1) {
-                edit->mHighlighter->resetState();
+                edit->mSyntaxer->resetState();
             } else {
-                edit->mHighlighter->setState(
+                edit->mSyntaxer->setState(
                             edit->mDocument->ranges(vLine-2));
             }
-            edit->mHighlighter->setLine(sLine, vLine - 1);
+            edit->mSyntaxer->setLine(sLine, vLine - 1);
             // Try to concatenate as many tokens as possible to minimize the count
             // of ExtTextOut calls necessary. This depends on the selection state
             // or the line having special colors. For spaces the foreground color
@@ -951,14 +951,14 @@ void SynEditTextPainter::paintLines()
             TokenAccu.Columns = 0;
             nTokenColumnsBefore = 0;
             // Test first whether anything of this token is visible.
-            while (!edit->mHighlighter->eol()) {
-                sToken = edit->mHighlighter->getToken();
+            while (!edit->mSyntaxer->eol()) {
+                sToken = edit->mSyntaxer->getToken();
                 // Work-around buggy highlighters which return empty tokens.
                 if (sToken.isEmpty())  {
-                    edit->mHighlighter->next();
-                    if (edit->mHighlighter->eol())
+                    edit->mSyntaxer->next();
+                    if (edit->mSyntaxer->eol())
                         break;
-                    sToken = edit->mHighlighter->getToken();
+                    sToken = edit->mSyntaxer->getToken();
                     // Maybe should also test whether GetTokenPos changed...
                     if (sToken.isEmpty()) {
                         qDebug()<<SynEdit::tr("The highlighter seems to be in an infinite loop");
@@ -974,12 +974,12 @@ void SynEditTextPainter::paintLines()
                         nTokenColumnLen = vLastChar - nTokenColumnsBefore;
                     }
                     // It's at least partially visible. Get the token attributes now.
-                    attr = edit->mHighlighter->getTokenAttribute();
+                    attr = edit->mSyntaxer->getTokenAttribute();
                     if (sToken == "["
                             || sToken == "("
                             || sToken == "{"
                             ) {
-                        SyntaxerState rangeState = edit->mHighlighter->getState();
+                        SyntaxerState rangeState = edit->mSyntaxer->getState();
                         getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel
@@ -988,15 +988,15 @@ void SynEditTextPainter::paintLines()
                                || sToken == ")"
                                || sToken == "}"
                                ){
-                        SyntaxerState rangeState = edit->mHighlighter->getState();
+                        SyntaxerState rangeState = edit->mSyntaxer->getState();
                         getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel+1,
                                           attr);
                     }
                     if (bCurrentLine && edit->mInputPreeditString.length()>0) {
-                        int startPos = edit->mHighlighter->getTokenPos()+1;
-                        int endPos = edit->mHighlighter->getTokenPos() + sToken.length();
+                        int startPos = edit->mSyntaxer->getTokenPos()+1;
+                        int endPos = edit->mSyntaxer->getTokenPos() + sToken.length();
                         //qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
                         if (!(endPos < edit->mCaretX
                                 || startPos >= edit->mCaretX+edit->mInputPreeditString.length())) {
@@ -1012,11 +1012,11 @@ void SynEditTextPainter::paintLines()
                 }
                 nTokenColumnsBefore+=nTokenColumnLen;
                 // Let the highlighter scan the next token.
-                edit->mHighlighter->next();
+                edit->mSyntaxer->next();
             }
             // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
             //nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore);
-            if (edit->mHighlighter->eol() && (nTokenColumnsBefore < vLastChar)) {
+            if (edit->mSyntaxer->eol() && (nTokenColumnsBefore < vLastChar)) {
                 int lineColumns = edit->mDocument->lineColumns(vLine-1);
                 // Draw text that couldn't be parsed by the highlighter, if any.
                 if (nTokenColumnsBefore < lineColumns) {
@@ -1034,17 +1034,17 @@ void SynEditTextPainter::paintLines()
                     (!bSpecialLine) && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
                     addHighlightToken(LineBreakGlyph,
                       edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
-                      edit->charColumns(LineBreakGlyph),vLine, edit->mHighlighter->whitespaceAttribute());
+                      edit->charColumns(LineBreakGlyph),vLine, edit->mSyntaxer->whitespaceAttribute());
                 }
             }
 
             // Paint folding
             foldRange = edit->foldStartAtLine(vLine);
             if ((foldRange) && foldRange->collapsed) {
-                sFold = edit->highlighter()->foldString();
+                sFold = edit->syntaxer()->foldString();
                 nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
-                attr = edit->mHighlighter->symbolAttribute();
-                getBraceColorAttr(edit->mHighlighter->getState().braceLevel,attr);
+                attr = edit->mSyntaxer->symbolAttribute();
+                getBraceColorAttr(edit->mSyntaxer->getState().braceLevel,attr);
                 addHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1) - (vFirstChar - FirstCol)
                   , nFold, vLine, attr);
             }

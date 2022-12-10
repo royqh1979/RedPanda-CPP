@@ -30,7 +30,7 @@ extern const QChar SoftBreakGlyph;
 
 #define MAX_SCROLL 65535
 
-// names for highlighter attributes
+// names for token attributes
 #define SYNS_AttrAssembler          "Assembler"
 #define SYNS_AttrCharacter          "Character"
 #define SYNS_AttrClass              "Class"

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "SynEdit.h"
-#include "highlighter/cpp.h"
+#include "syntaxer/cpp.h"
 #include <QApplication>
 #include <QFontMetrics>
 #include <algorithm>
@@ -24,7 +24,7 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QTimerEvent>
-#include "highlighter/syntaxer.h"
+#include "syntaxer/syntaxer.h"
 #include "Constants.h"
 #include "TextPainter.h"
 #include <QClipboard>
@@ -349,48 +349,48 @@ bool SynEdit::canRedo() const
 int SynEdit::maxScrollWidth() const
 {
     int maxLen = mDocument->lengthOfLongestLine();
-    if (highlighter())
-        maxLen = maxLen+stringColumns(highlighter()->foldString(),maxLen);
+    if (syntaxer())
+        maxLen = maxLen+stringColumns(syntaxer()->foldString(),maxLen);
     if (mOptions.testFlag(eoScrollPastEol))
         return std::max(maxLen ,1);
     else
         return std::max(maxLen-mCharsInWindow+1, 1);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, PTokenAttribute &attri)
+bool SynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, PTokenAttribute &attri)
 {
     int tmpStart;
-    return getHighlighterAttriAtRowColEx(pos, token, tmpStart, attri);
+    return getTokenAttriAtRowColEx(pos, token, tmpStart, attri);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, PTokenAttribute &attri)
+bool SynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, PTokenAttribute &attri)
 {
     int posX, posY, endPos, start;
     QString line;
     posY = pos.line - 1;
-    if (mHighlighter && (posY >= 0) && (posY < mDocument->count())) {
+    if (mSyntaxer && (posY >= 0) && (posY < mDocument->count())) {
         line = mDocument->getString(posY);
         if (posY == 0) {
-            mHighlighter->resetState();
+            mSyntaxer->resetState();
         } else {
-            mHighlighter->setState(mDocument->ranges(posY-1));
+            mSyntaxer->setState(mDocument->ranges(posY-1));
         }
-        mHighlighter->setLine(line, posY);
+        mSyntaxer->setLine(line, posY);
         posX = pos.ch;
         if ((posX > 0) && (posX <= line.length())) {
-            while (!mHighlighter->eol()) {
-                start = mHighlighter->getTokenPos() + 1;
-                token = mHighlighter->getToken();
+            while (!mSyntaxer->eol()) {
+                start = mSyntaxer->getTokenPos() + 1;
+                token = mSyntaxer->getToken();
                 endPos = start + token.length()-1;
                 if ((posX >= start) && (posX <= endPos)) {
-                    attri = mHighlighter->getTokenAttribute();
+                    attri = mSyntaxer->getTokenAttribute();
                     if (posX == endPos)
-                        tokenFinished = mHighlighter->getTokenFinished();
+                        tokenFinished = mSyntaxer->getTokenFinished();
                     else
                         tokenFinished = false;
                     return true;
                 }
-                mHighlighter->next();
+                mSyntaxer->next();
             }
         }
     }
@@ -400,30 +400,30 @@ bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token
     return false;
 }
 
-bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &token, int &start, PTokenAttribute &attri)
+bool SynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, int &start, PTokenAttribute &attri)
 {
     int posX, posY, endPos;
     QString line;
     posY = pos.line - 1;
-    if (mHighlighter && (posY >= 0) && (posY < mDocument->count())) {
+    if (mSyntaxer && (posY >= 0) && (posY < mDocument->count())) {
         line = mDocument->getString(posY);
         if (posY == 0) {
-            mHighlighter->resetState();
+            mSyntaxer->resetState();
         } else {
-            mHighlighter->setState(mDocument->ranges(posY-1));
+            mSyntaxer->setState(mDocument->ranges(posY-1));
         }
-        mHighlighter->setLine(line, posY);
+        mSyntaxer->setLine(line, posY);
         posX = pos.ch;
         if ((posX > 0) && (posX <= line.length())) {
-            while (!mHighlighter->eol()) {
-                start = mHighlighter->getTokenPos() + 1;
-                token = mHighlighter->getToken();
+            while (!mSyntaxer->eol()) {
+                start = mSyntaxer->getTokenPos() + 1;
+                token = mSyntaxer->getToken();
                 endPos = start + token.length()-1;
                 if ((posX >= start) && (posX <= endPos)) {
-                    attri = mHighlighter->getTokenAttribute();
+                    attri = mSyntaxer->getTokenAttribute();
                     return true;
                 }
-                mHighlighter->next();
+                mSyntaxer->next();
             }
         }
     }
@@ -516,7 +516,7 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                             p.line = PosY;
                             if ((Test == BracketInc) || (Test == BracketDec)) {
                                 isCommentOrStringOrChar = false;
-                                if (getHighlighterAttriAtRowCol(p, vDummy, attr))
+                                if (getTokenAttriAtRowCol(p, vDummy, attr))
                                     isCommentOrStringOrChar =
                                         (attr->tokenType() == TokenType::String) ||
                                             (attr->tokenType() == TokenType::Comment) ||
@@ -550,7 +550,7 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
                             p.line = PosY;
                             if ((Test == BracketInc) || (Test == BracketDec)) {
                                 isCommentOrStringOrChar = false;
-                                if (getHighlighterAttriAtRowCol(p, vDummy, attr))
+                                if (getTokenAttriAtRowCol(p, vDummy, attr))
                                     isCommentOrStringOrChar =
                                         (attr->tokenType() == TokenType::String) ||
                                             (attr->tokenType() == TokenType::Comment) ||
@@ -1292,7 +1292,7 @@ BufferCoord SynEdit::getPreviousLeftBrace(int x, int y)
         p.ch = PosX;
         p.line = PosY;
         if (Test=='{' || Test == '}') {
-            if (getHighlighterAttriAtRowCol(p, vDummy, attr)) {
+            if (getTokenAttriAtRowCol(p, vDummy, attr)) {
                 isCommentOrStringOrChar =
                         (attr->tokenType() == TokenType::String) ||
                         (attr->tokenType() == TokenType::Comment) ||
@@ -1538,7 +1538,7 @@ int SynEdit::findCommentStartLine(int searchStartLine)
     SyntaxerState range;
     while (commentStartLine>=1) {
         range = mDocument->ranges(commentStartLine-1);
-        if (!mHighlighter->isLastLineCommentNotFinished(range.state)){
+        if (!mSyntaxer->isLastLineCommentNotFinished(range.state)){
             commentStartLine++;
             break;
         }
@@ -1554,7 +1554,7 @@ int SynEdit::findCommentStartLine(int searchStartLine)
 
 int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
 {
-    if (!mHighlighter)
+    if (!mSyntaxer)
         return 0;
     line = std::min(line, mDocument->count()+1);
     if (line<=1)
@@ -1574,20 +1574,20 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
         //calculate the indents of last statement;
         indentSpaces = leftSpaces(startLineText);
         SyntaxerState rangePreceeding = mDocument->ranges(startLine-1);
-        mHighlighter->setState(rangePreceeding);
+        mSyntaxer->setState(rangePreceeding);
         if (addIndent) {
 //            QString trimmedS = s.trimmed();
             QString trimmedLineText = lineText.trimmed();
-            mHighlighter->setLine(trimmedLineText,line-1);
+            mSyntaxer->setLine(trimmedLineText,line-1);
             int statePrePre;
             if (startLine>1) {
                 statePrePre = mDocument->ranges(startLine-2).state;
             } else {
                 statePrePre = 0;
             }
-            SyntaxerState rangeAfterFirstToken = mHighlighter->getState();
-            QString firstToken = mHighlighter->getToken();
-            PTokenAttribute attr = mHighlighter->getTokenAttribute();
+            SyntaxerState rangeAfterFirstToken = mSyntaxer->getState();
+            QString firstToken = mSyntaxer->getToken();
+            PTokenAttribute attr = mSyntaxer->getTokenAttribute();
             if (attr->tokenType() == TokenType::Keyword
                                   &&  lineText.endsWith(':')
                                   && (
@@ -1596,11 +1596,11 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                                   || firstToken == "default"
                         )) {
                 // public: private: protecte: case: should indents like it's parent statement
-                mHighlighter->setState(rangePreceeding);
-                mHighlighter->setLine("}",line-1);
-                rangeAfterFirstToken = mHighlighter->getState();
-                firstToken = mHighlighter->getToken();
-                attr = mHighlighter->getTokenAttribute();
+                mSyntaxer->setState(rangePreceeding);
+                mSyntaxer->setLine("}",line-1);
+                rangeAfterFirstToken = mSyntaxer->getState();
+                firstToken = mSyntaxer->getToken();
+                attr = mSyntaxer->getTokenAttribute();
             }
             bool indentAdded = false;
             int additionIndent = 0;
@@ -1619,14 +1619,14 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 indentAdded = true;
                 l = startLine;
-            } else if (mHighlighter->language() == ProgrammingLanguage::Cpp
+            } else if (mSyntaxer->language() == ProgrammingLanguage::Cpp
                        && trimmedLineText.startsWith('#')
-                       && attr == ((CppSyntaxer *)mHighlighter.get())->preprocessorAttribute()) {
+                       && attr == ((CppSyntaxer *)mSyntaxer.get())->preprocessorAttribute()) {
                 indentAdded = true;
                 indentSpaces=0;
                 l=0;
-            } else if (mHighlighter->language() == ProgrammingLanguage::Cpp
-                       && mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
+            } else if (mSyntaxer->language() == ProgrammingLanguage::Cpp
+                       && mSyntaxer->isLastLineCommentNotFinished(rangePreceeding.state)
                        ) {
                 // last line is a not finished comment,
                 if  (trimmedLineText.startsWith("*")) {
@@ -1652,10 +1652,10 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     indentAdded = true;
                     l = startLine;
                 }
-            } else if ( mHighlighter->isLastLineCommentNotFinished(statePrePre)
+            } else if ( mSyntaxer->isLastLineCommentNotFinished(statePrePre)
                         && rangePreceeding.matchingIndents.isEmpty()
                         && rangePreceeding.firstIndentThisLine>=rangePreceeding.indents.length()
-                        && !mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)) {
+                        && !mSyntaxer->isLastLineCommentNotFinished(rangePreceeding.state)) {
                 // the preceeding line is the end of comment
                 // we should use the indents of the start line of the comment
                 int commentStartLine = findCommentStartLine(startLine-2);
@@ -1723,7 +1723,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 PTokenAttribute attr;
                 coord.line = startLine;
                 coord.ch = document()->getString(startLine-1).length();
-                if (getHighlighterAttriAtRowCol(coord,token,attr)
+                if (getTokenAttriAtRowCol(coord,token,attr)
                         && attr->tokenType() == QSynedit::TokenType::Operator
                         && token == ":") {
                     indentSpaces += tabWidth();
@@ -1982,7 +1982,7 @@ QString SynEdit::getDisplayStringAtLine(int line) const
     QString s = mDocument->getString(line-1);
     PCodeFoldingRange foldRange = foldStartAtLine(line);
     if ((foldRange) && foldRange->collapsed) {
-        return s+highlighter()->foldString();
+        return s+syntaxer()->foldString();
     }
     return s;
 }
@@ -2395,7 +2395,7 @@ void SynEdit::insertLine(bool moveCaret)
     if (mCaretX>lineText().length()+1) {
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
-            QString s = Temp+highlighter()->foldString();
+            QString s = Temp+syntaxer()->foldString();
             if (mCaretX > s.length()) {
                 if (!mUndoing) {
                     addCaretToUndo();
@@ -2426,19 +2426,19 @@ void SynEdit::insertLine(bool moveCaret)
     bool notInComment=true;
     properSetLine(mCaretY-1,leftLineText);
     //update range stated for line mCaretY
-    if (mHighlighter) {
+    if (mSyntaxer) {
         if (mCaretY==1) {
-            mHighlighter->resetState();
+            mSyntaxer->resetState();
         } else {
-            mHighlighter->setState(mDocument->ranges(mCaretY-2));
+            mSyntaxer->setState(mDocument->ranges(mCaretY-2));
         }
-        mHighlighter->setLine(leftLineText, mCaretY-1);
-        mHighlighter->nextToEol();
-        mDocument->setRange(mCaretY-1,mHighlighter->getState());
-        notInComment = !mHighlighter->isLastLineCommentNotFinished(
-                    mHighlighter->getState().state)
-                && !mHighlighter->isLastLineStringNotFinished(
-                    mHighlighter->getState().state);
+        mSyntaxer->setLine(leftLineText, mCaretY-1);
+        mSyntaxer->nextToEol();
+        mDocument->setRange(mCaretY-1,mSyntaxer->getState());
+        notInComment = !mSyntaxer->isLastLineCommentNotFinished(
+                    mSyntaxer->getState().state)
+                && !mSyntaxer->isLastLineStringNotFinished(
+                    mSyntaxer->getState().state);
     }
     int indentSpaces = 0;
     if (mOptions.testFlag(eoAutoIndent)) {
@@ -2905,8 +2905,8 @@ void SynEdit::doAddChar(QChar AChar)
         // auto
         if (mActiveSelectionMode==SelectionMode::Normal
                 && mOptions.testFlag(eoAutoIndent)
-                && mHighlighter
-                && mHighlighter->language() == ProgrammingLanguage::Cpp
+                && mSyntaxer
+                && mSyntaxer->language() == ProgrammingLanguage::Cpp
                 && (oldCaretY<=mDocument->count()) ) {
 
             //unindent if ':' at end of the line
@@ -3295,8 +3295,8 @@ void SynEdit::recalcCharExtent()
     FontStyle styles[] = {FontStyle::fsBold, FontStyle::fsItalic, FontStyle::fsStrikeOut, FontStyle::fsUnderline};
     bool hasStyles[] = {false,false,false,false};
     int size = 4;
-    if (mHighlighter && mHighlighter->attributes().count()>0) {
-        for (const PTokenAttribute& attribute: mHighlighter->attributes()) {
+    if (mSyntaxer && mSyntaxer->attributes().count()>0) {
+        for (const PTokenAttribute& attribute: mSyntaxer->attributes()) {
             for (int i=0;i<size;i++) {
                 if (attribute->styles().testFlag(styles[i]))
                     hasStyles[i] = true;
@@ -3414,14 +3414,14 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
         return Result;
 
     if (Result == 0) {
-        mHighlighter->resetState();
+        mSyntaxer->resetState();
     } else {
-        mHighlighter->setState(mDocument->ranges(Result-1));
+        mSyntaxer->setState(mDocument->ranges(Result-1));
     }
     do {
-        mHighlighter->setLine(mDocument->getString(Result), Result);
-        mHighlighter->nextToEol();
-        iRange = mHighlighter->getState();
+        mSyntaxer->setLine(mDocument->getString(Result), Result);
+        mSyntaxer->nextToEol();
+        iRange = mSyntaxer->getState();
         if (Result > canStopIndex){
             if (mDocument->ranges(Result).state == iRange.state
                     && mDocument->ranges(Result).blockLevel == iRange.blockLevel
@@ -3448,7 +3448,7 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
 
 void SynEdit::rescanRange(int line)
 {
-    if (!mHighlighter)
+    if (!mSyntaxer)
         return;
     line--;
     line = std::max(0,line);
@@ -3456,24 +3456,24 @@ void SynEdit::rescanRange(int line)
         return;
 
     if (line == 0) {
-        mHighlighter->resetState();
+        mSyntaxer->resetState();
     } else {
-        mHighlighter->setState(mDocument->ranges(line-1));
+        mSyntaxer->setState(mDocument->ranges(line-1));
     }
-    mHighlighter->setLine(mDocument->getString(line), line);
-    mHighlighter->nextToEol();
-    SyntaxerState iRange = mHighlighter->getState();
+    mSyntaxer->setLine(mDocument->getString(line), line);
+    mSyntaxer->nextToEol();
+    SyntaxerState iRange = mSyntaxer->getState();
     mDocument->setRange(line,iRange);
 }
 
 void SynEdit::rescanRanges()
 {
-    if (mHighlighter && !mDocument->empty()) {
-        mHighlighter->resetState();
+    if (mSyntaxer && !mDocument->empty()) {
+        mSyntaxer->resetState();
         for (int i =0;i<mDocument->count();i++) {
-            mHighlighter->setLine(mDocument->getString(i), i);
-            mHighlighter->nextToEol();
-            mDocument->setRange(i, mHighlighter->getState());
+            mSyntaxer->setLine(mDocument->getString(i), i);
+            mSyntaxer->nextToEol();
+            mDocument->setRange(i, mSyntaxer->getState());
         }
     }
     if (mUseCodeFolding)
@@ -3611,9 +3611,9 @@ void SynEdit::scanForFoldRanges(PCodeFoldingRanges topFoldRanges)
 }
 
 //this func should only be used in findSubFoldRange
-int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString& highlighterAttrName) {
+int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString& tokenAttrName) {
     QString CurLine = mDocument->getString(Line);
-    if (!mHighlighter){
+    if (!mSyntaxer){
         for (int i=startChar; i<CurLine.length();i++) {
             if (CurLine[i]==character) {
                 return i;
@@ -3629,12 +3629,12 @@ int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString
         mHighlighter->setLine(CurLine,Line);
         */
         QString token;
-        while (!mHighlighter->eol()) {
-            token = mHighlighter->getToken();
-            PTokenAttribute attr = mHighlighter->getTokenAttribute();
-            if (token == character && attr->name()==highlighterAttrName)
-                return mHighlighter->getTokenPos();
-            mHighlighter->next();
+        while (!mSyntaxer->eol()) {
+            token = mSyntaxer->getToken();
+            PTokenAttribute attr = mSyntaxer->getTokenAttribute();
+            if (token == character && attr->name()==tokenAttrName)
+                return mSyntaxer->getTokenPos();
+            mSyntaxer->next();
         }
     }
     return -1;
@@ -3645,7 +3645,7 @@ void SynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRan
     PCodeFoldingRange  collapsedFold;
     int line = 0;
     QString curLine;
-    if (!mHighlighter)
+    if (!mSyntaxer)
         return;
 
     while (line < mDocument->count()) { // index is valid for LinesToScan and fLines
@@ -4597,7 +4597,7 @@ QString SynEdit::selText() const
             PCodeFoldingRange foldRange = foldStartAtLine(blockEnd().line);
             QString s = mDocument->getString(Last);
             if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
-                s=s+highlighter()->foldString();
+                s=s+syntaxer()->foldString();
                 if (ColTo>s.length()) {
                     Last = foldRange->toLine-1;
                     ColTo = mDocument->getString(Last).length()+1;
@@ -4676,7 +4676,7 @@ QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, Select
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getString(Last);
         if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
-            s=s+highlighter()->foldString();
+            s=s+syntaxer()->foldString();
             if (ColTo>s.length()) {
                 Last = foldRange->toLine-1;
                 ColTo = mDocument->getString(Last).length()+1;
@@ -4751,7 +4751,7 @@ QString SynEdit::displayLineText()
         QString s= mDocument->getString(mCaretY - 1);
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
-            return s+highlighter()->foldString();
+            return s+syntaxer()->foldString();
         }
         return s;
     }
@@ -4772,17 +4772,17 @@ void SynEdit::setLineText(const QString s)
         mDocument->putString(mCaretY-1,s);
 }
 
-PSyntaxer SynEdit::highlighter() const
+PSyntaxer SynEdit::syntaxer() const
 {
-    return mHighlighter;
+    return mSyntaxer;
 }
 
-void SynEdit::setHighlighter(const PSyntaxer &highlighter)
+void SynEdit::setSyntaxer(const PSyntaxer &syntaxer)
 {
-    PSyntaxer oldHighlighter= mHighlighter;
-    mHighlighter = highlighter;
-    if (oldHighlighter && mHighlighter &&
-            oldHighlighter->language() == highlighter->language()) {
+    PSyntaxer oldSyntaxer = mSyntaxer;
+    mSyntaxer = syntaxer;
+    if (oldSyntaxer  && mSyntaxer &&
+            oldSyntaxer ->language() == syntaxer->language()) {
     } else {
         recalcCharExtent();
         mDocument->beginUpdate();
@@ -5335,7 +5335,7 @@ void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMo
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getString(endPos.line-1);
         if ((foldRange) && foldRange->collapsed && endPos.ch>s.length()) {
-            QString newS=s+highlighter()->foldString();
+            QString newS=s+syntaxer()->foldString();
             if ((startPos.ch<=s.length() || startPos.line<endPos.line)
                     && endPos.ch>newS.length() ) {
                 //selection has whole block
@@ -5479,7 +5479,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     int caretY=pos.line;
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
-        if (!mUndoing && mHighlighter && mHighlighter->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent)) {
+        if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent)) {
             QString s = trimLeft(text[0]);
             if (sLeftSide.isEmpty()) {
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
@@ -5509,7 +5509,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             if (i==text.length()-1) {
                 str = sRightSide;
             } else {
-                if (!mUndoing && mHighlighter && mHighlighter->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
+                if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
                     str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
                 } else {
                     str = "";
@@ -5519,7 +5519,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             str = text[i];
             if (i==text.length()-1)
                 str += sRightSide;
-            if (!mUndoing && mHighlighter && mHighlighter->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
+            if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
                 int indentSpaces = calcIndentSpaces(caretY,str,true);
                 str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
             }
@@ -5983,8 +5983,8 @@ void SynEdit::onBeginFirstPaintLock()
 
 bool SynEdit::isIdentChar(const QChar &ch)
 {
-    if (mHighlighter) {
-        return mHighlighter->isIdentChar(ch);
+    if (mSyntaxer) {
+        return mSyntaxer->isIdentChar(ch);
     } else {
         if (ch == '_') {
             return true;
@@ -6639,7 +6639,7 @@ void SynEdit::onLinesDeleted(int index, int count)
 {
     if (mUseCodeFolding)
         foldOnListDeleted(index + 1, count);
-    if (mHighlighter && mDocument->count() > 0)
+    if (mSyntaxer && mDocument->count() > 0)
         scanFrom(index, index+1);
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
@@ -6649,7 +6649,7 @@ void SynEdit::onLinesInserted(int index, int count)
 {
     if (mUseCodeFolding)
         foldOnListInserted(index + 1, count);
-    if (mHighlighter && mDocument->count() > 0) {
+    if (mSyntaxer && mDocument->count() > 0) {
 //        int vLastScan = index;
 //        do {
           scanFrom(index, index+count);
@@ -6663,7 +6663,7 @@ void SynEdit::onLinesInserted(int index, int count)
 void SynEdit::onLinesPutted(int index, int count)
 {
     int vEndLine = index + 1;
-    if (mHighlighter) {
+    if (mSyntaxer) {
         vEndLine = std::max(vEndLine, scanFrom(index, index+count) + 1);
     }
     invalidateLines(index + 1, vEndLine);
@@ -6721,8 +6721,8 @@ void SynEdit::setBlockEnd(BufferCoord Value)
           Value.ch = 1;
     } else {
         int maxLen = mDocument->lengthOfLongestLine();
-        if (highlighter())
-            maxLen = maxLen+stringColumns(highlighter()->foldString(),maxLen);
+        if (syntaxer())
+            maxLen = maxLen+stringColumns(syntaxer()->foldString(),maxLen);
         Value.ch = minMax(Value.ch, 1, maxLen+1);
     }
     if (Value.ch != mBlockEnd.ch || Value.line != mBlockEnd.line) {
@@ -6820,8 +6820,8 @@ void SynEdit::setBlockBegin(BufferCoord value)
             value.ch = 1;
     } else {
         int maxLen = mDocument->lengthOfLongestLine();
-        if (highlighter())
-            maxLen = maxLen+stringColumns(highlighter()->foldString(),maxLen);
+        if (syntaxer())
+            maxLen = maxLen+stringColumns(syntaxer()->foldString(),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }
     if (selAvail()) {

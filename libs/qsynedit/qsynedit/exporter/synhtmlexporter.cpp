@@ -124,7 +124,7 @@ void SynHTMLExporter::FormatAttributeDone(bool , bool , FontStyles )
 
 void SynHTMLExporter::FormatAttributeInit(bool , bool , FontStyles )
 {
-    QString StyleName = GetStyleName(mHighlighter, mLastAttri);
+    QString StyleName = GetStyleName(mSyntaxer, mLastAttri);
     AddData(QString("<span class=\"%1\">").arg(StyleName));
 }
 
@@ -135,7 +135,7 @@ void SynHTMLExporter::FormatAfterLastAttribute()
 
 void SynHTMLExporter::FormatBeforeFirstAttribute(bool, bool, FontStyles)
 {
-    QString StyleName = GetStyleName(mHighlighter, mLastAttri);
+    QString StyleName = GetStyleName(mSyntaxer, mLastAttri);
     AddData(QString("<span class=\"%1\">").arg(StyleName));
 }
 
@@ -164,7 +164,7 @@ QString SynHTMLExporter::GetHeader()
 {
     using namespace std::placeholders;
     QString Styles;
-    enumTokenAttributes(mHighlighter, true,
+    enumTokenAttributes(mSyntaxer, true,
                           std::bind(&SynHTMLExporter::AttriToCSSCallback,
                                     this, _1, _2, _3, _4),
                           {&Styles});

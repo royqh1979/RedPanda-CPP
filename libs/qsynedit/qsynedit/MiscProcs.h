@@ -21,7 +21,7 @@
 #include <memory>
 #include <QString>
 #include <QSet>
-#include "highlighter/syntaxer.h"
+#include "syntaxer/syntaxer.h"
 #include <QPaintDevice>
 #include <QTextStream>
 #include <QVector>
@@ -50,7 +50,7 @@ using  TokenAttributeProc = std::function<bool(PSyntaxer syntaxer,
     PTokenAttribute attri, const QString& uniqueAttriName,
     QList<void *> params)>;
 
-// Enums all child highlighters and their attributes of a TSynMultiSyn through a
+// Enums all child syntaxers and their attributes of a TSynMultiSyn through a
 // callback function.
 // This function also handles nested TSynMultiSyns including their MarkerAttri.
 bool enumTokenAttributes(PSyntaxer syntaxer,

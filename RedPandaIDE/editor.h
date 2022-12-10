@@ -290,7 +290,7 @@ private:
     void updateFunctionTip(bool showTip);
     void clearUserCodeInTabStops();
     void popUserCodeInTabStops();
-    void onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString& token,
+    void onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int column, const QString& token,
         QSynedit::PTokenAttribute &attr);
     void onScrollBarValueChanged();
     static PCppParser sharedParser(ParserLanguage language);

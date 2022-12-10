@@ -21,7 +21,7 @@
 #include <QPainter>
 #include <QString>
 #include "Types.h"
-#include "highlighter/syntaxer.h"
+#include "syntaxer/syntaxer.h"
 #include "MiscClasses.h"
 
 namespace QSynedit {

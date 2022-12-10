@@ -29,8 +29,8 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QMimeData>
-#include "qsynedit/highlighter/cpp.h"
-#include "HighlighterManager.h"
+#include "qsynedit/syntaxer/cpp.h"
+#include "syntaxermanager.h"
 #include "qsynedit/exporter/synrtfexporter.h"
 #include "qsynedit/exporter/synhtmlexporter.h"
 #include "qsynedit/Constants.h"
@@ -105,17 +105,17 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mFilename = QString("untitled%1").arg(getNewFileNumber());
     }
     QFileInfo fileInfo(mFilename);
-    QSynedit::PHighlighter highlighter;
+    QSynedit::PSyntaxer syntaxer;
     if (!isNew) {
         loadFile();
-        highlighter = highlighterManager.getHighlighter(mFilename);
+        syntaxer = syntaxerManager.getSyntaxer(mFilename);
     } else {
         mFileEncoding = ENCODING_ASCII;
-        highlighter=highlighterManager.getCppHighlighter();
+        syntaxer=syntaxerManager.getCppSyntaxer();
     }
 
-    if (highlighter) {
-        setHighlighter(highlighter);
+    if (syntaxer) {
+        setSyntaxer(syntaxer);
         setUseCodeFolding(true);
     } else {
         setUseCodeFolding(false);
@@ -225,7 +225,7 @@ void Editor::loadFile(QString filename) {
     default:
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
-    if (highlighter()) {
+    if (syntaxer()) {
         reparse(true);
         if (pSettings->editor().syntaxCheckWhenLineChanged()) {
             checkSyntaxInBack();
@@ -382,15 +382,15 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
 
-    //update (reassign highlighter)
-    QSynedit::PHighlighter newHighlighter = HighlighterManager().getHighlighter(mFilename);
-    if (newHighlighter) {
+    //update (reassign syntaxer)
+    QSynedit::PSyntaxer newSyntaxer = syntaxerManager.getSyntaxer(mFilename);
+    if (newSyntaxer) {
         setUseCodeFolding(true);
     } else {
         setUseCodeFolding(false);
     }
-    setHighlighter(newHighlighter);
-    if (!newHighlighter || newHighlighter->language() != QSynedit::ProgrammingLanguage::Cpp) {
+    setSyntaxer(newSyntaxer);
+    if (!newSyntaxer || newSyntaxer->language() != QSynedit::ProgrammingLanguage::Cpp) {
         mSyntaxIssues.clear();
     }
     applyColorScheme(pSettings->editor().colorScheme());
@@ -483,11 +483,11 @@ void Editor::undoSymbolCompletion(int pos)
     QString token;
     bool tokenFinished;
 
-    if (!highlighter())
+    if (!syntaxer())
         return;
     if (!pSettings->editor().removeSymbolPairs())
         return;
-    if (!getHighlighterAttriAtRowCol(caretXY(), token, tokenFinished, attr))
+    if (!getTokenAttriAtRowCol(caretXY(), token, tokenFinished, attr))
         return;
     if ((attr->tokenType() == QSynedit::TokenType::Comment) && (!tokenFinished))
         return ;
@@ -635,9 +635,9 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     insertString.append(" */");
                 }
                 insertCodeSnippet(linesToText(insertString));
-            } else if (highlighter()
+            } else if (syntaxer()
                        && caretY()>=2
-                       && highlighter()->isLastLineCommentNotFinished(
+                       && syntaxer()->isLastLineCommentNotFinished(
                            document()->ranges(caretY()-2).state)) {
                 s=trimLeft(lineText());
                 if (s.startsWith("* ")) {
@@ -917,7 +917,7 @@ void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
 //        int spaceBefore = mLineBeforeTabStop.length()-TrimLeft(mLineBeforeTabStop).length();
         p->beginX = mTabStopBegin;
         p->endX =  mTabStopEnd;
-        p->color = highlighter()->stringAttribute()->foreground();
+        p->color = syntaxer()->stringAttribute()->foreground();
         areaList.append(p);
     }
     PSyntaxIssueList lst = getSyntaxIssuesAtLine(Line);
@@ -966,7 +966,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (token.isEmpty())
         return;
 
-    if (mParser && highlighter()) {
+    if (mParser && syntaxer()) {
         QString lineText = document()->getString(line-1);
         if (mParser->isIncludeLine(lineText)) {
             if (cursor() == Qt::PointingHandCursor) {
@@ -1018,7 +1018,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 style.setFlag(QSynedit::FontStyle::fsUnderline,item->underlined());
                 style.setFlag(QSynedit::FontStyle::fsStrikeOut,item->strikeout());
             } else {
-                foreground = highlighter()->identifierAttribute()->foreground();
+                foreground = syntaxer()->identifierAttribute()->foreground();
             }
             if (cursor() == Qt::PointingHandCursor) {
                 QSynedit::BufferCoord p;
@@ -1032,14 +1032,14 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     }
 
     //selection
-    if (highlighter() && attr) {
+    if (syntaxer() && attr) {
         if (attr->tokenType() == QSynedit::TokenType::Keyword) {
             if (CppTypeKeywords.contains(token)
                     ||
                     (
-                        highlighter()->language()==QSynedit::ProgrammingLanguage::Cpp
+                        syntaxer()->language()==QSynedit::ProgrammingLanguage::Cpp
                         &&
-                        ((QSynedit::CppHighlighter*)highlighter().get())->customTypeKeywords().contains(token)
+                        ((QSynedit::CppSyntaxer*)syntaxer().get())->customTypeKeywords().contains(token)
                         )
                 )
             {
@@ -1481,12 +1481,12 @@ void Editor::copyAsHTML()
     exporter.setExportAsText(false);
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     exporter.setFont(font());
-    QSynedit::PHighlighter hl = highlighter();
+    QSynedit::PSyntaxer hl = syntaxer();
     if (!pSettings->editor().copyHTMLUseEditorColor()) {
-        hl = highlighterManager.copyHighlighter(highlighter());
-        highlighterManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
+        hl = syntaxerManager.copy(syntaxer());
+        syntaxerManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
     }
-    exporter.setHighlighter(hl);
+    exporter.setSyntaxer(hl);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
                                         this,
                                         std::placeholders::_1,
@@ -1541,7 +1541,7 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
         start = 1;
         token = document()->getString(line-1);
     } else if (endChar < 1) {
-        if (!getHighlighterAttriAtRowColEx(p,token,start,attr))
+        if (!getTokenAttriAtRowColEx(p,token,start,attr))
             return;
     } else {
         start = startChar;
@@ -1699,7 +1699,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                     clearUserCodeInTabStops();
                 }
             }
-        } else if (!selAvail() && highlighter() && pSettings->editor().highlightMathingBraces()){
+        } else if (!selAvail() && syntaxer() && pSettings->editor().highlightMathingBraces()){
             invalidateLine(mHighlightCharPos1.line);
             invalidateLine(mHighlightCharPos2.line);
             mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
@@ -1720,7 +1720,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             }
             QSynedit::PTokenAttribute attr;
             QString token;
-            if (getHighlighterAttriAtRowCol(coord,token,attr)
+            if (getTokenAttriAtRowCol(coord,token,attr)
                     && attr->tokenType() == QSynedit::TokenType::Operator) {
                 QSynedit::BufferCoord complementCharPos = getMatchingBracketEx(coord);
                 if (!foldHidesLine(coord.line)
@@ -1938,38 +1938,38 @@ QStringList Editor::getExpressionAtPosition(
         const QSynedit::BufferCoord &pos)
 {
     QStringList result;
-    if (!highlighter())
+    if (!syntaxer())
         return result;
     int line = pos.line-1;
     int ch = pos.ch-1;
     int symbolMatchingLevel = 0;
     LastSymbolType lastSymbolType=LastSymbolType::None;
-    QSynedit::PHighlighter highlighter;
+    QSynedit::PSyntaxer syntaxer;
     if (isNew())
-        highlighter = highlighterManager.getCppHighlighter();
+        syntaxer = syntaxerManager.getCppSyntaxer();
     else
-        highlighter = highlighterManager.getHighlighter(mFilename);
-    if (!highlighter)
+        syntaxer = syntaxerManager.getSyntaxer(mFilename);
+    if (!syntaxer)
         return result;
     while (true) {
         if (line>=document()->count() || line<0)
             break;
         QStringList tokens;
         if (line==0) {
-            highlighter->resetState();
+            syntaxer->resetState();
         } else {
-            highlighter->setState(document()->ranges(line-1));
+            syntaxer->setState(document()->ranges(line-1));
         }
         QString sLine = document()->getString(line);
-        highlighter->setLine(sLine,line-1);
-        while (!highlighter->eol()) {
-            int start = highlighter->getTokenPos();
-            QString token = highlighter->getToken();
+        syntaxer->setLine(sLine,line-1);
+        while (!syntaxer->eol()) {
+            int start = syntaxer->getTokenPos();
+            QString token = syntaxer->getToken();
             int endPos = start + token.length()-1;
             if (start>ch) {
                 break;
             }
-            QSynedit::PTokenAttribute attr = highlighter->getTokenAttribute();
+            QSynedit::PTokenAttribute attr = syntaxer->getTokenAttribute();
             if ( (line == pos.line-1)
                  && (start<=ch) && (ch<=endPos)) {
                 if (attr->tokenType() == QSynedit::TokenType::Comment
@@ -1981,7 +1981,7 @@ QStringList Editor::getExpressionAtPosition(
                     && attr->tokenType() != QSynedit::TokenType::Space){
                 tokens.append(token);
             }
-            highlighter->next();
+            syntaxer->next();
         }
         for (int i=tokens.count()-1;i>=0;i--) {
             QString token = tokens[i];
@@ -2199,12 +2199,12 @@ bool Editor::handleSymbolCompletion(QChar key)
         return false;
 
     //todo: better methods to detect current caret type
-    if (highlighter()) {
+    if (syntaxer()) {
         if (caretX() <= 1) {
             if (caretY()>1) {
-                if (highlighter()->isLastLineCommentNotFinished(document()->ranges(caretY() - 2).state))
+                if (syntaxer()->isLastLineCommentNotFinished(document()->ranges(caretY() - 2).state))
                     return false;
-                if (highlighter()->isLastLineStringNotFinished(document()->ranges(caretY() - 2).state)
+                if (syntaxer()->isLastLineStringNotFinished(document()->ranges(caretY() - 2).state)
                         && (key!='\"') && (key!='\''))
                     return false;
             }
@@ -2214,7 +2214,7 @@ bool Editor::handleSymbolCompletion(QChar key)
             QSynedit::PTokenAttribute attr;
             QString token;
             bool tokenFinished;
-            if (getHighlighterAttriAtRowCol(HighlightPos, token, tokenFinished, attr)) {
+            if (getTokenAttriAtRowCol(HighlightPos, token, tokenFinished, attr)) {
                 if ((attr->tokenType() == QSynedit::TokenType::Comment) && (!tokenFinished))
                     return false;
                 if ((attr->tokenType() == QSynedit::TokenType::String) && (!tokenFinished)
@@ -2227,11 +2227,6 @@ bool Editor::handleSymbolCompletion(QChar key)
             }
         }
     }
-
-    // Check if that line is highlighted as string or character or comment
-    //    if (Attr = fText.Highlighter.StringAttribute) or (Attr = fText.Highlighter.CommentAttribute) or SameStr(Attr.Name,
-    //      'Character') then
-    //      Exit;
 
     QuoteStatus status;
     switch(key.unicode()) {
@@ -2349,7 +2344,7 @@ bool Editor::handleParentheseSkip()
 
       if (document()->count()==0)
           return false;
-      if (highlighter() && highlighter()->supportBraceLevel()) {
+      if (syntaxer() && syntaxer()->supportBraceLevel()) {
           QSynedit::SyntaxerState lastLineState = document()->ranges(document()->count()-1);
           if (lastLineState.parenthesisLevel==0) {
               setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
@@ -2400,7 +2395,7 @@ bool Editor::handleBracketSkip()
 
     if (document()->count()==0)
         return false;
-    if (highlighter() && highlighter()->supportBraceLevel()) {
+    if (syntaxer() && syntaxer()->supportBraceLevel()) {
         QSynedit::SyntaxerState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.bracketLevel==0) {
             setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
@@ -2487,7 +2482,7 @@ bool Editor::handleBraceSkip()
     if (document()->count()==0)
         return false;
 
-    if (highlighter() && highlighter()->supportBraceLevel()) {
+    if (syntaxer() && syntaxer()->supportBraceLevel()) {
         QSynedit::SyntaxerState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.braceLevel==0) {
             bool oldInsertMode = insertMode();
@@ -2531,7 +2526,7 @@ bool Editor::handleSingleQuoteCompletion()
                 endUpdate();
                 return true;
             }
-            if (ch == 0 || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
+            if (ch == 0 || syntaxer()->isWordBreakChar(ch) || syntaxer()->isSpaceChar(ch)) {
                 // insert ''
                 beginUpdate();
                 beginUndoBlock();
@@ -2571,7 +2566,7 @@ bool Editor::handleDoubleQuoteCompletion()
                 endUpdate();
                 return true;
             }
-            if ((ch == 0) || highlighter()->isWordBreakChar(ch) || highlighter()->isSpaceChar(ch)) {
+            if ((ch == 0) || syntaxer()->isWordBreakChar(ch) || syntaxer()->isSpaceChar(ch)) {
                 // insert ""
                 beginUpdate();
                 beginUndoBlock();
@@ -2662,7 +2657,7 @@ void Editor::initParser()
 {
     if (pSettings->codeCompletion().shareParser()) {
         if (pSettings->codeCompletion().enabled()
-            && (highlighter() && highlighter()->language() == QSynedit::ProgrammingLanguage::Cpp)
+            && (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::Cpp)
             ) {
             mParser = sharedParser(mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C);
         }
@@ -2682,15 +2677,15 @@ void Editor::initParser()
     resetCppParser(mParser);
     mParser->setEnabled(
                 pSettings->codeCompletion().enabled() &&
-                (highlighter() && highlighter()->language() == QSynedit::ProgrammingLanguage::Cpp));
+                (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::Cpp));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
 {
     QuoteStatus Result = QuoteStatus::NotQuote;
-    if (!highlighter())
+    if (!syntaxer())
         return Result;
-    if ((caretY()>1) && highlighter()->isLastLineStringNotFinished(document()->ranges(caretY() - 2).state))
+    if ((caretY()>1) && syntaxer()->isLastLineStringNotFinished(document()->ranges(caretY() - 2).state))
         Result = QuoteStatus::DoubleQuote;
 
     QString Line = document()->getString(caretY()-1);
@@ -2812,10 +2807,10 @@ void Editor::reparse(bool resetParser)
         return;
     if (!pSettings->codeCompletion().enabled())
         return;
-    if (!highlighter())
+    if (!syntaxer())
         return;
-    if (highlighter()->language() != QSynedit::ProgrammingLanguage::Cpp
-             && highlighter()->language() != QSynedit::ProgrammingLanguage::GLSL)
+    if (syntaxer()->language() != QSynedit::ProgrammingLanguage::Cpp
+             && syntaxer()->language() != QSynedit::ProgrammingLanguage::GLSL)
         return;
     if (!mParser)
         return;
@@ -2845,7 +2840,7 @@ void Editor::reparseTodo()
 {
     if (!mParentPageControl)
         return;
-    if (!highlighter())
+    if (!syntaxer())
         return;
     if (pSettings->editor().parseTodos())
         pMainWindow->todoParser()->parseFile(mFilename, inProject());
@@ -2996,12 +2991,12 @@ void Editor::exportAsRTF(const QString &rtfFilename)
     exporter.setExportAsText(true);
     exporter.setUseBackground(pSettings->editor().copyRTFUseBackground());
     exporter.setFont(font());
-    QSynedit::PHighlighter hl = highlighter();
+    QSynedit::PSyntaxer hl = syntaxer();
     if (!pSettings->editor().copyRTFUseEditorColor()) {
-        hl = highlighterManager.copyHighlighter(highlighter());
-        highlighterManager.applyColorScheme(hl,pSettings->editor().copyRTFColorScheme());
+        hl = syntaxerManager.copy(syntaxer());
+        syntaxerManager.applyColorScheme(hl,pSettings->editor().copyRTFColorScheme());
     }
-    exporter.setHighlighter(hl);
+    exporter.setSyntaxer(hl);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
                                         this,
                                         std::placeholders::_1,
@@ -3021,12 +3016,12 @@ void Editor::exportAsHTML(const QString &htmlFilename)
     exporter.setExportAsText(false);
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     exporter.setFont(font());
-    QSynedit::PHighlighter hl = highlighter();
+    QSynedit::PSyntaxer hl = syntaxer();
     if (!pSettings->editor().copyHTMLUseEditorColor()) {
-        hl = highlighterManager.copyHighlighter(highlighter());
-        highlighterManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
+        hl = syntaxerManager.copy(syntaxer());
+        syntaxerManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
     }
-    exporter.setHighlighter(hl);
+    exporter.setSyntaxer(hl);
     exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
                                         this,
                                         std::placeholders::_1,
@@ -3049,7 +3044,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     if (!mParser || !mParser->enabled())
         return;
 
-    if (!highlighter())
+    if (!syntaxer())
         return;
 
     if (mCompletionPopup->isVisible()) // already in search, don't do it again
@@ -3061,7 +3056,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     QSynedit::PTokenAttribute attr;
     bool tokenFinished;
     QSynedit::BufferCoord pBeginPos, pEndPos;
-    if (getHighlighterAttriAtRowCol(
+    if (getTokenAttriAtRowCol(
                 QSynedit::BufferCoord{caretX() - 1,
                 caretY()}, s, tokenFinished, attr)) {
         if (attr->tokenType() == QSynedit::TokenType::Preprocessor) {//Preprocessor
@@ -3121,9 +3116,9 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                 );
 
     QSet<QString> keywords;
-    if (highlighter()) {
-        if (highlighter()->language() != QSynedit::ProgrammingLanguage::Cpp ) {
-            keywords = highlighter()->keywords();
+    if (syntaxer()) {
+        if (syntaxer()->language() != QSynedit::ProgrammingLanguage::Cpp ) {
+            keywords = syntaxer()->keywords();
         } else {
             if (mUseCppSyntax) {
                 foreach (const QString& keyword, CppKeywords.keys()) {
@@ -3341,14 +3336,6 @@ void Editor::completionInsert(bool appendFunc)
                 && (statement->args != "(void)")) {
             setCaretX(caretX() - funcAddOn.length()+1);
 
-            //todo: function hint
-            // immediately activate function hint
-//            if devEditor.ShowFunctionTip and Assigned(fText.Highlighter) then begin
-//            fText.SetFocus;
-//            fFunctionTip.Parser := fParser;
-//            fFunctionTip.FileName := fFileName;
-//            fFunctionTip.Show;
-//              end;
         } else {
             setCaretX(caretX());
         }
@@ -3542,7 +3529,7 @@ bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
 Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
 {
     // Only allow in the text area...
-    if (pointToCharLine(point, pos) && highlighter()) {
+    if (pointToCharLine(point, pos) && syntaxer()) {
         if (!pMainWindow->debugger()->executing()
                 && getSyntaxIssueAtPosition(pos)) {
             return TipType::Error;
@@ -3552,7 +3539,7 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
         QString s;
 
         // Only allow hand tips in highlighted areas
-        if (getHighlighterAttriAtRowCol(pos,s,attr)) {
+        if (getTokenAttriAtRowCol(pos,s,attr)) {
             // Only allow Identifiers, Preprocessor directives, and selection
             if (attr) {
                 if (selAvail()) {
@@ -3561,7 +3548,7 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
                         return TipType::Selection;
                 } else if (mParser && mParser->isIncludeLine(document()->getString(pos.line-1))) {
                     return TipType::Preprocessor;
-                }else if (attr == highlighter()->identifierAttribute())
+                }else if (attr == syntaxer()->identifierAttribute())
                     return TipType::Identifier;
             }
         }
@@ -3710,7 +3697,7 @@ void Editor::updateFunctionTip(bool showTip)
         pMainWindow->functionTip()->hide();
         return;
     }
-    if (!highlighter())
+    if (!syntaxer())
         return;
 
     if (!mParser || !mParser->enabled())
@@ -3745,22 +3732,22 @@ void Editor::updateFunctionTip(bool showTip)
         QStringList tokens;
         QList<int> positions;
         if (currentLine==0)
-            highlighter()->resetState();
+            syntaxer()->resetState();
         else
-            highlighter()->setState(
+            syntaxer()->setState(
                             document()->ranges(currentLine-1));
-        highlighter()->setLine(line,currentLine);
-        while(!highlighter()->eol()) {
-            int start = highlighter()->getTokenPos();
-            QString token = highlighter()->getToken();
-            QSynedit::PTokenAttribute attr = highlighter()->getTokenAttribute();
+        syntaxer()->setLine(line,currentLine);
+        while(!syntaxer()->eol()) {
+            int start = syntaxer()->getTokenPos();
+            QString token = syntaxer()->getToken();
+            QSynedit::PTokenAttribute attr = syntaxer()->getTokenAttribute();
             if (start>=currentChar)
                 break;
 
             if (attr->tokenType() != QSynedit::TokenType::Comment
                     && attr->tokenType() != QSynedit::TokenType::Space) {
                 if (foundFunctionStart) {
-                    if (attr!=highlighter()->identifierAttribute())
+                    if (attr!=syntaxer()->identifierAttribute())
                         return; // not a function
                     functionNamePos.line = currentLine+1;
                     functionNamePos.ch = start+1;
@@ -3773,7 +3760,7 @@ void Editor::updateFunctionTip(bool showTip)
                      && start+token.length()>=caretPos.ch) {
                 return; // in comment, do nothing
             }
-            highlighter()->next();
+            syntaxer()->next();
         }
         if (!foundFunctionStart) {
             for (int i=tokens.length()-1;i>=0;i--) {
@@ -3962,9 +3949,9 @@ void Editor::popUserCodeInTabStops()
     }
 }
 
-void Editor::onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString &token, QSynedit::PTokenAttribute& attr)
+void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int column, const QString &token, QSynedit::PTokenAttribute& attr)
 {
-    if (!syntaxHighlighter)
+    if (!syntaxer)
         return;
     if (token.isEmpty())
         return;
@@ -3972,7 +3959,7 @@ void Editor::onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int
     if (mCompletionPopup->isVisible() || mHeaderCompletionPopup->isVisible())
         return;
 
-    if (mParser && (attr == syntaxHighlighter->identifierAttribute())) {
+    if (mParser && (attr == syntaxer->identifierAttribute())) {
         QSynedit::BufferCoord p{column,Line};
         QSynedit::BufferCoord pBeginPos,pEndPos;
         QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
@@ -3990,41 +3977,41 @@ void Editor::onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int
                 kind = StatementKind::skVariable;
             }
         }
-        QSynedit::CppHighlighter* cppHighlighter = dynamic_cast<QSynedit::CppHighlighter*>(syntaxHighlighter.get());
+        QSynedit::CppSyntaxer* cppSyntaxer = dynamic_cast<QSynedit::CppSyntaxer*>(syntaxer.get());
         switch(kind) {
         case StatementKind::skFunction:
         case StatementKind::skConstructor:
         case StatementKind::skDestructor:
-            attr = cppHighlighter->functionAttribute();
+            attr = cppSyntaxer->functionAttribute();
             break;
         case StatementKind::skClass:
         case StatementKind::skTypedef:
         case StatementKind::skAlias:
-            attr = cppHighlighter->classAttribute();
+            attr = cppSyntaxer->classAttribute();
             break;
         case StatementKind::skEnumClassType:
         case StatementKind::skEnumType:
             break;
         case StatementKind::skLocalVariable:
         case StatementKind::skParameter:
-            attr = cppHighlighter->localVarAttribute();
+            attr = cppSyntaxer->localVarAttribute();
             break;
         case StatementKind::skVariable:
-            attr = cppHighlighter->variableAttribute();
+            attr = cppSyntaxer->variableAttribute();
             break;
         case StatementKind::skGlobalVariable:
-            attr = cppHighlighter->globalVarAttribute();
+            attr = cppSyntaxer->globalVarAttribute();
             break;
         case StatementKind::skEnum:
         case StatementKind::skPreprocessor:
-            attr = cppHighlighter->preprocessorAttribute();
+            attr = cppSyntaxer->preprocessorAttribute();
             break;
         case StatementKind::skKeyword:
-            attr = cppHighlighter->keywordAttribute();
+            attr = cppSyntaxer->keywordAttribute();
             break;
         case StatementKind::skNamespace:
         case StatementKind::skNamespaceAlias:
-            attr = cppHighlighter->stringAttribute();
+            attr = cppSyntaxer->stringAttribute();
             break;
         default:
             break;
@@ -4580,9 +4567,9 @@ void Editor::checkSyntaxInBack()
         return;
     if (readOnly())
         return;
-    if (!highlighter())
+    if (!syntaxer())
         return;
-    if (highlighter()->language()!=QSynedit::ProgrammingLanguage::Cpp)
+    if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::Cpp)
         return;
     pMainWindow->checkSyntaxInBack(this);
 }
@@ -4737,7 +4724,7 @@ void Editor::applySettings()
     options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
     options.setFlag(QSynedit::eoShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()
-                    && highlighter() && highlighter()->supportBraceLevel());
+                    && syntaxer() && syntaxer()->supportBraceLevel());
     setOptions(options);
 
     setTabWidth(pSettings->editor().tabWidth());
@@ -4792,15 +4779,15 @@ void Editor::applySettings()
     }
 
     if (pSettings->editor().enableCustomCTypeKeywords()) {
-        if (highlighter() && highlighter()->language() == QSynedit::ProgrammingLanguage::Cpp) {
+        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::Cpp) {
             QSet<QString> set;
             foreach(const QString& s, pSettings->editor().customCTypeKeywords())
                 set.insert(s);
-            ((QSynedit::CppHighlighter*)(highlighter().get()))->setCustomTypeKeywords(set);
+            ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
         }
     } else {
-        if (highlighter() && highlighter()->language() == QSynedit::ProgrammingLanguage::Cpp) {
-            ((QSynedit::CppHighlighter*)(highlighter().get()))->setCustomTypeKeywords(QSet<QString>());
+        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::Cpp) {
+            ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(QSet<QString>());
         }
     }
 
@@ -4828,9 +4815,9 @@ void Editor::applyColorScheme(const QString& schemeName)
     QSynedit::EditorOptions options = getOptions();
     options.setFlag(QSynedit::EditorOption::eoShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()
-                    && highlighter() && highlighter()->supportBraceLevel());
+                    && syntaxer() && syntaxer()->supportBraceLevel());
     setOptions(options);
-    highlighterManager.applyColorScheme(highlighter(),schemeName);
+    syntaxerManager.applyColorScheme(syntaxer(),schemeName);
     if (pSettings->editor().rainbowParenthesis()) {
         QSynedit::PTokenAttribute attr0 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_1);

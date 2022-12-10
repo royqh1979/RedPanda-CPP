@@ -21,7 +21,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QAbstractListModel>
-#include "HighlighterManager.h"
+#include "syntaxermanager.h"
 #include "qsynedit/Constants.h"
 
 struct TodoItem {
@@ -76,7 +76,7 @@ signals:
 private:
     void parseFile();
     void parseFiles();
-    void doParseFile(const QString& filename, QSynedit::PHighlighter highlighter);
+    void doParseFile(const QString& filename, QSynedit::PSyntaxer syntaxer);
 private:
     QString mFilename;
     QStringList mFiles;
