@@ -22,22 +22,22 @@ Highlighter::Highlighter() :
     mEnabled(true),
     mWordBreakChars{ WordBreakChars }
 {
-    mCommentAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrComment,
+    mCommentAttribute = std::make_shared<TokenAttribute>(SYNS_AttrComment,
                                                                TokenType::Comment);
     addAttribute(mCommentAttribute);
-    mIdentifierAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIdentifier,
+    mIdentifierAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIdentifier,
                                                                   TokenType::Identifier);
     addAttribute(mIdentifierAttribute);
-    mKeywordAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrReservedWord,
+    mKeywordAttribute = std::make_shared<TokenAttribute>(SYNS_AttrReservedWord,
                                                                TokenType::Keyword);
     addAttribute(mKeywordAttribute);
-    mStringAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrString,
+    mStringAttribute = std::make_shared<TokenAttribute>(SYNS_AttrString,
                                                               TokenType::String);
     addAttribute(mStringAttribute);
-    mWhitespaceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSpace,
+    mWhitespaceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrSpace,
                                                                    TokenType::Space);
     addAttribute(mWhitespaceAttribute);
-    mSymbolAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrSymbol,
+    mSymbolAttribute = std::make_shared<TokenAttribute>(SYNS_AttrSymbol,
                                                                  TokenType::Operator);
     addAttribute(mSymbolAttribute);
 }
@@ -196,49 +196,49 @@ void Highlighter::setEnabled(bool value)
     }
 }
 
-FontStyles HighlighterAttribute::styles() const
+FontStyles TokenAttribute::styles() const
 {
     return mStyles;
 }
 
-void HighlighterAttribute::setStyles(const FontStyles &styles)
+void TokenAttribute::setStyles(const FontStyles &styles)
 {
     if (mStyles!=styles) {
         mStyles = styles;
     }
 }
 
-const QColor& HighlighterAttribute::foreground() const
+const QColor& TokenAttribute::foreground() const
 {
     return mForeground;
 }
 
-void HighlighterAttribute::setForeground(const QColor &color)
+void TokenAttribute::setForeground(const QColor &color)
 {
     mForeground = color;
 }
 
-const QColor &HighlighterAttribute::background() const
+const QColor &TokenAttribute::background() const
 {
     return mBackground;
 }
 
-void HighlighterAttribute::setBackground(const QColor &background)
+void TokenAttribute::setBackground(const QColor &background)
 {
     mBackground = background;
 }
 
-TokenType HighlighterAttribute::tokenType() const
+TokenType TokenAttribute::tokenType() const
 {
     return mTokenType;
 }
 
-QString HighlighterAttribute::name() const
+QString TokenAttribute::name() const
 {
     return mName;
 }
 
-HighlighterAttribute::HighlighterAttribute(const QString &name, TokenType tokenType):
+TokenAttribute::TokenAttribute(const QString &name, TokenType tokenType):
     mForeground(QColor()),
     mBackground(QColor()),
     mName(name),
@@ -248,7 +248,7 @@ HighlighterAttribute::HighlighterAttribute(const QString &name, TokenType tokenT
 
 }
 
-bool HighlighterState::operator==(const HighlighterState &s2)
+bool SyntaxerState::operator==(const SyntaxerState &s2)
 {
     // indents contains the information of brace/parenthesis/brackets embedded levels
     return (state == s2.state)
@@ -256,14 +256,14 @@ bool HighlighterState::operator==(const HighlighterState &s2)
             ;
 }
 
-int HighlighterState::getLastIndent()
+int SyntaxerState::getLastIndent()
 {
     if (indents.isEmpty())
         return -1;
     return indents.back();
 }
 
-HighlighterState::HighlighterState():
+SyntaxerState::SyntaxerState():
     state(0),
     blockLevel(0),
     blockStarted(0),

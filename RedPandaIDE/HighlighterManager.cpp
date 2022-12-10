@@ -33,16 +33,16 @@ HighlighterManager::HighlighterManager()
 
 }
 
-QSynedit::PHighlighter HighlighterManager::getHighlighter(QSynedit::HighlighterLanguage language)
+QSynedit::PHighlighter HighlighterManager::getHighlighter(QSynedit::ProgrammingLanguage language)
 {
     switch(language) {
-    case QSynedit::HighlighterLanguage::Cpp:
+    case QSynedit::ProgrammingLanguage::Cpp:
         return getCppHighlighter();
-    case QSynedit::HighlighterLanguage::Asssembly:
+    case QSynedit::ProgrammingLanguage::Asssembly:
         return getAsmHighlighter();
-    case QSynedit::HighlighterLanguage::Makefile:
+    case QSynedit::ProgrammingLanguage::Makefile:
         return getMakefileHighlighter();
-    case QSynedit::HighlighterLanguage::GLSL:
+    case QSynedit::ProgrammingLanguage::GLSL:
         return getGLSLHighlighter();
     default:
         return QSynedit::PHighlighter();

@@ -158,7 +158,7 @@ QString Document::lineBreak() const
     return "\n";
 }
 
-HighlighterState Document::ranges(int index)
+SyntaxerState Document::ranges(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
@@ -166,7 +166,7 @@ HighlighterState Document::ranges(int index)
     } else {
          ListIndexOutOfBounds(index);
     }
-    return HighlighterState();
+    return SyntaxerState();
 }
 
 void Document::insertItem(int Index, const QString &s)
@@ -201,7 +201,7 @@ void Document::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void Document::setRange(int Index, const HighlighterState& range)
+void Document::setRange(int Index, const SyntaxerState& range)
 {
     QMutexLocker locker(&mMutex);
     if (Index<0 || Index>=mLines.count()) {

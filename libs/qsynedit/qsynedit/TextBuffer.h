@@ -32,7 +32,7 @@ namespace QSynedit {
 
 struct DocumentLine {
   QString fString;
-  HighlighterState fRange;
+  SyntaxerState fRange;
   int fColumns;  //
 
 public:
@@ -64,8 +64,8 @@ public:
     int blockEnded(int index);
     int lengthOfLongestLine();
     QString lineBreak() const;
-    HighlighterState ranges(int index);
-    void setRange(int index, const HighlighterState& range);
+    SyntaxerState ranges(int index);
+    void setRange(int index, const SyntaxerState& range);
     QString getString(int index);
     int count();
     QString text();

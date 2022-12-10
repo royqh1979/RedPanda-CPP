@@ -182,17 +182,17 @@ const QSet<QString> MakefileHighlighter::Directives {
 
 MakefileHighlighter::MakefileHighlighter()
 {
-    mTargetAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass, TokenType::Identifier);
+    mTargetAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass, TokenType::Identifier);
     addAttribute(mTargetAttribute);
-    mCommandAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrGlobalVariable, TokenType::Identifier);
+    mCommandAttribute = std::make_shared<TokenAttribute>(SYNS_AttrGlobalVariable, TokenType::Identifier);
     addAttribute(mCommandAttribute);
-    mCommandParamAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrPreprocessor, TokenType::Identifier);
+    mCommandParamAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor, TokenType::Identifier);
     addAttribute(mCommandParamAttribute);
-    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber, TokenType::Number);
+    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber, TokenType::Number);
     addAttribute(mNumberAttribute);
-    mVariableAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrLocalVariable, TokenType::Identifier);
+    mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrLocalVariable, TokenType::Identifier);
     addAttribute(mVariableAttribute);
-    mExpressionAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction, TokenType::Identifier);
+    mExpressionAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction, TokenType::Identifier);
     addAttribute(mExpressionAttribute);
 }
 
@@ -421,9 +421,9 @@ QString MakefileHighlighter::languageName()
     return "makefile";
 }
 
-HighlighterLanguage MakefileHighlighter::language()
+ProgrammingLanguage MakefileHighlighter::language()
 {
-    return HighlighterLanguage::Makefile;
+    return ProgrammingLanguage::Makefile;
 }
 
 QString MakefileHighlighter::getToken() const
@@ -662,14 +662,14 @@ bool MakefileHighlighter::isLastLineStringNotFinished(int /*state*/) const
     return false;
 }
 
-HighlighterState MakefileHighlighter::getState() const
+SyntaxerState MakefileHighlighter::getState() const
 {
-    HighlighterState state;
+    SyntaxerState state;
     state.state = (int)mState;
     return state;
 }
 
-void MakefileHighlighter::setState(const HighlighterState & rangeState)
+void MakefileHighlighter::setState(const SyntaxerState & rangeState)
 {
     mState = (RangeState)rangeState.state;
     mStates.clear();

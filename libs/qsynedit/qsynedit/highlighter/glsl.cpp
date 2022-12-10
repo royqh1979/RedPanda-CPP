@@ -83,48 +83,48 @@ const QSet<QString> GLSLHighlighter::Keywords {
 
 GLSLHighlighter::GLSLHighlighter(): Highlighter()
 {
-    mAsmAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrAssembler,
+    mAsmAttribute = std::make_shared<TokenAttribute>(SYNS_AttrAssembler,
                                                            TokenType::Embeded);
     addAttribute(mAsmAttribute);
-    mCharAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrCharacter,
+    mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter,
                                                             TokenType::Character);
     addAttribute(mCharAttribute);
 
-    mClassAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass,
+    mClassAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass,
                                                              TokenType::Identifier);
     addAttribute(mClassAttribute);
-    mFloatAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFloat,
+    mFloatAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFloat,
                                                              TokenType::Number);
     addAttribute(mFloatAttribute);
-    mFunctionAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction,
+    mFunctionAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction,
                                                                 TokenType::Identifier);
     addAttribute(mFunctionAttribute);
-    mGlobalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrGlobalVariable,
+    mGlobalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrGlobalVariable,
                                                                  TokenType::Identifier);
     addAttribute(mGlobalVarAttribute);
-    mHexAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrHexadecimal,
+    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal,
                                                            TokenType::Number);
     addAttribute(mHexAttribute);
-    mInvalidAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrIllegalChar,
+    mInvalidAttribute = std::make_shared<TokenAttribute>(SYNS_AttrIllegalChar,
                                                                TokenType::Error);
     addAttribute(mInvalidAttribute);
-    mLocalVarAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrLocalVariable,
+    mLocalVarAttribute = std::make_shared<TokenAttribute>(SYNS_AttrLocalVariable,
                                                                 TokenType::Identifier);
     addAttribute(mLocalVarAttribute);
-    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber,
+    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber,
                                                               TokenType::Number);
     addAttribute(mNumberAttribute);
-    mOctAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrOctal,
+    mOctAttribute = std::make_shared<TokenAttribute>(SYNS_AttrOctal,
                                                            TokenType::Number);
     addAttribute(mOctAttribute);
-    mPreprocessorAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrPreprocessor,
+    mPreprocessorAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor,
                                                                     TokenType::Preprocessor);
     addAttribute(mPreprocessorAttribute);
 
-    mStringEscapeSequenceAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrStringEscapeSequences,
+    mStringEscapeSequenceAttribute = std::make_shared<TokenAttribute>(SYNS_AttrStringEscapeSequences,
                                                                             TokenType::String);
     addAttribute(mStringEscapeSequenceAttribute);
-    mVariableAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrVariable,
+    mVariableAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable,
                                                                 TokenType::Identifier);
     addAttribute(mVariableAttribute);
 
@@ -322,7 +322,7 @@ void GLSLHighlighter::braceCloseProc()
     } else {
         mRange.blockEnded++ ;
     }
-    popIndents(sitBrace);
+    popIndents(IndentForBrace);
 }
 
 void GLSLHighlighter::braceOpenProc()
@@ -336,19 +336,19 @@ void GLSLHighlighter::braceOpenProc()
     mRange.braceLevel += 1;
     mRange.blockLevel += 1;
     mRange.blockStarted += 1;
-    if (mRange.getLastIndent() == sitStatement) {
+    if (mRange.getLastIndent() == IndentForStatement) {
         // if last indent is started by 'if' 'for' etc
         // just replace it
-        while (mRange.getLastIndent() == sitStatement)
-            popIndents(sitStatement);
-        pushIndents(sitBrace);
+        while (mRange.getLastIndent() == IndentForStatement)
+            popIndents(IndentForStatement);
+        pushIndents(IndentForBrace);
 //        int idx = mRange.indents.length()-1;
 //        if (idx < mRange.firstIndentThisLine) {
 //            mRange.firstIndentThisLine = idx;
 //        }
 //        mRange.indents.replace(idx,1,BraceIndentType);
     } else {
-        pushIndents(sitBrace);
+        pushIndents(IndentForBrace);
     }
 }
 
@@ -483,7 +483,7 @@ void GLSLHighlighter::identProc()
     if (isKeyword(word)) {
         mTokenId = TokenId::Key;
         if (GLSLStatementKeyWords.contains(word)) {
-            pushIndents(sitStatement);
+            pushIndents(IndentForStatement);
         }
     } else {
         mTokenId = TokenId::Identifier;
@@ -821,7 +821,7 @@ void GLSLHighlighter::roundCloseProc()
     mRange.parenthesisLevel--;
     if (mRange.parenthesisLevel<0)
         mRange.parenthesisLevel=0;
-    popIndents(sitParenthesis);
+    popIndents(IndentForParenthesis);
 }
 
 void GLSLHighlighter::roundOpenProc()
@@ -829,7 +829,7 @@ void GLSLHighlighter::roundOpenProc()
     mRun += 1;
     mTokenId = TokenId::Symbol;
     mRange.parenthesisLevel++;
-    pushIndents(sitParenthesis);
+    pushIndents(IndentForParenthesis);
 }
 
 void GLSLHighlighter::semiColonProc()
@@ -838,8 +838,8 @@ void GLSLHighlighter::semiColonProc()
     mTokenId = TokenId::Symbol;
     if (mRange.state == RangeState::rsAsm)
         mRange.state = RangeState::rsUnknown;
-    while (mRange.getLastIndent() == sitStatement) {
-        popIndents(sitStatement);
+    while (mRange.getLastIndent() == IndentForStatement) {
+        popIndents(IndentForStatement);
     }
 }
 
@@ -892,7 +892,7 @@ void GLSLHighlighter::squareCloseProc()
     mRange.bracketLevel--;
     if (mRange.bracketLevel<0)
         mRange.bracketLevel=0;
-    popIndents(sitBracket);
+    popIndents(IndentForBracket);
 }
 
 void GLSLHighlighter::squareOpenProc()
@@ -900,7 +900,7 @@ void GLSLHighlighter::squareOpenProc()
     mRun+=1;
     mTokenId = TokenId::Symbol;
     mRange.bracketLevel++;
-    pushIndents(sitBracket);
+    pushIndents(IndentForBracket);
 }
 
 void GLSLHighlighter::starProc()
@@ -1429,7 +1429,7 @@ bool GLSLHighlighter::isKeyword(const QString &word)
     return Keywords.contains(word);
 }
 
-void GLSLHighlighter::setState(const HighlighterState& rangeState)
+void GLSLHighlighter::setState(const SyntaxerState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
@@ -1462,12 +1462,12 @@ QString GLSLHighlighter::languageName()
     return "glsl";
 }
 
-HighlighterLanguage GLSLHighlighter::language()
+ProgrammingLanguage GLSLHighlighter::language()
 {
-    return HighlighterLanguage::GLSL;
+    return ProgrammingLanguage::GLSL;
 }
 
-HighlighterState GLSLHighlighter::getState() const
+SyntaxerState GLSLHighlighter::getState() const
 {
     return mRange;
 }

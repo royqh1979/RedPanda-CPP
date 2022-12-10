@@ -22,8 +22,8 @@ QString CustomHighlighterV1::languageName()
     return mLanguageName;
 }
 
-HighlighterLanguage CustomHighlighterV1::language()
+ProgrammingLanguage CustomHighlighterV1::language()
 {
-    return HighlighterLanguage::Custom;
+    return ProgrammingLanguage::Custom;
 }
 }

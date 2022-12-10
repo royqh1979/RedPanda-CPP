@@ -1236,7 +1236,7 @@ int SynEdit::findIndentsStartLine(int line, QVector<int> indents)
     if (line<0 || line>=mDocument->count())
         return -1;
     while (line>=1) {
-        HighlighterState range = mDocument->ranges(line);
+        SyntaxerState range = mDocument->ranges(line);
         QVector<int> newIndents = range.indents.mid(range.firstIndentThisLine);
         int i = 0;
         int len = indents.length();
@@ -1535,7 +1535,7 @@ void SynEdit::doShrinkSelection(const BufferCoord &/*pos*/)
 int SynEdit::findCommentStartLine(int searchStartLine)
 {
     int commentStartLine = searchStartLine;
-    HighlighterState range;
+    SyntaxerState range;
     while (commentStartLine>=1) {
         range = mDocument->ranges(commentStartLine-1);
         if (!mHighlighter->isLastLineCommentNotFinished(range.state)){
@@ -1573,7 +1573,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
     if (startLine>=1) {
         //calculate the indents of last statement;
         indentSpaces = leftSpaces(startLineText);
-        HighlighterState rangePreceeding = mDocument->ranges(startLine-1);
+        SyntaxerState rangePreceeding = mDocument->ranges(startLine-1);
         mHighlighter->setState(rangePreceeding);
         if (addIndent) {
 //            QString trimmedS = s.trimmed();
@@ -1585,7 +1585,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             } else {
                 statePrePre = 0;
             }
-            HighlighterState rangeAfterFirstToken = mHighlighter->getState();
+            SyntaxerState rangeAfterFirstToken = mHighlighter->getState();
             QString firstToken = mHighlighter->getToken();
             PHighlighterAttribute attr = mHighlighter->getTokenAttribute();
             if (attr->tokenType() == TokenType::Keyword
@@ -1614,18 +1614,18 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 l = startLine;
             } else if (attr->tokenType() == TokenType::Operator
                        && (firstToken == '{')
-                       && (rangePreceeding.getLastIndent()==sitStatement)) {
+                       && (rangePreceeding.getLastIndent()==IndentForStatement)) {
                 // current line starts with '{' and last statement not finished, we should consider it to calc indents
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 indentAdded = true;
                 l = startLine;
-            } else if (mHighlighter->language() == HighlighterLanguage::Cpp
+            } else if (mHighlighter->language() == ProgrammingLanguage::Cpp
                        && trimmedLineText.startsWith('#')
                        && attr == ((CppHighlighter *)mHighlighter.get())->preprocessorAttribute()) {
                 indentAdded = true;
                 indentSpaces=0;
                 l=0;
-            } else if (mHighlighter->language() == HighlighterLanguage::Cpp
+            } else if (mHighlighter->language() == ProgrammingLanguage::Cpp
                        && mHighlighter->isLastLineCommentNotFinished(rangePreceeding.state)
                        ) {
                 // last line is a not finished comment,
@@ -1635,7 +1635,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     // the line the comment beginning , and add 1 additional space
                     additionIndent = 1;
                     int commentStartLine = findCommentStartLine(startLine-1);
-                    HighlighterState range;
+                    SyntaxerState range;
                     indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1));
                     range = mDocument->ranges(commentStartLine-1);
                     matchingIndents = range.matchingIndents;
@@ -1645,7 +1645,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     //indents according to the beginning of the comment and 2 additional space
                     additionIndent = 0;
                     int commentStartLine = findCommentStartLine(startLine-1);
-                    HighlighterState range;
+                    SyntaxerState range;
                     indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1))+2;
                     range = mDocument->ranges(commentStartLine-1);
                     matchingIndents = range.matchingIndents;
@@ -1659,7 +1659,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 // the preceeding line is the end of comment
                 // we should use the indents of the start line of the comment
                 int commentStartLine = findCommentStartLine(startLine-2);
-                HighlighterState range;
+                SyntaxerState range;
                 indentSpaces = leftSpaces(mDocument->getString(commentStartLine-1));
                 range = mDocument->ranges(commentStartLine-1);
                 matchingIndents = range.matchingIndents;
@@ -1675,7 +1675,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                     ) {
                 // find the indent's start line, and use it's indent as the default indent;
                 while (l>=1) {
-                    HighlighterState range = mDocument->ranges(l-1);
+                    SyntaxerState range = mDocument->ranges(l-1);
                     QVector<int> newIndents = range.indents.mid(range.firstIndentThisLine);
                     int i = 0;
                     int len = matchingIndents.length();
@@ -1693,8 +1693,8 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                         // we found the where the indent started
                         if (len>0 && !range.matchingIndents.isEmpty()
                                 &&
-                                ( matchingIndents.back()== sitBrace
-                                  || matchingIndents.back() == sitStatement
+                                ( matchingIndents.back()== IndentForBrace
+                                  || matchingIndents.back() == IndentForStatement
                                 ) ) {
                             // but it's not a complete statement
                             matchingIndents = range.matchingIndents;
@@ -2906,7 +2906,7 @@ void SynEdit::doAddChar(QChar AChar)
         if (mActiveSelectionMode==SelectionMode::Normal
                 && mOptions.testFlag(eoAutoIndent)
                 && mHighlighter
-                && mHighlighter->language() == HighlighterLanguage::Cpp
+                && mHighlighter->language() == ProgrammingLanguage::Cpp
                 && (oldCaretY<=mDocument->count()) ) {
 
             //unindent if ':' at end of the line
@@ -3408,7 +3408,7 @@ void SynEdit::updateModifiedStatus()
 
 int SynEdit::scanFrom(int Index, int canStopIndex)
 {
-    HighlighterState iRange;
+    SyntaxerState iRange;
     int Result = std::max(0,Index);
     if (Result >= mDocument->count())
         return Result;
@@ -3462,7 +3462,7 @@ void SynEdit::rescanRange(int line)
     }
     mHighlighter->setLine(mDocument->getString(line), line);
     mHighlighter->nextToEol();
-    HighlighterState iRange = mHighlighter->getState();
+    SyntaxerState iRange = mHighlighter->getState();
     mDocument->setRange(line,iRange);
 }
 
@@ -4981,7 +4981,7 @@ void SynEdit::doGotoBlockStart(bool isSelection)
 {
     if (mCaretY<0 || mCaretY>document()->count())
         return;
-    HighlighterState state = document()->ranges(mCaretY-1);
+    SyntaxerState state = document()->ranges(mCaretY-1);
     //todo: handle block other than {}
     if (document()->braceLevels(mCaretY-1)==0) {
         doGotoEditorStart(isSelection);
@@ -5003,7 +5003,7 @@ void SynEdit::doGotoBlockEnd(bool isSelection)
 {
     if (mCaretY<0 || mCaretY>document()->count())
         return;
-    HighlighterState state = document()->ranges(mCaretY-1);
+    SyntaxerState state = document()->ranges(mCaretY-1);
     //todo: handle block other than {}
     if (document()->blockLevel(mCaretY-1)==0) {
         doGotoEditorEnd(isSelection);
@@ -5479,7 +5479,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     int caretY=pos.line;
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
-        if (!mUndoing && mHighlighter && mHighlighter->language()==HighlighterLanguage::Cpp && mOptions.testFlag(eoAutoIndent)) {
+        if (!mUndoing && mHighlighter && mHighlighter->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent)) {
             QString s = trimLeft(text[0]);
             if (sLeftSide.isEmpty()) {
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
@@ -5509,7 +5509,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             if (i==text.length()-1) {
                 str = sRightSide;
             } else {
-                if (!mUndoing && mHighlighter && mHighlighter->language()==HighlighterLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
+                if (!mUndoing && mHighlighter && mHighlighter->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
                     str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
                 } else {
                     str = "";
@@ -5519,7 +5519,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             str = text[i];
             if (i==text.length()-1)
                 str += sRightSide;
-            if (!mUndoing && mHighlighter && mHighlighter->language()==HighlighterLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
+            if (!mUndoing && mHighlighter && mHighlighter->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
                 int indentSpaces = calcIndentSpaces(caretY,str,true);
                 str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
             }

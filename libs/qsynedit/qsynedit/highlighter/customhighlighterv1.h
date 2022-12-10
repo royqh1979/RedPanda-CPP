@@ -27,7 +27,7 @@ public:
     void resetState() override;
 
     QString languageName() override;
-    HighlighterLanguage language() override;
+    ProgrammingLanguage language() override;
 protected:
     bool mIgnoreCase;
     QString mCommentBlockStart;
@@ -47,7 +47,7 @@ protected:
     QString mLanguageName;
     QSet<QString> mSuffixes;
 
-    HighlighterState mRange;
+    SyntaxerState mRange;
 //    SynRangeState mSpaceRange;
     QString mLine;
     int mLineSize;

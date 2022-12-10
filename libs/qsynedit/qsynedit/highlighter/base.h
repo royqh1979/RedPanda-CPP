@@ -27,14 +27,14 @@
 #include "../Types.h"
 
 namespace QSynedit {
-enum SynIndentType {
-    sitBrace = 0,
-    sitParenthesis = 1,
-    sitBracket = 2,
-    sitStatement = 3,
+enum IndentType {
+    IndentForBrace,
+    IndentForParenthesis,
+    IndentForBracket,
+    IndentForStatement,
 };
 
-struct HighlighterState {
+struct SyntaxerState {
     int state;  // current syntax parsing state
     int blockLevel; // needed by block folding
     int blockStarted;  // needed by block folding
@@ -51,9 +51,9 @@ struct HighlighterState {
     QVector<int> matchingIndents; /* the indent matched ( and removed )
                               but not started at this line
                                 (need by auto indent) */
-    bool operator==(const HighlighterState& s2);
+    bool operator==(const SyntaxerState& s2);
     int getLastIndent();
-    HighlighterState();
+    SyntaxerState();
 };
 
 enum class TokenType {
@@ -78,7 +78,7 @@ enum class TokenType {
     Embeded  //language embeded in others
     };
 
-enum class HighlighterLanguage {
+enum class ProgrammingLanguage {
     DecideBySuffix,
     Composition,
     Asssembly,
@@ -88,9 +88,9 @@ enum class HighlighterLanguage {
     Custom
 };
 
-class HighlighterAttribute {
+class TokenAttribute {
 public:
-    explicit HighlighterAttribute(const QString& name, TokenType mTokenType);
+    explicit TokenAttribute(const QString& name, TokenType mTokenType);
 
     QString name() const;
 
@@ -113,7 +113,7 @@ private:
     TokenType mTokenType;
 };
 
-typedef std::shared_ptr<HighlighterAttribute> PHighlighterAttribute;
+typedef std::shared_ptr<TokenAttribute> PHighlighterAttribute;
 using HighlighterAttributeList = QVector<PHighlighterAttribute>;
 
 class Highlighter {
@@ -142,20 +142,20 @@ public:
     virtual bool isLastLineCommentNotFinished(int state) const = 0;
     virtual bool isLastLineStringNotFinished(int state) const = 0;
     virtual bool eol() const = 0;
-    virtual HighlighterState getState() const = 0;
+    virtual SyntaxerState getState() const = 0;
     virtual QString getToken() const=0;
     virtual const PHighlighterAttribute &getTokenAttribute() const=0;
     virtual int getTokenPos() = 0;
     virtual bool isKeyword(const QString& word);
     virtual void next() = 0;
     virtual void nextToEol();
-    virtual void setState(const HighlighterState& rangeState) = 0;
+    virtual void setState(const SyntaxerState& rangeState) = 0;
     virtual void setLine(const QString& newLine, int lineNumber) = 0;
     virtual void resetState() = 0;
     virtual QSet<QString> keywords() const;
 
     virtual QString languageName() = 0;
-    virtual HighlighterLanguage language() = 0;
+    virtual ProgrammingLanguage language() = 0;
 
     virtual QString foldString();
 

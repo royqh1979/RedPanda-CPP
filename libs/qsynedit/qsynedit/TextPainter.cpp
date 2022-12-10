@@ -979,7 +979,7 @@ void SynEditTextPainter::paintLines()
                             || sToken == "("
                             || sToken == "{"
                             ) {
-                        HighlighterState rangeState = edit->mHighlighter->getState();
+                        SyntaxerState rangeState = edit->mHighlighter->getState();
                         getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel
@@ -988,7 +988,7 @@ void SynEditTextPainter::paintLines()
                                || sToken == ")"
                                || sToken == "}"
                                ){
-                        HighlighterState rangeState = edit->mHighlighter->getState();
+                        SyntaxerState rangeState = edit->mHighlighter->getState();
                         getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel+1,

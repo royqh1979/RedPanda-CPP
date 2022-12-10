@@ -98,13 +98,13 @@ const QSet<QString> ASMHighlighter::Keywords {
 
 ASMHighlighter::ASMHighlighter()
 {
-    mNumberAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrNumber, TokenType::Number);
+    mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber, TokenType::Number);
     addAttribute(mNumberAttribute);
-    mDirectiveAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrVariable, TokenType::Keyword);
+    mDirectiveAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable, TokenType::Keyword);
     addAttribute(mDirectiveAttribute);
-    mLabelAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrFunction, TokenType::Keyword);
+    mLabelAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction, TokenType::Keyword);
     addAttribute(mLabelAttribute);
-    mRegisterAttribute = std::make_shared<HighlighterAttribute>(SYNS_AttrClass, TokenType::Keyword);
+    mRegisterAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass, TokenType::Keyword);
     addAttribute(mRegisterAttribute);
 }
 
@@ -298,9 +298,9 @@ QString ASMHighlighter::languageName()
     return "asm";
 }
 
-HighlighterLanguage ASMHighlighter::language()
+ProgrammingLanguage ASMHighlighter::language()
 {
-    return HighlighterLanguage::Asssembly;
+    return ProgrammingLanguage::Asssembly;
 }
 
 QString ASMHighlighter::getToken() const
@@ -439,12 +439,12 @@ bool ASMHighlighter::isLastLineStringNotFinished(int /*state*/) const
     return true;
 }
 
-HighlighterState ASMHighlighter::getState() const
+SyntaxerState ASMHighlighter::getState() const
 {
-    return HighlighterState();
+    return SyntaxerState();
 }
 
-void ASMHighlighter::setState(const HighlighterState&)
+void ASMHighlighter::setState(const SyntaxerState&)
 {
 
 }

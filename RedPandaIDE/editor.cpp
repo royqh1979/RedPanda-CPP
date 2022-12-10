@@ -390,7 +390,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         setUseCodeFolding(false);
     }
     setHighlighter(newHighlighter);
-    if (!newHighlighter || newHighlighter->language() != QSynedit::HighlighterLanguage::Cpp) {
+    if (!newHighlighter || newHighlighter->language() != QSynedit::ProgrammingLanguage::Cpp) {
         mSyntaxIssues.clear();
     }
     applyColorScheme(pSettings->editor().colorScheme());
@@ -1037,7 +1037,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             if (CppTypeKeywords.contains(token)
                     ||
                     (
-                        highlighter()->language()==QSynedit::HighlighterLanguage::Cpp
+                        highlighter()->language()==QSynedit::ProgrammingLanguage::Cpp
                         &&
                         ((QSynedit::CppHighlighter*)highlighter().get())->customTypeKeywords().contains(token)
                         )
@@ -2350,7 +2350,7 @@ bool Editor::handleParentheseSkip()
       if (document()->count()==0)
           return false;
       if (highlighter() && highlighter()->supportBraceLevel()) {
-          QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
+          QSynedit::SyntaxerState lastLineState = document()->ranges(document()->count()-1);
           if (lastLineState.parenthesisLevel==0) {
               setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
               return true;
@@ -2401,7 +2401,7 @@ bool Editor::handleBracketSkip()
     if (document()->count()==0)
         return false;
     if (highlighter() && highlighter()->supportBraceLevel()) {
-        QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
+        QSynedit::SyntaxerState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.bracketLevel==0) {
             setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
@@ -2488,7 +2488,7 @@ bool Editor::handleBraceSkip()
         return false;
 
     if (highlighter() && highlighter()->supportBraceLevel()) {
-        QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
+        QSynedit::SyntaxerState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.braceLevel==0) {
             bool oldInsertMode = insertMode();
             setInsertMode(false); //set mode to overwrite
@@ -2662,7 +2662,7 @@ void Editor::initParser()
 {
     if (pSettings->codeCompletion().shareParser()) {
         if (pSettings->codeCompletion().enabled()
-            && (highlighter() && highlighter()->language() == QSynedit::HighlighterLanguage::Cpp)
+            && (highlighter() && highlighter()->language() == QSynedit::ProgrammingLanguage::Cpp)
             ) {
             mParser = sharedParser(mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C);
         }
@@ -2682,7 +2682,7 @@ void Editor::initParser()
     resetCppParser(mParser);
     mParser->setEnabled(
                 pSettings->codeCompletion().enabled() &&
-                (highlighter() && highlighter()->language() == QSynedit::HighlighterLanguage::Cpp));
+                (highlighter() && highlighter()->language() == QSynedit::ProgrammingLanguage::Cpp));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -2814,8 +2814,8 @@ void Editor::reparse(bool resetParser)
         return;
     if (!highlighter())
         return;
-    if (highlighter()->language() != QSynedit::HighlighterLanguage::Cpp
-             && highlighter()->language() != QSynedit::HighlighterLanguage::GLSL)
+    if (highlighter()->language() != QSynedit::ProgrammingLanguage::Cpp
+             && highlighter()->language() != QSynedit::ProgrammingLanguage::GLSL)
         return;
     if (!mParser)
         return;
@@ -3122,7 +3122,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 
     QSet<QString> keywords;
     if (highlighter()) {
-        if (highlighter()->language() != QSynedit::HighlighterLanguage::Cpp ) {
+        if (highlighter()->language() != QSynedit::ProgrammingLanguage::Cpp ) {
             keywords = highlighter()->keywords();
         } else {
             if (mUseCppSyntax) {
@@ -4582,7 +4582,7 @@ void Editor::checkSyntaxInBack()
         return;
     if (!highlighter())
         return;
-    if (highlighter()->language()!=QSynedit::HighlighterLanguage::Cpp)
+    if (highlighter()->language()!=QSynedit::ProgrammingLanguage::Cpp)
         return;
     pMainWindow->checkSyntaxInBack(this);
 }
@@ -4792,14 +4792,14 @@ void Editor::applySettings()
     }
 
     if (pSettings->editor().enableCustomCTypeKeywords()) {
-        if (highlighter() && highlighter()->language() == QSynedit::HighlighterLanguage::Cpp) {
+        if (highlighter() && highlighter()->language() == QSynedit::ProgrammingLanguage::Cpp) {
             QSet<QString> set;
             foreach(const QString& s, pSettings->editor().customCTypeKeywords())
                 set.insert(s);
             ((QSynedit::CppHighlighter*)(highlighter().get()))->setCustomTypeKeywords(set);
         }
     } else {
-        if (highlighter() && highlighter()->language() == QSynedit::HighlighterLanguage::Cpp) {
+        if (highlighter() && highlighter()->language() == QSynedit::ProgrammingLanguage::Cpp) {
             ((QSynedit::CppHighlighter*)(highlighter().get()))->setCustomTypeKeywords(QSet<QString>());
         }
     }
@@ -4815,7 +4815,7 @@ void Editor::applySettings()
 static QSynedit::PHighlighterAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
     PColorSchemeItem item = pColorManager->getItem(schemeName,schemeItemName);
     if (item) {
-        QSynedit::PHighlighterAttribute attr = std::make_shared<QSynedit::HighlighterAttribute>(attrName,
+        QSynedit::PHighlighterAttribute attr = std::make_shared<QSynedit::TokenAttribute>(attrName,
                                                                                                 QSynedit::TokenType::Default);
         attr->setForeground(item->foreground());
         attr->setBackground(item->background());

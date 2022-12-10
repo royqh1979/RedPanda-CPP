@@ -88,7 +88,7 @@ public:
     bool eol() const override;
 
     QString languageName() override;
-    HighlighterLanguage language() override;
+    ProgrammingLanguage language() override;
     QString getToken() const override;
     const PHighlighterAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
@@ -100,8 +100,8 @@ public:
     bool getTokenFinished() const override;
     bool isLastLineCommentNotFinished(int state) const override;
     bool isLastLineStringNotFinished(int state) const override;
-    HighlighterState getState() const override;
-    void setState(const HighlighterState& rangeState) override;
+    SyntaxerState getState() const override;
+    void setState(const SyntaxerState& rangeState) override;
     void resetState() override;
 
 

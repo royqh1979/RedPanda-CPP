@@ -134,7 +134,7 @@ private:
 
 private:
     bool mAsmStart;
-    HighlighterState mRange;
+    SyntaxerState mRange;
 //    SynRangeState mSpaceRange;
     QString mLineString;
     QChar* mLine;
@@ -175,15 +175,15 @@ public:
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
     bool isKeyword(const QString &word) override;
-    void setState(const HighlighterState& rangeState) override;
+    void setState(const SyntaxerState& rangeState) override;
     void resetState() override;
 
     QString languageName() override;
-    HighlighterLanguage language() override;
+    ProgrammingLanguage language() override;
 
     // SynHighlighter interface
 public:
-    HighlighterState getState() const override;
+    SyntaxerState getState() const override;
 
     // SynHighlighter interface
 public:

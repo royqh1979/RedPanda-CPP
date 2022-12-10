@@ -23,7 +23,7 @@ class HighlighterManager
 public:
     HighlighterManager();
 
-    QSynedit::PHighlighter getHighlighter(QSynedit::HighlighterLanguage language);
+    QSynedit::PHighlighter getHighlighter(QSynedit::ProgrammingLanguage language);
     QSynedit::PHighlighter getHighlighter(const QString& filename);
     QSynedit::PHighlighter copyHighlighter(QSynedit::PHighlighter highlighter);
     QSynedit::PHighlighter getCppHighlighter();
