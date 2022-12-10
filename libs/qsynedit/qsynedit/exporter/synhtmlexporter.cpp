@@ -45,7 +45,7 @@ void SynHTMLExporter::setCreateHTMLFragment(bool createHTMLFragment)
     mCreateHTMLFragment = createHTMLFragment;
 }
 
-QString SynHTMLExporter::AttriToCSS(PHighlighterAttribute Attri, const QString &UniqueAttriName)
+QString SynHTMLExporter::AttriToCSS(PTokenAttribute Attri, const QString &UniqueAttriName)
 {
     QString StyleName = MakeValidName(UniqueAttriName);
 
@@ -67,7 +67,7 @@ QString SynHTMLExporter::AttriToCSS(PHighlighterAttribute Attri, const QString &
     return Result;
 }
 
-bool SynHTMLExporter::AttriToCSSCallback(PHighlighter , PHighlighterAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
+bool SynHTMLExporter::AttriToCSSCallback(PHighlighter , PTokenAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
 {
     QString& styles = *static_cast<QString *>(params[0]);
     styles.append(AttriToCSS(Attri,UniqueAttriName) + lineBreak());
@@ -79,10 +79,10 @@ QString SynHTMLExporter::ColorToHTML(const QColor &AColor)
     return AColor.name();
 }
 
-QString SynHTMLExporter::GetStyleName(PHighlighter Highlighter, PHighlighterAttribute Attri)
+QString SynHTMLExporter::GetStyleName(PHighlighter Highlighter, PTokenAttribute Attri)
 {
     QString result;
-    enumHighlighterAttributes(Highlighter,false,
+    enumTokenAttributes(Highlighter,false,
                           std::bind(
                               &SynHTMLExporter::StyleNameCallback,this,
                               std::placeholders::_1, std::placeholders::_2,
@@ -104,9 +104,9 @@ QString SynHTMLExporter::MakeValidName(const QString &Name)
     return Result;
 }
 
-bool SynHTMLExporter::StyleNameCallback(PHighlighter /*Highlighter*/, PHighlighterAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
+bool SynHTMLExporter::StyleNameCallback(PHighlighter /*Highlighter*/, PTokenAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
 {
-    PHighlighterAttribute& AttriToFind = *static_cast<PHighlighterAttribute*>(params[0]);
+    PTokenAttribute& AttriToFind = *static_cast<PTokenAttribute*>(params[0]);
     QString& StyleName = *static_cast<QString *>(params[1]);
 
     if (Attri == AttriToFind) {
@@ -164,7 +164,7 @@ QString SynHTMLExporter::GetHeader()
 {
     using namespace std::placeholders;
     QString Styles;
-    enumHighlighterAttributes(mHighlighter, true,
+    enumTokenAttributes(mHighlighter, true,
                           std::bind(&SynHTMLExporter::AttriToCSSCallback,
                                     this, _1, _2, _3, _4),
                           {&Styles});
@@ -222,7 +222,7 @@ QString SynHTMLExporter::GetHeader()
     return Result;
 }
 
-void SynHTMLExporter::SetTokenAttribute(PHighlighterAttribute Attri)
+void SynHTMLExporter::SetTokenAttribute(PTokenAttribute Attri)
 {
     mLastAttri = Attri;
     SynExporter::SetTokenAttribute(Attri);

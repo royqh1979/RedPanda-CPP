@@ -90,7 +90,7 @@ void SynExporter::ExportRange(PDocument ALines, BufferCoord Start, BufferCoord S
         // export the line
         mHighlighter->setLine(Line, i);
         while (!mHighlighter->eol()) {
-            PHighlighterAttribute attri = mHighlighter->getTokenAttribute();
+            PTokenAttribute attri = mHighlighter->getTokenAttribute();
             int startPos = mHighlighter->getTokenPos();
             QString token = mHighlighter->getToken();
             if (i==Start.line && (startPos+token.length() < Start.ch)) {
@@ -338,7 +338,7 @@ static QColor ValidatedColor(const QColor& color, const QColor& defaultColor) {
     else
         return defaultColor;
 }
-void SynExporter::SetTokenAttribute(PHighlighterAttribute Attri)
+void SynExporter::SetTokenAttribute(PTokenAttribute Attri)
 {
     if (mFirstAttribute) {
         mFirstAttribute = false;

@@ -248,11 +248,11 @@ public:
     int maxScrollHeight() const;
 
     bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
-      PHighlighterAttribute& attri);
+      PTokenAttribute& attri);
     bool getHighlighterAttriAtRowCol(const BufferCoord& pos, QString& token,
-      bool& tokenFinished, PHighlighterAttribute& attri);
+      bool& tokenFinished, PTokenAttribute& attri);
     bool getHighlighterAttriAtRowColEx(const BufferCoord& pos, QString& token,
-      int &start, PHighlighterAttribute& attri);
+      int &start, PTokenAttribute& attri);
 
     void beginUndoBlock();
     void endUndoBlock();
@@ -301,10 +301,10 @@ public:
     bool pointToLine(const QPoint& point, int& line);
     bool isIdentChar(const QChar& ch);
 
-    void setRainbowAttrs(const PHighlighterAttribute &attr0,
-                         const PHighlighterAttribute &attr1,
-                         const PHighlighterAttribute &attr2,
-                         const PHighlighterAttribute &attr3);
+    void setRainbowAttrs(const PTokenAttribute &attr0,
+                         const PTokenAttribute &attr1,
+                         const PTokenAttribute &attr2,
+                         const PTokenAttribute &attr3);
 
     void updateMouseCursor();
 
@@ -411,13 +411,13 @@ public:
     bool caretUseTextColor() const;
     void setCaretUseTextColor(bool newCaretUseTextColor);
 
-    const PHighlighterAttribute &rainbowAttr0() const;
+    const PTokenAttribute &rainbowAttr0() const;
 
-    const PHighlighterAttribute &rainbowAttr1() const;
+    const PTokenAttribute &rainbowAttr1() const;
 
-    const PHighlighterAttribute &rainbowAttr2() const;
+    const PTokenAttribute &rainbowAttr2() const;
 
-    const PHighlighterAttribute &rainbowAttr3() const;
+    const PTokenAttribute &rainbowAttr3() const;
 
     int mouseWheelScrollSpeed() const;
     void setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed);
@@ -463,7 +463,7 @@ protected:
     virtual void onGutterPaint(QPainter& painter, int aLine, int X, int Y);
     virtual void onPaint(QPainter& painter);
     virtual void onPreparePaintHighlightToken(int line,
-            int aChar, const QString& token, PHighlighterAttribute attr,
+            int aChar, const QString& token, PTokenAttribute attr,
             FontStyles& style, QColor& foreground, QColor& background);
     virtual void onProcessCommand(EditCommand command, QChar car, void * pData);
     virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
@@ -673,10 +673,10 @@ private:
     QColor mForegroundColor;
     QColor mBackgroundColor;
     QColor mCaretColor;
-    PHighlighterAttribute mRainbowAttr0;
-    PHighlighterAttribute mRainbowAttr1;
-    PHighlighterAttribute mRainbowAttr2;
-    PHighlighterAttribute mRainbowAttr3;
+    PTokenAttribute mRainbowAttr0;
+    PTokenAttribute mRainbowAttr1;
+    PTokenAttribute mRainbowAttr2;
+    PTokenAttribute mRainbowAttr3;
 
     bool mCaretUseTextColor;
     QColor mActiveLineColor;

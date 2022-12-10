@@ -291,7 +291,7 @@ private:
     void clearUserCodeInTabStops();
     void popUserCodeInTabStops();
     void onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString& token,
-        QSynedit::PHighlighterAttribute &attr);
+        QSynedit::PTokenAttribute &attr);
     void onScrollBarValueChanged();
     static PCppParser sharedParser(ParserLanguage language);
 private:
@@ -364,7 +364,7 @@ protected:
 
     // SynEdit interface
 protected:
-    void onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PHighlighterAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background) override;
+    void onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background) override;
 
     // QObject interface
 public:

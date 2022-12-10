@@ -111,7 +111,7 @@ void HighlighterManager::applyColorScheme(QSynedit::PHighlighter highlighter, co
     for (QString name: highlighter->attributes().keys()) {
         PColorSchemeItem item = pColorManager->getItem(schemeName,name);
         if (item) {
-            QSynedit::PHighlighterAttribute attr = highlighter->attributes()[name];
+            QSynedit::PTokenAttribute attr = highlighter->attributes()[name];
             attr->setBackground(item->background());
             attr->setForeground(item->foreground());
             QSynedit::FontStyles styles = QSynedit::FontStyle::fsNone;

@@ -22,7 +22,7 @@
 
 namespace QSynedit {
 using FormatTokenHandler = std::function<void(PHighlighter syntaxHighlighter, int Line, int column, const QString& token,
-    PHighlighterAttribute& attr)>;
+    PTokenAttribute& attr)>;
 class SynExporter
 {
 
@@ -236,7 +236,7 @@ protected:
      *     added to the output buffer.
      * @param Attri
      */
-    virtual void SetTokenAttribute(PHighlighterAttribute Attri);
+    virtual void SetTokenAttribute(PTokenAttribute Attri);
 
     QTextCodec *getCodec();
 private:

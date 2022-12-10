@@ -40,7 +40,7 @@ public:
     PHighlighter getHighlighter() const;
     void setHighlighter(const PHighlighter &highlighter);
 
-    PHighlighterAttribute getMarkerAttribute() const;
+    PTokenAttribute getMarkerAttribute() const;
 
     QString getSchemeName() const;
     void setSchemeName(const QString &schemeName);
@@ -52,7 +52,7 @@ private:
     QString mEndExpr;
     QString StartExpr;
     PHighlighter mHighlighter;
-    PHighlighterAttribute mMarkerAttribute;
+    PTokenAttribute mMarkerAttribute;
     QString mSchemeName;
     int mCaseSensitive;
 //    OnCheckMarker mOnCheckStartMarker;

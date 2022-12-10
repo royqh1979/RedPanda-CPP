@@ -431,7 +431,7 @@ QString MakefileHighlighter::getToken() const
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-const PHighlighterAttribute &MakefileHighlighter::getTokenAttribute() const
+const PTokenAttribute &MakefileHighlighter::getTokenAttribute() const
 {
     /*
         Directive,

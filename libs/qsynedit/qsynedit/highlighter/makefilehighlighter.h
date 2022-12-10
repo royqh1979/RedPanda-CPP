@@ -80,12 +80,12 @@ private:
     RangeState mState;
     TokenId mTokenID;
 
-    PHighlighterAttribute mTargetAttribute;
-    PHighlighterAttribute mCommandAttribute;
-    PHighlighterAttribute mCommandParamAttribute;
-    PHighlighterAttribute mNumberAttribute;
-    PHighlighterAttribute mVariableAttribute;
-    PHighlighterAttribute mExpressionAttribute;
+    PTokenAttribute mTargetAttribute;
+    PTokenAttribute mCommandAttribute;
+    PTokenAttribute mCommandParamAttribute;
+    PTokenAttribute mNumberAttribute;
+    PTokenAttribute mVariableAttribute;
+    PTokenAttribute mExpressionAttribute;
 
 private:
     void procSpace();
@@ -135,7 +135,7 @@ public:
     QString languageName() override;
     ProgrammingLanguage language() override;
     QString getToken() const override;
-    const PHighlighterAttribute &getTokenAttribute() const override;
+    const PTokenAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;

@@ -592,7 +592,7 @@ bool SynEditTextPainter::tokenIsSpaces(bool &bSpacesTest, const QString& token, 
 // record. This will paint any chars already stored if there is
 // a (visible) change in the attributes.
 void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefore,
-                                           int tokenColumns, int cLine, PHighlighterAttribute p_Attri)
+                                           int tokenColumns, int cLine, PTokenAttribute p_Attri)
 {
     bool bCanAppend;
     QColor foreground, background;
@@ -704,12 +704,12 @@ void SynEditTextPainter::paintFoldAttributes()
                 indentLevel++ ;
                 if (edit->mHighlighter) {
                     if (edit->mCodeFolding.indentGuides) {
-                        PHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
+                        PTokenAttribute attr = edit->mHighlighter->symbolAttribute();
                         getBraceColorAttr(indentLevel,attr);
                         paintColor = attr->foreground();
                     }
                     if (edit->mCodeFolding.fillIndents) {
-                        PHighlighterAttribute attr = edit->mHighlighter->symbolAttribute();
+                        PTokenAttribute attr = edit->mHighlighter->symbolAttribute();
                         getBraceColorAttr(indentLevel,attr);
                         gradientStart=attr->foreground();
                         attr = edit->mHighlighter->symbolAttribute();
@@ -762,13 +762,13 @@ void SynEditTextPainter::paintFoldAttributes()
 
 }
 
-void SynEditTextPainter::getBraceColorAttr(int level, PHighlighterAttribute &attr)
+void SynEditTextPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
 {
     if (!edit->mOptions.testFlag(EditorOption::eoShowRainbowColor))
         return;
     if (attr->tokenType() != TokenType::Operator)
         return;
-    PHighlighterAttribute oldAttr = attr;
+    PTokenAttribute oldAttr = attr;
     switch(level % 4) {
     case 0:
         attr = edit->mRainbowAttr0;
@@ -794,12 +794,12 @@ void SynEditTextPainter::paintLines()
     QString sLine; // the current line
     QString sToken; // highlighter token info
     int nTokenColumnsBefore, nTokenColumnLen;
-    PHighlighterAttribute attr;
+    PTokenAttribute attr;
     int vFirstChar;
     int vLastChar;
     EditingAreaList  areaList;
     PCodeFoldingRange foldRange;
-    PHighlighterAttribute preeditAttr;
+    PTokenAttribute preeditAttr;
     int nFold;
     QString sFold;
 
@@ -1026,7 +1026,7 @@ void SynEditTextPainter::paintLines()
                     if (nTokenColumnLen > 0) {
                         sToken = edit->substringByColumns(sLine,nTokenColumnsBefore+1,nTokenColumnLen);
                         addHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
-                            nTokenColumnLen, vLine, PHighlighterAttribute());
+                            nTokenColumnLen, vLine, PTokenAttribute());
                     }
                 }
                 // Draw LineBreak glyph.

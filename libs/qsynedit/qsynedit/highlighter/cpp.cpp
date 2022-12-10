@@ -190,72 +190,72 @@ CppHighlighter::CppHighlighter(): Highlighter()
     resetState();
 }
 
-const PHighlighterAttribute &CppHighlighter::asmAttribute() const
+const PTokenAttribute &CppHighlighter::asmAttribute() const
 {
     return mAsmAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::preprocessorAttribute() const
+const PTokenAttribute &CppHighlighter::preprocessorAttribute() const
 {
     return mPreprocessorAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::invalidAttribute() const
+const PTokenAttribute &CppHighlighter::invalidAttribute() const
 {
     return mInvalidAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::numberAttribute() const
+const PTokenAttribute &CppHighlighter::numberAttribute() const
 {
     return mNumberAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::floatAttribute() const
+const PTokenAttribute &CppHighlighter::floatAttribute() const
 {
     return mFloatAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::hexAttribute() const
+const PTokenAttribute &CppHighlighter::hexAttribute() const
 {
     return mHexAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::octAttribute() const
+const PTokenAttribute &CppHighlighter::octAttribute() const
 {
     return mOctAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::stringEscapeSequenceAttribute() const
+const PTokenAttribute &CppHighlighter::stringEscapeSequenceAttribute() const
 {
     return mStringEscapeSequenceAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::charAttribute() const
+const PTokenAttribute &CppHighlighter::charAttribute() const
 {
     return mCharAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::variableAttribute() const
+const PTokenAttribute &CppHighlighter::variableAttribute() const
 {
     return mVariableAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::functionAttribute() const
+const PTokenAttribute &CppHighlighter::functionAttribute() const
 {
     return mFunctionAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::classAttribute() const
+const PTokenAttribute &CppHighlighter::classAttribute() const
 {
     return mClassAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::globalVarAttribute() const
+const PTokenAttribute &CppHighlighter::globalVarAttribute() const
 {
     return mGlobalVarAttribute;
 }
 
-const PHighlighterAttribute &CppHighlighter::localVarAttribute() const
+const PTokenAttribute &CppHighlighter::localVarAttribute() const
 {
     return mLocalVarAttribute;
 }
@@ -1442,7 +1442,7 @@ QString CppHighlighter::getToken() const
     return mLine.mid(mTokenPos,mRun-mTokenPos);
 }
 
-const PHighlighterAttribute &CppHighlighter::getTokenAttribute() const
+const PTokenAttribute &CppHighlighter::getTokenAttribute() const
 {
     switch (mTokenId) {
     case TokenId::Asm:

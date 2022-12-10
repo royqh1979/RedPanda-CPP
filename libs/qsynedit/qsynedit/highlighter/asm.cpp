@@ -108,12 +108,12 @@ ASMHighlighter::ASMHighlighter()
     addAttribute(mRegisterAttribute);
 }
 
-const PHighlighterAttribute &ASMHighlighter::numberAttribute() const
+const PTokenAttribute &ASMHighlighter::numberAttribute() const
 {
     return mNumberAttribute;
 }
 
-const PHighlighterAttribute &ASMHighlighter::registerAttribute() const
+const PTokenAttribute &ASMHighlighter::registerAttribute() const
 {
     return mRegisterAttribute;
 }
@@ -308,7 +308,7 @@ QString ASMHighlighter::getToken() const
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-const PHighlighterAttribute &ASMHighlighter::getTokenAttribute() const
+const PTokenAttribute &ASMHighlighter::getTokenAttribute() const
 {
     switch(mTokenID) {
     case TokenId::Comment:
@@ -459,12 +459,12 @@ QSet<QString> ASMHighlighter::keywords() const
     return Keywords;
 }
 
-const PHighlighterAttribute &ASMHighlighter::directiveAttribute() const
+const PTokenAttribute &ASMHighlighter::directiveAttribute() const
 {
     return mDirectiveAttribute;
 }
 
-const PHighlighterAttribute &ASMHighlighter::labelAttribute() const
+const PTokenAttribute &ASMHighlighter::labelAttribute() const
 {
     return mLabelAttribute;
 }

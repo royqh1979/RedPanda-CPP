@@ -61,9 +61,9 @@ protected:
 
     QSet<QString> mCustomTypeKeywords;
 
-    PHighlighterAttribute mInvalidAttribute;
-    PHighlighterAttribute mTypeKeywordAttribute;
-    PHighlighterAttribute mCallableAttribute;
+    PTokenAttribute mInvalidAttribute;
+    PTokenAttribute mTypeKeywordAttribute;
+    PTokenAttribute mCallableAttribute;
 };
 
 }

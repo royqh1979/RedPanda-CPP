@@ -113,28 +113,27 @@ private:
     TokenType mTokenType;
 };
 
-typedef std::shared_ptr<TokenAttribute> PHighlighterAttribute;
-using HighlighterAttributeList = QVector<PHighlighterAttribute>;
+typedef std::shared_ptr<TokenAttribute> PTokenAttribute;
 
 class Highlighter {
 public:
     explicit Highlighter();
 
-    const QMap<QString, PHighlighterAttribute>& attributes() const;
+    const QMap<QString, PTokenAttribute>& attributes() const;
 
     const QSet<QChar>& wordBreakChars() const;
 
-    const PHighlighterAttribute& identifierAttribute() const;
+    const PTokenAttribute& identifierAttribute() const;
 
-    const PHighlighterAttribute& keywordAttribute() const;
+    const PTokenAttribute& keywordAttribute() const;
 
-    const PHighlighterAttribute& commentAttribute() const;
+    const PTokenAttribute& commentAttribute() const;
 
-    const PHighlighterAttribute& stringAttribute() const;
+    const PTokenAttribute& stringAttribute() const;
 
-    const PHighlighterAttribute& whitespaceAttribute() const;
+    const PTokenAttribute& whitespaceAttribute() const;
 
-    const PHighlighterAttribute& symbolAttribute() const;
+    const PTokenAttribute& symbolAttribute() const;
 
     virtual bool isIdentChar(const QChar& ch) const;
 
@@ -144,7 +143,7 @@ public:
     virtual bool eol() const = 0;
     virtual SyntaxerState getState() const = 0;
     virtual QString getToken() const=0;
-    virtual const PHighlighterAttribute &getTokenAttribute() const=0;
+    virtual const PTokenAttribute &getTokenAttribute() const=0;
     virtual int getTokenPos() = 0;
     virtual bool isKeyword(const QString& word);
     virtual void next() = 0;
@@ -164,22 +163,22 @@ public:
     virtual bool isWordBreakChar(const QChar& ch);
     bool enabled() const;
     void setEnabled(bool value);
-    virtual PHighlighterAttribute getAttribute(const QString& name) const;
+    virtual PTokenAttribute getAttribute(const QString& name) const;
 
 protected:
-    PHighlighterAttribute mCommentAttribute;
-    PHighlighterAttribute mIdentifierAttribute;
-    PHighlighterAttribute mKeywordAttribute;
-    PHighlighterAttribute mStringAttribute;
-    PHighlighterAttribute mWhitespaceAttribute;
-    PHighlighterAttribute mSymbolAttribute;
+    PTokenAttribute mCommentAttribute;
+    PTokenAttribute mIdentifierAttribute;
+    PTokenAttribute mKeywordAttribute;
+    PTokenAttribute mStringAttribute;
+    PTokenAttribute mWhitespaceAttribute;
+    PTokenAttribute mSymbolAttribute;
 
-    void addAttribute(PHighlighterAttribute attribute);
+    void addAttribute(PTokenAttribute attribute);
     void clearAttributes();
     virtual int attributesCount() const;
 
 private:
-    QMap<QString,PHighlighterAttribute> mAttributes;
+    QMap<QString,PTokenAttribute> mAttributes;
     bool mEnabled;
     QSet<QChar> mWordBreakChars;
 };

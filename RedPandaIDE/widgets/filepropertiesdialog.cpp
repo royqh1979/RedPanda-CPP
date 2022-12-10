@@ -56,7 +56,7 @@ void FilePropertiesDialog::calcFile(Editor *editor,
         while (j<line.length() && (line[j]=='\t' || line[j]==' '))
             j++;
         QString token;
-        QSynedit::PHighlighterAttribute attr;
+        QSynedit::PTokenAttribute attr;
         if (editor->getHighlighterAttriAtRowCol(QSynedit::BufferCoord{j+1,i+1},
                                                 token,attr)) {
             // if it is preprocessor...

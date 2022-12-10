@@ -46,15 +46,15 @@ QStringList splitStrings(const QString& text);
 
 int calSpanLines(const BufferCoord& startPos, const BufferCoord& endPos);
 
-using  HighlighterAttriProc = std::function<bool(PHighlighter Highlighter,
-    PHighlighterAttribute Attri, const QString& UniqueAttriName,
+using  TokenAttributeProc = std::function<bool(PHighlighter Highlighter,
+    PTokenAttribute Attri, const QString& UniqueAttriName,
     QList<void *> Params)>;
 
 // Enums all child highlighters and their attributes of a TSynMultiSyn through a
 // callback function.
 // This function also handles nested TSynMultiSyns including their MarkerAttri.
-bool enumHighlighterAttributes(PHighlighter Highlighter,
-                           bool SkipDuplicates, HighlighterAttriProc highlighterAttriProc,
+bool enumTokenAttributes(PHighlighter Highlighter,
+                           bool SkipDuplicates, TokenAttributeProc highlighterAttriProc,
                            std::initializer_list<void *> Params);
 
 FontStyles getFontStyles(const QFont& font);

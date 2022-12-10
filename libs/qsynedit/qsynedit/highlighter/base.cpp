@@ -42,7 +42,7 @@ Highlighter::Highlighter() :
     addAttribute(mSymbolAttribute);
 }
 
-const QMap<QString, PHighlighterAttribute>& Highlighter::attributes() const
+const QMap<QString, PTokenAttribute>& Highlighter::attributes() const
 {
     return mAttributes;
 }
@@ -52,32 +52,32 @@ const QSet<QChar>& Highlighter::wordBreakChars() const
     return mWordBreakChars;
 }
 
-const PHighlighterAttribute& Highlighter::identifierAttribute() const
+const PTokenAttribute& Highlighter::identifierAttribute() const
 {
     return mIdentifierAttribute;
 }
 
-const PHighlighterAttribute &Highlighter::keywordAttribute() const
+const PTokenAttribute &Highlighter::keywordAttribute() const
 {
     return mKeywordAttribute;
 }
 
-const PHighlighterAttribute &Highlighter::commentAttribute() const
+const PTokenAttribute &Highlighter::commentAttribute() const
 {
     return mCommentAttribute;
 }
 
-const PHighlighterAttribute& Highlighter::stringAttribute() const
+const PTokenAttribute& Highlighter::stringAttribute() const
 {
     return mStringAttribute;
 }
 
-const PHighlighterAttribute& Highlighter::whitespaceAttribute() const
+const PTokenAttribute& Highlighter::whitespaceAttribute() const
 {
     return mWhitespaceAttribute;
 }
 
-const PHighlighterAttribute& Highlighter::symbolAttribute() const
+const PTokenAttribute& Highlighter::symbolAttribute() const
 {
     return mSymbolAttribute;
 }
@@ -164,7 +164,7 @@ bool Highlighter::isIdentChar(const QChar &ch) const
     return false;
 }
 
-void Highlighter::addAttribute(PHighlighterAttribute attribute)
+void Highlighter::addAttribute(PTokenAttribute attribute)
 {
     mAttributes[attribute->name()]=attribute;
 }
@@ -179,9 +179,9 @@ int Highlighter::attributesCount() const
     return mAttributes.size();
 }
 
-PHighlighterAttribute Highlighter::getAttribute(const QString& name) const
+PTokenAttribute Highlighter::getAttribute(const QString& name) const
 {
-    return mAttributes.value(name,PHighlighterAttribute());
+    return mAttributes.value(name,PTokenAttribute());
 }
 
 bool Highlighter::enabled() const

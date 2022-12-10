@@ -133,7 +133,7 @@ void TodoThread::doParseFile(const QString &filename, QSynedit::PHighlighter hig
     for (int i =0;i<lines.count();i++) {
         highlighter->setLine(lines[i],i);
         while (!highlighter->eol()) {
-            QSynedit::PHighlighterAttribute attr;
+            QSynedit::PTokenAttribute attr;
             attr = highlighter->getTokenAttribute();
             if (attr && attr->tokenType() == QSynedit::TokenType::Comment) {
                 QString token = highlighter->getToken();

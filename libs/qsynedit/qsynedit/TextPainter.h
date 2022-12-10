@@ -55,10 +55,10 @@ private:
     void paintHighlightToken(bool bFillToEOL);
     bool tokenIsSpaces(bool& bSpacesTest, const QString& token, bool& bIsSpaces);
     void addHighlightToken(const QString& token, int columnsBefore, int tokenColumns,
-                           int cLine, PHighlighterAttribute p_Attri);
+                           int cLine, PTokenAttribute p_Attri);
 
     void paintFoldAttributes();
-    void getBraceColorAttr(int level, PHighlighterAttribute &attr);
+    void getBraceColorAttr(int level, PTokenAttribute &attr);
     void paintLines();
 
 private:

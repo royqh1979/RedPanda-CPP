@@ -44,7 +44,7 @@ int getEOL(const QString &Line, int start)
 
 bool internalEnumHighlighterAttris(PHighlighter Highlighter,
                                    bool SkipDuplicates,
-                                   HighlighterAttriProc highlighterAttriProc,
+                                   TokenAttributeProc highlighterAttriProc,
                                    std::initializer_list<void *>& Params,
                                    HighlighterList& HighlighterList) {
     bool Result = true;
@@ -55,7 +55,7 @@ bool internalEnumHighlighterAttris(PHighlighter Highlighter,
         HighlighterList.append(Highlighter);
     }
     if (Highlighter) {
-        for (PHighlighterAttribute pAttr: Highlighter->attributes()){
+        for (PTokenAttribute pAttr: Highlighter->attributes()){
             QString UniqueAttriName = Highlighter->languageName()
                     +  QString("%1").arg(HighlighterList.indexOf(Highlighter)) + '.'
                     + pAttr->name();
@@ -68,8 +68,8 @@ bool internalEnumHighlighterAttris(PHighlighter Highlighter,
     return Result;
 }
 
-bool enumHighlighterAttributes(PHighlighter Highlighter, bool SkipDuplicates,
-                           HighlighterAttriProc highlighterAttriProc,
+bool enumTokenAttributes(PHighlighter Highlighter, bool SkipDuplicates,
+                           TokenAttributeProc highlighterAttriProc,
                            std::initializer_list<void *> Params)
 {
     if (!Highlighter || !highlighterAttriProc) {

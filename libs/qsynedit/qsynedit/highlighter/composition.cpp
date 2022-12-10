@@ -59,7 +59,7 @@ void HighlighterSchema::setHighlighter(const PHighlighter &highlighter)
     mHighlighter = highlighter;
 }
 
-PHighlighterAttribute HighlighterSchema::getMarkerAttribute() const
+PTokenAttribute HighlighterSchema::getMarkerAttribute() const
 {
     return mMarkerAttribute;
 }

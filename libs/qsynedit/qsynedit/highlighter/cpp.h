@@ -56,33 +56,33 @@ class CppHighlighter: public Highlighter
 public:
     explicit CppHighlighter();
 
-    const PHighlighterAttribute &asmAttribute() const;
+    const PTokenAttribute &asmAttribute() const;
 
-    const PHighlighterAttribute &preprocessorAttribute() const;
+    const PTokenAttribute &preprocessorAttribute() const;
 
-    const PHighlighterAttribute &invalidAttribute() const;
+    const PTokenAttribute &invalidAttribute() const;
 
-    const PHighlighterAttribute &numberAttribute() const;
+    const PTokenAttribute &numberAttribute() const;
 
-    const PHighlighterAttribute &floatAttribute() const;
+    const PTokenAttribute &floatAttribute() const;
 
-    const PHighlighterAttribute &hexAttribute() const;
+    const PTokenAttribute &hexAttribute() const;
 
-    const PHighlighterAttribute &octAttribute() const;
+    const PTokenAttribute &octAttribute() const;
 
-    const PHighlighterAttribute &stringEscapeSequenceAttribute() const;
+    const PTokenAttribute &stringEscapeSequenceAttribute() const;
 
-    const PHighlighterAttribute &charAttribute() const;
+    const PTokenAttribute &charAttribute() const;
 
-    const PHighlighterAttribute &variableAttribute() const;
+    const PTokenAttribute &variableAttribute() const;
 
-    const PHighlighterAttribute &functionAttribute() const;
+    const PTokenAttribute &functionAttribute() const;
 
-    const PHighlighterAttribute &classAttribute() const;
+    const PTokenAttribute &classAttribute() const;
 
-    const PHighlighterAttribute &globalVarAttribute() const;
+    const PTokenAttribute &globalVarAttribute() const;
 
-    const PHighlighterAttribute &localVarAttribute() const;
+    const PTokenAttribute &localVarAttribute() const;
 
     static const QSet<QString> Keywords;
 
@@ -152,20 +152,20 @@ private:
 
     QSet<QString> mCustomTypeKeywords;
 
-    PHighlighterAttribute mAsmAttribute;
-    PHighlighterAttribute mPreprocessorAttribute;
-    PHighlighterAttribute mInvalidAttribute;
-    PHighlighterAttribute mNumberAttribute;
-    PHighlighterAttribute mFloatAttribute;
-    PHighlighterAttribute mHexAttribute;
-    PHighlighterAttribute mOctAttribute;
-    PHighlighterAttribute mStringEscapeSequenceAttribute;
-    PHighlighterAttribute mCharAttribute;
-    PHighlighterAttribute mVariableAttribute;
-    PHighlighterAttribute mFunctionAttribute;
-    PHighlighterAttribute mClassAttribute;
-    PHighlighterAttribute mGlobalVarAttribute;
-    PHighlighterAttribute mLocalVarAttribute;
+    PTokenAttribute mAsmAttribute;
+    PTokenAttribute mPreprocessorAttribute;
+    PTokenAttribute mInvalidAttribute;
+    PTokenAttribute mNumberAttribute;
+    PTokenAttribute mFloatAttribute;
+    PTokenAttribute mHexAttribute;
+    PTokenAttribute mOctAttribute;
+    PTokenAttribute mStringEscapeSequenceAttribute;
+    PTokenAttribute mCharAttribute;
+    PTokenAttribute mVariableAttribute;
+    PTokenAttribute mFunctionAttribute;
+    PTokenAttribute mClassAttribute;
+    PTokenAttribute mGlobalVarAttribute;
+    PTokenAttribute mLocalVarAttribute;
 
     // SynHighligterBase interface
 public:
@@ -174,7 +174,7 @@ public:
     bool isLastLineStringNotFinished(int state) const override;
     bool eol() const override;
     QString getToken() const override;
-    const PHighlighterAttribute &getTokenAttribute() const override;
+    const PTokenAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;

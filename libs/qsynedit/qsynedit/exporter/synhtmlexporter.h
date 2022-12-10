@@ -30,15 +30,15 @@ public:
 protected:
     bool mCreateHTMLFragment;
 private:
-    PHighlighterAttribute mLastAttri;
-    QString AttriToCSS(PHighlighterAttribute Attri, const QString& UniqueAttriName);
-    bool AttriToCSSCallback(PHighlighter Highlighter, PHighlighterAttribute  Attri,
+    PTokenAttribute mLastAttri;
+    QString AttriToCSS(PTokenAttribute Attri, const QString& UniqueAttriName);
+    bool AttriToCSSCallback(PHighlighter Highlighter, PTokenAttribute  Attri,
                             const QString& UniqueAttriName,  QList<void *> params);
     QString ColorToHTML(const QColor &AColor);
     QString GetStyleName(PHighlighter Highlighter,
-                         PHighlighterAttribute Attri);
+                         PTokenAttribute Attri);
     QString MakeValidName(const QString &Name);
-    bool StyleNameCallback(PHighlighter Highlighter, PHighlighterAttribute  Attri,
+    bool StyleNameCallback(PHighlighter Highlighter, PTokenAttribute  Attri,
                            const QString& UniqueAttriName,  QList<void *> params);
 
     // SynExporter interface
@@ -51,7 +51,7 @@ protected:
     QString GetFooter();
     QString GetFormatName();
     QString GetHeader();
-    void SetTokenAttribute(PHighlighterAttribute Attri);
+    void SetTokenAttribute(PTokenAttribute Attri);
 };
 }
 #endif // SYNHTMLEXPORTER_H

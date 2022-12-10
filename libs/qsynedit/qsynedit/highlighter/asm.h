@@ -45,10 +45,10 @@ class ASMHighlighter : public Highlighter
 
 public:
     explicit ASMHighlighter();
-    const PHighlighterAttribute &numberAttribute() const;
-    const PHighlighterAttribute &directiveAttribute() const;
-    const PHighlighterAttribute &labelAttribute() const;
-    const PHighlighterAttribute &registerAttribute() const;
+    const PTokenAttribute &numberAttribute() const;
+    const PTokenAttribute &directiveAttribute() const;
+    const PTokenAttribute &labelAttribute() const;
+    const PTokenAttribute &registerAttribute() const;
 
     static const QSet<QString> Keywords;
     static const QSet<QString> Registers;
@@ -61,10 +61,10 @@ private:
     QChar mToIdent;
     int mTokenPos;
     TokenId mTokenID;
-    PHighlighterAttribute mNumberAttribute;
-    PHighlighterAttribute mDirectiveAttribute;
-    PHighlighterAttribute mRegisterAttribute;
-    PHighlighterAttribute mLabelAttribute;
+    PTokenAttribute mNumberAttribute;
+    PTokenAttribute mDirectiveAttribute;
+    PTokenAttribute mRegisterAttribute;
+    PTokenAttribute mLabelAttribute;
 
 private:
     void CommentProc();
@@ -90,7 +90,7 @@ public:
     QString languageName() override;
     ProgrammingLanguage language() override;
     QString getToken() const override;
-    const PHighlighterAttribute &getTokenAttribute() const override;
+    const PTokenAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;

@@ -479,7 +479,7 @@ void Editor::setPageControl(QTabWidget *newPageControl)
 
 void Editor::undoSymbolCompletion(int pos)
 {
-    QSynedit::PHighlighterAttribute attr;
+    QSynedit::PTokenAttribute attr;
     QString token;
     bool tokenFinished;
 
@@ -961,7 +961,7 @@ bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgr
     return false;
 }
 
-void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PHighlighterAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background)
+void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background)
 {
     if (token.isEmpty())
         return;
@@ -1530,7 +1530,7 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
     QSynedit::BufferCoord p;
     QString token;
     int start;
-    QSynedit::PHighlighterAttribute attr;
+    QSynedit::PTokenAttribute attr;
     PSyntaxIssueList lst;
     if ((line<1) || (line>document()->count()))
         return;
@@ -1718,7 +1718,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                 coord.ch = ch+1;
                 coord.line = caretY();
             }
-            QSynedit::PHighlighterAttribute attr;
+            QSynedit::PTokenAttribute attr;
             QString token;
             if (getHighlighterAttriAtRowCol(coord,token,attr)
                     && attr->tokenType() == QSynedit::TokenType::Operator) {
@@ -1969,7 +1969,7 @@ QStringList Editor::getExpressionAtPosition(
             if (start>ch) {
                 break;
             }
-            QSynedit::PHighlighterAttribute attr = highlighter->getTokenAttribute();
+            QSynedit::PTokenAttribute attr = highlighter->getTokenAttribute();
             if ( (line == pos.line-1)
                  && (start<=ch) && (ch<=endPos)) {
                 if (attr->tokenType() == QSynedit::TokenType::Comment
@@ -2211,7 +2211,7 @@ bool Editor::handleSymbolCompletion(QChar key)
         } else {
             QSynedit::BufferCoord  HighlightPos = QSynedit::BufferCoord{caretX()-1, caretY()};
             // Check if that line is highlighted as  comment
-            QSynedit::PHighlighterAttribute attr;
+            QSynedit::PTokenAttribute attr;
             QString token;
             bool tokenFinished;
             if (getHighlighterAttriAtRowCol(HighlightPos, token, tokenFinished, attr)) {
@@ -3058,7 +3058,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     QString word="";
 
     QString s;
-    QSynedit::PHighlighterAttribute attr;
+    QSynedit::PTokenAttribute attr;
     bool tokenFinished;
     QSynedit::BufferCoord pBeginPos, pEndPos;
     if (getHighlighterAttriAtRowCol(
@@ -3548,7 +3548,7 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
             return TipType::Error;
         }
 
-        QSynedit::PHighlighterAttribute attr;
+        QSynedit::PTokenAttribute attr;
         QString s;
 
         // Only allow hand tips in highlighted areas
@@ -3753,7 +3753,7 @@ void Editor::updateFunctionTip(bool showTip)
         while(!highlighter()->eol()) {
             int start = highlighter()->getTokenPos();
             QString token = highlighter()->getToken();
-            QSynedit::PHighlighterAttribute attr = highlighter()->getTokenAttribute();
+            QSynedit::PTokenAttribute attr = highlighter()->getTokenAttribute();
             if (start>=currentChar)
                 break;
 
@@ -3962,7 +3962,7 @@ void Editor::popUserCodeInTabStops()
     }
 }
 
-void Editor::onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString &token, QSynedit::PHighlighterAttribute& attr)
+void Editor::onExportedFormatToken(QSynedit::PHighlighter syntaxHighlighter, int Line, int column, const QString &token, QSynedit::PTokenAttribute& attr)
 {
     if (!syntaxHighlighter)
         return;
@@ -4812,16 +4812,16 @@ void Editor::applySettings()
     invalidate();
 }
 
-static QSynedit::PHighlighterAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
+static QSynedit::PTokenAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
     PColorSchemeItem item = pColorManager->getItem(schemeName,schemeItemName);
     if (item) {
-        QSynedit::PHighlighterAttribute attr = std::make_shared<QSynedit::TokenAttribute>(attrName,
+        QSynedit::PTokenAttribute attr = std::make_shared<QSynedit::TokenAttribute>(attrName,
                                                                                                 QSynedit::TokenType::Default);
         attr->setForeground(item->foreground());
         attr->setBackground(item->background());
         return attr;
     }
-    return QSynedit::PHighlighterAttribute();
+    return QSynedit::PTokenAttribute();
 }
 void Editor::applyColorScheme(const QString& schemeName)
 {
@@ -4832,13 +4832,13 @@ void Editor::applyColorScheme(const QString& schemeName)
     setOptions(options);
     highlighterManager.applyColorScheme(highlighter(),schemeName);
     if (pSettings->editor().rainbowParenthesis()) {
-        QSynedit::PHighlighterAttribute attr0 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PTokenAttribute attr0 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_1);
-        QSynedit::PHighlighterAttribute attr1 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PTokenAttribute attr1 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_2);
-        QSynedit::PHighlighterAttribute attr2 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PTokenAttribute attr2 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_3);
-        QSynedit::PHighlighterAttribute attr3 =createRainbowAttribute(SYNS_AttrSymbol,
+        QSynedit::PTokenAttribute attr3 =createRainbowAttribute(SYNS_AttrSymbol,
                                                                schemeName,COLOR_SCHEME_BRACE_4);
         setRainbowAttrs(attr0,attr1,attr2,attr3);
     }

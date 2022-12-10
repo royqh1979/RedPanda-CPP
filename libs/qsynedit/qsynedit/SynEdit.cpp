@@ -357,13 +357,13 @@ int SynEdit::maxScrollWidth() const
         return std::max(maxLen-mCharsInWindow+1, 1);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, PHighlighterAttribute &attri)
+bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, PTokenAttribute &attri)
 {
     int tmpStart;
     return getHighlighterAttriAtRowColEx(pos, token, tmpStart, attri);
 }
 
-bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, PHighlighterAttribute &attri)
+bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, PTokenAttribute &attri)
 {
     int posX, posY, endPos, start;
     QString line;
@@ -395,12 +395,12 @@ bool SynEdit::getHighlighterAttriAtRowCol(const BufferCoord &pos, QString &token
         }
     }
     token = "";
-    attri = PHighlighterAttribute();
+    attri = PTokenAttribute();
     tokenFinished = false;
     return false;
 }
 
-bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &token, int &start, PHighlighterAttribute &attri)
+bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &token, int &start, PTokenAttribute &attri)
 {
     int posX, posY, endPos;
     QString line;
@@ -428,7 +428,7 @@ bool SynEdit::getHighlighterAttriAtRowColEx(const BufferCoord &pos, QString &tok
         }
     }
     token = "";
-    attri = PHighlighterAttribute();
+    attri = PTokenAttribute();
     return false;
 }
 
@@ -485,7 +485,7 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
     QChar Test, BracketInc, BracketDec;
     int NumBrackets;
     QString vDummy;
-    PHighlighterAttribute attr;
+    PTokenAttribute attr;
     BufferCoord p;
     bool isCommentOrStringOrChar;
     int nBrackets = sizeof(Brackets) / sizeof(QChar);
@@ -1264,7 +1264,7 @@ BufferCoord SynEdit::getPreviousLeftBrace(int x, int y)
 {
     QChar Test;
     QString vDummy;
-    PHighlighterAttribute attr;
+    PTokenAttribute attr;
     BufferCoord p;
     bool isCommentOrStringOrChar;
     BufferCoord Result{0,0};
@@ -1587,7 +1587,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             }
             SyntaxerState rangeAfterFirstToken = mHighlighter->getState();
             QString firstToken = mHighlighter->getToken();
-            PHighlighterAttribute attr = mHighlighter->getTokenAttribute();
+            PTokenAttribute attr = mHighlighter->getTokenAttribute();
             if (attr->tokenType() == TokenType::Keyword
                                   &&  lineText.endsWith(':')
                                   && (
@@ -1720,7 +1720,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
             if (!indentAdded && !startLineText.isEmpty()) {
                 BufferCoord coord;
                 QString token;
-                PHighlighterAttribute attr;
+                PTokenAttribute attr;
                 coord.line = startLine;
                 coord.ch = document()->getString(startLine-1).length();
                 if (getHighlighterAttriAtRowCol(coord,token,attr)
@@ -2413,7 +2413,7 @@ void SynEdit::insertLine(bool moveCaret)
 
     QString Temp2 = Temp;
     QString Temp3;
-    PHighlighterAttribute Attr;
+    PTokenAttribute Attr;
 
     // This is sloppy, but the Right Thing would be to track the column of markers
     // too, so they could be moved depending on whether they are after the caret...
@@ -3296,7 +3296,7 @@ void SynEdit::recalcCharExtent()
     bool hasStyles[] = {false,false,false,false};
     int size = 4;
     if (mHighlighter && mHighlighter->attributes().count()>0) {
-        for (const PHighlighterAttribute& attribute: mHighlighter->attributes()) {
+        for (const PTokenAttribute& attribute: mHighlighter->attributes()) {
             for (int i=0;i<size;i++) {
                 if (attribute->styles().testFlag(styles[i]))
                     hasStyles[i] = true;
@@ -3631,7 +3631,7 @@ int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString
         QString token;
         while (!mHighlighter->eol()) {
             token = mHighlighter->getToken();
-            PHighlighterAttribute attr = mHighlighter->getTokenAttribute();
+            PTokenAttribute attr = mHighlighter->getTokenAttribute();
             if (token == character && attr->name()==highlighterAttrName)
                 return mHighlighter->getTokenPos();
             mHighlighter->next();
@@ -3998,22 +3998,22 @@ void SynEdit::setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed)
     mMouseWheelScrollSpeed = newMouseWheelScrollSpeed;
 }
 
-const PHighlighterAttribute &SynEdit::rainbowAttr3() const
+const PTokenAttribute &SynEdit::rainbowAttr3() const
 {
     return mRainbowAttr3;
 }
 
-const PHighlighterAttribute &SynEdit::rainbowAttr2() const
+const PTokenAttribute &SynEdit::rainbowAttr2() const
 {
     return mRainbowAttr2;
 }
 
-const PHighlighterAttribute &SynEdit::rainbowAttr1() const
+const PTokenAttribute &SynEdit::rainbowAttr1() const
 {
     return mRainbowAttr1;
 }
 
-const PHighlighterAttribute &SynEdit::rainbowAttr0() const
+const PTokenAttribute &SynEdit::rainbowAttr0() const
 {
     return mRainbowAttr0;
 }
@@ -5687,7 +5687,7 @@ void SynEdit::onPaint(QPainter &)
 }
 
 void SynEdit::onPreparePaintHighlightToken(int , int , const QString &,
-                                           PHighlighterAttribute , FontStyles &, QColor &, QColor &)
+                                           PTokenAttribute , FontStyles &, QColor &, QColor &)
 {
 
 }
@@ -6002,7 +6002,7 @@ bool SynEdit::isIdentChar(const QChar &ch)
     }
 }
 
-void SynEdit::setRainbowAttrs(const PHighlighterAttribute &attr0, const PHighlighterAttribute &attr1, const PHighlighterAttribute &attr2, const PHighlighterAttribute &attr3)
+void SynEdit::setRainbowAttrs(const PTokenAttribute &attr0, const PTokenAttribute &attr1, const PTokenAttribute &attr2, const PTokenAttribute &attr3)
 {
     mRainbowAttr0 = attr0;
     mRainbowAttr1 = attr1;
