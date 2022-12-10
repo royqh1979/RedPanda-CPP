@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "makefilehighlighter.h"
+#include "makefile.h"
 #include "../Constants.h"
 //#include <QDebug>
 
 namespace QSynedit {
-const QSet<QString> MakefileHighlighter::Directives {
+const QSet<QString> MakefileSyntaxer::Directives {
     "abspath",
     "addprefix",
     "addsuffix",
@@ -180,7 +180,7 @@ const QSet<QString> MakefileHighlighter::Directives {
     "YFLAGS",
 };
 
-MakefileHighlighter::MakefileHighlighter()
+MakefileSyntaxer::MakefileSyntaxer()
 {
     mTargetAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass, TokenType::Identifier);
     addAttribute(mTargetAttribute);
@@ -196,27 +196,27 @@ MakefileHighlighter::MakefileHighlighter()
     addAttribute(mExpressionAttribute);
 }
 
-void MakefileHighlighter::procSpace()
+void MakefileSyntaxer::procSpace()
 {
     mTokenID = TokenId::Space;
     while (mLine[mRun]!=0 && mLine[mRun]<=32)
         mRun++;
 }
 
-void MakefileHighlighter::procNumber()
+void MakefileSyntaxer::procNumber()
 {
     while (isNumberChar(mLine[mRun]))
         mRun++;
     mTokenID = TokenId::Number;
 }
 
-void MakefileHighlighter::procNull()
+void MakefileSyntaxer::procNull()
 {
     mTokenID = TokenId::Null;
     mState = RangeState::Unknown;
 }
 
-void MakefileHighlighter::procString(bool inExpression )
+void MakefileSyntaxer::procString(bool inExpression )
 {
     mTokenID = TokenId::String;
     while (mLine[mRun] != 0) {
@@ -238,7 +238,7 @@ void MakefileHighlighter::procString(bool inExpression )
 
 }
 
-void MakefileHighlighter::procStringStart(StringStartType type,bool inExpression )
+void MakefileSyntaxer::procStringStart(StringStartType type,bool inExpression )
 {
     mRun++;
     pushState();
@@ -253,7 +253,7 @@ void MakefileHighlighter::procStringStart(StringStartType type,bool inExpression
     procString(inExpression);
 }
 
-void MakefileHighlighter::procExpressionStart(ExpressionStartType type)
+void MakefileSyntaxer::procExpressionStart(ExpressionStartType type)
 {
     mRun+=2; //skip '$(' or '${'
     pushState();
@@ -268,20 +268,20 @@ void MakefileHighlighter::procExpressionStart(ExpressionStartType type)
     mTokenID = TokenId::Expression;
 }
 
-void MakefileHighlighter::procExpressionEnd()
+void MakefileSyntaxer::procExpressionEnd()
 {
     mTokenID = TokenId::Expression;
     mRun+=1;
     popState();
 }
 
-void MakefileHighlighter::procSymbol()
+void MakefileSyntaxer::procSymbol()
 {
     mTokenID = TokenId::Symbol;
     mRun+=1;
 }
 
-void MakefileHighlighter::procVariableExpression()
+void MakefileSyntaxer::procVariableExpression()
 {
     mRun+=1; //skip $
     while (isIdentStartChar(mLine[mRun]))
@@ -289,7 +289,7 @@ void MakefileHighlighter::procVariableExpression()
     mTokenID = TokenId::Variable;
 }
 
-void MakefileHighlighter::procAutoVariable()
+void MakefileSyntaxer::procAutoVariable()
 {
     mRun+=1; //skip $
     switch(mLine[mRun].unicode()) {
@@ -311,14 +311,14 @@ void MakefileHighlighter::procAutoVariable()
     }
 }
 
-void MakefileHighlighter::procAssignment()
+void MakefileSyntaxer::procAssignment()
 {
     mTokenID = TokenId::Symbol;
     mRun++;
     mState = RangeState::Assignment;
 }
 
-void MakefileHighlighter::procDollar()
+void MakefileSyntaxer::procDollar()
 {
     if (mLine[mRun+1]=='(') {
         procExpressionStart(ExpressionStartType::Parenthesis);
@@ -331,14 +331,14 @@ void MakefileHighlighter::procDollar()
     }
 }
 
-void MakefileHighlighter::procComment()
+void MakefileSyntaxer::procComment()
 {
     mRun++; //skip #
     mRun = mLineString.length();
     mTokenID = TokenId::Comment;
 }
 
-void MakefileHighlighter::procIdentifier()
+void MakefileSyntaxer::procIdentifier()
 {
     int start = mRun;
     while (isIdentChar(mLine[mRun])) {
@@ -374,12 +374,12 @@ void MakefileHighlighter::procIdentifier()
 }
 
 
-void MakefileHighlighter::pushState()
+void MakefileSyntaxer::pushState()
 {
     mStates.push_back(mState);
 }
 
-void MakefileHighlighter::popState()
+void MakefileSyntaxer::popState()
 {
     if (!mStates.empty()) {
         mState = mStates.back();
@@ -387,7 +387,7 @@ void MakefileHighlighter::popState()
     }
 }
 
-bool MakefileHighlighter::isIdentChar(const QChar &ch) const
+bool MakefileSyntaxer::isIdentChar(const QChar &ch) const
 {
     if ((ch>='0') && (ch <= '9')) {
         return true;
@@ -411,27 +411,27 @@ bool MakefileHighlighter::isIdentChar(const QChar &ch) const
     return false;
 }
 
-bool MakefileHighlighter::eol() const
+bool MakefileSyntaxer::eol() const
 {
     return mTokenID == TokenId::Null;
 }
 
-QString MakefileHighlighter::languageName()
+QString MakefileSyntaxer::languageName()
 {
     return "makefile";
 }
 
-ProgrammingLanguage MakefileHighlighter::language()
+ProgrammingLanguage MakefileSyntaxer::language()
 {
     return ProgrammingLanguage::Makefile;
 }
 
-QString MakefileHighlighter::getToken() const
+QString MakefileSyntaxer::getToken() const
 {
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-const PTokenAttribute &MakefileHighlighter::getTokenAttribute() const
+const PTokenAttribute &MakefileSyntaxer::getTokenAttribute() const
 {
     /*
         Directive,
@@ -467,12 +467,12 @@ const PTokenAttribute &MakefileHighlighter::getTokenAttribute() const
     }
 }
 
-int MakefileHighlighter::getTokenPos()
+int MakefileSyntaxer::getTokenPos()
 {
     return mTokenPos;
 }
 
-void MakefileHighlighter::next()
+void MakefileSyntaxer::next()
 {
     mTokenPos = mRun;
     if (mLine[mRun].unicode()==0) {
@@ -638,7 +638,7 @@ void MakefileHighlighter::next()
     }
 }
 
-void MakefileHighlighter::setLine(const QString &newLine, int lineNumber)
+void MakefileSyntaxer::setLine(const QString &newLine, int lineNumber)
 {
     mLineString = newLine;
     mLine = mLineString.data();
@@ -647,41 +647,41 @@ void MakefileHighlighter::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-bool MakefileHighlighter::getTokenFinished() const
+bool MakefileSyntaxer::getTokenFinished() const
 {
     return true;
 }
 
-bool MakefileHighlighter::isLastLineCommentNotFinished(int /*state*/) const
+bool MakefileSyntaxer::isLastLineCommentNotFinished(int /*state*/) const
 {
     return false;
 }
 
-bool MakefileHighlighter::isLastLineStringNotFinished(int /*state*/) const
+bool MakefileSyntaxer::isLastLineStringNotFinished(int /*state*/) const
 {
     return false;
 }
 
-SyntaxerState MakefileHighlighter::getState() const
+SyntaxerState MakefileSyntaxer::getState() const
 {
     SyntaxerState state;
     state.state = (int)mState;
     return state;
 }
 
-void MakefileHighlighter::setState(const SyntaxerState & rangeState)
+void MakefileSyntaxer::setState(const SyntaxerState & rangeState)
 {
     mState = (RangeState)rangeState.state;
     mStates.clear();
 }
 
-void MakefileHighlighter::resetState()
+void MakefileSyntaxer::resetState()
 {
     mState = RangeState::Unknown;
     mStates.clear();
 }
 
-QSet<QString> MakefileHighlighter::keywords() const
+QSet<QString> MakefileSyntaxer::keywords() const
 {
     return Directives;
 }

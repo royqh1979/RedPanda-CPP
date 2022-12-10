@@ -18,7 +18,7 @@
 #define SYNEDITSTRINGLIST_H
 
 #include <QStringList>
-#include "highlighter/base.h"
+#include "highlighter/syntaxer.h"
 #include <QFontMetrics>
 #include <QMutex>
 #include <QVector>

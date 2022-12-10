@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef SYNHIGHLIGTERBASE_H
-#define SYNHIGHLIGTERBASE_H
+#ifndef QSYNEDIT_SYNTAXER_H
+#define QSYNEDIT_SYNTAXER_H
 
 #include <QColor>
 #include <QObject>
@@ -115,9 +115,9 @@ private:
 
 typedef std::shared_ptr<TokenAttribute> PTokenAttribute;
 
-class Highlighter {
+class Syntaxer {
 public:
-    explicit Highlighter();
+    explicit Syntaxer();
 
     const QMap<QString, PTokenAttribute>& attributes() const;
 
@@ -183,8 +183,7 @@ private:
     QSet<QChar> mWordBreakChars;
 };
 
-using PHighlighter = std::shared_ptr<Highlighter>;
-using HighlighterList = QVector<PHighlighter>;
-
+using PSyntaxer = std::shared_ptr<Syntaxer>;
+using SyntaxerList = QVector<PSyntaxer>;
 }
 #endif // SYNHIGHLIGTERBASE_H

@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef SYNEDITASMHIGHLIGHTER_H
-#define SYNEDITASMHIGHLIGHTER_H
+#ifndef QSYNEDIT_ASM_SYNTAXER_H
+#define QSYNEDIT_ASM_SYNTAXER_H
 
-#include "base.h"
+#include "syntaxer.h"
 
 namespace QSynedit {
 
-class ASMHighlighter : public Highlighter
+class ASMSyntaxer : public Syntaxer
 {
     enum class TokenId {
         Comment,
@@ -44,7 +44,7 @@ class ASMHighlighter : public Highlighter
     };
 
 public:
-    explicit ASMHighlighter();
+    explicit ASMSyntaxer();
     const PTokenAttribute &numberAttribute() const;
     const PTokenAttribute &directiveAttribute() const;
     const PTokenAttribute &labelAttribute() const;

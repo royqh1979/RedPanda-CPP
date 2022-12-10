@@ -20,7 +20,7 @@
 
 namespace  QSynedit {
 
-const QSet<QString> ASMHighlighter::Registers {
+const QSet<QString> ASMSyntaxer::Registers {
     "ah","al","ax","eax",
     "bh","bl","bx","ebx",
     "ch","cl","cx","ecx",
@@ -37,7 +37,7 @@ const QSet<QString> ASMHighlighter::Registers {
     "r15h","r15l","r15w","r15d"
 };
 
-const QSet<QString> ASMHighlighter::Keywords {
+const QSet<QString> ASMSyntaxer::Keywords {
     "movb","movw","movl","movq",
     "leab","leaw","leal","leaq",
     "incb","incw","incl","incq",
@@ -96,7 +96,7 @@ const QSet<QString> ASMHighlighter::Keywords {
 
 
 
-ASMHighlighter::ASMHighlighter()
+ASMSyntaxer::ASMSyntaxer()
 {
     mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber, TokenType::Number);
     addAttribute(mNumberAttribute);
@@ -108,17 +108,17 @@ ASMHighlighter::ASMHighlighter()
     addAttribute(mRegisterAttribute);
 }
 
-const PTokenAttribute &ASMHighlighter::numberAttribute() const
+const PTokenAttribute &ASMSyntaxer::numberAttribute() const
 {
     return mNumberAttribute;
 }
 
-const PTokenAttribute &ASMHighlighter::registerAttribute() const
+const PTokenAttribute &ASMSyntaxer::registerAttribute() const
 {
     return mRegisterAttribute;
 }
 
-void ASMHighlighter::CommentProc()
+void ASMSyntaxer::CommentProc()
 {
     mTokenID = TokenId::Comment;
     do {
@@ -126,7 +126,7 @@ void ASMHighlighter::CommentProc()
     } while (! (mLine[mRun]==0 || mLine[mRun] == '\r' || mLine[mRun]=='\n'));
 }
 
-void ASMHighlighter::CRProc()
+void ASMSyntaxer::CRProc()
 {
     mTokenID = TokenId::Space;
     mRun++;
@@ -134,7 +134,7 @@ void ASMHighlighter::CRProc()
         mRun++;
 }
 
-void ASMHighlighter::GreaterProc()
+void ASMSyntaxer::GreaterProc()
 {
     mRun++;
     mTokenID = TokenId::Symbol;
@@ -142,7 +142,7 @@ void ASMHighlighter::GreaterProc()
         mRun++;
 }
 
-void ASMHighlighter::IdentProc(IdentPrefix prefix)
+void ASMSyntaxer::IdentProc(IdentPrefix prefix)
 {
     int start = mRun;
     while (isIdentChar(mLine[mRun])) {
@@ -171,13 +171,13 @@ void ASMHighlighter::IdentProc(IdentPrefix prefix)
     }
 }
 
-void ASMHighlighter::LFProc()
+void ASMSyntaxer::LFProc()
 {
     mTokenID = TokenId::Space;
     mRun++;
 }
 
-void ASMHighlighter::LowerProc()
+void ASMSyntaxer::LowerProc()
 {
     mRun++;
     mTokenID = TokenId::Symbol;
@@ -185,12 +185,12 @@ void ASMHighlighter::LowerProc()
         mRun++;
 }
 
-void ASMHighlighter::NullProc()
+void ASMSyntaxer::NullProc()
 {
     mTokenID = TokenId::Null;
 }
 
-void ASMHighlighter::NumberProc()
+void ASMSyntaxer::NumberProc()
 {
     mRun++;
     mTokenID = TokenId::Number;
@@ -204,7 +204,7 @@ void ASMHighlighter::NumberProc()
     }
 }
 
-void ASMHighlighter::SingleQuoteStringProc()
+void ASMSyntaxer::SingleQuoteStringProc()
 {
     mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\'') && (mLine[mRun + 2] == '\''))
@@ -218,7 +218,7 @@ void ASMHighlighter::SingleQuoteStringProc()
         mRun++;
 }
 
-void ASMHighlighter::SlashProc()
+void ASMSyntaxer::SlashProc()
 {
     mRun++;
     if (mLine[mRun] == '/') {
@@ -232,7 +232,7 @@ void ASMHighlighter::SlashProc()
         mTokenID = TokenId::Symbol;
 }
 
-void ASMHighlighter::SpaceProc()
+void ASMSyntaxer::SpaceProc()
 {
     mTokenID = TokenId::Space;
     while (true) {
@@ -244,7 +244,7 @@ void ASMHighlighter::SpaceProc()
     }
 }
 
-void ASMHighlighter::StringProc()
+void ASMSyntaxer::StringProc()
 {
     mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\"') && (mLine[mRun + 2] == '\"'))
@@ -262,19 +262,19 @@ void ASMHighlighter::StringProc()
         mRun++;
 }
 
-void ASMHighlighter::SymbolProc()
+void ASMSyntaxer::SymbolProc()
 {
     mRun++;
     mTokenID = TokenId::Symbol;
 }
 
-void ASMHighlighter::UnknownProc()
+void ASMSyntaxer::UnknownProc()
 {
     mRun++;
     mTokenID = TokenId::Unknown;
 }
 
-bool ASMHighlighter::isIdentStartChar(const QChar &ch)
+bool ASMSyntaxer::isIdentStartChar(const QChar &ch)
 {
     if (ch == '_') {
         return true;
@@ -288,27 +288,27 @@ bool ASMHighlighter::isIdentStartChar(const QChar &ch)
     return false;
 }
 
-bool ASMHighlighter::eol() const
+bool ASMSyntaxer::eol() const
 {
     return mTokenID == TokenId::Null;
 }
 
-QString ASMHighlighter::languageName()
+QString ASMSyntaxer::languageName()
 {
     return "asm";
 }
 
-ProgrammingLanguage ASMHighlighter::language()
+ProgrammingLanguage ASMSyntaxer::language()
 {
     return ProgrammingLanguage::Asssembly;
 }
 
-QString ASMHighlighter::getToken() const
+QString ASMSyntaxer::getToken() const
 {
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-const PTokenAttribute &ASMHighlighter::getTokenAttribute() const
+const PTokenAttribute &ASMSyntaxer::getTokenAttribute() const
 {
     switch(mTokenID) {
     case TokenId::Comment:
@@ -338,12 +338,12 @@ const PTokenAttribute &ASMHighlighter::getTokenAttribute() const
     }
 }
 
-int ASMHighlighter::getTokenPos()
+int ASMSyntaxer::getTokenPos()
 {
     return mTokenPos;
 }
 
-void ASMHighlighter::next()
+void ASMSyntaxer::next()
 {
     mTokenPos = mRun;
     switch(mLine[mRun].unicode()) {
@@ -415,7 +415,7 @@ void ASMHighlighter::next()
     }
 }
 
-void ASMHighlighter::setLine(const QString &newLine, int lineNumber)
+void ASMSyntaxer::setLine(const QString &newLine, int lineNumber)
 {
     mLineString = newLine;
     mLine = mLineString.data();
@@ -424,47 +424,47 @@ void ASMHighlighter::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-bool ASMHighlighter::getTokenFinished() const
+bool ASMSyntaxer::getTokenFinished() const
 {
     return true;
 }
 
-bool ASMHighlighter::isLastLineCommentNotFinished(int /*state*/) const
+bool ASMSyntaxer::isLastLineCommentNotFinished(int /*state*/) const
 {
     return true;
 }
 
-bool ASMHighlighter::isLastLineStringNotFinished(int /*state*/) const
+bool ASMSyntaxer::isLastLineStringNotFinished(int /*state*/) const
 {
     return true;
 }
 
-SyntaxerState ASMHighlighter::getState() const
+SyntaxerState ASMSyntaxer::getState() const
 {
     return SyntaxerState();
 }
 
-void ASMHighlighter::setState(const SyntaxerState&)
+void ASMSyntaxer::setState(const SyntaxerState&)
 {
 
 }
 
-void ASMHighlighter::resetState()
+void ASMSyntaxer::resetState()
 {
 
 }
 
-QSet<QString> ASMHighlighter::keywords() const
+QSet<QString> ASMSyntaxer::keywords() const
 {
     return Keywords;
 }
 
-const PTokenAttribute &ASMHighlighter::directiveAttribute() const
+const PTokenAttribute &ASMSyntaxer::directiveAttribute() const
 {
     return mDirectiveAttribute;
 }
 
-const PTokenAttribute &ASMHighlighter::labelAttribute() const
+const PTokenAttribute &ASMSyntaxer::labelAttribute() const
 {
     return mLabelAttribute;
 }

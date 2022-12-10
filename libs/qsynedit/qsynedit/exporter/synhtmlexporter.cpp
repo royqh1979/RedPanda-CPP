@@ -67,7 +67,7 @@ QString SynHTMLExporter::AttriToCSS(PTokenAttribute Attri, const QString &Unique
     return Result;
 }
 
-bool SynHTMLExporter::AttriToCSSCallback(PHighlighter , PTokenAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
+bool SynHTMLExporter::AttriToCSSCallback(PSyntaxer , PTokenAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
 {
     QString& styles = *static_cast<QString *>(params[0]);
     styles.append(AttriToCSS(Attri,UniqueAttriName) + lineBreak());
@@ -79,7 +79,7 @@ QString SynHTMLExporter::ColorToHTML(const QColor &AColor)
     return AColor.name();
 }
 
-QString SynHTMLExporter::GetStyleName(PHighlighter Highlighter, PTokenAttribute Attri)
+QString SynHTMLExporter::GetStyleName(PSyntaxer Highlighter, PTokenAttribute Attri)
 {
     QString result;
     enumTokenAttributes(Highlighter,false,
@@ -104,7 +104,7 @@ QString SynHTMLExporter::MakeValidName(const QString &Name)
     return Result;
 }
 
-bool SynHTMLExporter::StyleNameCallback(PHighlighter /*Highlighter*/, PTokenAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
+bool SynHTMLExporter::StyleNameCallback(PSyntaxer /*Highlighter*/, PTokenAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
 {
     PTokenAttribute& AttriToFind = *static_cast<PTokenAttribute*>(params[0]);
     QString& StyleName = *static_cast<QString *>(params[1]);

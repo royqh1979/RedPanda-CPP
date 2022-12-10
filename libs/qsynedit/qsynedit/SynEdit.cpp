@@ -24,7 +24,7 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QTimerEvent>
-#include "highlighter/base.h"
+#include "highlighter/syntaxer.h"
 #include "Constants.h"
 #include "TextPainter.h"
 #include <QClipboard>
@@ -1621,7 +1621,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 l = startLine;
             } else if (mHighlighter->language() == ProgrammingLanguage::Cpp
                        && trimmedLineText.startsWith('#')
-                       && attr == ((CppHighlighter *)mHighlighter.get())->preprocessorAttribute()) {
+                       && attr == ((CppSyntaxer *)mHighlighter.get())->preprocessorAttribute()) {
                 indentAdded = true;
                 indentSpaces=0;
                 l=0;
@@ -4772,14 +4772,14 @@ void SynEdit::setLineText(const QString s)
         mDocument->putString(mCaretY-1,s);
 }
 
-PHighlighter SynEdit::highlighter() const
+PSyntaxer SynEdit::highlighter() const
 {
     return mHighlighter;
 }
 
-void SynEdit::setHighlighter(const PHighlighter &highlighter)
+void SynEdit::setHighlighter(const PSyntaxer &highlighter)
 {
-    PHighlighter oldHighlighter= mHighlighter;
+    PSyntaxer oldHighlighter= mHighlighter;
     mHighlighter = highlighter;
     if (oldHighlighter && mHighlighter &&
             oldHighlighter->language() == highlighter->language()) {

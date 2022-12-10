@@ -14,16 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MAKEFILEHIGHLIGHTER_H
-#define MAKEFILEHIGHLIGHTER_H
+#ifndef MAKEFILE_H
+#define MAKEFILE_H
 
 
-#include "base.h"
+#include "syntaxer.h"
 #include <QVector>
 
 namespace QSynedit {
 
-class MakefileHighlighter : public Highlighter
+class MakefileSyntaxer : public Syntaxer
 {
     enum class TokenId {
         Null,
@@ -66,7 +66,7 @@ class MakefileHighlighter : public Highlighter
 
 
 public:
-    explicit MakefileHighlighter();
+    explicit MakefileSyntaxer();
 
     static const QSet<QString> Directives;
 private:
@@ -156,4 +156,4 @@ public:
 };
 
 }
-#endif // MAKEFILEHIGHLIGHTER_H
+#endif // MAKEFILE_H

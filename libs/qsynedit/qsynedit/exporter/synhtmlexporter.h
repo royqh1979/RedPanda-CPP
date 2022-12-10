@@ -32,13 +32,13 @@ protected:
 private:
     PTokenAttribute mLastAttri;
     QString AttriToCSS(PTokenAttribute Attri, const QString& UniqueAttriName);
-    bool AttriToCSSCallback(PHighlighter Highlighter, PTokenAttribute  Attri,
+    bool AttriToCSSCallback(PSyntaxer Highlighter, PTokenAttribute  Attri,
                             const QString& UniqueAttriName,  QList<void *> params);
     QString ColorToHTML(const QColor &AColor);
-    QString GetStyleName(PHighlighter Highlighter,
+    QString GetStyleName(PSyntaxer Highlighter,
                          PTokenAttribute Attri);
     QString MakeValidName(const QString &Name);
-    bool StyleNameCallback(PHighlighter Highlighter, PTokenAttribute  Attri,
+    bool StyleNameCallback(PSyntaxer Highlighter, PTokenAttribute  Attri,
                            const QString& UniqueAttriName,  QList<void *> params);
 
     // SynExporter interface

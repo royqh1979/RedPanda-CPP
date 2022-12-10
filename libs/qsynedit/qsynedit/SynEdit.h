@@ -341,8 +341,8 @@ public:
     bool modified() const;
     void setModified(bool Value);
 
-    PHighlighter highlighter() const;
-    void setHighlighter(const PHighlighter &highlighter);
+    PSyntaxer highlighter() const;
+    void setHighlighter(const PSyntaxer &highlighter);
 
     bool useCodeFolding() const;
     void setUseCodeFolding(bool value);
@@ -667,7 +667,7 @@ private:
     ScrollStyle mScrollBars;
     int mTextHeight;
     int mTopLine;
-    PHighlighter mHighlighter;
+    PSyntaxer mHighlighter;
     QColor mSelectedForeground;
     QColor mSelectedBackground;
     QColor mForegroundColor;

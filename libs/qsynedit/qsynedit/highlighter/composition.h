@@ -16,7 +16,7 @@
  */
 #ifndef SYNHIGHLIGHTCOMPOSITION_H
 #define SYNHIGHLIGHTCOMPOSITION_H
-#include "base.h"
+#include "syntaxer.h"
 #include <memory>
 #include <QObject>
 
@@ -37,8 +37,8 @@ public:
     QString getStartExpr() const;
     void setStartExpr(const QString &value);
 
-    PHighlighter getHighlighter() const;
-    void setHighlighter(const PHighlighter &highlighter);
+    PSyntaxer getHighlighter() const;
+    void setHighlighter(const PSyntaxer &highlighter);
 
     PTokenAttribute getMarkerAttribute() const;
 
@@ -51,7 +51,7 @@ public:
 private:
     QString mEndExpr;
     QString StartExpr;
-    PHighlighter mHighlighter;
+    PSyntaxer mHighlighter;
     PTokenAttribute mMarkerAttribute;
     QString mSchemeName;
     int mCaseSensitive;

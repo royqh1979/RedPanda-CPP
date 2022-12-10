@@ -49,12 +49,12 @@ void HighlighterSchema::setStartExpr(const QString &value)
     StartExpr = value;
 }
 
-PHighlighter HighlighterSchema::getHighlighter() const
+PSyntaxer HighlighterSchema::getHighlighter() const
 {
     return mHighlighter;
 }
 
-void HighlighterSchema::setHighlighter(const PHighlighter &highlighter)
+void HighlighterSchema::setHighlighter(const PSyntaxer &highlighter)
 {
     mHighlighter = highlighter;
 }

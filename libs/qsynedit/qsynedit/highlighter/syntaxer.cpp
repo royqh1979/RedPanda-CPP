@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "base.h"
+#include "syntaxer.h"
 #include "../Constants.h"
 
 namespace QSynedit {
-Highlighter::Highlighter() :
+Syntaxer::Syntaxer() :
     mEnabled(true),
     mWordBreakChars{ WordBreakChars }
 {
@@ -42,78 +42,78 @@ Highlighter::Highlighter() :
     addAttribute(mSymbolAttribute);
 }
 
-const QMap<QString, PTokenAttribute>& Highlighter::attributes() const
+const QMap<QString, PTokenAttribute>& Syntaxer::attributes() const
 {
     return mAttributes;
 }
 
-const QSet<QChar>& Highlighter::wordBreakChars() const
+const QSet<QChar>& Syntaxer::wordBreakChars() const
 {
     return mWordBreakChars;
 }
 
-const PTokenAttribute& Highlighter::identifierAttribute() const
+const PTokenAttribute& Syntaxer::identifierAttribute() const
 {
     return mIdentifierAttribute;
 }
 
-const PTokenAttribute &Highlighter::keywordAttribute() const
+const PTokenAttribute &Syntaxer::keywordAttribute() const
 {
     return mKeywordAttribute;
 }
 
-const PTokenAttribute &Highlighter::commentAttribute() const
+const PTokenAttribute &Syntaxer::commentAttribute() const
 {
     return mCommentAttribute;
 }
 
-const PTokenAttribute& Highlighter::stringAttribute() const
+const PTokenAttribute& Syntaxer::stringAttribute() const
 {
     return mStringAttribute;
 }
 
-const PTokenAttribute& Highlighter::whitespaceAttribute() const
+const PTokenAttribute& Syntaxer::whitespaceAttribute() const
 {
     return mWhitespaceAttribute;
 }
 
-const PTokenAttribute& Highlighter::symbolAttribute() const
+const PTokenAttribute& Syntaxer::symbolAttribute() const
 {
     return mSymbolAttribute;
 }
 
-bool Highlighter::isKeyword(const QString &)
+bool Syntaxer::isKeyword(const QString &)
 {
     return false;
 }
 
-void Highlighter::nextToEol()
+void Syntaxer::nextToEol()
 {
     while (!eol())
         next();
 }
 
-QSet<QString> Highlighter::keywords() const
+QSet<QString> Syntaxer::keywords() const
 {
     return QSet<QString>();
 }
 
-QString Highlighter::foldString()
+QString Syntaxer::foldString()
 {
     return " ... }";
 }
 
-bool Highlighter::supportBraceLevel()
+bool Syntaxer::supportBraceLevel()
 {
     return false;
 }
 
-bool Highlighter::isSpaceChar(const QChar &ch)
+bool Syntaxer::isSpaceChar(const QChar &ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 }
 
-bool Highlighter::isWordBreakChar(const QChar &ch)
+bool Syntaxer::isWordBreakChar(const QChar &ch)
 {
     switch (ch.unicode()) {
     case '.':
@@ -147,7 +147,7 @@ bool Highlighter::isWordBreakChar(const QChar &ch)
     }
 }
 
-bool Highlighter::isIdentChar(const QChar &ch) const
+bool Syntaxer::isIdentChar(const QChar &ch) const
 {
     if (ch == '_') {
         return true;
@@ -164,32 +164,32 @@ bool Highlighter::isIdentChar(const QChar &ch) const
     return false;
 }
 
-void Highlighter::addAttribute(PTokenAttribute attribute)
+void Syntaxer::addAttribute(PTokenAttribute attribute)
 {
     mAttributes[attribute->name()]=attribute;
 }
 
-void Highlighter::clearAttributes()
+void Syntaxer::clearAttributes()
 {
     mAttributes.clear();
 }
 
-int Highlighter::attributesCount() const
+int Syntaxer::attributesCount() const
 {
     return mAttributes.size();
 }
 
-PTokenAttribute Highlighter::getAttribute(const QString& name) const
+PTokenAttribute Syntaxer::getAttribute(const QString& name) const
 {
     return mAttributes.value(name,PTokenAttribute());
 }
 
-bool Highlighter::enabled() const
+bool Syntaxer::enabled() const
 {
     return mEnabled;
 }
 
-void Highlighter::setEnabled(bool value)
+void Syntaxer::setEnabled(bool value)
 {
     if (value != mEnabled) {
         mEnabled = value;

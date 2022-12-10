@@ -29,7 +29,7 @@ static const QSet<QString> GLSLStatementKeyWords {
     "while"
 };
 
-const QSet<QString> GLSLHighlighter::Keywords {
+const QSet<QString> GLSLSyntaxer::Keywords {
     "const", "uniform", "buffer", "shared", "attribute", "varying",
     "coherent", "volatile", "restrict", "readonly", "writeonly",
     "atomic_uint",
@@ -81,7 +81,7 @@ const QSet<QString> GLSLHighlighter::Keywords {
     "struct"
 };
 
-GLSLHighlighter::GLSLHighlighter(): Highlighter()
+GLSLSyntaxer::GLSLSyntaxer(): Syntaxer()
 {
     mAsmAttribute = std::make_shared<TokenAttribute>(SYNS_AttrAssembler,
                                                            TokenType::Embeded);
@@ -131,77 +131,77 @@ GLSLHighlighter::GLSLHighlighter(): Highlighter()
     resetState();
 }
 
-const PTokenAttribute &GLSLHighlighter::asmAttribute() const
+const PTokenAttribute &GLSLSyntaxer::asmAttribute() const
 {
     return mAsmAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::preprocessorAttribute() const
+const PTokenAttribute &GLSLSyntaxer::preprocessorAttribute() const
 {
     return mPreprocessorAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::invalidAttribute() const
+const PTokenAttribute &GLSLSyntaxer::invalidAttribute() const
 {
     return mInvalidAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::numberAttribute() const
+const PTokenAttribute &GLSLSyntaxer::numberAttribute() const
 {
     return mNumberAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::floatAttribute() const
+const PTokenAttribute &GLSLSyntaxer::floatAttribute() const
 {
     return mFloatAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::hexAttribute() const
+const PTokenAttribute &GLSLSyntaxer::hexAttribute() const
 {
     return mHexAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::octAttribute() const
+const PTokenAttribute &GLSLSyntaxer::octAttribute() const
 {
     return mOctAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::stringEscapeSequenceAttribute() const
+const PTokenAttribute &GLSLSyntaxer::stringEscapeSequenceAttribute() const
 {
     return mStringEscapeSequenceAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::charAttribute() const
+const PTokenAttribute &GLSLSyntaxer::charAttribute() const
 {
     return mCharAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::variableAttribute() const
+const PTokenAttribute &GLSLSyntaxer::variableAttribute() const
 {
     return mVariableAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::functionAttribute() const
+const PTokenAttribute &GLSLSyntaxer::functionAttribute() const
 {
     return mFunctionAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::classAttribute() const
+const PTokenAttribute &GLSLSyntaxer::classAttribute() const
 {
     return mClassAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::globalVarAttribute() const
+const PTokenAttribute &GLSLSyntaxer::globalVarAttribute() const
 {
     return mGlobalVarAttribute;
 }
 
-const PTokenAttribute &GLSLHighlighter::localVarAttribute() const
+const PTokenAttribute &GLSLSyntaxer::localVarAttribute() const
 {
     return mLocalVarAttribute;
 }
 
-GLSLHighlighter::TokenId GLSLHighlighter::getTokenId()
+GLSLSyntaxer::TokenId GLSLSyntaxer::getTokenId()
 {
     if ((mRange.state == RangeState::rsAsm || mRange.state == RangeState::rsAsmBlock)
             && !mAsmStart && !(mTokenId == TokenId::Comment || mTokenId == TokenId::Space
@@ -212,7 +212,7 @@ GLSLHighlighter::TokenId GLSLHighlighter::getTokenId()
     }
 }
 
-void GLSLHighlighter::andSymbolProc()
+void GLSLSyntaxer::andSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     switch (mLine[mRun+1].unicode()) {
@@ -227,7 +227,7 @@ void GLSLHighlighter::andSymbolProc()
     }
 }
 
-void GLSLHighlighter::ansiCppProc()
+void GLSLSyntaxer::ansiCppProc()
 {
     mTokenId = TokenId::Comment;
     if (mLine[mRun]==0) {
@@ -246,7 +246,7 @@ void GLSLHighlighter::ansiCppProc()
     }
 }
 
-void GLSLHighlighter::ansiCProc()
+void GLSLSyntaxer::ansiCProc()
 {
     bool finishProcess = false;
     mTokenId = TokenId::Comment;
@@ -281,7 +281,7 @@ void GLSLHighlighter::ansiCProc()
     }
 }
 
-void GLSLHighlighter::asciiCharProc()
+void GLSLSyntaxer::asciiCharProc()
 {
     mTokenId = TokenId::Char;
     do {
@@ -297,13 +297,13 @@ void GLSLHighlighter::asciiCharProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void GLSLHighlighter::atSymbolProc()
+void GLSLSyntaxer::atSymbolProc()
 {
     mTokenId = TokenId::Unknown;
     mRun+=1;
 }
 
-void GLSLHighlighter::braceCloseProc()
+void GLSLSyntaxer::braceCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -325,7 +325,7 @@ void GLSLHighlighter::braceCloseProc()
     popIndents(IndentForBrace);
 }
 
-void GLSLHighlighter::braceOpenProc()
+void GLSLSyntaxer::braceOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -352,7 +352,7 @@ void GLSLHighlighter::braceOpenProc()
     }
 }
 
-void GLSLHighlighter::colonProc()
+void GLSLSyntaxer::colonProc()
 {
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1]==':') {
@@ -362,13 +362,13 @@ void GLSLHighlighter::colonProc()
     }
 }
 
-void GLSLHighlighter::commaProc()
+void GLSLSyntaxer::commaProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
 }
 
-void GLSLHighlighter::directiveProc()
+void GLSLSyntaxer::directiveProc()
 {
     QString preContents = mLineString.left(mRun).trimmed();
     if (!preContents.isEmpty()) { // '#' is not first non-space char on the line, treat it as an invalid char
@@ -411,7 +411,7 @@ void GLSLHighlighter::directiveProc()
 //    } while (mLine[mRun]!=0);
 }
 
-void GLSLHighlighter::directiveEndProc()
+void GLSLSyntaxer::directiveEndProc()
 {
     mTokenId = TokenId::Directive;
     if (mLine[mRun] == 0) {
@@ -443,7 +443,7 @@ void GLSLHighlighter::directiveEndProc()
     } while (mLine[mRun]!=0);
 }
 
-void GLSLHighlighter::equalProc()
+void GLSLSyntaxer::equalProc()
 {
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '=') {
@@ -453,7 +453,7 @@ void GLSLHighlighter::equalProc()
     }
 }
 
-void GLSLHighlighter::greaterProc()
+void GLSLSyntaxer::greaterProc()
 {
     mTokenId = TokenId::Symbol;
     switch (mLine[mRun + 1].unicode()) {
@@ -472,7 +472,7 @@ void GLSLHighlighter::greaterProc()
     }
 }
 
-void GLSLHighlighter::identProc()
+void GLSLSyntaxer::identProc()
 {
     int wordEnd = mRun;
     while (isIdentChar(mLine[wordEnd])) {
@@ -490,7 +490,7 @@ void GLSLHighlighter::identProc()
     }
 }
 
-void GLSLHighlighter::lowerProc()
+void GLSLSyntaxer::lowerProc()
 {
     mTokenId = TokenId::Symbol;
     switch(mLine[mRun+1].unicode()) {
@@ -509,7 +509,7 @@ void GLSLHighlighter::lowerProc()
     }
 }
 
-void GLSLHighlighter::minusProc()
+void GLSLSyntaxer::minusProc()
 {
     mTokenId = TokenId::Symbol;
     switch(mLine[mRun+1].unicode()) {
@@ -531,7 +531,7 @@ void GLSLHighlighter::minusProc()
     }
 }
 
-void GLSLHighlighter::modSymbolProc()
+void GLSLSyntaxer::modSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     switch(mLine[mRun + 1].unicode()) {
@@ -543,7 +543,7 @@ void GLSLHighlighter::modSymbolProc()
     }
 }
 
-void GLSLHighlighter::notSymbolProc()
+void GLSLSyntaxer::notSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     switch(mLine[mRun + 1].unicode()) {
@@ -555,7 +555,7 @@ void GLSLHighlighter::notSymbolProc()
     }
 }
 
-void GLSLHighlighter::nullProc()
+void GLSLSyntaxer::nullProc()
 {
     if ((mRun-1>=0) && isSpaceChar(mLine[mRun-1]) &&
     (mRange.state == RangeState::rsCppComment
@@ -568,7 +568,7 @@ void GLSLHighlighter::nullProc()
         mTokenId = TokenId::Null;
 }
 
-void GLSLHighlighter::numberProc()
+void GLSLSyntaxer::numberProc()
 {
     int idx1; // token[1]
     idx1 = mRun;
@@ -738,7 +738,7 @@ void GLSLHighlighter::numberProc()
     }
 }
 
-void GLSLHighlighter::orSymbolProc()
+void GLSLSyntaxer::orSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     switch ( mLine[mRun+1].unicode()) {
@@ -753,7 +753,7 @@ void GLSLHighlighter::orSymbolProc()
     }
 }
 
-void GLSLHighlighter::plusProc()
+void GLSLSyntaxer::plusProc()
 {
     mTokenId = TokenId::Symbol;
     switch(mLine[mRun+1].unicode()){
@@ -768,7 +768,7 @@ void GLSLHighlighter::plusProc()
     }
 }
 
-void GLSLHighlighter::pointProc()
+void GLSLSyntaxer::pointProc()
 {
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '*' ) {
@@ -782,13 +782,13 @@ void GLSLHighlighter::pointProc()
     }
 }
 
-void GLSLHighlighter::questionProc()
+void GLSLSyntaxer::questionProc()
 {
     mTokenId = TokenId::Symbol;
     mRun+=1;
 }
 
-void GLSLHighlighter::rawStringProc()
+void GLSLSyntaxer::rawStringProc()
 {
     bool noEscaping = false;
     if (mRange.state == RangeState::rsRawStringNotEscaping)
@@ -814,7 +814,7 @@ void GLSLHighlighter::rawStringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void GLSLHighlighter::roundCloseProc()
+void GLSLSyntaxer::roundCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -824,7 +824,7 @@ void GLSLHighlighter::roundCloseProc()
     popIndents(IndentForParenthesis);
 }
 
-void GLSLHighlighter::roundOpenProc()
+void GLSLSyntaxer::roundOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -832,7 +832,7 @@ void GLSLHighlighter::roundOpenProc()
     pushIndents(IndentForParenthesis);
 }
 
-void GLSLHighlighter::semiColonProc()
+void GLSLSyntaxer::semiColonProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -843,7 +843,7 @@ void GLSLHighlighter::semiColonProc()
     }
 }
 
-void GLSLHighlighter::slashProc()
+void GLSLSyntaxer::slashProc()
 {
     switch(mLine[mRun+1].unicode()) {
     case '/': // Cpp style comment
@@ -876,7 +876,7 @@ void GLSLHighlighter::slashProc()
     }
 }
 
-void GLSLHighlighter::spaceProc()
+void GLSLSyntaxer::spaceProc()
 {
     mRun += 1;
     mTokenId = TokenId::Space;
@@ -885,7 +885,7 @@ void GLSLHighlighter::spaceProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void GLSLHighlighter::squareCloseProc()
+void GLSLSyntaxer::squareCloseProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
@@ -895,7 +895,7 @@ void GLSLHighlighter::squareCloseProc()
     popIndents(IndentForBracket);
 }
 
-void GLSLHighlighter::squareOpenProc()
+void GLSLSyntaxer::squareOpenProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
@@ -903,7 +903,7 @@ void GLSLHighlighter::squareOpenProc()
     pushIndents(IndentForBracket);
 }
 
-void GLSLHighlighter::starProc()
+void GLSLSyntaxer::starProc()
 {
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1] == '=') {
@@ -913,7 +913,7 @@ void GLSLHighlighter::starProc()
     }
 }
 
-void GLSLHighlighter::stringEndProc()
+void GLSLSyntaxer::stringEndProc()
 {
     mTokenId = TokenId::String;
     if (mLine[mRun]==0) {
@@ -965,7 +965,7 @@ void GLSLHighlighter::stringEndProc()
     }
 }
 
-void GLSLHighlighter::stringEscapeSeqProc()
+void GLSLSyntaxer::stringEscapeSeqProc()
 {
     mTokenId = TokenId::StringEscapeSeq;
     mRun+=1;
@@ -1047,7 +1047,7 @@ void GLSLHighlighter::stringEscapeSeqProc()
         mRange.state = RangeState::rsString;
 }
 
-void GLSLHighlighter::stringProc()
+void GLSLSyntaxer::stringProc()
 {
     if (mLine[mRun] == 0) {
         mRange.state = RangeState::rsUnknown;
@@ -1099,7 +1099,7 @@ void GLSLHighlighter::stringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void GLSLHighlighter::stringStartProc()
+void GLSLSyntaxer::stringStartProc()
 {
     mTokenId = TokenId::String;
     mRun += 1;
@@ -1110,19 +1110,19 @@ void GLSLHighlighter::stringStartProc()
     stringProc();
 }
 
-void GLSLHighlighter::tildeProc()
+void GLSLSyntaxer::tildeProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
 }
 
-void GLSLHighlighter::unknownProc()
+void GLSLSyntaxer::unknownProc()
 {
     mRun+=1;
     mTokenId = TokenId::Unknown;
 }
 
-void GLSLHighlighter::xorSymbolProc()
+void GLSLSyntaxer::xorSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     if (mLine[mRun+1]=='=') {
@@ -1132,7 +1132,7 @@ void GLSLHighlighter::xorSymbolProc()
     }
 }
 
-void GLSLHighlighter::processChar()
+void GLSLSyntaxer::processChar()
 {
     switch(mLine[mRun].unicode()) {
     case '&':
@@ -1249,7 +1249,7 @@ void GLSLHighlighter::processChar()
     }
 }
 
-void GLSLHighlighter::popIndents(int indentType)
+void GLSLSyntaxer::popIndents(int indentType)
 {
     while (!mRange.indents.isEmpty() && mRange.indents.back()!=indentType) {
         mRange.indents.pop_back();
@@ -1263,7 +1263,7 @@ void GLSLHighlighter::popIndents(int indentType)
     }
 }
 
-void GLSLHighlighter::pushIndents(int indentType)
+void GLSLSyntaxer::pushIndents(int indentType)
 {
     int idx = mRange.indents.length();
     if (idx<mRange.firstIndentThisLine)
@@ -1271,7 +1271,7 @@ void GLSLHighlighter::pushIndents(int indentType)
     mRange.indents.push_back(indentType);
 }
 
-bool GLSLHighlighter::getTokenFinished() const
+bool GLSLSyntaxer::getTokenFinished() const
 {
     if (mTokenId == TokenId::Comment
             || mTokenId == TokenId::String
@@ -1281,7 +1281,7 @@ bool GLSLHighlighter::getTokenFinished() const
     return true;
 }
 
-bool GLSLHighlighter::isLastLineCommentNotFinished(int state) const
+bool GLSLSyntaxer::isLastLineCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||
             state == RangeState::rsAnsiCAsm ||
@@ -1290,22 +1290,22 @@ bool GLSLHighlighter::isLastLineCommentNotFinished(int state) const
             state == RangeState::rsCppComment);
 }
 
-bool GLSLHighlighter::isLastLineStringNotFinished(int state) const
+bool GLSLSyntaxer::isLastLineStringNotFinished(int state) const
 {
     return state == RangeState::rsMultiLineString;
 }
 
-bool GLSLHighlighter::eol() const
+bool GLSLSyntaxer::eol() const
 {
     return mTokenId == TokenId::Null;
 }
 
-QString GLSLHighlighter::getToken() const
+QString GLSLSyntaxer::getToken() const
 {
     return mLineString.mid(mTokenPos,mRun-mTokenPos);
 }
 
-const PTokenAttribute &GLSLHighlighter::getTokenAttribute() const
+const PTokenAttribute &GLSLSyntaxer::getTokenAttribute() const
 {
     switch (mTokenId) {
     case TokenId::Asm:
@@ -1346,12 +1346,12 @@ const PTokenAttribute &GLSLHighlighter::getTokenAttribute() const
     }
 }
 
-int GLSLHighlighter::getTokenPos()
+int GLSLSyntaxer::getTokenPos()
 {
     return mTokenPos;
 }
 
-void GLSLHighlighter::next()
+void GLSLSyntaxer::next()
 {
     mAsmStart = false;
     mTokenPos = mRun;
@@ -1409,7 +1409,7 @@ void GLSLHighlighter::next()
     } while (mTokenId!=TokenId::Null && mRun<=mTokenPos);
 }
 
-void GLSLHighlighter::setLine(const QString &newLine, int lineNumber)
+void GLSLSyntaxer::setLine(const QString &newLine, int lineNumber)
 {
     mLineString = newLine;
     mLine = mLineString.data();
@@ -1424,12 +1424,12 @@ void GLSLHighlighter::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-bool GLSLHighlighter::isKeyword(const QString &word)
+bool GLSLSyntaxer::isKeyword(const QString &word)
 {
     return Keywords.contains(word);
 }
 
-void GLSLHighlighter::setState(const SyntaxerState& rangeState)
+void GLSLSyntaxer::setState(const SyntaxerState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
@@ -1441,7 +1441,7 @@ void GLSLHighlighter::setState(const SyntaxerState& rangeState)
     mRange.matchingIndents.clear();
 }
 
-void GLSLHighlighter::resetState()
+void GLSLSyntaxer::resetState()
 {
     mRange.state = RangeState::rsUnknown;
     mRange.braceLevel = 0;
@@ -1457,32 +1457,32 @@ void GLSLHighlighter::resetState()
     mAsmStart = false;
 }
 
-QString GLSLHighlighter::languageName()
+QString GLSLSyntaxer::languageName()
 {
     return "glsl";
 }
 
-ProgrammingLanguage GLSLHighlighter::language()
+ProgrammingLanguage GLSLSyntaxer::language()
 {
     return ProgrammingLanguage::GLSL;
 }
 
-SyntaxerState GLSLHighlighter::getState() const
+SyntaxerState GLSLSyntaxer::getState() const
 {
     return mRange;
 }
 
-bool GLSLHighlighter::isIdentChar(const QChar &ch) const
+bool GLSLSyntaxer::isIdentChar(const QChar &ch) const
 {
     return ch=='_' || (ch>='a' && ch<='z') || (ch>='A' && ch<='Z') || (ch>='0' && ch<='9');
 }
 
-QSet<QString> GLSLHighlighter::keywords() const
+QSet<QString> GLSLSyntaxer::keywords() const
 {
     return Keywords;
 }
 
-bool GLSLHighlighter::supportBraceLevel()
+bool GLSLSyntaxer::supportBraceLevel()
 {
     return true;
 }

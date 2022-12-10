@@ -1,9 +1,9 @@
 #ifndef CUSTOMHIGHLIGHTERV1_H
 #define CUSTOMHIGHLIGHTERV1_H
-#include "base.h"
+#include "syntaxer.h"
 namespace QSynedit {
 
-class CustomHighlighterV1:public Highlighter
+class CustomHighlighterV1:public Syntaxer
 {
 public:
     enum RangeState {

@@ -21,7 +21,7 @@
 #include "../SynEdit.h"
 
 namespace QSynedit {
-using FormatTokenHandler = std::function<void(PHighlighter syntaxHighlighter, int Line, int column, const QString& token,
+using FormatTokenHandler = std::function<void(PSyntaxer syntaxHighlighter, int line, int column, const QString& token,
     PTokenAttribute& attr)>;
 class SynExporter
 {
@@ -69,8 +69,8 @@ public:
     QFont font() const;
     void setFont(const QFont &font);
 
-    PHighlighter highlighter() const;
-    void setHighlighter(PHighlighter Value);
+    PSyntaxer highlighter() const;
+    void setHighlighter(PSyntaxer Value);
 
     QString title() const;
     void setTitle(const QString &Value);
@@ -112,7 +112,7 @@ protected:
     QString mDefaultFilter;
     bool mExportAsText;
     QFont mFont;
-    PHighlighter mHighlighter;
+    PSyntaxer mHighlighter;
     QColor mLastBG;
     QColor mLastFG;
     FontStyles mLastStyle;

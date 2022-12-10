@@ -21,7 +21,7 @@
 #include <memory>
 #include <QString>
 #include <QSet>
-#include "highlighter/base.h"
+#include "highlighter/syntaxer.h"
 #include <QPaintDevice>
 #include <QTextStream>
 #include <QVector>
@@ -46,15 +46,15 @@ QStringList splitStrings(const QString& text);
 
 int calSpanLines(const BufferCoord& startPos, const BufferCoord& endPos);
 
-using  TokenAttributeProc = std::function<bool(PHighlighter Highlighter,
-    PTokenAttribute Attri, const QString& UniqueAttriName,
-    QList<void *> Params)>;
+using  TokenAttributeProc = std::function<bool(PSyntaxer syntaxer,
+    PTokenAttribute attri, const QString& uniqueAttriName,
+    QList<void *> params)>;
 
 // Enums all child highlighters and their attributes of a TSynMultiSyn through a
 // callback function.
 // This function also handles nested TSynMultiSyns including their MarkerAttri.
-bool enumTokenAttributes(PHighlighter Highlighter,
-                           bool SkipDuplicates, TokenAttributeProc highlighterAttriProc,
+bool enumTokenAttributes(PSyntaxer syntaxer,
+                           bool skipDuplicates, TokenAttributeProc tokenAttriProc,
                            std::initializer_list<void *> Params);
 
 FontStyles getFontStyles(const QFont& font);

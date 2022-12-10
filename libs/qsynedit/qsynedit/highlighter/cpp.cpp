@@ -34,7 +34,7 @@ static const QSet<QString> CppStatementKeyWords {
 
 
 
-const QSet<QString> CppHighlighter::Keywords {
+const QSet<QString> CppSyntaxer::Keywords {
     "and",
     "and_eq",
     "bitand",
@@ -141,7 +141,7 @@ const QSet<QString> CppHighlighter::Keywords {
 
     "nullptr",
 };
-CppHighlighter::CppHighlighter(): Highlighter()
+CppSyntaxer::CppSyntaxer(): Syntaxer()
 {
     mAsmAttribute = std::make_shared<TokenAttribute>(SYNS_AttrAssembler,
                                                            TokenType::Embeded);
@@ -190,77 +190,77 @@ CppHighlighter::CppHighlighter(): Highlighter()
     resetState();
 }
 
-const PTokenAttribute &CppHighlighter::asmAttribute() const
+const PTokenAttribute &CppSyntaxer::asmAttribute() const
 {
     return mAsmAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::preprocessorAttribute() const
+const PTokenAttribute &CppSyntaxer::preprocessorAttribute() const
 {
     return mPreprocessorAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::invalidAttribute() const
+const PTokenAttribute &CppSyntaxer::invalidAttribute() const
 {
     return mInvalidAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::numberAttribute() const
+const PTokenAttribute &CppSyntaxer::numberAttribute() const
 {
     return mNumberAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::floatAttribute() const
+const PTokenAttribute &CppSyntaxer::floatAttribute() const
 {
     return mFloatAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::hexAttribute() const
+const PTokenAttribute &CppSyntaxer::hexAttribute() const
 {
     return mHexAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::octAttribute() const
+const PTokenAttribute &CppSyntaxer::octAttribute() const
 {
     return mOctAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::stringEscapeSequenceAttribute() const
+const PTokenAttribute &CppSyntaxer::stringEscapeSequenceAttribute() const
 {
     return mStringEscapeSequenceAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::charAttribute() const
+const PTokenAttribute &CppSyntaxer::charAttribute() const
 {
     return mCharAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::variableAttribute() const
+const PTokenAttribute &CppSyntaxer::variableAttribute() const
 {
     return mVariableAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::functionAttribute() const
+const PTokenAttribute &CppSyntaxer::functionAttribute() const
 {
     return mFunctionAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::classAttribute() const
+const PTokenAttribute &CppSyntaxer::classAttribute() const
 {
     return mClassAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::globalVarAttribute() const
+const PTokenAttribute &CppSyntaxer::globalVarAttribute() const
 {
     return mGlobalVarAttribute;
 }
 
-const PTokenAttribute &CppHighlighter::localVarAttribute() const
+const PTokenAttribute &CppSyntaxer::localVarAttribute() const
 {
     return mLocalVarAttribute;
 }
 
-CppHighlighter::TokenId CppHighlighter::getTokenId()
+CppSyntaxer::TokenId CppSyntaxer::getTokenId()
 {
     if ((mRange.state == RangeState::rsAsm || mRange.state == RangeState::rsAsmBlock)
             && !mAsmStart && !(mTokenId == TokenId::Comment || mTokenId == TokenId::Space
@@ -271,7 +271,7 @@ CppHighlighter::TokenId CppHighlighter::getTokenId()
     }
 }
 
-void CppHighlighter::andSymbolProc()
+void CppSyntaxer::andSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -287,7 +287,7 @@ void CppHighlighter::andSymbolProc()
     mRun+=1;
 }
 
-void CppHighlighter::ansiCppProc()
+void CppSyntaxer::ansiCppProc()
 {
     mTokenId = TokenId::Comment;
     if (mRun>=mLineSize) {
@@ -306,7 +306,7 @@ void CppHighlighter::ansiCppProc()
     }
 }
 
-void CppHighlighter::ansiCProc()
+void CppSyntaxer::ansiCProc()
 {
     bool finishProcess = false;
     mTokenId = TokenId::Comment;
@@ -341,7 +341,7 @@ void CppHighlighter::ansiCProc()
     }
 }
 
-void CppHighlighter::asciiCharProc()
+void CppSyntaxer::asciiCharProc()
 {
     mTokenId = TokenId::Char;
     do {
@@ -357,13 +357,13 @@ void CppHighlighter::asciiCharProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void CppHighlighter::atSymbolProc()
+void CppSyntaxer::atSymbolProc()
 {
     mTokenId = TokenId::Unknown;
     mRun+=1;
 }
 
-void CppHighlighter::braceCloseProc()
+void CppSyntaxer::braceCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -385,7 +385,7 @@ void CppHighlighter::braceCloseProc()
     popIndents(IndentForBrace);
 }
 
-void CppHighlighter::braceOpenProc()
+void CppSyntaxer::braceOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -412,7 +412,7 @@ void CppHighlighter::braceOpenProc()
     }
 }
 
-void CppHighlighter::colonProc()
+void CppSyntaxer::colonProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]==':') {
@@ -422,13 +422,13 @@ void CppHighlighter::colonProc()
     }
 }
 
-void CppHighlighter::commaProc()
+void CppSyntaxer::commaProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
 }
 
-void CppHighlighter::directiveProc()
+void CppSyntaxer::directiveProc()
 {
     QString preContents = mLine.left(mRun).trimmed();
     if (!preContents.isEmpty()) { // '#' is not first non-space char on the line, treat it as an invalid char
@@ -457,7 +457,7 @@ void CppHighlighter::directiveProc()
         mRange.state = RangeState::rsUnknown;
 }
 
-void CppHighlighter::defineIdentProc()
+void CppSyntaxer::defineIdentProc()
 {
     mTokenId = TokenId::Identifier;
     while(mRun < mLineSize && isIdentChar(mLine[mRun]))
@@ -465,7 +465,7 @@ void CppHighlighter::defineIdentProc()
     mRange.state = RangeState::rsDefineRemaining;
 }
 
-void CppHighlighter::defineRemainingProc()
+void CppSyntaxer::defineRemainingProc()
 {
     mTokenId = TokenId::Directive;
     do {
@@ -495,7 +495,7 @@ void CppHighlighter::defineRemainingProc()
     mRange.state=RangeState::rsUnknown;
 }
 
-void CppHighlighter::directiveEndProc()
+void CppSyntaxer::directiveEndProc()
 {
     mTokenId = TokenId::Directive;
     if (mRun >= mLineSize) {
@@ -529,7 +529,7 @@ void CppHighlighter::directiveEndProc()
     } while (mRun < mLineSize);
 }
 
-void CppHighlighter::equalProc()
+void CppSyntaxer::equalProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '=') {
@@ -539,7 +539,7 @@ void CppHighlighter::equalProc()
     }
 }
 
-void CppHighlighter::greaterProc()
+void CppSyntaxer::greaterProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -559,7 +559,7 @@ void CppHighlighter::greaterProc()
     mRun+=1;
 }
 
-void CppHighlighter::identProc()
+void CppSyntaxer::identProc()
 {
     int wordEnd = mRun;
     while (wordEnd<mLineSize && isIdentChar(mLine[wordEnd])) {
@@ -577,7 +577,7 @@ void CppHighlighter::identProc()
     }
 }
 
-void CppHighlighter::lowerProc()
+void CppSyntaxer::lowerProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -597,7 +597,7 @@ void CppHighlighter::lowerProc()
     mRun+=1;
 }
 
-void CppHighlighter::minusProc()
+void CppSyntaxer::minusProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -620,7 +620,7 @@ void CppHighlighter::minusProc()
     mRun += 1;
 }
 
-void CppHighlighter::modSymbolProc()
+void CppSyntaxer::modSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
@@ -630,7 +630,7 @@ void CppHighlighter::modSymbolProc()
     }
 }
 
-void CppHighlighter::notSymbolProc()
+void CppSyntaxer::notSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
@@ -640,7 +640,7 @@ void CppHighlighter::notSymbolProc()
     }
 }
 
-void CppHighlighter::nullProc()
+void CppSyntaxer::nullProc()
 {
     if (
     (mRange.state == RangeState::rsCppComment
@@ -656,7 +656,7 @@ void CppHighlighter::nullProc()
         mTokenId = TokenId::Null;
 }
 
-void CppHighlighter::numberProc()
+void CppSyntaxer::numberProc()
 {
     int idx1; // token[1]
     idx1 = mRun;
@@ -827,7 +827,7 @@ void CppHighlighter::numberProc()
     }
 }
 
-void CppHighlighter::orSymbolProc()
+void CppSyntaxer::orSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -843,7 +843,7 @@ void CppHighlighter::orSymbolProc()
     mRun+=1;
 }
 
-void CppHighlighter::plusProc()
+void CppSyntaxer::plusProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -859,7 +859,7 @@ void CppHighlighter::plusProc()
     mRun+=1;
 }
 
-void CppHighlighter::pointProc()
+void CppSyntaxer::pointProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '*' ) {
@@ -873,13 +873,13 @@ void CppHighlighter::pointProc()
     }
 }
 
-void CppHighlighter::questionProc()
+void CppSyntaxer::questionProc()
 {
     mTokenId = TokenId::Symbol;
     mRun+=1;
 }
 
-void CppHighlighter::rawStringProc()
+void CppSyntaxer::rawStringProc()
 {
     bool noEscaping = false;
     if (mRange.state == RangeState::rsRawStringNotEscaping)
@@ -905,7 +905,7 @@ void CppHighlighter::rawStringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void CppHighlighter::roundCloseProc()
+void CppSyntaxer::roundCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -915,7 +915,7 @@ void CppHighlighter::roundCloseProc()
     popIndents(IndentForParenthesis);
 }
 
-void CppHighlighter::roundOpenProc()
+void CppSyntaxer::roundOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -923,7 +923,7 @@ void CppHighlighter::roundOpenProc()
     pushIndents(IndentForParenthesis);
 }
 
-void CppHighlighter::semiColonProc()
+void CppSyntaxer::semiColonProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -934,7 +934,7 @@ void CppHighlighter::semiColonProc()
     }
 }
 
-void CppHighlighter::slashProc()
+void CppSyntaxer::slashProc()
 {
     if (mRun+1<mLineSize) {
         switch(mLine[mRun+1].unicode()) {
@@ -968,7 +968,7 @@ void CppHighlighter::slashProc()
     mTokenId = TokenId::Symbol;
 }
 
-void CppHighlighter::backSlashProc()
+void CppSyntaxer::backSlashProc()
 {
     if (mRun+1==mLineSize-1) {
         mTokenId = TokenId::Symbol;
@@ -978,7 +978,7 @@ void CppHighlighter::backSlashProc()
     mRun+=1;
 }
 
-void CppHighlighter::spaceProc()
+void CppSyntaxer::spaceProc()
 {
     mRun += 1;
     mTokenId = TokenId::Space;
@@ -987,7 +987,7 @@ void CppHighlighter::spaceProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void CppHighlighter::squareCloseProc()
+void CppSyntaxer::squareCloseProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
@@ -997,7 +997,7 @@ void CppHighlighter::squareCloseProc()
     popIndents(IndentForBracket);
 }
 
-void CppHighlighter::squareOpenProc()
+void CppSyntaxer::squareOpenProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
@@ -1005,7 +1005,7 @@ void CppHighlighter::squareOpenProc()
     pushIndents(IndentForBracket);
 }
 
-void CppHighlighter::starProc()
+void CppSyntaxer::starProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '=') {
@@ -1015,7 +1015,7 @@ void CppHighlighter::starProc()
     }
 }
 
-void CppHighlighter::stringEndProc()
+void CppSyntaxer::stringEndProc()
 {
     mTokenId = TokenId::String;
     if (mRun>=mLineSize) {
@@ -1070,7 +1070,7 @@ void CppHighlighter::stringEndProc()
     }
 }
 
-void CppHighlighter::stringEscapeSeqProc()
+void CppSyntaxer::stringEscapeSeqProc()
 {
     mTokenId = TokenId::StringEscapeSeq;
     mRun+=1;
@@ -1162,7 +1162,7 @@ void CppHighlighter::stringEscapeSeqProc()
         mRange.state = RangeState::rsString;
 }
 
-void CppHighlighter::stringProc()
+void CppSyntaxer::stringProc()
 {
     if (mRun >= mLineSize) {
         mRange.state = RangeState::rsUnknown;
@@ -1217,7 +1217,7 @@ void CppHighlighter::stringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void CppHighlighter::stringStartProc()
+void CppSyntaxer::stringStartProc()
 {
     mTokenId = TokenId::String;
     mRun += 1;
@@ -1228,19 +1228,19 @@ void CppHighlighter::stringStartProc()
     stringProc();
 }
 
-void CppHighlighter::tildeProc()
+void CppSyntaxer::tildeProc()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
 }
 
-void CppHighlighter::unknownProc()
+void CppSyntaxer::unknownProc()
 {
     mRun+=1;
     mTokenId = TokenId::Unknown;
 }
 
-void CppHighlighter::xorSymbolProc()
+void CppSyntaxer::xorSymbolProc()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
@@ -1250,7 +1250,7 @@ void CppHighlighter::xorSymbolProc()
     }
 }
 
-void CppHighlighter::processChar()
+void CppSyntaxer::processChar()
 {
     if (mRun>=mLineSize) {
         nullProc();
@@ -1371,7 +1371,7 @@ void CppHighlighter::processChar()
     }
 }
 
-void CppHighlighter::popIndents(int indentType)
+void CppSyntaxer::popIndents(int indentType)
 {
     while (!mRange.indents.isEmpty() && mRange.indents.back()!=indentType) {
         mRange.indents.pop_back();
@@ -1385,7 +1385,7 @@ void CppHighlighter::popIndents(int indentType)
     }
 }
 
-void CppHighlighter::pushIndents(int indentType)
+void CppSyntaxer::pushIndents(int indentType)
 {
     int idx = mRange.indents.length();
     if (idx<mRange.firstIndentThisLine)
@@ -1393,22 +1393,22 @@ void CppHighlighter::pushIndents(int indentType)
     mRange.indents.push_back(indentType);
 }
 
-const QSet<QString> &CppHighlighter::customTypeKeywords() const
+const QSet<QString> &CppSyntaxer::customTypeKeywords() const
 {
     return mCustomTypeKeywords;
 }
 
-void CppHighlighter::setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords)
+void CppSyntaxer::setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords)
 {
     mCustomTypeKeywords = newCustomTypeKeywords;
 }
 
-bool CppHighlighter::supportBraceLevel()
+bool CppSyntaxer::supportBraceLevel()
 {
     return true;
 }
 
-bool CppHighlighter::getTokenFinished() const
+bool CppSyntaxer::getTokenFinished() const
 {
     if (mTokenId == TokenId::Comment
             || mTokenId == TokenId::String
@@ -1418,7 +1418,7 @@ bool CppHighlighter::getTokenFinished() const
     return true;
 }
 
-bool CppHighlighter::isLastLineCommentNotFinished(int state) const
+bool CppSyntaxer::isLastLineCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||
             state == RangeState::rsAnsiCAsm ||
@@ -1427,22 +1427,22 @@ bool CppHighlighter::isLastLineCommentNotFinished(int state) const
             state == RangeState::rsCppComment);
 }
 
-bool CppHighlighter::isLastLineStringNotFinished(int state) const
+bool CppSyntaxer::isLastLineStringNotFinished(int state) const
 {
     return state == RangeState::rsMultiLineString;
 }
 
-bool CppHighlighter::eol() const
+bool CppSyntaxer::eol() const
 {
     return mTokenId == TokenId::Null;
 }
 
-QString CppHighlighter::getToken() const
+QString CppSyntaxer::getToken() const
 {
     return mLine.mid(mTokenPos,mRun-mTokenPos);
 }
 
-const PTokenAttribute &CppHighlighter::getTokenAttribute() const
+const PTokenAttribute &CppSyntaxer::getTokenAttribute() const
 {
     switch (mTokenId) {
     case TokenId::Asm:
@@ -1483,12 +1483,12 @@ const PTokenAttribute &CppHighlighter::getTokenAttribute() const
     }
 }
 
-int CppHighlighter::getTokenPos()
+int CppSyntaxer::getTokenPos()
 {
     return mTokenPos;
 }
 
-void CppHighlighter::next()
+void CppSyntaxer::next()
 {
     mAsmStart = false;
     mTokenPos = mRun;
@@ -1574,7 +1574,7 @@ void CppHighlighter::next()
     //qDebug()<<"1-1-1";
 }
 
-void CppHighlighter::setLine(const QString &newLine, int lineNumber)
+void CppSyntaxer::setLine(const QString &newLine, int lineNumber)
 {
     mLine = newLine;
     mLineSize = mLine.size();
@@ -1588,12 +1588,12 @@ void CppHighlighter::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-bool CppHighlighter::isKeyword(const QString &word)
+bool CppSyntaxer::isKeyword(const QString &word)
 {
     return Keywords.contains(word) || mCustomTypeKeywords.contains(word);
 }
 
-void CppHighlighter::setState(const SyntaxerState& rangeState)
+void CppSyntaxer::setState(const SyntaxerState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
@@ -1604,7 +1604,7 @@ void CppHighlighter::setState(const SyntaxerState& rangeState)
     mRange.matchingIndents.clear();
 }
 
-void CppHighlighter::resetState()
+void CppSyntaxer::resetState()
 {
     mRange.state = RangeState::rsUnknown;
     mRange.braceLevel = 0;
@@ -1620,34 +1620,34 @@ void CppHighlighter::resetState()
     mAsmStart = false;
 }
 
-QString CppHighlighter::languageName()
+QString CppSyntaxer::languageName()
 {
     return "cpp";
 }
 
-ProgrammingLanguage CppHighlighter::language()
+ProgrammingLanguage CppSyntaxer::language()
 {
     return ProgrammingLanguage::Cpp;
 }
 
-SyntaxerState CppHighlighter::getState() const
+SyntaxerState CppSyntaxer::getState() const
 {
     return mRange;
 }
 
-bool CppHighlighter::isIdentChar(const QChar &ch) const
+bool CppSyntaxer::isIdentChar(const QChar &ch) const
 {
     return ch=='_' || ch.isDigit() || ch.isLetter();
 }
 
-QSet<QString> CppHighlighter::keywords() const
+QSet<QString> CppSyntaxer::keywords() const
 {
     QSet<QString> set=Keywords;
     set.unite(mCustomTypeKeywords);
     return set;
 }
 
-QString CppHighlighter::foldString()
+QString CppSyntaxer::foldString()
 {
     return "...}";
 }

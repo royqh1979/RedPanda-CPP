@@ -166,12 +166,12 @@ void SynExporter::setFont(const QFont &font)
     mFont = font;
 }
 
-PHighlighter SynExporter::highlighter() const
+PSyntaxer SynExporter::highlighter() const
 {
     return mHighlighter;
 }
 
-void SynExporter::setHighlighter(PHighlighter Value)
+void SynExporter::setHighlighter(PSyntaxer Value)
 {
     if (mHighlighter != Value) {
         mHighlighter = Value;

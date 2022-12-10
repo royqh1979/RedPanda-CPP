@@ -16,12 +16,12 @@
  */
 #ifndef SYNEDITGLSLHIGHLIGHTER_H
 #define SYNEDITGLSLHIGHLIGHTER_H
-#include "base.h"
+#include "syntaxer.h"
 #include <QSet>
 
 namespace QSynedit {
 
-class GLSLHighlighter: public Highlighter
+class GLSLSyntaxer: public Syntaxer
 {
     enum class TokenId {
         Asm,
@@ -54,7 +54,7 @@ class GLSLHighlighter: public Highlighter
     };
 
 public:
-    explicit GLSLHighlighter();
+    explicit GLSLSyntaxer();
 
     const PTokenAttribute &asmAttribute() const;
 
