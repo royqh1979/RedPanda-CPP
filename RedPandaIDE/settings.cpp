@@ -2072,12 +2072,10 @@ void Settings::CompilerSet::setProperties(const QString &binDir, const QString& 
     int delimPos2 = delimPos1;
     while (delimPos2<output.length() && !isNonPrintableAsciiChar(output[delimPos2]))
         delimPos2++;
-    mTarget = output.mid(delimPos1,delimPos2-delimPos1);
+    QString triplet = output.mid(delimPos1,delimPos2-delimPos1);
 
-    if (mTarget.contains("x86_64"))
-        mTarget = "x86_64";
-    else
-        mTarget = "i686";
+    int tripletDelimPos1 = triplet.indexOf('-');
+    mTarget = triplet.mid(0, tripletDelimPos1);
 
     //Find version number
     targetStr = "clang version ";
@@ -2660,7 +2658,7 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& cc_pr
         return false;
     QString baseName = baseSet->name();
     QString platformName;
-    if (baseSet->target() == "x86_64") {
+    if (baseSet->target().contains("64") || baseSet->target() == "s390x") {
         if (baseName.startsWith("TDM-GCC ")) {
             PCompilerSet set= addSet(baseSet);
             platformName = "32-bit";
