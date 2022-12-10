@@ -2,6 +2,8 @@ Red Panda C++ Version 2.6
 
   - enhancement: Highlighter for makefiles
   - fix: QSortFilterProxyModel not correctly cleared when exiting and project closed. (ASSERT fails in DEBUG mode.)
+  - enhancement: Windows installers now use UNICODE encoding.
+  - fix: can't correctly show code suggestions after "template <"
 
 Red Panda C++ Version 2.5
 

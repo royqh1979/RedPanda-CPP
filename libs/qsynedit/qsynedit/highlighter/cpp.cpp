@@ -372,12 +372,15 @@ void CppHighlighter::braceCloseProc()
     }
 
     mRange.braceLevel -= 1;
-    if (mRange.braceLevel<0)
+    mRange.blockLevel -= 1;
+    if (mRange.braceLevel<0) {
         mRange.braceLevel = 0;
-    if (mRange.leftBraces>0) {
-        mRange.leftBraces--;
+        mRange.blockLevel = 0;
+    }
+    if (mRange.blockStarted>0) {
+        mRange.blockStarted--;
     } else {
-        mRange.rightBraces++ ;
+        mRange.blockEnded++ ;
     }
     popIndents(sitBrace);
 }
@@ -391,7 +394,8 @@ void CppHighlighter::braceOpenProc()
         mAsmStart = true;
     }
     mRange.braceLevel += 1;
-    mRange.leftBraces++;
+    mRange.blockLevel += 1;
+    mRange.blockStarted++;
     if (mRange.getLastIndent() == sitStatement) {
         // if last indent is started by 'if' 'for' etc
         // just replace it
@@ -1576,8 +1580,9 @@ void CppHighlighter::setLine(const QString &newLine, int lineNumber)
     mLineSize = mLine.size();
     mLineNumber = lineNumber;
     mRun = 0;
-    mRange.leftBraces = 0;
-    mRange.rightBraces = 0;
+    mRange.blockStarted = 0;
+    mRange.blockEnded = 0;
+    mRange.blockEndedLastLine = 0;
     mRange.firstIndentThisLine = mRange.indents.length();
     mRange.matchingIndents.clear();
     next();
@@ -1592,8 +1597,9 @@ void CppHighlighter::setState(const HighlighterState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
-    mRange.leftBraces = 0;
-    mRange.rightBraces = 0;
+    mRange.blockStarted = 0;
+    mRange.blockEnded = 0;
+    mRange.blockEndedLastLine = 0;
     mRange.firstIndentThisLine = mRange.indents.length();
     mRange.matchingIndents.clear();
 }
@@ -1604,8 +1610,10 @@ void CppHighlighter::resetState()
     mRange.braceLevel = 0;
     mRange.bracketLevel = 0;
     mRange.parenthesisLevel = 0;
-    mRange.leftBraces = 0;
-    mRange.rightBraces = 0;
+    mRange.blockLevel = 0;
+    mRange.blockStarted = 0;
+    mRange.blockEnded = 0;
+    mRange.blockEndedLastLine = 0;
     mRange.indents.clear();
     mRange.firstIndentThisLine = 0;
     mRange.matchingIndents.clear();

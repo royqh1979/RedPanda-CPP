@@ -12,8 +12,6 @@ void CustomHighlighterV1::resetState()
     mRange.braceLevel = 0;
     mRange.bracketLevel = 0;
     mRange.parenthesisLevel = 0;
-    mRange.leftBraces = 0;
-    mRange.rightBraces = 0;
     mRange.indents.clear();
     mRange.firstIndentThisLine = 0;
     mRange.matchingIndents.clear();

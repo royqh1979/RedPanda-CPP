@@ -513,9 +513,9 @@ private:
     void foldOnListCleared();
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
-    void scanForFoldRanges(PCodeFoldingRanges TopFoldRanges);
+    void scanForFoldRanges(PCodeFoldingRanges topFoldRanges);
     int lineHasChar(int Line, int startChar, QChar character, const QString& highlighterAttrName);
-    void findSubFoldRange(PCodeFoldingRanges TopFoldRanges,int FoldIndex,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent);
+    void findSubFoldRange(PCodeFoldingRanges topFoldRanges,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent);
     PCodeFoldingRange collapsedFoldStartAtLine(int Line);
     void initializeCaret();
     PCodeFoldingRange foldStartAtLine(int Line) const;

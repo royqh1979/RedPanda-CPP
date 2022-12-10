@@ -36,11 +36,15 @@ enum SynIndentType {
 
 struct HighlighterState {
     int state;  // current syntax parsing state
+    int blockLevel; // needed by block folding
+    int blockStarted;  // needed by block folding
+    int blockEnded;    // needed by block folding;
+    int blockEndedLastLine; //needed by block folding;
     int braceLevel; // current braces embedding level (needed by rainbow color)
     int bracketLevel; // current brackets embedding level (needed by rainbow color)
     int parenthesisLevel; // current parenthesis embedding level (needed by rainbow color)
-    int leftBraces; // unpairing left braces in the current line ( needed by block folding)
-    int rightBraces; // unparing right braces in the current line (needed by block folding)
+//    int leftBraces; // unpairing left braces in the current line ( needed by block folding)
+//    int rightBraces; // unparing right braces in the current line (needed by block folding)
     QVector<int> indents; // indents stack (needed by auto indent)
     int firstIndentThisLine; /* index of first indent that appended to the indents
                               *  stack at this line ( need by auto indent) */

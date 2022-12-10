@@ -265,11 +265,15 @@ int HighlighterState::getLastIndent()
 
 HighlighterState::HighlighterState():
     state(0),
+    blockLevel(0),
+    blockStarted(0),
+    blockEnded(0),
+    blockEndedLastLine(0),
     braceLevel(0),
     bracketLevel(0),
     parenthesisLevel(0),
-    leftBraces(0),
-    rightBraces(0),
+//    leftBraces(0),
+//    rightBraces(0),
     firstIndentThisLine(0)
 {
 }

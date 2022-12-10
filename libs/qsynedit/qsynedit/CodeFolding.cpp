@@ -49,7 +49,7 @@ CodeFoldingOptions::CodeFoldingOptions():
     folderBarLinesColor(QColor("black")),
     indentGuidesColor("gray")
 {
-    foldRegions.add(true,'{','}',SYNS_AttrSymbol);
+
 }
 
 

@@ -3424,6 +3424,10 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
         iRange = mHighlighter->getState();
         if (Result > canStopIndex){
             if (mDocument->ranges(Result).state == iRange.state
+                    && mDocument->ranges(Result).blockLevel == iRange.blockLevel
+                    && mDocument->ranges(Result).blockStarted == iRange.blockStarted
+                    && mDocument->ranges(Result).blockEnded == iRange.blockEnded
+                    && mDocument->ranges(Result).blockEndedLastLine == iRange.blockEndedLastLine
                     && mDocument->ranges(Result).braceLevel == iRange.braceLevel
                     && mDocument->ranges(Result).parenthesisLevel == iRange.parenthesisLevel
                     && mDocument->ranges(Result).bracketLevel == iRange.bracketLevel
@@ -3600,13 +3604,10 @@ void SynEdit::rescanForFoldRanges()
     }
 }
 
-void SynEdit::scanForFoldRanges(PCodeFoldingRanges TopFoldRanges)
+void SynEdit::scanForFoldRanges(PCodeFoldingRanges topFoldRanges)
 {
-    PCodeFoldingRanges parentFoldRanges = TopFoldRanges;
-    // Recursively scan for folds (all types)
-    for (int i= 0 ; i< mCodeFolding.foldRegions.count() ; i++ ) {
-        findSubFoldRange(TopFoldRanges, i,parentFoldRanges,PCodeFoldingRange());
-    }
+    PCodeFoldingRanges parentFoldRanges = topFoldRanges;
+    findSubFoldRange(topFoldRanges, parentFoldRanges,PCodeFoldingRange());
 }
 
 //this func should only be used in findSubFoldRange
@@ -3639,108 +3640,53 @@ int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString
     return -1;
 }
 
-void SynEdit::findSubFoldRange(PCodeFoldingRanges TopFoldRanges, int FoldIndex,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent)
+void SynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange parent)
 {
-    PCodeFoldingRange  CollapsedFold;
-    int Line = 0;
-    QString CurLine;
+    PCodeFoldingRange  collapsedFold;
+    int line = 0;
+    QString curLine;
     if (!mHighlighter)
         return;
-    bool useBraces = ( mCodeFolding.foldRegions.get(FoldIndex)->openSymbol == "{"
-            && mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol == "}");
 
-    while (Line < mDocument->count()) { // index is valid for LinesToScan and fLines
+    while (line < mDocument->count()) { // index is valid for LinesToScan and fLines
         // If there is a collapsed fold over here, skip it
-        CollapsedFold = collapsedFoldStartAtLine(Line + 1); // only collapsed folds remain
-        if (CollapsedFold) {
-          Line = CollapsedFold->toLine;
-          continue;
+        collapsedFold = collapsedFoldStartAtLine(line + 1); // only collapsed folds remain
+        if (collapsedFold) {
+            line = collapsedFold->toLine;
+            continue;
         }
 
-        //we just use braceLevel
-        if (useBraces) {
-            // Find an opening character on this line
-            CurLine = mDocument->getString(Line);
-            if (mDocument->rightBraces(Line)>0) {
-                for (int i=0; i<mDocument->rightBraces(Line);i++) {
-                    // Stop the recursion if we find a closing char, and return to our parent
-                    if (Parent) {
-                      Parent->toLine = Line + 1;
-                      Parent = Parent->parent.lock();
-                      if (!Parent) {
-                          parentFoldRanges = TopFoldRanges;
-                      } else {
-                          parentFoldRanges = Parent->subFoldRanges;
-                      }
+        // Find an opening character on this line
+        curLine = mDocument->getString(line);
+        if (mDocument->blockEnded(line)>0) {
+            for (int i=0; i<mDocument->blockEnded(line);i++) {
+                // Stop the recursion if we find a closing char, and return to our parent
+                if (parent) {
+                    parent->toLine = line + 1;
+                    parent = parent->parent.lock();
+                    if (!parent) {
+                        parentFoldRanges = topFoldRanges;
+                    } else {
+                        parentFoldRanges = parent->subFoldRanges;
                     }
                 }
-            }
-            if (mDocument->leftBraces(Line)>0) {
-                for (int i=0; i<mDocument->leftBraces(Line);i++) {
-                    // Add it to the top list of folds
-                    Parent = parentFoldRanges->addByParts(
-                      Parent,
-                      TopFoldRanges,
-                      Line + 1,
-                      Line + 1);
-                    parentFoldRanges = Parent->subFoldRanges;
-                }
-            }
-        } else {
-
-            // Find an opening character on this line
-            CurLine = mDocument->getString(Line);
-
-            mHighlighter->setState(mDocument->ranges(Line));
-            mHighlighter->setLine(CurLine,Line);
-
-            QString token;
-            int pos;
-            while (!mHighlighter->eol()) {
-                token = mHighlighter->getToken();
-                pos = mHighlighter->getTokenPos()+token.length();
-                PHighlighterAttribute attr = mHighlighter->getTokenAttribute();
-                // We've found a starting character and it have proper highlighting (ignore stuff inside comments...)
-                if (token == mCodeFolding.foldRegions.get(FoldIndex)->openSymbol && attr->name()==mCodeFolding.foldRegions.get(FoldIndex)->highlight) {
-                    // And ignore lines with both opening and closing chars in them
-                    if (lineHasChar(Line,pos,mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol,
-                                    mCodeFolding.foldRegions.get(FoldIndex)->highlight)<0) {
-                        // Add it to the top list of folds
-                        Parent = parentFoldRanges->addByParts(
-                          Parent,
-                          TopFoldRanges,
-                          Line + 1,
-                          Line + 1);
-                        parentFoldRanges = Parent->subFoldRanges;
-
-                        // Skip until a newline
-                        break;
-                    }
-
-                } else if (token == mCodeFolding.foldRegions.get(FoldIndex)->closeSymbol && attr->name()==mCodeFolding.foldRegions.get(FoldIndex)->highlight) {
-                    // And ignore lines with both opening and closing chars in them
-                    if (lineHasChar(Line,pos,mCodeFolding.foldRegions.get(FoldIndex)->openSymbol,
-                                    mCodeFolding.foldRegions.get(FoldIndex)->highlight)<0) {
-                        // Stop the recursion if we find a closing char, and return to our parent
-                        if (Parent) {
-                          Parent->toLine = Line + 1;
-                          Parent = Parent->parent.lock();
-                          if (!Parent) {
-                              parentFoldRanges = TopFoldRanges;
-                          } else {
-                              parentFoldRanges = Parent->subFoldRanges;
-                          }
-                        }
-
-                        // Skip until a newline
-                        break;
-                    }
-                }
-                mHighlighter->next();
             }
         }
-        Line++;
+        if (mDocument->blockStarted(line)>0) {
+            for (int i=0; i<mDocument->blockStarted(line);i++) {
+                // Add it to the top list of folds
+                parent = parentFoldRanges->addByParts(
+                  parent,
+                  topFoldRanges,
+                  line + 1,
+                  line + 1);
+                parentFoldRanges = parent->subFoldRanges;
+            }
+        }
+        line++;
     }
+
+
 }
 
 PCodeFoldingRange SynEdit::collapsedFoldStartAtLine(int Line)
@@ -5039,10 +4985,10 @@ void SynEdit::doGotoBlockStart(bool isSelection)
     //todo: handle block other than {}
     if (document()->braceLevels(mCaretY-1)==0) {
         doGotoEditorStart(isSelection);
-    } else if (document()->leftBraces(mCaretY-1)==0){
+    } else if (document()->blockStarted(mCaretY-1)==0){
         int line=mCaretY-1;
         while (line>=1) {
-            if (document()->leftBraces(line-1)>document()->rightBraces(line-1)) {
+            if (document()->blockStarted(line-1)>document()->blockEnded(line-1)) {
                 moveCaretVert(line+1-mCaretY, isSelection);
                 moveCaretToLineStart(isSelection);
                 setTopLine(line-1);
@@ -5059,12 +5005,12 @@ void SynEdit::doGotoBlockEnd(bool isSelection)
         return;
     HighlighterState state = document()->ranges(mCaretY-1);
     //todo: handle block other than {}
-    if (document()->braceLevels(mCaretY-1)==0) {
+    if (document()->blockLevel(mCaretY-1)==0) {
         doGotoEditorEnd(isSelection);
-    } else if (document()->rightBraces(mCaretY-1)==0){
+    } else if (document()->blockEnded(mCaretY-1)==0){
         int line=mCaretY+1;
         while (line<=document()->count()) {
-            if (document()->rightBraces(line-1)>document()->leftBraces(line-1)) {
+            if (document()->blockEnded(line-1)>document()->blockStarted(line-1)) {
                 moveCaretVert(line-1-mCaretY, isSelection);
                 moveCaretToLineStart(isSelection);
                 setTopLine(line-mLinesInWindow+1);

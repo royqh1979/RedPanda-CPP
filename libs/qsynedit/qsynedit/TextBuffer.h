@@ -55,38 +55,39 @@ class Document : public QObject
 public:
     explicit Document(const QFont& font, const QFont& nonAsciiFont, QObject* parent=nullptr);
 
-    int parenthesisLevels(int Index);
-    int bracketLevels(int Index);
-    int braceLevels(int Index);
-    int lineColumns(int Index);
-    int leftBraces(int Index);
-    int rightBraces(int Index);
+    int parenthesisLevels(int index);
+    int bracketLevels(int index);
+    int braceLevels(int index);
+    int lineColumns(int index);
+    int blockLevel(int index);
+    int blockStarted(int index);
+    int blockEnded(int index);
     int lengthOfLongestLine();
     QString lineBreak() const;
-    HighlighterState ranges(int Index);
-    void setRange(int Index, const HighlighterState& ARange);
-    QString getString(int Index);
+    HighlighterState ranges(int index);
+    void setRange(int index, const HighlighterState& range);
+    QString getString(int index);
     int count();
     QString text();
     void setText(const QString& text);
     void setContents(const QStringList& text);
     QStringList contents();
 
-    void putString(int Index, const QString& s, bool notify=true);
+    void putString(int index, const QString& s, bool notify=true);
 
     void beginUpdate();
     void endUpdate();
 
     int add(const QString& s);
-    void addStrings(const QStringList& Strings);
+    void addStrings(const QStringList& strings);
 
     int getTextLength();
     void clear();
-    void deleteAt(int Index);
-    void deleteLines(int Index, int NumLines);
-    void exchange(int Index1, int Index2);
-    void insert(int Index, const QString& s);
-    void insertLines(int Index, int NumLines);
+    void deleteAt(int index);
+    void deleteLines(int index, int numLines);
+    void exchange(int index1, int index2);
+    void insert(int index, const QString& s);
+    void insertLines(int index, int numLines);
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,

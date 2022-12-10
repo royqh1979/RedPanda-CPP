@@ -50,7 +50,7 @@ struct CodeFoldingOptions {
       QColor collapsedLineColor;
       QColor folderBarLinesColor;
       QColor indentGuidesColor;
-      CodeFoldingDefines foldRegions;
+      //CodeFoldingDefines foldRegions;
       CodeFoldingOptions();
 };
 

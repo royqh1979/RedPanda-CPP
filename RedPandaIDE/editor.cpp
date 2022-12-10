@@ -729,7 +729,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 return;
             } else if (mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()){
                 QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
-
                 if (mParser && !lastWord.isEmpty()) {
                     if (lastWord == "using") {
                         commandProcessor(QSynedit::EditCommand::ecChar,ch,nullptr);
@@ -2350,7 +2349,7 @@ bool Editor::handleParentheseSkip()
 
       if (document()->count()==0)
           return false;
-      if (highlighter()) {
+      if (highlighter() && highlighter()->supportBraceLevel()) {
           QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
           if (lastLineState.parenthesisLevel==0) {
               setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
@@ -2401,7 +2400,7 @@ bool Editor::handleBracketSkip()
 
     if (document()->count()==0)
         return false;
-    if (highlighter()) {
+    if (highlighter() && highlighter()->supportBraceLevel()) {
         QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.bracketLevel==0) {
             setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
@@ -2487,7 +2486,8 @@ bool Editor::handleBraceSkip()
 
     if (document()->count()==0)
         return false;
-    if (highlighter()) {
+
+    if (highlighter() && highlighter()->supportBraceLevel()) {
         QSynedit::HighlighterState lastLineState = document()->ranges(document()->count()-1);
         if (lastLineState.braceLevel==0) {
             bool oldInsertMode = insertMode();
@@ -3150,7 +3150,6 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                     pos,
                     memberOperator,
                     memberExpression);
-//        qDebug()<<ownerExpression<<memberExpression;
         word = memberExpression.join("");
         mCompletionPopup->prepareSearch(
                     preWord,
@@ -4421,7 +4420,10 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
               bracketLevel++;
           } else if (s[wordEnd] == '<'
                      || s[wordEnd] == '[') {
-              bracketLevel--;
+              if (bracketLevel>0)
+                  bracketLevel--;
+              else
+                  return "";
           } else if (bracketLevel==0) {
               //we can't differentiate multiple definition and function parameter define here , so we don't handle ','
               if (s[wordEnd] == ',') {
@@ -4473,7 +4475,7 @@ QString Editor::getPreviousWordAtPositionForCompleteFunctionDefinition(const QSy
     if (wordEnd >= s.length())
         wordEnd = s.length()-1;
     while (wordEnd > 0 &&  (isIdentChar(s[wordEnd]) || s[wordEnd] == ':')) {
-      wordEnd--;
+        wordEnd--;
     }
     int bracketLevel=0;
     while (wordEnd > 0) {
@@ -4482,7 +4484,10 @@ QString Editor::getPreviousWordAtPositionForCompleteFunctionDefinition(const QSy
             bracketLevel++;
         } else if (s[wordEnd] == '<'
                    || s[wordEnd] == '[') {
-            bracketLevel--;
+            if (bracketLevel>0)
+                bracketLevel--;
+            else
+                break;
         } else if (bracketLevel==0) {
             if (s[wordEnd]=='*' || s[wordEnd]=='&' || s[wordEnd]==' ' || s[wordEnd]=='\t') {
                 //do nothing
