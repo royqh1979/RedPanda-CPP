@@ -54,7 +54,10 @@ struct OJProblem {
     QString name;
     QString url;
     QString description;
+    QString hint;
     QString answerProgram;
+    int timeLimit; // ms
+    int memoryLimit; // mb
     QVector<POJProblemCase> cases;
 };
 

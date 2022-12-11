@@ -106,7 +106,7 @@ TodoThread::TodoThread(const QStringList &files, QObject *parent): QThread(paren
 
 void TodoThread::parseFile()
 {
-    QSynedit::PSyntaxer syntaxer = syntaxerManager.getCppSyntaxer();
+    QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     emit parseStarted();
     doParseFile(mFilename,syntaxer);
     emit parseFinished();
@@ -114,7 +114,7 @@ void TodoThread::parseFile()
 
 void TodoThread::parseFiles()
 {
-    QSynedit::PSyntaxer highlighter = syntaxerManager.getCppSyntaxer();
+    QSynedit::PSyntaxer highlighter = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     emit parseStarted();
     foreach(const QString& filename,mFiles) {
         doParseFile(filename,highlighter);

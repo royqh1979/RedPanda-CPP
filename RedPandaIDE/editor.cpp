@@ -111,7 +111,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         syntaxer = syntaxerManager.getSyntaxer(mFilename);
     } else {
         mFileEncoding = ENCODING_ASCII;
-        syntaxer=syntaxerManager.getCppSyntaxer();
+        syntaxer=syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     }
 
     if (syntaxer) {
@@ -390,7 +390,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         setUseCodeFolding(false);
     }
     setSyntaxer(newSyntaxer);
-    if (!newSyntaxer || newSyntaxer->language() != QSynedit::ProgrammingLanguage::Cpp) {
+    if (!newSyntaxer || newSyntaxer->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
     }
     applyColorScheme(pSettings->editor().colorScheme());
@@ -1037,7 +1037,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             if (CppTypeKeywords.contains(token)
                     ||
                     (
-                        syntaxer()->language()==QSynedit::ProgrammingLanguage::Cpp
+                        syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP
                         &&
                         ((QSynedit::CppSyntaxer*)syntaxer().get())->customTypeKeywords().contains(token)
                         )
@@ -1938,38 +1938,32 @@ QStringList Editor::getExpressionAtPosition(
         const QSynedit::BufferCoord &pos)
 {
     QStringList result;
-    if (!syntaxer())
+    if (!syntaxer() || !parser())
         return result;
     int line = pos.line-1;
     int ch = pos.ch-1;
     int symbolMatchingLevel = 0;
     LastSymbolType lastSymbolType=LastSymbolType::None;
-    QSynedit::PSyntaxer syntaxer;
-    if (isNew())
-        syntaxer = syntaxerManager.getCppSyntaxer();
-    else
-        syntaxer = syntaxerManager.getSyntaxer(mFilename);
-    if (!syntaxer)
-        return result;
+    QSynedit::CppSyntaxer syntaxer;
     while (true) {
         if (line>=document()->count() || line<0)
             break;
         QStringList tokens;
         if (line==0) {
-            syntaxer->resetState();
+            syntaxer.resetState();
         } else {
-            syntaxer->setState(document()->ranges(line-1));
+            syntaxer.setState(document()->ranges(line-1));
         }
         QString sLine = document()->getString(line);
-        syntaxer->setLine(sLine,line-1);
-        while (!syntaxer->eol()) {
-            int start = syntaxer->getTokenPos();
-            QString token = syntaxer->getToken();
+        syntaxer.setLine(sLine,line-1);
+        while (!syntaxer.eol()) {
+            int start = syntaxer.getTokenPos();
+            QString token = syntaxer.getToken();
             int endPos = start + token.length()-1;
             if (start>ch) {
                 break;
             }
-            QSynedit::PTokenAttribute attr = syntaxer->getTokenAttribute();
+            QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
             if ( (line == pos.line-1)
                  && (start<=ch) && (ch<=endPos)) {
                 if (attr->tokenType() == QSynedit::TokenType::Comment
@@ -1981,7 +1975,7 @@ QStringList Editor::getExpressionAtPosition(
                     && attr->tokenType() != QSynedit::TokenType::Space){
                 tokens.append(token);
             }
-            syntaxer->next();
+            syntaxer.next();
         }
         for (int i=tokens.count()-1;i>=0;i--) {
             QString token = tokens[i];
@@ -2657,7 +2651,7 @@ void Editor::initParser()
 {
     if (pSettings->codeCompletion().shareParser()) {
         if (pSettings->codeCompletion().enabled()
-            && (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::Cpp)
+            && (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP)
             ) {
             mParser = sharedParser(mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C);
         }
@@ -2677,7 +2671,7 @@ void Editor::initParser()
     resetCppParser(mParser);
     mParser->setEnabled(
                 pSettings->codeCompletion().enabled() &&
-                (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::Cpp));
+                (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -2809,7 +2803,7 @@ void Editor::reparse(bool resetParser)
         return;
     if (!syntaxer())
         return;
-    if (syntaxer()->language() != QSynedit::ProgrammingLanguage::Cpp
+    if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP
              && syntaxer()->language() != QSynedit::ProgrammingLanguage::GLSL)
         return;
     if (!mParser)
@@ -3117,7 +3111,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 
     QSet<QString> keywords;
     if (syntaxer()) {
-        if (syntaxer()->language() != QSynedit::ProgrammingLanguage::Cpp ) {
+        if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP ) {
             keywords = syntaxer()->keywords();
         } else {
             if (mUseCppSyntax) {
@@ -4569,7 +4563,7 @@ void Editor::checkSyntaxInBack()
         return;
     if (!syntaxer())
         return;
-    if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::Cpp)
+    if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
         return;
     pMainWindow->checkSyntaxInBack(this);
 }
@@ -4779,14 +4773,14 @@ void Editor::applySettings()
     }
 
     if (pSettings->editor().enableCustomCTypeKeywords()) {
-        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::Cpp) {
+        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             QSet<QString> set;
             foreach(const QString& s, pSettings->editor().customCTypeKeywords())
                 set.insert(s);
             ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
         }
     } else {
-        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::Cpp) {
+        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(QSet<QString>());
         }
     }

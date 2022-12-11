@@ -134,7 +134,7 @@ private:
     void addStatement(const PStatement& statement, const QString& fileName, int line);
     void filterList(const QString& member);
     void getCompletionFor(
-            const QStringList& ownerExpression,
+            QStringList ownerExpression,
             const QString& memberOperator,
             const QStringList& memberExpression,
             const QString& fileName,
@@ -143,7 +143,7 @@ private:
 
     void getCompletionForFunctionWithoutDefinition(
             const QString& preWord,
-            const QStringList& ownerExpression,
+            QStringList ownerExpression,
             const QString& memberOperator,
             const QStringList& memberExpression,
             const QString& fileName,

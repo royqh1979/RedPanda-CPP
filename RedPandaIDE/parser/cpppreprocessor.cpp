@@ -579,7 +579,6 @@ void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString
     } else {
         PDefine define = getDefine(word);
         if (define && define->args=="" ) {
-            //newLine:=newLine+RemoveGCCAttributes(define^.Value);
             if (define->value != word )
               newLine += expandMacros(define->value,depth+1);
             else

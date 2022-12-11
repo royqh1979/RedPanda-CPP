@@ -1,4 +1,4 @@
-QT       += core gui printsupport network svg
+QT       += core gui printsupport network svg xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -97,6 +97,7 @@ SOURCES += \
     parser/cpptokenizer.cpp \
     parser/parserutils.cpp \
     parser/statementmodel.cpp \
+    problems/freeprojectsetformat.cpp \
     problems/ojproblemset.cpp \
     problems/problemcasevalidator.cpp \
     project.cpp \
@@ -232,6 +233,7 @@ HEADERS += \
     parser/cpptokenizer.h \
     parser/parserutils.h \
     parser/statementmodel.h \
+    problems/freeprojectsetformat.h \
     problems/ojproblemset.h \
     problems/problemcasevalidator.h \
     project.h \

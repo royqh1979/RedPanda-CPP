@@ -35,6 +35,7 @@
 #include "widgets/darkfusionstyle.h"
 #include "widgets/lightfusionstyle.h"
 #include "problems/problemcasevalidator.h"
+#include "problems/freeprojectsetformat.h"
 #include "widgets/ojproblempropertywidget.h"
 #include "iconsmanager.h"
 #include "widgets/newclassdialog.h"
@@ -578,8 +579,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionCut->setEnabled(true);
         ui->actionFoldAll->setEnabled(e->document()->count()>0);
         ui->actionIndent->setEnabled(!e->readOnly());
-
-        ui->actionPaste->setEnabled(!e->readOnly() && !QGuiApplication::clipboard()->text().isEmpty());
+        ui->actionPaste->setEnabled(!e->readOnly());
         ui->actionRedo->setEnabled(e->canRedo());
         ui->actionUndo->setEnabled(e->canUndo());
         ui->actionSave->setEnabled(!e->readOnly());
@@ -1545,7 +1545,12 @@ void MainWindow::updateCompilerSet()
         Editor *e = mEditorList->getEditor();
         if ( !e || e->inProject()) {
             index = mProject->options().compilerSet;
+        } else if (e->syntaxer()
+                   && e->syntaxer()->language()==QSynedit::ProgrammingLanguage::Makefile
+                   && mProject->directory() == extractFileDir(e->filename())) {
+            index = mProject->options().compilerSet;
         }
+
         if (index < 0 || index>=mCompilerSet->count()) {
             index = pSettings->compilerSets().defaultIndex();
         }
@@ -1710,6 +1715,7 @@ void MainWindow::updateActionIcons()
     pIconsManager->setIcon(ui->btnRemoveProblem, IconsManager::ACTION_MISC_CROSS);
     pIconsManager->setIcon(ui->btnSaveProblemSet, IconsManager::ACTION_FILE_SAVE_AS);
     pIconsManager->setIcon(ui->btnLoadProblemSet, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnImportFPS, IconsManager::ACTION_CODE_BACK);
 
     pIconsManager->setIcon(ui->btnAddProblemCase, IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemoveProblemCase, IconsManager::ACTION_MISC_REMOVE);
@@ -5137,6 +5143,7 @@ void MainWindow::onCompilerSetChanged(int index)
                     QMessageBox::Yes | QMessageBox::No,
                     QMessageBox::No) != QMessageBox::Yes) {
             mCompilerSet->setCurrentIndex(mProject->options().compilerSet);
+            //ui->actionRebuild->trigger();
             return;
         }
         mProject->setCompilerSet(index);
@@ -6288,10 +6295,13 @@ void MainWindow::on_actionProject_options_triggered()
 {
     if (!mProject)
         return;
+//    int oldCompilerSet = mProject->options().compilerSet;
     QString oldName = mProject->name();
     PSettingsDialog dialog = SettingsDialog::projectOptionDialog();
     dialog->exec();
     updateCompilerSet();
+//    if (oldCompilerSet != mProject->options().compilerSet)
+//        ui->actionRebuild->trigger();
 }
 
 
@@ -8896,5 +8906,26 @@ SearchDialog *MainWindow::searchDialog() const
 void MainWindow::on_actionGenerate_Assembly_triggered()
 {
     doGenerateAssembly();
+}
+
+
+void MainWindow::on_btnImportFPS_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Import FPS Problem Set"),
+                QString(),
+                tr("FPS Problem Set Files (*.fps)"));
+    if (!fileName.isEmpty()) {
+        try {
+            QList<POJProblem> problems = importFreeProblemSet(fileName);
+            mOJProblemSetModel.addProblems(problems);
+        } catch (FileError& error) {
+            QMessageBox::critical(this,tr("Load Error"),
+                                  error.reason());
+        }
+    }
+    ui->lblProblemSet->setText(mOJProblemSetModel.name());
+    ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(0,0));
 }
 

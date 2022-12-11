@@ -540,7 +540,7 @@ void CodeCompletionPopup::filterList(const QString &member)
 }
 
 void CodeCompletionPopup::getCompletionFor(
-        const QStringList &ownerExpression,
+        QStringList ownerExpression,
         const QString& memberOperator,
         const QStringList& memberExpression,
         const QString &fileName,
@@ -808,7 +808,7 @@ void CodeCompletionPopup::getCompletionFor(
     }
 }
 
-void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QString& preWord, const QStringList &ownerExpression, const QString &memberOperator, const QStringList &memberExpression, const QString &fileName, int line)
+void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QString& preWord, QStringList ownerExpression, const QString &memberOperator, const QStringList &memberExpression, const QString &fileName, int line)
 {
     if(!mParser) {
         return;

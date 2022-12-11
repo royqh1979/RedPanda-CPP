@@ -1619,13 +1619,13 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
                 matchingIndents = rangeAfterFirstToken.matchingIndents;
                 indentAdded = true;
                 l = startLine;
-            } else if (mSyntaxer->language() == ProgrammingLanguage::Cpp
+            } else if (mSyntaxer->language() == ProgrammingLanguage::CPP
                        && trimmedLineText.startsWith('#')
                        && attr == ((CppSyntaxer *)mSyntaxer.get())->preprocessorAttribute()) {
                 indentAdded = true;
                 indentSpaces=0;
                 l=0;
-            } else if (mSyntaxer->language() == ProgrammingLanguage::Cpp
+            } else if (mSyntaxer->language() == ProgrammingLanguage::CPP
                        && mSyntaxer->isLastLineCommentNotFinished(rangePreceeding.state)
                        ) {
                 // last line is a not finished comment,
@@ -2906,7 +2906,7 @@ void SynEdit::doAddChar(QChar AChar)
         if (mActiveSelectionMode==SelectionMode::Normal
                 && mOptions.testFlag(eoAutoIndent)
                 && mSyntaxer
-                && mSyntaxer->language() == ProgrammingLanguage::Cpp
+                && mSyntaxer->language() == ProgrammingLanguage::CPP
                 && (oldCaretY<=mDocument->count()) ) {
 
             //unindent if ':' at end of the line
@@ -5479,7 +5479,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     int caretY=pos.line;
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
-        if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent)) {
+        if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent)) {
             QString s = trimLeft(text[0]);
             if (sLeftSide.isEmpty()) {
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
@@ -5509,7 +5509,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             if (i==text.length()-1) {
                 str = sRightSide;
             } else {
-                if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
+                if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent) && notInComment) {
                     str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
                 } else {
                     str = "";
@@ -5519,7 +5519,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
             str = text[i];
             if (i==text.length()-1)
                 str += sRightSide;
-            if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::Cpp && mOptions.testFlag(eoAutoIndent) && notInComment) {
+            if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent) && notInComment) {
                 int indentSpaces = calcIndentSpaces(caretY,str,true);
                 str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
             }

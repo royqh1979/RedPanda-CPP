@@ -3,7 +3,13 @@ Red Panda C++ Version 2.6
   - enhancement: Highlighter for makefiles
   - fix: QSortFilterProxyModel not correctly cleared when exiting and project closed. (ASSERT fails in DEBUG mode.)
   - enhancement: Windows installers now use UNICODE encoding.
-  - fix: can't correctly show code suggestions after "template <"
+  - fix: Can't correctly show code suggestions after "template <"
+  - enhancement: Better code completion support for macros
+  - fix: Paste not enabled when create a new file and system clipboard is empty.
+  - enhancement: Auto rebuild when project's compiler set changed.
+  - enhancement: When current file is the project's makefile, show project's compiler set in the toolbar.
+  - enhancement: Prevent error of "del" to stop make when rebuild project.
+  - enhancement: Import FPS (free problem set) files.
 
 Red Panda C++ Version 2.5
 

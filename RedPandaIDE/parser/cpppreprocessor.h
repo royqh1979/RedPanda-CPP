@@ -94,6 +94,8 @@ public:
     const QList<QString> &projectIncludePathList() const;
     void setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream);
 
+    static QList<PDefineArgToken> tokenizeValue(const QString& value);
+
 private:
     void preprocessBuffer();
     void skipToEndOfPreprocessor();
@@ -128,44 +130,43 @@ private:
     void invalidDefinesInFile(const QString& fileName);
 
     void parseArgs(PDefine define);
-    QList<PDefineArgToken> tokenizeValue(const QString& value);
 
     QStringList removeComments(const QStringList& text);
     /*
      * '_','a'..'z','A'..'Z','0'..'9'
      */
-    bool isWordChar(const QChar& ch);
+static  bool isWordChar(const QChar& ch);
     /*
      * 'A'..'Z', '0'..'9', 'a'..'z', '_', '*', '&', '~'
      */
-    bool isIdentChar(const QChar& ch);
+static  bool isIdentChar(const QChar& ch);
     /*
      * '\r','\n'
      */
-    bool isLineChar(const QChar& ch);
+static  bool isLineChar(const QChar& ch);
     /*
      *  '\t' ' '
      */
-    bool isSpaceChar(const QChar& ch);
+static  bool isSpaceChar(const QChar& ch);
     /*
      * '+', '-', '*', '/', '!', '=', '<', '>', '&', '|', '^'
      */
-    bool isOperatorChar(const QChar& ch);
+static  bool isOperatorChar(const QChar& ch);
 
     /*
      * 'A'..'Z', 'a'..'z', '_'
      */
-    bool isMacroIdentChar(const QChar& ch);
+static  bool isMacroIdentChar(const QChar& ch);
 
     /*
      * '0'..'9'
      */
-    bool isDigit(const QChar& ch);
+static  bool isDigit(const QChar& ch);
 
     /*
      * '0'..'9','x',X','a'..'f','A'..'F','u','U','l','L'
      */
-    bool isNumberChar(const QChar& ch);
+static  bool isNumberChar(const QChar& ch);
 
     QString lineBreak();
 

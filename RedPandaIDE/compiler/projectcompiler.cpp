@@ -311,9 +311,9 @@ void ProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
     if (mProject->options().type == ProjectType::DynamicLib)
-        writeln(file, QString("\t${RM} $(CLEANOBJ) $(CLEAN_DEF) $(CLEAN_STATIC) > %1 2>&1").arg(NULL_FILE));
+        writeln(file, QString("\t-${RM} $(CLEANOBJ) $(CLEAN_DEF) $(CLEAN_STATIC) > %1 2>&1").arg(NULL_FILE));
     else
-        writeln(file, QString("\t${RM} $(CLEANOBJ) > %1 2>&1").arg(NULL_FILE));
+        writeln(file, QString("\t-${RM} $(CLEANOBJ) > %1 2>&1").arg(NULL_FILE));
     writeln(file);
 }
 

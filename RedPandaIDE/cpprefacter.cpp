@@ -207,7 +207,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         QByteArray encoding;
         editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
-    editor.setSyntaxer(syntaxerManager.getCppSyntaxer());
+    editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
     int posY = 0;
     while (posY < editor.document()->count()) {
         QString line = editor.document()->getString(posY);
@@ -272,7 +272,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
     }
     QStringList newContents;
-    editor.setSyntaxer(syntaxerManager.getCppSyntaxer());
+    editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
     int posY = 0;
     while (posY < editor.document()->count()) {
         QString line = editor.document()->getString(posY);

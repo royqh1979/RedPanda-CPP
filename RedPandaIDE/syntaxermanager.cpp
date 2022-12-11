@@ -36,14 +36,14 @@ SyntaxerManager::SyntaxerManager()
 QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage language)
 {
     switch(language) {
-    case QSynedit::ProgrammingLanguage::Cpp:
-        return getCppSyntaxer();
-    case QSynedit::ProgrammingLanguage::Asssembly:
-        return getAsmSyntaxer();
+    case QSynedit::ProgrammingLanguage::CPP:
+        return std::make_shared<QSynedit::CppSyntaxer>();
+    case QSynedit::ProgrammingLanguage::Assembly:
+        return std::make_shared<QSynedit::ASMSyntaxer>();
     case QSynedit::ProgrammingLanguage::Makefile:
-        return getMakefileSyntaxer();
+        return std::make_shared<QSynedit::MakefileSyntaxer>();
     case QSynedit::ProgrammingLanguage::GLSL:
-        return getGLSLSyntaxer();
+        return std::make_shared<QSynedit::GLSLSyntaxer>();
     default:
         return QSynedit::PSyntaxer();
     }
@@ -59,15 +59,15 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename)
             || suffix == "hxx" || suffix == "hh" || suffix == "C"
             || suffix == "CPP" || suffix =="H" || suffix == "c++"
             || suffix == "h++") {
-        return getCppSyntaxer();
+        return getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
-        return getGLSLSyntaxer();
+        return getSyntaxer(QSynedit::ProgrammingLanguage::GLSL);
     } else if (suffix == "s" || suffix == "asm") {
-        return getAsmSyntaxer();
+        return getSyntaxer(QSynedit::ProgrammingLanguage::Assembly);
     } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
-        return getMakefileSyntaxer();
+        return getSyntaxer(QSynedit::ProgrammingLanguage::Makefile);
     } else if (suffix.isEmpty()) {
-        return getCppSyntaxer();
+        return getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     }
     return QSynedit::PSyntaxer();
 }
@@ -77,26 +77,6 @@ QSynedit::PSyntaxer SyntaxerManager::copy(QSynedit::PSyntaxer syntaxer)
     if (!syntaxer)
         return QSynedit::PSyntaxer();
     return getSyntaxer(syntaxer->language());
-}
-
-QSynedit::PSyntaxer SyntaxerManager::getCppSyntaxer()
-{
-    return std::make_shared<QSynedit::CppSyntaxer>();
-}
-
-QSynedit::PSyntaxer SyntaxerManager::getAsmSyntaxer()
-{
-    return std::make_shared<QSynedit::ASMSyntaxer>();
-}
-
-QSynedit::PSyntaxer SyntaxerManager::getGLSLSyntaxer()
-{
-    return std::make_shared<QSynedit::GLSLSyntaxer>();
-}
-
-QSynedit::PSyntaxer SyntaxerManager::getMakefileSyntaxer()
-{
-    return std::make_shared<QSynedit::MakefileSyntaxer>();
 }
 
 void SyntaxerManager::applyColorScheme(QSynedit::PSyntaxer syntaxer, const QString &schemeName)

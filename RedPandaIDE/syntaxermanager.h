@@ -26,10 +26,6 @@ public:
     QSynedit::PSyntaxer getSyntaxer(QSynedit::ProgrammingLanguage language);
     QSynedit::PSyntaxer getSyntaxer(const QString& filename);
     QSynedit::PSyntaxer copy(QSynedit::PSyntaxer syntaxer);
-    QSynedit::PSyntaxer getCppSyntaxer();
-    QSynedit::PSyntaxer getAsmSyntaxer();
-    QSynedit::PSyntaxer getGLSLSyntaxer();
-    QSynedit::PSyntaxer getMakefileSyntaxer();
     void applyColorScheme(QSynedit::PSyntaxer syntaxer, const QString& schemeName);
 };
 

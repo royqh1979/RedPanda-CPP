@@ -416,7 +416,7 @@ PStatement CppParser::findStatementOf(const QString &fileName,
 
 PEvalStatement CppParser::evalExpression(
         const QString &fileName,
-        const QStringList &phraseExpression,
+        QStringList &phraseExpression,
         const PStatement &currentScope)
 {
     QMutexLocker locker(&mMutex);
@@ -3925,6 +3925,24 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int lin
     return result;
 }
 
+PStatement CppParser::findMacro(const QString &phrase, const QString &fileName)
+{
+    const StatementMap& statementMap =mStatementList.childrenStatements(nullptr);
+    if (statementMap.isEmpty())
+        return PStatement();
+    StatementList statements = statementMap.values(phrase);
+    PFileIncludes includes = mPreprocessor.includesList().value(fileName,PFileIncludes());
+    foreach (const PStatement& s, statements) {
+        if (s->kind == StatementKind::skPreprocessor) {
+            if (includes && !includes->includeFiles.contains(s->fileName)
+                    && !includes->includeFiles.contains(s->definitionFileName))
+                continue;
+            return s;
+        }
+    }
+    return PStatement();
+}
+
 PStatement CppParser::findMemberOfStatement(const QString &phrase,
                                             const PStatement& scopeStatement)
 {
@@ -4017,7 +4035,7 @@ PStatement CppParser::findStatementInNamespace(const QString &name, const QStrin
 }
 
 PEvalStatement CppParser::doEvalExpression(const QString& fileName,
-                                       const QStringList& phraseExpression,
+                                       QStringList& phraseExpression,
                                        int &pos,
                                        const PStatement& scope,
                                        const PEvalStatement& previousResult,
@@ -4032,7 +4050,7 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
                                    freeScoped);
 }
 
-PEvalStatement CppParser::doEvalPointerArithmetic(const QString &fileName, const QStringList &phraseExpression, int &pos, const PStatement &scope, const PEvalStatement &previousResult, bool freeScoped)
+PEvalStatement CppParser::doEvalPointerArithmetic(const QString &fileName, QStringList &phraseExpression, int &pos, const PStatement &scope, const PEvalStatement &previousResult, bool freeScoped)
 {
     if (pos>=phraseExpression.length())
         return PEvalStatement();
@@ -4083,7 +4101,7 @@ PEvalStatement CppParser::doEvalPointerArithmetic(const QString &fileName, const
 
 PEvalStatement CppParser::doEvalPointerToMembers(
         const QString &fileName,
-        const QStringList &phraseExpression,
+        QStringList &phraseExpression,
         int &pos,
         const PStatement &scope,
         const PEvalStatement &previousResult,
@@ -4126,7 +4144,7 @@ PEvalStatement CppParser::doEvalPointerToMembers(
 }
 
 PEvalStatement CppParser::doEvalCCast(const QString &fileName,
-                                                   const QStringList &phraseExpression,
+                                                   QStringList &phraseExpression,
                                                    int &pos,
                                                    const PStatement& scope,
                                                    const PEvalStatement& previousResult,
@@ -4258,7 +4276,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
 }
 
 PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
-                                                   const QStringList &phraseExpression,
+                                                   QStringList &phraseExpression,
                                                    int &pos,
                                                    const PStatement& scope,
                                                    const PEvalStatement& previousResult,
@@ -4390,7 +4408,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
 }
 
 PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
-                                                   const QStringList &phraseExpression,
+                                                   QStringList &phraseExpression,
                                                    int &pos,
                                                    const PStatement& scope,
                                                    const PEvalStatement& previousResult,
@@ -4445,7 +4463,7 @@ PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
 }
 
 PEvalStatement CppParser::doEvalTerm(const QString &fileName,
-                                                   const QStringList &phraseExpression,
+                                                   QStringList &phraseExpression,
                                                    int &pos,
                                                    const PStatement& scope,
                                                    const PEvalStatement& previousResult,
@@ -4459,6 +4477,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
     PEvalStatement result;
     if (pos>=phraseExpression.length())
         return result;
+//    qDebug()<<"eval term"<<phraseExpression[pos];
     if (phraseExpression[pos]=="(") {
         pos++;
         result = doEvalExpression(fileName,phraseExpression,pos,scope,PEvalStatement(),freeScoped);
@@ -4506,6 +4525,11 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 } else {
                     statement = findStatementInScope(phraseExpression[pos],previousResult->effectiveTypeStatement);
                 }
+//                if (!statement) {
+//                    statement = findMacro(
+//                                phraseExpression[pos],
+//                                fileName);
+//                }
             }
             pos++;
             if (statement && statement->kind == StatementKind::skConstructor) {
@@ -4534,6 +4558,15 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                     break;
                 case StatementKind::skFunction:
                     result = doCreateEvalFunction(fileName,statement);
+                    break;
+                case StatementKind::skPreprocessor:
+                    //qDebug()<<"before"<<phraseExpression;
+                    pos--;
+                    if (expandMacro(phraseExpression,pos,statement)) {
+                        //qDebug()<<"after"<<phraseExpression;
+                        result = doEvalExpression(fileName,phraseExpression,pos,scope,previousResult,freeScoped);
+                    } else
+                        result = PEvalStatement();
                     break;
                 default:
                     result = PEvalStatement();
@@ -4587,6 +4620,114 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
 //    }
 
     return result;
+}
+
+bool CppParser::expandMacro(QStringList &phraseExpression, int &pos, const PStatement &macro)
+{
+    QString s;
+    if (macro->args.isEmpty()) {
+        s=macro->value;
+        phraseExpression.removeAt(pos);
+    } else {
+        QString args=macro->args.mid(1,macro->args.length()-2).trimmed(); // remove '(' ')'
+
+        if(args=="")
+            return false;
+        QStringList argList = args.split(',');
+        QList<bool> argUsed;
+        for (int i=0;i<argList.size();i++) {
+            argList[i]=argList[i].trimmed();
+            argUsed.append(false);
+        }
+        QList<PDefineArgToken> tokens = mPreprocessor.tokenizeValue(macro->value);
+
+        QString formatStr = "";
+        DefineArgTokenType lastTokenType=DefineArgTokenType::Other;
+        int index;
+        foreach (const PDefineArgToken& token, tokens) {
+            switch(token->type) {
+            case DefineArgTokenType::Identifier:
+                index = argList.indexOf(token->value);
+                if (index>=0) {
+                    argUsed[index] = true;
+                    if (lastTokenType == DefineArgTokenType::Sharp) {
+                        formatStr+= "\"%"+QString("%1").arg(index+1)+"\"";
+                        break;
+                    } else {
+                        formatStr+= "%"+QString("%1").arg(index+1);
+                        break;
+                    }
+                }
+                formatStr += token->value;
+                break;
+            case DefineArgTokenType::DSharp:
+            case DefineArgTokenType::Sharp:
+                break;
+            case DefineArgTokenType::Space:
+            case DefineArgTokenType::Symbol:
+                formatStr+=token->value;
+                break;
+            default:
+                break;
+            }
+            lastTokenType = token->type;
+        }
+        QStringList values;
+        int i;
+        int level=1;
+        QString current;
+        for (i=pos+2;i<phraseExpression.length();i++) {
+            if (phraseExpression[i]==')') {
+                level--;
+                if (level==0) {
+                    values.append(current);
+                    break;
+                }
+            } else if (phraseExpression[i]=='(') {
+                level++;
+            } else {
+                if (level==1 && phraseExpression[i]==',') {
+                     values.append(current);
+                     current.clear();
+                     continue;
+                }
+            }
+            current+=phraseExpression[i];
+        }
+        if (level!=0)
+            return false;
+        if (values.length()!=argList.length())
+            return false;
+        s = formatStr;
+        for (int i=0;i<values.length();i++) {
+            if (argUsed[i]) {
+                QString argValue = values[i];
+                s=s.arg(argValue.trimmed());
+            }
+        }
+        for (int j=pos;j<=i;j++) {
+            phraseExpression.removeAt(pos);
+        }
+    }
+
+    QSynedit::CppSyntaxer syntaxer;
+    syntaxer.resetState();
+    syntaxer.setLine(s,0);
+    int i=0;
+    while (!syntaxer.eol()) {
+        QString token=syntaxer.getToken();
+        QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
+        switch(attr->tokenType()) {
+        case QSynedit::TokenType::Space:
+        case QSynedit::TokenType::Comment:
+            break;
+        default:
+            phraseExpression.insert(pos+i,token);
+            i++;
+        }
+        syntaxer.next();
+    }
+    return true;
 }
 
 PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceStatement)

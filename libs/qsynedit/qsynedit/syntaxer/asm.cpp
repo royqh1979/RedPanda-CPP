@@ -300,7 +300,7 @@ QString ASMSyntaxer::languageName()
 
 ProgrammingLanguage ASMSyntaxer::language()
 {
-    return ProgrammingLanguage::Asssembly;
+    return ProgrammingLanguage::Assembly;
 }
 
 QString ASMSyntaxer::getToken() const

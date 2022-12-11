@@ -80,7 +80,8 @@ public:
     void rename(const QString& newName);
     QString name() const;
     QString exportFilename() const;
-    void addProblem(POJProblem problem);
+    void addProblem(const POJProblem& problem);
+    void addProblems(const QList<POJProblem> &problems);
     POJProblem problem(int index);
     void removeProblem(int index);
     bool problemNameUsed(const QString& name);

@@ -1627,7 +1627,7 @@ QString CppSyntaxer::languageName()
 
 ProgrammingLanguage CppSyntaxer::language()
 {
-    return ProgrammingLanguage::Cpp;
+    return ProgrammingLanguage::CPP;
 }
 
 SyntaxerState CppSyntaxer::getState() const

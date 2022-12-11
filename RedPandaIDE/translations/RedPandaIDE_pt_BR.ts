@@ -4732,6 +4732,14 @@
         <source>Generate Assembly</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Import FPS Problem Set</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>FPS Problem Set Files (*.fps)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -6166,6 +6174,10 @@
     <message>
         <source>Reserve Word for Types</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Problem Case %1</source>
+        <translation type="unfinished">Caso do problema %1</translation>
     </message>
 </context>
 <context>

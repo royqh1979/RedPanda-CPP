@@ -81,8 +81,8 @@ enum class TokenType {
 enum class ProgrammingLanguage {
     DecideBySuffix,
     Composition,
-    Asssembly,
-    Cpp,
+    Assembly,
+    CPP,
     GLSL,
     Makefile,
     Custom

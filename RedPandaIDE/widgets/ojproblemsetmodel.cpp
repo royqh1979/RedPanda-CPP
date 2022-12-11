@@ -68,10 +68,20 @@ QString OJProblemSetModel::exportFilename() const
     return mProblemSet.exportFilename;
 }
 
-void OJProblemSetModel::addProblem(POJProblem problem)
+void OJProblemSetModel::addProblem(const POJProblem& problem)
 {
     beginInsertRows(QModelIndex(), mProblemSet.problems.count(), mProblemSet.problems.count());
     mProblemSet.problems.append(problem);
+    endInsertRows();
+}
+
+void OJProblemSetModel::addProblems(const QList<POJProblem> &problems)
+{
+    if (problems.isEmpty())
+        return;
+    beginInsertRows(QModelIndex(), mProblemSet.problems.count(), mProblemSet.problems.count()+problems.count()-1);
+    foreach( const POJProblem& p, problems)
+        mProblemSet.problems.append(p);
     endInsertRows();
 }
 

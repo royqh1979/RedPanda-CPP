@@ -748,6 +748,8 @@ private slots:
 
     void on_actionGenerate_Assembly_triggered();
 
+    void on_btnImportFPS_clicked();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
