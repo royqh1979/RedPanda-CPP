@@ -24,12 +24,11 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
             if (xml.name()=="item") {
                 currentProblem=std::make_shared<OJProblem>();
             } else if (currentProblem &&
-                       ( xml.name()=="sample_input"
-                         || xml.name()=="test_input")) {
+                       (xml.name()=="test_input")) {
                 currentCase = std::make_shared<OJProblemCase>();
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
                     if (attr.name() == "name") {
-                        currentCase->name = attr.value().toString();
+                        currentCase->name = attr.value().toString().trimmed();
                         break;
                     }
                 }
@@ -38,7 +37,7 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
                        xml.name()=="time_limit") {
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
                     if (attr.name() == "unit" && attr.value()=="ms") {
-                        currentEleName = xml.name().toString();
+                        currentEleName = attr.name().toString();
                         break;
                     }
                 }
@@ -46,7 +45,7 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
                        xml.name()=="memory_limit") {
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
                     if (attr.name() == "unit" && attr.value()=="mb") {
-                        currentEleName = xml.name().toString();
+                        currentEleName = attr.name().toString();
                         break;
                     }
                 }
@@ -60,15 +59,9 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
             }
             break;
         case QXmlStreamReader::TokenType::Characters:
-            if (currentCase &&
-                    (
-                        currentEleName=="test_input" ||
-                        currentEleName=="sample_input")) {
+            if (currentCase && currentProblem && currentEleName=="test_input") {
                     currentCase->input = xml.text().toString();
-            } else if (currentCase && currentProblem &&
-                       (
-                           currentEleName=="test_output" ||
-                           currentEleName=="sample_output")) {
+            } else if (currentCase && currentProblem && currentEleName=="test_output" ) {
                 currentCase->expected = xml.text().toString();
                 currentProblem->cases.append(currentCase);
                 currentCase.reset();
@@ -77,7 +70,9 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
             } else if (currentProblem &&  currentEleName=="hint") {
                 currentProblem->hint = xml.text().toString();
             } else if (currentProblem &&  currentEleName=="title") {
-                currentProblem->name = xml.text().toString();
+                currentProblem->name = xml.text().toString().trimmed();
+            } else if (currentProblem &&  currentEleName=="url") {
+                currentProblem->url = xml.text().toString().trimmed();
             } else if (currentProblem &&  currentEleName=="time_limit") {
                 currentProblem->timeLimit = xml.text().toInt();
             } else if (currentProblem &&  currentEleName=="memory_limit") {

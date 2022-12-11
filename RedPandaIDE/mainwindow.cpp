@@ -8915,7 +8915,7 @@ void MainWindow::on_btnImportFPS_clicked()
                 this,
                 tr("Import FPS Problem Set"),
                 QString(),
-                tr("FPS Problem Set Files (*.fps)"));
+                tr("FPS Problem Set Files (*.fps;*.xml)"));
     if (!fileName.isEmpty()) {
         try {
             QList<POJProblem> problems = importFreeProblemSet(fileName);
