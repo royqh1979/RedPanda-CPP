@@ -1430,6 +1430,7 @@ public:
         void loadPathList(const QString& name, QStringList& list);
         PCompilerSet loadSet(int index);
         void prepareCompatibleIndex();
+        static bool isTarget64Bit(const QString &target);
     private:
         CompilerSetList mList;
         int mDefaultIndex;

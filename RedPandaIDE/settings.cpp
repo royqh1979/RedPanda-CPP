@@ -27,6 +27,7 @@
 #include <QScreen>
 #include <QDesktopWidget>
 #include <QHash>
+#include <iterator>
 #ifdef Q_OS_LINUX
 #include <sys/sysinfo.h>
 #endif
@@ -2658,7 +2659,7 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& cc_pr
         return false;
     QString baseName = baseSet->name();
     QString platformName;
-    if (baseSet->target().contains("64") || baseSet->target() == "s390x") {
+    if (isTarget64Bit(baseSet->target())) {
         if (baseName.startsWith("TDM-GCC ")) {
             PCompilerSet set= addSet(baseSet);
             platformName = "32-bit";
@@ -3142,6 +3143,51 @@ QString Settings::CompilerSets::getKeyFromCompilerCompatibleIndex(int idx) const
     if (idx<0 || idx >= mCompilerCompatibleIndex.length())
         return QString();
     return mCompilerCompatibleIndex[idx];
+}
+
+bool Settings::CompilerSets::isTarget64Bit(const QString &target)
+{
+    static const auto generateSortedTargets = []() -> decltype(auto) {
+        /* Fetched from LLVM 15.0.6's arch parser,
+         *   `Triple::ArchType parseArch(StringRef ArchName)`
+         *   in `llvm/lib/Support/Triple.cpp`.
+         * The following non-CPU targets are not included:
+         *   nvptx64, le64, amdil64, hsail64, spir64, spirv64, renderscript64.
+         */
+        static QString targets[] = {
+            // x86_64
+            "amd64", "x86_64", "x86_64h",
+            // ppc64
+            "powerpc64", "ppu", "ppc64",
+            // ppc64le
+            "powerpc64le", "ppc64le",
+            // aarch64
+            "aarch64", "arm64", "arm64e",
+            // aarch64_be
+            "aarch64_be",
+            // aarch64_32
+            "aarch64_32", "arm64_32",
+            // mips64
+            "mips64", "mips64eb", "mipsn32", "mipsisa64r6", "mips64r6", "mipsn32r6",
+            // mips64el
+            "mips64el", "mipsn32el", "mipsisa64r6el", "mips64r6el", "mipsn32r6el",
+            // riscv64
+            "riscv64",
+            // systemz
+            "s390x", "systemz",
+            // sparcv9
+            "sparcv9", "sparc64",
+            // wasm64
+            "wasm64",
+            // loongarch64
+            "loongarch64",
+        };
+        std::sort(std::begin(targets), std::end(targets));
+        return (targets); // parentheses required for type deduction
+    };
+    static const auto &common64BitTargets = generateSortedTargets();
+    bool is64Bit = std::binary_search(std::begin(common64BitTargets), std::end(common64BitTargets), target);
+    return is64Bit;
 }
 
 Settings::Environment::Environment(Settings *settings):_Base(settings, SETTING_ENVIRONMENT)
