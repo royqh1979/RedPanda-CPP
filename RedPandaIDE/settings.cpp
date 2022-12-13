@@ -2653,8 +2653,10 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
 
 bool Settings::CompilerSets::addSets(const QString &folder, const QString& cc_prog) {
     foreach (const PCompilerSet& set, mList) {
-        if (set->binDirs().contains(folder))
-            return false;
+        if (set->binDirs().contains(folder)) {
+            if (extractFileName(set->cppCompiler())==cc_prog)
+                return false;
+        }
     }
     // Default, release profile
     PCompilerSet baseSet = addSet(folder,cc_prog);

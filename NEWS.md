@@ -11,7 +11,8 @@ Red Panda C++ Version 2.6
   - enhancement: Prevent error of "del" to stop make when rebuild project.
   - enhancement: Import FPS (free problem set) files.
   - enhancement: Show current problem's description in the problem list's mouse tip.
-  - enhancement: Show memory usage for problem cases.
+  - enhancement: Show memory usage for problem cases (windows only).
+  - enhancement: Show memory usage after console program exited.
 
 Red Panda C++ Version 2.5
 
