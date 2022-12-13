@@ -723,6 +723,38 @@
         <source>Executable suffix</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Locate C Compiler</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Executable files (*.exe)</source>
+        <translation type="unfinished">Arquivos executáveis (*.exe)</translation>
+    </message>
+    <message>
+        <source>Locate C++ Compiler</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate Make</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate GDB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate GDB Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate windres</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate gprof</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CppRefacter</name>
@@ -5977,23 +6009,23 @@
     </message>
     <message>
         <source>Cannot find the %1 &quot;%2&quot;</source>
-        <translation>Impossível encontrar %1 &quot;%2&quot;</translation>
+        <translation type="vanished">Impossível encontrar %1 &quot;%2&quot;</translation>
     </message>
     <message>
         <source>C Compiler</source>
-        <translation>Compilar C</translation>
+        <translation type="vanished">Compilar C</translation>
     </message>
     <message>
         <source>C++ Compiler</source>
-        <translation>Compilador C++</translation>
+        <translation type="vanished">Compilador C++</translation>
     </message>
     <message>
         <source>Maker</source>
-        <translation>Maker</translation>
+        <translation type="vanished">Maker</translation>
     </message>
     <message>
         <source>Debugger</source>
-        <translation>Depurador</translation>
+        <translation type="vanished">Depurador</translation>
     </message>
     <message>
         <source>C options</source>

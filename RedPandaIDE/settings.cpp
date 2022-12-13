@@ -1544,9 +1544,11 @@ void Settings::Editor::setTabToSpaces(bool tabToSpaces)
 
 Settings::CompilerSet::CompilerSet():
     mFullLoaded(false),
-    mAutoAddCharsetParams(true),
+    mCompilerType(CompilerType::Unknown),
+    mCompilerSetType(CompilerSetType::RELEASE),
+    mAutoAddCharsetParams(false),
     mExecCharset(ENCODING_SYSTEM_DEFAULT),
-    mStaticLink(true),
+    mStaticLink(false),
     mPreprocessingSuffix(DEFAULT_PREPROCESSING_SUFFIX),
     mCompilationProperSuffix(DEFAULT_COMPILATION_SUFFIX),
     mAssemblingSuffix(DEFAULT_ASSEMBLING_SUFFIX),
@@ -1770,34 +1772,34 @@ bool Settings::CompilerSet::dirsValid(QString &msg)
         return true;
 }
 
-bool Settings::CompilerSet::validateExes(QString &msg)
-{
-    msg ="";
-    if (!fileExists(mCCompiler)) {
-        msg += QObject::tr("Cannot find the %1 \"%2\"")
-                .arg(QObject::tr("C Compiler"))
-                .arg(mCCompiler);
-    }
-    if (!fileExists(mCppCompiler)) {
-        msg += QObject::tr("Cannot find the %1 \"%2\"")
-                .arg(QObject::tr("C++ Compiler"))
-                .arg(mCppCompiler);
-    }
-    if (!mMake.isEmpty() && !fileExists(mMake)) {
-        msg += QObject::tr("Cannot find the %1 \"%2\"")
-                .arg(QObject::tr("Maker"))
-                .arg(mMake);
-    }
-    if (!fileExists(mDebugger)) {
-        msg += QObject::tr("Cannot find the %1 \"%2\"")
-                .arg(QObject::tr("Debugger"))
-                .arg(mDebugger);
-    }
-    if (!msg.isEmpty())
-        return false;
-    else
-        return true;
-}
+//bool Settings::CompilerSet::validateExes(QString &msg)
+//{
+//    msg ="";
+//    if (!fileExists(mCCompiler)) {
+//        msg += QObject::tr("Cannot find the %1 \"%2\"")
+//                .arg(QObject::tr("C Compiler"))
+//                .arg(mCCompiler);
+//    }
+//    if (!fileExists(mCppCompiler)) {
+//        msg += QObject::tr("Cannot find the %1 \"%2\"")
+//                .arg(QObject::tr("C++ Compiler"))
+//                .arg(mCppCompiler);
+//    }
+//    if (!mMake.isEmpty() && !fileExists(mMake)) {
+//        msg += QObject::tr("Cannot find the %1 \"%2\"")
+//                .arg(QObject::tr("Maker"))
+//                .arg(mMake);
+//    }
+//    if (!fileExists(mDebugger)) {
+//        msg += QObject::tr("Cannot find the %1 \"%2\"")
+//                .arg(QObject::tr("Debugger"))
+//                .arg(mDebugger);
+//    }
+//    if (!msg.isEmpty())
+//        return false;
+//    else
+//        return true;
+//}
 
 const QString &Settings::CompilerSet::CCompiler() const
 {
@@ -1806,7 +1808,17 @@ const QString &Settings::CompilerSet::CCompiler() const
 
 void Settings::CompilerSet::setCCompiler(const QString &name)
 {
-    mCCompiler = name;
+    if (mCCompiler!=name) {
+        mCCompiler = name;
+        if (mCompilerType == CompilerType::Unknown) {
+            QString temp=extractFileName(mCCompiler);
+            if (temp == CLANG_PROGRAM) {
+                setCompilerType(CompilerType::Clang);
+            } else if (temp == GCC_PROGRAM) {
+                setCompilerType(CompilerType::GCC);
+            }
+        }
+    }
 }
 
 const QString &Settings::CompilerSet::cppCompiler() const
@@ -2403,6 +2415,26 @@ int Settings::CompilerSet::mainVersion()
 
 }
 
+bool Settings::CompilerSet::canCompileC()
+{
+    return fileExists(mCCompiler);
+}
+
+bool Settings::CompilerSet::canCompileCPP()
+{
+    return fileExists(mCppCompiler);
+}
+
+bool Settings::CompilerSet::canMake()
+{
+    return fileExists(mMake);
+}
+
+bool Settings::CompilerSet::canDebug()
+{
+    return fileExists(mDebugger);
+}
+
 void Settings::CompilerSet::setUserInput()
 {
     mUseCustomCompileParams = false;
@@ -2800,7 +2832,7 @@ void Settings::CompilerSets::loadSets()
     PCompilerSet pCurrentSet = defaultSet();
     if (pCurrentSet) {
         QString msg;
-        if (!pCurrentSet->dirsValid(msg) || !pCurrentSet->validateExes(msg)) {
+        if (!pCurrentSet->dirsValid(msg)) {
             if (QMessageBox::warning(nullptr,QObject::tr("Confirm"),
                        QObject::tr("The following problems were found during validation of compiler set \"%1\":")
                                      .arg(pCurrentSet->name())

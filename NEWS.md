@@ -14,6 +14,11 @@ Red Panda C++ Version 2.6
   - enhancement: Show memory usage for problem cases (windows only).
   - enhancement: Show memory usage after console program exited.
   - fix: If clang and g++ are in the same folder, only the compiler sets for gcc are auto generated.
+  - fix: Buttons in options -> compiler -> compiler set -> programs are not usable.
+  - enhancement: Don't check existence of gcc/g++/make/gdb at startup.
+  - enhancement: Auto disable "compile" button if gcc doesn't exist.
+  - enhancement: Auto disable "debug" button if gdb doesn't exist.
+  - enhancement: Auto disable "compile" button for project if make doesn't exist.
 
 Red Panda C++ Version 2.5
 

@@ -1249,8 +1249,12 @@ public:
 
         int mainVersion();
 
+        bool canCompileC();
+        bool canCompileCPP();
+        bool canMake();
+        bool canDebug();
         bool dirsValid(QString& msg);
-        bool validateExes(QString& msg);
+//        bool validateExes(QString& msg);
         //properties
         const QString& CCompiler() const;
         void setCCompiler(const QString& name);
