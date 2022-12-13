@@ -902,8 +902,8 @@ public:
         int mCaseEditorFontSize;
         bool mCaseEditorFontOnlyMonospaced;
         bool mEnableCaseLimit;
-        size_t mCaseTimeout; //ms
-        size_t mCaseMemoryLimit; //kb
+        qulonglong mCaseTimeout; //ms
+        qulonglong mCaseMemoryLimit; //kb
 
     protected:
         void doSave() override;

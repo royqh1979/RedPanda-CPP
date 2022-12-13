@@ -497,6 +497,7 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
                  return "";
         }
         break;
+#ifdef Q_OS_WIN
     case 2:
         if (role == Qt::DisplayRole) {
              POJProblemCase problemCase = mProblem->cases[index.row()];
@@ -507,6 +508,7 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
                  return "";
         }
         break;
+#endif
     }
 
     return QVariant();
@@ -543,7 +545,11 @@ Qt::ItemFlags OJProblemModel::flags(const QModelIndex &idx) const
 
 int OJProblemModel::columnCount(const QModelIndex &/*parent*/) const
 {
+#ifdef Q_OS_WIN
     return 3;
+#else
+    return 2;
+#endif
 }
 
 QVariant OJProblemModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -554,8 +560,10 @@ QVariant OJProblemModel::headerData(int section, Qt::Orientation orientation, in
             return tr("Name");
         case 1:
             return tr("Time(ms)");
+#ifdef Q_OS_WIN
         case 2:
             return tr("Memory(kb)");
+#endif
         }
     }
     return QVariant();

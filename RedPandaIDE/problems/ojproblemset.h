@@ -46,8 +46,8 @@ struct OJProblemCase {
     QString expectedOutputFileName;
     ProblemCaseTestState testState; // no persistence
     QString output; // no persistence
-    size_t runningTime; // no persistence
-    size_t runningMemory; // no persistence;
+    qulonglong runningTime; // no persistence
+    qulonglong runningMemory; // no persistence;
     int firstDiffLine; // no persistence
     int outputLineCounts; // no persistence
     int expectedLineCounts;

@@ -28,6 +28,8 @@ using std::vector;
 #include <sys/stat.h>        /* For mode constants */
 #include <fcntl.h>           /* For O_* constants */
 #include <chrono>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <sys/wait.h>
 #define MAX_COMMAND_LENGTH 32768
 #define MAX_ERROR_LENGTH 2048
@@ -70,7 +72,7 @@ vector<string> GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit)
 
 string unescapeSpaces(const string& s) {
     string result;
-    int i=0;
+    size_t i=0;
     while(i<s.length()) {
         if (s[i]=='%' && (i+2)<s.length() && s[i+1]=='2' && s[i+2]=='0') {
             result.push_back(' ');
@@ -83,7 +85,8 @@ string unescapeSpaces(const string& s) {
     return result;
 }
 
-int ExecuteCommand(vector<string>& command,bool reInp) {
+int ExecuteCommand(vector<string>& command,bool reInp, long int &peakMemory) {
+    peakMemory = 0;
     pid_t pid = fork();
     if (pid == 0) {
         string path_to_command;
@@ -133,11 +136,13 @@ int ExecuteCommand(vector<string>& command,bool reInp) {
     } else {
         int status;
         pid_t w;
-        w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
+        struct rusage usage;
+        w = wait4(pid, &status, WUNTRACED | WCONTINUED, &usage);
         if (w==-1) {
-            perror("waitpid failed!");
+            perror("wait4 failed!");
             exit(EXIT_FAILURE);
         }
+        peakMemory = usage.ru_maxrss;
         if (WIFEXITED(status)) {
             return WEXITSTATUS(status);
         } else {
@@ -195,7 +200,8 @@ int main(int argc, char** argv) {
     auto starttime = std::chrono::high_resolution_clock::now();
 
     // Execute the command
-    int returnvalue = ExecuteCommand(command,reInp);
+    long int peakMemory;
+    int returnvalue = ExecuteCommand(command,reInp, peakMemory);
 
     // Get ending timestamp
     auto endtime = std::chrono::high_resolution_clock::now();
@@ -213,7 +219,7 @@ int main(int argc, char** argv) {
 
     // Done? Print return value of executed program
     printf("\n--------------------------------");
-    printf("\nProcess exited after %.4g seconds with return value %lu\n",seconds,returnvalue);
+    printf("\nProcess exited after %.4g seconds with return value %lu, %d KB mem used.\n",seconds,returnvalue,peakMemory);
     if (pauseAfterExit)
         PauseExit(returnvalue,reInp);
     return 0;
