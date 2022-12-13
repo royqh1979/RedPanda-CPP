@@ -125,6 +125,10 @@ void OJProblemSetModel::saveToFile(const QString &fileName, int currentIndex)
             problemObj["name"]=problem->name;
             problemObj["url"]=problem->url;
             problemObj["description"]=problem->description;
+            problemObj["time_limit"]=(int)problem->timeLimit;
+            problemObj["memory_limit"]=(int)problem->memoryLimit;
+            problemObj["time_limit_unit"]=(int)problem->timeLimitUnit;
+            problemObj["memory_limit_unit"]=(int)problem->memoryLimitUnit;
             if (fileExists(problem->answerProgram))
                 problemObj["answer_program"] = problem->answerProgram;
             QJsonArray cases;
@@ -184,6 +188,11 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
             POJProblem problem = std::make_shared<OJProblem>();
             problem->name = problemObj["name"].toString();
             problem->url = problemObj["url"].toString();
+            problem->timeLimit = problemObj["time_limit"].toInt();
+            problem->memoryLimit = problemObj["memory_limit"].toInt();
+            problem->timeLimitUnit = (ProblemTimeLimitUnit)problemObj["time_limit_unit"].toInt();
+            problem->memoryLimitUnit = (ProblemMemoryLimitUnit)problemObj["memory_limit_unit"].toInt();
+
             problem->description = problemObj["description"].toString();
             problem->answerProgram = problemObj["answer_program"].toString();
             QJsonArray casesArray = problemObj["cases"].toArray();
@@ -252,6 +261,15 @@ QVariant OJProblemSetModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         return mProblemSet.problems[index.row()]->name;
+    } else if (role == Qt::ToolTipRole) {
+        POJProblem problem = mProblemSet.problems[index.row()];
+
+        QString s;
+        s=QString("<h3>%1</h3>").arg(problem->name);
+        if (!problem->description.isEmpty())
+            s+=problem->description;
+
+        return s;
     }
     return QVariant();
 }
@@ -479,6 +497,16 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
                  return "";
         }
         break;
+    case 2:
+        if (role == Qt::DisplayRole) {
+             POJProblemCase problemCase = mProblem->cases[index.row()];
+             if (problemCase->testState == ProblemCaseTestState::Passed
+                     || problemCase->testState == ProblemCaseTestState::Failed)
+                 return problemCase->runningMemory/1024;
+             else
+                 return "";
+        }
+        break;
     }
 
     return QVariant();
@@ -515,7 +543,7 @@ Qt::ItemFlags OJProblemModel::flags(const QModelIndex &idx) const
 
 int OJProblemModel::columnCount(const QModelIndex &/*parent*/) const
 {
-    return 2;
+    return 3;
 }
 
 QVariant OJProblemModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -526,6 +554,8 @@ QVariant OJProblemModel::headerData(int section, Qt::Orientation orientation, in
             return tr("Name");
         case 1:
             return tr("Time(ms)");
+        case 2:
+            return tr("Memory(kb)");
         }
     }
     return QVariant();

@@ -18,11 +18,14 @@
 #define OJPROBLEMPROPERTYWIDGET_H
 
 #include <QDialog>
+#include <memory>
 
 namespace Ui {
 class OJProblemPropertyWidget;
 }
 
+class OJProblem;
+using POJProblem = std::shared_ptr<OJProblem>;
 class OJProblemPropertyWidget : public QDialog
 {
     Q_OBJECT
@@ -30,12 +33,8 @@ class OJProblemPropertyWidget : public QDialog
 public:
     explicit OJProblemPropertyWidget(QWidget *parent = nullptr);
     ~OJProblemPropertyWidget();
-    void setName(const QString& name);
-    void setUrl(const QString& url);
-    void setDescription(const QString& description);
-    QString name();
-    QString url();
-    QString description();
+    void loadFromProblem(POJProblem problem);
+    void saveToProblem(POJProblem problem);
 
 private slots:
     void on_btnOk_clicked();

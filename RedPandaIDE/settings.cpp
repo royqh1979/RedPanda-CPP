@@ -26,8 +26,6 @@
 #include <QStandardPaths>
 #include <QScreen>
 #include <QDesktopWidget>
-#include <QHash>
-#include <iterator>
 #ifdef Q_OS_LINUX
 #include <sys/sysinfo.h>
 #endif
@@ -332,6 +330,11 @@ QSize Settings::_Base::sizeValue(const QString &key)
 int Settings::_Base::intValue(const QString &key, int defaultValue)
 {
     return value(key,defaultValue).toInt();
+}
+
+unsigned int Settings::_Base::uintValue(const QString &key, unsigned int defaultValue)
+{
+    return value(key,defaultValue).toUInt();
 }
 
 QStringList Settings::_Base::stringListValue(const QString &key, const QStringList &defaultValue)
@@ -3478,24 +3481,34 @@ void Settings::Executor::setCaseEditorFontOnlyMonospaced(bool newCaseEditorFontO
     mCaseEditorFontOnlyMonospaced = newCaseEditorFontOnlyMonospaced;
 }
 
-int Settings::Executor::caseTimeout() const
+size_t Settings::Executor::caseTimeout() const
 {
     return mCaseTimeout;
 }
 
-void Settings::Executor::setCaseTimeout(int newCaseTimeout)
+void Settings::Executor::setCaseTimeout(size_t newCaseTimeout)
 {
     mCaseTimeout = newCaseTimeout;
 }
 
-bool Settings::Executor::enableCaseTimeout() const
+size_t Settings::Executor::caseMemoryLimit() const
 {
-    return mEnableCaseTimeout;
+    return mCaseMemoryLimit;
 }
 
-void Settings::Executor::setEnableCaseTimeout(bool newEnableCaseTimeout)
+void Settings::Executor::setCaseMemoryLimit(size_t newCaseMemoryLimit)
 {
-    mEnableCaseTimeout = newEnableCaseTimeout;
+    mCaseMemoryLimit = newCaseMemoryLimit;
+}
+
+bool Settings::Executor::enableCaseLimit() const
+{
+    return mEnableCaseLimit;
+}
+
+void Settings::Executor::setEnableCaseLimit(bool newValue)
+{
+    mEnableCaseLimit = newValue;
 }
 
 int Settings::Executor::caseEditorFontSize() const
@@ -3555,8 +3568,9 @@ void Settings::Executor::doSave()
     saveValue("case_editor_font_size",mCaseEditorFontSize);
     saveValue("case_editor_font_only_monospaced",mCaseEditorFontOnlyMonospaced);
     saveValue("case_timeout_ms", mCaseTimeout);
+    saveValue("case_memory_limit",mCaseMemoryLimit);
     remove("case_timeout");
-    saveValue("enable_case_timeout", mEnableCaseTimeout);
+    saveValue("enable_case_limit", mEnableCaseLimit);
 }
 
 bool Settings::Executor::pauseConsole() const
@@ -3595,8 +3609,14 @@ void Settings::Executor::doLoad()
     if (case_timeout>0)
         mCaseTimeout = case_timeout*1000;
     else
-        mCaseTimeout = intValue("case_timeout_ms", 2000);
-    mEnableCaseTimeout = boolValue("enable_case_timeout", true);
+        mCaseTimeout = uintValue("case_timeout_ms", 2000); //2000ms
+    mCaseMemoryLimit = uintValue("case_memory_limit",0); // kb
+
+    mEnableCaseLimit = boolValue("enable_case_limit", true);
+    //compatibility
+    if (boolValue("enable_time_limit", true)) {
+        mEnableCaseLimit=true;
+    }
 }
 
 

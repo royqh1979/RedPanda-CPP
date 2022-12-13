@@ -25,6 +25,8 @@
 class Runner;
 class Project;
 class Compiler;
+struct OJProblem;
+using POJProblem = std::shared_ptr<OJProblem>;
 struct OJProblemCase;
 using POJProblemCase = std::shared_ptr<OJProblemCase>;
 class CompilerManager : public QObject
@@ -47,8 +49,13 @@ public:
             const QString& arguments,
             const QString& workDir,
             const QStringList& extraBinDir);
-    void runProblem(const QString& filename, const QString& arguments, const QString& workDir, POJProblemCase problemCase);
-    void runProblem(const QString& filename, const QString& arguments, const QString& workDir, const QVector<POJProblemCase> &problemCases);
+    void runProblem(
+            const QString& filename, const QString& arguments, const QString& workDir, POJProblemCase problemCase,
+            const POJProblem& problem
+            );
+    void runProblem(const QString& filename, const QString& arguments, const QString& workDir, const QVector<POJProblemCase> &problemCases,
+                    const POJProblem& problem
+                    );
     void stopRun();
     void stopAllRunners();
     void stopPausing();
@@ -67,7 +74,9 @@ signals:
     void signalStopAllRunners();
 
 private slots:
-    void doRunProblem(const QString& filename, const QString& arguments, const QString& workDir, const QVector<POJProblemCase> &problemCases);
+    void doRunProblem(const QString& filename, const QString& arguments, const QString& workDir, const QVector<POJProblemCase> &problemCases,
+                      const POJProblem& problem
+                      );
     void onRunnerTerminated();
     void onRunnerPausing();
     void onCompileFinished();

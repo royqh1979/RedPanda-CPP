@@ -28,3 +28,34 @@ const QString &OJProblemCase::getId() const
 {
     return id;
 }
+
+size_t OJProblem::getTimeLimit()
+{
+    switch(timeLimitUnit) {
+    case ProblemTimeLimitUnit::Seconds:
+        return timeLimit*1000;
+    default:
+        return timeLimit;
+    }
+}
+
+size_t OJProblem::getMemoryLimit()
+{
+    switch(memoryLimitUnit) {
+    case ProblemMemoryLimitUnit::KB:
+        return memoryLimit*1024;
+    case ProblemMemoryLimitUnit::MB:
+        return memoryLimit*1024*1024;
+    default:
+        return memoryLimit*1024*1024*1024;
+    }
+}
+
+OJProblem::OJProblem() :
+    timeLimit(0),
+    memoryLimit(0),
+    timeLimitUnit(ProblemTimeLimitUnit::Milliseconds),
+    memoryLimitUnit(ProblemMemoryLimitUnit::MB)
+{
+
+}

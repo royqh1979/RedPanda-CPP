@@ -10,6 +10,8 @@ Red Panda C++ Version 2.6
   - enhancement: When current file is the project's makefile, show project's compiler set in the toolbar.
   - enhancement: Prevent error of "del" to stop make when rebuild project.
   - enhancement: Import FPS (free problem set) files.
+  - enhancement: Show current problem's description in the problem list's mouse tip.
+  - enhancement: Show memory usage for problem cases.
 
 Red Panda C++ Version 2.5
 

@@ -75,13 +75,20 @@
       <item>
        <widget class="QGroupBox" name="grpEnableTimeout">
         <property name="title">
-         <string>Timeout for Case Valdation</string>
+         <string>Case Valdation Limit</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Time Limit</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
           <widget class="QSpinBox" name="spinCaseTimeout">
            <property name="specialValueText">
             <string/>
@@ -90,7 +97,7 @@
             <string>ms</string>
            </property>
            <property name="minimum">
-            <number>100</number>
+            <number>0</number>
            </property>
            <property name="maximum">
             <number>1000000</number>
@@ -100,7 +107,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="2">
           <spacer name="horizontalSpacer_4">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -112,6 +119,23 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Memory Limit</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinMemoryLimit">
+           <property name="suffix">
+            <string>kb</string>
+           </property>
+           <property name="maximum">
+            <number>999999</number>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>

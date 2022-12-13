@@ -26,9 +26,11 @@ class OJProblemCasesRunner : public Runner
     Q_OBJECT
 public:
     explicit OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
-                                  const QVector<POJProblemCase>& problemCases, QObject *parent = nullptr);
+                                  const QVector<POJProblemCase>& problemCases,
+                                  QObject *parent = nullptr);
     explicit OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
-                                  POJProblemCase problemCase, QObject *parent = nullptr);
+                                  POJProblemCase problemCase,
+                                  QObject *parent = nullptr);
     //max size of output buffer
     int bufferSize() const;
     void setBufferSize(int newBufferSize);
@@ -42,6 +44,8 @@ public:
 
     int execTimeout() const;
     void setExecTimeout(int newExecTimeout);
+
+    void setMemoryLimit(size_t limit);
 
 signals:
     void caseStarted(const QString &caseId, int current, int total);
@@ -60,6 +64,7 @@ private:
     int mBufferSize;
     int mOutputRefreshTime;
     int mExecTimeout;
+    size_t mMemoryLimit;
 };
 
 #endif // OJPROBLEMCASESRUNNER_H

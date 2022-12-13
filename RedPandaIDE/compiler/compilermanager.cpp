@@ -316,27 +316,40 @@ void CompilerManager::run(
 }
 
 
-void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, POJProblemCase problemCase)
+void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, POJProblemCase problemCase,
+                                 const POJProblem& problem
+                                 )
 {
     QMutexLocker locker(&mRunnerMutex);
-    doRunProblem(filename, arguments, workDir, QVector<POJProblemCase> {problemCase});
+    doRunProblem(filename, arguments, workDir, QVector<POJProblemCase> {problemCase}, problem);
 
 }
 
-void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, const QVector<POJProblemCase>& problemCases)
+void CompilerManager::runProblem(const QString &filename, const QString &arguments, const QString &workDir, const QVector<POJProblemCase>& problemCases,
+                                 const POJProblem& problem
+                                 )
 {
     QMutexLocker locker(&mRunnerMutex);
-    doRunProblem(filename, arguments, workDir, problemCases);
+    doRunProblem(filename, arguments, workDir, problemCases, problem);
 }
-void CompilerManager::doRunProblem(const QString &filename, const QString &arguments, const QString &workDir, const QVector<POJProblemCase>& problemCases)
+void CompilerManager::doRunProblem(const QString &filename, const QString &arguments, const QString &workDir, const QVector<POJProblemCase>& problemCases,
+                                   const POJProblem& problem)
 {
     if (mRunner!=nullptr) {
         return;
     }
     OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCases);
     mRunner = execRunner;
-    if (pSettings->executor().enableCaseTimeout())
+    if (pSettings->executor().enableCaseLimit()) {
         execRunner->setExecTimeout(pSettings->executor().caseTimeout());
+        execRunner->setMemoryLimit(pSettings->executor().caseMemoryLimit()*1024); //convert kb to bytes
+    }
+    size_t timeLimit = problem->getTimeLimit();
+    size_t memoryLimit = problem->getMemoryLimit();
+    if (timeLimit>0)
+        execRunner->setExecTimeout(timeLimit);
+    if (memoryLimit)
+        execRunner->setMemoryLimit(memoryLimit);
     connect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
     connect(mRunner, &Runner::finished, mRunner ,&Runner::deleteLater);
     connect(mRunner, &Runner::finished, pMainWindow ,&MainWindow::onRunProblemFinished);

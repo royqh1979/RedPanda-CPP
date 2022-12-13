@@ -16,12 +16,22 @@
  */
 #include "ojproblempropertywidget.h"
 #include "ui_ojproblempropertywidget.h"
+#include "../problems/ojproblemset.h"
 
 OJProblemPropertyWidget::OJProblemPropertyWidget(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::OJProblemPropertyWidget)
 {
     ui->setupUi(this);
+    QFont f = ui->lbName->font();
+    f.setPixelSize(f.pixelSize()+2);
+    f.setBold(true);
+    ui->lbName->setFont(f);
+    ui->cbTimeLimitUnit->addItem(tr("sec"));
+    ui->cbTimeLimitUnit->addItem(tr("ms"));
+    ui->cbMemoryLimitUnit->addItem(tr("KB"));
+    ui->cbMemoryLimitUnit->addItem(tr("MB"));
+    ui->cbMemoryLimitUnit->addItem(tr("GB"));
 }
 
 OJProblemPropertyWidget::~OJProblemPropertyWidget()
@@ -29,38 +39,55 @@ OJProblemPropertyWidget::~OJProblemPropertyWidget()
     delete ui;
 }
 
-void OJProblemPropertyWidget::setName(const QString &name)
+void OJProblemPropertyWidget::loadFromProblem(POJProblem problem)
 {
-    QFont f = ui->lbName->font();
-    f.setPixelSize(f.pixelSize()+2);
-    f.setBold(true);
-    ui->lbName->setFont(f);
-    ui->lbName->setText(name);
+    if (!problem)
+        return;
+    ui->lbName->setText(problem->name);
+    ui->txtURL->setText(problem->url);
+    ui->txtDescription->setHtml(problem->description);
+    ui->spinMemoryLimit->setValue(problem->memoryLimit);
+    ui->spinTimeLimit->setValue(problem->timeLimit);
+    switch(problem->timeLimitUnit) {
+    case ProblemTimeLimitUnit::Seconds:
+        ui->cbTimeLimitUnit->setCurrentText(tr("sec"));
+        break;
+    case ProblemTimeLimitUnit::Milliseconds:
+        ui->cbTimeLimitUnit->setCurrentText(tr("ms"));
+        break;
+    }
+    switch(problem->memoryLimitUnit) {
+    case ProblemMemoryLimitUnit::KB:
+        ui->cbTimeLimitUnit->setCurrentText(tr("KB"));
+        break;
+    case ProblemMemoryLimitUnit::MB:
+        ui->cbTimeLimitUnit->setCurrentText(tr("MB"));
+        break;
+    case ProblemMemoryLimitUnit::GB:
+        ui->cbTimeLimitUnit->setCurrentText(tr("GB"));
+        break;
+    }
 }
 
-void OJProblemPropertyWidget::setUrl(const QString &url)
+void OJProblemPropertyWidget::saveToProblem(POJProblem problem)
 {
-    ui->txtURL->setText(url);
-}
-
-void OJProblemPropertyWidget::setDescription(const QString &description)
-{
-    ui->txtDescription->setHtml(description);
-}
-
-QString OJProblemPropertyWidget::name()
-{
-    return ui->lbName->text();
-}
-
-QString OJProblemPropertyWidget::url()
-{
-    return ui->txtURL->text();
-}
-
-QString OJProblemPropertyWidget::description()
-{
-    return ui->txtDescription->toHtml();
+    if (!problem)
+        return;
+    problem->name = ui->lbName->text();
+    problem->url = ui->txtURL->text();
+    problem->description = ui->txtDescription->toHtml();
+    problem->memoryLimit = ui->spinMemoryLimit->value();
+    problem->timeLimit = ui->spinTimeLimit->value();
+    if (ui->cbTimeLimitUnit->currentText()=="sec")
+        problem->timeLimitUnit = ProblemTimeLimitUnit::Seconds;
+    else
+        problem->timeLimitUnit = ProblemTimeLimitUnit::Milliseconds;
+    if (ui->cbTimeLimitUnit->currentText()=="KB")
+        problem->memoryLimitUnit = ProblemMemoryLimitUnit::KB;
+    else if (ui->cbTimeLimitUnit->currentText()=="MB")
+        problem->memoryLimitUnit = ProblemMemoryLimitUnit::MB;
+    else
+        problem->memoryLimitUnit = ProblemMemoryLimitUnit::GB;
 }
 
 void OJProblemPropertyWidget::on_btnOk_clicked()

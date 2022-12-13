@@ -348,6 +348,9 @@ private slots:
     void onFilesViewRename();
     void onProblemProperties();
     void onProblemOpenSource();
+    void onProblemRename();
+    void onProblemGotoUrl();
+
     void onLableProblemSetContextMenuRequested();
     void onBookmarkRemove();
     void onBookmarkRemoveAll();
@@ -881,6 +884,9 @@ private:
     //action for problem set
     QAction * mProblem_OpenSource;
     QAction * mProblem_Properties;
+    QAction * mProblem_Rename;
+    QAction * mProblem_GotoUrl;
+
 
     //action for problem
     QAction * mProblem_RunCurrentCase;

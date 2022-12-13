@@ -94,6 +94,7 @@
 #ifdef Q_OS_WIN
 #include <QMimeDatabase>
 #include <QMimeType>
+#include <QToolTip>
 #include <windows.h>
 #endif
 
@@ -1933,7 +1934,8 @@ void MainWindow::runExecutable(
         POJProblem problem = mOJProblemModel.problem();
         if (problem) {
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
-                                         problem->cases);
+                                         problem->cases,
+                                         problem);
             stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
@@ -1941,8 +1943,10 @@ void MainWindow::runExecutable(
         QModelIndex index = ui->tblProblemCases->currentIndex();
         if (index.isValid()) {
             POJProblemCase problemCase =mOJProblemModel.getCase(index.row());
+            POJProblem problem = mOJProblemModel.problem();
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
-                                     problemCase);
+                                         problemCase,
+                                         problem);
             stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
         }
@@ -2674,6 +2678,20 @@ void MainWindow::buildContextMenus()
                 );
     connect(mProblem_OpenSource, &QAction::triggered, this,
             &MainWindow::onProblemOpenSource);
+
+    mProblem_Rename=createActionFor(
+                tr("Rename Problem"),
+                ui->lstProblemSet
+                );
+    connect(mProblem_Rename, &QAction::triggered, this,
+            &MainWindow::onProblemRename);
+
+    mProblem_GotoUrl=createActionFor(
+                tr("Goto Url"),
+                ui->lstProblemSet
+                );
+    connect(mProblem_GotoUrl, &QAction::triggered, this,
+            &MainWindow::onProblemGotoUrl);
 
     //context menu signal for the problem list view
     ui->tblProblemCases->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -3558,6 +3576,9 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
     QMenu menu(this);
     QModelIndex idx = ui->lstProblemSet->currentIndex();
     mProblem_Properties->setEnabled(idx.isValid());
+    mProblem_Rename->setEnabled(idx.isValid());
+    menu.addAction(mProblem_Rename);
+    menu.addAction(mProblem_GotoUrl);
     if (idx.isValid()) {
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         QMenu * menuSetAnswer = new QMenu(&menu);
@@ -3614,7 +3635,11 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
         });
         menuSetAnswer->addAction(action);
         menu.addMenu(menuSetAnswer);
+        mProblem_GotoUrl->setEnabled(!problem->url.isEmpty());
         mProblem_OpenSource->setEnabled(!problem->answerProgram.isEmpty());
+    } else {
+        mProblem_GotoUrl->setEnabled(false);
+        mProblem_OpenSource->setEnabled(false);
     }
     menu.addAction(mProblem_OpenSource);
     menu.addAction(mProblem_Properties);
@@ -4044,15 +4069,9 @@ void MainWindow::onProblemProperties()
     if (!problem)
         return;
     OJProblemPropertyWidget dialog;
-    dialog.setName(problem->name);
-    dialog.setUrl(problem->url);
-    dialog.setDescription(problem->description);
+    dialog.loadFromProblem(problem);
     if (dialog.exec() == QDialog::Accepted) {
-        problem->url = dialog.url();
-        problem->description = dialog.description();
-        if (problem == mOJProblemModel.problem()) {
-            updateProblemTitle();
-        }
+        dialog.saveToProblem(problem);
     }
 }
 
@@ -4066,6 +4085,27 @@ void MainWindow::onProblemOpenSource()
         return;
     if (!problem->answerProgram.isEmpty()) {
         openFile(problem->answerProgram);
+    }
+}
+
+void MainWindow::onProblemRename()
+{
+    QModelIndex idx = ui->lstProblemSet->currentIndex();
+    if (!idx.isValid())
+        return;
+    ui->lstProblemSet->edit(idx);
+}
+
+void MainWindow::onProblemGotoUrl()
+{
+    QModelIndex idx = ui->lstProblemSet->currentIndex();
+    if (!idx.isValid())
+        return;
+    POJProblem problem=mOJProblemSetModel.problem(idx.row());
+    if (!problem)
+        return;
+    if (!problem->url.isEmpty()) {
+        QDesktopServices::openUrl(problem->url);
     }
 }
 
@@ -8920,12 +8960,13 @@ void MainWindow::on_btnImportFPS_clicked()
         try {
             QList<POJProblem> problems = importFreeProblemSet(fileName);
             mOJProblemSetModel.addProblems(problems);
+            ui->lblProblemSet->setText(mOJProblemSetModel.name());
+            ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(0,0));
         } catch (FileError& error) {
             QMessageBox::critical(this,tr("Load Error"),
                                   error.reason());
         }
     }
-    ui->lblProblemSet->setText(mOJProblemSetModel.name());
-    ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(0,0));
 }
+
 

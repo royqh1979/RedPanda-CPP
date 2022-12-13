@@ -69,6 +69,7 @@ private:
         bool boolValue(const QString &key, bool defaultValue);
         QSize sizeValue(const QString &key);
         int intValue(const QString &key, int defaultValue);
+        unsigned int uintValue(const QString &key, unsigned int defaultValue);
         QStringList stringListValue(const QString &key, const QStringList& defaultValue=QStringList());
         QSet<QString> stringSetValue(const QString &key);
         QColor colorValue(const QString &key, const QColor& defaultValue);
@@ -874,11 +875,14 @@ public:
         bool caseEditorFontOnlyMonospaced() const;
         void setCaseEditorFontOnlyMonospaced(bool newCaseEditorFontOnlyMonospaced);
 
-        bool enableCaseTimeout() const;
-        void setEnableCaseTimeout(bool newEnableCaseTimeout);
+        bool enableCaseLimit() const;
+        void setEnableCaseLimit(bool newValue);
 
-        int caseTimeout() const;
-        void setCaseTimeout(int newCaseTimeout);
+        size_t caseTimeout() const;
+        void setCaseTimeout(size_t newCaseTimeout);
+
+        size_t caseMemoryLimit() const;
+        void setCaseMemoryLimit(size_t newCaseMemoryLimit);
 
     private:
         // general
@@ -897,8 +901,9 @@ public:
         QString mCaseEditorFontName;
         int mCaseEditorFontSize;
         bool mCaseEditorFontOnlyMonospaced;
-        bool mEnableCaseTimeout;
-        int mCaseTimeout;
+        bool mEnableCaseLimit;
+        size_t mCaseTimeout; //ms
+        size_t mCaseMemoryLimit; //kb
 
     protected:
         void doSave() override;

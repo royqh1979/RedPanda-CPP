@@ -21,12 +21,16 @@
 #include "../widgets/ojproblemsetmodel.h"
 #include <QElapsedTimer>
 #include <QProcess>
+#ifdef Q_OS_WINDOWS
+#include <psapi.h>
+#endif
 
 
 OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                            const QVector<POJProblemCase>& problemCases, QObject *parent):
     Runner(filename,arguments,workDir,parent),
-    mExecTimeout(-1)
+    mExecTimeout(0),
+    mMemoryLimit(0)
 {
     mProblemCases = problemCases;
     mBufferSize = 8192;
@@ -37,7 +41,8 @@ OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStrin
 OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                            POJProblemCase problemCase, QObject *parent):
     Runner(filename,arguments,workDir,parent),
-    mExecTimeout(-1)
+    mExecTimeout(0),
+    mMemoryLimit(0)
 {
     mProblemCases.append(problemCase);
     mBufferSize = 8192;
@@ -88,6 +93,12 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     problemCase->output.clear();
     process.start();
     process.waitForStarted(5000);
+#ifdef Q_OS_WIN
+    HANDLE hProcess = NULL;
+    if (process.processId()!=0) {
+        hProcess = OpenProcess(PROCESS_ALL_ACCESS,FALSE,process.processId());
+    }
+#endif
     if (process.state()==QProcess::Running) {
         if (fileExists(problemCase->inputFileName))
             process.write(readFileToByteArray(problemCase->inputFileName));
@@ -133,8 +144,22 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         }
     }
     problemCase->runningTime=elapsedTimer.elapsed();
+    problemCase->runningMemory = 0;
+#ifdef Q_OS_WIN
+    if (hProcess!=NULL) {
+        PROCESS_MEMORY_COUNTERS counter{0};
+        counter.cb = sizeof(counter);
+        if (GetProcessMemoryInfo(hProcess,&counter,
+                                 sizeof(counter))){
+            problemCase->runningMemory = counter.PeakWorkingSetSize;
+        }
+    }
+#endif
     if (execTimeouted) {
-        problemCase->output = tr("Case Timeout");
+        problemCase->output = tr("Time limit exceeded!");
+        emit resetOutput(problemCase->getId(), problemCase->output);
+    } else if (mMemoryLimit>0 && problemCase->runningMemory>mMemoryLimit) {
+        problemCase->output = tr("Memory limit exceeded!");
         emit resetOutput(problemCase->getId(), problemCase->output);
     } else {
         if (process.state() == QProcess::ProcessState::NotRunning)
@@ -142,6 +167,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
         output.append(buffer);
         problemCase->output = QString::fromLocal8Bit(output);
+
         if (errorOccurred) {
             //qDebug()<<"process error:"<<process.error();
             switch (process.error()) {
@@ -190,6 +216,11 @@ int OJProblemCasesRunner::execTimeout() const
 void OJProblemCasesRunner::setExecTimeout(int newExecTimeout)
 {
     mExecTimeout = newExecTimeout;
+}
+
+void OJProblemCasesRunner::setMemoryLimit(size_t limit)
+{
+    mMemoryLimit = limit;
 }
 
 int OJProblemCasesRunner::waitForFinishTime() const

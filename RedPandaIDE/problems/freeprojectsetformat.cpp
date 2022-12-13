@@ -35,17 +35,27 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
                 currentCase->name = QObject::tr("Problem Case %1").arg(currentProblem->cases.count()+1);
             } else if (currentProblem &&
                        xml.name()=="time_limit") {
+                currentEleName = xml.name().toString();
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
-                    if (attr.name() == "unit" && attr.value()=="ms") {
-                        currentEleName = attr.name().toString();
+                    if (attr.name() == "unit") {
+                        if (attr.value()=="ms")
+                            currentProblem->timeLimitUnit = ProblemTimeLimitUnit::Milliseconds;
+                        else if (attr.value()=="s")
+                            currentProblem->timeLimitUnit = ProblemTimeLimitUnit::Seconds;
                         break;
                     }
                 }
             } else if (currentProblem &&
                        xml.name()=="memory_limit") {
+                currentEleName = xml.name().toString();
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
-                    if (attr.name() == "unit" && attr.value()=="mb") {
-                        currentEleName = attr.name().toString();
+                    if (attr.name() == "unit") {
+                        if (attr.value()=="mb")
+                            currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::MB;
+                        else if (attr.value()=="kb")
+                            currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::KB;
+                        else if (attr.value()=="gb")
+                            currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::GB;
                         break;
                     }
                 }
@@ -70,7 +80,7 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
             } else if (currentProblem &&  currentEleName=="hint") {
                 currentProblem->hint = xml.text().toString();
             } else if (currentProblem &&  currentEleName=="title") {
-                currentProblem->name = xml.text().toString().trimmed();
+                currentProblem->name = xml.text().toString().trimmed().replace("&nbsp;"," ");
             } else if (currentProblem &&  currentEleName=="url") {
                 currentProblem->url = xml.text().toString().trimmed();
             } else if (currentProblem &&  currentEleName=="time_limit") {

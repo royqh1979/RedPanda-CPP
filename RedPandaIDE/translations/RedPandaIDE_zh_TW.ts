@@ -1755,10 +1755,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Timeout for Case Valdation</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Case Editor Font</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1776,6 +1772,22 @@
     </message>
     <message>
         <source>ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Case Valdation Limit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Time Limit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Memory Limit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>kb</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4578,7 +4590,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>FPS Problem Set Files (*.fps)</source>
+        <source>Rename Problem</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Url</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>FPS Problem Set Files (*.fps;*.xml)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4760,10 +4780,6 @@
 <context>
     <name>OJProblemCasesRunner</name>
     <message>
-        <source>Case Timeout</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The runner process &apos;%1&apos; failed to start.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4779,6 +4795,14 @@
         <source>An error occurred when attempting to read from the runner process.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Time limit exceeded!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Memory limit exceeded!</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>OJProblemModel</name>
@@ -4788,6 +4812,10 @@
     </message>
     <message>
         <source>Time(ms)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Memory(kb)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4815,6 +4843,34 @@
     </message>
     <message>
         <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Time Limit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Memory Limit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>KB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GB</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

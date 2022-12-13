@@ -41,9 +41,10 @@ void ExecutorProblemSetWidget::doLoad()
     ui->cbFont->setCurrentFont(QFont(pSettings->executor().caseEditorFontName()));
     ui->spinFontSize->setValue(pSettings->executor().caseEditorFontSize());
     ui->chkOnlyMonospaced->setChecked(pSettings->executor().caseEditorFontOnlyMonospaced());
-    ui->grpEnableTimeout->setChecked(pSettings->executor().enableCaseTimeout());
+    ui->grpEnableTimeout->setChecked(pSettings->executor().enableCaseLimit());
 
     ui->spinCaseTimeout->setValue(pSettings->executor().caseTimeout());
+    ui->spinMemoryLimit->setValue(pSettings->executor().caseMemoryLimit());
 }
 
 void ExecutorProblemSetWidget::doSave()
@@ -55,8 +56,10 @@ void ExecutorProblemSetWidget::doSave()
     pSettings->executor().setCaseEditorFontName(ui->cbFont->currentFont().family());
     pSettings->executor().setCaseEditorFontOnlyMonospaced(ui->chkOnlyMonospaced->isChecked());
     pSettings->executor().setCaseEditorFontSize(ui->spinFontSize->value());
-    pSettings->executor().setEnableCaseTimeout(ui->grpEnableTimeout->isChecked());
+    pSettings->executor().setEnableCaseLimit(ui->grpEnableTimeout->isChecked());
     pSettings->executor().setCaseTimeout(ui->spinCaseTimeout->value());
+    pSettings->executor().setCaseMemoryLimit(ui->spinMemoryLimit->value());
+
     pSettings->executor().save();
     pMainWindow->applySettings();
 }

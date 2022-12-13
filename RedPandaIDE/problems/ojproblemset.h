@@ -27,6 +27,17 @@ enum class ProblemCaseTestState {
     Failed
 };
 
+enum class ProblemTimeLimitUnit {
+    Seconds,
+    Milliseconds
+};
+
+enum class ProblemMemoryLimitUnit {
+    KB,
+    MB,
+    GB
+};
+
 struct OJProblemCase {
     QString name;
     QString input;
@@ -35,9 +46,10 @@ struct OJProblemCase {
     QString expectedOutputFileName;
     ProblemCaseTestState testState; // no persistence
     QString output; // no persistence
-    int runningTime;
-    int firstDiffLine;
-    int outputLineCounts;
+    size_t runningTime; // no persistence
+    size_t runningMemory; // no persistence;
+    int firstDiffLine; // no persistence
+    int outputLineCounts; // no persistence
     int expectedLineCounts;
     OJProblemCase();
 
@@ -56,9 +68,14 @@ struct OJProblem {
     QString description;
     QString hint;
     QString answerProgram;
-    int timeLimit; // ms
-    int memoryLimit; // mb
+    size_t timeLimit;
+    size_t memoryLimit;
+    ProblemTimeLimitUnit timeLimitUnit;
+    ProblemMemoryLimitUnit memoryLimitUnit;
     QVector<POJProblemCase> cases;
+    size_t getTimeLimit();
+    size_t getMemoryLimit();
+    OJProblem();
 };
 
 using POJProblem = std::shared_ptr<OJProblem>;
