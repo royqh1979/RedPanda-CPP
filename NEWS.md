@@ -13,6 +13,7 @@ Red Panda C++ Version 2.6
   - enhancement: Show current problem's description in the problem list's mouse tip.
   - enhancement: Show memory usage for problem cases (windows only).
   - enhancement: Show memory usage after console program exited.
+  - fix: If clang and g++ are in the same folder, only the compiler sets for gcc are auto generated.
 
 Red Panda C++ Version 2.5
 
