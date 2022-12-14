@@ -3244,7 +3244,7 @@ void SynEdit::updateScrollbars()
                     nPage = mCharsInWindow;
                     nPos = mLeftChar;
                 } else {
-                    nMin = 0;
+                    nMin = 1;
                     nMax = MAX_SCROLL;
                     nPage = mulDiv(MAX_SCROLL, mCharsInWindow, nMaxScroll);
                     nPos = mulDiv(MAX_SCROLL, mLeftChar, nMaxScroll);
@@ -3265,7 +3265,7 @@ void SynEdit::updateScrollbars()
                     nPage = mLinesInWindow;
                     nPos = mTopLine;
                 } else {
-                    nMin = 0;
+                    nMin = 1;
                     nMax = MAX_SCROLL;
                     nPage = mulDiv(MAX_SCROLL, mLinesInWindow, nMaxScroll);
                     nPos = mulDiv(MAX_SCROLL, mTopLine, nMaxScroll);

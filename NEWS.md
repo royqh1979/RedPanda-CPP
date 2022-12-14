@@ -19,6 +19,7 @@ Red Panda C++ Version 2.6
   - enhancement: Auto disable "compile" button if gcc doesn't exist.
   - enhancement: Auto disable "debug" button if gdb doesn't exist.
   - enhancement: Auto disable "compile" button for project if make doesn't exist.
+  - Fix: Crash when scroll file which has more than 65535 lines.
 
 Red Panda C++ Version 2.5
 
