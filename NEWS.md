@@ -2,6 +2,7 @@ Red Panda C++ Version 2.7
 
   - enhancement: Remove multiple problems in the problem set view
   - enhancement: Clear the proble view after a new problem set created
+  - enhancement: "Remove trailing spaces" in options / editor / misc
 
 Red Panda C++ Version 2.6
 

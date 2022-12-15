@@ -1325,10 +1325,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Max Undo Steps</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Default file encoding</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1357,19 +1353,39 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Max Undo Memory Usage</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>MB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auto reformat code before saving files</source>
+        <source>Parse TODOs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Parse TODOs</source>
+        <source>Memory Usage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Action before saving files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reformat Code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove Trailing Spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Limits for Undo</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6558,6 +6574,10 @@
     </message>
     <message>
         <source>Command: %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiling...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

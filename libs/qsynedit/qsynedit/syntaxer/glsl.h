@@ -45,8 +45,7 @@ class GLSLSyntaxer: public Syntaxer
     };
 
     enum RangeState {
-        rsUnknown, rsAnsiC, rsAnsiCAsm, rsAnsiCAsmBlock, rsAsm,
-        rsAsmBlock, rsDirective, rsDirectiveComment, rsString,
+        rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment, rsString,
         rsMultiLineString, rsMultiLineDirective, rsCppComment,
         rsStringEscapeSeq, rsMultiLineStringEscapeSeq,
         rsRawString, rsSpace,rsRawStringEscaping,rsRawStringNotEscaping,rsChar,
@@ -133,7 +132,6 @@ private:
     void pushIndents(int indentType);
 
 private:
-    bool mAsmStart;
     SyntaxerState mRange;
 //    SynRangeState mSpaceRange;
     QString mLineString;

@@ -720,6 +720,16 @@ void Settings::Editor::setEnableCustomCTypeKeywords(bool newEnableCustomCTypeKey
     mEnableCustomCTypeKeywords = newEnableCustomCTypeKeywords;
 }
 
+bool Settings::Editor::removeTrailingSpacesWhenSaved() const
+{
+    return mRemoveTrailingSpacesWhenSaved;
+}
+
+void Settings::Editor::setRemoveTrailingSpacesWhenSaved(bool newRemoveTrailingSpacesWhenSaved)
+{
+    mRemoveTrailingSpacesWhenSaved = newRemoveTrailingSpacesWhenSaved;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1301,6 +1311,7 @@ void Settings::Editor::doSave()
     saveValue("undo_limit",mUndoLimit);
     saveValue("undo_memory_usage", mUndoMemoryUsage);
     saveValue("auto_format_when_saved", mAutoFormatWhenSaved);
+    saveValue("remove_trailing_spaces_when_saved",mRemoveTrailingSpacesWhenSaved);
     saveValue("parse_todos",mParseTodos);
 
     saveValue("custom_c_type_keywords", mCustomCTypeKeywords);
@@ -1448,6 +1459,7 @@ void Settings::Editor::doLoad()
     mUndoLimit = intValue("undo_limit",0);
     mUndoMemoryUsage = intValue("undo_memory_usage", 10);
     mAutoFormatWhenSaved = boolValue("auto_format_when_saved", false);
+    mRemoveTrailingSpacesWhenSaved = boolValue("remove_trailing_spaces_when_saved",false);
     mParseTodos = boolValue("parse_todos",true);
 
     mCustomCTypeKeywords = stringListValue("custom_c_type_keywords");

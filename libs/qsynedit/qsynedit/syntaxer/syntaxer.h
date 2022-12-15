@@ -51,6 +51,7 @@ struct SyntaxerState {
     QVector<int> matchingIndents; /* the indent matched ( and removed )
                               but not started at this line
                                 (need by auto indent) */
+    bool hasTrailingSpaces;
     bool operator==(const SyntaxerState& s2);
     int getLastIndent();
     SyntaxerState();

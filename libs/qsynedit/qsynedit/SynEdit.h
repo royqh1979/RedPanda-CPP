@@ -74,36 +74,27 @@ Q_DECLARE_FLAGS(StateFlags,StateFlag)
 Q_DECLARE_OPERATORS_FOR_FLAGS(StateFlags)
 
 enum EditorOption {
-  eoAltSetsColumnMode = 0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
-  eoAutoIndent =        0x00000002, //Will auto calculate the indent when input
-  eoLigatureSupport =   0x00000004, //Support ligaures in fonts like fira code
-  eoDragDropEditing =   0x00000008, //Allows you to select a block of text and drag it within the document to another location
-  eoDropFiles =         0x00000010, //Allows the editor accept OLE file drops
-  eoEnhanceHomeKey =    0x00000020, //enhances home key positioning, similar to visual studio
-  eoEnhanceEndKey =     0x00000040, //enhances End key positioning, similar to JDeveloper
-  eoGroupUndo =         0x00000080, //When undoing/redoing actions, handle all continous changes of the same kind in one call instead undoing/redoing each command separately
-  eoHalfPageScroll =    0x00000100, //When scrolling with page-up and page-down commands, only scroll a half page at a time
-  eoHideShowScrollbars =0x00000200, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
-  eoKeepCaretX =        0x00000400 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
-  eoRightMouseMovesCursor= 0x00000800, //When clicking with the right mouse for a popup menu, move the cursor to that location
-  eoScrollByOneLess =   0x00001000, //Forces scrolling to be one less
-  eoScrollPastEof =     0x00002000, //Allows the cursor to go past the end of file marker
-  eoScrollPastEol =     0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
-  eoShowSpecialChars =  0x00008000, //Shows the special Characters
+  eoAltSetsColumnMode =     0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
+  eoAutoIndent =            0x00000002, //Will auto calculate the indent when input
+  eoLigatureSupport =       0x00000004, //Support ligaures in fonts like fira code
+  eoDragDropEditing =       0x00000008, //Allows you to select a block of text and drag it within the document to another location
+  eoDropFiles =             0x00000010, //Allows the editor accept OLE file drops
+  eoEnhanceHomeKey =        0x00000020, //enhances home key positioning, similar to visual studio
+  eoEnhanceEndKey =         0x00000040, //enhances End key positioning, similar to JDeveloper
+  eoGroupUndo =             0x00000080, //When undoing/redoing actions, handle all continous changes of the same kind in one call instead undoing/redoing each command separately
+  eoHalfPageScroll =        0x00000100, //When scrolling with page-up and page-down commands, only scroll a half page at a time
+  eoHideShowScrollbars =    0x00000200, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
+  eoKeepCaretX =            0x00000400 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
+  eoRightMouseMovesCursor=  0x00000800, //When clicking with the right mouse for a popup menu, move the cursor to that location
+  eoScrollByOneLess =       0x00001000, //Forces scrolling to be one less
+  eoScrollPastEof =         0x00002000, //Allows the cursor to go past the end of file marker
+  eoScrollPastEol =         0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
+  eoShowSpecialChars =      0x00008000, //Shows the special Characters
 //  eoSpecialLineDefaultFg = 0x00010000, //disables the foreground text color override when using the OnSpecialLineColor event
-  eoTabIndent =         0x00020000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
-  eoTabsToSpaces =      0x00040000, //Converts a tab character to a specified number of space characters
-  eoShowRainbowColor =  0x00080000,
-  eoTrimTrailingSpaces =0x00100000, //Spaces at the end of lines will be trimmed and not saved
-  eoSelectWordByDblClick=0x00200000,
-//  eoNoSelection =       0x00400000, //Disables selecting text
-    //eoAutoSizeMaxScrollWidth = 0x00000008, //Automatically resizes the MaxScrollWidth property when inserting text
-    //eoDisableScrollArrows = 0x00000010 , //Disables the scroll bar arrow buttons when you can't scroll in that direction any more
-    //  eoScrollHintFollows = 0x00020000, //The scroll hint follows the mouse when scrolling vertically
-    //  eoShowScrollHint = 0x00100000, //Shows a hint of the visible line numbers when scrolling vertically
-    //  eoSmartTabDelete = 0x00400000, //similar to Smart Tabs, but when you delete characters
-    //  eoSmartTabs = 0x00800000, //When tabbing, the cursor will go to the next non-white space character of the previous line
-    // eoNoCaret =           0x00000800, //Makes it so the caret is never visible
+  eoTabIndent =             0x00020000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
+  eoTabsToSpaces =          0x00040000, //Converts a tab character to a specified number of space characters
+  eoShowRainbowColor    =   0x00080000,
+  eoSelectWordByDblClick=   0x00100000,
 };
 
 Q_DECLARE_FLAGS(EditorOptions, EditorOption)
@@ -215,7 +206,7 @@ public:
     BufferCoord prevWordPos();
     BufferCoord prevWordPosEx(const BufferCoord& XY);
 
-    void commandProcessor(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     //Caret
     void showCaret();
     void hideCaret();
@@ -261,28 +252,31 @@ public:
         selectAll();
         setSelText(text);
     }
+    void trimTrailingSpaces() {
+        processCommand(EditCommand::TrimTrailingSpaces);
+    }
 
     //Commands
-    virtual void cutToClipboard() { commandProcessor(EditCommand::ecCut);}
-    virtual void copyToClipboard() { commandProcessor(EditCommand::ecCopy);}
-    virtual void pasteFromClipboard() { commandProcessor(EditCommand::ecPaste);}
-    virtual void undo()  { commandProcessor(EditCommand::ecUndo);}
-    virtual void redo()  { commandProcessor(EditCommand::ecRedo);}
-    virtual void zoomIn()  { commandProcessor(EditCommand::ecZoomIn);}
-    virtual void zoomOut()  { commandProcessor(EditCommand::ecZoomOut);}
+    virtual void cutToClipboard() { processCommand(EditCommand::Cut);}
+    virtual void copyToClipboard() { processCommand(EditCommand::Copy);}
+    virtual void pasteFromClipboard() { processCommand(EditCommand::Paste);}
+    virtual void undo()  { processCommand(EditCommand::Undo);}
+    virtual void redo()  { processCommand(EditCommand::Redo);}
+    virtual void zoomIn()  { processCommand(EditCommand::ZoomIn);}
+    virtual void zoomOut()  { processCommand(EditCommand::ZoomOut);}
     virtual void selectAll() {
-        commandProcessor(EditCommand::ecSelectAll);
+        processCommand(EditCommand::SelectAll);
     }
     virtual void selectWord() {
-        commandProcessor(EditCommand::ecSelWord);
+        processCommand(EditCommand::SelWord);
     }
-    virtual void tab() { commandProcessor(EditCommand::ecTab);}
-    virtual void shifttab() { commandProcessor(EditCommand::ecShiftTab);}
-    virtual void toggleComment() { commandProcessor(EditCommand::ecToggleComment);}
-    virtual void toggleBlockComment() { commandProcessor(EditCommand::ecToggleBlockComment);}
-    virtual void matchBracket() { commandProcessor(EditCommand::ecMatchBracket);}
-    virtual void moveSelUp(){ commandProcessor(EditCommand::ecMoveSelUp);}
-    virtual void moveSelDown(){ commandProcessor(EditCommand::ecMoveSelDown);}
+    virtual void tab() { processCommand(EditCommand::Tab);}
+    virtual void shifttab() { processCommand(EditCommand::ShiftTab);}
+    virtual void toggleComment() { processCommand(EditCommand::ToggleComment);}
+    virtual void toggleBlockComment() { processCommand(EditCommand::ToggleBlockComment);}
+    virtual void matchBracket() { processCommand(EditCommand::MatchBracket);}
+    virtual void moveSelUp(){ processCommand(EditCommand::MoveSelUp);}
+    virtual void moveSelDown(){ processCommand(EditCommand::MoveSelDown);}
 
     virtual void beginUpdate();
     virtual void endUpdate();
@@ -555,6 +549,7 @@ private:
     int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos, int startLine, int endLine);
     int doInsertTextByLineMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
 
+    void doTrimTrailingSpaces();
     void deleteFromTo(const BufferCoord& start, const BufferCoord& end);
     void setSelWord();
     void setWordBlock(BufferCoord value);

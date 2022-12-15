@@ -389,9 +389,26 @@ void SynEditTextPainter::paintToken(const QString &token, int tokenCols, int col
                         drawed = true;
                     }
                     if (!drawed) {
-                        if (token[i].unicode()<=0xFF)
-                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , token[i]);
-                        else {
+                        if (token[i].unicode()<=0xFF) {
+                            QChar ch;
+                            int padding=0;
+                            if (edit->mOptions.testFlag(eoShowSpecialChars)) {
+                                switch(token[i].unicode()) {
+                                case '\t':
+                                    ch=TabGlyph;
+                                    padding=(charCols-1)/2*edit->mCharWidth;
+                                    break;
+                                case ' ':
+                                    ch=SpaceGlyph;
+                                    break;
+                                default:
+                                    ch=token[i];
+                                }
+                            } else {
+                                ch=token[i];
+                            }
+                            painter->drawText(nX+padding,rcToken.bottom()-painter->fontMetrics().descent() , ch);
+                        } else {
                             painter->setFont(fontForNonAscii);
                             painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , token[i]);
                             painter->setFont(font);

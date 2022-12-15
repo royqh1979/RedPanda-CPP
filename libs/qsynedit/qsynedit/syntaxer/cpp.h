@@ -48,9 +48,9 @@ class CppSyntaxer: public Syntaxer
         rsUnknown, rsAnsiC, rsAnsiCAsm, rsAnsiCAsmBlock, rsAsm,
         rsAsmBlock, rsDirective, rsDirectiveComment, rsString,
         rsMultiLineString, rsMultiLineDirective, rsCppComment,
-        rsStringEscapeSeq, rsMultiLineStringEscapeSeq,
-        rsRawString, rsSpace,rsRawStringEscaping,rsRawStringNotEscaping,rsChar,
-        rsCppCommentEnded, rsDefineStart, rsDefineIdentifier, rsDefineRemaining
+        rsStringEscapeSeq,
+        rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,rsChar,
+        rsDefineIdentifier, rsDefineRemaining
     };
 
 public:
@@ -124,7 +124,7 @@ private:
     void squareCloseProc();
     void squareOpenProc();
     void starProc();
-    void stringEndProc();
+//    void stringEndProc();
     void stringEscapeSeqProc();
     void stringProc();
     void stringStartProc();

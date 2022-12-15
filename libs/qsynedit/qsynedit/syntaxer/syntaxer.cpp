@@ -274,7 +274,8 @@ SyntaxerState::SyntaxerState():
     parenthesisLevel(0),
 //    leftBraces(0),
 //    rightBraces(0),
-    firstIndentThisLine(0)
+    firstIndentThisLine(0),
+    hasTrailingSpaces(false)
 {
 }
 }

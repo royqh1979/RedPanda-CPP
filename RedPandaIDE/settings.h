@@ -379,6 +379,9 @@ public:
         bool enableCustomCTypeKeywords() const;
         void setEnableCustomCTypeKeywords(bool newEnableCustomCTypeKeywords);
 
+        bool removeTrailingSpacesWhenSaved() const;
+        void setRemoveTrailingSpacesWhenSaved(bool newRemoveTrailingSpacesWhenSaved);
+
     private:
         //General
         // indents
@@ -488,6 +491,7 @@ public:
         int mUndoLimit;
         int mUndoMemoryUsage;
         bool mAutoFormatWhenSaved;
+        bool mRemoveTrailingSpacesWhenSaved;
         bool mParseTodos;
 
         QStringList mCustomCTypeKeywords;

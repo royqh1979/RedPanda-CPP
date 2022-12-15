@@ -201,6 +201,8 @@ void MakefileSyntaxer::procSpace()
     mTokenID = TokenId::Space;
     while (mLine[mRun]!=0 && mLine[mRun]<=32)
         mRun++;
+    if (mRun>=mStringLen)
+        mHasTrailingSpaces = true;
 }
 
 void MakefileSyntaxer::procNumber()
@@ -666,6 +668,7 @@ SyntaxerState MakefileSyntaxer::getState() const
 {
     SyntaxerState state;
     state.state = (int)mState;
+    state.hasTrailingSpaces = mHasTrailingSpaces;
     return state;
 }
 
@@ -673,12 +676,14 @@ void MakefileSyntaxer::setState(const SyntaxerState & rangeState)
 {
     mState = (RangeState)rangeState.state;
     mStates.clear();
+    mHasTrailingSpaces = false;
 }
 
 void MakefileSyntaxer::resetState()
 {
     mState = RangeState::Unknown;
     mStates.clear();
+    mHasTrailingSpaces = false;
 }
 
 QSet<QString> MakefileSyntaxer::keywords() const

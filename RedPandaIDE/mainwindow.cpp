@@ -7818,7 +7818,6 @@ void MainWindow::on_btnRemoveProblem_clicked()
     std::sort(idxList.begin(),idxList.end(),[](int i1, int i2){
        return i1>i2;
     });
-    qDebug()<<idxList;
     foreach (int id,idxList) {
         mOJProblemSetModel.removeProblem(id);
     }

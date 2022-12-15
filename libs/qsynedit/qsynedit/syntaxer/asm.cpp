@@ -242,6 +242,8 @@ void ASMSyntaxer::SpaceProc()
         if (mLine[mRun] > 32)
             break;
     }
+    if (mRun>=mStringLen)
+        mHasTrailingSpaces = true;
 }
 
 void ASMSyntaxer::StringProc()
@@ -441,17 +443,19 @@ bool ASMSyntaxer::isLastLineStringNotFinished(int /*state*/) const
 
 SyntaxerState ASMSyntaxer::getState() const
 {
-    return SyntaxerState();
+    SyntaxerState state;
+    state.hasTrailingSpaces = mHasTrailingSpaces;
+    return state;
 }
 
 void ASMSyntaxer::setState(const SyntaxerState&)
 {
-
+    mHasTrailingSpaces = false;
 }
 
 void ASMSyntaxer::resetState()
 {
-
+    mHasTrailingSpaces = false;
 }
 
 QSet<QString> ASMSyntaxer::keywords() const

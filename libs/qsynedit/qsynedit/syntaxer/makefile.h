@@ -79,6 +79,7 @@ private:
     QVector<RangeState> mStates;
     RangeState mState;
     TokenId mTokenID;
+    bool mHasTrailingSpaces;
 
     PTokenAttribute mTargetAttribute;
     PTokenAttribute mCommandAttribute;

@@ -66,7 +66,13 @@ void EditorMiscWidget::doLoad()
     }
     ui->spinMaxUndo->setValue(pSettings->editor().undoLimit());
     ui->spinMaxUndoMemory->setValue(pSettings->editor().undoMemoryUsage());
-    ui->chkAutoReformat->setChecked(pSettings->editor().autoFormatWhenSaved());
+    if (pSettings->editor().removeTrailingSpacesWhenSaved())
+        ui->rbRemoveTrailingSpaces->setChecked(true);
+    else if (pSettings->editor().autoFormatWhenSaved())
+        ui->rbAutoReformat->setChecked(true);
+    else
+        ui->rbNone->setChecked(true);
+
     ui->chkParseTodos->setChecked(pSettings->editor().parseTodos());
 }
 
@@ -84,7 +90,8 @@ void EditorMiscWidget::doSave()
     }
     pSettings->editor().setUndoLimit(ui->spinMaxUndo->value());
     pSettings->editor().setUndoMemoryUsage(ui->spinMaxUndoMemory->value());
-    pSettings->editor().setAutoFormatWhenSaved(ui->chkAutoReformat->isChecked());
+    pSettings->editor().setAutoFormatWhenSaved(ui->rbAutoReformat->isChecked());
+    pSettings->editor().setRemoveTrailingSpacesWhenSaved(ui->rbRemoveTrailingSpaces->isChecked());
     pSettings->editor().setParseTodos(ui->chkParseTodos->isChecked());
 
 
