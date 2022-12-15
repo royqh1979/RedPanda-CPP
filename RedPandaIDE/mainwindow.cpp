@@ -7789,6 +7789,7 @@ void MainWindow::on_btnNewProblemSet_clicked()
     mOJProblemSetNameCounter++;
     mOJProblemSetModel.create(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
     ui->lblProblemSet->setText(mOJProblemSetModel.name());
+    onProblemSetIndexChanged(QModelIndex(),QModelIndex());
 }
 
 
@@ -7810,10 +7811,18 @@ void MainWindow::on_btnAddProblem_clicked()
 
 void MainWindow::on_btnRemoveProblem_clicked()
 {
-    QModelIndex idx = ui->lstProblemSet->currentIndex();
-    if (!idx.isValid())
-        return;
-    mOJProblemSetModel.removeProblem(idx.row());
+    QList<int> idxList;
+    foreach (const QModelIndex idx,ui->lstProblemSet->selectionModel()->selectedIndexes()) {
+        idxList.append(idx.row());
+    }
+    std::sort(idxList.begin(),idxList.end(),[](int i1, int i2){
+       return i1>i2;
+    });
+    qDebug()<<idxList;
+    foreach (int id,idxList) {
+        mOJProblemSetModel.removeProblem(id);
+    }
+
 }
 
 
