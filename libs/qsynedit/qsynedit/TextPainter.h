@@ -35,6 +35,7 @@ class SynEditTextPainter
         QColor FG;
         QColor BG;
         FontStyles Style;
+        bool showSpecialGlyphs;
     };
 
 public:
@@ -50,10 +51,9 @@ private:
     int columnToXValue(int col);
     void paintToken(const QString& token, int tokenLen, int columnsBefore,
                     int first, int last, bool isSelection, const QFont& font,
-                    const QFont& fontForNonAscii);
+                    const QFont& fontForNonAscii, bool showGlyphs);
     void paintEditAreas(const EditingAreaList& areaList);
     void paintHighlightToken(bool bFillToEOL);
-    bool tokenIsSpaces(bool& bSpacesTest, const QString& token, bool& bIsSpaces);
     void addHighlightToken(const QString& token, int columnsBefore, int tokenColumns,
                            int cLine, PTokenAttribute p_Attri);
 

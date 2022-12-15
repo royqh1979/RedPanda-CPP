@@ -4705,7 +4705,7 @@ void Editor::applySettings()
             QSynedit::eoRightMouseMovesCursor | QSynedit::eoScrollByOneLess | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo
             | QSynedit::eoSelectWordByDblClick;
 
-    options.setFlag(QSynedit::eoShowSpecialChars);
+    options.setFlag(QSynedit::eoShowSpecialChars, false);
 
     //options
     options.setFlag(QSynedit::eoAutoIndent,pSettings->editor().autoIndent());
