@@ -51,6 +51,7 @@ CompilerSetOptionWidget::CompilerSetOptionWidget(const QString& name, const QStr
 #ifdef Q_OS_WIN
     ui->txtExecutableSuffix->setReadOnly(true);
 #endif
+    ui->settingTabs->setCurrentWidget(ui->tabGeneral);
 }
 
 CompilerSetOptionWidget::~CompilerSetOptionWidget()
@@ -235,6 +236,16 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     pSet->setExecutableSuffix(ui->txtExecutableSuffix->text());
 }
 
+QString CompilerSetOptionWidget::getBinDir()
+{
+    Settings::PCompilerSet pSet = pSettings->compilerSets().defaultSet();
+    if (!pSet->binDirs().isEmpty())
+        return pSet->binDirs().front();
+    if (!mBinDirWidget->dirList().isEmpty())
+        return mBinDirWidget->dirList().front();
+    return QDir().absolutePath();
+}
+
 void CompilerSetOptionWidget::on_btnFindCompilers_pressed()
 {
 #ifdef Q_OS_WIN
@@ -336,5 +347,89 @@ void CompilerSetOptionWidget::on_cbEncoding_currentTextChanged(const QString &/*
 void CompilerSetOptionWidget::on_cbEncodingDetails_currentTextChanged(const QString &/*arg1*/)
 {
 
+}
+
+
+void CompilerSetOptionWidget::on_btnChooseCCompiler_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Locate C Compiler"),
+                getBinDir(),
+                tr("Executable files (*.exe)"));
+    if (fileExists(fileName))
+        ui->txtCCompiler->setText(fileName);
+}
+
+
+void CompilerSetOptionWidget::on_btnChooseCppCompiler_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Locate C++ Compiler"),
+                getBinDir(),
+                tr("Executable files (*.exe)"));
+    if (fileExists(fileName))
+        ui->txtCppCompiler->setText(fileName);
+}
+
+
+void CompilerSetOptionWidget::on_btnChooseMake_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Locate Make"),
+                getBinDir(),
+                tr("Executable files (*.exe)"));
+    if (fileExists(fileName))
+        ui->txtMake->setText(fileName);
+}
+
+
+void CompilerSetOptionWidget::on_btnChooseGDB_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Locate GDB"),
+                getBinDir(),
+                tr("Executable files (*.exe)"));
+    if (fileExists(fileName))
+        ui->txtDebugger->setText(fileName);
+}
+
+
+void CompilerSetOptionWidget::on_btnChooseGDBServer_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Locate GDB Server"),
+                getBinDir(),
+                tr("Executable files (*.exe)"));
+    if (fileExists(fileName))
+        ui->txtGDBServer->setText(fileName);
+}
+
+
+void CompilerSetOptionWidget::on_btnChooseResourceCompiler_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Locate windres"),
+                getBinDir(),
+                tr("Executable files (*.exe)"));
+    if (fileExists(fileName))
+        ui->txtResourceCompiler->setText(fileName);
+}
+
+
+void CompilerSetOptionWidget::on_btnChooseProfiler_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                tr("Locate gprof"),
+                getBinDir(),
+                tr("Executable files (*.exe)"));
+    if (fileExists(fileName))
+        ui->txtProfiler->setText(fileName);
 }
 

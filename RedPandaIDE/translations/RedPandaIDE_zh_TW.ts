@@ -632,6 +632,38 @@
         <source>Executable suffix</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Locate C Compiler</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Executable files (*.exe)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate C++ Compiler</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate Make</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate GDB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate GDB Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate windres</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate gprof</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CppRefacter</name>
@@ -5750,26 +5782,6 @@
     </message>
     <message>
         <source>C++ include</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cannot find the %1 &quot;%2&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>C Compiler</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>C++ Compiler</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Maker</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Debugger</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

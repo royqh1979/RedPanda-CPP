@@ -650,14 +650,28 @@ void MainWindow::updateCompileActions()
     bool forProject=false;
     bool canCompile = false;
     bool canRun = false;
+    bool canDebug = false;
     Editor * e = mEditorList->getEditor();
     if (e) {
         if (!e->inProject()) {
             FileType fileType = getFileType(e->filename());
             if (fileType == FileType::CSource
                     || fileType == FileType::CppSource || e->isNew()) {
-                canCompile = true;
                 canRun = true;
+                Settings::PCompilerSet set = pSettings->compilerSets().defaultSet();
+                if (set) {
+                    canDebug = set->canDebug();
+                    switch(fileType) {
+                    case FileType::CSource:
+                        canCompile = set->canCompileC();
+                        break;
+                    case FileType::CppSource:
+                        canCompile = set->canCompileCPP();
+                        break;
+                    default:
+                        break;
+                    }
+                }
             }
         } else {
              forProject = (mProject!=nullptr);
@@ -666,9 +680,13 @@ void MainWindow::updateCompileActions()
         forProject = (mProject!=nullptr);
     }
     if (forProject) {
-        canCompile = true;
         canRun = (mProject->options().type !=ProjectType::DynamicLib)
                 && (mProject->options().type !=ProjectType::StaticLib);
+        Settings::PCompilerSet set = pSettings->compilerSets().getSet(mProject->options().compilerSet);
+        if (set) {
+            canDebug = set->canDebug();
+            canCompile = set->canMake();
+        }
     }
     if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()
          || (!canCompile)) {
@@ -681,11 +699,11 @@ void MainWindow::updateCompileActions()
         ui->btnRunAllProblemCases->setEnabled(false);
     } else {
         ui->actionCompile->setEnabled(true);
-        ui->actionCompile_Run->setEnabled(canRun);
+        ui->actionCompile_Run->setEnabled(canRun && canCompile);
         ui->actionRun->setEnabled(canRun);
         ui->actionRebuild->setEnabled(true);
         ui->actionGenerate_Assembly->setEnabled(!forProject);
-        ui->actionDebug->setEnabled(canRun);
+        ui->actionDebug->setEnabled(canDebug);
         ui->btnRunAllProblemCases->setEnabled(canRun);
     }
     if (!mDebugger->executing()) {
@@ -5170,6 +5188,7 @@ void MainWindow::onCompilerSetChanged(int index)
     if (index<0)
         return;
     Editor *e = mEditorList->getEditor();
+    updateCompileActions();
     if ( mProject && (!e || e->inProject())
          ) {
         if (index==mProject->options().compilerSet)

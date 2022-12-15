@@ -11,7 +11,16 @@ Red Panda C++ Version 2.6
   - enhancement: Prevent error of "del" to stop make when rebuild project.
   - enhancement: Import FPS (free problem set) files.
   - enhancement: Show current problem's description in the problem list's mouse tip.
-  - enhancement: Show memory usage for problem cases.
+  - enhancement: Show memory usage for problem cases (windows only).
+  - enhancement: Show memory usage after console program exited.
+  - fix: If clang and g++ are in the same folder, only the compiler sets for gcc are auto generated.
+  - fix: Buttons in options -> compiler -> compiler set -> programs are not usable.
+  - enhancement: Don't check existence of gcc/g++/make/gdb at startup.
+  - enhancement: Auto disable "compile" button if gcc doesn't exist.
+  - enhancement: Auto disable "debug" button if gdb doesn't exist.
+  - enhancement: Auto disable "compile" button for project if make doesn't exist.
+  - fix: Crash when scroll file which has more than 65535 lines.
+  - fix: Can't scroll to lines greater than 65535.
 
 Red Panda C++ Version 2.5
 

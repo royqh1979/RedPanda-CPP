@@ -20,6 +20,7 @@
 using std::string;
 #include <stdio.h>
 #include <windows.h>
+#include <psapi.h>
 #include <conio.h>
 
 #ifndef WINBOOL
@@ -114,7 +115,7 @@ string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
     return result;
 }
 
-DWORD ExecuteCommand(string& command,bool reInp) {
+DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory) {
     STARTUPINFOA si;
     PROCESS_INFORMATION pi;
 
@@ -139,7 +140,13 @@ DWORD ExecuteCommand(string& command,bool reInp) {
 
     WaitForSingleObject(pi.hProcess, INFINITE); // Wait for it to finish
 
-
+    peakMemory = 0;
+    PROCESS_MEMORY_COUNTERS counter;
+    counter.cb = sizeof(counter);
+    if (GetProcessMemoryInfo(pi.hProcess,&counter,
+                                 sizeof(counter))){
+            peakMemory = counter.PeakWorkingSetSize/1024;
+    }
     DWORD result = 0;
     GetExitCodeProcess(pi.hProcess, &result);
     return result;
@@ -225,8 +232,9 @@ int main(int argc, char** argv) {
     // Save starting timestamp
     LONGLONG starttime = GetClockTick();
 
+    LONGLONG peakMemory=0;
     // Then execute said command
-    DWORD returnvalue = ExecuteCommand(command,reInp);
+    DWORD returnvalue = ExecuteCommand(command,reInp,peakMemory);
 
     // Get ending timestamp
     LONGLONG endtime = GetClockTick();
@@ -242,7 +250,7 @@ int main(int argc, char** argv) {
 
     // Done? Print return value of executed program
     printf("\n--------------------------------");
-    printf("\nProcess exited after %.4g seconds with return value %lu\n",seconds,returnvalue);
+    printf("\nProcess exited after %.4g seconds with return value %lu, %d KB mem used.\n",seconds,returnvalue,peakMemory);
     if (pauseAfterExit)
         PauseExit(returnvalue,reInp);
     return 0;

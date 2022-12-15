@@ -3238,17 +3238,10 @@ void SynEdit::updateScrollbars()
             }
             if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
                 nMaxScroll = maxScrollWidth();
-                if (nMaxScroll <= MAX_SCROLL) {
-                    nMin = 1;
-                    nMax = nMaxScroll;
-                    nPage = mCharsInWindow;
-                    nPos = mLeftChar;
-                } else {
-                    nMin = 0;
-                    nMax = MAX_SCROLL;
-                    nPage = mulDiv(MAX_SCROLL, mCharsInWindow, nMaxScroll);
-                    nPos = mulDiv(MAX_SCROLL, mLeftChar, nMaxScroll);
-                }
+                nMin = 1;
+                nMax = nMaxScroll;
+                nPage = mCharsInWindow;
+                nPos = mLeftChar;
                 horizontalScrollBar()->setMinimum(nMin);
                 horizontalScrollBar()->setMaximum(nMax);
                 horizontalScrollBar()->setPageStep(nPage);
@@ -3259,17 +3252,10 @@ void SynEdit::updateScrollbars()
 
             if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
                 nMaxScroll = maxScrollHeight();
-                if (nMaxScroll <= MAX_SCROLL) {
-                    nMin = 1;
-                    nMax = std::max(1, nMaxScroll);
-                    nPage = mLinesInWindow;
-                    nPos = mTopLine;
-                } else {
-                    nMin = 0;
-                    nMax = MAX_SCROLL;
-                    nPage = mulDiv(MAX_SCROLL, mLinesInWindow, nMaxScroll);
-                    nPos = mulDiv(MAX_SCROLL, mTopLine, nMaxScroll);
-                }
+                nMin = 1;
+                nMax = std::max(1, nMaxScroll);
+                nPage = mLinesInWindow;
+                nPos = mTopLine;
                 verticalScrollBar()->setMinimum(nMin);
                 verticalScrollBar()->setMaximum(nMax);
                 verticalScrollBar()->setPageStep(nPage);

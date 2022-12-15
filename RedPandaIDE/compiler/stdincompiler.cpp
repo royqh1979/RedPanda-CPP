@@ -30,7 +30,10 @@ StdinCompiler::StdinCompiler(const QString &filename,const QByteArray& encoding,
 
 bool StdinCompiler::prepareForCompile()
 {
-    log(tr("Checking file syntax..."));
+    if (mOnlyCheckSyntax)
+        log(tr("Checking file syntax..."));
+    else
+        log(tr("Compiling..."));
     log("------------------");
     log(tr("- Filename: %1").arg(mFilename));
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
@@ -68,7 +71,10 @@ bool StdinCompiler::prepareForCompile()
         mArguments += getLibraryArguments(fileType);
 
     if (!fileExists(mCompiler)) {
-        throw CompileError(tr("The Compiler '%1' doesn't exists!").arg(mCompiler));
+        if (!mOnlyCheckSyntax)
+            throw CompileError(tr("The Compiler '%1' doesn't exists!").arg(mCompiler));
+        else
+            return false;
     }
 
     log(tr("Processing %1 source file:").arg(strFileType));

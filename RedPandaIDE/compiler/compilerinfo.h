@@ -54,7 +54,8 @@ enum class CompilerSetType {
 enum class CompilerType {
     GCC,
     GCC_UTF8,
-    Clang
+    Clang,
+    Unknown
 };
 
 using CompileOptionChoiceList = QList<QPair<QString,QString>>;

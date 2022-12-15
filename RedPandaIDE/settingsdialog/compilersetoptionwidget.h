@@ -52,6 +52,7 @@ protected:
 private:
     void reloadCurrentCompilerSet();
     void saveCurrentCompilerSet();
+    QString getBinDir();
 
 private slots:
     void on_cbCompilerSet_currentIndexChanged(int index);
@@ -63,6 +64,13 @@ private slots:
 
     void on_cbEncoding_currentTextChanged(const QString &arg1);
     void on_cbEncodingDetails_currentTextChanged(const QString &arg1);
+    void on_btnChooseCCompiler_clicked();
+    void on_btnChooseCppCompiler_clicked();
+    void on_btnChooseMake_clicked();
+    void on_btnChooseGDB_clicked();
+    void on_btnChooseGDBServer_clicked();
+    void on_btnChooseResourceCompiler_clicked();
+    void on_btnChooseProfiler_clicked();
 };
 
 #endif // COMPILERSETOPTIONWIDGET_H

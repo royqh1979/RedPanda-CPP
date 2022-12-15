@@ -27,9 +27,6 @@ extern const QChar TabGlyph;
 extern const QChar LineBreakGlyph;
 extern const QChar SoftBreakGlyph;
 
-
-#define MAX_SCROLL 65535
-
 // names for token attributes
 #define SYNS_AttrAssembler          "Assembler"
 #define SYNS_AttrCharacter          "Character"
