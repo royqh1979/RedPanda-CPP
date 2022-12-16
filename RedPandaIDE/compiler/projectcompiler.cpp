@@ -529,6 +529,10 @@ bool ProjectCompiler::prepareForCompile()
 
     mCompiler = compilerSet()->make();
 
+    if (!fileExists(mCompiler)) {
+        throw CompileError(tr("Make program '%1' doesn't exists!").arg(mCompiler));
+    }
+
     QString parallelParam;
     if (mProject->options().allowParallelBuilding) {
         if (mProject->options().parellelBuildingJobs==0) {
