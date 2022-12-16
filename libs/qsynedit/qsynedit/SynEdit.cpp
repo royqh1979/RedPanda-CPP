@@ -462,6 +462,65 @@ void SynEdit::addSelectionToUndo()
                          mBlockEnd,QStringList(),mActiveSelectionMode);
 }
 
+void SynEdit::doTrimTrailingSpaces()
+{
+    if (mDocument->count()<=0)
+        return;
+
+    if (mSyntaxer) {
+        for (int i=0;i<mDocument->count();i++) {
+            if (mDocument->ranges(i).hasTrailingSpaces) {
+                    int line = i+1;
+                    QString oldLine = mDocument->getString(i);
+                    QString newLine = trimRight(oldLine);
+                    if (newLine.isEmpty())
+                        continue;
+                    properSetLine(i,newLine);
+                    mUndoList->addChange(
+                                ChangeReason::Delete,
+                                BufferCoord{1,line},
+                                BufferCoord{oldLine.length()+1, line},
+                                QStringList(oldLine),
+                                SelectionMode::Normal
+                                );
+                    mUndoList->addChange(
+                                ChangeReason::Insert,
+                                BufferCoord{1, line},
+                                BufferCoord{newLine.length()+1, line},
+                                QStringList(),
+                                SelectionMode::Normal
+                                );
+            }
+        }
+
+    } else {
+        for (int i=0;i<mDocument->count();i++) {
+            int line = i+1;
+            QString oldLine = mDocument->getString(i);
+            QString newLine = trimRight(oldLine);
+            if (newLine.isEmpty())
+                continue;
+            properSetLine(i,newLine);
+            mUndoList->addChange(
+                        ChangeReason::Delete,
+                        BufferCoord{1,line},
+                        BufferCoord{oldLine.length()+1, line},
+                        QStringList(oldLine),
+                        SelectionMode::Normal
+                        );
+            mUndoList->addChange(
+                        ChangeReason::Insert,
+                        BufferCoord{1, line},
+                        BufferCoord{newLine.length()+1, line},
+                        QStringList(),
+                        SelectionMode::Normal
+                        );
+        }
+
+    }
+    mUndoList->endBlock();
+}
+
 void SynEdit::beginUpdate()
 {
     incPaintLock();
@@ -2025,8 +2084,6 @@ void SynEdit::doDeleteLastChar()
             internalSetCaretX(mDocument->getString(mCaretY - 1).length() + 1);
             mDocument->deleteAt(mCaretY);
             doLinesDeleted(mCaretY+1, 1);
-            if (mOptions.testFlag(eoTrimTrailingSpaces))
-                Temp = trimRight(Temp);
             setLineText(lineText() + Temp);
             helper.append("");
             helper.append("");
@@ -3021,18 +3078,8 @@ void SynEdit::doCopyToClipboard()
     bool selected=selAvail();
     if (!selected)
         doSelecteLine();
-    bool ChangeTrim = (mActiveSelectionMode == SelectionMode::Column) &&
-            mOptions.testFlag(eoTrimTrailingSpaces);
     QString sText;
-    {
-        auto action = finally([&,this] {
-            if (ChangeTrim)
-                mOptions.setFlag(eoTrimTrailingSpaces);
-        });
-        if (ChangeTrim)
-            mOptions.setFlag(eoTrimTrailingSpaces,false);
-        sText = selText();
-    }
+    sText = selText();
     internalDoCopyToClipboard(sText);
     if (!selected) {
         setBlockBegin(caretXY());
@@ -3867,7 +3914,7 @@ EditCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
 {
     PEditKeyStroke keyStroke = mKeyStrokes.findKeycode2(mLastKey,mLastKeyModifiers,
                                                            key, modifiers);
-    EditCommand cmd=EditCommand::ecNone;
+    EditCommand cmd=EditCommand::None;
     if (keyStroke)
         cmd = keyStroke->command();
     else {
@@ -3875,7 +3922,7 @@ EditCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
         if (keyStroke)
             cmd = keyStroke->command();
     }
-    if (cmd == EditCommand::ecNone) {
+    if (cmd == EditCommand::None) {
         mLastKey = key;
         mLastKeyModifiers = modifiers;
     } else {
@@ -4147,9 +4194,9 @@ void SynEdit::setOptions(const EditorOptions &Value)
         //if (!mOptions.testFlag(eoScrollPastEof))
         setTopLine(mTopLine);
 
-        bool bUpdateAll = Value.testFlag(eoShowSpecialChars) != mOptions.testFlag(eoShowSpecialChars);
-        if (!bUpdateAll)
-            bUpdateAll = Value.testFlag(eoShowRainbowColor) != mOptions.testFlag(eoShowRainbowColor);
+        bool bUpdateAll =
+                (Value.testFlag(eoShowSpecialChars) != mOptions.testFlag(eoShowSpecialChars))
+                || (Value.testFlag(eoShowRainbowColor) != mOptions.testFlag(eoShowRainbowColor));
         //bool bUpdateScroll = (Options * ScrollOptions)<>(Value * ScrollOptions);
         bool bUpdateScroll = true;
         mOptions = Value;
@@ -4525,7 +4572,7 @@ void SynEdit::doRedoItem()
                                  item->changeEndPos(),item->changeText(),
                                  item->changeSelMode(),item->changeNumber());
             setCaretAndSelection(CaretPt, CaretPt, CaretPt);
-            commandProcessor(EditCommand::ecLineBreak);
+            processCommand(EditCommand::LineBreak);
             break;
         }
         default:
@@ -4791,11 +4838,11 @@ bool SynEdit::empty()
     return mDocument->empty();
 }
 
-void SynEdit::commandProcessor(EditCommand Command, QChar AChar, void *pData)
+void SynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
 {
     // first the program event handler gets a chance to process the command
     onProcessCommand(Command, AChar, pData);
-    if (Command != EditCommand::ecNone)
+    if (Command != EditCommand::None)
         executeCommand(Command, AChar, pData);
     onCommandProcessed(Command, AChar, pData);
 }
@@ -5306,11 +5353,7 @@ void SynEdit::doLinesInserted(int firstLine, int count)
 
 void SynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
 {
-    if (mOptions.testFlag(eoTrimTrailingSpaces)) {
-        mDocument->putString(ALine,trimRight(ALineText),notify);
-    } else {
-        mDocument->putString(ALine,ALineText,notify);
-    }
+    mDocument->putString(ALine,ALineText,notify);
 }
 
 void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode)
@@ -5520,10 +5563,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
         if (bChangeScroll)
             mOptions.setFlag(eoScrollPastEol,false);
     });
-    if (mOptions.testFlag(eoTrimTrailingSpaces) && (sRightSide == "")) {
-        newPos=BufferCoord{mDocument->getString(caretY-1).length()+1,caretY};
-    } else
-        newPos=BufferCoord{str.length() - sRightSide.length()+1,caretY};
+    newPos=BufferCoord{str.length() - sRightSide.length()+1,caretY};
     onLinesPutted(startLine-1,result+1);
     if (!mUndoing) {
         mUndoList->addChange(
@@ -5699,43 +5739,43 @@ void SynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     });
     switch(command) {
     //horizontal caret movement or selection
-    case EditCommand::ecLeft:
-    case EditCommand::ecSelLeft:
-        moveCaretHorz(-1, command == EditCommand::ecSelLeft);
+    case EditCommand::Left:
+    case EditCommand::SelLeft:
+        moveCaretHorz(-1, command == EditCommand::SelLeft);
         break;
-    case EditCommand::ecRight:
-    case EditCommand::ecSelRight:
-        moveCaretHorz(1, command == EditCommand::ecSelRight);
+    case EditCommand::Right:
+    case EditCommand::SelRight:
+        moveCaretHorz(1, command == EditCommand::SelRight);
         break;
-    case EditCommand::ecPageLeft:
-    case EditCommand::ecSelPageLeft:
-        moveCaretHorz(-mCharsInWindow, command == EditCommand::ecSelPageLeft);
+    case EditCommand::PageLeft:
+    case EditCommand::SelPageLeft:
+        moveCaretHorz(-mCharsInWindow, command == EditCommand::SelPageLeft);
         break;
-    case EditCommand::ecPageRight:
-    case EditCommand::ecSelPageRight:
-        moveCaretHorz(mCharsInWindow, command == EditCommand::ecSelPageRight);
+    case EditCommand::PageRight:
+    case EditCommand::SelPageRight:
+        moveCaretHorz(mCharsInWindow, command == EditCommand::SelPageRight);
         break;
-    case EditCommand::ecLineStart:
-    case EditCommand::ecSelLineStart:
-        moveCaretToLineStart(command == EditCommand::ecSelLineStart);
+    case EditCommand::LineStart:
+    case EditCommand::SelLineStart:
+        moveCaretToLineStart(command == EditCommand::SelLineStart);
         break;
-    case EditCommand::ecLineEnd:
-    case EditCommand::ecSelLineEnd:
-        moveCaretToLineEnd(command == EditCommand::ecSelLineEnd);
+    case EditCommand::LineEnd:
+    case EditCommand::SelLineEnd:
+        moveCaretToLineEnd(command == EditCommand::SelLineEnd);
         break;
     // vertical caret movement or selection
-    case EditCommand::ecUp:
-    case EditCommand::ecSelUp:
-        moveCaretVert(-1, command == EditCommand::ecSelUp);
+    case EditCommand::Up:
+    case EditCommand::SelUp:
+        moveCaretVert(-1, command == EditCommand::SelUp);
         break;
-    case EditCommand::ecDown:
-    case EditCommand::ecSelDown:
-        moveCaretVert(1, command == EditCommand::ecSelDown);
+    case EditCommand::Down:
+    case EditCommand::SelDown:
+        moveCaretVert(1, command == EditCommand::SelDown);
         break;
-    case EditCommand::ecPageUp:
-    case EditCommand::ecSelPageUp:
-    case EditCommand::ecPageDown:
-    case EditCommand::ecSelPageDown:
+    case EditCommand::PageUp:
+    case EditCommand::SelPageUp:
+    case EditCommand::PageDown:
+    case EditCommand::SelPageDown:
     {
         int counter = mLinesInWindow;
         if (mOptions.testFlag(eoHalfPageScroll))
@@ -5745,112 +5785,112 @@ void SynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         }
         if (counter<0)
             break;
-        if (command == EditCommand::ecPageUp || command == EditCommand::ecSelPageUp) {
+        if (command == EditCommand::PageUp || command == EditCommand::SelPageUp) {
             counter = -counter;
         }
-        moveCaretVert(counter, command == EditCommand::ecSelPageUp || command == EditCommand::ecSelPageDown);
+        moveCaretVert(counter, command == EditCommand::SelPageUp || command == EditCommand::SelPageDown);
         break;
     }
-    case EditCommand::ecPageTop:
-    case EditCommand::ecSelPageTop:
-        moveCaretVert(mTopLine-mCaretY, command == EditCommand::ecSelPageTop);
+    case EditCommand::PageTop:
+    case EditCommand::SelPageTop:
+        moveCaretVert(mTopLine-mCaretY, command == EditCommand::SelPageTop);
         break;
-    case EditCommand::ecPageBottom:
-    case EditCommand::ecSelPageBottom:
-        moveCaretVert(mTopLine+mLinesInWindow-1-mCaretY, command == EditCommand::ecSelPageBottom);
+    case EditCommand::PageBottom:
+    case EditCommand::SelPageBottom:
+        moveCaretVert(mTopLine+mLinesInWindow-1-mCaretY, command == EditCommand::SelPageBottom);
         break;
-    case EditCommand::ecEditorStart:
-    case EditCommand::ecSelEditorStart:
-        doGotoEditorStart(command == EditCommand::ecSelEditorStart);
+    case EditCommand::EditorStart:
+    case EditCommand::SelEditorStart:
+        doGotoEditorStart(command == EditCommand::SelEditorStart);
         break;
-    case EditCommand::ecEditorEnd:
-    case EditCommand::ecSelEditorEnd:
-        doGotoEditorEnd(command == EditCommand::ecSelEditorEnd);
+    case EditCommand::EditorEnd:
+    case EditCommand::SelEditorEnd:
+        doGotoEditorEnd(command == EditCommand::SelEditorEnd);
         break;
-    case EditCommand::ecBlockStart:
-    case EditCommand::ecSelBlockStart:
-        doGotoBlockStart(command == EditCommand::ecSelBlockStart);
+    case EditCommand::BlockStart:
+    case EditCommand::SelBlockStart:
+        doGotoBlockStart(command == EditCommand::SelBlockStart);
         break;
-    case EditCommand::ecBlockEnd:
-    case EditCommand::ecSelBlockEnd:
-        doGotoBlockEnd(command == EditCommand::ecSelBlockEnd);
+    case EditCommand::BlockEnd:
+    case EditCommand::SelBlockEnd:
+        doGotoBlockEnd(command == EditCommand::SelBlockEnd);
         break;
     // goto special line / column position
-    case EditCommand::ecGotoXY:
-    case EditCommand::ecSelGotoXY:
+    case EditCommand::GotoXY:
+    case EditCommand::SelGotoXY:
         if (pData)
-            moveCaretAndSelection(caretXY(), *((BufferCoord *)(pData)), command == EditCommand::ecSelGotoXY);
+            moveCaretAndSelection(caretXY(), *((BufferCoord *)(pData)), command == EditCommand::SelGotoXY);
         break;
     // word selection
-    case EditCommand::ecWordLeft:
-    case EditCommand::ecSelWordLeft:
+    case EditCommand::WordLeft:
+    case EditCommand::SelWordLeft:
     {
         BufferCoord CaretNew = prevWordPos();
-        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::ecSelWordLeft);
+        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::SelWordLeft);
         break;
     }
-    case EditCommand::ecWordRight:
-    case EditCommand::ecSelWordRight:
+    case EditCommand::WordRight:
+    case EditCommand::SelWordRight:
     {
         BufferCoord CaretNew = nextWordPos();
-        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::ecSelWordRight);
+        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::SelWordRight);
         break;
     }
-    case EditCommand::ecSelWord:
+    case EditCommand::SelWord:
         setSelWord();
         break;
-    case EditCommand::ecSelectAll:
+    case EditCommand::SelectAll:
         doSelectAll();
         break;
-    case EditCommand::ecExpandSelection:
+    case EditCommand::ExpandSelection:
         doExpandSelection(caretXY());
         break;
-    case EditCommand::ecShrinkSelection:
+    case EditCommand::ShrinkSelection:
         doShrinkSelection(caretXY());
         break;
-    case EditCommand::ecDeleteLastChar:
+    case EditCommand::DeleteLastChar:
         doDeleteLastChar();
         break;
-    case EditCommand::ecDeleteChar:
+    case EditCommand::DeleteChar:
         doDeleteCurrentChar();
         break;
-    case EditCommand::ecDeleteWord:
+    case EditCommand::DeleteWord:
         doDeleteWord();
         break;
-    case EditCommand::ecDeleteEOL:
+    case EditCommand::DeleteEOL:
         doDeleteToEOL();
         break;
-    case EditCommand::ecDeleteWordStart:
+    case EditCommand::DeleteWordStart:
         doDeleteToWordStart();
         break;
-    case EditCommand::ecDeleteWordEnd:
+    case EditCommand::DeleteWordEnd:
         doDeleteToWordEnd();
         break;
-    case EditCommand::ecDeleteBOL:
+    case EditCommand::DeleteBOL:
         doDeleteFromBOL();
         break;
-    case EditCommand::ecDeleteLine:
+    case EditCommand::DeleteLine:
         doDeleteLine();
         break;
-    case EditCommand::ecDuplicateLine:
+    case EditCommand::DuplicateLine:
         doDuplicateLine();
         break;
-    case EditCommand::ecMoveSelUp:
+    case EditCommand::MoveSelUp:
         doMoveSelUp();
         break;
-    case EditCommand::ecMoveSelDown:
+    case EditCommand::MoveSelDown:
         doMoveSelDown();
         break;
-    case EditCommand::ecClearAll:
+    case EditCommand::ClearAll:
         clearAll();
         break;
-    case EditCommand::ecInsertLine:
+    case EditCommand::InsertLine:
         insertLine(false);
         break;
-    case EditCommand::ecLineBreak:
+    case EditCommand::LineBreak:
         insertLine(true);
         break;
-    case EditCommand::ecLineBreakAtEnd:
+    case EditCommand::LineBreakAtEnd:
         mUndoList->beginBlock();
         addCaretToUndo();
         addSelectionToUndo();
@@ -5858,97 +5898,101 @@ void SynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         insertLine(true);
         mUndoList->endBlock();
         break;
-    case EditCommand::ecTab:
+    case EditCommand::Tab:
         doTabKey();
         break;
-    case EditCommand::ecShiftTab:
+    case EditCommand::ShiftTab:
         doShiftTabKey();
         break;
-    case EditCommand::ecChar:
+    case EditCommand::Char:
         doAddChar(ch);
         break;
-    case EditCommand::ecInsertMode:
+    case EditCommand::InsertMode:
         if (!mReadOnly)
             setInsertMode(true);
         break;
-    case EditCommand::ecOverwriteMode:
+    case EditCommand::OverwriteMode:
         if (!mReadOnly)
             setInsertMode(false);
         break;
-    case EditCommand::ecToggleMode:
+    case EditCommand::ToggleMode:
         if (!mReadOnly) {
             setInsertMode(!mInserting);
         }
         break;
-    case EditCommand::ecCut:
+    case EditCommand::Cut:
         if (!mReadOnly)
             doCutToClipboard();
         break;
-    case EditCommand::ecCopy:
+    case EditCommand::Copy:
         doCopyToClipboard();
         break;
-    case EditCommand::ecPaste:
+    case EditCommand::Paste:
         if (!mReadOnly)
             doPasteFromClipboard();
         break;
-    case EditCommand::ecImeStr:
-    case EditCommand::ecString:
+    case EditCommand::ImeStr:
+    case EditCommand::String:
         if (!mReadOnly)
             doAddStr(*((QString*)pData));
         break;
-    case EditCommand::ecUndo:
+    case EditCommand::Undo:
         if (!mReadOnly)
             doUndo();
         break;
-    case EditCommand::ecRedo:
+    case EditCommand::Redo:
         if (!mReadOnly)
             doRedo();
         break;
-    case EditCommand::ecZoomIn:
+    case EditCommand::ZoomIn:
         doZoomIn();
         break;
-    case EditCommand::ecZoomOut:
+    case EditCommand::ZoomOut:
         doZoomOut();
         break;
-    case EditCommand::ecComment:
+    case EditCommand::Comment:
         doComment();
         break;
-    case EditCommand::ecUncomment:
+    case EditCommand::Uncomment:
         doUncomment();
         break;
-    case EditCommand::ecToggleComment:
+    case EditCommand::ToggleComment:
         doToggleComment();
         break;
-    case EditCommand::ecToggleBlockComment:
+    case EditCommand::ToggleBlockComment:
         doToggleBlockComment();
         break;
-    case EditCommand::ecNormalSelect:
+    case EditCommand::NormalSelect:
         setSelectionMode(SelectionMode::Normal);
         break;
-    case EditCommand::ecLineSelect:
+    case EditCommand::LineSelect:
         setSelectionMode(SelectionMode::Line);
         break;
-    case EditCommand::ecColumnSelect:
+    case EditCommand::ColumnSelect:
         setSelectionMode(SelectionMode::Column);
         break;
-    case EditCommand::ecScrollLeft:
+    case EditCommand::ScrollLeft:
         horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
         break;
-    case EditCommand::ecScrollRight:
+    case EditCommand::ScrollRight:
         horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
         break;
-    case EditCommand::ecScrollUp:
+    case EditCommand::ScrollUp:
         verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
         break;
-    case EditCommand::ecScrollDown:
+    case EditCommand::ScrollDown:
         verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
         break;
-    case EditCommand::ecMatchBracket:
+    case EditCommand::MatchBracket:
         {
         BufferCoord coord = getMatchingBracket();
         if (coord.ch!=0 && coord.line!=0)
             internalSetCaretXY(coord);
         }
+        break;
+    case EditCommand::TrimTrailingSpaces:
+        if (!mReadOnly)
+            doTrimTrailingSpaces();
         break;
     default:
         break;
@@ -6169,13 +6213,13 @@ void SynEdit::keyPressEvent(QKeyEvent *event)
         event->accept();
     } else {
         EditCommand cmd=TranslateKeyCode(event->key(),event->modifiers());
-        if (cmd!=EditCommand::ecNone) {
-            commandProcessor(cmd,QChar(),nullptr);
+        if (cmd!=EditCommand::None) {
+            processCommand(cmd,QChar(),nullptr);
             event->accept();
         } else if (!event->text().isEmpty()) {
             QChar c = event->text().at(0);
             if (c=='\t' || c.isPrint()) {
-                commandProcessor(EditCommand::ecChar,c,nullptr);
+                processCommand(EditCommand::Char,c,nullptr);
                 event->accept();
             }
         }
@@ -6306,8 +6350,9 @@ void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
     QAbstractScrollArea::mouseDoubleClickEvent(event);
     QPoint ptMouse = event->pos();
     if (ptMouse.x() >= mGutterWidth + 2) {
-          setSelWord();
-          mStateFlags.setFlag(StateFlag::sfDblClicked);
+        if (mOptions.testFlag(EditorOption::eoSelectWordByDblClick))
+            setSelWord();
+        mStateFlags.setFlag(StateFlag::sfDblClicked);
     }
 }
 
@@ -6328,7 +6373,7 @@ void SynEdit::inputMethodEvent(QInputMethodEvent *event)
     }
     QString s = event->commitString();
     if (!s.isEmpty()) {
-        commandProcessor(EditCommand::ecImeStr,QChar(),&s);
+        processCommand(EditCommand::ImeStr,QChar(),&s);
 //        for (QChar ch:s) {
 //            CommandProcessor(SynEditorCommand::ecChar,ch);
 //        }

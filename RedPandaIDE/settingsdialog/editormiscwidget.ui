@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>515</width>
-    <height>408</height>
+    <height>510</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,10 +36,55 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkAutoReformat">
-     <property name="text">
-      <string>Auto reformat code before saving files</string>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Limits for Undo</string>
      </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Memory Usage</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="spinMaxUndo">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>1000000000</number>
+        </property>
+        <property name="singleStep">
+         <number>50</number>
+        </property>
+        <property name="value">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Steps</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QSpinBox" name="spinMaxUndoMemory">
+        <property name="suffix">
+         <string>MB</string>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -57,42 +102,6 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Max Undo Steps</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QSpinBox" name="spinMaxUndo">
-        <property name="minimum">
-         <number>0</number>
-        </property>
-        <property name="maximum">
-         <number>1000000000</number>
-        </property>
-        <property name="singleStep">
-         <number>50</number>
-        </property>
-        <property name="value">
-         <number>10000</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
      </layout>
     </widget>
    </item>
@@ -111,28 +120,38 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item>
-       <widget class="QLabel" name="label_2">
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Action before saving files</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="rbAutoReformat">
         <property name="text">
-         <string>Max Undo Memory Usage</string>
+         <string>Reformat Code</string>
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QSpinBox" name="spinMaxUndoMemory">
-        <property name="suffix">
-         <string>MB</string>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="value">
-         <number>50</number>
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="rbRemoveTrailingSpaces">
+        <property name="text">
+         <string>Remove Trailing Spaces</string>
         </property>
        </widget>
       </item>
-      <item>
-       <spacer name="horizontalSpacer_3">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="rbNone">
+        <property name="text">
+         <string>None</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -187,7 +206,14 @@
      <property name="title">
       <string>Default file type</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QRadioButton" name="rbCFile">
+        <property name="text">
+         <string>C files</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QRadioButton" name="rbCppFile">
         <property name="text">
@@ -196,11 +222,17 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="rbCFile">
-        <property name="text">
-         <string>C files</string>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-       </widget>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>

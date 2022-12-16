@@ -61,6 +61,7 @@ private:
     QChar mToIdent;
     int mTokenPos;
     TokenId mTokenID;
+    bool mHasTrailingSpaces;
     PTokenAttribute mNumberAttribute;
     PTokenAttribute mDirectiveAttribute;
     PTokenAttribute mRegisterAttribute;

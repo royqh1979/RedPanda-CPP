@@ -338,7 +338,7 @@ int SynEditTextPainter::columnToXValue(int col)
 
 void SynEditTextPainter::paintToken(const QString &token, int tokenCols, int columnsBefore,
                                     int first, int last, bool /*isSelection*/, const QFont& font,
-                                    const QFont& fontForNonAscii)
+                                    const QFont& fontForNonAscii, bool showGlyphs)
 {
     bool startPaint;
     int nX;
@@ -389,9 +389,26 @@ void SynEditTextPainter::paintToken(const QString &token, int tokenCols, int col
                         drawed = true;
                     }
                     if (!drawed) {
-                        if (token[i].unicode()<=0xFF)
-                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , token[i]);
-                        else {
+                        if (token[i].unicode()<=0xFF) {
+                            QChar ch;
+                            int padding=0;
+                            if (showGlyphs) {
+                                switch(token[i].unicode()) {
+                                case '\t':
+                                    ch=TabGlyph;
+                                    padding=(charCols-1)/2*edit->mCharWidth;
+                                    break;
+                                case ' ':
+                                    ch=SpaceGlyph;
+                                    break;
+                                default:
+                                    ch=token[i];
+                                }
+                            } else {
+                                ch=token[i];
+                            }
+                            painter->drawText(nX+padding,rcToken.bottom()-painter->fontMetrics().descent() , ch);
+                        } else {
                             painter->setFont(fontForNonAscii);
                             painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , token[i]);
                             painter->setFont(font);
@@ -513,24 +530,25 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
             if (bU1) {
                 setDrawingColors(false);
                 rcToken.setRight(columnToXValue(nLineSelStart));
-                paintToken(TokenAccu.s,TokenAccu.Columns,TokenAccu.ColumnsBefore,nC1,nLineSelStart,false,font,nonAsciiFont);
+                paintToken(
+                            TokenAccu.s,TokenAccu.Columns,TokenAccu.ColumnsBefore,nC1,nLineSelStart,false,font,nonAsciiFont, TokenAccu.showSpecialGlyphs);
             }
             // selected part of the token
             setDrawingColors(true);
             nC1Sel = std::max(nLineSelStart, nC1);
             nC2Sel = std::min(nLineSelEnd, nC2);
             rcToken.setRight(columnToXValue(nC2Sel));
-            paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1Sel, nC2Sel,true,font,nonAsciiFont);
+            paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1Sel, nC2Sel,true,font,nonAsciiFont, TokenAccu.showSpecialGlyphs);
             // second unselected part of the token
             if (bU2) {
                 setDrawingColors(false);
                 rcToken.setRight(columnToXValue(nC2));
-                paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore,nLineSelEnd, nC2,false,font,nonAsciiFont);
+                paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore,nLineSelEnd, nC2,false,font,nonAsciiFont, TokenAccu.showSpecialGlyphs);
             }
         } else {
             setDrawingColors(bSel);
             rcToken.setRight(columnToXValue(nC2));
-            paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1, nC2,bSel,font,nonAsciiFont);
+            paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1, nC2,bSel,font,nonAsciiFont, TokenAccu.showSpecialGlyphs);
         }
     }
 
@@ -572,22 +590,6 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
     }
 }
 
-bool SynEditTextPainter::tokenIsSpaces(bool &bSpacesTest, const QString& token, bool& bIsSpaces)
-{
-    if (!bSpacesTest) {
-        bSpacesTest = true;
-        for (QChar ch:token) {
-            //todo: should include tabs?
-            if (ch!= ' ') {
-                bIsSpaces = false;
-                return bIsSpaces;
-            }
-        }
-        bIsSpaces = true;
-    }
-    return bIsSpaces;
-}
-
 // Store the token chars with the attributes in the TokenAccu
 // record. This will paint any chars already stored if there is
 // a (visible) change in the attributes.
@@ -597,12 +599,15 @@ void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefo
     bool bCanAppend;
     QColor foreground, background;
     FontStyles style;
-    bool bSpacesTest,bIsSpaces;
+    bool isSpaces=false;
+    bool showGlyphs=false;
 
     if (p_Attri) {
         foreground = p_Attri->foreground();
         background = p_Attri->background();
         style = p_Attri->styles();
+        isSpaces = p_Attri->tokenType() == TokenType::Space;
+        showGlyphs = isSpaces && edit->mOptions.testFlag(eoShowSpecialChars);
     } else {
         foreground = colFG;
         background = colBG;
@@ -624,17 +629,18 @@ void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefo
 
     // Do we have to paint the old chars first, or can we just append?
     bCanAppend = false;
-    bSpacesTest = false;
-    if (TokenAccu.Columns > 0) {
-        // font style must be the same or token is only spaces
-        if (TokenAccu.Style == style ||  ( (style & FontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
-                                           && tokenIsSpaces(bSpacesTest,Token,bIsSpaces)) ) {
-            if (
-              // background color must be the same and
-            ((TokenAccu.BG == background) &&
-              // foreground color must be the same or token is only spaces
-              ((TokenAccu.FG == foreground) || (tokenIsSpaces(bSpacesTest,Token,bIsSpaces) && !edit->mOptions.testFlag(eoShowSpecialChars))))) {
-              bCanAppend = true;
+    if (TokenAccu.Columns > 0 ) {
+        if (showGlyphs == TokenAccu.showSpecialGlyphs) {
+            // font style must be the same or token is only spaces
+            if (TokenAccu.Style == style ||  ( (style & FontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
+                                               && isSpaces)) {
+                if (
+                  // background color must be the same and
+                    (TokenAccu.BG == background) &&
+                  // foreground color must be the same or token is only spaces
+                  ((TokenAccu.FG == foreground) || isSpaces)) {
+                  bCanAppend = true;
+                }
             }
         }
         // If we can't append it, then we have to paint the old token chars first.
@@ -652,6 +658,7 @@ void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefo
         TokenAccu.FG = foreground;
         TokenAccu.BG = background;
         TokenAccu.Style = style;
+        TokenAccu.showSpecialGlyphs = showGlyphs;
     }
 }
 
@@ -909,17 +916,17 @@ void SynEditTextPainter::paintLines()
                   setDrawingColors(true);
                   rcToken.setLeft(std::max(rcLine.left(), columnToXValue(nLineSelStart)));
                   rcToken.setRight(std::min(rcLine.right(), columnToXValue(nLineSelEnd)));
-                  paintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd,false,edit->font(),edit->fontForNonAscii());
+                  paintToken(sToken, nTokenColumnLen, 0, nLineSelStart, nLineSelEnd,false,edit->font(),edit->fontForNonAscii(),false);
                   setDrawingColors(false);
                   rcToken.setLeft(std::max(rcLine.left(), columnToXValue(FirstCol)));
                   rcToken.setRight(std::min(rcLine.right(), columnToXValue(nLineSelStart)));
-                  paintToken(sToken, nTokenColumnLen, 0, FirstCol, nLineSelStart,false,edit->font(),edit->fontForNonAscii());
+                  paintToken(sToken, nTokenColumnLen, 0, FirstCol, nLineSelStart,false,edit->font(),edit->fontForNonAscii(),false);
                   rcToken.setLeft(std::max(rcLine.left(), columnToXValue(nLineSelEnd)));
                   rcToken.setRight(std::min(rcLine.right(), columnToXValue(LastCol)));
-                  paintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true,edit->font(),edit->fontForNonAscii());
+                  paintToken(sToken, nTokenColumnLen, 0, nLineSelEnd, LastCol,true,edit->font(),edit->fontForNonAscii(),false);
               } else {
                   setDrawingColors(bLineSelected);
-                  paintToken(sToken, nTokenColumnLen, 0, FirstCol, LastCol,bLineSelected,edit->font(),edit->fontForNonAscii());
+                  paintToken(sToken, nTokenColumnLen, 0, FirstCol, LastCol,bLineSelected,edit->font(),edit->fontForNonAscii(),false);
               }
               //Paint editingAreaBorders
               if (bCurrentLine && edit->mInputPreeditString.length()>0) {
@@ -1030,8 +1037,10 @@ void SynEditTextPainter::paintLines()
                     }
                 }
                 // Draw LineBreak glyph.
-                if (edit->mOptions.testFlag(eoShowSpecialChars) && (!bLineSelected) &&
-                    (!bSpecialLine) && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
+                if (edit->mOptions.testFlag(eoShowSpecialChars)
+//                        && (!bLineSelected)
+//                        && (!bSpecialLine)
+                        && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
                     addHighlightToken(LineBreakGlyph,
                       edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
                       edit->charColumns(LineBreakGlyph),vLine, edit->mSyntaxer->whitespaceAttribute());

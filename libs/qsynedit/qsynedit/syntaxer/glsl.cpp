@@ -203,13 +203,7 @@ const PTokenAttribute &GLSLSyntaxer::localVarAttribute() const
 
 GLSLSyntaxer::TokenId GLSLSyntaxer::getTokenId()
 {
-    if ((mRange.state == RangeState::rsAsm || mRange.state == RangeState::rsAsmBlock)
-            && !mAsmStart && !(mTokenId == TokenId::Comment || mTokenId == TokenId::Space
-                               || mTokenId == TokenId::Null)) {
-        return TokenId::Asm;
-    } else {
-        return mTokenId;
-    }
+    return mTokenId;
 }
 
 void GLSLSyntaxer::andSymbolProc()
@@ -259,11 +253,7 @@ void GLSLSyntaxer::ansiCProc()
         case '*':
             if (mLine[mRun+1] == '/') {
                 mRun += 2;
-                if (mRange.state == RangeState::rsAnsiCAsm) {
-                    mRange.state = RangeState::rsAsm;
-                } else if (mRange.state == RangeState::rsAnsiCAsmBlock){
-                    mRange.state = RangeState::rsAsmBlock;
-                } else if (mRange.state == RangeState::rsDirectiveComment &&
+                if (mRange.state == RangeState::rsDirectiveComment &&
                            mLine[mRun] != 0 && mLine[mRun]!='\r' && mLine[mRun]!='\n') {
                     mRange.state = RangeState::rsMultiLineDirective;
                 } else {
@@ -307,10 +297,6 @@ void GLSLSyntaxer::braceCloseProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    if (mRange.state == RangeState::rsAsmBlock) {
-        mRange.state = rsUnknown;
-    }
-
     mRange.braceLevel -= 1;
     mRange.blockLevel -= 1;
     if (mRange.braceLevel<0) {
@@ -329,10 +315,6 @@ void GLSLSyntaxer::braceOpenProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    if (mRange.state == RangeState::rsAsm) {
-        mRange.state = RangeState::rsAsmBlock;
-        mAsmStart = true;
-    }
     mRange.braceLevel += 1;
     mRange.blockLevel += 1;
     mRange.blockStarted += 1;
@@ -836,8 +818,6 @@ void GLSLSyntaxer::semiColonProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    if (mRange.state == RangeState::rsAsm)
-        mRange.state = RangeState::rsUnknown;
     while (mRange.getLastIndent() == IndentForStatement) {
         popIndents(IndentForStatement);
     }
@@ -853,11 +833,7 @@ void GLSLSyntaxer::slashProc()
         return;
     case '*': // C style comment
         mTokenId = TokenId::Comment;
-        if (mRange.state == RangeState::rsAsm) {
-            mRange.state = RangeState::rsAnsiCAsm;
-        } else if (mRange.state == RangeState::rsAsmBlock) {
-            mRange.state = RangeState::rsAnsiCAsmBlock;
-        } else if (mRange.state == RangeState::rsDirective) {
+        if (mRange.state == RangeState::rsDirective) {
             mRange.state = RangeState::rsDirectiveComment;
         } else {
             mRange.state = RangeState::rsAnsiC;
@@ -883,6 +859,8 @@ void GLSLSyntaxer::spaceProc()
     while (mLine[mRun]>=1 && mLine[mRun]<=32)
         mRun+=1;
     mRange.state = RangeState::rsUnknown;
+    if (mRun>=mLineSize)
+        mRange.hasTrailingSpaces=true;
 }
 
 void GLSLSyntaxer::squareCloseProc()
@@ -1284,8 +1262,6 @@ bool GLSLSyntaxer::getTokenFinished() const
 bool GLSLSyntaxer::isLastLineCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||
-            state == RangeState::rsAnsiCAsm ||
-            state == RangeState::rsAnsiCAsmBlock ||
             state == RangeState::rsDirectiveComment||
             state == RangeState::rsCppComment);
 }
@@ -1353,13 +1329,10 @@ int GLSLSyntaxer::getTokenPos()
 
 void GLSLSyntaxer::next()
 {
-    mAsmStart = false;
     mTokenPos = mRun;
     do {
         switch (mRange.state) {
         case RangeState::rsAnsiC:
-        case RangeState::rsAnsiCAsm:
-        case RangeState::rsAnsiCAsmBlock:
         case RangeState::rsDirectiveComment:
             ansiCProc();
             break;
@@ -1439,6 +1412,7 @@ void GLSLSyntaxer::setState(const SyntaxerState& rangeState)
     mRange.blockEndedLastLine = 0;
     mRange.firstIndentThisLine = mRange.indents.length();
     mRange.matchingIndents.clear();
+    mRange.hasTrailingSpaces = false;
 }
 
 void GLSLSyntaxer::resetState()
@@ -1454,7 +1428,7 @@ void GLSLSyntaxer::resetState()
     mRange.indents.clear();
     mRange.firstIndentThisLine = 0;
     mRange.matchingIndents.clear();
-    mAsmStart = false;
+    mRange.hasTrailingSpaces = false;
 }
 
 QString GLSLSyntaxer::languageName()
