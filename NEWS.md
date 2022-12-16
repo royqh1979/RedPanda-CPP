@@ -9,6 +9,7 @@ Red Panda C++ Version 2.7
   - enhancement: "Show special chars" in options / editor / font
   - fix: Lost compiler set settings if a compiler set's bin dirs is empty.
   - enhancement: Better error message when trying to debug with Release compile set.
+  - enhancement: Add missing space char color settings in color schemes
 
 Red Panda C++ Version 2.6
 
