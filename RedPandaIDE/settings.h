@@ -1246,7 +1246,7 @@ public:
         CompilerSet& operator= (const CompilerSet&& ) = delete;
 
         // Initialization
-        void setProperties(const QString& c_prog);
+        void setProperties(const QString& binDir, const QString& c_prog);
 
         void resetCompileOptionts();
         bool setCompileOption(const QString& key, int valIndex);

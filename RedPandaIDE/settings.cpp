@@ -1599,7 +1599,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     QDir dir(compilerFolder);
     if (dir.exists(c_prog)) {
 
-        setProperties(dir.absoluteFilePath(c_prog));
+        setProperties(compilerFolder,c_prog);
 
         //manually set the directories
         setDirectories(compilerFolder, mCompilerType);
@@ -2092,15 +2092,15 @@ static void addExistingDirectory(QStringList& dirs, const QString& directory) {
     dirs.append(dirPath);
 }
 
-void Settings::CompilerSet::setProperties(const QString& c_prog)
+void Settings::CompilerSet::setProperties(const QString& binDir, const QString& c_prog)
 {
-    if (!fileExists(c_prog))
-        return;
-    QString binDir=extractFileDir(c_prog);
+    // We have tested before the call
+//    if (!fileExists(c_prog))
+//        return;
     // Obtain version number and compiler distro etc
     QStringList arguments;
     arguments.append("-v");
-    QByteArray output = getCompilerOutput(binDir,c_prog,arguments);
+    QByteArray output = getCompilerOutput(binDir, c_prog,arguments);
 
     //Target
     QByteArray targetStr = "Target: ";
