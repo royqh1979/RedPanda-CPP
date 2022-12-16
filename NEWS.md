@@ -10,6 +10,7 @@ Red Panda C++ Version 2.7
   - fix: Lost compiler set settings if a compiler set's bin dirs is empty.
   - enhancement: Better error message when trying to debug with Release compile set.
   - enhancement: Add missing space char color settings in color schemes
+  - enhancement: Export FPS (free problem set) files.
 
 Red Panda C++ Version 2.6
 
