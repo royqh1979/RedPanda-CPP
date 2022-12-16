@@ -1,5 +1,5 @@
 #include "freeprojectsetformat.h"
-
+#include "../utils.h"
 #include <QFile>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
@@ -8,8 +8,9 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
 {
     QFile file(filename);
     QList<POJProblem> problems;
-    if (!file.open(QFile::ReadOnly))
-        return problems;
+    if (!file.open(QFile::ReadOnly)) {
+        throw FileError(QObject::tr("Can't open file \"%1\" for read.").arg(filename));
+    }
     QXmlStreamReader xml;
     xml.setDevice(&file);
     POJProblem currentProblem;
@@ -97,10 +98,93 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
 void exportFreeProblemSet(const QList<POJProblem> &problems, const QString &filename)
 {
     QFile file(filename);
-    if (!file.open(QFile::WriteOnly|QFile::Truncate))
-        return;
+    if (!file.open(QFile::WriteOnly|QFile::Truncate)) {
+        throw FileError(QObject::tr("Can't open file \"%1\" for write.").arg(filename));
+    }
     QXmlStreamWriter writer(&file);
     writer.setAutoFormatting(true);
     writer.writeStartDocument();
+    //fps
+    {
+        writer.writeStartElement("fps");
+        writer.writeAttribute("version","1.4");
+        writer.writeAttribute("url","https://github.com/zhblue/freeproblemset/");
+       {
+            writer.writeStartElement("generator");
+            writer.writeAttribute("name","RedPanda-C++");
+            writer.writeAttribute("url","https://royqh1979.gitee.io/redpandacpp/");
+            writer.writeEndElement(); // generator
+        }
+        foreach(const POJProblem& problem,problems) {
+            writer.writeStartElement("item");
+            {
+                writer.writeStartElement("title");
+                writer.writeCDATA(problem->name);
+                writer.writeEndElement(); //title
+            }
+            {
+                writer.writeStartElement("url");
+                writer.writeCDATA(problem->url);
+                writer.writeEndElement();//url
+            }
+            {
+                QString unit;
+                switch(problem->timeLimitUnit) {
+                case ProblemTimeLimitUnit::Milliseconds:
+                    unit = "ms";
+                    break;
+                case ProblemTimeLimitUnit::Seconds:
+                    unit = "s";
+                    break;
+                }
+                writer.writeStartElement("time_limit");
+                writer.writeAttribute("unit",unit);
+                writer.writeCDATA(QString("%1").arg(problem->timeLimit));
+                writer.writeEndElement(); //time_limit
+            }
+            {
+                QString unit;
+                switch(problem->memoryLimitUnit) {
+                case ProblemMemoryLimitUnit::MB:
+                    unit = "mb";
+                    break;
+                case ProblemMemoryLimitUnit::KB:
+                    unit = "kb";
+                    break;
+                case ProblemMemoryLimitUnit::GB:
+                    unit = "gb";
+                    break;
+                }
+                writer.writeStartElement("memory_limit");
+                writer.writeAttribute("unit",unit);
+                writer.writeCDATA(QString("%1").arg(problem->memoryLimit));
+                writer.writeEndElement(); //memory_limit
+            }
+            {
+                writer.writeStartElement("description");
+                writer.writeCDATA(problem->description);
+                writer.writeEndElement(); //description
+            }
+            foreach(const POJProblemCase& pCase, problem->cases) {
+                writer.writeStartElement("test_input");
+                writer.writeAttribute("name",pCase->name);
+                writer.writeCDATA(pCase->input);
+                writer.writeEndElement(); //test_input
+                writer.writeStartElement("test_output");
+                writer.writeCDATA(pCase->expected);
+                writer.writeEndElement(); //test_output
+            }
+            {
+                writer.writeStartElement("hint");
+                writer.writeCDATA(problem->hint);
+                writer.writeEndElement(); //hint
+            }
+            writer.writeEndElement(); //item
+        }
+        writer.writeEndElement(); //fps
+    }
     writer.writeEndDocument();
+    if (writer.hasError()) {
+        throw FileError(QObject::tr("Error when writing file \"%1\".").arg(filename));
+    }
 }

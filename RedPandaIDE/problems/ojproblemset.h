@@ -19,6 +19,7 @@
 #include <QString>
 #include <memory>
 #include <QVector>
+#include <QList>
 
 enum class ProblemCaseTestState {
     NotTested,
@@ -82,7 +83,7 @@ using POJProblem = std::shared_ptr<OJProblem>;
 
 struct OJProblemSet {
     QString name;
-    QVector<POJProblem> problems;
+    QList<POJProblem> problems;
     QString exportFilename;
 };
 

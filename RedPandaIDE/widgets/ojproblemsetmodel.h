@@ -82,7 +82,8 @@ public:
     QString exportFilename() const;
     void addProblem(const POJProblem& problem);
     void addProblems(const QList<POJProblem> &problems);
-    POJProblem problem(int index);
+    const QList<POJProblem> &problems() const;
+    POJProblem problem(int index) const;
     void removeProblem(int index);
     bool problemNameUsed(const QString& name);
     void removeAllProblems();

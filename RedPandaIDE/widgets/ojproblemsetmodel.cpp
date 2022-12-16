@@ -85,7 +85,12 @@ void OJProblemSetModel::addProblems(const QList<POJProblem> &problems)
     endInsertRows();
 }
 
-POJProblem OJProblemSetModel::problem(int index)
+const QList<POJProblem> &OJProblemSetModel::problems() const
+{
+    return mProblemSet.problems;
+}
+
+POJProblem OJProblemSetModel::problem(int index) const
 {
     return mProblemSet.problems[index];
 }

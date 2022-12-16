@@ -4677,6 +4677,18 @@
         <source>Trim trailing spaces</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Export FPS Problem Set</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>FPS Problem Set Files (*.fps)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export Error</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -6002,6 +6014,18 @@
     </message>
     <message>
         <source>Problem Case %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open file &quot;%1&quot; for read.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open file &quot;%1&quot; for write.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error when writing file &quot;%1&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

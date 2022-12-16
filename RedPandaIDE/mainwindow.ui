@@ -120,7 +120,7 @@
      <x>0</x>
      <y>0</y>
      <width>955</width>
-     <height>29</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -847,6 +847,17 @@
            <property name="icon">
             <iconset resource="icons.qrc">
              <normaloff>:/icons/images/newlook24/058-prev.png</normaloff>:/icons/images/newlook24/058-prev.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnExportFPS">
+           <property name="text">
+            <string>Export FPS Problem Set</string>
+           </property>
+           <property name="icon">
+            <iconset resource="icons.qrc">
+             <normaloff>:/icons/images/newlook24/052-next.png</normaloff>:/icons/images/newlook24/052-next.png</iconset>
            </property>
           </widget>
          </item>

@@ -1713,6 +1713,7 @@ void MainWindow::updateActionIcons()
     pIconsManager->setIcon(ui->btnSaveProblemSet, IconsManager::ACTION_FILE_SAVE_AS);
     pIconsManager->setIcon(ui->btnLoadProblemSet, IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnImportFPS, IconsManager::ACTION_CODE_BACK);
+    pIconsManager->setIcon(ui->btnExportFPS, IconsManager::ACTION_CODE_FORWARD);
 
     pIconsManager->setIcon(ui->btnAddProblemCase, IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemoveProblemCase, IconsManager::ACTION_MISC_REMOVE);
@@ -8974,6 +8975,24 @@ void MainWindow::on_actionTrim_trailing_spaces_triggered()
     Editor * e = mEditorList->getEditor();
     if (e) {
         e->trimTrailingSpaces();
+    }
+}
+
+
+void MainWindow::on_btnExportFPS_clicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(
+                this,
+                tr("Export FPS Problem Set"),
+                QString(),
+                tr("FPS Problem Set Files (*.fps)"));
+    if (!fileName.isEmpty()) {
+        try {
+            exportFreeProblemSet(mOJProblemSetModel.problems(),fileName);
+        } catch (FileError& error) {
+            QMessageBox::critical(this,tr("Export Error"),
+                                  error.reason());
+        }
     }
 }
 
