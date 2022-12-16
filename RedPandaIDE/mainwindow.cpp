@@ -658,8 +658,10 @@ void MainWindow::updateCompileActions()
     } else {
         bool forProject=false;
         bool canRun = false;
+        bool canCompile = false;
         Editor * e = mEditorList->getEditor();
         if (e) {
+            canCompile = true;
             if (!e->inProject()) {
                 FileType fileType = getFileType(e->filename());
                 if (fileType == FileType::CSource
@@ -673,13 +675,14 @@ void MainWindow::updateCompileActions()
             forProject = (mProject!=nullptr);
         }
         if (forProject) {
+            canCompile = true;
             canRun = (mProject->options().type !=ProjectType::DynamicLib)
                     && (mProject->options().type !=ProjectType::StaticLib);
         }
-        ui->actionCompile->setEnabled(true);
-        ui->actionCompile_Run->setEnabled(canRun);
+        ui->actionCompile->setEnabled(canCompile);
+        ui->actionCompile_Run->setEnabled(canRun && canCompile);
         ui->actionRun->setEnabled(canRun);
-        ui->actionRebuild->setEnabled(true);
+        ui->actionRebuild->setEnabled(canCompile);
         ui->actionGenerate_Assembly->setEnabled(!forProject);
         ui->actionDebug->setEnabled(canRun);
         ui->btnRunAllProblemCases->setEnabled(canRun);

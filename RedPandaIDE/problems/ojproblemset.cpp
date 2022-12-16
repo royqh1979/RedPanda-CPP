@@ -18,7 +18,11 @@
 
 #include <QUuid>
 
-OJProblemCase::OJProblemCase()
+OJProblemCase::OJProblemCase():
+    testState(ProblemCaseTestState::NotTested),
+    firstDiffLine(-1),
+    outputLineCounts(0),
+    expectedLineCounts(0)
 {
     QUuid uid = QUuid::createUuid();
     id = uid.toString();
