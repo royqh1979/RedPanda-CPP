@@ -661,11 +661,11 @@ void MainWindow::updateCompileActions()
         bool canCompile = false;
         Editor * e = mEditorList->getEditor();
         if (e) {
-            canCompile = true;
             if (!e->inProject()) {
                 FileType fileType = getFileType(e->filename());
                 if (fileType == FileType::CSource
                         || fileType == FileType::CppSource || e->isNew()) {
+                    canCompile = true;
                     canRun = true;
                 }
             } else {
