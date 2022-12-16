@@ -2,7 +2,7 @@
 
 #include <QFile>
 #include <QXmlStreamReader>
-#
+#include <QXmlStreamWriter>
 
 QList<POJProblem> importFreeProblemSet(const QString &filename)
 {
@@ -14,7 +14,6 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
     xml.setDevice(&file);
     POJProblem currentProblem;
     POJProblemCase currentCase;
-    QString currentText;
     QString currentEleName;
     while(!xml.atEnd()) {
         xml.readNext();
@@ -93,4 +92,15 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
         }
     }
     return problems;
+}
+
+void exportFreeProblemSet(const QList<POJProblem> &problems, const QString &filename)
+{
+    QFile file(filename);
+    if (!file.open(QFile::WriteOnly|QFile::Truncate))
+        return;
+    QXmlStreamWriter writer(&file);
+    writer.setAutoFormatting(true);
+    writer.writeStartDocument();
+    writer.writeEndDocument();
 }
