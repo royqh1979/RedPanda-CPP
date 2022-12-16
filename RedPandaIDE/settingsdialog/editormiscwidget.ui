@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>515</width>
-    <height>510</height>
+    <width>583</width>
+    <height>528</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -132,14 +132,14 @@
       <item row="0" column="1">
        <widget class="QRadioButton" name="rbAutoReformat">
         <property name="text">
-         <string>Reformat Code</string>
+         <string>Reformat</string>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
        <widget class="QRadioButton" name="rbRemoveTrailingSpaces">
         <property name="text">
-         <string>Remove Trailing Spaces</string>
+         <string>Trim trailing spaces</string>
         </property>
        </widget>
       </item>

@@ -905,7 +905,7 @@
     </message>
     <message>
         <source>Can&apos;&apos;t find debugger in : &quot;%1&quot;</source>
-        <translation>Impossível encontrar depurador em &quot;%1&quot;</translation>
+        <translation type="vanished">Impossível encontrar depurador em &quot;%1&quot;</translation>
     </message>
     <message>
         <source>GDB Server path error</source>
@@ -961,6 +961,14 @@
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;&apos;t find debugger (gdb) in : &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1343,7 +1351,7 @@
     </message>
     <message>
         <source>Enable Ligatures Support</source>
-        <translation>Habilitar suporte a ligaduras</translation>
+        <translation type="vanished">Habilitar suporte a ligaduras</translation>
     </message>
     <message>
         <source>Size:</source>
@@ -1392,6 +1400,14 @@
     <message>
         <source>Use Custom Font</source>
         <translation>Usar fonte personalizada</translation>
+    </message>
+    <message>
+        <source>Show special chars</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable ligatures support</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1485,11 +1501,7 @@
     </message>
     <message>
         <source>Reformat Code</source>
-        <translation type="unfinished">Reformatar código</translation>
-    </message>
-    <message>
-        <source>Remove Trailing Spaces</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">Reformatar código</translation>
     </message>
     <message>
         <source>None</source>
@@ -1497,6 +1509,14 @@
     </message>
     <message>
         <source>Limits for Undo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reformat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Trim trailing spaces</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2011,6 +2031,10 @@
     <message>
         <source>Command: %1 %2</source>
         <translation>Comando: %1 %2</translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4050,7 +4074,7 @@
     </message>
     <message>
         <source>You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.&lt;BR /&gt;&lt;BR /&gt;Do you want to correct this now?</source>
-        <translation>Informação para depuração não ativada (-g3) e/or removida do executável (-s) nas opções do compilador.&lt;BR /&gt;&lt;BR /&gt;Quer alterar isso agora?</translation>
+        <translation type="vanished">Informação para depuração não ativada (-g3) e/or removida do executável (-s) nas opções do compilador.&lt;BR /&gt;&lt;BR /&gt;Quer alterar isso agora?</translation>
     </message>
     <message>
         <source>Project not built</source>
@@ -4816,6 +4840,26 @@
         <source>FPS Problem Set Files (*.fps;*.xml)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Do you want to set it now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are not using a Debug compiler setting.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please use a Debug compiler set, or enable the &quot;generate debugging info (-g3)&quot; and disable the &quot;strip additional info (-s)&quot; options in the compiler settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please choose a Debug compiler set in the toolbar, or enable the &quot;generate debugging info (-g3)&quot; and disable the &quot;strip additional info (-s)&quot; options in the compiler set settings&apos;s &quot;settings&quot; page.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Trim trailing spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -5307,6 +5351,14 @@
     <message>
         <source>- Command: %1 %2</source>
         <translation>- Comando: %1 %2</translation>
+    </message>
+    <message>
+        <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -6009,23 +6061,23 @@
     </message>
     <message>
         <source>The following %1 directories don&apos;t exist:</source>
-        <translation>As seguintes pastas não existem:</translation>
+        <translation type="vanished">As seguintes pastas não existem:</translation>
     </message>
     <message>
         <source>binary</source>
-        <translation>binário</translation>
+        <translation type="vanished">binário</translation>
     </message>
     <message>
         <source>No %1 directories have been specified.</source>
-        <translation>%1 pastas não foram especificadas</translation>
+        <translation type="vanished">%1 pastas não foram especificadas</translation>
     </message>
     <message>
         <source>C include</source>
-        <translation>include C</translation>
+        <translation type="vanished">include C</translation>
     </message>
     <message>
         <source>C++ include</source>
-        <translation>include C++</translation>
+        <translation type="vanished">include C++</translation>
     </message>
     <message>
         <source>Cannot find the %1 &quot;%2&quot;</source>
@@ -6173,11 +6225,11 @@
     </message>
     <message>
         <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
-        <translation>Os seguintes problemas foram encontrados durante a validação do compilador &quot;%1&quot;:</translation>
+        <translation type="vanished">Os seguintes problemas foram encontrados durante a validação do compilador &quot;%1&quot;:</translation>
     </message>
     <message>
         <source>Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?</source>
-        <translation>Gostaria que o Red Panda C++ os removesse e acrescentasse caminhos padrões para validar?</translation>
+        <translation type="vanished">Gostaria que o Red Panda C++ os removesse e acrescentasse caminhos padrões para validar?</translation>
     </message>
     <message>
         <source>Compiler set not configured.</source>
@@ -6269,7 +6321,7 @@
     </message>
     <message>
         <source>Leaving those directories will lead to problems during compilation.</source>
-        <translation>Deixar essas pastas resultará em problemas durante a compilação.</translation>
+        <translation type="vanished">Deixar essas pastas resultará em problemas durante a compilação.</translation>
     </message>
     <message>
         <source>Gloabal Variable</source>

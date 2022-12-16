@@ -382,6 +382,9 @@ public:
         bool removeTrailingSpacesWhenSaved() const;
         void setRemoveTrailingSpacesWhenSaved(bool newRemoveTrailingSpacesWhenSaved);
 
+        bool showSpecialChars() const;
+        void setShowSpecialChars(bool newShowSpecialChars);
+
     private:
         //General
         // indents
@@ -399,6 +402,8 @@ public:
         QSynedit::EditCaretType mCaretForOverwrite;
         bool mCaretUseTextColor;
         QColor mCaretColor;
+        //
+        bool mShowSpecialChars;
 
         //highlights
         bool mHighlightCurrentWord;
@@ -1241,7 +1246,7 @@ public:
         CompilerSet& operator= (const CompilerSet&& ) = delete;
 
         // Initialization
-        void setProperties(const QString& binDir, const QString& c_prog);
+        void setProperties(const QString& c_prog);
 
         void resetCompileOptionts();
         bool setCompileOption(const QString& key, int valIndex);
@@ -1257,7 +1262,7 @@ public:
         bool canCompileCPP();
         bool canMake();
         bool canDebug();
-        bool dirsValid(QString& msg);
+//        bool dirsValid(QString& msg);
 //        bool validateExes(QString& msg);
         //properties
         const QString& CCompiler() const;

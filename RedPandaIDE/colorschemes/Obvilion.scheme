@@ -15,7 +15,6 @@
         "underlined": false
     },
     "Assembler": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ff79abff",
         "italic": false,
@@ -36,7 +35,6 @@
         "underlined": false
     },
     "Class": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ff79abff",
         "italic": false,
@@ -44,7 +42,6 @@
         "underlined": false
     },
     "Comment": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ffc7dd0c",
         "italic": false,
@@ -82,7 +79,6 @@
         "underlined": false
     },
     "Float": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ff7fb347",
         "italic": false,
@@ -126,7 +122,6 @@
         "underlined": false
     },
     "Hexadecimal": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ff7fb347",
         "italic": false,
@@ -162,7 +157,6 @@
         "underlined": false
     },
     "Number": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ff7fb347",
         "italic": false,
@@ -170,7 +164,6 @@
         "underlined": false
     },
     "Octal": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ff7fb347",
         "italic": false,
@@ -178,7 +171,6 @@
         "underlined": false
     },
     "Preprocessor": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ff79abff",
         "italic": false,
@@ -186,7 +178,6 @@
         "underlined": false
     },
     "Reserved Word": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ffffffff",
         "italic": false,
@@ -202,7 +193,6 @@
         "underlined": false
     },
     "Space": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ff505050",
         "italic": false,
@@ -210,7 +200,6 @@
         "underlined": false
     },
     "String": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ffffc600",
         "italic": false,
@@ -218,7 +207,6 @@
         "underlined": false
     },
     "Symbol": {
-        "background": "#ff1e1e1e",
         "bold": false,
         "foreground": "#ffd9e577",
         "italic": false,

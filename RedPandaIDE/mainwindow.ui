@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>945</width>
+    <width>955</width>
     <height>619</height>
    </rect>
   </property>
@@ -119,8 +119,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>945</width>
-     <height>25</height>
+     <width>955</width>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -229,6 +229,7 @@
     <addaction name="actionRemove_Bookmark"/>
     <addaction name="actionModify_Bookmark_Description"/>
     <addaction name="separator"/>
+    <addaction name="actionTrim_trailing_spaces"/>
     <addaction name="actionReformat_Code"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -3281,6 +3282,11 @@
   <action name="actionGenerate_Assembly">
    <property name="text">
     <string>Generate Assembly</string>
+   </property>
+  </action>
+  <action name="actionTrim_trailing_spaces">
+   <property name="text">
+    <string>Trim trailing spaces</string>
    </property>
   </action>
  </widget>

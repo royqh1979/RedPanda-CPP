@@ -530,7 +530,10 @@ bool ProjectCompiler::prepareForCompile()
     mCompiler = compilerSet()->make();
 
     if (!fileExists(mCompiler)) {
-        throw CompileError(tr("Make program '%1' doesn't exists!").arg(mCompiler));
+        throw CompileError(
+                    tr("Make program '%1' doesn't exists!").arg(mCompiler)
+                    +"<br />"
+                    +tr("Please check the \"program\" page of compiler settings."));
     }
 
     QString parallelParam;

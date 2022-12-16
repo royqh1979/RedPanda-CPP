@@ -101,7 +101,9 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         mExecuting = false;
         QMessageBox::critical(pMainWindow,
                               tr("Debugger not exists"),
-                              tr("Can''t find debugger in : \"%1\"").arg(debuggerPath));
+                              tr("Can''t find debugger (gdb) in : \"%1\"").arg(debuggerPath)
+                              +"<br />"
+                              +tr("Please check the \"program\" page of compiler settings."));
         return false;
     }
     if (pSettings->debugger().useGDBServer()) {

@@ -193,6 +193,7 @@
         "underlined": false
     },
     "Space": {
+		"foreground": "#ff303030",
         "bold": false,
         "italic": false,
         "strikeout": false,

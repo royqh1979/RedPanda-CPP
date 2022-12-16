@@ -241,8 +241,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     mMenuInsertCodeSnippet = new QMenu();
     mMenuInsertCodeSnippet->setTitle(tr("Insert Snippet"));
-    ui->menuCode->insertMenu(ui->actionReformat_Code,mMenuInsertCodeSnippet);
-    ui->menuCode->insertSeparator(ui->actionReformat_Code);
+    ui->menuCode->insertMenu(ui->actionTrim_trailing_spaces,mMenuInsertCodeSnippet);
+    ui->menuCode->insertSeparator(ui->actionTrim_trailing_spaces);
     connect(mMenuInsertCodeSnippet,&QMenu::aboutToShow,
             this, &MainWindow::onShowInsertCodeSnippetMenu);
 
@@ -647,49 +647,7 @@ void MainWindow::updateProjectActions()
 
 void MainWindow::updateCompileActions()
 {
-    bool forProject=false;
-    bool canCompile = false;
-    bool canRun = false;
-    bool canDebug = false;
-    Editor * e = mEditorList->getEditor();
-    if (e) {
-        if (!e->inProject()) {
-            FileType fileType = getFileType(e->filename());
-            if (fileType == FileType::CSource
-                    || fileType == FileType::CppSource || e->isNew()) {
-                canRun = true;
-                Settings::PCompilerSet set = pSettings->compilerSets().defaultSet();
-                if (set) {
-                    canDebug = set->canDebug();
-                    switch(fileType) {
-                    case FileType::CSource:
-                        canCompile = set->canCompileC();
-                        break;
-                    case FileType::CppSource:
-                        canCompile = set->canCompileCPP();
-                        break;
-                    default:
-                        break;
-                    }
-                }
-            }
-        } else {
-             forProject = (mProject!=nullptr);
-        }
-    }  else {
-        forProject = (mProject!=nullptr);
-    }
-    if (forProject) {
-        canRun = (mProject->options().type !=ProjectType::DynamicLib)
-                && (mProject->options().type !=ProjectType::StaticLib);
-        Settings::PCompilerSet set = pSettings->compilerSets().getSet(mProject->options().compilerSet);
-        if (set) {
-            canDebug = set->canDebug();
-            canCompile = set->canMake();
-        }
-    }
-    if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()
-         || (!canCompile)) {
+    if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()) {
         ui->actionCompile->setEnabled(false);
         ui->actionCompile_Run->setEnabled(false);
         ui->actionRun->setEnabled(false);
@@ -698,12 +656,32 @@ void MainWindow::updateCompileActions()
         ui->actionDebug->setEnabled(false);
         ui->btnRunAllProblemCases->setEnabled(false);
     } else {
+        bool forProject=false;
+        bool canRun = false;
+        Editor * e = mEditorList->getEditor();
+        if (e) {
+            if (!e->inProject()) {
+                FileType fileType = getFileType(e->filename());
+                if (fileType == FileType::CSource
+                        || fileType == FileType::CppSource || e->isNew()) {
+                    canRun = true;
+                }
+            } else {
+                 forProject = (mProject!=nullptr);
+            }
+        }  else {
+            forProject = (mProject!=nullptr);
+        }
+        if (forProject) {
+            canRun = (mProject->options().type !=ProjectType::DynamicLib)
+                    && (mProject->options().type !=ProjectType::StaticLib);
+        }
         ui->actionCompile->setEnabled(true);
-        ui->actionCompile_Run->setEnabled(canRun && canCompile);
+        ui->actionCompile_Run->setEnabled(canRun);
         ui->actionRun->setEnabled(canRun);
         ui->actionRebuild->setEnabled(true);
         ui->actionGenerate_Assembly->setEnabled(!forProject);
-        ui->actionDebug->setEnabled(canDebug);
+        ui->actionDebug->setEnabled(canRun);
         ui->btnRunAllProblemCases->setEnabled(canRun);
     }
     if (!mDebugger->executing()) {
@@ -2055,25 +2033,20 @@ void MainWindow::debug()
         debugEnabled = mProject->getCompileOption(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
         stripEnabled = mProject->getCompileOption(LINK_CMD_OPT_STRIP_EXE) == COMPILER_OPTION_ON;
         // Ask the user if he wants to enable debugging...
-        if (((!debugEnabled) || stripEnabled) &&
-                (QMessageBox::question(this,
+        if ((!debugEnabled) || stripEnabled) {
+             if (QMessageBox::question(this,
                                       tr("Enable debugging"),
-                                      tr("You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
-                                      ) == QMessageBox::Yes)) {
-            // Enable debugging, disable stripping
-            mProject->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_ON);
-            mProject->setCompileOption(LINK_CMD_OPT_STRIP_EXE,"");
-
-            // Save changes to compiler set
-            mProject->saveOptions();
-
-            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-            mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-            mCompileSuccessionTask->execName = mProject->executable();
-            mCompileSuccessionTask->isExecutable = true;
-            mCompileSuccessionTask->binDirs = binDirs;
-
-            compile();
+                                      tr("You are not using a Debug compiler setting.")
+                                      +"<BR /><BR />"
+                                      +tr("Please use a Debug compiler set, or enable the \"generate debugging info (-g3)\" and disable the \"strip additional info (-s)\" options in the compiler settings.")
+                                      +"<BR /><BR />"
+                                      +tr("Do you want to set it now?")
+                                      ) == QMessageBox::Yes) {
+                 changeOptions(
+                            SettingsDialog::tr("Compiler Set"),
+                            SettingsDialog::tr("Compiler")
+                            );
+            }
             return;
         }
         // Did we compile?
@@ -2155,25 +2128,22 @@ void MainWindow::debug()
             debugEnabled = compilerSet->getCompileOptionValue(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
             stripEnabled = compilerSet->getCompileOptionValue(LINK_CMD_OPT_STRIP_EXE) == COMPILER_OPTION_ON;
             // Ask the user if he wants to enable debugging...
-            if (((!debugEnabled) || stripEnabled) &&
-                    (QMessageBox::question(this,
+            if ((!debugEnabled) || stripEnabled) {
+                 if (QMessageBox::question(this,
                                           tr("Enable debugging"),
-                                          tr("You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.<BR /><BR />Do you want to correct this now?")
-                                          ) == QMessageBox::Yes)) {
-                // Enable debugging, disable stripping
-                compilerSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_ON);
-                compilerSet->unsetCompileOption(LINK_CMD_OPT_STRIP_EXE);
-
-                // Save changes to compiler set
-                pSettings->compilerSets().saveSet(pSettings->compilerSets().defaultIndex());
-
-                mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-                mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-                mCompileSuccessionTask->binDirs = binDirs;
-                compile();
+                                          tr("You are not using a Debug compiler setting.")
+                                          +"<BR /><BR />"
+                                          +tr("Please choose a Debug compiler set in the toolbar, or enable the \"generate debugging info (-g3)\" and disable the \"strip additional info (-s)\" options in the compiler set settings's \"settings\" page.")
+                                          +"<BR /><BR />"
+                                          +tr("Do you want to set it now?")
+                                          ) == QMessageBox::Yes) {
+                     changeOptions(
+                                SettingsDialog::tr("Compiler Set"),
+                                SettingsDialog::tr("Compiler")
+                                );
+                }
                 return;
             }
-
             Editor* e = mEditorList->getEditor();
             if (e!=nullptr) {
                 // Did we saved?
@@ -4572,6 +4542,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionOpen_Terminal);
         menu.addAction(ui->actionLocate_in_Files_View);
         menu.addSeparator();
+        menu.addAction(ui->actionTrim_trailing_spaces);
         menu.addAction(ui->actionReformat_Code);
         menu.addSeparator();
         menu.addAction(ui->actionCut);
@@ -8996,4 +8967,13 @@ void MainWindow::on_btnImportFPS_clicked()
     }
 }
 
+
+
+void MainWindow::on_actionTrim_trailing_spaces_triggered()
+{
+    Editor * e = mEditorList->getEditor();
+    if (e) {
+        e->trimTrailingSpaces();
+    }
+}
 

@@ -805,10 +805,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Can&apos;&apos;t find debugger in : &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>GDB Server path error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -862,6 +858,14 @@
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;&apos;t find debugger (gdb) in : &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1235,10 +1239,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable Ligatures Support</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Size:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1284,6 +1284,14 @@
     </message>
     <message>
         <source>Use Custom Font</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show special chars</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable ligatures support</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1373,19 +1381,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Reformat Code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remove Trailing Spaces</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limits for Undo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reformat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Trim trailing spaces</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1891,6 +1899,10 @@
     </message>
     <message>
         <source>Command: %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3906,10 +3918,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.&lt;BR /&gt;&lt;BR /&gt;Do you want to correct this now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Project not built</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4649,6 +4657,26 @@
         <source>FPS Problem Set Files (*.fps;*.xml)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Do you want to set it now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are not using a Debug compiler setting.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please use a Debug compiler set, or enable the &quot;generate debugging info (-g3)&quot; and disable the &quot;strip additional info (-s)&quot; options in the compiler settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please choose a Debug compiler set in the toolbar, or enable the &quot;generate debugging info (-g3)&quot; and disable the &quot;strip additional info (-s)&quot; options in the compiler set settings&apos;s &quot;settings&quot; page.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Trim trailing spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -5103,6 +5131,14 @@
     </message>
     <message>
         <source>- Command: %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5781,26 +5817,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The following %1 directories don&apos;t exist:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>binary</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>No %1 directories have been specified.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>C include</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>C++ include</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>C options</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5897,14 +5913,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The following problems were found during validation of compiler set &quot;%1&quot;:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Compiler set not configuared.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5978,10 +5986,6 @@
     </message>
     <message>
         <source>Can&apos;t parse problem set file &apos;%1&apos;:%2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Leaving those directories will lead to problems during compilation.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

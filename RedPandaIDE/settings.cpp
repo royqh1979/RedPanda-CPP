@@ -730,6 +730,16 @@ void Settings::Editor::setRemoveTrailingSpacesWhenSaved(bool newRemoveTrailingSp
     mRemoveTrailingSpacesWhenSaved = newRemoveTrailingSpacesWhenSaved;
 }
 
+bool Settings::Editor::showSpecialChars() const
+{
+    return mShowSpecialChars;
+}
+
+void Settings::Editor::setShowSpecialChars(bool newShowSpecialChars)
+{
+    mShowSpecialChars = newShowSpecialChars;
+}
+
 bool Settings::Editor::highlightCurrentWord() const
 {
     return mHighlightCurrentWord;
@@ -1220,6 +1230,8 @@ void Settings::Editor::doSave()
     saveValue("caret_use_text_color",mCaretUseTextColor);
     saveValue("caret_color",mCaretColor);
 
+    saveValue("show_special_chars",mShowSpecialChars);
+
     //highlight
     saveValue("highlight_matching_braces",mHighlightMathingBraces);
     saveValue("highlight_current_word",mHighlightCurrentWord);
@@ -1344,6 +1356,9 @@ void Settings::Editor::doLoad()
     mCaretForOverwrite = static_cast<QSynedit::EditCaretType>( intValue("caret_for_overwrite",static_cast<int>(QSynedit::EditCaretType::ctBlock)));
     mCaretUseTextColor = boolValue("caret_use_text_color",true);
     mCaretColor = colorValue("caret_color",Qt::yellow);
+
+    mShowSpecialChars = boolValue("show_special_chars",false);
+
 
     //highlight
     mHighlightMathingBraces = boolValue("highlight_matching_braces",true);
@@ -1581,8 +1596,10 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mExecutableSuffix(DEFAULT_EXECUTABLE_SUFFIX),
     mCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable)
 {
-    if (QDir(compilerFolder).exists()) {
-        setProperties(compilerFolder, c_prog);
+    QDir dir(compilerFolder);
+    if (dir.exists(c_prog)) {
+
+        setProperties(dir.absoluteFilePath(c_prog));
 
         //manually set the directories
         setDirectories(compilerFolder, mCompilerType);
@@ -1717,72 +1734,72 @@ static void checkDirs(const QStringList& dirlist, QString& gooddirs, QString& ba
 }
 
 
-bool Settings::CompilerSet::dirsValid(QString &msg)
-{
-    QString goodbin, badbin, goodlib, badlib, goodinc, badinc, goodinccpp, badinccpp;
-    msg = "";
+//bool Settings::CompilerSet::dirsValid(QString &msg)
+//{
+//    QString goodbin, badbin, goodlib, badlib, goodinc, badinc, goodinccpp, badinccpp;
+//    msg = "";
 
-    if (mBinDirs.count()>0) {// we need some bin dir, so treat count=0 as an error too
-        checkDirs(mBinDirs,goodbin,badbin);
-        if (!badbin.isEmpty()) {
-            msg += QObject::tr("The following %1 directories don't exist:").arg(
-                        QObject::tr("binary")
-                        );
-            msg += "<br />";
-            msg += badbin.replace(';',"<br />");
-            msg += "<br />";
-            msg += "<br />";
-            return false;
-        }
-    } else {
-        msg += QObject::tr("No %1 directories have been specified.").arg(
-                    QObject::tr("binary")
-                    );
-        msg += "<br />";
-        msg += "<br />";
-        return false;
-    }
-    checkDirs(mCIncludeDirs,goodbin,badbin);
-    if (!badbin.isEmpty()) {
-        msg += QObject::tr("The following %1 directories don't exist:").arg(
-                    QObject::tr("C include")
-                    );
-        msg += "<br />";
-        msg += badbin.replace(';',"<br />");
-        msg += "<br />";
-        msg += "<br />";
-        return false;
-    }
+//    if (mBinDirs.count()>0) {// we need some bin dir, so treat count=0 as an error too
+//        checkDirs(mBinDirs,goodbin,badbin);
+//        if (!badbin.isEmpty()) {
+//            msg += QObject::tr("The following %1 directories don't exist:").arg(
+//                        QObject::tr("binary")
+//                        );
+//            msg += "<br />";
+//            msg += badbin.replace(';',"<br />");
+//            msg += "<br />";
+//            msg += "<br />";
+//            return false;
+//        }
+//    } else {
+//        msg += QObject::tr("No %1 directories have been specified.").arg(
+//                    QObject::tr("binary")
+//                    );
+//        msg += "<br />";
+//        msg += "<br />";
+//        return false;
+//    }
+//    checkDirs(mCIncludeDirs,goodbin,badbin);
+//    if (!badbin.isEmpty()) {
+//        msg += QObject::tr("The following %1 directories don't exist:").arg(
+//                    QObject::tr("C include")
+//                    );
+//        msg += "<br />";
+//        msg += badbin.replace(';',"<br />");
+//        msg += "<br />";
+//        msg += "<br />";
+//        return false;
+//    }
 
-    checkDirs(mCppIncludeDirs,goodbin,badbin);
-    if (!badbin.isEmpty()) {
-        msg += QObject::tr("The following %1 directories don't exist:").arg(
-                    QObject::tr("C++ include")
-                    );
-        msg += "<br />";
-        msg += badbin.replace(';',"<br />");
-        msg += "<br />";
-        msg += "<br />";
-        return false;
-    }
+//    checkDirs(mCppIncludeDirs,goodbin,badbin);
+//    if (!badbin.isEmpty()) {
+//        msg += QObject::tr("The following %1 directories don't exist:").arg(
+//                    QObject::tr("C++ include")
+//                    );
+//        msg += "<br />";
+//        msg += badbin.replace(';',"<br />");
+//        msg += "<br />";
+//        msg += "<br />";
+//        return false;
+//    }
 
-    checkDirs(mLibDirs,goodbin,badbin);
-    if (!badbin.isEmpty()) {
-        msg += QObject::tr("The following %1 directories don't exist:").arg(
-                    QObject::tr("C++ include")
-                    );
-        msg += "<br />";
-        msg += badbin.replace(';',"<br />");
-        msg += "<br />";
-        msg += "<br />";
-        return false;
-    }
+//    checkDirs(mLibDirs,goodbin,badbin);
+//    if (!badbin.isEmpty()) {
+//        msg += QObject::tr("The following %1 directories don't exist:").arg(
+//                    QObject::tr("C++ include")
+//                    );
+//        msg += "<br />";
+//        msg += badbin.replace(';',"<br />");
+//        msg += "<br />";
+//        msg += "<br />";
+//        return false;
+//    }
 
-    if (!msg.isEmpty())
-        return false;
-    else
-        return true;
-}
+//    if (!msg.isEmpty())
+//        return false;
+//    else
+//        return true;
+//}
 
 //bool Settings::CompilerSet::validateExes(QString &msg)
 //{
@@ -2075,11 +2092,11 @@ static void addExistingDirectory(QStringList& dirs, const QString& directory) {
     dirs.append(dirPath);
 }
 
-void Settings::CompilerSet::setProperties(const QString &binDir, const QString& c_prog)
+void Settings::CompilerSet::setProperties(const QString& c_prog)
 {
-    if (c_prog.isEmpty())
+    if (!fileExists(c_prog))
         return;
-
+    QString binDir=extractFileDir(c_prog);
     // Obtain version number and compiler distro etc
     QStringList arguments;
     arguments.append("-v");
@@ -2844,37 +2861,36 @@ void Settings::CompilerSets::loadSets()
     PCompilerSet pCurrentSet = defaultSet();
     if (pCurrentSet) {
         QString msg;
-        if (!pCurrentSet->dirsValid(msg)) {
-            if (QMessageBox::warning(nullptr,QObject::tr("Confirm"),
-                       QObject::tr("The following problems were found during validation of compiler set \"%1\":")
-                                     .arg(pCurrentSet->name())
-                                     +"<br /><br />"
-                                     +msg
-                                     +"<br /><br />"
-                                     +QObject::tr("Leaving those directories will lead to problems during compilation.")
-                                     +"<br /><br />"
-                                     +QObject::tr("Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?")
-                                     ,
-                                     QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
-                return;
-            }
-            findSets();
-            if ( (int)mList.size() <= mDefaultIndex)
-                mDefaultIndex =  mList.size()-1;
-            pCurrentSet = defaultSet();
-            if (!pCurrentSet) {
-                mList.clear();
-                mDefaultIndex = -1;
-                saveSets();
-                return;
-            }
-            saveSets();
-            if (pCurrentSet->binDirs().count()>0) {
-                pCurrentSet->setProperties(pCurrentSet->binDirs()[0],pCurrentSet->CCompiler());
-            }
-        } else {
-            return;
-        }
+//        if (!pCurrentSet->dirsValid(msg)) {
+//            if (QMessageBox::warning(nullptr,QObject::tr("Confirm"),
+//                       QObject::tr("The following problems were found during validation of compiler set \"%1\":")
+//                                     .arg(pCurrentSet->name())
+//                                     +"<br /><br />"
+//                                     +msg
+//                                     +"<br /><br />"
+//                                     +QObject::tr("Leaving those directories will lead to problems during compilation.")
+//                                     +"<br /><br />"
+//                                     +QObject::tr("Would you like Red Panda C++ to remove them for you and add the default paths to the valid paths?")
+//                                     ,
+//                                     QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
+//                return;
+//            }
+//            findSets();
+//            if ( (int)mList.size() <= mDefaultIndex)
+//                mDefaultIndex =  mList.size()-1;
+//            pCurrentSet = defaultSet();
+//            if (!pCurrentSet) {
+//                mList.clear();
+//                mDefaultIndex = -1;
+//                saveSets();
+//                return;
+//            }
+//            saveSets();
+//            pCurrentSet->setProperties(pCurrentSet->CCompiler());
+//        } else {
+//            return;
+//        }
+        return;
     } else {
 #ifdef Q_OS_WIN
         QString msg = QObject::tr("Compiler set not configuared.")
@@ -3137,8 +3153,8 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
 
     mSettings->mSettings.endGroup();
 
-    if (pSet->binDirs().isEmpty())
-        return PCompilerSet();
+//    if (pSet->binDirs().isEmpty())
+//        return PCompilerSet();
 
     return pSet;
 }

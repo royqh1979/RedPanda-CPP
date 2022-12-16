@@ -753,6 +753,8 @@ private slots:
 
     void on_btnImportFPS_clicked();
 
+    void on_actionTrim_trailing_spaces_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;

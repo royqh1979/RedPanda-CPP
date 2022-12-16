@@ -112,6 +112,7 @@
 		"strikeout" : false
 	},
 	"Space" : {
+		"foreground": "#ff9b9b9b",	
 		"bold" : false,
 		"italic" : false,
 		"underlined" : false,

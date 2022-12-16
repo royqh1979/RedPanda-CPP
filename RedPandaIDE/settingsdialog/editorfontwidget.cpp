@@ -59,7 +59,7 @@ void EditorFontWidget::doLoad()
     ui->cbNonAsciiFont->setCurrentFont(QFont(pSettings->editor().nonAsciiFontName()));
     ui->spinFontSize->setValue(pSettings->editor().fontSize());
     ui->chkLigature->setChecked(pSettings->editor().enableLigaturesSupport());
-
+    ui->chkShowSpecialChars->setChecked(pSettings->editor().showSpecialChars());
     //gutter
     ui->chkGutterVisible->setChecked(pSettings->editor().gutterVisible());
     ui->chkAutoSizeGutter->setChecked(pSettings->editor().gutterAutoSize());
@@ -83,7 +83,7 @@ void EditorFontWidget::doSave()
     pSettings->editor().setNonAsciiFontName(ui->cbNonAsciiFont->currentFont().family());
     pSettings->editor().setFontSize(ui->spinFontSize->value());
     pSettings->editor().setEnableLigaturesSupport(ui->chkLigature->isChecked());
-
+    pSettings->editor().setShowSpecialChars(ui->chkShowSpecialChars->isChecked());
     //gutter
     pSettings->editor().setGutterVisible(ui->chkGutterVisible->isChecked());
     pSettings->editor().setGutterAutoSize(ui->chkAutoSizeGutter->isChecked());

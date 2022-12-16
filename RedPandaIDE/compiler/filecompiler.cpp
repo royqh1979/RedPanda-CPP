@@ -113,7 +113,10 @@ bool FileCompiler::prepareForCompile()
         mArguments += getLibraryArguments(fileType);
 
     if (!fileExists(mCompiler)) {
-        throw CompileError(tr("The Compiler '%1' doesn't exists!").arg(mCompiler));
+        throw CompileError(
+                    tr("The Compiler '%1' doesn't exists!").arg(mCompiler)
+                    +"<br />"
+                    +tr("Please check the \"program\" page of compiler settings."));
     }
 
     log(tr("Processing %1 source file:").arg(strFileType));

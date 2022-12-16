@@ -2,7 +2,13 @@ Red Panda C++ Version 2.7
 
   - enhancement: Remove multiple problems in the problem set view
   - enhancement: Clear the proble view after a new problem set created
-  - enhancement: "Remove trailing spaces" in options / editor / misc
+  - enhancement: "Trim trailing spaces" in options / editor / misc
+  - enhancement: "Trim trailing spaces" in code menu
+  - change: Don't auto disable compile and debug buttons.
+  - enhancement: Better error messages for missing compile/debug/make programs.
+  - enhancement: "Show special chars" in options / editor / font
+  - fix: Lost compiler set settings if a compiler set's bin dirs is empty.
+  - enhancement: Better error message when trying to debug with Release compile set.
 
 Red Panda C++ Version 2.6
 

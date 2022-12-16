@@ -191,6 +191,7 @@
         "underlined": false
     },
     "Space": {
+    	"foreground": "#ff505050",
         "bold": false,
         "italic": false,
         "strikeout": false,
