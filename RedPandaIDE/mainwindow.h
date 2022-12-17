@@ -275,9 +275,13 @@ private:
     QStringList getBinDirsForCurrentEditor();
     QStringList getDefaultCompilerSetBinDirs();
     void openShell(const QString& folder, const QString& shellCommand, const QStringList& binDirs);
-    QAction* createActionFor(const QString& text,
+    QAction* createAction(const QString& text,
                              QWidget* parent,
                              QKeySequence shortcut=QKeySequence());
+    QAction* createShortcutCustomableAction(
+            const QString& text,
+            const QString& objectName,
+            QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
     void includeOrSkipDirs(const QStringList& dirs, bool skip);
     void showSearchReplacePanel(bool show);
@@ -614,15 +618,15 @@ private slots:
 
     void onLoadProblemSet();
 
-    void on_btnAddProblemCase_clicked();
+    void onAddProblemCase();
 
     void on_btnRunAllProblemCases_clicked();
 
     void on_actionC_Reference_triggered();
 
-    void on_btnRemoveProblemCase_clicked();
+    void onRemoveProblemCases();
 
-    void on_btnOpenProblemAnswer_clicked();
+    void onOpenProblemAnswerFile();
 
     void on_actionTool_Window_Bars_triggered();
 
@@ -662,7 +666,7 @@ private slots:
 
     void on_actionDelete_to_BOL_triggered();
 
-    void on_btnCaseValidateOptions_clicked();
+    void onOpenCaseValidationOptions();
 
     void on_actionInterrupt_triggered();
 
@@ -895,8 +899,8 @@ private:
     QAction * mProblemSet_Load;
     QAction * mProblemSet_ImportFPS;
     QAction * mProblemSet_ExportFPS;
-    QAction * mProblem_Add;
-    QAction * mProblem_Remove;
+    QAction * mProblemSet_AddProblem;
+    QAction * mProblemSet_RemoveProblem;
 
     //action for problem
     QAction * mProblem_OpenSource;
@@ -910,10 +914,6 @@ private:
     QAction * mProblem_RemoveCases;
     QAction * mProblem_OpenAnswer;
     QAction * mProblem_CaseValidationOptions;
-    QAction * mProblem_ClearInputFile;
-    QAction * mProblem_SetInputFile;
-    QAction * mProblem_ClearExpectedOutputFile;
-    QAction * mProblem_SetExpectedFile;
 
     QAction * mProblem_RunCurrentCase;
     QAction * mProblem_RunAllCases;

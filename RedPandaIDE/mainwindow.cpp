@@ -318,8 +318,6 @@ MainWindow::MainWindow(QWidget *parent)
             ui->searchView,&QTreeView::expandAll);
     ui->replacePanel->setVisible(false);
     ui->tabProblem->setEnabled(false);
-    ui->btnRemoveProblem->setEnabled(false);
-    ui->btnRemoveProblemCase->setEnabled(false);
 
     //problem set
     mOJProblemSetNameCounter=1;
@@ -1714,18 +1712,18 @@ void MainWindow::updateActionIcons()
 
     //problem view
     mProblemSet_New->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET));
-    mProblem_Add->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD));
-    mProblem_Remove->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+    mProblemSet_AddProblem->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD));
+    mProblemSet_RemoveProblem->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
     mProblemSet_Save->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS));
     mProblemSet_Load->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN_FOLDER));
     mProblemSet_ImportFPS->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_BACK));
     mProblemSet_ExportFPS->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_FORWARD));
 
-    pIconsManager->setIcon(ui->btnAddProblemCase, IconsManager::ACTION_MISC_ADD);
-    pIconsManager->setIcon(ui->btnRemoveProblemCase, IconsManager::ACTION_MISC_REMOVE);
-    pIconsManager->setIcon(ui->btnOpenProblemAnswer, IconsManager::ACTION_PROBLEM_EDIT_SOURCE);
-    pIconsManager->setIcon(ui->btnRunAllProblemCases, IconsManager::ACTION_PROBLEM_RUN_CASES);
-    pIconsManager->setIcon(ui->btnCaseValidateOptions, IconsManager::ACTION_MISC_GEAR);
+    mProblem_AddCase->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD));
+    mProblem_RemoveCases->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_REMOVE));
+    mProblem_OpenAnswer->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_EDIT_SOURCE));
+    mProblem_RunAllCases->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_RUN_CASES));
+    mProblem_CaseValidationOptions->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_GEAR));
 
     pIconsManager->setIcon(ui->btnProblemCaseClearInputFileName, IconsManager::ACTION_MISC_CLEAN);
     pIconsManager->setIcon(ui->btnProblemCaseInputFileName, IconsManager::ACTION_MISC_FOLDER);
@@ -1733,7 +1731,6 @@ void MainWindow::updateActionIcons()
     pIconsManager->setIcon(ui->btnProblemCaseExpectedOutputFileName, IconsManager::ACTION_MISC_FOLDER);
 
     mProblem_Properties->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_PROPERTIES));
-
 
     int idx = ui->tabExplorer->indexOf(ui->tabWatch);
     if (idx>=0)
@@ -2388,277 +2385,298 @@ void MainWindow::doAutoSave(Editor *e)
 void MainWindow::createCustomActions()
 {
     // action for problem set
-    mProblemSet_New = createActionFor(
+    mProblemSet_New = createAction(
                 tr("New Problem Set"),
                 ui->tabProblemSet
                 );
     connect(mProblemSet_New,&QAction::triggered,
             this, &MainWindow::onNewProblemSet);
 
-    mProblemSet_Rename = createActionFor(
+    mProblemSet_Rename = createAction(
                 tr("Rename Problem Set"),
                 ui->tabProblemSet
                 );
     connect(mProblemSet_Rename, &QAction::triggered,
             this, &MainWindow::onRenameProblemSet);
 
-    mProblemSet_Save = createActionFor(
+    mProblemSet_Save = createAction(
                 tr("Save Problem Set"),
                 ui->tabProblemSet
                 );
     connect(mProblemSet_Save,&QAction::triggered,
             this, &MainWindow::onSaveProblemSet);
 
-    mProblemSet_Load = createActionFor(
+    mProblemSet_Load = createAction(
                 tr("Load Problem Set"),
                 ui->tabProblemSet);
     connect(mProblemSet_Load,&QAction::triggered,
             this, &MainWindow::onLoadProblemSet);
 
-    mProblemSet_ImportFPS = createActionFor(
+    mProblemSet_ImportFPS = createAction(
                 tr("Import FPS Problem Set"),
                 ui->tabProblemSet);
     connect(mProblemSet_ImportFPS,&QAction::triggered,
             this, &MainWindow::onImportFPSProblemSet);
 
-    mProblemSet_ExportFPS = createActionFor(
+    mProblemSet_ExportFPS = createAction(
                 tr("Export FPS Problem Set"),
                 ui->tabProblemSet);
     connect(mProblemSet_ExportFPS,&QAction::triggered,
             this, &MainWindow::onExportFPSProblemSet);
 
-    mProblem_Add = createActionFor(
+    mProblemSet_AddProblem = createAction(
                 tr("Add Problem"),
                 ui->tabProblemSet);
-    connect(mProblem_Add,&QAction::triggered,
+    connect(mProblemSet_AddProblem,&QAction::triggered,
             this, &MainWindow::onAddProblem);
 
-    mProblem_Remove = createActionFor(
+    mProblemSet_RemoveProblem = createAction(
                 tr("Remove Problem"),
                 ui->tabProblemSet);
-    connect(mProblem_Remove,&QAction::triggered,
+    connect(mProblemSet_RemoveProblem,&QAction::triggered,
             this, &MainWindow::onRemoveProblem);
 
-    //problem
-    mProblem_Properties = createActionFor(
-                tr("Properties..."),
-                this
-                );
-    connect(mProblem_Properties, &QAction::triggered, this,
-            &MainWindow::onProblemProperties);
 
-    mProblem_OpenSource=createActionFor(
+    //problem
+    mProblem_OpenSource=createAction(
                 tr("Open Source File"),
-                ui->lstProblemSet
+                ui->tabProblemSet
                 );
     connect(mProblem_OpenSource, &QAction::triggered, this,
             &MainWindow::onProblemOpenSource);
 
-    mProblem_Rename=createActionFor(
+    mProblem_Rename=createAction(
                 tr("Rename Problem"),
-                ui->lstProblemSet
+                ui->tabProblemSet
                 );
     connect(mProblem_Rename, &QAction::triggered, this,
             &MainWindow::onProblemRename);
 
-    mProblem_GotoUrl=createActionFor(
+    mProblem_GotoUrl=createAction(
                 tr("Goto Url"),
-                ui->lstProblemSet
+                ui->tabProblemSet
                 );
     connect(mProblem_GotoUrl, &QAction::triggered, this,
             &MainWindow::onProblemGotoUrl);
 
-    //problem cases
-    mProblem_RunAllCases = createActionFor(
-                tr("Run All Cases"),
-                this
+    mProblem_Properties = createAction(
+                tr("Properties..."),
+                ui->tabProblemSet
                 );
-    mProblem_RunAllCases->setObjectName("Problem_RunAllCases");
+    connect(mProblem_Properties, &QAction::triggered, this,
+            &MainWindow::onProblemProperties);
+
+    //problem cases (buttons)
+    mProblem_AddCase = createAction(
+                tr("Add Problem Case"),
+                ui->tabProblem);
+    connect(mProblem_AddCase, &QAction::triggered, this,
+            &MainWindow::onAddProblemCase);
+
+    mProblem_RemoveCases = createAction(
+                tr("Remove Problem Case"),
+                ui->tabProblem);
+    connect(mProblem_RemoveCases, &QAction::triggered, this,
+            &MainWindow::onRemoveProblemCases);
+
+    mProblem_OpenAnswer = createAction(
+                tr("Open Anwser Source File"),
+                ui->tabProblem);
+    connect(mProblem_OpenAnswer, &QAction::triggered, this,
+            &MainWindow::onOpenProblemAnswerFile);
+
+    mProblem_CaseValidationOptions = createAction(
+                tr("Problem Cases Validation Options"),
+                ui->tabProblem);
+    connect(mProblem_CaseValidationOptions, &QAction::triggered, this,
+            &MainWindow::onOpenCaseValidationOptions);
+
+    // problem case run
+    mProblem_RunAllCases = createShortcutCustomableAction(
+                tr("Run All Cases"),
+                "Problem_RunAllCases");
     connect(mProblem_RunAllCases, &QAction::triggered, this,
             &MainWindow::on_btnRunAllProblemCases_clicked);
 
-    mProblem_RunCurrentCase = createActionFor(
+    mProblem_RunCurrentCase = createShortcutCustomableAction(
                 tr("Run Current Case"),
-                this
-                );
-    mProblem_RunCurrentCase->setObjectName("Problem_RunCurrentCases");
+                "Problem_RunCurrentCases");
     connect(mProblem_RunCurrentCase, &QAction::triggered, this,
             &MainWindow::onProblemRunCurrentCase);
 
-    mProblem_batchSetCases = createActionFor(
+    mProblem_batchSetCases = createShortcutCustomableAction(
                 tr("Batch Set Cases"),
-                this);
-    mProblem_batchSetCases->setObjectName("Problem_BatchSetCases");
+                "Problem_BatchSetCases");
     connect(mProblem_batchSetCases, &QAction::triggered, this,
             &MainWindow::onProblemBatchSetCases);
 
     //Bookmark
     ui->tableBookmark->setContextMenuPolicy(Qt::CustomContextMenu);
-    mBookmark_Remove=createActionFor(
+    mBookmark_Remove=createAction(
                 tr("Remove"),
                 ui->tableBookmark);
     connect(mBookmark_Remove, &QAction::triggered,
             this, &MainWindow::onBookmarkRemove);
 
-    mBookmark_RemoveAll=createActionFor(
+    mBookmark_RemoveAll=createAction(
                 tr("Remove All Bookmarks"),
                 ui->tableBookmark);
     connect(mBookmark_RemoveAll, &QAction::triggered,
             this, &MainWindow::onBookmarkRemoveAll);
-    mBookmark_Modify=createActionFor(
+    mBookmark_Modify=createAction(
                 tr("Modify Description"),
                 ui->tableBookmark);
     connect(mBookmark_Modify, &QAction::triggered,
             this, &MainWindow::onBookmarkModify);
 
     //watch view
-    mDebugConsole_ShowDetailLog = createActionFor(
+    mDebugConsole_ShowDetailLog = createAction(
                 tr("Show detail debug logs"),
                 ui->debugConsole);
     mDebugConsole_ShowDetailLog->setCheckable(true);
     connect(mDebugConsole_ShowDetailLog, &QAction::toggled,
             this, &MainWindow::onDebugConsoleShowDetailLog);
 
-    mDebugConsole_Copy=createActionFor(
+    mDebugConsole_Copy=createAction(
                 tr("Copy"),
                 ui->debugConsole,
                 QKeySequence("Ctrl+C"));
     connect(mDebugConsole_Copy, &QAction::triggered,
             this, &MainWindow::onDebugConsoleCopy);
 
-    mDebugConsole_Paste=createActionFor(
+    mDebugConsole_Paste=createAction(
                 tr("Paste"),
                 ui->debugConsole,
                 QKeySequence("Ctrl+V"));
     connect(mDebugConsole_Paste, &QAction::triggered,
             this, &MainWindow::onDebugConsolePaste);
 
-    mDebugConsole_SelectAll=createActionFor(
+    mDebugConsole_SelectAll=createAction(
                 tr("Select All"),
                 ui->debugConsole);
     connect(mDebugConsole_SelectAll, &QAction::triggered,
             this, &MainWindow::onDebugConsoleSelectAll);
 
-    mDebugConsole_Clear=createActionFor(
+    mDebugConsole_Clear=createAction(
                 tr("Clear"),
                 ui->debugConsole);
     connect(mDebugConsole_Clear, &QAction::triggered,
             this, &MainWindow::onDebugConsoleClear);
 
     //compile issues
-    mTableIssuesCopyAction = createActionFor(
+    mTableIssuesCopyAction = createAction(
                 tr("Copy"),
                 ui->tableIssues,
                 QKeySequence("Ctrl+C"));
     connect(mTableIssuesCopyAction,&QAction::triggered,
             this, &MainWindow::onTableIssuesCopy);
 
-    mTableIssuesCopyAllAction = createActionFor(
+    mTableIssuesCopyAllAction = createAction(
                 tr("Copy all"),
                 ui->tableIssues,
                 QKeySequence("Ctrl+Shift+C"));
     connect(mTableIssuesCopyAllAction,&QAction::triggered,
             this, &MainWindow::onTableIssuesCopyAll);
 
-    mTableIssuesClearAction = createActionFor(
+    mTableIssuesClearAction = createAction(
                 tr("Clear"),
                 ui->tableIssues);
     connect(mTableIssuesClearAction,&QAction::triggered,
             this, &MainWindow::onTableIssuesClear);
 
     //search
-    mSearchViewClearAction = createActionFor(
+    mSearchViewClearAction = createAction(
                 tr("Remove this search"),
                 ui->searchHistoryPanel);
     connect(mSearchViewClearAction, &QAction::triggered,
             this, &MainWindow::onSearchViewClear);
 
-    mSearchViewClearAllAction = createActionFor(
+    mSearchViewClearAllAction = createAction(
                 tr("Clear all searches"),
                 ui->searchHistoryPanel);
     connect(mSearchViewClearAllAction,&QAction::triggered,
             this, &MainWindow::onSearchViewClearAll);
 
     //breakpoints
-    mBreakpointViewPropertyAction = createActionFor(
+    mBreakpointViewPropertyAction = createAction(
                 tr("Breakpoint condition..."),
                 ui->tblBreakpoints);
     connect(mBreakpointViewPropertyAction,&QAction::triggered,
             this, &MainWindow::onBreakpointViewProperty);
 
-    mBreakpointViewRemoveAllAction = createActionFor(
+    mBreakpointViewRemoveAllAction = createAction(
                 tr("Remove All Breakpoints"),
                 ui->tblBreakpoints);
     connect(mBreakpointViewRemoveAllAction,&QAction::triggered,
             this, &MainWindow::onBreakpointViewRemoveAll);
-    mBreakpointViewRemoveAction = createActionFor(
+    mBreakpointViewRemoveAction = createAction(
                 tr("Remove Breakpoint"),
                 ui->tblBreakpoints);
     connect(mBreakpointViewRemoveAction,&QAction::triggered,
             this, &MainWindow::onBreakpointRemove);
 
     //project
-    mProject_Rename_Unit = createActionFor(
+    mProject_Rename_Unit = createAction(
                 tr("Rename File"),
                 ui->projectView);
     connect(mProject_Rename_Unit, &QAction::triggered,
             this, &MainWindow::onProjectRenameUnit);
-    mProject_Add_Folder = createActionFor(
+    mProject_Add_Folder = createAction(
                 tr("Add Folder"),
                 ui->projectView);
     connect(mProject_Add_Folder, &QAction::triggered,
             this, &MainWindow::onProjectAddFolder);
 
-    mProject_Rename_Folder = createActionFor(
+    mProject_Rename_Folder = createAction(
                 tr("Rename Folder"),
                 ui->projectView);
     connect(mProject_Rename_Folder, &QAction::triggered,
             this, &MainWindow::onProjectRenameFolder);
 
-    mProject_Remove_Folder = createActionFor(
+    mProject_Remove_Folder = createAction(
                 tr("Remove Folder"),
                 ui->projectView);
     connect(mProject_Remove_Folder, &QAction::triggered,
             this, &MainWindow::onProjectRemoveFolder);
-    mProject_SwitchFileSystemViewMode = createActionFor(
+    mProject_SwitchFileSystemViewMode = createAction(
                 tr("Switch to normal view"),
                 ui->projectView);
     connect(mProject_SwitchFileSystemViewMode, &QAction::triggered,
             this, &MainWindow::onProjectSwitchFileSystemViewMode);
 
-    mProject_SwitchCustomViewMode = createActionFor(
+    mProject_SwitchCustomViewMode = createAction(
                 tr("Switch to custom view"),
                 ui->projectView);
     connect(mProject_SwitchCustomViewMode, &QAction::triggered,
             this, &MainWindow::onProjectSwitchCustomViewMode);
 
     //browser
-    mClassBrowser_Sort_By_Type = createActionFor(
+    mClassBrowser_Sort_By_Type = createAction(
                 tr("Sort By Type"),
                 ui->tabStructure);
     mClassBrowser_Sort_By_Type->setCheckable(true);
     mClassBrowser_Sort_By_Type->setIcon(QIcon(":/icons/images/newlook24/077-sort-type.png"));
-    mClassBrowser_Sort_By_Name = createActionFor(
+    mClassBrowser_Sort_By_Name = createAction(
                 tr("Sort alphabetically"),
                 ui->tabStructure);
     mClassBrowser_Sort_By_Name->setCheckable(true);
     mClassBrowser_Sort_By_Name->setIcon(QIcon(":/icons/images/newlook24/076-sort-alpha.png"));
-    mClassBrowser_Show_Inherited = createActionFor(
+    mClassBrowser_Show_Inherited = createAction(
                 tr("Show inherited members"),
                 ui->tabStructure);
     mClassBrowser_Show_Inherited->setCheckable(true);
     mClassBrowser_Show_Inherited->setIcon(QIcon(":/icons/images/newlook24/075-show-inheritance.png"));
-    mClassBrowser_goto_declaration = createActionFor(
+    mClassBrowser_goto_declaration = createAction(
                 tr("Goto declaration"),
                 ui->tabStructure);
-    mClassBrowser_goto_definition = createActionFor(
+    mClassBrowser_goto_definition = createAction(
                 tr("Goto definition"),
                 ui->tabStructure);
-    mClassBrowser_Show_CurrentFile = createActionFor(
+    mClassBrowser_Show_CurrentFile = createAction(
                 tr("In current file"),
                 ui->tabStructure);
     mClassBrowser_Show_CurrentFile->setCheckable(true);
-    mClassBrowser_Show_WholeProject = createActionFor(
+    mClassBrowser_Show_WholeProject = createAction(
                 tr("In current project"),
                 ui->tabStructure);
     mClassBrowser_Show_WholeProject->setCheckable(true);
@@ -2687,48 +2705,48 @@ void MainWindow::createCustomActions()
 
 
     //Files view
-    mFilesView_CreateFolder = createActionFor(
+    mFilesView_CreateFolder = createAction(
                 tr("New Folder"),
                 ui->treeFiles);
     connect(mFilesView_CreateFolder, &QAction::triggered,
             this, &MainWindow::onFilesViewCreateFolder);
 
-    mFilesView_CreateFile = createActionFor(
+    mFilesView_CreateFile = createAction(
                 tr("New File"),
                 ui->treeFiles);
     connect(mFilesView_CreateFile, &QAction::triggered,
             this, &MainWindow::onFilesViewCreateFile);
 
-    mFilesView_Rename = createActionFor(
+    mFilesView_Rename = createAction(
                 tr("Rename"),
                 ui->treeFiles);
     connect(mFilesView_Rename, &QAction::triggered,
             this, &MainWindow::onFilesViewRename);
 
-    mFilesView_RemoveFile = createActionFor(
+    mFilesView_RemoveFile = createAction(
                 tr("Delete"),
                 ui->treeFiles);
     mFilesView_RemoveFile->setShortcut(Qt::Key_Delete);
     connect(mFilesView_RemoveFile, &QAction::triggered,
             this, &MainWindow::onFilesViewRemoveFiles);
-    mFilesView_Open = createActionFor(
+    mFilesView_Open = createAction(
                 tr("Open in Editor"),
                 ui->treeFiles);
     connect(mFilesView_Open, &QAction::triggered,
             this, &MainWindow::onFilesViewOpen);
 
-    mFilesView_OpenWithExternal = createActionFor(
+    mFilesView_OpenWithExternal = createAction(
                 tr("Open in External Program"),
                 ui->treeFiles);
     connect(mFilesView_OpenWithExternal, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenWithExternal);
-    mFilesView_OpenInTerminal = createActionFor(
+    mFilesView_OpenInTerminal = createAction(
                 tr("Open in Terminal"),
                 ui->treeFiles);
     mFilesView_OpenInTerminal->setIcon(ui->actionOpen_Terminal->icon());
     connect(mFilesView_OpenInTerminal, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenInTerminal);
-    mFilesView_OpenInExplorer = createActionFor(
+    mFilesView_OpenInExplorer = createAction(
                 tr("Open in Windows Explorer"),
                 ui->treeFiles);
     mFilesView_OpenInExplorer->setIcon(ui->actionOpen_Containing_Folder->icon());
@@ -2736,18 +2754,18 @@ void MainWindow::createCustomActions()
             this, &MainWindow::onFilesViewOpenInExplorer);
 
     //Tools output
-    mToolsOutput_Clear = createActionFor(
+    mToolsOutput_Clear = createAction(
                 tr("Clear"),
                 ui->txtToolsOutput);
     connect(mToolsOutput_Clear, &QAction::triggered,
             this, &MainWindow::onToolsOutputClear);
-    mToolsOutput_Copy = createActionFor(
+    mToolsOutput_Copy = createAction(
                 tr("Copy"),
                 ui->txtToolsOutput);
     mToolsOutput_Copy->setShortcut(QKeySequence("Ctrl+C"));
     connect(mToolsOutput_Copy, &QAction::triggered,
             this, &MainWindow::onToolsOutputCopy);
-    mToolsOutput_SelectAll = createActionFor(
+    mToolsOutput_SelectAll = createAction(
                 tr("Select All"),
                 ui->txtToolsOutput);
     connect(mToolsOutput_SelectAll, &QAction::triggered,
@@ -2756,14 +2774,24 @@ void MainWindow::createCustomActions()
 
 void MainWindow::initToolButtons()
 {
-    //problem set actions
+    //problem set toolbuttons
     ui->btnNewProblemSet->setDefaultAction(mProblemSet_New);
     ui->btnSaveProblemSet->setDefaultAction(mProblemSet_Save);
     ui->btnLoadProblemSet->setDefaultAction(mProblemSet_Load);
     ui->btnImportFPS->setDefaultAction(mProblemSet_ImportFPS);
     ui->btnExportFPS->setDefaultAction(mProblemSet_ExportFPS);
-    ui->btnAddProblem->setDefaultAction(mProblem_Add);
-    ui->btnRemoveProblem->setDefaultAction(mProblem_Remove);
+    ui->btnAddProblem->setDefaultAction(mProblemSet_AddProblem);
+    ui->btnRemoveProblem->setDefaultAction(mProblemSet_RemoveProblem);
+
+    //problem toolbuttons
+    ui->btnAddProblemCase->setDefaultAction(mProblem_AddCase);
+    ui->btnRemoveProblemCase->setDefaultAction(mProblem_RemoveCases);
+    ui->btnOpenProblemAnswer->setDefaultAction(mProblem_OpenAnswer);
+    ui->btnCaseValidateOptions->setDefaultAction(mProblem_CaseValidationOptions);
+
+
+    ui->btnRunAllProblemCases->setDefaultAction(mProblem_RunAllCases);
+
 
     //toolbar for class browser
     mClassBrowserToolbar = new QWidget();
@@ -2827,7 +2855,7 @@ void MainWindow::initToolButtons()
 //    action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 //}
 
-QAction* MainWindow::createActionFor(
+QAction* MainWindow::createAction(
         const QString& text,
         QWidget* parent,
         QKeySequence shortcut) {
@@ -2837,6 +2865,13 @@ QAction* MainWindow::createActionFor(
     action->setPriority(QAction::HighPriority);
     action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     parent->addAction(action);
+    return action;
+}
+
+QAction *MainWindow::createShortcutCustomableAction(const QString &text, const QString &objectName, QKeySequence shortcut)
+{
+    QAction* action = createAction(text,this,shortcut);
+    action->setObjectName(objectName);
     return action;
 }
 
@@ -3671,8 +3706,8 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
     menu.addAction(mProblemSet_Save);
     menu.addAction(mProblemSet_ImportFPS);
     menu.addAction(mProblemSet_ExportFPS);
-    menu.addAction(mProblem_Add);
-    menu.addAction(mProblem_Remove);
+    menu.addAction(mProblemSet_AddProblem);
+    menu.addAction(mProblemSet_RemoveProblem);
     menu.addSeparator();
     menu.addAction(mProblem_Rename);
     menu.addAction(mProblem_GotoUrl);
@@ -3810,9 +3845,8 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     if (idx.isValid()) {
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
         if (problemCase) {
-            ui->btnProblemCaseInputFileName->setEnabled(false);
             ui->btnRemoveProblemCase->setEnabled(true);
-            ui->btnProblemCaseInputFileName->setEnabled(true);
+            ui->btnRunAllProblemCases->setEnabled(true);
             fillProblemCaseInputAndExpected(problemCase);
             ui->txtProblemCaseOutput->clear();
             ui->txtProblemCaseOutput->setPlainText(problemCase->output);
@@ -3832,6 +3866,7 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     ui->txtProblemCaseExpectedOutputFileName->setToolTip("");
 
     ui->btnRemoveProblemCase->setEnabled(false);
+    ui->btnRunAllProblemCases->setEnabled(false);
     ui->txtProblemCaseInputFileName->clear();
     ui->btnProblemCaseInputFileName->setEnabled(false);
     ui->txtProblemCaseInput->clear();
@@ -7979,7 +8014,7 @@ void MainWindow::onLoadProblemSet()
 }
 
 
-void MainWindow::on_btnAddProblemCase_clicked()
+void MainWindow::onAddProblemCase()
 {
     int startCount = mOJProblemModel.count();
     QString name;
@@ -8015,7 +8050,7 @@ void MainWindow::on_actionC_Reference_triggered()
 }
 
 
-void MainWindow::on_btnRemoveProblemCase_clicked()
+void MainWindow::onRemoveProblemCases()
 {
     QModelIndex idx = ui->tblProblemCases->currentIndex();
     if (idx.isValid()) {
@@ -8024,7 +8059,7 @@ void MainWindow::on_btnRemoveProblemCase_clicked()
 }
 
 
-void MainWindow::on_btnOpenProblemAnswer_clicked()
+void MainWindow::onOpenProblemAnswerFile()
 {
     POJProblem problem = mOJProblemModel.problem();
     if (!problem || problem->answerProgram.isEmpty())
@@ -8203,7 +8238,7 @@ void MainWindow::on_actionDelete_to_BOL_triggered()
 }
 
 
-void MainWindow::on_btnCaseValidateOptions_clicked()
+void MainWindow::onOpenCaseValidationOptions()
 {
     changeOptions(
                 SettingsDialog::tr("Problem Set"),
