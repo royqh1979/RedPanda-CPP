@@ -3786,8 +3786,8 @@ void MainWindow::onTableProblemCasesContextMenu(const QPoint &pos)
     QModelIndex idx = ui->tblProblemCases->currentIndex();
     menu.addAction(mProblem_RunAllCases);
     menu.addAction(mProblem_RunCurrentCase);
-    mProblem_RunAllCases->setEnabled(mOJProblemModel.count()>0);
-    mProblem_RunCurrentCase->setEnabled(idx.isValid());
+    mProblem_RunAllCases->setEnabled(mOJProblemModel.count()>0 && ui->actionRun->isEnabled());
+    mProblem_RunCurrentCase->setEnabled(idx.isValid() && ui->actionRun->isEnabled());
     menu.exec(ui->tblProblemCases->mapToGlobal(pos));
 }
 
@@ -3846,7 +3846,7 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
         if (problemCase) {
             ui->btnRemoveProblemCase->setEnabled(true);
-            ui->btnRunAllProblemCases->setEnabled(true);
+            ui->btnRunAllProblemCases->setEnabled(ui->actionRun->isEnabled());
             fillProblemCaseInputAndExpected(problemCase);
             ui->txtProblemCaseOutput->clear();
             ui->txtProblemCaseOutput->setPlainText(problemCase->output);
