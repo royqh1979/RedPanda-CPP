@@ -44,6 +44,7 @@
 #define CC_CMD_OPT_USE_PIPE "cc_cmd_opt_use_pipe"
 
 #define COMPILER_OPTION_ON "on"
+#define COMPILER_OPTION_OFF ""
 
 enum class CompilerSetType {
     RELEASE,

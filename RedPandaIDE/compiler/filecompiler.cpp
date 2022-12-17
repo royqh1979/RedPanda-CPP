@@ -36,8 +36,10 @@ FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,
 bool FileCompiler::prepareForCompile()
 {
     Settings::CompilerSet::CompilationStage oldStage = compilerSet()->compilationStage();
-    auto action = finally([this,oldStage]{
+    QString oldDebugOptionValue = compilerSet()->getCompileOptionValue(CC_CMD_OPT_DEBUG_INFO);
+    auto action = finally([this,oldStage,oldDebugOptionValue]{
        compilerSet()->setCompilationStage(oldStage);
+       compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,oldDebugOptionValue);
     });
     Settings::CompilerSet::CompilationStage stage = oldStage;
     switch(mCompileType) {
@@ -46,6 +48,7 @@ bool FileCompiler::prepareForCompile()
         break;
     case CppCompileType::GenerateAssemblyOnly:
         stage = Settings::CompilerSet::CompilationStage::CompilationProperOnly;
+        compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_OFF);
         break;
     default:
         stage = oldStage;

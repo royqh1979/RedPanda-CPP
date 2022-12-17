@@ -13,6 +13,9 @@ Red Panda C++ Version 2.7
   - enhancement: Export FPS (free problem set) files.
   - enhancement: Run all cases button not correct disabled when no case exits.
   - enhancement: Speed up remove problems.
+  - fix: "Compile" button disabled after app start with an empty new file.
+  - enhancement: Don't add "-g3" option when generate assembely.
+  - enhancement: Generate assembly is not correctly disabled when current file is not C/C++.
 
 Red Panda C++ Version 2.6
 

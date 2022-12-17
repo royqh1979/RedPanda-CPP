@@ -76,6 +76,8 @@
 #include <QFileIconProvider>
 #include <QMimeDatabase>
 #include <QMimeType>
+#include <QToolTip>
+
 #include "mainwindow.h"
 #include <QScrollBar>
 #include <QTextDocumentFragment>
@@ -92,10 +94,6 @@
 #include "widgets/searchinfiledialog.h"
 
 #ifdef Q_OS_WIN
-#include <QMimeDatabase>
-#include <QMimeType>
-#include <QProgressDialog>
-#include <QToolTip>
 #include <windows.h>
 #endif
 
@@ -127,6 +125,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     addActions( this->findChildren<QAction *>(QString(), Qt::FindChildrenRecursively));
+
+    //custom actions
+    createCustomActions();
+
     // status bar
 
     //statusBar takes the owner ships
@@ -421,7 +423,7 @@ MainWindow::MainWindow(QWidget *parent)
     //git menu
     connect(ui->menuGit, &QMenu::aboutToShow,
             this, &MainWindow::updateVCSActions);
-    createCustomActions();
+
     initToolButtons();
     buildContextMenus();
     updateAppTitle();
@@ -623,8 +625,8 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionLocate_in_Files_View->setEnabled(!e->isNew());
     }
 
-    updateCompileActions();
-    updateCompilerSet();
+    updateCompileActions(e);
+    updateCompilerSet(e);
 }
 
 
@@ -646,7 +648,11 @@ void MainWindow::updateProjectActions()
     updateCompileActions();
 }
 
-void MainWindow::updateCompileActions()
+void MainWindow::updateCompileActions() {
+    updateCompileActions(mEditorList->getEditor());
+}
+
+void MainWindow::updateCompileActions(const Editor *e)
 {
     if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()) {
         ui->actionCompile->setEnabled(false);
@@ -660,7 +666,6 @@ void MainWindow::updateCompileActions()
         bool forProject=false;
         bool canRun = false;
         bool canCompile = false;
-        Editor * e = mEditorList->getEditor();
         if (e) {
             if (!e->inProject()) {
                 FileType fileType = getFileType(e->filename());
@@ -684,7 +689,7 @@ void MainWindow::updateCompileActions()
         ui->actionCompile_Run->setEnabled(canRun && canCompile);
         ui->actionRun->setEnabled(canRun);
         ui->actionRebuild->setEnabled(canCompile);
-        ui->actionGenerate_Assembly->setEnabled(!forProject);
+        ui->actionGenerate_Assembly->setEnabled(canCompile && !forProject);
         ui->actionDebug->setEnabled(canRun);
         ui->btnRunAllProblemCases->setEnabled(canRun);
     }
@@ -696,7 +701,6 @@ void MainWindow::updateCompileActions()
     //it's not a compile action, but put here for convinience
     ui->actionSaveAll->setEnabled(mProject!=nullptr
             || mEditorList->pageCount()>0);
-
 }
 
 void MainWindow::updateEditorColorSchemes()
@@ -1536,6 +1540,11 @@ void MainWindow::changeOptions(const QString &widgetName, const QString &groupNa
 
 void MainWindow::updateCompilerSet()
 {
+    updateCompilerSet(mEditorList->getEditor());
+}
+
+void MainWindow::updateCompilerSet(const Editor *e)
+{
     mCompilerSet->blockSignals(true);
     mCompilerSet->clear();
     for (size_t i=0;i<pSettings->compilerSets().size();i++) {
@@ -1543,7 +1552,6 @@ void MainWindow::updateCompilerSet()
     }
     int index=pSettings->compilerSets().defaultIndex();
     if (mProject) {
-        Editor *e = mEditorList->getEditor();
         if ( !e || e->inProject()) {
             index = mProject->options().compilerSet;
         } else if (e->syntaxer()
@@ -3781,11 +3789,14 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
 void MainWindow::onTableProblemCasesContextMenu(const QPoint &pos)
 {
     QMenu menu(this);
+    menu.addAction(mProblem_AddCase);
+    menu.addAction(mProblem_RemoveCases);
     menu.addAction(mProblem_batchSetCases);
     menu.addSeparator();
     QModelIndex idx = ui->tblProblemCases->currentIndex();
     menu.addAction(mProblem_RunAllCases);
     menu.addAction(mProblem_RunCurrentCase);
+    menu.addAction(mProblem_CaseValidationOptions);
     mProblem_RunAllCases->setEnabled(mOJProblemModel.count()>0 && ui->actionRun->isEnabled());
     mProblem_RunCurrentCase->setEnabled(idx.isValid() && ui->actionRun->isEnabled());
     menu.exec(ui->tblProblemCases->mapToGlobal(pos));
@@ -3805,7 +3816,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
 {
     QModelIndex idx = current;
     if (!idx.isValid()) {
-        ui->btnRemoveProblem->setEnabled(false);
+        mProblemSet_RemoveProblem->setEnabled(false);
         mOJProblemModel.setProblem(nullptr);
         ui->txtProblemCaseExpected->clear();
         ui->txtProblemCaseInput->clear();
@@ -3815,7 +3826,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         ui->lblProblem->setToolTip("");
         ui->tabProblem->setEnabled(false);
     } else {
-        ui->btnRemoveProblem->setEnabled(true);
+        mProblemSet_RemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
         if (problem && !problem->answerProgram.isEmpty()) {
             openFile(problem->answerProgram);
@@ -3845,7 +3856,7 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     if (idx.isValid()) {
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
         if (problemCase) {
-            ui->btnRemoveProblemCase->setEnabled(true);
+            mProblem_RemoveCases->setEnabled(true);
             ui->btnRunAllProblemCases->setEnabled(ui->actionRun->isEnabled());
             fillProblemCaseInputAndExpected(problemCase);
             ui->txtProblemCaseOutput->clear();
@@ -3865,7 +3876,7 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     ui->txtProblemCaseExpectedOutputFileName->clear();
     ui->txtProblemCaseExpectedOutputFileName->setToolTip("");
 
-    ui->btnRemoveProblemCase->setEnabled(false);
+    mProblem_RemoveCases->setEnabled(false);
     ui->btnRunAllProblemCases->setEnabled(false);
     ui->txtProblemCaseInputFileName->clear();
     ui->btnProblemCaseInputFileName->setEnabled(false);
@@ -7926,27 +7937,27 @@ void MainWindow::onAddProblem()
 
 void MainWindow::onRemoveProblem()
 {
-    QList<int> idxList;
-    foreach (const QModelIndex idx,ui->lstProblemSet->selectionModel()->selectedIndexes()) {
-        idxList.append(idx.row());
+    if (ui->lstProblemSet->selectionModel()->selectedIndexes().isEmpty()) {
+        QModelIndex idx=ui->lstProblemSet->currentIndex();
+        if (idx.isValid())
+            mOJProblemSetModel.removeProblem(idx.row());
+    } else {
+        QList<int> idxList;
+        foreach (const QModelIndex idx,ui->lstProblemSet->selectionModel()->selectedIndexes()) {
+            idxList.append(idx.row());
+        }
+        if (idxList.isEmpty())
+            return;
+        std::sort(idxList.begin(),idxList.end(),[](int i1, int i2){
+           return i1>i2;
+        });
+        bool oldBlock = ui->lstProblemSet->selectionModel()->blockSignals(true);
+        for (int i=0;i<idxList.count();i++) {
+            mOJProblemSetModel.removeProblem(idxList[i]);
+        }
+        ui->lstProblemSet->selectionModel()->blockSignals(oldBlock);
+        onProblemSetIndexChanged(ui->lstProblemSet->currentIndex(),QModelIndex());
     }
-    if (idxList.isEmpty())
-        return;
-    std::sort(idxList.begin(),idxList.end(),[](int i1, int i2){
-       return i1>i2;
-    });
-    bool oldBlock = ui->lstProblemSet->selectionModel()->blockSignals(true);
-    QProgressDialog progress(tr("Removing Problems..."),tr("Abort"),0,idxList.count(),this);
-    progress.setWindowModality(Qt::WindowModal);
-    for (int i=0;i<idxList.count();i++) {
-        progress.setValue(i);
-        if (progress.wasCanceled())
-            break;
-        mOJProblemSetModel.removeProblem(idxList[i]);
-    }
-    progress.setValue(idxList.count());
-    ui->lstProblemSet->selectionModel()->blockSignals(oldBlock);
-    onProblemSetIndexChanged(ui->lstProblemSet->currentIndex(),QModelIndex());
 }
 
 

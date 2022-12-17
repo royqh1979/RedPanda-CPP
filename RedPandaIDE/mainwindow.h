@@ -124,8 +124,10 @@ public:
     void updateEditorActions(const Editor *e);
     void updateProjectActions();
     void updateCompileActions();
+    void updateCompileActions(const Editor* e);
     void updateEditorColorSchemes();
     void updateCompilerSet();
+    void updateCompilerSet(const Editor* e);
     void updateDebuggerSettings();
     void updateActionIcons();
     void checkSyntaxInBack(Editor* e);
