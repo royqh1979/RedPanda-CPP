@@ -11,6 +11,7 @@ Red Panda C++ Version 2.7
   - enhancement: Better error message when trying to debug with Release compile set.
   - enhancement: Add missing space char color settings in color schemes
   - enhancement: Export FPS (free problem set) files.
+  - enhancement: Improve context menus.
 
 Red Panda C++ Version 2.6
 

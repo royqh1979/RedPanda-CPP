@@ -267,6 +267,8 @@ private:
     void stretchExplorerPanel(bool open);
     void prepareDebugger();
     void doAutoSave(Editor *e);
+    void createCustomActions();
+    void initToolButtons();
     void buildContextMenus();
     void buildEncodingMenu();
     void maximizeEditor();
@@ -346,12 +348,15 @@ private slots:
     void onFilesViewCreateFile();
     void onFilesViewRemoveFiles();
     void onFilesViewRename();
+
+    void onNewProblemSet();
+
     void onProblemProperties();
     void onProblemOpenSource();
     void onProblemRename();
     void onProblemGotoUrl();
 
-    void onLableProblemSetContextMenuRequested();
+    void onRenameProblemSet();
     void onBookmarkRemove();
     void onBookmarkRemoveAll();
     void onBookmarkModify();
@@ -601,15 +606,13 @@ private slots:
 
     void on_actionRun_Parameters_triggered();
 
-    void on_btnNewProblemSet_clicked();
+    void onAddProblem();
 
-    void on_btnAddProblem_clicked();
+    void onRemoveProblem();
 
-    void on_btnRemoveProblem_clicked();
+    void onSaveProblemSet();
 
-    void on_btnSaveProblemSet_clicked();
-
-    void on_btnLoadProblemSet_clicked();
+    void onLoadProblemSet();
 
     void on_btnAddProblemCase_clicked();
 
@@ -751,11 +754,11 @@ private slots:
 
     void on_actionGenerate_Assembly_triggered();
 
-    void on_btnImportFPS_clicked();
+    void onImportFPSProblemSet();
 
     void on_actionTrim_trailing_spaces_triggered();
 
-    void on_btnExportFPS_clicked();
+    void onExportFPSProblemSet();
 
 private:
     Ui::MainWindow *ui;
@@ -886,13 +889,32 @@ private:
     QAction * mBookmark_Modify;
 
     //action for problem set
+    QAction * mProblemSet_New;
+    QAction * mProblemSet_Rename;
+    QAction * mProblemSet_Save;
+    QAction * mProblemSet_Load;
+    QAction * mProblemSet_ImportFPS;
+    QAction * mProblemSet_ExportFPS;
+    QAction * mProblem_Add;
+    QAction * mProblem_Remove;
+
+    //action for problem
     QAction * mProblem_OpenSource;
     QAction * mProblem_Properties;
     QAction * mProblem_Rename;
     QAction * mProblem_GotoUrl;
 
 
-    //action for problem
+    //action for problem cases
+    QAction * mProblem_AddCase;
+    QAction * mProblem_RemoveCases;
+    QAction * mProblem_OpenAnswer;
+    QAction * mProblem_CaseValidationOptions;
+    QAction * mProblem_ClearInputFile;
+    QAction * mProblem_SetInputFile;
+    QAction * mProblem_ClearExpectedOutputFile;
+    QAction * mProblem_SetExpectedFile;
+
     QAction * mProblem_RunCurrentCase;
     QAction * mProblem_RunAllCases;
     QAction * mProblem_batchSetCases;

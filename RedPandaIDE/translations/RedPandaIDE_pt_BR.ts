@@ -4872,6 +4872,18 @@
         <source>Export Error</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Abort</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Removing Problems...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rename Problem Set</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

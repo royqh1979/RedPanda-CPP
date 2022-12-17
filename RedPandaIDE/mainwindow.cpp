@@ -94,6 +94,7 @@
 #ifdef Q_OS_WIN
 #include <QMimeDatabase>
 #include <QMimeType>
+#include <QProgressDialog>
 #include <QToolTip>
 #include <windows.h>
 #endif
@@ -422,6 +423,8 @@ MainWindow::MainWindow(QWidget *parent)
     //git menu
     connect(ui->menuGit, &QMenu::aboutToShow,
             this, &MainWindow::updateVCSActions);
+    createCustomActions();
+    initToolButtons();
     buildContextMenus();
     updateAppTitle();
     //applySettings();
@@ -1710,13 +1713,13 @@ void MainWindow::updateActionIcons()
     ui->actionFilesView_Hide_Non_Support_Files->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_FILTER));
 
     //problem view
-    pIconsManager->setIcon(ui->btnNewProblemSet, IconsManager::ACTION_PROBLEM_SET);
-    pIconsManager->setIcon(ui->btnAddProblem, IconsManager::ACTION_MISC_ADD);
-    pIconsManager->setIcon(ui->btnRemoveProblem, IconsManager::ACTION_MISC_CROSS);
-    pIconsManager->setIcon(ui->btnSaveProblemSet, IconsManager::ACTION_FILE_SAVE_AS);
-    pIconsManager->setIcon(ui->btnLoadProblemSet, IconsManager::ACTION_FILE_OPEN_FOLDER);
-    pIconsManager->setIcon(ui->btnImportFPS, IconsManager::ACTION_CODE_BACK);
-    pIconsManager->setIcon(ui->btnExportFPS, IconsManager::ACTION_CODE_FORWARD);
+    mProblemSet_New->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET));
+    mProblem_Add->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD));
+    mProblem_Remove->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+    mProblemSet_Save->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS));
+    mProblemSet_Load->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN_FOLDER));
+    mProblemSet_ImportFPS->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_BACK));
+    mProblemSet_ExportFPS->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_FORWARD));
 
     pIconsManager->setIcon(ui->btnAddProblemCase, IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemoveProblemCase, IconsManager::ACTION_MISC_REMOVE);
@@ -2382,6 +2385,443 @@ void MainWindow::doAutoSave(Editor *e)
     }
 }
 
+void MainWindow::createCustomActions()
+{
+    // action for problem set
+    mProblemSet_New = createActionFor(
+                tr("New Problem Set"),
+                ui->tabProblemSet
+                );
+    connect(mProblemSet_New,&QAction::triggered,
+            this, &MainWindow::onNewProblemSet);
+
+    mProblemSet_Rename = createActionFor(
+                tr("Rename Problem Set"),
+                ui->tabProblemSet
+                );
+    connect(mProblemSet_Rename, &QAction::triggered,
+            this, &MainWindow::onRenameProblemSet);
+
+    mProblemSet_Save = createActionFor(
+                tr("Save Problem Set"),
+                ui->tabProblemSet
+                );
+    connect(mProblemSet_Save,&QAction::triggered,
+            this, &MainWindow::onSaveProblemSet);
+
+    mProblemSet_Load = createActionFor(
+                tr("Load Problem Set"),
+                ui->tabProblemSet);
+    connect(mProblemSet_Load,&QAction::triggered,
+            this, &MainWindow::onLoadProblemSet);
+
+    mProblemSet_ImportFPS = createActionFor(
+                tr("Import FPS Problem Set"),
+                ui->tabProblemSet);
+    connect(mProblemSet_ImportFPS,&QAction::triggered,
+            this, &MainWindow::onImportFPSProblemSet);
+
+    mProblemSet_ExportFPS = createActionFor(
+                tr("Export FPS Problem Set"),
+                ui->tabProblemSet);
+    connect(mProblemSet_ExportFPS,&QAction::triggered,
+            this, &MainWindow::onExportFPSProblemSet);
+
+    mProblem_Add = createActionFor(
+                tr("Add Problem"),
+                ui->tabProblemSet);
+    connect(mProblem_Add,&QAction::triggered,
+            this, &MainWindow::onAddProblem);
+
+    mProblem_Remove = createActionFor(
+                tr("Remove Problem"),
+                ui->tabProblemSet);
+    connect(mProblem_Remove,&QAction::triggered,
+            this, &MainWindow::onRemoveProblem);
+
+    //problem
+    mProblem_Properties = createActionFor(
+                tr("Properties..."),
+                this
+                );
+    connect(mProblem_Properties, &QAction::triggered, this,
+            &MainWindow::onProblemProperties);
+
+    mProblem_OpenSource=createActionFor(
+                tr("Open Source File"),
+                ui->lstProblemSet
+                );
+    connect(mProblem_OpenSource, &QAction::triggered, this,
+            &MainWindow::onProblemOpenSource);
+
+    mProblem_Rename=createActionFor(
+                tr("Rename Problem"),
+                ui->lstProblemSet
+                );
+    connect(mProblem_Rename, &QAction::triggered, this,
+            &MainWindow::onProblemRename);
+
+    mProblem_GotoUrl=createActionFor(
+                tr("Goto Url"),
+                ui->lstProblemSet
+                );
+    connect(mProblem_GotoUrl, &QAction::triggered, this,
+            &MainWindow::onProblemGotoUrl);
+
+    //problem cases
+    mProblem_RunAllCases = createActionFor(
+                tr("Run All Cases"),
+                this
+                );
+    mProblem_RunAllCases->setObjectName("Problem_RunAllCases");
+    connect(mProblem_RunAllCases, &QAction::triggered, this,
+            &MainWindow::on_btnRunAllProblemCases_clicked);
+
+    mProblem_RunCurrentCase = createActionFor(
+                tr("Run Current Case"),
+                this
+                );
+    mProblem_RunCurrentCase->setObjectName("Problem_RunCurrentCases");
+    connect(mProblem_RunCurrentCase, &QAction::triggered, this,
+            &MainWindow::onProblemRunCurrentCase);
+
+    mProblem_batchSetCases = createActionFor(
+                tr("Batch Set Cases"),
+                this);
+    mProblem_batchSetCases->setObjectName("Problem_BatchSetCases");
+    connect(mProblem_batchSetCases, &QAction::triggered, this,
+            &MainWindow::onProblemBatchSetCases);
+
+    //Bookmark
+    ui->tableBookmark->setContextMenuPolicy(Qt::CustomContextMenu);
+    mBookmark_Remove=createActionFor(
+                tr("Remove"),
+                ui->tableBookmark);
+    connect(mBookmark_Remove, &QAction::triggered,
+            this, &MainWindow::onBookmarkRemove);
+
+    mBookmark_RemoveAll=createActionFor(
+                tr("Remove All Bookmarks"),
+                ui->tableBookmark);
+    connect(mBookmark_RemoveAll, &QAction::triggered,
+            this, &MainWindow::onBookmarkRemoveAll);
+    mBookmark_Modify=createActionFor(
+                tr("Modify Description"),
+                ui->tableBookmark);
+    connect(mBookmark_Modify, &QAction::triggered,
+            this, &MainWindow::onBookmarkModify);
+
+    //watch view
+    mDebugConsole_ShowDetailLog = createActionFor(
+                tr("Show detail debug logs"),
+                ui->debugConsole);
+    mDebugConsole_ShowDetailLog->setCheckable(true);
+    connect(mDebugConsole_ShowDetailLog, &QAction::toggled,
+            this, &MainWindow::onDebugConsoleShowDetailLog);
+
+    mDebugConsole_Copy=createActionFor(
+                tr("Copy"),
+                ui->debugConsole,
+                QKeySequence("Ctrl+C"));
+    connect(mDebugConsole_Copy, &QAction::triggered,
+            this, &MainWindow::onDebugConsoleCopy);
+
+    mDebugConsole_Paste=createActionFor(
+                tr("Paste"),
+                ui->debugConsole,
+                QKeySequence("Ctrl+V"));
+    connect(mDebugConsole_Paste, &QAction::triggered,
+            this, &MainWindow::onDebugConsolePaste);
+
+    mDebugConsole_SelectAll=createActionFor(
+                tr("Select All"),
+                ui->debugConsole);
+    connect(mDebugConsole_SelectAll, &QAction::triggered,
+            this, &MainWindow::onDebugConsoleSelectAll);
+
+    mDebugConsole_Clear=createActionFor(
+                tr("Clear"),
+                ui->debugConsole);
+    connect(mDebugConsole_Clear, &QAction::triggered,
+            this, &MainWindow::onDebugConsoleClear);
+
+    //compile issues
+    mTableIssuesCopyAction = createActionFor(
+                tr("Copy"),
+                ui->tableIssues,
+                QKeySequence("Ctrl+C"));
+    connect(mTableIssuesCopyAction,&QAction::triggered,
+            this, &MainWindow::onTableIssuesCopy);
+
+    mTableIssuesCopyAllAction = createActionFor(
+                tr("Copy all"),
+                ui->tableIssues,
+                QKeySequence("Ctrl+Shift+C"));
+    connect(mTableIssuesCopyAllAction,&QAction::triggered,
+            this, &MainWindow::onTableIssuesCopyAll);
+
+    mTableIssuesClearAction = createActionFor(
+                tr("Clear"),
+                ui->tableIssues);
+    connect(mTableIssuesClearAction,&QAction::triggered,
+            this, &MainWindow::onTableIssuesClear);
+
+    //search
+    mSearchViewClearAction = createActionFor(
+                tr("Remove this search"),
+                ui->searchHistoryPanel);
+    connect(mSearchViewClearAction, &QAction::triggered,
+            this, &MainWindow::onSearchViewClear);
+
+    mSearchViewClearAllAction = createActionFor(
+                tr("Clear all searches"),
+                ui->searchHistoryPanel);
+    connect(mSearchViewClearAllAction,&QAction::triggered,
+            this, &MainWindow::onSearchViewClearAll);
+
+    //breakpoints
+    mBreakpointViewPropertyAction = createActionFor(
+                tr("Breakpoint condition..."),
+                ui->tblBreakpoints);
+    connect(mBreakpointViewPropertyAction,&QAction::triggered,
+            this, &MainWindow::onBreakpointViewProperty);
+
+    mBreakpointViewRemoveAllAction = createActionFor(
+                tr("Remove All Breakpoints"),
+                ui->tblBreakpoints);
+    connect(mBreakpointViewRemoveAllAction,&QAction::triggered,
+            this, &MainWindow::onBreakpointViewRemoveAll);
+    mBreakpointViewRemoveAction = createActionFor(
+                tr("Remove Breakpoint"),
+                ui->tblBreakpoints);
+    connect(mBreakpointViewRemoveAction,&QAction::triggered,
+            this, &MainWindow::onBreakpointRemove);
+
+    //project
+    mProject_Rename_Unit = createActionFor(
+                tr("Rename File"),
+                ui->projectView);
+    connect(mProject_Rename_Unit, &QAction::triggered,
+            this, &MainWindow::onProjectRenameUnit);
+    mProject_Add_Folder = createActionFor(
+                tr("Add Folder"),
+                ui->projectView);
+    connect(mProject_Add_Folder, &QAction::triggered,
+            this, &MainWindow::onProjectAddFolder);
+
+    mProject_Rename_Folder = createActionFor(
+                tr("Rename Folder"),
+                ui->projectView);
+    connect(mProject_Rename_Folder, &QAction::triggered,
+            this, &MainWindow::onProjectRenameFolder);
+
+    mProject_Remove_Folder = createActionFor(
+                tr("Remove Folder"),
+                ui->projectView);
+    connect(mProject_Remove_Folder, &QAction::triggered,
+            this, &MainWindow::onProjectRemoveFolder);
+    mProject_SwitchFileSystemViewMode = createActionFor(
+                tr("Switch to normal view"),
+                ui->projectView);
+    connect(mProject_SwitchFileSystemViewMode, &QAction::triggered,
+            this, &MainWindow::onProjectSwitchFileSystemViewMode);
+
+    mProject_SwitchCustomViewMode = createActionFor(
+                tr("Switch to custom view"),
+                ui->projectView);
+    connect(mProject_SwitchCustomViewMode, &QAction::triggered,
+            this, &MainWindow::onProjectSwitchCustomViewMode);
+
+    //browser
+    mClassBrowser_Sort_By_Type = createActionFor(
+                tr("Sort By Type"),
+                ui->tabStructure);
+    mClassBrowser_Sort_By_Type->setCheckable(true);
+    mClassBrowser_Sort_By_Type->setIcon(QIcon(":/icons/images/newlook24/077-sort-type.png"));
+    mClassBrowser_Sort_By_Name = createActionFor(
+                tr("Sort alphabetically"),
+                ui->tabStructure);
+    mClassBrowser_Sort_By_Name->setCheckable(true);
+    mClassBrowser_Sort_By_Name->setIcon(QIcon(":/icons/images/newlook24/076-sort-alpha.png"));
+    mClassBrowser_Show_Inherited = createActionFor(
+                tr("Show inherited members"),
+                ui->tabStructure);
+    mClassBrowser_Show_Inherited->setCheckable(true);
+    mClassBrowser_Show_Inherited->setIcon(QIcon(":/icons/images/newlook24/075-show-inheritance.png"));
+    mClassBrowser_goto_declaration = createActionFor(
+                tr("Goto declaration"),
+                ui->tabStructure);
+    mClassBrowser_goto_definition = createActionFor(
+                tr("Goto definition"),
+                ui->tabStructure);
+    mClassBrowser_Show_CurrentFile = createActionFor(
+                tr("In current file"),
+                ui->tabStructure);
+    mClassBrowser_Show_CurrentFile->setCheckable(true);
+    mClassBrowser_Show_WholeProject = createActionFor(
+                tr("In current project"),
+                ui->tabStructure);
+    mClassBrowser_Show_WholeProject->setCheckable(true);
+
+    mClassBrowser_Sort_By_Name->setChecked(pSettings->ui().classBrowserSortAlpha());
+    mClassBrowser_Sort_By_Type->setChecked(pSettings->ui().classBrowserSortType());
+    mClassBrowser_Show_Inherited->setChecked(pSettings->ui().classBrowserShowInherited());
+    connect(mClassBrowser_Sort_By_Name, &QAction::toggled,
+            this, &MainWindow::onClassBrowserSortByName);
+    connect(mClassBrowser_Sort_By_Type, &QAction::toggled,
+            this, &MainWindow::onClassBrowserSortByType);
+    connect(mClassBrowser_Show_Inherited, &QAction::toggled,
+            this, &MainWindow::onClassBrowserShowInherited);
+
+    connect(mClassBrowser_goto_definition,&QAction::triggered,
+            this, &MainWindow::onClassBrowserGotoDefinition);
+
+    connect(mClassBrowser_goto_declaration,&QAction::triggered,
+            this, &MainWindow::onClassBrowserGotoDeclaration);
+
+    connect(mClassBrowser_Show_CurrentFile,&QAction::triggered,
+            this, &MainWindow::onClassBrowserChangeScope);
+
+    connect(mClassBrowser_Show_WholeProject,&QAction::triggered,
+            this, &MainWindow::onClassBrowserChangeScope);
+
+
+    //Files view
+    mFilesView_CreateFolder = createActionFor(
+                tr("New Folder"),
+                ui->treeFiles);
+    connect(mFilesView_CreateFolder, &QAction::triggered,
+            this, &MainWindow::onFilesViewCreateFolder);
+
+    mFilesView_CreateFile = createActionFor(
+                tr("New File"),
+                ui->treeFiles);
+    connect(mFilesView_CreateFile, &QAction::triggered,
+            this, &MainWindow::onFilesViewCreateFile);
+
+    mFilesView_Rename = createActionFor(
+                tr("Rename"),
+                ui->treeFiles);
+    connect(mFilesView_Rename, &QAction::triggered,
+            this, &MainWindow::onFilesViewRename);
+
+    mFilesView_RemoveFile = createActionFor(
+                tr("Delete"),
+                ui->treeFiles);
+    mFilesView_RemoveFile->setShortcut(Qt::Key_Delete);
+    connect(mFilesView_RemoveFile, &QAction::triggered,
+            this, &MainWindow::onFilesViewRemoveFiles);
+    mFilesView_Open = createActionFor(
+                tr("Open in Editor"),
+                ui->treeFiles);
+    connect(mFilesView_Open, &QAction::triggered,
+            this, &MainWindow::onFilesViewOpen);
+
+    mFilesView_OpenWithExternal = createActionFor(
+                tr("Open in External Program"),
+                ui->treeFiles);
+    connect(mFilesView_OpenWithExternal, &QAction::triggered,
+            this, &MainWindow::onFilesViewOpenWithExternal);
+    mFilesView_OpenInTerminal = createActionFor(
+                tr("Open in Terminal"),
+                ui->treeFiles);
+    mFilesView_OpenInTerminal->setIcon(ui->actionOpen_Terminal->icon());
+    connect(mFilesView_OpenInTerminal, &QAction::triggered,
+            this, &MainWindow::onFilesViewOpenInTerminal);
+    mFilesView_OpenInExplorer = createActionFor(
+                tr("Open in Windows Explorer"),
+                ui->treeFiles);
+    mFilesView_OpenInExplorer->setIcon(ui->actionOpen_Containing_Folder->icon());
+    connect(mFilesView_OpenInExplorer, &QAction::triggered,
+            this, &MainWindow::onFilesViewOpenInExplorer);
+
+    //Tools output
+    mToolsOutput_Clear = createActionFor(
+                tr("Clear"),
+                ui->txtToolsOutput);
+    connect(mToolsOutput_Clear, &QAction::triggered,
+            this, &MainWindow::onToolsOutputClear);
+    mToolsOutput_Copy = createActionFor(
+                tr("Copy"),
+                ui->txtToolsOutput);
+    mToolsOutput_Copy->setShortcut(QKeySequence("Ctrl+C"));
+    connect(mToolsOutput_Copy, &QAction::triggered,
+            this, &MainWindow::onToolsOutputCopy);
+    mToolsOutput_SelectAll = createActionFor(
+                tr("Select All"),
+                ui->txtToolsOutput);
+    connect(mToolsOutput_SelectAll, &QAction::triggered,
+            this, &MainWindow::onToolsOutputSelectAll);
+}
+
+void MainWindow::initToolButtons()
+{
+    //problem set actions
+    ui->btnNewProblemSet->setDefaultAction(mProblemSet_New);
+    ui->btnSaveProblemSet->setDefaultAction(mProblemSet_Save);
+    ui->btnLoadProblemSet->setDefaultAction(mProblemSet_Load);
+    ui->btnImportFPS->setDefaultAction(mProblemSet_ImportFPS);
+    ui->btnExportFPS->setDefaultAction(mProblemSet_ExportFPS);
+    ui->btnAddProblem->setDefaultAction(mProblem_Add);
+    ui->btnRemoveProblem->setDefaultAction(mProblem_Remove);
+
+    //toolbar for class browser
+    mClassBrowserToolbar = new QWidget();
+    {
+        QVBoxLayout* layout = dynamic_cast<QVBoxLayout*>( ui->tabStructure->layout());
+        layout->insertWidget(0,mClassBrowserToolbar);
+        QHBoxLayout* hlayout =  new QHBoxLayout();
+        hlayout->setContentsMargins(2,2,2,2);
+        mClassBrowserToolbar->setLayout(hlayout);
+        QToolButton * toolButton;
+        int size = pointToPixel(pSettings->environment().interfaceFontSize());
+        QSize iconSize(size,size);
+        toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
+        toolButton->setDefaultAction(mClassBrowser_Sort_By_Type);
+        hlayout->addWidget(toolButton);
+        toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
+        toolButton->setDefaultAction(mClassBrowser_Sort_By_Name);
+        hlayout->addWidget(toolButton);
+        QFrame * vLine = new QFrame();
+        vLine->setFrameShape(QFrame::VLine);
+        vLine->setFrameShadow(QFrame::Sunken);
+        hlayout->addWidget(vLine);
+        toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
+        toolButton->setDefaultAction(mClassBrowser_Show_Inherited);
+        hlayout->addWidget(toolButton);
+        hlayout->addStretch();
+    }
+
+    //toolbar for files view
+    {
+        QHBoxLayout* hlayout =  dynamic_cast<QHBoxLayout*>(ui->panelFiles->layout());
+        QToolButton * toolButton;
+        int size = pointToPixel(pSettings->environment().interfaceFontSize());
+        QSize iconSize(size,size);
+        toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
+        toolButton->setDefaultAction(ui->actionOpen_Folder);
+        hlayout->addWidget(toolButton);
+        toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
+        toolButton->setDefaultAction(ui->actionLocate_in_Files_View);
+        hlayout->addWidget(toolButton);
+        QFrame * vLine = new QFrame();
+        vLine->setFrameShape(QFrame::VLine);
+        vLine->setFrameShadow(QFrame::Sunken);
+        hlayout->addWidget(vLine);
+        toolButton = new QToolButton;
+        toolButton->setIconSize(iconSize);
+        toolButton->setDefaultAction(ui->actionFilesView_Hide_Non_Support_Files);
+        ui->actionFilesView_Hide_Non_Support_Files->setChecked(pSettings->environment().hideNonSupportFilesInFileView());
+        hlayout->addWidget(toolButton);
+    }
+
+}
+
 //static void limitActionShortCutScope(QAction* action,QWidget* scopeWidget) {
 //    action->setParent(scopeWidget);
 //    action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
@@ -2652,70 +3092,16 @@ void MainWindow::newEditor()
 
 void MainWindow::buildContextMenus()
 {
+
     //context menu signal for the problem list view
     ui->lstProblemSet->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->lstProblemSet, &QWidget::customContextMenuRequested,
             this, &MainWindow::onLstProblemSetContextMenu);
-    mProblem_Properties = createActionFor(
-                tr("Properties..."),
-                this
-                );
-    mProblem_Properties->setObjectName("actionProbelm_Properties");
-    connect(mProblem_Properties, &QAction::triggered, this,
-            &MainWindow::onProblemProperties);
 
-    mProblem_OpenSource=createActionFor(
-                tr("Open Source File"),
-                ui->lstProblemSet
-                );
-    connect(mProblem_OpenSource, &QAction::triggered, this,
-            &MainWindow::onProblemOpenSource);
-
-    mProblem_Rename=createActionFor(
-                tr("Rename Problem"),
-                ui->lstProblemSet
-                );
-    connect(mProblem_Rename, &QAction::triggered, this,
-            &MainWindow::onProblemRename);
-
-    mProblem_GotoUrl=createActionFor(
-                tr("Goto Url"),
-                ui->lstProblemSet
-                );
-    connect(mProblem_GotoUrl, &QAction::triggered, this,
-            &MainWindow::onProblemGotoUrl);
-
-    //context menu signal for the problem list view
+    //context menu signal for the problem cases list view
     ui->tblProblemCases->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tblProblemCases, &QWidget::customContextMenuRequested,
             this, &MainWindow::onTableProblemCasesContextMenu);
-    mProblem_RunAllCases = createActionFor(
-                tr("Run All Cases"),
-                this
-                );
-    mProblem_RunAllCases->setObjectName("Problem_RunAllCases");
-    connect(mProblem_RunAllCases, &QAction::triggered, this,
-            &MainWindow::on_btnRunAllProblemCases_clicked);
-
-    mProblem_RunCurrentCase = createActionFor(
-                tr("Run Current Case"),
-                this
-                );
-    mProblem_RunCurrentCase->setObjectName("Problem_RunCurrentCases");
-    connect(mProblem_RunCurrentCase, &QAction::triggered, this,
-            &MainWindow::onProblemRunCurrentCase);
-
-    mProblem_batchSetCases = createActionFor(
-                tr("Batch Set Cases"),
-                this);
-    mProblem_batchSetCases->setObjectName("Problem_BatchSetCases");
-    connect(mProblem_batchSetCases, &QAction::triggered, this,
-            &MainWindow::onProblemBatchSetCases);
-
-    //context menu signal for the Problem Set lable
-    ui->lblProblemSet->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->lblProblemSet, &QWidget::customContextMenuRequested,
-            this, &MainWindow::onLableProblemSetContextMenuRequested);
 
     //context menu signal for the watch view
     ui->watchView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2726,55 +3112,11 @@ void MainWindow::buildContextMenus()
     ui->tableBookmark->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableBookmark,&QWidget::customContextMenuRequested,
             this, &MainWindow::onBookmarkContextMenu);
-    mBookmark_Remove=createActionFor(
-                tr("Remove"),
-                ui->tableBookmark);
-    connect(mBookmark_Remove, &QAction::triggered,
-            this, &MainWindow::onBookmarkRemove);
 
-    mBookmark_RemoveAll=createActionFor(
-                tr("Remove All Bookmarks"),
-                ui->tableBookmark);
-    connect(mBookmark_RemoveAll, &QAction::triggered,
-            this, &MainWindow::onBookmarkRemoveAll);
-    mBookmark_Modify=createActionFor(
-                tr("Modify Description"),
-                ui->tableBookmark);
-    connect(mBookmark_Modify, &QAction::triggered,
-            this, &MainWindow::onBookmarkModify);
-
-    //context menu signal for the watch view
+    //context menu signal for the debug console
     ui->debugConsole->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->debugConsole,&QWidget::customContextMenuRequested,
             this, &MainWindow::onDebugConsoleContextMenu);
-    mDebugConsole_ShowDetailLog = createActionFor(
-                tr("Show detail debug logs"),
-                ui->debugConsole);
-    mDebugConsole_ShowDetailLog->setCheckable(true);
-    connect(mDebugConsole_ShowDetailLog, &QAction::toggled,
-            this, &MainWindow::onDebugConsoleShowDetailLog);
-    mDebugConsole_Copy=createActionFor(
-                tr("Copy"),
-                ui->debugConsole,
-                QKeySequence("Ctrl+C"));
-    connect(mDebugConsole_Copy, &QAction::triggered,
-            this, &MainWindow::onDebugConsoleCopy);
-    mDebugConsole_Paste=createActionFor(
-                tr("Paste"),
-                ui->debugConsole,
-                QKeySequence("Ctrl+V"));
-    connect(mDebugConsole_Paste, &QAction::triggered,
-            this, &MainWindow::onDebugConsolePaste);
-    mDebugConsole_SelectAll=createActionFor(
-                tr("Select All"),
-                ui->debugConsole);
-    connect(mDebugConsole_SelectAll, &QAction::triggered,
-            this, &MainWindow::onDebugConsoleSelectAll);
-    mDebugConsole_Clear=createActionFor(
-                tr("Clear"),
-                ui->debugConsole);
-    connect(mDebugConsole_Clear, &QAction::triggered,
-            this, &MainWindow::onDebugConsoleClear);
 
     //context menu signal for Editor's tabbar
     ui->EditorTabsLeft->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2795,185 +3137,26 @@ void MainWindow::buildContextMenus()
     ui->tableIssues->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tableIssues,&QWidget::customContextMenuRequested,
             this, &MainWindow::onTableIssuesContextMenu);
-    mTableIssuesCopyAction = createActionFor(
-                tr("Copy"),
-                ui->tableIssues,
-                QKeySequence("Ctrl+C"));
-    connect(mTableIssuesCopyAction,&QAction::triggered,
-            this, &MainWindow::onTableIssuesCopy);
-
-    mTableIssuesCopyAllAction = createActionFor(
-                tr("Copy all"),
-                ui->tableIssues,
-                QKeySequence("Ctrl+Shift+C"));
-    connect(mTableIssuesCopyAllAction,&QAction::triggered,
-            this, &MainWindow::onTableIssuesCopyAll);
-
-    mTableIssuesClearAction = createActionFor(
-                tr("Clear"),
-                ui->tableIssues);
-    connect(mTableIssuesClearAction,&QAction::triggered,
-            this, &MainWindow::onTableIssuesClear);
 
     //context menu signal for search view
-    ui->searchHistoryPanel->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->searchHistoryPanel, &QWidget::customContextMenuRequested,
+    ui->tabSearch->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tabSearch, &QWidget::customContextMenuRequested,
             this, &MainWindow::onSearchViewContextMenu);
-    mSearchViewClearAction = createActionFor(
-                tr("Remove this search"),
-                ui->searchHistoryPanel);
-    connect(mSearchViewClearAction, &QAction::triggered,
-            this, &MainWindow::onSearchViewClear);
-    mSearchViewClearAllAction = createActionFor(
-                tr("Clear all searches"),
-                ui->searchHistoryPanel);
-    connect(mSearchViewClearAllAction,&QAction::triggered,
-            this, &MainWindow::onSearchViewClearAll);
 
     //context menu signal for breakpoints view
     ui->tblBreakpoints->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tblBreakpoints,&QWidget::customContextMenuRequested,
              this, &MainWindow::onBreakpointsViewContextMenu);
-    mBreakpointViewPropertyAction = createActionFor(
-                tr("Breakpoint condition..."),
-                ui->tblBreakpoints);
-    connect(mBreakpointViewPropertyAction,&QAction::triggered,
-            this, &MainWindow::onBreakpointViewProperty);
-
-    mBreakpointViewRemoveAllAction = createActionFor(
-                tr("Remove All Breakpoints"),
-                ui->tblBreakpoints);
-    connect(mBreakpointViewRemoveAllAction,&QAction::triggered,
-            this, &MainWindow::onBreakpointViewRemoveAll);
-    mBreakpointViewRemoveAction = createActionFor(
-                tr("Remove Breakpoint"),
-                ui->tblBreakpoints);
-    connect(mBreakpointViewRemoveAction,&QAction::triggered,
-            this, &MainWindow::onBreakpointRemove);
 
     //context menu signal for project view
     ui->projectView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->projectView,&QWidget::customContextMenuRequested,
              this, &MainWindow::onProjectViewContextMenu);
-    mProject_Rename_Unit = createActionFor(
-                tr("Rename File"),
-                ui->projectView);
-    connect(mProject_Rename_Unit, &QAction::triggered,
-            this, &MainWindow::onProjectRenameUnit);
-    mProject_Add_Folder = createActionFor(
-                tr("Add Folder"),
-                ui->projectView);
-    connect(mProject_Add_Folder, &QAction::triggered,
-            this, &MainWindow::onProjectAddFolder);
-
-    mProject_Rename_Folder = createActionFor(
-                tr("Rename Folder"),
-                ui->projectView);
-    connect(mProject_Rename_Folder, &QAction::triggered,
-            this, &MainWindow::onProjectRenameFolder);
-
-    mProject_Remove_Folder = createActionFor(
-                tr("Remove Folder"),
-                ui->projectView);
-    connect(mProject_Remove_Folder, &QAction::triggered,
-            this, &MainWindow::onProjectRemoveFolder);
-    mProject_SwitchFileSystemViewMode = createActionFor(
-                tr("Switch to normal view"),
-                ui->projectView);
-    connect(mProject_SwitchFileSystemViewMode, &QAction::triggered,
-            this, &MainWindow::onProjectSwitchFileSystemViewMode);
-
-    mProject_SwitchCustomViewMode = createActionFor(
-                tr("Switch to custom view"),
-                ui->projectView);
-    connect(mProject_SwitchCustomViewMode, &QAction::triggered,
-            this, &MainWindow::onProjectSwitchCustomViewMode);
 
     //context menu signal for class browser
     ui->tabStructure->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->tabStructure,&QWidget::customContextMenuRequested,
              this, &MainWindow::onClassBrowserContextMenu);
-    mClassBrowser_Sort_By_Type = createActionFor(
-                tr("Sort By Type"),
-                ui->tabStructure);
-    mClassBrowser_Sort_By_Type->setCheckable(true);
-    mClassBrowser_Sort_By_Type->setIcon(QIcon(":/icons/images/newlook24/077-sort-type.png"));
-    mClassBrowser_Sort_By_Name = createActionFor(
-                tr("Sort alphabetically"),
-                ui->tabStructure);
-    mClassBrowser_Sort_By_Name->setCheckable(true);
-    mClassBrowser_Sort_By_Name->setIcon(QIcon(":/icons/images/newlook24/076-sort-alpha.png"));
-    mClassBrowser_Show_Inherited = createActionFor(
-                tr("Show inherited members"),
-                ui->tabStructure);
-    mClassBrowser_Show_Inherited->setCheckable(true);
-    mClassBrowser_Show_Inherited->setIcon(QIcon(":/icons/images/newlook24/075-show-inheritance.png"));
-    mClassBrowser_goto_declaration = createActionFor(
-                tr("Goto declaration"),
-                ui->tabStructure);
-    mClassBrowser_goto_definition = createActionFor(
-                tr("Goto definition"),
-                ui->tabStructure);
-    mClassBrowser_Show_CurrentFile = createActionFor(
-                tr("In current file"),
-                ui->tabStructure);
-    mClassBrowser_Show_CurrentFile->setCheckable(true);
-    mClassBrowser_Show_WholeProject = createActionFor(
-                tr("In current project"),
-                ui->tabStructure);
-    mClassBrowser_Show_WholeProject->setCheckable(true);
-
-    mClassBrowser_Sort_By_Name->setChecked(pSettings->ui().classBrowserSortAlpha());
-    mClassBrowser_Sort_By_Type->setChecked(pSettings->ui().classBrowserSortType());
-    mClassBrowser_Show_Inherited->setChecked(pSettings->ui().classBrowserShowInherited());
-    connect(mClassBrowser_Sort_By_Name, &QAction::toggled,
-            this, &MainWindow::onClassBrowserSortByName);
-    connect(mClassBrowser_Sort_By_Type, &QAction::toggled,
-            this, &MainWindow::onClassBrowserSortByType);
-    connect(mClassBrowser_Show_Inherited, &QAction::toggled,
-            this, &MainWindow::onClassBrowserShowInherited);
-
-    connect(mClassBrowser_goto_definition,&QAction::triggered,
-            this, &MainWindow::onClassBrowserGotoDefinition);
-
-    connect(mClassBrowser_goto_declaration,&QAction::triggered,
-            this, &MainWindow::onClassBrowserGotoDeclaration);
-
-    connect(mClassBrowser_Show_CurrentFile,&QAction::triggered,
-            this, &MainWindow::onClassBrowserChangeScope);
-
-    connect(mClassBrowser_Show_WholeProject,&QAction::triggered,
-            this, &MainWindow::onClassBrowserChangeScope);
-
-    //toolbar for class browser
-    mClassBrowserToolbar = new QWidget();
-    {
-        QVBoxLayout* layout = dynamic_cast<QVBoxLayout*>( ui->tabStructure->layout());
-        layout->insertWidget(0,mClassBrowserToolbar);
-        QHBoxLayout* hlayout =  new QHBoxLayout();
-        hlayout->setContentsMargins(2,2,2,2);
-        mClassBrowserToolbar->setLayout(hlayout);
-        QToolButton * toolButton;
-        int size = pointToPixel(pSettings->environment().interfaceFontSize());
-        QSize iconSize(size,size);
-        toolButton = new QToolButton;
-        toolButton->setIconSize(iconSize);
-        toolButton->setDefaultAction(mClassBrowser_Sort_By_Type);
-        hlayout->addWidget(toolButton);
-        toolButton = new QToolButton;
-        toolButton->setIconSize(iconSize);
-        toolButton->setDefaultAction(mClassBrowser_Sort_By_Name);
-        hlayout->addWidget(toolButton);
-        QFrame * vLine = new QFrame();
-        vLine->setFrameShape(QFrame::VLine);
-        vLine->setFrameShadow(QFrame::Sunken);
-        hlayout->addWidget(vLine);
-        toolButton = new QToolButton;
-        toolButton->setIconSize(iconSize);
-        toolButton->setDefaultAction(mClassBrowser_Show_Inherited);
-        hlayout->addWidget(toolButton);
-        hlayout->addStretch();
-    }
 
     //menu for statusbar
     mFileEncodingStatus->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -2985,99 +3168,10 @@ void MainWindow::buildContextMenus()
     connect(ui->treeFiles,&QWidget::customContextMenuRequested,
              this, &MainWindow::onFilesViewContextMenu);
 
-    mFilesView_CreateFolder = createActionFor(
-                tr("New Folder"),
-                ui->treeFiles);
-    connect(mFilesView_CreateFolder, &QAction::triggered,
-            this, &MainWindow::onFilesViewCreateFolder);
-
-    mFilesView_CreateFile = createActionFor(
-                tr("New File"),
-                ui->treeFiles);
-    connect(mFilesView_CreateFile, &QAction::triggered,
-            this, &MainWindow::onFilesViewCreateFile);
-
-    mFilesView_Rename = createActionFor(
-                tr("Rename"),
-                ui->treeFiles);
-    connect(mFilesView_Rename, &QAction::triggered,
-            this, &MainWindow::onFilesViewRename);
-
-    mFilesView_RemoveFile = createActionFor(
-                tr("Delete"),
-                ui->treeFiles);
-    mFilesView_RemoveFile->setShortcut(Qt::Key_Delete);
-    connect(mFilesView_RemoveFile, &QAction::triggered,
-            this, &MainWindow::onFilesViewRemoveFiles);
-    mFilesView_Open = createActionFor(
-                tr("Open in Editor"),
-                ui->treeFiles);
-    connect(mFilesView_Open, &QAction::triggered,
-            this, &MainWindow::onFilesViewOpen);
-
-    mFilesView_OpenWithExternal = createActionFor(
-                tr("Open in External Program"),
-                ui->treeFiles);
-    connect(mFilesView_OpenWithExternal, &QAction::triggered,
-            this, &MainWindow::onFilesViewOpenWithExternal);
-    mFilesView_OpenInTerminal = createActionFor(
-                tr("Open in Terminal"),
-                ui->treeFiles);
-    mFilesView_OpenInTerminal->setIcon(ui->actionOpen_Terminal->icon());
-    connect(mFilesView_OpenInTerminal, &QAction::triggered,
-            this, &MainWindow::onFilesViewOpenInTerminal);
-    mFilesView_OpenInExplorer = createActionFor(
-                tr("Open in Windows Explorer"),
-                ui->treeFiles);
-    mFilesView_OpenInExplorer->setIcon(ui->actionOpen_Containing_Folder->icon());
-    connect(mFilesView_OpenInExplorer, &QAction::triggered,
-            this, &MainWindow::onFilesViewOpenInExplorer);
-
-    //toolbar for files view
-    {
-        QHBoxLayout* hlayout =  dynamic_cast<QHBoxLayout*>(ui->panelFiles->layout());
-        QToolButton * toolButton;
-        int size = pointToPixel(pSettings->environment().interfaceFontSize());
-        QSize iconSize(size,size);
-        toolButton = new QToolButton;
-        toolButton->setIconSize(iconSize);
-        toolButton->setDefaultAction(ui->actionOpen_Folder);
-        hlayout->addWidget(toolButton);
-        toolButton = new QToolButton;
-        toolButton->setIconSize(iconSize);
-        toolButton->setDefaultAction(ui->actionLocate_in_Files_View);
-        hlayout->addWidget(toolButton);
-        QFrame * vLine = new QFrame();
-        vLine->setFrameShape(QFrame::VLine);
-        vLine->setFrameShadow(QFrame::Sunken);
-        hlayout->addWidget(vLine);
-        toolButton = new QToolButton;
-        toolButton->setIconSize(iconSize);
-        toolButton->setDefaultAction(ui->actionFilesView_Hide_Non_Support_Files);
-        ui->actionFilesView_Hide_Non_Support_Files->setChecked(pSettings->environment().hideNonSupportFilesInFileView());
-        hlayout->addWidget(toolButton);
-    }
-
     //context menu signal for class browser
     ui->txtToolsOutput->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->txtToolsOutput,&QWidget::customContextMenuRequested,
              this, &MainWindow::onToolsOutputContextMenu);
-    mToolsOutput_Clear = createActionFor(
-                tr("Clear"),
-                ui->txtToolsOutput);
-    connect(mToolsOutput_Clear, &QAction::triggered,
-            this, &MainWindow::onToolsOutputClear);
-    mToolsOutput_Copy = createActionFor(
-                tr("Copy"),
-                ui->txtToolsOutput);
-    mToolsOutput_Copy->setShortcut(QKeySequence("Ctrl+C"));
-    connect(mToolsOutput_Copy, &QAction::triggered,
-            this, &MainWindow::onToolsOutputCopy);
-    mToolsOutput_SelectAll = createActionFor(
-                tr("Select All"),
-                ui->txtToolsOutput);
-    connect(mToolsOutput_SelectAll, &QAction::triggered,
-            this, &MainWindow::onToolsOutputSelectAll);
 }
 
 void MainWindow::buildEncodingMenu()
@@ -3278,6 +3372,8 @@ void MainWindow::onSearchViewContextMenu(const QPoint &pos)
     QMenu menu(this);
     menu.addAction(mSearchViewClearAction);
     menu.addAction(mSearchViewClearAllAction);
+    mSearchViewClearAction->setEnabled(ui->cbSearchHistory->currentIndex()>0);
+    mSearchViewClearAction->setEnabled(mSearchResultListModel->rowCount(QModelIndex())>0);
     menu.exec(ui->searchHistoryPanel->mapToGlobal(pos));
 }
 
@@ -3569,6 +3665,15 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
     QModelIndex idx = ui->lstProblemSet->currentIndex();
     mProblem_Properties->setEnabled(idx.isValid());
     mProblem_Rename->setEnabled(idx.isValid());
+    menu.addAction(mProblemSet_Rename);
+    menu.addAction(mProblemSet_New);
+    menu.addAction(mProblemSet_Load);
+    menu.addAction(mProblemSet_Save);
+    menu.addAction(mProblemSet_ImportFPS);
+    menu.addAction(mProblemSet_ExportFPS);
+    menu.addAction(mProblem_Add);
+    menu.addAction(mProblem_Remove);
+    menu.addSeparator();
     menu.addAction(mProblem_Rename);
     menu.addAction(mProblem_GotoUrl);
     if (idx.isValid()) {
@@ -4101,7 +4206,7 @@ void MainWindow::onProblemGotoUrl()
     }
 }
 
-void MainWindow::onLableProblemSetContextMenuRequested()
+void MainWindow::onRenameProblemSet()
 {
     QString newName = QInputDialog::getText(
                 ui->lblProblemSet,
@@ -7749,7 +7854,7 @@ void MainWindow::on_actionRun_Parameters_triggered()
 }
 
 
-void MainWindow::on_btnNewProblemSet_clicked()
+void MainWindow::onNewProblemSet()
 {
     if (mOJProblemSetModel.count()>0) {
         if (QMessageBox::warning(this,
@@ -7758,7 +7863,7 @@ void MainWindow::on_btnNewProblemSet_clicked()
                              +"<br />"
                              +tr("Do you want to save it?"),
                              QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes) {
-            on_btnSaveProblemSet_clicked();
+            onSaveProblemSet();
         }
     }
     mOJProblemSetNameCounter++;
@@ -7768,7 +7873,7 @@ void MainWindow::on_btnNewProblemSet_clicked()
 }
 
 
-void MainWindow::on_btnAddProblem_clicked()
+void MainWindow::onAddProblem()
 {
     int startCount = mOJProblemSetModel.count();
     QString name;
@@ -7784,23 +7889,33 @@ void MainWindow::on_btnAddProblem_clicked()
 }
 
 
-void MainWindow::on_btnRemoveProblem_clicked()
+void MainWindow::onRemoveProblem()
 {
     QList<int> idxList;
     foreach (const QModelIndex idx,ui->lstProblemSet->selectionModel()->selectedIndexes()) {
         idxList.append(idx.row());
     }
+    if (idxList.isEmpty())
+        return;
     std::sort(idxList.begin(),idxList.end(),[](int i1, int i2){
        return i1>i2;
     });
-    foreach (int id,idxList) {
-        mOJProblemSetModel.removeProblem(id);
+    bool oldBlock = ui->lstProblemSet->selectionModel()->blockSignals(true);
+    QProgressDialog progress(tr("Removing Problems..."),tr("Abort"),0,idxList.count(),this);
+    progress.setWindowModality(Qt::WindowModal);
+    for (int i=0;i<idxList.count();i++) {
+        progress.setValue(i);
+        if (progress.wasCanceled())
+            break;
+        mOJProblemSetModel.removeProblem(idxList[i]);
     }
-
+    progress.setValue(idxList.count());
+    ui->lstProblemSet->selectionModel()->blockSignals(oldBlock);
+    onProblemSetIndexChanged(ui->lstProblemSet->currentIndex(),QModelIndex());
 }
 
 
-void MainWindow::on_btnSaveProblemSet_clicked()
+void MainWindow::onSaveProblemSet()
 {
     QFileDialog dialog(this);
     dialog.setWindowTitle(tr("Save Problem Set"));
@@ -7835,7 +7950,7 @@ void MainWindow::on_btnSaveProblemSet_clicked()
 }
 
 
-void MainWindow::on_btnLoadProblemSet_clicked()
+void MainWindow::onLoadProblemSet()
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this,
@@ -8951,7 +9066,7 @@ void MainWindow::on_actionGenerate_Assembly_triggered()
 }
 
 
-void MainWindow::on_btnImportFPS_clicked()
+void MainWindow::onImportFPSProblemSet()
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this,
@@ -8982,7 +9097,7 @@ void MainWindow::on_actionTrim_trailing_spaces_triggered()
 }
 
 
-void MainWindow::on_btnExportFPS_clicked()
+void MainWindow::onExportFPSProblemSet()
 {
     QString fileName = QFileDialog::getSaveFileName(
                 this,
