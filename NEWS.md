@@ -1,10 +1,10 @@
 Red Panda C++ Version 2.7
 
   - enhancement: Remove multiple problems in the problem set view
-  - enhancement: Clear the proble view after a new problem set created
-  - enhancement: "Trim trailing spaces" in options / editor / misc
+  - enhancement: Clear the problem view after a new problem set created
+  - enhancement: "Trim trailing spaces" (Before saving a file) in options / editor / misc
   - enhancement: "Trim trailing spaces" in code menu
-  - change: Don't auto disable compile and debug buttons.
+  - change: Don't auto disable compile and debug buttons for compiler sets that don't have compiler/debugger programs.
   - enhancement: Better error messages for missing compile/debug/make programs.
   - enhancement: "Show special chars" in options / editor / font
   - fix: Lost compiler set settings if a compiler set's bin dirs is empty.
@@ -16,6 +16,8 @@ Red Panda C++ Version 2.7
   - fix: "Compile" button disabled after app start with an empty new file.
   - enhancement: Don't add "-g3" option when generate assembely.
   - enhancement: Generate assembly is not correctly disabled when current file is not C/C++.
+  - change: Disable  "Copy Limit" int "options"/"editor"/"Copy/Export" by default.
+  - fix: Project's "static link" option is overwrited by global compiler set settings, when project options dialog is opened.
 
 Red Panda C++ Version 2.6
 

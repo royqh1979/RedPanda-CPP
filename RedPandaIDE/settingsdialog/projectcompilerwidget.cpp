@@ -47,6 +47,7 @@ void ProjectCompilerWidget::refreshOptions()
     ui->tabOptions->resetUI(pSet,mOptions);
 
     ui->chkStaticLink->setChecked(pSet->staticLink());
+    ui->chkAddCharset->setChecked(pSet->autoAddCharsetParams());
 
     QByteArray execEncoding = pMainWindow->project()->options().execEncoding;
     if (execEncoding == ENCODING_AUTO_DETECT
@@ -72,11 +73,10 @@ void ProjectCompilerWidget::refreshOptions()
 
 void ProjectCompilerWidget::doLoad()
 {
-    ui->chkAddCharset->setChecked(pMainWindow->project()->options().addCharset);
-    ui->chkStaticLink->setChecked(pMainWindow->project()->options().staticLink);
-
     mOptions = pMainWindow->project()->options().compilerOptions;
     ui->cbCompilerSet->setCurrentIndex(pMainWindow->project()->options().compilerSet);
+    ui->chkAddCharset->setChecked(pMainWindow->project()->options().addCharset);
+    ui->chkStaticLink->setChecked(pMainWindow->project()->options().staticLink);
 }
 
 void ProjectCompilerWidget::doSave()

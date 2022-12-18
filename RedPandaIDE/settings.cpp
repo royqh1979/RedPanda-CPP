@@ -1414,7 +1414,7 @@ void Settings::Editor::doLoad()
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
     //copy
-    mCopySizeLimit = boolValue("copy_limit",true);
+    mCopySizeLimit = boolValue("copy_limit",false);
     mCopyCharLimits = intValue("copy_char_limits",100);
     mCopyLineLimits = intValue("copy_line_limits",100000);
 #ifdef Q_OS_WIN
