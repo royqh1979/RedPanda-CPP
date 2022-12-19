@@ -4675,7 +4675,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../mainwindow.ui" line="1969"/>
         <source>Choose Expected Output File</source>
-        <translation type="unfinished"></translation>
+        <translation>选择期望输出文件</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2018"/>
@@ -5894,7 +5894,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../mainwindow.cpp" line="2404"/>
         <source>Rename Problem Set</source>
-        <translation type="unfinished">修改试题集名称</translation>
+        <translation>修改试题集名称</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2940"/>
@@ -5914,7 +5914,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../mainwindow.cpp" line="2479"/>
         <source>Add Problem Case</source>
-        <translation type="unfinished"></translation>
+        <translation>添加试题案例</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2510"/>
