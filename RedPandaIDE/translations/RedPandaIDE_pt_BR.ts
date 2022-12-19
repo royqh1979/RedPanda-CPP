@@ -3166,7 +3166,7 @@
     </message>
     <message>
         <source>Add Problem Case</source>
-        <translation type="vanished">Acrescentar caso de problema</translation>
+        <translation>Acrescentar caso de problema</translation>
     </message>
     <message>
         <source>Remove Problem Case</source>
@@ -3210,7 +3210,7 @@
     </message>
     <message>
         <source>...</source>
-        <translation>...</translation>
+        <translation type="vanished">...</translation>
     </message>
     <message>
         <source>File</source>
@@ -4873,15 +4873,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Abort</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Removing Problems...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Rename Problem Set</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose Expected Output File</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
