@@ -34,9 +34,6 @@
      <property name="wordWrap">
       <bool>false</bool>
      </property>
-     <property name="itemAlignment">
-      <set>Qt::AlignCenter</set>
-     </property>
      <property name="sortingEnabled">
       <bool>true</bool>
      </property>

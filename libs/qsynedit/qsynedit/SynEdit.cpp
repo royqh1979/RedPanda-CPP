@@ -6330,7 +6330,7 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
             mimeData->setText(selText());
             drag->setMimeData(mimeData);
 
-            drag->exec(Qt::CopyAction | Qt::MoveAction);
+            drag->exec(Qt::DropActions(Qt::CopyAction | Qt::MoveAction));
         }
     } else if (buttons == Qt::LeftButton) {
         if (mOptions.testFlag(eoAltSetsColumnMode) &&

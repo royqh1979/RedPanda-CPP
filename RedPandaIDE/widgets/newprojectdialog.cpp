@@ -31,6 +31,9 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
 {
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
+    ui->lstTemplates->setItemAlignment(Qt::AlignCenter);
+#endif
     mTemplatesTabBar = new QTabBar(this);
     mTemplatesTabBar->setExpanding(false);
     ui->verticalLayout->insertWidget(0,mTemplatesTabBar);

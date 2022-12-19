@@ -704,7 +704,7 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     if (allAscii) {
         realEncoding = ENCODING_ASCII;
     } else if (encoding == ENCODING_AUTO_DETECT) {
-        if (codec->name().compare("System",Qt::CaseInsensitive)==0) {
+        if (QString(codec->name()).compare("System",Qt::CaseInsensitive)==0) {
             realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
         } else {
             realEncoding = codec->name();
