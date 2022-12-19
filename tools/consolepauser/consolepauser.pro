@@ -31,6 +31,9 @@ LIBS+= \
     -lrt
 }
 
+win32: {
+DEFINES += _WIN32_WINNT=0x0601
+}
 
 CONFIG += lrelease
 CONFIG += embed_translations
