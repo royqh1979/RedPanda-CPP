@@ -1698,6 +1698,10 @@
         <source>Traditional Chinese</source>
         <translation>Chinês tradicional</translation>
     </message>
+    <message>
+        <source>Icon Zoom:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnvironmentFileAssociationWidget</name>

@@ -113,6 +113,9 @@ void SettingsWidget::connectInputs()
     for (QSpinBox* p:findChildren<QSpinBox*>()) {
         connect(p, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsWidget::setSettingsChanged);
     }
+    for (QDoubleSpinBox* p:findChildren<QDoubleSpinBox*>()) {
+        connect(p, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsWidget::setSettingsChanged);
+    }
     for (ColorEdit* p:findChildren<ColorEdit*>()) {
         connect(p, &ColorEdit::colorChanged, this, &SettingsWidget::setSettingsChanged);
     }
@@ -148,6 +151,10 @@ void SettingsWidget::disconnectInputs()
     for (QSpinBox* p:findChildren<QSpinBox*>()) {
         disconnect(p, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsWidget::setSettingsChanged);
     }
+    for (QDoubleSpinBox* p:findChildren<QDoubleSpinBox*>()) {
+        disconnect(p, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsWidget::setSettingsChanged);
+    }
+
     for (ColorEdit* p:findChildren<ColorEdit*>()) {
         disconnect(p, &ColorEdit::colorChanged, this, &SettingsWidget::setSettingsChanged);
     }

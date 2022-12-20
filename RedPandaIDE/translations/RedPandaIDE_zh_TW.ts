@@ -1575,6 +1575,10 @@
         <source>Traditional Chinese</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Icon Zoom:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnvironmentFileAssociationWidget</name>

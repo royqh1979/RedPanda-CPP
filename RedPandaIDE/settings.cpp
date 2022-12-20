@@ -332,6 +332,11 @@ int Settings::_Base::intValue(const QString &key, int defaultValue)
     return value(key,defaultValue).toInt();
 }
 
+double Settings::_Base::doubleValue(const QString &key, double defaultValue)
+{
+    return value(key,defaultValue).toDouble();
+}
+
 unsigned int Settings::_Base::uintValue(const QString &key, unsigned int defaultValue)
 {
     return value(key,defaultValue).toUInt();
@@ -3268,6 +3273,7 @@ void Settings::Environment::doLoad()
     }
     mInterfaceFont = stringValue("interface_font",defaultFontName);
     mInterfaceFontSize = intValue("interface_font_size",11);
+    mIconZoomFactor = doubleValue("icon_zoom_factor",1.0);
     mLanguage = stringValue("language", defaultLocaleName);
     mIconSet = stringValue("icon_set","contrast");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
@@ -3408,12 +3414,23 @@ void Settings::Environment::setOpenFilesInSingleInstance(bool newOpenFilesInSing
     mOpenFilesInSingleInstance = newOpenFilesInSingleInstance;
 }
 
+double Settings::Environment::iconZoomFactor() const
+{
+    return mIconZoomFactor;
+}
+
+void Settings::Environment::setIconZoomFactor(double newIconZoomFactor)
+{
+    mIconZoomFactor = newIconZoomFactor;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearence
     saveValue("theme", mTheme);
     saveValue("interface_font", mInterfaceFont);
     saveValue("interface_font_size", mInterfaceFontSize);
+    saveValue("icon_zoom_factor",mIconZoomFactor);
     saveValue("language", mLanguage);
     saveValue("icon_set",mIconSet);
     saveValue("use_custom_icon_set", mUseCustomIconSet);

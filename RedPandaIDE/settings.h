@@ -69,6 +69,7 @@ private:
         bool boolValue(const QString &key, bool defaultValue);
         QSize sizeValue(const QString &key);
         int intValue(const QString &key, int defaultValue);
+        double doubleValue(const QString& key, double defaultValue);
         unsigned int uintValue(const QString &key, unsigned int defaultValue);
         QStringList stringListValue(const QString &key, const QStringList& defaultValue=QStringList());
         QSet<QString> stringSetValue(const QString &key);
@@ -559,12 +560,16 @@ public:
         bool openFilesInSingleInstance() const;
         void setOpenFilesInSingleInstance(bool newOpenFilesInSingleInstance);
 
+        double iconZoomFactor() const;
+        void setIconZoomFactor(double newIconZoomFactor);
+
     private:
 
         //Appearence
         QString mTheme;
         QString mInterfaceFont;
         int mInterfaceFontSize;
+        double mIconZoomFactor;
         QString mLanguage;
         QString mCurrentFolder;
         QString mIconSet;

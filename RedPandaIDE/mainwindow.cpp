@@ -488,7 +488,10 @@ void MainWindow::updateStatusbarForLineCol(bool clear)
 
 void MainWindow::updateEditorSettings()
 {
-    pIconsManager->updateEditorGuttorIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->editor().fontSize()));
+    pIconsManager->updateEditorGuttorIcons(
+                pSettings->environment().iconSet(),
+                calIconSize(pSettings->editor().fontName(),pSettings->editor().fontSize())
+                );
     mEditorList->applySettings();
 }
 
@@ -841,7 +844,11 @@ void MainWindow::applySettings()
         pIconsManager->prepareCustomIconSet(customIconSetFolder);
         pIconsManager->setIconSetsFolder(customIconSetFolder);
     }
-    pIconsManager->updateParserIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
+    pIconsManager->updateParserIcons(
+                pSettings->environment().iconSet(),
+                calIconSize(
+                    pSettings->environment().interfaceFont(),
+                    pSettings->environment().interfaceFontSize()));
 
     QFont caseEditorFont(pSettings->executor().caseEditorFontName());
     caseEditorFont.setPixelSize(pointToPixel(pSettings->executor().caseEditorFontSize()));
@@ -881,7 +888,11 @@ void MainWindow::applySettings()
     updateActionIcons();
 
     //icon sets for files view
-    pIconsManager->updateFileSystemIcons(pSettings->environment().iconSet(),pointToPixel(pSettings->environment().interfaceFontSize()));
+    pIconsManager->updateFileSystemIcons(
+                pSettings->environment().iconSet(),
+                calIconSize(
+                    pSettings->environment().interfaceFont(),
+                    pSettings->environment().interfaceFontSize()));
     if (!mFileSystemModel.rootPath().isEmpty() && mFileSystemModel.rootPath()!=".")
         setFilesViewRoot(pSettings->environment().currentFolder());
 //    for (int i=0;i<ui->cbFilesPath->count();i++) {
@@ -1005,6 +1016,13 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
         }
     }
     //updateForEncodingInfo();
+}
+
+int MainWindow::calIconSize(const QString &fontName, int fontPointSize)
+{
+    QFont font(fontName,fontPointSize);
+    QFontMetrics metrics(font);
+    return metrics.ascent();
 }
 
 void MainWindow::prepareSearchDialog()
@@ -1593,7 +1611,9 @@ void MainWindow::updateDebuggerSettings()
 
 void MainWindow::updateActionIcons()
 {
-    int size = pointToPixel(pSettings->environment().interfaceFontSize());
+    int size = calIconSize(
+                pSettings->environment().interfaceFont(),
+                pSettings->environment().interfaceFontSize())*pSettings->environment().iconZoomFactor();
     pIconsManager->updateActionIcons(pSettings->environment().iconSet(), size);
     QSize iconSize(size,size);
     ui->toolbarMain->setIconSize(iconSize);
@@ -2810,7 +2830,9 @@ void MainWindow::initToolButtons()
         hlayout->setContentsMargins(2,2,2,2);
         mClassBrowserToolbar->setLayout(hlayout);
         QToolButton * toolButton;
-        int size = pointToPixel(pSettings->environment().interfaceFontSize());
+        int size = calIconSize(
+                    pSettings->environment().interfaceFont(),
+                    pSettings->environment().interfaceFontSize())*pSettings->environment().iconZoomFactor();
         QSize iconSize(size,size);
         toolButton = new QToolButton;
         toolButton->setIconSize(iconSize);
@@ -2835,7 +2857,9 @@ void MainWindow::initToolButtons()
     {
         QHBoxLayout* hlayout =  dynamic_cast<QHBoxLayout*>(ui->panelFiles->layout());
         QToolButton * toolButton;
-        int size = pointToPixel(pSettings->environment().interfaceFontSize());
+        int size = calIconSize(
+                    pSettings->environment().interfaceFont(),
+                    pSettings->environment().interfaceFontSize())*pSettings->environment().iconZoomFactor();
         QSize iconSize(size,size);
         toolButton = new QToolButton;
         toolButton->setIconSize(iconSize);

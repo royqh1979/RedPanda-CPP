@@ -18,6 +18,8 @@ Red Panda C++ Version 2.7
   - enhancement: Generate assembly is not correctly disabled when current file is not C/C++.
   - change: Disable  "Copy Limit" int "options"/"editor"/"Copy/Export" by default.
   - fix: Project's "static link" option is overwrited by global compiler set settings, when project options dialog is opened.
+  - fix: Icon size not correct under macOS high DPI / zoom factor settings.
+  - enhancement: "Icon zoom" in options / environment / appearance
 
 Red Panda C++ Version 2.6
 

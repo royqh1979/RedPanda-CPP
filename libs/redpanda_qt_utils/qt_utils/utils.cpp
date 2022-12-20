@@ -34,6 +34,8 @@
 #include <QDirIterator>
 #ifdef Q_OS_WIN
 #include <QDirIterator>
+#include <QFont>
+#include <QFontMetrics>
 #include <QMimeDatabase>
 #include <windows.h>
 #endif
@@ -718,3 +720,5 @@ QStringList absolutePaths(const QString &dirPath, const QStringList &relativePat
     }
     return list;
 }
+
+

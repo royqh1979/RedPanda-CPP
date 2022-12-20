@@ -52,6 +52,7 @@ void EnvironmentAppearenceWidget::doLoad()
             break;
         }
     }
+    ui->spinZoomFactor->setValue(pSettings->environment().iconZoomFactor());
     ui->chkUseCustomIconSet->setChecked(pSettings->environment().useCustomIconSet());
     ui->chkUseCustomTheme->setChecked(pSettings->environment().useCustomTheme());
 
@@ -79,6 +80,8 @@ void EnvironmentAppearenceWidget::doSave()
     pSettings->environment().setInterfaceFontSize(ui->spinFontSize->value());
     pSettings->environment().setLanguage(ui->cbLanguage->currentData().toString());
     pSettings->environment().setIconSet(ui->cbIconSet->currentData().toString());
+    pSettings->environment().setIconZoomFactor(ui->spinZoomFactor->value());
+
     pSettings->environment().setUseCustomIconSet(ui->chkUseCustomIconSet->isChecked());
     pSettings->environment().setUseCustomTheme(ui->chkUseCustomTheme->isChecked());
 

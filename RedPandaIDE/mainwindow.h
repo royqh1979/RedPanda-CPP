@@ -258,6 +258,7 @@ public slots:
     void onFileSaved(const QString& path, bool inProject);
 
 private:
+    int calIconSize(const QString &fontName, int fontPointSize);
     void prepareSearchDialog();
     void prepareReplaceDialog();
     void prepareProjectForCompile();
