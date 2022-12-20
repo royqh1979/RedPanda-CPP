@@ -1706,45 +1706,6 @@ void Settings::CompilerSet::setCompileOptions(const QMap<QString, QString> optio
     mCompileOptions=options;
 }
 
-void Settings::CompilerSet::setAddressSanitizerOptions() {
-    /* Enable Address sanitizer (ASan) on Linux if the cost is acceptable.
-     *
-     * ASan would be very slow on non-x86 64-bit architectures, for large address
-     * space and unoptimized runtime, so don't enable ASan on these arches.
-     *
-     * In a word, enable ASan if RedPanda C++ is running on
-     * - x86-64 Linux, or
-     * - 32-bit Linux, or
-     * - ARM64 Linux with compiler set targeting ARM32.
-     *
-     * TODO:
-     * - Consider cross compilers.
-     * - The word "very slow" is guessed based on implementation of libasan.
-     *   Real device testing only applies to AArch64. Test more arches if possible.
-     */
-
-#ifdef Q_OS_LINUX
-
-#if defined(__x86_64__) || Q_PROCESSOR_WORDSIZE == 4
-    if constexpr (true)
-#elif defined(__aarch64__)
-    // See LLVM 15.0.6's ARM ISA parser,
-    //   `ARM::ISAKind ARM::parseArchISA(StringRef Arch)`
-    //   in `llvm/lib/Support/ARMTargetParserCommon.cpp`.
-    if (mTarget.startsWith("arm") && !mTarget.startsWith("arm64"))
-#else
-    if constexpr (false)
-#endif
-
-    {
-        setCustomCompileParams("-fsanitize=address");
-        setUseCustomCompileParams(true);
-        setCustomLinkParams("-fsanitize=address");
-        setUseCustomLinkParams(true);
-    }
-#endif
-}
-
 QString Settings::CompilerSet::getCompileOptionValue(const QString &key)
 {
     return mCompileOptions.value(key,QString());
@@ -2729,12 +2690,17 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
     pSet->setStaticLink(true);
 }
 
-static void setDebugOptions(Settings::PCompilerSet pSet) {
+static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false) {
     pSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL, COMPILER_OPTION_ON);
     //pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
-    pSet->setAddressSanitizerOptions();
+    if (enableAsan) {
+        pSet->setCustomCompileParams("-fsanitize=address");
+        pSet->setUseCustomCompileParams(true);
+        pSet->setCustomLinkParams("-fsanitize=address");
+        pSet->setUseCustomLinkParams(true);
+    }
     pSet->setStaticLink(false);
 }
 
@@ -2770,10 +2736,28 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
     }
 
 
-    PCompilerSet set = addSet(baseSet);
-    set->setName(baseName + " " + platformName + " Debug");
-    set->setCompilerSetType(CompilerSetType::DEBUG);
-    setDebugOptions(set);
+    PCompilerSet debugSet = addSet(baseSet);
+    debugSet->setName(baseName + " " + platformName + " Debug");
+    debugSet->setCompilerSetType(CompilerSetType::DEBUG);
+    setDebugOptions(debugSet);
+
+    /* Clang’s document says ASan is supported on Windows.
+     * (https://clang.llvm.org/docs/AddressSanitizer.html)
+     * That’s true for 'compiler-rt' builds, but not true for 'libgcc' builds.
+     *
+     * Add "debug with Asan" for Windows Clang, anyway.
+     *
+     * TODO: Test on BSD family.
+     */
+#ifdef Q_OS_WIN
+    if (baseSet->compilerType() == CompilerType::Clang)
+#endif
+    {
+        PCompilerSet debugAsanSet = addSet(baseSet);
+        debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
+        debugAsanSet->setCompilerSetType(CompilerSetType::DEBUG);
+        setDebugOptions(debugAsanSet, true);
+    }
 
     baseSet->setName(baseName + " " + platformName + " Release");
     baseSet->setCompilerSetType(CompilerSetType::RELEASE);

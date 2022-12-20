@@ -1253,7 +1253,6 @@ public:
         bool setCompileOption(const QString& key, const QString& value);
         void unsetCompileOption(const QString& key);
         void setCompileOptions(const QMap<QString, QString> options);
-        void setAddressSanitizerOptions();
 
         QString getCompileOptionValue(const QString& key);
 
