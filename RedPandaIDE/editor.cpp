@@ -4705,7 +4705,10 @@ void Editor::applySettings()
             QSynedit::eoRightMouseMovesCursor | QSynedit::eoScrollByOneLess | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo
             | QSynedit::eoSelectWordByDblClick;
 
-    options.setFlag(QSynedit::eoShowSpecialChars, pSettings->editor().showSpecialChars());
+    options.setFlag(QSynedit::eoShowLeadingSpaces, pSettings->editor().showLeadingSpaces());
+    options.setFlag(QSynedit::eoShowTrailingSpaces, pSettings->editor().showTrailingSpaces());
+    options.setFlag(QSynedit::eoShowInnerSpaces, pSettings->editor().showInnerSpaces());
+    options.setFlag(QSynedit::eoShowLineBreaks, pSettings->editor().showLineBreaks());
 
     //options
     options.setFlag(QSynedit::eoAutoIndent,pSettings->editor().autoIndent());
@@ -4746,6 +4749,7 @@ void Editor::applySettings()
     f2.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f2.setStyleStrategy(QFont::PreferAntialias);
     setFontForNonAscii(f2);
+    setLineSpacingFactor(pSettings->editor().lineSpacing());
 
     // Set gutter properties
     gutter().setLeftOffset(pointToPixel(pSettings->editor().fontSize()) + pSettings->editor().gutterLeftOffset());

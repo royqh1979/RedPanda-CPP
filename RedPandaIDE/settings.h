@@ -383,8 +383,20 @@ public:
         bool removeTrailingSpacesWhenSaved() const;
         void setRemoveTrailingSpacesWhenSaved(bool newRemoveTrailingSpacesWhenSaved);
 
-        bool showSpecialChars() const;
-        void setShowSpecialChars(bool newShowSpecialChars);
+        double lineSpacing() const;
+        void setLineSpacing(double newLineSpacing);
+
+        bool showLineBreaks() const;
+        void setShowLineBreaks(bool newShowLineBreaks);
+
+        bool showInnerSpaces() const;
+        void setShowInnerSpaces(bool newShowMiddleSpaces);
+
+        bool showTrailingSpaces() const;
+        void setShowTrailingSpaces(bool newShowEndSpaces);
+
+        bool showLeadingSpaces() const;
+        void setShowLeadingSpaces(bool newShowStartSpaces);
 
     private:
         //General
@@ -403,8 +415,7 @@ public:
         QSynedit::EditCaretType mCaretForOverwrite;
         bool mCaretUseTextColor;
         QColor mCaretColor;
-        //
-        bool mShowSpecialChars;
+
 
         //highlights
         bool mHighlightCurrentWord;
@@ -431,6 +442,12 @@ public:
         QString mNonAsciiFontName;
         int mFontSize;
         bool mFontOnlyMonospaced;
+        double mLineSpacing;
+
+        bool mShowLeadingSpaces;
+        bool mShowTrailingSpaces;
+        bool mShowInnerSpaces;
+        bool mShowLineBreaks;
 
         //gutter
         bool mGutterVisible;

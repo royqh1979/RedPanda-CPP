@@ -58,8 +58,12 @@ void EditorFontWidget::doLoad()
     ui->cbFont->setCurrentFont(QFont(pSettings->editor().fontName()));
     ui->cbNonAsciiFont->setCurrentFont(QFont(pSettings->editor().nonAsciiFontName()));
     ui->spinFontSize->setValue(pSettings->editor().fontSize());
+    ui->spinLineSpacing->setValue(pSettings->editor().lineSpacing());
     ui->chkLigature->setChecked(pSettings->editor().enableLigaturesSupport());
-    ui->chkShowSpecialChars->setChecked(pSettings->editor().showSpecialChars());
+    ui->chkLeadingSpaces->setChecked(pSettings->editor().showLeadingSpaces());
+    ui->chkInnerSpaces->setChecked(pSettings->editor().showInnerSpaces());
+    ui->chkTrailingSpaces->setChecked(pSettings->editor().showTrailingSpaces());
+    ui->chkLineBreaks->setChecked(pSettings->editor().showLineBreaks());
     //gutter
     ui->chkGutterVisible->setChecked(pSettings->editor().gutterVisible());
     ui->chkAutoSizeGutter->setChecked(pSettings->editor().gutterAutoSize());
@@ -82,8 +86,13 @@ void EditorFontWidget::doSave()
     pSettings->editor().setFontName(ui->cbFont->currentFont().family());
     pSettings->editor().setNonAsciiFontName(ui->cbNonAsciiFont->currentFont().family());
     pSettings->editor().setFontSize(ui->spinFontSize->value());
+    pSettings->editor().setLineSpacing(ui->spinLineSpacing->value());
+
     pSettings->editor().setEnableLigaturesSupport(ui->chkLigature->isChecked());
-    pSettings->editor().setShowSpecialChars(ui->chkShowSpecialChars->isChecked());
+    pSettings->editor().setShowLeadingSpaces(ui->chkLeadingSpaces->isChecked());
+    pSettings->editor().setShowInnerSpaces(ui->chkInnerSpaces->isChecked());
+    pSettings->editor().setShowTrailingSpaces(ui->chkTrailingSpaces->isChecked());
+    pSettings->editor().setShowLineBreaks(ui->chkLineBreaks->isChecked());
     //gutter
     pSettings->editor().setGutterVisible(ui->chkGutterVisible->isChecked());
     pSettings->editor().setGutterAutoSize(ui->chkAutoSizeGutter->isChecked());

@@ -735,14 +735,54 @@ void Settings::Editor::setRemoveTrailingSpacesWhenSaved(bool newRemoveTrailingSp
     mRemoveTrailingSpacesWhenSaved = newRemoveTrailingSpacesWhenSaved;
 }
 
-bool Settings::Editor::showSpecialChars() const
+double Settings::Editor::lineSpacing() const
 {
-    return mShowSpecialChars;
+    return mLineSpacing;
 }
 
-void Settings::Editor::setShowSpecialChars(bool newShowSpecialChars)
+void Settings::Editor::setLineSpacing(double newLineSpacing)
 {
-    mShowSpecialChars = newShowSpecialChars;
+    mLineSpacing = newLineSpacing;
+}
+
+bool Settings::Editor::showLeadingSpaces() const
+{
+    return mShowLeadingSpaces;
+}
+
+void Settings::Editor::setShowLeadingSpaces(bool newShowStartSpaces)
+{
+    mShowLeadingSpaces = newShowStartSpaces;
+}
+
+bool Settings::Editor::showTrailingSpaces() const
+{
+    return mShowTrailingSpaces;
+}
+
+void Settings::Editor::setShowTrailingSpaces(bool newShowEndSpaces)
+{
+    mShowTrailingSpaces = newShowEndSpaces;
+}
+
+bool Settings::Editor::showInnerSpaces() const
+{
+    return mShowInnerSpaces;
+}
+
+void Settings::Editor::setShowInnerSpaces(bool newShowMiddleSpaces)
+{
+    mShowInnerSpaces = newShowMiddleSpaces;
+}
+
+bool Settings::Editor::showLineBreaks() const
+{
+    return mShowLineBreaks;
+}
+
+void Settings::Editor::setShowLineBreaks(bool newShowLineBreaks)
+{
+    mShowLineBreaks = newShowLineBreaks;
 }
 
 bool Settings::Editor::highlightCurrentWord() const
@@ -1235,8 +1275,6 @@ void Settings::Editor::doSave()
     saveValue("caret_use_text_color",mCaretUseTextColor);
     saveValue("caret_color",mCaretColor);
 
-    saveValue("show_special_chars",mShowSpecialChars);
-
     //highlight
     saveValue("highlight_matching_braces",mHighlightMathingBraces);
     saveValue("highlight_current_word",mHighlightCurrentWord);
@@ -1261,7 +1299,13 @@ void Settings::Editor::doSave()
     saveValue("non_ascii_font_name", mNonAsciiFontName);
     saveValue("font_size", mFontSize);
     saveValue("font_only_monospaced", mFontOnlyMonospaced);
+    saveValue("line_spacing",mLineSpacing);
     saveValue("enable_ligatures_support", mEnableLigaturesSupport);
+
+    saveValue("show_leading_spaces", mShowLeadingSpaces);
+    saveValue("show_trailing_spaces", mShowTrailingSpaces);
+    saveValue("show_inner_spaces", mShowInnerSpaces);
+    saveValue("show_line_breaks", mShowLineBreaks);
 
     //gutter
     saveValue("gutter_visible", mGutterVisible);
@@ -1362,9 +1406,6 @@ void Settings::Editor::doLoad()
     mCaretUseTextColor = boolValue("caret_use_text_color",true);
     mCaretColor = colorValue("caret_color",Qt::yellow);
 
-    mShowSpecialChars = boolValue("show_special_chars",false);
-
-
     //highlight
     mHighlightMathingBraces = boolValue("highlight_matching_braces",true);
     mHighlightCurrentWord = boolValue("highlight_current_word",true);
@@ -1397,7 +1438,13 @@ void Settings::Editor::doLoad()
 #endif
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
+    mLineSpacing = doubleValue("line_spacing",1.0);
     mEnableLigaturesSupport = boolValue("enable_ligatures_support", false);
+
+    mShowLeadingSpaces = boolValue("show_leading_spaces", false);
+    mShowTrailingSpaces = boolValue("show_trailing_spaces", false);
+    mShowInnerSpaces = boolValue("show_inner_spaces", false);
+    mShowLineBreaks = boolValue("show_line_breaks", false);
 
     //gutter
     mGutterVisible = boolValue("gutter_visible",true);
@@ -1716,27 +1763,27 @@ QString Settings::CompilerSet::getCompileOptionValue(const QString &key)
     return mCompileOptions.value(key,QString());
 }
 
-static void checkDirs(const QStringList& dirlist, QString& gooddirs, QString& baddirs) {
-    gooddirs = "";
-    baddirs = "";
+//static void checkDirs(const QStringList& dirlist, QString& gooddirs, QString& baddirs) {
+//    gooddirs = "";
+//    baddirs = "";
 
-    for (int i=0; i<dirlist.count();i++) {
-        QDir dir(dirlist[i]);
-        if (!dir.exists()) {
-            if (baddirs.isEmpty()) {
-                baddirs = dirlist[i];
-            } else {
-                baddirs += ";" + dirlist[i];
-            }
-        } else {
-            if (gooddirs.isEmpty()) {
-                gooddirs = dirlist[i];
-            } else {
-                gooddirs += ";" + dirlist[i];
-            }
-        }
-    }
-}
+//    for (int i=0; i<dirlist.count();i++) {
+//        QDir dir(dirlist[i]);
+//        if (!dir.exists()) {
+//            if (baddirs.isEmpty()) {
+//                baddirs = dirlist[i];
+//            } else {
+//                baddirs += ";" + dirlist[i];
+//            }
+//        } else {
+//            if (gooddirs.isEmpty()) {
+//                gooddirs = dirlist[i];
+//            } else {
+//                gooddirs += ";" + dirlist[i];
+//            }
+//        }
+//    }
+//}
 
 
 //bool Settings::CompilerSet::dirsValid(QString &msg)

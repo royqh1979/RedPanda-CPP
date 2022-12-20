@@ -485,8 +485,8 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
     bool bU1, bSel, bU2;
     int nX1, nX2;
     // Compute some helper variables.
-    nC1 = std::max(FirstCol, TokenAccu.ColumnsBefore + 1);
-    nC2 = std::min(LastCol, TokenAccu.ColumnsBefore + TokenAccu.Columns + 1);
+    nC1 = std::max(FirstCol, mTokenAccu.columnsBefore + 1);
+    nC2 = std::min(LastCol, mTokenAccu.columnsBefore + mTokenAccu.columns + 1);
     if (bComplexLine) {
       bU1 = (nC1 < nLineSelStart);
       bSel = (nC1 < nLineSelEnd) && (nC2 >= nLineSelStart);
@@ -499,10 +499,10 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
       bU2 = false; // to shut up compiler warning.
     }
     // Any token chars accumulated?
-    if (TokenAccu.Columns > 0) {
+    if (mTokenAccu.columns > 0) {
         // Initialize the colors and the font style.
-        colBG = TokenAccu.BG;
-        colFG = TokenAccu.FG;
+        colBG = mTokenAccu.background;
+        colFG = mTokenAccu.foreground;
         if (bSpecialLine) {
             if (colSpFG.isValid())
                 colFG = colSpFG;
@@ -513,16 +513,16 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
 //        if (bSpecialLine && edit->mOptions.testFlag(eoSpecialLineDefaultFg))
 //            colFG = TokenAccu.FG;
         QFont font = edit->font();
-        font.setBold(TokenAccu.Style & FontStyle::fsBold);
-        font.setItalic(TokenAccu.Style & FontStyle::fsItalic);
-        font.setStrikeOut(TokenAccu.Style & FontStyle::fsStrikeOut);
-        font.setUnderline(TokenAccu.Style & FontStyle::fsUnderline);
+        font.setBold(mTokenAccu.style & FontStyle::fsBold);
+        font.setItalic(mTokenAccu.style & FontStyle::fsItalic);
+        font.setStrikeOut(mTokenAccu.style & FontStyle::fsStrikeOut);
+        font.setUnderline(mTokenAccu.style & FontStyle::fsUnderline);
         painter->setFont(font);
         QFont nonAsciiFont = edit->fontForNonAscii();
-        nonAsciiFont.setBold(TokenAccu.Style & FontStyle::fsBold);
-        nonAsciiFont.setItalic(TokenAccu.Style & FontStyle::fsItalic);
-        nonAsciiFont.setStrikeOut(TokenAccu.Style & FontStyle::fsStrikeOut);
-        nonAsciiFont.setUnderline(TokenAccu.Style & FontStyle::fsUnderline);
+        nonAsciiFont.setBold(mTokenAccu.style & FontStyle::fsBold);
+        nonAsciiFont.setItalic(mTokenAccu.style & FontStyle::fsItalic);
+        nonAsciiFont.setStrikeOut(mTokenAccu.style & FontStyle::fsStrikeOut);
+        nonAsciiFont.setUnderline(mTokenAccu.style & FontStyle::fsUnderline);
 
         // Paint the chars
         if (bComplexToken) {
@@ -531,24 +531,24 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
                 setDrawingColors(false);
                 rcToken.setRight(columnToXValue(nLineSelStart));
                 paintToken(
-                            TokenAccu.s,TokenAccu.Columns,TokenAccu.ColumnsBefore,nC1,nLineSelStart,false,font,nonAsciiFont, TokenAccu.showSpecialGlyphs);
+                            mTokenAccu.s,mTokenAccu.columns,mTokenAccu.columnsBefore,nC1,nLineSelStart,false,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
             }
             // selected part of the token
             setDrawingColors(true);
             nC1Sel = std::max(nLineSelStart, nC1);
             nC2Sel = std::min(nLineSelEnd, nC2);
             rcToken.setRight(columnToXValue(nC2Sel));
-            paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1Sel, nC2Sel,true,font,nonAsciiFont, TokenAccu.showSpecialGlyphs);
+            paintToken(mTokenAccu.s, mTokenAccu.columns, mTokenAccu.columnsBefore, nC1Sel, nC2Sel,true,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
             // second unselected part of the token
             if (bU2) {
                 setDrawingColors(false);
                 rcToken.setRight(columnToXValue(nC2));
-                paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore,nLineSelEnd, nC2,false,font,nonAsciiFont, TokenAccu.showSpecialGlyphs);
+                paintToken(mTokenAccu.s, mTokenAccu.columns, mTokenAccu.columnsBefore,nLineSelEnd, nC2,false,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
             }
         } else {
             setDrawingColors(bSel);
             rcToken.setRight(columnToXValue(nC2));
-            paintToken(TokenAccu.s, TokenAccu.Columns, TokenAccu.ColumnsBefore, nC1, nC2,bSel,font,nonAsciiFont, TokenAccu.showSpecialGlyphs);
+            paintToken(mTokenAccu.s, mTokenAccu.columns, mTokenAccu.columnsBefore, nC1, nC2,bSel,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
         }
     }
 
@@ -593,21 +593,17 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
 // Store the token chars with the attributes in the TokenAccu
 // record. This will paint any chars already stored if there is
 // a (visible) change in the attributes.
-void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefore,
-                                           int tokenColumns, int cLine, PTokenAttribute p_Attri)
+void SynEditTextPainter::addHighlightToken(const QString &token, int columnsBefore,
+                                           int tokenColumns, int cLine, PTokenAttribute attri, bool showGlyphs)
 {
     bool bCanAppend;
     QColor foreground, background;
     FontStyles style;
-    bool isSpaces=false;
-    bool showGlyphs=false;
 
-    if (p_Attri) {
-        foreground = p_Attri->foreground();
-        background = p_Attri->background();
-        style = p_Attri->styles();
-        isSpaces = p_Attri->tokenType() == TokenType::Space;
-        showGlyphs = isSpaces && edit->mOptions.testFlag(eoShowSpecialChars);
+    if (attri) {
+        foreground = attri->foreground();
+        background = attri->background();
+        style = attri->styles();
     } else {
         foreground = colFG;
         background = colBG;
@@ -625,21 +621,20 @@ void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefo
     }
 
     edit->onPreparePaintHighlightToken(cLine,edit->mSyntaxer->getTokenPos()+1,
-        Token,p_Attri,style,foreground,background);
+        token,attri,style,foreground,background);
 
     // Do we have to paint the old chars first, or can we just append?
     bCanAppend = false;
-    if (TokenAccu.Columns > 0 ) {
-        if (showGlyphs == TokenAccu.showSpecialGlyphs) {
+    if (mTokenAccu.columns > 0 ) {
+        if (showGlyphs == mTokenAccu.showSpecialGlyphs) {
             // font style must be the same or token is only spaces
-            if (TokenAccu.Style == style ||  ( (style & FontStyle::fsUnderline) == (TokenAccu.Style & fsUnderline)
-                                               && isSpaces)) {
+            if (mTokenAccu.style == style) {
                 if (
                   // background color must be the same and
-                    (TokenAccu.BG == background) &&
+                    (mTokenAccu.background == background) &&
                   // foreground color must be the same or token is only spaces
-                  ((TokenAccu.FG == foreground) || isSpaces)) {
-                  bCanAppend = true;
+                  (mTokenAccu.foreground == foreground)) {
+                    bCanAppend = true;
                 }
             }
         }
@@ -649,16 +644,16 @@ void SynEditTextPainter::addHighlightToken(const QString &Token, int columnsBefo
     }
     // Don't use AppendStr because it's more expensive.
     if (bCanAppend) {
-        TokenAccu.s.append(Token);
-        TokenAccu.Columns+=tokenColumns;
+        mTokenAccu.s.append(token);
+        mTokenAccu.columns+=tokenColumns;
     } else {
-        TokenAccu.Columns = tokenColumns;
-        TokenAccu.s = Token;
-        TokenAccu.ColumnsBefore = columnsBefore;
-        TokenAccu.FG = foreground;
-        TokenAccu.BG = background;
-        TokenAccu.Style = style;
-        TokenAccu.showSpecialGlyphs = showGlyphs;
+        mTokenAccu.columns = tokenColumns;
+        mTokenAccu.s = token;
+        mTokenAccu.columnsBefore = columnsBefore;
+        mTokenAccu.foreground = foreground;
+        mTokenAccu.background = background;
+        mTokenAccu.style = style;
+        mTokenAccu.showSpecialGlyphs = showGlyphs;
     }
 }
 
@@ -814,8 +809,8 @@ void SynEditTextPainter::paintLines()
     // inside the loop. Get only the starting point for this.
     rcLine = AClip;
     rcLine.setBottom((aFirstRow - edit->mTopLine) * edit->mTextHeight);
-    TokenAccu.Columns = 0;
-    TokenAccu.ColumnsBefore = 0;
+    mTokenAccu.columns = 0;
+    mTokenAccu.columnsBefore = 0;
     // Now loop through all the lines. The indices are valid for Lines.
     BufferCoord selectionBegin = edit->blockBegin();
     BufferCoord selectionEnd= edit->blockEnd();
@@ -908,7 +903,7 @@ void SynEditTextPainter::paintLines()
               } else {
                   nTokenColumnLen = edit->mDocument->lineColumns(vLine-1);
               }
-              if (edit->mOptions.testFlag(eoShowSpecialChars) && (!bLineSelected) && (!bSpecialLine) && (nTokenColumnLen < vLastChar)) {
+              if (edit->mOptions.testFlag(eoShowLineBreaks) && (!bLineSelected) && (!bSpecialLine) && (nTokenColumnLen < vLastChar)) {
                   sToken = sToken + LineBreakGlyph;
                   nTokenColumnLen += edit->charColumns(LineBreakGlyph);
               }
@@ -955,7 +950,7 @@ void SynEditTextPainter::paintLines()
             // of ExtTextOut calls necessary. This depends on the selection state
             // or the line having special colors. For spaces the foreground color
             // is ignored as well.
-            TokenAccu.Columns = 0;
+            mTokenAccu.columns = 0;
             nTokenColumnsBefore = 0;
             // Test first whether anything of this token is visible.
             while (!edit->mSyntaxer->eol()) {
@@ -1014,38 +1009,40 @@ void SynEditTextPainter::paintLines()
                             }
                         }
                     }
+                    bool showGlyph=false;
+                    if (attr && attr->tokenType() == TokenType::Space) {
+                        int pos = edit->mSyntaxer->getTokenPos();
+                        if (pos==0) {
+                            showGlyph = edit->mOptions.testFlag(eoShowLeadingSpaces);
+                        } else if (pos+sToken.length()==sLine.length()) {
+                            showGlyph = edit->mOptions.testFlag(eoShowTrailingSpaces);
+                        } else {
+                            showGlyph = edit->mOptions.testFlag(eoShowInnerSpaces);
+                        }
+                    }
                     addHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
-                      nTokenColumnLen, vLine,attr);
+                      nTokenColumnLen, vLine,attr, showGlyph);
                 }
                 nTokenColumnsBefore+=nTokenColumnLen;
                 // Let the highlighter scan the next token.
                 edit->mSyntaxer->next();
             }
-            // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
-            //nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore);
-            if (edit->mSyntaxer->eol() && (nTokenColumnsBefore < vLastChar)) {
-                int lineColumns = edit->mDocument->lineColumns(vLine-1);
-                // Draw text that couldn't be parsed by the highlighter, if any.
-                if (nTokenColumnsBefore < lineColumns) {
-                    if (nTokenColumnsBefore + 1 < vFirstChar)
-                        nTokenColumnsBefore = vFirstChar - 1;
-                    nTokenColumnLen = std::min(lineColumns, vLastChar) - (nTokenColumnsBefore + 1);
-                    if (nTokenColumnLen > 0) {
-                        sToken = edit->substringByColumns(sLine,nTokenColumnsBefore+1,nTokenColumnLen);
-                        addHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
-                            nTokenColumnLen, vLine, PTokenAttribute());
-                    }
-                }
-                // Draw LineBreak glyph.
-                if (edit->mOptions.testFlag(eoShowSpecialChars)
-//                        && (!bLineSelected)
-//                        && (!bSpecialLine)
-                        && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
-                    addHighlightToken(LineBreakGlyph,
-                      edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
-                      edit->charColumns(LineBreakGlyph),vLine, edit->mSyntaxer->whitespaceAttribute());
-                }
-            }
+//            // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
+//            //nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore);
+//            if (edit->mSyntaxer->eol() && (nTokenColumnsBefore < vLastChar)) {
+//                int lineColumns = edit->mDocument->lineColumns(vLine-1);
+//                // Draw text that couldn't be parsed by the highlighter, if any.
+//                if (nTokenColumnsBefore < lineColumns) {
+//                    if (nTokenColumnsBefore + 1 < vFirstChar)
+//                        nTokenColumnsBefore = vFirstChar - 1;
+//                    nTokenColumnLen = std::min(lineColumns, vLastChar) - (nTokenColumnsBefore + 1);
+//                    if (nTokenColumnLen > 0) {
+//                        sToken = edit->substringByColumns(sLine,nTokenColumnsBefore+1,nTokenColumnLen);
+//                        addHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
+//                            nTokenColumnLen, vLine, PTokenAttribute(),false);
+//                    }
+//                }
+//            }
 
             // Paint folding
             foldRange = edit->foldStartAtLine(vLine);
@@ -1055,9 +1052,18 @@ void SynEditTextPainter::paintLines()
                 attr = edit->mSyntaxer->symbolAttribute();
                 getBraceColorAttr(edit->mSyntaxer->getState().braceLevel,attr);
                 addHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1) - (vFirstChar - FirstCol)
-                  , nFold, vLine, attr);
+                  , nFold, vLine, attr,false);
+            } else  {
+                // Draw LineBreak glyph.
+                if (edit->mOptions.testFlag(eoShowLineBreaks)
+                        && (!bLineSelected)
+                        && (!bSpecialLine)
+                        && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
+                    addHighlightToken(LineBreakGlyph,
+                      edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
+                      edit->charColumns(LineBreakGlyph),vLine, edit->mSyntaxer->whitespaceAttribute(),false);
+                }
             }
-
             // Draw anything that's left in the TokenAccu record. Fill to the end
             // of the invalid area with the correct colors.
             paintHighlightToken(true);

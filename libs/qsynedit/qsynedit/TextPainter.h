@@ -29,12 +29,12 @@ class SynEdit;
 class SynEditTextPainter
 {
     struct SynTokenAccu {
-        int Columns;
-        int ColumnsBefore;
+        int columns;
+        int columnsBefore;
         QString s;
-        QColor FG;
-        QColor BG;
-        FontStyles Style;
+        QColor foreground;
+        QColor background;
+        FontStyles style;
         bool showSpecialGlyphs;
     };
 
@@ -55,7 +55,7 @@ private:
     void paintEditAreas(const EditingAreaList& areaList);
     void paintHighlightToken(bool bFillToEOL);
     void addHighlightToken(const QString& token, int columnsBefore, int tokenColumns,
-                           int cLine, PTokenAttribute p_Attri);
+                           int cLine, PTokenAttribute p_Attri, bool showGlyphs);
 
     void paintFoldAttributes();
     void getBraceColorAttr(int level, PTokenAttribute &attr);
@@ -84,7 +84,7 @@ private:
 
     QRect AClip;
     int aFirstRow, aLastRow, FirstCol, LastCol;
-    SynTokenAccu TokenAccu;
+    SynTokenAccu mTokenAccu;
 };
 
 }

@@ -105,7 +105,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     this->setCursor(Qt::CursorShape::IBeamCursor);
     //TabStop := True;
     mInserting = true;
-    mExtraLineSpacing = 0;
+    mLineSpacingFactor = 1.0;
 
     this->setFrameShape(QFrame::Panel);
     this->setFrameShadow(QFrame::Sunken);
@@ -3405,7 +3405,7 @@ void SynEdit::recalcCharExtent()
         if (fm.horizontalAdvance("M")>mCharWidth)
             mCharWidth = fm.horizontalAdvance("M");
     }
-    mTextHeight += mExtraLineSpacing;
+    mTextHeight *= mLineSpacingFactor;
 }
 
 QString SynEdit::expandAtWideGlyphs(const QString &S)
@@ -3968,6 +3968,19 @@ void SynEdit::onScrolled(int)
     invalidate();
 }
 
+double SynEdit::lineSpacingFactor() const
+{
+    return mLineSpacingFactor;
+}
+
+void SynEdit::setLineSpacingFactor(double newLineSpacingFactor)
+{
+    if (newLineSpacingFactor<1.0)
+        newLineSpacingFactor = 1.0;
+    mLineSpacingFactor = newLineSpacingFactor;
+    recalcCharExtent();
+}
+
 ScrollStyle SynEdit::scrollBars() const
 {
     return mScrollBars;
@@ -4185,6 +4198,10 @@ EditorOptions SynEdit::getOptions() const
     return mOptions;
 }
 
+
+static bool sameEditorOption(const EditorOptions& value1, const EditorOptions& value2, EditorOption flag) {
+    return value1.testFlag(flag)==value2.testFlag(flag);
+}
 void SynEdit::setOptions(const EditorOptions &Value)
 {
     if (Value != mOptions) {
@@ -4195,8 +4212,11 @@ void SynEdit::setOptions(const EditorOptions &Value)
         setTopLine(mTopLine);
 
         bool bUpdateAll =
-                (Value.testFlag(eoShowSpecialChars) != mOptions.testFlag(eoShowSpecialChars))
-                || (Value.testFlag(eoShowRainbowColor) != mOptions.testFlag(eoShowRainbowColor));
+                !sameEditorOption(Value,mOptions,eoShowLeadingSpaces)
+                || !sameEditorOption(Value,mOptions,eoShowInnerSpaces)
+                || !sameEditorOption(Value,mOptions,eoShowTrailingSpaces)
+                || !sameEditorOption(Value,mOptions,eoShowLineBreaks)
+                || !sameEditorOption(Value,mOptions,eoShowRainbowColor);
         //bool bUpdateScroll = (Options * ScrollOptions)<>(Value * ScrollOptions);
         bool bUpdateScroll = true;
         mOptions = Value;

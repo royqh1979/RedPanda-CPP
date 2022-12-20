@@ -1287,11 +1287,31 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Show special chars</source>
+        <source>Enable ligatures support</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable ligatures support</source>
+        <source>Line Spacing:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show whitespaces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Leading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Inner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Trailing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Line break</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

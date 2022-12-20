@@ -20,6 +20,8 @@ Red Panda C++ Version 2.7
   - fix: Project's "static link" option is overwrited by global compiler set settings, when project options dialog is opened.
   - fix: Icon size not correct under macOS high DPI / zoom factor settings.
   - enhancement: "Icon zoom" in options / environment / appearance
+  - enhancement: "Line Spacing" in options / editor / font
+  - enhancement: "Show whitespaces" in options / editor / font
 
 Red Panda C++ Version 2.6
 
