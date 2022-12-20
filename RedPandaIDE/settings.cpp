@@ -1706,6 +1706,45 @@ void Settings::CompilerSet::setCompileOptions(const QMap<QString, QString> optio
     mCompileOptions=options;
 }
 
+void Settings::CompilerSet::setAddressSanitizerOptions() {
+    /* Enable Address sanitizer (ASan) on Linux if the cost is acceptable.
+     *
+     * ASan would be very slow on non-x86 64-bit architectures, for large address
+     * space and unoptimized runtime, so don't enable ASan on these arches.
+     *
+     * In a word, enable ASan if RedPanda C++ is running on
+     * - x86-64 Linux, or
+     * - 32-bit Linux, or
+     * - ARM64 Linux with compiler set targeting ARM32.
+     *
+     * TODO:
+     * - Consider cross compilers.
+     * - The word "very slow" is guessed based on implementation of libasan.
+     *   Real device testing only applies to AArch64. Test more arches if possible.
+     */
+
+#ifdef Q_OS_LINUX
+
+#if defined(__x86_64__) || Q_PROCESSOR_WORDSIZE == 4
+    if constexpr (true)
+#elif defined(__aarch64__)
+    // See LLVM 15.0.6's ARM ISA parser,
+    //   `ARM::ISAKind ARM::parseArchISA(StringRef Arch)`
+    //   in `llvm/lib/Support/ARMTargetParserCommon.cpp`.
+    if (mTarget.startsWith("arm") && !mTarget.startsWith("arm64"))
+#else
+    if constexpr (false)
+#endif
+
+    {
+        setCustomCompileParams("-fsanitize=address");
+        setUseCustomCompileParams(true);
+        setCustomLinkParams("-fsanitize=address");
+        setUseCustomLinkParams(true);
+    }
+#endif
+}
+
 QString Settings::CompilerSet::getCompileOptionValue(const QString &key)
 {
     return mCompileOptions.value(key,QString());
@@ -2695,14 +2734,7 @@ static void setDebugOptions(Settings::PCompilerSet pSet) {
     pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL, COMPILER_OPTION_ON);
     //pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
-
-#ifdef Q_OS_LINUX
-    pSet->setCustomCompileParams("-fsanitize=address");
-    pSet->setUseCustomCompileParams(true);
-    pSet->setCustomLinkParams("-fsanitize=address");
-    pSet->setUseCustomLinkParams(true);
-#endif
-
+    pSet->setAddressSanitizerOptions();
     pSet->setStaticLink(false);
 }
 
