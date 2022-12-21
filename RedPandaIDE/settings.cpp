@@ -2735,6 +2735,12 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
         platformName = "32-bit";
     }
 
+
+    PCompilerSet debugSet = addSet(baseSet);
+    debugSet->setName(baseName + " " + platformName + " Debug");
+    debugSet->setCompilerSetType(CompilerSetType::DEBUG);
+    setDebugOptions(debugSet);
+
     // Enable ASan compiler set if it is supported and gdb works with ASan.
 #ifdef Q_OS_LINUX
     PCompilerSet debugAsanSet = addSet(baseSet);
@@ -2742,11 +2748,6 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
     debugAsanSet->setCompilerSetType(CompilerSetType::DEBUG);
     setDebugOptions(debugAsanSet, true);
 #endif
-
-    PCompilerSet debugSet = addSet(baseSet);
-    debugSet->setName(baseName + " " + platformName + " Debug");
-    debugSet->setCompilerSetType(CompilerSetType::DEBUG);
-    setDebugOptions(debugSet);
 
     baseSet->setName(baseName + " " + platformName + " Release");
     baseSet->setCompilerSetType(CompilerSetType::RELEASE);
@@ -2757,7 +2758,16 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
 //    baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
 //    setProfileOptions(baseSet);
 
+#ifdef Q_OS_LINUX
+# if defined(__x86_64__) || __SIZEOF_POINTER__ == 4
+    mDefaultIndex = (int)mList.size() - 1; // x86-64 Linux or 32-bit Unix, default to "debug with ASan"
+# else
+    mDefaultIndex = (int)mList.size() - 2; // other Unix, where ASan can be very slow, default to "debug"
+# endif
+#else
     mDefaultIndex = (int)mList.size() - 1;
+#endif
+
     return true;
 
 }
