@@ -70,7 +70,6 @@ void ProjectCompiler::createStaticMakeFile()
     if (!mOnlyCheckSyntax) {
         writeln(file,"\tar r $(BIN) $(LINKOBJ)");
         writeln(file,"\tranlib $(BIN)");
-        writeln(file);
     }
     writeMakeObjFilesRules(file);
 }
@@ -86,7 +85,6 @@ void ProjectCompiler::createDynamicMakeFile()
         } else {
             writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
         }
-        writeln(file);
     }
     writeMakeObjFilesRules(file);
 }
