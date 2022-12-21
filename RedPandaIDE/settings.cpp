@@ -2735,12 +2735,6 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
         platformName = "32-bit";
     }
 
-
-    PCompilerSet debugSet = addSet(baseSet);
-    debugSet->setName(baseName + " " + platformName + " Debug");
-    debugSet->setCompilerSetType(CompilerSetType::DEBUG);
-    setDebugOptions(debugSet);
-
     /* Clang’s document says ASan is supported on Windows.
      * (https://clang.llvm.org/docs/AddressSanitizer.html)
      * That’s true for 'compiler-rt' builds, but not true for 'libgcc' builds.
@@ -2758,6 +2752,11 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
         debugAsanSet->setCompilerSetType(CompilerSetType::DEBUG);
         setDebugOptions(debugAsanSet, true);
     }
+
+    PCompilerSet debugSet = addSet(baseSet);
+    debugSet->setName(baseName + " " + platformName + " Debug");
+    debugSet->setCompilerSetType(CompilerSetType::DEBUG);
+    setDebugOptions(debugSet);
 
     baseSet->setName(baseName + " " + platformName + " Release");
     baseSet->setCompilerSetType(CompilerSetType::RELEASE);
