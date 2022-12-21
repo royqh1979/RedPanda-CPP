@@ -207,7 +207,7 @@ int main(int argc, char** argv) {
     auto endtime = std::chrono::high_resolution_clock::now();
     auto difftime = endtime - starttime;
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(difftime);
-    double seconds = milliseconds.count()/1000;
+    double seconds = milliseconds.count()/1000.0;
 
     if (pBuf) {
         strcpy(pBuf,"FINISHED");
@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
 
     // Done? Print return value of executed program
     printf("\n--------------------------------");
-    printf("\nProcess exited after %.4g seconds with return value %lu, %d KB mem used.\n",seconds,returnvalue,peakMemory);
+    printf("\nProcess exited after %.4g seconds with return value %d, %ld KB mem used.\n",seconds,returnvalue,peakMemory);
     if (pauseAfterExit)
         PauseExit(returnvalue,reInp);
     return 0;
