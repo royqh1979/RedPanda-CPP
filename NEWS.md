@@ -22,6 +22,7 @@ Red Panda C++ Version 2.7
   - enhancement: "Icon zoom" in options / environment / appearance
   - enhancement: "Line Spacing" in options / editor / font
   - enhancement: "Show whitespaces" in options / editor / font
+  - enhancement: Auto add "lib" to the output of static/dynamic library projects, if project name don't start with "lib".
 
 Red Panda C++ Version 2.6
 

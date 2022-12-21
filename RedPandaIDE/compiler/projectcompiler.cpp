@@ -68,8 +68,9 @@ void ProjectCompiler::createStaticMakeFile()
     newMakeFile(file);
     writeln(file,"$(BIN): $(LINKOBJ)");
     if (!mOnlyCheckSyntax) {
-      writeln(file,"\tar r $(BIN) $(LINKOBJ)");
-      writeln(file,"\tranlib $(BIN)");
+        writeln(file,"\tar r $(BIN) $(LINKOBJ)");
+        writeln(file,"\tranlib $(BIN)");
+        writeln(file);
     }
     writeMakeObjFilesRules(file);
 }
@@ -81,10 +82,11 @@ void ProjectCompiler::createDynamicMakeFile()
     writeln(file,"$(BIN): $(LINKOBJ)");
     if (!mOnlyCheckSyntax) {
         if (mProject->options().isCpp) {
-          file.write("\t$(CPP) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+            writeln(file, "\t$(CPP) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
         } else {
-          file.write("\t$(CC) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
         }
+        writeln(file);
     }
     writeMakeObjFilesRules(file);
 }
@@ -261,8 +263,14 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 
     // This needs to be put in before the clean command.
     if (mProject->options().type == ProjectType::DynamicLib) {
-        QString OutputFileDir = extractFilePath(mProject->executable());
-        QString libOutputFile = includeTrailingPathDelimiter(OutputFileDir) + "lib" + extractFileName(mProject->executable());
+        QString outputFileDir = extractFilePath(mProject->executable());
+        QString outputFilename = extractFileName(mProject->executable());
+        QString libOutputFile;
+        if (!outputFilename.startsWith("lib")) {
+            libOutputFile = includeTrailingPathDelimiter(outputFileDir) + "lib" + outputFilename;
+        } else {
+            libOutputFile = includeTrailingPathDelimiter(outputFileDir) + outputFilename;
+        }
         if (QFileInfo(libOutputFile).absoluteFilePath()
                 == mProject->directory())
             libOutputFile = extractFileName(libOutputFile);

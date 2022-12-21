@@ -129,9 +129,13 @@ QString Project::executable() const
         switch(mOptions.type) {
         case ProjectType::StaticLib:
             exeFileName = changeFileExt(extractFileName(mFilename),STATIC_LIB_EXT);
+            if (!exeFileName.startsWith("lib"))
+                exeFileName = "lib" + exeFileName;
             break;
         case ProjectType::DynamicLib:
             exeFileName = changeFileExt(extractFileName(mFilename),DYNAMIC_LIB_EXT);
+            if (!exeFileName.startsWith("lib"))
+                exeFileName = "lib" + exeFileName;
             break;
         default:
             exeFileName = changeFileExt(extractFileName(mFilename),DEFAULT_EXECUTABLE_SUFFIX);
