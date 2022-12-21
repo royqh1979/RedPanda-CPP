@@ -2735,23 +2735,13 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
         platformName = "32-bit";
     }
 
-    /* Clang’s document says ASan is supported on Windows.
-     * (https://clang.llvm.org/docs/AddressSanitizer.html)
-     * That’s true for 'compiler-rt' builds, but not true for 'libgcc' builds.
-     *
-     * Add "debug with Asan" for Windows Clang, anyway.
-     *
-     * TODO: Test on BSD family.
-     */
-#ifdef Q_OS_WIN
-    if (baseSet->compilerType() == CompilerType::Clang)
+    // Enable ASan compiler set if it is supported and gdb works with ASan.
+#ifdef Q_OS_LINUX
+    PCompilerSet debugAsanSet = addSet(baseSet);
+    debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
+    debugAsanSet->setCompilerSetType(CompilerSetType::DEBUG);
+    setDebugOptions(debugAsanSet, true);
 #endif
-    {
-        PCompilerSet debugAsanSet = addSet(baseSet);
-        debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
-        debugAsanSet->setCompilerSetType(CompilerSetType::DEBUG);
-        setDebugOptions(debugAsanSet, true);
-    }
 
     PCompilerSet debugSet = addSet(baseSet);
     debugSet->setName(baseName + " " + platformName + " Debug");
