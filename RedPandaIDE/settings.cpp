@@ -2742,19 +2742,17 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
     pSet->setStaticLink(true);
 }
 
-static void setDebugOptions(Settings::PCompilerSet pSet) {
+static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false) {
     pSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL, COMPILER_OPTION_ON);
     //pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
-
-#ifdef Q_OS_LINUX
-    pSet->setCustomCompileParams("-fsanitize=address");
-    pSet->setUseCustomCompileParams(true);
-    pSet->setCustomLinkParams("-fsanitize=address");
-    pSet->setUseCustomLinkParams(true);
-#endif
-
+    if (enableAsan) {
+        pSet->setCustomCompileParams("-fsanitize=address");
+        pSet->setUseCustomCompileParams(true);
+        pSet->setCustomLinkParams("-fsanitize=address");
+        pSet->setUseCustomLinkParams(true);
+    }
     pSet->setStaticLink(false);
 }
 
@@ -2790,10 +2788,18 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
     }
 
 
-    PCompilerSet set = addSet(baseSet);
-    set->setName(baseName + " " + platformName + " Debug");
-    set->setCompilerSetType(CompilerSetType::DEBUG);
-    setDebugOptions(set);
+    PCompilerSet debugSet = addSet(baseSet);
+    debugSet->setName(baseName + " " + platformName + " Debug");
+    debugSet->setCompilerSetType(CompilerSetType::DEBUG);
+    setDebugOptions(debugSet);
+
+    // Enable ASan compiler set if it is supported and gdb works with ASan.
+#ifdef Q_OS_LINUX
+    PCompilerSet debugAsanSet = addSet(baseSet);
+    debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
+    debugAsanSet->setCompilerSetType(CompilerSetType::DEBUG);
+    setDebugOptions(debugAsanSet, true);
+#endif
 
     baseSet->setName(baseName + " " + platformName + " Release");
     baseSet->setCompilerSetType(CompilerSetType::RELEASE);
@@ -2804,7 +2810,16 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
 //    baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
 //    setProfileOptions(baseSet);
 
+#ifdef Q_OS_LINUX
+# if defined(__x86_64__) || __SIZEOF_POINTER__ == 4
+    mDefaultIndex = (int)mList.size() - 1; // x86-64 Linux or 32-bit Unix, default to "debug with ASan"
+# else
+    mDefaultIndex = (int)mList.size() - 2; // other Unix, where ASan can be very slow, default to "debug"
+# endif
+#else
     mDefaultIndex = (int)mList.size() - 1;
+#endif
+
     return true;
 
 }
