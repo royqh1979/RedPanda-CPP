@@ -23,6 +23,7 @@ Red Panda C++ Version 2.7
   - enhancement: "Line Spacing" in options / editor / font
   - enhancement: "Show whitespaces" in options / editor / font
   - enhancement: Auto add "lib" to the output of static/dynamic library projects, if project name don't start with "lib".
+  - fix: Makefile error when "Use precompiled header" is enabled in the project option dialog.
 
 Red Panda C++ Version 2.6
 

@@ -7036,105 +7036,105 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">无法保存文件&apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="944"/>
+        <location filename="../project.cpp" line="948"/>
         <source>Error Load File</source>
         <translation>载入文件错误</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="968"/>
-        <location filename="../project.cpp" line="1065"/>
+        <location filename="../project.cpp" line="972"/>
+        <location filename="../project.cpp" line="1069"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="969"/>
+        <location filename="../project.cpp" line="973"/>
         <source>Can&apos;t create folder %1 </source>
         <translation>无法创建文件夹%1</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1036"/>
+        <location filename="../project.cpp" line="1040"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1037"/>
-        <location filename="../project.cpp" line="1066"/>
+        <location filename="../project.cpp" line="1041"/>
+        <location filename="../project.cpp" line="1070"/>
         <source>Can&apos;t save file %1</source>
         <translation>无法保存文件%1</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1193"/>
+        <location filename="../project.cpp" line="1197"/>
         <source>File Exists</source>
         <translation>文件已存在</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1194"/>
+        <location filename="../project.cpp" line="1198"/>
         <source>File &apos;%1&apos; is already in the project</source>
         <translation>文件&apos;%1&apos;已在项目中</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1576"/>
+        <location filename="../project.cpp" line="1580"/>
         <source>Project Updated</source>
         <translation>项目已升级</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1577"/>
+        <location filename="../project.cpp" line="1581"/>
         <source>Your project was succesfully updated to a newer file format!</source>
         <translation>已成功将项目升级到新的格式</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1579"/>
+        <location filename="../project.cpp" line="1583"/>
         <source>If something has gone wrong, we kept a backup-file: &apos;%1&apos;...</source>
         <translation>旧项目文件备份在&apos;%1&apos;。</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1650"/>
+        <location filename="../project.cpp" line="1654"/>
         <source>Headers</source>
         <translation>头文件</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1658"/>
+        <location filename="../project.cpp" line="1662"/>
         <source>Sources</source>
         <translation>源文件</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1666"/>
+        <location filename="../project.cpp" line="1670"/>
         <source>Others</source>
         <translation>其他文件</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1884"/>
+        <location filename="../project.cpp" line="1888"/>
         <source>Settings need update</source>
         <translation>设置需要更新</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1885"/>
+        <location filename="../project.cpp" line="1889"/>
         <source>The compiler settings format of Red Panda C++ has changed.</source>
         <oldsource>The compiler settings format of Dev-C++ has changed.</oldsource>
         <translation>小熊猫C++的编译器设置格式已发生改变。</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1887"/>
+        <location filename="../project.cpp" line="1891"/>
         <source>Please update your settings at Project &gt;&gt; Project Options &gt;&gt; Compiler and save your project.</source>
         <translation>请在项目 &gt;&gt; 项目属性 &gt;&gt; 编译器设置中修改您的设置并保存您的项目</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1961"/>
+        <location filename="../project.cpp" line="1965"/>
         <source>Compiler not found</source>
         <translation>未找到编译器</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1962"/>
+        <location filename="../project.cpp" line="1966"/>
         <source>The compiler set you have selected for this project, no longer exists.</source>
         <translation>您为该项目设置的编译器不存在。</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="1964"/>
+        <location filename="../project.cpp" line="1968"/>
         <source>It will be substituted by the global compiler set.</source>
         <translation>它将会被全局编译器设置代替。</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="2060"/>
+        <location filename="../project.cpp" line="2064"/>
         <source>Developed using the Red Panda C++ IDE</source>
         <oldsource>Developed using the Red Panda Dev-C++ IDE</oldsource>
         <translation>使用小熊猫C++编辑器开发</translation>
@@ -7244,47 +7244,47 @@ Are you really want to continue?</oldsource>
         <translation>无法写入文件&apos;%1&apos;！</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="197"/>
+        <location filename="../compiler/projectcompiler.cpp" line="205"/>
         <source>- Resource File: %1</source>
         <translation>- 资源文件: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="522"/>
+        <location filename="../compiler/projectcompiler.cpp" line="535"/>
         <source>Compiling project changes...</source>
         <translation>正在编译项目修改...</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="524"/>
+        <location filename="../compiler/projectcompiler.cpp" line="537"/>
         <source>- Project Filename: %1</source>
         <translation>- 项目文件名: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="525"/>
+        <location filename="../compiler/projectcompiler.cpp" line="538"/>
         <source>- Compiler Set Name: %1</source>
         <translation>- 编译器配置: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="534"/>
+        <location filename="../compiler/projectcompiler.cpp" line="547"/>
         <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
         <translation>Make程序“%1”不存在！</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="536"/>
+        <location filename="../compiler/projectcompiler.cpp" line="549"/>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation>请检查编译器配置中的“程序”页。</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="566"/>
+        <location filename="../compiler/projectcompiler.cpp" line="579"/>
         <source>Processing makefile:</source>
         <translation>正在处理makefile...</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="568"/>
+        <location filename="../compiler/projectcompiler.cpp" line="581"/>
         <source>- makefile processer: %1</source>
         <translation>- makefile处理器: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="569"/>
+        <location filename="../compiler/projectcompiler.cpp" line="582"/>
         <source>- Command: %1 %2</source>
         <translation>- 命令: %1 %2</translation>
     </message>
@@ -7622,32 +7622,32 @@ Are you really want to continue?</oldsource>
 <context>
     <name>ProjectModel</name>
     <message>
-        <location filename="../project.cpp" line="2633"/>
+        <location filename="../project.cpp" line="2637"/>
         <source>File exists</source>
         <translation>文件已存在</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="2634"/>
+        <location filename="../project.cpp" line="2638"/>
         <source>File &apos;%1&apos; already exists. Delete it now?</source>
         <translation>文件&apos;%1&apos;已存在。是否删除？</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="2652"/>
+        <location filename="../project.cpp" line="2656"/>
         <source>Remove failed</source>
         <translation>删除失败</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="2653"/>
+        <location filename="../project.cpp" line="2657"/>
         <source>Failed to remove file &apos;%1&apos;</source>
         <translation>无法删除文件&apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="2670"/>
+        <location filename="../project.cpp" line="2674"/>
         <source>Rename failed</source>
         <translation>改名失败</translation>
     </message>
     <message>
-        <location filename="../project.cpp" line="2671"/>
+        <location filename="../project.cpp" line="2675"/>
         <source>Failed to rename file &apos;%1&apos; to &apos;%2&apos;</source>
         <translation>无法将文件&apos;%1&apos;改名为&apos;%2&apos;</translation>
     </message>
@@ -7720,30 +7720,43 @@ Are you really want to continue?</oldsource>
         <translation>使用预编译头文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectprecompilewidget.ui" line="47"/>
-        <location filename="../settingsdialog/projectprecompilewidget.ui" line="50"/>
+        <location filename="../settingsdialog/projectprecompilewidget.ui" line="44"/>
+        <source>Header to be precompiled:</source>
+        <translation>要预编译的头文件：</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/projectprecompilewidget.ui" line="54"/>
+        <location filename="../settingsdialog/projectprecompilewidget.ui" line="57"/>
         <source>Browse</source>
         <translation>浏览</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectprecompilewidget.ui" line="71"/>
+        <location filename="../settingsdialog/projectprecompilewidget.ui" line="78"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For more information about gcc precompiled header, see:&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#007af4;&quot;&gt;https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;请问访问下面网站以了解有关gcc预定义头文件的信息:&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#007af4;&quot;&gt;https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectprecompilewidget.cpp" line="61"/>
         <source>Precompiled header</source>
-        <translation>预定义头文件</translation>
+        <translation type="vanished">预定义头文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectprecompilewidget.cpp" line="63"/>
         <source>precompiled header files (*.pch)</source>
-        <translation>预定义头文件 (*.pch)</translation>
+        <translation type="vanished">预定义头文件 (*.pch)</translation>
     </message>
     <message>
         <source>header files (*.h)</source>
         <oldsource>header files (*.h</oldsource>
         <translation type="vanished">文件夹 (*.h)</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/projectprecompilewidget.cpp" line="61"/>
+        <source>Select the header file to be precompiled</source>
+        <translation>选择要预编译的头文件</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/projectprecompilewidget.cpp" line="63"/>
+        <source>Header files (*.h *.hh *.hpp)</source>
+        <translation>头文件 (*.h *.hh *.hpp)</translation>
     </message>
 </context>
 <context>
@@ -8059,7 +8072,7 @@ Are you really want to continue?</oldsource>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2956"/>
+        <location filename="../settings.cpp" line="2971"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -8172,7 +8185,7 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2958"/>
+        <location filename="../settings.cpp" line="2973"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -8193,13 +8206,13 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2948"/>
-        <location filename="../settings.cpp" line="2954"/>
+        <location filename="../settings.cpp" line="2963"/>
+        <location filename="../settings.cpp" line="2969"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2950"/>
+        <location filename="../settings.cpp" line="2965"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -8569,7 +8582,7 @@ Are you really want to continue?</oldsource>
         <location filename="../autolinkmanager.cpp" line="60"/>
         <location filename="../autolinkmanager.cpp" line="74"/>
         <location filename="../autolinkmanager.cpp" line="105"/>
-        <location filename="../project.cpp" line="662"/>
+        <location filename="../project.cpp" line="666"/>
         <source>Can&apos;t open file &apos;%1&apos; for write.</source>
         <translation>无法写入文件&apos;%1&apos;.</translation>
     </message>

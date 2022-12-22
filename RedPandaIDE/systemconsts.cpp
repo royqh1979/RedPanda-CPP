@@ -30,7 +30,7 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     addDefaultFileFilter(QObject::tr("Dev C++ Project files"),"*.dev");
     addDefaultFileFilter(QObject::tr("C files"),"*.c");
     addDefaultFileFilter(QObject::tr("C++ files"),"*.cpp *.cc *.cxx");
-    addDefaultFileFilter(QObject::tr("Header files"),"*.h *.hh");
+    addDefaultFileFilter(QObject::tr("Header files"),"*.h *.hh *.hpp");
 
     addFileFilter(mIconFileFilters, QObject::tr("Icon files"), "*.ico");
 

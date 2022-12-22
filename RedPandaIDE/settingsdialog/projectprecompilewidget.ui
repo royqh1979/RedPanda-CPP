@@ -39,6 +39,13 @@
           <number>0</number>
          </property>
          <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Header to be precompiled:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLineEdit" name="txtPrecompileHeader"/>
          </item>
          <item>

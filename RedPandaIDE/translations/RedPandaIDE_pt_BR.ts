@@ -5737,14 +5737,22 @@
     </message>
     <message>
         <source>Precompiled header</source>
-        <translation>Cabeçalho já compilado</translation>
+        <translation type="vanished">Cabeçalho já compilado</translation>
     </message>
     <message>
         <source>header files (*.h)</source>
         <translation type="vanished">arquivos de cabeçalhos (*h)</translation>
     </message>
     <message>
-        <source>precompiled header files (*.pch)</source>
+        <source>Select the header file to be precompiled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Header files (*.h *.hh *.hpp)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Header to be precompiled:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

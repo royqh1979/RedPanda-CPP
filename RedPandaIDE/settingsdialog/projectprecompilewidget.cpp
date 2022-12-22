@@ -56,13 +56,13 @@ void ProjectPreCompileWidget::on_btnBrowse_clicked()
     } else {
         currentDir = extractFilePath(currentFile);
     }
-    QString fileName = QFileDialog::getSaveFileName(
+    QString fileName = QFileDialog::getOpenFileName(
                 this,
-                tr("Precompiled header"),
+                tr("Select the header file to be precompiled"),
                 currentDir,
-                tr("precompiled header files (*.pch)"),
+                tr("Header files (*.h *.hh *.hpp)"),
                 nullptr,
-                QFileDialog::Options()|QFileDialog::DontConfirmOverwrite);
+                QFileDialog::Options());
     if (!fileName.isEmpty()) {
         ui->txtPrecompileHeader->setText(fileName);
     }

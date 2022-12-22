@@ -119,6 +119,14 @@ void ProjectCompiler::newMakeFile(QFile& file)
 
     // Write clean command
     writeMakeClean(file);
+
+    // PCH
+    if (mProject->options().usePrecompiledHeader
+            && fileExists(mProject->options().precompiledHeader)) {
+        writeln(file, "$(PCH) : $(PCH_H)");
+        writeln(file, "\t$(CPP) -c \"$(PCH_H)\" -o \"$(PCH)\" $(CXXFLAGS)");
+        writeln(file);
+    }
 }
 
 void ProjectCompiler::writeMakeHeader(QFile &file)
@@ -253,9 +261,10 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     cCompileArguments.replace('\\', '/');
     writeln(file,"CFLAGS   = $(INCS) " + cCompileArguments);
     writeln(file, QString("RM       = ") + CLEAN_PROGRAM );
-    if (mProject->options().usePrecompiledHeader){
-        writeln(file,"PCH_H = " + mProject->options().precompiledHeader );
-        writeln(file,"PCH = " + changeFileExt(mProject->options().precompiledHeader, GCH_EXT));
+    if (mProject->options().usePrecompiledHeader
+            && fileExists(mProject->options().precompiledHeader)){
+        writeln(file,"PCH_H = " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader )));
+        writeln(file,"PCH = " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader+"."+GCH_EXT)));
    }
 
 
@@ -296,11 +305,7 @@ void ProjectCompiler::writeMakeTarget(QFile &file)
     writeln(file);
     writeln(file, "all: all-before $(BIN) all-after");
     writeln(file);
-    if (mProject->options().usePrecompiledHeader) {
-        writeln(file, "$(PCH) : $(PCH_H)");
-        writeln(file, "  $(CPP) -x c++-header \"$(PCH_H)\" -o \"$(PCH)\" $(CXXFLAGS)");
-        writeln(file);
-    }
+
 }
 
 void ProjectCompiler::writeMakeIncludes(QFile &file)
@@ -316,10 +321,16 @@ void ProjectCompiler::writeMakeIncludes(QFile &file)
 void ProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
-    if (mProject->options().type == ProjectType::DynamicLib)
-        writeln(file, QString("\t-${RM} $(CLEANOBJ) $(CLEAN_DEF) $(CLEAN_STATIC) > %1 2>&1").arg(NULL_FILE));
-    else
-        writeln(file, QString("\t-${RM} $(CLEANOBJ) > %1 2>&1").arg(NULL_FILE));
+    QString target="$(CLEANOBJ)";
+    if (mProject->options().usePrecompiledHeader
+            && fileExists(mProject->options().precompiledHeader)) {
+        target += " $(PCH)";
+    }
+
+    if (mProject->options().type == ProjectType::DynamicLib) {
+        target +=" $(CLEAN_DEF) $(CLEAN_STATIC)";
+    }
+    writeln(file, QString("\t-$(RM) %1 > %2 2>&1").arg(target,NULL_FILE));
     writeln(file);
 }
 
@@ -327,8 +338,6 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 {
     PCppParser parser = mProject->cppParser();
     QString precompileStr;
-    if (mProject->options().usePrecompiledHeader)
-        precompileStr = " $(PCH) ";
 
     QList<PProjectUnit> projectUnits=mProject->unitList();
     foreach(const PProjectUnit &unit, projectUnits) {
@@ -344,17 +353,15 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         // if we have scanned it, use scanned info
         if (parser && parser->scannedFiles().contains(unit->fileName())) {
             QSet<QString> fileIncludes = parser->getFileIncludes(unit->fileName());
-            foreach (const QString& headerName, fileIncludes) {
-                if (headerName == unit->fileName())
+            foreach(const PProjectUnit &unit2, projectUnits) {
+                if (unit2==unit)
                     continue;
-                if (!parser->isSystemHeaderFile(headerName)
-                        && ! parser->isProjectHeaderFile(headerName)) {
-                    foreach(const PProjectUnit &unit2, projectUnits) {
-                        if (unit2->fileName()==headerName) {
-                            objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),headerName));
-                            break;
-                        }
-                    }
+                if (fileIncludes.contains(unit2->fileName())) {
+                    if (mProject->options().usePrecompiledHeader &&
+                           unit2->fileName() == mProject->options().precompiledHeader)
+                        precompileStr = " $(PCH) ";
+                    else
+                        objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),unit2->fileName()));
                 }
             }
         } else {

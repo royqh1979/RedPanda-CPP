@@ -5517,11 +5517,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Precompiled header</source>
+        <source>Select the header file to be precompiled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>precompiled header files (*.pch)</source>
+        <source>Header files (*.h *.hh *.hpp)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Header to be precompiled:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
