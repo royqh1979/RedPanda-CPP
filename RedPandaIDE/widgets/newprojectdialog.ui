@@ -68,8 +68,14 @@
         <property name="textFormat">
          <enum>Qt::RichText</enum>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
         <property name="wordWrap">
          <bool>true</bool>
+        </property>
+        <property name="margin">
+         <number>5</number>
         </property>
         <property name="openExternalLinks">
          <bool>true</bool>
@@ -82,6 +88,18 @@
       <item>
        <widget class="QWidget" name="widget_2" native="true">
         <layout class="QGridLayout" name="gridLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
          <property name="verticalSpacing">
           <number>10</number>
          </property>
