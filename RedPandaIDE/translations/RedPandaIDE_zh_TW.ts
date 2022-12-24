@@ -1870,6 +1870,18 @@
         <source>kb</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Convert HTML for：</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Input</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Expected Output</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FileAssociationModel</name>

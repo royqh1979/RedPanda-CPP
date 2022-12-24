@@ -3634,6 +3634,26 @@ void Settings::Executor::setCaseMemoryLimit(size_t newCaseMemoryLimit)
     mCaseMemoryLimit = newCaseMemoryLimit;
 }
 
+bool Settings::Executor::convertHTMLToTextForExpected() const
+{
+    return mConvertHTMLToTextForExpected;
+}
+
+void Settings::Executor::setConvertHTMLToTextForExpected(bool newConvertHTMLToTextForExpected)
+{
+    mConvertHTMLToTextForExpected = newConvertHTMLToTextForExpected;
+}
+
+bool Settings::Executor::convertHTMLToTextForInput() const
+{
+    return mConvertHTMLToTextForInput;
+}
+
+void Settings::Executor::setConvertHTMLToTextForInput(bool newConvertHTMLToTextForInput)
+{
+    mConvertHTMLToTextForInput = newConvertHTMLToTextForInput;
+}
+
 bool Settings::Executor::enableCaseLimit() const
 {
     return mEnableCaseLimit;
@@ -3696,6 +3716,8 @@ void Settings::Executor::doSave()
     saveValue("enable_proble_set", mEnableProblemSet);
     saveValue("enable_competivie_companion", mEnableCompetitiveCompanion);
     saveValue("competitive_companion_port", mCompetivieCompanionPort);
+    saveValue("input_convert_html", mConvertHTMLToTextForInput);
+    saveValue("expected_convert_html", mConvertHTMLToTextForExpected);
     saveValue("ignore_spaces_when_validating_cases", mIgnoreSpacesWhenValidatingCases);
     saveValue("case_editor_font_name",mCaseEditorFontName);
     saveValue("case_editor_font_size",mCaseEditorFontSize);
@@ -3728,6 +3750,8 @@ void Settings::Executor::doLoad()
     mEnableProblemSet = boolValue("enable_proble_set",true);
     mEnableCompetitiveCompanion = boolValue("enable_competivie_companion",true);
     mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
+    mConvertHTMLToTextForInput = boolValue("input_convert_html", false);
+    mConvertHTMLToTextForExpected = boolValue("expected_convert_html", false);
     mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
 #ifdef Q_OS_WIN
     mCaseEditorFontName = stringValue("case_editor_font_name","consolas");

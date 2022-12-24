@@ -4022,8 +4022,18 @@ void MainWindow::onNewProblemConnection()
             POJProblemCase problemCase = std::make_shared<OJProblemCase>();
             problemCase->testState = ProblemCaseTestState::NotTested;
             problemCase->name = tr("Problem Case %1").arg(problem->cases.count()+1);
-            problemCase->input = caseObj["input"].toString();
-            problemCase->expected = caseObj["output"].toString();
+            if (pSettings->executor().convertHTMLToTextForInput()) {
+                QTextDocument doc;
+                doc.setHtml(caseObj["input"].toString());
+                problemCase->input = doc.toPlainText();
+            } else
+                problemCase->input = caseObj["input"].toString();
+            if (pSettings->executor().convertHTMLToTextForExpected()) {
+                QTextDocument doc;
+                doc.setHtml(caseObj["output"].toString());
+                problemCase->expected = doc.toPlainText();
+            } else
+                problemCase->expected = caseObj["output"].toString();
             problem->cases.append(problemCase);
         }
         mOJProblemSetModel.addProblem(problem);
@@ -7956,6 +7966,7 @@ void MainWindow::onAddProblem()
     problem->name = name;
     mOJProblemSetModel.addProblem(problem);
     ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(mOJProblemSetModel.count()-1));
+    mProblem_Properties->trigger();
 }
 
 

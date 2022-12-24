@@ -36,6 +36,9 @@ void ExecutorProblemSetWidget::doLoad()
     ui->grpProblemSet->setChecked(pSettings->executor().enableProblemSet());
     ui->grpCompetitiveCompanion->setChecked(pSettings->executor().enableCompetitiveCompanion());
     ui->spinPortNumber->setValue(pSettings->executor().competivieCompanionPort());
+    ui->chkConvertInputHTML->setChecked(pSettings->executor().convertHTMLToTextForInput());
+    ui->chkConvertExpectedHTML->setChecked(pSettings->executor().convertHTMLToTextForExpected());
+
     ui->chkIgnoreSpacesWhenValidatingCases->setChecked(pSettings->executor().ignoreSpacesWhenValidatingCases());
 
     ui->cbFont->setCurrentFont(QFont(pSettings->executor().caseEditorFontName()));
@@ -52,6 +55,8 @@ void ExecutorProblemSetWidget::doSave()
     pSettings->executor().setEnableProblemSet(ui->grpProblemSet->isChecked());
     pSettings->executor().setEnableCompetitiveCompanion(ui->grpCompetitiveCompanion->isChecked());
     pSettings->executor().setCompetivieCompanionPort(ui->spinPortNumber->value());
+    pSettings->executor().setConvertHTMLToTextForInput(ui->chkConvertInputHTML->isChecked());
+    pSettings->executor().setConvertHTMLToTextForExpected(ui->chkConvertExpectedHTML->isChecked());
     pSettings->executor().setIgnoreSpacesWhenValidatingCases(ui->chkIgnoreSpacesWhenValidatingCases->isChecked());
     pSettings->executor().setCaseEditorFontName(ui->cbFont->currentFont().family());
     pSettings->executor().setCaseEditorFontOnlyMonospaced(ui->chkOnlyMonospaced->isChecked());

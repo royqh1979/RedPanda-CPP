@@ -58,13 +58,13 @@ void OJProblemPropertyWidget::loadFromProblem(POJProblem problem)
     }
     switch(problem->memoryLimitUnit) {
     case ProblemMemoryLimitUnit::KB:
-        ui->cbTimeLimitUnit->setCurrentText(tr("KB"));
+        ui->cbMemoryLimitUnit->setCurrentText(tr("KB"));
         break;
     case ProblemMemoryLimitUnit::MB:
-        ui->cbTimeLimitUnit->setCurrentText(tr("MB"));
+        ui->cbMemoryLimitUnit->setCurrentText(tr("MB"));
         break;
     case ProblemMemoryLimitUnit::GB:
-        ui->cbTimeLimitUnit->setCurrentText(tr("GB"));
+        ui->cbMemoryLimitUnit->setCurrentText(tr("GB"));
         break;
     }
 }

@@ -915,6 +915,12 @@ public:
         size_t caseMemoryLimit() const;
         void setCaseMemoryLimit(size_t newCaseMemoryLimit);
 
+        bool convertHTMLToTextForInput() const;
+        void setConvertHTMLToTextForInput(bool newConvertHTMLToTextForInput);
+
+        bool convertHTMLToTextForExpected() const;
+        void setConvertHTMLToTextForExpected(bool newConvertHTMLToTextForExpected);
+
     private:
         // general
         bool mPauseConsole;
@@ -928,6 +934,8 @@ public:
         bool mEnableProblemSet;
         bool mEnableCompetitiveCompanion;
         int mCompetivieCompanionPort;
+        bool mConvertHTMLToTextForInput;
+        bool mConvertHTMLToTextForExpected;
         bool mIgnoreSpacesWhenValidatingCases;
         QString mCaseEditorFontName;
         int mCaseEditorFontSize;

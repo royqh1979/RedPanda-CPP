@@ -24,6 +24,9 @@ Red Panda C++ Version 2.7
   - enhancement: "Show whitespaces" in options / editor / font
   - enhancement: Auto add "lib" to the output of static/dynamic library projects, if project name don't start with "lib".
   - fix: Makefile error when "Use precompiled header" is enabled in the project option dialog.
+  - enhancement: "Convert HTML for - Input" / "Convert HTML for - Expected" in "Options" - "Executor" - "Problem Set"
+  - fix: Unit for memory limit is not correctly loaded when open problem properties dialog.
+  - enhancement: Auto open the properties dialog, after add a new problem.
 
 Red Panda C++ Version 2.6
 

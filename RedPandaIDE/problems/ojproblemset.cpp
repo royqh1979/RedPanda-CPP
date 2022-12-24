@@ -58,7 +58,7 @@ size_t OJProblem::getMemoryLimit()
 OJProblem::OJProblem() :
     timeLimit(0),
     memoryLimit(0),
-    timeLimitUnit(ProblemTimeLimitUnit::Milliseconds),
+    timeLimitUnit(ProblemTimeLimitUnit::Seconds),
     memoryLimitUnit(ProblemMemoryLimitUnit::MB)
 {
 
