@@ -32,6 +32,7 @@ OJProblemPropertyWidget::OJProblemPropertyWidget(QWidget *parent) :
     ui->cbMemoryLimitUnit->addItem(tr("KB"));
     ui->cbMemoryLimitUnit->addItem(tr("MB"));
     ui->cbMemoryLimitUnit->addItem(tr("GB"));
+    ui->txtDescription->setFocus();
 }
 
 OJProblemPropertyWidget::~OJProblemPropertyWidget()
