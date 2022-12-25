@@ -5455,7 +5455,11 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
     if (isCheckSyntax) {
         if (!CompilerInfoManager::supportSyntaxCheck(pSettings->compilerSets().defaultSet()->compilerType())) {
             QDir dir(extractFileDir(filename));
+#ifdef Q_OS_WIN
             QFile::remove(dir.absoluteFilePath("a.exe"));
+#else
+            QFile::remove(dir.absoluteFilePath("a.out"));
+#endif
         }
 
       // check syntax in back, don't change message panel
