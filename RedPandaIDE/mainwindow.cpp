@@ -5423,7 +5423,7 @@ void MainWindow::onCompileStarted()
     //do nothing
 }
 
-void MainWindow::onCompileFinished(bool isCheckSyntax)
+void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
 {
     if (mQuitting) {
         if (isCheckSyntax)
@@ -5453,6 +5453,11 @@ void MainWindow::onCompileFinished(bool isCheckSyntax)
     }
 
     if (isCheckSyntax) {
+        if (!CompilerInfoManager::supportSyntaxCheck(pSettings->compilerSets().defaultSet()->compilerType())) {
+            QDir dir(extractFileDir(filename));
+            QFile::remove(dir.absoluteFilePath("a.exe"));
+        }
+
       // check syntax in back, don't change message panel
     } else if (ui->tableIssues->count() == 0) {
         // Close it if there's nothing to show

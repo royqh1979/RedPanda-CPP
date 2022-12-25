@@ -54,7 +54,11 @@ bool FileCompiler::prepareForCompile()
         stage = oldStage;
     }
     compilerSet()->setCompilationStage(stage);
-    log(tr("Compiling single file..."));
+    if (mOnlyCheckSyntax) {
+        log(tr("Checking single file..."));
+    } else {
+        log(tr("Compiling single file..."));
+    }
     log("------------------");
     log(tr("- Filename: %1").arg(mFilename));
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));

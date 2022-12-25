@@ -113,6 +113,7 @@ using PCompilerInfoManager = std::shared_ptr<CompilerInfoManager>;
 class CompilerInfoManager {
 public:
     CompilerInfoManager();
+    static bool supportSyntaxCheck(CompilerType compilerType);
     static PCompilerInfo getInfo(CompilerType compilerType);
     static bool hasCompilerOption(CompilerType compilerType, const QString& optKey);
     static PCompilerOption getCompilerOption(CompilerType compilerType, const QString& optKey);

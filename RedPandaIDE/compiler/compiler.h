@@ -44,7 +44,7 @@ public:
 
 signals:
     void compileStarted();
-    void compileFinished();
+    void compileFinished(QString filename);
     void compileOutput(const QString& msg);
     void compileIssue(PCompileIssue issue);
     void compileErrorOccured(const QString& reason);

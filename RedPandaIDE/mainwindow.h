@@ -224,7 +224,7 @@ public slots:
     void clearToolsOutput();
     void clearTodos();
     void onCompileStarted();
-    void onCompileFinished(bool isCheckSyntax);
+    void onCompileFinished(QString filename, bool isCheckSyntax);
     void onCompileErrorOccured(const QString& reason);
     void onRunErrorOccured(const QString& reason);
     void onRunFinished();

@@ -205,8 +205,7 @@ void CompilerManager::checkSyntax(const QString &filename, const QByteArray& enc
         mSyntaxCheckIssueCount = 0;
 
         //deleted when thread finished
-        StdinCompiler *pStdinCompiler = new StdinCompiler(filename,encoding, content,true,true);
-        mBackgroundSyntaxChecker = pStdinCompiler;
+        mBackgroundSyntaxChecker = new StdinCompiler(filename,encoding, content,true,true);
         mBackgroundSyntaxChecker->setProject(project);
         connect(mBackgroundSyntaxChecker, &Compiler::finished, mBackgroundSyntaxChecker, &QThread::deleteLater);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
@@ -405,11 +404,11 @@ bool CompilerManager::canCompile(const QString &)
     return !compiling();
 }
 
-void CompilerManager::onCompileFinished()
+void CompilerManager::onCompileFinished(QString filename)
 {
     QMutexLocker locker(&mCompileMutex);
     mCompiler=nullptr;
-    pMainWindow->onCompileFinished(false);
+    pMainWindow->onCompileFinished(filename,false);
 }
 
 void CompilerManager::onRunnerTerminated()
@@ -435,11 +434,11 @@ void CompilerManager::onCompileIssue(PCompileIssue issue)
     mCompileIssueCount++;
 }
 
-void CompilerManager::onSyntaxCheckFinished()
+void CompilerManager::onSyntaxCheckFinished(QString filename)
 {
     QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
     mBackgroundSyntaxChecker=nullptr;
-    pMainWindow->onCompileFinished(true);
+    pMainWindow->onCompileFinished(filename, true);
 }
 
 void CompilerManager::onSyntaxCheckIssue(PCompileIssue issue)

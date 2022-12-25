@@ -6,7 +6,6 @@ Red Panda C++ Version 2.7
   - enhancement: "Trim trailing spaces" in code menu
   - change: Don't auto disable compile and debug buttons for compiler sets that don't have compiler/debugger programs.
   - enhancement: Better error messages for missing compile/debug/make programs.
-  - enhancement: "Show special chars" in options / editor / font
   - fix: Lost compiler set settings if a compiler set's bin dirs is empty.
   - enhancement: Better error message when trying to debug with Release compile set.
   - enhancement: Add missing space char color settings in color schemes

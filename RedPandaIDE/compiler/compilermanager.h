@@ -79,9 +79,9 @@ private slots:
                       );
     void onRunnerTerminated();
     void onRunnerPausing();
-    void onCompileFinished();
+    void onCompileFinished(QString filename);
     void onCompileIssue(PCompileIssue issue);
-    void onSyntaxCheckFinished();
+    void onSyntaxCheckFinished(QString filename);
     void onSyntaxCheckIssue(PCompileIssue issue);
 
 private:

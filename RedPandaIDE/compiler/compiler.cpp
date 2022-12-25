@@ -48,7 +48,7 @@ void Compiler::run()
 {
     emit compileStarted();
     auto action = finally([this]{
-        emit compileFinished();
+        emit compileFinished(mFilename);
     });
     try {
         if (!prepareForCompile()){

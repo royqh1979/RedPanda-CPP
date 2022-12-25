@@ -185,6 +185,18 @@ CompilerInfoManager::CompilerInfoManager()
     mInfos.insert(CompilerType::GCC_UTF8, std::make_shared<GCCUTF8CompilerInfo>());
 }
 
+bool CompilerInfoManager::supportSyntaxCheck(CompilerType compilerType)
+{
+    switch(compilerType) {
+    case CompilerType::GCC:
+    case CompilerType::GCC_UTF8:
+    case CompilerType::Clang:
+        return true;
+    default:
+        return false;
+    }
+}
+
 PCompilerInfo CompilerInfoManager::getInfo(CompilerType compilerType)
 {
     return getInstance()->mInfos.value(compilerType,PCompilerInfo());
