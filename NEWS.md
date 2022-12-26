@@ -1,6 +1,7 @@
 Red Panda C++ Version 2.8
 
   - fix: Crash when editing makefile
+  - enhancement: Add "Resources" in project option's dialog's custom compiler parameter page
 
 Red Panda C++ Version 2.7
 

@@ -266,6 +266,9 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
         writeln(file,"PCH_H = " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader )));
         writeln(file,"PCH = " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader+"."+GCH_EXT)));
    }
+#ifdef Q_OS_WIN
+    writeln(file,"WINDRESFLAGS  = " + mProject->options().resourceCmd);
+#endif
 
 
     // This needs to be put in before the clean command.
@@ -492,11 +495,11 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         if (mOnlyCheckSyntax) {
             writeln(file);
             writeln(file, ObjFileName + ':');
-            writeln(file, "\t$(WINDRES) -i " + PrivResName + WindresArgs + " --input-format=rc -o nul -O coff" + ResIncludes);
+            writeln(file, "\t$(WINDRES) -i " + PrivResName + WindresArgs + " --input-format=rc -o nul -O coff $(WINDRESFLAGS)" + ResIncludes);
         } else {
             writeln(file);
             writeln(file, ObjFileName + ": " + PrivResName + ' ' + ResFiles);
-            writeln(file, "\t$(WINDRES) -i " + PrivResName + WindresArgs + " --input-format=rc -o " + ObjFileName + " -O coff"
+            writeln(file, "\t$(WINDRES) -i " + PrivResName + WindresArgs + " --input-format=rc -o " + ObjFileName + " -O coff $(WINDRESFLAGS)"
                 + ResIncludes);
         }
         writeln(file);

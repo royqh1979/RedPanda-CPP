@@ -54,7 +54,7 @@
      <property name="currentIndex">
       <number>2</number>
      </property>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="tabCCompiler">
       <attribute name="title">
        <string>C Compiler</string>
       </attribute>
@@ -76,7 +76,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_2">
+     <widget class="QWidget" name="tabCppCompiler">
       <attribute name="title">
        <string>C++ Compiler</string>
       </attribute>
@@ -98,7 +98,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_3">
+     <widget class="QWidget" name="tabLinker">
       <attribute name="title">
        <string>Linker</string>
       </attribute>
@@ -156,6 +156,28 @@
           </item>
          </layout>
         </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabResource">
+      <attribute name="title">
+       <string>Resource</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <property name="leftMargin">
+        <number>5</number>
+       </property>
+       <property name="topMargin">
+        <number>5</number>
+       </property>
+       <property name="rightMargin">
+        <number>5</number>
+       </property>
+       <property name="bottomMargin">
+        <number>5</number>
+       </property>
+       <item>
+        <widget class="QPlainTextEdit" name="txtResource"/>
        </item>
       </layout>
      </widget>

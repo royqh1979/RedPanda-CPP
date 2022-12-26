@@ -137,6 +137,7 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
     mOptions.compilerCmd = fromByteArray(mIni->GetValue("Project", "Compiler", ""));
     mOptions.cppCompilerCmd = fromByteArray(mIni->GetValue("Project", "CppCompiler", ""));
     mOptions.linkerCmd = fromByteArray(mIni->GetValue("Project", "Linker",""));
+    mOptions.resourceCmd = fromByteArray(mIni->GetValue("Project", "ResourceCommand", ""));
     mOptions.isCpp = mIni->GetBoolValue("Project", "IsCpp", false);
     mOptions.includeVersionInfo = mIni->GetBoolValue("Project", "IncludeVersionInfo", false);
     mOptions.supportXPThemes = mIni->GetBoolValue("Project", "SupportXPThemes", false);

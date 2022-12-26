@@ -35,7 +35,10 @@ ProjectCompileParamatersWidget::ProjectCompileParamatersWidget(const QString &na
     SYSTEM_INFO info;
     GetSystemInfo(&info);
     ui->spinParallelJobs->setMaximum(info.dwNumberOfProcessors);
+#else
+    ui->tabResource->setVisible(false);
 #endif
+    ui->tabCommands->setCurrentWidget(ui->tabCCompiler);
 }
 
 ProjectCompileParamatersWidget::~ProjectCompileParamatersWidget()
@@ -48,6 +51,7 @@ void ProjectCompileParamatersWidget::doLoad()
     ui->txtCCompiler->setPlainText(pMainWindow->project()->options().compilerCmd);
     ui->txtCPPCompiler->setPlainText(pMainWindow->project()->options().cppCompilerCmd);
     ui->txtLinker->setPlainText(pMainWindow->project()->options().linkerCmd);
+    ui->txtResource->setPlainText(pMainWindow->project()->options().resourceCmd);
     ui->grpAllowParallelBuilding->setChecked(pMainWindow->project()->options().allowParallelBuilding);
     ui->spinParallelJobs->setValue(pMainWindow->project()->options().parellelBuildingJobs);
 }
@@ -57,6 +61,7 @@ void ProjectCompileParamatersWidget::doSave()
     pMainWindow->project()->options().compilerCmd = ui->txtCCompiler->toPlainText();
     pMainWindow->project()->options().cppCompilerCmd = ui->txtCPPCompiler->toPlainText();
     pMainWindow->project()->options().linkerCmd = ui->txtLinker->toPlainText();
+    pMainWindow->project()->options().resourceCmd = ui->txtResource->toPlainText();
     pMainWindow->project()->options().allowParallelBuilding = ui->grpAllowParallelBuilding->isChecked();
     pMainWindow->project()->options().parellelBuildingJobs = ui->spinParallelJobs->value();
     pMainWindow->project()->saveOptions();

@@ -2072,6 +2072,10 @@
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Checking single file...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FilePropertiesDialog</name>
@@ -5363,6 +5367,10 @@
     </message>
     <message>
         <source>Parallel Jobs(0 means infinite):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Resource</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
