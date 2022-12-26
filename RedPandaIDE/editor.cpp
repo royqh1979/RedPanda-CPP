@@ -798,7 +798,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     }
                 }
                 lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(caretXY());
-                if (!lastWord.isEmpty()) {
+                if (mParser && !lastWord.isEmpty()) {
                     PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
                     while(currentScope && currentScope->kind==StatementKind::skBlock) {
                         currentScope = currentScope->parentScope.lock();

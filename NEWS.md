@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.8
+
+  - fix: Crash when editing makefile
+
 Red Panda C++ Version 2.7
 
   - enhancement: Remove multiple problems in the problem set view
