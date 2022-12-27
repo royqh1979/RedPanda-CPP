@@ -93,17 +93,12 @@ void CppTokenizer::dumpTokens(const QString &fileName)
     }
 }
 
-const CppTokenizer::TokenList &CppTokenizer::tokens()
-{
-    return mTokenList;
-}
-
-CppTokenizer::PToken CppTokenizer::operator[](int i)
+const CppTokenizer::PToken &CppTokenizer::operator[](int i) const
 {
     return mTokenList[i];
 }
 
-int CppTokenizer::tokenCount()
+int CppTokenizer::tokenCount() const
 {
     return mTokenList.count();
 }

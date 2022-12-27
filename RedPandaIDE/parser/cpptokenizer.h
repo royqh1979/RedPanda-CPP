@@ -47,10 +47,9 @@ public:
     void clear();
     void tokenize(const QStringList& buffer);
     void dumpTokens(const QString& fileName);
-    const TokenList& tokens();
-    PToken operator[](int i);
-    int tokenCount();
-    bool isIdentChar(const QChar& ch);
+    const PToken& operator[](int i) const;
+    int tokenCount() const;
+    static bool isIdentChar(const QChar& ch);
     int lambdasCount() const;
     int indexOfFirstLambda() const;
     void removeFirstLambda();
@@ -87,15 +86,15 @@ private:
     void skipToEOL();
     void skipToNextToken();
     bool openFile(const QString& fileName);
-    bool isLetterChar(const QChar& ch);
-    bool isHexChar(const QChar& ch);
-    bool isDigitChar(const QChar& ch);
-    bool isSpaceChar(const QChar& ch);
-    bool isLineChar(const QChar& ch);
-    bool isBlankChar(const QChar& ch);
-    bool isOperatorChar(const QChar& ch);
+    static bool isLetterChar(const QChar& ch);
+    static bool isHexChar(const QChar& ch);
+    static bool isDigitChar(const QChar& ch);
+    static bool isSpaceChar(const QChar& ch);
+    static bool isLineChar(const QChar& ch);
+    static bool isBlankChar(const QChar& ch);
+    static bool isOperatorChar(const QChar& ch);
 
-    bool currentWordEquals(QChar* wordStart, QChar *wordEnd, const QString& text);
+    static bool currentWordEquals(QChar* wordStart, QChar *wordEnd, const QString& text);
 
 private:
     QStringList mBuffer;
