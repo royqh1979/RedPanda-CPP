@@ -112,23 +112,41 @@ private:
     void expandMacro(const QString& line, QString& newLine, QString& word, int& i, int depth);
     QString removeGCCAttributes(const QString& line);
     void removeGCCAttribute(const QString&line, QString& newLine, int &i, const QString& word);
-    PDefine getDefine(const QString& name);
+    PDefine getDefine(const QString& name) const{
+        return mDefines.value(name,PDefine());
+    }
     // current file stuff
-    PParsedFile getInclude(int index);
+    PParsedFile getInclude(int index) const {
+        return mIncludes[index];
+    }
     void openInclude(const QString& fileName, QStringList bufferedText=QStringList());
     void closeInclude();
 
     // branch stuff
-    bool getCurrentBranch();
-    void setCurrentBranch(bool value);
-    void removeCurrentBranch();
+    bool getCurrentBranch(){
+        if (!mBranchResults.isEmpty())
+            return mBranchResults.last();
+        else
+            return true;
+    }
+    void setCurrentBranch(bool value){
+        mBranchResults.append(value);
+    }
+    void removeCurrentBranch(){
+        if (mBranchResults.size()>0)
+            mBranchResults.pop_back();
+    };
     // include stuff
-    PFileIncludes getFileIncludesEntry(const QString& FileName);
+    PFileIncludes getFileIncludesEntry(const QString& fileName){
+        return mIncludesList.value(fileName,PFileIncludes());
+    }
     void addDefinesInFile(const QString& fileName);
     void addDefineByParts(const QString& name, const QString& args,
                           const QString& value, bool hardCoded);
     void addDefineByLine(const QString& line, bool hardCoded);
-    PDefine getHardDefine(const QString& name);
+    PDefine getHardDefine(const QString& name){
+        return mHardDefines.value(name,PDefine());
+    };
     void invalidDefinesInFile(const QString& fileName);
 
     void parseArgs(PDefine define);

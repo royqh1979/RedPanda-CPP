@@ -149,16 +149,6 @@ void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
     addDefineByParts(name, args, value, hardCoded);
 }
 
-PDefine CppPreprocessor::getDefine(const QString &name)
-{
-    return mDefines.value(name,PDefine());
-}
-
-PDefine CppPreprocessor::getHardDefine(const QString &name)
-{
-    return mHardDefines.value(name,PDefine());
-}
-
 void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
 {
     mParseSystem = parseSystem;
@@ -669,11 +659,6 @@ void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, 
     }
 }
 
-PParsedFile CppPreprocessor::getInclude(int index)
-{
-    return mIncludes[index];
-}
-
 void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedText)
 {
     if (mIncludes.size()>0) {
@@ -800,33 +785,6 @@ void CppPreprocessor::closeInclude()
     mResult.append(
                 QString("#include %1:%2").arg(parsedFile->fileName)
                 .arg(parsedFile->index+1));
-}
-
-bool CppPreprocessor::getCurrentBranch()
-{
-    if (!mBranchResults.isEmpty())
-        return mBranchResults.last();
-    else
-        return true;
-}
-
-void CppPreprocessor::setCurrentBranch(bool value)
-{
-    mBranchResults.append(value);
-}
-
-void CppPreprocessor::removeCurrentBranch()
-{
-    if (mBranchResults.size()>0)
-        mBranchResults.pop_back();
-}
-
-const QStringList& CppPreprocessor::result() const
-{
-
-PFileIncludes CppPreprocessor::getFileIncludesEntry(const QString &fileName)
-{
-    return mIncludesList.value(fileName,PFileIncludes());
 }
 
 void CppPreprocessor::addDefinesInFile(const QString &fileName)
