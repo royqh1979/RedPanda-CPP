@@ -47,12 +47,25 @@ public:
     void clear();
     void tokenize(const QStringList& buffer);
     void dumpTokens(const QString& fileName);
-    const PToken& operator[](int i) const;
-    int tokenCount() const;
-    static bool isIdentChar(const QChar& ch);
-    int lambdasCount() const;
-    int indexOfFirstLambda() const;
-    void removeFirstLambda();
+    const PToken& operator[](int i) const {
+        return mTokenList[i];
+    }
+    int tokenCount() const {
+        return mTokenList.count();
+    }
+    static bool isIdentChar(const QChar& ch) {
+            return ch=='_' || ch.isLetter() ;
+    }
+    int lambdasCount() const {
+        return mLambdas.count();
+    }
+
+    int indexOfFirstLambda() const {
+        return mLambdas.front();
+    }
+    void removeFirstLambda() {
+        mLambdas.pop_front();
+    }
 
 private:
     void addToken(const QString& sText, int iLine, TokenType tokenType);
@@ -86,15 +99,61 @@ private:
     void skipToEOL();
     void skipToNextToken();
     bool openFile(const QString& fileName);
-    static bool isLetterChar(const QChar& ch);
-    static bool isHexChar(const QChar& ch);
-    static bool isDigitChar(const QChar& ch);
-    static bool isSpaceChar(const QChar& ch);
-    static bool isLineChar(const QChar& ch);
-    static bool isBlankChar(const QChar& ch);
-    static bool isOperatorChar(const QChar& ch);
+    static bool isLetterChar(const QChar& ch) {
+        return isIdentChar(ch)
+                    || ch == '_'
+                    || ch == '*'
+                    || ch == '&'
+                    || ch == '~';
+    }
+    static bool isHexChar(const QChar& ch) {
+        return (ch >= 'A' && ch<='F')
+                || (ch>='a' && ch<='f')
+                || ch == 'x'
+                || ch == 'L';
+    }
+    static bool isDigitChar(const QChar& ch) {
+        return (ch>='0' && ch<='9');
+    }
 
-    static bool currentWordEquals(QChar* wordStart, QChar *wordEnd, const QString& text);
+    static bool isSpaceChar(const QChar& ch) {
+        return (ch == ' ' || ch == '\t');
+    }
+
+    static bool isLineChar(const QChar& ch) {
+        return (ch=='\n' || ch=='\r');
+    }
+
+    static bool isBlankChar(const QChar& ch) {
+        return (ch<=32) && (ch>0);
+    }
+
+    static bool isOperatorChar(const QChar& ch) {
+        switch (ch.unicode()) {
+        case '+':
+        case '-':
+        case '/':
+        case '*':
+        case '[':
+        case ']':
+        case '=':
+        case '%':
+        case '!':
+        case '&':
+        case '|':
+        case '>':
+        case '<':
+        case '^':
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    static bool currentWordEquals(QChar* wordStart, QChar *wordEnd, const QString& text) {
+        QString currentWord(wordStart, wordEnd-wordStart);
+        return currentWord == text;
+    }
 
 private:
     QStringList mBuffer;

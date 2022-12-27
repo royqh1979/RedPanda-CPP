@@ -77,7 +77,9 @@ public:
     void clearProjectIncludePaths();
     void removeScannedFile(const QString& filename);
 
-    QStringList result() const;
+    const QStringList& result() const{
+        return mResult;
+    };
 
     QHash<QString, PFileIncludes> &includesList();
 

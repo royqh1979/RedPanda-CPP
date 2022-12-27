@@ -93,16 +93,6 @@ void CppTokenizer::dumpTokens(const QString &fileName)
     }
 }
 
-const CppTokenizer::PToken &CppTokenizer::operator[](int i) const
-{
-    return mTokenList[i];
-}
-
-int CppTokenizer::tokenCount() const
-{
-    return mTokenList.count();
-}
-
 void CppTokenizer::addToken(const QString &sText, int iLine, TokenType tokenType)
 {
     PToken token = std::make_shared<Token>();
@@ -799,26 +789,6 @@ void CppTokenizer::skipToNextToken()
         mCurrent++;
 }
 
-bool CppTokenizer::isIdentChar(const QChar &ch)
-{
-    return ch=='_' || ch.isLetter() ;
-}
-
-int CppTokenizer::lambdasCount() const
-{
-    return mLambdas.count();
-}
-
-int CppTokenizer::indexOfFirstLambda() const
-{
-    return mLambdas.front();
-}
-
-void CppTokenizer::removeFirstLambda()
-{
-    mLambdas.pop_front();
-}
-
 void CppTokenizer::advance()
 {
     switch(mCurrent->unicode()) {
@@ -843,72 +813,4 @@ void CppTokenizer::advance()
     default:
         mCurrent++;
     }
-}
-
-bool CppTokenizer::isLetterChar(const QChar &ch)
-{
-//    return (ch>= 'A' && ch<='Z')
-//            || (ch>='a' && ch<='z')
-    return isIdentChar(ch)
-            || ch == '_'
-            || ch == '*'
-            || ch == '&'
-            || ch == '~';
-}
-
-bool CppTokenizer::isHexChar(const QChar &ch)
-{
-    return (ch >= 'A' && ch<='F')
-            || (ch>='a' && ch<='f')
-            || ch == 'x'
-            || ch == 'L';
-}
-
-bool CppTokenizer::isDigitChar(const QChar &ch)
-{
-    return (ch>='0' && ch<='9');
-}
-
-bool CppTokenizer::isSpaceChar(const QChar &ch)
-{
-    return (ch == ' ' || ch == '\t');
-}
-
-bool CppTokenizer::isLineChar(const QChar &ch)
-{
-    return (ch=='\n' || ch=='\r');
-}
-
-bool CppTokenizer::isBlankChar(const QChar &ch)
-{
-    return (ch<=32) && (ch>0);
-}
-
-bool CppTokenizer::isOperatorChar(const QChar &ch)
-{
-    switch (ch.unicode()) {
-    case '+':
-    case '-':
-    case '/':
-    case '*':
-    case '[':
-    case ']':
-    case '=':
-    case '%':
-    case '!':
-    case '&':
-    case '|':
-    case '>':
-    case '<':
-    case '^':
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool CppTokenizer::currentWordEquals(QChar *wordStart, QChar *wordEnd, const QString& text)
-{
-    QString currentWord(wordStart, wordEnd-wordStart);
-    return currentWord == text;
 }

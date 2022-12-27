@@ -821,10 +821,8 @@ void CppPreprocessor::removeCurrentBranch()
         mBranchResults.pop_back();
 }
 
-QStringList CppPreprocessor::result() const
+const QStringList& CppPreprocessor::result() const
 {
-    return mResult;
-}
 
 PFileIncludes CppPreprocessor::getFileIncludesEntry(const QString &fileName)
 {
