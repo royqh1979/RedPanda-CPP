@@ -1319,7 +1319,7 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
             if (mLastIdCharPressed>=pSettings->codeCompletion().minCharRequired()) {
                 QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
-                if (!lastWord.isEmpty()) {
+                if (mParser && !lastWord.isEmpty()) {
                     if (CppTypeKeywords.contains(lastWord)) {
                         return;
                     }
@@ -3515,7 +3515,7 @@ bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
     if (!mCompletionPopup->isVisible())
         return processed;
     QString s=event->commitString();
-    if (!s.isEmpty()) {
+    if (mParser && !s.isEmpty()) {
         QString phrase = getWordForCompletionSearch(caretXY(),mCompletionPopup->memberOperator()=="::");
         mLastIdCharPressed = phrase.length();
         mCompletionPopup->search(phrase, false);
