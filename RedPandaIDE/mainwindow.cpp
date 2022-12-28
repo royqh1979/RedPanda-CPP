@@ -669,11 +669,13 @@ void MainWindow::updateCompileActions(const Editor *e)
         bool forProject=false;
         bool canRun = false;
         bool canCompile = false;
+        bool canGenerateAssembly=false;
         if (e) {
             if (!e->inProject()) {
                 FileType fileType = getFileType(e->filename());
                 if (fileType == FileType::CSource
                         || fileType == FileType::CppSource || e->isNew()) {
+                    canGenerateAssembly = true;
                     canCompile = true;
                     canRun = true;
                 }
@@ -687,12 +689,19 @@ void MainWindow::updateCompileActions(const Editor *e)
             canCompile = true;
             canRun = (mProject->options().type !=ProjectType::DynamicLib)
                     && (mProject->options().type !=ProjectType::StaticLib);
+            if (e) {
+                FileType fileType = getFileType(e->filename());
+                if (fileType == FileType::CSource
+                        || fileType == FileType::CppSource) {
+                    canGenerateAssembly = true;
+                }
+            }
         }
         ui->actionCompile->setEnabled(canCompile);
         ui->actionCompile_Run->setEnabled(canRun && canCompile);
         ui->actionRun->setEnabled(canRun);
         ui->actionRebuild->setEnabled(canCompile);
-        ui->actionGenerate_Assembly->setEnabled(canCompile && !forProject);
+        ui->actionGenerate_Assembly->setEnabled(canGenerateAssembly);
         ui->actionDebug->setEnabled(canRun);
         ui->btnRunAllProblemCases->setEnabled(canRun);
     }
@@ -1843,7 +1852,7 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
 {
     mCompilerManager->stopPausing();
     CompileTarget target =getCompileTarget();
-    if (target == CompileTarget::Project) {
+    if (target == CompileTarget::Project && compileType == CppCompileType::Normal) {
         if (mProject->modified()) {
             mProject->saveAll();
         }
@@ -1873,7 +1882,9 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
                     return false;
             }
             if (mCompileSuccessionTask) {
-                Settings::PCompilerSet compilerSet =pSettings->compilerSets().defaultSet();
+                Settings::PCompilerSet compilerSet=pSettings->compilerSets().defaultSet();
+                if (editor->inProject())
+                    compilerSet = pSettings->compilerSets().getSet(mProject->options().compilerSet);
                 if (compilerSet)  {
                     Settings::CompilerSet::CompilationStage stage;
                     switch(compileType) {
@@ -7586,13 +7597,13 @@ void MainWindow::doCompileRun(RunType runType)
 void MainWindow::doGenerateAssembly()
 {
     CompileTarget target =getCompileTarget();
-    QStringList binDirs;
     QString execName;
-    if (target == CompileTarget::File) {
-        binDirs = getDefaultCompilerSetBinDirs();
+    if (target!= CompileTarget::File
+            && target != CompileTarget::Project) {
+        return;
     }
     mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
-    mCompileSuccessionTask->binDirs=binDirs;
+    //mCompileSuccessionTask->binDirs="";
     mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
     compile(false,CppCompileType::GenerateAssemblyOnly);
 }
