@@ -104,6 +104,7 @@ void ProjectGeneralWidget::doSave()
 
     project->options().isCpp = ui->cbDefaultCpp->isChecked();
     project->options().supportXPThemes = ui->cbSupportXPTheme->isChecked();
+    qDebug()<<mIconPath;
     if (mIconPath.isEmpty()
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             || ui->lbIcon->pixmap(Qt::ReturnByValue).isNull()) {
@@ -112,15 +113,16 @@ void ProjectGeneralWidget::doSave()
 #endif
         project->options().icon = "";
     } else {
-        QString iconPath =  generateAbsolutePath(project->directory(),"app.ico");
+        QString iconPath = generateAbsolutePath(project->directory(),"app.ico");
         if (iconPath!=mIconPath) {
-            if (QFile(iconPath).exists()) {
+            if (fileExists(iconPath)) {
                 if (!QFile::remove(iconPath)) {
                     QMessageBox::critical(this,
                                           tr("Can't remove old icon file"),
                                           tr("Can't remove old icon file '%1'")
                                           .arg(iconPath),
                                           QMessageBox::Ok);
+                    return;
                 }
             }
             if (!mIconPath.endsWith(".ico",PATH_SENSITIVITY) && QImageWriter::supportedImageFormats().contains("ico")) {
@@ -131,10 +133,10 @@ void ProjectGeneralWidget::doSave()
 #endif
             } else
                 copyFile(mIconPath, iconPath,true);
-            project->options().icon = iconPath;
-            mIconPath = iconPath;
-            refreshIcon();
         }
+        project->options().icon = iconPath;
+        mIconPath = iconPath;
+        refreshIcon();
     }
 
     project->saveOptions();
@@ -144,7 +146,7 @@ void ProjectGeneralWidget::on_btnBrowse_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Select icon file"),
-                                                    pSettings->dirs().appDir(),
+                                                    pMainWindow->project()->directory(),
                                                     tr("Image Files (*.ico *.png *.jpg)"));
     if (!fileName.isEmpty()) {
         mIconPath = fileName;

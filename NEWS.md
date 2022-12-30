@@ -4,6 +4,9 @@ Red Panda C++ Version 2.8
   - enhancement: Add "Resources" in project option's dialog's custom compiler parameter page
   - fix: Crash while input using input method in makefile 
   - enhancement: "Run" / "Generate Assembly" for project source files
+  - fix: Can't set project icon to "app.ico" in the project folder, if the project doesn't has icon.
+  - fix: Resource compilation items is missing in the auto generated makefile, if the project's icon is removed and re-added.
+
 
 Red Panda C++ Version 2.7
 

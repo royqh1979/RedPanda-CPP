@@ -221,7 +221,7 @@ public:
     PProjectUnit addUnit(const QString& inFileName,
                 PProjectModelNode parentNode);
     QString folder();
-    void buildPrivateResource(bool forceSave=false);
+    void buildPrivateResource();
     void closeUnit(PProjectUnit& unit);
     PProjectUnit doAutoOpen();
     bool fileAlreadyExists(const QString& s);

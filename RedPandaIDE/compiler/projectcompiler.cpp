@@ -462,7 +462,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 ResIncludes = ResIncludes + " --include-dir " + genMakePath1(filename);
         }
 
-        QString ResFiles;
+        QString resFiles;
         // Concatenate all resource filenames (not created when syntax checking)
         if (!mOnlyCheckSyntax) {
             foreach(const PProjectUnit& unit, mProject->unitList()) {
@@ -470,36 +470,37 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     continue;
                 if (fileExists(unit->fileName())) {
                     QString ResFile = extractRelativePath(mProject->makeFileName(), unit->fileName());
-                    ResFiles = ResFiles + genMakePath2(ResFile) + ' ';
+                    resFiles = resFiles + genMakePath2(ResFile) + ' ';
                 }
             }
-            ResFiles = ResFiles.trimmed();
+            resFiles = resFiles.trimmed();
         }
 
         // Determine resource output file
-        QString ObjFileName;
+        QString objFileName;
         if (!mProject->options().objectOutput.isEmpty()) {
-            ObjFileName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+            objFileName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
                   changeFileExt(mProject->options().privateResource, RES_EXT);
         } else {
-            ObjFileName = changeFileExt(mProject->options().privateResource, RES_EXT);
+            objFileName = changeFileExt(mProject->options().privateResource, RES_EXT);
         }
-        ObjFileName = genMakePath1(extractRelativePath(mProject->filename(), ObjFileName));
-        QString PrivResName = genMakePath1(extractRelativePath(mProject->filename(), mProject->options().privateResource));
+        objFileName = genMakePath1(extractRelativePath(mProject->filename(), objFileName));
+        QString privResName = genMakePath1(extractRelativePath(mProject->filename(), mProject->options().privateResource));
 
         // Build final cmd
-        QString WindresArgs;
-        if (getCCompileArguments(mOnlyCheckSyntax).contains("-m32"))
-              WindresArgs = " -F pe-i386";
+        QString windresArgs;
+
+        if (mProject->getCompileOption(CC_CMD_OPT_POINTER_SIZE)=="32")
+              windresArgs = " -F pe-i386";
 
         if (mOnlyCheckSyntax) {
             writeln(file);
-            writeln(file, ObjFileName + ':');
-            writeln(file, "\t$(WINDRES) -i " + PrivResName + WindresArgs + " --input-format=rc -o nul -O coff $(WINDRESFLAGS)" + ResIncludes);
+            writeln(file, objFileName + ':');
+            writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o nul -O coff $(WINDRESFLAGS)" + ResIncludes);
         } else {
             writeln(file);
-            writeln(file, ObjFileName + ": " + PrivResName + ' ' + ResFiles);
-            writeln(file, "\t$(WINDRES) -i " + PrivResName + WindresArgs + " --input-format=rc -o " + ObjFileName + " -O coff $(WINDRESFLAGS)"
+            writeln(file, objFileName + ": " + privResName + ' ' + resFiles);
+            writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o " + objFileName + " -O coff $(WINDRESFLAGS)"
                 + ResIncludes);
         }
         writeln(file);

@@ -1260,7 +1260,7 @@ QString Project::folder()
     return extractFileDir(filename());
 }
 
-void Project::buildPrivateResource(bool forceSave)
+void Project::buildPrivateResource()
 {
     int comp = 0;
     foreach (const PProjectUnit& unit,mUnits) {
@@ -1308,14 +1308,6 @@ void Project::buildPrivateResource(bool forceSave)
     }
     rcFile = extractRelativePath(mFilename, rcFile);
     rcFile.replace(' ','_');
-
-    // don't run the private resource file and header if not modified,
-    // unless ForceSave is true
-    if (!forceSave
-            && fileExists(rcFile)
-            && fileExists(changeFileExt(rcFile, H_EXT))
-            && !mModified)
-        return;
 
     QStringList contents;
     contents.append("/* THIS FILE WILL BE OVERWRITTEN BY Red Panda C++ */");
