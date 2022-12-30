@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
     // First make sure we aren't going to read nonexistent arrays
     if(argc < 4) {
         printf("\n--------------------------------");
-        printf("\nUsage: ConsolePauser.exe <0|1> <shared_memory_id> <filename> <parameters>\n");
+        printf("\nUsage: consolepauser.exe <0|1> <shared_memory_id> <filename> <parameters>\n");
         printf("\n 1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
         PauseExit(EXIT_SUCCESS,false);
     }

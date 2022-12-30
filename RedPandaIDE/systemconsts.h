@@ -21,6 +21,7 @@
 
 #define APP_SETTSINGS_FILENAME "redpandacpp.ini"
 #ifdef Q_OS_WIN
+#define CONSOLE_PAUSER  "consolepauser.exe"
 #define GCC_PROGRAM     "gcc.exe"
 #define GPP_PROGRAM     "g++.exe"
 #define GDB_PROGRAM     "gdb.exe"
@@ -36,6 +37,7 @@
 #define CLANG_CPP_PROGRAM   "clang++.exe"
 #define LLDB_MI_PROGRAM   "lldb-mi.exe"
 #elif defined(Q_OS_LINUX)
+#define CONSOLE_PAUSER  "consolepauser"
 #define GCC_PROGRAM     "gcc"
 #define GPP_PROGRAM     "g++"
 #define GDB_PROGRAM     "gdb"

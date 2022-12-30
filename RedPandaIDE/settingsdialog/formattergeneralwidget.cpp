@@ -321,10 +321,17 @@ void FormatterGeneralWidget::updateDemo()
     Settings::CodeFormatter formatter(nullptr);
     updateCodeFormatter(formatter);
 
+#ifdef Q_OS_WIN
     QByteArray newContent = runAndGetOutput("astyle.exe",
                                             pSettings->dirs().appDir(),
                                             formatter.getArguments(),
                                             content);
+#else
+    QByteArray newContent = runAndGetOutput(pSettings->environment().AStylePath(),
+                                            extractFileDir(pSettings->environment().AStylePath()),
+                                            formatter.getArguments(),
+                                            content);
+#endif
     ui->editDemo->document()->setText(newContent);
 }
 

@@ -21,6 +21,7 @@
 #include "executablerunner.h"
 #include "ojproblemcasesrunner.h"
 #include "utils.h"
+#include "../systemconsts.h"
 #include "../settings.h"
 #include <QMessageBox>
 #include <QUuid>
@@ -250,7 +251,7 @@ void CompilerManager::run(
                     .arg(sharedMemoryId,localizePath(filename)).arg(arguments);
 
             //delete when thread finished
-            execRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"ConsolePauser.exe",newArguments,workDir);
+            execRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().appDir())+CONSOLE_PAUSER,newArguments,workDir);
             execRunner->setShareMemoryId(sharedMemoryId);
         } else {
             //delete when thread finished

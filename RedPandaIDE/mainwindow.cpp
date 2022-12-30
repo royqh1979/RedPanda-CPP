@@ -3124,7 +3124,7 @@ void MainWindow::updateTools()
                         file.close();
                         if (item->pauseAfterExit) {
                             executeFile(
-                                        includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"ConsolePauser.exe",
+                                        includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
                                         " 1 \""+localizePath(file.fileName())+"\" ",
                                         workDir, file.fileName());
                         } else {
@@ -3137,7 +3137,7 @@ void MainWindow::updateTools()
                 } else {
                     if (item->pauseAfterExit) {
                         executeFile(
-                                    includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"ConsolePauser.exe",
+                                    includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
                                     " 1 \""+program+"\" "+params,
                                     workDir, "");
                     } else {
