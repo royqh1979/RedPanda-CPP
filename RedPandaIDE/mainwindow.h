@@ -623,7 +623,7 @@ private slots:
 
     void onAddProblemCase();
 
-    void on_btnRunAllProblemCases_clicked();
+    void onProblemRunAllCases();
 
     void on_actionC_Reference_triggered();
 

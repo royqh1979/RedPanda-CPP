@@ -664,7 +664,7 @@ void MainWindow::updateCompileActions(const Editor *e)
         ui->actionRebuild->setEnabled(false);
         ui->actionGenerate_Assembly->setEnabled(false);
         ui->actionDebug->setEnabled(false);
-        ui->btnRunAllProblemCases->setEnabled(false);
+        mProblem_RunAllCases->setEnabled(false);
     } else {
         bool forProject=false;
         bool canRun = false;
@@ -703,7 +703,7 @@ void MainWindow::updateCompileActions(const Editor *e)
         ui->actionRebuild->setEnabled(canCompile);
         ui->actionGenerate_Assembly->setEnabled(canGenerateAssembly);
         ui->actionDebug->setEnabled(canRun);
-        ui->btnRunAllProblemCases->setEnabled(canRun);
+        mProblem_RunAllCases->setEnabled(canRun && mOJProblemModel.count()>0);
     }
     if (!mDebugger->executing()) {
         disableDebugActions();
@@ -2535,7 +2535,7 @@ void MainWindow::createCustomActions()
                 tr("Run All Cases"),
                 "Problem_RunAllCases");
     connect(mProblem_RunAllCases, &QAction::triggered, this,
-            &MainWindow::on_btnRunAllProblemCases_clicked);
+            &MainWindow::onProblemRunAllCases);
 
     mProblem_RunCurrentCase = createShortcutCustomableAction(
                 tr("Run Current Case"),
@@ -3892,12 +3892,11 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
         if (problemCase) {
             mProblem_RemoveCases->setEnabled(true);
-            ui->btnRunAllProblemCases->setEnabled(ui->actionRun->isEnabled());
+            mProblem_RunAllCases->setEnabled(ui->actionRun->isEnabled());
             fillProblemCaseInputAndExpected(problemCase);
             ui->txtProblemCaseOutput->clear();
             ui->txtProblemCaseOutput->setPlainText(problemCase->output);
             updateProblemCaseOutput(problemCase);
-
             return;
         }
     }
@@ -3912,7 +3911,7 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     ui->txtProblemCaseExpectedOutputFileName->setToolTip("");
 
     mProblem_RemoveCases->setEnabled(false);
-    ui->btnRunAllProblemCases->setEnabled(false);
+    mProblem_RunAllCases->setEnabled(false);
     ui->txtProblemCaseInputFileName->clear();
     ui->btnProblemCaseInputFileName->setEnabled(false);
     ui->txtProblemCaseInput->clear();
@@ -8096,7 +8095,7 @@ void MainWindow::onAddProblemCase()
     ui->tblProblemCases->setCurrentIndex(mOJProblemModel.index(mOJProblemModel.count()-1,0));
 }
 
-void MainWindow::on_btnRunAllProblemCases_clicked()
+void MainWindow::onProblemRunAllCases()
 {    
     if (mOJProblemModel.count()<=0)
         return;
