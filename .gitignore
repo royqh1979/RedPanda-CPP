@@ -1,3 +1,5 @@
 /.vs
+/packages/archlinux/*
+!/packages/archlinux/PKGBUILD
 *.bak
 *.pro.user

@@ -39,6 +39,9 @@ linux: {
     isEmpty(PREFIX) {
         PREFIX = /usr/local
     }
+    isEmpty(LIBEXECDIR) {
+        LIBEXECDIR = $${PREFIX}/libexec
+    }
 
     QMAKE_SUBSTITUTES += platform/linux/redpandaide.desktop.in
 
