@@ -1,55 +1,66 @@
-# ÒÀÀµ
+ï»¿# ä¾èµ–
  
- Ğ¡ĞÜÃ¨C++ĞèÒªQt 5(>=5.12)
+ å°ç†ŠçŒ«C++éœ€è¦Qt 5(>=5.12)
 
 # Windows
 
- ÎÒÊ¹ÓÃmsys2´ò°üµÄ×îĞÂ°æµÄGCCºÍMinGW-w64¹¤¾ßÁ´À´±àÒëĞ¡ĞÜÃ¨C++¡£VCºÍÆäËû°æ±¾µÄgcc²»Ò»¶¨ÄÜ¹»Õı³£±àÒë¡£
+ æˆ‘ä½¿ç”¨msys2æ‰“åŒ…çš„æœ€æ–°ç‰ˆçš„GCCå’ŒMinGW-w64å·¥å…·é“¾æ¥ç¼–è¯‘å°ç†ŠçŒ«C++ã€‚VCå’Œå…¶ä»–ç‰ˆæœ¬çš„gccä¸ä¸€å®šèƒ½å¤Ÿæ­£å¸¸ç¼–è¯‘ã€‚
 
- ±àÒë²½Öè£º
- - °²×°msys2 (https://www.msys2.org)
- - Ê¹ÓÃmsys2µÄpacman³ÌĞò°²×°mingw-w64-x86_64-qt5ºÍmingw-w64-x86_64-gcc
- - °²×°qtcreator
- - Ê¹ÓÃqtcreator´ò¿ªRed_Panda_CPP.proÎÄ¼ş
+ ç¼–è¯‘æ­¥éª¤ï¼š
+ - å®‰è£…msys2 (https://www.msys2.org)
+ - ä½¿ç”¨msys2çš„pacmanç¨‹åºå®‰è£…mingw-w64-x86_64-qt5å’Œmingw-w64-x86_64-gcc
+ - å®‰è£…qtcreator
+ - ä½¿ç”¨qtcreatoræ‰“å¼€Red_Panda_CPP.proæ–‡ä»¶
 
 # Linux
 
-²½Öè:
- - °²×° gcc ºÍ qt5¿ª·¢Ïà¹Ø°ü
- - Ê¹ÓÃqtcreator´ò¿ªRed_Panda_CPP.proÎÄ¼ş
+æ­¥éª¤:
+ - å®‰è£… gcc å’Œ qt5å¼€å‘ç›¸å…³åŒ…
+ - ä½¿ç”¨qtcreatoræ‰“å¼€Red_Panda_CPP.proæ–‡ä»¶
 
+qmake å˜é‡:
+- `PREFIX`ï¼šé»˜è®¤å€¼æ˜¯ `/usr/local`ã€‚æ‰“åŒ…æ—¶åº”è¯¥å®šä¹‰ä¸º `/usr` æˆ– `/opt/redpanda-cpp`ã€‚
+- `LIBEXECDIR`ï¼šè¾…åŠ©ç¨‹åºçš„è·¯å¾„ï¼Œé»˜è®¤å€¼æ˜¯ `$PREFIX/libexec`ã€‚Arch Linux ä½¿ç”¨ `/usr/lib`ã€‚
 
 ## Ubuntu
 
-### 1.°²×°±àÒëÆ÷
+### 1.å®‰è£…ç¼–è¯‘å™¨
 
-```text
-apt install gcc g++ make gdb gdbserver 
+```bash
+apt install gcc g++ make gdb gdbserver
 ```
 
-### 2.°²×°QT5ºÍÒÀÀµ°ü
+### 2.å®‰è£…QT5å’Œä¾èµ–åŒ…
 
-```text
-apt install qtbase5-dev qttools5-dev-tools  libicu-dev libqt5svg5-dev  git qterminal
+```bash
+apt install qtbase5-dev qttools5-dev-tools libicu-dev libqt5svg5-dev git qterminal
 ```
 
-### 3.ÏÂÔØÔ´Âë
+### 3.ä¸‹è½½æºç 
 
-```
+```bash
 git clone https://gitee.com/royqh1979/RedPanda-CPP.git
 ```
 
-### 4.±àÒë
+### 4.ç¼–è¯‘
 
-```
-cd cd RedPanda-CPP/
-qmake Red_Panda_CPP.pro 
-make -j8
+```bash
+cd RedPanda-CPP/
+qmake Red_Panda_CPP.pro
+make -j$(nproc)
 sudo make install
 ```
 
-### 5.ÔËĞĞ
+### 5.è¿è¡Œ
 
-```
+```bash
 RedPandaIDE
 ```
+
+## Arch Linux åŠè¡ç”Ÿç‰ˆæœ¬
+
+`packages/archlinux` ç›®å½•ä¸‹æä¾›äº†ä¸€ä¸ªå‚è€ƒ PKGBUILDï¼Œä½¿ç”¨ [makepkg](https://wiki.archlinuxcn.org/wiki/Makepkg) æ„å»ºå°ç†ŠçŒ« C++ å¹¶å®‰è£…ã€‚
+
+å°ç†ŠçŒ« C++ å¯ä»¥é€šè¿‡ `RedPandaIDE` å‘½ä»¤å¯åŠ¨ã€‚
+
+æ³¨æ„ï¼šmakepkg ç­¾å‡ºæ­¤å­˜å‚¨åº“çš„ HEADï¼Œå› æ­¤æ„å»ºä¹‹å‰åŠ¡å¿…æäº¤æ‰€æœ‰å˜æ›´ã€‚

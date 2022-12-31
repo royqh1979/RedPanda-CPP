@@ -13,4 +13,51 @@
 # Linux
 
  - Install gcc and qt5
- - Use qtcreator to open Red_Panda_CPP.pro
+ - Open `Red_Panda_CPP.pro` with Qt Creator
+
+qmake variables:
+- `PREFIX`: default to `/usr/local`. It should be set to `/usr` or `/opt/redpanda-cpp` when packaging.
+- `LIBEXECDIR`: directory for auxiliary executables, default to `$PREFIX/libexec`. Arch Linux uses `/usr/lib`.
+
+## Ubuntu
+
+### 1. Install Compiler
+
+```bash
+apt install gcc g++ make gdb gdbserver
+```
+
+### 2. Install Qt 5 and Other Dependencies
+
+```bash
+apt install qtbase5-dev qttools5-dev-tools libicu-dev libqt5svg5-dev git qterminal
+```
+
+### 3. Fetch Source Code
+
+```bash
+git clone https://github.com/royqh1979/RedPanda-CPP.git
+```
+
+### 4. Build
+
+```bash
+cd RedPanda-CPP/
+qmake Red_Panda_CPP.pro
+make -j$(nproc)
+sudo make install
+```
+
+### 5. Run
+
+```bash
+RedPandaIDE
+```
+
+## Arch Linux
+
+A reference PKGBUILD is available at `packages/archlinux`. Build RedPanda C++ with [makepkg](https://wiki.archlinux.org/title/Makepkg) and then install.
+
+Enter `RedPandaIDE` to launch RedPanda C++.
+
+Note that makepkg checks out HEAD of the repo, so any change should be committed before building.
