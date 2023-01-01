@@ -64,3 +64,21 @@ RedPandaIDE
 小熊猫 C++ 可以通过 `RedPandaIDE` 命令启动。
 
 注意：makepkg 签出此存储库的 HEAD，因此构建之前务必提交所有变更。
+
+## AppImage
+
+1. 安装依赖包：curl、docker。
+2. 准备构建环境。
+   ```bash
+   arch=x86_64 # 或 aarch64
+   curl -L -o packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
+   docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
+   ```
+3. 构建 AppImage。
+   ```bash
+   ./packages/appimage/build-x86_64.sh # 或 *-aarch64.sh
+   ```
+4. 运行小熊猫 C++.
+   ```bash
+   ./dist/RedPandaIDE-x86_64.AppImage # 或 *-aarch64.AppImage
+   ```

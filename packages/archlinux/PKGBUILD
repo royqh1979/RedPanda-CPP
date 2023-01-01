@@ -1,6 +1,6 @@
 _pkgname=RedPanda-CPP
 pkgname=${_pkgname,,}-git
-pkgver=0.0
+pkgver=2.7.r10.g0caaad84
 pkgrel=1
 pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (development version)'
 arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64')

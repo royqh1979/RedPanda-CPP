@@ -1,4 +1,6 @@
 /.vs
+/dist
+/packages/appimage/*/*.AppImage
 /packages/archlinux/*
 !/packages/archlinux/PKGBUILD
 *.bak

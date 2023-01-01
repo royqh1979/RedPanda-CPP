@@ -61,3 +61,21 @@ A reference PKGBUILD is available at `packages/archlinux`. Build RedPanda C++ wi
 Enter `RedPandaIDE` to launch RedPanda C++.
 
 Note that makepkg checks out HEAD of the repo, so any change should be committed before building.
+
+## AppImage
+
+1. Install dependency: curl, docker.
+2. Prepare build environment.
+   ```bash
+   arch=x86_64 # or aarch64
+   curl -L -o packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
+   docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
+   ```
+3. Build AppImage.
+   ```bash
+   ./packages/appimage/build-x86_64.sh # or *-aarch64.sh
+   ```
+4. Run Red Panda C++.
+   ```bash
+   ./dist/RedPandaIDE-x86_64.AppImage # or *-aarch64.AppImage
+   ```
