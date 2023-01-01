@@ -4812,6 +4812,11 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
     tabWidget->setCurrentIndex(index);
     QMenu menu(this);
     QTabBar* tabBar = tabWidget->tabBar();
+    Editor * editor = dynamic_cast<Editor *>(tabWidget->widget(index));
+    if (!switchHeaderSourceTarget(editor).isEmpty()) {
+        menu.addAction(ui->actionSwitchHeaderSource);
+        menu.addSeparator();
+    }
     menu.addAction(ui->actionClose);
     menu.addAction(ui->actionClose_All);
     menu.addSeparator();
@@ -4826,7 +4831,6 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
                 tabWidget==ui->EditorTabsRight
                 || tabWidget->count()>1
                 );
-    Editor * editor = dynamic_cast<Editor *>(tabWidget->widget(index));
     if (editor ) {
         ui->actionLocate_in_Files_View->setEnabled(!editor->isNew());
     }
