@@ -184,7 +184,9 @@ QString Settings::Dirs::appResourceDir() const
 #ifdef Q_OS_WIN
     return appDir();
 #elif defined(Q_OS_LINUX)
-    return PREFIX "/share/" APP_NAME;
+    // in AppImage PREFIX is not true, resolve from relative path
+    const static QString absoluteResourceDir(QDir(appDir()).absoluteFilePath("../share/" APP_NAME));
+    return absoluteResourceDir;
 #elif defined(Q_OS_MACOS)
 //    return QApplication::instance()->applicationDirPath();
     return "";
@@ -197,7 +199,10 @@ QString Settings::Dirs::appLibexecDir() const
 #ifdef Q_OS_WIN
     return appDir();
 #elif defined(Q_OS_LINUX)
-    return LIBEXECDIR "/" APP_NAME;
+    // in AppImage LIBEXECDIR is not true, resolve from relative path
+    const static QString relativeLibExecDir(QDir(PREFIX "/bin").relativeFilePath(LIBEXECDIR "/" APP_NAME));
+    const static QString absoluteLibExecDir(QDir(appDir()).absoluteFilePath(relativeLibExecDir));
+    return absoluteLibExecDir;
 #elif defined(Q_OS_MACOS)
     return QApplication::instance()->applicationDirPath();
 #endif
