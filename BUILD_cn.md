@@ -67,18 +67,34 @@ RedPandaIDE
 
 ## AppImage
 
-1. 安装依赖包：curl、docker。
-2. 准备构建环境。
+1. 安装依赖包：cURL、Docker。
+
+   Windows 宿主的额外要求：
+   - Docker 使用基于 WSL 2 的引擎，或者对此项目文件夹启用文件共享（Settings > Resources > File sharing）；
+   - PowerShell（曾用名 “PowerShell Core”，不是 “Windows PowerShell”）。
+2. 准备构建环境。Linux 宿主：
    ```bash
    arch=x86_64 # 或 aarch64
    curl -L -o packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
    docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
    ```
-3. 构建 AppImage。
+   Windows 宿主：
+   ```ps1
+   $arch = "x86_64" # 或 "aarch64"（如果将来 Docker 支持 WoA）
+   Invoke-WebRequest -OutFile packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage -Uri https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
+   docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
+   ```
+3. 构建 AppImage。Linux 宿主：
    ```bash
    ./packages/appimage/build-x86_64.sh # 或 *-aarch64.sh
+   ```
+   Windows 宿主：
+   ```ps1
+   ./packages/appimage/build-x86_64.ps1 # 或 *-aarch64.ps1（如果将来 Docker 支持 WoA）
    ```
 4. 运行小熊猫 C++.
    ```bash
    ./dist/RedPandaIDE-x86_64.AppImage # 或 *-aarch64.AppImage
    ```
+
+注意：AppImage 与 QEMU 用户态模拟不兼容，使用此格式的 AppImageKit 工具自然不能用 QEMU 用户态模拟来运行。因此不能在 x86-64 系统上构建 AArch64 AppImage，反之亦然。

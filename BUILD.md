@@ -64,18 +64,34 @@ Note that makepkg checks out HEAD of the repo, so any change should be committed
 
 ## AppImage
 
-1. Install dependency: curl, docker.
-2. Prepare build environment.
+1. Install dependency: cURL, Docker.
+
+   Extra requirements for Windows host:
+   - Docker uses WSL 2 based engine, or enable file sharing on the project folder (Settings > Resources > File sharing);
+   - PowerShell (previously “PowerShell Core”, not “Windows PowerShell”).
+2. Prepare build environment. Linux host:
    ```bash
    arch=x86_64 # or aarch64
    curl -L -o packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
    docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
    ```
-3. Build AppImage.
+   Windows host:
+   ```ps1
+   $arch = "x86_64" # or "aarch64" someday Docker is available on WoA
+   Invoke-WebRequest -OutFile packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage -Uri https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
+   docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
+   ```
+3. Build AppImage. Linux host:
    ```bash
    ./packages/appimage/build-x86_64.sh # or *-aarch64.sh
+   ```
+   Windows host:
+   ```ps1
+   ./packages/appimage/build-x86_64.ps1 # or *-aarch64.ps1 someday Docker is available on WoA
    ```
 4. Run Red Panda C++.
    ```bash
    ./dist/RedPandaIDE-x86_64.AppImage # or *-aarch64.AppImage
    ```
+
+Note: AppImage, in which format AppImageKit is shipped, is incompatable with QEMU user space emulator, so you cannot build AArch64 AppImage on x86-64, and vice versa.
