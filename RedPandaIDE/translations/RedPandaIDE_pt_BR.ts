@@ -4920,6 +4920,10 @@
         <source>Choose Expected Output File</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Toggle Readonly</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

@@ -237,9 +237,11 @@ void Project::open()
         newUnit->setOverrideBuildCmd(ini.GetBoolValue(groupName,"OverrideBuildCmd", false));
         newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
         QByteArray defaultEncoding = toByteArray(mOptions.encoding);
+        //Compatibility
         if (ini.GetBoolValue(groupName,"DetectEncoding",true)){
             defaultEncoding = ENCODING_AUTO_DETECT;
         }
+
         newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",defaultEncoding));
         if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
             newUnit->setEncoding(ENCODING_AUTO_DETECT);
@@ -758,9 +760,14 @@ bool Project::saveUnits()
         ini.SetLongValue(groupName,"Priority", unit->priority());
         ini.SetLongValue(groupName,"OverrideBuildCmd", unit->overrideBuildCmd());
         ini.SetValue(groupName,"BuildCmd", toByteArray(unit->buildCmd()));
-        ini.SetLongValue(groupName,"DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
-        if (unit->encoding() != options().encoding)
+        //ini.SetLongValue(groupName,"DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
+        ini.Delete(groupName,"DetectEncoding");
+        if (unit->encoding() != options().encoding
+                && unit->encoding()!=ENCODING_AUTO_DETECT)
             ini.SetValue(groupName,"FileEncoding", toByteArray(unit->encoding()));
+        else
+            ini.Delete(groupName,"FileEncoding");
+
     }
     ini.SetLongValue("Project","UnitCount",count);
     ini.SaveFile(mFilename.toLocal8Bit());

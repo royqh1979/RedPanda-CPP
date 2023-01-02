@@ -8,6 +8,8 @@ Red Panda C++ Version 2.8
   - fix: Resource compilation items is missing in the auto generated makefile, if the project's icon is removed and re-added.
   - fix: Action "Run all problem cases" is triggered twice by one clicked.
   - enhancement: "Switch Header/Source" in editor title bar context menu.
+  - enhancement: "Toggle readonly" in the Edit menu.
+  - fix: Error When save project units' encoding settings.
 
 Red Panda C++ Version 2.7
 

@@ -571,6 +571,7 @@ void MainWindow::updateEditorActions(const Editor *e)
 
         ui->actionGo_to_Line->setEnabled(false);
         ui->actionLocate_in_Files_View->setEnabled(false);
+        ui->actionToggle_Readonly->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -624,8 +625,9 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionRemove_Bookmark->setEnabled(e->hasBookmark(line));
         ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
 
-                ui->actionGo_to_Line->setEnabled(true);
+        ui->actionGo_to_Line->setEnabled(true);
         ui->actionLocate_in_Files_View->setEnabled(!e->isNew());
+        ui->actionToggle_Readonly->setEnabled(!e->modified());
     }
 
     updateCompileActions(e);
@@ -4819,6 +4821,8 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
     }
     menu.addAction(ui->actionClose);
     menu.addAction(ui->actionClose_All);
+    menu.addSeparator();
+    menu.addAction(ui->actionToggle_Readonly);
     menu.addSeparator();
     menu.addAction(ui->actionOpen_Containing_Folder);
     menu.addAction(ui->actionOpen_Terminal);
@@ -9215,6 +9219,17 @@ void MainWindow::onExportFPSProblemSet()
             QMessageBox::critical(this,tr("Export Error"),
                                   error.reason());
         }
+    }
+}
+
+
+void MainWindow::on_actionToggle_Readonly_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && !editor->modified()) {
+        editor->setReadOnly(!editor->readOnly());
+        editor->updateCaption();
+        updateEditorActions(editor);
     }
 }
 

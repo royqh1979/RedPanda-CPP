@@ -200,6 +200,8 @@
     <addaction name="actionDelete_to_Word_End"/>
     <addaction name="actionDelete_to_BOL"/>
     <addaction name="actionDelete_to_EOL"/>
+    <addaction name="separator"/>
+    <addaction name="actionToggle_Readonly"/>
    </widget>
    <widget class="QMenu" name="menuSearch">
     <property name="title">
@@ -3298,6 +3300,11 @@
   <action name="actionTrim_trailing_spaces">
    <property name="text">
     <string>Trim trailing spaces</string>
+   </property>
+  </action>
+  <action name="actionToggle_Readonly">
+   <property name="text">
+    <string>Toggle Readonly</string>
    </property>
   </action>
  </widget>

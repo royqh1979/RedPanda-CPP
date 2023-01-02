@@ -767,6 +767,8 @@ private slots:
 
     void onExportFPSProblemSet();
 
+    void on_actionToggle_Readonly_triggered();
+
 private:
     Ui::MainWindow *ui;
     EditorList *mEditorList;
