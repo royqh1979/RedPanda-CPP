@@ -260,6 +260,9 @@ bool Editor::save(bool force, bool doReparse) {
     if (this->mIsNew && !force) {
         return saveAs();
     }
+    while (pMainWindow->parsing()) {
+        QThread::msleep(200);
+    }
     //is this file writable;
     pMainWindow->fileSystemWatcher()->removePath(mFilename);
     try {

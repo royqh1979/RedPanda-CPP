@@ -131,6 +131,8 @@ public:
     void updateDebuggerSettings();
     void updateActionIcons();
     void checkSyntaxInBack(Editor* e);
+    bool compiling();
+    bool parsing();
     bool compile(bool rebuild=false, CppCompileType compileType=CppCompileType::Normal);
     void runExecutable(
             const QString& exeName,

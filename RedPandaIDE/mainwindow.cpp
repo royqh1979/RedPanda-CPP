@@ -519,6 +519,9 @@ void MainWindow::updateEditorActions()
 
 void MainWindow::updateEditorActions(const Editor *e)
 {
+    //it's not a compile action, but put here for convinience
+    ui->actionSaveAll->setEnabled(
+                (mProject!=nullptr || mEditorList->pageCount()>0));
     if (e==nullptr) {
         ui->actionAuto_Detect->setEnabled(false);
         ui->actionEncode_in_ANSI->setEnabled(false);
@@ -659,7 +662,9 @@ void MainWindow::updateCompileActions() {
 
 void MainWindow::updateCompileActions(const Editor *e)
 {
-    if (mCompilerManager->compiling() || mCompilerManager->running() || mDebugger->executing()) {
+    if (mCompilerManager->compiling()
+            //|| mCompilerManager->backgroundSyntaxChecking()
+            || mCompilerManager->running() || mDebugger->executing()) {
         ui->actionCompile->setEnabled(false);
         ui->actionCompile_Run->setEnabled(false);
         ui->actionRun->setEnabled(false);
@@ -712,9 +717,7 @@ void MainWindow::updateCompileActions(const Editor *e)
     }
     ui->actionStop_Execution->setEnabled(mCompilerManager->running() || mDebugger->executing());
 
-    //it's not a compile action, but put here for convinience
-    ui->actionSaveAll->setEnabled(mProject!=nullptr
-            || mEditorList->pageCount()>0);
+
 }
 
 void MainWindow::updateEditorColorSchemes()
@@ -1849,6 +1852,24 @@ void MainWindow::checkSyntaxInBack(Editor *e)
         mCompilerManager->checkSyntax(e->filename(),e->fileEncoding(),e->text(), nullptr);
     }
 }
+
+bool MainWindow::compiling()
+{
+    return (mCompilerManager->backgroundSyntaxChecking()) || (mCompilerManager->compiling());
+}
+
+bool MainWindow::parsing()
+{
+    if (mProject && mProject->cppParser() && mProject->cppParser()->parsing())
+        return true;
+    for(int i=0;i<mEditorList->pageCount();i++) {
+        Editor * editor = (*mEditorList)[i];
+        if (editor->parser() && editor->parser()->parsing())
+            return true;
+    }
+    return false;
+}
+
 
 bool MainWindow::compile(bool rebuild, CppCompileType compileType)
 {
