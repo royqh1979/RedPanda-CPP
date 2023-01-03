@@ -29,6 +29,9 @@ else: VERSION = $${APP_VERSION}
 isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
+isEmpty(LIBEXECDIR) {
+    LIBEXECDIR = $${PREFIX}/libexec
+}
 
 # windows 7 is the minimum windows version
 win32: {
@@ -36,6 +39,7 @@ DEFINES += _WIN32_WINNT=0x0601
 }
 
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
+DEFINES += LIBEXECDIR=\\\"$${LIBEXECDIR}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
 DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
 

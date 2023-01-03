@@ -1,0 +1,40 @@
+_pkgname=RedPanda-CPP
+pkgname=${_pkgname,,}-git
+pkgver=2.7.r10.g0caaad84
+pkgrel=1
+pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (development version)'
+arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64')
+url="https://github.com/royqh1979/$_pkgname"
+license=('GPL3')
+depends=(qt5-base qt5-svg gcc gdb)
+makedepends=(git qt5-tools)
+optdepends=(
+    'clang: alternate C/C++ compiler'
+    'qterminal: run in terminal'
+    'konsole: run in terminal (alternate)'
+    'git: git integration'
+)
+conflicts=("${_pkgname,,}")
+provides=("${_pkgname,,}")
+source=("$_pkgname::git+file://${PWD%packages/archlinux}")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "$srcdir/$_pkgname"
+    git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+    mkdir redpanda-build
+    cd redpanda-build
+    qmake \
+        PREFIX='/usr' \
+        LIBEXECDIR='/usr/lib' \
+        "$srcdir/$_pkgname/Red_Panda_CPP.pro"
+    make
+}
+
+package() {
+    cd redpanda-build
+    make INSTALL_ROOT="$pkgdir" install
+}

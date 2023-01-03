@@ -1,0 +1,14 @@
+##########################
+# AppImage on Windows host
+##########################
+
+# script run in docker
+/packages/appimage/01-in-docker.sh eol=lf
+
+# text files to be packed
+/platform/linux/install.sh eol=lf
+/platform/linux/redpandaide.desktop.in eol=lf
+/platform/linux/templates/*/*.txt eol=lf
+/platform/linux/templates/*/*.template eol=lf
+/platform/linux/templates/*/*.fs eol=lf
+/platform/linux/templates/*/*.vs eol=lf

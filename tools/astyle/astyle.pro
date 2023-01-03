@@ -26,6 +26,9 @@ SOURCES += \
 isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
+isEmpty(LIBEXECDIR) {
+    LIBEXECDIR = $${PREFIX}/libexec
+}
 
 win32: {
     !isEmpty(PREFIX) {
@@ -39,8 +42,8 @@ QMAKE_CXXFLAGS += /source-charset:utf-8
 }
 
 # Default rules for deployment.
-qnx: target.path = $${PREFIX}/libexec/$${APP_NAME}
-else: unix:!android: target.path = $${PREFIX}/libexec/$${APP_NAME}
+qnx: target.path = $${LIBEXECDIR}/$${APP_NAME}
+else: unix:!android: target.path = $${LIBEXECDIR}/$${APP_NAME}
 
 !isEmpty(target.path): INSTALLS += target
 
