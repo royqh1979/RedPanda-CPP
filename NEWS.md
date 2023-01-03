@@ -11,6 +11,7 @@ Red Panda C++ Version 2.8
   - enhancement: "Toggle readonly" in the Edit menu.
   - fix: Error When save project units' encoding settings.
   - enhancement: Waiting for syntax parsers to finish before saving files, to prevent data lost caused by syntax parsering crash.
+  - fix: Restore main window and cpu info window will set wrong font in the cpu info.
 
 Red Panda C++ Version 2.7
 

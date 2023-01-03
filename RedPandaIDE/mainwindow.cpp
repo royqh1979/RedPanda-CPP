@@ -851,6 +851,8 @@ void MainWindow::applySettings()
     qApp->setFont(font);
     this->setFont(font);
     for (QWidget* p:findChildren<QWidget*>()) {
+        if (mCPUDialog && (p==mCPUDialog || mCPUDialog->isAncestorOf(p)))
+            continue;
         p->setFont(font);
     }
     if (pSettings->environment().useCustomIconSet()) {
@@ -1851,11 +1853,6 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     } else {
         mCompilerManager->checkSyntax(e->filename(),e->fileEncoding(),e->text(), nullptr);
     }
-}
-
-bool MainWindow::compiling()
-{
-    return (mCompilerManager->backgroundSyntaxChecking()) || (mCompilerManager->compiling());
 }
 
 bool MainWindow::parsing()
