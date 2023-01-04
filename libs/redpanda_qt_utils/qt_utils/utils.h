@@ -38,9 +38,9 @@ class QTextCodec;
 
 enum class FileEndingType {
     Windows,
-    Linux,
-    Mac
-};// Windows: CRLF, UNIX: LF, Mac: CR
+    Unix,
+    MacOld
+};// Windows: CRLF, UNIX: LF, Old Mac OS: CR (old mac os, not mac os x)
 
 class BaseError{
 public:

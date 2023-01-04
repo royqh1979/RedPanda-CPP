@@ -111,6 +111,7 @@ MainWindow* pMainWindow;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
+      mFullInitialized(false),
       mSearchInFilesDialog(nullptr),
       mSearchDialog(nullptr),
       mReplaceDialog(nullptr),
@@ -5296,6 +5297,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::showEvent(QShowEvent *)
 {
+    if (mFullInitialized)
+        return;
+    mFullInitialized = true;
     applySettings();
     const Settings::UI& settings = pSettings->ui();
     ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());

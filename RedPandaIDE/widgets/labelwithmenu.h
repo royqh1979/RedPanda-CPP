@@ -28,6 +28,14 @@ public:
     // QWidget interface
 protected:
     void mousePressEvent(QMouseEvent *event) override;
+
+    // QWidget interface
+protected:
+    void enterEvent(QEvent *event) override;
+    void leaveEvent(QEvent *event) override;
+
+private:
+    QCursor mCursor;
 };
 
 #endif // LABELWITHMENU_H

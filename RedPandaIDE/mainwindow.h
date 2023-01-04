@@ -772,6 +772,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    bool mFullInitialized;
     EditorList *mEditorList;
     QLabel *mFileInfoStatus;
     LabelWithMenu *mFileEncodingStatus;

@@ -22,7 +22,7 @@
 
 LabelWithMenu::LabelWithMenu(QWidget* parent):QLabel(parent)
 {
-
+    mCursor = Qt::ArrowCursor;
 }
 
 void LabelWithMenu::mousePressEvent(QMouseEvent *event)
@@ -31,4 +31,22 @@ void LabelWithMenu::mousePressEvent(QMouseEvent *event)
                                                  event->pos());
     QApplication::instance()->postEvent(this,e);
     event->accept();
+}
+
+void LabelWithMenu::enterEvent(QEvent *event)
+{
+    mCursor = cursor();
+    setCursor(Qt::PointingHandCursor);
+    setTextInteractionFlags(Qt::TextInteractionFlag::TextSelectableByKeyboard);
+    setSelection(0,text().length());
+    QLabel::enterEvent(event);
+}
+
+void LabelWithMenu::leaveEvent(QEvent *event)
+{
+    setCursor(mCursor);
+    mCursor = Qt::ArrowCursor;
+    setSelection(0,0);
+    setTextInteractionFlags(Qt::TextInteractionFlag::NoTextInteraction);
+    QLabel::leaveEvent(event);
 }
