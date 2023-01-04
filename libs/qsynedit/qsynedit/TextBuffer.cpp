@@ -43,7 +43,7 @@ Document::Document(const QFont& font, const QFont& nonAsciiFont, QObject *parent
 {
 
     mAppendNewLineAtEOF = true;
-    mFileEndingType = FileEndingType::Windows;
+    mNewlineType = NewlineType::Windows;
     mIndexOfLongestLine = -1;
     mUpdateCount = 0;
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
@@ -147,12 +147,12 @@ int Document::lengthOfLongestLine() {
 
 QString Document::lineBreak() const
 {
-    switch(mFileEndingType) {
-    case FileEndingType::Linux:
+    switch(mNewlineType) {
+    case NewlineType::Unix:
         return "\n";
-    case FileEndingType::Windows:
+    case NewlineType::Windows:
         return "\r\n";
-    case FileEndingType::Mac:
+    case NewlineType::MacOld:
         return "\r";
     }
     return "\n";
@@ -321,7 +321,7 @@ int Document::getTextLength()
     int Result = 0;
     foreach (const PDocumentLine& line, mLines ) {
         Result += line->fString.length();
-        if (mFileEndingType == FileEndingType::Windows) {
+        if (mNewlineType == NewlineType::Windows) {
             Result += 2;
         } else {
             Result += 1;
@@ -542,7 +542,7 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
 {
     QMutexLocker locker(&mMutex);
     QFile file(filename);
-    if (!file.open(QFile::ReadOnly ))
+    if (!file.open(QFile::ReadOnly))
         throw FileError(tr("Can't open file '%1' for read!").arg(file.fileName()));
     beginUpdate();
     internalClear();
@@ -573,11 +573,11 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
             codec = QTextCodec::codecForName(ENCODING_UTF8);
         }
         if (line.endsWith("\r\n")) {
-            mFileEndingType = FileEndingType::Windows;
+            mNewlineType = NewlineType::Windows;
         } else if (line.endsWith("\n")) {
-            mFileEndingType = FileEndingType::Linux;
+            mNewlineType = NewlineType::Unix;
         } else if (line.endsWith("\r")) {
-            mFileEndingType = FileEndingType::Mac;
+            mNewlineType = NewlineType::MacOld;
         }
         internalClear();
         while (true) {
@@ -780,16 +780,16 @@ void Document::internalClear()
     }
 }
 
-FileEndingType Document::getFileEndingType()
+NewlineType Document::getNewlineType()
 {
     QMutexLocker locker(&mMutex);
-    return mFileEndingType;
+    return mNewlineType;
 }
 
-void Document::setFileEndingType(const FileEndingType &fileEndingType)
+void Document::setNewlineType(const NewlineType &fileEndingType)
 {
     QMutexLocker locker(&mMutex);
-    mFileEndingType = fileEndingType;
+    mNewlineType = fileEndingType;
 }
 
 bool Document::empty()

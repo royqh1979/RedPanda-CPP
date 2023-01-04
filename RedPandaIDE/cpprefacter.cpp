@@ -50,11 +50,15 @@ bool CppRefacter::findOccurence(Editor *editor, const QSynedit::BufferCoord &pos
     if (!statement)
         return false;
 
-    std::shared_ptr<Project> project = pMainWindow->project();
-    if (editor->inProject() && project) {
-        doFindOccurenceInProject(statement,project,editor->parser());
-    } else {
+    if (statement->scope == StatementScope::Local) {
         doFindOccurenceInEditor(statement,editor,editor->parser());
+    } else {
+        std::shared_ptr<Project> project = pMainWindow->project();
+        if (editor->inProject() && project) {
+            doFindOccurenceInProject(statement,project,editor->parser());
+        } else {
+            doFindOccurenceInEditor(statement,editor,editor->parser());
+        }
     }
     pMainWindow->searchResultModel()->notifySearchResultsUpdated();
     return true;
@@ -88,10 +92,10 @@ bool CppRefacter::findOccurence(const QString &statementFullname, SearchFileScop
         if (!statement)
             return false;
 
-        if (scope == SearchFileScope::wholeProject) {
-            doFindOccurenceInProject(statement,project,parser);
-        } else if (scope == SearchFileScope::currentFile) {
+        if (statement->scope == StatementScope::Local || scope == SearchFileScope::currentFile) {
             doFindOccurenceInEditor(statement, editor,parser);
+        } else if (scope == SearchFileScope::wholeProject) {
+            doFindOccurenceInProject(statement,project,parser);
         }
         pMainWindow->searchResultModel()->notifySearchResultsUpdated();
         return true;
@@ -163,6 +167,7 @@ void CppRefacter::doFindOccurenceInEditor(PStatement statement , Editor *editor,
                 );
     PSearchResultTreeItem item = findOccurenceInFile(
                 editor->filename(),
+                editor->encodingOption(),
                 statement,
                 parser);
     if (item && !(item->results.isEmpty())) {
@@ -181,6 +186,7 @@ void CppRefacter::doFindOccurenceInProject(PStatement statement, std::shared_ptr
         if (isCFile(unit->fileName()) || isHFile(unit->fileName())) {
             PSearchResultTreeItem item = findOccurenceInFile(
                         unit->fileName(),
+                        unit->encoding(),
                         statement,
                         parser);
             if (item && !(item->results.isEmpty())) {
@@ -192,6 +198,7 @@ void CppRefacter::doFindOccurenceInProject(PStatement statement, std::shared_ptr
 
 PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         const QString &filename,
+        const QByteArray& fileEncoding,
         const PStatement &statement,
         const PCppParser& parser)
 {
@@ -203,9 +210,16 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     if (pMainWindow->editorList()->getContentFromOpenedEditor(
                 filename,buffer)){
         editor.document()->setContents(buffer);
+    } else if (!fileExists(filename)){
+        return parentItem;
     } else {
         QByteArray encoding;
-        editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
+        try {
+            editor.document()->loadFromFile(filename,fileEncoding,encoding);
+        } catch (FileError e) {
+            //don't handle it;
+            return parentItem;
+        }
     }
     editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
     int posY = 0;

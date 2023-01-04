@@ -42,6 +42,7 @@ private:
     void doFindOccurenceInProject(PStatement statement, std::shared_ptr<Project> project, const PCppParser& parser);
     PSearchResultTreeItem findOccurenceInFile(
             const QString& filename,
+            const QByteArray& fileEncoding,
             const PStatement& statement,
             const PCppParser& parser);
     void renameSymbolInFile(

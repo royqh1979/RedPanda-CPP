@@ -36,7 +36,7 @@ class QTextCodec;
 #define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
 #define ENCODING_ASCII  "ASCII"
 
-enum class FileEndingType {
+enum class NewlineType {
     Windows,
     Unix,
     MacOld

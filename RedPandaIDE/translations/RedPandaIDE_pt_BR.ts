@@ -4046,7 +4046,7 @@
     </message>
     <message>
         <source>Line:%1 Col:%2 Selected:%3 Lines:%4 Length:%5</source>
-        <translation>Linha:%1 Coluna:%2 Seleção:%3 Linhas:%4 Tamanho:%5</translation>
+        <translation type="vanished">Linha:%1 Coluna:%2 Seleção:%3 Linhas:%4 Tamanho:%5</translation>
     </message>
     <message>
         <source>Read Only</source>
@@ -4922,6 +4922,10 @@
     </message>
     <message>
         <source>Toggle Readonly</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Line: %1 Col: %2 Lines: %3</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

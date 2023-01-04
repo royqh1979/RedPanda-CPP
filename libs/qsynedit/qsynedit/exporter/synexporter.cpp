@@ -32,7 +32,7 @@ SynExporter::SynExporter(const QByteArray charset):mCharset(charset)
     mForegroundColor = QGuiApplication::palette().color(QPalette::Text);
     mUseBackground = false;
     mExportAsText = false;
-    mFileEndingType = FileEndingType::Windows;
+    mFileEndingType = NewlineType::Windows;
     clear();
     setTitle("");
 }
@@ -211,12 +211,12 @@ void SynExporter::setUseBackground(bool Value)
     }
 }
 
-FileEndingType SynExporter::fileEndingType() const
+NewlineType SynExporter::fileEndingType() const
 {
     return mFileEndingType;
 }
 
-void SynExporter::setFileEndingType(const FileEndingType &fileEndingType)
+void SynExporter::setFileEndingType(const NewlineType &fileEndingType)
 {
     mFileEndingType = fileEndingType;
 }
@@ -389,11 +389,11 @@ void SynExporter::setOnFormatToken(const FormatTokenHandler &onFormatToken)
 QString SynExporter::lineBreak()
 {
     switch(mFileEndingType) {
-    case FileEndingType::Linux:
+    case NewlineType::Unix:
         return "\n";
-    case FileEndingType::Windows:
+    case NewlineType::Windows:
         return "\r\n";
-    case FileEndingType::Mac:
+    case NewlineType::MacOld:
         return "\r";
     }
     return "\n";

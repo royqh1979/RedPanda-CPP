@@ -78,8 +78,8 @@ public:
     bool useBackground() const;
     void setUseBackground(bool Value);
 
-    FileEndingType fileEndingType() const;
-    void setFileEndingType(const FileEndingType &fileEndingType);
+    NewlineType fileEndingType() const;
+    void setFileEndingType(const NewlineType &fileEndingType);
 
     /**
      * @brief The clipboard format the exporter creates as native format.
@@ -119,7 +119,7 @@ protected:
     QMap<QChar,QString> mReplaceReserved;
     QString mTitle;
     bool mUseBackground;
-    FileEndingType mFileEndingType;
+    NewlineType mFileEndingType;
 
     QString lineBreak();
 

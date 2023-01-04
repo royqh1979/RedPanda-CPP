@@ -137,9 +137,9 @@ MainWindow::MainWindow(QWidget *parent)
     mFileEncodingStatus = new LabelWithMenu();
     mFileModeStatus = new QLabel();
 
-    mFileInfoStatus->setStyleSheet("margin-left:10px; margin-right:10px");
-    mFileEncodingStatus->setStyleSheet("margin-left:10px; margin-right:10px");
-    mFileModeStatus->setStyleSheet("margin-left:10px; margin-right:10px");
+    mFileInfoStatus->setStyleSheet("margin-left:5px; margin-right:5px");
+    mFileEncodingStatus->setStyleSheet("margin-left:5px; margin-right:5px");
+    mFileModeStatus->setStyleSheet("margin-left:5px; margin-right:5px");
     prepareTabInfosData();
     prepareTabMessagesData();
     ui->statusbar->insertPermanentWidget(0,mFileModeStatus);
@@ -459,12 +459,12 @@ void MainWindow::updateForEncodingInfo(const Editor* editor, bool clear) {
     if (!clear && editor!=nullptr) {
         if (editor->encodingOption() != editor->fileEncoding()) {
             mFileEncodingStatus->setText(
-                        QString("%1(%2)")
+                        QString(" %1(%2) ")
                         .arg(QString(editor->encodingOption())
                              ,QString(editor->fileEncoding())));
         } else {
             mFileEncodingStatus->setText(
-                        QString("%1")
+                        QString(" %1 ")
                         .arg(QString(editor->encodingOption()))
                         );
         }
@@ -1323,12 +1323,10 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
 {
     if (!clear && e!=nullptr) {
         int col = e->charToColumn(e->caretY(),e->caretX());
-        QString msg = tr("Line:%1 Col:%2 Selected:%3 Lines:%4 Length:%5")
+        QString msg = tr("Line: %1 Col: %2 Lines: %3")
                 .arg(e->caretY())
                 .arg(col)
-                .arg(e->selText().length())
-                .arg(e->document()->count())
-                .arg(e->document()->getTextLength());
+                .arg(e->document()->count());
         mFileInfoStatus->setText(msg);
     } else {
         mFileInfoStatus->setText("");
@@ -3348,6 +3346,12 @@ void MainWindow::buildEncodingMenu()
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
     ui->actionEncode_in_UTF_8_BOM->setCheckable(true);
+}
+
+void MainWindow::buildNewlineMenu()
+{
+    mMenuNewline = new QMenu(this);
+    mMenuNewline->setTitle(tr("Newline"));
 }
 
 void MainWindow::maximizeEditor()
@@ -9252,6 +9256,7 @@ void MainWindow::on_actionToggle_Readonly_triggered()
         editor->setReadOnly(!editor->readOnly());
         editor->updateCaption();
         updateEditorActions(editor);
+        updateForStatusbarModeInfo(editor);
     }
 }
 

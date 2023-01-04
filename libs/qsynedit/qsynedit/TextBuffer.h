@@ -98,8 +98,8 @@ public:
     bool getAppendNewLineAtEOF();
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
 
-    FileEndingType getFileEndingType();
-    void setFileEndingType(const FileEndingType &fileEndingType);
+    NewlineType getNewlineType();
+    void setNewlineType(const NewlineType &fileEndingType);
 
     bool empty();
 
@@ -143,7 +143,7 @@ private:
     int mCharWidth;
     //int mCount;
     //int mCapacity;
-    FileEndingType mFileEndingType;
+    NewlineType mNewlineType;
     bool mAppendNewLineAtEOF;
     int mIndexOfLongestLine;
     int mUpdateCount;

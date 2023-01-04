@@ -12,6 +12,8 @@ Red Panda C++ Version 2.8
   - fix: Error When save project units' encoding settings.
   - enhancement: Waiting for syntax parsers to finish before saving files, to prevent data lost caused by syntax parsering crash.
   - fix: Restore main window and cpu info window will set wrong font in the cpu info.
+  - enhancement: Let encoding options in the statusbar more explicit.
+  - fix: Crash when find occurrences in a project that has missing files.
 
 Red Panda C++ Version 2.7
 

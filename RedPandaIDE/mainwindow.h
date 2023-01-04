@@ -275,6 +275,7 @@ private:
     void initToolButtons();
     void buildContextMenus();
     void buildEncodingMenu();
+    void buildNewlineMenu();
     void maximizeEditor();
     QStringList getBinDirsForCurrentEditor();
     QStringList getDefaultCompilerSetBinDirs();
@@ -778,6 +779,7 @@ private:
     LabelWithMenu *mFileEncodingStatus;
     QLabel *mFileModeStatus;
     QMenu *mMenuEncoding;
+    QMenu *mMenuNewline;
     QMenu *mMenuExport;
     QMenu *mMenuEncodingList;
     QMenu *mMenuRecentFiles;
