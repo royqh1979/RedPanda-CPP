@@ -2954,16 +2954,19 @@ void Editor::print()
 
     QPrintDialog dialog(&printer, this);
     dialog.setWindowTitle(tr("Print Document"));
-//    if (editor->selAvail())
-//        dialog.addEnabledOption(QAbstractPrintDialog::PrintSelection);
+    dialog.setOption(QAbstractPrintDialog::PrintCurrentPage,false);
+    dialog.setOption(QAbstractPrintDialog::PrintPageRange,false);
+    if (selAvail())
+        dialog.setOption(QAbstractPrintDialog::PrintSelection);
     if (dialog.exec() != QDialog::Accepted) {
         return;
     }
     QTextDocument doc;
-//    if (editor->selAvail()) {
-//        doc.setPlainText(editor->selText());
-//    } else {
-    QStringList lst = contents();
+    QStringList lst;
+    if (dialog.testOption(QAbstractPrintDialog::PrintSelection))
+        lst = textToLines(selText());
+    else
+        lst = contents();
     for (int i=0;i<lst.length();i++) {
         int columns = 0;
         QString line = lst[i];

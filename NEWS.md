@@ -14,6 +14,7 @@ Red Panda C++ Version 2.8
   - fix: Restore main window and cpu info window will set wrong font in the cpu info.
   - enhancement: Let encoding options in the statusbar more explicit.
   - fix: Crash when find occurrences in a project that has missing files.
+  - enhancement: Print current selection can be used in the print dialog.
 
 Red Panda C++ Version 2.7
 
