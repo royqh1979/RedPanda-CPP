@@ -1529,7 +1529,7 @@ void Settings::Editor::doLoad()
         mDefaultEncoding = value("default_encoding", ENCODING_UTF8).toByteArray();
     mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
     mUndoLimit = intValue("undo_limit",0);
-    mUndoMemoryUsage = intValue("undo_memory_usage", 10);
+    mUndoMemoryUsage = intValue("undo_memory_usage", 0);
     mAutoFormatWhenSaved = boolValue("auto_format_when_saved", false);
     mRemoveTrailingSpacesWhenSaved = boolValue("remove_trailing_spaces_when_saved",false);
     mParseTodos = boolValue("parse_todos",true);

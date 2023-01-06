@@ -2817,6 +2817,7 @@ void Editor::reparse(bool resetParser)
         return;
     if (!mParser->enabled())
         return;
+
     //mParser->setEnabled(pSettings->codeCompletion().enabled());
     ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
     if (!inProject()) {

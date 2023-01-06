@@ -1692,6 +1692,14 @@
         <source>Editors share one code parser</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Max undo memory for each editor:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MB</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnvironmentProgramsWidget</name>
@@ -4739,6 +4747,10 @@
     </message>
     <message>
         <source>Line: %1 Col: %2 Lines: %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Newline</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

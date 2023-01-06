@@ -17,6 +17,7 @@ Red Panda C++ Version 2.8
   - enhancement: Print current selection can be used in the print dialog.
   - enhancement: Print syntax colored content.
   - enhancement: Correctly handle tab in the exported RTF.
+  - change: Disable undo limit by default.
 
 Red Panda C++ Version 2.7
 

@@ -33,26 +33,27 @@ EnvironmentPerformanceWidget::~EnvironmentPerformanceWidget()
 void EnvironmentPerformanceWidget::doLoad()
 {
     ui->chkClearWhenEditorHidden->setChecked(pSettings->codeCompletion().clearWhenEditorHidden());
-#ifdef Q_OS_WIN
-    MEMORYSTATUSEX statex;
+//#ifdef Q_OS_WIN
+//    MEMORYSTATUSEX statex;
 
-    statex.dwLength = sizeof (statex);
+//    statex.dwLength = sizeof (statex);
 
-    GlobalMemoryStatusEx (&statex);
-    if (statex.ullTotalPhys < (long long int)2*1024*1024*1024) {
-        ui->chkClearWhenEditorHidden->setEnabled(false);
-        ui->chkClearWhenEditorHidden->setChecked(true);
-        pSettings->codeCompletion().setClearWhenEditorHidden(true);
-        pSettings->codeCompletion().save();
-    }
-    if (statex.ullTotalPhys < (long long int)1024*1024*1024) {
-        ui->chkEditorsShareParser->setEnabled(false);
-        ui->chkEditorsShareParser->setChecked(true);
-        pSettings->codeCompletion().setShareParser(true);
-        pSettings->codeCompletion().save();
-    }
-#endif
+//    GlobalMemoryStatusEx (&statex);
+//    if (statex.ullTotalPhys < (long long int)2*1024*1024*1024) {
+//        ui->chkClearWhenEditorHidden->setEnabled(false);
+//        ui->chkClearWhenEditorHidden->setChecked(true);
+//        pSettings->codeCompletion().setClearWhenEditorHidden(true);
+//        pSettings->codeCompletion().save();
+//    }
+//    if (statex.ullTotalPhys < (long long int)1024*1024*1024) {
+//        ui->chkEditorsShareParser->setEnabled(false);
+//        ui->chkEditorsShareParser->setChecked(true);
+//        pSettings->codeCompletion().setShareParser(true);
+//        pSettings->codeCompletion().save();
+//    }
+//#endif
     ui->chkEditorsShareParser->setChecked(pSettings->codeCompletion().shareParser());
+    ui->spinMaxUndoMemory->setValue(pSettings->editor().undoMemoryUsage());
 }
 
 void EnvironmentPerformanceWidget::doSave()
@@ -61,4 +62,6 @@ void EnvironmentPerformanceWidget::doSave()
     pSettings->codeCompletion().setShareParser(ui->chkEditorsShareParser->isChecked());
 
     pSettings->codeCompletion().save();
+    pSettings->editor().setUndoMemoryUsage(ui->spinMaxUndoMemory->value());
+    pSettings->editor().save();
 }
