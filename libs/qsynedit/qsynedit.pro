@@ -27,9 +27,10 @@ SOURCES += qsynedit/CodeFolding.cpp \
     qsynedit/SynEdit.cpp \
     qsynedit/TextBuffer.cpp \
     qsynedit/TextPainter.cpp \
-    qsynedit/exporter/synexporter.cpp \
-    qsynedit/exporter/synhtmlexporter.cpp \
-    qsynedit/exporter/synrtfexporter.cpp \
+    qsynedit/exporter/exporter.cpp \
+    qsynedit/exporter/htmlexporter.cpp \
+    qsynedit/exporter/qtsupportedhtmlexporter.cpp \
+    qsynedit/exporter/rtfexporter.cpp \
     qsynedit/syntaxer/asm.cpp \
     qsynedit/syntaxer/cpp.cpp \
     qsynedit/syntaxer/customhighlighterv1.cpp \
@@ -53,9 +54,10 @@ HEADERS += qsynedit/Search.h \
     qsynedit/TextBuffer.h \
     qsynedit/TextPainter.h \
     qsynedit/Types.h \
-    qsynedit/exporter/synexporter.h \
-    qsynedit/exporter/synhtmlexporter.h \
-    qsynedit/exporter/synrtfexporter.h \
+    qsynedit/exporter/exporter.h \
+    qsynedit/exporter/htmlexporter.h \
+    qsynedit/exporter/qtsupportedhtmlexporter.h \
+    qsynedit/exporter/rtfexporter.h \
     qsynedit/syntaxer/asm.h \
     qsynedit/syntaxer/cpp.h \
     qsynedit/syntaxer/customhighlighterv1.h \

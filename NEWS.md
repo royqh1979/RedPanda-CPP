@@ -15,6 +15,8 @@ Red Panda C++ Version 2.8
   - enhancement: Let encoding options in the statusbar more explicit.
   - fix: Crash when find occurrences in a project that has missing files.
   - enhancement: Print current selection can be used in the print dialog.
+  - enhancement: Print syntax colored content.
+  - enhancement: Correctly handle tab in the exported RTF.
 
 Red Panda C++ Version 2.7
 

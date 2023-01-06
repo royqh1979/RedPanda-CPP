@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef SYNEXPORTER_H
-#define SYNEXPORTER_H
+#ifndef EXPORTER_H
+#define EXPORTER_H
 
 #include <QString>
 #include "../SynEdit.h"
@@ -23,11 +23,11 @@
 namespace QSynedit {
 using FormatTokenHandler = std::function<void(PSyntaxer syntaxHighlighter, int line, int column, const QString& token,
     PTokenAttribute& attr)>;
-class SynExporter
+class Exporter
 {
 
 public:
-    explicit SynExporter(const QByteArray charset);
+    explicit Exporter(int tabSize, const QByteArray charset);
 
     /**
      * @brief Clears the output buffer and any internal data that relates to the last
@@ -35,36 +35,29 @@ public:
      */
     virtual void clear();
     /**
-     * @brief Copies the output buffer contents to the clipboard, as the native format
-     *       or as text depending on the ExportAsText property.
-     */
-    void CopyToClipboard();
-    /**
      * @brief Exports everything in the strings parameter to the output buffer.
-     * @param ALines
+     * @param doc
      */
-    void ExportAll(PDocument ALines);
+    void exportAll(const PDocument& doc);
 
     /**
      * @brief Exports the given range of the strings parameter to the output buffer.
-     * @param ALines
-     * @param Start
-     * @param Stop
+     * @param doc
+     * @param start
+     * @param stop
      */
-    void ExportRange(PDocument ALines,
-                     BufferCoord Start, BufferCoord Stop);
+    void exportRange(const PDocument& doc,
+                     BufferCoord start, BufferCoord stop);
     /**
      * @brief Saves the contents of the output buffer to a file.
      * @param AFileName
      */
-    void SaveToFile(const QString& AFileName);
+    void saveToFile(const QString& filename);
     /**
      * @brief Saves the contents of the output buffer to a stream.
-     * @param AStream
+     * @param stream
      */
-    void SaveToStream(QIODevice& AStream);
-    bool exportAsText() const;
-    void setExportAsText(bool Value);
+    void writeToStream(QIODevice& stream);
 
     QFont font() const;
     void setFont(const QFont &font);
@@ -85,7 +78,7 @@ public:
      * @brief The clipboard format the exporter creates as native format.
      * @return
      */
-    virtual QByteArray clipboardFormat();
+    QByteArray clipboardFormat();
 
     QColor foregroundColor() const;
     void setForegroundColor(const QColor &value);
@@ -102,15 +95,16 @@ public:
     FormatTokenHandler onFormatToken() const;
     void setOnFormatToken(const FormatTokenHandler &onFormatToken);
 
-    const QByteArray& buffer() const;
+    QByteArray buffer() const;
+    const QString& text() const;
 
 protected:
+    int mTabSize;
+    QByteArray mClipboardFormat;
     QByteArray mCharset;
     QColor mBackgroundColor;
     QColor mForegroundColor;
-    QByteArray mClipboardFormat;
     QString mDefaultFilter;
-    bool mExportAsText;
     QFont mFont;
     PSyntaxer mSyntaxer;
     QColor mLastBG;
@@ -125,126 +119,119 @@ protected:
 
     /**
      * @brief Adds a string to the output buffer.
-     * @param AText
+     * @param text
      */
-    void AddData(const QString& AText);
+    void addData(const QString& text);
 
     /**
      * @brief Adds a string and a trailing newline to the output buffer.
-     * @param AText
+     * @param text
      */
-    void AddDataNewLine(const QString& AText);
+    void addDataNewLine(const QString& text);
 
     /**
      * @brief Adds a newline to the output buffer.
      */
-    void AddNewLine();
-
-
-     /**
-     * @brief Copies the data under this format to the clipboard. The clipboard has to
-     *   be opened explicitly when more than one format is to be set.
-     */
-    void CopyToClipboardFormat(QByteArray AFormat);
+    void addNewLine();
 
     /**
      * @brief Has to be overridden in descendant classes to add the closing format
      *  strings to the output buffer.  The parameters can be used to track what
      *    changes are made for the next token.
-     * @param BackgroundChanged
-     * @param ForegroundChanged
-     * @param FontStylesChanged
+     * @param backgroundChanged
+     * @param foregroundChanged
+     * @param fontStyles
      */
-    virtual void FormatAttributeDone(bool BackgroundChanged, bool ForegroundChanged,
-                             FontStyles  FontStylesChanged) = 0;
+    virtual void formatAttributeDone(bool backgroundChanged, bool foregroundChanged,
+                             FontStyles  fontStyles) = 0;
 
     /**
      * @brief Has to be overridden in descendant classes to add the opening format
      *   strings to the output buffer.  The parameters can be used to track what
      *   changes have been made in respect to the previous token.
-     * @param BackgroundChanged
-     * @param ForegroundChanged
-     * @param FontStylesChanged
+     * @param backgroundChanged
+     * @param foregroundChanged
+     * @param fontStyles
      */
-    virtual void FormatAttributeInit(bool BackgroundChanged, bool ForegroundChanged,
-                                     FontStyles  FontStylesChanged) = 0;
+    virtual void formatAttributeInit(bool backgroundChanged, bool foregroundChanged,
+                                     FontStyles  fontStyles) = 0;
     /**
      * @brief Has to be overridden in descendant classes to add the closing format
      *   strings to the output buffer after the last token has been written.
      */
-    virtual void FormatAfterLastAttribute() = 0;
+    virtual void formatAfterLastAttribute() = 0;
 
     /**
      * @brief Has to be overridden in descendant classes to add the opening format
      *   strings to the output buffer when the first token is about to be written.
-     * @param BackgroundChanged
-     * @param ForegroundChanged
-     * @param FontStylesChanged
+     * @param backgroundChanged
+     * @param foregroundChanged
+     * @param fontStyles
      */
-    virtual void FormatBeforeFirstAttribute(bool BackgroundChanged, bool ForegroundChanged,
-                                            FontStyles  FontStylesChanged) = 0;
+    virtual void formatBeforeFirstAttribute(bool backgroundChanged, bool foregroundChanged,
+                                            FontStyles  fontStyles) = 0;
     /**
      * @brief Can be overridden in descendant classes to add the formatted text of
      *   the actual token text to the output buffer.
      */
-    virtual void FormatToken(const QString& Token) ;
+    virtual void formatToken(const QString& token) ;
     /**
      * @brief Has to be overridden in descendant classes to add a newline in the output
      *   format to the output buffer.
      */
-    virtual void FormatNewLine() = 0;
+    virtual void formatNewLine() = 0;
     /**
      * @brief Returns the size of the formatted text in the output buffer, to be used
      *   in the format header or footer.
      * @return
      */
-    int GetBufferSize();
+    int getBufferSize() const;
     /**
      * @brief Has to be overridden in descendant classes to return the correct output
      *   format footer.
      * @return
      */
-    virtual QString GetFooter() = 0;
+    virtual QString getFooter() = 0;
     /**
      * @brief Has to be overridden in descendant classes to return the name of the
      *   output format.
      * @return
      */
-    virtual QString GetFormatName() = 0;
+    virtual QString getFormatName() = 0;
     /**
      * @brief Has to be overridden in descendant classes to return the correct output
      *   format header.
      * @return
      */
-    virtual QString GetHeader() = 0;
+    virtual QString getHeader() = 0;
     /**
      * @brief Inserts a data block at the given position into the output buffer.  Is
      *   used to insert the format header after the exporting, since some header
      *     data may be known only after the conversion is done.
-     * @param APos
-     * @param AText
+     * @param pos
+     * @param text
      */
-    void InsertData(int APos, const QString& AText);
+    void insertData(int pos, const QString& text);
     /**
      * @brief Returns a string that has all the invalid chars of the output format
      *   replaced with the entries in the replacement array.
      */
-    QString ReplaceReservedChars(const QString &AToken);
+    QString replaceReservedChars(const QString &token);
     /**
      * @brief Sets the token attribute of the next token to determine the changes
      *   of colors and font styles so the properties of the next token can be
      *     added to the output buffer.
-     * @param Attri
+     * @param attri
      */
-    virtual void SetTokenAttribute(PTokenAttribute Attri);
+    virtual void setTokenAttribute(PTokenAttribute attri);
 
-    QTextCodec *getCodec();
+    QTextCodec *getCodec() const;
 private:
-    QByteArray mBuffer;
+    QString mText;
     bool mFirstAttribute;
     FormatTokenHandler mOnFormatToken;
 
 };
 }
 
-#endif // SYNEXPORTER_H
+#endif // EXPORTER_H

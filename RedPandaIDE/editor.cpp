@@ -31,8 +31,9 @@
 #include <QMimeData>
 #include "qsynedit/syntaxer/cpp.h"
 #include "syntaxermanager.h"
-#include "qsynedit/exporter/synrtfexporter.h"
-#include "qsynedit/exporter/synhtmlexporter.h"
+#include "qsynedit/exporter/rtfexporter.h"
+#include "qsynedit/exporter/htmlexporter.h"
+#include "qsynedit/exporter/qtsupportedhtmlexporter.h"
 #include "qsynedit/Constants.h"
 #include <QGuiApplication>
 #include <QClipboard>
@@ -1482,10 +1483,9 @@ void Editor::copyAsHTML()
 {
     if (!selAvail())
         return;
-    QSynedit::SynHTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::HTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());
-    exporter.setExportAsText(false);
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     exporter.setFont(font());
     QSynedit::PSyntaxer hl = syntaxer();
@@ -1504,7 +1504,7 @@ void Editor::copyAsHTML()
                                         ));
     exporter.setCreateHTMLFragment(true);
 
-    exporter.ExportRange(document(),blockBegin(),blockEnd());
+    exporter.exportRange(document(),blockBegin(),blockEnd());
 
     //clipboard takes the owner ship
     QMimeData * mimeData = new QMimeData;
@@ -2956,43 +2956,52 @@ void Editor::print()
     dialog.setWindowTitle(tr("Print Document"));
     dialog.setOption(QAbstractPrintDialog::PrintCurrentPage,false);
     dialog.setOption(QAbstractPrintDialog::PrintPageRange,false);
+
     if (selAvail())
-        dialog.setOption(QAbstractPrintDialog::PrintSelection);
+        dialog.setOption(QAbstractPrintDialog::PrintSelection,true);
+
     if (dialog.exec() != QDialog::Accepted) {
         return;
     }
-    QTextDocument doc;
-    QStringList lst;
-    if (dialog.testOption(QAbstractPrintDialog::PrintSelection))
-        lst = textToLines(selText());
-    else
-        lst = contents();
-    for (int i=0;i<lst.length();i++) {
-        int columns = 0;
-        QString line = lst[i];
-        QString newLine;
-        for (QChar ch:line) {
-            if (ch=='\t') {
-                int charCol = tabWidth() - (columns % tabWidth());
-                newLine += QString(charCol,' ');
-                columns += charCol;
-            } else {
-                newLine+=ch;
-                columns+=charColumns(ch);
-            }
-        }
-        lst[i]=newLine;
+
+    QSynedit::QtSupportedHtmlExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+
+    exporter.setTitle(QFileInfo(mFilename).fileName());
+    exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
+
+    exporter.setFont(font());
+    QSynedit::PSyntaxer hl = syntaxer();
+    if (!pSettings->editor().copyHTMLUseEditorColor()) {
+        hl = syntaxerManager.copy(syntaxer());
+        syntaxerManager.applyColorScheme(hl,pSettings->editor().copyHTMLColorScheme());
     }
+    exporter.setSyntaxer(hl);
+    exporter.setOnFormatToken(std::bind(&Editor::onExportedFormatToken,
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2,
+                                        std::placeholders::_3,
+                                        std::placeholders::_4,
+                                        std::placeholders::_5
+                                        ));
+
+    if (dialog.testOption(QAbstractPrintDialog::PrintSelection))
+        exporter.exportRange(document(),blockBegin(),blockEnd());
+    else
+        exporter.exportAll(document());
+
+    QString html = exporter.text();
+    QTextDocument doc;
+
     doc.setDefaultFont(font());
-    doc.setPlainText(lst.join(lineBreak()));
+    doc.setHtml(html);
     doc.print(&printer);
 }
 
 void Editor::exportAsRTF(const QString &rtfFilename)
 {
-    QSynedit::SynRTFExporter exporter(pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::RTFExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(rtfFilename));
-    exporter.setExportAsText(true);
     exporter.setUseBackground(pSettings->editor().copyRTFUseBackground());
     exporter.setFont(font());
     QSynedit::PSyntaxer hl = syntaxer();
@@ -3009,15 +3018,14 @@ void Editor::exportAsRTF(const QString &rtfFilename)
                                         std::placeholders::_4,
                                         std::placeholders::_5
                                         ));
-    exporter.ExportAll(document());
-    exporter.SaveToFile(rtfFilename);
+    exporter.exportAll(document());
+    exporter.saveToFile(rtfFilename);
 }
 
 void Editor::exportAsHTML(const QString &htmlFilename)
 {
-    QSynedit::SynHTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::HTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(htmlFilename));
-    exporter.setExportAsText(false);
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     exporter.setFont(font());
     QSynedit::PSyntaxer hl = syntaxer();
@@ -3034,8 +3042,8 @@ void Editor::exportAsHTML(const QString &htmlFilename)
                                         std::placeholders::_4,
                                         std::placeholders::_5
                                         ));
-    exporter.ExportAll(document());
-    exporter.SaveToFile(htmlFilename);
+    exporter.exportAll(document());
+    exporter.saveToFile(htmlFilename);
 }
 
 void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeCompletionType type)

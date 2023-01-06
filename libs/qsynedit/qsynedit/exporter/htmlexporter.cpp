@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "synhtmlexporter.h"
+#include "htmlexporter.h"
 #include "../MiscProcs.h"
 #include <functional>
 
 namespace QSynedit {
 
-SynHTMLExporter::SynHTMLExporter(int tabSize,const QByteArray charset):
-    SynExporter(charset)
+HTMLExporter::HTMLExporter(int tabSize,const QByteArray charset):
+    Exporter(tabSize,charset)
 {
     mClipboardFormat = "text/html";
     mDefaultFilter = "HTML Documents (*.htm;*.html)|*.htm;*.html";
@@ -35,139 +35,139 @@ SynHTMLExporter::SynHTMLExporter(int tabSize,const QByteArray charset):
     mCreateHTMLFragment = false;
 }
 
-bool SynHTMLExporter::createHTMLFragment() const
+bool HTMLExporter::createHTMLFragment() const
 {
     return mCreateHTMLFragment;
 }
 
-void SynHTMLExporter::setCreateHTMLFragment(bool createHTMLFragment)
+void HTMLExporter::setCreateHTMLFragment(bool createHTMLFragment)
 {
     mCreateHTMLFragment = createHTMLFragment;
 }
 
-QString SynHTMLExporter::AttriToCSS(PTokenAttribute Attri, const QString &UniqueAttriName)
+QString HTMLExporter::attriToCSS(PTokenAttribute attri, const QString &uniqueAttriName)
 {
-    QString StyleName = MakeValidName(UniqueAttriName);
+    QString styleName = makeValidName(uniqueAttriName);
 
-    QString Result = "." + StyleName + " { ";
-    if (mUseBackground && Attri->background().isValid())
-        Result += "background-color: " + ColorToHTML(Attri->background()) + "; ";
-    if (Attri->foreground().isValid())
-        Result += "color: " + ColorToHTML(Attri->foreground()) + "; ";
+    QString result = "." + styleName + " { ";
+    if (mUseBackground && attri->background().isValid())
+        result += "background-color: " + colorToHTML(attri->background()) + "; ";
+    if (attri->foreground().isValid())
+        result += "color: " + colorToHTML(attri->foreground()) + "; ";
 
-    if (Attri->styles().testFlag(FontStyle::fsBold))
-        Result += "font-weight: bold; ";
-    if (Attri->styles().testFlag(FontStyle::fsItalic))
-        Result += "font-style: italic; ";
-    if (Attri->styles().testFlag(FontStyle::fsUnderline))
-        Result += "text-decoration: underline; ";
-    if (Attri->styles().testFlag(FontStyle::fsStrikeOut))
-        Result += "text-decoration: line-through; ";
-    Result += "}";
-    return Result;
-}
-
-bool SynHTMLExporter::AttriToCSSCallback(PSyntaxer , PTokenAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
-{
-    QString& styles = *static_cast<QString *>(params[0]);
-    styles.append(AttriToCSS(Attri,UniqueAttriName) + lineBreak());
-    return true;
-}
-
-QString SynHTMLExporter::ColorToHTML(const QColor &AColor)
-{
-    return AColor.name();
-}
-
-QString SynHTMLExporter::GetStyleName(PSyntaxer Highlighter, PTokenAttribute Attri)
-{
-    QString result;
-    enumTokenAttributes(Highlighter,false,
-                          std::bind(
-                              &SynHTMLExporter::StyleNameCallback,this,
-                              std::placeholders::_1, std::placeholders::_2,
-                              std::placeholders::_3, std::placeholders::_4),
-                          {&Attri,&result});
+    if (attri->styles().testFlag(FontStyle::fsBold))
+        result += "font-weight: bold; ";
+    if (attri->styles().testFlag(FontStyle::fsItalic))
+        result += "font-style: italic; ";
+    if (attri->styles().testFlag(FontStyle::fsUnderline))
+        result += "text-decoration: underline; ";
+    if (attri->styles().testFlag(FontStyle::fsStrikeOut))
+        result += "text-decoration: line-through; ";
+    result += "}";
     return result;
 }
 
-QString SynHTMLExporter::MakeValidName(const QString &Name)
+bool HTMLExporter::attriToCSSCallback(PSyntaxer , PTokenAttribute attri, const QString& uniqueAttriName, QList<void *> params)
 {
-    QString Result;
-    for (QChar ch:Name) {
-        ch = ch.toLower();
-        if (ch == '.' || ch =='_')
-            Result += '-';
-        else if ((ch >='a' && ch <= 'z') || (ch>='0' && ch<='9') || (ch == '-'))
-            Result += ch;
-    }
-    return Result;
+    QString& styles = *static_cast<QString *>(params[0]);
+    styles.append(attriToCSS(attri,uniqueAttriName) + lineBreak());
+    return true;
 }
 
-bool SynHTMLExporter::StyleNameCallback(PSyntaxer /*Highlighter*/, PTokenAttribute Attri, const QString& UniqueAttriName, QList<void *> params)
+QString HTMLExporter::colorToHTML(const QColor &color) const
 {
-    PTokenAttribute& AttriToFind = *static_cast<PTokenAttribute*>(params[0]);
-    QString& StyleName = *static_cast<QString *>(params[1]);
+    return color.name();
+}
 
-    if (Attri == AttriToFind) {
-        StyleName.clear();
-        StyleName.append(MakeValidName(UniqueAttriName));
+QString HTMLExporter::getStyleName(PSyntaxer syntaxer, PTokenAttribute attri)
+{
+    QString result;
+    enumTokenAttributes(syntaxer,false,
+                          std::bind(
+                              &HTMLExporter::styleNameCallback,this,
+                              std::placeholders::_1, std::placeholders::_2,
+                              std::placeholders::_3, std::placeholders::_4),
+                          {&attri,&result});
+    return result;
+}
+
+QString HTMLExporter::makeValidName(const QString &name)
+{
+    QString result;
+    for (QChar ch:name) {
+        ch = ch.toLower();
+        if (ch == '.' || ch =='_')
+            result += '-';
+        else if ((ch >='a' && ch <= 'z') || (ch>='0' && ch<='9') || (ch == '-'))
+            result += ch;
+    }
+    return result;
+}
+
+bool HTMLExporter::styleNameCallback(PSyntaxer /*syntaxer*/, PTokenAttribute attri, const QString& uniqueAttriName, QList<void *> params)
+{
+    PTokenAttribute& attriToFind = *static_cast<PTokenAttribute*>(params[0]);
+    QString& styleName = *static_cast<QString *>(params[1]);
+
+    if (attri == attriToFind) {
+        styleName.clear();
+        styleName.append(makeValidName(uniqueAttriName));
         return false;
     }
     return true;
 }
 
-void SynHTMLExporter::FormatAttributeDone(bool , bool , FontStyles )
+void HTMLExporter::formatAttributeDone(bool , bool , FontStyles )
 {
-    AddData("</span>");
+    addData("</span>");
 }
 
-void SynHTMLExporter::FormatAttributeInit(bool , bool , FontStyles )
+void HTMLExporter::formatAttributeInit(bool , bool , FontStyles )
 {
-    QString StyleName = GetStyleName(mSyntaxer, mLastAttri);
-    AddData(QString("<span class=\"%1\">").arg(StyleName));
+    QString styleName = getStyleName(mSyntaxer, mLastAttri);
+    addData(QString("<span class=\"%1\">").arg(styleName));
 }
 
-void SynHTMLExporter::FormatAfterLastAttribute()
+void HTMLExporter::formatAfterLastAttribute()
 {
-    AddData("</span>");
+    addData("</span>");
 }
 
-void SynHTMLExporter::FormatBeforeFirstAttribute(bool, bool, FontStyles)
+void HTMLExporter::formatBeforeFirstAttribute(bool, bool, FontStyles)
 {
-    QString StyleName = GetStyleName(mSyntaxer, mLastAttri);
-    AddData(QString("<span class=\"%1\">").arg(StyleName));
+    QString styleName = getStyleName(mSyntaxer, mLastAttri);
+    addData(QString("<span class=\"%1\">").arg(styleName));
 }
 
-void SynHTMLExporter::FormatNewLine()
+void HTMLExporter::formatNewLine()
 {
-    AddData("<br />");
-    AddNewLine();
+    addData("<br />");
+    addNewLine();
 }
 
-QString SynHTMLExporter::GetFooter()
+QString HTMLExporter::getFooter()
 {
-    QString Result = "";
-    Result = "</span>" + lineBreak();
+    QString result = "";
+    result = "</div>" + lineBreak();
     if (mCreateHTMLFragment)
-        Result += "<!--EndFragment-->";
-    Result += "</body>"+lineBreak()+ "</html>";
-    return Result;
+        result += "<!--EndFragment-->";
+    result += "</body>"+lineBreak()+ "</html>";
+    return result;
 }
 
-QString SynHTMLExporter::GetFormatName()
+QString HTMLExporter::getFormatName()
 {
     return "HTML";
 }
 
-QString SynHTMLExporter::GetHeader()
+QString HTMLExporter::getHeader()
 {
     using namespace std::placeholders;
-    QString Styles;
+    QString styles;
     enumTokenAttributes(mSyntaxer, true,
-                          std::bind(&SynHTMLExporter::AttriToCSSCallback,
+                          std::bind(&HTMLExporter::attriToCSSCallback,
                                     this, _1, _2, _3, _4),
-                          {&Styles});
+                          {&styles});
 
     QString HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
             "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
@@ -184,12 +184,12 @@ QString SynHTMLExporter::GetHeader()
             "</style>" + lineBreak() +
             "</head>" + lineBreak() +
             "<body>" + lineBreak();
-    QString Header = HTMLAsTextHeader
+    QString header = HTMLAsTextHeader
             .arg(mTitle)
             .arg(QString(mCharset))
-            .arg(ColorToHTML(mForegroundColor))
-            .arg(ColorToHTML(mBackgroundColor))
-            .arg(Styles);
+            .arg(colorToHTML(mForegroundColor))
+            .arg(colorToHTML(mBackgroundColor))
+            .arg(styles);
     if (mCreateHTMLFragment) {
         HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
@@ -205,26 +205,26 @@ QString SynHTMLExporter::GetHeader()
                     "</style>" + lineBreak() +
                     "</head>" + lineBreak() +
                     "<body>" + lineBreak();
-        Header = HTMLAsTextHeader
+        header = HTMLAsTextHeader
                     .arg(QString(mCharset))
-                    .arg(ColorToHTML(mForegroundColor))
-                    .arg(ColorToHTML(mBackgroundColor))
-                    .arg(Styles);
+                    .arg(colorToHTML(mForegroundColor))
+                    .arg(colorToHTML(mBackgroundColor))
+                    .arg(styles);
     }
-    QString Result = Header;
+    QString result = header;
     if (mCreateHTMLFragment) {
-        Result += "<!--StartFragment-->";
+        result += "<!--StartFragment-->";
     }
-    Result += QString("<span style=\"font: %1pt %2;\">")
+    result += QString("<div style=\"font: %1pt %2;\">")
             .arg(pixelToPoint(mFont.pixelSize()))
             .arg(mFont.family());
 
-    return Result;
+    return result;
 }
 
-void SynHTMLExporter::SetTokenAttribute(PTokenAttribute Attri)
+void HTMLExporter::setTokenAttribute(PTokenAttribute attri)
 {
-    mLastAttri = Attri;
-    SynExporter::SetTokenAttribute(Attri);
+    mLastAttri = attri;
+    Exporter::setTokenAttribute(attri);
 }
 }
