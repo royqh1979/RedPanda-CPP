@@ -19,6 +19,7 @@ Red Panda C++ Version 2.8
   - enhancement: Correctly handle tab in the exported RTF.
   - change: Disable undo limit by default.
   - fix: "Goto declaration" / "Goto definition" / "Find occurences" not correctly disabled for non-c/c++ files.
+  - fix: Can't save new file using filename with custom suffix.
 
 Red Panda C++ Version 2.7
 

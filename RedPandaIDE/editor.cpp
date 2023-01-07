@@ -312,32 +312,55 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         QFileDialog dialog(this,tr("Save As"),extractFilePath(mFilename),
                            pSystemConsts->defaultFileFilters().join(";;"));
         dialog.selectNameFilter(selectedFileFilter);
-        dialog.setDefaultSuffix(defaultExt);
+        //dialog.setDefaultSuffix(defaultExt);
         dialog.selectFile(mFilename);
         dialog.setFileMode(QFileDialog::AnyFile);
         dialog.setAcceptMode(QFileDialog::AcceptSave);
-        connect(&dialog, &QFileDialog::filterSelected,
-                [&dialog](const QString &filter){
-            int pos = filter.indexOf("*.");
-            if (pos>=0) {
-                QString suffix;
-                pos+=2;
-                while (pos<filter.length()) {
-                    if (filter[pos] == ';' || filter[pos] ==' ' || filter[pos] == ')')
-                        break;
-                    suffix+=filter[pos];
-                    pos++;
-                }
-                dialog.setDefaultSuffix(suffix);
-            } else {
-                dialog.setDefaultSuffix("");
-            }
-        });
+//        connect(&dialog, &QFileDialog::filterSelected,
+//                [&dialog](const QString &filter){
+//            if (filter.indexOf("*.*")) {
+//                dialog.setDefaultSuffix("");
+//                qDebug()<<"lllll";
+//                return;
+//            }
+//            int pos = filter.indexOf("*.");
+//            if (pos>=0) {
+//                QString suffix;
+//                pos+=2;
+//                while (pos<filter.length()) {
+//                    if (filter[pos] == ';' || filter[pos] ==' ' || filter[pos] == ')')
+//                        break;
+//                    suffix+=filter[pos];
+//                    pos++;
+//                }
+//                //dialog.setDefaultSuffix(suffix);
+//            } else {
+//                dialog.setDefaultSuffix("");
+//            }
+//        });
 
         if (dialog.exec()!=QFileDialog::Accepted) {
             return false;
         }
         newName = dialog.selectedFiles()[0];
+        QFileInfo fileInfo(newName);
+        if (fileInfo.suffix().isEmpty()) {
+            QString filter = dialog.selectedNameFilter();
+            if (!filter.contains("*.*")) {
+                int pos = filter.indexOf("*.");
+                if (pos>=0) {
+                    QString suffix;
+                    pos+=2;
+                    while (pos<filter.length()) {
+                        if (filter[pos] == ';' || filter[pos] ==' ' || filter[pos] == ')')
+                                    break;
+                        suffix+=filter[pos];
+                        pos++;
+                    }
+                    newName += "." + suffix;
+                }
+            }
+        }
         QDir::setCurrent(extractFileDir(newName));
     }
 

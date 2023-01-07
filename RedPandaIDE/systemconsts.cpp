@@ -26,7 +26,11 @@ SystemConsts* pSystemConsts;
 
 SystemConsts::SystemConsts(): mDefaultFileFilters()
 {
+#ifdef Q_OS_WIN
+    addDefaultFileFilter(QObject::tr("All files"),"*.*");
+#else
     addDefaultFileFilter(QObject::tr("All files"),"*");
+#endif
     addDefaultFileFilter(QObject::tr("Dev C++ Project files"),"*.dev");
     addDefaultFileFilter(QObject::tr("C files"),"*.c");
     addDefaultFileFilter(QObject::tr("C++ files"),"*.cpp *.cc *.cxx");
