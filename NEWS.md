@@ -18,6 +18,7 @@ Red Panda C++ Version 2.8
   - enhancement: Print syntax colored content.
   - enhancement: Correctly handle tab in the exported RTF.
   - change: Disable undo limit by default.
+  - fix: "Goto declaration" / "Goto definition" / "Find occurences" not correctly disabled for non-c/c++ files.
 
 Red Panda C++ Version 2.7
 

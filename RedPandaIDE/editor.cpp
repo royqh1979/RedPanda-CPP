@@ -4131,15 +4131,8 @@ void Editor::gotoDeclaration(const QSynedit::BufferCoord &pos)
                 filename(),
                 expression,
                 pos.line);
-//    QString phrase = getWordAtPosition(this,pos,pBeginPos,pEndPos, WordPurpose::wpInformation);
-//    if (phrase.isEmpty())
-//        return;
-
-//    PStatement statement = mParser->findStatementOf(
-//                mFilename,phrase,pos.Line);
 
     if (!statement) {
-//        pMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
         return;
     }
     QString filename;
@@ -4159,6 +4152,8 @@ void Editor::gotoDeclaration(const QSynedit::BufferCoord &pos)
 
 void Editor::gotoDefinition(const QSynedit::BufferCoord &pos)
 {
+    if (!parser())
+        return;
     QStringList expression = getExpressionAtPosition(pos);
 
     // Find it's definition
@@ -4587,7 +4582,7 @@ void Editor::checkSyntaxInBack()
     pMainWindow->checkSyntaxInBack(this);
 }
 
-const PCppParser &Editor::parser()
+const PCppParser &Editor::parser() const
 {
     return mParser;
 }

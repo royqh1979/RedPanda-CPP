@@ -576,6 +576,10 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGo_to_Line->setEnabled(false);
         ui->actionLocate_in_Files_View->setEnabled(false);
         ui->actionToggle_Readonly->setEnabled(false);
+
+        ui->actionGoto_Declaration->setEnabled(false);
+        ui->actionGoto_Definition->setEnabled(false);
+        ui->actionFind_references->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -632,6 +636,11 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGo_to_Line->setEnabled(true);
         ui->actionLocate_in_Files_View->setEnabled(!e->isNew());
         ui->actionToggle_Readonly->setEnabled(!e->modified());
+
+        //these actions needs parser
+        ui->actionGoto_Declaration->setEnabled(e->parser()!=nullptr);
+        ui->actionGoto_Definition->setEnabled(e->parser()!=nullptr);
+        ui->actionFind_references->setEnabled(e->parser()!=nullptr);
     }
 
     updateCompileActions(e);
@@ -4785,13 +4794,6 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionGo_to_Line);
         menu.addSeparator();
         menu.addAction(ui->actionFile_Properties);
-
-        //these actions needs parser
-        if (editor->parser() && editor->parser()->enabled()) {
-            ui->actionGoto_Declaration->setEnabled(!editor->parser()->parsing());
-            ui->actionGoto_Definition->setEnabled(!editor->parser()->parsing());
-            ui->actionFind_references->setEnabled(!editor->parser()->parsing());
-        }
     } else {
         //mouse on gutter
 

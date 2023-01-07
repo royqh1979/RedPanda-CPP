@@ -229,7 +229,7 @@ public:
             const QSynedit::BufferCoord& pos);
     void resetBookmarks();
 
-    const PCppParser &parser();
+    const PCppParser &parser() const;
 
     void tab() override;
 signals:
