@@ -512,8 +512,8 @@ PStatement CppScopes::findScopeAtLine(int line)
         int mid = (start+end)/2;
         PCppScope midScope = mScopes[mid];
         if (midScope->startLine == line) {
-            while (mid-1>=0 && (mScopes[mid-1]->startLine == line)) {
-                mid--;
+            while (mid<end && (mScopes[mid+1]->startLine == line)) {
+                mid++;
             }
             return mScopes[mid]->statement;
         } else if (midScope->startLine > line) {
