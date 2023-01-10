@@ -20,6 +20,8 @@ Red Panda C++ Version 2.8
   - change: Disable undo limit by default.
   - fix: "Goto declaration" / "Goto definition" / "Find occurences" not correctly disabled for non-c/c++ files.
   - fix: Can't save new file using filename with custom suffix.
+  - fix: alt+shift+left/right can't select
+  - fix: Input any content will exit column mode.
 
 Red Panda C++ Version 2.7
 

@@ -4364,6 +4364,8 @@ void SynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             internalSetCaretXY(item->changeStartPos());
+            setBlockBegin(caretXY());
+            ensureCursorPosVisible();
             break;
         }
         case ChangeReason::MoveSelectionUp:
@@ -4407,6 +4409,7 @@ void SynEdit::doUndoItem()
                         item->changeText(),
                         item->changeSelMode(),
                         item->changeNumber());
+            setBlockBegin(caretXY());
             ensureCursorPosVisible();
             break;
         }
@@ -5487,19 +5490,34 @@ void SynEdit::doInsertText(const BufferCoord& pos,
     case SelectionMode::Normal:
         insertedLines = doInsertTextByNormalMode(pos,text, newPos);
         doLinesInserted(pos.line+1, insertedLines);
+        internalSetCaretXY(newPos);
+        setBlockBegin(newPos);
+        ensureCursorPosVisible();
         break;
     case SelectionMode::Column:
-        insertedLines = doInsertTextByColumnMode(pos,text, newPos, startLine,endLine);
+        insertedLines = doInsertTextByColumnMode(pos,text, startLine,endLine);
         doLinesInserted(endLine-insertedLines+1,insertedLines);
+        if (!text.isEmpty()) {
+            int textLen = text.back().length();
+            BufferCoord bb=blockBegin();
+            BufferCoord be=blockEnd();
+            bb.ch+=textLen;
+            be.ch+=textLen;
+            internalSetCaretXY(bb);
+            setBlockBegin(bb);
+            setBlockEnd(be);
+            ensureCursorPosVisible();
+        }
         break;
     case SelectionMode::Line:
         insertedLines = doInsertTextByLineMode(pos,text, newPos);
         doLinesInserted(pos.line, insertedLines);
+        internalSetCaretXY(newPos);
+        setBlockBegin(newPos);
+        ensureCursorPosVisible();
         break;
     }
-    internalSetCaretXY(newPos);
-    setBlockBegin(newPos);
-    ensureCursorPosVisible();
+
 }
 
 int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos)
@@ -5594,7 +5612,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     return result;
 }
 
-int SynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos, int startLine, int endLine)
+int SynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, int startLine, int endLine)
 {
     QString str;
     QString tempString;
@@ -5650,12 +5668,6 @@ int SynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList&
             i++;
         }
         line++;
-    }
-    newPos=pos;
-    if (!text[0].isEmpty()) {
-        newPos.ch+=text[0].length();
-//        mCaretX+=firstLineLen;
-//        mStatusChanges.setFlag(SynStatusChange::scCaretX);
     }
     if (!mUndoing) {
         mUndoList->endBlock();
@@ -6761,30 +6773,30 @@ BufferCoord SynEdit::blockEnd() const
         return mBlockEnd;
 }
 
-void SynEdit::setBlockEnd(BufferCoord Value)
+void SynEdit::setBlockEnd(BufferCoord value)
 {
     //setActiveSelectionMode(mSelectionMode);
-    Value.line = minMax(Value.line, 1, mDocument->count());
+    value.line = minMax(value.line, 1, mDocument->count());
     if (mActiveSelectionMode == SelectionMode::Normal) {
-      if (Value.line >= 1 && Value.line <= mDocument->count())
-          Value.ch = std::min(Value.ch, getDisplayStringAtLine(Value.line).length() + 1);
+      if (value.line >= 1 && value.line <= mDocument->count())
+          value.ch = std::min(value.ch, getDisplayStringAtLine(value.line).length() + 1);
       else
-          Value.ch = 1;
+          value.ch = 1;
     } else {
         int maxLen = mDocument->lengthOfLongestLine();
         if (syntaxer())
             maxLen = maxLen+stringColumns(syntaxer()->foldString(),maxLen);
-        Value.ch = minMax(Value.ch, 1, maxLen+1);
+        value.ch = minMax(value.ch, 1, maxLen+1);
     }
-    if (Value.ch != mBlockEnd.ch || Value.line != mBlockEnd.line) {
-        if (mActiveSelectionMode == SelectionMode::Column && Value.ch != mBlockEnd.ch) {
+    if (value.ch != mBlockEnd.ch || value.line != mBlockEnd.line) {
+        if (mActiveSelectionMode == SelectionMode::Column && value.ch != mBlockEnd.ch) {
             invalidateLines(
-                        std::min(mBlockBegin.line, std::min(mBlockEnd.line, Value.line)),
-                        std::max(mBlockBegin.line, std::max(mBlockEnd.line, Value.line)));
-            mBlockEnd = Value;
+                        std::min(mBlockBegin.line, std::min(mBlockEnd.line, value.line)),
+                        std::max(mBlockBegin.line, std::max(mBlockEnd.line, value.line)));
+            mBlockEnd = value;
         } else {
             int nLine = mBlockEnd.line;
-            mBlockEnd = Value;
+            mBlockEnd = value;
             if (mActiveSelectionMode != SelectionMode::Column || mBlockBegin.ch != mBlockEnd.ch)
                 invalidateLines(nLine, mBlockEnd.line);
         }

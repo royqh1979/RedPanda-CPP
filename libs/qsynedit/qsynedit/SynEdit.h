@@ -550,7 +550,7 @@ private:
     void doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode);
     void doInsertText(const BufferCoord& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
     int doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
-    int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos, int startLine, int endLine);
+    int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, int startLine, int endLine);
     int doInsertTextByLineMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
 
     void doTrimTrailingSpaces();

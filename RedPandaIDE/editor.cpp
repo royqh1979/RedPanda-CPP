@@ -57,13 +57,16 @@ SaveException::SaveException(const QString& reason) {
     mReason = reason;
     mReasonBuffer = mReason.toLocal8Bit();
 }
+
 SaveException::SaveException(const QString&& reason) {
     mReason = reason;
     mReasonBuffer = mReason.toLocal8Bit();
 }
+
 const QString& SaveException::reason() const  noexcept{
     return mReason;
 }
+
 const char* SaveException::what() const noexcept {
     return mReasonBuffer;
 }

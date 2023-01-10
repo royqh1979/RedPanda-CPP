@@ -191,10 +191,12 @@ void EditKeyStrokes::resetDefaults()
     add(EditCommand::ScrollDown, Qt::Key_Down, Qt::ControlModifier);
     add(EditCommand::Left, Qt::Key_Left, Qt::NoModifier);
     add(EditCommand::SelLeft, Qt::Key_Left, Qt::ShiftModifier);
+    add(EditCommand::SelLeft, Qt::Key_Left, Qt::KeyboardModifiers(Qt::ShiftModifier | Qt::AltModifier));
     add(EditCommand::WordLeft, Qt::Key_Left, Qt::ControlModifier);
     add(EditCommand::SelWordLeft, Qt::Key_Left, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
     add(EditCommand::Right, Qt::Key_Right, Qt::NoModifier);
     add(EditCommand::SelRight, Qt::Key_Right, Qt::ShiftModifier);
+    add(EditCommand::SelRight, Qt::Key_Right, Qt::KeyboardModifiers(Qt::ShiftModifier | Qt::AltModifier));
     add(EditCommand::WordRight, Qt::Key_Right, Qt::ControlModifier);
     add(EditCommand::SelWordRight, Qt::Key_Right, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
 
