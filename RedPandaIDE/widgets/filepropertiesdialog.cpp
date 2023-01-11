@@ -51,7 +51,7 @@ void FilePropertiesDialog::calcFile(Editor *editor,
     includeLines = 0;
     // iterate through all lines of file
     for (int i=0;i<editor->document()->count();i++) {
-        QString line = editor->document()->getString(i);
+        QString line = editor->document()->getLine(i);
         int j=0;
         while (j<line.length() && (line[j]=='\t' || line[j]==' '))
             j++;

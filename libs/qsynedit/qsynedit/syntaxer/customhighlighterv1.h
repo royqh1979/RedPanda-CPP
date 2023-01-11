@@ -49,7 +49,7 @@ protected:
     QString mLanguageName;
     QSet<QString> mSuffixes;
 
-    SyntaxerState mRange;
+    SyntaxState mRange;
 //    SynRangeState mSpaceRange;
     QString mLine;
     int mLineSize;

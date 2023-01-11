@@ -664,15 +664,15 @@ bool MakefileSyntaxer::isLastLineStringNotFinished(int /*state*/) const
     return false;
 }
 
-SyntaxerState MakefileSyntaxer::getState() const
+SyntaxState MakefileSyntaxer::getState() const
 {
-    SyntaxerState state;
+    SyntaxState state;
     state.state = (int)mState;
     state.hasTrailingSpaces = mHasTrailingSpaces;
     return state;
 }
 
-void MakefileSyntaxer::setState(const SyntaxerState & rangeState)
+void MakefileSyntaxer::setState(const SyntaxState & rangeState)
 {
     mState = (RangeState)rangeState.state;
     mStates.clear();

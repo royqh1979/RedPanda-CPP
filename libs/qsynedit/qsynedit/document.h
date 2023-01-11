@@ -31,12 +31,13 @@
 namespace QSynedit {
 
 struct DocumentLine {
-  QString fString;
-  SyntaxerState fRange;
-  int fColumns;  //
-
+  QString lineText;
+  SyntaxState syntaxState;
+  int columns;  //
 public:
   explicit DocumentLine();
+  DocumentLine(const DocumentLine&)=delete;
+  DocumentLine& operator=(const DocumentLine&)=delete;
 };
 
 typedef std::shared_ptr<DocumentLine> PDocumentLine;
@@ -54,39 +55,41 @@ class Document : public QObject
     Q_OBJECT
 public:
     explicit Document(const QFont& font, const QFont& nonAsciiFont, QObject* parent=nullptr);
+    Document(const Document&)=delete;
+    Document& operator=(const Document&)=delete;
 
-    int parenthesisLevels(int index);
-    int bracketLevels(int index);
-    int braceLevels(int index);
+    int parenthesisLevel(int index);
+    int bracketLevel(int index);
+    int braceLevel(int index);
     int lineColumns(int index);
     int blockLevel(int index);
     int blockStarted(int index);
     int blockEnded(int index);
     int lengthOfLongestLine();
     QString lineBreak() const;
-    SyntaxerState ranges(int index);
-    void setRange(int index, const SyntaxerState& range);
-    QString getString(int index);
+    SyntaxState getSyntaxState(int index);
+    void setSyntaxState(int index, const SyntaxState& range);
+    QString getLine(int index);
     int count();
     QString text();
     void setText(const QString& text);
     void setContents(const QStringList& text);
     QStringList contents();
 
-    void putString(int index, const QString& s, bool notify=true);
+    void putLine(int index, const QString& s, bool notify=true);
 
     void beginUpdate();
     void endUpdate();
 
-    int add(const QString& s);
-    void addStrings(const QStringList& strings);
+    int addLine(const QString& s);
+    void addLines(const QStringList& strings);
 
     int getTextLength();
     void clear();
     void deleteAt(int index);
     void deleteLines(int index, int numLines);
     void exchange(int index1, int index2);
-    void insert(int index, const QString& s);
+    void insertLine(int index, const QString& s);
     void insertLines(int index, int numLines);
 
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);

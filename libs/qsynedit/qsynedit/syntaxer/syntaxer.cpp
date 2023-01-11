@@ -248,7 +248,7 @@ TokenAttribute::TokenAttribute(const QString &name, TokenType tokenType):
 
 }
 
-bool SyntaxerState::operator==(const SyntaxerState &s2)
+bool SyntaxState::operator==(const SyntaxState &s2)
 {
     // indents contains the information of brace/parenthesis/brackets embedded levels
     return (state == s2.state)
@@ -256,14 +256,14 @@ bool SyntaxerState::operator==(const SyntaxerState &s2)
             ;
 }
 
-int SyntaxerState::getLastIndent()
+int SyntaxState::getLastIndent()
 {
     if (indents.isEmpty())
         return -1;
     return indents.back();
 }
 
-SyntaxerState::SyntaxerState():
+SyntaxState::SyntaxState():
     state(0),
     blockLevel(0),
     blockStarted(0),

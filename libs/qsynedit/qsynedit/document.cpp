@@ -55,29 +55,29 @@ static void ListIndexOutOfBounds(int index) {
 
 
 
-int Document::parenthesisLevels(int index)
+int Document::parenthesisLevel(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        return mLines[index]->fRange.parenthesisLevel;
+        return mLines[index]->syntaxState.parenthesisLevel;
     } else
         return 0;
 }
 
-int Document::bracketLevels(int index)
+int Document::bracketLevel(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        return mLines[index]->fRange.bracketLevel;
+        return mLines[index]->syntaxState.bracketLevel;
     } else
         return 0;
 }
 
-int Document::braceLevels(int index)
+int Document::braceLevel(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        return mLines[index]->fRange.braceLevel;
+        return mLines[index]->syntaxState.braceLevel;
     } else
         return 0;
 }
@@ -86,10 +86,10 @@ int Document::lineColumns(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        if (mLines[index]->fColumns == -1) {
+        if (mLines[index]->columns == -1) {
             return calculateLineColumns(index);
         } else
-            return mLines[index]->fColumns;
+            return mLines[index]->columns;
     } else
         return 0;
 }
@@ -98,7 +98,7 @@ int Document::blockLevel(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        return mLines[index]->fRange.blockLevel;
+        return mLines[index]->syntaxState.blockLevel;
     } else
         return 0;
 }
@@ -107,7 +107,7 @@ int Document::blockStarted(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        return mLines[index]->fRange.blockStarted;
+        return mLines[index]->syntaxState.blockStarted;
     } else
         return 0;
 }
@@ -116,9 +116,9 @@ int Document::blockEnded(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        int result = mLines[index]->fRange.blockEnded;
+        int result = mLines[index]->syntaxState.blockEnded;
 //        if (index+1 < mLines.size())
-//            result += mLines[index+1]->fRange.blockEndedLastLine;
+//            result += mLines[index+1]->syntaxState.blockEndedLastLine;
         return result;
     } else
         return 0;
@@ -140,7 +140,7 @@ int Document::lengthOfLongestLine() {
         }
     }
     if (mIndexOfLongestLine >= 0)
-        return mLines[mIndexOfLongestLine]->fColumns;
+        return mLines[mIndexOfLongestLine]->columns;
     else
         return 0;
 }
@@ -158,22 +158,22 @@ QString Document::lineBreak() const
     return "\n";
 }
 
-SyntaxerState Document::ranges(int index)
+SyntaxState Document::getSyntaxState(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        return mLines[index]->fRange;
+        return mLines[index]->syntaxState;
     } else {
          ListIndexOutOfBounds(index);
     }
-    return SyntaxerState();
+    return SyntaxState();
 }
 
 void Document::insertItem(int Index, const QString &s)
 {
     beginUpdate();
     PDocumentLine line = std::make_shared<DocumentLine>();
-    line->fString = s;
+    line->lineText = s;
     mIndexOfLongestLine = -1;
     mLines.insert(Index,line);
     endUpdate();
@@ -183,7 +183,7 @@ void Document::addItem(const QString &s)
 {
     beginUpdate();
     PDocumentLine line = std::make_shared<DocumentLine>();
-    line->fString = s;
+    line->lineText = s;
     mIndexOfLongestLine = -1;
     mLines.append(line);
     endUpdate();
@@ -201,24 +201,24 @@ void Document::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void Document::setRange(int Index, const SyntaxerState& range)
+void Document::setSyntaxState(int Index, const SyntaxState& range)
 {
     QMutexLocker locker(&mMutex);
     if (Index<0 || Index>=mLines.count()) {
         ListIndexOutOfBounds(Index);
     }
     beginUpdate();
-    mLines[Index]->fRange = range;
+    mLines[Index]->syntaxState = range;
     endUpdate();
 }
 
-QString Document::getString(int Index)
+QString Document::getLine(int Index)
 {
     QMutexLocker locker(&mMutex);
     if (Index<0 || Index>=mLines.count()) {
         return QString();
     }
-    return mLines[Index]->fString;
+    return mLines[Index]->lineText;
 }
 
 int Document::count()
@@ -264,7 +264,7 @@ QStringList Document::contents()
     QStringList Result;
     DocumentLines list = mLines;
     foreach (const PDocumentLine& line, list) {
-        Result.append(line->fString);
+        Result.append(line->lineText);
     }
     return Result;
 }
@@ -286,7 +286,7 @@ void Document::endUpdate()
 }
 
 
-int Document::add(const QString &s)
+int Document::addLine(const QString &s)
 {
     QMutexLocker locker(&mMutex);
     beginUpdate();
@@ -297,7 +297,7 @@ int Document::add(const QString &s)
     return Result;
 }
 
-void Document::addStrings(const QStringList &strings)
+void Document::addLines(const QStringList &strings)
 {
     QMutexLocker locker(&mMutex);
     if (strings.count() > 0) {
@@ -320,7 +320,7 @@ int Document::getTextLength()
     QMutexLocker locker(&mMutex);
     int Result = 0;
     foreach (const PDocumentLine& line, mLines ) {
-        Result += line->fString.length();
+        Result += line->lineText.length();
         if (mNewlineType == NewlineType::Windows) {
             Result += 2;
         } else {
@@ -385,7 +385,7 @@ void Document::exchange(int index1, int index2)
     endUpdate();
 }
 
-void Document::insert(int index, const QString &s)
+void Document::insertLine(int index, const QString &s)
 {
     QMutexLocker locker(&mMutex);
     if ((index < 0) || (index > mLines.count())) {
@@ -418,32 +418,32 @@ QString Document::getTextStr() const
     QString result;
     for (int i=0;i<mLines.count()-1;i++) {
         const PDocumentLine& line = mLines[i];
-        result.append(line->fString);
+        result.append(line->lineText);
         result.append(lineBreak());
     }
     if (mLines.length()>0) {
-        result.append(mLines.back()->fString);
+        result.append(mLines.back()->lineText);
     }
     return result;
 }
 
-void Document::putString(int index, const QString &s, bool notify) {
+void Document::putLine(int index, const QString &s, bool notify) {
     QMutexLocker locker(&mMutex);
     if (index == mLines.count()) {
-        add(s);
+        addLine(s);
     } else {
         if (index<0 || index>=mLines.count()) {
             ListIndexOutOfBounds(index);
         }
         beginUpdate();
-        int oldColumns = mLines[index]->fColumns;
-        mLines[index]->fString = s;
+        int oldColumns = mLines[index]->columns;
+        mLines[index]->lineText = s;
         calculateLineColumns(index);
-        if (mIndexOfLongestLine == index && oldColumns>mLines[index]->fColumns )
+        if (mIndexOfLongestLine == index && oldColumns>mLines[index]->columns )
             mIndexOfLongestLine = -1;
         else if (mIndexOfLongestLine>=0
                  && mIndexOfLongestLine<mLines.count()
-                 && mLines[index]->fColumns > mLines[mIndexOfLongestLine]->fColumns)
+                 && mLines[index]->columns > mLines[mIndexOfLongestLine]->columns)
             mIndexOfLongestLine = index;
         if (notify)
             emit putted(index,1);
@@ -463,8 +463,8 @@ int Document::calculateLineColumns(int Index)
 {
     PDocumentLine line = mLines[Index];
 
-    line->fColumns = stringColumns(line->fString,0);
-    return line->fColumns;
+    line->columns = stringColumns(line->lineText,0);
+    return line->columns;
 }
 
 void Document::insertLines(int index, int numLines)
@@ -692,12 +692,12 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     bool allAscii = true;
     for (PDocumentLine& line:mLines) {
         if (allAscii) {
-            allAscii = isTextAllAscii(line->fString);
+            allAscii = isTextAllAscii(line->lineText);
         }
         if (!allAscii) {
-            file.write(codec->fromUnicode(line->fString));
+            file.write(codec->fromUnicode(line->lineText));
         } else {
-            file.write(line->fString.toLatin1());
+            file.write(line->lineText.toLatin1());
         }
         file.write(lineBreak().toLatin1());
     }
@@ -758,7 +758,7 @@ void Document::putTextStr(const QString &text)
             }
             pos++;
         }
-        add(text.mid(start,pos-start));
+        addLine(text.mid(start,pos-start));
         if (pos>=text.length())
             break;
         if (text[pos] == '\r')
@@ -804,7 +804,7 @@ void Document::resetColumns()
     mIndexOfLongestLine = -1;
     if (mLines.count() > 0 ) {
         for (int i=0;i<mLines.size();i++) {
-            mLines[i]->fColumns = -1;
+            mLines[i]->columns = -1;
         }
     }
 }
@@ -814,14 +814,14 @@ void Document::invalidAllLineColumns()
     QMutexLocker locker(&mMutex);
     mIndexOfLongestLine = -1;
     for (PDocumentLine& line:mLines) {
-        line->fColumns = -1;
+        line->columns = -1;
     }
 }
 
 DocumentLine::DocumentLine():
-    fString(),
-    fRange(),
-    fColumns(-1)
+    lineText(),
+    syntaxState(),
+    columns(-1)
 {
 }
 

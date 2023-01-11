@@ -256,7 +256,7 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSyn
         item->start = ch;
         item->len = wordLen;
         item->parent = parentItem.get();
-        item->text = e->document()->getString(Line-1);
+        item->text = e->document()->getLine(Line-1);
         item->text.replace('\t',' ');
         parentItem->results.append(item);
         return QSynedit::SearchAction::Skip;

@@ -441,14 +441,14 @@ bool ASMSyntaxer::isLastLineStringNotFinished(int /*state*/) const
     return true;
 }
 
-SyntaxerState ASMSyntaxer::getState() const
+SyntaxState ASMSyntaxer::getState() const
 {
-    SyntaxerState state;
+    SyntaxState state;
     state.hasTrailingSpaces = mHasTrailingSpaces;
     return state;
 }
 
-void ASMSyntaxer::setState(const SyntaxerState&)
+void ASMSyntaxer::setState(const SyntaxState&)
 {
     mHasTrailingSpaces = false;
 }

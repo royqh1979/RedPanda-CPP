@@ -34,7 +34,7 @@ enum IndentType {
     IndentForStatement,
 };
 
-struct SyntaxerState {    
+struct SyntaxState {
     int state;  // current syntax parsing state
     int blockLevel; // needed by block folding
     int blockStarted;  // needed by block folding
@@ -52,9 +52,9 @@ struct SyntaxerState {
                               but not started at this line
                                 (need by auto indent) */
     bool hasTrailingSpaces;
-    bool operator==(const SyntaxerState& s2);
+    bool operator==(const SyntaxState& s2);
     int getLastIndent();
-    SyntaxerState();
+    SyntaxState();
 };
 
 enum class TokenType {
@@ -146,14 +146,14 @@ public:
     virtual bool isLastLineCommentNotFinished(int state) const = 0;
     virtual bool isLastLineStringNotFinished(int state) const = 0;
     virtual bool eol() const = 0;
-    virtual SyntaxerState getState() const = 0;
+    virtual SyntaxState getState() const = 0;
     virtual QString getToken() const=0;
     virtual const PTokenAttribute &getTokenAttribute() const=0;
     virtual int getTokenPos() = 0;
     virtual bool isKeyword(const QString& word);
     virtual void next() = 0;
     virtual void nextToEol();
-    virtual void setState(const SyntaxerState& rangeState) = 0;
+    virtual void setState(const SyntaxState& rangeState) = 0;
     virtual void setLine(const QString& newLine, int lineNumber) = 0;
     virtual void resetState() = 0;
     virtual QSet<QString> keywords() const;

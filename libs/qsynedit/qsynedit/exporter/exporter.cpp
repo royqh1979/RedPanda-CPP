@@ -56,9 +56,9 @@ void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord 
     if (!doc || !mSyntaxer || (doc->count() == 0))
         return;
     stop.line = std::max(1, std::min(stop.line, doc->count()));
-    stop.ch = std::max(1, std::min(stop.ch, doc->getString(stop.line - 1).length() + 1));
+    stop.ch = std::max(1, std::min(stop.ch, doc->getLine(stop.line - 1).length() + 1));
     start.line = std::max(1, std::min(start.line, doc->count()));
-    start.ch = std::max(1, std::min(start.ch, doc->getString(start.line - 1).length() + 1));
+    start.ch = std::max(1, std::min(start.ch, doc->getLine(start.line - 1).length() + 1));
     if ( (start.line > doc->count()) || (start.line > stop.line) )
         return;
     if ((start.line == stop.line) && (start.ch >= stop.ch))
@@ -71,9 +71,9 @@ void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord 
     if (start.line == 1)
         mSyntaxer->resetState();
     else
-        mSyntaxer->setState(doc->ranges(start.line-2));
+        mSyntaxer->setState(doc->getSyntaxState(start.line-2));
     for (int i = start.line; i<=stop.line; i++) {
-        QString Line = doc->getString(i-1);
+        QString Line = doc->getLine(i-1);
         // order is important, since Start.Y might be equal to Stop.Y
 //        if (i == Stop.Line)
 //            Line.remove(Stop.Char-1, INT_MAX);

@@ -118,7 +118,7 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
         if (line.startsWith("=>")) {
             activeLine = i;
         }
-        ui->txtCode->document()->add(line);
+        ui->txtCode->document()->addLine(line);
     }
     if (activeLine!=-1)
         ui->txtCode->setCaretXYEx(true,QSynedit::BufferCoord{1,activeLine+1});

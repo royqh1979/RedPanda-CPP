@@ -5446,9 +5446,9 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
             int line = issue->line;
             if (line > e->document()->count())
                 return;
-            int col = std::min(issue->column,e->document()->getString(line-1).length()+1);
+            int col = std::min(issue->column,e->document()->getLine(line-1).length()+1);
             if (col < 1)
-                col = e->document()->getString(line-1).length()+1;
+                col = e->document()->getLine(line-1).length()+1;
             e->addSyntaxIssues(line,col,issue->endColumn,issue->type,issue->description);
         }
     }
@@ -7853,7 +7853,7 @@ void MainWindow::on_actionAdd_bookmark_triggered()
             return;
         QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),
                                              tr("Description:"),QLineEdit::Normal,
-                                             editor->document()->getString(line-1).trimmed());
+                                             editor->document()->getLine(line-1).trimmed());
         desc = desc.trimmed();
         editor->addBookmark(line);
         mBookmarkModel->addBookmark(editor->filename(),line,desc,editor->inProject());

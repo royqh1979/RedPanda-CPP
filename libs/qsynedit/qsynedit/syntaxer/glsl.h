@@ -134,7 +134,7 @@ private:
     void pushIndents(int indentType);
 
 private:
-    SyntaxerState mRange;
+    SyntaxState mRange;
 //    SynRangeState mSpaceRange;
     QString mLineString;
     QChar* mLine;
@@ -175,7 +175,7 @@ public:
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
     bool isKeyword(const QString &word) override;
-    void setState(const SyntaxerState& rangeState) override;
+    void setState(const SyntaxState& rangeState) override;
     void resetState() override;
 
     QString languageName() override;
@@ -183,7 +183,7 @@ public:
 
     // SynHighlighter interface
 public:
-    SyntaxerState getState() const override;
+    SyntaxState getState() const override;
 
     // SynHighlighter interface
 public:

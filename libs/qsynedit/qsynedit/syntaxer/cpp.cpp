@@ -1575,7 +1575,7 @@ bool CppSyntaxer::isKeyword(const QString &word)
     return Keywords.contains(word) || mCustomTypeKeywords.contains(word);
 }
 
-void CppSyntaxer::setState(const SyntaxerState& rangeState)
+void CppSyntaxer::setState(const SyntaxState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
@@ -1614,7 +1614,7 @@ ProgrammingLanguage CppSyntaxer::language()
     return ProgrammingLanguage::CPP;
 }
 
-SyntaxerState CppSyntaxer::getState() const
+SyntaxState CppSyntaxer::getState() const
 {
     return mRange;
 }

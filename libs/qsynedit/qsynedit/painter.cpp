@@ -659,7 +659,7 @@ void QSynEditPainter::addHighlightToken(const QString &token, int columnsBefore,
 
 void QSynEditPainter::paintFoldAttributes()
 {
-    int TabSteps, LineIndent, LastNonBlank, X, Y, cRow, vLine;
+    int tabSteps, lineIndent, lastNonBlank, X, Y, cRow, vLine;
     // Paint indent guides. Use folds to determine indent value of these
     // Use a separate loop so we can use a custom pen
     // Paint indent guides using custom pen
@@ -685,24 +685,24 @@ void QSynEditPainter::paintFoldAttributes()
                 Y++;
             }
             // Get next nonblank line
-            LastNonBlank = vLine - 1;
-            while (LastNonBlank + 1 < edit->mDocument->count() && edit->mDocument->getString(LastNonBlank).isEmpty())
-                LastNonBlank++;
-            if (LastNonBlank>=edit->document()->count())
+            lastNonBlank = vLine - 1;
+            while (lastNonBlank + 1 < edit->mDocument->count() && edit->mDocument->getLine(lastNonBlank).isEmpty())
+                lastNonBlank++;
+            if (lastNonBlank>=edit->document()->count())
                 continue;
-            LineIndent = edit->getLineIndent(edit->mDocument->getString(LastNonBlank));
-            int braceLevel = edit->mDocument->ranges(LastNonBlank).braceLevel;
+            lineIndent = edit->getLineIndent(edit->mDocument->getLine(lastNonBlank));
+            int braceLevel = edit->mDocument->getSyntaxState(lastNonBlank).braceLevel;
             int indentLevel = braceLevel ;
             if (edit->tabWidth()>0)
-                indentLevel = LineIndent / edit->tabWidth();
+                indentLevel = lineIndent / edit->tabWidth();
             // Step horizontal coord
             //TabSteps = edit->mTabWidth;
-            TabSteps = 0;
+            tabSteps = 0;
             indentLevel = 0;
 
-            while (TabSteps < LineIndent) {
-                X = TabSteps * edit->mCharWidth + edit->textOffset() - 2;
-                TabSteps+=edit->tabWidth();
+            while (tabSteps < lineIndent) {
+                X = tabSteps * edit->mCharWidth + edit->textOffset() - 2;
+                tabSteps+=edit->tabWidth();
                 indentLevel++ ;
                 if (edit->mSyntaxer) {
                     if (edit->mCodeFolding.indentGuides) {
@@ -721,10 +721,10 @@ void QSynEditPainter::paintFoldAttributes()
                 }
                 if (edit->mCodeFolding.fillIndents) {
                     int X1;
-                    if (TabSteps>LineIndent)
-                        X1 = LineIndent * edit->mCharWidth + edit->textOffset() - 2;
+                    if (tabSteps>lineIndent)
+                        X1 = lineIndent * edit->mCharWidth + edit->textOffset() - 2;
                     else
-                        X1 = TabSteps * edit->mCharWidth + edit->textOffset() - 2;
+                        X1 = tabSteps * edit->mCharWidth + edit->textOffset() - 2;
                     gradientStart.setAlpha(20);
                     gradientEnd.setAlpha(10);
                     QLinearGradient gradient(X,Y,X1,Y);
@@ -820,7 +820,7 @@ void QSynEditPainter::paintLines()
             break;
 
         // Get the line.
-        sLine = edit->mDocument->getString(vLine - 1);
+        sLine = edit->mDocument->getLine(vLine - 1);
         // determine whether will be painted with ActiveLineColor
         if (edit->mActiveSelectionMode == SelectionMode::Column) {
             bCurrentLine = (vLine >= selectionBegin.line && vLine <= selectionEnd.line);
@@ -943,7 +943,7 @@ void QSynEditPainter::paintLines()
                 edit->mSyntaxer->resetState();
             } else {
                 edit->mSyntaxer->setState(
-                            edit->mDocument->ranges(vLine-2));
+                            edit->mDocument->getSyntaxState(vLine-2));
             }
             edit->mSyntaxer->setLine(sLine, vLine - 1);
             // Try to concatenate as many tokens as possible to minimize the count
@@ -981,7 +981,7 @@ void QSynEditPainter::paintLines()
                             || sToken == "("
                             || sToken == "{"
                             ) {
-                        SyntaxerState rangeState = edit->mSyntaxer->getState();
+                        SyntaxState rangeState = edit->mSyntaxer->getState();
                         getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel
@@ -990,7 +990,7 @@ void QSynEditPainter::paintLines()
                                || sToken == ")"
                                || sToken == "}"
                                ){
-                        SyntaxerState rangeState = edit->mSyntaxer->getState();
+                        SyntaxState rangeState = edit->mSyntaxer->getState();
                         getBraceColorAttr(rangeState.bracketLevel
                                           +rangeState.braceLevel
                                           +rangeState.parenthesisLevel+1,

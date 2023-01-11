@@ -1402,7 +1402,7 @@ bool GLSLSyntaxer::isKeyword(const QString &word)
     return Keywords.contains(word);
 }
 
-void GLSLSyntaxer::setState(const SyntaxerState& rangeState)
+void GLSLSyntaxer::setState(const SyntaxState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
@@ -1441,7 +1441,7 @@ ProgrammingLanguage GLSLSyntaxer::language()
     return ProgrammingLanguage::GLSL;
 }
 
-SyntaxerState GLSLSyntaxer::getState() const
+SyntaxState GLSLSyntaxer::getState() const
 {
     return mRange;
 }

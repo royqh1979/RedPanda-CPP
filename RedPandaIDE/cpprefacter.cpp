@@ -224,7 +224,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
     int posY = 0;
     while (posY < editor.document()->count()) {
-        QString line = editor.document()->getString(posY);
+        QString line = editor.document()->getLine(posY);
         if (line.isEmpty()) {
             posY++;
             continue;
@@ -234,7 +234,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
             editor.syntaxer()->resetState();
         } else {
             editor.syntaxer()->setState(
-                        editor.document()->ranges(posY-1));
+                        editor.document()->getSyntaxState(posY-1));
         }
         editor.syntaxer()->setLine(line,posY);
         while (!editor.syntaxer()->eol()) {
@@ -289,13 +289,13 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
     editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
     int posY = 0;
     while (posY < editor.document()->count()) {
-        QString line = editor.document()->getString(posY);
+        QString line = editor.document()->getLine(posY);
 
         if (posY == 0) {
             editor.syntaxer()->resetState();
         } else {
             editor.syntaxer()->setState(
-                        editor.document()->ranges(posY-1));
+                        editor.document()->getSyntaxState(posY-1));
         }
         editor.syntaxer()->setLine(line,posY);
         QString newLine;
