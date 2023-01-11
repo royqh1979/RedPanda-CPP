@@ -16,7 +16,7 @@
  */
 #ifndef SYNSEARCHREGEX_H
 #define SYNSEARCHREGEX_H
-#include "SearchBase.h"
+#include "baseseacher.h"
 
 #include <QRegularExpression>
 

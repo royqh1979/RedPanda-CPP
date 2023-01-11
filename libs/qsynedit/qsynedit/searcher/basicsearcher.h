@@ -14,31 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "SearchBase.h"
+#ifndef SYNSEARCH_H
+#define SYNSEARCH_H
+#include "baseseacher.h"
 
-namespace QSynedit {
-BaseSearcher::BaseSearcher(QObject *parent) : QObject(parent)
+namespace  QSynedit {
+
+class BasicSearcher : public BaseSearcher
 {
+    Q_OBJECT
+public:
+    explicit BasicSearcher(QObject* parent = nullptr);
 
+    // SynSearchBase interface
+public:
+    int length(int aIndex) override;
+    int result(int aIndex) override;
+    int resultCount() override;
+    int findAll(const QString &text) override;
+    QString replace(const QString &aOccurrence, const QString &aReplacement) override;
+private:
+    bool isDelimitChar(QChar ch);
+private:
+    QList<int> mResults;
+};
 }
 
-QString BaseSearcher::pattern()
-{
-    return mPattern;
-}
-
-void BaseSearcher::setPattern(const QString &value)
-{
-    mPattern = value;
-}
-
-SearchOptions BaseSearcher::options() const
-{
-    return mOptions;
-}
-
-void BaseSearcher::setOptions(const SearchOptions &options)
-{
-    mOptions = options;
-}
-}
+#endif // SYNSEARCH_H
