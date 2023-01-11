@@ -20,7 +20,7 @@
 #include <QTreeView>
 #include <QMap>
 #include <QStyledItemDelegate>
-#include "qsynedit/SearchBase.h"
+#include "qsynedit/searcher/baseseacher.h"
 #include "utils.h"
 
 #define MAX_SEARCH_RESULTS 20

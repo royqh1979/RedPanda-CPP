@@ -17,13 +17,13 @@
 #include "syntaxermanager.h"
 #include <QFileInfo>
 #include <QObject>
-#include "qsynedit/Constants.h"
+#include "qsynedit/constants.h"
 #include "qsynedit/syntaxer/cpp.h"
 #include "qsynedit/syntaxer/asm.h"
 #include "qsynedit/syntaxer/glsl.h"
 #include "qsynedit/syntaxer/makefile.h"
 
-#include "qsynedit/Constants.h"
+#include "qsynedit/constants.h"
 #include "colorscheme.h"
 
 SyntaxerManager syntaxerManager;

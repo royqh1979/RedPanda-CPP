@@ -20,7 +20,7 @@
 #include <QObject>
 #include <utils.h>
 #include <QTabWidget>
-#include "qsynedit/SynEdit.h"
+#include "qsynedit/qsynedit.h"
 #include "colorscheme.h"
 #include "common.h"
 #include "parser/cppparser.h"
@@ -55,7 +55,7 @@ private:
     QByteArray mReasonBuffer;
 };
 
-class Editor : public QSynedit::SynEdit
+class Editor : public QSynedit::QSynEdit
 {
     Q_OBJECT
 public:
@@ -400,7 +400,7 @@ protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 };
 
-QString getWordAtPosition(QSynedit::SynEdit* editor,
+QString getWordAtPosition(QSynedit::QSynEdit* editor,
                           const QSynedit::BufferCoord& p,
                           QSynedit::BufferCoord& pWordBegin,
                           QSynedit::BufferCoord& pWordEnd,

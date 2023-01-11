@@ -18,7 +18,7 @@
 #define SEARCHINFILEDIALOG_H
 
 #include <QDialog>
-#include <qsynedit/SynEdit.h>
+#include <qsynedit/qsynedit.h>
 #include "../utils.h"
 
 namespace Ui {
@@ -49,11 +49,11 @@ private slots:
 
 private:
    void doSearch(bool replace);
-   int execute(QSynedit::SynEdit* editor, const QString& sSearch,
+   int execute(QSynedit::QSynEdit* editor, const QString& sSearch,
                const QString& sReplace,
                QSynedit::SearchMathedProc matchCallback = nullptr,
                QSynedit::SearchConfirmAroundProc confirmAroundCallback = nullptr);
-   std::shared_ptr<SearchResultTreeItem> batchFindInEditor(QSynedit::SynEdit * editor,const QString& filename, const QString& keyword);
+   std::shared_ptr<SearchResultTreeItem> batchFindInEditor(QSynedit::QSynEdit * editor,const QString& filename, const QString& keyword);
 private:
     Ui::SearchInFileDialog *ui;
     QSynedit::SearchOptions mSearchOptions;

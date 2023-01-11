@@ -2,7 +2,7 @@
 #define REPLACEDIALOG_H
 
 #include <QDialog>
-#include <qsynedit/SearchBase.h>
+#include <qsynedit/searcher/baseseacher.h>
 
 namespace Ui {
 class ReplaceDialog;

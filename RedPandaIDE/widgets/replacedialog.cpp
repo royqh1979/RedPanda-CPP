@@ -2,8 +2,8 @@
 #include "ui_replacedialog.h"
 #include <QMessageBox>
 #include <memory>
-#include <qsynedit/Search.h>
-#include <qsynedit/SearchRegex.h>
+#include <qsynedit/searcher/basicsearcher.h>
+#include <qsynedit/searcher/regexsearcher.h>
 #include "../utils.h"
 #include "../editor.h"
 #include "../editorlist.h"

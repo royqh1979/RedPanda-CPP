@@ -25,6 +25,8 @@ class RTFExporter : public Exporter
 {
 public:
     explicit RTFExporter(int tabSize,const QByteArray charset);
+    RTFExporter(const RTFExporter&)=delete;
+    RTFExporter& operator=(const RTFExporter&)=delete;
 private:
     bool mAttributesChanged;
     QList<QColor> mListColors;

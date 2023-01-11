@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "SynEdit.h"
+#include "qsynedit.h"
 #include "syntaxer/cpp.h"
 #include <QApplication>
 #include <QFontMetrics>
@@ -25,8 +25,8 @@
 #include <QPainter>
 #include <QTimerEvent>
 #include "syntaxer/syntaxer.h"
-#include "Constants.h"
-#include "TextPainter.h"
+#include "constants.h"
+#include "painter.h"
 #include <QClipboard>
 #include <QDebug>
 #include <QGuiApplication>
@@ -42,7 +42,7 @@
 #include <QMimeData>
 
 namespace QSynedit {
-SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
+QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDropped(false)
 {
     mCharWidth=1;
@@ -67,18 +67,18 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     //fPlugins := TList.Create;
     mMouseMoved = false;
     mUndoing = false;
-    mDocument->connect(mDocument.get(), &Document::changed, this, &SynEdit::onLinesChanged);
-    mDocument->connect(mDocument.get(), &Document::changing, this, &SynEdit::onLinesChanging);
-    mDocument->connect(mDocument.get(), &Document::cleared, this, &SynEdit::onLinesCleared);
-    mDocument->connect(mDocument.get(), &Document::deleted, this, &SynEdit::onLinesDeleted);
-    mDocument->connect(mDocument.get(), &Document::inserted, this, &SynEdit::onLinesInserted);
-    mDocument->connect(mDocument.get(), &Document::putted, this, &SynEdit::onLinesPutted);
+    mDocument->connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
+    mDocument->connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
+    mDocument->connect(mDocument.get(), &Document::cleared, this, &QSynEdit::onLinesCleared);
+    mDocument->connect(mDocument.get(), &Document::deleted, this, &QSynEdit::onLinesDeleted);
+    mDocument->connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
+    mDocument->connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
 
     mGutterWidth = 0;
     mScrollBars = ScrollStyle::ssBoth;
 
     mUndoList = std::make_shared<UndoList>();
-    mUndoList->connect(mUndoList.get(), &UndoList::addedUndo, this, &SynEdit::onUndoAdded);
+    mUndoList->connect(mUndoList.get(), &UndoList::addedUndo, this, &QSynEdit::onUndoAdded);
     mRedoList = std::make_shared<RedoList>();
 //    mRedoList->connect(mRedoList.get(), &SynEditUndoList::addedUndo, this, &SynEdit::onRedoAdded);
 
@@ -97,7 +97,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mMouseSelectionScrollSpeed = 1;
 
     mGutter.setRightOffset(21);
-    mGutter.connect(&mGutter, &Gutter::changed, this, &SynEdit::onGutterChanged);
+    mGutter.connect(&mGutter, &Gutter::changed, this, &QSynEdit::onGutterChanged);
     mGutterWidth = mGutter.realGutterWidth(charWidth());
     //ControlStyle := ControlStyle + [csOpaque, csSetCaption, csNeedsBorderPaint];
     //Height := 150;
@@ -140,7 +140,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 
     mScrollTimer = new QTimer(this);
     //mScrollTimer->setInterval(100);
-    connect(mScrollTimer, &QTimer::timeout,this, &SynEdit::onScrollTimeout);
+    connect(mScrollTimer, &QTimer::timeout,this, &QSynEdit::onScrollTimeout);
 
     qreal dpr=devicePixelRatioF();
     mContentImage = std::make_shared<QImage>(clientWidth()*dpr,clientHeight()*dpr,QImage::Format_ARGB32);
@@ -153,9 +153,9 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     hideCaret();
 
     connect(horizontalScrollBar(),&QScrollBar::valueChanged,
-            this, &SynEdit::onScrolled);
+            this, &QSynEdit::onScrolled);
     connect(verticalScrollBar(),&QScrollBar::valueChanged,
-            this, &SynEdit::onScrolled);
+            this, &QSynEdit::onScrolled);
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
 
@@ -166,7 +166,7 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     setFontForNonAscii(mFontDummy);
 }
 
-int SynEdit::displayLineCount() const
+int QSynEdit::displayLineCount() const
 {
     if (mDocument->empty()) {
         return 0;
@@ -174,22 +174,22 @@ int SynEdit::displayLineCount() const
     return lineToRow(mDocument->count());
 }
 
-DisplayCoord SynEdit::displayXY() const
+DisplayCoord QSynEdit::displayXY() const
 {
     return bufferToDisplayPos(caretXY());
 }
 
-int SynEdit::displayX() const
+int QSynEdit::displayX() const
 {
     return displayXY().Column;
 }
 
-int SynEdit::displayY() const
+int QSynEdit::displayY() const
 {
     return displayXY().Row;
 }
 
-BufferCoord SynEdit::caretXY() const
+BufferCoord QSynEdit::caretXY() const
 {
     BufferCoord result;
     result.ch = caretX();
@@ -197,34 +197,34 @@ BufferCoord SynEdit::caretXY() const
     return result;
 }
 
-int SynEdit::caretX() const
+int QSynEdit::caretX() const
 {
     return mCaretX;
 }
 
-int SynEdit::caretY() const
+int QSynEdit::caretY() const
 {
     return mCaretY;
 }
 
-void SynEdit::setCaretX(int value)
+void QSynEdit::setCaretX(int value)
 {
     setCaretXY({value,mCaretY});
 }
 
-void SynEdit::setCaretY(int value)
+void QSynEdit::setCaretY(int value)
 {
     setCaretXY({mCaretX,value});
 }
 
-void SynEdit::setCaretXY(const BufferCoord &value)
+void QSynEdit::setCaretXY(const BufferCoord &value)
 {
     setBlockBegin(value);
     setBlockEnd(value);
     setCaretXYEx(true,value);
 }
 
-void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
+void QSynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
 {
     int nMaxX;
     if (value.line > mDocument->count())
@@ -289,7 +289,7 @@ void SynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
 
 }
 
-void SynEdit::setCaretXYCentered(const BufferCoord &value)
+void QSynEdit::setCaretXYCentered(const BufferCoord &value)
 {
     incPaintLock();
     auto action = finally([this] {
@@ -305,7 +305,7 @@ void SynEdit::setCaretXYCentered(const BufferCoord &value)
     ensureCursorPosVisibleEx(true); // but here after block has been set
 }
 
-void SynEdit::uncollapseAroundLine(int line)
+void QSynEdit::uncollapseAroundLine(int line)
 {
     while (true) { // Open up the closed folds around the focused line until we can see the line we're looking for
       PCodeFoldingRange fold = foldHidesLine(line);
@@ -316,12 +316,12 @@ void SynEdit::uncollapseAroundLine(int line)
     }
 }
 
-PCodeFoldingRange SynEdit::foldHidesLine(int line)
+PCodeFoldingRange QSynEdit::foldHidesLine(int line)
 {
     return foldAroundLineEx(line, true, false, true);
 }
 
-void SynEdit::setInsertMode(bool value)
+void QSynEdit::setInsertMode(bool value)
 {
     if (mInserting != value) {
         mInserting = value;
@@ -330,22 +330,22 @@ void SynEdit::setInsertMode(bool value)
     }
 }
 
-bool SynEdit::insertMode() const
+bool QSynEdit::insertMode() const
 {
     return mInserting;
 }
 
-bool SynEdit::canUndo() const
+bool QSynEdit::canUndo() const
 {
     return !mReadOnly && mUndoList->canUndo();
 }
 
-bool SynEdit::canRedo() const
+bool QSynEdit::canRedo() const
 {
     return !mReadOnly && mRedoList->canRedo();
 }
 
-int SynEdit::maxScrollWidth() const
+int QSynEdit::maxScrollWidth() const
 {
     int maxLen = mDocument->lengthOfLongestLine();
     if (syntaxer())
@@ -356,13 +356,13 @@ int SynEdit::maxScrollWidth() const
         return std::max(maxLen-mCharsInWindow+1, 1);
 }
 
-bool SynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, PTokenAttribute &attri)
+bool QSynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, PTokenAttribute &attri)
 {
     int tmpStart;
     return getTokenAttriAtRowColEx(pos, token, tmpStart, attri);
 }
 
-bool SynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, PTokenAttribute &attri)
+bool QSynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, PTokenAttribute &attri)
 {
     int posX, posY, endPos, start;
     QString line;
@@ -399,7 +399,7 @@ bool SynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, bool
     return false;
 }
 
-bool SynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, int &start, PTokenAttribute &attri)
+bool QSynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, int &start, PTokenAttribute &attri)
 {
     int posX, posY, endPos;
     QString line;
@@ -431,23 +431,23 @@ bool SynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, in
     return false;
 }
 
-void SynEdit::beginUndoBlock()
+void QSynEdit::beginUndoBlock()
 {
     mUndoList->beginBlock();
 }
 
-void SynEdit::endUndoBlock()
+void QSynEdit::endUndoBlock()
 {
     mUndoList->endBlock();
 }
 
-void SynEdit::addCaretToUndo()
+void QSynEdit::addCaretToUndo()
 {
     BufferCoord p=caretXY();
     mUndoList->addChange(ChangeReason::Caret,p,p,QStringList(), mActiveSelectionMode);
 }
 
-void SynEdit::addLeftTopToUndo()
+void QSynEdit::addLeftTopToUndo()
 {
     BufferCoord p;
     p.ch = leftChar();
@@ -455,13 +455,13 @@ void SynEdit::addLeftTopToUndo()
     mUndoList->addChange(ChangeReason::LeftTop,p,p,QStringList(), mActiveSelectionMode);
 }
 
-void SynEdit::addSelectionToUndo()
+void QSynEdit::addSelectionToUndo()
 {
     mUndoList->addChange(ChangeReason::Selection,mBlockBegin,
                          mBlockEnd,QStringList(),mActiveSelectionMode);
 }
 
-void SynEdit::doTrimTrailingSpaces()
+void QSynEdit::doTrimTrailingSpaces()
 {
     if (mDocument->count()<=0)
         return;
@@ -520,22 +520,22 @@ void SynEdit::doTrimTrailingSpaces()
     mUndoList->endBlock();
 }
 
-void SynEdit::beginUpdate()
+void QSynEdit::beginUpdate()
 {
     incPaintLock();
 }
 
-void SynEdit::endUpdate()
+void QSynEdit::endUpdate()
 {
     decPaintLock();
 }
 
-BufferCoord SynEdit::getMatchingBracket()
+BufferCoord QSynEdit::getMatchingBracket()
 {
     return getMatchingBracketEx(caretXY());
 }
 
-BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
+BufferCoord QSynEdit::getMatchingBracketEx(BufferCoord APoint)
 {
     QChar Brackets[] = {'(', ')', '[', ']', '{', '}', '<', '>'};
     QString Line;
@@ -642,31 +642,31 @@ BufferCoord SynEdit::getMatchingBracketEx(BufferCoord APoint)
     return BufferCoord{0,0};
 }
 
-QStringList SynEdit::contents()
+QStringList QSynEdit::contents()
 {
     return document()->contents();
 }
 
-QString SynEdit::text()
+QString QSynEdit::text()
 {
     return document()->text();
 }
 
-bool SynEdit::getPositionOfMouse(BufferCoord &aPos)
+bool QSynEdit::getPositionOfMouse(BufferCoord &aPos)
 {
     QPoint point = QCursor::pos();
     point = mapFromGlobal(point);
     return pointToCharLine(point,aPos);
 }
 
-bool SynEdit::getLineOfMouse(int &line)
+bool QSynEdit::getLineOfMouse(int &line)
 {
     QPoint point = QCursor::pos();
     point = mapFromGlobal(point);
     return pointToLine(point,line);
 }
 
-bool SynEdit::pointToCharLine(const QPoint &point, BufferCoord &coord)
+bool QSynEdit::pointToCharLine(const QPoint &point, BufferCoord &coord)
 {
     // Make sure it fits within the SynEdit bounds (and on the gutter)
     if ((point.x() < gutterWidth() + clientLeft())
@@ -680,7 +680,7 @@ bool SynEdit::pointToCharLine(const QPoint &point, BufferCoord &coord)
     return true;
 }
 
-bool SynEdit::pointToLine(const QPoint &point, int &line)
+bool QSynEdit::pointToLine(const QPoint &point, int &line)
 {
     // Make sure it fits within the SynEdit bounds
     if ((point.x() < clientLeft())
@@ -695,12 +695,12 @@ bool SynEdit::pointToLine(const QPoint &point, int &line)
     return true;
 }
 
-void SynEdit::invalidateGutter()
+void QSynEdit::invalidateGutter()
 {
     invalidateGutterLines(-1, -1);
 }
 
-void SynEdit::invalidateGutterLine(int aLine)
+void QSynEdit::invalidateGutterLine(int aLine)
 {
     if ((aLine < 1) || (aLine > mDocument->count()))
         return;
@@ -708,7 +708,7 @@ void SynEdit::invalidateGutterLine(int aLine)
     invalidateGutterLines(aLine, aLine);
 }
 
-void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
+void QSynEdit::invalidateGutterLines(int FirstLine, int LastLine)
 {
     QRect rcInval;
     if (!isVisible())
@@ -752,7 +752,7 @@ void SynEdit::invalidateGutterLines(int FirstLine, int LastLine)
  * @return
  */
 
-DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY) const
+DisplayCoord QSynEdit::pixelsToNearestRowColumn(int aX, int aY) const
 {
     return {
         std::max(1, (int)(mLeftChar + round((aX - mGutterWidth - 2.0) / mCharWidth))),
@@ -760,7 +760,7 @@ DisplayCoord SynEdit::pixelsToNearestRowColumn(int aX, int aY) const
     };
 }
 
-DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY) const
+DisplayCoord QSynEdit::pixelsToRowColumn(int aX, int aY) const
 {
     return {
         std::max(1, (int)(mLeftChar + (aX - mGutterWidth - 2.0) / mCharWidth)),
@@ -769,7 +769,7 @@ DisplayCoord SynEdit::pixelsToRowColumn(int aX, int aY) const
 
 }
 
-QPoint SynEdit::rowColumnToPixels(const DisplayCoord &coord) const
+QPoint QSynEdit::rowColumnToPixels(const DisplayCoord &coord) const
 {
     QPoint result;
     result.setX((coord.Column - 1) * mCharWidth + textOffset());
@@ -783,7 +783,7 @@ QPoint SynEdit::rowColumnToPixels(const DisplayCoord &coord) const
  * @param p
  * @return
  */
-DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p) const
+DisplayCoord QSynEdit::bufferToDisplayPos(const BufferCoord &p) const
 {
     DisplayCoord result {p.ch,p.line};
     // Account for tabs and charColumns
@@ -800,7 +800,7 @@ DisplayCoord SynEdit::bufferToDisplayPos(const BufferCoord &p) const
  * @param p
  * @return
  */
-BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p) const
+BufferCoord QSynEdit::displayToBufferPos(const DisplayCoord &p) const
 {
     BufferCoord Result{p.Column,p.Row};
     // Account for code folding
@@ -847,7 +847,7 @@ BufferCoord SynEdit::displayToBufferPos(const DisplayCoord &p) const
 //    return getContents(pStart,pEnd).join(joinStr);
 //}
 
-int SynEdit::leftSpaces(const QString &line) const
+int QSynEdit::leftSpaces(const QString &line) const
 {
     int result = 0;
     if (mOptions.testFlag(eoAutoIndent)) {
@@ -864,7 +864,7 @@ int SynEdit::leftSpaces(const QString &line) const
     return result;
 }
 
-QString SynEdit::GetLeftSpacing(int charCount, bool wantTabs) const
+QString QSynEdit::GetLeftSpacing(int charCount, bool wantTabs) const
 {
     if (wantTabs && !mOptions.testFlag(eoTabsToSpaces) && tabWidth()>0) {
         return QString(charCount / tabWidth(),'\t') + QString(charCount % tabWidth(),' ');
@@ -873,7 +873,7 @@ QString SynEdit::GetLeftSpacing(int charCount, bool wantTabs) const
     }
 }
 
-int SynEdit::charToColumn(int aLine, int aChar) const
+int QSynEdit::charToColumn(int aLine, int aChar) const
 {
     if (aLine>=1 && aLine <= mDocument->count()) {
         QString s = getDisplayStringAtLine(aLine);
@@ -882,7 +882,7 @@ int SynEdit::charToColumn(int aLine, int aChar) const
     return aChar;
 }
 
-int SynEdit::charToColumn(const QString &s, int aChar) const
+int QSynEdit::charToColumn(const QString &s, int aChar) const
 {
     int x = 0;
     int len = std::min(aChar-1,s.length());
@@ -895,7 +895,7 @@ int SynEdit::charToColumn(const QString &s, int aChar) const
     return x+1;
 }
 
-int SynEdit::columnToChar(int aLine, int aColumn) const
+int QSynEdit::columnToChar(int aLine, int aColumn) const
 {
     Q_ASSERT( (aLine <= mDocument->count()) && (aLine >= 1));
     if (aLine <= mDocument->count()) {
@@ -917,12 +917,12 @@ int SynEdit::columnToChar(int aLine, int aColumn) const
     return aColumn;
 }
 
-int SynEdit::stringColumns(const QString &line, int colsBefore) const
+int QSynEdit::stringColumns(const QString &line, int colsBefore) const
 {
     return mDocument->stringColumns(line,colsBefore);
 }
 
-int SynEdit::getLineIndent(const QString &line) const
+int QSynEdit::getLineIndent(const QString &line) const
 {
     int indents = 0;
     for (QChar ch:line) {
@@ -940,7 +940,7 @@ int SynEdit::getLineIndent(const QString &line) const
     return indents;
 }
 
-int SynEdit::rowToLine(int aRow) const
+int QSynEdit::rowToLine(int aRow) const
 {
     if (mUseCodeFolding)
         return foldRowToLine(aRow);
@@ -949,12 +949,12 @@ int SynEdit::rowToLine(int aRow) const
     //return displayToBufferPos({1, aRow}).Line;
 }
 
-int SynEdit::lineToRow(int aLine) const
+int QSynEdit::lineToRow(int aLine) const
 {
     return bufferToDisplayPos({1, aLine}).Row;
 }
 
-int SynEdit::foldRowToLine(int Row) const
+int QSynEdit::foldRowToLine(int Row) const
 {
     int result = Row;
     for (int i=0;i<mAllFoldRanges.count();i++) {
@@ -966,7 +966,7 @@ int SynEdit::foldRowToLine(int Row) const
     return result;
 }
 
-int SynEdit::foldLineToRow(int Line) const
+int QSynEdit::foldLineToRow(int Line) const
 {
     int result = Line;
     for (int i=mAllFoldRanges.count()-1;i>=0;i--) {
@@ -983,17 +983,17 @@ int SynEdit::foldLineToRow(int Line) const
     return result;
 }
 
-void SynEdit::setDefaultKeystrokes()
+void QSynEdit::setDefaultKeystrokes()
 {
     mKeyStrokes.resetDefaults();
 }
 
-void SynEdit::setExtraKeystrokes()
+void QSynEdit::setExtraKeystrokes()
 {
     mKeyStrokes.setExtraKeyStrokes();
 }
 
-void SynEdit::invalidateLine(int Line)
+void QSynEdit::invalidateLine(int Line)
 {
     QRect rcInval;
     if (mPainterLock >0)
@@ -1017,7 +1017,7 @@ void SynEdit::invalidateLine(int Line)
     }
 }
 
-void SynEdit::invalidateLines(int FirstLine, int LastLine)
+void QSynEdit::invalidateLines(int FirstLine, int LastLine)
 {
     if (mPainterLock>0)
         return;
@@ -1070,39 +1070,39 @@ void SynEdit::invalidateLines(int FirstLine, int LastLine)
     }
 }
 
-void SynEdit::invalidateSelection()
+void QSynEdit::invalidateSelection()
 {
     if (mPainterLock>0)
         return;
     invalidateLines(blockBegin().line, blockEnd().line);
 }
 
-void SynEdit::invalidateRect(const QRect &rect)
+void QSynEdit::invalidateRect(const QRect &rect)
 {
     if (mPainterLock>0)
         return;
     viewport()->update(rect);
 }
 
-void SynEdit::invalidate()
+void QSynEdit::invalidate()
 {
     if (mPainterLock>0)
         return;
     viewport()->update();
 }
 
-void SynEdit::lockPainter()
+void QSynEdit::lockPainter()
 {
     mPainterLock++;
 }
 
-void SynEdit::unlockPainter()
+void QSynEdit::unlockPainter()
 {
     Q_ASSERT(mPainterLock>0);
     mPainterLock--;
 }
 
-bool SynEdit::selAvail() const
+bool QSynEdit::selAvail() const
 {
     if (mBlockBegin.ch == mBlockEnd.ch && mBlockBegin.line == mBlockEnd.line)
         return false;
@@ -1118,7 +1118,7 @@ bool SynEdit::selAvail() const
     return true;
 }
 
-bool SynEdit::colSelAvail() const
+bool QSynEdit::colSelAvail() const
 {
     if (mActiveSelectionMode != SelectionMode::Column)
         return false;
@@ -1131,12 +1131,12 @@ bool SynEdit::colSelAvail() const
     return coordBegin.Column!=coordEnd.Column;
 }
 
-QString SynEdit::wordAtCursor()
+QString QSynEdit::wordAtCursor()
 {
     return wordAtRowCol(caretXY());
 }
 
-QString SynEdit::wordAtRowCol(const BufferCoord &pos)
+QString QSynEdit::wordAtRowCol(const BufferCoord &pos)
 {
     if ((pos.line >= 1) && (pos.line <= mDocument->count())) {
         QString line = mDocument->getString(pos.line - 1);
@@ -1163,7 +1163,7 @@ QString SynEdit::wordAtRowCol(const BufferCoord &pos)
     return "";
 }
 
-QChar SynEdit::charAt(const BufferCoord &pos)
+QChar QSynEdit::charAt(const BufferCoord &pos)
 {
     if ((pos.line >= 1) && (pos.line <= mDocument->count())) {
         QString line = mDocument->getString(pos.line-1);
@@ -1177,7 +1177,7 @@ QChar SynEdit::charAt(const BufferCoord &pos)
     return QChar(0);
 }
 
-QChar SynEdit::nextNonSpaceChar(int line, int ch)
+QChar QSynEdit::nextNonSpaceChar(int line, int ch)
 {
     if (ch<0)
         return QChar();
@@ -1194,7 +1194,7 @@ QChar SynEdit::nextNonSpaceChar(int line, int ch)
     return QChar();
 }
 
-QChar SynEdit::lastNonSpaceChar(int line, int ch)
+QChar QSynEdit::lastNonSpaceChar(int line, int ch)
 {
     if (line>=mDocument->count())
         return QChar();
@@ -1216,7 +1216,7 @@ QChar SynEdit::lastNonSpaceChar(int line, int ch)
     return QChar();
 }
 
-void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord &ptSelBegin, const BufferCoord &ptSelEnd)
+void QSynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord &ptSelBegin, const BufferCoord &ptSelEnd)
 {
     incPaintLock();
     internalSetCaretXY(ptCaret);
@@ -1225,12 +1225,12 @@ void SynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord
     decPaintLock();
 }
 
-bool SynEdit::inputMethodOn()
+bool QSynEdit::inputMethodOn()
 {
     return !mInputPreeditString.isEmpty();
 }
 
-void SynEdit::collapseAll()
+void QSynEdit::collapseAll()
 {
     incPaintLock();
     for (int i = mAllFoldRanges.count()-1;i>=0;i--){
@@ -1239,7 +1239,7 @@ void SynEdit::collapseAll()
     decPaintLock();
 }
 
-void SynEdit::unCollpaseAll()
+void QSynEdit::unCollpaseAll()
 {
     incPaintLock();
     for (int i = mAllFoldRanges.count()-1;i>=0;i--){
@@ -1248,7 +1248,7 @@ void SynEdit::unCollpaseAll()
     decPaintLock();
 }
 
-void SynEdit::processGutterClick(QMouseEvent *event)
+void QSynEdit::processGutterClick(QMouseEvent *event)
 {
     int X = event->pos().x();
     int Y = event->pos().y();
@@ -1282,13 +1282,13 @@ void SynEdit::processGutterClick(QMouseEvent *event)
     }
 }
 
-void SynEdit::clearUndo()
+void QSynEdit::clearUndo()
 {
     mUndoList->clear();
     mRedoList->clear();
 }
 
-int SynEdit::findIndentsStartLine(int line, QVector<int> indents)
+int QSynEdit::findIndentsStartLine(int line, QVector<int> indents)
 {
     line--;
     if (line<0 || line>=mDocument->count())
@@ -1318,7 +1318,7 @@ int SynEdit::findIndentsStartLine(int line, QVector<int> indents)
     return -1;
 }
 
-BufferCoord SynEdit::getPreviousLeftBrace(int x, int y)
+BufferCoord QSynEdit::getPreviousLeftBrace(int x, int y)
 {
     QChar Test;
     QString vDummy;
@@ -1376,12 +1376,12 @@ BufferCoord SynEdit::getPreviousLeftBrace(int x, int y)
     }
 }
 
-int SynEdit::charColumns(QChar ch) const
+int QSynEdit::charColumns(QChar ch) const
 {
     return mDocument->charColumns(ch);
 }
 
-void SynEdit::showCaret()
+void QSynEdit::showCaret()
 {
     if (m_blinkTimerId==0)
         m_blinkTimerId = startTimer(500);
@@ -1389,7 +1389,7 @@ void SynEdit::showCaret()
     updateCaret();
 }
 
-void SynEdit::hideCaret()
+void QSynEdit::hideCaret()
 {
     if (m_blinkTimerId!=0) {
         killTimer(m_blinkTimerId);
@@ -1399,7 +1399,7 @@ void SynEdit::hideCaret()
     }
 }
 
-bool SynEdit::isPointInSelection(const BufferCoord &Value) const
+bool QSynEdit::isPointInSelection(const BufferCoord &Value) const
 {
     BufferCoord ptBegin = blockBegin();
     BufferCoord ptEnd = blockEnd();
@@ -1421,12 +1421,12 @@ bool SynEdit::isPointInSelection(const BufferCoord &Value) const
         return false;
 }
 
-BufferCoord SynEdit::nextWordPos()
+BufferCoord QSynEdit::nextWordPos()
 {
     return nextWordPosEx(caretXY());
 }
 
-BufferCoord SynEdit::nextWordPosEx(const BufferCoord &XY)
+BufferCoord QSynEdit::nextWordPosEx(const BufferCoord &XY)
 {
     int CX = XY.ch;
     int CY = XY.line;
@@ -1467,12 +1467,12 @@ BufferCoord SynEdit::nextWordPosEx(const BufferCoord &XY)
     return BufferCoord{CX,CY};
 }
 
-BufferCoord SynEdit::wordStart()
+BufferCoord QSynEdit::wordStart()
 {
     return wordStartEx(caretXY());
 }
 
-BufferCoord SynEdit::wordStartEx(const BufferCoord &XY)
+BufferCoord QSynEdit::wordStartEx(const BufferCoord &XY)
 {
     int CX = XY.ch;
     int CY = XY.line;
@@ -1488,12 +1488,12 @@ BufferCoord SynEdit::wordStartEx(const BufferCoord &XY)
     return BufferCoord{CX,CY};
 }
 
-BufferCoord SynEdit::wordEnd()
+BufferCoord QSynEdit::wordEnd()
 {
     return wordEndEx(caretXY());
 }
 
-BufferCoord SynEdit::wordEndEx(const BufferCoord &XY)
+BufferCoord QSynEdit::wordEndEx(const BufferCoord &XY)
 {
     int CX = XY.ch;
     int CY = XY.line;
@@ -1510,12 +1510,12 @@ BufferCoord SynEdit::wordEndEx(const BufferCoord &XY)
     return BufferCoord{CX,CY};
 }
 
-BufferCoord SynEdit::prevWordPos()
+BufferCoord QSynEdit::prevWordPos()
 {
     return prevWordPosEx(caretXY());
 }
 
-BufferCoord SynEdit::prevWordPosEx(const BufferCoord &XY)
+BufferCoord QSynEdit::prevWordPosEx(const BufferCoord &XY)
 {
     int CX = XY.ch;
     int CY = XY.line;
@@ -1551,12 +1551,12 @@ BufferCoord SynEdit::prevWordPosEx(const BufferCoord &XY)
     return BufferCoord{CX,CY};
 }
 
-void SynEdit::setSelWord()
+void QSynEdit::setSelWord()
 {
     setWordBlock(caretXY());
 }
 
-void SynEdit::setWordBlock(BufferCoord value)
+void QSynEdit::setWordBlock(BufferCoord value)
 {
 //    if (mOptions.testFlag(eoScrollPastEol))
 //        Value.Char =
@@ -1576,7 +1576,7 @@ void SynEdit::setWordBlock(BufferCoord value)
         setCaretAndSelection(vWordEnd, vWordStart, vWordEnd);
 }
 
-void SynEdit::doExpandSelection(const BufferCoord &pos)
+void QSynEdit::doExpandSelection(const BufferCoord &pos)
 {
     if (selAvail()) {
         //todo
@@ -1585,12 +1585,12 @@ void SynEdit::doExpandSelection(const BufferCoord &pos)
     }
 }
 
-void SynEdit::doShrinkSelection(const BufferCoord &/*pos*/)
+void QSynEdit::doShrinkSelection(const BufferCoord &/*pos*/)
 {
     //todo
 }
 
-int SynEdit::findCommentStartLine(int searchStartLine)
+int QSynEdit::findCommentStartLine(int searchStartLine)
 {
     int commentStartLine = searchStartLine;
     SyntaxerState range;
@@ -1610,7 +1610,7 @@ int SynEdit::findCommentStartLine(int searchStartLine)
     return commentStartLine;
 }
 
-int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
+int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
 {
     if (!mSyntaxer)
         return 0;
@@ -1794,7 +1794,7 @@ int SynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
     return std::max(0,indentSpaces);
 }
 
-void SynEdit::doSelectAll()
+void QSynEdit::doSelectAll()
 {
     BufferCoord LastPt;
     LastPt.ch = 1;
@@ -1809,7 +1809,7 @@ void SynEdit::doSelectAll()
     emit statusChanged(StatusChange::scSelection);
 }
 
-void SynEdit::doComment()
+void QSynEdit::doComment()
 {
     BufferCoord origBlockBegin, origBlockEnd, origCaret;
     int endLine;
@@ -1848,7 +1848,7 @@ void SynEdit::doComment()
     setCaretAndSelection(origCaret, origBlockBegin, origBlockEnd);
 }
 
-void SynEdit::doUncomment()
+void QSynEdit::doUncomment()
 {
     BufferCoord origBlockBegin, origBlockEnd, origCaret;
     int endLine;
@@ -1898,7 +1898,7 @@ void SynEdit::doUncomment()
     setCaretAndSelection(origCaret,origBlockBegin,origBlockEnd);
 }
 
-void SynEdit::doToggleComment()
+void QSynEdit::doToggleComment()
 {
     BufferCoord origBlockBegin, origBlockEnd, origCaret;
     int endLine;
@@ -1945,7 +1945,7 @@ void SynEdit::doToggleComment()
         doComment();
 }
 
-void SynEdit::doToggleBlockComment()
+void QSynEdit::doToggleBlockComment()
 {
     QString s;
     if (mReadOnly)
@@ -1970,7 +1970,7 @@ void SynEdit::doToggleBlockComment()
 
 }
 
-void SynEdit::doMouseScroll(bool isDragging)
+void QSynEdit::doMouseScroll(bool isDragging)
 {
     if (mDropped) {
         mDropped=false;
@@ -2027,15 +2027,15 @@ void SynEdit::doMouseScroll(bool isDragging)
             mUndoList->addGroupBreak();
     }
     if (isDragging) {
-        mScrollTimer->singleShot(20,this,&SynEdit::onDraggingScrollTimeout);
+        mScrollTimer->singleShot(20,this,&QSynEdit::onDraggingScrollTimeout);
     } else  {
-        mScrollTimer->singleShot(20,this,&SynEdit::onScrollTimeout);
+        mScrollTimer->singleShot(20,this,&QSynEdit::onScrollTimeout);
     }
 
 //    computeScroll(isDragging);
 }
 
-QString SynEdit::getDisplayStringAtLine(int line) const
+QString QSynEdit::getDisplayStringAtLine(int line) const
 {
     QString s = mDocument->getString(line-1);
     PCodeFoldingRange foldRange = foldStartAtLine(line);
@@ -2045,7 +2045,7 @@ QString SynEdit::getDisplayStringAtLine(int line) const
     return s;
 }
 
-void SynEdit::doDeleteLastChar()
+void QSynEdit::doDeleteLastChar()
 {
     if (mReadOnly)
         return ;
@@ -2125,7 +2125,7 @@ void SynEdit::doDeleteLastChar()
     }
 }
 
-void SynEdit::doDeleteCurrentChar()
+void QSynEdit::doDeleteCurrentChar()
 {
     QStringList helper;
     BufferCoord Caret;
@@ -2193,7 +2193,7 @@ void SynEdit::doDeleteCurrentChar()
     }
 }
 
-void SynEdit::doDeleteWord()
+void QSynEdit::doDeleteWord()
 {
     if (mReadOnly)
         return;
@@ -2205,7 +2205,7 @@ void SynEdit::doDeleteWord()
     deleteFromTo(start,end);
 }
 
-void SynEdit::doDeleteToEOL()
+void QSynEdit::doDeleteToEOL()
 {
     if (mReadOnly)
         return;
@@ -2215,7 +2215,7 @@ void SynEdit::doDeleteToEOL()
     deleteFromTo(caretXY(),BufferCoord{lineText().length()+1,mCaretY});
 }
 
-void SynEdit::doDeleteToWordStart()
+void QSynEdit::doDeleteToWordStart()
 {
     if (mReadOnly)
         return;
@@ -2230,7 +2230,7 @@ void SynEdit::doDeleteToWordStart()
     deleteFromTo(start,end);
 }
 
-void SynEdit::doDeleteToWordEnd()
+void QSynEdit::doDeleteToWordEnd()
 {
     if (mReadOnly)
         return;
@@ -2245,7 +2245,7 @@ void SynEdit::doDeleteToWordEnd()
     deleteFromTo(start,end);
 }
 
-void SynEdit::doDeleteFromBOL()
+void QSynEdit::doDeleteFromBOL()
 {
     if (mReadOnly)
         return;
@@ -2255,7 +2255,7 @@ void SynEdit::doDeleteFromBOL()
     deleteFromTo(BufferCoord{1,mCaretY},caretXY());
 }
 
-void SynEdit::doDeleteLine()
+void QSynEdit::doDeleteLine()
 {
     if (!mReadOnly && (mDocument->count() > 0)) {
         PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
@@ -2299,7 +2299,7 @@ void SynEdit::doDeleteLine()
     }
 }
 
-void SynEdit::doSelecteLine()
+void QSynEdit::doSelecteLine()
 {
     setBlockBegin(BufferCoord{1,mCaretY});
     if (mCaretY==mDocument->count())
@@ -2308,7 +2308,7 @@ void SynEdit::doSelecteLine()
         setBlockEnd(BufferCoord{1,mCaretY+1});
 }
 
-void SynEdit::doDuplicateLine()
+void QSynEdit::doDuplicateLine()
 {
     if (!mReadOnly && (mDocument->count() > 0)) {
         PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
@@ -2330,7 +2330,7 @@ void SynEdit::doDuplicateLine()
     }
 }
 
-void SynEdit::doMoveSelUp()
+void QSynEdit::doMoveSelUp()
 {
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
@@ -2376,7 +2376,7 @@ void SynEdit::doMoveSelUp()
     }
 }
 
-void SynEdit::doMoveSelDown()
+void QSynEdit::doMoveSelDown()
 {
     if (mActiveSelectionMode == SelectionMode::Column)
         return;
@@ -2421,7 +2421,7 @@ void SynEdit::doMoveSelDown()
     }
 }
 
-void SynEdit::clearAll()
+void QSynEdit::clearAll()
 {
     mDocument->clear();
     mUndoList->clear();
@@ -2429,7 +2429,7 @@ void SynEdit::clearAll()
     setModified(false);
 }
 
-void SynEdit::insertLine(bool moveCaret)
+void QSynEdit::insertLine(bool moveCaret)
 {
     if (mReadOnly)
         return;
@@ -2542,7 +2542,7 @@ void SynEdit::insertLine(bool moveCaret)
     updateLastCaretX();
 }
 
-void SynEdit::doTabKey()
+void QSynEdit::doTabKey()
 {
     if (mActiveSelectionMode == SelectionMode::Column) {
         doAddChar('\t');
@@ -2570,7 +2570,7 @@ void SynEdit::doTabKey()
     ensureCursorPosVisible();
 }
 
-void SynEdit::doShiftTabKey()
+void QSynEdit::doShiftTabKey()
 {
     // Provide Visual Studio like block indenting
     if (mOptions.testFlag(eoTabIndent) && canDoBlockIndent()) {
@@ -2614,7 +2614,7 @@ void SynEdit::doShiftTabKey()
 }
 
 
-bool SynEdit::canDoBlockIndent()
+bool QSynEdit::canDoBlockIndent()
 {
     BufferCoord BB;
     BufferCoord BE;
@@ -2663,7 +2663,7 @@ bool SynEdit::canDoBlockIndent()
     return true;
 }
 
-QRect SynEdit::calculateCaretRect() const
+QRect QSynEdit::calculateCaretRect() const
 {
     DisplayCoord coord = displayXY();
     if (!mInputPreeditString.isEmpty()) {
@@ -2693,7 +2693,7 @@ QRect SynEdit::calculateCaretRect() const
     }
 }
 
-QRect SynEdit::calculateInputCaretRect() const
+QRect QSynEdit::calculateInputCaretRect() const
 {
     DisplayCoord coord = displayXY();
     QPoint caretPos = rowColumnToPixels(coord);
@@ -2705,12 +2705,12 @@ QRect SynEdit::calculateInputCaretRect() const
                  mTextHeight);
 }
 
-void SynEdit::clearAreaList(EditingAreaList areaList)
+void QSynEdit::clearAreaList(EditingAreaList areaList)
 {
     areaList.clear();
 }
 
-void SynEdit::computeCaret()
+void QSynEdit::computeCaret()
 {
     QPoint iMousePos = QCursor::pos();
     iMousePos = mapFromGlobal(iMousePos);
@@ -2722,7 +2722,7 @@ void SynEdit::computeCaret()
     setInternalDisplayXY(vCaretNearestPos);
 }
 
-void SynEdit::computeScroll(bool isDragging)
+void QSynEdit::computeScroll(bool isDragging)
 {
     QPoint iMousePos = QCursor::pos();
     iMousePos = mapFromGlobal(iMousePos);
@@ -2770,7 +2770,7 @@ void SynEdit::computeScroll(bool isDragging)
 //    }
 }
 
-void SynEdit::doBlockIndent()
+void QSynEdit::doBlockIndent()
 {
     BufferCoord  oldCaretPos;
     BufferCoord  BB, BE;
@@ -2850,7 +2850,7 @@ void SynEdit::doBlockIndent()
     mUndoList->endBlock();
 }
 
-void SynEdit::doBlockUnindent()
+void QSynEdit::doBlockUnindent()
 {
     int lastIndent = 0;
     int firstIndent = 0;
@@ -2912,7 +2912,7 @@ void SynEdit::doBlockUnindent()
     mUndoList->endBlock();
 }
 
-void SynEdit::doAddChar(QChar AChar)
+void QSynEdit::doAddChar(QChar AChar)
 {
     if (mReadOnly)
         return;
@@ -3056,7 +3056,7 @@ void SynEdit::doAddChar(QChar AChar)
     //DoOnPaintTransient(ttAfter);
 }
 
-void SynEdit::doCutToClipboard()
+void QSynEdit::doCutToClipboard()
 {
     if (mReadOnly)
         return;
@@ -3072,7 +3072,7 @@ void SynEdit::doCutToClipboard()
     mUndoList->addGroupBreak();
 }
 
-void SynEdit::doCopyToClipboard()
+void QSynEdit::doCopyToClipboard()
 {
     bool selected=selAvail();
     if (!selected)
@@ -3086,14 +3086,14 @@ void SynEdit::doCopyToClipboard()
     }
 }
 
-void SynEdit::internalDoCopyToClipboard(const QString &s)
+void QSynEdit::internalDoCopyToClipboard(const QString &s)
 {
     QClipboard* clipboard=QGuiApplication::clipboard();
     clipboard->clear();
     clipboard->setText(s);
 }
 
-void SynEdit::doPasteFromClipboard()
+void QSynEdit::doPasteFromClipboard()
 {
     if (mReadOnly)
         return;
@@ -3123,7 +3123,7 @@ void SynEdit::doPasteFromClipboard()
     mUndoList->endBlock();
 }
 
-void SynEdit::incPaintLock()
+void QSynEdit::incPaintLock()
 {
     if (mPaintLock==0) {
         onBeginFirstPaintLock();
@@ -3131,7 +3131,7 @@ void SynEdit::incPaintLock()
     mPaintLock ++ ;
 }
 
-void SynEdit::decPaintLock()
+void QSynEdit::decPaintLock()
 {
     Q_ASSERT(mPaintLock > 0);
     mPaintLock--;
@@ -3148,49 +3148,49 @@ void SynEdit::decPaintLock()
     }
 }
 
-int SynEdit::clientWidth()
+int QSynEdit::clientWidth()
 {
     return viewport()->size().width();
 }
 
-int SynEdit::clientHeight()
+int QSynEdit::clientHeight()
 {
     return viewport()->size().height();
 }
 
-int SynEdit::clientTop()
+int QSynEdit::clientTop()
 {
     return 0;
 }
 
-int SynEdit::clientLeft()
+int QSynEdit::clientLeft()
 {
     return 0;
 }
 
-QRect SynEdit::clientRect()
+QRect QSynEdit::clientRect()
 {
     return QRect(0,0, clientWidth(), clientHeight());
 }
 
-void SynEdit::synFontChanged()
+void QSynEdit::synFontChanged()
 {
     recalcCharExtent();
     onSizeOrFontChanged(true);
 }
 
 
-void SynEdit::updateLastCaretX()
+void QSynEdit::updateLastCaretX()
 {
     mLastCaretColumn = displayX();
 }
 
-void SynEdit::ensureCursorPosVisible()
+void QSynEdit::ensureCursorPosVisible()
 {
     ensureCursorPosVisibleEx(false);
 }
 
-void SynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
+void QSynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
 {
     incPaintLock();
     auto action = finally([this]{
@@ -3219,7 +3219,7 @@ void SynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
     }
 }
 
-void SynEdit::scrollWindow(int dx, int dy)
+void QSynEdit::scrollWindow(int dx, int dy)
 {
     int nx = horizontalScrollBar()->value()+dx;
     int ny = verticalScrollBar()->value()+dy;
@@ -3227,36 +3227,36 @@ void SynEdit::scrollWindow(int dx, int dy)
     verticalScrollBar()->setValue(ny);
 }
 
-void SynEdit::setInternalDisplayXY(const DisplayCoord &aPos)
+void QSynEdit::setInternalDisplayXY(const DisplayCoord &aPos)
 {
     incPaintLock();
     internalSetCaretXY(displayToBufferPos(aPos));
     decPaintLock();
 }
 
-void SynEdit::internalSetCaretXY(const BufferCoord &Value)
+void QSynEdit::internalSetCaretXY(const BufferCoord &Value)
 {
     setCaretXYEx(true, Value);
 }
 
-void SynEdit::internalSetCaretX(int Value)
+void QSynEdit::internalSetCaretX(int Value)
 {
     internalSetCaretXY(BufferCoord{Value, mCaretY});
 }
 
-void SynEdit::internalSetCaretY(int Value)
+void QSynEdit::internalSetCaretY(int Value)
 {
     internalSetCaretXY(BufferCoord{mCaretX,Value});
 }
 
-void SynEdit::setStatusChanged(StatusChanges changes)
+void QSynEdit::setStatusChanged(StatusChanges changes)
 {
     mStatusChanges = mStatusChanges | changes;
     if (mPaintLock == 0)
         doOnStatusChange(mStatusChanges);
 }
 
-void SynEdit::doOnStatusChange(StatusChanges)
+void QSynEdit::doOnStatusChange(StatusChanges)
 {
     if (mStatusChanges.testFlag(StatusChange::scCaretX)
             || mStatusChanges.testFlag(StatusChange::scCaretY)) {
@@ -3266,7 +3266,7 @@ void SynEdit::doOnStatusChange(StatusChanges)
     mStatusChanges = StatusChange::scNone;
 }
 
-void SynEdit::updateScrollbars()
+void QSynEdit::updateScrollbars()
 {
     int nMaxScroll;
     int nMin,nMax,nPage,nPos;
@@ -3316,13 +3316,13 @@ void SynEdit::updateScrollbars()
     }
 }
 
-void SynEdit::updateCaret()
+void QSynEdit::updateCaret()
 {
     mStateFlags.setFlag(StateFlag::sfCaretChanged,false);
     invalidateRect(calculateCaretRect());
 }
 
-void SynEdit::recalcCharExtent()
+void QSynEdit::recalcCharExtent()
 {
     FontStyle styles[] = {FontStyle::fsBold, FontStyle::fsItalic, FontStyle::fsStrikeOut, FontStyle::fsUnderline};
     bool hasStyles[] = {false,false,false,false};
@@ -3407,7 +3407,7 @@ void SynEdit::recalcCharExtent()
     mTextHeight *= mLineSpacingFactor;
 }
 
-QString SynEdit::expandAtWideGlyphs(const QString &S)
+QString QSynEdit::expandAtWideGlyphs(const QString &S)
 {
     QString Result(S.length()*2); // speed improvement
     int  j = 0;
@@ -3428,7 +3428,7 @@ QString SynEdit::expandAtWideGlyphs(const QString &S)
     return Result;
 }
 
-void SynEdit::updateModifiedStatus()
+void QSynEdit::updateModifiedStatus()
 {
     bool oldModified = mModified;
     mModified = !mUndoList->initialState();
@@ -3438,7 +3438,7 @@ void SynEdit::updateModifiedStatus()
         emit statusChanged(StatusChange::scModifyChanged);
 }
 
-int SynEdit::scanFrom(int Index, int canStopIndex)
+int QSynEdit::scanFrom(int Index, int canStopIndex)
 {
     SyntaxerState iRange;
     int Result = std::max(0,Index);
@@ -3478,7 +3478,7 @@ int SynEdit::scanFrom(int Index, int canStopIndex)
     return Result;
 }
 
-void SynEdit::rescanRange(int line)
+void QSynEdit::rescanRange(int line)
 {
     if (!mSyntaxer)
         return;
@@ -3498,7 +3498,7 @@ void SynEdit::rescanRange(int line)
     mDocument->setRange(line,iRange);
 }
 
-void SynEdit::rescanRanges()
+void QSynEdit::rescanRanges()
 {
     if (mSyntaxer && !mDocument->empty()) {
         mSyntaxer->resetState();
@@ -3512,7 +3512,7 @@ void SynEdit::rescanRanges()
         rescanFolds();
 }
 
-void SynEdit::uncollapse(PCodeFoldingRange FoldRange)
+void QSynEdit::uncollapse(PCodeFoldingRange FoldRange)
 {
     FoldRange->linesCollapsed = 0;
     FoldRange->collapsed = false;
@@ -3525,7 +3525,7 @@ void SynEdit::uncollapse(PCodeFoldingRange FoldRange)
     updateScrollbars();
 }
 
-void SynEdit::collapse(PCodeFoldingRange FoldRange)
+void QSynEdit::collapse(PCodeFoldingRange FoldRange)
 {
     FoldRange->linesCollapsed = FoldRange->toLine - FoldRange->fromLine;
     FoldRange->collapsed = true;
@@ -3545,7 +3545,7 @@ void SynEdit::collapse(PCodeFoldingRange FoldRange)
     updateScrollbars();
 }
 
-void SynEdit::foldOnListInserted(int Line, int Count)
+void QSynEdit::foldOnListInserted(int Line, int Count)
 {
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
@@ -3558,7 +3558,7 @@ void SynEdit::foldOnListInserted(int Line, int Count)
     }
 }
 
-void SynEdit::foldOnListDeleted(int Line, int Count)
+void QSynEdit::foldOnListDeleted(int Line, int Count)
 {
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
@@ -3575,12 +3575,12 @@ void SynEdit::foldOnListDeleted(int Line, int Count)
 
 }
 
-void SynEdit::foldOnListCleared()
+void QSynEdit::foldOnListCleared()
 {
     mAllFoldRanges.clear();
 }
 
-void SynEdit::rescanFolds()
+void QSynEdit::rescanFolds()
 {
     if (!mUseCodeFolding)
         return;
@@ -3590,7 +3590,7 @@ void SynEdit::rescanFolds()
 
 static void null_deleter(CodeFoldingRanges *) {}
 
-void SynEdit::rescanForFoldRanges()
+void QSynEdit::rescanForFoldRanges()
 {
     // Delete all uncollapsed folds
 //    for (int i=mAllFoldRanges.count()-1;i>=0;i--) {
@@ -3601,7 +3601,7 @@ void SynEdit::rescanForFoldRanges()
 
     // Did we leave any collapsed folds and are we viewing a code file?
     if (mAllFoldRanges.count() > 0) {
-        CodeFoldingRanges ranges=mAllFoldRanges;
+        CodeFoldingRanges ranges{mAllFoldRanges};
         mAllFoldRanges.clear();
         // Add folds to a separate list
         PCodeFoldingRanges temporaryAllFoldRanges = std::make_shared<CodeFoldingRanges>();
@@ -3636,14 +3636,14 @@ void SynEdit::rescanForFoldRanges()
     }
 }
 
-void SynEdit::scanForFoldRanges(PCodeFoldingRanges topFoldRanges)
+void QSynEdit::scanForFoldRanges(PCodeFoldingRanges topFoldRanges)
 {
     PCodeFoldingRanges parentFoldRanges = topFoldRanges;
     findSubFoldRange(topFoldRanges, parentFoldRanges,PCodeFoldingRange());
 }
 
 //this func should only be used in findSubFoldRange
-int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString& tokenAttrName) {
+int QSynEdit::lineHasChar(int Line, int startChar, QChar character, const QString& tokenAttrName) {
     QString CurLine = mDocument->getString(Line);
     if (!mSyntaxer){
         for (int i=startChar; i<CurLine.length();i++) {
@@ -3672,7 +3672,7 @@ int SynEdit::lineHasChar(int Line, int startChar, QChar character, const QString
     return -1;
 }
 
-void SynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange parent)
+void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange parent)
 {
     PCodeFoldingRange  collapsedFold;
     int line = 0;
@@ -3721,7 +3721,7 @@ void SynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRan
 
 }
 
-PCodeFoldingRange SynEdit::collapsedFoldStartAtLine(int Line)
+PCodeFoldingRange QSynEdit::collapsedFoldStartAtLine(int Line)
 {
     for (int i = 0; i< mAllFoldRanges.count() - 1; i++ ) {
         if (mAllFoldRanges[i]->fromLine == Line && mAllFoldRanges[i]->collapsed) {
@@ -3733,12 +3733,12 @@ PCodeFoldingRange SynEdit::collapsedFoldStartAtLine(int Line)
     return PCodeFoldingRange();
 }
 
-void SynEdit::initializeCaret()
+void QSynEdit::initializeCaret()
 {
     //showCaret();
 }
 
-PCodeFoldingRange SynEdit::foldStartAtLine(int Line) const
+PCodeFoldingRange QSynEdit::foldStartAtLine(int Line) const
 {
     for (int i = 0; i<mAllFoldRanges.count();i++) {
         PCodeFoldingRange range = mAllFoldRanges[i];
@@ -3750,7 +3750,7 @@ PCodeFoldingRange SynEdit::foldStartAtLine(int Line) const
     return PCodeFoldingRange();
 }
 
-bool SynEdit::foldCollapsedBetween(int startLine, int endLine) const
+bool QSynEdit::foldCollapsedBetween(int startLine, int endLine) const
 {
     for (int i = 0; i<mAllFoldRanges.count();i++) {
         PCodeFoldingRange range = mAllFoldRanges[i];
@@ -3763,7 +3763,7 @@ bool SynEdit::foldCollapsedBetween(int startLine, int endLine) const
     return false;
 }
 
-QString SynEdit::substringByColumns(const QString &s, int startColumn, int &colLen)
+QString QSynEdit::substringByColumns(const QString &s, int startColumn, int &colLen)
 {
 
     int len = s.length();
@@ -3807,12 +3807,12 @@ QString SynEdit::substringByColumns(const QString &s, int startColumn, int &colL
     return result;
 }
 
-PCodeFoldingRange SynEdit::foldAroundLine(int Line)
+PCodeFoldingRange QSynEdit::foldAroundLine(int Line)
 {
     return foldAroundLineEx(Line,false,false,false);
 }
 
-PCodeFoldingRange SynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+PCodeFoldingRange QSynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
 {
     // Check global list
     PCodeFoldingRange Result = checkFoldRange(&mAllFoldRanges, Line, WantCollapsed, AcceptFromLine, AcceptToLine);
@@ -3829,7 +3829,7 @@ PCodeFoldingRange SynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool A
     return Result;
 }
 
-PCodeFoldingRange SynEdit::checkFoldRange(CodeFoldingRanges *FoldRangeToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+PCodeFoldingRange QSynEdit::checkFoldRange(CodeFoldingRanges *FoldRangeToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
 {
     for (int i = 0; i< FoldRangeToCheck->count(); i++) {
         PCodeFoldingRange range = (*FoldRangeToCheck)[i];
@@ -3843,7 +3843,7 @@ PCodeFoldingRange SynEdit::checkFoldRange(CodeFoldingRanges *FoldRangeToCheck, i
     return PCodeFoldingRange();
 }
 
-PCodeFoldingRange SynEdit::foldEndAtLine(int Line)
+PCodeFoldingRange QSynEdit::foldEndAtLine(int Line)
 {
     for (int i = 0; i<mAllFoldRanges.count();i++) {
         PCodeFoldingRange range = mAllFoldRanges[i];
@@ -3855,7 +3855,7 @@ PCodeFoldingRange SynEdit::foldEndAtLine(int Line)
     return PCodeFoldingRange();
 }
 
-void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
+void QSynEdit::paintCaret(QPainter &painter, const QRect rcClip)
 {
     if (m_blinkStatus!=1)
         return;
@@ -3904,12 +3904,12 @@ void SynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     }
 }
 
-int SynEdit::textOffset() const
+int QSynEdit::textOffset() const
 {
     return mGutterWidth + 2 - (mLeftChar-1)*mCharWidth;
 }
 
-EditCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
+EditCommand QSynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
 {
     PEditKeyStroke keyStroke = mKeyStrokes.findKeycode2(mLastKey,mLastKeyModifiers,
                                                            key, modifiers);
@@ -3931,7 +3931,7 @@ EditCommand SynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
     return cmd;
 }
 
-void SynEdit::onSizeOrFontChanged(bool bFont)
+void QSynEdit::onSizeOrFontChanged(bool bFont)
 {
 
     if (mCharWidth != 0) {
@@ -3955,24 +3955,24 @@ void SynEdit::onSizeOrFontChanged(bool bFont)
     }
 }
 
-void SynEdit::onChanged()
+void QSynEdit::onChanged()
 {
     emit changed();
 }
 
-void SynEdit::onScrolled(int)
+void QSynEdit::onScrolled(int)
 {
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
 }
 
-double SynEdit::lineSpacingFactor() const
+double QSynEdit::lineSpacingFactor() const
 {
     return mLineSpacingFactor;
 }
 
-void SynEdit::setLineSpacingFactor(double newLineSpacingFactor)
+void QSynEdit::setLineSpacingFactor(double newLineSpacingFactor)
 {
     if (newLineSpacingFactor<1.0)
         newLineSpacingFactor = 1.0;
@@ -3980,32 +3980,32 @@ void SynEdit::setLineSpacingFactor(double newLineSpacingFactor)
     recalcCharExtent();
 }
 
-ScrollStyle SynEdit::scrollBars() const
+ScrollStyle QSynEdit::scrollBars() const
 {
     return mScrollBars;
 }
 
-void SynEdit::setScrollBars(ScrollStyle newScrollBars)
+void QSynEdit::setScrollBars(ScrollStyle newScrollBars)
 {
     mScrollBars = newScrollBars;
 }
 
-int SynEdit::mouseSelectionScrollSpeed() const
+int QSynEdit::mouseSelectionScrollSpeed() const
 {
     return mMouseSelectionScrollSpeed;
 }
 
-void SynEdit::setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed)
+void QSynEdit::setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed)
 {
     mMouseSelectionScrollSpeed = newMouseSelectionScrollSpeed;
 }
 
-const QFont &SynEdit::fontForNonAscii() const
+const QFont &QSynEdit::fontForNonAscii() const
 {
     return mFontForNonAscii;
 }
 
-void SynEdit::setFontForNonAscii(const QFont &newFontForNonAscii)
+void QSynEdit::setFontForNonAscii(const QFont &newFontForNonAscii)
 {
     mFontForNonAscii = newFontForNonAscii;
     mFontForNonAscii.setStyleStrategy(QFont::PreferAntialias);
@@ -4013,84 +4013,84 @@ void SynEdit::setFontForNonAscii(const QFont &newFontForNonAscii)
         mDocument->setFontMetrics(font(),mFontForNonAscii);
 }
 
-const QColor &SynEdit::backgroundColor() const
+const QColor &QSynEdit::backgroundColor() const
 {
     return mBackgroundColor;
 }
 
-void SynEdit::setBackgroundColor(const QColor &newBackgroundColor)
+void QSynEdit::setBackgroundColor(const QColor &newBackgroundColor)
 {
     mBackgroundColor = newBackgroundColor;
 }
 
-const QColor &SynEdit::foregroundColor() const
+const QColor &QSynEdit::foregroundColor() const
 {
     return mForegroundColor;
 }
 
-void SynEdit::setForegroundColor(const QColor &newForegroundColor)
+void QSynEdit::setForegroundColor(const QColor &newForegroundColor)
 {
     mForegroundColor = newForegroundColor;
 }
 
-int SynEdit::mouseWheelScrollSpeed() const
+int QSynEdit::mouseWheelScrollSpeed() const
 {
     return mMouseWheelScrollSpeed;
 }
 
-void SynEdit::setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed)
+void QSynEdit::setMouseWheelScrollSpeed(int newMouseWheelScrollSpeed)
 {
     mMouseWheelScrollSpeed = newMouseWheelScrollSpeed;
 }
 
-const PTokenAttribute &SynEdit::rainbowAttr3() const
+const PTokenAttribute &QSynEdit::rainbowAttr3() const
 {
     return mRainbowAttr3;
 }
 
-const PTokenAttribute &SynEdit::rainbowAttr2() const
+const PTokenAttribute &QSynEdit::rainbowAttr2() const
 {
     return mRainbowAttr2;
 }
 
-const PTokenAttribute &SynEdit::rainbowAttr1() const
+const PTokenAttribute &QSynEdit::rainbowAttr1() const
 {
     return mRainbowAttr1;
 }
 
-const PTokenAttribute &SynEdit::rainbowAttr0() const
+const PTokenAttribute &QSynEdit::rainbowAttr0() const
 {
     return mRainbowAttr0;
 }
 
-bool SynEdit::caretUseTextColor() const
+bool QSynEdit::caretUseTextColor() const
 {
     return mCaretUseTextColor;
 }
 
-void SynEdit::setCaretUseTextColor(bool newCaretUseTextColor)
+void QSynEdit::setCaretUseTextColor(bool newCaretUseTextColor)
 {
     mCaretUseTextColor = newCaretUseTextColor;
 }
 
-const QColor &SynEdit::rightEdgeColor() const
+const QColor &QSynEdit::rightEdgeColor() const
 {
     return mRightEdgeColor;
 }
 
-void SynEdit::setRightEdgeColor(const QColor &newRightEdgeColor)
+void QSynEdit::setRightEdgeColor(const QColor &newRightEdgeColor)
 {
     if (newRightEdgeColor!=mRightEdgeColor) {
         mRightEdgeColor = newRightEdgeColor;
     }
 }
 
-int SynEdit::rightEdge() const
+int QSynEdit::rightEdge() const
 {
     return mRightEdge;
 }
 
-void SynEdit::setRightEdge(int newRightEdge)
+void QSynEdit::setRightEdge(int newRightEdge)
 {
     if (mRightEdge != newRightEdge) {
         mRightEdge = newRightEdge;
@@ -4098,37 +4098,37 @@ void SynEdit::setRightEdge(int newRightEdge)
     }
 }
 
-const QColor &SynEdit::selectedBackground() const
+const QColor &QSynEdit::selectedBackground() const
 {
     return mSelectedBackground;
 }
 
-void SynEdit::setSelectedBackground(const QColor &newSelectedBackground)
+void QSynEdit::setSelectedBackground(const QColor &newSelectedBackground)
 {
     mSelectedBackground = newSelectedBackground;
 }
 
-const QColor &SynEdit::selectedForeground() const
+const QColor &QSynEdit::selectedForeground() const
 {
     return mSelectedForeground;
 }
 
-void SynEdit::setSelectedForeground(const QColor &newSelectedForeground)
+void QSynEdit::setSelectedForeground(const QColor &newSelectedForeground)
 {
     mSelectedForeground = newSelectedForeground;
 }
 
-int SynEdit::textHeight() const
+int QSynEdit::textHeight() const
 {
     return mTextHeight;
 }
 
-bool SynEdit::readOnly() const
+bool QSynEdit::readOnly() const
 {
     return mReadOnly;
 }
 
-void SynEdit::setReadOnly(bool readOnly)
+void QSynEdit::setReadOnly(bool readOnly)
 {
     if (mReadOnly != readOnly) {
         mReadOnly = readOnly;
@@ -4136,37 +4136,37 @@ void SynEdit::setReadOnly(bool readOnly)
     }
 }
 
-Gutter& SynEdit::gutter()
+Gutter& QSynEdit::gutter()
 {
     return mGutter;
 }
 
-EditCaretType SynEdit::insertCaret() const
+EditCaretType QSynEdit::insertCaret() const
 {
     return mInsertCaret;
 }
 
-void SynEdit::setInsertCaret(const EditCaretType &insertCaret)
+void QSynEdit::setInsertCaret(const EditCaretType &insertCaret)
 {
     mInsertCaret = insertCaret;
 }
 
-EditCaretType SynEdit::overwriteCaret() const
+EditCaretType QSynEdit::overwriteCaret() const
 {
     return mOverwriteCaret;
 }
 
-void SynEdit::setOverwriteCaret(const EditCaretType &overwriteCaret)
+void QSynEdit::setOverwriteCaret(const EditCaretType &overwriteCaret)
 {
     mOverwriteCaret = overwriteCaret;
 }
 
-QColor SynEdit::activeLineColor() const
+QColor QSynEdit::activeLineColor() const
 {
     return mActiveLineColor;
 }
 
-void SynEdit::setActiveLineColor(const QColor &activeLineColor)
+void QSynEdit::setActiveLineColor(const QColor &activeLineColor)
 {
     if (mActiveLineColor!=activeLineColor) {
         mActiveLineColor = activeLineColor;
@@ -4174,17 +4174,17 @@ void SynEdit::setActiveLineColor(const QColor &activeLineColor)
     }
 }
 
-QColor SynEdit::caretColor() const
+QColor QSynEdit::caretColor() const
 {
     return mCaretColor;
 }
 
-void SynEdit::setCaretColor(const QColor &caretColor)
+void QSynEdit::setCaretColor(const QColor &caretColor)
 {
     mCaretColor = caretColor;
 }
 
-void SynEdit::setTabWidth(int newTabWidth)
+void QSynEdit::setTabWidth(int newTabWidth)
 {
     if (newTabWidth!=tabWidth()) {
         mDocument->setTabWidth(newTabWidth);
@@ -4192,7 +4192,7 @@ void SynEdit::setTabWidth(int newTabWidth)
     }
 }
 
-EditorOptions SynEdit::getOptions() const
+EditorOptions QSynEdit::getOptions() const
 {
     return mOptions;
 }
@@ -4201,7 +4201,7 @@ EditorOptions SynEdit::getOptions() const
 static bool sameEditorOption(const EditorOptions& value1, const EditorOptions& value2, EditorOption flag) {
     return value1.testFlag(flag)==value2.testFlag(flag);
 }
-void SynEdit::setOptions(const EditorOptions &Value)
+void QSynEdit::setOptions(const EditorOptions &Value)
 {
     if (Value != mOptions) {
         //bool bSetDrag = mOptions.testFlag(eoDropFiles) != Value.testFlag(eoDropFiles);
@@ -4239,7 +4239,7 @@ void SynEdit::setOptions(const EditorOptions &Value)
     }
 }
 
-void SynEdit::doAddStr(const QString &s)
+void QSynEdit::doAddStr(const QString &s)
 {
     if (mInserting == false && !selAvail()) {
         switch(mActiveSelectionMode) {
@@ -4264,7 +4264,7 @@ void SynEdit::doAddStr(const QString &s)
     doSetSelText(s);
 }
 
-void SynEdit::doUndo()
+void QSynEdit::doUndo()
 {
     if (mReadOnly)
         return;
@@ -4303,7 +4303,7 @@ void SynEdit::doUndo()
     onChanged();
 }
 
-void SynEdit::doUndoItem()
+void QSynEdit::doUndoItem()
 {
     mUndoing = true;
     bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
@@ -4443,7 +4443,7 @@ void SynEdit::doUndoItem()
     }
 }
 
-void SynEdit::doRedo()
+void QSynEdit::doRedo()
 {
     if (mReadOnly)
         return;
@@ -4486,7 +4486,7 @@ void SynEdit::doRedo()
     onChanged();
 }
 
-void SynEdit::doRedoItem()
+void QSynEdit::doRedoItem()
 {
     mUndoing = true;
     bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
@@ -4603,7 +4603,7 @@ void SynEdit::doRedoItem()
     }
 }
 
-void SynEdit::doZoomIn()
+void QSynEdit::doZoomIn()
 {
     QFont newFont = font();
     int size = newFont.pixelSize();
@@ -4612,7 +4612,7 @@ void SynEdit::doZoomIn()
     setFont(newFont);
 }
 
-void SynEdit::doZoomOut()
+void QSynEdit::doZoomOut()
 {
     QFont newFont = font();
     int size = newFont.pixelSize();
@@ -4623,7 +4623,7 @@ void SynEdit::doZoomOut()
     setFont(newFont);
 }
 
-QString SynEdit::selText() const
+QString QSynEdit::selText() const
 {
     if (!selAvail()) {
         return "";
@@ -4698,7 +4698,7 @@ QString SynEdit::selText() const
     return "";
 }
 
-QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const
+QStringList QSynEdit::getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const
 {
     QStringList result;
     if (startPos==endPos) {
@@ -4765,29 +4765,29 @@ QStringList SynEdit::getContent(BufferCoord startPos, BufferCoord endPos, Select
     return result;
 }
 
-QString SynEdit::lineBreak() const
+QString QSynEdit::lineBreak() const
 {
     return mDocument->lineBreak();
 }
 
-bool SynEdit::useCodeFolding() const
+bool QSynEdit::useCodeFolding() const
 {
     return mUseCodeFolding;
 }
 
-void SynEdit::setUseCodeFolding(bool value)
+void QSynEdit::setUseCodeFolding(bool value)
 {
     if (mUseCodeFolding!=value) {
         mUseCodeFolding = value;
     }
 }
 
-CodeFoldingOptions &SynEdit::codeFolding()
+CodeFoldingOptions &QSynEdit::codeFolding()
 {
     return mCodeFolding;
 }
 
-QString SynEdit::displayLineText()
+QString QSynEdit::displayLineText()
 {
     if (mCaretY >= 1 && mCaretY <= mDocument->count()) {
         QString s= mDocument->getString(mCaretY - 1);
@@ -4800,7 +4800,7 @@ QString SynEdit::displayLineText()
     return QString();
 }
 
-QString SynEdit::lineText() const
+QString QSynEdit::lineText() const
 {
     if (mCaretY >= 1 && mCaretY <= mDocument->count())
         return mDocument->getString(mCaretY - 1);
@@ -4808,18 +4808,18 @@ QString SynEdit::lineText() const
         return QString();
 }
 
-void SynEdit::setLineText(const QString s)
+void QSynEdit::setLineText(const QString s)
 {
     if (mCaretY >= 1 && mCaretY <= mDocument->count())
         mDocument->putString(mCaretY-1,s);
 }
 
-PSyntaxer SynEdit::syntaxer() const
+PSyntaxer QSynEdit::syntaxer() const
 {
     return mSyntaxer;
 }
 
-void SynEdit::setSyntaxer(const PSyntaxer &syntaxer)
+void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
 {
     PSyntaxer oldSyntaxer = mSyntaxer;
     mSyntaxer = syntaxer;
@@ -4837,17 +4837,17 @@ void SynEdit::setSyntaxer(const PSyntaxer &syntaxer)
     invalidate();
 }
 
-const PDocument& SynEdit::document() const
+const PDocument& QSynEdit::document() const
 {
     return mDocument;
 }
 
-bool SynEdit::empty()
+bool QSynEdit::empty()
 {
     return mDocument->empty();
 }
 
-void SynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
+void QSynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
 {
     // first the program event handler gets a chance to process the command
     onProcessCommand(Command, AChar, pData);
@@ -4856,7 +4856,7 @@ void SynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
     onCommandProcessed(Command, AChar, pData);
 }
 
-void SynEdit::moveCaretHorz(int DX, bool isSelection)
+void QSynEdit::moveCaretHorz(int DX, bool isSelection)
 {
     BufferCoord ptO = caretXY();
     BufferCoord ptDst = ptO;
@@ -4912,7 +4912,7 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
     decPaintLock();
 }
 
-void SynEdit::moveCaretVert(int DY, bool isSelection)
+void QSynEdit::moveCaretVert(int DY, bool isSelection)
 {
     DisplayCoord ptO = displayXY();
     DisplayCoord ptDst = ptO;
@@ -4961,7 +4961,7 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
     mLastCaretColumn = SaveLastCaretX;
 }
 
-void SynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection)
+void QSynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection)
 {
     if (mOptions.testFlag(EditorOption::eoGroupUndo)) {
         mUndoList->addGroupBreak();
@@ -4978,7 +4978,7 @@ void SynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoo
     decPaintLock();
 }
 
-void SynEdit::moveCaretToLineStart(bool isSelection)
+void QSynEdit::moveCaretToLineStart(bool isSelection)
 {
     int newX;
     // home key enhancement
@@ -5002,7 +5002,7 @@ void SynEdit::moveCaretToLineStart(bool isSelection)
     moveCaretAndSelection(caretXY(), BufferCoord{newX, mCaretY}, isSelection);
 }
 
-void SynEdit::moveCaretToLineEnd(bool isSelection)
+void QSynEdit::moveCaretToLineEnd(bool isSelection)
 {
     int vNewX;
     if (mOptions.testFlag(EditorOption::eoEnhanceEndKey)) {
@@ -5023,7 +5023,7 @@ void SynEdit::moveCaretToLineEnd(bool isSelection)
     moveCaretAndSelection(caretXY(), BufferCoord{vNewX, mCaretY}, isSelection);
 }
 
-void SynEdit::doGotoBlockStart(bool isSelection)
+void QSynEdit::doGotoBlockStart(bool isSelection)
 {
     if (mCaretY<0 || mCaretY>document()->count())
         return;
@@ -5045,7 +5045,7 @@ void SynEdit::doGotoBlockStart(bool isSelection)
     }
 }
 
-void SynEdit::doGotoBlockEnd(bool isSelection)
+void QSynEdit::doGotoBlockEnd(bool isSelection)
 {
     if (mCaretY<0 || mCaretY>document()->count())
         return;
@@ -5067,13 +5067,13 @@ void SynEdit::doGotoBlockEnd(bool isSelection)
     }
 }
 
-void SynEdit::doGotoEditorStart(bool isSelection)
+void QSynEdit::doGotoEditorStart(bool isSelection)
 {
     moveCaretVert(1-mCaretY, isSelection);
     moveCaretToLineStart(isSelection);
 }
 
-void SynEdit::doGotoEditorEnd(bool isSelection)
+void QSynEdit::doGotoEditorEnd(bool isSelection)
 {
     if (!mDocument->empty()) {
         moveCaretVert(mDocument->count()-mCaretY, isSelection);
@@ -5081,7 +5081,7 @@ void SynEdit::doGotoEditorEnd(bool isSelection)
     }
 }
 
-void SynEdit::setSelectedTextEmpty()
+void QSynEdit::setSelectedTextEmpty()
 {
     BufferCoord startPos=blockBegin();
     BufferCoord endPos=blockEnd();
@@ -5089,12 +5089,12 @@ void SynEdit::setSelectedTextEmpty()
     internalSetCaretXY(startPos);
 }
 
-void SynEdit::setSelTextPrimitive(const QStringList &text)
+void QSynEdit::setSelTextPrimitive(const QStringList &text)
 {
     setSelTextPrimitiveEx(mActiveSelectionMode, text);
 }
 
-void SynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text)
+void QSynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text)
 {
     incPaintLock();
     bool groupUndo=false;
@@ -5134,7 +5134,7 @@ void SynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text)
     setStatusChanged(StatusChange::scSelection);
 }
 
-void SynEdit::doSetSelText(const QString &value)
+void QSynEdit::doSetSelText(const QString &value)
 {
     bool blockBeginned = false;
     auto action = finally([this, &blockBeginned]{
@@ -5157,7 +5157,7 @@ void SynEdit::doSetSelText(const QString &value)
     setSelTextPrimitive(splitStrings(value));
 }
 
-int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SearchOptions sOptions, PSynSearchBase searchEngine,
+int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, SearchOptions sOptions, PSynSearchBase searchEngine,
                     SearchMathedProc matchedCallback, SearchConfirmAroundProc confirmAroundCallback)
 {
     if (!searchEngine)
@@ -5340,7 +5340,7 @@ int SynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sear
     return result;
 }
 
-void SynEdit::doLinesDeleted(int firstLine, int count)
+void QSynEdit::doLinesDeleted(int firstLine, int count)
 {
     emit linesDeleted(firstLine, count);
 //    // gutter marks
@@ -5357,7 +5357,7 @@ void SynEdit::doLinesDeleted(int firstLine, int count)
     //    end;
 }
 
-void SynEdit::doLinesInserted(int firstLine, int count)
+void QSynEdit::doLinesInserted(int firstLine, int count)
 {
     emit linesInserted(firstLine, count);
 //    // gutter marks
@@ -5372,12 +5372,12 @@ void SynEdit::doLinesInserted(int firstLine, int count)
 //    end;
 }
 
-void SynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
+void QSynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
 {
     mDocument->putString(ALine,ALineText,notify);
 }
 
-void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode)
+void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode)
 {
     bool UpdateMarks = false;
     int MarkOffset = 0;
@@ -5468,7 +5468,7 @@ void SynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMo
     }
 }
 
-void SynEdit::doInsertText(const BufferCoord& pos,
+void QSynEdit::doInsertText(const BufferCoord& pos,
                            const QStringList& text,
                            SelectionMode mode, int startLine, int endLine) {
     if (text.isEmpty())
@@ -5520,7 +5520,7 @@ void SynEdit::doInsertText(const BufferCoord& pos,
 
 }
 
-int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos)
+int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos)
 {
     QString sLeftSide;
     QString sRightSide;
@@ -5612,7 +5612,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     return result;
 }
 
-int SynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, int endLine)
+int QSynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, int endLine)
 {
     QString str;
     QString tempString;
@@ -5675,7 +5675,7 @@ int SynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, in
     return result;
 }
 
-int SynEdit::doInsertTextByLineMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos)
+int QSynEdit::doInsertTextByLineMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos)
 {
     QString Str;
     int Result = 0;
@@ -5703,7 +5703,7 @@ int SynEdit::doInsertTextByLineMode(const BufferCoord& pos, const QStringList& t
     return Result;
 }
 
-void SynEdit::deleteFromTo(const BufferCoord &start, const BufferCoord &end)
+void QSynEdit::deleteFromTo(const BufferCoord &start, const BufferCoord &end)
 {
     if (mReadOnly)
         return;
@@ -5719,48 +5719,48 @@ void SynEdit::deleteFromTo(const BufferCoord &start, const BufferCoord &end)
     }
 }
 
-bool SynEdit::onGetSpecialLineColors(int, QColor &, QColor &)
+bool QSynEdit::onGetSpecialLineColors(int, QColor &, QColor &)
 {
     return false;
 }
 
-void SynEdit::onGetEditingAreas(int, EditingAreaList &)
+void QSynEdit::onGetEditingAreas(int, EditingAreaList &)
 {
 
 }
 
-void SynEdit::onGutterGetText(int , QString &)
+void QSynEdit::onGutterGetText(int , QString &)
 {
 
 }
 
-void SynEdit::onGutterPaint(QPainter &, int , int , int )
+void QSynEdit::onGutterPaint(QPainter &, int , int , int )
 {
 
 }
 
-void SynEdit::onPaint(QPainter &)
+void QSynEdit::onPaint(QPainter &)
 {
 
 }
 
-void SynEdit::onPreparePaintHighlightToken(int , int , const QString &,
+void QSynEdit::onPreparePaintHighlightToken(int , int , const QString &,
                                            PTokenAttribute , FontStyles &, QColor &, QColor &)
 {
 
 }
 
-void SynEdit::onProcessCommand(EditCommand , QChar , void *)
+void QSynEdit::onProcessCommand(EditCommand , QChar , void *)
 {
 
 }
 
-void SynEdit::onCommandProcessed(EditCommand , QChar , void *)
+void QSynEdit::onCommandProcessed(EditCommand , QChar , void *)
 {
 
 }
 
-void SynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
+void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
 {
     hideCaret();
     incPaintLock();
@@ -6024,17 +6024,17 @@ void SynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
 
 }
 
-void SynEdit::onEndFirstPaintLock()
+void QSynEdit::onEndFirstPaintLock()
 {
 
 }
 
-void SynEdit::onBeginFirstPaintLock()
+void QSynEdit::onBeginFirstPaintLock()
 {
 
 }
 
-bool SynEdit::isIdentChar(const QChar &ch)
+bool QSynEdit::isIdentChar(const QChar &ch)
 {
     if (mSyntaxer) {
         return mSyntaxer->isIdentChar(ch);
@@ -6055,7 +6055,7 @@ bool SynEdit::isIdentChar(const QChar &ch)
     }
 }
 
-void SynEdit::setRainbowAttrs(const PTokenAttribute &attr0, const PTokenAttribute &attr1, const PTokenAttribute &attr2, const PTokenAttribute &attr3)
+void QSynEdit::setRainbowAttrs(const PTokenAttribute &attr0, const PTokenAttribute &attr1, const PTokenAttribute &attr2, const PTokenAttribute &attr3)
 {
     mRainbowAttr0 = attr0;
     mRainbowAttr1 = attr1;
@@ -6063,7 +6063,7 @@ void SynEdit::setRainbowAttrs(const PTokenAttribute &attr0, const PTokenAttribut
     mRainbowAttr3 = attr3;
 }
 
-void SynEdit::updateMouseCursor(){
+void QSynEdit::updateMouseCursor(){
     QPoint p = mapFromGlobal(cursor().pos());
     if (p.y() >= clientHeight() || p.x()>= clientWidth()) {
         setCursor(Qt::ArrowCursor);
@@ -6074,7 +6074,7 @@ void SynEdit::updateMouseCursor(){
     }
 }
 
-bool SynEdit::isCaretVisible()
+bool QSynEdit::isCaretVisible()
 {
     if (mCaretY < mTopLine)
         return false;
@@ -6087,7 +6087,7 @@ bool SynEdit::isCaretVisible()
     return true;
 }
 
-void SynEdit::paintEvent(QPaintEvent *event)
+void QSynEdit::paintEvent(QPaintEvent *event)
 {
     if (mPainterLock>0)
         return;
@@ -6133,7 +6133,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
 
         QPainter cachePainter(mContentImage.get());
         cachePainter.setFont(font());
-        SynEditTextPainter textPainter(this, &cachePainter,
+        QSynEditPainter textPainter(this, &cachePainter,
                                        nL1,nL2,nC1,nC2);
         // First paint paint the text area if it was (partly) invalidated.
         if (rcClip.right() > mGutterWidth ) {
@@ -6163,7 +6163,7 @@ void SynEdit::paintEvent(QPaintEvent *event)
     paintCaret(painter, rcCaret);
 }
 
-void SynEdit::resizeEvent(QResizeEvent *)
+void QSynEdit::resizeEvent(QResizeEvent *)
 {
     //resize the cache image
     qreal dpr = devicePixelRatioF();
@@ -6181,7 +6181,7 @@ void SynEdit::resizeEvent(QResizeEvent *)
     onSizeOrFontChanged(false);
 }
 
-void SynEdit::timerEvent(QTimerEvent *event)
+void QSynEdit::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == m_blinkTimerId) {
         m_blinkStatus = 1- m_blinkStatus;
@@ -6189,7 +6189,7 @@ void SynEdit::timerEvent(QTimerEvent *event)
     }
 }
 
-bool SynEdit::event(QEvent *event)
+bool QSynEdit::event(QEvent *event)
 {
     switch(event->type()) {
     case QEvent::KeyPress:{
@@ -6217,17 +6217,17 @@ bool SynEdit::event(QEvent *event)
     return QAbstractScrollArea::event(event);
 }
 
-void SynEdit::focusInEvent(QFocusEvent *)
+void QSynEdit::focusInEvent(QFocusEvent *)
 {
     showCaret();
 }
 
-void SynEdit::focusOutEvent(QFocusEvent *)
+void QSynEdit::focusOutEvent(QFocusEvent *)
 {
     hideCaret();
 }
 
-void SynEdit::keyPressEvent(QKeyEvent *event)
+void QSynEdit::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Escape && mActiveSelectionMode != SelectionMode::Normal) {
         setActiveSelectionMode(SelectionMode::Normal);
@@ -6252,7 +6252,7 @@ void SynEdit::keyPressEvent(QKeyEvent *event)
     }
 }
 
-void SynEdit::mousePressEvent(QMouseEvent *event)
+void QSynEdit::mousePressEvent(QMouseEvent *event)
 {
     bool bWasSel = false;
     bool bStartDrag = false;
@@ -6312,7 +6312,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void SynEdit::mouseReleaseEvent(QMouseEvent *event)
+void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseReleaseEvent(event);
     int X=event->pos().x();
@@ -6338,7 +6338,7 @@ void SynEdit::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
-void SynEdit::mouseMoveEvent(QMouseEvent *event)
+void QSynEdit::mouseMoveEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseMoveEvent(event);
     mMouseMoved = true;
@@ -6368,7 +6368,7 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
+void QSynEdit::mouseDoubleClickEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseDoubleClickEvent(event);
     QPoint ptMouse = event->pos();
@@ -6379,7 +6379,7 @@ void SynEdit::mouseDoubleClickEvent(QMouseEvent *event)
     }
 }
 
-void SynEdit::inputMethodEvent(QInputMethodEvent *event)
+void QSynEdit::inputMethodEvent(QInputMethodEvent *event)
 {
 //    qDebug()<<event->replacementStart()<<":"<<event->replacementLength()<<" - "
 //           << event->preeditString()<<" - "<<event->commitString();
@@ -6403,12 +6403,12 @@ void SynEdit::inputMethodEvent(QInputMethodEvent *event)
     }
 }
 
-void SynEdit::leaveEvent(QEvent *)
+void QSynEdit::leaveEvent(QEvent *)
 {
     setCursor(Qt::ArrowCursor);
 }
 
-void SynEdit::wheelEvent(QWheelEvent *event)
+void QSynEdit::wheelEvent(QWheelEvent *event)
 {
     if (event->modifiers() == Qt::ShiftModifier) {
         if (event->angleDelta().y()>0) {
@@ -6434,7 +6434,7 @@ void SynEdit::wheelEvent(QWheelEvent *event)
     QAbstractScrollArea::wheelEvent(event);
 }
 
-bool SynEdit::viewportEvent(QEvent * event)
+bool QSynEdit::viewportEvent(QEvent * event)
 {
 //    switch (event->type()) {
 //        case QEvent::Resize:
@@ -6444,7 +6444,7 @@ bool SynEdit::viewportEvent(QEvent * event)
     return QAbstractScrollArea::viewportEvent(event);
 }
 
-QVariant SynEdit::inputMethodQuery(Qt::InputMethodQuery property) const
+QVariant QSynEdit::inputMethodQuery(Qt::InputMethodQuery property) const
 {
     QRect rect = calculateInputCaretRect();
 
@@ -6457,7 +6457,7 @@ QVariant SynEdit::inputMethodQuery(Qt::InputMethodQuery property) const
 
 }
 
-void SynEdit::dragEnterEvent(QDragEnterEvent *event)
+void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->mimeData()->hasFormat("text/plain")) {
         event->acceptProposedAction();
@@ -6474,7 +6474,7 @@ void SynEdit::dragEnterEvent(QDragEnterEvent *event)
     }
 }
 
-void SynEdit::dropEvent(QDropEvent *event)
+void QSynEdit::dropEvent(QDropEvent *event)
 {
     //mScrollTimer->stop();
 
@@ -6532,7 +6532,7 @@ void SynEdit::dropEvent(QDropEvent *event)
     internalSetCaretXY(coord);
 }
 
-void SynEdit::dragMoveEvent(QDragMoveEvent *event)
+void QSynEdit::dragMoveEvent(QDragMoveEvent *event)
 {
     if (event->keyboardModifiers() ==  Qt::ControlModifier) {
         event->setDropAction(Qt::CopyAction);
@@ -6554,7 +6554,7 @@ void SynEdit::dragMoveEvent(QDragMoveEvent *event)
     showCaret();
 }
 
-void SynEdit::dragLeaveEvent(QDragLeaveEvent *)
+void QSynEdit::dragLeaveEvent(QDragLeaveEvent *)
 {
 //    setCaretXY(mDragCaretSave);
 //    setBlockBegin(mDragSelBeginSave);
@@ -6562,7 +6562,7 @@ void SynEdit::dragLeaveEvent(QDragLeaveEvent *)
     //    showCaret();
 }
 
-int SynEdit::maxScrollHeight() const
+int QSynEdit::maxScrollHeight() const
 {
     if (mOptions.testFlag(eoScrollPastEof))
         return std::max(displayLineCount(),1);
@@ -6570,12 +6570,12 @@ int SynEdit::maxScrollHeight() const
         return std::max(displayLineCount()-mLinesInWindow+1, 1);
 }
 
-bool SynEdit::modified() const
+bool QSynEdit::modified() const
 {
     return mModified;
 }
 
-void SynEdit::setModified(bool value)
+void QSynEdit::setModified(bool value)
 {
     if (value) {
         mLastModifyTime = QDateTime::currentDateTime();
@@ -6597,12 +6597,12 @@ void SynEdit::setModified(bool value)
     }
 }
 
-int SynEdit::gutterWidth() const
+int QSynEdit::gutterWidth() const
 {
     return mGutterWidth;
 }
 
-void SynEdit::setGutterWidth(int Value)
+void QSynEdit::setGutterWidth(int Value)
 {
     Value = std::max(Value, 0);
     if (mGutterWidth != Value) {
@@ -6612,33 +6612,33 @@ void SynEdit::setGutterWidth(int Value)
     }
 }
 
-int SynEdit::charWidth() const
+int QSynEdit::charWidth() const
 {
     return mCharWidth;
 }
 
-void SynEdit::setUndoLimit(int size)
+void QSynEdit::setUndoLimit(int size)
 {
     mUndoList->setMaxUndoActions(size);
 }
 
-void SynEdit::setUndoMemoryUsage(int size)
+void QSynEdit::setUndoMemoryUsage(int size)
 {
     mUndoList->setMaxMemoryUsage(size*1024*1024);
 //        mUndoList->setMaxMemoryUsage(size*1024);
 }
 
-int SynEdit::charsInWindow() const
+int QSynEdit::charsInWindow() const
 {
     return mCharsInWindow;
 }
 
-void SynEdit::onBookMarkOptionsChanged()
+void QSynEdit::onBookMarkOptionsChanged()
 {
     invalidateGutter();
 }
 
-void SynEdit::onLinesChanged()
+void QSynEdit::onLinesChanged()
 {
     SelectionMode vOldMode;
     mStateFlags.setFlag(StateFlag::sfLinesChanging, false);
@@ -6668,12 +6668,12 @@ void SynEdit::onLinesChanged()
     setTopLine(mTopLine);
 }
 
-void SynEdit::onLinesChanging()
+void QSynEdit::onLinesChanging()
 {
     mStateFlags.setFlag(StateFlag::sfLinesChanging);
 }
 
-void SynEdit::onLinesCleared()
+void QSynEdit::onLinesCleared()
 {
     if (mUseCodeFolding)
         foldOnListCleared();
@@ -6689,7 +6689,7 @@ void SynEdit::onLinesCleared()
     mStatusChanges.setFlag(StatusChange::scAll);
 }
 
-void SynEdit::onLinesDeleted(int index, int count)
+void QSynEdit::onLinesDeleted(int index, int count)
 {
     if (mUseCodeFolding)
         foldOnListDeleted(index + 1, count);
@@ -6699,7 +6699,7 @@ void SynEdit::onLinesDeleted(int index, int count)
     invalidateGutterLines(index + 1, INT_MAX);
 }
 
-void SynEdit::onLinesInserted(int index, int count)
+void QSynEdit::onLinesInserted(int index, int count)
 {
     if (mUseCodeFolding)
         foldOnListInserted(index + 1, count);
@@ -6714,7 +6714,7 @@ void SynEdit::onLinesInserted(int index, int count)
     invalidateGutterLines(index + 1, INT_MAX);
 }
 
-void SynEdit::onLinesPutted(int index, int count)
+void QSynEdit::onLinesPutted(int index, int count)
 {
     int vEndLine = index + 1;
     if (mSyntaxer) {
@@ -6723,7 +6723,7 @@ void SynEdit::onLinesPutted(int index, int count)
     invalidateLines(index + 1, vEndLine);
 }
 
-void SynEdit::onUndoAdded()
+void QSynEdit::onUndoAdded()
 {
     updateModifiedStatus();
 
@@ -6736,12 +6736,12 @@ void SynEdit::onUndoAdded()
     onChanged();
 }
 
-SelectionMode SynEdit::activeSelectionMode() const
+SelectionMode QSynEdit::activeSelectionMode() const
 {
     return mActiveSelectionMode;
 }
 
-void SynEdit::setActiveSelectionMode(const SelectionMode &Value)
+void QSynEdit::setActiveSelectionMode(const SelectionMode &Value)
 {
     if (mActiveSelectionMode != Value) {
         if (selAvail())
@@ -6753,7 +6753,7 @@ void SynEdit::setActiveSelectionMode(const SelectionMode &Value)
     }
 }
 
-BufferCoord SynEdit::blockEnd() const
+BufferCoord QSynEdit::blockEnd() const
 {
     if (mActiveSelectionMode==SelectionMode::Column)
         return mBlockEnd;
@@ -6764,7 +6764,7 @@ BufferCoord SynEdit::blockEnd() const
         return mBlockEnd;
 }
 
-void SynEdit::setBlockEnd(BufferCoord value)
+void QSynEdit::setBlockEnd(BufferCoord value)
 {
     //setActiveSelectionMode(mSelectionMode);
     value.line = minMax(value.line, 1, mDocument->count());
@@ -6795,7 +6795,7 @@ void SynEdit::setBlockEnd(BufferCoord value)
     }
 }
 
-void SynEdit::setSelLength(int Value)
+void QSynEdit::setSelLength(int Value)
 {
     if (mBlockBegin.line>mDocument->count() || mBlockBegin.line<=0)
         return;
@@ -6845,12 +6845,12 @@ void SynEdit::setSelLength(int Value)
     }
 }
 
-void SynEdit::setSelText(const QString &text)
+void QSynEdit::setSelText(const QString &text)
 {
     doSetSelText(text);
 }
 
-BufferCoord SynEdit::blockBegin() const
+BufferCoord QSynEdit::blockBegin() const
 {
     if (mActiveSelectionMode==SelectionMode::Column)
         return mBlockBegin;
@@ -6861,7 +6861,7 @@ BufferCoord SynEdit::blockBegin() const
         return mBlockBegin;
 }
 
-void SynEdit::setBlockBegin(BufferCoord value)
+void QSynEdit::setBlockBegin(BufferCoord value)
 {
     int nInval1, nInval2;
     bool SelChanged;
@@ -6901,12 +6901,12 @@ void SynEdit::setBlockBegin(BufferCoord value)
         setStatusChanged(StatusChange::scSelection);
 }
 
-int SynEdit::leftChar() const
+int QSynEdit::leftChar() const
 {
     return mLeftChar;
 }
 
-void SynEdit::setLeftChar(int Value)
+void QSynEdit::setLeftChar(int Value)
 {
     //int MaxVal;
     //QRect iTextArea;
@@ -6917,17 +6917,17 @@ void SynEdit::setLeftChar(int Value)
     }
 }
 
-int SynEdit::linesInWindow() const
+int QSynEdit::linesInWindow() const
 {
     return mLinesInWindow;
 }
 
-int SynEdit::topLine() const
+int QSynEdit::topLine() const
 {
     return mTopLine;
 }
 
-void SynEdit::setTopLine(int Value)
+void QSynEdit::setTopLine(int Value)
 {
     Value = std::min(Value,maxScrollHeight());
 //    if (mOptions.testFlag(SynEditorOption::eoScrollPastEof))
@@ -6941,7 +6941,7 @@ void SynEdit::setTopLine(int Value)
     }
 }
 
-void SynEdit::onGutterChanged()
+void QSynEdit::onGutterChanged()
 {
     if (mGutter.showLineNumbers() && mGutter.autoSize())
         mGutter.autoSizeDigitCount(mDocument->count());
@@ -6958,13 +6958,13 @@ void SynEdit::onGutterChanged()
         setGutterWidth(nW);
 }
 
-void SynEdit::onScrollTimeout()
+void QSynEdit::onScrollTimeout()
 {
     computeScroll(false);
     //doMouseScroll(false);
 }
 
-void SynEdit::onDraggingScrollTimeout()
+void QSynEdit::onDraggingScrollTimeout()
 {
     computeScroll(true);
     //doMouseScroll(true);

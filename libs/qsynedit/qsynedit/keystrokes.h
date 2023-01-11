@@ -20,7 +20,7 @@
 #include <QKeySequence>
 #include <QList>
 #include <memory>
-#include "MiscClasses.h"
+#include "gutter.h"
 #include "qt_utils/utils.h"
 
 namespace QSynedit {
@@ -170,15 +170,13 @@ enum class EditCommand {
     UserFirst = 1001, // Start of user-defined commands
 };
 
-class KeyError: public BaseError {
-public:
-    explicit KeyError(const QString& reason);
-};
-
 class EditKeyStroke
 {
 public:
     explicit EditKeyStroke();
+    EditKeyStroke(const EditKeyStroke&)=delete;
+    EditKeyStroke& operator=(const EditKeyStroke&)=delete;
+
     QKeySequence keySequence() const;
     void setKeySequence(QKeySequence& keySequence);
     int key() const;
@@ -210,6 +208,10 @@ using EditKeyStrokeList = QList<PEditKeyStroke>;
 
 class EditKeyStrokes {
 public:
+    explicit EditKeyStrokes();
+    EditKeyStrokes(const EditKeyStrokes&)=delete;
+    EditKeyStrokes& operator=(const EditKeyStrokes&)=delete;
+
     PEditKeyStroke add(EditCommand command, int key, Qt::KeyboardModifiers modifiers);
     PEditKeyStroke findCommand(EditCommand command);
     PEditKeyStroke findKeycode(int key, Qt::KeyboardModifiers modifiers);

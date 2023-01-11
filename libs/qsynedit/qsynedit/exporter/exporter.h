@@ -18,7 +18,7 @@
 #define EXPORTER_H
 
 #include <QString>
-#include "../SynEdit.h"
+#include "../qsynedit.h"
 
 namespace QSynedit {
 using FormatTokenHandler = std::function<void(PSyntaxer syntaxHighlighter, int line, int column, const QString& token,
@@ -28,6 +28,8 @@ class Exporter
 
 public:
     explicit Exporter(int tabSize, const QByteArray charset);
+    Exporter(const Exporter&)=delete;
+    Exporter& operator=(const Exporter&)=delete;
 
     /**
      * @brief Clears the output buffer and any internal data that relates to the last

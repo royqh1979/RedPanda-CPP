@@ -19,45 +19,46 @@ msvc {
     DEFINES += NOMINMAX
 }
 
-SOURCES += qsynedit/CodeFolding.cpp \
-    qsynedit/Constants.cpp \
-    qsynedit/KeyStrokes.cpp \
-    qsynedit/MiscClasses.cpp \
-    qsynedit/MiscProcs.cpp \
-    qsynedit/SynEdit.cpp \
-    qsynedit/TextBuffer.cpp \
-    qsynedit/TextPainter.cpp \
+SOURCES += qsynedit/codefolding.cpp \
+    qsynedit/constants.cpp \
+    qsynedit/document.cpp \
+    qsynedit/keyStrokes.cpp \
+    qsynedit/miscprocs.cpp \
     qsynedit/exporter/exporter.cpp \
     qsynedit/exporter/htmlexporter.cpp \
     qsynedit/exporter/qtsupportedhtmlexporter.cpp \
     qsynedit/exporter/rtfexporter.cpp \
+    qsynedit/gutter.cpp \
+    qsynedit/painter.cpp \
+    qsynedit/qsynedit.cpp \
+    qsynedit/searcher/baseseacher.cpp \
+    qsynedit/searcher/basicsearcher.cpp \
+    qsynedit/searcher/regexsearcher.cpp \
     qsynedit/syntaxer/asm.cpp \
     qsynedit/syntaxer/cpp.cpp \
     qsynedit/syntaxer/customhighlighterv1.cpp \
     qsynedit/syntaxer/glsl.cpp \
-    qsynedit/Search.cpp \
-    qsynedit/SearchBase.cpp \
-    qsynedit/SearchRegex.cpp \
-    qsynedit/Types.cpp \
+    qsynedit/types.cpp \
     qsynedit/syntaxer/makefile.cpp \
     qsynedit/syntaxer/syntaxer.cpp
 
-HEADERS += qsynedit/Search.h \
-    qsynedit/SearchBase.h \
-    qsynedit/SearchRegex.h \
-    qsynedit/CodeFolding.h \
-    qsynedit/Constants.h \
-    qsynedit/KeyStrokes.h \
-    qsynedit/MiscClasses.h \
-    qsynedit/MiscProcs.h \
-    qsynedit/SynEdit.h \
-    qsynedit/TextBuffer.h \
-    qsynedit/TextPainter.h \
-    qsynedit/Types.h \
+HEADERS += \
+    qsynedit/codefolding.h \
+    qsynedit/constants.h \
+    qsynedit/document.h \
+    qsynedit/keystrokes.h \
+    qsynedit/miscprocs.h \
+    qsynedit/types.h \
     qsynedit/exporter/exporter.h \
     qsynedit/exporter/htmlexporter.h \
     qsynedit/exporter/qtsupportedhtmlexporter.h \
     qsynedit/exporter/rtfexporter.h \
+    qsynedit/gutter.h \
+    qsynedit/painter.h \
+    qsynedit/qsynedit.h \
+    qsynedit/searcher/baseseacher.h \
+    qsynedit/searcher/basicsearcher.h \
+    qsynedit/searcher/regexsearcher.h \
     qsynedit/syntaxer/asm.h \
     qsynedit/syntaxer/cpp.h \
     qsynedit/syntaxer/customhighlighterv1.h \

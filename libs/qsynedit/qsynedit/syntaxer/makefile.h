@@ -67,6 +67,8 @@ class MakefileSyntaxer : public Syntaxer
 
 public:
     explicit MakefileSyntaxer();
+    MakefileSyntaxer(const MakefileSyntaxer&)=delete;
+    MakefileSyntaxer& operator=(const MakefileSyntaxer&)=delete;
 
     static const QSet<QString> Directives;
 private:

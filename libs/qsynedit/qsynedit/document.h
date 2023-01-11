@@ -24,8 +24,8 @@
 #include <QVector>
 #include <memory>
 #include <QFile>
-#include "MiscProcs.h"
-#include "Types.h"
+#include "miscprocs.h"
+#include "types.h"
 #include "qt_utils/utils.h"
 
 namespace QSynedit {

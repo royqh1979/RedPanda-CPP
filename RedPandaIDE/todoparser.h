@@ -22,7 +22,7 @@
 #include <QMutex>
 #include <QAbstractListModel>
 #include "syntaxermanager.h"
-#include "qsynedit/Constants.h"
+#include "qsynedit/constants.h"
 
 struct TodoItem {
     QString filename;

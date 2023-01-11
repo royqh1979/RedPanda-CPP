@@ -23,7 +23,7 @@
 #include <QColor>
 #include <QString>
 #include <QPair>
-#include "qsynedit/SynEdit.h"
+#include "qsynedit/qsynedit.h"
 #include "compiler/compilerinfo.h"
 #include "utils.h"
 

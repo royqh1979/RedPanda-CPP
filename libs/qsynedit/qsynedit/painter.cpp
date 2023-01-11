@@ -14,15 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "TextPainter.h"
-#include "SynEdit.h"
-#include "Constants.h"
+#include "painter.h"
+#include "qsynedit.h"
+#include "constants.h"
 #include <cmath>
 #include <QDebug>
 
 namespace QSynedit {
 
-SynEditTextPainter::SynEditTextPainter(SynEdit *edit, QPainter *painter, int FirstRow, int LastRow, int FirstCol, int LastCol)
+QSynEditPainter::QSynEditPainter(QSynEdit *edit, QPainter *painter, int FirstRow, int LastRow, int FirstCol, int LastCol)
 {
     this->edit = edit;
     this->painter = painter;
@@ -32,7 +32,7 @@ SynEditTextPainter::SynEditTextPainter(SynEdit *edit, QPainter *painter, int Fir
     this->LastCol = LastCol;
 }
 
-void SynEditTextPainter::paintTextLines(const QRect& clip)
+void QSynEditPainter::paintTextLines(const QRect& clip)
 {
     painter->fillRect(clip, edit->mBackgroundColor);
     AClip = clip;
@@ -89,7 +89,7 @@ void SynEditTextPainter::paintTextLines(const QRect& clip)
     paintFoldAttributes();
 }
 
-void SynEditTextPainter::paintGutter(const QRect& clip)
+void QSynEditPainter::paintGutter(const QRect& clip)
 {
     int cRow;
     QRect rcLine, rcFold;
@@ -237,7 +237,7 @@ void SynEditTextPainter::paintGutter(const QRect& clip)
     }
 }
 
-QColor SynEditTextPainter::colEditorBG()
+QColor QSynEditPainter::colEditorBG()
 {
     if (edit->mActiveLineColor.isValid() && bCurrentLine) {
         return edit->mActiveLineColor;
@@ -246,7 +246,7 @@ QColor SynEditTextPainter::colEditorBG()
     }
 }
 
-void SynEditTextPainter::computeSelectionInfo()
+void QSynEditPainter::computeSelectionInfo()
 {
     BufferCoord vStart{0,0};
     BufferCoord vEnd{0,0};
@@ -312,7 +312,7 @@ void SynEditTextPainter::computeSelectionInfo()
     }
 }
 
-void SynEditTextPainter::setDrawingColors(bool selected)
+void QSynEditPainter::setDrawingColors(bool selected)
 {
     if (selected) {
         if (colSelFG.isValid())
@@ -331,12 +331,12 @@ void SynEditTextPainter::setDrawingColors(bool selected)
     }
 }
 
-int SynEditTextPainter::columnToXValue(int col)
+int QSynEditPainter::columnToXValue(int col)
 {
     return edit->textOffset() + (col - 1) * edit->mCharWidth;
 }
 
-void SynEditTextPainter::paintToken(const QString &token, int tokenCols, int columnsBefore,
+void QSynEditPainter::paintToken(const QString &token, int tokenCols, int columnsBefore,
                                     int first, int last, bool /*isSelection*/, const QFont& font,
                                     const QFont& fontForNonAscii, bool showGlyphs)
 {
@@ -426,7 +426,7 @@ void SynEditTextPainter::paintToken(const QString &token, int tokenCols, int col
     }
 }
 
-void SynEditTextPainter::paintEditAreas(const EditingAreaList &areaList)
+void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
 {
     QRect rc;
     int x1,x2;
@@ -478,7 +478,7 @@ void SynEditTextPainter::paintEditAreas(const EditingAreaList &areaList)
     }
 }
 
-void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
+void QSynEditPainter::paintHighlightToken(bool bFillToEOL)
 {
     bool bComplexToken;
     int nC1, nC2, nC1Sel, nC2Sel;
@@ -593,7 +593,7 @@ void SynEditTextPainter::paintHighlightToken(bool bFillToEOL)
 // Store the token chars with the attributes in the TokenAccu
 // record. This will paint any chars already stored if there is
 // a (visible) change in the attributes.
-void SynEditTextPainter::addHighlightToken(const QString &token, int columnsBefore,
+void QSynEditPainter::addHighlightToken(const QString &token, int columnsBefore,
                                            int tokenColumns, int cLine, PTokenAttribute attri, bool showGlyphs)
 {
     bool bCanAppend;
@@ -657,7 +657,7 @@ void SynEditTextPainter::addHighlightToken(const QString &token, int columnsBefo
     }
 }
 
-void SynEditTextPainter::paintFoldAttributes()
+void QSynEditPainter::paintFoldAttributes()
 {
     int TabSteps, LineIndent, LastNonBlank, X, Y, cRow, vLine;
     // Paint indent guides. Use folds to determine indent value of these
@@ -764,7 +764,7 @@ void SynEditTextPainter::paintFoldAttributes()
 
 }
 
-void SynEditTextPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
+void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
 {
     if (!edit->mOptions.testFlag(EditorOption::eoShowRainbowColor))
         return;
@@ -789,7 +789,7 @@ void SynEditTextPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
         attr = oldAttr;
 }
 
-void SynEditTextPainter::paintLines()
+void QSynEditPainter::paintLines()
 {
     int cRow; // row index for the loop
     int vLine;
@@ -963,8 +963,8 @@ void SynEditTextPainter::paintLines()
                     sToken = edit->mSyntaxer->getToken();
                     // Maybe should also test whether GetTokenPos changed...
                     if (sToken.isEmpty()) {
-                        qDebug()<<SynEdit::tr("The highlighter seems to be in an infinite loop");
-                        throw BaseError(SynEdit::tr("The highlighter seems to be in an infinite loop"));
+                        qDebug()<<QSynEdit::tr("The highlighter seems to be in an infinite loop");
+                        throw BaseError(QSynEdit::tr("The highlighter seems to be in an infinite loop"));
                     }
                 }
                 //nTokenColumnsBefore = edit->charToColumn(sLine,edit->mHighlighter->getTokenPos()+1)-1;

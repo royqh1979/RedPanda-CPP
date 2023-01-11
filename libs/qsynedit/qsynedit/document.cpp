@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "TextBuffer.h"
+#include "document.h"
 #include "qt_utils/utils.h"
 #include <QDataStream>
 #include <QFile>
@@ -22,7 +22,7 @@
 #include <QTextStream>
 #include <QMutexLocker>
 #include <stdexcept>
-#include "SynEdit.h"
+#include "qsynedit.h"
 #include <QMessageBox>
 #include <cmath>
 #include "qt_utils/charsetinfo.h"

@@ -22,27 +22,6 @@
 #include <QVector>
 
 namespace QSynedit {
-struct CodeFoldingDefine;
-using PCodeFoldingDefine = std::shared_ptr<CodeFoldingDefine> ;
-
-class CodeFoldingDefines {
-private:
-    std::vector<PCodeFoldingDefine> fRegions;
-public:
-    int count();
-    PCodeFoldingDefine add(bool addEnding, const QChar& openSymbol, const QChar& closeSymbol, const QString& highlight);
-    PCodeFoldingDefine get(int index);
-};
-typedef std::shared_ptr<CodeFoldingDefines> PSynFoldRegions;
-
-
-struct CodeFoldingDefine {
-    bool addEnding;
-    QChar openSymbol;
-    QChar closeSymbol;
-    QString highlight;
-};
-
 struct CodeFoldingOptions {
       bool indentGuides;
       bool fillIndents;
@@ -60,13 +39,14 @@ class CodeFoldingRanges;
 typedef std::shared_ptr<CodeFoldingRanges> PCodeFoldingRanges;
 
 class CodeFoldingRanges{
-private:
-    QVector<PCodeFoldingRange> mRanges;
+
 public:
+    explicit CodeFoldingRanges();
+    CodeFoldingRanges& operator=(const CodeFoldingRanges&)=delete;
+
     PCodeFoldingRange range(int index);
     void clear();
     int count() const;
-    CodeFoldingRanges();
     PCodeFoldingRange addByParts(PCodeFoldingRange parent, PCodeFoldingRanges allFold,
                                int fromLine, int toLine);
 
@@ -74,11 +54,16 @@ public:
     void remove(int index);
     void add(PCodeFoldingRange foldRange);
     PCodeFoldingRange operator[](int index) const;
+private:
+    QVector<PCodeFoldingRange> mRanges;
 };
 
 // A single fold
 class CodeFoldingRange {
 public:
+    explicit CodeFoldingRange(PCodeFoldingRange parent, int fromLine, int toLine);
+    CodeFoldingRange(const CodeFoldingRange&)=delete;
+    CodeFoldingRange& operator=(const CodeFoldingRange&)=delete;
     int fromLine; // Beginning line
     int toLine; // End line
     int linesCollapsed; // Number of collapsed lines
@@ -88,7 +73,6 @@ public:
     std::weak_ptr<CodeFoldingRange> parent;
     bool parentCollapsed();
     void move(int count);
-    explicit CodeFoldingRange(PCodeFoldingRange parent, int fromLine, int toLine);
 };
 
 }

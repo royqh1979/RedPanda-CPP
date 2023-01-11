@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "KeyStrokes.h"
-#include "MiscProcs.h"
+#include "keystrokes.h"
+#include "miscprocs.h"
 
 namespace QSynedit {
 EditKeyStroke::EditKeyStroke()
@@ -99,7 +99,7 @@ void EditKeyStroke::setCommand(const EditCommand &command)
     mCommand = command;
 }
 
-KeyError::KeyError(const QString &reason):BaseError(reason)
+EditKeyStrokes::EditKeyStrokes()
 {
 
 }

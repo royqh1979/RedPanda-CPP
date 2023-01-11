@@ -40,6 +40,10 @@ class CharsetInfoManager: public QObject {
     Q_OBJECT
 public:
     explicit CharsetInfoManager(const QString& localeName);
+
+    explicit CharsetInfoManager(CharsetInfoManager&) = delete;
+    CharsetInfoManager& operator=(CharsetInfoManager&) = delete;
+
     QByteArray getDefaultSystemEncoding();
     PCharsetInfo findCharsetByCodepage(int codepage);
     QStringList languageNames();

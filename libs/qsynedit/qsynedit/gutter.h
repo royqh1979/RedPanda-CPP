@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MISCCLASSES_H
-#define MISCCLASSES_H
+#ifndef GUTTER_H
+#define GUTTER_H
 
 #include <QColor>
 #include <QFont>
 #include <QObject>
-#include "Types.h"
+#include "types.h"
 
 namespace QSynedit {
 
@@ -34,6 +34,8 @@ class Gutter : public QObject {
     Q_OBJECT
 public:
     explicit Gutter(QObject* parent = nullptr);
+    Gutter(const Gutter&)=delete;
+    Gutter& operator=(const Gutter&)=delete;
     QFont font() const;
     void setFont(const QFont &value);
 
@@ -128,4 +130,4 @@ using PSynGutter = std::shared_ptr<Gutter>;
 
 }
 
-#endif // MISCCLASSES_H
+#endif // GUTTER_H

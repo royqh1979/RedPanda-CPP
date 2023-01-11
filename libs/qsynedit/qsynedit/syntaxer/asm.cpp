@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "asm.h"
-#include "../Constants.h"
+#include "../constants.h"
 #include <QDebug>
 
 namespace  QSynedit {

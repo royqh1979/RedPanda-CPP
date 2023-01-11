@@ -20,7 +20,7 @@
 #include "editor.h"
 #include "systemconsts.h"
 #include "settings.h"
-#include "qsynedit/Constants.h"
+#include "qsynedit/constants.h"
 #include "debugger.h"
 #include "widgets/cpudialog.h"
 #include "widgets/filepropertiesdialog.h"

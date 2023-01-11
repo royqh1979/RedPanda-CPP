@@ -54,6 +54,8 @@ class GLSLSyntaxer: public Syntaxer
 
 public:
     explicit GLSLSyntaxer();
+    GLSLSyntaxer(const GLSLSyntaxer&)=delete;
+    GLSLSyntaxer& operator=(const GLSLSyntaxer&)=delete;
 
     const PTokenAttribute &asmAttribute() const;
 

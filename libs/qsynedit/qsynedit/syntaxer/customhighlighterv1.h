@@ -13,6 +13,8 @@ public:
     };
 
     CustomHighlighterV1();
+    CustomHighlighterV1(const CustomHighlighterV1&)=delete;
+    CustomHighlighterV1& operator=(const CustomHighlighterV1&)=delete;
 //    bool getTokenFinished() const override;
 //    bool isLastLineCommentNotFinished(int state) const override;
 //    bool isLastLineStringNotFinished(int state) const override;

@@ -24,7 +24,7 @@
 #include <QSet>
 #include <QVector>
 #include <QVector>
-#include "../Types.h"
+#include "../types.h"
 
 namespace QSynedit {
 enum IndentType {
@@ -34,7 +34,7 @@ enum IndentType {
     IndentForStatement,
 };
 
-struct SyntaxerState {
+struct SyntaxerState {    
     int state;  // current syntax parsing state
     int blockLevel; // needed by block folding
     int blockStarted;  // needed by block folding
@@ -92,6 +92,8 @@ enum class ProgrammingLanguage {
 class TokenAttribute {
 public:
     explicit TokenAttribute(const QString& name, TokenType mTokenType);
+    TokenAttribute(const TokenAttribute&)=delete;
+    TokenAttribute& operator=(const TokenAttribute&)=delete;
 
     QString name() const;
 
@@ -119,6 +121,8 @@ typedef std::shared_ptr<TokenAttribute> PTokenAttribute;
 class Syntaxer {
 public:
     explicit Syntaxer();
+    Syntaxer(const Syntaxer&)=delete;
+    Syntaxer& operator=(const Syntaxer&)=delete;
 
     const QMap<QString, PTokenAttribute>& attributes() const;
 

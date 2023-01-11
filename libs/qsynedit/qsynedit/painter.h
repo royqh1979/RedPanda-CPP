@@ -14,19 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef TEXTPAINTER_H
-#define TEXTPAINTER_H
+#ifndef PAINTER_H
+#define PAINTER_H
 
 #include <QColor>
 #include <QPainter>
 #include <QString>
-#include "Types.h"
+#include "types.h"
 #include "syntaxer/syntaxer.h"
-#include "MiscClasses.h"
+#include "gutter.h"
 
 namespace QSynedit {
-class SynEdit;
-class SynEditTextPainter
+class QSynEdit;
+class QSynEditPainter
 {
     struct SynTokenAccu {
         int columns;
@@ -39,7 +39,7 @@ class SynEditTextPainter
     };
 
 public:
-    SynEditTextPainter(SynEdit * edit,QPainter* painter,int FirstRow, int LastRow,
+    QSynEditPainter(QSynEdit * edit,QPainter* painter,int FirstRow, int LastRow,
                        int FirstCol, int LastCol);
     void paintTextLines(const QRect& clip);
     void paintGutter(const QRect& clip);
@@ -62,7 +62,7 @@ private:
     void paintLines();
 
 private:
-    SynEdit* edit;
+    QSynEdit* edit;
     QPainter* painter;
     bool bDoRightEdge; // right edge
     int nRightEdge;
@@ -89,4 +89,4 @@ private:
 
 }
 
-#endif // TEXTPAINTER_H
+#endif // PAINTER_H

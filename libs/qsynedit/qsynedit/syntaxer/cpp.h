@@ -55,6 +55,8 @@ class CppSyntaxer: public Syntaxer
 
 public:
     explicit CppSyntaxer();
+    CppSyntaxer(const CppSyntaxer&)=delete;
+    CppSyntaxer operator=(const CppSyntaxer&)=delete;
 
     const PTokenAttribute &asmAttribute() const;
 

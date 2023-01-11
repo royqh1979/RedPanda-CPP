@@ -14,32 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "CodeFolding.h"
-#include "Constants.h"
+#include "codefolding.h"
+#include "constants.h"
 
 
 namespace QSynedit {
-
-int CodeFoldingDefines::count()
-{
-    return fRegions.size();
-}
-
-PCodeFoldingDefine CodeFoldingDefines::add(bool addEnding, const QChar &openSymbol, const QChar &closeSymbol, const QString &highlight)
-{
-    PCodeFoldingDefine region = std::make_shared<CodeFoldingDefine>();
-    region->addEnding = addEnding;
-    region->openSymbol = openSymbol;
-    region->closeSymbol = closeSymbol;
-    region->highlight = highlight;
-    fRegions.push_back(region);
-    return region;
-}
-
-PCodeFoldingDefine CodeFoldingDefines::get(int index)
-{
-    return fRegions.at(index);
-}
 
 CodeFoldingOptions::CodeFoldingOptions():
     indentGuides(true),

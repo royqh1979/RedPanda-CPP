@@ -20,8 +20,8 @@
 #include "../editor.h"
 #include "../mainwindow.h"
 #include "../editorlist.h"
-#include <qsynedit/Search.h>
-#include <qsynedit/SearchRegex.h>
+#include <qsynedit/searcher/basicsearcher.h>
+#include <qsynedit/searcher/regexsearcher.h>
 #include "../project.h"
 #include "../settings.h"
 #include <QMessageBox>
@@ -184,7 +184,7 @@ void SearchInFileDialog::doSearch(bool replace)
                     results->results.append(parentItem);
                 }
             } else if (fileExists(curFilename)) {
-                QSynedit::SynEdit editor;
+                QSynedit::QSynEdit editor;
                 QByteArray realEncoding;
                 editor.document()->loadFromFile(curFilename,ENCODING_AUTO_DETECT, realEncoding);
                 fileSearched++;
@@ -207,7 +207,7 @@ void SearchInFileDialog::doSearch(bool replace)
 
 }
 
-int SearchInFileDialog::execute(QSynedit::SynEdit *editor, const QString &sSearch, const QString &sReplace,
+int SearchInFileDialog::execute(QSynedit::QSynEdit *editor, const QString &sSearch, const QString &sReplace,
                           QSynedit::SearchMathedProc matchCallback,
                           QSynedit::SearchConfirmAroundProc confirmAroundCallback)
 {
@@ -235,7 +235,7 @@ int SearchInFileDialog::execute(QSynedit::SynEdit *editor, const QString &sSearc
                           searchEngine, matchCallback, confirmAroundCallback);
 }
 
-std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSynedit::SynEdit *e, const QString& filename,const QString &keyword)
+std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSynedit::QSynEdit *e, const QString& filename,const QString &keyword)
 {
     //backup
     QSynedit::BufferCoord caretBackup = e->caretXY();

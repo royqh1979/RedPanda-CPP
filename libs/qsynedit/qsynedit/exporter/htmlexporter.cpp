@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "htmlexporter.h"
-#include "../MiscProcs.h"
+#include "../miscprocs.h"
 #include <functional>
 
 namespace QSynedit {

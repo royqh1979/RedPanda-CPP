@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef SYNEDIT_H
-#define SYNEDIT_H
+#ifndef QSYNEDIT_H
+#define QSYNEDIT_H
 
 #include <QAbstractScrollArea>
 #include <QCursor>
@@ -24,12 +24,12 @@
 #include <QStringList>
 #include <QTimer>
 #include <QWidget>
-#include "MiscClasses.h"
-#include "CodeFolding.h"
-#include "Types.h"
-#include "TextBuffer.h"
-#include "KeyStrokes.h"
-#include "SearchBase.h"
+#include "gutter.h"
+#include "codefolding.h"
+#include "types.h"
+#include "document.h"
+#include "keystrokes.h"
+#include "searcher/baseseacher.h"
 
 namespace QSynedit {
 
@@ -130,14 +130,14 @@ using SearchMathedProc = std::function<SearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
 using SearchConfirmAroundProc = std::function<bool ()>;
 
-class SynEdit;
-using PSynEdit = std::shared_ptr<SynEdit>;
+class QSynEdit;
+using PSynEdit = std::shared_ptr<QSynEdit>;
 
-class SynEdit : public QAbstractScrollArea
+class QSynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
 public:
-    explicit SynEdit(QWidget* parent=nullptr);
+    explicit QSynEdit(QWidget* parent=nullptr);
     /**
      * Returns how many rows are there in the editor
      * @return
@@ -739,7 +739,7 @@ private:
     BufferCoord mDragSelEndSave;
     bool mDropped;
 
-friend class SynEditTextPainter;
+friend class QSynEditPainter;
 
 // QWidget interface
 protected:
@@ -787,4 +787,4 @@ protected:
 };
 
 }
-#endif // SYNEDIT_H
+#endif // QSYNEDIT_H

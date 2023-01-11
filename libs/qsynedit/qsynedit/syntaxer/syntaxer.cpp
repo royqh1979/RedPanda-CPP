@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "syntaxer.h"
-#include "../Constants.h"
+#include "../constants.h"
 
 namespace QSynedit {
 Syntaxer::Syntaxer() :

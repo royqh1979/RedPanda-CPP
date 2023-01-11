@@ -7,7 +7,10 @@ namespace QSynedit {
 class QtSupportedHtmlExporter : public Exporter
 {
 public:
-    QtSupportedHtmlExporter(int tabSize,const QByteArray charset);
+    explicit QtSupportedHtmlExporter(int tabSize,const QByteArray charset);
+    QtSupportedHtmlExporter(const QtSupportedHtmlExporter&)=delete;
+    QtSupportedHtmlExporter& operator=(const QtSupportedHtmlExporter&)=delete;
+
     bool createHTMLFragment() const;
     void setCreateHTMLFragment(bool createHTMLFragment);
 

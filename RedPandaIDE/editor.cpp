@@ -34,7 +34,7 @@
 #include "qsynedit/exporter/rtfexporter.h"
 #include "qsynedit/exporter/htmlexporter.h"
 #include "qsynedit/exporter/qtsupportedhtmlexporter.h"
-#include "qsynedit/Constants.h"
+#include "qsynedit/constants.h"
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QPainter>
@@ -82,7 +82,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
                   Project* pProject, bool isNew,
                   QTabWidget* parentPageControl):
-  SynEdit(parent),
+  QSynEdit(parent),
   mEncodingOption(encoding),
   mFilename(QFileInfo(filename).absoluteFilePath()),
   mParentPageControl(parentPageControl),
@@ -150,18 +150,18 @@ Editor::Editor(QWidget *parent, const QString& filename,
     //mLineBeforeTabStop="";
     //mLineAfterTabStop = "";
 
-    connect(this,&SynEdit::statusChanged,this,&Editor::onStatusChanged);
+    connect(this,&QSynEdit::statusChanged,this,&Editor::onStatusChanged);
 
     if (mParentPageControl)
-        connect(this,&SynEdit::gutterClicked,this,&Editor::onGutterClicked);
+        connect(this,&QSynEdit::gutterClicked,this,&Editor::onGutterClicked);
 
     onStatusChanged(QSynedit::StatusChange::scOpenFile);
 
     setAttribute(Qt::WA_Hover,true);
 
-    connect(this,&SynEdit::linesDeleted,
+    connect(this,&QSynEdit::linesDeleted,
             this, &Editor::onLinesDeleted);
-    connect(this,&SynEdit::linesInserted,
+    connect(this,&QSynEdit::linesInserted,
             this, &Editor::onLinesInserted);
 
     setContextMenuPolicy(Qt::CustomContextMenu);
@@ -578,17 +578,17 @@ void Editor::wheelEvent(QWheelEvent *event) {
             return;
         }
     }
-    SynEdit::wheelEvent(event);
+    QSynEdit::wheelEvent(event);
 }
 
 void Editor::focusInEvent(QFocusEvent *event)
 {
-    SynEdit::focusInEvent(event);
+    QSynEdit::focusInEvent(event);
 }
 
 void Editor::focusOutEvent(QFocusEvent *event)
 {
-    SynEdit::focusOutEvent(event);
+    QSynEdit::focusOutEvent(event);
     //pMainWindow->updateClassBrowserForEditor(nullptr);
     if (!pMainWindow->isQuitting())
         pMainWindow->functionTip()->hide();
@@ -599,7 +599,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     bool handled = false;
     auto action = finally([&,this]{
         if (!handled) {
-            SynEdit::keyPressEvent(event);
+            QSynEdit::keyPressEvent(event);
         } else {
             event->accept();
         }
@@ -1301,7 +1301,7 @@ bool Editor::event(QEvent *event)
             }
         }
     }
-    return SynEdit::event(event);
+    return QSynEdit::event(event);
 }
 
 void Editor::mouseReleaseEvent(QMouseEvent *event)
@@ -1331,12 +1331,12 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             }
         }
     }
-    QSynedit::SynEdit::mouseReleaseEvent(event);
+    QSynedit::QSynEdit::mouseReleaseEvent(event);
 }
 
 void Editor::inputMethodEvent(QInputMethodEvent *event)
 {
-    QSynedit::SynEdit::inputMethodEvent(event);
+    QSynedit::QSynEdit::inputMethodEvent(event);
     QString s = event->commitString();
     if (s.isEmpty())
         return;
@@ -1403,7 +1403,7 @@ void Editor::showEvent(QShowEvent */*event*/)
         connect(mParser.get(),
                 &CppParser::onEndParsing,
                 this,
-                &QSynedit::SynEdit::invalidate);
+                &QSynedit::QSynEdit::invalidate);
         reparse(false);
     }
     if (mParentPageControl) {
@@ -1446,7 +1446,7 @@ void Editor::hideEvent(QHideEvent */*event*/)
         disconnect(mParser.get(),
                 &CppParser::onEndParsing,
                 this,
-                &QSynedit::SynEdit::invalidate);
+                &QSynedit::QSynEdit::invalidate);
     }
     pMainWindow->updateForEncodingInfo(nullptr);
     pMainWindow->updateStatusbarForLineCol(nullptr);
@@ -1457,7 +1457,7 @@ void Editor::hideEvent(QHideEvent */*event*/)
 
 void Editor::resizeEvent(QResizeEvent *event)
 {
-    QSynedit::SynEdit::resizeEvent(event);
+    QSynedit::QSynEdit::resizeEvent(event);
     pMainWindow->functionTip()->hide();
 }
 
@@ -1482,7 +1482,7 @@ void Editor::copyToClipboard()
         copyAsHTML();
         break;;
     default:
-        QSynedit::SynEdit::copyToClipboard();
+        QSynedit::QSynEdit::copyToClipboard();
     }
 }
 
@@ -1502,7 +1502,7 @@ void Editor::cutToClipboard()
             return;
         }
     }
-    QSynedit::SynEdit::cutToClipboard();
+    QSynedit::QSynEdit::cutToClipboard();
 }
 
 void Editor::copyAsHTML()
@@ -4135,7 +4135,7 @@ void Editor::setProject(Project *pProject)
                 connect(mParser.get(),
                         &CppParser::onEndParsing,
                         this,
-                        &QSynedit::SynEdit::invalidate);
+                        &QSynedit::QSynEdit::invalidate);
             } else {
                 invalidate();
             }
@@ -4207,7 +4207,7 @@ void Editor::gotoDefinition(const QSynedit::BufferCoord &pos)
     }
 }
 
-QString getWordAtPosition(QSynedit::SynEdit *editor, const QSynedit::BufferCoord &p, QSynedit::BufferCoord &pWordBegin, QSynedit::BufferCoord &pWordEnd, Editor::WordPurpose purpose)
+QString getWordAtPosition(QSynedit::QSynEdit *editor, const QSynedit::BufferCoord &p, QSynedit::BufferCoord &pWordBegin, QSynedit::BufferCoord &pWordEnd, Editor::WordPurpose purpose)
 {
     QString result = "";
     QString s;
@@ -4631,7 +4631,7 @@ void Editor::tab()
             return;
         }
     }
-    SynEdit::tab();
+    QSynEdit::tab();
 }
 
 int Editor::gutterClickedLine() const

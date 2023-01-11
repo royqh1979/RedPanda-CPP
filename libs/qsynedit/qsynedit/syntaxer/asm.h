@@ -45,6 +45,9 @@ class ASMSyntaxer : public Syntaxer
 
 public:
     explicit ASMSyntaxer();
+    ASMSyntaxer(const ASMSyntaxer&)=delete;
+    ASMSyntaxer& operator=(const ASMSyntaxer&)=delete;
+
     const PTokenAttribute &numberAttribute() const;
     const PTokenAttribute &directiveAttribute() const;
     const PTokenAttribute &labelAttribute() const;

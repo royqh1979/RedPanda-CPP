@@ -23,7 +23,10 @@ namespace QSynedit {
 class HTMLExporter : public Exporter
 {
 public:
-    HTMLExporter(int tabSize,const QByteArray charset);
+    explicit HTMLExporter(int tabSize,const QByteArray charset);
+    HTMLExporter(const HTMLExporter&)=delete;
+    const HTMLExporter& operator=(const HTMLExporter&)=delete;
+
     bool createHTMLFragment() const;
     void setCreateHTMLFragment(bool createHTMLFragment);
 
