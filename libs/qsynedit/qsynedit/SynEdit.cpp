@@ -112,7 +112,6 @@ SynEdit::SynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     this->setLineWidth(1);
     mInsertCaret = EditCaretType::ctVerticalLine;
     mOverwriteCaret = EditCaretType::ctBlock;
-    mSelectionMode = SelectionMode::Normal;
     mActiveSelectionMode = SelectionMode::Normal;
     mReadOnly = false;
 
@@ -4624,19 +4623,6 @@ void SynEdit::doZoomOut()
     setFont(newFont);
 }
 
-SelectionMode SynEdit::selectionMode() const
-{
-    return mSelectionMode;
-}
-
-void SynEdit::setSelectionMode(SelectionMode value)
-{
-    if (mSelectionMode!=value) {
-        mSelectionMode = value;
-        setActiveSelectionMode(value);
-    }
-}
-
 QString SynEdit::selText() const
 {
     if (!selAvail()) {
@@ -4876,6 +4862,15 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
     BufferCoord ptDst = ptO;
     QString s = displayLineText();
     int nLineLen = s.length();
+
+    if (mOptions.testFlag(eoAltSetsColumnMode) &&
+                         (mActiveSelectionMode != SelectionMode::Line)) {
+        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly) {
+            setActiveSelectionMode(SelectionMode::Column);
+        } else
+            setActiveSelectionMode(SelectionMode::Normal);
+    }
+
     // only moving or selecting one char can change the line
     //bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
     bool bChangeY=true;
@@ -4912,13 +4907,7 @@ void SynEdit::moveCaretHorz(int DX, bool isSelection)
     }
     // set caret and block begin / end
     incPaintLock();
-    if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                         (mActiveSelectionMode != SelectionMode::Line)) {
-        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly) {
-            setActiveSelectionMode(SelectionMode::Column);
-        } else
-            setActiveSelectionMode(selectionMode());
-    }
+
     moveCaretAndSelection(mBlockBegin, ptDst, isSelection);
     decPaintLock();
 }
@@ -4942,6 +4931,14 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
         if (mOptions.testFlag(eoKeepCaretX))
             ptDst.Column = mLastCaretColumn;
     }
+    if (mOptions.testFlag(eoAltSetsColumnMode) &&
+                         (mActiveSelectionMode != SelectionMode::Line)) {
+        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly)
+            setActiveSelectionMode(SelectionMode::Column);
+        else
+            setActiveSelectionMode(SelectionMode::Normal);
+    }
+
     BufferCoord vDstLineChar = displayToBufferPos(ptDst);
 
     if (mActiveSelectionMode==SelectionMode::Column) {
@@ -4955,13 +4952,6 @@ void SynEdit::moveCaretVert(int DY, bool isSelection)
 
     // set caret and block begin / end
     incPaintLock();
-    if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                         (mActiveSelectionMode != SelectionMode::Line)) {
-        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly)
-            setActiveSelectionMode(SelectionMode::Column);
-        else
-            setActiveSelectionMode(selectionMode());
-    }
     moveCaretAndSelection(mBlockBegin, vDstLineChar, isSelection);
     decPaintLock();
 
@@ -5119,10 +5109,18 @@ void SynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text)
         if (mode == SelectionMode::Column) {
             int colBegin = charToColumn(startPos.line,startPos.ch);
             int colEnd = charToColumn(endPos.line,endPos.ch);
-            if (colBegin<colEnd)
+            int col;
+            if (colBegin<colEnd) {
                 internalSetCaretXY(startPos);
-            else
+                col=colBegin;
+            } else {
                 internalSetCaretXY(endPos);
+                col=colEnd;
+            }
+            startPos.ch = columnToChar(startPos.line, col);
+            endPos.ch = columnToChar(endPos.line, col);
+            setBlockBegin(startPos);
+            setBlockEnd(endPos);
         } else
             internalSetCaretXY(startPos);
     }
@@ -5494,13 +5492,14 @@ void SynEdit::doInsertText(const BufferCoord& pos,
         setBlockBegin(newPos);
         ensureCursorPosVisible();
         break;
-    case SelectionMode::Column:
+    case SelectionMode::Column:{
+        BufferCoord bb=blockBegin();
+        BufferCoord be=blockEnd();
+        int lenBefore = mDocument->getString(be.line-1).length();
         insertedLines = doInsertTextByColumnMode(text, startLine,endLine);
         doLinesInserted(endLine-insertedLines+1,insertedLines);
         if (!text.isEmpty()) {
-            int textLen = text.back().length();
-            BufferCoord bb=blockBegin();
-            BufferCoord be=blockEnd();
+            int textLen = mDocument->getString(be.line-1).length()-lenBefore;
             bb.ch+=textLen;
             be.ch+=textLen;
             internalSetCaretXY(bb);
@@ -5508,6 +5507,7 @@ void SynEdit::doInsertText(const BufferCoord& pos,
             setBlockEnd(be);
             ensureCursorPosVisible();
         }
+    }
         break;
     case SelectionMode::Line:
         insertedLines = doInsertTextByLineMode(pos,text, newPos);
@@ -5994,15 +5994,6 @@ void SynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     case EditCommand::ToggleBlockComment:
         doToggleBlockComment();
         break;
-    case EditCommand::NormalSelect:
-        setSelectionMode(SelectionMode::Normal);
-        break;
-    case EditCommand::LineSelect:
-        setSelectionMode(SelectionMode::Line);
-        break;
-    case EditCommand::ColumnSelect:
-        setSelectionMode(SelectionMode::Column);
-        break;
     case EditCommand::ScrollLeft:
         horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
         break;
@@ -6238,8 +6229,8 @@ void SynEdit::focusOutEvent(QFocusEvent *)
 
 void SynEdit::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Escape && mActiveSelectionMode != mSelectionMode) {
-        setActiveSelectionMode(selectionMode());
+    if (event->key() == Qt::Key_Escape && mActiveSelectionMode != SelectionMode::Normal) {
+        setActiveSelectionMode(SelectionMode::Normal);
         setBlockBegin(caretXY());
         setBlockEnd(caretXY());
         event->accept();
@@ -6293,7 +6284,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
         computeCaret();
         mStateFlags.setFlag(StateFlag::sfWaitForDragging,false);
         if (bWasSel && mOptions.testFlag(eoDragDropEditing) && (X >= mGutterWidth + 2)
-                && (mSelectionMode == SelectionMode::Normal) && isPointInSelection(displayToBufferPos(pixelsToRowColumn(X, Y))) ) {
+                && (mActiveSelectionMode == SelectionMode::Normal) && isPointInSelection(displayToBufferPos(pixelsToRowColumn(X, Y))) ) {
             bStartDrag = true;
         }
         if (bStartDrag && !mReadOnly) {
@@ -6308,7 +6299,7 @@ void SynEdit::mousePressEvent(QMouseEvent *event)
                 if (event->modifiers() == Qt::AltModifier && !mReadOnly)
                     setActiveSelectionMode(SelectionMode::Column);
                 else
-                    setActiveSelectionMode(selectionMode());
+                    setActiveSelectionMode(SelectionMode::Normal);
                 //Selection mode must be set before calling SetBlockBegin
                 setBlockBegin(caretXY());
             }
@@ -6370,7 +6361,7 @@ void SynEdit::mouseMoveEvent(QMouseEvent *event)
                 if (event->modifiers() == Qt::AltModifier && !mReadOnly)
                     setActiveSelectionMode(SelectionMode::Column);
                 else
-                    setActiveSelectionMode(selectionMode());
+                    setActiveSelectionMode(SelectionMode::Normal);
         }
     } else if (buttons == Qt::NoButton) {
         updateMouseCursor();

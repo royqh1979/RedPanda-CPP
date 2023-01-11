@@ -24,6 +24,7 @@ Red Panda C++ Version 2.8
   - fix: Input any content will exit column mode.
   - fix: Result of scope calculation not right if a for statement immediately follows another for statement.
   - fix: Function parameters that is pointer,reference or array can't be correctly parsed.
+  - fix: In column mode, selection that contain lines with different length will cause error.
 
 Red Panda C++ Version 2.7
 

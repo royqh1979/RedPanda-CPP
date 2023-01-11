@@ -106,10 +106,6 @@ enum class EditCommand {
     OverwriteMode   = 222,  // Set overwrite mode
     ToggleMode      = 223,  // Toggle ins/ovr mode
 
-    NormalSelect    = 231,  // Normal selection mode
-    ColumnSelect    = 232,  // Column selection mode
-    LineSelect      = 233,  // Line selection mode
-
     MatchBracket    = 250,  // Go to matching bracket
 
     ContextHelp     = 490,  // Help on Word, Data = Word

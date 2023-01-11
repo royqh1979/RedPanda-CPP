@@ -351,9 +351,6 @@ public:
     const PDocument& document() const;
     bool empty();
 
-    SelectionMode selectionMode() const;
-    void setSelectionMode(SelectionMode value);
-
     QString selText() const;
 
     QStringList getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const;
@@ -687,7 +684,6 @@ private:
     bool mModified;
     QDateTime mLastModifyTime;
     double mLineSpacingFactor;
-    SelectionMode mSelectionMode;
     SelectionMode mActiveSelectionMode; //mode of the active selection
     bool mWantReturns;
     bool mWantTabs;
