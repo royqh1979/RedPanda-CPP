@@ -23,6 +23,7 @@ Red Panda C++ Version 2.8
   - fix: alt+shift+left/right can't select
   - fix: Input any content will exit column mode.
   - fix: Result of scope calculation not right if a for statement immediately follows another for statement.
+  - fix: Function parameters that is pointer,reference or array can't be correctly parsed.
 
 Red Panda C++ Version 2.7
 

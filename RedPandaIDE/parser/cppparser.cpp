@@ -3819,7 +3819,7 @@ void CppParser::internalParse(const QString &fileName)
 
         QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-//        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
 //        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
@@ -3833,7 +3833,7 @@ void CppParser::internalParse(const QString &fileName)
         if (mTokenizer.tokenCount() == 0)
             return;
 #ifdef QT_DEBUG
-//        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         lastIndex = -1;
@@ -3844,8 +3844,8 @@ void CppParser::internalParse(const QString &fileName)
                 break;
         }
 #ifdef QT_DEBUG
-//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
         //reduce memory usage
         internalClear();
@@ -5116,30 +5116,25 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
         } else if (isWordChar(mTokenizer[i]->text[0])) {
             QString cmd=mTokenizer[i]->text;
             if (i+1==argEnd || mTokenizer[i+1]->text==',' || mTokenizer[i+1]->text=='=') {
-                bool noCmd=false;
-                if (!cmd.startsWith('*')
-                        && !cmd.startsWith('&')
-                        && !cmd.endsWith(']')) {
-                    PStatement statement=findStatementOf(mCurrentFile,cmd,functionStatement,true);
-                    noCmd = (statement && isTypeStatement(statement->kind));
+                QString args,suffix;
+                parseCommandTypeAndArgs(cmd,suffix,args);
+                if (!cmd.isEmpty()) {
+                    PStatement statement = findStatementOf(mCurrentFile,cmd,functionStatement,true);
+                    bool noCmd = (statement && isTypeStatement(statement->kind));
                     if (!noCmd) {
-                        QString args,suffix;
-                        parseCommandTypeAndArgs(cmd,suffix,args);
-                        if (!cmd.isEmpty()) {
-                            addStatement(
-                                        functionStatement,
-                                        mCurrentFile,
-                                        varType+suffix, // 'int*'
-                                        cmd, // a
-                                        args,
-                                        "",
-                                        "",
-                                        mTokenizer[i]->line,
-                                        StatementKind::skParameter,
-                                        StatementScope::Local,
-                                        StatementClassScope::None,
-                                        StatementProperty::spHasDefinition);
-                        }
+                        addStatement(
+                                    functionStatement,
+                                    mCurrentFile,
+                                    varType+suffix, // 'int*'
+                                    cmd, // a
+                                    args,
+                                    "",
+                                    "",
+                                    mTokenizer[i]->line,
+                                    StatementKind::skParameter,
+                                    StatementScope::Local,
+                                    StatementClassScope::None,
+                                    StatementProperty::spHasDefinition);
                     }
                 }
             } else {

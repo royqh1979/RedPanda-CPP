@@ -5495,7 +5495,7 @@ void SynEdit::doInsertText(const BufferCoord& pos,
         ensureCursorPosVisible();
         break;
     case SelectionMode::Column:
-        insertedLines = doInsertTextByColumnMode(pos,text, startLine,endLine);
+        insertedLines = doInsertTextByColumnMode(text, startLine,endLine);
         doLinesInserted(endLine-insertedLines+1,insertedLines);
         if (!text.isEmpty()) {
             int textLen = text.back().length();
@@ -5612,7 +5612,7 @@ int SynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList&
     return result;
 }
 
-int SynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, int startLine, int endLine)
+int SynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, int endLine)
 {
     QString str;
     QString tempString;
