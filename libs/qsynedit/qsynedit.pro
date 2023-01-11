@@ -22,7 +22,7 @@ msvc {
 SOURCES += qsynedit/codefolding.cpp \
     qsynedit/constants.cpp \
     qsynedit/document.cpp \
-    qsynedit/keyStrokes.cpp \
+    qsynedit/keystrokes.cpp \
     qsynedit/miscprocs.cpp \
     qsynedit/exporter/exporter.cpp \
     qsynedit/exporter/htmlexporter.cpp \
