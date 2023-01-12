@@ -1122,7 +1122,11 @@ public:
         int problemOrder() const;
         void setProblemOrder(int newProblemOrder);
 
+        bool openEditorsWhenReplace() const;
+        void setOpenEditorsWhenReplace(bool newOpenEditorsWhenReplace);
+
     private:
+        bool mOpenEditorsWhenReplace;
         QByteArray mMainWindowState;
         QByteArray mMainWindowGeometry;
         int mBottomPanelIndex;

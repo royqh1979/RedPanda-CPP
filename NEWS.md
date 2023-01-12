@@ -28,6 +28,9 @@ Red Panda C++ Version 2.8
   - enhancement: Rename symbols won't remove all breakpoints/bookmarks
   - enhancement: Batch replace won't remove all breakpoints/bookmarks
   - enhancement: Execute parameters can be used in debug.
+  - enhancement: Add "Open files in editor" in the search panel
+  - enhancement: Auto disable the "in project" option in the "search in files" dialog, if no project is opened.
+  - enhancement: Auto disable the "search again" button in the search panel if the current search history item is search in the project, and no project is opened.
 
 Red Panda C++ Version 2.7
 

@@ -5272,6 +5272,16 @@ void Settings::UI::setProblemOrder(int newProblemOrder)
     mProblemOrder = newProblemOrder;
 }
 
+bool Settings::UI::openEditorsWhenReplace() const
+{
+    return mOpenEditorsWhenReplace;
+}
+
+void Settings::UI::setOpenEditorsWhenReplace(bool newOpenEditorsWhenReplace)
+{
+    mOpenEditorsWhenReplace = newOpenEditorsWhenReplace;
+}
+
 int Settings::UI::bookmarkOrder() const
 {
     return mBookmarkOrder;
@@ -5644,6 +5654,8 @@ void Settings::UI::setMainWindowState(const QByteArray &newMainWindowState)
 
 void Settings::UI::doSave()
 {
+    saveValue("open_editor_when_batch_replace",mOpenEditorsWhenReplace);
+
     saveValue("main_window_state",mMainWindowState);
     saveValue("main_window_geometry",mMainWindowGeometry);
     saveValue("bottom_panel_index",mBottomPanelIndex);
@@ -5707,6 +5719,8 @@ void Settings::UI::doSave()
 
 void Settings::UI::doLoad()
 {
+    mOpenEditorsWhenReplace=boolValue("open_editor_when_batch_replace",true);
+
     mMainWindowState = value("main_window_state",QByteArray()).toByteArray();
     mMainWindowGeometry = value("main_window_geometry",QByteArray()).toByteArray();
     mBottomPanelIndex = intValue("bottom_panel_index",0);

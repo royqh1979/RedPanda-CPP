@@ -163,6 +163,8 @@ void SearchInFileDialog::doSearch(bool replace)
         }
         pMainWindow->searchResultModel()->notifySearchResultsUpdated();
     } else if (ui->rbProject->isChecked()) {
+        if (!pMainWindow->project())
+            return;
         PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
                     keyword,
                     mSearchOptions,
@@ -277,6 +279,9 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSyn
 void SearchInFileDialog::showEvent(QShowEvent *event)
 {
     QDialog::showEvent(event);
+    ui->rbProject->setEnabled(pMainWindow->project()!=nullptr);
+    if (ui->rbProject->isChecked() && !ui->rbProject->isEnabled())
+        ui->rbCurrentFile->setChecked(true);
     if (pSettings->environment().language()=="zh_CN") {
         ui->txtRegExpHelp->setText(
                     QString("<html><head/><body><p><a href=\"%1\"><span style=\" text-decoration: underline; color:#0000ff;\">(?)</span></a></p></body></html>")

@@ -934,6 +934,7 @@ void MainWindow::applySettings()
 void MainWindow::applyUISettings()
 {
     const Settings::UI& settings = pSettings->ui();
+    ui->chkOpenFileInEditors->setChecked(settings.openEditorsWhenReplace());
     restoreGeometry(settings.mainWindowGeometry());
     restoreState(settings.mainWindowState());
     ui->actionTool_Window_Bars->setChecked(settings.showToolWindowBars());
@@ -5030,6 +5031,8 @@ void MainWindow::closeProject(bool refreshEditor)
         updateProjectView();
         mClosingProject=false;
     }
+    if (refreshEditor)
+        on_cbSearchHistory_currentIndexChanged(ui->cbSearchHistory->currentIndex());
 }
 
 void MainWindow::updateProjectView()
@@ -5203,6 +5206,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         if (mCPUDialog)
             mCPUDialog->close();
         Settings::UI& settings = pSettings->ui();
+        settings.setOpenEditorsWhenReplace(ui->chkOpenFileInEditors->isChecked());
         settings.setMainWindowState(saveState());
         settings.setMainWindowGeometry(saveGeometry());
         settings.setBottomPanelIndex(ui->tabMessages->currentIndex());
@@ -6197,7 +6201,12 @@ void MainWindow::on_cbSearchHistory_currentIndexChanged(int index)
     mSearchResultModel.setCurrentIndex(index);
     PSearchResults results = mSearchResultModel.results(index);
     if (results) {
-        ui->btnSearchAgain->setEnabled(true);
+        if (results->searchType==SearchType::Search
+                && results->scope==SearchFileScope::wholeProject
+                && pMainWindow->project()==nullptr)
+            ui->btnSearchAgain->setEnabled(false);
+        else
+            ui->btnSearchAgain->setEnabled(true);
     } else {
         ui->btnSearchAgain->setEnabled(false);
     }
@@ -6212,6 +6221,9 @@ void MainWindow::on_btnSearchAgain_clicked()
     if (!results)
         return;
     if (results->searchType == SearchType::Search){
+        if (results->scope==SearchFileScope::wholeProject
+                && pMainWindow->project()==nullptr)
+            return;
         mSearchInFilesDialog->findInFiles(results->keyword,
                                    results->scope,
                                    results->options);
@@ -7705,34 +7717,79 @@ void MainWindow::on_btnReplace_clicked()
     }
     QString newWord = ui->cbReplaceInHistory->currentText();
     foreach (const PSearchResultTreeItem& file, results->results) {
-        QStringList contents;
-        Editor* editor = openFile(file->filename);
-        if (!editor) {
-            QMessageBox::critical(this,
-                                  tr("Replace Error"),
-                                  tr("Can't open file '%1' for replace!").arg(file->filename));
-            return;
+        QVector<PSearchResultTreeItem> selections;
+        foreach(const PSearchResultTreeItem& item,file->results) {
+            if (item->selected) {
+                selections.push_back(item);
+            }
         }
-        editor->clearSelection();
-        editor->addGroupBreak();
-        editor->beginUndoBlock();
-        for (int i=file->results.count()-1;i>=0;i--) {
-            const PSearchResultTreeItem& item = file->results[i];
-            if (!item->selected)
-                continue;
+        if (selections.isEmpty())
+            continue;
+        Editor* editor = nullptr;
+        if (ui->chkOpenFileInEditors->isChecked()) {
+            editor = openFile(file->filename);
+            if (!editor) {
+                QMessageBox::critical(this,
+                                      tr("Replace Error"),
+                                      tr("Can't open file '%1' for replace!").arg(file->filename));
+                return;
+            }
+        } else {
+            editor = mEditorList->getOpenedEditorByFilename(file->filename);
+        }
+        bool needSave=false;
+        std::shared_ptr<Editor> pEditor;
+        if (editor) {
+            editor->clearSelection();
+            editor->addGroupBreak();
+            editor->beginUndoBlock();
+        } else {
+            needSave=true;
+            pEditor = std::make_shared<Editor>(nullptr);
+            editor = pEditor.get();
+            QByteArray encoding;
+            editor->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
+            try {
+                editor->document()->loadFromFile(file->filename,ENCODING_AUTO_DETECT,encoding);
+            } catch(FileError e) {
+                QMessageBox::critical(this,
+                                      tr("Replace Error"),
+                                      e.reason());
+                return;
+            }
+        }
+        while (!selections.isEmpty()) {
+            const PSearchResultTreeItem& item = selections.back();
+            selections.pop_back();
             QString line = editor->document()->getLine(item->line-1);
             if (line.mid(item->start-1,results->keyword.length())!=results->keyword) {
                 QMessageBox::critical(editor,
                             tr("Replace Error"),
                             tr("Contents has changed since last search!"));
-                editor->endUndoBlock();
+                if (!needSave)
+                    editor->endUndoBlock();
                 return;
             }
             line.remove(item->start-1,results->keyword.length());
             line.insert(item->start-1, newWord);
             editor->replaceLine(item->line,line);
         }
-        editor->endUndoBlock();
+        if (!needSave) {
+            editor->endUndoBlock();
+        } else {
+            QByteArray realEncoding;
+            QFile toFile(file->filename);
+            try {
+                editor->document()->saveToFile(toFile,ENCODING_AUTO_DETECT,
+                                       pSettings->editor().defaultEncoding(),
+                                       realEncoding);
+            } catch(FileError e) {
+                QMessageBox::critical(this,
+                                      tr("Replace Error"),
+                                      e.reason());
+                return;
+            }
+        }
     }
     showSearchReplacePanel(false);
     stretchMessagesPanel(false);

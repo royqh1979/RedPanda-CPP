@@ -4753,6 +4753,10 @@
         <source>Newline</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Open file in editors</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

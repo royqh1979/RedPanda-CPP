@@ -4373,7 +4373,6 @@ void QSynEdit::doUndoItem()
             break;
         }
         case ChangeReason::ReplaceLine:
-            qDebug()<<item->changeStartPos().line<<item->changeText();
             mRedoList->addRedo(
                         item->changeReason(),
                         item->changeStartPos(),

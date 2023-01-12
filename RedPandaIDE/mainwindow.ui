@@ -929,7 +929,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>6</number>
+     <number>3</number>
     </property>
     <property name="iconSize">
      <size>
@@ -1442,6 +1442,13 @@
            </property>
            <property name="sizeAdjustPolicy">
             <enum>QComboBox::AdjustToContents</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="chkOpenFileInEditors">
+           <property name="text">
+            <string>Open file in editors</string>
            </property>
           </widget>
          </item>

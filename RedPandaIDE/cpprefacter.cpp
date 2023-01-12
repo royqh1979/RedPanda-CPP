@@ -324,9 +324,17 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
     } else {
         Editor editor(nullptr);
         QByteArray encoding;
-        editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
-        QStringList newContents;
         editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
+        try {
+            editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
+        } catch(FileError e) {
+            QMessageBox::critical(pMainWindow,
+                        tr("Rename Symbol Error"),
+                        e.reason());
+            return;
+        }
+
+        QStringList newContents;
         int posY = 0;
         while (posY < editor.document()->count()) {
             QString line = editor.document()->getLine(posY);
@@ -365,8 +373,16 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         }
         QByteArray realEncoding;
         QFile file(filename);
-        editor.document()->saveToFile(file,ENCODING_AUTO_DETECT,
-                                   pSettings->editor().defaultEncoding(),
-                                   realEncoding);
+        try {
+            editor.document()->saveToFile(file,ENCODING_AUTO_DETECT,
+                                       pSettings->editor().defaultEncoding(),
+                                       realEncoding);
+        } catch(FileError e) {
+            QMessageBox::critical(pMainWindow,
+                        tr("Rename Symbol Error"),
+                        e.reason());
+            return;
+        }
+
     }
 }
