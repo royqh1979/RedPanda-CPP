@@ -431,6 +431,11 @@ bool QSynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, i
     return false;
 }
 
+void QSynEdit::addGroupBreak()
+{
+    mUndoList->addGroupBreak();
+}
+
 void QSynEdit::beginUndoBlock()
 {
     mUndoList->beginBlock();
@@ -6785,6 +6790,12 @@ BufferCoord QSynEdit::blockEnd() const
         return mBlockBegin;
     else
         return mBlockEnd;
+}
+
+void QSynEdit::clearSelection()
+{
+    setActiveSelectionMode(SelectionMode::Normal);
+    setBlockBegin(caretXY());
 }
 
 void QSynEdit::setBlockEnd(BufferCoord value)

@@ -7713,6 +7713,9 @@ void MainWindow::on_btnReplace_clicked()
                                   tr("Can't open file '%1' for replace!").arg(file->filename));
             return;
         }
+        editor->clearSelection();
+        editor->addGroupBreak();
+        editor->beginUndoBlock();
         for (int i=file->results.count()-1;i>=0;i--) {
             const PSearchResultTreeItem& item = file->results[i];
             if (!item->selected)
@@ -7722,12 +7725,14 @@ void MainWindow::on_btnReplace_clicked()
                 QMessageBox::critical(editor,
                             tr("Replace Error"),
                             tr("Contents has changed since last search!"));
+                editor->endUndoBlock();
                 return;
             }
             line.remove(item->start-1,results->keyword.length());
             line.insert(item->start-1, newWord);
             editor->replaceLine(item->line,line);
         }
+        editor->endUndoBlock();
     }
     showSearchReplacePanel(false);
     stretchMessagesPanel(false);

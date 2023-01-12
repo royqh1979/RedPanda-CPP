@@ -281,6 +281,9 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
     if (oldEditor){
         QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
         int posY = 0;
+        oldEditor->clearSelection();
+        oldEditor->addGroupBreak();
+        oldEditor->beginUndoBlock();
         while (posY < oldEditor->document()->count()) {
             QString line = oldEditor->document()->getLine(posY);
             if (posY == 0) {
@@ -317,6 +320,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
                 oldEditor->replaceLine(posY+1,newLine);
             posY++;
         }
+        oldEditor->endUndoBlock();
     } else {
         Editor editor(nullptr);
         QByteArray encoding;
@@ -326,7 +330,6 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         int posY = 0;
         while (posY < editor.document()->count()) {
             QString line = editor.document()->getLine(posY);
-
             if (posY == 0) {
                 editor.syntaxer()->resetState();
             } else {

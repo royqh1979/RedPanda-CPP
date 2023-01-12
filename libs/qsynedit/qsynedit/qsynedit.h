@@ -249,6 +249,7 @@ public:
     bool getTokenAttriAtRowColEx(const BufferCoord& pos, QString& token,
       int &start, PTokenAttribute& attri);
 
+    void addGroupBreak();
     void beginUndoBlock();
     void endUndoBlock();
     void addCaretToUndo();
@@ -320,6 +321,7 @@ public:
     BufferCoord blockBegin() const;
     BufferCoord blockEnd() const;
 
+    void clearSelection();
     void setBlockBegin(BufferCoord value);
     void setBlockEnd(BufferCoord Value);
 
