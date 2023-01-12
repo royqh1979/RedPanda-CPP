@@ -289,6 +289,10 @@ void CppSyntaxer::andSymbolProc()
 
 void CppSyntaxer::ansiCppProc()
 {
+    if (mRun>=mLineSize) {
+        nullProc();
+        return;
+    }
     mTokenId = TokenId::Comment;
     while (mRun<mLineSize) {
         if (isSpaceChar(mLine[mRun]))
@@ -933,7 +937,10 @@ void CppSyntaxer::slashProc()
         case '/': // Cpp style comment
             mTokenId = TokenId::Comment;
             mRun+=2;
-            mRange.state = RangeState::rsCppComment;
+            if (mRun<mLineSize)
+                mRange.state = RangeState::rsCppComment;
+            else
+                mRange.state = RangeState::rsUnknown;
             return;
         case '*': // C style comment
             mTokenId = TokenId::Comment;
@@ -976,8 +983,11 @@ void CppSyntaxer::spaceProc()
     mTokenId = TokenId::Space;
     while (mRun<mLineSize && mLine[mRun]>=1 && mLine[mRun]<=32)
         mRun+=1;
-    if (mRun>=mLineSize)
+    if (mRun>=mLineSize) {
         mRange.hasTrailingSpaces = true;
+        if (mRange.state==RangeState::rsCppComment)
+            mRange.state = RangeState::rsUnknown;
+    }
 }
 
 void CppSyntaxer::squareCloseProc()

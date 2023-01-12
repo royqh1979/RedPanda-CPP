@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.9
+
+  - enhancement: set caret to the corresponding line in the editor after "run"/"generate assembly"
+  - fix: syntax highlighting for cpp style line comment is not correct.
+
 Red Panda C++ Version 2.8
 
   - fix: Crash when editing makefile

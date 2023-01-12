@@ -5541,8 +5541,33 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
             if (!mCompileSuccessionTask->isExecutable) {
                 switch (mCompileSuccessionTask->type) {
                 case MainWindow::CompileSuccessionTaskType::RunNormal:
-                    if (fileExists(mCompileSuccessionTask->execName))
-                        openFile(mCompileSuccessionTask->execName);
+                    if (fileExists(mCompileSuccessionTask->execName)) {
+                        Editor * editor = openFile(mCompileSuccessionTask->execName);
+                        if (e && editor) {
+                            int line = e->caretY();
+                            int startLine = 1;
+                            QString s = " # "+e->filename()+":";
+                            for(int i=0;i<editor->document()->count();i++) {
+                                QString t=editor->document()->getLine(i);
+                                if (t.startsWith(s,PATH_SENSITIVITY)) {
+                                    t=t.mid(s.length());
+                                    int pos = t.indexOf(":");
+                                    if (pos>0) {
+                                        QString numstring=t.mid(0,pos);
+                                        bool isOk;
+                                        int l=numstring.toInt(&isOk);
+                                        if (isOk) {
+                                            if (l<=line)
+                                                startLine=i+1;
+                                            if (l>=line)
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                            editor->setCaretPositionAndActivate(startLine,1);
+                        }
+                    }
                     break;
                 case MainWindow::CompileSuccessionTaskType::RunProblemCases:
                 case MainWindow::CompileSuccessionTaskType::RunCurrentProblemCase:
