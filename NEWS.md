@@ -25,6 +25,9 @@ Red Panda C++ Version 2.8
   - fix: Result of scope calculation not right if a for statement immediately follows another for statement.
   - fix: Function parameters that is pointer,reference or array can't be correctly parsed.
   - fix: In column mode, selection that contain lines with different length will cause error.
+  - enhancement: Rename symbols won't remove all breakpoints/bookmarks
+  - enhancement: Batch replace won't remove all breakpoints/bookmarks
+  - enhancement: Execute parameters can be used in debug.
 
 Red Panda C++ Version 2.7
 

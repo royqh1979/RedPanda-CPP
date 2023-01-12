@@ -169,6 +169,7 @@ enum class ChangeReason {
     LineBreak,
     MoveSelectionUp,
     MoveSelectionDown,
+    ReplaceLine,
     Nothing // undo list empty
   };
 

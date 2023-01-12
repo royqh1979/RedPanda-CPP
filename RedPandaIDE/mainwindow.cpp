@@ -2315,11 +2315,17 @@ void MainWindow::debug()
         if (!debugInferiorhasBreakpoint()) {
             mDebugger->sendCommand("-break-insert","-t main");
         }
+        if (pSettings->executor().useParams()) {
+            mDebugger->sendCommand("-exec-arguments", pSettings->executor().params());
+        }
         mDebugger->sendCommand("-exec-continue","");
     } else {
 #ifdef Q_OS_WIN
         mDebugger->sendCommand("-gdb-set", "new-console on");
 #endif
+        if (pSettings->executor().useParams()) {
+            mDebugger->sendCommand("-exec-arguments", pSettings->executor().params());
+        }
         if (!debugInferiorhasBreakpoint()) {
             mDebugger->sendCommand("-exec-run", "--start");
         } else {
@@ -7707,12 +7713,11 @@ void MainWindow::on_btnReplace_clicked()
                                   tr("Can't open file '%1' for replace!").arg(file->filename));
             return;
         }
-        contents = editor->contents();
         for (int i=file->results.count()-1;i>=0;i--) {
             const PSearchResultTreeItem& item = file->results[i];
             if (!item->selected)
                 continue;
-            QString line = contents[item->line-1];
+            QString line = editor->document()->getLine(item->line-1);
             if (line.mid(item->start-1,results->keyword.length())!=results->keyword) {
                 QMessageBox::critical(editor,
                             tr("Replace Error"),
@@ -7721,15 +7726,8 @@ void MainWindow::on_btnReplace_clicked()
             }
             line.remove(item->start-1,results->keyword.length());
             line.insert(item->start-1, newWord);
-            contents[item->line-1] = line;
+            editor->replaceLine(item->line,line);
         }
-        QSynedit::BufferCoord coord=editor->caretXY();
-        int topLine = editor->topLine();
-        int leftChar = editor->leftChar();
-        editor->replaceAll(contents.join(editor->lineBreak()));
-        editor->setCaretXY(coord);
-        editor->setTopLine(topLine);
-        editor->setLeftChar(leftChar);
     }
     showSearchReplacePanel(false);
     stretchMessagesPanel(false);

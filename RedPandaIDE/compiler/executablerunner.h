@@ -27,6 +27,8 @@ class ExecutableRunner : public Runner
 public:
     ExecutableRunner(const QString& filename, const QString& arguments, const QString& workDir,
                      QObject* parent = nullptr);
+    ExecutableRunner(const ExecutableRunner&)=delete;
+    ExecutableRunner& operator=(const ExecutableRunner&)=delete;
 
     const QString &redirectInputFilename() const;
     void setRedirectInputFilename(const QString &newDataFile);

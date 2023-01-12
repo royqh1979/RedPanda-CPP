@@ -34,6 +34,8 @@ class CompilerManager : public QObject
     Q_OBJECT
 public:
     explicit CompilerManager(QObject *parent = nullptr);
+    CompilerManager(const CompilerManager&)=delete;
+    CompilerManager& operator=(const CompilerManager&)=delete;
 
     bool compiling();
     bool backgroundSyntaxChecking();

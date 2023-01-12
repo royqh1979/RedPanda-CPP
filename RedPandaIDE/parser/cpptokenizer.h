@@ -43,6 +43,8 @@ public:
     using PToken = std::shared_ptr<Token>;
     using TokenList = QVector<PToken>;
     explicit CppTokenizer();
+    CppTokenizer(const CppTokenizer&)=delete;
+    CppTokenizer& operator=(const CppTokenizer&)=delete;
 
     void clear();
     void tokenize(const QStringList& buffer);

@@ -277,68 +277,89 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
 void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &statement,  const QString &newWord, const PCppParser &parser)
 {
     QStringList buffer;
-    Editor editor(nullptr);
-    if (pMainWindow->editorList()->getContentFromOpenedEditor(
-                filename,buffer)){
-        editor.document()->setContents(buffer);
+    Editor * oldEditor=pMainWindow->editorList()->getOpenedEditorByFilename(filename);
+    if (oldEditor){
+        QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
+        int posY = 0;
+        while (posY < oldEditor->document()->count()) {
+            QString line = oldEditor->document()->getLine(posY);
+            if (posY == 0) {
+                syntaxer->resetState();
+            } else {
+                syntaxer->setState(
+                            oldEditor->document()->getSyntaxState(posY-1));
+            }
+            syntaxer->setLine(line,posY);
+            QString newLine;
+            while (!syntaxer->eol()) {
+                int start = syntaxer->getTokenPos() + 1;
+                QString token = syntaxer->getToken();
+                if (token == statement->command) {
+                    //same name symbol , test if the same statement;
+                    QSynedit::BufferCoord p;
+                    p.line = posY+1;
+                    p.ch = start;
+
+                    QStringList expression = oldEditor->getExpressionAtPosition(p);
+                    PStatement tokenStatement = parser->findStatementOf(
+                                filename,
+                                expression, p.line);
+                    if (tokenStatement
+                            && (tokenStatement->line == statement->line)
+                            && (tokenStatement->fileName == statement->fileName)) {
+                        token = newWord;
+                    }
+                }
+                newLine += token;
+                syntaxer->next();
+            }
+            if (newLine!=line)
+                oldEditor->replaceLine(posY+1,newLine);
+            posY++;
+        }
     } else {
+        Editor editor(nullptr);
         QByteArray encoding;
         editor.document()->loadFromFile(filename,ENCODING_AUTO_DETECT,encoding);
-    }
-    QStringList newContents;
-    editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
-    int posY = 0;
-    while (posY < editor.document()->count()) {
-        QString line = editor.document()->getLine(posY);
+        QStringList newContents;
+        editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
+        int posY = 0;
+        while (posY < editor.document()->count()) {
+            QString line = editor.document()->getLine(posY);
 
-        if (posY == 0) {
-            editor.syntaxer()->resetState();
-        } else {
-            editor.syntaxer()->setState(
-                        editor.document()->getSyntaxState(posY-1));
-        }
-        editor.syntaxer()->setLine(line,posY);
-        QString newLine;
-        while (!editor.syntaxer()->eol()) {
-            int start = editor.syntaxer()->getTokenPos() + 1;
-            QString token = editor.syntaxer()->getToken();
-            if (token == statement->command) {
-                //same name symbol , test if the same statement;
-                QSynedit::BufferCoord p;
-                p.line = posY+1;
-                p.ch = start;
-
-                QStringList expression = editor.getExpressionAtPosition(p);
-                PStatement tokenStatement = parser->findStatementOf(
-                            filename,
-                            expression, p.line);
-                if (tokenStatement
-                        && (tokenStatement->line == statement->line)
-                        && (tokenStatement->fileName == statement->fileName)) {
-                    token = newWord;
-                }
+            if (posY == 0) {
+                editor.syntaxer()->resetState();
+            } else {
+                editor.syntaxer()->setState(
+                            editor.document()->getSyntaxState(posY-1));
             }
-            newLine += token;
-            editor.syntaxer()->next();
-        }
-        newContents.append(newLine);
-        posY++;
-    }
+            editor.syntaxer()->setLine(line,posY);
+            QString newLine;
+            while (!editor.syntaxer()->eol()) {
+                int start = editor.syntaxer()->getTokenPos() + 1;
+                QString token = editor.syntaxer()->getToken();
+                if (token == statement->command) {
+                    //same name symbol , test if the same statement;
+                    QSynedit::BufferCoord p;
+                    p.line = posY+1;
+                    p.ch = start;
 
-    Editor * oldEditor = pMainWindow->editorList()->getOpenedEditorByFilename(filename);
-    if (oldEditor) {
-        QSynedit::BufferCoord oldXY=oldEditor->caretXY();
-        int topLine = oldEditor->topLine();
-        int leftChar = oldEditor->leftChar();
-        oldEditor->beginUndoBlock();
-        oldEditor->addLeftTopToUndo();
-        oldEditor->addCaretToUndo();
-        oldEditor->replaceAll(newContents.join(oldEditor->lineBreak()));
-        oldEditor->setTopLine(topLine);
-        oldEditor->setLeftChar(leftChar);
-        oldEditor->setCaretXY(oldXY);
-        oldEditor->endUndoBlock();
-    } else {
+                    QStringList expression = editor.getExpressionAtPosition(p);
+                    PStatement tokenStatement = parser->findStatementOf(
+                                filename,
+                                expression, p.line);
+                    if (tokenStatement
+                            && (tokenStatement->line == statement->line)
+                            && (tokenStatement->fileName == statement->fileName)) {
+                        token = newWord;
+                    }
+                }
+                newLine += token;
+                editor.syntaxer()->next();
+            }
+            newContents.append(newLine);
+            posY++;
+        }
         QByteArray realEncoding;
         QFile file(filename);
         editor.document()->saveToFile(file,ENCODING_AUTO_DETECT,

@@ -41,6 +41,9 @@ class QSynEditPainter
 public:
     QSynEditPainter(QSynEdit * edit,QPainter* painter,int FirstRow, int LastRow,
                        int FirstCol, int LastCol);
+    QSynEditPainter(const QSynEditPainter&)=delete;
+    QSynEditPainter& operator=(const QSynEditPainter&)=delete;
+
     void paintTextLines(const QRect& clip);
     void paintGutter(const QRect& clip);
 

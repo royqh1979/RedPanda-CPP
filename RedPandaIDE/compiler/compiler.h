@@ -35,6 +35,8 @@ public:
         StdIn
     };
     Compiler(const QString& filename, bool silent,bool onlyCheckSyntax);
+    Compiler(const Compiler&)=delete;
+    Compiler& operator=(const Compiler&)=delete;
 
     bool isRebuild() const;
     void setRebuild(bool isRebuild);

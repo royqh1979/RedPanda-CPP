@@ -80,6 +80,9 @@ class CompilerInfo
 {
 public:
     CompilerInfo(const QString& name);
+    CompilerInfo(const CompilerInfo&)=delete;
+    CompilerInfo& operator=(const CompilerInfo&)=delete;
+
     const QList<PCompilerOption> &compilerOptions() const;
     const QString &name() const;
     PCompilerOption getCompilerOption(const QString& key) const;

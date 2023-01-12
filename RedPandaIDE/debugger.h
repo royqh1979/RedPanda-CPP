@@ -413,6 +413,7 @@ public:
     explicit DebugTarget(const QString& inferior,
                          const QString& GDBServer,
                          int port,
+                         const QString& arguments,
                          QObject *parent = nullptr);
     void setInputFile(const QString& inputFile);
     void stopDebug();
@@ -424,6 +425,7 @@ signals:
     void processError(QProcess::ProcessError error);
 private:
     QString mInferior;
+    QString mArguments;
     QString mGDBServer;
     int mPort;
     bool mStop;

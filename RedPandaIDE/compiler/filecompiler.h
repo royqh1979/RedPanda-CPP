@@ -26,7 +26,8 @@ public:
     FileCompiler(const QString& filename, const QByteArray& encoding,
                  CppCompileType compileType,
                  bool silent,bool onlyCheckSyntax);
-
+    FileCompiler(const FileCompiler&)=delete;
+    FileCompiler& operator=(const FileCompiler&)=delete;
 
 protected:
     bool prepareForCompile() override;

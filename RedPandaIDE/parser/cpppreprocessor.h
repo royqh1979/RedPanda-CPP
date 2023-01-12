@@ -61,6 +61,9 @@ class CppPreprocessor
 public:
 
     explicit CppPreprocessor();
+    CppPreprocessor(const CppPreprocessor&)=delete;
+    CppPreprocessor& operator=(const CppPreprocessor&)=delete;
+
     void clear();
 
     void clearTempResults();

@@ -4367,6 +4367,18 @@ void QSynEdit::doUndoItem()
             ensureCursorPosVisible();
             break;
         }
+        case ChangeReason::ReplaceLine:
+            qDebug()<<item->changeStartPos().line<<item->changeText();
+            mRedoList->addRedo(
+                        item->changeReason(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
+                        QStringList(mDocument->getLine(item->changeStartPos().line-1)),
+                        item->changeSelMode(),
+                        item->changeNumber()
+                        );
+            mDocument->putLine(item->changeStartPos().line-1,item->changeText()[0]);
+            break;
         case ChangeReason::MoveSelectionUp:
             setBlockBegin(BufferCoord{item->changeStartPos().ch, item->changeStartPos().line-1});
             setBlockEnd(BufferCoord{item->changeEndPos().ch, item->changeEndPos().line-1});
@@ -4563,6 +4575,17 @@ void QSynEdit::doRedoItem()
                         item->changeText(),
                         item->changeSelMode(),
                         item->changeNumber());
+            break;
+        case ChangeReason::ReplaceLine:
+            mUndoList->restoreChange(
+                        item->changeReason(),
+                        item->changeStartPos(),
+                        item->changeEndPos(),
+                        QStringList(mDocument->getLine(item->changeStartPos().line-1)),
+                        item->changeSelMode(),
+                        item->changeNumber()
+                        );
+            mDocument->putLine(item->changeStartPos().line-1,item->changeText()[0]);
             break;
         case ChangeReason::Insert:
             setCaretAndSelection(
@@ -6848,6 +6871,15 @@ void QSynEdit::setSelLength(int Value)
 void QSynEdit::setSelText(const QString &text)
 {
     doSetSelText(text);
+}
+
+void QSynEdit::replaceLine(int line, const QString &lineText)
+{
+    BufferCoord pos;
+    pos.line=line;
+    pos.ch=1;
+    mUndoList->addChange(ChangeReason::ReplaceLine,pos,pos,QStringList(mDocument->getLine(line-1)),SelectionMode::Normal);
+    mDocument->putLine(line-1,lineText);
 }
 
 BufferCoord QSynEdit::blockBegin() const

@@ -130,7 +130,10 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
     mWatchModel->resetAllVarInfos();
     if (pSettings->debugger().useGDBServer()) {
         //deleted when thread finished
-        mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort());
+        QString params;
+        if (pSettings->executor().useParams())
+            params = pSettings->executor().params();
+        mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort(),params);
         if (pSettings->executor().redirectInput())
             mTarget->setInputFile(pSettings->executor().inputFilename());
         connect(mTarget, &QThread::finished,[this](){
@@ -2668,9 +2671,11 @@ DebugTarget::DebugTarget(
         const QString &inferior,
         const QString &GDBServer,
         int port,
+        const QString& arguments,
         QObject *parent):
     QThread(parent),
     mInferior(inferior),
+    mArguments(arguments),
     mGDBServer(GDBServer),
     mPort(port),
     mStop(false),
@@ -2720,7 +2725,7 @@ void DebugTarget::run()
     QString arguments;
 #ifdef Q_OS_WIN
     cmd= mGDBServer;
-    arguments = QString(" localhost:%1 \"%2\"").arg(mPort).arg(mInferior);
+    arguments = QString(" localhost:%1 \"%2\" %3").arg(mPort).arg(mInferior,mArguments);
 #else
     cmd= pSettings->environment().terminalPath();
     arguments = QString(" -e \"%1\" localhost:%2 \"%3\"").arg(mGDBServer).arg(mPort).arg(mInferior);

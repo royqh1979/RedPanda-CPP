@@ -31,6 +31,8 @@ public:
     explicit OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
                                   POJProblemCase problemCase,
                                   QObject *parent = nullptr);
+    OJProblemCasesRunner(const OJProblemCasesRunner&)=delete;
+    OJProblemCasesRunner& operator=(const OJProblemCasesRunner&)=delete;
     //max size of output buffer
     int bufferSize() const;
     void setBufferSize(int newBufferSize);

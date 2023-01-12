@@ -31,6 +31,9 @@ class CppParser : public QObject
 
 public:
     explicit CppParser(QObject *parent = nullptr);
+    CppParser(const CppParser&)=delete;
+    CppParser& operator=(const CppParser)=delete;
+
     ~CppParser();
 
     void addHardDefineByLine(const QString& line);

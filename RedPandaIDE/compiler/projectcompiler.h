@@ -27,6 +27,8 @@ class ProjectCompiler : public Compiler
     Q_OBJECT
 public:
     ProjectCompiler(std::shared_ptr<Project> project, bool silent,bool onlyCheckSyntax);
+    ProjectCompiler(const ProjectCompiler&)=delete;
+    ProjectCompiler& operator=(const ProjectCompiler&)=delete;
     void buildMakeFile();
 
     bool onlyClean() const;

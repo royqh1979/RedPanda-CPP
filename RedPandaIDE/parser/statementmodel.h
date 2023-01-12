@@ -26,6 +26,8 @@ class StatementModel : public QObject
     Q_OBJECT
 public:
     explicit StatementModel(QObject *parent = nullptr);
+    StatementModel(const StatementModel&)=delete;
+    StatementModel& operator=(const StatementModel&)=delete;
 
     void add(const PStatement& statement);
 //    function DeleteFirst: Integer;

@@ -138,6 +138,8 @@ class QSynEdit : public QAbstractScrollArea
     Q_OBJECT
 public:
     explicit QSynEdit(QWidget* parent=nullptr);
+    QSynEdit(const QSynEdit&)=delete;
+    QSynEdit& operator=(const QSynEdit&)=delete;
     /**
      * Returns how many rows are there in the editor
      * @return
@@ -232,6 +234,7 @@ public:
     void setSelLength(int Value);
     void setSelText(const QString& text);
 
+    void replaceLine(int line, const QString& lineText);
     int searchReplace(const QString& sSearch, const QString& sReplace, SearchOptions options,
                PSynSearchBase searchEngine,  SearchMathedProc matchedCallback = nullptr,
                       SearchConfirmAroundProc confirmAroundCallback = nullptr);

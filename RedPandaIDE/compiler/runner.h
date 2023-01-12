@@ -24,6 +24,8 @@ class Runner : public QThread
     Q_OBJECT
 public:
     explicit Runner(const QString& filename, const QString& arguments, const QString& workDir, QObject *parent = nullptr);
+    Runner(const Runner&)=delete;
+    Runner operator=(const Runner&)=delete;
 
     bool pausing() const;
 
