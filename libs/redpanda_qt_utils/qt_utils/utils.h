@@ -108,8 +108,8 @@ void readFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc
 
 QByteArray readFileToByteArray(const QString& fileName);
 
-void stringsToFile(const QStringList& list, const QString& fileName);
-void stringToFile(const QString& str, const QString& fileName);
+bool stringsToFile(const QStringList& list, const QString& fileName);
+bool stringToFile(const QString& str, const QString& fileName);
 void createFile(const QString& fileName);
 
 /* File I/O utils */

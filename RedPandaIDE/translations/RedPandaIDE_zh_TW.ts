@@ -927,6 +927,10 @@
         <source>Readonly</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Can&apos;t generate temporary backup file &apos;%1&apos;.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorAutoSaveWidget</name>

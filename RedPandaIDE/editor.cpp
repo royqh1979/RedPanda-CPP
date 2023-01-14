@@ -244,13 +244,30 @@ void Editor::saveFile(QString filename) {
     QByteArray encoding = mFileEncoding;
     if (mEncodingOption!=ENCODING_AUTO_DETECT || mFileEncoding==ENCODING_ASCII)
         encoding = mEncodingOption;
-
+    QString backupFilename=filename+".savebak";
+    int count=1;
+    while (fileExists(backupFilename)) {
+        backupFilename=filename+QString(".savebak%1").arg(count);
+        count++;
+    }
+    if (!fileExists(filename)) {
+        if (!stringToFile(text(),backupFilename)) {
+            QMessageBox::critical(pMainWindow,tr("Error"),
+                                 tr("Can't generate temporary backup file '%1'.").arg(backupFilename));
+            return;
+        }
+    } else if (!QFile::copy(filename,backupFilename)) {
+        QMessageBox::critical(pMainWindow,tr("Error"),
+                             tr("Can't generate temporary backup file '%1'.").arg(backupFilename));
+        return;
+    }
     this->document()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
                               mFileEncoding);
     if (isVisible() && mParentPageControl)
         pMainWindow->updateForEncodingInfo(this);
     emit fileSaved(filename, inProject());
+    QFile::remove(backupFilename);
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
@@ -264,9 +281,9 @@ bool Editor::save(bool force, bool doReparse) {
     if (this->mIsNew && !force) {
         return saveAs();
     }    
-    while (pMainWindow->parsing()) {
-        QThread::msleep(200);
-    }
+//    while (pMainWindow->parsing()) {
+//        QThread::msleep(200);
+//    }
     //is this file writable;
 
     pMainWindow->fileSystemWatcher()->removePath(mFilename);

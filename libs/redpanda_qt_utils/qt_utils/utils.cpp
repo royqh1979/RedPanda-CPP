@@ -381,30 +381,32 @@ QByteArray readFileToByteArray(const QString &fileName)
     return QByteArray();
 }
 
-void stringToFile(const QString &str, const QString &fileName)
+bool stringToFile(const QString &str, const QString &fileName)
 {
     QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QTextStream stream(&file);
-        stream<<str;
-    }
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        return false;
+    QTextStream stream(&file);
+    stream<<str;
+    return true;
 }
 
 
-void stringsToFile(const QStringList &list, const QString &fileName)
+bool stringsToFile(const QStringList &list, const QString &fileName)
 {
     QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QTextStream stream(&file);
-        for (const QString& s:list) {
-            stream<<s
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        return false;
+    QTextStream stream(&file);
+    for (const QString& s:list) {
+        stream<<s
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                 <<Qt::endl;
+             <<Qt::endl;
 #else
-                 <<endl;
+             <<endl;
 #endif
-        }
     }
+    return true;
 }
 
 bool fileExists(const QString &file)
