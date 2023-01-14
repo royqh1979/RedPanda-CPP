@@ -148,7 +148,7 @@ CharsetInfoManager::CharsetInfoManager(const QString& localeName):
     mCodePages.append(std::make_shared<CharsetInfo>(1147,"IBM01147","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(1148,"IBM01148","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(1149,"IBM01149","","",false));
-    mCodePages.append(std::make_shared<CharsetInfo>(1200,"utf-16","","",false));
+    mCodePages.append(std::make_shared<CharsetInfo>(1200,"utf-16",tr("Unicode"),"",true));
     mCodePages.append(std::make_shared<CharsetInfo>(1201,"unicodeFFFE","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(1250,"windows-1250",tr("Central Europe"),"",true));
     mCodePages.append(std::make_shared<CharsetInfo>(1251,"windows-1251",tr("Cyrillic"),"",true));
@@ -176,7 +176,7 @@ CharsetInfoManager::CharsetInfoManager(const QString& localeName):
     mCodePages.append(std::make_shared<CharsetInfo>(10079,"x-mac-icelandic","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(10081,"x-mac-turkish","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(10082,"x-mac-croatian","","",false));
-    mCodePages.append(std::make_shared<CharsetInfo>(12000,"utf-32","","",false));
+    mCodePages.append(std::make_shared<CharsetInfo>(12000,"utf-32",tr("Unicode"),"",true));
     mCodePages.append(std::make_shared<CharsetInfo>(12001,"utf-32BE","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(20000,"x-Chinese_CNS","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(20001,"x-cp20001","","",false));
@@ -259,7 +259,7 @@ CharsetInfoManager::CharsetInfoManager(const QString& localeName):
     mCodePages.append(std::make_shared<CharsetInfo>(57010,"x-iscii-gu","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(57011,"x-iscii-pa","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(65000,"utf-7","","",false));
-    mCodePages.append(std::make_shared<CharsetInfo>(65001,"utf-8","","",false));
+    mCodePages.append(std::make_shared<CharsetInfo>(65001,"utf-8",tr("Unicode"),"",true));
 
 }
 

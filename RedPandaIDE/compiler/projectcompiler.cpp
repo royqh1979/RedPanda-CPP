@@ -410,6 +410,10 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     targetEncoding = defaultSystemEncoding;
                 } else if (encoding == ENCODING_UTF8_BOM) {
                     targetEncoding = "UTF-8";
+                } else if (encoding == ENCODING_UTF16_BOM) {
+                    targetEncoding = "UTF-16";
+                } else if (encoding == ENCODING_UTF32_BOM) {
+                    targetEncoding = "UTF-32";
                 } else {
                     targetEncoding = encoding;
                 }

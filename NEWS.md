@@ -2,6 +2,8 @@ Red Panda C++ Version 2.9
 
   - enhancement: set caret to the corresponding line in the editor after "run"/"generate assembly"
   - fix: syntax highlighting for cpp style line comment is not correct.
+  - fix: Save may crash app if the encoding codec is failed to load.
+  - enhancement: support open and save utf-16/utf-32 BOM files. (but gcc can't compile)
 
 Red Panda C++ Version 2.8
 

@@ -350,6 +350,10 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileTyp
             encodingName = systemEncodingName;
         } else if (encoding == ENCODING_UTF8_BOM) {
             encodingName = "UTF-8";
+        } else if (encoding == ENCODING_UTF16_BOM) {
+            encodingName = "UTF-16";
+        } else if (encoding == ENCODING_UTF32_BOM) {
+            encodingName = "UTF-32";
         } else {
             encodingName = encoding;
         }

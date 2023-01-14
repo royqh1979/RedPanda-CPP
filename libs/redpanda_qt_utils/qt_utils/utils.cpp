@@ -114,7 +114,7 @@ const QByteArray guessTextEncoding(const QByteArray& text){
 
 bool isTextAllAscii(const QByteArray& text) {
     for (char c:text) {
-        if (c<0) {
+        if (c<=0) {
             return false;
         }
     }

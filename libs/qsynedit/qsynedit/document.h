@@ -134,6 +134,10 @@ protected:
     void internalClear();
 private:
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
+    void loadUTF16BOMFile(QFile& file);
+    void loadUTF32BOMFile(QFile& file);
+    void saveUTF16File(QFile& file);
+    void saveUTF32File(QFile& file);
 
 private:
     DocumentLines mLines;
