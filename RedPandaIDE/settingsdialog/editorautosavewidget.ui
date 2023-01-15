@@ -15,6 +15,13 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QCheckBox" name="chkAutoBackupEditContents">
+     <property name="text">
+      <string>Auto backup editing contents</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="grpEnableAutoSave">
      <property name="title">
       <string>Enable auto save</string>

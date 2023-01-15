@@ -931,6 +931,30 @@
         <source>Can&apos;t generate temporary backup file &apos;%1&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Restore backup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup file &apos;%1&apos; detected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue to save?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error occurred at last save.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to load the backup file?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error Load File</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorAutoSaveWidget</name>
@@ -988,6 +1012,10 @@
     </message>
     <message>
         <source>Demo file name: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto backup editing contents</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

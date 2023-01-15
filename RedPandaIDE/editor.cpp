@@ -29,6 +29,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QMimeData>
+#include <QTemporaryFile>
 #include "qsynedit/syntaxer/cpp.h"
 #include "syntaxermanager.h"
 #include "qsynedit/exporter/rtfexporter.h"
@@ -83,6 +84,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mSaving(false),
   mHoverModifiedLine(-1)
 {
+    mBackupFile=nullptr;
     mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
     mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
     mCurrentLineModified = false;
@@ -93,7 +95,13 @@ Editor::Editor(QWidget *parent, const QString& filename,
     QFileInfo fileInfo(mFilename);
     QSynedit::PSyntaxer syntaxer;
     if (!isNew) {
-        loadFile();
+        try {
+            loadFile();
+        } catch (FileError& e) {
+            QMessageBox::critical(nullptr,
+                                  tr("Error Load File"),
+                                  e.reason());
+        }
         syntaxer = syntaxerManager.getSyntaxer(mFilename);
     } else {
         mFileEncoding = ENCODING_ASCII;
@@ -176,9 +184,13 @@ Editor::Editor(QWidget *parent, const QString& filename,
         setExtraKeystrokes();
     }
 
-    if (mParentPageControl)
+    if (mParentPageControl) {
         connect(&mFunctionTipTimer, &QTimer::timeout,
             this, &Editor::onFunctionTipsTimer);
+        mAutoBackupTimer.setInterval(1);
+        connect(&mAutoBackupTimer, &QTimer::timeout,
+            this, &Editor::onAutoBackupTimer);
+    }
 
     connect(horizontalScrollBar(), &QScrollBar::valueChanged,
             this, &Editor::onScrollBarValueChanged);
@@ -188,15 +200,33 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
 Editor::~Editor() {
     //qDebug()<<"editor "<<mFilename<<" deleted";
+    cleanAutoBackup();
 }
 
 void Editor::loadFile(QString filename) {
     if (filename.isEmpty()) {
-        this->document()->loadFromFile(mFilename,mEncodingOption,mFileEncoding);
+        filename=mFilename;
+        for (int i=0;i<100;i++) {
+            QString backfilename = filename+".savebak";
+            if (i>0)
+                backfilename += QString("%1").arg(i);
+            if (fileExists(backfilename)) {
+                if (QMessageBox::question(this,tr("Restore backup"),
+                                          tr("Backup file '%1' detected.").arg(backfilename)
+                                          +"<br />"
+                                          +tr("Error occurred at last save.")
+                                          +"<br />"
+                                          +tr("Do you want to load the backup file?"),
+                                          QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes)
+                    filename = backfilename;
+                break;
+            }
+        }
     } else {
         filename = QFileInfo(filename).absoluteFilePath();
-        this->document()->loadFromFile(filename,mEncodingOption,mFileEncoding);
     }
+
+    this->document()->loadFromFile(filename,mEncodingOption,mFileEncoding);
     //this->setModified(false);
     updateCaption();
     if (mParentPageControl)
@@ -219,6 +249,7 @@ void Editor::loadFile(QString filename) {
         reparseTodo();
     }
     mLastIdCharPressed = 0;
+    saveAutoBackup();
 }
 
 void Editor::saveFile(QString filename) {
@@ -450,6 +481,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     updateCaption();
 
     emit renamed(oldName, newName , firstSave);
+
+    initAutoBackup();
     return true;
 }
 
@@ -467,9 +500,15 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
     if (mEncodingOption == encoding)
         return;
     mEncodingOption = encoding;
-    if (!isNew())
-        loadFile();
-    else if (mParentPageControl)
+    if (!isNew()) {
+        try {
+            loadFile();
+        } catch (FileError& e) {
+            QMessageBox::critical(nullptr,
+                                  tr("Error Load File"),
+                                  e.reason());
+        }
+    } else if (mParentPageControl)
         pMainWindow->updateForEncodingInfo(this);
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
@@ -1800,8 +1839,6 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         }
     }
 
-
-
     if (changes.testFlag(QSynedit::scInsertMode) | changes.testFlag(QSynedit::scReadOnly))
         pMainWindow->updateForStatusbarModeInfo();
 
@@ -1864,6 +1901,16 @@ void Editor::onFunctionTipsTimer()
 {
     mFunctionTipTimer.stop();
     updateFunctionTip(true);
+}
+
+void Editor::onAutoBackupTimer()
+{
+    if (mBackupTime>lastModifyTime())
+        return;
+    QDateTime current=QDateTime::currentDateTime();
+    if (current.toSecsSinceEpoch()-lastModifyTime().toSecsSinceEpoch()<3)
+        return;
+    saveAutoBackup();
 }
 
 bool Editor::isBraceChar(QChar ch)
@@ -3266,6 +3313,61 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
     // Filter the whole statement list
     if (mHeaderCompletionPopup->search(word, autoComplete)) //only one suggestion and it's not input while typing
         headerCompletionInsert(); // if only have one suggestion, just use it
+}
+
+void Editor::initAutoBackup()
+{
+    if (!mParentPageControl)
+        return;
+    cleanAutoBackup();
+    if (!pSettings->editor().enableEditTempBackup())
+        return;
+    QFileInfo fileInfo(mFilename);
+    if (fileInfo.isAbsolute()) {
+        mBackupFile=new QFile(extractFileDir(mFilename)
+                              +QDir::separator()
+                              +extractFileName(mFilename)+QString(".%1.editbackup").arg(QDateTime::currentSecsSinceEpoch()));
+        if (mBackupFile->open(QFile::Truncate|QFile::WriteOnly)) {
+            saveAutoBackup();
+        } else {
+            cleanAutoBackup();
+        }
+    } else {
+        mBackupFile=new QFile(
+                    includeTrailingPathDelimiter(QDir::currentPath())
+                    +mFilename
+                    +QString(".%1.editbackup").arg(QDateTime::currentSecsSinceEpoch()));
+        if (!mBackupFile->open(QFile::Truncate|QFile::WriteOnly)) {
+            mBackupFile->setParent(nullptr);
+            delete mBackupFile;
+            mBackupFile=nullptr;
+        }
+    }
+    if (mBackupFile) {
+        mAutoBackupTimer.start();
+    }
+}
+
+void Editor::saveAutoBackup()
+{
+    if (mBackupFile) {
+        mBackupFile->reset();
+        mBackupTime=QDateTime::currentDateTime();
+        mBackupFile->write(text().toUtf8());
+        mBackupFile->flush();
+        qDebug()<<mBackupTime<<mBackupFile->size()<<mBackupFile->fileName();
+    }
+}
+
+void Editor::cleanAutoBackup()
+{
+    mAutoBackupTimer.stop();
+    if (mBackupFile) {
+        mBackupFile->close();
+        mBackupFile->remove();
+        delete mBackupFile;
+        mBackupFile=nullptr;
+    }
 }
 
 bool Editor::testInFunc(int x, int y)
@@ -4840,6 +4942,8 @@ void Editor::applySettings()
 
     this->setUndoLimit(pSettings->editor().undoLimit());
     this->setUndoMemoryUsage(pSettings->editor().undoMemoryUsage());
+
+    initAutoBackup();
 
     setMouseWheelScrollSpeed(pSettings->editor().mouseWheelScrollSpeed());
     setMouseSelectionScrollSpeed(pSettings->editor().mouseSelectionScrollSpeed());

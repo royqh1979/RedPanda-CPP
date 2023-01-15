@@ -48,8 +48,7 @@ void EditorAutoSaveWidget::onAutoSaveStrategyChanged()
 
 void EditorAutoSaveWidget::doLoad()
 {
-    //pSettings->editor().load();
-    //font
+    ui->chkAutoBackupEditContents->setChecked(pSettings->editor().enableEditTempBackup());
     ui->grpEnableAutoSave->setChecked(pSettings->editor().enableAutoSave());
     ui->spinInterval->setValue(pSettings->editor().autoSaveInterval());
     switch(pSettings->editor().autoSaveTarget()) {
@@ -76,6 +75,7 @@ void EditorAutoSaveWidget::doLoad()
 
 void EditorAutoSaveWidget::doSave()
 {
+    pSettings->editor().setEnableEditTempBackup(ui->chkAutoBackupEditContents->isChecked());
     pSettings->editor().setEnableAutoSave(ui->grpEnableAutoSave->isChecked());
     pSettings->editor().setAutoSaveInterval(ui->spinInterval->value());
     if (ui->rbCurrentFile->isChecked())

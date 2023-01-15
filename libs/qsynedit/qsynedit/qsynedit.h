@@ -784,6 +784,8 @@ protected:
     double lineSpacingFactor() const;
     void setLineSpacingFactor(double newLineSpacingFactor);
 
+    const QDateTime &lastModifyTime() const;
+
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;

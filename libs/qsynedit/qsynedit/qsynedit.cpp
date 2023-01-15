@@ -3972,6 +3972,11 @@ void QSynEdit::onScrolled(int)
     invalidate();
 }
 
+const QDateTime &QSynEdit::lastModifyTime() const
+{
+    return mLastModifyTime;
+}
+
 double QSynEdit::lineSpacingFactor() const
 {
     return mLineSpacingFactor;

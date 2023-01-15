@@ -398,6 +398,9 @@ public:
         bool showLeadingSpaces() const;
         void setShowLeadingSpaces(bool newShowStartSpaces);
 
+        bool enableEditTempBackup() const;
+        void setEnableEditTempBackup(bool newEnableEditTempBackup);
+
     private:
         //General
         // indents
@@ -497,6 +500,7 @@ public:
         bool mSyntaxCheckWhenLineChanged;
 
         //auto save
+        bool mEnableEditTempBackup;
         bool mEnableAutoSave;
         int mAutoSaveInterval;
         enum AutoSaveTarget mAutoSaveTarget;

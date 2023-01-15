@@ -41,7 +41,6 @@ Document::Document(const QFont& font, const QFont& nonAsciiFont, QObject *parent
       mMutex(QMutex::Recursive)
 #endif
 {
-
     mAppendNewLineAtEOF = true;
     mNewlineType = NewlineType::Windows;
     mIndexOfLongestLine = -1;

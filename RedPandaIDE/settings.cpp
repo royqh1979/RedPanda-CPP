@@ -760,6 +760,16 @@ void Settings::Editor::setShowLeadingSpaces(bool newShowStartSpaces)
     mShowLeadingSpaces = newShowStartSpaces;
 }
 
+bool Settings::Editor::enableEditTempBackup() const
+{
+    return mEnableEditTempBackup;
+}
+
+void Settings::Editor::setEnableEditTempBackup(bool newEnableEditTempBackup)
+{
+    mEnableEditTempBackup = newEnableEditTempBackup;
+}
+
 bool Settings::Editor::showTrailingSpaces() const
 {
     return mShowTrailingSpaces;
@@ -1360,6 +1370,7 @@ void Settings::Editor::doSave()
     saveValue("check_syntax_when_line_changed",mSyntaxCheckWhenLineChanged);
 
     //auto save
+    saveValue("enable_edit_temp_backup",mEnableEditTempBackup);
     saveValue("enable_auto_save",mEnableAutoSave);
     saveValue("auto_save_interal",mAutoSaveInterval);
     saveValue("auto_save_target",mAutoSaveTarget);
@@ -1508,6 +1519,7 @@ void Settings::Editor::doLoad()
     mSyntaxCheckWhenLineChanged = boolValue("check_syntax_when_line_changed",true);
 
     //auto save
+    mEnableEditTempBackup = boolValue("enable_edit_temp_backup",true);
     mEnableAutoSave = boolValue("enable_auto_save",false);
     mAutoSaveInterval = intValue("auto_save_interal",10);
     mAutoSaveTarget = static_cast<enum AutoSaveTarget>(

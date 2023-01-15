@@ -39,6 +39,8 @@ struct TabStop {
     int y;
 };
 
+class QTemporaryFile;
+
 using PTabStop = std::shared_ptr<TabStop>;
 
 class Editor : public QSynedit::QSynEdit
@@ -228,6 +230,7 @@ private slots:
     void onLinesDeleted(int first,int count);
     void onLinesInserted(int first,int count);
     void onFunctionTipsTimer();
+    void onAutoBackupTimer();
 
 private:
     bool isBraceChar(QChar ch);
@@ -253,6 +256,10 @@ private:
 
     void showCompletion(const QString& preWord, bool autoComplete, CodeCompletionType type);
     void showHeaderCompletion(bool autoComplete, bool forceShow=false);
+
+    void initAutoBackup();
+    void saveAutoBackup();
+    void cleanAutoBackup();
 
     bool testInFunc(int x,int y);
 
@@ -281,6 +288,8 @@ private:
     void onScrollBarValueChanged();
     static PCppParser sharedParser(ParserLanguage language);
 private:
+    QDateTime mBackupTime;
+    QFile* mBackupFile;
     QByteArray mEncodingOption; // the encoding type set by the user
     QByteArray mFileEncoding; // the real encoding of the file (auto detected)
     QString mFilename;
@@ -328,6 +337,7 @@ private:
     QSynedit::BufferCoord mHighlightCharPos2;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
     QTimer mFunctionTipTimer;
+    QTimer mAutoBackupTimer;
     int mHoverModifiedLine;
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
