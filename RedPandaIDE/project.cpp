@@ -1219,7 +1219,7 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
     newUnit->setFileName(QDir(directory()).filePath(inFileName));
     Editor * e= unitEditor(newUnit);
     if (e) {
-        newUnit->setEncoding(e->fileEncoding());
+        newUnit->setEncoding(e->encodingOption());
         e->setProject(this);
     } else {
         newUnit->setEncoding(options().encoding.toUtf8());

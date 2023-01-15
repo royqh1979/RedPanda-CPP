@@ -395,7 +395,7 @@ bool stringToFile(const QString &str, const QString &fileName)
 bool stringsToFile(const QStringList &list, const QString &fileName)
 {
     QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
         return false;
     QTextStream stream(&file);
     for (const QString& s:list) {

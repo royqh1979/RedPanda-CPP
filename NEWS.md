@@ -7,6 +7,7 @@ Red Panda C++ Version 2.9
   - enhancement: Create a temporary copy of the current file when saving files (it's removed after the saving sucessfully finished).
   - enhancement: Auto backup editing contents. (Save editing contents 3 seconds after input stopped. Auto delete when editor successfully closed)
   - enhancement: Add "Auto backup editing contents" option in options/editor/auto save
+  - fix: rename project file will wrongly set it's encoding to 'ASCII';
 
 Red Panda C++ Version 2.8
 
