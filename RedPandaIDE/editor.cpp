@@ -206,25 +206,28 @@ Editor::~Editor() {
 void Editor::loadFile(QString filename) {
     if (filename.isEmpty()) {
         filename=mFilename;
-        for (int i=0;i<100;i++) {
-            QString backfilename = filename+".savebak";
-            if (i>0)
-                backfilename += QString("%1").arg(i);
-            if (fileExists(backfilename)) {
-                if (QMessageBox::question(this,tr("Restore backup"),
-                                          tr("Backup file '%1' detected.").arg(backfilename)
-                                          +"<br />"
-                                          +tr("Error occurred at last save.")
-                                          +"<br />"
-                                          +tr("Do you want to load the backup file?"),
-                                          QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes)
-                    filename = backfilename;
-                break;
-            }
-        }
+        // save backup
+//        for (int i=0;i<100;i++) {
+//            QString backfilename = filename+".savebak";
+//            if (i>0)
+//                backfilename += QString("%1").arg(i);
+//            if (fileExists(backfilename)) {
+//                if (QMessageBox::question(this,tr("Restore backup"),
+//                                          tr("Backup file '%1' detected.").arg(backfilename)
+//                                          +"<br />"
+//                                          +tr("Error occurred at last save.")
+//                                          +"<br />"
+//                                          +tr("Do you want to load the backup file?"),
+//                                          QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes)
+//                    filename = backfilename;
+//                break;
+//            }
+//        }
     } else {
         filename = QFileInfo(filename).absoluteFilePath();
     }
+
+    //FileError should by catched by the caller of loadFile();
 
     this->document()->loadFromFile(filename,mEncodingOption,mFileEncoding);
     //this->setModified(false);
@@ -257,36 +260,37 @@ void Editor::saveFile(QString filename) {
     QByteArray encoding = mFileEncoding;
     if (mEncodingOption!=ENCODING_AUTO_DETECT || mFileEncoding==ENCODING_ASCII)
         encoding = mEncodingOption;
-    QString backupFilename=filename+".savebak";
-    int count=1;
-    while (fileExists(backupFilename)) {
-        backupFilename=filename+QString(".savebak%1").arg(count);
-        count++;
-    }
-    if (!fileExists(filename)) {
-        if (!stringToFile(text(),backupFilename)) {
-            if (QMessageBox::question(pMainWindow,tr("Error"),
-                                 tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
-                                  +"<br />"
-                                  +tr("Continue to save?"),
-                                  QMessageBox::Yes | QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)
-                return;
-        }
-    } else if (!QFile::copy(filename,backupFilename)) {
-        if (QMessageBox::question(pMainWindow,tr("Error"),
-                             tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
-                              +"<br />"
-                              +tr("Continue to save?"),
-                              QMessageBox::Yes | QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)
-            return;
-    }
+//  save backup
+//    QString backupFilename=filename+".savebak";
+//    int count=1;
+//    while (fileExists(backupFilename)) {
+//        backupFilename=filename+QString(".savebak%1").arg(count);
+//        count++;
+//    }
+//    if (!fileExists(filename)) {
+//        if (!stringToFile(text(),backupFilename)) {
+//            if (QMessageBox::question(pMainWindow,tr("Error"),
+//                                 tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
+//                                  +"<br />"
+//                                  +tr("Continue to save?"),
+//                                  QMessageBox::Yes | QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)
+//                return;
+//        }
+//    } else if (!QFile::copy(filename,backupFilename)) {
+//        if (QMessageBox::question(pMainWindow,tr("Error"),
+//                             tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
+//                              +"<br />"
+//                              +tr("Continue to save?"),
+//                              QMessageBox::Yes | QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)
+//            return;
+//    }
     this->document()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
                               mFileEncoding);
     if (isVisible() && mParentPageControl)
         pMainWindow->updateForEncodingInfo(this);
     emit fileSaved(filename, inProject());
-    QFile::remove(backupFilename);
+//    QFile::remove(backupFilename);
 }
 
 void Editor::convertToEncoding(const QByteArray &encoding)
