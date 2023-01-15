@@ -1908,7 +1908,7 @@ void Editor::onAutoBackupTimer()
     if (mBackupTime>lastModifyTime())
         return;
     QDateTime current=QDateTime::currentDateTime();
-    if (current.toSecsSinceEpoch()-lastModifyTime().toSecsSinceEpoch()<3)
+    if (current.toSecsSinceEpoch()-lastModifyTime().toSecsSinceEpoch()<=3)
         return;
     saveAutoBackup();
 }
@@ -3355,7 +3355,7 @@ void Editor::saveAutoBackup()
         mBackupTime=QDateTime::currentDateTime();
         mBackupFile->write(text().toUtf8());
         mBackupFile->flush();
-        qDebug()<<mBackupTime<<mBackupFile->size()<<mBackupFile->fileName();
+        //qDebug()<<mBackupTime<<mBackupFile->size()<<mBackupFile->fileName();
     }
 }
 
