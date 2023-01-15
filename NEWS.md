@@ -4,9 +4,8 @@ Red Panda C++ Version 2.9
   - fix: syntax highlighting for cpp style line comment is not correct.
   - fix: Save may crash app if the encoding codec is failed to load.
   - enhancement: support open and save utf-16/utf-32 BOM files. (but gcc can't compile)
-  - enhancement: Create a temporary copy of the current file when saving files (it's removed after the saving sucessfully finished).
-  - enhancement: Auto backup editing contents. (Save editing contents 3 seconds after input stopped. Auto delete when editor successfully closed)
-  - enhancement: Add "Auto backup editing contents" option in options/editor/auto save
+  - enhancement: Add "auto backup editing contents" option in options/editor/auto save. Turned off by default.
+  - enhancement: If the "auto backup editing contents" option is turned on, auto save editing contents 3 seconds after input stopped. Auto delete when editor successfully closed)
   - fix: rename project file will wrongly set it's encoding to 'ASCII';
   - fix: Project's file encoding is wrongly set to 'AUTO' when load project.
 
