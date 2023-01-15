@@ -41,20 +41,6 @@ struct TabStop {
 
 using PTabStop = std::shared_ptr<TabStop>;
 
-class SaveException: public std::exception {
-
-public:
-    explicit SaveException(const QString& reason);
-    explicit SaveException(const QString&& reason);
-    // exception interface
-    const QString& reason() const noexcept;
-public:
-    const char *what() const noexcept override;
-private:
-    QString mReason;
-    QByteArray mReasonBuffer;
-};
-
 class Editor : public QSynedit::QSynEdit
 {
     Q_OBJECT

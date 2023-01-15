@@ -136,8 +136,8 @@ private:
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
-    void saveUTF16File(QFile& file);
-    void saveUTF32File(QFile& file);
+    void saveUTF16File(QFile& file, QTextCodec* codec);
+    void saveUTF32File(QFile& file, QTextCodec* codec);
 
 private:
     DocumentLines mLines;

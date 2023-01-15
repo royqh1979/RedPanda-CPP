@@ -547,21 +547,19 @@ void Document::loadUTF32BOMFile(QFile &file)
     this->setText(text);
 }
 
-void Document::saveUTF16File(QFile &file)
+void Document::saveUTF16File(QFile &file, QTextCodec* codec)
 {
-    QString text=getTextStr();
-    QTextCodec* codec=QTextCodec::codecForName(ENCODING_UTF16);
     if (!codec)
         return;
+    QString text=getTextStr();
     file.write(codec->fromUnicode(text));
 }
 
-void Document::saveUTF32File(QFile &file)
+void Document::saveUTF32File(QFile &file, QTextCodec* codec)
 {
-    QString text=getTextStr();
-    QTextCodec* codec=QTextCodec::codecForName(ENCODING_UTF32);
     if (!codec)
         return;
+    QString text=getTextStr();
     file.write(codec->fromUnicode(text));
 }
 
@@ -757,10 +755,10 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     if (mLines.isEmpty())
         return;
     if (realEncoding == ENCODING_UTF16) {
-        saveUTF16File(file);
+        saveUTF16File(file,codec);
         return;
     } else if (realEncoding == ENCODING_UTF32) {
-        saveUTF32File(file);
+        saveUTF32File(file,codec);
         return;
     } if (realEncoding == ENCODING_UTF8_BOM) {
         file.putChar(0xEF);

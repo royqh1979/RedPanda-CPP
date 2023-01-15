@@ -5372,13 +5372,9 @@ void MainWindow::on_actionSave_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor) {
-        try {
-            editor->save();
+        editor->save();
 //            if (editor->inProject() && (mProject))
 //                mProject->saveAll();
-        } catch(FileError e) {
-            QMessageBox::critical(editor,tr("Error"),e.reason());
-        }
     }    
 }
 
@@ -5386,11 +5382,7 @@ void MainWindow::on_actionSaveAs_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor) {
-        try {
-            editor->saveAs();
-        } catch(FileError e) {
-            QMessageBox::critical(editor,tr("Error"),e.reason());
-        }
+        editor->saveAs();
     }
 }
 

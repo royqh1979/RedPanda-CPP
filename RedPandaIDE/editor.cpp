@@ -53,24 +53,6 @@
 #include "project.h"
 #include <qt_utils/charsetinfo.h>
 
-SaveException::SaveException(const QString& reason) {
-    mReason = reason;
-    mReasonBuffer = mReason.toLocal8Bit();
-}
-
-SaveException::SaveException(const QString&& reason) {
-    mReason = reason;
-    mReasonBuffer = mReason.toLocal8Bit();
-}
-
-const QString& SaveException::reason() const  noexcept{
-    return mReason;
-}
-
-const char* SaveException::what() const noexcept {
-    return mReasonBuffer;
-}
-
 QHash<ParserLanguage,std::weak_ptr<CppParser>> Editor::mSharedParsers;
 
 Editor::Editor(QWidget *parent):
@@ -252,14 +234,20 @@ void Editor::saveFile(QString filename) {
     }
     if (!fileExists(filename)) {
         if (!stringToFile(text(),backupFilename)) {
-            QMessageBox::critical(pMainWindow,tr("Error"),
-                                 tr("Can't generate temporary backup file '%1'.").arg(backupFilename));
-            return;
+            if (QMessageBox::question(pMainWindow,tr("Error"),
+                                 tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
+                                  +"<br />"
+                                  +tr("Continue to save?"),
+                                  QMessageBox::Yes | QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)
+                return;
         }
     } else if (!QFile::copy(filename,backupFilename)) {
-        QMessageBox::critical(pMainWindow,tr("Error"),
-                             tr("Can't generate temporary backup file '%1'.").arg(backupFilename));
-        return;
+        if (QMessageBox::question(pMainWindow,tr("Error"),
+                             tr("Can't generate temporary backup file '%1'.").arg(backupFilename)
+                              +"<br />"
+                              +tr("Continue to save?"),
+                              QMessageBox::Yes | QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)
+            return;
     }
     this->document()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
@@ -298,7 +286,7 @@ bool Editor::save(bool force, bool doReparse) {
         setModified(false);
         mIsNew = false;
         updateCaption();
-    }  catch (SaveException& exception) {
+    } catch (FileError& exception) {
         if (!force) {
             QMessageBox::critical(pMainWindow,tr("Error"),
                                  exception.reason());
@@ -414,7 +402,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         saveFile(mFilename);
         mIsNew = false;
         setModified(false);
-    }  catch (SaveException& exception) {
+    }  catch (FileError& exception) {
         QMessageBox::critical(pMainWindow,tr("Error"),
                                  exception.reason());
         return false;
