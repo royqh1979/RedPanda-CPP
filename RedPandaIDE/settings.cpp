@@ -1519,7 +1519,7 @@ void Settings::Editor::doLoad()
     mSyntaxCheckWhenLineChanged = boolValue("check_syntax_when_line_changed",true);
 
     //auto save
-    mEnableEditTempBackup = boolValue("enable_edit_temp_backup",true);
+    mEnableEditTempBackup = boolValue("enable_edit_temp_backup", false);
     mEnableAutoSave = boolValue("enable_auto_save",false);
     mAutoSaveInterval = intValue("auto_save_interal",10);
     mAutoSaveTarget = static_cast<enum AutoSaveTarget>(

@@ -238,7 +238,7 @@ void Project::open()
         newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
         QByteArray defaultEncoding = toByteArray(mOptions.encoding);
         //Compatibility
-        if (ini.GetBoolValue(groupName,"DetectEncoding",true)){
+        if (ini.GetBoolValue(groupName,"DetectEncoding",false)){
             defaultEncoding = ENCODING_AUTO_DETECT;
         }
 
@@ -767,7 +767,6 @@ bool Project::saveUnits()
             ini.SetValue(groupName,"FileEncoding", toByteArray(unit->encoding()));
         else
             ini.Delete(groupName,"FileEncoding");
-
     }
     ini.SetLongValue("Project","UnitCount",count);
     ini.SaveFile(mFilename.toLocal8Bit());
