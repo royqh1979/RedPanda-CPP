@@ -414,6 +414,7 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::updateProjectActions);
 
     ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
+    ui->actionDocument->setVisible(pSettings->environment().language()=="zh_CN");
 
     connect(ui->EditorTabsLeft, &EditorsTabWidget::middleButtonClicked,
             this, &MainWindow::on_EditorTabsLeft_tabCloseRequested);
@@ -7897,7 +7898,7 @@ void MainWindow::on_actionC_C_Reference_triggered()
             QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
         } else {
 
-            QDesktopServices::openUrl(QUrl("https://qingcms.gitee.io/cppreference/20210212/zh/cpp.html"));
+            QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/cpp"));
         }
     } else {
         QDesktopServices::openUrl(QUrl("https://en.cppreference.com/w/cpp"));
@@ -8221,7 +8222,7 @@ void MainWindow::onProblemRunAllCases()
 void MainWindow::on_actionC_Reference_triggered()
 {
     if (pSettings->environment().language()=="zh_CN") {
-        QDesktopServices::openUrl(QUrl("https://qingcms.gitee.io/cppreference/20210212/zh/c.html"));
+        QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/c"));
     } else {
         QDesktopServices::openUrl(QUrl("https://en.cppreference.com/w/c"));
     }
@@ -8757,7 +8758,7 @@ void MainWindow::on_actionGit_Restore_triggered()
 void MainWindow::on_actionWebsite_triggered()
 {
     if (pSettings->environment().language()=="zh_CN") {
-        QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/docsy/docs/"));
+        QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/"));
     } else {
         QDesktopServices::openUrl(QUrl("https://sourceforge.net/projects/redpanda-cpp/"));
     }
@@ -9337,5 +9338,21 @@ void MainWindow::on_actionToggle_Readonly_triggered()
         updateEditorActions(editor);
         updateForStatusbarModeInfo(editor);
     }
+}
+
+
+void MainWindow::on_actionSubmit_Issues_triggered()
+{
+    if (pSettings->environment().language()=="zh_CN") {
+        QDesktopServices::openUrl(QUrl("https://gitee.com/royqh1979/RedPanda-CPP/issues"));
+    } else {
+        QDesktopServices::openUrl(QUrl("https://github.com/royqh1979/RedPanda-CPP/issues"));
+    }
+}
+
+
+void MainWindow::on_actionDocument_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/docsy/docs/"));
 }
 

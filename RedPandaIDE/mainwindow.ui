@@ -267,11 +267,14 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionWebsite"/>
+    <addaction name="actionDocument"/>
     <addaction name="actionC_Reference"/>
     <addaction name="actionC_C_Reference"/>
     <addaction name="actionRaylib_Manual"/>
     <addaction name="actionEGE_Manual"/>
+    <addaction name="separator"/>
+    <addaction name="actionWebsite"/>
+    <addaction name="actionSubmit_Issues"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuRefactor">
@@ -3131,9 +3134,6 @@
    <property name="text">
     <string>Website</string>
    </property>
-   <property name="shortcut">
-    <string>F1</string>
-   </property>
   </action>
   <action name="actionGit_Branch">
    <property name="text">
@@ -3312,6 +3312,19 @@
   <action name="actionToggle_Readonly">
    <property name="text">
     <string>Toggle Readonly</string>
+   </property>
+  </action>
+  <action name="actionSubmit_Issues">
+   <property name="text">
+    <string>Submit Issues</string>
+   </property>
+  </action>
+  <action name="actionDocument">
+   <property name="text">
+    <string>Document</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
    </property>
   </action>
  </widget>

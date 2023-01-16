@@ -771,6 +771,10 @@ private slots:
 
     void on_actionToggle_Readonly_triggered();
 
+    void on_actionSubmit_Issues_triggered();
+
+    void on_actionDocument_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;

@@ -3,7 +3,8 @@ Red Panda C++ Version 2.10
   - fix: When restored from minimization, info on statusbar not correctly restored.
   - enhancement: Changes of "auto backup editing contents" is applied immediately.
   - enhancement: Don't create temp backup for readonly files.
-
+  - enhancement: Add "Help"/"Submit Iusses".
+  - enhancement: Add "Help"/"Document" for Simplified Chinese users.
 
 Red Panda C++ Version 2.9
 
