@@ -1459,6 +1459,10 @@ void Editor::showEvent(QShowEvent */*event*/)
         pMainWindow->debugger()->setIsForProject(inProject());
         pMainWindow->bookmarkModel()->setIsForProject(inProject());
         pMainWindow->todoModel()->setIsForProject(inProject());
+
+        pMainWindow->updateForEncodingInfo(true);
+        pMainWindow->updateStatusbarForLineCol(true);
+        pMainWindow->updateForStatusbarModeInfo(true);
     }
 
     if (!pMainWindow->isClosingAll()
@@ -1832,7 +1836,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             invalidate();
             mOldHighlightedWord = mCurrentHighlightedWord;
         }
-        pMainWindow->updateStatusbarForLineCol();
+        pMainWindow->updateStatusbarForLineCol(this);
 
         // Update the function tip
         if (pSettings->editor().showFunctionTips()) {
@@ -1851,6 +1855,11 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
     if (changes.testFlag(QSynedit::StatusChange::scCaretY) && mParentPageControl) {
         pMainWindow->caretList().addCaret(this,caretY(),caretX());
         pMainWindow->updateCaretActions();
+    }
+
+    if (changes.testFlag(QSynedit::StatusChange::scReadOnly)) {
+        if (!readOnly())
+            initAutoBackup();
     }
 }
 
@@ -3325,6 +3334,8 @@ void Editor::initAutoBackup()
         return;
     cleanAutoBackup();
     if (!pSettings->editor().enableEditTempBackup())
+        return;
+    if (readOnly())
         return;
     QFileInfo fileInfo(mFilename);
     if (fileInfo.isAbsolute()) {

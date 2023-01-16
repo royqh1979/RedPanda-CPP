@@ -33,7 +33,7 @@ RedPandaIDE.depends += redpanda-git-askpass
 
 APP_NAME = RedPandaCPP
 
-APP_VERSION = 2.9
+APP_VERSION = 2.10
 
 linux: {
     isEmpty(PREFIX) {

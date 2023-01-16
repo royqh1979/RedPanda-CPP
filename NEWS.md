@@ -1,3 +1,10 @@
+Red Panda C++ Version 2.10
+
+  - fix: When restored from minimization, info on statusbar not correctly restored.
+  - enhancement: Changes of "auto backup editing contents" is applied immediately.
+  - enhancement: Don't create temp backup for readonly files.
+
+
 Red Panda C++ Version 2.9
 
   - enhancement: set caret to the corresponding line in the editor after "run"/"generate assembly"

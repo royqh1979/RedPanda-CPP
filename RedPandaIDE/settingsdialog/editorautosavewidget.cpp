@@ -75,6 +75,7 @@ void EditorAutoSaveWidget::doLoad()
 
 void EditorAutoSaveWidget::doSave()
 {
+    bool shouldApplyEditorSettings=(ui->chkAutoBackupEditContents->isChecked()!=pSettings->editor().enableEditTempBackup());
     pSettings->editor().setEnableEditTempBackup(ui->chkAutoBackupEditContents->isChecked());
     pSettings->editor().setEnableAutoSave(ui->grpEnableAutoSave->isChecked());
     pSettings->editor().setAutoSaveInterval(ui->spinInterval->value());
@@ -91,6 +92,8 @@ void EditorAutoSaveWidget::doSave()
     else
         pSettings->editor().setAutoSaveStrategy(assAppendFormatedTimeStamp);
     pSettings->editor().save();
+    if (shouldApplyEditorSettings)
+        pMainWindow->updateEditorSettings();
     pMainWindow->resetAutoSaveTimer();
 }
 
