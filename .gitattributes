@@ -8,6 +8,7 @@
 # text files to be packed
 /platform/linux/install.sh eol=lf
 /platform/linux/redpandaide.desktop.in eol=lf
+/platform/linux/redpandaide.svg eol=lf
 /platform/linux/templates/*/*.txt eol=lf
 /platform/linux/templates/*/*.template eol=lf
 /platform/linux/templates/*/*.fs eol=lf

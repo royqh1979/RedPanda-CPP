@@ -5,7 +5,7 @@ set -xe
 # build RedPanda C++
 mkdir -p /build/redpanda-build
 cd /build/redpanda-build
-/opt/qt5/bin/qmake PREFIX='/usr' QMAKE_RPATHDIR='/_PlaceHolder' /build/RedPanda-CPP/Red_Panda_CPP.pro
+/opt/qt5/bin/qmake PREFIX='/usr' XDG_ADAPTIVE_ICON=ON QMAKE_RPATHDIR='/_PlaceHolder' /build/RedPanda-CPP/Red_Panda_CPP.pro
 make -j$(nproc)
 
 # install RedPanda C++ to AppDir
@@ -15,8 +15,8 @@ make install INSTALL_ROOT=/build/RedPandaIDE.AppDir
 cd /build/RedPandaIDE.AppDir
 ln -s usr/bin/RedPandaIDE AppRun
 ln -s usr/share/applications/redpandaide.desktop redpandaide.desktop
-ln -s usr/share/pixmaps/redpandaide.png redpandaide.png
-ln -s usr/share/pixmaps/redpandaide.png .DirIcon
+ln -s usr/share/icons/hicolor/scalable/apps/redpandaide.svg redpandaide.svg
+cp /build/RedPanda-CPP/platform/linux/redpandaide.png .DirIcon
 
 # copy dependency
 mkdir -p usr/lib
@@ -31,4 +31,4 @@ appimagetool --appimage-extract-and-run RedPandaIDE.AppDir RedPandaIDE-$CARCH.Ap
 
 # copy back to host
 mkdir -p /build/RedPanda-CPP/dist
-/bin/cp RedPandaIDE-$CARCH.AppImage /build/RedPanda-CPP/dist
+cp RedPandaIDE-$CARCH.AppImage /build/RedPanda-CPP/dist
