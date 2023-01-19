@@ -295,17 +295,29 @@ void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_clicked()
 
 void CompilerSetOptionWidget::on_btnRenameCompilerSet_clicked()
 {
+    Settings::PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    if (!set)
+        return;
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("New name"),QLineEdit::Normal,
-                                         pSettings->compilerSets().defaultSet()->name());
+                                         set->name());
     if (!name.isEmpty())
-        pSettings->compilerSets().defaultSet()->setName(name);
+        set->setName(name);
     doLoad();
 }
 
 void CompilerSetOptionWidget::on_btnRemoveCompilerSet_clicked()
 {
-    pSettings->compilerSets().deleteSet(ui->cbCompilerSet->currentIndex());
-    doLoad();
+    Settings::PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    if (!set)
+        return;
+    if (QMessageBox::question(this,
+                              QObject::tr("Remove"),
+                              QString(QObject::tr("Do you really want to remove \"%1\"?")).arg(set->name()),
+                              QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel)==QMessageBox::Yes) {
+
+        pSettings->compilerSets().deleteSet(ui->cbCompilerSet->currentIndex());
+        doLoad();
+    }
 }
 
 void CompilerSetOptionWidget::updateIcons(const QSize& /*size*/)
