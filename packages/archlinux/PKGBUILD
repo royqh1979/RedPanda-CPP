@@ -30,6 +30,7 @@ build() {
     qmake \
         PREFIX='/usr' \
         LIBEXECDIR='/usr/lib' \
+        XDG_ICON=ON \
         "$srcdir/$_pkgname/Red_Panda_CPP.pro"
     make
 }

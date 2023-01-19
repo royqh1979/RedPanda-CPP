@@ -55,9 +55,17 @@ linux: {
     docs.files += LICENSE
     INSTALLS += docs
 
-    pixmaps.path = $${PREFIX}/share/pixmaps
-    pixmaps.files += platform/linux/redpandaide.png
-    INSTALLS += pixmaps
+    equals(XDG_ICON, "ON") {
+        xdgicons.path = $${PREFIX}/share/icons/hicolor/scalable/apps/
+        xdgicons.files += platform/linux/redpandaide.svg
+        REDPANDA_ICON_PATH = redpandaide
+        INSTALLS += xdgicons
+    } else {
+        pixmaps.path = $${PREFIX}/share/pixmaps
+        pixmaps.files += platform/linux/redpandaide.png
+        REDPANDA_ICON_PATH = $${PREFIX}/share/pixmaps/redpandaide.png
+        INSTALLS += pixmaps
+    }
 
     desktop.path = $${PREFIX}/share/applications
     desktop.files += platform/linux/redpandaide.desktop

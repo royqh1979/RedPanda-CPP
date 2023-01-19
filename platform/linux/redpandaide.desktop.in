@@ -11,5 +11,5 @@ StartupNotify=false
 Terminal=false
 Type=Application
 Categories=Development;Qt;
-Icon=$${PREFIX}/share/pixmaps/redpandaide
+Icon=$${REDPANDA_ICON_PATH}
 Path=$${PREFIX}/bin
