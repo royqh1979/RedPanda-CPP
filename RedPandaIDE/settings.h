@@ -1334,8 +1334,7 @@ public:
         void setType(const QString& value);
         const QString& name() const;
         void setName(const QString& value);
-        const QStringList& CppDefines();
-        const QStringList& CDefines();
+        QStringList defines(bool isCpp);
         const QString& target() const;
         void setTarget(const QString& value);
 
@@ -1393,7 +1392,6 @@ public:
     private:
         void setDirectories(const QString& binDir, CompilerType mCompilerType);
         //load hard defines
-        void setDefines();
         void setExecutables();
         void setUserInput();
 
@@ -1426,8 +1424,6 @@ public:
         QString mVersion; // "4.7.1"
         QString mType; // "TDM-GCC", "MinGW"
         QString mName; // "TDM-GCC 4.7.1 Release"
-        QStringList mCppDefines; // list of predefined constants
-        QStringList mCDefines; // list of predefined constants
         QString mTarget; // 'X86_64' / 'i686'
         CompilerType mCompilerType; // 'Clang' / 'GCC'
         CompilerSetType mCompilerSetType; // RELEASE/ DEBUG/ Profile

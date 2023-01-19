@@ -1571,14 +1571,19 @@ void MainWindow::changeOptions(const QString &widgetName, const QString &groupNa
         return;
     }
 
-    Editor *e = mEditorList->getEditor();
-    if (mProject && !e) {
+    if (mProject) {
         scanActiveProject(true);
-    } else if (mProject && e && e->inProject()) {
-        scanActiveProject(true);
-    } else if (e) {
-        reparseNonProjectEditors();
     }
+    reparseNonProjectEditors();
+
+//    Editor *e = mEditorList->getEditor();
+//    if (mProject && !e) {
+//        scanActiveProject(true);
+//    } else if (mProject && e && e->inProject()) {
+//        scanActiveProject(true);
+//    } else if (e) {
+//        reparseNonProjectEditors();
+//    }
 
 }
 
@@ -7188,6 +7193,30 @@ void MainWindow::setProjectViewCurrentUnit(std::shared_ptr<ProjectUnit> unit) {
 
 void MainWindow::reparseNonProjectEditors()
 {
+    if (pSettings->codeCompletion().shareParser()) {
+        bool hasC=false;
+        bool hasCpp=false;
+        for(int i=0;i<mEditorList->pageCount();i++) {
+            Editor* e=(*mEditorList)[i];
+            if (!e->inProject() && e->parser()) {
+                if (e->parser()->language()==ParserLanguage::C) {
+                    hasC=true;
+                } else if (e->parser()->language()==ParserLanguage::CPlusPlus) {
+                    hasCpp=true;
+                }
+            }
+        }
+        if (hasC) {
+            PCppParser parser{Editor::sharedParser(ParserLanguage::C)};
+            if (parser)
+                resetCppParser(parser);
+        }
+        if (hasCpp) {
+            PCppParser parser{Editor::sharedParser(ParserLanguage::CPlusPlus)};
+            if (parser)
+                resetCppParser(parser);
+        }
+    }
     for (int i=0;i<mEditorList->pageCount();i++) {
         Editor* e=(*mEditorList)[i];
         if (!e->inProject()) {

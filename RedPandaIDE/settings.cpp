@@ -1677,8 +1677,6 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
 
         setUserInput();
 
-        setDefines();
-
         mFullLoaded = true;
     } else {
         mFullLoaded = false;
@@ -1707,8 +1705,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mVersion(set.mVersion),
     mType(set.mType),
     mName(set.mName),
-    mCppDefines(set.mCppDefines),
-    mCDefines(set.mCDefines),
     mTarget(set.mTarget),
     mCompilerType(set.mCompilerType),
     mCompilerSetType(set.mCompilerSetType),
@@ -1994,7 +1990,6 @@ QStringList &Settings::CompilerSet::defaultCIncludeDirs()
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
         setDirectories(binDirs()[0],mCompilerType);
-        setDefines();
     }
     return mDefaultCIncludeDirs;
 }
@@ -2004,7 +1999,6 @@ QStringList &Settings::CompilerSet::defaultCppIncludeDirs()
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
         setDirectories(binDirs()[0],mCompilerType);
-        setDefines();
     }
     return mDefaultCppIncludeDirs;
 }
@@ -2014,7 +2008,6 @@ QStringList &Settings::CompilerSet::defaultLibDirs()
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
         setDirectories(binDirs()[0],mCompilerType);
-        setDefines();
     }
     return mLibDirs;
 }
@@ -2057,27 +2050,6 @@ const QString &Settings::CompilerSet::name() const
 void Settings::CompilerSet::setName(const QString &value)
 {
     mName = value;
-}
-
-const QStringList& Settings::CompilerSet::CDefines()
-{
-    if (!mFullLoaded && !binDirs().isEmpty()) {
-        mFullLoaded=true;
-        setDirectories(binDirs()[0],mCompilerType);
-        setDefines();
-    }
-    return mCDefines;
-}
-
-const QStringList &Settings::CompilerSet::CppDefines()
-{
-    if (!mFullLoaded && !binDirs().isEmpty()) {
-        mFullLoaded=true;
-        setDirectories(binDirs()[0],mCompilerType);
-        setDefines();
-    }
-    return mCppDefines;
-
 }
 
 const QString &Settings::CompilerSet::target() const
@@ -2290,46 +2262,42 @@ void Settings::CompilerSet::setProperties(const QString& binDir, const QString& 
     }
 }
 
-void Settings::CompilerSet::setDefines() {
+QStringList Settings::CompilerSet::defines(bool isCpp) {
     // get default defines
     QStringList arguments;
     arguments.append("-dM");
     arguments.append("-E");
     arguments.append("-x");
-    arguments.append("c++");
-    arguments.append("-std=c++17");
+    QString key;
+    if (isCpp) {
+        arguments.append("c++");
+        key=CC_CMD_OPT_STD;
+    } else {
+        arguments.append("c");
+        key=C_CMD_OPT_STD;
+    }
+    //language standard
+    PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerType(), key);
+    if (pOption) {
+        if (!mCompileOptions[key].isEmpty())
+            arguments.append(pOption->setting + mCompileOptions[key]);
+    }
+
     arguments.append(NULL_FILE);
+    qDebug()<<arguments;
     QFileInfo ccompiler(mCCompiler);
     QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
     // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
 
-    mCppDefines.clear();
+    QStringList result;
     QList<QByteArray> lines = output.split('\n');
     for (QByteArray& line:lines) {
         QByteArray trimmedLine = line.trimmed();
         if (!trimmedLine.isEmpty()) {
-            mCppDefines.append(trimmedLine);
+            result.append(trimmedLine);
         }
     }
-
-    arguments.clear();
-    arguments.append("-dM");
-    arguments.append("-E");
-    arguments.append("-x");
-    arguments.append("c");
-    arguments.append(NULL_FILE);
-    output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
-    // 'cpp.exe -dM -E -x c NUL'
-
-    mCDefines.clear();
-    lines = output.split('\n');
-    for (QByteArray& line:lines) {
-        QByteArray trimmedLine = line.trimmed();
-        if (!trimmedLine.isEmpty()) {
-            mCDefines.append(trimmedLine);
-        }
-    }
-
+    return result;
 }
 
 void Settings::CompilerSet::setExecutables()

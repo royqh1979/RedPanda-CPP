@@ -310,16 +310,9 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
         foreach  (const QString& file,compilerSet->defaultCIncludeDirs()) {
             parser->addIncludePath(file);
         }
-        //TODO: Add default include dirs last, just like gcc does
         // Set defines
-        if (parser->language()==ParserLanguage::C) {
-            for (QString define:compilerSet->CDefines()) {
-                parser->addHardDefineByLine(define); // predefined constants from -dM -E
-            }
-        } else {
-            for (QString define:compilerSet->CppDefines()) {
-                parser->addHardDefineByLine(define); // predefined constants from -dM -E
-            }
+        for (QString define:compilerSet->defines(parser->language()==ParserLanguage::CPlusPlus)) {
+            parser->addHardDefineByLine(define);
         }
         // add a Red Pand C++ 's own macro
         parser->addHardDefineByLine("#define EGE_FOR_AUTO_CODE_COMPLETETION_ONLY");

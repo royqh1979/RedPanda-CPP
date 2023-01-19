@@ -220,6 +220,9 @@ public:
     const PCppParser &parser() const;
 
     void tab() override;
+
+    static PCppParser sharedParser(ParserLanguage language);
+
 signals:
     void renamed(const QString& oldName, const QString& newName, bool firstSave);
     void fileSaved(const QString& filename, bool inProject);
@@ -286,7 +289,6 @@ private:
     void onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int column, const QString& token,
         QSynedit::PTokenAttribute &attr);
     void onScrollBarValueChanged();
-    static PCppParser sharedParser(ParserLanguage language);
 private:
     QDateTime mBackupTime;
     QFile* mBackupFile;

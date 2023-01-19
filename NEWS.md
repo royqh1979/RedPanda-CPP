@@ -5,6 +5,7 @@ Red Panda C++ Version 2.10
   - enhancement: Don't create temp backup for readonly files.
   - enhancement: Add "Help"/"Submit Iusses".
   - enhancement: Add "Help"/"Document" for Simplified Chinese users.
+  - enhancement: Code Completion now respect compiler set's language standard settings.
 
 Red Panda C++ Version 2.9
 

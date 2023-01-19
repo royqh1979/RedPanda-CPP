@@ -136,7 +136,7 @@ bool FileCompiler::prepareForCompile()
 
 bool FileCompiler::prepareForRebuild()
 {
-    QString exeName=compilerSet()->getCompileOptionValue(mFilename);
+    QString exeName=compilerSet()->getOutputFilename(mFilename);
 
     QFile file(exeName);
 
