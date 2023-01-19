@@ -418,20 +418,26 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     targetEncoding = encoding;
                 }
 
-                if (unit->encoding() == ENCODING_AUTO_DETECT) {
-                    Editor* editor = mProject->unitEditor(unit);
-                    if (editor && editor->fileEncoding()!=ENCODING_ASCII
-                            && editor->fileEncoding()!=targetEncoding) {
-                        sourceEncoding = editor->fileEncoding();
+                if (unit->realEncoding().isEmpty()) {
+                    if (unit->encoding() == ENCODING_AUTO_DETECT) {
+                        Editor* editor = mProject->unitEditor(unit);
+                        if (editor && editor->fileEncoding()!=ENCODING_ASCII
+                                && editor->fileEncoding()!=targetEncoding) {
+                            sourceEncoding = editor->fileEncoding();
+                        } else {
+                            sourceEncoding = targetEncoding;
+                        }
+                    } else if (unit->encoding()==ENCODING_SYSTEM_DEFAULT) {
+                        sourceEncoding = defaultSystemEncoding;
+                    } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()) {
+                        sourceEncoding = unit->encoding();
                     } else {
                         sourceEncoding = targetEncoding;
                     }
-                } else if (unit->encoding()==ENCODING_SYSTEM_DEFAULT) {
-                    sourceEncoding = defaultSystemEncoding;
-                } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()) {
-                    sourceEncoding = unit->encoding();
-                } else {
+                } else if (unit->realEncoding()==ENCODING_ASCII) {
                     sourceEncoding = targetEncoding;
+                } else {
+                    sourceEncoding = unit->realEncoding();
                 }
 
                 if (sourceEncoding!=targetEncoding) {

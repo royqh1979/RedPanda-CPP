@@ -104,6 +104,9 @@ public:
 
     void setNew(bool newNew);
 
+    const QByteArray &realEncoding() const;
+    void setRealEncoding(const QByteArray &newRealEncoding);
+
 private:
     Project* mParent;
     QString mFileName;
@@ -116,6 +119,7 @@ private:
     bool mLink;
     int mPriority;
     QByteArray mEncoding;
+    QByteArray mRealEncoding;
     PProjectModelNode mNode;
     bool mFileMissing;
 };

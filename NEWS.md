@@ -6,6 +6,8 @@ Red Panda C++ Version 2.10
   - enhancement: Add "Help"/"Submit Iusses".
   - enhancement: Add "Help"/"Document" for Simplified Chinese users.
   - enhancement: Code Completion now respect compiler set's language standard settings.
+  - enhancement: Save project files' real encoding;
+  - enhancement: Use project files' real encoding information when generating the makefile.
 
 Red Panda C++ Version 2.9
 

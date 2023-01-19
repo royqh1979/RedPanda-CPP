@@ -4994,7 +4994,7 @@ void MainWindow::closeProject(bool refreshEditor)
                 }
             }
         } else
-            mProject->saveLayout(); // always save layout, but not when SaveAll has been called
+            mProject->saveAll(); // always save layout, but not when SaveAll has been called
 
         mClosingProject=true;
         mBookmarkModel->saveProjectBookmarks(

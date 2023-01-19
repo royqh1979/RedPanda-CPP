@@ -230,6 +230,14 @@ void Editor::loadFile(QString filename) {
     //FileError should by catched by the caller of loadFile();
 
     this->document()->loadFromFile(filename,mEncodingOption,mFileEncoding);
+
+    if (mProject) {
+        PProjectUnit unit = mProject->findUnit(this);
+        if (unit) {
+            unit->setEncoding(mEncodingOption);
+            unit->setRealEncoding(mFileEncoding);
+        }
+    }
     //this->setModified(false);
     updateCaption();
     if (mParentPageControl)
@@ -287,6 +295,12 @@ void Editor::saveFile(QString filename) {
     this->document()->saveToFile(file,encoding,
                               pSettings->editor().defaultEncoding(),
                               mFileEncoding);
+    if (mProject) {
+        PProjectUnit unit = mProject->findUnit(this);
+        if (unit) {
+            unit->setRealEncoding(mFileEncoding);
+        }
+    }
     if (isVisible() && mParentPageControl)
         pMainWindow->updateForEncodingInfo(this);
     emit fileSaved(filename, inProject());
@@ -518,6 +532,7 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
         PProjectUnit unit = mProject->findUnit(this);
         if (unit) {
             unit->setEncoding(mEncodingOption);
+            unit->setRealEncoding(mFileEncoding);
         }
     }
 }

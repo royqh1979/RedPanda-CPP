@@ -246,6 +246,11 @@ void Project::open()
         if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
             newUnit->setEncoding(ENCODING_AUTO_DETECT);
         }
+        if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
+            newUnit->setEncoding(ENCODING_AUTO_DETECT);
+        }
+        newUnit->setRealEncoding(ini.GetValue(groupName, "RealEncoding",ENCODING_ASCII));
+
         PProjectModelNode parentNode;
         if (mOptions.modelType==ProjectModelType::FileSystem) {
             parentNode = getParentFileSystemFolderNode(newUnit->fileName());
@@ -764,9 +769,10 @@ bool Project::saveUnits()
         ini.Delete(groupName,"DetectEncoding");
         if (unit->encoding() != options().encoding
                 && unit->encoding()!=ENCODING_AUTO_DETECT)
-            ini.SetValue(groupName,"FileEncoding", toByteArray(unit->encoding()));
+            ini.SetValue(groupName,"FileEncoding", unit->encoding());
         else
             ini.Delete(groupName,"FileEncoding");
+        ini.SetValue(groupName,"RealEncoding",unit->realEncoding());
     }
     ini.SetLongValue("Project","UnitCount",count);
     ini.SaveFile(mFilename.toLocal8Bit());
@@ -800,6 +806,7 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
     }
     if (editor) {
         unit->setEncoding(editor->encodingOption());
+        unit->setRealEncoding(editor->fileEncoding());
         editor->setProject(this);
     }
 }
@@ -1219,6 +1226,7 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
     Editor * e= unitEditor(newUnit);
     if (e) {
         newUnit->setEncoding(e->encodingOption());
+        newUnit->setRealEncoding(e->fileEncoding());
         e->setProject(this);
     } else {
         newUnit->setEncoding(options().encoding.toUtf8());
@@ -2290,6 +2298,8 @@ ProjectUnit::ProjectUnit(Project* parent)
     mFileMissing = false;
     mPriority=0;
     mNew = true;
+    mEncoding=ENCODING_AUTO_DETECT;
+    mRealEncoding="";
 }
 
 Project *ProjectUnit::parent() const
@@ -2316,6 +2326,16 @@ void ProjectUnit::setFileName(QString newFileName)
 void ProjectUnit::setNew(bool newNew)
 {
     mNew = newNew;
+}
+
+const QByteArray &ProjectUnit::realEncoding() const
+{
+    return mRealEncoding;
+}
+
+void ProjectUnit::setRealEncoding(const QByteArray &newRealEncoding)
+{
+    mRealEncoding = newRealEncoding;
 }
 
 const QString &ProjectUnit::folder() const
