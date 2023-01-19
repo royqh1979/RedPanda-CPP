@@ -246,7 +246,7 @@ QString CompilerSetOptionWidget::getBinDir()
     return QDir().absolutePath();
 }
 
-void CompilerSetOptionWidget::on_btnFindCompilers_pressed()
+void CompilerSetOptionWidget::on_btnFindCompilers_clicked()
 {
 #ifdef Q_OS_WIN
         QString msg = tr("Red Panda C++ will clear current compiler list and search"
@@ -269,7 +269,7 @@ void CompilerSetOptionWidget::on_btnFindCompilers_pressed()
     }
 }
 
-void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_pressed()
+void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_clicked()
 {
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("Name"));
     pSettings->compilerSets().addSet();
@@ -278,7 +278,7 @@ void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_pressed()
     doLoad();
 }
 
-void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_pressed()
+void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_clicked()
 {
     QString folder = QFileDialog::getExistingDirectory(this, tr("Compiler Set Folder"));
     int oldSize = pSettings->compilerSets().size();
@@ -293,7 +293,7 @@ void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_pressed()
     }
 }
 
-void CompilerSetOptionWidget::on_btnRenameCompilerSet_pressed()
+void CompilerSetOptionWidget::on_btnRenameCompilerSet_clicked()
 {
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("New name"),QLineEdit::Normal,
                                          pSettings->compilerSets().defaultSet()->name());
@@ -302,7 +302,7 @@ void CompilerSetOptionWidget::on_btnRenameCompilerSet_pressed()
     doLoad();
 }
 
-void CompilerSetOptionWidget::on_btnRemoveCompilerSet_pressed()
+void CompilerSetOptionWidget::on_btnRemoveCompilerSet_clicked()
 {
     pSettings->compilerSets().deleteSet(ui->cbCompilerSet->currentIndex());
     doLoad();

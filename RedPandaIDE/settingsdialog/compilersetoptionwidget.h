@@ -56,11 +56,11 @@ private:
 
 private slots:
     void on_cbCompilerSet_currentIndexChanged(int index);
-    void on_btnFindCompilers_pressed();
-    void on_btnAddBlankCompilerSet_pressed();
-    void on_btnAddCompilerSetByFolder_pressed();
-    void on_btnRenameCompilerSet_pressed();
-    void on_btnRemoveCompilerSet_pressed();
+    void on_btnFindCompilers_clicked();
+    void on_btnAddBlankCompilerSet_clicked();
+    void on_btnAddCompilerSetByFolder_clicked();
+    void on_btnRenameCompilerSet_clicked();
+    void on_btnRemoveCompilerSet_clicked();
 
     void on_cbEncoding_currentTextChanged(const QString &arg1);
     void on_cbEncodingDetails_currentTextChanged(const QString &arg1);

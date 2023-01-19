@@ -8,6 +8,7 @@ Red Panda C++ Version 2.10
   - enhancement: Code Completion now respect compiler set's language standard settings.
   - enhancement: Save project files' real encoding;
   - enhancement: Use project files' real encoding information when generating the makefile.
+  - fix: If buttons in the options dialog / compiler / compiler set page is pressed, they won't release.
 
 Red Panda C++ Version 2.9
 
