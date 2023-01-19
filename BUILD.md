@@ -18,7 +18,7 @@
 qmake variables:
 - `PREFIX`: default to `/usr/local`. It should be set to `/usr` or `/opt/redpanda-cpp` when packaging.
 - `LIBEXECDIR`: directory for auxiliary executables, default to `$PREFIX/libexec`. Arch Linux uses `/usr/lib`.
-- `XDG_ICON=ON`: install icon file following [freedesktop.org Icon Theme Specification](https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html). Required by AppImage; recommended for Linux packaging if `PREFIX` set to `/usr`.
+- `XDG_ADAPTIVE_ICON=ON`: install the icon file following [freedesktop.org Icon Theme Specification](https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html) for adaptiveness to themes and sizes. Required by AppImage; recommended for Linux packaging if `PREFIX` set to `/usr`.
 
 ## Ubuntu
 

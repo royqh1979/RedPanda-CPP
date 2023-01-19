@@ -55,7 +55,7 @@ linux: {
     docs.files += LICENSE
     INSTALLS += docs
 
-    equals(XDG_ICON, "ON") {
+    equals(XDG_ADAPTIVE_ICON, "ON") {
         xdgicons.path = $${PREFIX}/share/icons/hicolor/scalable/apps/
         xdgicons.files += platform/linux/redpandaide.svg
         REDPANDA_ICON_PATH = redpandaide

@@ -5,7 +5,7 @@ set -xe
 # build RedPanda C++
 mkdir -p /build/redpanda-build
 cd /build/redpanda-build
-/opt/qt5/bin/qmake PREFIX='/usr' XDG_ICON=ON QMAKE_RPATHDIR='/_PlaceHolder' /build/RedPanda-CPP/Red_Panda_CPP.pro
+/opt/qt5/bin/qmake PREFIX='/usr' XDG_ADAPTIVE_ICON=ON QMAKE_RPATHDIR='/_PlaceHolder' /build/RedPanda-CPP/Red_Panda_CPP.pro
 make -j$(nproc)
 
 # install RedPanda C++ to AppDir
