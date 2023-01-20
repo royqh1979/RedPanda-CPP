@@ -7921,14 +7921,20 @@ void MainWindow::on_actionMove_To_Other_View_triggered()
 
 void MainWindow::on_actionC_C_Reference_triggered()
 {
+    QFileInfo fileInfo(includeTrailingPathDelimiter(pSettings->dirs().appDir())+
+                       QString("cppreference-%1.chm").arg(pSettings->environment().language()));
+    if (fileInfo.exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+        return;
+    }
+    fileInfo=QFileInfo(includeTrailingPathDelimiter(pSettings->dirs().appDir())+
+                       QString("cppreference.chm"));
+    if (fileInfo.exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+        return;
+    }
     if (pSettings->environment().language()=="zh_CN") {
-        QFileInfo fileInfo(includeTrailingPathDelimiter(pSettings->dirs().appDir())+"cppreference-zh.chm");
-        if (fileInfo.exists()) {
-            QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
-        } else {
-
-            QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/cpp"));
-        }
+        QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/cpp"));
     } else {
         QDesktopServices::openUrl(QUrl("https://en.cppreference.com/w/cpp"));
     }
@@ -8250,6 +8256,18 @@ void MainWindow::onProblemRunAllCases()
 
 void MainWindow::on_actionC_Reference_triggered()
 {
+    QFileInfo fileInfo(includeTrailingPathDelimiter(pSettings->dirs().appDir())+
+                       QString("cppreference-%1.chm").arg(pSettings->environment().language()));
+    if (fileInfo.exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+        return;
+    }
+    fileInfo=QFileInfo(includeTrailingPathDelimiter(pSettings->dirs().appDir())+
+                       QString("cppreference.chm"));
+    if (fileInfo.exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+        return;
+    }
     if (pSettings->environment().language()=="zh_CN") {
         QDesktopServices::openUrl(QUrl("https://zh.cppreference.com/w/c"));
     } else {
