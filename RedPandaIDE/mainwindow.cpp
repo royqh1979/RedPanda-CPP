@@ -1001,11 +1001,13 @@ void MainWindow::removeActiveBreakpoints()
     }
 }
 
-void MainWindow::setActiveBreakpoint(QString FileName, int Line, bool setFocus)
+void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
 {
     removeActiveBreakpoints();
+    if (!fileExists(fileName))
+        return;
     // Then active the current line in the current file
-    Editor *e = openFile(FileName);
+    Editor *e = openFile(fileName);
     if (e!=nullptr) {
         e->setActiveBreakpointFocus(Line,setFocus);
     }

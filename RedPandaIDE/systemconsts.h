@@ -36,6 +36,7 @@
 #define CLANG_PROGRAM   "clang.exe"
 #define CLANG_CPP_PROGRAM   "clang++.exe"
 #define LLDB_MI_PROGRAM   "lldb-mi.exe"
+#define LLDB_SERVER_PROGRAM   "lldb-server.exe"
 #elif defined(Q_OS_LINUX)
 #define CONSOLE_PAUSER  "consolepauser"
 #define GCC_PROGRAM     "gcc"
@@ -52,6 +53,7 @@
 #define CLANG_PROGRAM   "clang"
 #define CLANG_CPP_PROGRAM   "clang++"
 #define LLDB_MI_PROGRAM   "lldb-mi"
+#define LLDB_SERVER_PROGRAM   "lldb-server"
 #elif defined(Q_OS_MACOS)
 #define GCC_PROGRAM     "gcc"
 #define GPP_PROGRAM     "g++"
@@ -67,8 +69,9 @@
 #define CLANG_PROGRAM   "clang"
 #define CLANG_CPP_PROGRAM   "clang++"
 #define LLDB_MI_PROGRAM   "lldb-mi"
+#define LLDB_SERVER_PROGRAM   "lldb-server"
 #else
-#error "Only support windows and linux now!"
+#error "Only support windows, Linux and MacOS now!"
 #endif
 
 #define DEV_PROJECT_EXT "dev"

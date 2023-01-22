@@ -39,6 +39,11 @@ enum class DebugCommandSource {
     Other
 };
 
+enum class DebuggerType {
+    GDB,
+    LLDB_MI
+};
+
 struct DebugCommand{
     QString command;
     QString params;
@@ -342,6 +347,7 @@ public:
     void sendAllWatchVarsToDebugger();
     PWatchVar findWatchVar(const QString& expression);
     PWatchVar watchVarAt(const QModelIndex& index);
+    void refreshVars();
 //    void notifyWatchVarUpdated(PWatchVar var);
 
     std::shared_ptr<BacktraceModel> backtraceModel();
@@ -359,6 +365,9 @@ public:
 
     bool forceUTF8() const;
     void setForceUTF8(bool newForceUTF8);
+
+    DebuggerType debuggerType() const;
+    void setDebuggerType(DebuggerType newDebuggerType);
 
 signals:
     void evalValueReady(const QString& s);
@@ -402,6 +411,7 @@ private:
     DebugReader *mReader;
     DebugTarget *mTarget;
     bool mForceUTF8;
+    DebuggerType mDebuggerType;
     int mLeftPageIndexBackup;
     qint64 mLastLoadtime;
     qint64 mProjectLastLoadtime;

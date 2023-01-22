@@ -35,6 +35,7 @@
 
 Debugger::Debugger(QObject *parent) : QObject(parent),
     mForceUTF8(false),
+    mDebuggerType(DebuggerType::GDB),
     mLastLoadtime(0),
     mProjectLastLoadtime(0)
 {
@@ -84,6 +85,10 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         return false;
     }
     setForceUTF8(CompilerInfoManager::forceUTF8InDebugger(compilerSet->compilerType()));
+    if (compilerSet->debugger().endsWith(LLDB_MI_PROGRAM))
+        setDebuggerType(DebuggerType::LLDB_MI);
+    else
+        setDebuggerType(DebuggerType::GDB);
     mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
     //QFile debuggerProgram(debuggerPath);
@@ -507,7 +512,14 @@ void Debugger::refreshWatchVars()
 {
     if (mExecuting) {
         sendAllWatchVarsToDebugger();
-        sendCommand("-var-update"," --all-values *");
+        if (mDebuggerType==DebuggerType::LLDB_MI) {
+            for (PWatchVar var:mWatchModel->watchVars()) {
+                if (!var->name.isEmpty())
+                    sendCommand("-var-update",QString(" --all-values %1").arg(var->name));
+            }
+        } else {
+            sendCommand("-var-update"," --all-values *");
+        }
     }
 }
 
@@ -516,6 +528,16 @@ void Debugger::fetchVarChildren(const QString &varName)
     if (mExecuting) {
         sendCommand("-var-list-children",varName);
     }
+}
+
+DebuggerType Debugger::debuggerType() const
+{
+    return mDebuggerType;
+}
+
+void Debugger::setDebuggerType(DebuggerType newDebuggerType)
+{
+    mDebuggerType = newDebuggerType;
 }
 
 bool Debugger::forceUTF8() const
@@ -606,10 +628,17 @@ void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
         }
         QString filename = breakpoint->filename;
         filename.replace('\\','/');
-        sendCommand("-break-insert",
-                    QString("%1 --source \"%2\" --line %3")
-                    .arg(condition,filename)
-                    .arg(breakpoint->line));
+        if (debuggerType()==DebuggerType::LLDB_MI) {
+            sendCommand("-break-insert",
+                        QString("%1 \"%2:%3\"")
+                        .arg(condition, filename)
+                        .arg(breakpoint->line));
+        } else {
+            //        sendCommand("-break-insert",
+            //                    QString("%1 --source \"%2\" --line %3")
+            //                    .arg(condition,filename)
+            //                    .arg(breakpoint->line));
+        }
     }
 }
 
@@ -1261,12 +1290,15 @@ void DebugReader::runNextCmd()
     }
 
     //clang compatibility
-    if (pCmd->command == "-break-insert" && mDebugger->forceUTF8()) {
+    if (mDebugger->forceUTF8()) {
         params = pCmd->params.toUtf8();
     }
     if (pCmd->command == "-var-create") {
         //hack for variable creation,to easy remember var expression
-        params = " - @ "+params;
+        if (mDebugger->debuggerType()==DebuggerType::LLDB_MI)
+            params = " - * "+params;
+        else
+            params = " - @ "+params;
     } else if (pCmd->command == "-var-list-children") {
         //hack for list variable children,to easy remember var expression
         params = " --all-values \"" + params+'\"';
@@ -1565,8 +1597,9 @@ QByteArray DebugReader::removeToken(const QByteArray &line)
 void DebugReader::asyncUpdate()
 {
     QMutexLocker locker(&mCmdQueueMutex);
-    if (mCmdQueue.isEmpty())
+    if (mCmdQueue.isEmpty()) {
         postCommand("-var-update"," --all-values *",DebugCommandSource::HeartBeat);
+    }
     mAsyncUpdated = false;
 }
 

@@ -11,6 +11,8 @@ Red Panda C++ Version 2.10
   - fix: If buttons in the options dialog / compiler / compiler set page is pressed, they won't release.
   - enhancement: Confirm before remove a compiler set.
   - enhancement: If there is "cppreference.chm" or "cppreference-%locale_name%.chm"(like cppreference-zh_CN.chm) in the redpanda C++'s app folder, open it instead of the cppreference website.
+  - enhancement: Use lldb-mi as the debugger.
+  - enhancement: Set lldb-mi as the debugger program for clang, when finding compiler set in folders.
 
 Red Panda C++ Version 2.9
 

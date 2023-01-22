@@ -374,12 +374,22 @@ int GDBMIResultParser::ParseValue::hexValue(int defaultValue) const
 QString GDBMIResultParser::ParseValue::pathValue() const
 {
     //Q_ASSERT(mType == ParseValueType::Value);
-    return QFileInfo(QString::fromLocal8Bit(mValue)).absoluteFilePath();
+    QByteArray value=mValue;
+#ifdef Q_OS_WIN
+    if (value.startsWith("/") && !value.startsWith("//"))
+        value=value.mid(1);
+#endif
+    return QFileInfo(QString::fromLocal8Bit(value)).absoluteFilePath();
 }
 
 QString GDBMIResultParser::ParseValue::utf8PathValue() const
 {
-    return QFileInfo(QString::fromUtf8(mValue)).absoluteFilePath();
+    QByteArray value=mValue;
+#ifdef Q_OS_WIN
+    if (value.startsWith("/") && !value.startsWith("//"))
+        value=value.mid(1);
+#endif
+    return QFileInfo(QString::fromUtf8(value)).absoluteFilePath();
 }
 
 GDBMIResultParser::ParseValueType GDBMIResultParser::ParseValue::type() const
