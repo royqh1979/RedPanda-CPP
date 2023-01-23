@@ -2305,12 +2305,12 @@ void Settings::CompilerSet::setExecutables()
     if (mCompilerType == CompilerType::Clang) {
         mCCompiler =  findProgramInBinDirs(CLANG_PROGRAM);
         mCppCompiler = findProgramInBinDirs(CLANG_CPP_PROGRAM);
-        mDebugger = findProgramInBinDirs(LLDB_MI_PROGRAM);
+        mDebugger = findProgramInBinDirs(GDB_PROGRAM);
         if (mDebugger.isEmpty()) {
-            mDebugger = findProgramInBinDirs(GDB_PROGRAM);
-            mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
-        } else {
+            mDebugger = findProgramInBinDirs(LLDB_MI_PROGRAM);
             mDebugServer = findProgramInBinDirs(LLDB_SERVER_PROGRAM);
+        } else {
+            mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
         }
         if (mCCompiler.isEmpty())
             mCCompiler =  findProgramInBinDirs(GCC_PROGRAM);
