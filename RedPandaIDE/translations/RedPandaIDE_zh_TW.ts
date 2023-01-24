@@ -6806,10 +6806,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Do you want to save changes to the current tool?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Choose Folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6819,6 +6815,22 @@
     </message>
     <message>
         <source>Executable files (*.exe)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to save changes to &quot;%1&quot;?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Title shouldn&apos;t be empty!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>untitled</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

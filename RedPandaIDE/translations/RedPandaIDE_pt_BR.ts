@@ -7276,7 +7276,7 @@
     </message>
     <message>
         <source>Do you want to save changes to the current tool?</source>
-        <translation>Quer salvar as alterações na ferramenta atual?</translation>
+        <translation type="vanished">Quer salvar as alterações na ferramenta atual?</translation>
     </message>
     <message>
         <source>Choose Folder</source>
@@ -7289,6 +7289,22 @@
     <message>
         <source>Executable files (*.exe)</source>
         <translation>Arquivos executáveis (*.exe)</translation>
+    </message>
+    <message>
+        <source>Do you want to save changes to &quot;%1&quot;?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Erro</translation>
+    </message>
+    <message>
+        <source>Title shouldn&apos;t be empty!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>untitled</source>
+        <translation type="unfinished">sem nome</translation>
     </message>
 </context>
 <context>

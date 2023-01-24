@@ -33,13 +33,24 @@ ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group
     ui->lstTools->setModel(&mToolsModel);
     delete m;
     mEditType = EditType::None;
-    finishEditing(false);
+    showEditPanel(false);
     connect(ui->lstTools->selectionModel(), &QItemSelectionModel::currentRowChanged,
             this,&ToolsGeneralWidget::onToolsCurrentChanged);
     connect(ui->txtProgram,&QLineEdit::textChanged,
             this, &ToolsGeneralWidget::updateDemo);
     connect(ui->txtParameters,&QLineEdit::textChanged,
             this, &ToolsGeneralWidget::updateDemo);
+
+    connect(ui->txtTitle,&QLineEdit::textChanged,
+            this, &ToolsGeneralWidget::onEdited);
+    connect(ui->txtProgram,&QLineEdit::textChanged,
+            this, &ToolsGeneralWidget::onEdited);
+    connect(ui->txtParameters,&QLineEdit::textChanged,
+            this, &ToolsGeneralWidget::onEdited);
+    connect(ui->txtDirectory,&QLineEdit::textChanged,
+            this, &ToolsGeneralWidget::onEdited);
+    connect(ui->chkPauseConsole,&QCheckBox::stateChanged,
+            this, &ToolsGeneralWidget::onEdited);
 }
 
 ToolsGeneralWidget::~ToolsGeneralWidget()
@@ -47,72 +58,76 @@ ToolsGeneralWidget::~ToolsGeneralWidget()
     delete ui;
 }
 
-void ToolsGeneralWidget::onToolsCurrentChanged()
+void ToolsGeneralWidget::onToolsCurrentChanged(const QModelIndex &current, const QModelIndex &previous)
 {
-    if (mEditType != EditType::None) {
-        finishEditing(true);
-    }
-    QModelIndex index = ui->lstTools->currentIndex();
+    finishEditing(true,previous);
+    QModelIndex index = current;
     if (!index.isValid())
         return;
     PToolItem item = mToolsModel.getTool(index.row());
     if (item) {
-        mEditType = EditType::Edit;
-        ui->txtDirectory->setText(item->workingDirectory);
-        ui->txtParameters->setText(item->parameters);
-        ui->txtProgram->setText(item->program);
-        ui->txtTitle->setText(item->title);
-        ui->chkPauseConsole->setChecked(item->pauseAfterExit);
-        ui->panelEdit->setVisible(true);
+        prepareEdit(item);
     }
 }
 
-void ToolsGeneralWidget::finishEditing(bool askSave)
+void ToolsGeneralWidget::finishEditing(bool askSave, const QModelIndex& itemIndex)
 {
-    if (mEditType == EditType::None) {
-        ui->panelEdit->setVisible(false);
+    auto action = finally([this]{
+        showEditPanel(false);
+    });
+    if (mEditType == EditType::None)
         return;
-    }
+    if (!mEdited)
+        return;
     if (askSave && QMessageBox::question(this,
                           tr("Save Changes?"),
-                          tr("Do you want to save changes to the current tool?"),
+                          tr("Do you want to save changes to \"%1\"?").arg(ui->txtTitle->text()),
                           QMessageBox::Yes | QMessageBox::No,
                           QMessageBox::Yes) != QMessageBox::Yes) {
-        ui->panelEdit->setVisible(false);
         return;
     }
-    ui->panelEdit->setVisible(false);
-    if (mEditType == EditType::Add) {
-        mEditType = EditType::None;
-        PToolItem item = std::make_shared<ToolItem>();
-        item->title = ui->txtTitle->text();
-        item->program = ui->txtProgram->text();
-        item->workingDirectory = ui->txtDirectory->text();
-        item->parameters = ui->txtParameters->text();
-        item->pauseAfterExit = ui->chkPauseConsole->isChecked();
-        mToolsModel.addTool(item);
-    } else {
-        mEditType = EditType::None;
-        QModelIndex index = ui->lstTools->currentIndex();
-        if (!index.isValid())
-            return;
-        PToolItem item = mToolsModel.getTool(index.row());
-        item->workingDirectory = ui->txtDirectory->text();
-        item->parameters = ui->txtParameters->text();
-        item->program = ui->txtProgram->text();
-        item->title = ui->txtTitle->text();
-        item->pauseAfterExit = ui->chkPauseConsole->isChecked();
+    if (ui->txtTitle->text().isEmpty()) {
+        QMessageBox::critical(this,
+                              tr("Error"),
+                              tr("Title shouldn't be empty!"));
+        return;
     }
+    mEditType = EditType::None;
+    QModelIndex index=itemIndex.isValid()?itemIndex:ui->lstTools->currentIndex();
+    if (!index.isValid())
+        return;
+
+    PToolItem item = mToolsModel.getTool(index.row());
+    item->workingDirectory = ui->txtDirectory->text();
+    item->parameters = ui->txtParameters->text();
+    item->program = ui->txtProgram->text();
+    item->title = ui->txtTitle->text();
+    item->pauseAfterExit = ui->chkPauseConsole->isChecked();
+    mEdited=false;
 }
 
-void ToolsGeneralWidget::prepareEdit()
+void ToolsGeneralWidget::prepareEdit(const PToolItem& item)
 {
-    ui->txtDirectory->setText("");
-    ui->txtParameters->setText("");
-    ui->txtProgram->setText("");
-    ui->txtTitle->setText("");
-    ui->chkPauseConsole->setChecked(false);
-    ui->panelEdit->setVisible(true);
+    mEditType = EditType::Edit;
+    ui->txtDirectory->setText(item->workingDirectory);
+    ui->txtParameters->setText(item->parameters);
+    ui->txtProgram->setText(item->program);
+    ui->txtTitle->setText(item->title);
+    ui->chkPauseConsole->setChecked(item->pauseAfterExit);
+    showEditPanel(true);
+    ui->txtTitle->setFocus();
+    mEdited = false;
+}
+
+void ToolsGeneralWidget::showEditPanel(bool isShow)
+{
+    ui->panelEdit->setVisible(isShow);
+    ui->panelEditButtons->setVisible(!isShow);
+}
+
+void ToolsGeneralWidget::onEdited()
+{
+    mEdited=true;
 }
 
 void ToolsGeneralWidget::updateDemo()
@@ -175,8 +190,13 @@ QVariant ToolsModel::data(const QModelIndex &index, int role) const
 void ToolsGeneralWidget::on_btnAdd_clicked()
 {
     ui->lstTools->setCurrentIndex(QModelIndex());
-    prepareEdit();
-    mEditType = EditType::Add;
+    PToolItem item = std::make_shared<ToolItem>();
+    item->title = tr("untitled");
+    item->pauseAfterExit = false;
+    mToolsModel.addTool(item);
+    QModelIndex index=mToolsModel.index(mToolsModel.tools().count()-1);
+    ui->lstTools->setCurrentIndex(index);
+    prepareEdit(item);
 }
 
 
@@ -189,7 +209,7 @@ void ToolsGeneralWidget::on_btnEditOk_clicked()
 void ToolsGeneralWidget::on_btnEditCancel_clicked()
 {
     mEditType = EditType::None;
-    ui->panelEdit->setVisible(false);
+    showEditPanel(false);
 }
 
 void ToolsGeneralWidget::doLoad()
@@ -252,4 +272,5 @@ void ToolsGeneralWidget::on_btnBrowseProgram_clicked()
         ui->txtProgram->setText(fileName);
     }
 }
+
 

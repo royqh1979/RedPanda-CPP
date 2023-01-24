@@ -52,18 +52,18 @@ class ToolsGeneralWidget : public SettingsWidget
     Q_OBJECT
 public:
     enum class EditType {
-        Add,
         Edit,
         None
     };
     explicit ToolsGeneralWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
     ~ToolsGeneralWidget();
 private:
-    void onToolsCurrentChanged();
-private:
-    void finishEditing(bool askSave);
-    void prepareEdit();
+    void finishEditing(bool askSave, const QModelIndex& itemIndex=QModelIndex());
+    void prepareEdit(const PToolItem& PToolItem);
+    void showEditPanel(bool isShow);
 private slots:
+    void onEdited();
+    void onToolsCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
     void updateDemo();
     void on_btnAdd_clicked();
 
@@ -78,12 +78,12 @@ private slots:
     void on_btnBrowseWorkingDirectory_clicked();
 
     void on_btnBrowseProgram_clicked();
-
 private:
     Ui::ToolsGeneralWidget *ui;
     MacroInfoModel mMacroInfoModel;
     ToolsModel mToolsModel;
     EditType mEditType;
+    bool mEdited;
 
     // SettingsWidget interface
 protected:
