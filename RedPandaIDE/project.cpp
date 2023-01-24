@@ -236,18 +236,15 @@ void Project::open()
         newUnit->setPriority(ini.GetLongValue(groupName,"Priority", 1000));
         newUnit->setOverrideBuildCmd(ini.GetBoolValue(groupName,"OverrideBuildCmd", false));
         newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
-        QByteArray defaultEncoding = toByteArray(mOptions.encoding);
+        QByteArray defaultEncoding = mOptions.encoding;
         //Compatibility
         if (ini.GetBoolValue(groupName,"DetectEncoding",false)){
-            defaultEncoding = ENCODING_AUTO_DETECT;
+            defaultEncoding = mOptions.encoding;
         }
 
         newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",defaultEncoding));
         if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
-            newUnit->setEncoding(ENCODING_AUTO_DETECT);
-        }
-        if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
-            newUnit->setEncoding(ENCODING_AUTO_DETECT);
+            newUnit->setEncoding(mOptions.encoding);
         }
         newUnit->setRealEncoding(ini.GetValue(groupName, "RealEncoding",ENCODING_ASCII));
 
@@ -805,9 +802,16 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
         return;
     }
     if (editor) {
+        editor->setProject(this);
+        if (editor->encodingOption()==ENCODING_AUTO_DETECT) {
+            if (editor->fileEncoding()==ENCODING_ASCII) {
+                editor->setEncodingOption(mOptions.encoding);
+            } else {
+                editor->setEncodingOption(editor->fileEncoding());
+            }
+        }
         unit->setEncoding(editor->encodingOption());
         unit->setRealEncoding(editor->fileEncoding());
-        editor->setProject(this);
     }
 }
 
@@ -1041,7 +1045,7 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     if (!mOptions.addCharset)
         ini->SetBoolValue("Project", "AddCharset",false);
     if (mOptions.encoding!=ENCODING_AUTO_DETECT)
-        ini->SetValue("Project","Encoding",mOptions.encoding.toUtf8());
+        ini->SetValue("Project","Encoding",mOptions.encoding);
     if (mOptions.modelType!=ProjectModelType::FileSystem)
         ini->SetLongValue("Project", "ModelType", (int)mOptions.modelType);
     ini->SetLongValue("Project","ClassBrowserType", (int)mOptions.classBrowserType);
@@ -1134,7 +1138,7 @@ void Project::saveOptions()
     ini.SetLongValue("Project","StaticLink", mOptions.staticLink);
     ini.SetLongValue("Project","AddCharset", mOptions.addCharset);
     ini.SetValue("Project","ExecEncoding", mOptions.execEncoding);
-    ini.SetValue("Project","Encoding",toByteArray(mOptions.encoding));
+    ini.SetValue("Project","Encoding",mOptions.encoding);
     ini.SetLongValue("Project","ModelType", (int)mOptions.modelType);
     ini.SetLongValue("Project","ClassBrowserType", (int)mOptions.classBrowserType);
     ini.SetBoolValue("Project","AllowParallelBuilding",mOptions.allowParallelBuilding);
@@ -1225,11 +1229,12 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
     newUnit->setFileName(QDir(directory()).filePath(inFileName));
     Editor * e= unitEditor(newUnit);
     if (e) {
-        newUnit->setEncoding(e->encodingOption());
-        newUnit->setRealEncoding(e->fileEncoding());
-        e->setProject(this);
+        associateEditorToUnit(e,newUnit);
+//        newUnit->setEncoding(e->encodingOption());
+//        newUnit->setRealEncoding(e->fileEncoding());
+//        e->setProject(this);
     } else {
-        newUnit->setEncoding(options().encoding.toUtf8());
+        newUnit->setEncoding(options().encoding);
     }
 
   // Determine compilation flags
@@ -2053,10 +2058,14 @@ void Project::loadOptions(SimpleIni& ini)
         }
         bool useUTF8 = ini.GetBoolValue("Project", "UseUTF8", false);
         if (useUTF8) {
-            mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_UTF8));
+            mOptions.encoding = ini.GetValue("Project","Encoding", ENCODING_UTF8);
         } else {
-            mOptions.encoding = fromByteArray(ini.GetValue("Project","Encoding", ENCODING_AUTO_DETECT));
+            mOptions.encoding = ini.GetValue("Project","Encoding", ENCODING_SYSTEM_DEFAULT);
         }
+        if (mOptions.encoding == ENCODING_AUTO_DETECT)
+            mOptions.encoding = pSettings->editor().defaultEncoding();
+        if (mOptions.encoding == ENCODING_AUTO_DETECT)
+            mOptions.encoding = ENCODING_SYSTEM_DEFAULT;
 
         mOptions.allowParallelBuilding = ini.GetBoolValue("Project","AllowParallelBuilding");
         mOptions.parellelBuildingJobs = ini.GetLongValue("Project","ParellelBuildingJobs");
@@ -2298,7 +2307,7 @@ ProjectUnit::ProjectUnit(Project* parent)
     mFileMissing = false;
     mPriority=0;
     mNew = true;
-    mEncoding=ENCODING_AUTO_DETECT;
+    mEncoding=ENCODING_SYSTEM_DEFAULT;
     mRealEncoding="";
 }
 

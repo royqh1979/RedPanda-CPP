@@ -96,7 +96,7 @@ struct ProjectOptions{
     bool staticLink;
     bool addCharset;
     QByteArray execEncoding;
-    QString encoding;
+    QByteArray encoding;
     ProjectModelType modelType;
     ProjectClassBrowserType classBrowserType;
     bool allowParallelBuilding;

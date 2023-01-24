@@ -469,13 +469,15 @@ void MainWindow::updateForEncodingInfo(const Editor* editor, bool clear) {
                         .arg(QString(editor->encodingOption()))
                         );
         }
-        ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
+        //ui->actionAuto_Detect->setEnabled(editor->inProject());
+        //ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
         ui->actionEncode_in_ANSI->setChecked(editor->encodingOption() == ENCODING_SYSTEM_DEFAULT);
         ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8);
         ui->actionEncode_in_UTF_8_BOM->setChecked(editor->encodingOption() == ENCODING_UTF8_BOM);
     } else {
         mFileEncodingStatus->setText("");
-        ui->actionAuto_Detect->setChecked(false);
+        //ui->actionAuto_Detect->setEnabled(true);
+        //ui->actionAuto_Detect->setChecked(false);
         ui->actionEncode_in_ANSI->setChecked(false);
         ui->actionEncode_in_UTF_8->setChecked(false);
         ui->actionEncode_in_UTF_8_BOM->setChecked(false);
@@ -1419,7 +1421,7 @@ void MainWindow::openFiles(const QStringList &files)
 
 Editor* MainWindow::openFile(const QString &filename, bool activate, QTabWidget* page)
 {
-    if (filename.isEmpty())
+    if (!fileExists(filename))
         return nullptr;
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
@@ -3333,7 +3335,7 @@ void MainWindow::buildEncodingMenu()
 
     mMenuEncoding = new QMenu();
     mMenuEncoding->setTitle(tr("File Encoding"));
-    mMenuEncoding->addAction(ui->actionAuto_Detect);
+    //mMenuEncoding->addAction(ui->actionAuto_Detect);
     mMenuEncoding->addAction(ui->actionEncode_in_ANSI);
     mMenuEncoding->addAction(ui->actionEncode_in_UTF_8);
     mMenuEncoding->addAction(ui->actionEncode_in_UTF_8_BOM);
@@ -3366,7 +3368,7 @@ void MainWindow::buildEncodingMenu()
 
     ui->menuEdit->insertMenu(ui->actionFoldAll,mMenuEncoding);
     ui->menuEdit->insertSeparator(ui->actionFoldAll);
-    ui->actionAuto_Detect->setCheckable(true);
+    //ui->actionAuto_Detect->setCheckable(true);
     ui->actionEncode_in_ANSI->setCheckable(true);
     ui->actionEncode_in_UTF_8->setCheckable(true);
     ui->actionEncode_in_UTF_8_BOM->setCheckable(true);

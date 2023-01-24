@@ -14,6 +14,8 @@ Red Panda C++ Version 2.10
   - enhancement: Use lldb-mi as the debugger.
   - enhancement: Set lldb-mi as the debugger program for clang, when finding compiler set in folders and gdb doesn't exist.
   - fix: Settings in Options/Tools/General is messed up when switching items in the list.
+  - fix: Infos in the status bar not correctly updated when editor closed.
+  - change: Project's encoding shouldn't be set to "auto detect"
 
 Red Panda C++ Version 2.9
 

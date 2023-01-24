@@ -94,6 +94,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     QFileInfo fileInfo(mFilename);
     QSynedit::PSyntaxer syntaxer;
+    mFileEncoding = ENCODING_ASCII;
     if (!isNew) {
         try {
             loadFile();
@@ -104,10 +105,14 @@ Editor::Editor(QWidget *parent, const QString& filename,
         }
         syntaxer = syntaxerManager.getSyntaxer(mFilename);
     } else {
-        mFileEncoding = ENCODING_ASCII;
         syntaxer=syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     }
-
+    if (mEncodingOption==ENCODING_AUTO_DETECT) {
+        if (mFileEncoding==ENCODING_ASCII)
+            mEncodingOption=pSettings->editor().defaultEncoding();
+        else
+            mEncodingOption=mFileEncoding;
+    }
     if (syntaxer) {
         setSyntaxer(syntaxer);
         setUseCodeFolding(true);
@@ -234,7 +239,15 @@ void Editor::loadFile(QString filename) {
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
         if (unit) {
-            unit->setEncoding(mEncodingOption);
+            if (mEncodingOption==ENCODING_AUTO_DETECT) {
+                if (mFileEncoding==ENCODING_ASCII)
+                    unit->setEncoding(mProject->options().encoding);
+                else
+                    unit->setEncoding(mFileEncoding);
+                mEncodingOption=unit->encoding();
+            } else {
+                unit->setEncoding(mEncodingOption);
+            }
             unit->setRealEncoding(mFileEncoding);
         }
     }
@@ -648,6 +661,14 @@ void Editor::wheelEvent(QWheelEvent *event) {
 void Editor::focusInEvent(QFocusEvent *event)
 {
     QSynEdit::focusInEvent(event);
+    if (mParentPageControl) {
+        pMainWindow->updateClassBrowserForEditor(this);
+        pMainWindow->updateAppTitle(this);
+        pMainWindow->updateEditorActions(this);
+        pMainWindow->updateForEncodingInfo(this);
+        pMainWindow->updateStatusbarForLineCol(this);
+        pMainWindow->updateForStatusbarModeInfo(this);
+    }
 }
 
 void Editor::focusOutEvent(QFocusEvent *event)
@@ -1474,10 +1495,6 @@ void Editor::showEvent(QShowEvent */*event*/)
         pMainWindow->debugger()->setIsForProject(inProject());
         pMainWindow->bookmarkModel()->setIsForProject(inProject());
         pMainWindow->todoModel()->setIsForProject(inProject());
-
-        pMainWindow->updateForEncodingInfo(true);
-        pMainWindow->updateStatusbarForLineCol(true);
-        pMainWindow->updateForStatusbarModeInfo(true);
     }
 
     if (!pMainWindow->isClosingAll()

@@ -150,10 +150,12 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
     mOptions.addCharset  = mIni->GetBoolValue("Project", "AddCharset",true);
     bool useUTF8 = mIni->GetBoolValue("Project", "UseUTF8", false);
     if (useUTF8) {
-        mOptions.encoding = fromByteArray(mIni->GetValue("Project","Encoding", ENCODING_UTF8));
+        mOptions.encoding = mIni->GetValue("Project","Encoding", ENCODING_UTF8);
     } else {
-        mOptions.encoding = fromByteArray(mIni->GetValue("Project","Encoding", ENCODING_AUTO_DETECT));
+        mOptions.encoding = mIni->GetValue("Project","Encoding", pSettings->editor().defaultEncoding());
     }
+    if (mOptions.encoding == ENCODING_AUTO_DETECT)
+        mOptions.encoding = ENCODING_SYSTEM_DEFAULT;
     mOptions.modelType = (ProjectModelType)mIni->GetLongValue("Project", "ModelType", (int)ProjectModelType::FileSystem);
     mOptions.classBrowserType = (ProjectClassBrowserType)mIni->GetLongValue("Project", "ClassBrowserType", (int)ProjectClassBrowserType::CurrentFile);
 

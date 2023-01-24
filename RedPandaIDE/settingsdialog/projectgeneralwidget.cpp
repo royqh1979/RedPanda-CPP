@@ -97,7 +97,7 @@ void ProjectGeneralWidget::doSave()
         return;
     project->setName(ui->txtName->text().trimmed());
 
-    project->options().encoding = ui->cbDefaultEncoding->currentText();
+    project->options().encoding = ui->cbDefaultEncoding->currentText().toUtf8();
 
     int row = std::max(0,ui->lstType->currentRow());
     project->options().type = static_cast<ProjectType>(row);
@@ -167,7 +167,10 @@ void ProjectGeneralWidget::on_btnRemove_clicked()
 void ProjectGeneralWidget::init()
 {
     ui->cbDefaultEncoding->clear();
-    ui->cbDefaultEncoding->addItems(pSystemConsts->codecNames());
+    QStringList codecNames=pSystemConsts->codecNames();
+    //project encoding shouldn't be auto
+    codecNames.removeAll(ENCODING_AUTO_DETECT);
+    ui->cbDefaultEncoding->addItems(codecNames);
     SettingsWidget::init();
 }
 
