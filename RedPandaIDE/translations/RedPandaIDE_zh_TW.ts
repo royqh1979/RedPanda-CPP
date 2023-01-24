@@ -5354,15 +5354,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auto detect</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>ANSI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>UTF-8</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Project(%1)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

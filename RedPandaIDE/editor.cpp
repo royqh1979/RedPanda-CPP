@@ -94,6 +94,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     QFileInfo fileInfo(mFilename);
     QSynedit::PSyntaxer syntaxer;
+    if (mProject && mEncodingOption==ENCODING_PROJECT) {
+        mEncodingOption=mProject->options().encoding;
+    }
     mFileEncoding = ENCODING_ASCII;
     if (!isNew) {
         try {
@@ -107,12 +110,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     } else {
         syntaxer=syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     }
-    if (mEncodingOption==ENCODING_AUTO_DETECT) {
-        if (mFileEncoding==ENCODING_ASCII)
-            mEncodingOption=pSettings->editor().defaultEncoding();
-        else
-            mEncodingOption=mFileEncoding;
-    }
+    resolveAutoDetectEncodingOption();
     if (syntaxer) {
         setSyntaxer(syntaxer);
         setUseCodeFolding(true);
@@ -239,15 +237,17 @@ void Editor::loadFile(QString filename) {
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
         if (unit) {
-            if (mEncodingOption==ENCODING_AUTO_DETECT) {
-                if (mFileEncoding==ENCODING_ASCII)
-                    unit->setEncoding(mProject->options().encoding);
-                else
-                    unit->setEncoding(mFileEncoding);
-                mEncodingOption=unit->encoding();
-            } else {
-                unit->setEncoding(mEncodingOption);
-            }
+//            if (mEncodingOption==ENCODING_AUTO_DETECT) {
+//                if (mFileEncoding==ENCODING_ASCII)
+//                    unit->setEncoding(mProject->options().encoding);
+//                else
+//                    unit->setEncoding(mFileEncoding);
+//                mEncodingOption=unit->encoding();
+//            } else {
+//                unit->setEncoding(mEncodingOption);
+//            }
+//            unit->setRealEncoding(mFileEncoding);
+            //unit->setEncoding(mEncodingOption);
             unit->setRealEncoding(mFileEncoding);
         }
     }
@@ -278,9 +278,10 @@ void Editor::loadFile(QString filename) {
 
 void Editor::saveFile(QString filename) {
     QFile file(filename);
-    QByteArray encoding = mFileEncoding;
-    if (mEncodingOption!=ENCODING_AUTO_DETECT || mFileEncoding==ENCODING_ASCII)
-        encoding = mEncodingOption;
+//    QByteArray encoding = mFileEncoding;
+//    if (mEncodingOption != ENCODING_AUTO_DETECT || mFileEncoding==ENCODING_ASCII)
+//        encoding = mEncodingOption;
+    QByteArray encoding = mEncodingOption;
 //  save backup
 //    QString backupFilename=filename+".savebak";
 //    int count=1;
@@ -541,6 +542,7 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
         }
     } else if (mParentPageControl)
         pMainWindow->updateForEncodingInfo(this);
+    resolveAutoDetectEncodingOption();
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
         if (unit) {
@@ -1956,6 +1958,16 @@ void Editor::onAutoBackupTimer()
     if (current.toSecsSinceEpoch()-lastModifyTime().toSecsSinceEpoch()<=3)
         return;
     saveAutoBackup();
+}
+
+void Editor::resolveAutoDetectEncodingOption()
+{
+    if (mEncodingOption==ENCODING_AUTO_DETECT) {
+        if (mFileEncoding==ENCODING_ASCII)
+            mEncodingOption=pSettings->editor().defaultEncoding();
+        else
+            mEncodingOption=mFileEncoding;
+    }
 }
 
 bool Editor::isBraceChar(QChar ch)

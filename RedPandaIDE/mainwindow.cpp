@@ -469,14 +469,12 @@ void MainWindow::updateForEncodingInfo(const Editor* editor, bool clear) {
                         .arg(QString(editor->encodingOption()))
                         );
         }
-        //ui->actionAuto_Detect->setEnabled(editor->inProject());
         //ui->actionAuto_Detect->setChecked(editor->encodingOption() == ENCODING_AUTO_DETECT);
         ui->actionEncode_in_ANSI->setChecked(editor->encodingOption() == ENCODING_SYSTEM_DEFAULT);
         ui->actionEncode_in_UTF_8->setChecked(editor->encodingOption() == ENCODING_UTF8);
         ui->actionEncode_in_UTF_8_BOM->setChecked(editor->encodingOption() == ENCODING_UTF8_BOM);
     } else {
         mFileEncodingStatus->setText("");
-        //ui->actionAuto_Detect->setEnabled(true);
         //ui->actionAuto_Detect->setChecked(false);
         ui->actionEncode_in_ANSI->setChecked(false);
         ui->actionEncode_in_UTF_8->setChecked(false);
@@ -3335,7 +3333,7 @@ void MainWindow::buildEncodingMenu()
 
     mMenuEncoding = new QMenu();
     mMenuEncoding->setTitle(tr("File Encoding"));
-    //mMenuEncoding->addAction(ui->actionAuto_Detect);
+    mMenuEncoding->addAction(ui->actionAuto_Detect);
     mMenuEncoding->addAction(ui->actionEncode_in_ANSI);
     mMenuEncoding->addAction(ui->actionEncode_in_UTF_8);
     mMenuEncoding->addAction(ui->actionEncode_in_UTF_8_BOM);
@@ -4593,7 +4591,6 @@ void MainWindow::onClassBrowserRefreshEnd()
 void MainWindow::onProjectSwitchCustomViewMode()
 {
     mProject->setModelType(ProjectModelType::Custom);
-    qDebug()<<"3";
     ui->projectView->expand(
                 mProjectProxyModel->mapFromSource(
                     mProject->model()->rootIndex()));

@@ -236,6 +236,7 @@ private slots:
     void onAutoBackupTimer();
 
 private:
+    void resolveAutoDetectEncodingOption();
     bool isBraceChar(QChar ch);
     bool shouldOpenInReadonly();
     QChar getCurrentChar();

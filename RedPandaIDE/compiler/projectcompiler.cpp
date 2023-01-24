@@ -427,6 +427,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                         } else {
                             sourceEncoding = targetEncoding;
                         }
+                    } else if (unit->encoding()==ENCODING_PROJECT) {
+                        sourceEncoding=mProject->options().encoding;
                     } else if (unit->encoding()==ENCODING_SYSTEM_DEFAULT) {
                         sourceEncoding = defaultSystemEncoding;
                     } else if (unit->encoding()!=ENCODING_ASCII && !unit->encoding().isEmpty()) {

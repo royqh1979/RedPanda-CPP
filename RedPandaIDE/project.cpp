@@ -165,7 +165,7 @@ bool Project::unitsModifiedSince(const QDateTime& time)
     foreach(const PProjectUnit& unit, mUnits) {
         QFileInfo info(unit->fileName());
         if (info.lastModified()>time) {
-            qDebug()<<info.lastModified()<<time;
+            //qDebug()<<info.lastModified()<<time;
             return true;
         }
         Editor * e=unitEditor(unit);
@@ -236,15 +236,9 @@ void Project::open()
         newUnit->setPriority(ini.GetLongValue(groupName,"Priority", 1000));
         newUnit->setOverrideBuildCmd(ini.GetBoolValue(groupName,"OverrideBuildCmd", false));
         newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
-        QByteArray defaultEncoding = mOptions.encoding;
-        //Compatibility
-        if (ini.GetBoolValue(groupName,"DetectEncoding",false)){
-            defaultEncoding = mOptions.encoding;
-        }
-
-        newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",defaultEncoding));
+        newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",ENCODING_PROJECT));
         if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
-            newUnit->setEncoding(mOptions.encoding);
+            newUnit->setEncoding(ENCODING_PROJECT);
         }
         newUnit->setRealEncoding(ini.GetValue(groupName, "RealEncoding",ENCODING_ASCII));
 
@@ -764,11 +758,7 @@ bool Project::saveUnits()
         ini.SetValue(groupName,"BuildCmd", toByteArray(unit->buildCmd()));
         //ini.SetLongValue(groupName,"DetectEncoding", unit->encoding()==ENCODING_AUTO_DETECT);
         ini.Delete(groupName,"DetectEncoding");
-        if (unit->encoding() != options().encoding
-                && unit->encoding()!=ENCODING_AUTO_DETECT)
-            ini.SetValue(groupName,"FileEncoding", unit->encoding());
-        else
-            ini.Delete(groupName,"FileEncoding");
+        ini.SetValue(groupName,"FileEncoding", unit->encoding());
         ini.SetValue(groupName,"RealEncoding",unit->realEncoding());
     }
     ini.SetLongValue("Project","UnitCount",count);
@@ -802,15 +792,25 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
         return;
     }
     if (editor) {
-        editor->setProject(this);
-        if (editor->encodingOption()==ENCODING_AUTO_DETECT) {
-            if (editor->fileEncoding()==ENCODING_ASCII) {
-                editor->setEncodingOption(mOptions.encoding);
-            } else {
-                editor->setEncodingOption(editor->fileEncoding());
-            }
+        Editor * e= unitEditor(unit);
+        if (e) {
+            if (editor==e)
+                return;
+            e->setProject(nullptr);
+            e->close();
         }
-        unit->setEncoding(editor->encodingOption());
+        editor->setProject(this);
+//        if (editor->encodingOption()==ENCODING_AUTO_DETECT) {
+//            if (editor->fileEncoding()==ENCODING_ASCII) {
+//                editor->setEncodingOption(mOptions.encoding);
+//            } else {
+//                editor->setEncodingOption(editor->fileEncoding());
+//            }
+//        }
+        if (editor->encodingOption()!=mOptions.encoding)
+            unit->setEncoding(editor->encodingOption());
+        else if (editor->encodingOption()!=unit->encoding())
+            unit->setEncoding(editor->encodingOption());
         unit->setRealEncoding(editor->fileEncoding());
     }
 }
@@ -1234,7 +1234,7 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
 //        newUnit->setRealEncoding(e->fileEncoding());
 //        e->setProject(this);
     } else {
-        newUnit->setEncoding(options().encoding);
+        newUnit->setEncoding(ENCODING_PROJECT);
     }
 
   // Determine compilation flags
@@ -2307,7 +2307,7 @@ ProjectUnit::ProjectUnit(Project* parent)
     mFileMissing = false;
     mPriority=0;
     mNew = true;
-    mEncoding=ENCODING_SYSTEM_DEFAULT;
+    mEncoding=ENCODING_PROJECT;
     mRealEncoding="";
 }
 

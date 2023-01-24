@@ -117,7 +117,7 @@ void ProjectFilesWidget::disableFileOptions()
 
 void ProjectFilesWidget::loadUnitEncoding(PProjectUnit unit)
 {
-    if (unit->encoding() == ENCODING_AUTO_DETECT
+    if (unit->encoding() == ENCODING_PROJECT
             || unit->encoding() == ENCODING_SYSTEM_DEFAULT
             || unit->encoding() == ENCODING_UTF8) {
         int index =ui->cbEncoding->findData(unit->encoding());
@@ -224,7 +224,7 @@ void ProjectFilesWidget::on_txtBuildCommand_textChanged()
 void ProjectFilesWidget::on_cbEncoding_currentTextChanged(const QString &)
 {
     QString userData = ui->cbEncoding->currentData().toString();
-    if (userData == ENCODING_AUTO_DETECT
+    if (userData == ENCODING_PROJECT
             || userData == ENCODING_SYSTEM_DEFAULT
             || userData == ENCODING_UTF8) {
         PProjectUnit unit = currentUnit();
@@ -255,7 +255,7 @@ void ProjectFilesWidget::init()
     ui->spinPriority->setMaximum(9999);
     ui->cbEncodingDetail->setVisible(false);
     ui->cbEncoding->clear();
-    ui->cbEncoding->addItem(tr("Auto detect"),ENCODING_AUTO_DETECT);
+    ui->cbEncoding->addItem(tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)),ENCODING_PROJECT);
     ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {

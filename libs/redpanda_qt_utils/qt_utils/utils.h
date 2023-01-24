@@ -39,6 +39,7 @@ class QTextCodec;
 #define ENCODING_UTF32_BOM "UTF-32 BOM"
 #define ENCODING_SYSTEM_DEFAULT   "SYSTEM"
 #define ENCODING_ASCII  "ASCII"
+#define ENCODING_PROJECT    "PROJECT"
 
 enum class NewlineType {
     Windows,

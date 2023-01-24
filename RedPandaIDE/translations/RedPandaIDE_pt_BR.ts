@@ -5578,7 +5578,7 @@
     </message>
     <message>
         <source>Auto detect</source>
-        <translation>Detecção automática</translation>
+        <translation type="vanished">Detecção automática</translation>
     </message>
     <message>
         <source>ANSI</source>
@@ -5587,6 +5587,10 @@
     <message>
         <source>UTF-8</source>
         <translation>UTF-8</translation>
+    </message>
+    <message>
+        <source>Project(%1)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
