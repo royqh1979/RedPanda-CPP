@@ -270,6 +270,8 @@ void ProjectFilesWidget::on_cbEncodingDetail_currentTextChanged(const QString &)
     PProjectUnit unit = currentUnit();
     if(!unit)
         return;
+    if (ui->cbEncodingDetail->currentText().isEmpty())
+        return;
     unit->setEncoding(ui->cbEncodingDetail->currentText().toUtf8());
 }
 
