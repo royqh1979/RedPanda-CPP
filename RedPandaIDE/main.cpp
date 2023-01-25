@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
         }
     }
     //Translation must be loaded first
-    QTranslator trans,transQt;
+    QTranslator trans,transQt,transUtils;
     bool firstRun;
     QString settingFilename = getSettingFilename(QString(), firstRun);
     if (!isGreenEdition()) {
@@ -307,6 +307,9 @@ int main(int argc, char *argv[])
 
         if (trans.load("RedPandaIDE_"+language,":/i18n/")) {
             app.installTranslator(&trans);
+        }
+        if (transUtils.load("qt_utils_"+language,":/i18n/")) {
+            app.installTranslator(&transUtils);
         }
         if (transQt.load("qt_"+language,":/translations")) {
             app.installTranslator(&transQt);

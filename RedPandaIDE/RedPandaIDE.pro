@@ -451,6 +451,9 @@ TRANSLATIONS += \
     translations/RedPandaIDE_zh_TW.ts \
     translations/RedPandaIDE_pt_BR.ts
 
+EXTRA_TRANSLATIONS += \
+    ../libs/redpanda_qt_utils/qt_utils_zh_CN.ts
+
 #CONFIG += lrelease embed_translations
 
 win32: {

@@ -17,6 +17,7 @@ Red Panda C++ Version 2.10
   - fix: Infos in the status bar not correctly updated when editor closed.
   - change: Project's encoding shouldn't be set to "auto detect"
   - fix: Can't correctly set project file's encoding back to 'UTF-8'/'ANSI' in the project options dialog/files setting page.
+  - enhancement: Simplified chinese translations for encoding names.
 
 Red Panda C++ Version 2.9
 
