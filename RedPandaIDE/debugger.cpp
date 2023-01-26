@@ -634,10 +634,10 @@ void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
                         .arg(condition, filename)
                         .arg(breakpoint->line));
         } else {
-            //        sendCommand("-break-insert",
-            //                    QString("%1 --source \"%2\" --line %3")
-            //                    .arg(condition,filename)
-            //                    .arg(breakpoint->line));
+            sendCommand("-break-insert",
+                        QString("%1 --source \"%2\" --line %3")
+                        .arg(condition,filename)
+                        .arg(breakpoint->line));
         }
     }
 }

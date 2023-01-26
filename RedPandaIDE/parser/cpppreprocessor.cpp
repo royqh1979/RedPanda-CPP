@@ -1441,12 +1441,18 @@ bool CppPreprocessor::evalMulExpr(const QString &expr, int &result, int &pos)
             pos++;
             if (!evalUnaryExpr(expr,rightResult,pos))
                 return false;
-            result /= rightResult;
+            if (rightResult != 0)
+                result /= rightResult;
+            else
+                result = 0;
         } else if (expr[pos]=='%') {
             pos++;
             if (!evalUnaryExpr(expr,rightResult,pos))
                 return false;
-            result %= rightResult;
+            if (rightResult != 0)
+                result %= rightResult;
+            else
+                result = 0;
         } else {
             break;
         }
