@@ -2431,12 +2431,7 @@ void MainWindow::doAutoSave(Editor *e)
         QString suffix = fileInfo.suffix();
         switch(pSettings->editor().autoSaveStrategy()) {
         case assOverwrite:
-            if (e->isNew()) {
-                mAutoSaveTimer.stop();
-                e->save();
-                mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
-            } else
-                e->save();
+            e->save();
             return;
         case assAppendUnixTimestamp:
             filename = parent.filePath(
@@ -2455,9 +2450,7 @@ void MainWindow::doAutoSave(Editor *e)
         }
         }
         if (e->isNew()) {
-            mAutoSaveTimer.stop();
             e->saveAs();
-            mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
         } else {
             e->saveFile(filename);
             e->setCanAutoSave(false);
@@ -3449,35 +3442,41 @@ void MainWindow::onAutoSaveTimeout()
         return;
     if (!pSettings->editor().enableAutoSave())
         return;
-    int updateCount = 0;
-    switch (pSettings->editor().autoSaveTarget()) {
-    case astCurrentFile: {
-        Editor *e = mEditorList->getEditor();
-        doAutoSave(e);
-        updateCount++;
-    }
-        break;
-    case astAllOpennedFiles:
-        for (int i=0;i<mEditorList->pageCount();i++) {
-            Editor *e = (*mEditorList)[i];
+    mAutoSaveTimer.stop();
+    {
+        auto action=finally([this]{
+            mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
+        });
+        int updateCount = 0;
+        switch (pSettings->editor().autoSaveTarget()) {
+        case astCurrentFile: {
+            Editor *e = mEditorList->getEditor();
             doAutoSave(e);
             updateCount++;
         }
-        break;
-    case astAllProjectFiles:
-        if (!mProject)
-            return;
-        for (int i=0;i<mEditorList->pageCount();i++) {
-            Editor *e = (*mEditorList)[i];
-            if (!e->inProject())
+            break;
+        case astAllOpennedFiles:
+            for (int i=0;i<mEditorList->pageCount();i++) {
+                Editor *e = (*mEditorList)[i];
+                doAutoSave(e);
+                updateCount++;
+            }
+            break;
+        case astAllProjectFiles:
+            if (!mProject)
                 return;
-            doAutoSave(e);
-            updateCount++;
+            for (int i=0;i<mEditorList->pageCount();i++) {
+                Editor *e = (*mEditorList)[i];
+                if (!e->inProject())
+                    return;
+                doAutoSave(e);
+                updateCount++;
+            }
+            //todo: auto save project files
+            break;
         }
-        //todo: auto save project files
-        break;
+        updateStatusbarMessage(tr("%1 files autosaved").arg(updateCount));
     }
-    updateStatusbarMessage(tr("%1 files autosaved").arg(updateCount));
 }
 
 void MainWindow::onWatchViewContextMenu(const QPoint &pos)
