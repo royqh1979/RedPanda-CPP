@@ -19,6 +19,7 @@ Red Panda C++ Version 2.10
   - fix: Can't correctly set project file's encoding back to 'UTF-8'/'ANSI' in the project options dialog/files setting page.
   - enhancement: Simplified chinese translations for encoding names.
   - fix: Crash when there are preprocessing directives like '#if 0/0' or '#if 0%0'
+  - enhancement: Pause autosave timer when autosave new files.
 
 Red Panda C++ Version 2.9
 

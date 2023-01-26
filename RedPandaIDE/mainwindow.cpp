@@ -2421,7 +2421,6 @@ void MainWindow::prepareDebugger()
 
 void MainWindow::doAutoSave(Editor *e)
 {
-
     if (!e || !e->canAutoSave())
         return;
     QString filename = e->filename();
@@ -2432,7 +2431,12 @@ void MainWindow::doAutoSave(Editor *e)
         QString suffix = fileInfo.suffix();
         switch(pSettings->editor().autoSaveStrategy()) {
         case assOverwrite:
-            e->save();
+            if (e->isNew()) {
+                mAutoSaveTimer.stop();
+                e->save();
+                mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
+            } else
+                e->save();
             return;
         case assAppendUnixTimestamp:
             filename = parent.filePath(
@@ -2451,7 +2455,9 @@ void MainWindow::doAutoSave(Editor *e)
         }
         }
         if (e->isNew()) {
+            mAutoSaveTimer.stop();
             e->saveAs();
+            mAutoSaveTimer.start(pSettings->editor().autoSaveInterval()*60*1000);
         } else {
             e->saveFile(filename);
             e->setCanAutoSave(false);
