@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.11
+
+  - fix: Can't correctly handle definitions for "operator,"
+
 Red Panda C++ Version 2.10
 
   - fix: When restored from minimization, info on statusbar not correctly restored.

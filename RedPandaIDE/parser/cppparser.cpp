@@ -1454,7 +1454,7 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
         mClassScope = StatementClassScope::Public; // structs are public by default
     mCurrentClassScope.append(mClassScope);
 #ifdef QT_DEBUG
-//    if (mCurrentClassScope.count()==1)
+//    if (mCurrentClassScope.count()==2)
 //        qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 #endif
 }
@@ -1465,7 +1465,7 @@ void CppParser::removeScopeLevel(int line)
     if (mCurrentScope.isEmpty())
         return; // TODO: should be an exception
 #ifdef QT_DEBUG
-//    if (mCurrentClassScope.count()==1)
+//    if (mCurrentClassScope.count()==2)
 //        qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 #endif
     PStatement currentScope = getCurrentScope();
@@ -1920,8 +1920,6 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
         QString sType = currentText; // should contain type "int"
         QString sName = ""; // should contain function name "foo::function"
 
-
-
         // Gather data for the string parts
         while (mIndex+1 < mTokenizer.tokenCount()) {
             if (mTokenizer[mIndex + 1]->text == '(') {
@@ -1939,7 +1937,8 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                 }
                 //if it's like: foo(...)(...)
                 if (mTokenizer[indexAfter]->text=='(') {
-                    if (mTokenizer[mIndex]->text=="operator") {
+                    if (mTokenizer[mIndex]->text=="operator"
+                            || mTokenizer[mIndex]->text.endsWith("::operator")) {
                         //operator()() , it's an operator overload for ()
                         handleMethod(StatementKind::skFunction,sType,
                                      "operator()",indexAfter,isStatic,false);
@@ -1985,7 +1984,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                         return;
                     }
                 }
-                sName = mTokenizer[mIndex]->text;
+                sName = sName+mTokenizer[mIndex]->text;
                 mIndex++;
 
                 handleMethod(StatementKind::skFunction,sType,
@@ -1998,8 +1997,15 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                        ||mTokenizer[mIndex + 1]->text == ':'
                        ||mTokenizer[mIndex + 1]->text == '{'
                        || mTokenizer[mIndex + 1]->text == '=') {
-                handleVar(sType,isExtern,isStatic);
-                return;
+                QString s = mTokenizer[mIndex]->text;
+                if (s == "operator"
+                        || s.endsWith("::operator")) {
+                    sName = s;
+                    mIndex++;
+                } else {
+                    handleVar(sType,isExtern,isStatic);
+                    return;
+                }
             } else {
                 QString s = mTokenizer[mIndex]->text;
                 if (s == "static")
@@ -3101,7 +3107,9 @@ bool CppParser::handleStatement()
 //    } else if (checkForLambda()) { // is lambda
 //        handleLambda();
     } else if (mTokenizer[mIndex]->text=='(') {
-        if (mIndex+1<mTokenizer.tokenCount() && mTokenizer[mIndex+1]->text=="operator") {
+        if (mIndex+1<mTokenizer.tokenCount() &&
+                (mTokenizer[mIndex+1]->text=="operator"
+                 || mTokenizer[mIndex+1]->text.endsWith("::operator"))) {
             // things like (operator int)
             mIndex++; //just skip '('
         } else
