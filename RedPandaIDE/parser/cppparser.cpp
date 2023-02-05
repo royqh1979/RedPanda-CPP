@@ -485,7 +485,16 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QStringList
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return PStatement();
-    return findStatementOf(fileName,expression,findScopeStatement(fileName,line));
+    PStatement statement = findStatementOf(fileName,expression,findScopeStatement(fileName,line));
+    if (statement && statement->line != line
+            && statement->definitionLine != line) {
+        PStatement parentStatement = statement->parentScope.lock();
+        if (parentStatement &&
+                (parentStatement->line == line && parentStatement->fileName == fileName)) {
+            return parentStatement;
+        }
+    }
+    return statement;
 }
 
 PStatement CppParser::findAliasedStatement(const PStatement &statement)
@@ -3230,7 +3239,7 @@ void CppParser::handleStructs(bool isTypedef)
                                 "", // args
                                 "", // noname args
                                 "", // values
-                                startLine,
+                                mTokenizer[mIndex]->line,
                                 StatementKind::skTypedef,
                                 getScope(),
                                 mClassScope,
@@ -3289,7 +3298,8 @@ void CppParser::handleStructs(bool isTypedef)
                                     "", // args
                                     "", // no name args,
                                     "", // values
-                                    startLine,
+                                    mTokenizer[mIndex]->line,
+                                    //startLine,
                                     StatementKind::skClass,
                                     getScope(),
                                     mClassScope,
@@ -3313,7 +3323,8 @@ void CppParser::handleStructs(bool isTypedef)
                                     "", // args
                                     "", // no name args
                                     "", // values
-                                    startLine,
+                                    mTokenizer[mIndex]->line,
+                                    //startLine,
                                     StatementKind::skClass,
                                     getScope(),
                                     mClassScope,
@@ -3381,7 +3392,8 @@ void CppParser::handleStructs(bool isTypedef)
                                             "",
                                             "",
                                             "",
-                                            startLine,
+                                            mTokenizer[i]->line,
+                                            //startLine,
                                             StatementKind::skClass,
                                             getScope(),
                                             mClassScope,
@@ -3442,13 +3454,16 @@ void CppParser::handleStructs(bool isTypedef)
                       "",
                       "",
                       "",
-                      startLine,
+                      mTokenizer[mIndex]->line,
                       StatementKind::skBlock,
                       getScope(),
                       mClassScope,
                       StatementProperty::spHasDefinition);
         }
-        addSoloScopeLevel(firstSynonym,startLine);
+        if (mIndex < mTokenizer.tokenCount())
+            addSoloScopeLevel(firstSynonym,mTokenizer[mIndex]->line);
+        else
+            addSoloScopeLevel(firstSynonym,startLine);
 
         // Step over {
         if ((mIndex < mTokenizer.tokenCount()) && (mTokenizer[mIndex]->text.front() == '{'))

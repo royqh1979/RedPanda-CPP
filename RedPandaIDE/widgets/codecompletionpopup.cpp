@@ -829,17 +829,24 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
             getCompletionListForTypeKeywordComplex(preWord);
             PStatement scopeStatement = mCurrentScope;
             //add members of current scope that not added before
-            while (scopeStatement && scopeStatement->kind!=StatementKind::skNamespace) {
+            while (scopeStatement && scopeStatement->kind!=StatementKind::skNamespace
+                   && scopeStatement->kind!=StatementKind::skClass) {
                 scopeStatement = scopeStatement->parentScope.lock();
             }
             if (scopeStatement) {
-                //namespace;
-                PStatementList namespaceStatementsList =
-                        mParser->findNamespace(scopeStatement->fullName);
-                if (namespaceStatementsList) {
-                    foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
-                        addFunctionWithoutDefinitionChildren(namespaceStatement, fileName, line);
+                if (scopeStatement->kind == StatementKind::skNamespace) {
+                    //namespace;
+                    PStatementList namespaceStatementsList =
+                            mParser->findNamespace(scopeStatement->fullName);
+                    if (namespaceStatementsList) {
+                        foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
+                            addFunctionWithoutDefinitionChildren(namespaceStatement, fileName, line);
+                        }
                     }
+                } else {
+                    //class
+                    addKeyword("operator");
+                    addFunctionWithoutDefinitionChildren(scopeStatement, fileName, line);
                 }
             } else {
                 //global
@@ -849,6 +856,7 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
             if (memberOperator != "::")
                 return;
             //the identifier to be completed is a member of variable/class
+
             if (ownerExpression.isEmpty()) {
                 // start with '::', we only find in global
                 // add all global members and not added before
@@ -879,6 +887,7 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
                 }
                 return;
             } else if (ownerStatement->effectiveTypeStatement->kind == StatementKind::skClass) {
+                addKeyword("operator");
                 addFunctionWithoutDefinitionChildren(ownerStatement->effectiveTypeStatement, fileName, line);
             }
         }

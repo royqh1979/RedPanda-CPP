@@ -869,7 +869,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         while(currentScope && currentScope->kind==StatementKind::skBlock) {
                             currentScope = currentScope->parentScope.lock();
                         }
-                        if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
+                        if (!currentScope || currentScope->kind == StatementKind::skNamespace
+                               || currentScope->kind == StatementKind::skClass) {
                             //may define a function
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false,CodeCompletionType::FunctionWithoutDefinition);
