@@ -2832,7 +2832,12 @@ void CppParser::handleOtherTypedefs()
     QString oldType;
     // Walk up to first new word (before first comma or ;)
     while(true) {
-        oldType += mTokenizer[mIndex]->text + ' ';
+        if (oldType.endsWith("::"))
+            oldType += mTokenizer[mIndex]->text;
+        else if (mTokenizer[mIndex]->text=="::")
+            oldType += "::";
+        else
+            oldType += ' ' + mTokenizer[mIndex]->text;
         mIndex++;
         if (mIndex+1>=mTokenizer.tokenCount()) {
             //not valid, just exit
@@ -3462,10 +3467,15 @@ void CppParser::handleUsing()
     //handle things like 'using std::vector;'
     if ((mIndex+2>=mTokenizer.tokenCount())
             || (mTokenizer[mIndex]->text != "namespace")) {
-        int i= mTokenizer[mIndex]->text.lastIndexOf("::");
-        if (i>=0) {
-            QString fullName = mTokenizer[mIndex]->text;
-            QString usingName = fullName.mid(i+2);
+        QString fullName;
+        QString usingName;
+        while (mIndex<mTokenizer.tokenCount() &&
+               mTokenizer[mIndex]->text!=';') {
+            fullName += mTokenizer[mIndex]->text;
+            usingName = mTokenizer[mIndex]->text;
+            mIndex++;
+        }
+        if (fullName!=usingName) {
             addStatement(
                         getCurrentScope(),
                         mCurrentFile,
@@ -3480,15 +3490,19 @@ void CppParser::handleUsing()
                         mClassScope,
                         StatementProperty::spHasDefinition);
         }
-        //skip to ; and skip it
-        mIndex=indexOfNextSemicolon(mIndex)+1;
+        //skip ;
+        mIndex++;
         return;
     }
     mIndex++;  // skip 'namespace'
     PStatement scopeStatement = getCurrentScope();
 
-    QString usingName = mTokenizer[mIndex]->text;
-    mIndex++;
+    QString usingName;
+    while (mIndex<mTokenizer.tokenCount() &&
+           mTokenizer[mIndex]->text!=';') {
+        usingName += mTokenizer[mIndex]->text;
+        mIndex++;
+    }
 
     if (scopeStatement) {
         QString fullName = scopeStatement->fullName + "::" + usingName;
@@ -3506,6 +3520,8 @@ void CppParser::handleUsing()
             fileInfo->usings.insert(usingName);
         }
     }
+    //skip ;
+    mIndex++;
 }
 
 void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
