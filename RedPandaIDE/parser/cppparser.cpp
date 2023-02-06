@@ -1463,8 +1463,8 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
         mClassScope = StatementClassScope::Public; // structs are public by default
     mCurrentClassScope.append(mClassScope);
 #ifdef QT_DEBUG
-    if (mCurrentClassScope.count()<=2)
-        qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
+//    if (mCurrentClassScope.count()<=2)
+//        qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 #endif
 }
 
@@ -1474,8 +1474,8 @@ void CppParser::removeScopeLevel(int line)
     if (mCurrentScope.isEmpty())
         return; // TODO: should be an exception
 #ifdef QT_DEBUG
-    if (mCurrentClassScope.count()<=2)
-        qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
+//    if (mCurrentClassScope.count()<=2)
+//        qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 #endif
     PStatement currentScope = getCurrentScope();
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
@@ -1802,7 +1802,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
         }
     } else if (mTokenizer[mIndex]->text.startsWith('*')
                || mTokenizer[mIndex]->text.startsWith('&')
-               || mTokenizer[mIndex]->text.startsWith("::")
+               || mTokenizer[mIndex]->text=="::"
                || tokenIsIdentifier(mTokenizer[mIndex]->text)
                    ) {
         // it should be function/var
@@ -1858,18 +1858,23 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                     handleVar(sType+" "+sName,isExtern,isStatic);
                     return;
                 }
-                if (mTokenizer[indexAfter]->text[0] == ';') {
+                if (mTokenizer[indexAfter]->text[0] == ';' && sType!="void") {
                     //function can only be defined in global/namespaces/classes
                     PStatement currentScope=getCurrentScope();
                     if (currentScope) {
+//                        if (mTokenizer[mIndex]->text=="upper_bound"
+//                                && this->mCurrentFile.endsWith("algorithmfwd.h")){
+//                            qDebug()<<"!!!!"<<isNotFuncArgs(mIndex + 1);
+//                        }
                         //in namespace, it might be function or object initilization
-                        if (currentScope->kind == StatementKind::skNamespace
-                               && isNotFuncArgs(mIndex + 1)) {
-                            // var decl with init
-                            handleVar(sType+" "+sName,isExtern,isStatic);
-                            return;
-                        //not in class, it can't be a valid function definition
+                        if (currentScope->kind == StatementKind::skNamespace) {
+                            if (isNotFuncArgs(mIndex + 1)) {
+                                // var decl with init
+                                handleVar(sType+" "+sName,isExtern,isStatic);
+                                return;
+                            }
                         } else if (currentScope->kind != StatementKind::skClass) {
+                            //not in class, it can't be a valid function definition
                             // var decl with init
                             handleVar(sType+" "+sName,isExtern,isStatic);
                             return;
@@ -1881,7 +1886,15 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                         return;
                     }
                 }
-                sName = sName+mTokenizer[mIndex]->text;
+                if (!sName.isEmpty()) {
+                    if (sName.endsWith("::"))
+                        sName+=mTokenizer[mIndex]->text;
+                    else {
+                        sType += " "+sName;
+                        sName = mTokenizer[mIndex]->text;
+                    }
+                } else
+                    sName = mTokenizer[mIndex]->text;
                 mIndex++;
 
                 handleMethod(StatementKind::skFunction,sType,
@@ -1897,11 +1910,17 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                 handleVar(sType+" "+sName,isExtern,isStatic);
                 return;
             } else if ( mTokenizer[mIndex + 1]->text == "::") {
-                sName = sName + mTokenizer[mIndex]->text+mTokenizer[mIndex+1]->text;
+                sName = sName + mTokenizer[mIndex]->text+ "::";
                 mIndex+=2;
             } else {
                 QString s = mTokenizer[mIndex]->text;
-                if (sName.isEmpty()) {
+                if (sName.endsWith("::")) {
+                    sName+=s;
+                } else {
+                    if (!sName.isEmpty()) {
+                        sType = sType+" "+sName;
+                        sName = "";
+                    }
                     if (s == "static")
                         isStatic = true;
                     else if (s == "friend")
@@ -1910,8 +1929,6 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                         isExtern = true;
                     if (!s.isEmpty() && !(s=="extern"))
                         sType = sType + ' '+ s;
-                } else {
-                    sName += s;
                 }
                 mIndex++;
             }
@@ -5270,10 +5287,10 @@ bool CppParser::isNotFuncArgs(int startIndex)
             return true;
         if (isIdentChar(ch)) {
             QString currentText=mTokenizer[i]->text;
-            if (mTokenizer[i]->text.endsWith('.'))
-                return true;
-            if (mTokenizer[i]->text.endsWith("->"))
-                return true;
+//            if (mTokenizer[i]->text.endsWith('.'))
+//                return true;
+//            if (mTokenizer[i]->text.endsWith("->"))
+//                return true;
             if (!mCppTypeKeywords.contains(currentText)) {
                 if (currentText=="true" || currentText=="false" || currentText=="nullptr" ||
                         currentText=="this")
@@ -5285,6 +5302,9 @@ bool CppParser::isNotFuncArgs(int startIndex)
                     return false;
 
                 PStatement statement =findStatementOf(mCurrentFile,word,getCurrentScope(),true);
+                //template arguments
+                if (!statement)
+                    return false;
                 if (statement && isTypeStatement(statement->kind))
                     return false;
             } else {
