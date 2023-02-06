@@ -2611,6 +2611,10 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
         if (splitLastMember(sName,scopelessName,parentClassName)) {
             // Provide Bar instead of Foo::Bar
             scopeStatement = getIncompleteClass(parentClassName,getCurrentScope());
+
+            //parent not found
+            if (!parentClassName.isEmpty() && !scopeStatement)
+                scopelessName=sName;
         } else
             scopelessName = sName;
 
