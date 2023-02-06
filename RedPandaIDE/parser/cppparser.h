@@ -215,8 +215,6 @@ private:
     QStringList sortFilesByIncludeRelations(const QSet<QString> &files);
 
     bool checkForKeyword(KeywordType &keywordType);
-    bool checkForMethod(QString &sType, QString &sName, int &argStartIndex,
-                        int &argEndIndex, bool &isStatic, bool &isFriend); // caching of results
     bool checkForNamespace(KeywordType keywordType);
     bool checkForPreprocessor();
 //    bool checkForLambda();
@@ -444,6 +442,12 @@ private:
     void handleForBlock();
     void handleKeyword(KeywordType skipType);
     void handleLambda(int index, int endIndex);
+    void handleOperatorOverloading(
+            const QString& sType,
+            const QString& prefix,
+            int operatorTokenIndex,
+            bool isStatic,
+            bool isFriend);
     void handleMethod(
             StatementKind functionKind,
             const QString& sType,

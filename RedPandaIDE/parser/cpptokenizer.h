@@ -80,8 +80,7 @@ private:
             TokenType *pTokenType);
     QString getNumber();
     QString getPreprocessor();
-    QString getWord(
-            bool bSkipParenthesis);
+    QString getWord();
     bool isArguments();
     bool isForInit();
     bool isNumber();
@@ -89,7 +88,7 @@ private:
     bool isWord();
     void simplify(QString& output);
     void simplifyArgs(QString& output);
-    void skipAssignment();
+//    void skipAssignment();
     void skipDoubleQuotes();
     void skipPair(const QChar& cStart, const QChar cEnd);
     void skipParenthesis();
@@ -130,27 +129,27 @@ private:
         return (ch<=32) && (ch>0);
     }
 
-    static bool isOperatorChar(const QChar& ch) {
-        switch (ch.unicode()) {
-        case '+':
-        case '-':
-        case '/':
-        case '*':
-        case '[':
-        case ']':
-        case '=':
-        case '%':
-        case '!':
-        case '&':
-        case '|':
-        case '>':
-        case '<':
-        case '^':
-            return true;
-        default:
-            return false;
-        }
-    }
+//    static bool isOperatorChar(const QChar& ch) {
+//        switch (ch.unicode()) {
+//        case '+':
+//        case '-':
+//        case '/':
+//        case '*':
+//        case '[':
+//        case ']':
+//        case '=':
+//        case '%':
+//        case '!':
+//        case '&':
+//        case '|':
+//        case '>':
+//        case '<':
+//        case '^':
+//            return true;
+//        default:
+//            return false;
+//        }
+//    }
 
     static bool currentWordEquals(QChar* wordStart, QChar *wordEnd, const QString& text) {
         QString currentWord(wordStart, wordEnd-wordStart);

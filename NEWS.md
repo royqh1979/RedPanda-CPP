@@ -2,7 +2,8 @@ Red Panda C++ Version 2.11
 
   - fix: Can't correctly handle definitions for "operator,"
   - enhancement: Auto suggest keyword "operator" when define functions.
-  - fix: Differentiate class and constructors.
+  - enhancement: Differentiate class and constructors in syntax color and jupming to declarations.
+  - enhancement: Improve parsing for operator overloading.
 
 Red Panda C++ Version 2.10
 
