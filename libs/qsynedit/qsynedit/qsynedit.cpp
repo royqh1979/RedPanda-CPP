@@ -1634,8 +1634,8 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
                 firstToken = mSyntaxer->getToken();
                 attr = mSyntaxer->getTokenAttribute();
             }
-            qDebug()<<line<<lineText;
-            qDebug()<<(int)rangeAfterFirstToken.lastUnindent.type<<rangeAfterFirstToken.lastUnindent.line;
+//            qDebug()<<line<<lineText;
+//            qDebug()<<(int)rangeAfterFirstToken.lastUnindent.type<<rangeAfterFirstToken.lastUnindent.line;
             if (trimmedLineText.startsWith('#')
                        && attr == ((CppSyntaxer *)mSyntaxer.get())->preprocessorAttribute()) {
                 indentSpaces=0;

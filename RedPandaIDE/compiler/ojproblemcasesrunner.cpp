@@ -153,6 +153,16 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
                                  sizeof(counter))){
             problemCase->runningMemory = counter.PeakWorkingSetSize;
         }
+        FILETIME creationTime;
+        FILETIME exitTime;
+        FILETIME kernelTime;
+        FILETIME userTime;
+        if (GetProcessTimes(hProcess,&creationTime,&exitTime,&kernelTime,&userTime)) {
+            LONGLONG t=((LONGLONG)kernelTime.dwHighDateTime<<32)
+                    +((LONGLONG)userTime.dwHighDateTime<<32)
+                    +(kernelTime.dwLowDateTime)+(userTime.dwLowDateTime);
+            problemCase->runningTime=(double)t/10000;
+        }
     }
 #endif
     if (execTimeouted) {

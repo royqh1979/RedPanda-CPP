@@ -21,6 +21,7 @@ using std::string;
 #include <stdio.h>
 #include <windows.h>
 #include <psapi.h>
+#include <processthreadsapi.h>
 #include <conio.h>
 
 #ifndef WINBOOL
@@ -115,7 +116,7 @@ string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
     return result;
 }
 
-DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory) {
+DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG &execTime) {
     STARTUPINFOA si;
     PROCESS_INFORMATION pi;
 
@@ -146,6 +147,16 @@ DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory) {
     if (GetProcessMemoryInfo(pi.hProcess,&counter,
                                  sizeof(counter))){
             peakMemory = counter.PeakWorkingSetSize/1024;
+    }
+    FILETIME creationTime;
+    FILETIME exitTime;
+    FILETIME kernelTime;
+    FILETIME userTime;
+    execTime=0;
+    if (GetProcessTimes(pi.hProcess,&creationTime,&exitTime,&kernelTime,&userTime)) {
+        execTime=((LONGLONG)kernelTime.dwHighDateTime<<32)
+                +((LONGLONG)userTime.dwHighDateTime<<32)
+                +(kernelTime.dwLowDateTime)+(userTime.dwLowDateTime);
     }
     DWORD result = 0;
     GetExitCodeProcess(pi.hProcess, &result);
@@ -233,12 +244,14 @@ int main(int argc, char** argv) {
     LONGLONG starttime = GetClockTick();
 
     LONGLONG peakMemory=0;
+    LONGLONG execTime=0;
     // Then execute said command
-    DWORD returnvalue = ExecuteCommand(command,reInp,peakMemory);
+    DWORD returnvalue = ExecuteCommand(command,reInp,peakMemory,execTime);
 
     // Get ending timestamp
     LONGLONG endtime = GetClockTick();
     double seconds = (endtime - starttime) / (double)GetClockFrequency();
+    double execSeconds = (double)execTime/10000;
 
     if (pBuf) {
         strcpy(pBuf,"FINISHED");
@@ -250,7 +263,7 @@ int main(int argc, char** argv) {
 
     // Done? Print return value of executed program
     printf("\n--------------------------------");
-    printf("\nProcess exited after %.4g seconds with return value %lu, %d KB mem used.\n",seconds,returnvalue,peakMemory);
+    printf("\nProcess exited after %.4g seconds with return value %lu (%.4g ms cpu time, %d KB mem used).\n",seconds,returnvalue, execSeconds, peakMemory);
     if (pauseAfterExit)
         PauseExit(returnvalue,reInp);
     return 0;

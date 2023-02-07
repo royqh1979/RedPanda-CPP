@@ -8,6 +8,7 @@ Red Panda C++ Version 2.11
   - fix: Respect encoding "Project default" when search/find occurrencies/open project units.
   - enhancement: Show progress dialog when search/find occurrencies in large projects.
   - enhancement: Improve auto indent.
+  - enhancement: Change the way to calculate execution time.
 
 Red Panda C++ Version 2.10
 

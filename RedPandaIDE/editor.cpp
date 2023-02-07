@@ -61,7 +61,6 @@ Editor::Editor(QWidget *parent):
 {
 }
 
-
 Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
                   Project* pProject, bool isNew,
