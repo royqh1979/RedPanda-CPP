@@ -6388,6 +6388,14 @@
         <source>Search in Files</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Abort</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SearchResultListModel</name>

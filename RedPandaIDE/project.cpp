@@ -370,6 +370,9 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
         }
         QByteArray encoding;
         encoding = unit->encoding();
+        if (encoding==ENCODING_PROJECT)
+            encoding=options().encoding;
+
         editor = mEditorList->newEditor(unit->fileName(), encoding, this, false);
         if (editor) {
             //editor->setProject(this);
@@ -397,6 +400,8 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
         }
         QByteArray encoding;
         encoding = unit->encoding();
+        if (encoding==ENCODING_PROJECT)
+            encoding=options().encoding;
         editor = mEditorList->newEditor(unit->fileName(), encoding, this, false);
         if (editor) {
             //editor->setInProject(true);
@@ -807,10 +812,12 @@ void Project::associateEditorToUnit(Editor *editor, PProjectUnit unit)
 //                editor->setEncodingOption(editor->fileEncoding());
 //            }
 //        }
-        if (editor->encodingOption()!=mOptions.encoding)
+        if (unit->encoding()==ENCODING_PROJECT) {
+            if (editor->encodingOption()!=mOptions.encoding)
+                unit->setEncoding(editor->encodingOption());
+        } else if (editor->encodingOption()!=unit->encoding()) {
             unit->setEncoding(editor->encodingOption());
-        else if (editor->encodingOption()!=unit->encoding())
-            unit->setEncoding(editor->encodingOption());
+        }
         unit->setRealEncoding(editor->fileEncoding());
     }
 }
@@ -952,7 +959,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
 
                 Editor * editor = mEditorList->newEditor(
                             unit->fileName(),
-                            unit->encoding(),
+                            unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
                             this,
                             true);
 

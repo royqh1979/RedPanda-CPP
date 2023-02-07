@@ -12,6 +12,10 @@ consolepauser.subdir = tools/consolepauser
 redpanda_qt_utils.subdir = libs/redpanda_qt_utils
 qsynedit.subdir = libs/qsynedit
 
+APP_NAME = RedPandaCPP
+
+APP_VERSION = 2.11
+
 # Add the dependencies so that the RedPandaIDE project can add the depended programs
 # into the main app bundle
 RedPandaIDE.depends = astyle consolepauser qsynedit
@@ -30,10 +34,6 @@ SUBDIRS += \
 redpanda-git-askpass.subdir = tools/redpanda-git-askpass
 RedPandaIDE.depends += redpanda-git-askpass
 }
-
-APP_NAME = RedPandaCPP
-
-APP_VERSION = 2.10
 
 linux: {
     isEmpty(PREFIX) {

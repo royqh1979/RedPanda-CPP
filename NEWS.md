@@ -5,6 +5,8 @@ Red Panda C++ Version 2.11
   - enhancement: Differentiate class and constructors in syntax color and jupming to declarations.
   - enhancement: Improve parsing for operator overloading.
   - fix: Parser can't correctly differentiate function and var initialization.
+  - fix: Respect encoding "Project default" when search/find occurrencies/open project units.
+  - enhancement: Show progress dialog when search/find occurrencies in large projects.
 
 Red Panda C++ Version 2.10
 

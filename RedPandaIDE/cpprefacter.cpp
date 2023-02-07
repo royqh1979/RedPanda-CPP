@@ -21,6 +21,7 @@
 #include "editorlist.h"
 #include <QFile>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QTextCodec>
 #include "syntaxermanager.h"
 #include "project.h"
@@ -182,11 +183,25 @@ void CppRefacter::doFindOccurenceInProject(PStatement statement, std::shared_ptr
                 statement->fullName,
                 SearchFileScope::wholeProject
                 );
+    QProgressDialog progressDlg(
+                tr("Searching..."),
+                tr("Abort"),
+                0,
+                pMainWindow->project()->unitList().count(),
+                pMainWindow);
+    progressDlg.setWindowModality(Qt::WindowModal);
+    int i=0;
     foreach (const PProjectUnit& unit, project->unitList()) {
+        i++;
         if (isCFile(unit->fileName()) || isHFile(unit->fileName())) {
+            progressDlg.setValue(i);
+            progressDlg.setLabelText(tr("Searching...")+"<br/>"+unit->fileName());
+
+            if (progressDlg.wasCanceled())
+                break;
             PSearchResultTreeItem item = findOccurenceInFile(
                         unit->fileName(),
-                        unit->encoding(),
+                        unit->encoding()==ENCODING_PROJECT?project->options().encoding:unit->encoding(),
                         statement,
                         parser);
             if (item && !(item->results.isEmpty())) {

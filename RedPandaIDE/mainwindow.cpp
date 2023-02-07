@@ -1445,6 +1445,8 @@ Editor* MainWindow::openFile(const QString &filename, bool activate, QTabWidget*
         QByteArray encoding = unit ? unit->encoding() :
                                      (pSettings->editor().autoDetectFileEncoding()? ENCODING_AUTO_DETECT : pSettings->editor().defaultEncoding());
         Project * pProject = (inProject?mProject.get():nullptr);
+        if (pProject && encoding==ENCODING_PROJECT)
+            encoding=pProject->options().encoding;
         editor = mEditorList->newEditor(filename,encoding,
                                     pProject, false, page);
 //        if (mProject) {
@@ -3103,6 +3105,8 @@ void MainWindow::loadLastOpens()
         QByteArray encoding = unit ? unit->encoding() :
                                      (pSettings->editor().autoDetectFileEncoding()? ENCODING_AUTO_DETECT : pSettings->editor().defaultEncoding());
         Project* pProject = (inProject?mProject.get():nullptr);
+        if (pProject && encoding==ENCODING_PROJECT)
+            encoding=pProject->options().encoding;
         Editor * editor = mEditorList->newEditor(editorFilename, encoding, pProject,false,page);
 
         if (inProject && editor) {

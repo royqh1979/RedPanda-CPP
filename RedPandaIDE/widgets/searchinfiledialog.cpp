@@ -26,6 +26,7 @@
 #include "../settings.h"
 #include <QMessageBox>
 #include <QDebug>
+#include <QProgressDialog>
 
 
 SearchInFileDialog::SearchInFileDialog(QWidget *parent) :
@@ -170,7 +171,23 @@ void SearchInFileDialog::doSearch(bool replace)
                     mSearchOptions,
                     SearchFileScope::wholeProject
                     );
+        QByteArray projectEncoding = pMainWindow->project()->options().encoding;
+        QProgressDialog progressDlg(
+                    tr("Searching..."),
+                    tr("Abort"),
+                    0,
+                    pMainWindow->project()->unitList().count(),
+                    pMainWindow);
+
+        progressDlg.setWindowModality(Qt::WindowModal);
+        int i=0;
         foreach (PProjectUnit unit, pMainWindow->project()->unitList()) {
+            i++;
+            progressDlg.setValue(i);
+            progressDlg.setLabelText(tr("Searching...")+"<br/>"+unit->fileName());
+
+            if (progressDlg.wasCanceled())
+                break;
             Editor * e = pMainWindow->project()->unitEditor(unit);
             QString curFilename =  unit->fileName();
             if (e) {
@@ -187,8 +204,11 @@ void SearchInFileDialog::doSearch(bool replace)
                 }
             } else if (fileExists(curFilename)) {
                 QSynedit::QSynEdit editor;
+                QByteArray encoding=unit->encoding();
+                if (encoding==ENCODING_PROJECT)
+                    encoding = projectEncoding;
                 QByteArray realEncoding;
-                editor.document()->loadFromFile(curFilename,ENCODING_AUTO_DETECT, realEncoding);
+                editor.document()->loadFromFile(curFilename,encoding, realEncoding);
                 fileSearched++;
                 PSearchResultTreeItem parentItem = batchFindInEditor(
                             &editor,
@@ -200,7 +220,6 @@ void SearchInFileDialog::doSearch(bool replace)
                     fileHitted++;
                     results->results.append(parentItem);
                 }
-
             }
         }
         pMainWindow->searchResultModel()->notifySearchResultsUpdated();
