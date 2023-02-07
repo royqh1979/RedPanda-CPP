@@ -130,8 +130,8 @@ private:
     void unknownProc();
     void xorSymbolProc();
     void processChar();
-    void popIndents(int indentType);
-    void pushIndents(int indentType);
+    void popIndents(IndentType indentType);
+    void pushIndents(IndentType indentType, int line=-1);
 
 private:
     SyntaxState mRange;

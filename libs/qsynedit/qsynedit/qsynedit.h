@@ -571,7 +571,6 @@ private:
     void processGutterClick(QMouseEvent* event);
 
     void clearUndo();
-    int findIndentsStartLine(int line, QVector<int> indents);
     BufferCoord getPreviousLeftBrace(int x,int y);
     bool canDoBlockIndent();
 

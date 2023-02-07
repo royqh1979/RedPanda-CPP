@@ -308,7 +308,7 @@ void GLSLSyntaxer::braceCloseProc()
     } else {
         mRange.blockEnded++ ;
     }
-    popIndents(IndentForBrace);
+    popIndents(IndentType::Block);
 }
 
 void GLSLSyntaxer::braceOpenProc()
@@ -318,20 +318,17 @@ void GLSLSyntaxer::braceOpenProc()
     mRange.braceLevel += 1;
     mRange.blockLevel += 1;
     mRange.blockStarted += 1;
-    if (mRange.getLastIndent() == IndentForStatement) {
+    if (mRange.getLastIndentType() == IndentType::Statement) {
         // if last indent is started by 'if' 'for' etc
         // just replace it
-        while (mRange.getLastIndent() == IndentForStatement)
-            popIndents(IndentForStatement);
-        pushIndents(IndentForBrace);
-//        int idx = mRange.indents.length()-1;
-//        if (idx < mRange.firstIndentThisLine) {
-//            mRange.firstIndentThisLine = idx;
-//        }
-//        mRange.indents.replace(idx,1,BraceIndentType);
-    } else {
-        pushIndents(IndentForBrace);
-    }
+        int lastLine=-1;
+        while (mRange.getLastIndentType() == IndentType::Statement) {
+            popIndents(IndentType::Statement);
+            lastLine = mRange.lastUnindent.line;
+        }
+        pushIndents(IndentType::Block, lastLine);
+    } else
+        pushIndents(IndentType::Block);
 }
 
 void GLSLSyntaxer::colonProc()
@@ -465,7 +462,7 @@ void GLSLSyntaxer::identProc()
     if (isKeyword(word)) {
         mTokenId = TokenId::Key;
         if (GLSLStatementKeyWords.contains(word)) {
-            pushIndents(IndentForStatement);
+            pushIndents(IndentType::Statement);
         }
     } else {
         mTokenId = TokenId::Identifier;
@@ -803,7 +800,7 @@ void GLSLSyntaxer::roundCloseProc()
     mRange.parenthesisLevel--;
     if (mRange.parenthesisLevel<0)
         mRange.parenthesisLevel=0;
-    popIndents(IndentForParenthesis);
+    popIndents(IndentType::Parenthesis);
 }
 
 void GLSLSyntaxer::roundOpenProc()
@@ -811,15 +808,15 @@ void GLSLSyntaxer::roundOpenProc()
     mRun += 1;
     mTokenId = TokenId::Symbol;
     mRange.parenthesisLevel++;
-    pushIndents(IndentForParenthesis);
+    pushIndents(IndentType::Parenthesis);
 }
 
 void GLSLSyntaxer::semiColonProc()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    while (mRange.getLastIndent() == IndentForStatement) {
-        popIndents(IndentForStatement);
+    while (mRange.getLastIndentType() == IndentType::Statement) {
+        popIndents(IndentType::Statement);
     }
 }
 
@@ -870,7 +867,7 @@ void GLSLSyntaxer::squareCloseProc()
     mRange.bracketLevel--;
     if (mRange.bracketLevel<0)
         mRange.bracketLevel=0;
-    popIndents(IndentForBracket);
+    popIndents(IndentType::Bracket);
 }
 
 void GLSLSyntaxer::squareOpenProc()
@@ -878,7 +875,7 @@ void GLSLSyntaxer::squareOpenProc()
     mRun+=1;
     mTokenId = TokenId::Symbol;
     mRange.bracketLevel++;
-    pushIndents(IndentForBracket);
+    pushIndents(IndentType::Bracket);
 }
 
 void GLSLSyntaxer::starProc()
@@ -1227,26 +1224,24 @@ void GLSLSyntaxer::processChar()
     }
 }
 
-void GLSLSyntaxer::popIndents(int indentType)
+void GLSLSyntaxer::popIndents(IndentType indentType)
 {
-    while (!mRange.indents.isEmpty() && mRange.indents.back()!=indentType) {
+    while (!mRange.indents.isEmpty() && mRange.indents.back().type!=indentType) {
         mRange.indents.pop_back();
     }
     if (!mRange.indents.isEmpty()) {
-        int idx = mRange.indents.length()-1;
-        if (idx < mRange.firstIndentThisLine) {
-            mRange.matchingIndents.append(mRange.indents[idx]);
-        }
+        mRange.lastUnindent=mRange.indents.back();
         mRange.indents.pop_back();
+    } else {
+        mRange.lastUnindent=IndentInfo{indentType,0};
     }
 }
 
-void GLSLSyntaxer::pushIndents(int indentType)
+void GLSLSyntaxer::pushIndents(IndentType indentType, int line)
 {
-    int idx = mRange.indents.length();
-    if (idx<mRange.firstIndentThisLine)
-        mRange.firstIndentThisLine = idx;
-    mRange.indents.push_back(indentType);
+    if (line==-1)
+        line = mLineNumber;
+    mRange.indents.push_back(IndentInfo{indentType,line});
 }
 
 bool GLSLSyntaxer::getTokenFinished() const
@@ -1388,12 +1383,6 @@ void GLSLSyntaxer::setLine(const QString &newLine, int lineNumber)
     mLine = mLineString.data();
     mLineNumber = lineNumber;
     mRun = 0;
-    mRange.blockLevel = 0;
-    mRange.blockStarted = 0;
-    mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
-    mRange.firstIndentThisLine = mRange.indents.length();
-    mRange.matchingIndents.clear();
     next();
 }
 
@@ -1406,12 +1395,7 @@ void GLSLSyntaxer::setState(const SyntaxState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
-    mRange.blockLevel = 0;
-    mRange.blockStarted = 0;
-    mRange.blockEnded = 0;
-    mRange.blockEndedLastLine = 0;
-    mRange.firstIndentThisLine = mRange.indents.length();
-    mRange.matchingIndents.clear();
+    mRange.lastUnindent=IndentInfo{IndentType::None,0};
     mRange.hasTrailingSpaces = false;
 }
 
@@ -1426,8 +1410,7 @@ void GLSLSyntaxer::resetState()
     mRange.blockEnded = 0;
     mRange.blockEndedLastLine = 0;
     mRange.indents.clear();
-    mRange.firstIndentThisLine = 0;
-    mRange.matchingIndents.clear();
+    mRange.lastUnindent=IndentInfo{IndentType::None,0};
     mRange.hasTrailingSpaces = false;
 }
 

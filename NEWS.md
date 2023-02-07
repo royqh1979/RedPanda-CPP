@@ -7,6 +7,7 @@ Red Panda C++ Version 2.11
   - fix: Parser can't correctly differentiate function and var initialization.
   - fix: Respect encoding "Project default" when search/find occurrencies/open project units.
   - enhancement: Show progress dialog when search/find occurrencies in large projects.
+  - enhancement: Improve auto indent.
 
 Red Panda C++ Version 2.10
 

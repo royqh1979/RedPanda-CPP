@@ -27,11 +27,20 @@
 #include "../types.h"
 
 namespace QSynedit {
-enum IndentType {
-    IndentForBrace,
-    IndentForParenthesis,
-    IndentForBracket,
-    IndentForStatement,
+
+enum class IndentType {
+    Brace,
+    Parenthesis,
+    Bracket,
+    Statement,
+    Block,
+    None
+};
+
+struct IndentInfo {
+    IndentType type;
+    int line;
+    bool operator==(const IndentInfo &i2) const;
 };
 
 struct SyntaxState {
@@ -45,15 +54,18 @@ struct SyntaxState {
     int parenthesisLevel; // current parenthesis embedding level (needed by rainbow color)
 //    int leftBraces; // unpairing left braces in the current line ( needed by block folding)
 //    int rightBraces; // unparing right braces in the current line (needed by block folding)
-    QVector<int> indents; // indents stack (needed by auto indent)
-    int firstIndentThisLine; /* index of first indent that appended to the indents
-                              *  stack at this line ( need by auto indent) */
-    QVector<int> matchingIndents; /* the indent matched ( and removed )
-                              but not started at this line
-                                (need by auto indent) */
+    QVector<IndentInfo> indents;
+    IndentInfo lastUnindent;
+//    QVector<int> indents; // indents stack (needed by auto indent)
+//    int firstIndentThisLine; /* index of first indent that appended to the indents
+//                              *  stack at this line ( need by auto indent) */
+//    QVector<int> matchingIndents; /* the indent matched ( and removed )
+//                              but not started at this line
+//                                (need by auto indent) */
     bool hasTrailingSpaces;
     bool operator==(const SyntaxState& s2);
-    int getLastIndent();
+    IndentInfo getLastIndent();
+    IndentType getLastIndentType();
     SyntaxState();
 };
 

@@ -1293,36 +1293,6 @@ void QSynEdit::clearUndo()
     mRedoList->clear();
 }
 
-int QSynEdit::findIndentsStartLine(int line, QVector<int> indents)
-{
-    line--;
-    if (line<0 || line>=mDocument->count())
-        return -1;
-    while (line>=1) {
-        SyntaxState range = mDocument->getSyntaxState(line);
-        QVector<int> newIndents = range.indents.mid(range.firstIndentThisLine);
-        int i = 0;
-        int len = indents.length();
-        while (i<len && !newIndents.isEmpty()) {
-            int indent = indents[i];
-            int idx = newIndents.lastIndexOf(indent);
-            if (idx >=0) {
-                newIndents.remove(idx,newIndents.size());
-            } else {
-                break;
-            }
-            i++;
-        }
-        if (i>=len) {
-            return line+1;
-        } else {
-            indents = range.matchingIndents + indents.mid(i);
-        }
-        line--;
-    }
-    return -1;
-}
-
 BufferCoord QSynEdit::getPreviousLeftBrace(int x, int y)
 {
     QChar Test;
@@ -1605,9 +1575,6 @@ int QSynEdit::findCommentStartLine(int searchStartLine)
             commentStartLine++;
             break;
         }
-        if (!range.matchingIndents.isEmpty()
-                || range.firstIndentThisLine<range.indents.length())
-            break;
         commentStartLine--;
     }
     if (commentStartLine<1)
@@ -1636,6 +1603,8 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
     if (startLine>=1) {
         //calculate the indents of last statement;
         indentSpaces = leftSpaces(startLineText);
+        if (mSyntaxer->language() != ProgrammingLanguage::CPP)
+            return indentSpaces;
         SyntaxState rangePreceeding = mDocument->getSyntaxState(startLine-1);
         mSyntaxer->setState(rangePreceeding);
         if (addIndent) {
@@ -1665,135 +1634,42 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
                 firstToken = mSyntaxer->getToken();
                 attr = mSyntaxer->getTokenAttribute();
             }
-            bool indentAdded = false;
-            int additionIndent = 0;
-            QVector<int> matchingIndents;
-            int l;
-            if (attr->tokenType() == TokenType::Operator
-                    && (firstToken == '}')) {
-                // current line starts with '}', we should consider it to calc indents
-                matchingIndents = rangeAfterFirstToken.matchingIndents;
-                indentAdded = true;
-                l = startLine;
-            } else if (attr->tokenType() == TokenType::Operator
-                       && (firstToken == '{')
-                       && (rangePreceeding.getLastIndent()==IndentForStatement)) {
-                // current line starts with '{' and last statement not finished, we should consider it to calc indents
-                matchingIndents = rangeAfterFirstToken.matchingIndents;
-                indentAdded = true;
-                l = startLine;
-            } else if (mSyntaxer->language() == ProgrammingLanguage::CPP
-                       && trimmedLineText.startsWith('#')
+            qDebug()<<line<<lineText;
+            qDebug()<<(int)rangeAfterFirstToken.lastUnindent.type<<rangeAfterFirstToken.lastUnindent.line;
+            if (trimmedLineText.startsWith('#')
                        && attr == ((CppSyntaxer *)mSyntaxer.get())->preprocessorAttribute()) {
-                indentAdded = true;
                 indentSpaces=0;
-                l=0;
-            } else if (mSyntaxer->language() == ProgrammingLanguage::CPP
-                       && mSyntaxer->isLastLineCommentNotFinished(rangePreceeding.state)
+            } else if (mSyntaxer->isLastLineCommentNotFinished(rangePreceeding.state)
                        ) {
                 // last line is a not finished comment,
                 if  (trimmedLineText.startsWith("*")) {
                     // this line start with "* "
                     // it means this line is a docstring, should indents according to
                     // the line the comment beginning , and add 1 additional space
-                    additionIndent = 1;
                     int commentStartLine = findCommentStartLine(startLine-1);
                     SyntaxState range;
-                    indentSpaces = leftSpaces(mDocument->getLine(commentStartLine-1));
+                    indentSpaces = leftSpaces(mDocument->getLine(commentStartLine-1))+1;
                     range = mDocument->getSyntaxState(commentStartLine-1);
-                    matchingIndents = range.matchingIndents;
-                    indentAdded = true;
-                    l = commentStartLine;
                 } else {
                     //indents according to the beginning of the comment and 2 additional space
-                    additionIndent = 0;
                     int commentStartLine = findCommentStartLine(startLine-1);
                     SyntaxState range;
                     indentSpaces = leftSpaces(mDocument->getLine(commentStartLine-1))+2;
                     range = mDocument->getSyntaxState(commentStartLine-1);
-                    matchingIndents = range.matchingIndents;
-                    indentAdded = true;
-                    l = startLine;
                 }
-            } else if ( mSyntaxer->isLastLineCommentNotFinished(statePrePre)
-                        && rangePreceeding.matchingIndents.isEmpty()
-                        && rangePreceeding.firstIndentThisLine>=rangePreceeding.indents.length()
-                        && !mSyntaxer->isLastLineCommentNotFinished(rangePreceeding.state)) {
-                // the preceeding line is the end of comment
-                // we should use the indents of the start line of the comment
-                int commentStartLine = findCommentStartLine(startLine-2);
-                SyntaxState range;
-                indentSpaces = leftSpaces(mDocument->getLine(commentStartLine-1));
-                range = mDocument->getSyntaxState(commentStartLine-1);
-                matchingIndents = range.matchingIndents;
-                indentAdded = true;
-                l = commentStartLine;
+            } else if (rangeAfterFirstToken.lastUnindent.type!=IndentType::None
+                       && firstToken=="}") {
+                IndentInfo matchingIndents = rangeAfterFirstToken.lastUnindent;
+                indentSpaces = leftSpaces(mDocument->getLine(matchingIndents.line));
+            } else if (firstToken=="{") {
+                IndentInfo matchingIndents = rangeAfterFirstToken.getLastIndent();
+                indentSpaces = leftSpaces(mDocument->getLine(matchingIndents.line));
+            } else if (rangePreceeding.getLastIndentType()!=IndentType::None) {
+                IndentInfo matchingIndents = rangePreceeding.getLastIndent();
+                indentSpaces = leftSpaces(mDocument->getLine(matchingIndents.line))+tabWidth();
             } else {
-                // we just use infos till preceeding line's end to calc indents
-                matchingIndents = rangePreceeding.matchingIndents;
-                l = startLine-1;
+                indentSpaces = 0;
             }
-
-            if (!matchingIndents.isEmpty()
-                    ) {
-                // find the indent's start line, and use it's indent as the default indent;
-                while (l>=1) {
-                    SyntaxState range = mDocument->getSyntaxState(l-1);
-                    QVector<int> newIndents = range.indents.mid(range.firstIndentThisLine);
-                    int i = 0;
-                    int len = matchingIndents.length();
-                    while (i<len && !newIndents.isEmpty()) {
-                        int indent = matchingIndents[i];
-                        int idx = newIndents.lastIndexOf(indent);
-                        if (idx >=0) {
-                            newIndents.remove(idx,newIndents.length()-idx);
-                        } else {
-                            break;
-                        }
-                        i++;
-                    }
-                    if (i>=len) {
-                        // we found the where the indent started
-                        if (len>0 && !range.matchingIndents.isEmpty()
-                                &&
-                                ( matchingIndents.back()== IndentForBrace
-                                  || matchingIndents.back() == IndentForStatement
-                                ) ) {
-                            // but it's not a complete statement
-                            matchingIndents = range.matchingIndents;
-                        } else {
-                            indentSpaces = leftSpaces(mDocument->getLine(l-1));
-                            if (newIndents.length()>0)
-                                indentSpaces+=tabWidth();
-                            break;
-                        }
-                    } else {
-                        matchingIndents = range.matchingIndents + matchingIndents.mid(i);
-                    }
-                    l--;
-                }
-            }
-            if (!indentAdded) {
-                if (rangePreceeding.firstIndentThisLine < rangePreceeding.indents.length()) {
-                    indentSpaces += tabWidth();
-                    indentAdded = true;
-                }
-            }
-
-            if (!indentAdded && !startLineText.isEmpty()) {
-                BufferCoord coord;
-                QString token;
-                PTokenAttribute attr;
-                coord.line = startLine;
-                coord.ch = document()->getLine(startLine-1).length();
-                if (getTokenAttriAtRowCol(coord,token,attr)
-                        && attr->tokenType() == QSynedit::TokenType::Operator
-                        && token == ":") {
-                    indentSpaces += tabWidth();
-                    indentAdded = true;
-                }
-            }
-            indentSpaces += additionIndent;
         }
     }
     return std::max(0,indentSpaces);

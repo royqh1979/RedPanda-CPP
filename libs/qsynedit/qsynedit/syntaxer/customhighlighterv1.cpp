@@ -13,8 +13,8 @@ void CustomHighlighterV1::resetState()
     mRange.bracketLevel = 0;
     mRange.parenthesisLevel = 0;
     mRange.indents.clear();
-    mRange.firstIndentThisLine = 0;
-    mRange.matchingIndents.clear();
+    mRange.lastUnindent=IndentInfo{IndentType::None,0};
+    mRange.hasTrailingSpaces=false;
 }
 
 QString CustomHighlighterV1::languageName()

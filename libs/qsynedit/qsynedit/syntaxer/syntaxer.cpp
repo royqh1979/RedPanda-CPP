@@ -252,30 +252,52 @@ bool SyntaxState::operator==(const SyntaxState &s2)
 {
     // indents contains the information of brace/parenthesis/brackets embedded levels
     return (state == s2.state)
+            && (blockLevel == s2.blockLevel) // needed by block folding
+            && (blockStarted == s2.blockStarted)  // needed by block folding
+            && (blockEnded == s2.blockEnded)    // needed by block folding;
+            && (blockEndedLastLine == s2.blockEndedLastLine) //needed by block folding;
+            && (braceLevel == s2.braceLevel) // current braces embedding level (needed by rainbow color)
+            && (bracketLevel == s2.bracketLevel) // current brackets embedding level (needed by rainbow color)
+            && (parenthesisLevel == s2.parenthesisLevel) // current parenthesis embedding level (needed by rainbow color)
+
             && (indents == s2.indents)
+            && (lastUnindent == s2.lastUnindent)
             ;
 }
 
-int SyntaxState::getLastIndent()
+IndentInfo SyntaxState::getLastIndent()
 {
     if (indents.isEmpty())
-        return -1;
+        return IndentInfo{IndentType::None,0};
     return indents.back();
 }
 
+IndentType SyntaxState::getLastIndentType()
+{
+    if (indents.isEmpty())
+        return IndentType::None;
+    return indents.back().type;
+}
+
 SyntaxState::SyntaxState():
-    state(0),
-    blockLevel(0),
-    blockStarted(0),
-    blockEnded(0),
-    blockEndedLastLine(0),
-    braceLevel(0),
-    bracketLevel(0),
-    parenthesisLevel(0),
+    state{0},
+    blockLevel{0},
+    blockStarted{0},
+    blockEnded{0},
+    blockEndedLastLine{0},
+    braceLevel{0},
+    bracketLevel{0},
+    parenthesisLevel{0},
 //    leftBraces(0),
 //    rightBraces(0),
-    firstIndentThisLine(0),
-    hasTrailingSpaces(false)
+    lastUnindent{IndentType::None,0},
+    hasTrailingSpaces{false}
 {
 }
+
+bool IndentInfo::operator==(const IndentInfo &i2) const
+{
+    return type==i2.type && line==i2.line;
+}
+
 }
