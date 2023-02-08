@@ -71,6 +71,7 @@ private slots:
     void on_btnChooseGDBServer_clicked();
     void on_btnChooseResourceCompiler_clicked();
     void on_btnChooseProfiler_clicked();
+    void on_btnChooseAssembler_clicked();
 };
 
 #endif // COMPILERSETOPTIONWIDGET_H

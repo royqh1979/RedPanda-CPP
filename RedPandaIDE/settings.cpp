@@ -1692,6 +1692,7 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mProfiler(set.mProfiler),
     mResourceCompiler(set.mResourceCompiler),
     mDebugServer(set.mDebugServer),
+    mAssembler(set.assembler()),
 
     mBinDirs(set.mBinDirs),
     mCIncludeDirs(set.mCIncludeDirs),
@@ -2329,6 +2330,7 @@ void Settings::CompilerSet::setExecutables()
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
     mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
+    mAssembler = findProgramInBinDirs(ASSEMBLER);
 }
 
 void Settings::CompilerSet::setDirectories(const QString& binDir,CompilerType compilerType)
@@ -2506,6 +2508,11 @@ bool Settings::CompilerSet::canDebug()
     return fileExists(mDebugger);
 }
 
+bool Settings::CompilerSet::canAssemble()
+{
+    return fileExists(mAssembler);
+}
+
 void Settings::CompilerSet::setUserInput()
 {
     mUseCustomCompileParams = false;
@@ -2549,6 +2556,16 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
                 false,
                 env);
     return result.trimmed();
+}
+
+const QString &Settings::CompilerSet::assembler() const
+{
+    return mAssembler;
+}
+
+void Settings::CompilerSet::setAssembler(const QString &newAssembler)
+{
+    mAssembler = newAssembler;
 }
 
 Settings::CompilerSet::CompilationStage Settings::CompilerSet::compilationStage() const
@@ -3073,6 +3090,8 @@ void Settings::CompilerSets::saveSet(int index)
     savePath("make", pSet->make());
     savePath("windres", pSet->resourceCompiler());
     savePath("profiler", pSet->profiler());
+    savePath("assembler", pSet->assembler());
+
 
     mSettings->mSettings.remove("Options");
     foreach(const PCompilerOption& option, CompilerInfoManager::getInstance()->getCompilerOptions(pSet->compilerType())) {
@@ -3151,6 +3170,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setMake(loadPath("make"));
     pSet->setResourceCompiler(loadPath("windres"));
     pSet->setProfiler(loadPath("profiler"));
+    pSet->setAssembler(loadPath("assembler"));
 
     pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
     pSet->setVersion(mSettings->mSettings.value("Version").toString());

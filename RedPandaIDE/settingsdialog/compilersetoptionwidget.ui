@@ -110,7 +110,7 @@
    <item>
     <widget class="QTabWidget" name="settingTabs">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="movable">
       <bool>false</bool>
@@ -249,10 +249,10 @@
           <enum>QFrame::Raised</enum>
          </property>
          <layout class="QGridLayout" name="gridLayout">
-          <item row="2" column="2">
-           <widget class="QToolButton" name="btnChooseMake">
+          <item row="5" column="2">
+           <widget class="QToolButton" name="btnChooseResourceCompiler">
             <property name="toolTip">
-             <string>Choose make</string>
+             <string>Choose Resource Compiler</string>
             </property>
             <property name="text">
              <string>...</string>
@@ -264,17 +264,10 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>C Compiler(gcc)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="2">
-           <widget class="QToolButton" name="btnChooseProfiler">
+          <item row="0" column="2">
+           <widget class="QToolButton" name="btnChooseCCompiler">
             <property name="toolTip">
-             <string>Choose Profiler</string>
+             <string>Choose C Compiler</string>
             </property>
             <property name="text">
              <string>...</string>
@@ -286,8 +279,11 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="txtResourceCompiler"/>
+          <item row="7" column="1">
+           <widget class="QLineEdit" name="txtProfiler"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="txtDebugger"/>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_3">
@@ -295,6 +291,20 @@
              <string>C++ Compiler(g++)</string>
             </property>
            </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QToolButton" name="btnChooseGDBServer">
+            <property name="text">
+             <string>...</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../icons.qrc">
+              <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="txtResourceCompiler"/>
           </item>
           <item row="1" column="2">
            <widget class="QToolButton" name="btnChooseCppCompiler">
@@ -311,20 +321,18 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Profiler(gprof)</string>
+          <item row="7" column="2">
+           <widget class="QToolButton" name="btnChooseProfiler">
+            <property name="toolTip">
+             <string>Choose Profiler</string>
             </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLineEdit" name="txtProfiler"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>make</string>
+             <string>...</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normalon>:/icons/images/newlook24/053-open.png</normalon>
+             </iconset>
             </property>
            </widget>
           </item>
@@ -343,54 +351,15 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="txtDebugger"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="txtMake"/>
-          </item>
-          <item row="0" column="2">
-           <widget class="QToolButton" name="btnChooseCCompiler">
-            <property name="toolTip">
-             <string>Choose C Compiler</string>
-            </property>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>...</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normalon>:/icons/images/newlook24/053-open.png</normalon>
-             </iconset>
+             <string>make</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="txtCppCompiler"/>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>gdb</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="2">
-           <widget class="QToolButton" name="btnChooseResourceCompiler">
-            <property name="toolTip">
-             <string>Choose Resource Compiler</string>
-            </property>
-            <property name="text">
-             <string>...</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normalon>:/icons/images/newlook24/053-open.png</normalon>
-             </iconset>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="txtCCompiler"/>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="txtGDBServer"/>
           </item>
           <item row="4" column="0">
            <widget class="QLabel" name="label_8">
@@ -399,6 +368,44 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="txtCCompiler"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>C Compiler(gcc)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="txtCppCompiler"/>
+          </item>
+          <item row="2" column="2">
+           <widget class="QToolButton" name="btnChooseMake">
+            <property name="toolTip">
+             <string>Choose make</string>
+            </property>
+            <property name="text">
+             <string>...</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normalon>:/icons/images/newlook24/053-open.png</normalon>
+             </iconset>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Profiler(gprof)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="txtMake"/>
+          </item>
           <item row="5" column="0">
            <widget class="QLabel" name="label_6">
             <property name="text">
@@ -406,11 +413,25 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="txtGDBServer"/>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>gdb</string>
+            </property>
+           </widget>
           </item>
-          <item row="4" column="2">
-           <widget class="QToolButton" name="btnChooseGDBServer">
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Assembler</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="txtAssembler"/>
+          </item>
+          <item row="6" column="2">
+           <widget class="QToolButton" name="btnChooseAssembler">
             <property name="text">
              <string>...</string>
             </property>

@@ -1261,6 +1261,11 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
 
   // Determine compilation flags
     switch(getFileType(inFileName)) {
+    case FileType::ASM:
+        newUnit->setCompile(true);
+        newUnit->setCompileCpp(false);
+        newUnit->setLink(true);
+        break;
     case FileType::CSource:
         newUnit->setCompile(true);
         newUnit->setCompileCpp(false);

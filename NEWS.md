@@ -12,6 +12,7 @@ Red Panda C++ Version 2.11
   - enhancement: Auto reload openned project files that use "Project Default" as the encoding, when the project encoding setting is changed in the project options dialog.
   - fix: Correctly handle files whose name contains spaces in the generated makefile.
   - fix: Correctly handle custom obj folder in the generated makefile.
+  - enhancement: Support compile asm files using nasm in the project.
 
 Red Panda C++ Version 2.10
 

@@ -1300,6 +1300,7 @@ public:
         bool canCompileCPP();
         bool canMake();
         bool canDebug();
+        bool canAssemble();
 //        bool dirsValid(QString& msg);
 //        bool validateExes(QString& msg);
         //properties
@@ -1389,6 +1390,9 @@ public:
         QString getOutputFilename(const QString& sourceFilename,Settings::CompilerSet::CompilationStage stage);
         bool isOutputExecutable();
         bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
+        const QString &assembler() const;
+        void setAssembler(const QString &newAssembler);
+
     private:
         void setDirectories(const QString& binDir, CompilerType mCompilerType);
         //load hard defines
@@ -1409,6 +1413,7 @@ public:
         QString mProfiler;
         QString mResourceCompiler;
         QString mDebugServer;
+        QString mAssembler;
 
         // Directories, mostly hardcoded too
         QStringList mBinDirs;
@@ -1471,6 +1476,7 @@ public:
 
         QString getKeyFromCompilerCompatibleIndex(int idx) const;
 
+        static bool isTarget64Bit(const QString &target);
     private:
         PCompilerSet addSet(const QString& folder, const QString& c_prog);
         PCompilerSet addSet(const PCompilerSet &pSet);
@@ -1482,7 +1488,6 @@ public:
         void loadPathList(const QString& name, QStringList& list);
         PCompilerSet loadSet(int index);
         void prepareCompatibleIndex();
-        static bool isTarget64Bit(const QString &target);
     private:
         CompilerSetList mList;
         int mDefaultIndex;

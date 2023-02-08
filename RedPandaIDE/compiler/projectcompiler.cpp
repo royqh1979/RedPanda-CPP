@@ -156,7 +156,11 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
         // Only process source files
         QString RelativeName = extractRelativePath(mProject->directory(), unit->fileName());
         FileType fileType = getFileType(RelativeName);
-        if (fileType == FileType::CSource || fileType == FileType::CppSource) {
+        if (fileType==FileType::ASM && !compilerSet()->canAssemble())
+            continue;
+
+        if (fileType == FileType::CSource || fileType == FileType::CppSource
+                || fileType == FileType::ASM) {
             if (!mProject->options().objectOutput.isEmpty()) {
                 // ofile = C:\MyProgram\obj\main.o
                 QString fullObjFile = includeTrailingPathDelimiter(mProject->options().objectOutput)
@@ -201,11 +205,11 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
           QString relativeResFile = extractRelativePath(mProject->directory(), fullResFile);
           objResFile = genMakePath1(relativeResFile);
           objResFile2 = genMakePath2(relativeResFile);
-          cleanRes += ' ' + genMakePath1(changeFileExt(relativeResFile, OBJ_EXT)).replace("/",QDir::separator());
+          cleanRes += ' ' + genMakePath1(changeFileExt(relativeResFile, RES_EXT)).replace("/",QDir::separator());
       } else {
           objResFile = genMakePath1(changeFileExt(mProject->options().privateResource, RES_EXT));
           objResFile2 = genMakePath2(changeFileExt(mProject->options().privateResource, RES_EXT));
-          cleanRes += ' ' + genMakePath1(changeFileExt(mProject->options().privateResource, OBJ_EXT)).replace("/",QDir::separator());
+          cleanRes += ' ' + genMakePath1(changeFileExt(mProject->options().privateResource, RES_EXT)).replace("/",QDir::separator());
       }
 }
 #endif
@@ -229,6 +233,8 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
         cppCompileArguments+= " -D__DEBUG__";
     }
 
+    if (compilerSet()->canAssemble())
+        writeln(file,"ASM      = " + extractFileName(compilerSet()->assembler()));
     writeln(file,"CPP      = " + extractFileName(compilerSet()->cppCompiler()));
     writeln(file,"CC       = " + extractFileName(compilerSet()->CCompiler()));
 #ifdef Q_OS_WIN
@@ -279,7 +285,21 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 #ifdef Q_OS_WIN
     writeln(file,"WINDRESFLAGS  = " + mProject->options().resourceCmd);
 #endif
-
+#ifdef Q_OS_WIN
+    if (compilerSet()->canAssemble() &&
+            Settings::CompilerSets::isTarget64Bit(compilerSet()->target())) {
+        if (mProject->getCompileOption(CC_CMD_OPT_POINTER_SIZE)=="32")
+            writeln(file,"ASMFLAGS      = -f win32");
+        else
+            writeln(file,"ASMFLAGS      = -f win64");
+    } else {
+        writeln(file,"ASMFLAGS      = -f win32");
+    }
+#elif defined(Q_OS_LINUX)
+    writeln(file,"ASMFLAGS      = -f elf64");
+#elif defined(Q_OS_MACOS)
+    writeln(file,"ASMFLAGS      = -f macho64");
+#endif
 
     // This needs to be put in before the clean command.
     if (mProject->options().type == ProjectType::DynamicLib) {
@@ -354,9 +374,12 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 
     QList<PProjectUnit> projectUnits=mProject->unitList();
     foreach(const PProjectUnit &unit, projectUnits) {
+        if (!unit->compile())
+            continue;
         FileType fileType = getFileType(unit->fileName());
         // Only process source files
-        if (fileType!=FileType::CSource && fileType!=FileType::CppSource)
+        if (fileType!=FileType::CSource && fileType!=FileType::CppSource
+                && fileType!=FileType::ASM)
             continue;
 
         QString shortFileName = extractRelativePath(mProject->makeFileName(),unit->fileName());
@@ -459,16 +482,22 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 }
             }
 
-            if (mOnlyCheckSyntax) {
-                if (unit->compileCpp())
-                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " $(CXXFLAGS) " + encodingStr);
-                else
-                    writeln(file, "\t(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
-            } else {
-                if (unit->compileCpp())
-                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CXXFLAGS) " + encodingStr);
-                else
-                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
+            if (fileType==FileType::CppSource || fileType==FileType::CppSource) {
+                if (mOnlyCheckSyntax) {
+                    if (unit->compileCpp())
+                        writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " $(CXXFLAGS) " + encodingStr);
+                    else
+                        writeln(file, "\t(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
+                } else {
+                    if (unit->compileCpp())
+                        writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CXXFLAGS) " + encodingStr);
+                    else
+                        writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
+                }
+            } else if (fileType==FileType::ASM) {
+                if (!mOnlyCheckSyntax) {
+                    writeln(file, "\t$(ASM) $(ASMFLAGS) " + genMakePath1(shortFileName) + " -o " + objFileName2);
+                }
             }
         }
     }

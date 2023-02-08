@@ -32,6 +32,7 @@ using SimpleIni = CSimpleIniA;
 using PSimpleIni = std::shared_ptr<SimpleIni>;
 
 enum class FileType{
+    ASM,    // asm source file (.asm)
     CSource, // c source file (.c)
     CppSource, // c++ source file (.cpp)
     CHeader, // c header (.h)
