@@ -162,8 +162,8 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
                 QString fullObjFile = includeTrailingPathDelimiter(mProject->options().objectOutput)
                         + extractFileName(unit->fileName());
                 QString relativeObjFile = extractRelativePath(mProject->directory(), changeFileExt(fullObjFile, OBJ_EXT));
-                QString ObjFile = genMakePath2(relativeObjFile);
-                Objects += ' ' + ObjFile;
+                QString objFile = genMakePath2(relativeObjFile);
+                Objects += ' ' + objFile;
 #ifdef Q_OS_WIN
                 cleanObjects += ' ' + genMakePath1(relativeObjFile).replace("/",QDir::separator());
 #else
@@ -189,20 +189,30 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     LinkObjects = LinkObjects.trimmed();
 
     // Get windres file
-    QString ObjResFile;
+    QString objResFile;
+    QString objResFile2;
+    QString cleanRes;
 #ifdef Q_OS_WIN
     if (!mProject->options().privateResource.isEmpty()) {
       if (!mProject->options().objectOutput.isEmpty()) {
-          ObjResFile = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+          QString fullResFile = includeTrailingPathDelimiter(mProject->options().objectOutput) +
                   changeFileExt(mProject->options().privateResource, RES_EXT);
-      } else
-          ObjResFile = changeFileExt(mProject->options().privateResource, RES_EXT);
-    }
+
+          QString relativeResFile = extractRelativePath(mProject->directory(), fullResFile);
+          objResFile = genMakePath1(relativeResFile);
+          objResFile2 = genMakePath2(relativeResFile);
+          cleanRes += ' ' + genMakePath1(changeFileExt(relativeResFile, OBJ_EXT)).replace("/",QDir::separator());
+      } else {
+          objResFile = genMakePath1(changeFileExt(mProject->options().privateResource, RES_EXT));
+          objResFile2 = genMakePath2(changeFileExt(mProject->options().privateResource, RES_EXT));
+          cleanRes += ' ' + genMakePath1(changeFileExt(mProject->options().privateResource, OBJ_EXT)).replace("/",QDir::separator());
+      }
+}
 #endif
 
     // Mention progress in the logs
-    if (!ObjResFile.isEmpty()) {
-        log(tr("- Resource File: %1").arg(generateAbsolutePath(mProject->directory(),ObjResFile)));
+    if (!objResFile.isEmpty()) {
+        log(tr("- Resource File: %1").arg(generateAbsolutePath(mProject->directory(),objResFile)));
     }
     log("");
 
@@ -224,17 +234,17 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 #ifdef Q_OS_WIN
     writeln(file,"WINDRES  = " + extractFileName(compilerSet()->resourceCompiler()));
 #endif
-    if (!ObjResFile.isEmpty()) {
-      writeln(file,"RES      = " + genMakePath1(ObjResFile));
+    if (!objResFile.isEmpty()) {
+      writeln(file,"RES      = " + objResFile2);
       writeln(file,"OBJ      = " + Objects + " $(RES)");
-      writeln(file,"LINKOBJ  = " + LinkObjects + " $(RES)");
+      writeln(file,"LINKOBJ  = " + LinkObjects + " " + objResFile);
 #ifdef Q_OS_WIN
       writeln(file,"CLEANOBJ  = " + cleanObjects +
-              " " + genMakePath1(ObjResFile).replace("/",QDir::separator())
+              " " + cleanRes
               + " " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->executable())).replace("/",QDir::separator()) );
 #else
       writeln(file,"CLEANOBJ  = " + cleanObjects +
-              " " + genMakePath1(ObjResFile)
+              " " + cleanRes
               + " " + genMakePath1(extractRelativePath(mProject->makeFileName(), mProject->executable())));
 #endif
     } else {
@@ -374,22 +384,22 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     objStr = objStr + ' ' + genMakePath2(extractRelativePath(mProject->makeFileName(),unit2->fileName()));
             }
         }
-        QString ObjFileName;
-        QString ObjFileName2;
+        QString objFileName;
+        QString objFileName2;
         if (!mProject->options().objectOutput.isEmpty()) {
-            ObjFileName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+            QString fullObjname = includeTrailingPathDelimiter(mProject->options().objectOutput) +
                     extractFileName(unit->fileName());
-            ObjFileName = genMakePath2(extractRelativePath(mProject->makeFileName(), changeFileExt(ObjFileName, OBJ_EXT)));
-            ObjFileName2 = genMakePath1(extractRelativePath(mProject->makeFileName(), changeFileExt(ObjFileName, OBJ_EXT)));
+            objFileName = genMakePath2(extractRelativePath(mProject->makeFileName(), changeFileExt(fullObjname, OBJ_EXT)));
+            objFileName2 = genMakePath1(extractRelativePath(mProject->makeFileName(), changeFileExt(fullObjname, OBJ_EXT)));
 //            if (!extractFileDir(ObjFileName).isEmpty()) {
 //                objStr = genMakePath2(includeTrailingPathDelimiter(extractFileDir(ObjFileName))) + objStr;
 //            }
         } else {
-            ObjFileName = genMakePath2(changeFileExt(shortFileName, OBJ_EXT));
-            ObjFileName2 = genMakePath1(changeFileExt(shortFileName, OBJ_EXT));
+            objFileName = genMakePath2(changeFileExt(shortFileName, OBJ_EXT));
+            objFileName2 = genMakePath1(changeFileExt(shortFileName, OBJ_EXT));
         }
 
-        objStr = ObjFileName + ": "+objStr+precompileStr;
+        objStr = objFileName + ": "+objStr+precompileStr;
 
         writeln(file,objStr);
 
@@ -456,9 +466,9 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     writeln(file, "\t(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
             } else {
                 if (unit->compileCpp())
-                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName2 + " $(CXXFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CXXFLAGS) " + encodingStr);
                 else
-                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + ObjFileName2 + " $(CFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
             }
         }
     }
@@ -489,15 +499,17 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         }
 
         // Determine resource output file
-        QString objFileName;
+        QString fullName;
         if (!mProject->options().objectOutput.isEmpty()) {
-            objFileName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+            fullName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
                   changeFileExt(mProject->options().privateResource, RES_EXT);
         } else {
-            objFileName = changeFileExt(mProject->options().privateResource, RES_EXT);
+            fullName = changeFileExt(mProject->options().privateResource, RES_EXT);
         }
-        objFileName = genMakePath1(extractRelativePath(mProject->filename(), objFileName));
+        QString objFileName = genMakePath1(extractRelativePath(mProject->filename(), fullName));
+        QString objFileName2 = genMakePath2(extractRelativePath(mProject->filename(), fullName));
         QString privResName = genMakePath1(extractRelativePath(mProject->filename(), mProject->options().privateResource));
+        QString privResName2 = genMakePath2(extractRelativePath(mProject->filename(), mProject->options().privateResource));
 
         // Build final cmd
         QString windresArgs;
@@ -507,11 +519,11 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 
         if (mOnlyCheckSyntax) {
             writeln(file);
-            writeln(file, objFileName + ':');
+            writeln(file, objFileName2 + ':');
             writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o nul -O coff $(WINDRESFLAGS)" + ResIncludes);
         } else {
             writeln(file);
-            writeln(file, objFileName + ": " + privResName + ' ' + resFiles);
+            writeln(file, objFileName2 + ": " + privResName2 + ' ' + resFiles);
             writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o " + objFileName + " -O coff $(WINDRESFLAGS)"
                 + ResIncludes);
         }

@@ -10,6 +10,8 @@ Red Panda C++ Version 2.11
   - enhancement: Improve auto indent.
   - enhancement: Change the way to calculate execution time.
   - enhancement: Auto reload openned project files that use "Project Default" as the encoding, when the project encoding setting is changed in the project options dialog.
+  - fix: Correctly handle files whose name contains spaces in the generated makefile.
+  - fix: Correctly handle custom obj folder in the generated makefile.
 
 Red Panda C++ Version 2.10
 
