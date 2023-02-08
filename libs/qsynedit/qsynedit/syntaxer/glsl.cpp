@@ -1383,6 +1383,11 @@ void GLSLSyntaxer::setLine(const QString &newLine, int lineNumber)
     mLine = mLineString.data();
     mLineNumber = lineNumber;
     mRun = 0;
+    mRange.blockStarted = 0;
+    mRange.blockEnded = 0;
+    mRange.blockEndedLastLine = 0;
+    mRange.lastUnindent=IndentInfo{IndentType::None,0};
+    mRange.hasTrailingSpaces = false;
     next();
 }
 

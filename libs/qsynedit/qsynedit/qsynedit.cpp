@@ -1606,10 +1606,10 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
         if (mSyntaxer->language() != ProgrammingLanguage::CPP)
             return indentSpaces;
         SyntaxState rangePreceeding = mDocument->getSyntaxState(startLine-1);
-        mSyntaxer->setState(rangePreceeding);
         if (addIndent) {
 //            QString trimmedS = s.trimmed();
             QString trimmedLineText = lineText.trimmed();
+            mSyntaxer->setState(rangePreceeding);
             mSyntaxer->setLine(trimmedLineText,line-1);
             int statePrePre;
             if (startLine>1) {
@@ -3336,7 +3336,7 @@ int QSynEdit::scanFrom(int Index, int canStopIndex)
         mSyntaxer->nextToEol();
         iRange = mSyntaxer->getState();
         if (Result > canStopIndex){
-            if (mDocument->getSyntaxState(Result).state == iRange.state
+            if (mDocument->getSyntaxState(Result) == iRange
                     && mDocument->getSyntaxState(Result).blockLevel == iRange.blockLevel
                     && mDocument->getSyntaxState(Result).blockStarted == iRange.blockStarted
                     && mDocument->getSyntaxState(Result).blockEnded == iRange.blockEnded

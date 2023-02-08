@@ -1571,6 +1571,11 @@ void CppSyntaxer::setLine(const QString &newLine, int lineNumber)
     mLineSize = mLine.size();
     mLineNumber = lineNumber;
     mRun = 0;
+    mRange.blockStarted = 0;
+    mRange.blockEnded = 0;
+    mRange.blockEndedLastLine = 0;
+    mRange.lastUnindent=IndentInfo{IndentType::None,0};
+    mRange.hasTrailingSpaces = false;
     next();
 }
 
