@@ -268,6 +268,8 @@ public:
                         const QString& description,
                         const QString& category);
 
+    void setEncoding(const QByteArray& encoding);
+
     std::shared_ptr<CppParser> cppParser();
     const QString &filename() const;
 

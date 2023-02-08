@@ -237,17 +237,6 @@ void Editor::loadFile(QString filename) {
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
         if (unit) {
-//            if (mEncodingOption==ENCODING_AUTO_DETECT) {
-//                if (mFileEncoding==ENCODING_ASCII)
-//                    unit->setEncoding(mProject->options().encoding);
-//                else
-//                    unit->setEncoding(mFileEncoding);
-//                mEncodingOption=unit->encoding();
-//            } else {
-//                unit->setEncoding(mEncodingOption);
-//            }
-//            unit->setRealEncoding(mFileEncoding);
-            //unit->setEncoding(mEncodingOption);
             unit->setRealEncoding(mFileEncoding);
         }
     }

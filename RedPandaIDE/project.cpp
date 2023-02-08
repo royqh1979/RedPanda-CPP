@@ -1100,6 +1100,21 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     return true;
 }
 
+void Project::setEncoding(const QByteArray &encoding)
+{
+    if (encoding!=mOptions.encoding) {
+        mOptions.encoding=encoding;
+        foreach (const PProjectUnit& unit,mUnits) {
+            if (unit->encoding()!=ENCODING_PROJECT)
+                continue;
+            Editor * e=unitEditor(unit);
+            if (e) {
+                e->setEncodingOption(mOptions.encoding);
+            }
+        }
+    }
+}
+
 void Project::saveOptions()
 {
     SimpleIni ini;
@@ -2067,7 +2082,7 @@ void Project::loadOptions(SimpleIni& ini)
         if (useUTF8) {
             mOptions.encoding = ini.GetValue("Project","Encoding", ENCODING_UTF8);
         } else {
-            mOptions.encoding = ini.GetValue("Project","Encoding", ENCODING_SYSTEM_DEFAULT);
+            mOptions.encoding = ini.GetValue("Project","Encoding", pSettings->editor().defaultEncoding());
         }
         if (mOptions.encoding == ENCODING_AUTO_DETECT)
             mOptions.encoding = pSettings->editor().defaultEncoding();

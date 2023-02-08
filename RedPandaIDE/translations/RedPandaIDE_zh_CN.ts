@@ -3353,7 +3353,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../settingsdialog/formattergeneralwidget.cpp" line="155"/>
         <source>Default</source>
-        <translation>缺省</translation>
+        <translation>默认</translation>
     </message>
     <message>
         <location filename="../settingsdialog/formattergeneralwidget.cpp" line="156"/>
@@ -6888,7 +6888,7 @@ Are you really want to continue?</oldsource>
         <location filename="../widgets/newprojectdialog.cpp" line="167"/>
         <location filename="../widgets/newprojectdialog.cpp" line="188"/>
         <source>Default</source>
-        <translation>缺省</translation>
+        <translation>默认</translation>
     </message>
     <message>
         <location filename="../widgets/newprojectdialog.cpp" line="268"/>
@@ -8661,7 +8661,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../colorscheme.cpp" line="760"/>
         <source>default</source>
-        <translation>缺省</translation>
+        <translation>默认</translation>
     </message>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; to write!</source>

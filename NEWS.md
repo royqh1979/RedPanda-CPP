@@ -9,6 +9,7 @@ Red Panda C++ Version 2.11
   - enhancement: Show progress dialog when search/find occurrencies in large projects.
   - enhancement: Improve auto indent.
   - enhancement: Change the way to calculate execution time.
+  - enhancement: Auto reload openned project files that use "Project Default" as the encoding, when the project encoding setting is changed in the project options dialog.
 
 Red Panda C++ Version 2.10
 

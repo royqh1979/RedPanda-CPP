@@ -97,7 +97,7 @@ void ProjectGeneralWidget::doSave()
         return;
     project->setName(ui->txtName->text().trimmed());
 
-    project->options().encoding = ui->cbDefaultEncoding->currentText().toUtf8();
+    project->setEncoding(ui->cbDefaultEncoding->currentText().toUtf8());
 
     int row = std::max(0,ui->lstType->currentRow());
     project->options().type = static_cast<ProjectType>(row);

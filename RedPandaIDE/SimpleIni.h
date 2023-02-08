@@ -2025,6 +2025,8 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::GetValue(
         }
     }
 
+    if (*(iKeyVal->second)==0)
+        return a_pDefault;
     return iKeyVal->second;
 }
 
