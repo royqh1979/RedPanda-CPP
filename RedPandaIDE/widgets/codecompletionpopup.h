@@ -41,7 +41,8 @@ enum class CodeCompletionType {
     Normal,
     ComplexKeyword,
     FunctionWithoutDefinition,
-    Namespaces
+    Namespaces,
+    KeywordsOnly
 };
 
 class CodeCompletionListItemDelegate: public QStyledItemDelegate {
@@ -133,6 +134,7 @@ private:
                      int line);
     void addStatement(const PStatement& statement, const QString& fileName, int line);
     void filterList(const QString& member);
+    void getKeywordCompletionFor(const QSet<QString>& customKeywords);
     void getCompletionFor(
             QStringList ownerExpression,
             const QString& memberOperator,

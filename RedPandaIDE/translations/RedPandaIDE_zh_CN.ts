@@ -849,7 +849,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="426"/>
         <source>Assembler</source>
-        <translation type="unfinished">汇编</translation>
+        <translation>汇编器(NASM)</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="464"/>
@@ -1084,7 +1084,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="456"/>
         <source>Locate nasm</source>
-        <translation type="unfinished"></translation>
+        <translation>定位nasm程序</translation>
     </message>
 </context>
 <context>
@@ -1111,12 +1111,12 @@ Are you really want to continue?</oldsource>
         <location filename="../cpprefacter.cpp" line="187"/>
         <location filename="../cpprefacter.cpp" line="198"/>
         <source>Searching...</source>
-        <translation type="unfinished">正在查找...</translation>
+        <translation>正在查找...</translation>
     </message>
     <message>
         <location filename="../cpprefacter.cpp" line="188"/>
         <source>Abort</source>
-        <translation type="unfinished">中止</translation>
+        <translation>中止</translation>
     </message>
 </context>
 <context>
@@ -1402,13 +1402,13 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">失败</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="343"/>
-        <location filename="../editor.cpp" line="429"/>
-        <location filename="../editor.cpp" line="458"/>
-        <location filename="../editor.cpp" line="1550"/>
-        <location filename="../editor.cpp" line="1555"/>
-        <location filename="../editor.cpp" line="1575"/>
-        <location filename="../editor.cpp" line="1580"/>
+        <location filename="../editor.cpp" line="345"/>
+        <location filename="../editor.cpp" line="431"/>
+        <location filename="../editor.cpp" line="460"/>
+        <location filename="../editor.cpp" line="1556"/>
+        <location filename="../editor.cpp" line="1561"/>
+        <location filename="../editor.cpp" line="1581"/>
+        <location filename="../editor.cpp" line="1586"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -1417,8 +1417,8 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="106"/>
-        <location filename="../editor.cpp" line="532"/>
+        <location filename="../editor.cpp" line="107"/>
+        <location filename="../editor.cpp" line="534"/>
         <source>Error Load File</source>
         <translation>载入文件错误</translation>
     </message>
@@ -1447,44 +1447,44 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">继续保存？</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="373"/>
+        <location filename="../editor.cpp" line="375"/>
         <source>Save As</source>
         <translation>另存为</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="430"/>
+        <location filename="../editor.cpp" line="432"/>
         <source>File %1 already openned!</source>
         <translation>文件%1已经被打开！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="1551"/>
+        <location filename="../editor.cpp" line="1557"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="1556"/>
+        <location filename="../editor.cpp" line="1562"/>
         <source>The text to be copied exceeds character limit!</source>
         <translation>要复制的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="1576"/>
+        <location filename="../editor.cpp" line="1582"/>
         <source>The text to be cut exceeds count limit!</source>
         <translation>要剪切的内容超过了行数限制！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="1581"/>
+        <location filename="../editor.cpp" line="1587"/>
         <source>The text to be cut exceeds character limit!</source>
         <translation>要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="3086"/>
+        <location filename="../editor.cpp" line="3092"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="3778"/>
-        <location filename="../editor.cpp" line="3825"/>
-        <location filename="../editor.cpp" line="3870"/>
+        <location filename="../editor.cpp" line="3805"/>
+        <location filename="../editor.cpp" line="3852"/>
+        <location filename="../editor.cpp" line="3897"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
@@ -1493,27 +1493,27 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4709"/>
+        <location filename="../editor.cpp" line="4738"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4710"/>
+        <location filename="../editor.cpp" line="4739"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation>找不到astyle程序&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4869"/>
+        <location filename="../editor.cpp" line="4898"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4870"/>
+        <location filename="../editor.cpp" line="4899"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="5115"/>
+        <location filename="../editor.cpp" line="5144"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -7346,7 +7346,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../settingsdialog/projectcompileparamaterswidget.ui" line="186"/>
         <source>Assembler</source>
-        <translation type="unfinished">汇编</translation>
+        <translation>汇编器</translation>
     </message>
     <message>
         <location filename="../settingsdialog/projectcompileparamaterswidget.cpp" line="75"/>

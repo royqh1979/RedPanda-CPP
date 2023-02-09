@@ -53,8 +53,9 @@ public:
     const PTokenAttribute &labelAttribute() const;
     const PTokenAttribute &registerAttribute() const;
 
-    static const QSet<QString> Keywords;
+    static const QSet<QString> Instructions;
     static const QSet<QString> Registers;
+    static const QSet<QString> Directives;
 private:
     QChar* mLine;
     QString mLineString;

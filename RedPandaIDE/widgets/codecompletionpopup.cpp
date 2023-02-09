@@ -104,6 +104,10 @@ void CodeCompletionPopup::prepareSearch(
         mIncludedFiles = mParser->getFileIncludes(filename);
         getCompletionListForNamespaces(preWord,filename,line);
         break;
+    case CodeCompletionType::KeywordsOnly:
+        mIncludedFiles.clear();
+        getKeywordCompletionFor(customKeywords);
+        break;
     default:
         mIncludedFiles = mParser->getFileIncludes(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
@@ -419,21 +423,12 @@ void CodeCompletionPopup::filterList(const QString &member)
 {
     QMutexLocker locker(&mMutex);
     mCompletionStatementList.clear();
-    if (!mParser)
-        return;
-    if (!mParser->enabled())
-        return;
+//    if (!mParser)
+//        return;
+//    if (!mParser->enabled())
+//        return;
     //we don't need to freeze here since we use smart pointers
     //  and data have been retrieved from the parser
-//    if (!mParser->freeze())
-//        return;
-//    {
-//        auto action = finally([this]{
-//            mParser->unFreeze();
-//        });
-//        if (mParserSerialId!=mParser->serialId()) {
-//            return;
-//        }
 
     mCompletionStatementList.clear();
     mCompletionStatementList.reserve(mFullCompletionStatementList.size());
@@ -539,6 +534,16 @@ void CodeCompletionPopup::filterList(const QString &member)
     //    }
 }
 
+void CodeCompletionPopup::getKeywordCompletionFor(const QSet<QString> &customKeywords)
+{
+    //add keywords
+    if (!customKeywords.isEmpty()) {
+        foreach (const QString& keyword,customKeywords) {
+            addKeyword(keyword);
+        }
+    }
+}
+
 void CodeCompletionPopup::getCompletionFor(
         QStringList ownerExpression,
         const QString& memberOperator,
@@ -547,18 +552,58 @@ void CodeCompletionPopup::getCompletionFor(
         int line,
         const QSet<QString>& customKeywords)
 {
-    if(!mParser) {
+
+    if (memberOperator.isEmpty() && ownerExpression.isEmpty() && memberExpression.isEmpty())
+        return;
+
+    if (memberOperator.isEmpty()) {
+        //C++ preprocessor directives
+        if (mMemberPhrase.startsWith('#')) {
+            if (mShowKeywords) {
+                foreach (const QString& keyword, CppDirectives) {
+                    addKeyword(keyword);
+                }
+            }
+            return;
+        }
+
+        //docstring tags (javadoc style)
+        if (mMemberPhrase.startsWith('@')) {
+            if (mShowKeywords) {
+                foreach (const QString& keyword,JavadocTags) {
+                    addKeyword(keyword);
+                }
+            }
+            return;
+        }
+
+        //the identifier to be completed is not a member of variable/class
+        if (mShowCodeSnippets) {
+            //add custom code templates
+            foreach (const PCodeSnippet& codeIn,mCodeSnippets) {
+                if (!codeIn->code.isEmpty()) {
+                    PStatement statement = std::make_shared<Statement>();
+                    statement->command = codeIn->prefix;
+                    statement->value = codeIn->code;
+                    statement->kind = StatementKind::skUserCodeSnippet;
+                    statement->fullName = codeIn->prefix;
+                    statement->usageCount = 0;
+                    mFullCompletionStatementList.append(statement);
+                }
+            }
+        }
+
         if (mShowKeywords) {
             //add keywords
+            if (!customKeywords.isEmpty()) {
                 foreach (const QString& keyword,customKeywords) {
                     addKeyword(keyword);
                 }
+            }
         }
-        return;
     }
-    if (!mParser->enabled())
-        return;
-    if (memberOperator.isEmpty() && ownerExpression.isEmpty() && memberExpression.isEmpty())
+
+    if (!mParser || !mParser->enabled())
         return;
 
     if (!mParser->freeze())
@@ -569,51 +614,6 @@ void CodeCompletionPopup::getCompletionFor(
         });
 
         if (memberOperator.isEmpty()) {
-            //C++ preprocessor directives
-            if (mMemberPhrase.startsWith('#')) {
-                if (mShowKeywords) {
-                    foreach (const QString& keyword, CppDirectives) {
-                        addKeyword(keyword);
-                    }
-                }
-                return;
-            }
-
-            //docstring tags (javadoc style)
-            if (mMemberPhrase.startsWith('@')) {
-                if (mShowKeywords) {
-                    foreach (const QString& keyword,JavadocTags) {
-                        addKeyword(keyword);
-                    }
-                }
-                return;
-            }
-
-            //the identifier to be completed is not a member of variable/class
-            if (mShowCodeSnippets) {
-                //add custom code templates
-                foreach (const PCodeSnippet& codeIn,mCodeSnippets) {
-                    if (!codeIn->code.isEmpty()) {
-                        PStatement statement = std::make_shared<Statement>();
-                        statement->command = codeIn->prefix;
-                        statement->value = codeIn->code;
-                        statement->kind = StatementKind::skUserCodeSnippet;
-                        statement->fullName = codeIn->prefix;
-                        statement->usageCount = 0;
-                        mFullCompletionStatementList.append(statement);
-                    }
-                }
-            }
-
-            if (mShowKeywords) {
-                //add keywords
-                if (!customKeywords.isEmpty()) {
-                    foreach (const QString& keyword,customKeywords) {
-                        addKeyword(keyword);
-                    }
-                }
-            }
-
             PStatement scopeStatement = mCurrentScope;
             // repeat until reach global
             while (scopeStatement) {

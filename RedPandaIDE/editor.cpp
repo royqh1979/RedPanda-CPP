@@ -31,6 +31,7 @@
 #include <QMimeData>
 #include <QTemporaryFile>
 #include "qsynedit/syntaxer/cpp.h"
+#include "qsynedit/syntaxer/asm.h"
 #include "syntaxermanager.h"
 #include "qsynedit/exporter/rtfexporter.h"
 #include "qsynedit/exporter/htmlexporter.h"
@@ -119,7 +120,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
 
     if (mProject) {
-        mParser = mProject->cppParser();
+        if (syntaxer->language() == QSynedit::ProgrammingLanguage::CPP)
+            mParser = mProject->cppParser();
     } else {
         initParser();
     }
@@ -832,65 +834,84 @@ void Editor::keyPressEvent(QKeyEvent *event)
     if (isIdentChar(ch)) {
         mLastIdCharPressed++;
         if (pSettings->codeCompletion().enabled()
-                && pSettings->codeCompletion().showCompletionWhileInput() ) {
-            if (mParser && mParser->isIncludeLine(lineText())
-                    && mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()) {
-                // is a #include line
-                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
-                showHeaderCompletion(false);
-                handled=true;
-                return;
-            } else if (mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()){
-                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
-                if (mParser && !lastWord.isEmpty()) {
-                    if (lastWord == "using") {
-                        processCommand(QSynedit::EditCommand::Char,ch,nullptr);
-                        showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
-                        handled=true;
-                        return;
-                    } else if (lastWord == "namespace") {
-                        processCommand(QSynedit::EditCommand::Char,ch,nullptr);
-                        showCompletion(lastWord,false, CodeCompletionType::Namespaces);
-                        handled=true;
-                        return;
-                    } else if (CppTypeKeywords.contains(lastWord)) {
-                        PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
-                        while(currentScope && currentScope->kind==StatementKind::skBlock) {
-                            currentScope = currentScope->parentScope.lock();
-                        }
-                        if (!currentScope || currentScope->kind == StatementKind::skNamespace
-                               || currentScope->kind == StatementKind::skClass) {
-                            //may define a function
-                            processCommand(QSynedit::EditCommand::Char,ch,nullptr);
-                            showCompletion(lastWord,false,CodeCompletionType::FunctionWithoutDefinition);
-                            handled=true;
-                            return;
-                        }
-                        if (lastWord == "long" ||
-                                lastWord == "short" ||
-                                lastWord == "signed" ||
-                                lastWord == "unsigned"
-                                ) {
+                && pSettings->codeCompletion().showCompletionWhileInput()
+                && mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()) {
+            if (mParser) {
+                if (mParser->isIncludeLine(lineText())) {
+                    // is a #include line
+                    processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                    showHeaderCompletion(false);
+                    handled=true;
+                    return;
+                } else {
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                    if (mParser && !lastWord.isEmpty()) {
+                        if (lastWord == "using") {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
                             handled=true;
                             return;
+                        } else if (lastWord == "namespace") {
+                            processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                            showCompletion(lastWord,false, CodeCompletionType::Namespaces);
+                            handled=true;
+                            return;
+                        } else if (CppTypeKeywords.contains(lastWord)) {
+                            PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
+                            while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                                currentScope = currentScope->parentScope.lock();
+                            }
+                            if (!currentScope || currentScope->kind == StatementKind::skNamespace
+                                   || currentScope->kind == StatementKind::skClass) {
+                                //may define a function
+                                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                                showCompletion(lastWord,false,CodeCompletionType::FunctionWithoutDefinition);
+                                handled=true;
+                                return;
+                            }
+                            if (lastWord == "long" ||
+                                    lastWord == "short" ||
+                                    lastWord == "signed" ||
+                                    lastWord == "unsigned"
+                                    ) {
+                                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                                showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
+                                handled=true;
+                                return;
+                            }
+
+
+                            //last word is a type keyword, this is a var or param define, and dont show suggestion
+                            return;
                         }
+                        PStatement statement = mParser->findStatementOf(
+                                    mFilename,
+                                    lastWord,
+                                    caretY());
+                        StatementKind kind = getKindOfStatement(statement);
+                        if (kind == StatementKind::skClass
+                                || kind == StatementKind::skEnumClassType
+                                || kind == StatementKind::skEnumType
+                                || kind == StatementKind::skTypedef) {
 
+                            PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
+                            while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                                currentScope = currentScope->parentScope.lock();
+                            }
+                            if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
+                                //may define a function
+                                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                                showCompletion("",false,CodeCompletionType::FunctionWithoutDefinition);
+                                handled=true;
+                                return;
+                            }
 
-                        //last word is a type keyword, this is a var or param define, and dont show suggestion
-                        return;
+                            //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
+                            return;
+                        }
                     }
-                    PStatement statement = mParser->findStatementOf(
-                                mFilename,
-                                lastWord,
-                                caretY());
-                    StatementKind kind = getKindOfStatement(statement);
-                    if (kind == StatementKind::skClass
-                            || kind == StatementKind::skEnumClassType
-                            || kind == StatementKind::skEnumType
-                            || kind == StatementKind::skTypedef) {
-
+                    lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(caretXY());
+                    if (mParser && !lastWord.isEmpty()) {
                         PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
                         while(currentScope && currentScope->kind==StatementKind::skBlock) {
                             currentScope = currentScope->parentScope.lock();
@@ -902,53 +923,38 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             handled=true;
                             return;
                         }
-
-                        //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
-                        return;
                     }
+                    processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                    showCompletion("",false,CodeCompletionType::Normal);
+                    handled=true;
+                    return;
                 }
-                lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(caretXY());
-                if (mParser && !lastWord.isEmpty()) {
-                    PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
-                    while(currentScope && currentScope->kind==StatementKind::skBlock) {
-                        currentScope = currentScope->parentScope.lock();
-                    }
-                    if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
-                        //may define a function
-                        processCommand(QSynedit::EditCommand::Char,ch,nullptr);
-                        showCompletion("",false,CodeCompletionType::FunctionWithoutDefinition);
-                        handled=true;
-                        return;
-                    }
-                }
-                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
-                showCompletion("",false,CodeCompletionType::Normal);
-                handled=true;
-                return;
+            } else if (syntaxer()) {
+                //show keywords
+                showCompletion("",false,CodeCompletionType::KeywordsOnly);
             }
         }
     } else {
-        //preprocessor ?
-        if (mParser && (mLastIdCharPressed=0) && (ch=='#') && lineText().isEmpty()) {
-            if (pSettings->codeCompletion().enabled()
-                    && pSettings->codeCompletion().showCompletionWhileInput() ) {
-                mLastIdCharPressed++;
-                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
-                showCompletion("",false,CodeCompletionType::Normal);
-                handled=true;
-                return;
-            }
-        }
-        //javadoc directive?
-        if  (mParser && (mLastIdCharPressed=0) && (ch=='#') &&
-              lineText().trimmed().startsWith('*')) {
-            if (pSettings->codeCompletion().enabled()
-                    && pSettings->codeCompletion().showCompletionWhileInput() ) {
-                mLastIdCharPressed++;
-                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
-                showCompletion("",false,CodeCompletionType::Normal);
-                handled=true;
-                return;
+        if (pSettings->codeCompletion().enabled()
+                && pSettings->codeCompletion().showCompletionWhileInput() ) {
+            if (mParser) {
+                //preprocessor ?
+                if ((mLastIdCharPressed==0) && (ch=='#') && lineText().isEmpty()) {
+                    mLastIdCharPressed++;
+                    processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                    showCompletion("",false,CodeCompletionType::Normal);
+                    handled=true;
+                    return;
+                }
+                //javadoc directive?
+                if  ((mLastIdCharPressed==0) && (ch=='@') &&
+                      lineText().trimmed().startsWith('*')) {
+                    mLastIdCharPressed++;
+                    processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                    showCompletion("",false,CodeCompletionType::Normal);
+                    handled=true;
+                    return;
+                }
             }
         }
         mLastIdCharPressed = 0;
@@ -3183,11 +3189,16 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     }
     if (!pSettings->codeCompletion().enabled())
         return;
-    if (!mParser || !mParser->enabled())
-        return;
+    if (type==CodeCompletionType::KeywordsOnly) {
+        if (!syntaxer())
+            return;
+    } else {
+        if (!mParser || !mParser->enabled())
+            return;
 
-    if (!syntaxer())
-        return;
+        if (!syntaxer())
+            return;
+    }
 
     if (mCompletionPopup->isVisible()) // already in search, don't do it again
         return;
@@ -3229,12 +3240,16 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     mCompletionPopup->setRecordUsage(pSettings->codeCompletion().recordUsage());
     mCompletionPopup->setSortByScope(pSettings->codeCompletion().sortByScope());
     mCompletionPopup->setShowKeywords(pSettings->codeCompletion().showKeywords());
-    mCompletionPopup->setShowCodeSnippets(pSettings->codeCompletion().showCodeIns());
+    if (type!=CodeCompletionType::Normal)
+        mCompletionPopup->setShowCodeSnippets(false);
+    else {
+        mCompletionPopup->setShowCodeSnippets(pSettings->codeCompletion().showCodeIns());
+        if (pSettings->codeCompletion().showCodeIns()) {
+            mCompletionPopup->setCodeSnippets(pMainWindow->codeSnippetManager()->snippets());
+        }
+    }
     mCompletionPopup->setHideSymbolsStartWithUnderline(pSettings->codeCompletion().hideSymbolsStartsWithUnderLine());
     mCompletionPopup->setHideSymbolsStartWithTwoUnderline(pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine());
-    if (pSettings->codeCompletion().showCodeIns()) {
-        mCompletionPopup->setCodeSnippets(pMainWindow->codeSnippetManager()->snippets());
-    }
     mCompletionPopup->setIgnoreCase(pSettings->codeCompletion().ignoreCase());
     mCompletionPopup->resize(pSettings->codeCompletion().width(),
                              pSettings->codeCompletion().height());
@@ -3249,18 +3264,30 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
         return onCompletionKeyPressed(event);
     });
     mCompletionPopup->setParser(mParser);
+    if (mParser) {
+        mCompletionPopup->setCurrentScope(
+                    mParser->findScopeStatement(mFilename, caretY())
+                    );
+    }
     pMainWindow->functionTip()->hide();
     mCompletionPopup->show();
 
     // Scan the current function body
-    mCompletionPopup->setCurrentScope(
-                mParser->findScopeStatement(mFilename, caretY())
-                );
 
     QSet<QString> keywords;
     if (syntaxer()) {
         if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP ) {
-            keywords = syntaxer()->keywords();
+            if (syntaxer()->language()==QSynedit::ProgrammingLanguage::Assembly) {
+                keywords = QSynedit::ASMSyntaxer::Directives;
+                foreach(const QString& keyword, QSynedit::ASMSyntaxer::Registers) {
+                    keywords.insert(keyword);
+                }
+                foreach(const QString& keyword, QSynedit::ASMSyntaxer::Instructions) {
+                    keywords.insert(keyword);
+                }
+            } else {
+                keywords = syntaxer()->keywords();
+            }
         } else {
             if (mUseCppSyntax) {
                 foreach (const QString& keyword, CppKeywords.keys()) {
@@ -4289,15 +4316,17 @@ void Editor::setProject(Project *pProject)
         return;
     mProject = pProject;
     if (mProject) {
-        mParser = mProject->cppParser();
-        if (isVisible()) {
-            if (mParser && mParser->parsing()) {
-                connect(mParser.get(),
-                        &CppParser::onEndParsing,
-                        this,
-                        &QSynedit::QSynEdit::invalidate);
-            } else {
-                invalidate();
+        if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
+            mParser = mProject->cppParser();
+            if (isVisible()) {
+                if (mParser && mParser->parsing()) {
+                    connect(mParser.get(),
+                            &CppParser::onEndParsing,
+                            this,
+                            &QSynedit::QSynEdit::invalidate);
+                } else {
+                    invalidate();
+                }
             }
         }
     } else {

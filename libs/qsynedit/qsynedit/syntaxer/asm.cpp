@@ -37,7 +37,7 @@ const QSet<QString> ASMSyntaxer::Registers {
     "r15h","r15l","r15w","r15d"
 };
 
-const QSet<QString> ASMSyntaxer::Keywords {
+const QSet<QString> ASMSyntaxer::Instructions {
     "movb","movw","movl","movq",
     "leab","leaw","leal","leaq",
     "incb","incw","incl","incq",
@@ -76,7 +76,7 @@ const QSet<QString> ASMSyntaxer::Keywords {
     "ja","jae","jb","jbe","jc","jcxz","je","jecxz","jg","jge","jl","jle","jmp","jna","jnae","jnb","jnbe","jnc",
     "jne","jng","jnge","jnl","jnle","jno","jnp","jns","jnz","jo","jp","jpe","jpo","js","jz","lahf","lar","lds",
     "lea","leave","les","lfs","lgdt","lgs","lidt","lldt","lmsw","lock","lods","lodsb","lodsd","lodsw",
-    "loop","loope","loopne","loopnz","loopz","lsl","lss","ltr","mov","movd","movq"," movs","movsb",
+    "loop","loope","loopne","loopnz","loopz","lsl","lss","ltr","mov","movd","movq","movs","movsb",
     "movsd","movsw","movsx","movzx","mul","neg","nop","not","or","out","outs","outsb","outsd","outsw",
     "packssdw","packsswb","packuswb","paddb","paddd","paddsb","paddsw","paddusb","paddusw",
     "paddw","pand","pandn","pavgusb","pcmpeqb","pcmpeqd","pcmpeqw","pcmpgtb","pcmpgtd","pcmpgtw",
@@ -91,7 +91,13 @@ const QSet<QString> ASMSyntaxer::Keywords {
     "setna","setnae","setnb","setnbe","setnc","setne","setng","setnge","setnl","setnle","setno",
     "setnp","setns","setnz","seto","setp","setpo","sets","setz","sgdt","shl","shld","shr","shrd","sidt",
     "sldt","smsw","stc","std","sti","stos","stosb","stosd","stosw","str","sub","test","verr","verw",
-    "wait","wbinvd","xadd","xchg","xlat","xlatb","xor"
+    "wait","wbinvd","xadd","xchg","xlat","xlatb","xor",
+};
+
+const QSet<QString> ASMSyntaxer::Directives {
+    "section","global","extern","segment",
+    "db","dw","dd","dq","dt","do","dy","dz",
+    "resb","resw","resd","resq","rest","reso","resy","resz",
 };
 
 
@@ -160,10 +166,12 @@ void ASMSyntaxer::IdentProc(IdentPrefix prefix)
             mTokenID = TokenId::Directive;
         break;
     default:
-        if (Keywords.contains(s))
+        if (Instructions.contains(s))
             mTokenID = TokenId::Instruction;
         else if (Registers.contains(s))
             mTokenID = TokenId::Register;
+        else if (Directives.contains(s))
+            mTokenID = TokenId::Directive;
         else if (mLine[mRun]==':')
             mTokenID = TokenId::Label;
         else
@@ -460,7 +468,10 @@ void ASMSyntaxer::resetState()
 
 QSet<QString> ASMSyntaxer::keywords() const
 {
-    return Keywords;
+    QSet<QString> result=Instructions;
+    result.unite(Directives);
+    result.unite(Registers);
+    return result;
 }
 
 const PTokenAttribute &ASMSyntaxer::directiveAttribute() const
