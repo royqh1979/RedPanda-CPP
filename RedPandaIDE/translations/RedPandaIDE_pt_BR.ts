@@ -755,6 +755,14 @@
         <source>Locate gprof</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Assembler</source>
+        <translation type="unfinished">Assembler</translation>
+    </message>
+    <message>
+        <source>Locate nasm</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CppRefacter</name>
@@ -769,6 +777,14 @@
     <message>
         <source>New symbol already exists!</source>
         <translation>Novo símbolo já existente!</translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Abort</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -5412,6 +5428,10 @@
     <message>
         <source>Resource</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Assembler</source>
+        <translation type="unfinished">Assembler</translation>
     </message>
 </context>
 <context>

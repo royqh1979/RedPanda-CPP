@@ -1035,6 +1035,8 @@ bool Project::saveAsTemplate(const QString &templateFolder,
         ini->SetValue("Project", "Linker",mOptions.linkerCmd.toUtf8());
     if (!mOptions.resourceCmd.isEmpty())
         ini->SetValue("Project", "ResourceCommand",mOptions.resourceCmd.toUtf8());
+    if (!mOptions.assemblerArgs.isEmpty())
+        ini->SetValue("Project", "AssemblerArgs",mOptions.assemblerArgs.toUtf8());
     ini->SetBoolValue("Project", "IsCpp", mOptions.isCpp);
     if (mOptions.includeVersionInfo)
         ini->SetBoolValue("Project", "IncludeVersionInfo", true);
@@ -1133,6 +1135,7 @@ void Project::saveOptions()
     ini.SetValue("Project","PrivateResource", toByteArray(mOptions.privateResource));
     ini.SetValue("Project","Compiler", toByteArray(mOptions.compilerCmd));
     ini.SetValue("Project","CppCompiler", toByteArray(mOptions.cppCompilerCmd));
+    ini.SetValue("Project","AssemblerArgs",toByteArray(mOptions.assemblerArgs));
     ini.SetValue("Project","Linker", toByteArray(mOptions.linkerCmd));
     ini.SetValue("Project", "ResourceCommand", toByteArray(mOptions.resourceCmd));
     ini.SetLongValue("Project","IsCpp", mOptions.isCpp);
@@ -1940,6 +1943,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", ""));
         mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", ""));
         mOptions.resourceCmd = fromByteArray(ini.GetValue("Project", "ResourceCommand", ""));
+        mOptions.assemblerArgs = fromByteArray(ini.GetValue("Project","AssemblerArgs",""));
         mOptions.binDirs = absolutePaths(fromByteArray(ini.GetValue("Project", "Bins", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts

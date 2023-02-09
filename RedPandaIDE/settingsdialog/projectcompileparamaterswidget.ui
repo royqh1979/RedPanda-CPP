@@ -52,7 +52,7 @@
    <item>
     <widget class="QTabWidget" name="tabCommands">
      <property name="currentIndex">
-      <number>2</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tabCCompiler">
       <attribute name="title">
@@ -178,6 +178,28 @@
        </property>
        <item>
         <widget class="QPlainTextEdit" name="txtResource"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabAssembler">
+      <attribute name="title">
+       <string>Assembler</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <property name="leftMargin">
+        <number>5</number>
+       </property>
+       <property name="topMargin">
+        <number>5</number>
+       </property>
+       <property name="rightMargin">
+        <number>5</number>
+       </property>
+       <property name="bottomMargin">
+        <number>5</number>
+       </property>
+       <item>
+        <widget class="QTextEdit" name="txtAssembler"/>
        </item>
       </layout>
      </widget>

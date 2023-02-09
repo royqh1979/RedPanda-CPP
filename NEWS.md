@@ -14,6 +14,7 @@ Red Panda C++ Version 2.11
   - fix: Correctly handle custom obj folder in the generated makefile.
   - enhancement: Support compile asm files using nasm in the project.
   - fix: Project parser should not parse non-c/cpp files.
+  - enhancement: Add "assembler" tab in the project options dialog's custom compiler parameters.
 
 Red Panda C++ Version 2.10
 

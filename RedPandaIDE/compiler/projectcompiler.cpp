@@ -289,11 +289,11 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     if (compilerSet()->canAssemble() &&
             Settings::CompilerSets::isTarget64Bit(compilerSet()->target())) {
         if (mProject->getCompileOption(CC_CMD_OPT_POINTER_SIZE)=="32")
-            writeln(file,"ASMFLAGS      = -f win32");
+            writeln(file,"ASMFLAGS      = -f win32 " + mProject->options().assemblerArgs);
         else
-            writeln(file,"ASMFLAGS      = -f win64");
+            writeln(file,"ASMFLAGS      = -f win64 " + mProject->options().assemblerArgs);
     } else {
-        writeln(file,"ASMFLAGS      = -f win32");
+        writeln(file,"ASMFLAGS      = -f win32 " + mProject->options().assemblerArgs);
     }
 #elif defined(Q_OS_LINUX)
     writeln(file,"ASMFLAGS      = -f elf64");
@@ -496,7 +496,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 }
             } else if (fileType==FileType::ASM) {
                 if (!mOnlyCheckSyntax) {
-                    writeln(file, "\t$(ASM) $(ASMFLAGS) " + genMakePath1(shortFileName) + " -o " + objFileName2);
+                    writeln(file, "\t$(ASM) " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(ASMFLAGS) ");
                 }
             }
         }
