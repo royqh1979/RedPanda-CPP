@@ -13,6 +13,7 @@ Red Panda C++ Version 2.11
   - fix: Correctly handle files whose name contains spaces in the generated makefile.
   - fix: Correctly handle custom obj folder in the generated makefile.
   - enhancement: Support compile asm files using nasm in the project.
+  - fix: Project parser should not parse non-c/cpp files.
 
 Red Panda C++ Version 2.10
 
