@@ -15,6 +15,7 @@ Red Panda C++ Version 2.11
   - enhancement: Support compile asm files using nasm in the project.
   - fix: Project parser should not parse non-c/cpp files.
   - enhancement: Add "assembler" tab in the project options dialog's custom compiler parameters.
+  - enhancement: Auto find nasm when detecting new compiler sets/adding gcc compiler sets.
   - fix: preprocessors is not correctly suggested.
   - fix: javadoc-style docstring is not correctly suggested
   - enhancement: Better syntax color for asm files.
