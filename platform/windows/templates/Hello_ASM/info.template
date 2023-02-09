@@ -1,0 +1,22 @@
+[Template]
+Ver = 3
+Name = Hello ASM
+Category = Assembly
+Description = A simple asm program
+Name[zh_CN] = ASM你好
+Category[zh_CN] = 汇编
+Description[zh_CN] = 简单的汇编程序示例
+Icon = app.ico
+
+
+[Project]
+Type = 1
+IsCpp = true
+Encoding = UTF-8
+ClassBrowserType = 0
+UnitCount = 1
+
+
+[Unit0]
+Source = main.asm
+Target = main.asm
