@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.12
+
+  - fix: Can't correctly load project's custom compile options, if it contains more than one line contents.
+
 Red Panda C++ Version 2.11
 
   - fix: Can't correctly handle definitions for "operator,"
