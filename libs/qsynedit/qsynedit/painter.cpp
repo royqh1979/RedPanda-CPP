@@ -195,10 +195,10 @@ void QSynEditPainter::paintGutter(const QRect& clip)
                               rcFold.top() + rcFold.height() / 2);
         }
         // Any fold ranges beginning on this line?
-        PCodeFoldingRange FoldRange = edit->foldStartAtLine(vLine);
-        if (FoldRange) {
+        PCodeFoldingRange foldRange = edit->foldStartAtLine(vLine);
+        if (foldRange) {
             // Draw the bottom part of a line
-            if (!FoldRange->collapsed) {
+            if (!foldRange->collapsed) {
                 x = rcFold.left() + (rcFold.width() / 2);
                 painter->drawLine(x, rcFold.top() + rcFold.height() / 2,
                                   x, rcFold.bottom());
@@ -220,7 +220,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
                         rcFold.left() + 2, rcFold.top() + (rcFold.height() / 2 ),
                         rcFold.right() - 2, rcFold.top() + (rcFold.height() / 2 ));
             // Paint vertical line of plus sign
-            if (FoldRange->collapsed) {
+            if (foldRange->collapsed) {
                 x = rcFold.left() + (rcFold.width() / 2);
                 painter->drawLine(x, rcFold.top() + 2,
                                   x, rcFold.bottom() - 2);
@@ -1047,7 +1047,7 @@ void QSynEditPainter::paintLines()
             // Paint folding
             foldRange = edit->foldStartAtLine(vLine);
             if ((foldRange) && foldRange->collapsed) {
-                sFold = edit->syntaxer()->foldString();
+                sFold = edit->syntaxer()->foldString("");
                 nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
                 attr = edit->mSyntaxer->symbolAttribute();
                 getBraceColorAttr(edit->mSyntaxer->getState().braceLevel,attr);

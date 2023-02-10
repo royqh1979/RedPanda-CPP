@@ -373,7 +373,8 @@ void CppSyntaxer::braceCloseProc()
     mTokenId = TokenId::Symbol;
     if (mRange.state == RangeState::rsAsmBlock) {
         mRange.state = rsUnknown;
-    }
+    } else if (mRange.state == RangeState::rsDefineRemaining)
+        return;
 
     mRange.braceLevel -= 1;
     mRange.blockLevel -= 1;
@@ -396,7 +397,9 @@ void CppSyntaxer::braceOpenProc()
     if (mRange.state == RangeState::rsAsm) {
         mRange.state = RangeState::rsAsmBlock;
         mAsmStart = true;
-    }
+    } else if (mRange.state == RangeState::rsDefineRemaining)
+        return;
+
     mRange.braceLevel += 1;
     mRange.blockLevel += 1;
     mRange.blockStarted++;
@@ -451,8 +454,25 @@ void CppSyntaxer::directiveProc()
     }
     if (directive == "define") {
         mRange.state = RangeState::rsDefineIdentifier;
-    } else
+    } else {
         mRange.state = RangeState::rsUnknown;
+        if (directive=="if"
+                ||  directive=="ifdef"
+                ||  directive=="ifndef"
+                ) {
+            mRange.blockLevel++;
+            mRange.blockStarted=1;
+        } else if (directive=="else"
+                   ||  directive=="elif"
+                   ||  directive=="elifdef"
+                   ||  directive=="elifndef") {
+            mRange.blockStarted=1;
+            mRange.blockEnded=1;
+        } else if (directive=="endif") {
+            mRange.blockLevel--;
+            mRange.blockEnded=1;
+        }
+    }
 }
 
 void CppSyntaxer::defineIdentProc()
@@ -1638,8 +1658,10 @@ QSet<QString> CppSyntaxer::keywords() const
     return set;
 }
 
-QString CppSyntaxer::foldString()
+QString CppSyntaxer::foldString(QString endLine)
 {
+    if (endLine.trimmed().startsWith("#"))
+        return "...";
     return "...}";
 }
 

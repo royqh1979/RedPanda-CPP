@@ -349,7 +349,7 @@ int QSynEdit::maxScrollWidth() const
 {
     int maxLen = mDocument->lengthOfLongestLine();
     if (syntaxer())
-        maxLen = maxLen+stringColumns(syntaxer()->foldString(),maxLen);
+        maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
     if (mOptions.testFlag(eoScrollPastEol))
         return std::max(maxLen ,1);
     else
@@ -1921,7 +1921,7 @@ QString QSynEdit::getDisplayStringAtLine(int line) const
     QString s = mDocument->getLine(line-1);
     PCodeFoldingRange foldRange = foldStartAtLine(line);
     if ((foldRange) && foldRange->collapsed) {
-        return s+syntaxer()->foldString();
+        return s+syntaxer()->foldString("");
     }
     return s;
 }
@@ -2332,7 +2332,7 @@ void QSynEdit::insertLine(bool moveCaret)
     if (mCaretX>lineText().length()+1) {
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
-            QString s = Temp+syntaxer()->foldString();
+            QString s = Temp+syntaxer()->foldString("");
             if (mCaretX > s.length()) {
                 if (!mUndoing) {
                     addCaretToUndo();
@@ -3575,7 +3575,10 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
             for (int i=0; i<mDocument->blockEnded(line);i++) {
                 // Stop the recursion if we find a closing char, and return to our parent
                 if (parent) {
-                    parent->toLine = line + 1;
+                    if (mDocument->blockStarted(line)>0)
+                        parent->toLine = line;
+                    else
+                        parent->toLine = line + 1;
                     parent = parent->parent.lock();
                     if (!parent) {
                         parentFoldRanges = topFoldRanges;
@@ -4547,7 +4550,7 @@ QString QSynEdit::selText() const
             PCodeFoldingRange foldRange = foldStartAtLine(blockEnd().line);
             QString s = mDocument->getLine(Last);
             if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
-                s=s+syntaxer()->foldString();
+                s=s+syntaxer()->foldString("");
                 if (ColTo>s.length()) {
                     Last = foldRange->toLine-1;
                     ColTo = mDocument->getLine(Last).length()+1;
@@ -4626,7 +4629,7 @@ QStringList QSynEdit::getContent(BufferCoord startPos, BufferCoord endPos, Selec
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(Last);
         if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
-            s=s+syntaxer()->foldString();
+            s=s+syntaxer()->foldString("");
             if (ColTo>s.length()) {
                 Last = foldRange->toLine-1;
                 ColTo = mDocument->getLine(Last).length()+1;
@@ -4701,7 +4704,7 @@ QString QSynEdit::displayLineText()
         QString s= mDocument->getLine(mCaretY - 1);
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
-            return s+syntaxer()->foldString();
+            return s+syntaxer()->foldString("");
         }
         return s;
     }
@@ -5293,7 +5296,7 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(endPos.line-1);
         if ((foldRange) && foldRange->collapsed && endPos.ch>s.length()) {
-            QString newS=s+syntaxer()->foldString();
+            QString newS=s+syntaxer()->foldString("");
             if ((startPos.ch<=s.length() || startPos.line<endPos.line)
                     && endPos.ch>newS.length() ) {
                 //selection has whole block
@@ -6690,7 +6693,7 @@ void QSynEdit::setBlockEnd(BufferCoord value)
     } else {
         int maxLen = mDocument->lengthOfLongestLine();
         if (syntaxer())
-            maxLen = maxLen+stringColumns(syntaxer()->foldString(),maxLen);
+            maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }
     if (value.ch != mBlockEnd.ch || value.line != mBlockEnd.line) {
@@ -6798,7 +6801,7 @@ void QSynEdit::setBlockBegin(BufferCoord value)
     } else {
         int maxLen = mDocument->lengthOfLongestLine();
         if (syntaxer())
-            maxLen = maxLen+stringColumns(syntaxer()->foldString(),maxLen);
+            maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }
     if (selAvail()) {

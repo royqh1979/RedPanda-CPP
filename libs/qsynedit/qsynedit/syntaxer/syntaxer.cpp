@@ -98,7 +98,7 @@ QSet<QString> Syntaxer::keywords() const
     return QSet<QString>();
 }
 
-QString Syntaxer::foldString()
+QString Syntaxer::foldString(QString startLine)
 {
     return " ... }";
 }

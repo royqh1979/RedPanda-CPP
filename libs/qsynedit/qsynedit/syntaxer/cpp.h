@@ -201,7 +201,7 @@ public:
 
     // SynHighlighter interface
 public:
-    QString foldString() override;
+    QString foldString(QString startLine) override;
     const QSet<QString> &customTypeKeywords() const;
     void setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords);
 

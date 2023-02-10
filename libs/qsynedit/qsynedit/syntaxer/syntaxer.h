@@ -173,7 +173,7 @@ public:
     virtual QString languageName() = 0;
     virtual ProgrammingLanguage language() = 0;
 
-    virtual QString foldString();
+    virtual QString foldString(QString startLine);
 
     virtual bool supportBraceLevel();
     virtual bool isSpaceChar(const QChar& ch);

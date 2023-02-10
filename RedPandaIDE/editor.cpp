@@ -4797,6 +4797,7 @@ void Editor::checkSyntaxInBack()
     pMainWindow->checkSyntaxInBack(this);
 }
 
+
 const PCppParser &Editor::parser() const
 {
     return mParser;
