@@ -120,7 +120,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
 
     if (mProject) {
-        if (syntaxer->language() == QSynedit::ProgrammingLanguage::CPP)
+        if (syntaxer && syntaxer->language() == QSynedit::ProgrammingLanguage::CPP)
             mParser = mProject->cppParser();
     } else {
         initParser();
@@ -4316,7 +4316,7 @@ void Editor::setProject(Project *pProject)
         return;
     mProject = pProject;
     if (mProject) {
-        if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
+        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             mParser = mProject->cppParser();
             if (isVisible()) {
                 if (mParser && mParser->parsing()) {

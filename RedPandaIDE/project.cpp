@@ -948,6 +948,17 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                             cleanPath(dir.absoluteFilePath(templateUnit->Source)),
                             includeTrailingPathDelimiter(this->directory())+target);
                 unit = newUnit(mRootNode, target);
+
+                FileType fileType=getFileType(unit->fileName());
+                if (fileType==FileType::ASM
+                        || isCFile(unit->fileName()) || isHFile(unit->fileName())) {
+                    Editor * editor = mEditorList->newEditor(
+                                unit->fileName(),
+                                unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
+                                this,
+                                false);
+                    editor->activate();
+                }
             } else {
                 QString s;
                 PProjectUnit unit;

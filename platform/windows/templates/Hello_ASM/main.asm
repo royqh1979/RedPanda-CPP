@@ -8,15 +8,13 @@ fmt:    db "%s", 10, 0          ; The printf format, "\n",'0'
 
 section .text:
 main:
-	push rbp		; align our stack at entry
-	mov rbp, rsp	; use RBP as frame reference
-	sub rsp, 32		; our 16-byte aligned local storage area
-	
-	mov rcx, fmt
-	mov rdx, msg
+; the x64 calling convention requires you to allocate 32 bytes of shadow space before each call
+; https://stackoverflow.com/questions/30190132/what-is-the-shadow-space-in-x64-assembly/
+	sub rsp, 32		; allocate shadow space for call
+	mov rcx, fmt	; first parameter 
+	mov rdx, msg	; secodng parameter
 	call printf
 	
+	add rsp,32	; remove shadow space
 	mov eax,0		; exit code	
-	add rsp,32		; restore stack
-	pop rbp			; restore stack
 	ret

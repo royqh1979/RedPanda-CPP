@@ -1,6 +1,7 @@
 Red Panda C++ Version 2.12
 
   - fix: Can't correctly load project's custom compile options, if it contains more than one line contents.
+  - fix: Crash when create or open txt files in project.
 
 Red Panda C++ Version 2.11
 
@@ -23,6 +24,9 @@ Red Panda C++ Version 2.11
   - fix: preprocessors is not correctly suggested.
   - fix: javadoc-style docstring is not correctly suggested
   - enhancement: Better syntax color for asm files.
+  - enhancement: Add nasm.exe in the gcc distributed with RedPanda-CPP
+  - enhancement: Add assembly templates 
+
 
 Red Panda C++ Version 2.10
 
