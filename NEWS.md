@@ -4,6 +4,7 @@ Red Panda C++ Version 2.12
   - fix: Crash when create or open txt files in project.
   - enhancement: Code folding for #if/#endif
   - enhancement: When folding "if", don't fold "else";
+  - fix: Confirm if recompile, when start to debug and project files has modifications.
 
 Red Panda C++ Version 2.11
 

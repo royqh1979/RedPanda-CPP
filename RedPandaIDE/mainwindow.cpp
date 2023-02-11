@@ -2131,6 +2131,7 @@ void MainWindow::debug()
             }
             return;
         }
+
         // Did we compile?
         if (!fileExists(mProject->executable())) {
             if (QMessageBox::question(
@@ -2161,6 +2162,25 @@ void MainWindow::debug()
             mCompileSuccessionTask->binDirs = binDirs;
             compile();
             return;
+        }
+        {
+            QFileInfo execInfo(mProject->executable());
+            QDateTime execModTime = execInfo.lastModified();
+            if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)  &&
+                    QMessageBox::question(
+                        this,
+                        tr("Rebuild Project"),
+                        tr("Project has been modified, do you want to rebuild it?")
+                                                          ) == QMessageBox::Yes) {
+                //mProject->saveAll();
+                mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+                mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+                mCompileSuccessionTask->execName=mProject->executable();
+                mCompileSuccessionTask->isExecutable=true;
+                mCompileSuccessionTask->binDirs=binDirs;
+                compile();
+                return;
+            }
         }
         // Did we choose a host application for our DLL?
         if (mProject->options().type == ProjectType::DynamicLib) {
