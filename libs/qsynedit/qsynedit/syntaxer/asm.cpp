@@ -98,6 +98,7 @@ const QSet<QString> ASMSyntaxer::Directives {
     "section","global","extern","segment",
     "db","dw","dd","dq","dt","do","dy","dz",
     "resb","resw","resd","resq","rest","reso","resy","resz",
+    "equ","times","word","dword","byte","tword"
 };
 
 

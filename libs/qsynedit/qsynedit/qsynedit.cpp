@@ -1620,13 +1620,17 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
             SyntaxState rangeAfterFirstToken = mSyntaxer->getState();
             QString firstToken = mSyntaxer->getToken();
             PTokenAttribute attr = mSyntaxer->getTokenAttribute();
-            if (attr->tokenType() == TokenType::Keyword
+            if (
+                    ( (attr->tokenType() == TokenType::Keyword
+                         && (
+                         firstToken == "public" || firstToken == "private"
+                         || firstToken == "protected" || firstToken == "case"
+                         || firstToken == "default"
+                         )
+                      )
+                      || (attr->tokenType() == TokenType::Identifier))
                                   &&  lineText.endsWith(':')
-                                  && (
-                                  firstToken == "public" || firstToken == "private"
-                                  || firstToken == "protected" || firstToken == "case"
-                                  || firstToken == "default"
-                        )) {
+                        ) {
                 // public: private: protecte: case: should indents like it's parent statement
                 mSyntaxer->setState(rangePreceeding);
                 mSyntaxer->setLine("}",line-1);
