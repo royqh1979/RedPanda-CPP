@@ -1,11 +1,11 @@
 [Template]
 Ver = 3
-Name = C and ASM
+Name = GAS & C
 Category = Assembly
-Description = C and ASM mixing programming demo
-Name[zh_CN] = C汇编混合
+Description = C and GAS mixing programming demo
+Name[zh_CN] = GAS与C
 Category[zh_CN] = 汇编
-Description[zh_CN] = C和汇编混合编程示例
+Description[zh_CN] = C和GAS汇编混合编程示例
 Icon = app.ico
 
 
@@ -18,8 +18,8 @@ UnitCount = 2
 
 
 [Unit0]
-Source = utils.asm
-Target = utils.asm
+Source = utils.s
+Target = utils.s
 
 
 [Unit1]

@@ -1,11 +1,11 @@
 [Template]
 Ver = 3
-Name = Hello ASM
+Name = Hello GAS
 Category = Assembly
-Description = A simple asm program
-Name[zh_CN] = ASM你好
+Description = A simple GNU as program
+Name[zh_CN] = GAS你好
 Category[zh_CN] = 汇编
-Description[zh_CN] = 简单的汇编程序示例
+Description[zh_CN] = 简单的GNU汇编程序示例
 Icon = app.ico
 
 
@@ -18,5 +18,5 @@ UnitCount = 1
 
 
 [Unit0]
-Source = main.asm
-Target = main.asm
+Source = main.s
+Target = main.s
