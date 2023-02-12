@@ -40,6 +40,8 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage l
         return std::make_shared<QSynedit::CppSyntaxer>();
     case QSynedit::ProgrammingLanguage::Assembly:
         return std::make_shared<QSynedit::ASMSyntaxer>();
+    case QSynedit::ProgrammingLanguage::ATTAssembly:
+        return std::make_shared<QSynedit::ASMSyntaxer>(true);
     case QSynedit::ProgrammingLanguage::Makefile:
         return std::make_shared<QSynedit::MakefileSyntaxer>();
     case QSynedit::ProgrammingLanguage::GLSL:
@@ -62,8 +64,10 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename)
         return getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
         return getSyntaxer(QSynedit::ProgrammingLanguage::GLSL);
-    } else if (suffix == "s" || suffix == "asm") {
+    } else if (suffix == "asm") {
         return getSyntaxer(QSynedit::ProgrammingLanguage::Assembly);
+    } else if (suffix == "s" || suffix == "S") {
+        return getSyntaxer(QSynedit::ProgrammingLanguage::ATTAssembly);
     } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
         return getSyntaxer(QSynedit::ProgrammingLanguage::Makefile);
     } else if (suffix.isEmpty()) {

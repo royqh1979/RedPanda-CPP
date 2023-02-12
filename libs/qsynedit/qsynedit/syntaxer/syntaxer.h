@@ -95,6 +95,7 @@ enum class ProgrammingLanguage {
     DecideBySuffix,
     Composition,
     Assembly,
+    ATTAssembly,
     CPP,
     GLSL,
     Makefile,

@@ -95,7 +95,8 @@ public:
         wpHeaderCompletionStart, // walk backwards over path, including start '<' or '"'
         wpDirective, // preprocessor
         wpJavadoc, //javadoc
-        wpInformation // walk backwards over words, array, functions, parents, forwards over words
+        wpInformation, // walk backwards over words, array, functions, parents, forwards over words
+        wpATTASMKeywords,
     };
 
     enum class TipType {

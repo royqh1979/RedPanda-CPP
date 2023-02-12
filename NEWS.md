@@ -9,7 +9,7 @@ Red Panda C++ Version 2.12
   - enhancement: Generate debug info for nasm files in Linux/MacOS.
   - enhancement: Compile/Run/Debug GAS source files.
   - enhancement: Compile/Debug GAS source files in project.
-
+  - enhancement: Keyword completion for asm/GAS files.
 
 Red Panda C++ Version 2.11
 

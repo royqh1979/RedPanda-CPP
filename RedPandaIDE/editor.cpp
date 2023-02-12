@@ -931,13 +931,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 }
             } else if (syntaxer()) {
                 //show keywords
+                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                 showCompletion("",false,CodeCompletionType::KeywordsOnly);
+                handled=true;
+                return;
             }
         }
     } else {
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
-            if (mParser) {
+            if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
                 //preprocessor ?
                 if ((mLastIdCharPressed==0) && (ch=='#') && lineText().isEmpty()) {
                     mLastIdCharPressed++;
@@ -952,6 +955,21 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     mLastIdCharPressed++;
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::Normal);
+                    handled=true;
+                    return;
+                }
+            } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+                if ((mLastIdCharPressed==0) && (ch=='.')) {
+                    mLastIdCharPressed++;
+                    processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                    showCompletion("",false,CodeCompletionType::KeywordsOnly);
+                    handled=true;
+                    return;
+                }
+                if ((mLastIdCharPressed==0) && (ch=='%')) {
+                    mLastIdCharPressed++;
+                    processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                    showCompletion("",false,CodeCompletionType::KeywordsOnly);
                     handled=true;
                     return;
                 }
@@ -3223,6 +3241,12 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                     return;
             }
         } else if (
+                   (attr->tokenType() == QSynedit::TokenType::String) &&
+                   (attr->tokenType() != QSynedit::TokenType::Character)) {
+            return;
+        } else if (type==CodeCompletionType::KeywordsOnly && syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+            word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
+        } else if (
                    (attr->tokenType() != QSynedit::TokenType::Operator) &&
                    (attr->tokenType() != QSynedit::TokenType::Space) &&
                    (attr->tokenType() != QSynedit::TokenType::Keyword) &&
@@ -3273,21 +3297,18 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     mCompletionPopup->show();
 
     // Scan the current function body
-
     QSet<QString> keywords;
     if (syntaxer()) {
         if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP ) {
-            if (syntaxer()->language()==QSynedit::ProgrammingLanguage::Assembly) {
-                keywords = QSynedit::ASMSyntaxer::Directives;
-                foreach(const QString& keyword, QSynedit::ASMSyntaxer::Registers) {
-                    keywords.insert(keyword);
-                }
-                foreach(const QString& keyword, QSynedit::ASMSyntaxer::Instructions) {
-                    keywords.insert(keyword);
-                }
-            } else {
+            if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+                if (word.startsWith("."))
+                    keywords = QSynedit::ASMSyntaxer::ATTDirectives;
+                else if (word.startsWith("%"))
+                    keywords = QSynedit::ASMSyntaxer::ATTRegisters;
+                else
+                    keywords = QSynedit::ASMSyntaxer::Instructions;
+            } else
                 keywords = syntaxer()->keywords();
-            }
         } else {
             if (mUseCppSyntax) {
                 foreach (const QString& keyword, CppKeywords.keys()) {
@@ -3508,6 +3529,11 @@ void Editor::completionInsert(bool appendFunc)
 // delete the part of the word that's already been typed ...
     QSynedit::BufferCoord p = wordEnd();
     QSynedit::BufferCoord pStart = wordStart();
+    if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+        if (statement->command.startsWith(".")
+                || statement->command.startsWith("#"))
+            pStart.ch--;
+    }
     setCaretAndSelection(pStart,pStart,p);
 
     // if we are inserting a function,
@@ -3612,7 +3638,9 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
         return false;
     QString oldPhrase = mCompletionPopup->memberPhrase();
     WordPurpose purpose = WordPurpose::wpCompletion;
-    if (oldPhrase.startsWith('#')) {
+    if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+        purpose = WordPurpose::wpATTASMKeywords;
+    } else if (oldPhrase.startsWith('#')) {
         purpose = WordPurpose::wpDirective;
     } else if (oldPhrase.startsWith('@')) {
         purpose = WordPurpose::wpJavadoc;
@@ -4426,6 +4454,23 @@ QString getWordAtPosition(QSynedit::QSynEdit *editor, const QSynedit::BufferCoor
                 wordEnd++;
             } else
                 break;
+        }
+    }
+
+
+    // Copy backward until % .
+    if (purpose == Editor::WordPurpose::wpATTASMKeywords) {
+        while ((wordBegin >= 0) && (wordBegin < len)) {
+           if (editor->isIdentChar(s[wordBegin]))
+               wordBegin--;
+           else if (s[wordBegin] == '%') {
+               wordBegin--;
+               break;
+           } else if (s[wordBegin] == '.') {
+                   wordBegin--;
+                   break;
+           } else
+               break;
         }
     }
 

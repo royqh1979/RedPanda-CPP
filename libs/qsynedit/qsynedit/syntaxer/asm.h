@@ -44,7 +44,7 @@ class ASMSyntaxer : public Syntaxer
     };
 
 public:
-    explicit ASMSyntaxer();
+    explicit ASMSyntaxer(bool isATT=false);
     ASMSyntaxer(const ASMSyntaxer&)=delete;
     ASMSyntaxer& operator=(const ASMSyntaxer&)=delete;
 
@@ -55,7 +55,9 @@ public:
 
     static const QSet<QString> Instructions;
     static const QSet<QString> Registers;
+    static const QSet<QString> ATTRegisters;
     static const QSet<QString> Directives;
+    static const QSet<QString> ATTDirectives;
 private:
     QChar* mLine;
     QString mLineString;
@@ -70,6 +72,7 @@ private:
     PTokenAttribute mDirectiveAttribute;
     PTokenAttribute mRegisterAttribute;
     PTokenAttribute mLabelAttribute;
+    bool mATT;
 
 private:
     void CommentProc();
@@ -113,6 +116,8 @@ public:
 public:
     QSet<QString> keywords() const override;
 
+    bool isATT() const;
+    void setATT(bool newATT);
 };
 
 }

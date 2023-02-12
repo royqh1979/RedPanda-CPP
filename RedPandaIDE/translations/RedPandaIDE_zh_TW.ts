@@ -6148,6 +6148,14 @@
         <source>Do you really want to remove &quot;%1&quot;?</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>GAS files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ASM files</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>
