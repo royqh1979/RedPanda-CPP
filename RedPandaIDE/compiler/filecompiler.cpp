@@ -18,6 +18,7 @@
 #include "utils.h"
 #include "../mainwindow.h"
 #include "compilermanager.h"
+#include "qsynedit/syntaxer/asm.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -125,6 +126,39 @@ bool FileCompiler::prepareForCompile()
 
     if (!mOnlyCheckSyntax)
         mArguments += getLibraryArguments(fileType);
+
+    if (fileType==FileType::GAS) {
+        bool hasStart=false;
+        QStringList lines=readFileToLines(mFilename);
+        QSynedit::ASMSyntaxer syntaxer;
+        syntaxer.resetState();
+        QString lastToken;
+        QString token;
+        QSynedit::PTokenAttribute attr;
+        for (int i=0;i<lines.count();i++) {
+            QString line=lines[i];
+            syntaxer.setLine(line,i+1);
+            lastToken="";
+            while(!syntaxer.eol()) {
+                token=syntaxer.getToken();
+                if (token==":" && lastToken=="_start") {
+                    hasStart=true;
+                    break;
+                }
+                attr = syntaxer.getTokenAttribute();
+                if (attr->tokenType() != QSynedit::TokenType::Space
+                        && attr->tokenType()!=QSynedit::TokenType::String
+                        && attr->tokenType()!=QSynedit::TokenType::Character)
+                    lastToken=token;
+                syntaxer.next();
+            }
+            if (hasStart)
+                break;
+        }
+        if (hasStart) {
+            mArguments+=" -nostdlib";
+        }
+    }
 
     if (!fileExists(mCompiler)) {
         throw CompileError(
