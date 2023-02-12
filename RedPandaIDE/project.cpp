@@ -951,6 +951,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
 
                 FileType fileType=getFileType(unit->fileName());
                 if (fileType==FileType::ASM
+                        || fileType==FileType::GAS
                         || isCFile(unit->fileName()) || isHFile(unit->fileName())) {
                     Editor * editor = mEditorList->newEditor(
                                 unit->fileName(),
@@ -1277,6 +1278,11 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
 
   // Determine compilation flags
     switch(getFileType(inFileName)) {
+    case FileType::GAS:
+        newUnit->setCompile(true);
+        newUnit->setCompileCpp(false);
+        newUnit->setLink(true);
+        break;
     case FileType::ASM:
         newUnit->setCompile(true);
         newUnit->setCompileCpp(false);

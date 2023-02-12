@@ -5,6 +5,11 @@ Red Panda C++ Version 2.12
   - enhancement: Code folding for #if/#endif
   - enhancement: When folding "if", don't fold "else";
   - fix: Confirm if recompile, when start to debug and project files has modifications.
+  - fix: Crash when debug project that has nasm files.
+  - enhancement: Generate debug info for nasm files in Linux/MacOS.
+  - enhancement: Compile/Run/Debug GAS source files.
+  - enhancement: Compile/Debug GAS source files in project.
+
 
 Red Panda C++ Version 2.11
 

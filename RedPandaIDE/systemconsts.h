@@ -84,6 +84,7 @@
 #define RES_EXT "res"
 #define H_EXT "h"
 #define OBJ_EXT "o"
+#define LST_EXT "lst"
 #define DEF_EXT "def"
 #define LIB_EXT "a"
 #define GCH_EXT "gch"

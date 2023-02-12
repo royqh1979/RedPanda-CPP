@@ -98,6 +98,13 @@ bool FileCompiler::prepareForCompile()
     mArguments += getCharsetArgument(mEncoding, fileType, mOnlyCheckSyntax);
     QString strFileType;
     switch(fileType) {
+    case FileType::GAS:
+        mArguments += getCCompileArguments(mOnlyCheckSyntax);
+        mArguments += getCIncludeArguments();
+        mArguments += getProjectIncludeArguments();
+        strFileType = "GNU Assembler";
+        mCompiler = compilerSet()->CCompiler();
+        break;
     case FileType::CSource:
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();

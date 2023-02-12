@@ -1611,12 +1611,6 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
             QString trimmedLineText = lineText.trimmed();
             mSyntaxer->setState(rangePreceeding);
             mSyntaxer->setLine(trimmedLineText,line-1);
-            int statePrePre;
-            if (startLine>1) {
-                statePrePre = mDocument->getSyntaxState(startLine-2).state;
-            } else {
-                statePrePre = 0;
-            }
             SyntaxState rangeAfterFirstToken = mSyntaxer->getState();
             QString firstToken = mSyntaxer->getToken();
             PTokenAttribute attr = mSyntaxer->getTokenAttribute();

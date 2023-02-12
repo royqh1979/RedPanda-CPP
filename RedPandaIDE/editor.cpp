@@ -3859,6 +3859,8 @@ QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/
 
 void Editor::showDebugHint(const QString &s, int line)
 {
+    if (!mParser)
+        return;
     PStatement statement = mParser->findStatementOf(mFilename,s,line);
     if (statement) {
         if (statement->kind != StatementKind::skVariable

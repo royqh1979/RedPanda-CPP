@@ -696,6 +696,9 @@ void MainWindow::updateCompileActions(const Editor *e)
                     canGenerateAssembly = true;
                     canCompile = true;
                     canRun = true;
+                } else if (fileType == FileType::GAS) {
+                    canCompile = true;
+                    canRun = true;
                 }
             } else {
                  forProject = (mProject!=nullptr);

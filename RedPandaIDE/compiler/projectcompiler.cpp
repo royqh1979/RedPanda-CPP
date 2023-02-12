@@ -160,7 +160,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
             continue;
 
         if (fileType == FileType::CSource || fileType == FileType::CppSource
-                || fileType == FileType::ASM) {
+                || fileType == FileType::ASM || fileType==FileType::GAS) {
             if (!mProject->options().objectOutput.isEmpty()) {
                 // ofile = C:\MyProgram\obj\main.o
                 QString fullObjFile = includeTrailingPathDelimiter(mProject->options().objectOutput)
@@ -285,21 +285,28 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 #ifdef Q_OS_WIN
     writeln(file,"WINDRESFLAGS  = " + mProject->options().resourceCmd);
 #endif
+    if (compilerSet()->canAssemble()) {
+        QString asmFlags;
 #ifdef Q_OS_WIN
-    if (compilerSet()->canAssemble() &&
-            Settings::CompilerSets::isTarget64Bit(compilerSet()->target())) {
-        if (mProject->getCompileOption(CC_CMD_OPT_POINTER_SIZE)=="32")
-            writeln(file,"ASMFLAGS      = -f win32 " + mProject->options().assemblerArgs);
-        else
-            writeln(file,"ASMFLAGS      = -f win64 " + mProject->options().assemblerArgs);
-    } else {
-        writeln(file,"ASMFLAGS      = -f win32 " + mProject->options().assemblerArgs);
-    }
+        if (Settings::CompilerSets::isTarget64Bit(compilerSet()->target())) {
+            if (mProject->getCompileOption(CC_CMD_OPT_POINTER_SIZE)=="32")
+                asmFlags = "-f win32 " + mProject->options().assemblerArgs;
+            else
+                asmFlags = "-f win64 " + mProject->options().assemblerArgs;
+        } else {
+            asmFlags = "-f win32 " + mProject->options().assemblerArgs;
+        }
 #elif defined(Q_OS_LINUX)
-    writeln(file,"ASMFLAGS      = -f elf64");
+        asmFlags = "-f elf64";
+        if (mProject->getCompileOption(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON)
+            asmFlags += " -g ";
 #elif defined(Q_OS_MACOS)
-    writeln(file,"ASMFLAGS      = -f macho64");
+        asmFlags = "-f macho64";
+        if (mProject->getCompileOption(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON)
+            asmFlags += " -g ";
 #endif
+        writeln(file,"ASMFLAGS      = " + asmFlags);
+    }
 
     // This needs to be put in before the clean command.
     if (mProject->options().type == ProjectType::DynamicLib) {
@@ -379,7 +386,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         FileType fileType = getFileType(unit->fileName());
         // Only process source files
         if (fileType!=FileType::CSource && fileType!=FileType::CppSource
-                && fileType!=FileType::ASM)
+                && fileType!=FileType::ASM
+                && fileType!=FileType::GAS)
             continue;
 
         QString shortFileName = extractRelativePath(mProject->makeFileName(),unit->fileName());
@@ -493,6 +501,10 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                         writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CXXFLAGS) " + encodingStr);
                     else
                         writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
+                }
+            } else if (fileType==FileType::GAS) {
+                if (!mOnlyCheckSyntax) {
+                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
                 }
             } else if (fileType==FileType::ASM) {
                 if (!mOnlyCheckSyntax) {
