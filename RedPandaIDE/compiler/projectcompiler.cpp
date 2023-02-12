@@ -298,12 +298,8 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
         }
 #elif defined(Q_OS_LINUX)
         asmFlags = "-f elf64";
-        if (mProject->getCompileOption(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON)
-            asmFlags += " -g ";
 #elif defined(Q_OS_MACOS)
         asmFlags = "-f macho64";
-        if (mProject->getCompileOption(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON)
-            asmFlags += " -g ";
 #endif
         writeln(file,"ASMFLAGS      = " + asmFlags);
     }
