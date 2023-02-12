@@ -10,6 +10,7 @@ Red Panda C++ Version 2.12
   - enhancement: Compile/Run/Debug GAS source files.
   - enhancement: Compile/Debug GAS source files in project.
   - enhancement: Keyword completion for asm/GAS files.
+  - enhancement: If GAS source file has "_start" label, compile it with "-nostartfiles".
 
 Red Panda C++ Version 2.11
 

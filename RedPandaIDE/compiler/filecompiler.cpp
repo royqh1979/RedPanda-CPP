@@ -156,7 +156,7 @@ bool FileCompiler::prepareForCompile()
                 break;
         }
         if (hasStart) {
-            mArguments+=" -nostdlib";
+            mArguments+=" -nostartfiles";
         }
     }
 
