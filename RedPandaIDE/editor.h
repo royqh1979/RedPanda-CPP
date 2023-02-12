@@ -292,6 +292,7 @@ private:
         QSynedit::PTokenAttribute &attr);
     void onScrollBarValueChanged();
 private:
+    bool mInited;
     QDateTime mBackupTime;
     QFile* mBackupFile;
     QByteArray mEncodingOption; // the encoding type set by the user

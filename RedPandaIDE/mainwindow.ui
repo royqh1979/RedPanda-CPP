@@ -2063,7 +2063,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>New File</string>
+    <string>New C/C++ File</string>
    </property>
    <property name="toolTip">
     <string>New Source File</string>
@@ -3325,6 +3325,11 @@
    </property>
    <property name="shortcut">
     <string>F1</string>
+   </property>
+  </action>
+  <action name="actionNew_GAS_File">
+   <property name="text">
+    <string>New GAS File</string>
    </property>
   </action>
  </widget>

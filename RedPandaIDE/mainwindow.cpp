@@ -216,6 +216,7 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew = new QMenu();
     mMenuNew->setTitle(tr("New"));
     mMenuNew->addAction(ui->actionNew);
+    mMenuNew->addAction(ui->actionNew_GAS_File);
     mMenuNew->addAction(ui->actionNew_Project);
     mMenuNew->addSeparator();
     mMenuNew->addAction(ui->actionNew_Template);
@@ -3031,7 +3032,7 @@ void MainWindow::onBookmarkContextMenu(const QPoint &pos)
     menu.exec(ui->tableBookmark->mapToGlobal(pos));
 }
 
-void MainWindow::saveLastOpens()
+bool MainWindow::saveLastOpens()
 {
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_LASTOPENS_FILE;
     QFile file(filename);
@@ -3042,7 +3043,7 @@ void MainWindow::saveLastOpens()
                               tr("Can't open last open information file '%1' for write!")
                               .arg(filename),
                               QMessageBox::Ok);
-        return;
+        return true;
     }
     QJsonObject rootObj;
     if (mProject) {
@@ -3052,6 +3053,25 @@ void MainWindow::saveLastOpens()
     for (int i=0;i<mEditorList->pageCount();i++) {
       Editor * editor = (*mEditorList)[i];
       QJsonObject fileObj;
+      if (editor->isNew()) {
+          if (!editor->modified())
+              continue;
+          QMessageBox::StandardButton reply;
+          reply = QMessageBox::question(editor,QObject::tr("Save"),
+                                        QString(QObject::tr("Save changes to %1?")).arg(editor->filename()),
+                                        QMessageBox::Yes|QMessageBox::No|QMessageBox::Yes|QMessageBox::Cancel);
+          if (reply == QMessageBox::No) {
+              editor->setModified(false);
+              continue;
+          } else if (reply == QMessageBox::Yes) {
+              if (!editor->save(false,false)) {
+                  return false;
+              }
+          } else {
+              return false;
+          }
+      }
+
       fileObj["filename"] = editor->filename();
       fileObj["onLeft"] = (editor->pageControl() != mEditorList->rightPageWidget());
       fileObj["focused"] = editor->hasFocus();
@@ -3071,9 +3091,10 @@ void MainWindow::saveLastOpens()
                               tr("Can't save last open info file '%1'")
                               .arg(filename),
                               QMessageBox::Ok);
-        return;
+        return true;
     }
     file.close();
+    return true;
 }
 
 void MainWindow::loadLastOpens()
@@ -3223,10 +3244,18 @@ void MainWindow::updateTools()
     }
 }
 
-void MainWindow::newEditor()
+void MainWindow::newEditor(const QString& suffix)
 {
     try {
-        Editor * editor=mEditorList->newEditor("",
+        QString filename=QString("untitled%1").arg(getNewFileNumber());
+        if (suffix.isEmpty()) {
+            if (pSettings->editor().defaultFileCpp())
+                filename+=".cpp";
+            else
+                filename+=".c";
+        } else
+            filename+= "." + suffix;
+        Editor * editor=mEditorList->newEditor(filename,
                                                pSettings->editor().defaultEncoding(),
                                                nullptr,true);
         editor->activate();
@@ -5198,7 +5227,10 @@ void MainWindow::on_actionNew_triggered()
                                   tr("New Project File?"),
                                   tr("Do you want to add the new file to the project?"),
                                   QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-            newProjectUnitFile();
+            if (mProject->options().isCpp)
+                newProjectUnitFile("cpp");
+            else
+                newProjectUnitFile("c");
             return;
         }
     }
@@ -5313,7 +5345,12 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 
     if (!mShouldRemoveAllSettings && pSettings->editor().autoLoadLastFiles()) {
-        saveLastOpens();
+        if (!saveLastOpens()) { //canceled
+            mClosingAll=false;
+            mQuitting = false;
+            event->ignore();
+            return ;
+        }
     } /*else {
         //if don't save last open files, close project before editors, to save project openned editors;
 
@@ -7062,7 +7099,7 @@ void MainWindow::prepareTabMessagesData()
     }
 }
 
-void MainWindow::newProjectUnitFile()
+void MainWindow::newProjectUnitFile(const QString& suffix)
 {
     if (!mProject)
         return;
@@ -7092,24 +7129,28 @@ void MainWindow::newProjectUnitFile()
              modelTypeNode = mProject->rootNode();
         }
         NewProjectUnitDialog newProjectUnitDialog;
-        if (modelTypeNode == mProject->rootNode()) {
-            if (mProject->options().isCpp)
-                newProjectUnitDialog.setSuffix("cpp");
-            else
-                newProjectUnitDialog.setSuffix("c");
+        if (!suffix.isEmpty()) {
+            newProjectUnitDialog.setSuffix(suffix);
         } else {
-            switch (modelTypeNode->folderNodeType) {
-            case ProjectModelNodeType::DUMMY_HEADERS_FOLDER:
-                newProjectUnitDialog.setSuffix("h");
-                break;
-            case ProjectModelNodeType::DUMMY_SOURCES_FOLDER:
+            if (modelTypeNode == mProject->rootNode()) {
                 if (mProject->options().isCpp)
                     newProjectUnitDialog.setSuffix("cpp");
                 else
                     newProjectUnitDialog.setSuffix("c");
-                break;
-            default:
-                newProjectUnitDialog.setSuffix("txt");
+            } else {
+                switch (modelTypeNode->folderNodeType) {
+                case ProjectModelNodeType::DUMMY_HEADERS_FOLDER:
+                    newProjectUnitDialog.setSuffix("h");
+                    break;
+                case ProjectModelNodeType::DUMMY_SOURCES_FOLDER:
+                    if (mProject->options().isCpp)
+                        newProjectUnitDialog.setSuffix("cpp");
+                    else
+                        newProjectUnitDialog.setSuffix("c");
+                    break;
+                default:
+                    newProjectUnitDialog.setSuffix("txt");
+                }
             }
         }
         QString folder = mProject->fileSystemNodeFolderPath(pNode);
@@ -7124,10 +7165,14 @@ void MainWindow::newProjectUnitFile()
     } else {
         do {
             newFileName = QString("untitled")+QString("%1").arg(getNewFileNumber());
-            if (mProject->options().isCpp)
-                newFileName += ".cpp";
-            else
-                newFileName += ".c";
+            if (!suffix.isEmpty()) {
+                newFileName += "." + suffix;
+            } else {
+                if (mProject->options().isCpp)
+                    newFileName += ".cpp";
+                else
+                    newFileName += ".c";
+            }
         } while (QDir(mProject->directory()).exists(newFileName));
         newFileName = QInputDialog::getText(
                     this,
@@ -9434,5 +9479,20 @@ void MainWindow::on_actionSubmit_Issues_triggered()
 void MainWindow::on_actionDocument_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/docsy/docs/"));
+}
+
+
+void MainWindow::on_actionNew_GAS_File_triggered()
+{
+    if (mProject) {
+        if (QMessageBox::question(this,
+                                  tr("New Project File?"),
+                                  tr("Do you want to add the new file to the project?"),
+                                  QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+            newProjectUnitFile("s");
+            return;
+        }
+    }
+    newEditor("s");
 }
 

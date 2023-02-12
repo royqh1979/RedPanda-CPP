@@ -107,6 +107,27 @@ const QString &SystemConsts::defaultAllFileFilter() const noexcept
     return mDefaultFileFilters[0];
 }
 
+QString SystemConsts::fileFilterFor(const QString &suffix)
+{
+    QString t="*."+suffix;
+    qDebug()<<" * "<<t;
+    foreach(const QString filter,mDefaultFileFilters) {
+        qDebug()<<filter;
+        int pos = filter.lastIndexOf("(");
+        int pos2 = filter.lastIndexOf(")");
+        if (pos<0 || pos2<=pos)
+            continue;
+        QString suffixes=filter.mid(pos+1,pos2-pos-1);
+        QStringList suffixList = suffixes.split(" ");
+        foreach( const QString& s, suffixList) {
+            qDebug()<<" - "<<s;
+            if (s.trimmed()==t)
+                return filter;
+        }
+    }
+    return "";
+}
+
 void SystemConsts::addDefaultFileFilter(const QString &name, const QString &fileExtensions)
 {
     addFileFilter(mDefaultFileFilters,name,fileExtensions);

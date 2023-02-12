@@ -160,13 +160,13 @@ public:
     void updateClassBrowserForEditor(Editor* editor);
     void resetAutoSaveTimer();
     void updateShortcuts();
-    void saveLastOpens();
+    bool saveLastOpens();
     void loadLastOpens();
     void updateTools();
 
     void openFiles(const QStringList& files);
 
-    void newEditor();
+    void newEditor(const QString& suffix="");
 
     QPlainTextEdit* txtLocals();
 
@@ -299,7 +299,7 @@ private:
     void showHideMessagesTab(QWidget *widget, bool show);
     void prepareTabInfosData();
     void prepareTabMessagesData();
-    void newProjectUnitFile();
+    void newProjectUnitFile(const QString& suffix="");
     void fillProblemCaseInputAndExpected(const POJProblemCase &problemCase);
 
     void doFilesViewRemoveFile(const QModelIndex& index);
@@ -774,6 +774,8 @@ private slots:
     void on_actionSubmit_Issues_triggered();
 
     void on_actionDocument_triggered();
+
+    void on_actionNew_GAS_File_triggered();
 
 private:
     Ui::MainWindow *ui;

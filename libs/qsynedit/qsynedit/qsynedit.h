@@ -425,6 +425,8 @@ public:
     const QColor &backgroundColor() const;
     void setBackgroundColor(const QColor &newBackgroundColor);
 
+    bool isEmpty();
+
 signals:
     void linesDeleted(int FirstLine, int Count);
     void linesInserted(int FirstLine, int Count);

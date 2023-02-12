@@ -4789,6 +4789,14 @@
         <source>Document</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>New C/C++ File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New GAS File</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

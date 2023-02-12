@@ -3910,6 +3910,15 @@ void QSynEdit::setBackgroundColor(const QColor &newBackgroundColor)
     mBackgroundColor = newBackgroundColor;
 }
 
+bool QSynEdit::isEmpty()
+{
+    if (mDocument->count()>1)
+        return false;
+    if (mDocument->count()==1)
+        return mDocument->getLine(0).isEmpty();
+    return true;
+}
+
 const QColor &QSynEdit::foregroundColor() const
 {
     return mForegroundColor;

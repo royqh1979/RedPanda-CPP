@@ -67,8 +67,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
                   Project* pProject, bool isNew,
                   QTabWidget* parentPageControl):
   QSynEdit(parent),
+  mInited(false),
   mEncodingOption(encoding),
-  mFilename(QFileInfo(filename).absoluteFilePath()),
+  mFilename(filename),
   mParentPageControl(parentPageControl),
   mProject(pProject),
   mIsNew(isNew),
@@ -85,6 +86,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mSaving(false),
   mHoverModifiedLine(-1)
 {
+    mInited=false;
     mBackupFile=nullptr;
     mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
     mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
@@ -107,10 +109,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
                                   tr("Error Load File"),
                                   e.reason());
         }
-        syntaxer = syntaxerManager.getSyntaxer(mFilename);
-    } else {
-        syntaxer=syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     }
+    syntaxer = syntaxerManager.getSyntaxer(mFilename);
     resolveAutoDetectEncodingOption();
     if (syntaxer) {
         setSyntaxer(syntaxer);
@@ -166,7 +166,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
             pMainWindow, &MainWindow::onEditorContextMenu);
 
     mCanAutoSave = false;
-    if (isNew && parentPageControl!=nullptr) {
+    if (isNew && parentPageControl!=nullptr ) {
         QString fileTemplate = pMainWindow->codeSnippetManager()->newFileTemplate();
         if (!fileTemplate.isEmpty()) {
             insertCodeSnippet(fileTemplate);
@@ -201,6 +201,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
             this, &Editor::onScrollBarValueChanged);
     connect(verticalScrollBar(), &QScrollBar::valueChanged,
             this, &Editor::onScrollBarValueChanged);
+    mInited=true;
 }
 
 Editor::~Editor() {
@@ -365,12 +366,18 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (name.isEmpty()) {
         QString selectedFileFilter;
         QString defaultExt;
-        if (pSettings->editor().defaultFileCpp()) {
-            selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
-            defaultExt = "cpp";
+        defaultExt=QFileInfo(oldName).suffix();
+        qDebug()<<defaultExt;
+        if (defaultExt.isEmpty()) {
+            if (pSettings->editor().defaultFileCpp()) {
+                selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
+                defaultExt = "cpp";
+            } else {
+                selectedFileFilter = pSystemConsts->defaultCFileFilter();
+                defaultExt = "c";
+            }
         } else {
-            selectedFileFilter = pSystemConsts->defaultCFileFilter();
-            defaultExt = "c";
+            selectedFileFilter = pSystemConsts->fileFilterFor(defaultExt);
         }
         QFileDialog dialog(this,tr("Save As"),extractFilePath(mFilename),
                            pSystemConsts->defaultFileFilters().join(";;"));
@@ -379,28 +386,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         dialog.selectFile(mFilename);
         dialog.setFileMode(QFileDialog::AnyFile);
         dialog.setAcceptMode(QFileDialog::AcceptSave);
-//        connect(&dialog, &QFileDialog::filterSelected,
-//                [&dialog](const QString &filter){
-//            if (filter.indexOf("*.*")) {
-//                dialog.setDefaultSuffix("");
-//                qDebug()<<"lllll";
-//                return;
-//            }
-//            int pos = filter.indexOf("*.");
-//            if (pos>=0) {
-//                QString suffix;
-//                pos+=2;
-//                while (pos<filter.length()) {
-//                    if (filter[pos] == ';' || filter[pos] ==' ' || filter[pos] == ')')
-//                        break;
-//                    suffix+=filter[pos];
-//                    pos++;
-//                }
-//                //dialog.setDefaultSuffix(suffix);
-//            } else {
-//                dialog.setDefaultSuffix("");
-//            }
-//        });
 
         if (dialog.exec()!=QFileDialog::Accepted) {
             return false;
@@ -2957,6 +2942,8 @@ Editor::QuoteStatus Editor::getQuoteStatus()
 
 void Editor::reparse(bool resetParser)
 {
+    if (!mInited)
+        return;
     if (!mParentPageControl)
         return;
     if (!pSettings->codeCompletion().enabled())

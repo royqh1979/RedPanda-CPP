@@ -11,6 +11,10 @@ Red Panda C++ Version 2.12
   - enhancement: Compile/Debug GAS source files in project.
   - enhancement: Keyword completion for asm/GAS files.
   - enhancement: If GAS source file has "_start" label, compile it with "-nostartfiles".
+  - fix: New non-saved filenames is wrongly saved in the last openfiles list.
+  - fix: File is parsed before editor is fully created.
+  - enhancement: New GAS File in the File Menu
+  - change: rename "New File" to "New C/C++ File"    
 
 Red Panda C++ Version 2.11
 

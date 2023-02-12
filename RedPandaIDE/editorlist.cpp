@@ -395,14 +395,11 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename)
 {
     if (filename.isEmpty())
         return nullptr;
-    QFileInfo fileInfo(filename);
-    QString fullname = fileInfo.absoluteFilePath();
     for (int i=0;i<mLeftPageWidget->count();i++) {
         Editor* e = static_cast<Editor*>(mLeftPageWidget->widget(i));
         if (!e)
             continue;
-        if (e->filename().compare(filename, PATH_SENSITIVITY)==0 ||
-                e->filename().compare(fullname, PATH_SENSITIVITY)==0) {
+        if (e->filename().compare(filename, PATH_SENSITIVITY)==0) {
             return e;
         }
     }
@@ -410,7 +407,7 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename)
         Editor* e = static_cast<Editor*>(mRightPageWidget->widget(i));
         if (!e)
             continue;
-        if (e->filename().compare(filename)==0 || e->filename().compare(fullname)==0) {
+        if (e->filename().compare(filename)==0) {
             return e;
         }
     }
