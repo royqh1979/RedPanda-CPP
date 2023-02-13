@@ -98,6 +98,7 @@ protected:
     QString mDirectory;
     bool mRebuild;
     std::shared_ptr<Project> mProject;
+    bool mSetLANG;
 
 private:
     bool mStop;
