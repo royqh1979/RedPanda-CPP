@@ -16,6 +16,7 @@ Red Panda C++ Version 2.12
   - enhancement: New GAS File in the File Menu
   - change: rename "New File" to "New C/C++ File"    
   - change: The default disassemble style of CPU Dialog is "AT&T" now.
+  - fix: Can't compile files with chinese characters in filenames using winlibs mingw gcc
 
 Red Panda C++ Version 2.11
 

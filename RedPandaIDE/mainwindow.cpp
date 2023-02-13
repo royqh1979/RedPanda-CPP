@@ -3021,16 +3021,6 @@ void MainWindow::onBookmarkContextMenu(const QPoint &pos)
 bool MainWindow::saveLastOpens()
 {
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_LASTOPENS_FILE;
-    QFile file(filename);
-
-    if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
-        QMessageBox::critical(this,
-                              tr("Save last open info error"),
-                              tr("Can't open last open information file '%1' for write!")
-                              .arg(filename),
-                              QMessageBox::Ok);
-        return true;
-    }
     QJsonObject rootObj;
     if (mProject) {
         rootObj["lastProject"]=mProject->filename();
@@ -3071,6 +3061,16 @@ bool MainWindow::saveLastOpens()
     QJsonDocument doc;
     doc.setObject(rootObj);
     QByteArray json = doc.toJson();
+    QFile file(filename);
+
+    if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QMessageBox::critical(this,
+                              tr("Save last open info error"),
+                              tr("Can't open last open information file '%1' for write!")
+                              .arg(filename),
+                              QMessageBox::Ok);
+        return true;
+    }
     if (file.write(doc.toJson())!=json.count()) {
         QMessageBox::critical(this,
                               tr("Save last open info error"),

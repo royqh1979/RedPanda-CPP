@@ -55,9 +55,9 @@ void ProjectCompiler::createStandardMakeFile()
     file.write("$(BIN): $(OBJ)\n");
     if (!mOnlyCheckSyntax) {
         if (mProject->options().isCpp) {
-            writeln(file,"\t$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS)");
+            writeln(file,"\t$(CPP) $(LINKOBJ) -o \"$(BIN)\" $(LIBS)");
         } else
-            writeln(file,"\t$(CC) $(LINKOBJ) -o $(BIN) $(LIBS)");
+            writeln(file,"\t$(CC) $(LINKOBJ) -o \"$(BIN)\" $(LIBS)");
     }
     writeMakeObjFilesRules(file);
 }
@@ -81,9 +81,9 @@ void ProjectCompiler::createDynamicMakeFile()
     writeln(file,"$(BIN): $(LINKOBJ)");
     if (!mOnlyCheckSyntax) {
         if (mProject->options().isCpp) {
-            writeln(file, "\t$(CPP) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+            writeln(file, "\t$(CPP) -mdll $(LINKOBJ) -o \"$(BIN)\" $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
         } else {
-            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o \"$(BIN)\" $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
         }
     }
     writeMakeObjFilesRules(file);
@@ -494,17 +494,17 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                         writeln(file, "\t(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
                 } else {
                     if (unit->compileCpp())
-                        writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CXXFLAGS) " + encodingStr);
+                        writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o \"" + objFileName2 + "\" $(CXXFLAGS) " + encodingStr);
                     else
-                        writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
+                        writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o \"" + objFileName2 + "\" $(CFLAGS) " + encodingStr);
                 }
             } else if (fileType==FileType::GAS) {
                 if (!mOnlyCheckSyntax) {
-                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
+                    writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o \"" + objFileName2 + "\" $(CFLAGS) " + encodingStr);
                 }
             } else if (fileType==FileType::ASM) {
                 if (!mOnlyCheckSyntax) {
-                    writeln(file, "\t$(ASM) " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(ASMFLAGS) ");
+                    writeln(file, "\t$(ASM) " + genMakePath1(shortFileName) + " -o \"" + objFileName2 + "\" $(ASMFLAGS) ");
                 }
             }
         }
@@ -561,7 +561,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         } else {
             writeln(file);
             writeln(file, objFileName2 + ": " + privResName2 + ' ' + resFiles);
-            writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o " + objFileName + " -O coff $(WINDRESFLAGS)"
+            writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o \"" + objFileName + "\" -O coff $(WINDRESFLAGS)"
                 + ResIncludes);
         }
         writeln(file);
