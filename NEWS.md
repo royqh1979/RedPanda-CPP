@@ -15,6 +15,7 @@ Red Panda C++ Version 2.12
   - fix: File is parsed before editor is fully created.
   - enhancement: New GAS File in the File Menu
   - change: rename "New File" to "New C/C++ File"    
+  - change: The default disassemble style of CPU Dialog is "AT&T" now.
 
 Red Panda C++ Version 2.11
 

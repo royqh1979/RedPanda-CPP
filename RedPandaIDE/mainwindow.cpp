@@ -2044,7 +2044,7 @@ void MainWindow::runExecutable(RunType runType)
         QStringList binDirs = mProject->binDirs();
         QFileInfo execInfo(mProject->executable());
         QDateTime execModTime = execInfo.lastModified();
-        if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)  &&
+        if (execInfo.exists() && mProject->modifiedSince(execModTime)  &&
                 QMessageBox::question(
                     this,
                     tr("Rebuild Project"),
@@ -2153,24 +2153,10 @@ void MainWindow::debug()
             }
             return;
         }
-        if (mProject->modified()  &&
-                QMessageBox::question(
-                    this,
-                    tr("Rebuild Project"),
-                    tr("Project has been modified, do you want to rebuild it?")
-                                                      ) == QMessageBox::Yes) {
-            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-            mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-            mCompileSuccessionTask->execName = mProject->executable();
-            mCompileSuccessionTask->isExecutable = true;
-            mCompileSuccessionTask->binDirs = binDirs;
-            compile();
-            return;
-        }
         {
             QFileInfo execInfo(mProject->executable());
             QDateTime execModTime = execInfo.lastModified();
-            if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)  &&
+            if (execInfo.exists() && mProject->modifiedSince(execModTime)  &&
                     QMessageBox::question(
                         this,
                         tr("Rebuild Project"),

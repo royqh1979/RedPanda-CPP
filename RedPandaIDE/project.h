@@ -216,6 +216,7 @@ public:
     QString makeFileName();
     bool unitsModifiedSince(const QDateTime& time);
     bool modified() const;
+    bool modifiedSince(const QDateTime& time);
     void setFileName(QString value);
     void setModified(bool value);
 

@@ -3983,7 +3983,7 @@ void Settings::Debugger::doLoad()
 #endif
     mOnlyShowMono = boolValue("only_show_mono",true);
     mFontSize = intValue("font_size",14);
-    mUseIntelStyle = boolValue("use_intel_style",true);
+    mUseIntelStyle = boolValue("use_intel_style",false);
     mBlendMode = boolValue("blend_mode",true);
     mSkipSystemLibraries = boolValue("skip_system_lib",true);
     mSkipProjectLibraries = boolValue("skip_project_lib",true);
