@@ -518,8 +518,13 @@ void ASMSyntaxer::next()
     case '/':
         SlashProc();
         break;
-    case '#':
     case ';':
+        if (mATT) {
+            SymbolProc();
+        } else
+            CommentProc();
+        break;
+    case '#':
         CommentProc();
         break;
     case '.':

@@ -178,17 +178,6 @@ bool Project::unitsModifiedSince(const QDateTime& time)
 bool Project::modified() const
 {
     return mModified;
-    // Project file modified? Done
-//    if (mModified)
-//        return true;// quick exit avoids loop over all units
-
-//    // Otherwise, check all units
-//    foreach (const PProjectUnit& unit, mUnits){
-//        if (unit->modified()) {
-//            return true;
-//        }
-//    }
-    //    return false;
 }
 
 bool Project::modifiedSince(const QDateTime &time)
