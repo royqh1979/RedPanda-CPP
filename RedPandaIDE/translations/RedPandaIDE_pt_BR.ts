@@ -4102,7 +4102,7 @@
     </message>
     <message>
         <source>Confirm</source>
-        <translation>Confirmar</translation>
+        <translation type="vanished">Confirmar</translation>
     </message>
     <message>
         <source>Source file is not compiled.</source>
@@ -4118,15 +4118,15 @@
     </message>
     <message>
         <source>Recompile now?</source>
-        <translation>Recompilar agora?</translation>
+        <translation type="vanished">Recompilar agora?</translation>
     </message>
     <message>
         <source>Rebuild Project</source>
-        <translation>Remontar projeto</translation>
+        <translation type="vanished">Remontar projeto</translation>
     </message>
     <message>
         <source>Project has been modified, do you want to rebuild it?</source>
-        <translation>Projeto modificado, quer remontar?</translation>
+        <translation type="vanished">Projeto modificado, quer remontar?</translation>
     </message>
     <message>
         <source>No compiler set</source>
@@ -4150,11 +4150,11 @@
     </message>
     <message>
         <source>Project not built</source>
-        <translation>Projeto não remontado</translation>
+        <translation type="vanished">Projeto não remontado</translation>
     </message>
     <message>
         <source>Project hasn&apos;t been built. Build it now?</source>
-        <translation>Projeto não remontado. Remontar agora?</translation>
+        <translation type="vanished">Projeto não remontado. Remontar agora?</translation>
     </message>
     <message>
         <source>Host application missing</source>
@@ -4982,6 +4982,14 @@
     </message>
     <message>
         <source>New GAS File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to generate the executable.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check detail info in &quot;Tools Output&quot; panel.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

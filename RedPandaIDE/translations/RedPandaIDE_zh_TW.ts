@@ -3938,10 +3938,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Confirm</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Source file is not compiled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3951,18 +3947,6 @@
     </message>
     <message>
         <source>Source file is more recent than executable.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Recompile now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rebuild Project</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Project has been modified, do you want to rebuild it?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3979,14 +3963,6 @@
     </message>
     <message>
         <source>Enable debugging</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Project not built</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Project hasn&apos;t been built. Build it now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4795,6 +4771,14 @@
     </message>
     <message>
         <source>New GAS File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to generate the executable.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check detail info in &quot;Tools Output&quot; panel.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
