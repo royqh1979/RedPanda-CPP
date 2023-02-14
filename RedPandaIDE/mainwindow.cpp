@@ -1974,12 +1974,7 @@ void MainWindow::runExecutable(
     // Check if it exists
     if (!fileExists(exeName)) {
         if (ui->actionCompile_Run->isEnabled()) {
-            if (QMessageBox::question(this,tr("Confirm"),
-                                     tr("Source file is not compiled.")
-                                     +"<br /><br />"+tr("Compile now?"),
-                    QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-                doCompileRun(runType);
-            }
+            doCompileRun(runType);
             return;
         } else {
             QMessageBox::critical(this,"Error",
@@ -1988,18 +1983,8 @@ void MainWindow::runExecutable(
         }
     } else {
         if (!filename.isEmpty() && compareFileModifiedTime(filename,exeName)>=0) {
-//            if (ui->actionCompile_Run->isEnabled()) {
-            if (QMessageBox::warning(this,tr("Confirm"),
-                                     tr("Source file is more recent than executable.")
-                                     +"<br /><br />"+tr("Recompile now?"),
-                    QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-                doCompileRun(runType);
-                return;
-            }
-//            } else {
-//                QMessageBox::warning(this,"Error",
-//                                       tr("Source file is more recent than executable."));
-//            }
+            doCompileRun(runType);
+            return;
         }
     }
 
@@ -2044,12 +2029,7 @@ void MainWindow::runExecutable(RunType runType)
         QStringList binDirs = mProject->binDirs();
         QFileInfo execInfo(mProject->executable());
         QDateTime execModTime = execInfo.lastModified();
-        if (execInfo.exists() && mProject->modifiedSince(execModTime)  &&
-                QMessageBox::question(
-                    this,
-                    tr("Rebuild Project"),
-                    tr("Project has been modified, do you want to rebuild it?")
-                                                      ) == QMessageBox::Yes) {
+        if (execInfo.exists() && mProject->modifiedSince(execModTime)) {
             //mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
@@ -2138,30 +2118,18 @@ void MainWindow::debug()
 
         // Did we compile?
         if (!fileExists(mProject->executable())) {
-            if (QMessageBox::question(
-                        this,
-                        tr("Project not built"),
-                        tr("Project hasn't been built. Build it now?"),
-                        QMessageBox::Yes | QMessageBox::No,
-                        QMessageBox::Yes) == QMessageBox::Yes) {
-                mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-                mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-                mCompileSuccessionTask->execName = mProject->executable();
-                mCompileSuccessionTask->isExecutable = true;
-                mCompileSuccessionTask->binDirs = binDirs;
-                compile();
-            }
+            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+            mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+            mCompileSuccessionTask->execName = mProject->executable();
+            mCompileSuccessionTask->isExecutable = true;
+            mCompileSuccessionTask->binDirs = binDirs;
+            compile();
             return;
         }
         {
             QFileInfo execInfo(mProject->executable());
             QDateTime execModTime = execInfo.lastModified();
-            if (execInfo.exists() && mProject->modifiedSince(execModTime)  &&
-                    QMessageBox::question(
-                        this,
-                        tr("Rebuild Project"),
-                        tr("Project has been modified, do you want to rebuild it?")
-                                                          ) == QMessageBox::Yes) {
+            if (execInfo.exists() && mProject->modifiedSince(execModTime)) {
                 //mProject->saveAll();
                 mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                 mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
@@ -5592,35 +5560,41 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
     if (!isCheckSyntax) {
         //run succession task if there aren't any errors
         if (mCompileSuccessionTask && mCompilerManager->compileErrorCount()==0) {
+            if (!fileExists(mCompileSuccessionTask->execName)) {
+                QMessageBox::critical(this,tr("Compile Failed"),
+                                      tr("Failed to generate the executable.")+"<BR/><BR/>"
+                                      +tr("Please check detail info in \"Tools Output\" panel."));
+
+                return;
+            }
             if (!mCompileSuccessionTask->isExecutable) {
+                Editor * editor;
                 switch (mCompileSuccessionTask->type) {
                 case MainWindow::CompileSuccessionTaskType::RunNormal:
-                    if (fileExists(mCompileSuccessionTask->execName)) {
-                        Editor * editor = openFile(mCompileSuccessionTask->execName);
-                        if (e && editor) {
-                            int line = e->caretY();
-                            int startLine = 1;
-                            QString s = " # "+e->filename()+":";
-                            for(int i=0;i<editor->document()->count();i++) {
-                                QString t=editor->document()->getLine(i);
-                                if (t.startsWith(s,PATH_SENSITIVITY)) {
-                                    t=t.mid(s.length());
-                                    int pos = t.indexOf(":");
-                                    if (pos>0) {
-                                        QString numstring=t.mid(0,pos);
-                                        bool isOk;
-                                        int l=numstring.toInt(&isOk);
-                                        if (isOk) {
-                                            if (l<=line)
-                                                startLine=i+1;
-                                            if (l>=line)
-                                                break;
-                                        }
+                    editor = openFile(mCompileSuccessionTask->execName);
+                    if (e && editor) {
+                        int line = e->caretY();
+                        int startLine = 1;
+                        QString s = " # "+e->filename()+":";
+                        for(int i=0;i<editor->document()->count();i++) {
+                            QString t=editor->document()->getLine(i);
+                            if (t.startsWith(s,PATH_SENSITIVITY)) {
+                                t=t.mid(s.length());
+                                int pos = t.indexOf(":");
+                                if (pos>0) {
+                                    QString numstring=t.mid(0,pos);
+                                    bool isOk;
+                                    int l=numstring.toInt(&isOk);
+                                    if (isOk) {
+                                        if (l<=line)
+                                            startLine=i+1;
+                                        if (l>=line)
+                                            break;
                                     }
                                 }
                             }
-                            editor->setCaretPositionAndActivate(startLine,1);
                         }
+                        editor->setCaretPositionAndActivate(startLine,1);
                     }
                     break;
                 case MainWindow::CompileSuccessionTaskType::RunProblemCases:

@@ -80,6 +80,7 @@ win32: {
         QMAKE_SUBSTITUTES += platform/windows/installer-scripts/config-clang.nsh.in
 
         resources.path = $${PREFIX}
+
         resources.files += platform/windows/templates
         resources.files += platform/windows/installer-scripts/config.nsh
         resources.files += platform/windows/installer-scripts/config32.nsh
@@ -90,5 +91,11 @@ win32: {
         resources.files += RedPandaIDE/images/devcpp.ico
 
         INSTALLS += resources
+
+        equals(X86_64, "ON") {
+            extra_templates.path = $${PREFIX}/templates
+            extra_templates.files += platform/windows/templates-win64/*
+            INSTALLS += extra_templates
+        }
     }
 }

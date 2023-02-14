@@ -367,7 +367,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         QString selectedFileFilter;
         QString defaultExt;
         defaultExt=QFileInfo(oldName).suffix();
-        qDebug()<<defaultExt;
         if (defaultExt.isEmpty()) {
             if (pSettings->editor().defaultFileCpp()) {
                 selectedFileFilter = pSystemConsts->defaultCPPFileFilter();
@@ -4654,7 +4653,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
 
     QString s = document()->getLine(p.line - 1);
     int wordBegin;
-    int wordEnd = p.ch-1;
+    int wordEnd = p.ch-2;
     if (wordEnd >= s.length())
         wordEnd = s.length()-1;
     while (true) {

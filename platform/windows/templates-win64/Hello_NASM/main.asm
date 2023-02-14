@@ -11,8 +11,8 @@ main:
 ; the x64 calling convention requires you to allocate 32 bytes of shadow space before each call
 ; https://stackoverflow.com/questions/30190132/what-is-the-shadow-space-in-x64-assembly/
 	sub rsp, 32		; allocate shadow space
-	mov rcx, fmt	; first parameter 
-	mov rdx, msg	; secodng parameter
+	lea rcx, [rel fmt]	; first parameter 
+	lea rdx, [rel msg]	; secodng parameter
 	call printf
 	
 	add rsp,32	; remove shadow space

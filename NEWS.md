@@ -18,6 +18,8 @@ Red Panda C++ Version 2.12
   - change: The default disassemble style of CPU Dialog is "AT&T" now.
   - fix: Can't compile files with chinese characters in filenames using winlibs mingw gcc
   - fix: If current editor is empty, parser will parse the file's content on the disk instead from the editor.
+  - fix: Can't show completion when cursor is after "char["
+  - change: Don't confirm rebuild/recompile when run/debug.
 
 Red Panda C++ Version 2.11
 

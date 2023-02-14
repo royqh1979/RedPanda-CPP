@@ -5,10 +5,8 @@ main:
 	# the x64 calling convention requires you to allocate 32 bytes of shadow space before each call
 	# https://stackoverflow.com/questions/30190132/what-is-the-shadow-space-in-x64-assembly/
 	sub 	$32, %rsp           # allocate shadow space
-	leaq	fmt(%rip), %rax # first parameter 
-	movq 	%rax, %rcx
-	leaq	msg(%rip), %rax # second parameter
-	movq 	%rax, %rdx
+	leaq	fmt(%rip), %rcx # first parameter 
+	leaq	msg(%rip), %rdx # second parameter
 	call 	printf
 	add 	$32, %rsp           # remove shadow space
 

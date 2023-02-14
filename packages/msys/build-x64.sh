@@ -20,7 +20,7 @@ echo "Building..."
 pushd .
 cd "${BUILD_DIR}"
 make distclean
-"$QMAKE" PREFIX="${PACKAGE_DIR}" -o Makefile "${SOURCE_DIR}\Red_Panda_Cpp.pro" -r -spec win32-g++ 
+"$QMAKE" PREFIX="${PACKAGE_DIR}" X86_64=ON -o Makefile "${SOURCE_DIR}\Red_Panda_Cpp.pro" -r -spec win32-g++  
 make -j16
 make install
 popd
