@@ -202,6 +202,10 @@ Editor::Editor(QWidget *parent, const QString& filename,
     connect(verticalScrollBar(), &QScrollBar::valueChanged,
             this, &Editor::onScrollBarValueChanged);
     mInited=true;
+
+    reparse(false);
+    checkSyntaxInBack();
+    reparseTodo();
 }
 
 Editor::~Editor() {
@@ -324,10 +328,6 @@ bool Editor::save(bool force, bool doReparse) {
     if (this->mIsNew && !force) {
         return saveAs();
     }    
-//    while (pMainWindow->parsing()) {
-//        QThread::msleep(200);
-//    }
-    //is this file writable;
 
     pMainWindow->fileSystemWatcher()->removePath(mFilename);
     try {
@@ -2980,6 +2980,8 @@ void Editor::reparse(bool resetParser)
 
 void Editor::reparseTodo()
 {
+    if (!mInited)
+        return;
     if (!mParentPageControl)
         return;
     if (!syntaxer())
@@ -4820,6 +4822,8 @@ void Editor::reformat(bool doReparse)
 
 void Editor::checkSyntaxInBack()
 {
+    if (!mInited)
+        return;
     if (!mParentPageControl)
         return;
     if (readOnly())

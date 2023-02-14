@@ -1538,6 +1538,9 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
         QStringList buffer;
         if (mOnGetFileStream) {
             mOnGetFileStream(file,buffer);
+            //prevent preprocessor to read file
+            if (buffer.isEmpty())
+                buffer.append(QString());
         }
         //we only use local include relations
         mPreprocessor.setScanOptions(false, true);
@@ -3793,6 +3796,9 @@ void CppParser::internalParse(const QString &fileName)
     QStringList buffer;
     if (mOnGetFileStream) {
         mOnGetFileStream(fileName,buffer);
+        //prevent preprocessor to read file
+        if (buffer.isEmpty())
+            buffer.append(QString());
     }
 
     // Preprocess the file...
