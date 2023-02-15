@@ -260,14 +260,13 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
                 .arg(statement->noNameArgs)
                 .arg((int)statement->kind),newNode);
     mProcessedStatements.insert(statement.get());
-    if (statement->kind == StatementKind::skClass
-            || statement->kind == StatementKind::skNamespace) {
+    if (isScopeStatement(statement)) {
         mScopeNodes.insert(statement->fullName,newNode);
     }
     //don't show enum type's children values (they are displayed in parent scope)
-    if (statement->kind != StatementKind::skEnumType) {
+//    if (statement->kind != StatementKind::skEnumType) {
         filterChildren(newNode.get(), statement->children);
-    }
+//    }
     return newNode;
 }
 
@@ -373,7 +372,7 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
             if (dummyNode)
                 parentNode = dummyNode;
         }
-        if (statement->kind == StatementKind::skNamespace || statement->kind == StatementKind::skClass) {
+        if (isScopeStatement(statement)) {
             //PStatement dummy = mDummyStatements.value(statement->fullName,PStatement());
             PClassBrowserNode scopeNode = mScopeNodes.value(statement->fullName,PClassBrowserNode());
             if (!scopeNode) {
@@ -415,8 +414,7 @@ ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentState
         return nullptr;
     if (!parentStatement)
         return mRoot;
-    if (parentStatement->kind!=skClass
-            && parentStatement->kind!=skNamespace) {
+    if (!isScopeStatement(parentStatement)) {
         return mRoot;
     }
     PClassBrowserNode parentNode = mScopeNodes.value(parentStatement->fullName,PClassBrowserNode());
@@ -426,6 +424,19 @@ ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentState
         parentNode = addChild(grandNode,dummyParent);
     }
     return parentNode.get();
+}
+
+bool ClassBrowserModel::isScopeStatement(const PStatement &statement)
+{
+    switch(statement->kind) {
+    case StatementKind::skClass:
+    case StatementKind::skNamespace:
+    case StatementKind::skEnumClassType:
+    case StatementKind::skEnumType:
+        return true;
+    default:
+        return false;
+    }
 }
 
 QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key)

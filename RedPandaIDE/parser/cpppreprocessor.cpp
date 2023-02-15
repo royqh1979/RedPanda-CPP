@@ -155,12 +155,12 @@ void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
     mParseLocal=parseLocal;
 }
 
-void CppPreprocessor::preprocess(const QString &fileName, QStringList buffer)
+void CppPreprocessor::preprocess(const QString &fileName)
 {
     clearTempResults();
     mFileName = fileName;
     mDefines = mHardDefines;
-    openInclude(fileName, buffer);
+    openInclude(fileName);
     //    StringsToFile(mBuffer,"f:\\buffer.txt");
     preprocessBuffer();
     //    StringsToFile(mBuffer,"f:\\buffer.txt");
@@ -456,11 +456,7 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
         return;
 
     PFileIncludes oldCurrentIncludes = mCurrentIncludes;
-    QStringList buffer;
-    if (mOnGetFileStream) {
-        mOnGetFileStream(fileName,buffer);
-    }
-    openInclude(fileName, buffer);
+    openInclude(fileName);
 }
 
 void CppPreprocessor::handlePreprocessor(const QString &value)
@@ -659,7 +655,7 @@ void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, 
     }
 }
 
-void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedText)
+void CppPreprocessor::openInclude(const QString &fileName)
 {
     if (mIncludes.size()>0) {
         PParsedFile topFile = mIncludes.front();
@@ -719,7 +715,8 @@ void CppPreprocessor::openInclude(const QString &fileName, QStringList bufferedT
         // Only load up the file if we are allowed to parse it
         bool isSystemFile = isSystemHeaderFile(fileName, mIncludePaths) || isSystemHeaderFile(fileName, mProjectIncludePaths);
         if ((mParseSystem && isSystemFile) || (mParseLocal && !isSystemFile)) {
-            if (!bufferedText.isEmpty()) {
+            QStringList bufferedText;
+            if (mOnGetFileStream && mOnGetFileStream(fileName,bufferedText)) {
                 parsedFile->buffer  = bufferedText;
             } else {
                 parsedFile->buffer = readFileToLines(fileName);

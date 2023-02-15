@@ -270,6 +270,7 @@
     <addaction name="actionDocument"/>
     <addaction name="actionC_Reference"/>
     <addaction name="actionC_C_Reference"/>
+    <addaction name="actionGNU_Assembler_Manual"/>
     <addaction name="actionRaylib_Manual"/>
     <addaction name="actionEGE_Manual"/>
     <addaction name="separator"/>
@@ -3330,6 +3331,11 @@
   <action name="actionNew_GAS_File">
    <property name="text">
     <string>New GAS File</string>
+   </property>
+  </action>
+  <action name="actionGNU_Assembler_Manual">
+   <property name="text">
+    <string>GNU Assembler Manual</string>
    </property>
   </action>
  </widget>

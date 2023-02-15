@@ -4992,6 +4992,10 @@
         <source>Please check detail info in &quot;Tools Output&quot; panel.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>GNU Assembler Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

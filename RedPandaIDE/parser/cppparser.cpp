@@ -1535,16 +1535,9 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
             continue;
         //already removed in interalInvalidateFiles
         //mPreprocessor.removeScannedFile(file);
-        QStringList buffer;
-        if (mOnGetFileStream) {
-            mOnGetFileStream(file,buffer);
-            //prevent preprocessor to read file
-            if (buffer.isEmpty())
-                buffer.append(QString());
-        }
         //we only use local include relations
         mPreprocessor.setScanOptions(false, true);
-        mPreprocessor.preprocess(file,buffer);
+        mPreprocessor.preprocess(file);
         mPreprocessor.clearTempResults();
     }
 
@@ -2267,8 +2260,11 @@ void CppParser::handleEnum(bool isTypedef)
     QString args;
     if (mTokenizer[mIndex]->text!='}') {
         while ((mIndex < mTokenizer.tokenCount()) &&
-                         !isblockChar(mTokenizer[mIndex]->text[0])) {
-            if (!mTokenizer[mIndex]->text.startsWith(',')) {
+                         mTokenizer[mIndex]->text!='}') {
+            if (mTokenizer[mIndex]->text=="=") {
+                mIndex=indexOfNextPeriodOrSemicolon(mIndex);
+                continue;
+            } else if (tokenIsIdentifier(mTokenizer[mIndex]->text)) {
                 cmd = mTokenizer[mIndex]->text;
                 args = "";
                 if (isEnumClass) {
@@ -3793,60 +3789,46 @@ void CppParser::internalParse(const QString &fileName)
 //    if (!isCfile(fileName) && !isHfile(fileName))  // support only known C/C++ files
 //        return;
 
-    QStringList buffer;
-    if (mOnGetFileStream) {
-        mOnGetFileStream(fileName,buffer);
-        //prevent preprocessor to read file
-        if (buffer.isEmpty())
-            buffer.append(QString());
-    }
-
     // Preprocess the file...
-    {
-        auto action = finally([this]{
-            mTokenizer.clear();
-        });
-        // Let the preprocessor augment the include records
-//        mPreprocessor.setIncludesList(mIncludesList);
-//        mPreprocessor.setScannedFileList(mScannedFiles);
-//        mPreprocessor.setIncludePaths(mIncludePaths);
-//        mPreprocessor.setProjectIncludePaths(mProjectIncludePaths);
-        mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
-        mPreprocessor.preprocess(fileName, buffer);
+    auto action = finally([this]{
+        mTokenizer.clear();
+    });
+    // Let the preprocessor augment the include records
+    mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
+    mPreprocessor.preprocess(fileName);
 
-        QStringList preprocessResult = mPreprocessor.result();
+    QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
 //        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
 //        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
-        //reduce memory usage
-        mPreprocessor.clearTempResults();
+    //reduce memory usage
+    mPreprocessor.clearTempResults();
 
-        // Tokenize the preprocessed buffer file
-        mTokenizer.tokenize(preprocessResult);
-        //reduce memory usage
-        preprocessResult.clear();
-        if (mTokenizer.tokenCount() == 0)
-            return;
+    // Tokenize the preprocessed buffer file
+    mTokenizer.tokenize(preprocessResult);
+    //reduce memory usage
+    preprocessResult.clear();
+    if (mTokenizer.tokenCount() == 0)
+        return;
 #ifdef QT_DEBUG
 //        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         lastIndex = -1;
 #endif
-        // Process the token list
-        while(true) {
-            if (!handleStatement())
-                break;
-        }
+    // Process the token list
+    while(true) {
+        if (!handleStatement())
+            break;
+    }
 #ifdef QT_DEBUG
 //        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
 //        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
-        //reduce memory usage
-        internalClear();
-    }
+    //reduce memory usage
+    internalClear();
 }
 
 void CppParser::inheritClassStatement(const PStatement& derived, bool isStruct,
@@ -5732,7 +5714,6 @@ int CppParser::parserId() const
 
 void CppParser::setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream)
 {
-    mOnGetFileStream = newOnGetFileStream;
     mPreprocessor.setOnGetFileStream(newOnGetFileStream);
 }
 

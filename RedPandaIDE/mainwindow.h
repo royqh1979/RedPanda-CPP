@@ -777,6 +777,8 @@ private slots:
 
     void on_actionNew_GAS_File_triggered();
 
+    void on_actionGNU_Assembler_Manual_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;

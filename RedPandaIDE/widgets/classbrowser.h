@@ -75,6 +75,7 @@ private:
     void filterChildren(ClassBrowserNode * node, const StatementMap& statements);
     PStatement createDummy(const PStatement& statement);
     ClassBrowserNode* getParentNode(const PStatement &parentStatement, int depth);
+    bool isScopeStatement(const PStatement& statement);
 private:
     ClassBrowserNode * mRoot;
     QHash<QString,PStatement> mDummyStatements;

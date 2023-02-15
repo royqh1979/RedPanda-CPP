@@ -921,6 +921,13 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
     updateCompilerSetType();
     mOptions.icon = aTemplate->icon();
 
+    QTextCodec* codec=QTextCodec::codecForName(mOptions.encoding);
+    if (!codec)
+        mOptions.encoding=ENCODING_SYSTEM_DEFAULT;
+    codec=QTextCodec::codecForName(mOptions.execEncoding);
+    if (!codec)
+        mOptions.execEncoding=ENCODING_SYSTEM_DEFAULT;
+
     // Copy icon to project directory
     if (!mOptions.icon.isEmpty()) {
         QString originIcon = cleanPath(QFileInfo(aTemplate->fileName()).absoluteDir().absoluteFilePath(mOptions.icon));

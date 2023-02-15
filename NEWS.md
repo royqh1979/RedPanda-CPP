@@ -20,6 +20,10 @@ Red Panda C++ Version 2.12
   - fix: If current editor is empty, parser will parse the file's content on the disk instead from the editor.
   - fix: Can't show completion when cursor is after "char["
   - change: Don't confirm rebuild/recompile when run/debug.
+  - fix: Can't parse enum values.
+  - fix: Can't correctly show enum values in the class browser.
+  - fix: Can't correctly create project, if template's encoding setting is not valid.
+  - enhancement: Add "embed assembly" template.
 
 Red Panda C++ Version 2.11
 

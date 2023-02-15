@@ -671,7 +671,6 @@ private:
 #else
     QMutex mMutex;
 #endif
-    GetFileStreamCallBack mOnGetFileStream;
     QMap<QString,KeywordType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;
 };

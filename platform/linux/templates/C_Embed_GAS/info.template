@@ -1,0 +1,22 @@
+[Template]
+Ver = 3
+Name = Inline ASM
+Category = Assembly
+Description = A simple c program with inline assembly instructions
+Name[zh_CN] = 内联汇编
+Category[zh_CN] = 汇编
+Description[zh_CN] = 简单的C内联汇编程序示例
+Icon = app.ico
+
+
+[Project]
+Type = 1
+IsCpp = 0
+Encoding = SYSTEM
+ClassBrowserType = 0
+UnitCount = 1
+
+
+[Unit0]
+CName=main.c
+C=main.c

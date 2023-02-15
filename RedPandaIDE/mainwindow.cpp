@@ -9456,3 +9456,9 @@ void MainWindow::on_actionNew_GAS_File_triggered()
     newEditor("s");
 }
 
+
+void MainWindow::on_actionGNU_Assembler_Manual_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://sourceware.org/binutils/docs/as/index.html"));
+}
+

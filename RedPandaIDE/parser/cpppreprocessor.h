@@ -70,7 +70,7 @@ public:
     void getDefineParts(const QString& input, QString &name, QString &args, QString &value);
     void addHardDefineByLine(const QString& line);
     void setScanOptions(bool parseSystem, bool parseLocal);
-    void preprocess(const QString& fileName, QStringList buffer = QStringList());
+    void preprocess(const QString& fileName);
 
     void dumpDefinesTo(const QString& fileName) const;
     void dumpIncludesListTo(const QString& fileName) const;
@@ -122,7 +122,7 @@ private:
     PParsedFile getInclude(int index) const {
         return mIncludes[index];
     }
-    void openInclude(const QString& fileName, QStringList bufferedText=QStringList());
+    void openInclude(const QString& fileName);
     void closeInclude();
 
     // branch stuff
