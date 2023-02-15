@@ -5355,7 +5355,11 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
             properSetLine(i,s);
         }
         // Lines never get deleted completely, so keep caret at end.
+        startPos.ch = columnToChar(startPos.line,ColFrom);
+        endPos.ch = columnToChar(endPos.line, ColFrom);
         internalSetCaretXY(startPos);
+        setBlockBegin(startPos);
+        setBlockEnd(endPos);
         // Column deletion never removes a line entirely, so no mark
         // updating is needed here.
         break;

@@ -25,6 +25,7 @@ Red Panda C++ Version 2.12
   - fix: Can't correctly create project, if template's encoding setting is not valid.
   - enhancement: New "embed assembly" template.
   - enhancement: New "Hello GAS" and "GAS and C" templates for linux and win64.
+  - fix: Wrong selection position after delete in column mode.
 
 Red Panda C++ Version 2.11
 
