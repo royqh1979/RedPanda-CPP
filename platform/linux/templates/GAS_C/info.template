@@ -1,0 +1,27 @@
+[Template]
+Ver = 3
+Name = GAS & C
+Category = Assembly
+Description = C and GAS mixing programming demo
+Name[zh_CN] = GAS与C
+Category[zh_CN] = 汇编
+Description[zh_CN] = C和GAS汇编混合编程示例
+Icon = app.ico
+
+
+[Project]
+Type = 1
+IsCpp = true
+Encoding = UTF-8
+ClassBrowserType = 0
+UnitCount = 2
+
+
+[Unit0]
+Source = utils.s
+Target = utils.s
+
+
+[Unit1]
+Cpp = main.cpp
+CppName = main.cpp

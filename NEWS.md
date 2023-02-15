@@ -23,7 +23,8 @@ Red Panda C++ Version 2.12
   - fix: Can't parse enum values.
   - fix: Can't correctly show enum values in the class browser.
   - fix: Can't correctly create project, if template's encoding setting is not valid.
-  - enhancement: Add "embed assembly" template.
+  - enhancement: New "embed assembly" template.
+  - enhancement: New "Hello GAS" and "GAS and C" templates for linux and win64.
 
 Red Panda C++ Version 2.11
 

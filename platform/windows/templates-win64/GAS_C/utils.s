@@ -1,6 +1,6 @@
-    .global  maxofthree
-    .global  add3
     .text
+    .globl  maxofthree
+    .globl  add3
 maxofthree:
 	mov     %ecx, %eax              # result (rax) initially holds x
 	cmp     %edx, %eax                # is x less than y?

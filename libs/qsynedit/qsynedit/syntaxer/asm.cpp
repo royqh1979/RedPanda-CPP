@@ -209,7 +209,7 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".endif",".equ",".equiv",".eqy",
     ".err",".error",".exitm",".extern",
     ".fail",".file",".fill", ".float",
-    ".func",".global",".gnu",".hidden",
+    ".func",".globl",".global",".gnu",".hidden",
     ".hword",".ident",".if", ".incbin",
     ".inclue", ".int", ".internal", ".intel_syntax",".irp",
     ".irpc",".lcomm",".lflags",".line",".linkonce",

@@ -1,0 +1,22 @@
+[Template]
+Ver = 3
+Name = Hello GAS
+Category = Assembly
+Description = A simple GNU as program
+Name[zh_CN] = GAS你好
+Category[zh_CN] = 汇编
+Description[zh_CN] = 简单的GNU汇编程序示例
+Icon = app.ico
+
+
+[Project]
+Type = 1
+IsCpp = true
+Encoding = UTF-8
+ClassBrowserType = 0
+UnitCount = 1
+
+
+[Unit0]
+Source = main.s
+Target = main.s

@@ -1,6 +1,5 @@
-	.global main
-
-	.text:
+	.text
+	.globl main
 main:
 	# Microsoft X86_64 Calling convention:
 	# - The first four integer or pointer parameters are passed in the rcx, rdx, r8, and r9 registers.
