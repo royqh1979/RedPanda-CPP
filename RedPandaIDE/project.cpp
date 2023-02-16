@@ -160,6 +160,11 @@ QString Project::makeFileName()
         return QDir(directory()).filePath(MAKEFILE_NAME);
 }
 
+QString Project::xmakeFileName()
+{
+    return QDir(directory()).filePath(XMAKEFILE_NAME);
+}
+
 bool Project::unitsModifiedSince(const QDateTime& time)
 {
     foreach(const PProjectUnit& unit, mUnits) {

@@ -37,6 +37,7 @@
 #define SETTING_ENVIRONMENT "Environment"
 #define SETTING_EXECUTOR "Executor"
 #define SETTING_DEBUGGER "Debugger"
+#define SETTING_EXTTOOLS "ExtTools"
 #define SETTING_HISTORY "History"
 #define SETTING_UI "UI"
 #define SETTING_VCS "VCS"
@@ -1266,6 +1267,21 @@ public:
         void doLoad() override;
     };
 
+    class ExtTools: public _Base {
+    public:
+        explicit ExtTools(Settings* settings);
+
+        const QString &xMakePath() const;
+        void setXMakePath(const QString &newXMakePath);
+
+    private:
+        QString mXMakePath;
+        // _Base interface
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    };
+
 
     class CompilerSet {
     public:
@@ -1522,7 +1538,9 @@ public:
     CodeFormatter &codeFormatter();
     UI &ui();
     VCS &vcs();
+    ExtTools &extTools();
     QString filename() const;
+
 
 private:
     QString mFilename;
@@ -1537,6 +1555,8 @@ private:
     CodeFormatter mCodeFormatter;
     UI mUI;
     VCS mVCS;
+    ExtTools mExtTools;
+
 };
 
 

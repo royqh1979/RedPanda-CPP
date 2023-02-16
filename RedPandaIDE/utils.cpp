@@ -146,6 +146,9 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".dat",PATH_SENSITIVITY)) {
         return FileType::Text;
     }
+    if (filename.endsWith(".lua",PATH_SENSITIVITY)) {
+        return FileType::LUA;
+    }
     QFileInfo info(filename);
     if (info.suffix().isEmpty()) {
         return FileType::Other;

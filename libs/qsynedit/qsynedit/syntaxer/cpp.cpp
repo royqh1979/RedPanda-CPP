@@ -407,9 +407,13 @@ void CppSyntaxer::braceOpenProc()
         // if last indent is started by 'if' 'for' etc
         // just replace it
         int lastLine=-1;
+        if (!mRange.indents.isEmpty()) {
+            lastLine=mRange.indents.back().line;
+        } else {
+            lastLine=0;
+        }
         while (mRange.getLastIndentType() == IndentType::Statement) {
             popIndents(IndentType::Statement);
-            lastLine = mRange.lastUnindent.line;
         }
         pushIndents(IndentType::Block, lastLine);
     } else

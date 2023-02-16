@@ -116,6 +116,7 @@
 #   define STATIC_LIB_EXT   "a"
 #   define DYNAMIC_LIB_EXT   "dll"
 #   define MAKEFILE_NAME    "makefile.win"
+#   define XMAKEFILE_NAME    "xmake.lua"
 #   define ALL_FILE_WILDCARD "*.*"
 #elif defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
 #   define PATH_SENSITIVITY Qt::CaseSensitive
@@ -129,6 +130,7 @@
 #   define STATIC_LIB_EXT   "a"
 #   define DYNAMIC_LIB_EXT   "d"
 #   define MAKEFILE_NAME    "makefile"
+#   define XMAKEFILE_NAME    "xmake.lua"
 #   define ALL_FILE_WILDCARD "*"
 #else
 #error "Only support windows and linux now!"

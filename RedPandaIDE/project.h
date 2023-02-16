@@ -214,6 +214,7 @@ public:
     QString directory() const;
     QString executable() const;
     QString makeFileName();
+    QString xmakeFileName();
     bool unitsModifiedSince(const QDateTime& time);
     bool modified() const;
     bool modifiedSince(const QDateTime& time);

@@ -29,6 +29,7 @@ Red Panda C++ Version 2.12
   - enhancement: Syntax highlight and basic code completion for lua.
   - enhancement: Basic code completion for xmake.lua.
   - enhancement: Parser not correctly released if save a c file to non-c file.
+  - enhancement: Improve auto indent for embedding no-brace statements like for-for-if.
 
 Red Panda C++ Version 2.11
 

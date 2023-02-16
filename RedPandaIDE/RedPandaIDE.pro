@@ -87,6 +87,7 @@ SOURCES += \
     compiler/compilerinfo.cpp \
     compiler/ojproblemcasesrunner.cpp \
     compiler/projectcompiler.cpp \
+    compiler/xmakecompiler.cpp \
     compiler/runner.cpp \
     customfileiconprovider.cpp \
     gdbmiresultparser.cpp \
@@ -225,6 +226,7 @@ HEADERS += \
     compiler/compilermanager.h \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
+    compiler/xmakecompiler.h \
     compiler/ojproblemcasesrunner.h \
     compiler/projectcompiler.h \
     compiler/runner.h \

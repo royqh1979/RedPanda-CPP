@@ -48,7 +48,8 @@ Settings::Settings(const QString &filename):
     mCodeCompletion(this),
     mCodeFormatter(this),
     mUI(this),
-    mVCS(this)
+    mVCS(this),
+    mExtTools(this)
 {
     //load();
 }
@@ -112,6 +113,7 @@ void Settings::load()
     mUI.load();
     mDirs.load();
     mVCS.load();
+    mExtTools.load();
 }
 
 Settings::Dirs &Settings::dirs()
@@ -142,6 +144,11 @@ Settings::Executor &Settings::executor()
 QString Settings::filename() const
 {
     return mFilename;
+}
+
+Settings::ExtTools &Settings::extTools()
+{
+    return mExtTools;
 }
 
 Settings::CodeCompletion& Settings::codeCompletion()
@@ -5864,4 +5871,29 @@ void Settings::VCS::detectGitInPath()
         }
 
     }
+}
+
+const QString &Settings::ExtTools::xMakePath() const
+{
+    return mXMakePath;
+}
+
+void Settings::ExtTools::setXMakePath(const QString &newXMakePath)
+{
+    mXMakePath = newXMakePath;
+}
+
+void Settings::ExtTools::doSave()
+{
+    saveValue("xmake_path", mXMakePath);
+}
+
+void Settings::ExtTools::doLoad()
+{
+    mXMakePath=stringValue("xmake_path","");
+}
+
+Settings::ExtTools::ExtTools(Settings *settings):_Base(settings, SETTING_EXTTOOLS)
+{
+
 }
