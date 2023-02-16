@@ -1651,7 +1651,7 @@ bool CppSyntaxer::isIdentChar(const QChar &ch) const
     return ch=='_' || ch.isDigit() || ch.isLetter();
 }
 
-QSet<QString> CppSyntaxer::keywords() const
+QSet<QString> CppSyntaxer::keywords()
 {
     QSet<QString> set=Keywords;
     set.unite(mCustomTypeKeywords);

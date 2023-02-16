@@ -208,7 +208,6 @@ MainWindow::MainWindow(QWidget *parent)
                              e.reason());
     }
 
-
 //    ui->actionIndent->setShortcut(Qt::Key_Tab);
 //    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
 
@@ -9461,4 +9460,3 @@ void MainWindow::on_actionGNU_Assembler_Manual_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://sourceware.org/binutils/docs/as/index.html"));
 }
-

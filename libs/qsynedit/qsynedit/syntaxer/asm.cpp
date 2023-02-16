@@ -260,7 +260,10 @@ bool ASMSyntaxer::isATT() const
 
 void ASMSyntaxer::setATT(bool newATT)
 {
-    mATT = newATT;
+    if (mATT!=newATT) {
+        mATT = newATT;
+        mKeywordsCache.clear();
+    }
 }
 
 void ASMSyntaxer::CommentProc()
@@ -612,17 +615,19 @@ void ASMSyntaxer::resetState()
     mHasTrailingSpaces = false;
 }
 
-QSet<QString> ASMSyntaxer::keywords() const
+QSet<QString> ASMSyntaxer::keywords()
 {
-    QSet<QString> result=Instructions;
-    if (!isATT()) {
-        result.unite(Directives);
-        result.unite(Registers);
-    } else {
-        result.unite(ATTDirectives);
-        result.unite(ATTRegisters);
+    if (mKeywordsCache.isEmpty()) {
+        mKeywordsCache=Instructions;
+        if (!isATT()) {
+            mKeywordsCache.unite(Directives);
+            mKeywordsCache.unite(Registers);
+        } else {
+            mKeywordsCache.unite(ATTDirectives);
+            mKeywordsCache.unite(ATTRegisters);
+        }
     }
-    return result;
+    return mKeywordsCache;
 }
 
 const PTokenAttribute &ASMSyntaxer::directiveAttribute() const

@@ -154,7 +154,7 @@ public:
 
     bool isIdentChar(const QChar& ch) const override;
 public:
-    QSet<QString> keywords() const override;
+    QSet<QString> keywords() override;
 
 };
 

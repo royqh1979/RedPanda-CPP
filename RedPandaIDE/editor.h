@@ -97,6 +97,7 @@ public:
         wpJavadoc, //javadoc
         wpInformation, // walk backwards over words, array, functions, parents, forwards over words
         wpATTASMKeywords,
+        wpKeywords
     };
 
     enum class TipType {

@@ -14,19 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef QSYNEDIT_GLSL_SYNTAXER_H
-#define QSYNEDIT_GLSL_SYNTAXER_H
+#ifndef QSYNEDIT_LUA_SYNTAXER_H
+#define QSYNEDIT_LUA_SYNTAXER_H
 #include "syntaxer.h"
 #include <QSet>
+#include <QMap>
 
 namespace QSynedit {
 
-class GLSLSyntaxer: public Syntaxer
+class LuaSyntaxer: public Syntaxer
 {
     enum class TokenId {
-        Asm,
         Comment,
-        Directive,
         Identifier,
         Key,
         Null,
@@ -36,30 +35,29 @@ class GLSLSyntaxer: public Syntaxer
         StringEscapeSeq,
         Symbol,
         Unknown,
-        Char,
         Float,
         Hex,
-        HexFloat,
-        Octal,
-        RawString
+        HexFloat
     };
 
     enum RangeState {
-        rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment, rsString,
-        rsMultiLineString, rsMultiLineDirective, rsCppComment,
-        rsStringEscapeSeq, rsMultiLineStringEscapeSeq,
-        rsRawString, rsSpace,rsRawStringEscaping,rsRawStringNotEscaping,rsChar,
-        rsCppCommentEnded
+        rsUnknown,
+        rsComment,
+        rsLongComment,
+        rsString,
+        rsMultiLineDirective,
+        rsStringEscapeSeq,
+        rsSpace,
+        rsRawStringNotEscaping,
+        rsRawStringEnd,
+
+        rsLongString /* long string must be placed at end to record levels */
     };
 
 public:
-    explicit GLSLSyntaxer();
-    GLSLSyntaxer(const GLSLSyntaxer&)=delete;
-    GLSLSyntaxer& operator=(const GLSLSyntaxer&)=delete;
-
-    const PTokenAttribute &asmAttribute() const;
-
-    const PTokenAttribute &preprocessorAttribute() const;
+    explicit LuaSyntaxer();
+    LuaSyntaxer(const LuaSyntaxer&)=delete;
+    LuaSyntaxer operator=(const LuaSyntaxer&)=delete;
 
     const PTokenAttribute &invalidAttribute() const;
 
@@ -69,75 +67,53 @@ public:
 
     const PTokenAttribute &hexAttribute() const;
 
-    const PTokenAttribute &octAttribute() const;
-
     const PTokenAttribute &stringEscapeSequenceAttribute() const;
 
     const PTokenAttribute &charAttribute() const;
 
-    const PTokenAttribute &variableAttribute() const;
-
-    const PTokenAttribute &functionAttribute() const;
-
-    const PTokenAttribute &classAttribute() const;
-
-    const PTokenAttribute &globalVarAttribute() const;
-
-    const PTokenAttribute &localVarAttribute() const;
-
     static const QSet<QString> Keywords;
+
+    static const QSet<QString> LibFunctions;
+
+    static const QMap<QString,QSet<QString>> LibTables;
 
     TokenId getTokenId();
 private:
-    void andSymbolProc();
-    void ansiCppProc();
-    void ansiCProc();
-    void asciiCharProc();
-    void atSymbolProc();
     void braceCloseProc();
     void braceOpenProc();
     void colonProc();
-    void commaProc();
-    void directiveProc();
-    void directiveEndProc();
+    void commentProc();
     void equalProc();
     void greaterProc();
     void identProc();
+    void longCommentProc();
     void lowerProc();
     void minusProc();
-    void modSymbolProc();
-    void notSymbolProc();
     void nullProc();
-    void numberProc();
-    void orSymbolProc();
-    void plusProc();
     void pointProc();
-    void questionProc();
-    void rawStringProc();
+    void processChar();
     void roundCloseProc();
     void roundOpenProc();
-    void semiColonProc();
     void slashProc();
+    void stringProc();
+    void tildeProc();
+
+    void numberProc();
     void spaceProc();
     void squareCloseProc();
     void squareOpenProc();
-    void starProc();
-    void stringEndProc();
+//    void stringEndProc();
     void stringEscapeSeqProc();
-    void stringProc();
-    void stringStartProc();
-    void tildeProc();
     void unknownProc();
-    void xorSymbolProc();
-    void processChar();
+
     void popIndents(IndentType indentType);
     void pushIndents(IndentType indentType, int line=-1);
 
 private:
+    bool mAsmStart;
     SyntaxState mRange;
 //    SynRangeState mSpaceRange;
-    QString mLineString;
-    QChar* mLine;
+    QString mLine;
     int mLineSize;
     int mRun;
     int mStringLen;
@@ -148,20 +124,15 @@ private:
     int mLeftBraces;
     int mRightBraces;
 
-    PTokenAttribute mAsmAttribute;
-    PTokenAttribute mPreprocessorAttribute;
+    QSet<QString> mCustomTypeKeywords;
+    QSet<QString> mKeywordsCache;
+
     PTokenAttribute mInvalidAttribute;
     PTokenAttribute mNumberAttribute;
     PTokenAttribute mFloatAttribute;
     PTokenAttribute mHexAttribute;
-    PTokenAttribute mOctAttribute;
     PTokenAttribute mStringEscapeSequenceAttribute;
     PTokenAttribute mCharAttribute;
-    PTokenAttribute mVariableAttribute;
-    PTokenAttribute mFunctionAttribute;
-    PTokenAttribute mClassAttribute;
-    PTokenAttribute mGlobalVarAttribute;
-    PTokenAttribute mLocalVarAttribute;
 
     // SynHighligterBase interface
 public:
@@ -193,10 +164,21 @@ public:
 public:
     QSet<QString> keywords() override;
 
+    // SynHighlighter interface
+public:
+    QString foldString(QString startLine) override;
+    const QSet<QString> &customTypeKeywords() const;
+    void setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords);
+
     // Highlighter interface
 public:
     bool supportBraceLevel() override;
+
+    // Syntaxer interface
+public:
+    QMap<QString, QSet<QString> > scopedKeywords() override;
 };
 
 }
-#endif // SYNEDITGLSLHIGHLIGHTER_H
+
+#endif // SYNEDITCPPHIGHLIGHTER_H

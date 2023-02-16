@@ -197,7 +197,7 @@ public:
 
     // SynHighlighter interface
 public:
-    QSet<QString> keywords() const override;
+    QSet<QString> keywords() override;
 
     // SynHighlighter interface
 public:

@@ -1439,7 +1439,7 @@ bool GLSLSyntaxer::isIdentChar(const QChar &ch) const
     return ch=='_' || (ch>='a' && ch<='z') || (ch>='A' && ch<='Z') || (ch>='0' && ch<='9');
 }
 
-QSet<QString> GLSLSyntaxer::keywords() const
+QSet<QString> GLSLSyntaxer::keywords()
 {
     return Keywords;
 }

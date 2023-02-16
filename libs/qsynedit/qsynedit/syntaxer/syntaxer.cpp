@@ -93,9 +93,14 @@ void Syntaxer::nextToEol()
         next();
 }
 
-QSet<QString> Syntaxer::keywords() const
+QSet<QString> Syntaxer::keywords()
 {
     return QSet<QString>();
+}
+
+QMap<QString, QSet<QString> > Syntaxer::scopedKeywords()
+{
+    return QMap<QString, QSet<QString> >();
 }
 
 QString Syntaxer::foldString(QString /*startLine*/)

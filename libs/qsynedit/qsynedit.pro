@@ -38,6 +38,7 @@ SOURCES += qsynedit/codefolding.cpp \
     qsynedit/syntaxer/cpp.cpp \
     qsynedit/syntaxer/customhighlighterv1.cpp \
     qsynedit/syntaxer/glsl.cpp \
+    qsynedit/syntaxer/lua.cpp \
     qsynedit/types.cpp \
     qsynedit/syntaxer/makefile.cpp \
     qsynedit/syntaxer/syntaxer.cpp
@@ -63,6 +64,7 @@ HEADERS += \
     qsynedit/syntaxer/cpp.h \
     qsynedit/syntaxer/customhighlighterv1.h \
     qsynedit/syntaxer/glsl.h \
+    qsynedit/syntaxer/lua.h \
     qsynedit/syntaxer/makefile.h \
     qsynedit/syntaxer/syntaxer.h
 

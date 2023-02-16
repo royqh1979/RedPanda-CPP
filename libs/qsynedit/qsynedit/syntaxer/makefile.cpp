@@ -686,7 +686,7 @@ void MakefileSyntaxer::resetState()
     mHasTrailingSpaces = false;
 }
 
-QSet<QString> MakefileSyntaxer::keywords() const
+QSet<QString> MakefileSyntaxer::keywords()
 {
     return Directives;
 }

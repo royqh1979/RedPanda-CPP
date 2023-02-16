@@ -37,6 +37,7 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     addDefaultFileFilter(QObject::tr("Header files"),"*.h *.hh *.hpp");
     addDefaultFileFilter(QObject::tr("GAS files"),"*.s *.S");
     addDefaultFileFilter(QObject::tr("ASM files"),"*.asm");
+    addDefaultFileFilter(QObject::tr("Lua files"),"*.lua");
 
     addFileFilter(mIconFileFilters, QObject::tr("Icon files"), "*.ico");
 

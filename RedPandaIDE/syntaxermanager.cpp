@@ -21,6 +21,7 @@
 #include "qsynedit/syntaxer/cpp.h"
 #include "qsynedit/syntaxer/asm.h"
 #include "qsynedit/syntaxer/glsl.h"
+#include "qsynedit/syntaxer/lua.h"
 #include "qsynedit/syntaxer/makefile.h"
 
 #include "qsynedit/constants.h"
@@ -46,6 +47,8 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage l
         return std::make_shared<QSynedit::MakefileSyntaxer>();
     case QSynedit::ProgrammingLanguage::GLSL:
         return std::make_shared<QSynedit::GLSLSyntaxer>();
+    case QSynedit::ProgrammingLanguage::LUA:
+        return std::make_shared<QSynedit::LuaSyntaxer>();
     default:
         return QSynedit::PSyntaxer();
     }
@@ -68,6 +71,8 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename)
         return getSyntaxer(QSynedit::ProgrammingLanguage::Assembly);
     } else if (suffix == "s" || suffix == "S") {
         return getSyntaxer(QSynedit::ProgrammingLanguage::ATTAssembly);
+    } else if (suffix == "lua") {
+        return getSyntaxer(QSynedit::ProgrammingLanguage::LUA);
     } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
         return getSyntaxer(QSynedit::ProgrammingLanguage::Makefile);
     } else if (suffix.isEmpty()) {

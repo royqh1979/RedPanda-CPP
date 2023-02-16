@@ -73,6 +73,7 @@ private:
     PTokenAttribute mRegisterAttribute;
     PTokenAttribute mLabelAttribute;
     bool mATT;
+    QSet<QString> mKeywordsCache;
 
 private:
     void CommentProc();
@@ -114,7 +115,7 @@ public:
 
 
 public:
-    QSet<QString> keywords() const override;
+    QSet<QString> keywords() override;
 
     bool isATT() const;
     void setATT(bool newATT);

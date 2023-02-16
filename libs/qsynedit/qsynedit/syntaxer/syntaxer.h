@@ -99,6 +99,7 @@ enum class ProgrammingLanguage {
     CPP,
     GLSL,
     Makefile,
+    LUA,
     Custom
 };
 
@@ -169,7 +170,8 @@ public:
     virtual void setState(const SyntaxState& rangeState) = 0;
     virtual void setLine(const QString& newLine, int lineNumber) = 0;
     virtual void resetState() = 0;
-    virtual QSet<QString> keywords() const;
+    virtual QSet<QString> keywords();
+    virtual QMap<QString,QSet<QString>> scopedKeywords();
 
     virtual QString languageName() = 0;
     virtual ProgrammingLanguage language() = 0;

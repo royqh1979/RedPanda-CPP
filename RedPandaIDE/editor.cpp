@@ -942,6 +942,14 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 }
+            } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::LUA) {
+                if (ch=='.') {
+                    mLastIdCharPressed++;
+                    processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                    showCompletion("",false,CodeCompletionType::KeywordsOnly);
+                    handled=true;
+                    return;
+                }
             } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
                 if ((mLastIdCharPressed==0) && (ch=='.')) {
                     mLastIdCharPressed++;
@@ -3232,8 +3240,11 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                    (attr->tokenType() == QSynedit::TokenType::String) &&
                    (attr->tokenType() != QSynedit::TokenType::Character)) {
             return;
-        } else if (type==CodeCompletionType::KeywordsOnly && syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
-            word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
+        } else if (type==CodeCompletionType::KeywordsOnly && syntaxer() ) {
+            if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly)
+                word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
+            else
+                word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpKeywords);
         } else if (
                    (attr->tokenType() != QSynedit::TokenType::Operator) &&
                    (attr->tokenType() != QSynedit::TokenType::Space) &&
@@ -3295,8 +3306,16 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                     keywords = QSynedit::ASMSyntaxer::ATTRegisters;
                 else
                     keywords = QSynedit::ASMSyntaxer::Instructions;
-            } else
-                keywords = syntaxer()->keywords();
+            } else {
+                int pos = word.lastIndexOf(".");
+                if (pos>=0) {
+                    QString scopeWord=word.left(pos);
+                    word = word.mid(pos+1);
+                    QMap<QString, QSet<QString> > scopedKeywords = syntaxer()->scopedKeywords();
+                    keywords = scopedKeywords.value(scopeWord, QSet<QString>());
+                } else
+                    keywords = syntaxer()->keywords();
+            }
         } else {
             if (mUseCppSyntax) {
                 foreach (const QString& keyword, CppKeywords.keys()) {
@@ -4457,6 +4476,17 @@ QString getWordAtPosition(QSynedit::QSynEdit *editor, const QSynedit::BufferCoor
            } else if (s[wordBegin] == '.') {
                    wordBegin--;
                    break;
+           } else
+               break;
+        }
+    }
+
+    if (purpose == Editor::WordPurpose::wpKeywords) {
+        while ((wordBegin >= 0) && (wordBegin < len)) {
+           if (editor->isIdentChar(s[wordBegin])) {
+               wordBegin--;
+           } else if (s[wordBegin] == '.') {
+               wordBegin--;
            } else
                break;
         }
