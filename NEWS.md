@@ -26,7 +26,7 @@ Red Panda C++ Version 2.12
   - enhancement: New "embed assembly" template.
   - enhancement: New "Hello GAS" and "GAS and C" templates for linux and win64.
   - fix: Wrong selection position after delete in column mode.
-  - enhancement: Syntaxer for lua.
+  - enhancement: Syntax highlight for lua.
 
 Red Panda C++ Version 2.11
 
