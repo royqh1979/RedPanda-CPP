@@ -639,4 +639,30 @@ const PTokenAttribute &ASMSyntaxer::labelAttribute() const
 {
     return mLabelAttribute;
 }
+
+QString ASMSyntaxer::commentSymbol()
+{
+    if (mATT)
+        return "#";
+    else
+        return ";";
+}
+
+
+QString ASMSyntaxer::blockCommentBeginSymbol()
+{
+    if (mATT)
+        return "/*";
+    else
+        return "";
+}
+
+QString ASMSyntaxer::blockCommentEndSymbol()
+{
+    if (mATT)
+        return "*/";
+    else
+        return "";
+}
+
 }

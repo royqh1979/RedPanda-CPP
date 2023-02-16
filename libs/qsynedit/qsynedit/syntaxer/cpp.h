@@ -208,6 +208,12 @@ public:
     // Highlighter interface
 public:
     bool supportBraceLevel() override;
+
+    // Syntaxer interface
+public:
+    QString commentSymbol() override;
+    QString blockCommentBeginSymbol() override;
+    QString blockCommentEndSymbol() override;
 };
 
 }

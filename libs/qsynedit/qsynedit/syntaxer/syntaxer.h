@@ -184,6 +184,10 @@ public:
     bool enabled() const;
     void setEnabled(bool value);
     virtual PTokenAttribute getAttribute(const QString& name) const;
+    virtual QString commentSymbol();
+    virtual QString blockCommentBeginSymbol();
+    virtual QString blockCommentEndSymbol();
+
 
 protected:
     PTokenAttribute mCommentAttribute;

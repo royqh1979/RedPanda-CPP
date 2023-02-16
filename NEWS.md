@@ -30,6 +30,7 @@ Red Panda C++ Version 2.12
   - enhancement: Basic code completion for xmake.lua.
   - enhancement: Parser not correctly released if save a c file to non-c file.
   - enhancement: Improve auto indent for embedding no-brace statements like for-for-if.
+  - enhancement: Toggle comment for asm/makefile/lua files.
 
 Red Panda C++ Version 2.11
 

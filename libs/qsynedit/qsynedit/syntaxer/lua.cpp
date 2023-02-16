@@ -969,6 +969,21 @@ void LuaSyntaxer::setUseXMakeLibs(bool newUseXMakeLibs)
     }
 }
 
+QString LuaSyntaxer::commentSymbol()
+{
+    return "--";
+}
+
+QString LuaSyntaxer::blockCommentBeginSymbol()
+{
+    return "--[";
+}
+
+QString LuaSyntaxer::blockCommentEndSymbol()
+{
+    return "]";
+}
+
 const QSet<QString> &LuaSyntaxer::customTypeKeywords() const
 {
     return mCustomTypeKeywords;

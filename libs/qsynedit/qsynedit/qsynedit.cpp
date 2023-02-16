@@ -1693,6 +1693,8 @@ void QSynEdit::doComment()
     int endLine;
     if (mReadOnly)
         return;
+    if (!syntaxer() || syntaxer()->commentSymbol().isEmpty())
+        return;
     mUndoList->beginBlock();
     auto action = finally([this]{
         mUndoList->endBlock();
@@ -1705,11 +1707,13 @@ void QSynEdit::doComment()
         endLine = std::max(origBlockBegin.line - 1, origBlockEnd.line - 2);
     else
         endLine = origBlockEnd.line - 1;
+    QString commentSymbol = syntaxer()->commentSymbol();
+    int symbolLen = commentSymbol.length();
     for (int i = origBlockBegin.line - 1; i<=endLine; i++) {
-        mDocument->putLine(i, "//" + mDocument->getLine(i));
+        mDocument->putLine(i, commentSymbol + mDocument->getLine(i));
         mUndoList->addChange(ChangeReason::Insert,
               BufferCoord{1, i + 1},
-              BufferCoord{3, i + 1},
+              BufferCoord{1+symbolLen, i + 1},
               QStringList(), SelectionMode::Normal);
     }
     // When grouping similar commands, process one comment action per undo/redo
@@ -1730,11 +1734,15 @@ void QSynEdit::doUncomment()
 {
     BufferCoord origBlockBegin, origBlockEnd, origCaret;
     int endLine;
-    QString s;
+    QString s,s2;
     QStringList changeText;
-    changeText.append("//");
     if (mReadOnly)
         return;
+    if (!syntaxer() || syntaxer()->commentSymbol().isEmpty())
+        return;
+    QString commentSymbol=syntaxer()->commentSymbol();
+    int symbolLen = commentSymbol.length();
+    changeText.append(commentSymbol);
     mUndoList->beginBlock();
     auto action = finally([this]{
         mUndoList->endBlock();
@@ -1749,27 +1757,28 @@ void QSynEdit::doUncomment()
         endLine = origBlockEnd.line - 1;
     for (int i = origBlockBegin.line - 1; i<= endLine; i++) {
         s = mDocument->getLine(i);
+        s2=s.trimmed();
+        if (!s2.startsWith(commentSymbol))
+            continue;
         // Find // after blanks only
         int j = 0;
         while ((j+1 < s.length()) && (s[j] == '\n' || s[j] == '\t'))
             j++;
-        if ((j + 1 < s.length()) && (s[j] == '/') && (s[j + 1] == '/')) {
-            s.remove(j,2);
-            mDocument->putLine(i,s);
-            mUndoList->addChange(ChangeReason::Delete,
-                                 BufferCoord{j+1, i + 1},
-                                 BufferCoord{j + 3, i + 1},
-                                 changeText, SelectionMode::Normal);
-            // Move begin of selection
-            if ((i == origBlockBegin.line - 1) && (origBlockBegin.ch > 1))
-                origBlockBegin.ch-=2;
-            // Move end of selection
-            if ((i == origBlockEnd.line - 1) && (origBlockEnd.ch > 1))
-                origBlockEnd.ch-=2;
-            // Move caret
-            if ((i == origCaret.line - 1) && (origCaret.ch > 1))
-                origCaret.ch-=2;
-        }
+        s.remove(j,symbolLen);
+        mDocument->putLine(i,s);
+        mUndoList->addChange(ChangeReason::Delete,
+                             BufferCoord{j+1, i + 1},
+                             BufferCoord{j+1+symbolLen, i + 1},
+                             changeText, SelectionMode::Normal);
+        // Move begin of selection
+        if ((i == origBlockBegin.line - 1) && (origBlockBegin.ch > 1))
+            origBlockBegin.ch-=symbolLen;
+        // Move end of selection
+        if ((i == origBlockEnd.line - 1) && (origBlockEnd.ch > 1))
+            origBlockEnd.ch-=symbolLen;
+        // Move caret
+        if ((i == origCaret.line - 1) && (origCaret.ch > 1))
+            origCaret.ch-=symbolLen;
     }
     // When grouping similar commands, process one uncomment action per undo/redo
     mUndoList->addGroupBreak();
@@ -1784,6 +1793,10 @@ void QSynEdit::doToggleComment()
     bool allCommented = true;
     if (mReadOnly)
         return;
+    if (!syntaxer() || syntaxer()->commentSymbol().isEmpty())
+        return;
+    QString commentSymbol=syntaxer()->commentSymbol();
+
     mUndoList->beginBlock();
     auto action = finally([this]{
         mUndoList->endBlock();
@@ -1797,22 +1810,8 @@ void QSynEdit::doToggleComment()
     else
         endLine = origBlockEnd.line - 1;
     for (int i = origBlockBegin.line - 1; i<= endLine; i++) {
-        s = mDocument->getLine(i);
-        // Find // after blanks only
-        int j = 0;
-        while ((j < s.length()) && (s[j] == '\n' || s[j] == '\t'))
-            j++;
-        if (j>= s.length())
-            continue;
-        if (s[j] != '/'){
-            allCommented = false;
-            break;
-        }
-        if (j+1>=s.length()) {
-            allCommented = false;
-            break;
-        }
-        if (s[j + 1] != '/') {
+        s = mDocument->getLine(i).trimmed();
+        if (!s.startsWith(commentSymbol)) {
             allCommented = false;
             break;
         }
@@ -1828,21 +1827,27 @@ void QSynEdit::doToggleBlockComment()
     QString s;
     if (mReadOnly)
         return;
+    if (!syntaxer() || syntaxer()->blockCommentBeginSymbol().isEmpty())
+        return;
+    QString beginSymbol=syntaxer()->blockCommentBeginSymbol();
+    QString endSymbol=syntaxer()->blockCommentEndSymbol();
+    int beginLen = beginSymbol.length();
+    int endLen = endSymbol.length();
 
     QString text=selText().trimmed();
-    if (text.length()>4 && text.startsWith("/*") && text.endsWith("*/")) {
+    if (text.length()>beginLen+endLen && text.startsWith(beginSymbol) && text.endsWith(endSymbol)) {
         QString newText=selText();
-        int pos = newText.indexOf("/*");
+        int pos = newText.indexOf(beginSymbol);
         if (pos>=0) {
-            newText.remove(pos,2);
+            newText.remove(pos,beginLen);
         }
-        pos = newText.lastIndexOf("*/");
+        pos = newText.lastIndexOf(endSymbol);
         if (pos>=0) {
-            newText.remove(pos,2);
+            newText.remove(pos,endLen);
         }
         setSelText(newText);
     } else {
-        QString newText="/*"+selText()+"*/";
+        QString newText=beginSymbol+selText()+endSymbol;
         setSelText(newText);
     }
 

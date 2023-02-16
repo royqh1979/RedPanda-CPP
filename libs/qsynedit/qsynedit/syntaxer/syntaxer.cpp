@@ -189,6 +189,21 @@ PTokenAttribute Syntaxer::getAttribute(const QString& name) const
     return mAttributes.value(name,PTokenAttribute());
 }
 
+QString Syntaxer::commentSymbol()
+{
+    return QString();
+}
+
+QString Syntaxer::blockCommentBeginSymbol()
+{
+    return QString();
+}
+
+QString Syntaxer::blockCommentEndSymbol()
+{
+    return QString();
+}
+
 bool Syntaxer::enabled() const
 {
     return mEnabled;

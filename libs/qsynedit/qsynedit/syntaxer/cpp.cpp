@@ -1425,6 +1425,21 @@ bool CppSyntaxer::supportBraceLevel()
     return true;
 }
 
+QString CppSyntaxer::commentSymbol()
+{
+    return "//";
+}
+
+QString CppSyntaxer::blockCommentBeginSymbol()
+{
+    return "/*";
+}
+
+QString CppSyntaxer::blockCommentEndSymbol()
+{
+    return "*/";
+}
+
 bool CppSyntaxer::getTokenFinished() const
 {
     if (mTokenId == TokenId::Comment

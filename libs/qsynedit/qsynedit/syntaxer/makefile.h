@@ -156,6 +156,10 @@ public:
 public:
     QSet<QString> keywords() override;
 
+
+    // Syntaxer interface
+public:
+    QString commentSymbol() override;
 };
 
 }

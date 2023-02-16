@@ -119,6 +119,12 @@ public:
 
     bool isATT() const;
     void setATT(bool newATT);
+
+    // Syntaxer interface
+public:
+    QString commentSymbol() override;
+    QString blockCommentBeginSymbol() override;
+    QString blockCommentEndSymbol() override;
 };
 
 }

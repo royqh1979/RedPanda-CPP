@@ -691,4 +691,9 @@ QSet<QString> MakefileSyntaxer::keywords()
     return Directives;
 }
 
+QString MakefileSyntaxer::commentSymbol()
+{
+    return "#";
+}
+
 }

@@ -1448,4 +1448,19 @@ bool GLSLSyntaxer::supportBraceLevel()
 {
     return true;
 }
+
+QString GLSLSyntaxer::commentSymbol()
+{
+    return "//";
+}
+
+QString GLSLSyntaxer::blockCommentBeginSymbol()
+{
+    return "/*";
+}
+
+QString GLSLSyntaxer::blockCommentEndSymbol()
+{
+    return "*/";
+}
 }

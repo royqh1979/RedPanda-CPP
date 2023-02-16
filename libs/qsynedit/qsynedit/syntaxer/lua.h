@@ -183,6 +183,12 @@ public:
     QMap<QString, QSet<QString> > scopedKeywords() override;
     bool useXMakeLibs() const;
     void setUseXMakeLibs(bool newUseXMakeLibs);
+
+    // Syntaxer interface
+public:
+    QString commentSymbol() override;
+    QString blockCommentBeginSymbol() override;
+    QString blockCommentEndSymbol() override;
 };
 
 }
