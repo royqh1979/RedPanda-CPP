@@ -473,14 +473,15 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     }
     applyColorScheme(pSettings->editor().colorScheme());
 
-    if (!inProject())
+    if (!inProject()) {
+        initParser();
         reparse(false);
+        reparseTodo();
+    }
 
     if (pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
 
-    if (!inProject())
-        reparseTodo();
 
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
@@ -2801,29 +2802,29 @@ bool Editor::handleCodeCompletion(QChar key)
 
 void Editor::initParser()
 {
-    if (pSettings->codeCompletion().shareParser()) {
-        if (pSettings->codeCompletion().enabled()
-            && (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP)
-            ) {
+    if (pSettings->codeCompletion().enabled()
+        && (isCFile(mFilename) || isHFile(mFilename))) {
+        if (pSettings->codeCompletion().shareParser()) {
             mParser = sharedParser(mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C);
+        } else {
+            mParser = std::make_shared<CppParser>();
+            if (mUseCppSyntax) {
+                mParser->setLanguage(ParserLanguage::CPlusPlus);
+            } else {
+                mParser->setLanguage(ParserLanguage::C);
+            }
+            mParser->setOnGetFileStream(
+                        std::bind(
+                            &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                            std::placeholders::_1, std::placeholders::_2));
+            resetCppParser(mParser);
+            mParser->setEnabled(
+                        pSettings->codeCompletion().enabled() &&
+                        (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP));
         }
-        return;
-    }
-
-    mParser = std::make_shared<CppParser>();
-    if (mUseCppSyntax) {
-        mParser->setLanguage(ParserLanguage::CPlusPlus);
     } else {
-        mParser->setLanguage(ParserLanguage::C);
+        mParser = nullptr;
     }
-    mParser->setOnGetFileStream(
-                std::bind(
-                    &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
-                    std::placeholders::_1, std::placeholders::_2));
-    resetCppParser(mParser);
-    mParser->setEnabled(
-                pSettings->codeCompletion().enabled() &&
-                (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP));
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -3263,9 +3264,9 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     mCompletionPopup->setRecordUsage(pSettings->codeCompletion().recordUsage());
     mCompletionPopup->setSortByScope(pSettings->codeCompletion().sortByScope());
     mCompletionPopup->setShowKeywords(pSettings->codeCompletion().showKeywords());
-    if (type!=CodeCompletionType::Normal)
+    if (type!=CodeCompletionType::Normal) {
         mCompletionPopup->setShowCodeSnippets(false);
-    else {
+    } else {
         mCompletionPopup->setShowCodeSnippets(pSettings->codeCompletion().showCodeIns());
         if (pSettings->codeCompletion().showCodeIns()) {
             mCompletionPopup->setCodeSnippets(pMainWindow->codeSnippetManager()->snippets());

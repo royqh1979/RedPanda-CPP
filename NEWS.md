@@ -28,6 +28,7 @@ Red Panda C++ Version 2.12
   - fix: Wrong selection position after delete in column mode.
   - enhancement: Syntax highlight and basic code completion for lua.
   - enhancement: Basic code completion for xmake.lua.
+  - enhancement: Parser not correctly released if save a c file to non-c file.
 
 Red Panda C++ Version 2.11
 
