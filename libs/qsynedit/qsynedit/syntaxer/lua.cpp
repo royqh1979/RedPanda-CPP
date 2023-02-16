@@ -30,7 +30,7 @@ const QSet<QString> LuaSyntaxer::Keywords {
     "while"
 };
 
-const QSet<QString> LuaSyntaxer::LibFunctions {
+const QSet<QString> LuaSyntaxer::StdLibFunctions {
     "assert", "collectgarbage","dofile","error",
     "_G","getmetaobject","ipairs","load","loadfile",
     "next","pairs","pcall","print","rawequal",
@@ -40,7 +40,7 @@ const QSet<QString> LuaSyntaxer::LibFunctions {
     "require"
 };
 
-const QMap<QString,QSet<QString>> LuaSyntaxer::LibTables {
+const QMap<QString,QSet<QString>> LuaSyntaxer::StdLibTables {
     {"coroutine",{"close","create","isyieldable","resume","running",
         "status","wrap","yield"}},
     {"package",{"config","cpath","loaded","loadlib","path",
@@ -67,9 +67,97 @@ const QMap<QString,QSet<QString>> LuaSyntaxer::LibTables {
 
 };
 
+const QSet<QString> LuaSyntaxer::XMakeLibFunctions {
+    "is_os", "is_arch", "is_plat", "is_host", "is_mode", "is_kind",
+    "is_config", "has_config", "has_package",
+
+    "includes","set_project","set_version",
+    "set_xmakever","add_moduledirs","add_plugindirs",
+    "get_config","set_config","add_requires","add_requireconfs",
+    "add_repositories","set_defaultplat","set_defaultarchs"
+    "set_defaultmode","set_allowedplats","set_allowedarchs",
+    "set_allowedmodes",
+    "configvar_check_links","configvar_check_ctypes",
+    "configvar_check_cxxtypes","configvar_check_cfuncs",
+    "configvar_check_cxxfuncs","configvar_check_cincludes",
+    "configvar_check_cxxincludes","configvar_check_csnippets",
+    "configvar_check_cxxsnippets","configvar_check_features",
+    "check_macros","configvar_check_macros",
+
+    "target","target_end","set_kind","set_strip",
+    "set_enabled","set_enabled","set_default",
+    "set_options","set_symbols","set_basename",
+    "set_filename","set_prefixname","set_suffixname",
+    "set_extension","set_warnings","set_optimize",
+    "set_languages","set_fpmodels","set_targetdir",
+    "set_objectdir","set_dependir","add_imports",
+    "add_rules","on_load","on_config","on_link",
+    "on_build","on_build_file","on_build_files",
+    "on_clean","on_package","on_install",
+    "on_uninstall","on_run","before_link",
+    "before_build","before_build_file",
+    "before_build_files","before_clean",
+    "before_package","before_install",
+    "before_uninstall","before_run",
+    "after_link","after_build","after_build_file",
+    "after_build_files","after_clean","after_package",
+    "after_install","after_uninstall","after_run",
+    "set_pcheader","set_pcxxheader","add_deps",
+    "add_links","add_syslinks","add_files",
+    "remove_files","remove_headerfiles",
+    "add_linkdirs","add_rpathdirs",
+    "add_includedirs","add_includedirs",
+    "add_defines","add_undefines",
+    "add_cflags","add_cxflags",
+    "add_cxxflags","add_mflags","add_mxflags",
+    "add_mxxflags","add_scflags","add_asflags",
+    "add_gcflags","add_dcflags","add_rcflags",
+    "add_fcflags","add_zcflags","add_cuflags",
+    "add_culdflags","add_cugencodes","add_ldflags",
+    "add_arflags","add_shflags","add_options",
+    "add_packages","add_languages","add_vectorexts",
+    "add_frameworks","add_frameworkdirs","set_toolset",
+    "set_toolchains","set_plat","set_arch",
+    "set_values","add_values","set_rundir",
+    "set_runargs","add_runenvs","set_runenv",
+    "set_installdir","add_installfiles",
+    "add_headerfiles","set_configdir","set_configvar",
+    "add_configfiles","set_policy","set_runtimes",
+    "set_group","add_filegroups","set_exceptions",
+
+    "option","option_end","add_deps","before_check",
+    "on_check","after_check","set_values","set_default",
+    "set_showmenu","set_category","set_description",
+    "add_links","add_linkdirs","add_rpathdirs",
+    "add_cincludes","add_cxxincludes","add_ctypes",
+    "add_cxxtypes","add_csnippets","add_cxxsnippets",
+    "add_cfuncs","add_cxxfuncs",
+
+    "task","task_end","set_menu","set_category","on_run",
+
+    "rule","rule_end","add_deps","add_imports","set_extensions",
+    "on_load","on_config","on_link","on_build",
+    "on_clean","on_package","on_install","on_uninstall",
+    "on_build_file","on_buildcmd_file","on_build_files",
+    "on_buildcmd_files","before_link","before_build",
+    "before_clean","before_package","before_install",
+    "before_uninstall","before_build_file",
+    "before_buildcmd_file","before_build_files",
+    "before_buildcmd_files","after_link",
+    "after_build","after_clean","after_package",
+    "after_install","after_uninstall","after_build_file",
+    "after_buildcmd_file","after_build_files",
+    "after_buildcmd_files",
+
+    "toolchain","toolchain_end","set_kind","set_toolset",
+    "set_sdkdir","set_bindir","on_check","on_load",
+
+};
+
 
 LuaSyntaxer::LuaSyntaxer(): Syntaxer()
 {
+    mUseXMakeLibs=false;
     mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter,
                                                             TokenType::Character);
     addAttribute(mCharAttribute);
@@ -868,6 +956,19 @@ void LuaSyntaxer::pushIndents(IndentType indentType, int line)
     mRange.indents.push_back(IndentInfo{indentType,line});
 }
 
+bool LuaSyntaxer::useXMakeLibs() const
+{
+    return mUseXMakeLibs;
+}
+
+void LuaSyntaxer::setUseXMakeLibs(bool newUseXMakeLibs)
+{
+    if (mUseXMakeLibs!=newUseXMakeLibs) {
+        mKeywordsCache.clear();
+        mUseXMakeLibs = newUseXMakeLibs;
+    }
+}
+
 const QSet<QString> &LuaSyntaxer::customTypeKeywords() const
 {
     return mCustomTypeKeywords;
@@ -886,7 +987,7 @@ bool LuaSyntaxer::supportBraceLevel()
 
 QMap<QString, QSet<QString> > LuaSyntaxer::scopedKeywords()
 {
-    return LibTables;
+    return StdLibTables;
 }
 
 bool LuaSyntaxer::getTokenFinished() const
@@ -1074,8 +1175,10 @@ QSet<QString> LuaSyntaxer::keywords() {
     if (mKeywordsCache.isEmpty()) {
         mKeywordsCache = Keywords;
         mKeywordsCache.unite(mCustomTypeKeywords);
-        mKeywordsCache.unite(LibFunctions);
-        foreach(const QString& s, LibTables.keys())
+        mKeywordsCache.unite(StdLibFunctions);
+        if (mUseXMakeLibs)
+            mKeywordsCache.unite(XMakeLibFunctions);
+        foreach(const QString& s, StdLibTables.keys())
             mKeywordsCache.insert(s);
     }
     return mKeywordsCache;

@@ -73,9 +73,12 @@ public:
 
     static const QSet<QString> Keywords;
 
-    static const QSet<QString> LibFunctions;
+    static const QSet<QString> StdLibFunctions;
 
-    static const QMap<QString,QSet<QString>> LibTables;
+    static const QMap<QString,QSet<QString>> StdLibTables;
+
+    static const QSet<QString> XMakeLibFunctions;
+
 
     TokenId getTokenId();
 private:
@@ -123,6 +126,7 @@ private:
     int mLineNumber;
     int mLeftBraces;
     int mRightBraces;
+    bool mUseXMakeLibs;
 
     QSet<QString> mCustomTypeKeywords;
     QSet<QString> mKeywordsCache;
@@ -177,6 +181,8 @@ public:
     // Syntaxer interface
 public:
     QMap<QString, QSet<QString> > scopedKeywords() override;
+    bool useXMakeLibs() const;
+    void setUseXMakeLibs(bool newUseXMakeLibs);
 };
 
 }

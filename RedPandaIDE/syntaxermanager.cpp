@@ -72,7 +72,13 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename)
     } else if (suffix == "s" || suffix == "S") {
         return getSyntaxer(QSynedit::ProgrammingLanguage::ATTAssembly);
     } else if (suffix == "lua") {
-        return getSyntaxer(QSynedit::ProgrammingLanguage::LUA);
+        if (basename=="xmake") {
+            auto syntaxer=getSyntaxer(QSynedit::ProgrammingLanguage::LUA);
+            QSynedit::LuaSyntaxer* pSyntaxer= (QSynedit::LuaSyntaxer*)syntaxer.get();
+            pSyntaxer->setUseXMakeLibs(true);
+            return syntaxer;
+        } else
+            return getSyntaxer(QSynedit::ProgrammingLanguage::LUA);
     } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
         return getSyntaxer(QSynedit::ProgrammingLanguage::Makefile);
     } else if (suffix.isEmpty()) {
