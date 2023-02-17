@@ -1332,8 +1332,6 @@ public:
         void setMake(const QString& name);
         const QString& debugger() const;
         void setDebugger(const QString& name);
-        const QString& profiler() const;
-        void setProfiler(const QString& name);
         const QString& resourceCompiler() const;
         void setResourceCompiler(const QString& name);
         const QString &debugServer() const;
@@ -1430,7 +1428,6 @@ public:
         QString mCppCompiler;
         QString mMake;
         QString mDebugger;
-        QString mProfiler;
         QString mResourceCompiler;
         QString mDebugServer;
         QString mAssembler;

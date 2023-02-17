@@ -2189,7 +2189,7 @@ void MainWindow::debug()
                                           tr("Enable debugging"),
                                           tr("You are not using a Debug compiler setting.")
                                           +"<BR /><BR />"
-                                          +tr("Please choose a Debug compiler set in the toolbar, or enable the \"generate debugging info (-g3)\" and disable the \"strip additional info (-s)\" options in the compiler set settings's \"settings\" page.")
+                                          +tr("Please choose a Debug compiler set in the toolbarin the compiler set settings's \"settings\" page.")
                                           +"<BR /><BR />"
                                           +tr("Do you want to set it now?")
                                           ) == QMessageBox::Yes) {

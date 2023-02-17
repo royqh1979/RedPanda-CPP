@@ -682,7 +682,6 @@ private:
     PUndoList mUndoList;
     PRedoList mRedoList;
     QPoint mMouseDownPos;
-   int mMouseWheelAccumulator;
     EditCaretType mOverwriteCaret;
     EditCaretType  mInsertCaret;
     QPoint mCaretOffset;
@@ -744,6 +743,8 @@ private:
     BufferCoord mDragSelBeginSave;
     BufferCoord mDragSelEndSave;
     bool mDropped;
+    qint64 mLastWheelEventTime;
+    int mWheelEventTimes;
 
 friend class QSynEditPainter;
 

@@ -43,7 +43,9 @@
 
 namespace QSynedit {
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
-    mDropped(false)
+    mDropped{false},
+    mLastWheelEventTime{QDateTime::currentMSecsSinceEpoch()},
+    mWheelEventTimes{0}
 {
     mCharWidth=1;
     mTextHeight = 1;
@@ -3323,42 +3325,35 @@ void QSynEdit::updateModifiedStatus()
 
 int QSynEdit::scanFrom(int Index, int canStopIndex)
 {
-    SyntaxState iRange;
-    int Result = std::max(0,Index);
-    if (Result >= mDocument->count())
-        return Result;
+    SyntaxState state;
+    int result = std::max(0,Index);
+    if (result >= mDocument->count())
+        return result;
 
-    if (Result == 0) {
+    if (result == 0) {
         mSyntaxer->resetState();
     } else {
-        mSyntaxer->setState(mDocument->getSyntaxState(Result-1));
+        mSyntaxer->setState(mDocument->getSyntaxState(result-1));
     }
     do {
-        mSyntaxer->setLine(mDocument->getLine(Result), Result);
+        mSyntaxer->setLine(mDocument->getLine(result), result);
         mSyntaxer->nextToEol();
-        iRange = mSyntaxer->getState();
-        if (Result > canStopIndex){
-            if (mDocument->getSyntaxState(Result) == iRange
-                    && mDocument->getSyntaxState(Result).blockLevel == iRange.blockLevel
-                    && mDocument->getSyntaxState(Result).blockStarted == iRange.blockStarted
-                    && mDocument->getSyntaxState(Result).blockEnded == iRange.blockEnded
-                    && mDocument->getSyntaxState(Result).blockEndedLastLine == iRange.blockEndedLastLine
-                    && mDocument->getSyntaxState(Result).braceLevel == iRange.braceLevel
-                    && mDocument->getSyntaxState(Result).parenthesisLevel == iRange.parenthesisLevel
-                    && mDocument->getSyntaxState(Result).bracketLevel == iRange.bracketLevel
+        state = mSyntaxer->getState();
+        if (result > canStopIndex){
+            if (mDocument->getSyntaxState(result) == state
                     ) {
                 if (mUseCodeFolding)
                     rescanFolds();
-                return Result;// avoid the final Decrement
+                return result;// avoid the final Decrement
             }
         }
-        mDocument->setSyntaxState(Result,iRange);
-        Result ++ ;
-    } while (Result < mDocument->count());
-    Result--;
+        mDocument->setSyntaxState(result,state);
+        result ++ ;
+    } while (result < mDocument->count());
+    result--;
     if (mUseCodeFolding)
         rescanFolds();
-    return Result;
+    return result;
 }
 
 void QSynEdit::rescanRange(int line)
@@ -6336,6 +6331,15 @@ void QSynEdit::leaveEvent(QEvent *)
 
 void QSynEdit::wheelEvent(QWheelEvent *event)
 {
+    qint64 current=QDateTime::currentMSecsSinceEpoch();
+    if (current-mLastWheelEventTime<=1000) {
+        mWheelEventTimes+=1;
+        if (mWheelEventTimes>30)
+            return;
+    } else {
+        mWheelEventTimes=0;
+        mLastWheelEventTime=current;
+    }
     if (event->modifiers() == Qt::ShiftModifier) {
         if (event->angleDelta().y()>0) {
             horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);

@@ -1708,7 +1708,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mCppCompiler(set.mCppCompiler),
     mMake(set.mMake),
     mDebugger(set.mDebugger),
-    mProfiler(set.mProfiler),
     mResourceCompiler(set.mResourceCompiler),
     mDebugServer(set.mDebugServer),
     mAssembler(set.assembler()),
@@ -1963,16 +1962,6 @@ const QString &Settings::CompilerSet::debugger() const
 void Settings::CompilerSet::setDebugger(const QString &name)
 {
     mDebugger = name;
-}
-
-const QString &Settings::CompilerSet::profiler() const
-{
-    return mProfiler;
-}
-
-void Settings::CompilerSet::setProfiler(const QString &name)
-{
-    mProfiler = name;
 }
 
 const QString &Settings::CompilerSet::resourceCompiler() const
@@ -2348,7 +2337,6 @@ void Settings::CompilerSet::setExecutables()
     }
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
-    mProfiler = findProgramInBinDirs(GPROF_PROGRAM);
     mAssembler = findProgramInBinDirs(ASSEMBLER);
 }
 
@@ -3108,9 +3096,7 @@ void Settings::CompilerSets::saveSet(int index)
     savePath("debug_server", pSet->debugServer());
     savePath("make", pSet->make());
     savePath("windres", pSet->resourceCompiler());
-    savePath("profiler", pSet->profiler());
     savePath("assembler", pSet->assembler());
-
 
     mSettings->mSettings.remove("Options");
     foreach(const PCompilerOption& option, CompilerInfoManager::getInstance()->getCompilerOptions(pSet->compilerType())) {
@@ -3188,7 +3174,6 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setDebugServer(loadPath("debug_server"));
     pSet->setMake(loadPath("make"));
     pSet->setResourceCompiler(loadPath("windres"));
-    pSet->setProfiler(loadPath("profiler"));
     pSet->setAssembler(loadPath("assembler"));
 
     pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
