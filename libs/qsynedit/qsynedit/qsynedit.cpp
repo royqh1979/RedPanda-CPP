@@ -1919,7 +1919,7 @@ void QSynEdit::endEditing()
     if (mEditingCount==0) {
         if (!mUndoing)
             mUndoList->endBlock();
-        rescanRanges();
+        reparseDocument();
     }
     decPaintLock();
 }
@@ -3354,7 +3354,7 @@ void QSynEdit::scanFrom(int index)
     return ;
 }
 
-void QSynEdit::rescanRange(int line)
+void QSynEdit::reparseLine(int line)
 {
     if (!mSyntaxer)
         return;
@@ -3374,7 +3374,7 @@ void QSynEdit::rescanRange(int line)
     mDocument->setSyntaxState(line,iRange);
 }
 
-void QSynEdit::rescanRanges()
+void QSynEdit::reparseDocument()
 {
     if (mSyntaxer && !mDocument->empty()) {
         mSyntaxer->resetState();
@@ -3458,6 +3458,7 @@ void QSynEdit::foldOnListCleared()
 
 void QSynEdit::rescanFolds()
 {
+    //qDebug()<<QDateTime::currentDateTime();
     if (!mUseCodeFolding)
         return;
     rescanForFoldRanges();
@@ -4746,7 +4747,7 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
         auto action=finally([this]{
             mDocument->endUpdate();
         });
-        rescanRanges();
+        reparseDocument();
     }
     onSizeOrFontChanged(true);
     invalidate();
@@ -5312,6 +5313,7 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
         }
     }
     QStringList deleted=getContent(startPos,endPos,mode);
+    beginEditingWithoutUndo();
     switch(mode) {
     case SelectionMode::Normal:
         if (mDocument->count() > 0) {
@@ -5320,18 +5322,11 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
             // the selection mark.
             QString TempString = mDocument->getLine(startPos.line - 1).mid(0, startPos.ch - 1)
                 + mDocument->getLine(endPos.line - 1).mid(endPos.ch-1);
-//            bool collapsed=foldCollapsedBetween(BB.Line,BE.Line);
             // Delete all lines in the selection range.
             mDocument->deleteLines(startPos.line, endPos.line - startPos.line);
             properSetLine(startPos.line-1,TempString);
             UpdateMarks = true;
             internalSetCaretXY(startPos);
-//            if (collapsed) {
-//                PSynEditFoldRange foldRange = foldStartAtLine(BB.Line);
-//                if (!foldRange
-//                        || (!foldRange->collapsed))
-//                    uncollapseAroundLine(BB.Line);
-//            }
         }
         break;
     case SelectionMode::Column:
@@ -5378,6 +5373,7 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
     // Update marks
     if (UpdateMarks)
         doLinesDeleted(startPos.line, endPos.line - startPos.line + MarkOffset);
+    endEditingWithoutUndo();
     if (!mUndoing) {
         mUndoList->addChange(ChangeReason::Delete,
                              startPos,
@@ -5478,7 +5474,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
         str = sLeftSide + text[0] + sRightSide;
         properSetLine(caretY - 1, str);
     }
-    rescanRange(caretY);
+    reparseLine(caretY);
     // step2: insert remaining lines of Value
     for (int i=1;i<text.length();i++) {
         bool notInComment = true;
@@ -5510,7 +5506,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             }
         }
         properSetLine(caretY - 1, str,false);
-        rescanRange(caretY);
+        reparseLine(caretY);
         result++;
     }
     bChangeScroll = !mOptions.testFlag(eoScrollPastEol);
@@ -5950,6 +5946,18 @@ void QSynEdit::onEndFirstPaintLock()
 void QSynEdit::onBeginFirstPaintLock()
 {
 
+}
+
+void QSynEdit::beginEditingWithoutUndo()
+{
+    mEditingCount++;
+}
+
+void QSynEdit::endEditingWithoutUndo()
+{
+    mEditingCount--;
+    if (mEditingCount==0)
+        reparseDocument();
 }
 
 bool QSynEdit::isIdentChar(const QChar &ch)
