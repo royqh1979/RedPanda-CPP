@@ -58,14 +58,13 @@ CodeFoldingRange::CodeFoldingRange(PCodeFoldingRange parent,
     toLine(toLine),
     linesCollapsed(0),
     collapsed(false),
-    hintMarkLeft(0),
     parent(parent)
 {
     subFoldRanges = std::make_shared<CodeFoldingRanges>();
 }
 
 
-PCodeFoldingRange CodeFoldingRanges::range(int index)
+PCodeFoldingRange CodeFoldingRanges::range(int index) const
 {
     return mRanges[index];
 }
@@ -116,6 +115,11 @@ void CodeFoldingRanges::add(PCodeFoldingRange foldRange)
 PCodeFoldingRange CodeFoldingRanges::operator[](int index) const
 {
     return mRanges[index];
+}
+
+const QVector<PCodeFoldingRange> &CodeFoldingRanges::ranges() const
+{
+    return mRanges;
 }
 
 }

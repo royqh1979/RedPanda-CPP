@@ -44,7 +44,7 @@ public:
     explicit CodeFoldingRanges();
     CodeFoldingRanges& operator=(const CodeFoldingRanges&)=delete;
 
-    PCodeFoldingRange range(int index);
+    PCodeFoldingRange range(int index) const;
     void clear();
     int count() const;
     PCodeFoldingRange addByParts(PCodeFoldingRange parent, PCodeFoldingRanges allFold,
@@ -54,6 +54,8 @@ public:
     void remove(int index);
     void add(PCodeFoldingRange foldRange);
     PCodeFoldingRange operator[](int index) const;
+    const QVector<PCodeFoldingRange> &ranges() const;
+
 private:
     QVector<PCodeFoldingRange> mRanges;
 };
@@ -69,7 +71,6 @@ public:
     int linesCollapsed; // Number of collapsed lines
     PCodeFoldingRanges subFoldRanges; // Sub fold ranges
     bool collapsed; // Is collapsed?
-    int hintMarkLeft;
     std::weak_ptr<CodeFoldingRange> parent;
     bool parentCollapsed();
     void move(int count);

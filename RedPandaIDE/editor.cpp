@@ -246,6 +246,7 @@ void Editor::loadFile(QString filename) {
             unit->setRealEncoding(mFileEncoding);
         }
     }
+
     //this->setModified(false);
     updateCaption();
     if (mParentPageControl)
@@ -267,6 +268,7 @@ void Editor::loadFile(QString filename) {
         }
         reparseTodo();
     }
+
     mLastIdCharPressed = 0;
     saveAutoBackup();
 }
@@ -355,6 +357,7 @@ bool Editor::save(bool force, bool doReparse) {
             checkSyntaxInBack();
         reparseTodo();
     }
+
     return true;
 }
 
@@ -3273,7 +3276,6 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     }
     pMainWindow->functionTip()->hide();
     mCompletionPopup->show();
-
     // Scan the current function body
     QSet<QString> keywords;
     if (syntaxer()) {

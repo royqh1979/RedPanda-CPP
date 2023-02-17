@@ -3377,12 +3377,16 @@ void QSynEdit::reparseLine(int line)
 void QSynEdit::reparseDocument()
 {
     if (mSyntaxer && !mDocument->empty()) {
+//        qint64 begin=QDateTime::currentMSecsSinceEpoch();
         mSyntaxer->resetState();
         for (int i =0;i<mDocument->count();i++) {
             mSyntaxer->setLine(mDocument->getLine(i), i);
             mSyntaxer->nextToEol();
             mDocument->setSyntaxState(i, mSyntaxer->getState());
         }
+//        qint64 diff= QDateTime::currentMSecsSinceEpoch() - begin;
+
+//        qDebug()<<diff<<mDocument->count();
     }
     if (mUseCodeFolding)
         rescanFolds();
@@ -3461,7 +3465,11 @@ void QSynEdit::rescanFolds()
     //qDebug()<<QDateTime::currentDateTime();
     if (!mUseCodeFolding)
         return;
+//    qint64 begin=QDateTime::currentMSecsSinceEpoch();
+
     rescanForFoldRanges();
+//    qint64 diff= QDateTime::currentMSecsSinceEpoch() - begin;
+//    qDebug()<<"-"<<diff;
     invalidateGutter();
 }
 
@@ -3478,35 +3486,30 @@ void QSynEdit::rescanForFoldRanges()
 
     // Did we leave any collapsed folds and are we viewing a code file?
     if (mAllFoldRanges.count() > 0) {
-        CodeFoldingRanges ranges{mAllFoldRanges};
+        QMap<QString,PCodeFoldingRange> rangeIndexes;
+        foreach(const PCodeFoldingRange& r, mAllFoldRanges.ranges()) {
+            if (r->collapsed)
+                rangeIndexes.insert(QString("%1-%2").arg(r->fromLine).arg(r->toLine),r);
+        }
         mAllFoldRanges.clear();
         // Add folds to a separate list
         PCodeFoldingRanges temporaryAllFoldRanges = std::make_shared<CodeFoldingRanges>();
         scanForFoldRanges(temporaryAllFoldRanges);
 
+        PCodeFoldingRange tempFoldRange;
+        PCodeFoldingRange r2;
         // Combine new with old folds, preserve parent order
         for (int i = 0; i< temporaryAllFoldRanges->count();i++) {
-            PCodeFoldingRange tempFoldRange=temporaryAllFoldRanges->range(i);
-            int j=0;
-            while (j <ranges.count()) {
-                PCodeFoldingRange foldRange = ranges[j];
-                //qDebug()<<TemporaryAllFoldRanges->range(i)->fromLine<<ranges[j]->fromLine;
-                if (tempFoldRange->fromLine == foldRange->fromLine
-                        && tempFoldRange->toLine == foldRange->toLine) {
-                    //qDebug()<<"-"<<foldRange->fromLine;
-                    mAllFoldRanges.add(foldRange);
-                    break;
-                }
-                j++;
+            tempFoldRange=temporaryAllFoldRanges->range(i);
+            r2=rangeIndexes.value(QString("%1-%2").arg(tempFoldRange->fromLine).arg(tempFoldRange->toLine),
+                                  PCodeFoldingRange());
+            if (r2) {
+                tempFoldRange->collapsed=true;
+                tempFoldRange->linesCollapsed=r2->linesCollapsed;
             }
-            if (j>=ranges.count()) {
-                //qDebug()<<"--"<<tempFoldRange->fromLine;
-                mAllFoldRanges.add(tempFoldRange);
-            }
+            mAllFoldRanges.add(tempFoldRange);
         }
-
     } else {
-
         // We ended up with no folds after deleting, just pass standard data...
         PCodeFoldingRanges temp(&mAllFoldRanges, null_deleter);
         scanForFoldRanges(temp);
@@ -3516,7 +3519,11 @@ void QSynEdit::rescanForFoldRanges()
 void QSynEdit::scanForFoldRanges(PCodeFoldingRanges topFoldRanges)
 {
     PCodeFoldingRanges parentFoldRanges = topFoldRanges;
+//    qint64 begin=QDateTime::currentMSecsSinceEpoch();
+
     findSubFoldRange(topFoldRanges, parentFoldRanges,PCodeFoldingRange());
+//    qint64 diff= QDateTime::currentMSecsSinceEpoch() - begin;
+//    qDebug()<<"?"<<diff;
 }
 
 //this func should only be used in findSubFoldRange
@@ -3559,19 +3566,21 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
 
     while (line < mDocument->count()) { // index is valid for LinesToScan and fLines
         // If there is a collapsed fold over here, skip it
-        collapsedFold = collapsedFoldStartAtLine(line + 1); // only collapsed folds remain
-        if (collapsedFold) {
-            line = collapsedFold->toLine;
-            continue;
-        }
+//        collapsedFold = collapsedFoldStartAtLine(line + 1); // only collapsed folds remain
+//        if (collapsedFold) {
+//            line = collapsedFold->toLine;
+//            continue;
+//        }
 
         // Find an opening character on this line
         curLine = mDocument->getLine(line);
-        if (mDocument->blockEnded(line)>0) {
-            for (int i=0; i<mDocument->blockEnded(line);i++) {
+        int blockEnded=mDocument->blockEnded(line);
+        int blockStarted=mDocument->blockStarted(line);
+        if (blockEnded>0) {
+            for (int i=0; i<blockEnded;i++) {
                 // Stop the recursion if we find a closing char, and return to our parent
                 if (parent) {
-                    if (mDocument->blockStarted(line)>0)
+                    if (blockStarted>0)
                         parent->toLine = line;
                     else
                         parent->toLine = line + 1;
@@ -3584,8 +3593,8 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
                 }
             }
         }
-        if (mDocument->blockStarted(line)>0) {
-            for (int i=0; i<mDocument->blockStarted(line);i++) {
+        if (blockStarted>0) {
+            for (int i=0; i<blockStarted;i++) {
                 // Add it to the top list of folds
                 parent = parentFoldRanges->addByParts(
                   parent,
@@ -3604,7 +3613,7 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
 PCodeFoldingRange QSynEdit::collapsedFoldStartAtLine(int Line)
 {
     for (int i = 0; i< mAllFoldRanges.count() - 1; i++ ) {
-        if (mAllFoldRanges[i]->fromLine == Line && mAllFoldRanges[i]->collapsed) {
+        if (mAllFoldRanges[i]->collapsed && mAllFoldRanges[i]->fromLine == Line) {
             return mAllFoldRanges[i];
         } else if (mAllFoldRanges[i]->fromLine > Line) {
             break; // sorted by line. don't bother scanning further

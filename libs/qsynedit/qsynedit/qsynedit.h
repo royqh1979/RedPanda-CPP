@@ -469,6 +469,8 @@ protected:
     virtual void onBeginFirstPaintLock();
 
 private:
+    void beginEditingWithoutUndo();
+    void endEditingWithoutUndo();
     void clearAreaList(EditingAreaList areaList);
     void computeCaret();
     void computeScroll(bool isDragging);
@@ -500,8 +502,8 @@ private:
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
     void scanFrom(int index);
-    void rescanRange(int line);
-    void rescanRanges();
+    void reparseLine(int line);
+    void reparseDocument();
     void uncollapse(PCodeFoldingRange FoldRange);
     void collapse(PCodeFoldingRange FoldRange);
 

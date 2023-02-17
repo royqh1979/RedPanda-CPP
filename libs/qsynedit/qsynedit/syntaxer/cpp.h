@@ -94,7 +94,6 @@ private:
     void ansiCppProc();
     void ansiCProc();
     void asciiCharProc();
-    void atSymbolProc();
     void braceCloseProc();
     void braceOpenProc();
     void colonProc();

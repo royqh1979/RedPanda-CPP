@@ -206,9 +206,9 @@ void Document::setSyntaxState(int Index, const SyntaxState& range)
     if (Index<0 || Index>=mLines.count()) {
         ListIndexOutOfBounds(Index);
     }
-    beginUpdate();
+    //beginUpdate();
     mLines[Index]->syntaxState = range;
-    endUpdate();
+    //endUpdate();
 }
 
 QString Document::getLine(int Index)
@@ -581,6 +581,7 @@ void Document::setTabWidth(int newTabWidth)
         resetColumns();
     }
 }
+
 void Document::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);

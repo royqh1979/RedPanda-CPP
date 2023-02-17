@@ -361,12 +361,6 @@ void CppSyntaxer::asciiCharProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void CppSyntaxer::atSymbolProc()
-{
-    mTokenId = TokenId::Unknown;
-    mRun+=1;
-}
-
 void CppSyntaxer::braceCloseProc()
 {
     mRun += 1;
@@ -673,39 +667,28 @@ void CppSyntaxer::nullProc()
 
 void CppSyntaxer::numberProc()
 {
-    int idx1; // token[1]
-    idx1 = mRun;
-    mRun+=1;
     mTokenId = TokenId::Number;
-    bool shouldExit = false;
+    if (mRun+1<mLineSize && mLine[mRun]=='0') {
+        if (mLine[mRun+1]=='x' || mLine[mRun+1]=='X') {
+            mTokenId=TokenId::Hex;
+            mRun+=2;
+        } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='7') {
+            mTokenId=TokenId::Octal;
+            mRun+=2;
+        }
+    } else
+        mRun+=1;
     while (mRun<mLineSize) {
         switch(mLine[mRun].unicode()) {
         case '\'':
             if (mTokenId != TokenId::Number) {
-                mTokenId = TokenId::Symbol;
                 return;
             }
             break;
         case '.':
-            if (mRun+1<mLineSize && mLine[mRun+1] == '.') {
-                mRun+=2;
-                mTokenId = TokenId::Unknown;
-                return;
-            } else if (mTokenId != TokenId::Hex) {
+            if (mTokenId != TokenId::Hex && mTokenId != TokenId::Octal) {
                 mTokenId = TokenId::Float;
             } else {
-                mTokenId = TokenId::Unknown;
-                return;
-            }
-            break;
-        case '-':
-        case '+':
-            if (mTokenId != TokenId::Float) // number <> float. an arithmetic operator
-                return;
-            if (mRun-1>=0 && mLine[mRun-1]!= 'e' && mLine[mRun-1]!='E')  // number = float, but no exponent. an arithmetic operator
-                return;
-            if (mRun+1<mLineSize && (mLine[mRun+1]<'0' || mLine[mRun+1]>'9'))  {// invalid
-                mRun+=1;
                 mTokenId = TokenId::Unknown;
                 return;
             }
@@ -718,15 +701,8 @@ void CppSyntaxer::numberProc()
         case '5':
         case '6':
         case '7':
-            if ((mRun == idx1+1) && (mLine[idx1] == '0')) { // octal number
-                mTokenId = TokenId::Octal;
-            }
-            break;
         case '8':
         case '9':
-            if ( (mLine[idx1]=='0') && (mTokenId != TokenId::Hex)  && (mTokenId != TokenId::Float) ) // invalid octal char
-                mTokenId = TokenId::Unknown; // we must continue parse, it may be an float number
-            break;
         case 'a':
         case 'b':
         case 'c':
@@ -735,110 +711,31 @@ void CppSyntaxer::numberProc()
         case 'B':
         case 'C':
         case 'D':
-            if (mTokenId!=TokenId::Hex) { //invalid
-                mTokenId = TokenId::Unknown;
-                return;
-            }
             break;
         case 'e':
         case 'E':
+            if (mTokenId==TokenId::Number) {
+                mTokenId = TokenId::Float;
+                mRun++;
+                if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
+                    mRun++;
+            break;
+            }
+            break;
+        case 'p':
+        case 'P':
             if (mTokenId!=TokenId::Hex) {
-                if (mRun-1>=0 && (mLine[mRun-1]>='0' || mLine[mRun-1]<='9') ) {//exponent
-                    for (int i=idx1;i<mRun;i++) {
-                        if (mLine[i] == 'e' || mLine[i]=='E') { // too many exponents
-                            mRun+=1;
-                            mTokenId = TokenId::Unknown;
-                            return;
-                        }
-                    }
-                    if (mRun+1<mLineSize && mLine[mRun+1]!='+' && mLine[mRun+1]!='-' && !(mLine[mRun+1]>='0' && mLine[mRun+1]<='9')) {
-                        return;
-                    } else {
-                        mTokenId = TokenId::Float;
-                    }
-                } else {
-                    mRun+=1;
-                    mTokenId = TokenId::Unknown;
-                    return;
-                }
-            }
+                mTokenId = TokenId::Float;
+                mRun++;
+                if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
+                    mRun++;
             break;
-        case 'f':
-        case 'F':
-            if (mTokenId!=TokenId::Hex) {
-                for (int i=idx1;i<mRun;i++) {
-                    if (mLine[i] == 'f' || mLine[i]=='F') {
-                        mRun+=1;
-                        mTokenId = TokenId::Unknown;
-                        return;
-                    }
-                }
-                if (mTokenId == TokenId::Float) {
-                    if (mRun-1>=0 && (mLine[mRun-1]=='l' || mLine[mRun-1]=='L')) {
-                        mRun+=1;
-                        mTokenId = TokenId::Unknown;
-                        return;
-                    }
-                } else {
-                    mTokenId = TokenId::Float;
-                }
-            }
-            break;
-        case 'l':
-        case 'L':
-            for (int i=idx1;i<=mRun-2;i++) {
-                if (mLine[i] == 'l' && mLine[i]=='L') {
-                    mRun+=1;
-                    mTokenId = TokenId::Unknown;
-                    return;
-                }
-            }
-            if (mTokenId == TokenId::Float && (mLine[mRun-1]=='f' || mLine[mRun-1]=='F')) {
-                mRun+=1;
-                mTokenId = TokenId::Unknown;
-                return;
-            }
-            break;
-        case 'u':
-        case 'U':
-            if (mTokenId == TokenId::Float) {
-                mRun+=1;
-                mTokenId = TokenId::Unknown;
-                return;
-            } else {
-                for (int i=idx1;i<mRun;i++) {
-                    if (mLine[i] == 'u' || mLine[i]=='U') {
-                        mRun+=1;
-                        mTokenId = TokenId::Unknown;
-                        return;
-                    }
-                }
-            }
-            break;
-        case 'x':
-        case 'X':
-            if ((mRun == idx1+1) && (mLine[idx1]=='0') &&
-                    mRun+1<mLineSize &&
-                    ((mLine[mRun+1]>='0' && mLine[mRun+1]<='9')
-                     || (mLine[mRun+1]>='a' && mLine[mRun+1]<='f')
-                     || (mLine[mRun+1]>='A' && mLine[mRun+1]<='F')) ) {
-                mTokenId = TokenId::Hex;
-            } else {
-                mRun+=1;
-                mTokenId = TokenId::Unknown;
-                return;
             }
             break;
         default:
-            shouldExit=true;
+            return;
         }
-        if (shouldExit) {
-            break;
-        }
-        mRun+=1;        
-    }
-    if (mRun-1>=0 && mLine[mRun-1] == '\'') {
-        mTokenId = TokenId::Unknown;
+        mRun+=1;
     }
 }
 
@@ -1123,11 +1020,7 @@ void CppSyntaxer::stringEscapeSeqProc()
         case '5':
         case '6':
         case '7':
-            for (int i=0;i<3;i++) {
-                if (mRun>=mLineSize || mLine[mRun]<'0' || mLine[mRun]>'7')
-                    break;
-                mRun+=1;
-            }
+            mRun+=3;
             break;
         case '8':
         case '9':
@@ -1136,49 +1029,19 @@ void CppSyntaxer::stringEscapeSeqProc()
             break;
         case 'x':
             mRun+=1;
-            if (mRun>=mLineSize || !(
-                     (mLine[mRun]>='0' && mLine[mRun]<='9')
-                   ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
-                   ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
-                    )) {
-                mTokenId = TokenId::Unknown;
-            } else {
-                while (mRun<mLineSize && (
-                       (mLine[mRun]>='0' && mLine[mRun]<='9')
-                     ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
-                     ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
-                       ))  {
-                    mRun+=1;
-                }
+            while (mRun<mLineSize && (
+                   (mLine[mRun]>='0' && mLine[mRun]<='9')
+                 ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
+                 ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
+                   ))  {
+                mRun+=1;
             }
             break;
         case 'u':
-            mRun+=1;
-            for (int i=0;i<4;i++) {
-                if (mRun>=mLineSize || !(
-                            (mLine[mRun]>='0' && mLine[mRun]<='9')
-                          ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
-                          ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
-                           )) {
-                    mTokenId = TokenId::Unknown;
-                    return;
-                }
-                mRun+=1;
-            }
+            mRun+=5;
             break;
         case 'U':
-            mRun+=1;
-            for (int i=0;i<8;i++) {
-                if (mRun>=mLineSize || !(
-                            (mLine[mRun]>='0' && mLine[mRun]<='9')
-                          ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
-                          ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
-                           )) {
-                    mTokenId = TokenId::Unknown;
-                    return;
-                }
-                mRun+=1;
-            }
+            mRun+=9;
             break;
         }
     }
@@ -1282,9 +1145,6 @@ void CppSyntaxer::processChar()
             break;
         case '\'':
             asciiCharProc();
-            break;
-        case '@':
-            atSymbolProc();
             break;
         case '}':
             braceCloseProc();
