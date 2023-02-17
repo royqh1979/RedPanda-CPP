@@ -1125,12 +1125,18 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     //        qDebug()<<s;
     //        PStatement statement = mParser->findStatementOf(mFilename,
     //          s , p.Line);
-            QStringList expression = getExpressionAtPosition(p);
-            PStatement statement = parser()->findStatementOf(
-                        filename(),
-                        expression,
-                        p.line);
-            StatementKind kind = getKindOfStatement(statement);
+            StatementKind kind;
+            if (mParser->parsing()){
+                kind=mIdentCache.value(QString("%1 %2").arg(aChar).arg(token),StatementKind::skUnknown);
+            } else {
+                QStringList expression = getExpressionAtPosition(p);
+                PStatement statement = parser()->findStatementOf(
+                            filename(),
+                            expression,
+                            p.line);
+                kind = getKindOfStatement(statement);
+                mIdentCache.insert(QString("%1 %2").arg(aChar).arg(token),kind);
+            }
             if (kind == StatementKind::skUnknown) {
                 QSynedit::BufferCoord pBeginPos,pEndPos;
                 QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
@@ -1356,7 +1362,7 @@ void Editor::showEvent(QShowEvent */*event*/)
         connect(mParser.get(),
                 &CppParser::onEndParsing,
                 this,
-                &QSynedit::QSynEdit::invalidate);
+                &Editor::onEndParsing);
         reparse(false);
     }
     if (mParentPageControl) {
@@ -1399,7 +1405,7 @@ void Editor::hideEvent(QHideEvent */*event*/)
         disconnect(mParser.get(),
                 &CppParser::onEndParsing,
                 this,
-                &QSynedit::QSynEdit::invalidate);
+                &Editor::onEndParsing);
     }
     pMainWindow->updateForEncodingInfo(nullptr);
     pMainWindow->updateStatusbarForLineCol(nullptr);
@@ -1971,6 +1977,12 @@ void Editor::onTooltipTimer()
     } else {
         updateMouseCursor();
     }
+}
+
+void Editor::onEndParsing()
+{
+    mIdentCache.clear();
+    invalidate();
 }
 
 void Editor::resolveAutoDetectEncodingOption()
@@ -4341,7 +4353,7 @@ void Editor::setProject(Project *pProject)
                     connect(mParser.get(),
                             &CppParser::onEndParsing,
                             this,
-                            &QSynedit::QSynEdit::invalidate);
+                            &Editor::onEndParsing);
                 } else {
                     invalidate();
                 }

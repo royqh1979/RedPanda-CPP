@@ -37,6 +37,7 @@ Red Panda C++ Version 2.12
   - enhancement: Show "..." instead of "...}" when folding #if/#endif
   - enhancement: Correctly handle high-precision mouse wheel / touchpad in editors.
   - enhancement: Greatly reduce time to open/edit big files.
+  - enhancement: Reduce flicker when editing big files.
 
 Red Panda C++ Version 2.11
 

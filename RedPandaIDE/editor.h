@@ -237,6 +237,7 @@ private slots:
     void onFunctionTipsTimer();
     void onAutoBackupTimer();
     void onTooltipTimer();
+    void onEndParsing();
 
 private:
     void resolveAutoDetectEncodingOption();
@@ -348,6 +349,7 @@ private:
     QTimer mTooltipTimer;
     int mHoverModifiedLine;
     int mWheelAccumulatedDelta;
+    QMap<QString,StatementKind> mIdentCache;
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
 

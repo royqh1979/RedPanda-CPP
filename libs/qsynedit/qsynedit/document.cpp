@@ -260,12 +260,12 @@ void Document::setContents(const QStringList &text)
 QStringList Document::contents()
 {
     QMutexLocker locker(&mMutex);
-    QStringList Result;
+    QStringList result;
     DocumentLines list = mLines;
     foreach (const PDocumentLine& line, list) {
-        Result.append(line->lineText);
+        result.append(line->lineText);
     }
-    return Result;
+    return result;
 }
 
 void Document::beginUpdate()
