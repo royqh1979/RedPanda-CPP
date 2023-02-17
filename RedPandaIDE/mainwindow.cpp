@@ -2234,29 +2234,17 @@ void MainWindow::debug()
 
                 debugFile.setFile(filePath);
                 if (!debugFile.exists()) {
-                    if (QMessageBox::question(this,tr("Compile"),
-                                              tr("Source file is not compiled.")+"<BR /><BR />" + tr("Compile now?"),
-                                              QMessageBox::Yes|QMessageBox::No,
-                                              QMessageBox::Yes) == QMessageBox::Yes) {
-                        mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-                        mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-                        mCompileSuccessionTask->binDirs = binDirs;
-                        compile();
-                        return;
-                    }
-                } else {
-                    if (compareFileModifiedTime(e->filename(),filePath)>=0) {
-                        if (QMessageBox::question(this,tr("Compile"),
-                                                  tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
-                                                  QMessageBox::Yes|QMessageBox::No,
-                                                  QMessageBox::Yes) == QMessageBox::Yes) {
-                            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-                            mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-                            mCompileSuccessionTask->binDirs = binDirs;
-                            compile();
-                            return;
-                        }
-                    }
+                    mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+                    mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+                    mCompileSuccessionTask->binDirs = binDirs;
+                    compile();
+                    return;
+                } else if (compareFileModifiedTime(e->filename(),filePath)>=0) {
+                    mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+                    mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+                    mCompileSuccessionTask->binDirs = binDirs;
+                    compile();
+                    return;
                 }
 
                 prepareDebugger();
