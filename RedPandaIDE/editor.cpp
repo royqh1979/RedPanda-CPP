@@ -195,6 +195,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mAutoBackupTimer.setInterval(1);
         connect(&mAutoBackupTimer, &QTimer::timeout,
             this, &Editor::onAutoBackupTimer);
+        connect(&mTooltipTimer, &QTimer::timeout,
+                this, &Editor::onTooltipTimer);
     }
 
     connect(horizontalScrollBar(), &QScrollBar::valueChanged,
@@ -1233,169 +1235,21 @@ bool Editor::event(QEvent *event)
             && !pMainWindow->completionPopup()->isVisible()
             && !pMainWindow->functionTip()->isVisible()
             && !pMainWindow->headerCompletionPopup()->isVisible()) {
-        if(mHoverModifiedLine!=-1) {
-            invalidateLine(mHoverModifiedLine);
-            mHoverModifiedLine=-1;
-        }
-
-        QHoverEvent *helpEvent = static_cast<QHoverEvent *>(event);
-        QSynedit::BufferCoord p;
-        TipType reason = getTipType(helpEvent->pos(),p);
-        PSyntaxIssue pError;
-        int line ;
-        if (reason == TipType::Error) {
-            pError = getSyntaxIssueAtPosition(p);
-        } else if (pointToLine(helpEvent->pos(),line)) {
-            //issue tips is prefered
-            PSyntaxIssueList issues = getSyntaxIssuesAtLine(line);
-            if (issues && !issues->isEmpty()) {
-                reason = TipType::Error;
-                pError = issues->front();
-            }
-        }
-
-        // Get subject
-        bool isIncludeLine = false;
-        bool isIncludeNextLine = false;
-        QSynedit::BufferCoord pBeginPos,pEndPos;
-        QString s;
-        QStringList expression;
-        switch (reason) {
-        case TipType::Preprocessor:
-            // When hovering above a preprocessor line, determine if we want to show an include or a identifier hint
-            if (mParser) {
-                s = document()->getLine(p.line - 1);
-                isIncludeNextLine = mParser->isIncludeNextLine(s);
-                if (!isIncludeNextLine)
-                    isIncludeLine = mParser->isIncludeLine(s);
-                if (!isIncludeNextLine &&!isIncludeLine)
-                    s = wordAtRowCol(p);
-            }
-            break;
-        case TipType::Identifier:
-            if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning())
-                s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
-            else if (!mCompletionPopup->isVisible()
-                     && !mHeaderCompletionPopup->isVisible()) {
-                expression = getExpressionAtPosition(p);
-                s = expression.join(""); // information during coding
-            }
-            break;
-        case TipType::Selection:
-            s = selText(); // when a selection is available, always only use that
-            break;
-        case TipType::Error:
-            s = pError->token;
-            break;
-        case TipType::None:
-            cancelHint();
-            mCurrentWord = "";
-            mCurrentTipType = TipType::None;
-            event->ignore();
-            return true;
-        }
-
-        s = s.trimmed();
-        if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
-            if (mParser
-                    && mParser->enabled()
-                    && qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
-                if (!hasFocus())
-                    activate();
-                setCursor(Qt::PointingHandCursor);
-            } else {
-                updateMouseCursor();
-            }
-            if (pointToLine(helpEvent->pos(),line)) {
-                invalidateLine(line);
-                mHoverModifiedLine=line;
-            }
-            event->ignore();
-            return true; // do NOT remove hint when subject stays the same
-        }
-
-        // Remove hint
         cancelHint();
-        mCurrentWord = s;
-        mCurrentTipType = reason;
-
-
-        // Determine what to do with subject
-        QString hint = "";
-        switch (reason) {
-        case TipType::Preprocessor:
-            if (isIncludeNextLine || isIncludeLine) {
-                if (pSettings->editor().enableHeaderToolTips())
-                    hint = getFileHint(s, isIncludeNextLine);
-            } else if (//devEditor.ParserHints and
-                     !mCompletionPopup->isVisible()
-                     && !mHeaderCompletionPopup->isVisible()) {
-                if (pSettings->editor().enableIdentifierToolTips())
-                    hint = getParserHint(QStringList(),s,p.line);
-            }
-            break;
-        case TipType::Identifier:
-        case TipType::Selection:
-            if (!mCompletionPopup->isVisible()
-                    && !mHeaderCompletionPopup->isVisible()) {
-                if (pMainWindow->debugger()->executing()
-                        && (pSettings->editor().enableDebugTooltips())) {
-                    showDebugHint(s,p.line);
-                } else if (pSettings->editor().enableIdentifierToolTips()) { //if devEditor.ParserHints {
-                    hint = getParserHint(expression, s, p.line);
-                }
-            }
-            break;
-        case TipType::Error:
-            if (pSettings->editor().enableIssueToolTips())
-                hint = getErrorHint(pError);
-            break;
-        default:
-            break;
-        }
-//        qDebug()<<"hint:"<<hint;
-        if (!hint.isEmpty()) {
-            //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
-            //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
-            if (mParser
-                    && mParser->enabled()
-                    && qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
-                if (!hasFocus())
-                    activate();
-                setCursor(Qt::PointingHandCursor);
-            } else if (cursor() == Qt::PointingHandCursor) {
-                updateMouseCursor();
-            }
-            if (pointToLine(helpEvent->pos(),line)) {
-                invalidateLine(line);
-                mHoverModifiedLine=line;
-            }
-            if (pMainWindow->functionTip()->isVisible()) {
-                pMainWindow->functionTip()->hide();
-            }
-            QToolTip::showText(mapToGlobal(helpEvent->pos()),hint,this);
-            event->ignore();
+        mTooltipTimer.stop();
+        if (pSettings->editor().tipsDelay()>0) {
+            mTooltipTimer.setSingleShot(true);
+            mTooltipTimer.start(pSettings->editor().tipsDelay());
         } else {
-            updateMouseCursor();
-            event->ignore();
+            onTooltipTimer();
         }
-        return true;
+        event->ignore();
     } else if (event->type() == QEvent::HoverLeave) {
         cancelHint();
         return true;
     } else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease ) {
         if (!mCurrentWord.isEmpty()) {
-            QKeyEvent* keyEvent = dynamic_cast<QKeyEvent*>(event);
-            if (keyEvent->key() == Qt::Key_Control) {
-                QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
-                //postEvent takes the owner ship
-                QHoverEvent* hoverEvent=new QHoverEvent(QEvent::HoverMove,
-                                                        mapFromGlobal(QCursor::pos()),
-                                                        mapFromGlobal(QCursor::pos()),
-                                                        Qt::ControlModifier
-                                                        );
-                app->postEvent(this,hoverEvent);
-            }
+            onTooltipTimer();
         }
     }
     return QSynEdit::event(event);
@@ -1408,7 +1262,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
     }
 
     // if ctrl+clicked
-    if ((cursor() == Qt::PointingHandCursor) && (event->modifiers() == Qt::ControlModifier)
+    if ((event->modifiers() == Qt::ControlModifier)
             && (event->button() == Qt::LeftButton)) {
 
         QSynedit::BufferCoord p;
@@ -1886,8 +1740,10 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         if (pSettings->editor().showFunctionTips()) {
             updateFunctionTip(false);
             mFunctionTipTimer.stop();
-            mFunctionTipTimer.start(500);
-//              updateFunctionTip();
+            if (pSettings->editor().tipsDelay()>0)
+                mFunctionTipTimer.start(500);
+            else
+                onFunctionTipsTimer();
         }
     }
 
@@ -1968,6 +1824,151 @@ void Editor::onAutoBackupTimer()
     if (current.toSecsSinceEpoch()-lastModifyTime().toSecsSinceEpoch()<=3)
         return;
     saveAutoBackup();
+}
+
+void Editor::onTooltipTimer()
+{
+    if(mHoverModifiedLine!=-1) {
+        invalidateLine(mHoverModifiedLine);
+        mHoverModifiedLine=-1;
+    }
+
+    QSynedit::BufferCoord p;
+    QPoint pos = mapFromGlobal(QCursor::pos());
+    TipType reason = getTipType(pos,p);
+    PSyntaxIssue pError;
+    int line ;
+    if (reason == TipType::Error) {
+        pError = getSyntaxIssueAtPosition(p);
+    } else if (pointToLine(pos,line)) {
+        //issue tips is prefered
+        PSyntaxIssueList issues = getSyntaxIssuesAtLine(line);
+        if (issues && !issues->isEmpty()) {
+            reason = TipType::Error;
+            pError = issues->front();
+        }
+    }
+
+    // Get subject
+    bool isIncludeLine = false;
+    bool isIncludeNextLine = false;
+    QSynedit::BufferCoord pBeginPos,pEndPos;
+    QString s;
+    QStringList expression;
+    switch (reason) {
+    case TipType::Preprocessor:
+        // When hovering above a preprocessor line, determine if we want to show an include or a identifier hint
+        if (mParser) {
+            s = document()->getLine(p.line - 1);
+            isIncludeNextLine = mParser->isIncludeNextLine(s);
+            if (!isIncludeNextLine)
+                isIncludeLine = mParser->isIncludeLine(s);
+            if (!isIncludeNextLine &&!isIncludeLine)
+                s = wordAtRowCol(p);
+        }
+        break;
+    case TipType::Identifier:
+        if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning())
+            s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
+        else if (!mCompletionPopup->isVisible()
+                 && !mHeaderCompletionPopup->isVisible()) {
+            expression = getExpressionAtPosition(p);
+            s = expression.join(""); // information during coding
+        }
+        break;
+    case TipType::Selection:
+        s = selText(); // when a selection is available, always only use that
+        break;
+    case TipType::Error:
+        s = pError->token;
+        break;
+    case TipType::None:
+        cancelHint();
+        mCurrentWord = "";
+        mCurrentTipType = TipType::None;
+        return;
+    }
+
+    s = s.trimmed();
+    if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
+        if (mParser
+                && mParser->enabled()
+                && qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
+            if (!hasFocus())
+                activate();
+            setCursor(Qt::PointingHandCursor);
+        } else {
+            updateMouseCursor();
+        }
+        if (pointToLine(pos,line)) {
+            invalidateLine(line);
+            mHoverModifiedLine=line;
+        }
+    }
+
+    // Remove hint
+    cancelHint();
+    mCurrentWord = s;
+    mCurrentTipType = reason;
+
+
+    // Determine what to do with subject
+    QString hint = "";
+    switch (reason) {
+    case TipType::Preprocessor:
+        if (isIncludeNextLine || isIncludeLine) {
+            if (pSettings->editor().enableHeaderToolTips())
+                hint = getFileHint(s, isIncludeNextLine);
+        } else if (//devEditor.ParserHints and
+                 !mCompletionPopup->isVisible()
+                 && !mHeaderCompletionPopup->isVisible()) {
+            if (pSettings->editor().enableIdentifierToolTips())
+                hint = getParserHint(QStringList(),s,p.line);
+        }
+        break;
+    case TipType::Identifier:
+    case TipType::Selection:
+        if (!mCompletionPopup->isVisible()
+                && !mHeaderCompletionPopup->isVisible()) {
+            if (pMainWindow->debugger()->executing()
+                    && (pSettings->editor().enableDebugTooltips())) {
+                showDebugHint(s,p.line);
+            } else if (pSettings->editor().enableIdentifierToolTips()) { //if devEditor.ParserHints {
+                hint = getParserHint(expression, s, p.line);
+            }
+        }
+        break;
+    case TipType::Error:
+        if (pSettings->editor().enableIssueToolTips())
+            hint = getErrorHint(pError);
+        break;
+    default:
+        break;
+    }
+//        qDebug()<<"hint:"<<hint;
+    if (!hint.isEmpty()) {
+        //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
+        //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
+        if (mParser
+                && mParser->enabled()
+                && qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
+            if (!hasFocus())
+                activate();
+            setCursor(Qt::PointingHandCursor);
+        } else if (cursor() == Qt::PointingHandCursor) {
+            updateMouseCursor();
+        }
+        if (pointToLine(pos,line)) {
+            invalidateLine(line);
+            mHoverModifiedLine=line;
+        }
+        if (pMainWindow->functionTip()->isVisible()) {
+            pMainWindow->functionTip()->hide();
+        }
+        QToolTip::showText(mapToGlobal(pos),hint,this);
+    } else {
+        updateMouseCursor();
+    }
 }
 
 void Editor::resolveAutoDetectEncodingOption()
@@ -3829,8 +3830,8 @@ void Editor::cancelHint()
 
     // disable editor hint
     QToolTip::hideText();
-    //mCurrentWord = "";
-    //mCurrentTipType = TipType::None;
+    mCurrentWord="";
+    mCurrentTipType=TipType::None;
     updateMouseCursor();
 }
 

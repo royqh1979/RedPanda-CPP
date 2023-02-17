@@ -777,6 +777,16 @@ void Settings::Editor::setEnableEditTempBackup(bool newEnableEditTempBackup)
     mEnableEditTempBackup = newEnableEditTempBackup;
 }
 
+int Settings::Editor::tipsDelay() const
+{
+    return mTipsDelay;
+}
+
+void Settings::Editor::setTipsDelay(int newTipsDelay)
+{
+    mTipsDelay = newTipsDelay;
+}
+
 bool Settings::Editor::showTrailingSpaces() const
 {
     return mShowTrailingSpaces;
@@ -1408,6 +1418,7 @@ void Settings::Editor::doSave()
     saveValue("enable_header_tooltips",mEnableHeaderToolTips);
     saveValue("enable_issue_tooltips",mEnableIssueToolTips);
     saveValue("show_function_tips",mShowFunctionTips);
+    saveValue("tips_delay",mTipsDelay);
 }
 
 void Settings::Editor::doLoad()
@@ -1563,6 +1574,7 @@ void Settings::Editor::doLoad()
     mEnableHeaderToolTips = boolValue("enable_header_tooltips", true);
     mEnableIssueToolTips = boolValue("enable_issue_tooltips", true);
     mShowFunctionTips = boolValue("show_function_tips",true);
+    mTipsDelay = intValue("tips_delay",500);
 }
 
 QSynedit::EditCaretType Settings::Editor::caretForOverwrite() const

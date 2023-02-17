@@ -1687,6 +1687,14 @@
         <source>Show expression value tooltips when debugging</source>
         <translation>Mostrar dicas com valor de expressão ao depurar</translation>
     </message>
+    <message>
+        <source>Tool tips delay</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ms</source>
+        <translation type="unfinished">ms</translation>
+    </message>
 </context>
 <context>
     <name>EnvironmentAppearenceWidget</name>
@@ -6531,6 +6539,10 @@
         <source>ASM files</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Lua files</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>
@@ -7470,6 +7482,53 @@
     <message>
         <source>Value</source>
         <translation>Valor</translation>
+    </message>
+</context>
+<context>
+    <name>XMakeCompiler</name>
+    <message>
+        <source>Building xmake.lua file...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Filename: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open &apos;%1&apos; for write!</source>
+        <translation type="unfinished">Impossível abrir &apos;%1&apos; para gravar!</translation>
+    </message>
+    <message>
+        <source>Compiling project changes...</source>
+        <translation type="unfinished">Compilando alterações em projeto ...</translation>
+    </message>
+    <message>
+        <source>- Project Filename: %1</source>
+        <translation type="unfinished">- Nome de arquivo de projeto: %1</translation>
+    </message>
+    <message>
+        <source>- Compiler Set Name: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Processing makefile:</source>
+        <translation type="unfinished">Processando makefile:</translation>
+    </message>
+    <message>
+        <source>- makefile processer: %1</source>
+        <translation type="unfinished">- Processador do makefile: %1</translation>
+    </message>
+    <message>
+        <source>- Command: %1 %2</source>
+        <translation type="unfinished">- Comando: %1 %2</translation>
     </message>
 </context>
 <context>

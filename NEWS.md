@@ -31,6 +31,8 @@ Red Panda C++ Version 2.12
   - enhancement: Parser not correctly released if save a c file to non-c file.
   - enhancement: Improve auto indent for embedding no-brace statements like for-for-if.
   - enhancement: Toggle comment for asm/makefile/lua files.
+  - enhancement: Delay for tooltips.
+  - enhancement: "Tool tips delay" option in Options/editor/Tooltips
 
 Red Panda C++ Version 2.11
 

@@ -402,6 +402,9 @@ public:
         bool enableEditTempBackup() const;
         void setEnableEditTempBackup(bool newEnableEditTempBackup);
 
+        int tipsDelay() const;
+        void setTipsDelay(int newTipsDelay);
+
     private:
         //General
         // indents
@@ -527,6 +530,7 @@ public:
 
 
         //hints tooltip
+        int mTipsDelay;
         bool mEnableTooltips;
         bool mEnableDebugTooltips;
         bool mEnableIdentifierToolTips;

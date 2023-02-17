@@ -236,6 +236,7 @@ private slots:
     void onLinesInserted(int first,int count);
     void onFunctionTipsTimer();
     void onAutoBackupTimer();
+    void onTooltipTimer();
 
 private:
     void resolveAutoDetectEncodingOption();
@@ -344,6 +345,7 @@ private:
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
     QTimer mFunctionTipTimer;
     QTimer mAutoBackupTimer;
+    QTimer mTooltipTimer;
     int mHoverModifiedLine;
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;

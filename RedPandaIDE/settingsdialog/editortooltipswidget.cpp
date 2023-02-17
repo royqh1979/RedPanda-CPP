@@ -38,7 +38,7 @@ void EditorTooltipsWidget::doLoad()
     ui->chkIdentifierTooltips->setChecked(pSettings->editor().enableIdentifierToolTips());
     ui->chkHeaderTooltips->setChecked(pSettings->editor().enableHeaderToolTips());
     ui->chkDebugTooltips->setChecked(pSettings->editor().enableDebugTooltips());
-
+    ui->spinTipsDelay->setValue(pSettings->editor().tipsDelay());
 }
 
 void EditorTooltipsWidget::doSave()
@@ -49,5 +49,6 @@ void EditorTooltipsWidget::doSave()
     pSettings->editor().setEnableIdentifierToolTips(ui->chkIdentifierTooltips->isChecked());
     pSettings->editor().setEnableHeaderToolTips(ui->chkHeaderTooltips->isChecked());
     pSettings->editor().setEnableDebugTooltips(ui->chkDebugTooltips->isChecked());
+    pSettings->editor().setTipsDelay(ui->spinTipsDelay->value());
     pSettings->editor().save();
 }

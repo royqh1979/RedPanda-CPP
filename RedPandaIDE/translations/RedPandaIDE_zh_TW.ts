@@ -1564,6 +1564,14 @@
         <source>Show expression value tooltips when debugging</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Tool tips delay</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ms</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnvironmentAppearenceWidget</name>
@@ -6152,6 +6160,10 @@
         <source>ASM files</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Lua files</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>
@@ -6952,6 +6964,53 @@
     </message>
     <message>
         <source>Value</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>XMakeCompiler</name>
+    <message>
+        <source>Building xmake.lua file...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Filename: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open &apos;%1&apos; for write!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiling project changes...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Project Filename: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Compiler Set Name: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Processing makefile:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- makefile processer: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Command: %1 %2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
