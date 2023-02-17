@@ -1047,7 +1047,7 @@ void QSynEditPainter::paintLines()
             // Paint folding
             foldRange = edit->foldStartAtLine(vLine);
             if ((foldRange) && foldRange->collapsed) {
-                sFold = edit->syntaxer()->foldString("");
+                sFold = edit->syntaxer()->foldString(sLine);
                 nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
                 attr = edit->mSyntaxer->symbolAttribute();
                 getBraceColorAttr(edit->mSyntaxer->getState().braceLevel,attr);

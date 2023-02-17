@@ -35,6 +35,7 @@ Red Panda C++ Version 2.12
   - enhancement: "Tool tips delay" option in Options/editor/Tooltips
   - change: Remove "Compile & Run" menu item. It's replaced by "Run".
   - enhancement: Limit max speed for mouse scroll (and touch pad?)
+  - enhancement: Show "..." instead of "...}" when folding #if/#endif
 
 Red Panda C++ Version 2.11
 

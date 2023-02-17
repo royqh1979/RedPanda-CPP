@@ -1925,7 +1925,7 @@ QString QSynEdit::getDisplayStringAtLine(int line) const
     QString s = mDocument->getLine(line-1);
     PCodeFoldingRange foldRange = foldStartAtLine(line);
     if ((foldRange) && foldRange->collapsed) {
-        return s+syntaxer()->foldString("");
+        return s+syntaxer()->foldString(s);
     }
     return s;
 }
@@ -2331,12 +2331,12 @@ void QSynEdit::insertLine(bool moveCaret)
         setSelectedTextEmpty();
     }
 
-    QString Temp = lineText();
+    QString temp = lineText();
 
     if (mCaretX>lineText().length()+1) {
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
-            QString s = Temp+syntaxer()->foldString("");
+            QString s = temp+syntaxer()->foldString(temp);
             if (mCaretX > s.length()) {
                 if (!mUndoing) {
                     addCaretToUndo();
@@ -2346,13 +2346,13 @@ void QSynEdit::insertLine(bool moveCaret)
                 if (mCaretY>mDocument->count()) {
                     mCaretY=mDocument->count();
                 }
-                Temp = lineText();
-                mCaretX=Temp.length()+1;
+                temp = lineText();
+                mCaretX=temp.length()+1;
             }
         }
     }
 
-    QString Temp2 = Temp;
+    QString Temp2 = temp;
     QString Temp3;
     PTokenAttribute Attr;
 
@@ -3323,37 +3323,36 @@ void QSynEdit::updateModifiedStatus()
         emit statusChanged(StatusChange::scModifyChanged);
 }
 
-int QSynEdit::scanFrom(int Index, int canStopIndex)
+int QSynEdit::scanFrom(int index, int canStopIndex)
 {
     SyntaxState state;
-    int result = std::max(0,Index);
-    if (result >= mDocument->count())
-        return result;
+    int resIndex = std::max(0,index);
+    if (resIndex >= mDocument->count())
+        return resIndex;
 
-    if (result == 0) {
+    if (resIndex == 0) {
         mSyntaxer->resetState();
     } else {
-        mSyntaxer->setState(mDocument->getSyntaxState(result-1));
+        mSyntaxer->setState(mDocument->getSyntaxState(resIndex-1));
     }
     do {
-        mSyntaxer->setLine(mDocument->getLine(result), result);
+        mSyntaxer->setLine(mDocument->getLine(resIndex), resIndex);
         mSyntaxer->nextToEol();
         state = mSyntaxer->getState();
-        if (result > canStopIndex){
-            if (mDocument->getSyntaxState(result) == state
-                    ) {
+        if (resIndex > canStopIndex){
+            if (mDocument->getSyntaxState(resIndex) == state) {
                 if (mUseCodeFolding)
                     rescanFolds();
-                return result;// avoid the final Decrement
+                return resIndex;// avoid the final Decrement
             }
         }
-        mDocument->setSyntaxState(result,state);
-        result ++ ;
-    } while (result < mDocument->count());
-    result--;
+        mDocument->setSyntaxState(resIndex,state);
+        resIndex ++ ;
+    } while (resIndex < mDocument->count());
+    resIndex--;
     if (mUseCodeFolding)
         rescanFolds();
-    return result;
+    return resIndex;
 }
 
 void QSynEdit::rescanRange(int line)
@@ -4556,7 +4555,7 @@ QString QSynEdit::selText() const
             PCodeFoldingRange foldRange = foldStartAtLine(blockEnd().line);
             QString s = mDocument->getLine(Last);
             if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
-                s=s+syntaxer()->foldString("");
+                s=s+syntaxer()->foldString(s);
                 if (ColTo>s.length()) {
                     Last = foldRange->toLine-1;
                     ColTo = mDocument->getLine(Last).length()+1;
@@ -4635,7 +4634,7 @@ QStringList QSynEdit::getContent(BufferCoord startPos, BufferCoord endPos, Selec
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(Last);
         if ((foldRange) && foldRange->collapsed && ColTo>s.length()) {
-            s=s+syntaxer()->foldString("");
+            s=s+syntaxer()->foldString(s);
             if (ColTo>s.length()) {
                 Last = foldRange->toLine-1;
                 ColTo = mDocument->getLine(Last).length()+1;
@@ -4710,7 +4709,7 @@ QString QSynEdit::displayLineText()
         QString s= mDocument->getLine(mCaretY - 1);
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
-            return s+syntaxer()->foldString("");
+            return s+syntaxer()->foldString(s);
         }
         return s;
     }
@@ -5302,7 +5301,7 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(endPos.line-1);
         if ((foldRange) && foldRange->collapsed && endPos.ch>s.length()) {
-            QString newS=s+syntaxer()->foldString("");
+            QString newS=s+syntaxer()->foldString(s);
             if ((startPos.ch<=s.length() || startPos.line<endPos.line)
                     && endPos.ch>newS.length() ) {
                 //selection has whole block
