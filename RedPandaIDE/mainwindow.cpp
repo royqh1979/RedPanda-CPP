@@ -7554,13 +7554,13 @@ void MainWindow::on_actionRename_Symbol_triggered()
         return;
     if (!editor->parser())
         return;
-    editor->beginUpdate();
+    editor->beginEditing();
     QSynedit::BufferCoord oldCaretXY = editor->caretXY();
     //    mClassBrowserModel.beginUpdate();
     QCursor oldCursor = editor->cursor();
     editor->setCursor(Qt::CursorShape::WaitCursor);
     auto action = finally([oldCursor,editor]{
-        editor->endUpdate();
+        editor->endEditing();
 //        mClassBrowserModel.EndTreeUpdate;
         editor->setCursor(oldCursor);
     });
@@ -7804,7 +7804,7 @@ void MainWindow::on_btnReplace_clicked()
         if (editor) {
             editor->clearSelection();
             editor->addGroupBreak();
-            editor->beginUndoBlock();
+            editor->beginEditing();
         } else {
             needSave=true;
             pEditor = std::make_shared<Editor>(nullptr);
@@ -7829,7 +7829,7 @@ void MainWindow::on_btnReplace_clicked()
                             tr("Replace Error"),
                             tr("Contents has changed since last search!"));
                 if (!needSave)
-                    editor->endUndoBlock();
+                    editor->endEditing();
                 return;
             }
             line.remove(item->start-1,results->keyword.length());
@@ -7837,7 +7837,7 @@ void MainWindow::on_btnReplace_clicked()
             editor->replaceLine(item->line,line);
         }
         if (!needSave) {
-            editor->endUndoBlock();
+            editor->endEditing();
         } else {
             QByteArray realEncoding;
             QFile toFile(file->filename);

@@ -250,8 +250,8 @@ public:
       int &start, PTokenAttribute& attri);
 
     void addGroupBreak();
-    void beginUndoBlock();
-    void endUndoBlock();
+    void beginEditing();
+    void endEditing();
     void addCaretToUndo();
     void addLeftTopToUndo();
     void addSelectionToUndo();
@@ -286,8 +286,6 @@ public:
     virtual void moveSelUp(){ processCommand(EditCommand::MoveSelUp);}
     virtual void moveSelDown(){ processCommand(EditCommand::MoveSelDown);}
 
-    virtual void beginUpdate();
-    virtual void endUpdate();
     virtual BufferCoord getMatchingBracket();
     virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
 
@@ -501,7 +499,7 @@ private:
     void recalcCharExtent();
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
-    int scanFrom(int Index, int canStopIndex);
+    void scanFrom(int index);
     void rescanRange(int line);
     void rescanRanges();
     void uncollapse(PCodeFoldingRange FoldRange);
@@ -641,6 +639,7 @@ private:
     std::shared_ptr<QImage> mContentImage;
     CodeFoldingRanges mAllFoldRanges;
     CodeFoldingOptions mCodeFolding;
+    int mEditingCount;
     bool mUseCodeFolding;
     bool  mAlwaysShowCaret;
     BufferCoord mBlockBegin;

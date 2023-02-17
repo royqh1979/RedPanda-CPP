@@ -283,6 +283,7 @@ bool SyntaxState::operator==(const SyntaxState &s2)
             && (indents == s2.indents)
             && (lastUnindent == s2.lastUnindent)
             ;
+
 }
 
 IndentInfo SyntaxState::getLastIndent()

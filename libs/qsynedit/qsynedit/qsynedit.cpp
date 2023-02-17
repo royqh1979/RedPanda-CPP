@@ -43,6 +43,7 @@
 
 namespace QSynedit {
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
+    mEditingCount{0},
     mDropped{false},
     mWheelAccumlatedDeltaX{0},
     mWheelAccumlatedDeltaY{0}
@@ -438,16 +439,6 @@ void QSynEdit::addGroupBreak()
     mUndoList->addGroupBreak();
 }
 
-void QSynEdit::beginUndoBlock()
-{
-    mUndoList->beginBlock();
-}
-
-void QSynEdit::endUndoBlock()
-{
-    mUndoList->endBlock();
-}
-
 void QSynEdit::addCaretToUndo()
 {
     BufferCoord p=caretXY();
@@ -472,7 +463,10 @@ void QSynEdit::doTrimTrailingSpaces()
 {
     if (mDocument->count()<=0)
         return;
-
+    beginEditing();
+    auto action=finally([this](){
+        endEditing();
+    });
     if (mSyntaxer) {
         for (int i=0;i<mDocument->count();i++) {
             if (mDocument->getSyntaxState(i).hasTrailingSpaces) {
@@ -498,7 +492,6 @@ void QSynEdit::doTrimTrailingSpaces()
                                 );
             }
         }
-
     } else {
         for (int i=0;i<mDocument->count();i++) {
             int line = i+1;
@@ -524,17 +517,7 @@ void QSynEdit::doTrimTrailingSpaces()
         }
 
     }
-    mUndoList->endBlock();
-}
-
-void QSynEdit::beginUpdate()
-{
-    incPaintLock();
-}
-
-void QSynEdit::endUpdate()
-{
-    decPaintLock();
+    mUndoList->endBlock();    
 }
 
 BufferCoord QSynEdit::getMatchingBracket()
@@ -1697,9 +1680,9 @@ void QSynEdit::doComment()
         return;
     if (!syntaxer() || syntaxer()->commentSymbol().isEmpty())
         return;
-    mUndoList->beginBlock();
+    beginEditing();
     auto action = finally([this]{
-        mUndoList->endBlock();
+        endEditing();
     });
     origBlockBegin = blockBegin();
     origBlockEnd = blockEnd();
@@ -1745,9 +1728,9 @@ void QSynEdit::doUncomment()
     QString commentSymbol=syntaxer()->commentSymbol();
     int symbolLen = commentSymbol.length();
     changeText.append(commentSymbol);
-    mUndoList->beginBlock();
+    beginEditing();
     auto action = finally([this]{
-        mUndoList->endBlock();
+        endEditing();
     });
     origBlockBegin = blockBegin();
     origBlockEnd = blockEnd();
@@ -1799,9 +1782,9 @@ void QSynEdit::doToggleComment()
         return;
     QString commentSymbol=syntaxer()->commentSymbol();
 
-    mUndoList->beginBlock();
+    beginEditing();
     auto action = finally([this]{
-        mUndoList->endBlock();
+        endEditing();
     });
     origBlockBegin = blockBegin();
     origBlockEnd = blockEnd();
@@ -1917,7 +1900,28 @@ void QSynEdit::doMouseScroll(bool isDragging)
         mScrollTimer->singleShot(20,this,&QSynEdit::onScrollTimeout);
     }
 
-//    computeScroll(isDragging);
+    //    computeScroll(isDragging);
+}
+
+void QSynEdit::beginEditing()
+{
+    incPaintLock();
+    if (mEditingCount==0) {
+        if (!mUndoing)
+            mUndoList->beginBlock();
+    }
+    mEditingCount++;
+}
+
+void QSynEdit::endEditing()
+{
+    mEditingCount--;
+    if (mEditingCount==0) {
+        if (!mUndoing)
+            mUndoList->endBlock();
+        rescanRanges();
+    }
+    decPaintLock();
 }
 
 QString QSynEdit::getDisplayStringAtLine(int line) const
@@ -2146,7 +2150,7 @@ void QSynEdit::doDeleteLine()
         PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
         if (foldRange && foldRange->collapsed)
             return;
-        mUndoList->beginBlock();
+        beginEditing();
         addCaretToUndo();
         addSelectionToUndo();
         if (selAvail())
@@ -2179,7 +2183,7 @@ void QSynEdit::doDeleteLine()
                                  helper, SelectionMode::Normal);
             doLinesDeleted(mCaretY, 1);
         }
-        mUndoList->endBlock();
+        endEditing();
         internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
     }
 }
@@ -2202,7 +2206,7 @@ void QSynEdit::doDuplicateLine()
         QString s = lineText();
         mDocument->insertLine(mCaretY, lineText());
         doLinesInserted(mCaretY + 1, 1);
-        mUndoList->beginBlock();
+        beginEditing();
         addCaretToUndo();
         mUndoList->addChange(ChangeReason::LineBreak,
                              BufferCoord{s.length()+1,mCaretY},
@@ -2210,7 +2214,7 @@ void QSynEdit::doDuplicateLine()
         mUndoList->addChange(ChangeReason::Insert,
                              BufferCoord{1,mCaretY+1},
                              BufferCoord{s.length()+1,mCaretY+1}, QStringList(), SelectionMode::Normal);
-        mUndoList->endBlock();
+        endEditing();
         internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
     }
 }
@@ -2221,7 +2225,7 @@ void QSynEdit::doMoveSelUp()
         return;
     if (!mReadOnly && (mDocument->count() > 0) && (blockBegin().line > 1)) {
         if (!mUndoing) {
-            mUndoList->beginBlock();
+            beginEditing();
             addCaretToUndo();
             addSelectionToUndo();
         }
@@ -2256,7 +2260,7 @@ void QSynEdit::doMoveSelUp()
                     origBlockEnd,
                     QStringList(),
                     SelectionMode::Normal);
-            mUndoList->endBlock();
+            endEditing();
         }
     }
 }
@@ -2267,7 +2271,7 @@ void QSynEdit::doMoveSelDown()
         return;
     if (!mReadOnly && (mDocument->count() > 0) && (blockEnd().line < mDocument->count())) {
         if (!mUndoing) {
-            mUndoList->beginBlock();
+            beginEditing();
             addCaretToUndo();
             addSelectionToUndo();
         }
@@ -2300,7 +2304,7 @@ void QSynEdit::doMoveSelDown()
                     origBlockEnd,
                     QStringList(),
                     SelectionMode::Normal);
-            mUndoList->endBlock();
+            endEditing();
         }
 
     }
@@ -2320,10 +2324,10 @@ void QSynEdit::insertLine(bool moveCaret)
         return;
     int nLinesInserted=0;
     if (!mUndoing)
-        mUndoList->beginBlock();
+        beginEditing();
     auto action = finally([this] {
         if (!mUndoing)
-            mUndoList->endBlock();
+            endEditing();
     });
     QString helper;
     if (selAvail()) {
@@ -2438,7 +2442,7 @@ void QSynEdit::doTabKey()
         doBlockIndent();
         return;
     }
-    mUndoList->beginBlock();
+    beginEditing();
     if (selAvail()) {
         setSelectedTextEmpty();
     }
@@ -2451,7 +2455,7 @@ void QSynEdit::doTabKey()
         Spaces = '\t';
     }
     setSelTextPrimitive(QStringList(Spaces));
-    mUndoList->endBlock();
+    endEditing();
     ensureCursorPosVisible();
 }
 
@@ -2693,7 +2697,7 @@ void QSynEdit::doBlockIndent()
 //        strToInsert.append(spaces);
 //    }
 //    strToInsert.append(spaces);
-    mUndoList->beginBlock();
+    beginEditing();
     mUndoList->addChange(ChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
     mUndoList->addChange(ChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
     int ch;
@@ -2732,7 +2736,7 @@ void QSynEdit::doBlockIndent()
       BE.ch+=spaces.length();
     setCaretAndSelection(oldCaretPos,
       BB, BE);
-    mUndoList->endBlock();
+    endEditing();
 }
 
 void QSynEdit::doBlockUnindent()
@@ -2751,7 +2755,7 @@ void QSynEdit::doBlockUnindent()
     }
     BufferCoord oldCaretPos = caretXY();
     int x = 0;
-    mUndoList->beginBlock();
+    beginEditing();
     mUndoList->addChange(ChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
     mUndoList->addChange(ChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
 
@@ -2794,7 +2798,7 @@ void QSynEdit::doBlockUnindent()
     BB.ch -= firstIndent;
     BE.ch -= lastIndent;
     setCaretAndSelection(oldCaretPos, BB, BE);
-    mUndoList->endBlock();
+    endEditing();
 }
 
 void QSynEdit::doAddChar(QChar AChar)
@@ -2839,7 +2843,7 @@ void QSynEdit::doAddChar(QChar AChar)
 //                                 BufferCoord{0, 0},
 //                                 "", SynSelectionMode::smNormal);
     } else {
-        mUndoList->beginBlock();
+        beginEditing();
         doSetSelText(AChar);
         int oldCaretX=mCaretX-1;
         int oldCaretY=mCaretY;
@@ -2936,7 +2940,7 @@ void QSynEdit::doAddChar(QChar AChar)
                 }
             }
         }
-        mUndoList->endBlock();
+        endEditing();
     }
     //DoOnPaintTransient(ttAfter);
 }
@@ -2945,7 +2949,7 @@ void QSynEdit::doCutToClipboard()
 {
     if (mReadOnly)
         return;
-    mUndoList->beginBlock();
+    beginEditing();
     addCaretToUndo();
     addSelectionToUndo();
     if (!selAvail()) {
@@ -2953,7 +2957,7 @@ void QSynEdit::doCutToClipboard()
     }
     internalDoCopyToClipboard(selText());
     setSelectedTextEmpty();
-    mUndoList->endBlock();
+    endEditing();
     mUndoList->addGroupBreak();
 }
 
@@ -2988,7 +2992,7 @@ void QSynEdit::doPasteFromClipboard()
         return;
     //correctly handle spaces copied from wechat
 //    text.replace(QChar(0x00A0),QChar(0x0020));
-    mUndoList->beginBlock();
+    beginEditing();
 //    if (selAvail()) {
 //        mUndoList->AddChange(
 //                    SynChangeReason::crDelete,
@@ -3005,7 +3009,7 @@ void QSynEdit::doPasteFromClipboard()
     mBlockEnd = vEndOfBlock;
 //    qDebug()<<textToLines(text);
     setSelTextPrimitive(splitStrings(text));
-    mUndoList->endBlock();
+    endEditing();
 }
 
 void QSynEdit::incPaintLock()
@@ -3323,36 +3327,31 @@ void QSynEdit::updateModifiedStatus()
         emit statusChanged(StatusChange::scModifyChanged);
 }
 
-int QSynEdit::scanFrom(int index, int canStopIndex)
+void QSynEdit::scanFrom(int index)
 {
-    SyntaxState state;
-    int resIndex = std::max(0,index);
-    if (resIndex >= mDocument->count())
-        return resIndex;
+    if (mEditingCount>0)
+        return;
 
-    if (resIndex == 0) {
+    SyntaxState state;
+    int idx = std::max(0,index);
+    if (idx >= mDocument->count())
+        return;
+
+    if (idx == 0) {
         mSyntaxer->resetState();
     } else {
-        mSyntaxer->setState(mDocument->getSyntaxState(resIndex-1));
+        mSyntaxer->setState(mDocument->getSyntaxState(idx-1));
     }
     do {
-        mSyntaxer->setLine(mDocument->getLine(resIndex), resIndex);
+        mSyntaxer->setLine(mDocument->getLine(idx), idx);
         mSyntaxer->nextToEol();
         state = mSyntaxer->getState();
-        if (resIndex > canStopIndex){
-            if (mDocument->getSyntaxState(resIndex) == state) {
-                if (mUseCodeFolding)
-                    rescanFolds();
-                return resIndex;// avoid the final Decrement
-            }
-        }
-        mDocument->setSyntaxState(resIndex,state);
-        resIndex ++ ;
-    } while (resIndex < mDocument->count());
-    resIndex--;
+        mDocument->setSyntaxState(idx,state);
+        idx ++ ;
+    } while (idx < mDocument->count());
     if (mUseCodeFolding)
         rescanFolds();
-    return resIndex;
+    return ;
 }
 
 void QSynEdit::rescanRange(int line)
@@ -4200,19 +4199,19 @@ void QSynEdit::doUndo()
 void QSynEdit::doUndoItem()
 {
     mUndoing = true;
+    beginEditing();
     bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
+    mOptions.setFlag(eoScrollPastEol);
+    auto action = finally([&,this]{
+        endEditing();
+        if (ChangeScrollPastEol)
+            mOptions.setFlag(eoScrollPastEol,false);
+        mUndoing = false;
+    });
 
     PUndoItem item = mUndoList->popItem();
     if (item) {
         setActiveSelectionMode(item->changeSelMode());
-        incPaintLock();
-        auto action = finally([&,this]{
-            mUndoing = false;
-            if (ChangeScrollPastEol)
-                mOptions.setFlag(eoScrollPastEol,false);
-            decPaintLock();
-        });
-        mOptions.setFlag(eoScrollPastEol);
         switch(item->changeReason()) {
         case ChangeReason::Caret:
             mRedoList->addRedo(
@@ -4395,19 +4394,19 @@ void QSynEdit::doRedoItem()
 {
     mUndoing = true;
     bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
+    mOptions.setFlag(eoScrollPastEol);
+    mUndoList->setInsideRedo(true);
+    beginEditing();
+    auto action = finally([&,this]{
+        endEditing();
+        mUndoList->setInsideRedo(false);
+        if (ChangeScrollPastEol)
+            mOptions.setFlag(eoScrollPastEol,false);
+        mUndoing = false;
+    });
     PUndoItem item = mRedoList->popItem();
     if (item) {
         setActiveSelectionMode(item->changeSelMode());
-        incPaintLock();
-        mOptions.setFlag(eoScrollPastEol);
-        mUndoList->setInsideRedo(true);
-        auto action = finally([&,this]{
-            mUndoing = false;
-            mUndoList->setInsideRedo(false);
-            if (ChangeScrollPastEol)
-                mOptions.setFlag(eoScrollPastEol,false);
-            decPaintLock();
-        });
         switch(item->changeReason()) {
         case ChangeReason::Caret:
             mUndoList->restoreChange(
@@ -5018,7 +5017,7 @@ void QSynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text
     BufferCoord endPos = blockEnd();
     if (selAvail()) {
         if (!mUndoing && !text.isEmpty()) {
-            mUndoList->beginBlock();
+            beginEditing();
             groupUndo=true;
         }
         doDeleteText(startPos,endPos,activeSelectionMode());
@@ -5044,7 +5043,7 @@ void QSynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text
         doInsertText(caretXY(),text,mode,mBlockBegin.line,mBlockEnd.line);
     }
     if (groupUndo) {
-        mUndoList->endBlock();
+        endEditing();
     }
     decPaintLock();
     setStatusChanged(StatusChange::scSelection);
@@ -5055,10 +5054,10 @@ void QSynEdit::doSetSelText(const QString &value)
     bool blockBeginned = false;
     auto action = finally([this, &blockBeginned]{
         if (blockBeginned)
-            mUndoList->endBlock();
+            endEditing();
     });
     if (selAvail()) {
-      mUndoList->beginBlock();
+      beginEditing();
       blockBeginned = true;
 //      mUndoList->AddChange(
 //                  SynChangeReason::crDelete, mBlockBegin, mBlockEnd,
@@ -5137,7 +5136,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
         auto action = finally([&,this]{
             if (dobatchReplace) {
                 decPaintLock();
-                mUndoList->endBlock();
+                endEditing();
             }
         });
         int i;
@@ -5206,7 +5205,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                     if (!dobatchReplace &&
                             (searchAction == SearchAction::ReplaceAll) ){
                         incPaintLock();
-                        mUndoList->beginBlock();
+                        beginEditing();
                         dobatchReplace = true;
                     }
                     bool oldAutoIndent = mOptions.testFlag(EditorOption::eoAutoIndent);
@@ -5448,7 +5447,6 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
     bool bChangeScroll;
 //    int SpaceCount;
     int result = 0;
-    int startLine = pos.line;
     QString line=mDocument->getLine(pos.line-1);
     sLeftSide = line.mid(0, pos.ch - 1);
     if (pos.ch - 1 > sLeftSide.length()) {
@@ -5522,7 +5520,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             mOptions.setFlag(eoScrollPastEol,false);
     });
     newPos=BufferCoord{str.length() - sRightSide.length()+1,caretY};
-    onLinesPutted(startLine-1,result+1);
+    //onLinesPutted(startLine-1,result+1);
     if (!mUndoing) {
         mUndoList->addChange(
                     ChangeReason::Insert,
@@ -5544,7 +5542,7 @@ int QSynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, i
     int insertCol = insertCoord.Column;
     line = startLine;
     if (!mUndoing) {
-        mUndoList->beginBlock();
+        beginEditing();
     }
     int i=0;
     while(line<=endLine) {
@@ -5590,7 +5588,7 @@ int QSynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, i
         line++;
     }
     if (!mUndoing) {
-        mUndoList->endBlock();
+        endEditing();
     }
     return result;
 }
@@ -5628,13 +5626,13 @@ void QSynEdit::deleteFromTo(const BufferCoord &start, const BufferCoord &end)
     if (mReadOnly)
         return;
     if ((start.ch != end.ch) || (start.line != end.line)) {
-        mUndoList->beginBlock();
+        beginEditing();
         addCaretToUndo();
         addSelectionToUndo();
         setBlockBegin(start);
         setBlockEnd(end);
         doDeleteText(start,end,SelectionMode::Normal);
-        mUndoList->endBlock();
+        endEditing();
         internalSetCaretXY(start);
     }
 }
@@ -5843,12 +5841,12 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         insertLine(true);
         break;
     case EditCommand::LineBreakAtEnd:
-        mUndoList->beginBlock();
+        beginEditing();
         addCaretToUndo();
         addSelectionToUndo();
         moveCaretToLineEnd(false);
         insertLine(true);
-        mUndoList->endBlock();
+        endEditing();
         break;
     case EditCommand::Tab:
         doTabKey();
@@ -6409,7 +6407,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
     int topLine = mTopLine;
     int leftChar = mLeftChar;
     QStringList text=splitStrings(event->mimeData()->text());
-    mUndoList->beginBlock();
+    beginEditing();
     addLeftTopToUndo();
     addCaretToUndo();
     addSelectionToUndo();
@@ -6442,7 +6440,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
                 }
             }
         }
-        mUndoList->endBlock();
+        endEditing();
 
     }
     event->acceptProposedAction();
@@ -6613,8 +6611,9 @@ void QSynEdit::onLinesDeleted(int index, int count)
 {
     if (mUseCodeFolding)
         foldOnListDeleted(index + 1, count);
-    if (mSyntaxer && mDocument->count() > 0)
-        scanFrom(index, index+1);
+    if (mSyntaxer && mDocument->count() > 0) {
+        scanFrom(index);
+    }
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
 }
@@ -6624,23 +6623,18 @@ void QSynEdit::onLinesInserted(int index, int count)
     if (mUseCodeFolding)
         foldOnListInserted(index + 1, count);
     if (mSyntaxer && mDocument->count() > 0) {
-//        int vLastScan = index;
-//        do {
-          scanFrom(index, index+count);
-//            vLastScan++;
-//        } while (vLastScan < index + count) ;
+          scanFrom(index);
     }
     invalidateLines(index + 1, INT_MAX);
     invalidateGutterLines(index + 1, INT_MAX);
 }
 
-void QSynEdit::onLinesPutted(int index, int count)
+void QSynEdit::onLinesPutted(int index, int /*count*/)
 {
-    int vEndLine = index + 1;
     if (mSyntaxer) {
-        vEndLine = std::max(vEndLine, scanFrom(index, index+count) + 1);
+        scanFrom(index);
     }
-    invalidateLines(index + 1, vEndLine);
+    invalidateLines(index + 1, INT_MAX);
 }
 
 void QSynEdit::onUndoAdded()

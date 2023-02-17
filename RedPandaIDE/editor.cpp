@@ -2453,22 +2453,18 @@ bool Editor::handleParentheseCompletion()
     if (status == QuoteStatus::RawString || status == QuoteStatus::NotQuote) {
         if (selAvail() && status == QuoteStatus::NotQuote) {
             QString text=selText();
-            beginUpdate();
-            beginUndoBlock();
+            beginEditing();
             processCommand(QSynedit::EditCommand::Char,'(');
             setSelText(text);
             processCommand(QSynedit::EditCommand::Char,')');
-            endUndoBlock();
-            endUpdate();
+            endEditing();
         } else {
-            beginUpdate();
-            beginUndoBlock();
+            beginEditing();
             processCommand(QSynedit::EditCommand::Char,'(');
             QSynedit::BufferCoord oldCaret = caretXY();
             processCommand(QSynedit::EditCommand::Char,')');
             setCaretXY(oldCaret);
-            endUndoBlock();
-            endUpdate();
+            endEditing();
         }
         return true;
     }
@@ -2514,22 +2510,18 @@ bool Editor::handleBracketCompletion()
     QuoteStatus status = getQuoteStatus();
     if (selAvail() && status == QuoteStatus::NotQuote) {
         QString text=selText();
-        beginUpdate();
-        beginUndoBlock();
+        beginEditing();
         processCommand(QSynedit::EditCommand::Char,'[');
         setSelText(text);
         processCommand(QSynedit::EditCommand::Char,']');
-        endUndoBlock();
-        endUpdate();
+        endEditing();
     } else {
-        beginUpdate();
-        beginUndoBlock();
+        beginEditing();
         processCommand(QSynedit::EditCommand::Char,'[');
         QSynedit::BufferCoord oldCaret = caretXY();
         processCommand(QSynedit::EditCommand::Char,']');
         setCaretXY(oldCaret);
-        endUndoBlock();
-        endUpdate();
+        endEditing();
     }
     return true;
         //    }
@@ -2562,8 +2554,7 @@ bool Editor::handleMultilineCommentCompletion()
 {
     if ((caretX()-2>=0) && (caretX()-2 < lineText().length()) && (lineText()[caretX() - 2] == '/')) {
         QString text=selText();
-        beginUpdate();
-        beginUndoBlock();
+        beginEditing();
         processCommand(QSynedit::EditCommand::Char,'*');
         QSynedit::BufferCoord oldCaret;
         if (text.isEmpty())
@@ -2574,8 +2565,7 @@ bool Editor::handleMultilineCommentCompletion()
         processCommand(QSynedit::EditCommand::Char,'/');
         if (text.isEmpty())
             setCaretXY(oldCaret);
-        endUndoBlock();
-        endUpdate();
+        endEditing();
         return true;
     }
     return false;
@@ -2590,8 +2580,7 @@ bool Editor::handleBraceCompletion()
         i--;
     }
     QString text=selText();
-    beginUpdate();
-    beginUndoBlock();
+    beginEditing();
     processCommand(QSynedit::EditCommand::Char,'{');
     QSynedit::BufferCoord oldCaret;
     if (text.isEmpty()) {
@@ -2616,8 +2605,7 @@ bool Editor::handleBraceCompletion()
     }
     if (text.isEmpty())
         setCaretXY(oldCaret);
-    endUndoBlock();
-    endUpdate();
+    endEditing();
     return true;
 }
 
@@ -2664,25 +2652,21 @@ bool Editor::handleSingleQuoteCompletion()
         if (status == QuoteStatus::NotQuote) {
             if (selAvail()) {
                 QString text=selText();
-                beginUpdate();
-                beginUndoBlock();
+                beginEditing();
                 processCommand(QSynedit::EditCommand::Char,'\'');
                 setSelText(text);
                 processCommand(QSynedit::EditCommand::Char,'\'');
-                endUndoBlock();
-                endUpdate();
+                endEditing();
                 return true;
             }
             if (ch == 0 || syntaxer()->isWordBreakChar(ch) || syntaxer()->isSpaceChar(ch)) {
                 // insert ''
-                beginUpdate();
-                beginUndoBlock();
+                beginEditing();
                 processCommand(QSynedit::EditCommand::Char,'\'');
                 QSynedit::BufferCoord oldCaret = caretXY();
                 processCommand(QSynedit::EditCommand::Char,'\'');
                 setCaretXY(oldCaret);
-                endUndoBlock();
-                endUpdate();
+                endEditing();
                 return true;
             }
         }
@@ -2704,25 +2688,21 @@ bool Editor::handleDoubleQuoteCompletion()
         if (status == QuoteStatus::NotQuote) {
             if (selAvail()) {
                 QString text=selText();
-                beginUpdate();
-                beginUndoBlock();
+                beginEditing();
                 processCommand(QSynedit::EditCommand::Char,'"');
                 setSelText(text);
                 processCommand(QSynedit::EditCommand::Char,'"');
-                endUndoBlock();
-                endUpdate();
+                endEditing();
                 return true;
             }
             if ((ch == 0) || syntaxer()->isWordBreakChar(ch) || syntaxer()->isSpaceChar(ch)) {
                 // insert ""
-                beginUpdate();
-                beginUndoBlock();
+                beginEditing();
                 processCommand(QSynedit::EditCommand::Char,'"');
                 QSynedit::BufferCoord oldCaret = caretXY();
                 processCommand(QSynedit::EditCommand::Char,'"');
                 setCaretXY(oldCaret);
-                endUndoBlock();
-                endUpdate();
+                endEditing();
                 return true;
             }
         }
@@ -2737,14 +2717,12 @@ bool Editor::handleGlobalIncludeCompletion()
     QString s= lineText().mid(1).trimmed();
     if (!s.startsWith("include"))  //it's not #include
         return false;
-    beginUpdate();
-    beginUndoBlock();
+    beginEditing();
     processCommand(QSynedit::EditCommand::Char,'<');
     QSynedit::BufferCoord oldCaret = caretXY();
     processCommand(QSynedit::EditCommand::Char,'>');
     setCaretXY(oldCaret);
-    endUpdate();
-    endUndoBlock();
+    endEditing();
     return true;
 }
 
@@ -3000,9 +2978,9 @@ void Editor::reparseTodo()
 
 void Editor::insertString(const QString &value, bool moveCursor)
 {
-    beginUpdate();
+    beginEditing();
     auto action = finally([this]{
-        endUpdate();
+        endEditing();
     });
 
     QSynedit::BufferCoord oldCursorPos = caretXY();
@@ -3022,9 +3000,9 @@ void Editor::insertCodeSnippet(const QString &code)
     mLineBeforeTabStop = "";
     mLineAfterTabStop = "";
     // prevent lots of repaints
-    beginUpdate();
+    beginEditing();
     auto action = finally([this]{
-        endUpdate();
+        endEditing();
     });
     if (selAvail())
         setSelText("");
@@ -4827,7 +4805,7 @@ void Editor::reformat(bool doReparse)
     int oldTopLine = topLine();
     QSynedit::BufferCoord mOldCaret = caretXY();
 
-    beginUndoBlock();
+    beginEditing();
     addLeftTopToUndo();
     addCaretToUndo();
 
@@ -4839,7 +4817,7 @@ void Editor::reformat(bool doReparse)
     setCaretXY(mOldCaret);
     setTopLine(oldTopLine);
     setOptions(oldOptions);
-    endUndoBlock();
+    endEditing();
 
     if (doReparse && !pMainWindow->isQuitting() && !pMainWindow->isClosingAll()
             && !(inProject() && pMainWindow->closingProject())) {
