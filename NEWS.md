@@ -33,6 +33,7 @@ Red Panda C++ Version 2.12
   - enhancement: Toggle comment for asm/makefile/lua files.
   - enhancement: Delay for tooltips.
   - enhancement: "Tool tips delay" option in Options/editor/Tooltips
+  - change: Remove "Compile & Run" menu item. It's replaced by "Run".
 
 Red Panda C++ Version 2.11
 

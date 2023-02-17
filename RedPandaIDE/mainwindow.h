@@ -460,8 +460,6 @@ private slots:
 
     void on_tabMessages_tabBarClicked(int index);
 
-    void on_actionCompile_Run_triggered();
-
     void on_actionRebuild_triggered();
 
     void on_actionStop_Execution_triggered();

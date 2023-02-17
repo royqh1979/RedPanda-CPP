@@ -677,7 +677,6 @@ void MainWindow::updateCompileActions(const Editor *e)
             //|| mCompilerManager->backgroundSyntaxChecking()
             || mCompilerManager->running() || mDebugger->executing()) {
         ui->actionCompile->setEnabled(false);
-        ui->actionCompile_Run->setEnabled(false);
         ui->actionRun->setEnabled(false);
         ui->actionRebuild->setEnabled(false);
         ui->actionGenerate_Assembly->setEnabled(false);
@@ -719,7 +718,6 @@ void MainWindow::updateCompileActions(const Editor *e)
             }
         }
         ui->actionCompile->setEnabled(canCompile);
-        ui->actionCompile_Run->setEnabled(canRun && canCompile);
         ui->actionRun->setEnabled(canRun);
         ui->actionRebuild->setEnabled(canCompile);
         ui->actionGenerate_Assembly->setEnabled(canGenerateAssembly);
@@ -1710,7 +1708,6 @@ void MainWindow::updateActionIcons()
 
 
     ui->actionCompile->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE));
-    ui->actionCompile_Run->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_COMPILE_RUN));
     ui->actionRun->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_RUN));
     ui->actionRebuild->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_REBUILD));
     ui->actionRun_Parameters->setIcon(pIconsManager->getIcon(IconsManager::ACTION_RUN_OPTIONS));
@@ -1972,7 +1969,7 @@ void MainWindow::runExecutable(
     mCompilerManager->stopPausing();
     // Check if it exists
     if (!fileExists(exeName)) {
-        if (ui->actionCompile_Run->isEnabled()) {
+        if (ui->actionCompile->isEnabled()) {
             doCompileRun(runType);
             return;
         } else {
@@ -4777,7 +4774,6 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
             menu.addSeparator();
         }
         //mouse on editing area
-        menu.addAction(ui->actionCompile_Run);
         menu.addAction(ui->actionDebug);
         if (editor->parser() && editor->parser()->enabled()) {
             menu.addSeparator();
@@ -5940,12 +5936,6 @@ void MainWindow::on_tabMessages_tabBarClicked(int index)
     } else {
         stretchMessagesPanel(true);
     }
-}
-
-
-void MainWindow::on_actionCompile_Run_triggered()
-{
-    doCompileRun(RunType::Normal);
 }
 
 void MainWindow::on_actionRebuild_triggered()

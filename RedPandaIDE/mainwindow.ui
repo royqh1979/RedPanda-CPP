@@ -154,7 +154,6 @@
     </property>
     <addaction name="actionCompile"/>
     <addaction name="actionRun"/>
-    <addaction name="actionCompile_Run"/>
     <addaction name="actionRebuild"/>
     <addaction name="actionGenerate_Assembly"/>
     <addaction name="separator"/>
@@ -410,7 +409,6 @@
    </attribute>
    <addaction name="actionCompile"/>
    <addaction name="actionRun"/>
-   <addaction name="actionCompile_Run"/>
    <addaction name="actionRebuild"/>
    <addaction name="separator"/>
    <addaction name="actionRun_Parameters"/>
@@ -2309,22 +2307,6 @@
   <action name="actionConvert_to_UTF_8">
    <property name="text">
     <string>Convert to UTF-8</string>
-   </property>
-  </action>
-  <action name="actionCompile_Run">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/017-comprun.png</normalon>
-    </iconset>
-   </property>
-   <property name="text">
-    <string>Compile &amp; Run</string>
-   </property>
-   <property name="toolTip">
-    <string>Compile &amp; Run</string>
-   </property>
-   <property name="shortcut">
-    <string>F11</string>
    </property>
   </action>
   <action name="actionRebuild">
