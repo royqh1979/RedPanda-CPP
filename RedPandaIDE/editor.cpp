@@ -66,25 +66,22 @@ Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
                   Project* pProject, bool isNew,
                   QTabWidget* parentPageControl):
-  QSynEdit(parent),
-  mInited(false),
-  mEncodingOption(encoding),
-  mFilename(filename),
-  mParentPageControl(parentPageControl),
-  mProject(pProject),
-  mIsNew(isNew),
-  mSyntaxIssues(),
-  mSyntaxErrorColor(Qt::red),
-  mSyntaxWarningColor("orange"),
-  mLineCount(0),
-  mActiveBreakpointLine(-1),
-  mLastIdCharPressed(0),
-  mCurrentWord(),
-  mCurrentTipType(TipType::None),
-  mOldHighlightedWord(),
-  mCurrentHighlightedWord(),
-  mSaving(false),
-  mHoverModifiedLine(-1)
+  QSynEdit{parent},
+  mInited{false},
+  mEncodingOption{encoding},
+  mFilename{filename},
+  mParentPageControl{parentPageControl},
+  mProject{pProject},
+  mIsNew{isNew},
+  mSyntaxErrorColor{Qt::red},
+  mSyntaxWarningColor{"orange"},
+  mLineCount{0},
+  mActiveBreakpointLine{-1},
+  mLastIdCharPressed{0},
+  mCurrentTipType{TipType::None},
+  mSaving{false},
+  mHoverModifiedLine{-1},
+  mWheelAccumulatedDelta{0}
 {
     mInited=false;
     mBackupFile=nullptr;
@@ -622,21 +619,23 @@ void Editor::undoSymbolCompletion(int pos)
 void Editor::wheelEvent(QWheelEvent *event) {
     if ( (event->modifiers() & Qt::ControlModifier)!=0) {
         int size = pSettings->editor().fontSize();
-        if (event->angleDelta().y()>0) {
+        int oldSize = size;
+        mWheelAccumulatedDelta+=event->angleDelta().y();
+        while (mWheelAccumulatedDelta>=120) {
+            mWheelAccumulatedDelta-=120;
             size = std::min(99,size+1);
-            pSettings->editor().setFontSize(size);
-            pSettings->editor().save();
-            pMainWindow->updateEditorSettings();
-            event->accept();
-            return;
-        } else if  (event->angleDelta().y()<0) {
-            size = std::max(2,size-1);
-            pSettings->editor().setFontSize(size);
-            pSettings->editor().save();
-            pMainWindow->updateEditorSettings();
-            event->accept();
-            return;
         }
+        while (mWheelAccumulatedDelta<=-120) {
+            mWheelAccumulatedDelta+=120;
+            size = std::max(2,size-1);
+        }
+        if (size!=oldSize) {
+            pSettings->editor().setFontSize(size);
+            pSettings->editor().save();
+            pMainWindow->updateEditorSettings();
+        }
+        event->accept();
+        return;
     }
     QSynEdit::wheelEvent(event);
 }

@@ -347,6 +347,7 @@ private:
     QTimer mAutoBackupTimer;
     QTimer mTooltipTimer;
     int mHoverModifiedLine;
+    int mWheelAccumulatedDelta;
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
 

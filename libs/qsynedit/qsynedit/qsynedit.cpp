@@ -44,8 +44,8 @@
 namespace QSynedit {
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDropped{false},
-    mLastWheelEventTime{QDateTime::currentMSecsSinceEpoch()},
-    mWheelEventTimes{0}
+    mWheelAccumlatedDeltaX{0},
+    mWheelAccumlatedDeltaY{0}
 {
     mCharWidth=1;
     mTextHeight = 1;
@@ -6330,37 +6330,28 @@ void QSynEdit::leaveEvent(QEvent *)
 
 void QSynEdit::wheelEvent(QWheelEvent *event)
 {
-    qint64 current=QDateTime::currentMSecsSinceEpoch();
-    if (current-mLastWheelEventTime<=1000) {
-        mWheelEventTimes+=1;
-        if (mWheelEventTimes>30)
-            return;
-    } else {
-        mWheelEventTimes=0;
-        mLastWheelEventTime=current;
-    }
     if (event->modifiers() == Qt::ShiftModifier) {
-        if (event->angleDelta().y()>0) {
+        mWheelAccumlatedDeltaX+=event->angleDelta().y();
+        while (mWheelAccumlatedDeltaX>=120) {
+            mWheelAccumlatedDeltaX-=120;
             horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
-            event->accept();
-            return;
-        } else if (event->angleDelta().y()<0) {
+        }
+        while (mWheelAccumlatedDeltaX<=-120) {
+            mWheelAccumlatedDeltaX+=120;
             horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
-            event->accept();
-            return;
         }
     } else {
-        if (event->angleDelta().y()>0) {
+        mWheelAccumlatedDeltaY+=event->angleDelta().y();
+        while (mWheelAccumlatedDeltaY>=120) {
+            mWheelAccumlatedDeltaY-=120;
             verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
-            event->accept();
-            return;
-        } else if (event->angleDelta().y()<0) {
+        }
+        while (mWheelAccumlatedDeltaY<=-120) {
+            mWheelAccumlatedDeltaY+=120;
             verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
-            event->accept();
-            return;
         }
     }
-    QAbstractScrollArea::wheelEvent(event);
+    event->accept();
 }
 
 bool QSynEdit::viewportEvent(QEvent * event)
