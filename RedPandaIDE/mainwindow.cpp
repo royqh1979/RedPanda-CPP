@@ -624,7 +624,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionFind_Previous->setEnabled(true);
 
         //code
-        ui->actionReformat_Code->setEnabled(true);
+        ui->actionReformat_Code->setEnabled(isCFile(e->filename()) || isHFile(e->filename()));
 
         ui->actionClose->setEnabled(true);
         ui->actionClose_All->setEnabled(true);
