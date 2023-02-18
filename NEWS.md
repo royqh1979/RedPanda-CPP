@@ -28,14 +28,14 @@ Red Panda C++ Version 2.12
   - fix: Wrong selection position after delete in column mode.
   - enhancement: Syntax highlight and basic code completion for lua.
   - enhancement: Basic code completion for xmake.lua.
-  - enhancement: Parser not correctly released if save a c file to non-c file.
+  - fix: Parser not correctly released if save a c file to non-c file.
   - enhancement: Improve auto indent for embedding no-brace statements like for-for-if.
   - enhancement: Toggle comment for asm/makefile/lua files.
   - enhancement: Delay for tooltips.
   - enhancement: "Tool tips delay" option in Options/editor/Tooltips
   - change: Remove "Compile & Run" menu item. It's replaced by "Run".
   - enhancement: Show "..." instead of "...}" when folding #if/#endif
-  - enhancement: Correctly handle high-precision mouse wheel / touchpad in editors.
+  - fix: Correctly handle high-precision mouse wheel / touchpad in editors.
   - enhancement: Greatly reduce time to open/edit big files.
   - enhancement: Reduce flicker when editing big files. 
   - enhancement: If executable doesn't have symbol table, inform user and stop.
