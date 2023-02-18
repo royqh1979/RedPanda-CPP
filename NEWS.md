@@ -41,8 +41,7 @@ Red Panda C++ Version 2.12
   - enhancement: If executable doesn't have symbol table, inform user and stop.
   - enhancement: If breakpoint is setted but executable doesn't have debug info ，inform user and stop.
   - enhancement: If current compiler set has "strip addition infos(-s)" enabled, inform user and stop.
-
-
+  - enhancement: Auto create project custom executable folder if not existing.
 
 Red Panda C++ Version 2.11
 

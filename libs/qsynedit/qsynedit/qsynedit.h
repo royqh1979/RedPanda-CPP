@@ -744,8 +744,8 @@ private:
     BufferCoord mDragSelBeginSave;
     BufferCoord mDragSelEndSave;
     bool mDropped;
-    int mWheelAccumlatedDeltaX;
-    int mWheelAccumlatedDeltaY;
+    int mWheelAccumulatedDeltaX;
+    int mWheelAccumulatedDeltaY;
 
 friend class QSynEditPainter;
 

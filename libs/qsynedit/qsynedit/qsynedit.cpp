@@ -45,8 +45,8 @@ namespace QSynedit {
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mEditingCount{0},
     mDropped{false},
-    mWheelAccumlatedDeltaX{0},
-    mWheelAccumlatedDeltaY{0}
+    mWheelAccumulatedDeltaX{0},
+    mWheelAccumulatedDeltaY{0}
 {
     mCharWidth=1;
     mTextHeight = 1;
@@ -6346,23 +6346,29 @@ void QSynEdit::leaveEvent(QEvent *)
 void QSynEdit::wheelEvent(QWheelEvent *event)
 {
     if (event->modifiers() == Qt::ShiftModifier) {
-        mWheelAccumlatedDeltaX+=event->angleDelta().y();
-        while (mWheelAccumlatedDeltaX>=120) {
-            mWheelAccumlatedDeltaX-=120;
+        if ( (mWheelAccumulatedDeltaX>0 &&event->angleDelta().y()<0)
+             || (mWheelAccumulatedDeltaX<0 &&event->angleDelta().y()>0))
+            mWheelAccumulatedDeltaX=0;
+        mWheelAccumulatedDeltaX+=event->angleDelta().y();
+        while (mWheelAccumulatedDeltaX>=120) {
+            mWheelAccumulatedDeltaX-=120;
             horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
         }
-        while (mWheelAccumlatedDeltaX<=-120) {
-            mWheelAccumlatedDeltaX+=120;
+        while (mWheelAccumulatedDeltaX<=-120) {
+            mWheelAccumulatedDeltaX+=120;
             horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
         }
     } else {
-        mWheelAccumlatedDeltaY+=event->angleDelta().y();
-        while (mWheelAccumlatedDeltaY>=120) {
-            mWheelAccumlatedDeltaY-=120;
+        if ( (mWheelAccumulatedDeltaY>0 &&event->angleDelta().y()<0)
+             || (mWheelAccumulatedDeltaY<0 &&event->angleDelta().y()>0))
+            mWheelAccumulatedDeltaY=0;
+        mWheelAccumulatedDeltaY+=event->angleDelta().y();
+        while (mWheelAccumulatedDeltaY>=120) {
+            mWheelAccumulatedDeltaY-=120;
             verticalScrollBar()->setValue(verticalScrollBar()->value()-mMouseWheelScrollSpeed);
         }
-        while (mWheelAccumlatedDeltaY<=-120) {
-            mWheelAccumlatedDeltaY+=120;
+        while (mWheelAccumulatedDeltaY<=-120) {
+            mWheelAccumulatedDeltaY+=120;
             verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
         }
     }

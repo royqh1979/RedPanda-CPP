@@ -35,7 +35,6 @@ void ProjectCompiler::buildMakeFile()
     //we are using custom make file, don't overwrite it
     if (mProject->options().useCustomMakefile && !mProject->options().customMakefile.isEmpty())
         return;
-
     switch(mProject->options().type) {
     case ProjectType::StaticLib:
         createStaticMakeFile();
@@ -95,7 +94,10 @@ void ProjectCompiler::newMakeFile(QFile& file)
     if (!mProject->options().objectOutput.isEmpty()) {
         QDir(mProject->directory()).mkpath(mProject->options().objectOutput);
     }
-
+    // Create executable output directory
+    if (!mProject->options().exeOutput.isEmpty()) {
+        QDir(mProject->directory()).mkpath(mProject->options().exeOutput);
+    }
     // Write more information to the log file than before
     log(tr("Building makefile..."));
     log("--------");

@@ -623,6 +623,9 @@ void Editor::wheelEvent(QWheelEvent *event) {
     if ( (event->modifiers() & Qt::ControlModifier)!=0) {
         int size = pSettings->editor().fontSize();
         int oldSize = size;
+        if ( (mWheelAccumulatedDelta>0 &&event->angleDelta().y()<0)
+             || (mWheelAccumulatedDelta<0 &&event->angleDelta().y()>0))
+            mWheelAccumulatedDelta=0;
         mWheelAccumulatedDelta+=event->angleDelta().y();
         while (mWheelAccumulatedDelta>=120) {
             mWheelAccumulatedDelta-=120;
