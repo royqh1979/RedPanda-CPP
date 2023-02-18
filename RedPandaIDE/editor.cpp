@@ -1777,7 +1777,14 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
 {
     if (button == Qt::LeftButton) {
-        toggleBreakpoint(line);
+        FileType fileType=getFileType(mFilename);
+        if (fileType==FileType::CSource
+                || fileType==FileType::CHeader
+                || fileType==FileType::CppSource
+                || fileType==FileType::CppHeader
+                || fileType==FileType::GAS
+                )
+            toggleBreakpoint(line);
     }
     mGutterClickedLine = line;
 }
@@ -1984,7 +1991,7 @@ void Editor::onTooltipTimer()
 
 void Editor::onEndParsing()
 {
-    qDebug()<<"yes";
+
     mIdentCache.clear();
     invalidate();
 }

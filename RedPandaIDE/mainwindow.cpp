@@ -4788,6 +4788,13 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     Editor * editor = mEditorList->getEditor();
     if (!editor)
         return;
+    FileType fileType=getFileType(editor->filename());
+    bool canDebug = (fileType==FileType::CSource
+            || fileType==FileType::CHeader
+            || fileType==FileType::CppSource
+            || fileType==FileType::CppHeader
+            || fileType==FileType::GAS
+            );
     QMenu menu(this);
     QSynedit::BufferCoord p;
     mEditorContextMenuPos = pos;
@@ -4800,15 +4807,18 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
             menu.addSeparator();
         }
         //mouse on editing area
-        menu.addAction(ui->actionDebug);
-        if (editor->parser() && editor->parser()->enabled()) {
+        if (canDebug) {
+            menu.addAction(ui->actionRun);
+            menu.addAction(ui->actionDebug);
             menu.addSeparator();
+        }
+        if (editor->parser() && editor->parser()->enabled()) {
             menu.addAction(ui->actionGoto_Declaration);
             menu.addAction(ui->actionGoto_Definition);
             menu.addAction(ui->actionFind_references);
+            menu.addSeparator();
         }
 
-        menu.addSeparator();
         menu.addAction(ui->actionOpen_Containing_Folder);
         menu.addAction(ui->actionOpen_Terminal);
         menu.addAction(ui->actionLocate_in_Files_View);
@@ -4821,10 +4831,12 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionPaste);
         menu.addAction(ui->actionSelectAll);
         menu.addSeparator();
-        menu.addAction(ui->actionAdd_Watch);
-        menu.addAction(ui->actionToggle_Breakpoint);
-        menu.addAction(ui->actionClear_all_breakpoints);
-        menu.addSeparator();
+        if (canDebug) {
+            menu.addAction(ui->actionAdd_Watch);
+            menu.addAction(ui->actionToggle_Breakpoint);
+            menu.addAction(ui->actionClear_all_breakpoints);
+            menu.addSeparator();
+        }
         menu.addAction(ui->actionAdd_bookmark);
         menu.addAction(ui->actionRemove_Bookmark);
         menu.addAction(ui->actionModify_Bookmark_Description);
@@ -4837,10 +4849,12 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
 
         if (!editor->getLineOfMouse(line))
             line=-1;
-        menu.addAction(ui->actionToggle_Breakpoint);
-        menu.addAction(ui->actionBreakpoint_property);
-        menu.addAction(ui->actionClear_all_breakpoints);
-        menu.addSeparator();
+        if (canDebug) {
+            menu.addAction(ui->actionToggle_Breakpoint);
+            menu.addAction(ui->actionBreakpoint_property);
+            menu.addAction(ui->actionClear_all_breakpoints);
+            menu.addSeparator();
+        }
         menu.addAction(ui->actionAdd_bookmark);
         menu.addAction(ui->actionRemove_Bookmark);
         menu.addAction(ui->actionModify_Bookmark_Description);
