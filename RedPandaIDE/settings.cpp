@@ -1660,7 +1660,6 @@ void Settings::Editor::setTabToSpaces(bool tabToSpaces)
 Settings::CompilerSet::CompilerSet():
     mFullLoaded(false),
     mCompilerType(CompilerType::Unknown),
-    mCompilerSetType(CompilerSetType::RELEASE),
     mAutoAddCharsetParams(false),
     mExecCharset(ENCODING_SYSTEM_DEFAULT),
     mStaticLink(false),
@@ -1726,7 +1725,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mName(set.mName),
     mTarget(set.mTarget),
     mCompilerType(set.mCompilerType),
-    mCompilerSetType(set.mCompilerSetType),
 
     mUseCustomCompileParams(set.mUseCustomCompileParams),
     mUseCustomLinkParams(set.mUseCustomLinkParams),
@@ -2680,16 +2678,6 @@ void Settings::CompilerSet::setDebugServer(const QString &newDebugServer)
     mDebugServer = newDebugServer;
 }
 
-CompilerSetType Settings::CompilerSet::compilerSetType() const
-{
-    return mCompilerSetType;
-}
-
-void Settings::CompilerSet::setCompilerSetType(CompilerSetType newCompilerSetType)
-{
-    mCompilerSetType = newCompilerSetType;
-}
-
 void Settings::CompilerSet::setCompilerType(CompilerType newCompilerType)
 {
     mCompilerType = newCompilerType;
@@ -2786,13 +2774,11 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
             PCompilerSet set= addSet(baseSet);
             platformName = "32-bit";
             set->setName(baseName + " " + platformName + " Release");
-            set->setCompilerSetType(CompilerSetType::RELEASE);
             set64_32Options(set);
             setReleaseOptions(set);
 
             set = addSet(baseSet);
             set->setName(baseName + " " + platformName + " Debug");
-            set->setCompilerSetType(CompilerSetType::DEBUG);
             set64_32Options(set);
             setDebugOptions(set);
         }
@@ -2804,19 +2790,16 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
 
     PCompilerSet debugSet = addSet(baseSet);
     debugSet->setName(baseName + " " + platformName + " Debug");
-    debugSet->setCompilerSetType(CompilerSetType::DEBUG);
     setDebugOptions(debugSet);
 
     // Enable ASan compiler set if it is supported and gdb works with ASan.
 #ifdef Q_OS_LINUX
     PCompilerSet debugAsanSet = addSet(baseSet);
     debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
-    debugAsanSet->setCompilerSetType(CompilerSetType::DEBUG);
     setDebugOptions(debugAsanSet, true);
 #endif
 
     baseSet->setName(baseName + " " + platformName + " Release");
-    baseSet->setCompilerSetType(CompilerSetType::RELEASE);
     setReleaseOptions(baseSet);
 
 //    baseSet = addSet(folder);
@@ -3129,7 +3112,6 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("Name", pSet->name());
     mSettings->mSettings.setValue("Target", pSet->target());
     mSettings->mSettings.setValue("CompilerType", (int)pSet->compilerType());
-    mSettings->mSettings.setValue("CompilerSetType", (int)pSet->compilerSetType());
 
     // Paths
     savePathList("Bins",pSet->binDirs());
@@ -3192,8 +3174,6 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     } else {
         pSet->setCompilerType((CompilerType)mSettings->mSettings.value("CompilerType").toInt());
     }
-
-    pSet->setCompilerSetType((CompilerSetType)mSettings->mSettings.value("CompilerSetType").toInt());
 
     // Load extra 'general' options
     pSet->setUseCustomCompileParams(mSettings->mSettings.value("useCustomCompileParams", false).toBool());

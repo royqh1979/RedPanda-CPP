@@ -907,7 +907,7 @@ void Project::setCompilerSet(int compilerSetIndex)
 {
     if (mOptions.compilerSet != compilerSetIndex) {
         mOptions.compilerSet = compilerSetIndex;
-        updateCompilerSetType();
+        updateCompilerSetting();
         setModified(true);
     }
 }
@@ -923,7 +923,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
     mOptions = aTemplate->options();
     mOptions.compilerSet = pSettings->compilerSets().defaultIndex();
     mOptions.isCpp = useCpp;
-    updateCompilerSetType();
+    updateCompilerSetting();
     mOptions.icon = aTemplate->icon();
 
     QTextCodec* codec=QTextCodec::codecForName(mOptions.encoding);
@@ -1179,7 +1179,6 @@ void Project::saveOptions()
     ini.SetLongValue("Project","IncludeVersionInfo", mOptions.includeVersionInfo);
     ini.SetLongValue("Project","SupportXPThemes", mOptions.supportXPThemes);
     ini.SetLongValue("Project","CompilerSet", mOptions.compilerSet);
-    ini.SetLongValue("Project","CompilerSetType", (int)mOptions.compilerSetType);
     ini.Delete("Project","CompilerSettings"); // remove old compiler settings
     ini.Delete("CompilerSettings",nullptr); // remove old compiler settings
     foreach (const QString& key, mOptions.compilerOptions.keys()) {
@@ -2111,12 +2110,6 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.execEncoding = ini.GetValue("Project","ExecEncoding", ENCODING_SYSTEM_DEFAULT);
         mOptions.addCharset = ini.GetBoolValue("Project", "AddCharset", true);
 
-        int val=ini.GetLongValue("Project","CompilerSetType",-1);
-        if (val<0) {
-            updateCompilerSetType();
-        } else {
-            mOptions.compilerSetType=(CompilerSetType)val;
-        }
         bool useUTF8 = ini.GetBoolValue("Project", "UseUTF8", false);
         if (useUTF8) {
             mOptions.encoding = ini.GetValue("Project","Encoding", ENCODING_UTF8);
@@ -2255,15 +2248,13 @@ void Project::updateFolderNode(PProjectModelNode node)
     }
 }
 
-void Project::updateCompilerSetType()
+void Project::updateCompilerSetting()
 {
     Settings::PCompilerSet defaultSet = pSettings->compilerSets().getSet(mOptions.compilerSet);
     if (defaultSet) {
-        mOptions.compilerSetType=defaultSet->compilerSetType();
         mOptions.staticLink = defaultSet->staticLink();
         mOptions.compilerOptions = defaultSet->compileOptions();
     } else {
-        mOptions.compilerSetType=CompilerSetType::DEBUG;
         mOptions.staticLink = false;
     }
 }

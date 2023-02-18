@@ -50,7 +50,6 @@ ProjectOptions::ProjectOptions()
     includeVersionInfo = false;
     supportXPThemes = false;
     compilerSet = 0;
-    compilerSetType = CompilerSetType::DEBUG;
     staticLink = true;
     addCharset = true;
     modelType = ProjectModelType::FileSystem;

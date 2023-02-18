@@ -90,7 +90,6 @@ struct ProjectOptions{
     bool includeVersionInfo;
     bool supportXPThemes;
     int compilerSet;
-    CompilerSetType compilerSetType;
     QMap<QString,QString> compilerOptions;
     ProjectVersionInfo versionInfo;
     QString cmdLineArgs;

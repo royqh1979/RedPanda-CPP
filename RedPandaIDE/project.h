@@ -340,7 +340,7 @@ private:
     void open();
     void removeFolderRecurse(PProjectModelNode node);
     void updateFolderNode(PProjectModelNode node);
-    void updateCompilerSetType();
+    void updateCompilerSetting();
 
 private:
     QHash<QString,PProjectUnit> mUnits;

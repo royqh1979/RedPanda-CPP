@@ -605,7 +605,7 @@
     </message>
     <message>
         <source>Choose Profiler</source>
-        <translation>Escolher levantador de perfil</translation>
+        <translation type="vanished">Escolher levantador de perfil</translation>
     </message>
     <message>
         <source>C++ Compiler(g++)</source>
@@ -617,7 +617,7 @@
     </message>
     <message>
         <source>Profiler(gprof)</source>
-        <translation>Profiler (gprof)</translation>
+        <translation type="vanished">Profiler (gprof)</translation>
     </message>
     <message>
         <source>make</source>
@@ -749,10 +749,6 @@
     </message>
     <message>
         <source>Locate windres</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Locate gprof</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3506,11 +3502,11 @@
     </message>
     <message>
         <source>Compile &amp; Run</source>
-        <translation>Compilar e executar</translation>
+        <translation type="vanished">Compilar e executar</translation>
     </message>
     <message>
         <source>F11</source>
-        <translation>F11</translation>
+        <translation type="vanished">F11</translation>
     </message>
     <message>
         <source>Rebuild All</source>
@@ -4118,11 +4114,11 @@
     </message>
     <message>
         <source>Compile now?</source>
-        <translation>Compilar agora?</translation>
+        <translation type="vanished">Compilar agora?</translation>
     </message>
     <message>
         <source>Source file is more recent than executable.</source>
-        <translation>Arquivo fonte é mais recente que o executável.</translation>
+        <translation type="vanished">Arquivo fonte é mais recente que o executável.</translation>
     </message>
     <message>
         <source>Recompile now?</source>
@@ -4186,7 +4182,7 @@
     </message>
     <message>
         <source>Recompile?</source>
-        <translation>Recompilar?</translation>
+        <translation type="vanished">Recompilar?</translation>
     </message>
     <message>
         <source>Auto Save Error</source>
@@ -4921,22 +4917,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Do you want to set it now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You are not using a Debug compiler setting.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please use a Debug compiler set, or enable the &quot;generate debugging info (-g3)&quot; and disable the &quot;strip additional info (-s)&quot; options in the compiler settings.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please choose a Debug compiler set in the toolbar, or enable the &quot;generate debugging info (-g3)&quot; and disable the &quot;strip additional info (-s)&quot; options in the compiler set settings&apos;s &quot;settings&quot; page.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Trim trailing spaces</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5002,6 +4982,70 @@
     </message>
     <message>
         <source>GNU Assembler Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Correct compiler setting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are using a Debug compiler set with wrong compile/link settings: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - &quot;Generate debug info (-g3)&quot; should be turned on</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - &quot;Strip executable (-s)&quot; should be turned off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to correct it now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t Debug</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your compiler set&apos;s &quot;Strip executable (-s)&quot; options is turnned on</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please correct it, recompile and retry debug.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The generated executable doesn&apos;t have symbol table, and can&apos;t be debugged.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Debug Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The executable doesn&apos;t have symbol table, and can&apos;t be debugged.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please turn off your compiler set&apos;s &quot;Strip executable (-s)&quot; option, recompile and retry debug.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The executable doesn&apos;t have enough debug info to set breakpoint.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Then recompile and retry debug.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Or you can remove all breakpoints, open cpu info dialog, and try debug machine codes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please choose a Debug compiler set in the toolbar, or turn on your compiler set&apos;s &quot;Generate debug info (-g3)&quot; option in the options dialog.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

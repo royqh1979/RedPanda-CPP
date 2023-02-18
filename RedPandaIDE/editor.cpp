@@ -1981,6 +1981,7 @@ void Editor::onTooltipTimer()
 
 void Editor::onEndParsing()
 {
+    qDebug()<<"yes";
     mIdentCache.clear();
     invalidate();
 }

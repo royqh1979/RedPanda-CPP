@@ -46,12 +46,6 @@
 #define COMPILER_OPTION_ON "on"
 #define COMPILER_OPTION_OFF ""
 
-enum class CompilerSetType {
-    RELEASE,
-    DEBUG,
-    PROFILING
-};
-
 enum class CompilerType {
     GCC,
     GCC_UTF8,

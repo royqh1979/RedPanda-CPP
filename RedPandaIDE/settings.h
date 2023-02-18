@@ -1381,9 +1381,6 @@ public:
 
         void setCompilerType(CompilerType newCompilerType);
 
-        CompilerSetType compilerSetType() const;
-        void setCompilerSetType(CompilerSetType newCompilerSetType);
-
         const QString &execCharset() const;
         void setExecCharset(const QString &newExecCharset);
 
@@ -1448,7 +1445,6 @@ public:
         QString mName; // "TDM-GCC 4.7.1 Release"
         QString mTarget; // 'X86_64' / 'i686'
         CompilerType mCompilerType; // 'Clang' / 'GCC'
-        CompilerSetType mCompilerSetType; // RELEASE/ DEBUG/ Profile
 
         // User settings
         bool mUseCustomCompileParams;

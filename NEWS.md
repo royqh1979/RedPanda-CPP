@@ -37,7 +37,12 @@ Red Panda C++ Version 2.12
   - enhancement: Show "..." instead of "...}" when folding #if/#endif
   - enhancement: Correctly handle high-precision mouse wheel / touchpad in editors.
   - enhancement: Greatly reduce time to open/edit big files.
-  - enhancement: Reduce flicker when editing big files.
+  - enhancement: Reduce flicker when editing big files. 
+  - enhancement: If executable doesn't have symbol table, inform user and stop.
+  - enhancement: If breakpoint is setted but executable doesn't have debug info ，inform user and stop.
+  - enhancement: If current compiler set has "strip addition infos(-s)" enabled, inform user and stop.
+
+
 
 Red Panda C++ Version 2.11
 

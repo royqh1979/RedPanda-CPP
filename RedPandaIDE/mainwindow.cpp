@@ -2090,20 +2090,34 @@ void MainWindow::debug()
     QStringList binDirs;
     switch(getCompileTarget()) {
     case CompileTarget::Project:
+        compilerSet=pSettings->compilerSets().getSet(mProject->options().compilerSet);
+        if (!compilerSet)
+            compilerSet = pSettings->compilerSets().defaultSet();
         binDirs = mProject->binDirs();
         // Check if we enabled proper options
         debugEnabled = mProject->getCompileOption(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
         stripEnabled = mProject->getCompileOption(LINK_CMD_OPT_STRIP_EXE) == COMPILER_OPTION_ON;
+        if (stripEnabled) {
+            QMessageBox::critical(this,
+                                  tr("Can't Debug"),
+                                  tr("Your compiler set's \"Strip executable (-s)\" options is turnned on")
+                                  +"<BR /><BR />"
+                                  +tr("The generated executable doesn't have symbol table, and can't be debugged.")
+                                  +"<BR /><BR />"
+                                  +tr("Please correct it, recompile and retry debug.")
+                                  );
+            return;
+        }
         // Ask the user if he wants to enable debugging...
-        if ((!debugEnabled) || stripEnabled) {
-             if (QMessageBox::question(this,
-                                      tr("Enable debugging"),
-                                      tr("You are not using a Debug compiler setting.")
-                                      +"<BR /><BR />"
-                                      +tr("Please use a Debug compiler set, or enable the \"generate debugging info (-g3)\" and disable the \"strip additional info (-s)\" options in the compiler settings.")
-                                      +"<BR /><BR />"
-                                      +tr("Do you want to set it now?")
-                                      ) == QMessageBox::Yes) {
+        if (compilerSet->name().endsWith("Debug") && !debugEnabled) {
+            if (QMessageBox::question(this,
+                                     tr("Correct compiler setting"),
+                                     tr("You are using a Debug compiler set with wrong compile/link settings: ")
+                                     +"<BR /><BR />"
+                                     +tr(" - \"Generate debug info (-g3)\" should be turned on")
+                                     +"<BR /><BR />"
+                                     +tr("Do you want to correct it now?")
+                                     ) == QMessageBox::Yes) {
                  changeOptions(
                             SettingsDialog::tr("Compiler Set"),
                             SettingsDialog::tr("Compiler")
@@ -2183,15 +2197,28 @@ void MainWindow::debug()
             // Check if we enabled proper options
             debugEnabled = compilerSet->getCompileOptionValue(CC_CMD_OPT_DEBUG_INFO) == COMPILER_OPTION_ON;
             stripEnabled = compilerSet->getCompileOptionValue(LINK_CMD_OPT_STRIP_EXE) == COMPILER_OPTION_ON;
+            if (stripEnabled) {
+                QMessageBox::critical(this,
+                                      tr("Can't Debug"),
+                                      tr("Your compiler set's \"Strip executable (-s)\" options is turnned on")
+                                      +"<BR /><BR />"
+                                      +tr("The generated executable doesn't have symbol table, and can't be debugged.")
+                                      +"<BR /><BR />"
+                                      +tr("Please correct it, recompile and retry debug.")
+                                      );
+                return;
+            }
             // Ask the user if he wants to enable debugging...
-            if ((!debugEnabled) || stripEnabled) {
+            if (compilerSet->name().endsWith("Debug") && !debugEnabled) {
                  if (QMessageBox::question(this,
                                           tr("Enable debugging"),
-                                          tr("You are not using a Debug compiler setting.")
+                                          tr("You are using a Debug compiler set with wrong compile/link settings: ")
                                           +"<BR /><BR />"
-                                          +tr("Please choose a Debug compiler set in the toolbarin the compiler set settings's \"settings\" page.")
+                                          +tr(" - \"Generate debug info (-g3)\" should be turned on")
                                           +"<BR /><BR />"
-                                          +tr("Do you want to set it now?")
+                                          +tr(" - \"Strip executable (-s)\" should be turned off")
+                                          +"<BR /><BR />"
+                                          +tr("Do you want to correct it now?")
                                           ) == QMessageBox::Yes) {
                      changeOptions(
                                 SettingsDialog::tr("Compiler Set"),
@@ -2285,7 +2312,7 @@ void MainWindow::debug()
     mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(filePath))); // restore working directory
     if (pSettings->debugger().useGDBServer()) {
         mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
-        if (!debugInferiorhasBreakpoint()) {
+        if (!debugInferiorhasBreakpoint() || !debugEnabled) {
             mDebugger->sendCommand("-break-insert","-t main");
         }
         if (pSettings->executor().useParams()) {
@@ -2300,11 +2327,10 @@ void MainWindow::debug()
             mDebugger->sendCommand("-exec-arguments", pSettings->executor().params());
         }
         if (!debugInferiorhasBreakpoint()) {
-            mDebugger->sendCommand("-exec-run", "--start");
+            mDebugger->sendCommand("-exec-run","--start");
         } else {
             mDebugger->sendCommand("-exec-run","");
         }
-
     }
 }
 
@@ -4907,6 +4933,31 @@ void MainWindow::enableDebugActions()
     if (mCPUDialog) {
         mCPUDialog->updateButtonStates(true);
     }
+}
+
+void MainWindow::stopDebugForNoSymbolTable()
+{
+    mDebugger->stop();
+    QMessageBox::critical(this,
+                          tr("Debug Failed"),
+                          tr("The executable doesn't have symbol table, and can't be debugged.")
+                          +"<BR /><BR />"
+                          +tr("Please turn off your compiler set's \"Strip executable (-s)\" option, recompile and retry debug.")
+                          );
+}
+
+void MainWindow::stopDebugForNoSourceFile()
+{
+    mDebugger->stop();
+    QMessageBox::critical(this,
+                          tr("Debug Failed"),
+                          tr("The executable doesn't have enough debug info to set breakpoint.")
+                          +"<BR /><BR />"
+                          +tr("Please choose a Debug compiler set in the toolbar, or turn on your compiler set's \"Generate debug info (-g3)\" option in the options dialog.")
+                          +tr("Then recompile and retry debug.")
+                          +"<BR /><BR/>"
+                          +tr("Or you can remove all breakpoints, open cpu info dialog, and try debug machine codes.")
+                          );
 }
 
 void MainWindow::onTodoParsingFile(const QString& filename)
@@ -9432,7 +9483,6 @@ void MainWindow::on_actionNew_GAS_File_triggered()
     }
     newEditor("s");
 }
-
 
 void MainWindow::on_actionGNU_Assembler_Manual_triggered()
 {
