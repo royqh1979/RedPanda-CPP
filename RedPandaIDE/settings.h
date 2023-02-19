@@ -569,6 +569,7 @@ public:
         void setIconSet(const QString &newIconSet);
 
         QString terminalPath() const;
+        QString terminalPathForExec() const;
         void setTerminalPath(const QString &terminalPath);
 
         QString AStylePath() const;

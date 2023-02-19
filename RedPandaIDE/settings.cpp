@@ -3325,12 +3325,87 @@ void Settings::Environment::doLoad()
         mDefaultOpenFolder = QDir::currentPath();
     }
 #ifdef Q_OS_LINUX
-    //use qterminal by default
-    mTerminalPath = stringValue("terminal_path","/usr/bin/qterminal");
-    if (mTerminalPath.isEmpty())
-        mTerminalPath = stringValue("terminal_path","/usr/bin/konsole");
-    if (mTerminalPath.isEmpty())
-        mTerminalPath = stringValue("terminal_path","/usr/bin/x-terminal-emulator");
+
+#define SYSTEM_TERMINAL(term) "/usr/bin/" #term, "/usr/local/bin/" #term
+    const static QString terminals[] {
+        /* modern, specialized or stylized terminal -- user who installed them are likely to prefer them */
+        SYSTEM_TERMINAL(alacritty),       // GPU-accelerated
+        SYSTEM_TERMINAL(kitty),           // GPU-accelerated
+        SYSTEM_TERMINAL(wayst),           // GPU-accelerated
+        SYSTEM_TERMINAL(tilix),           // tiling
+        SYSTEM_TERMINAL(cool-retro-term), // old CRT style
+
+        /* default terminal for DE */
+        SYSTEM_TERMINAL(konsole),         // KDE
+        SYSTEM_TERMINAL(deepin-terminal), // DDE
+        SYSTEM_TERMINAL(qterminal),       // LXQt
+        SYSTEM_TERMINAL(lxterminal),      // LXDE
+
+        /* bundled terminal in AppImage */
+        "alacritty",
+
+        /* compatible, with minor issue */
+        SYSTEM_TERMINAL(kgx),          // GNOME Console, confirm to quit
+        SYSTEM_TERMINAL(coreterminal), // not so conforming when parsing args
+        SYSTEM_TERMINAL(sakura),       // not so conforming when parsing args
+
+        /* compatible, without out-of-box hidpi support */
+        SYSTEM_TERMINAL(mlterm),
+        SYSTEM_TERMINAL(st),
+        SYSTEM_TERMINAL(terminology), // also not so conforming when parsing args
+        SYSTEM_TERMINAL(urxvt),
+        SYSTEM_TERMINAL(xterm),
+        SYSTEM_TERMINAL(zutty),
+
+        /* fallbacks */
+        SYSTEM_TERMINAL(foot),                // Wayland only
+        SYSTEM_TERMINAL(x-terminal-emulator), // Debian alternatives
+
+        /* parameter incompatible */
+        // "gnome-terminal",
+        // "guake",
+        // "hyper",
+        // "io.elementary.terminal",
+        // "kermit",
+        // "liri-terminal",
+        // "mate-terminal",
+        // "roxterm",
+        // "station",
+        // "terminator",
+        // "termite",
+        // "tilda",
+        // "xfce4-terminal",
+        // "yakuake",
+
+        /* incompatible -- other */
+        // "aterm",       // AUR broken, unable to test
+        // "eterm",       // AUR broken, unable to test
+        // "rxvt",        // no unicode support
+        // "shellinabox", // AUR broken, unable to test
+    };
+#undef SYSTEM_TERMINAL
+
+    auto checkAndSetTerminalPath = [this](QString terminalPath) -> bool {
+        QDir appDir(pSettings->dirs().appDir());
+        QString absoluteTerminalPath = appDir.absoluteFilePath(terminalPath);
+        QFileInfo termPathInfo(absoluteTerminalPath);
+        if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) {
+            mTerminalPath = terminalPath;
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    // check saved terminal path
+    if (!checkAndSetTerminalPath(stringValue("terminal_path", ""))) {
+        // if saved terminal path is invalid, try determing terminal from our list
+        for (auto terminal: terminals) {
+            if (checkAndSetTerminalPath(terminal))
+                break;
+        }
+    }
+
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
 #elif defined(Q_OS_MACOS)
     mTerminalPath = stringValue("terminal_path",
@@ -3394,6 +3469,17 @@ void Settings::Environment::setIconSet(const QString &newIconSet)
 QString Settings::Environment::terminalPath() const
 {
     return mTerminalPath;
+}
+
+QString Settings::Environment::terminalPathForExec() const
+{
+#ifdef Q_OS_LINUX
+    // `mTerminalPath` can be reletive (bundled terminal in AppImage).
+    QDir appDir(pSettings->dirs().appDir());
+    return appDir.absoluteFilePath(mTerminalPath);
+#else
+    return mTerminalPath;
+#endif
 }
 
 void Settings::Environment::setTerminalPath(const QString &terminalPath)
