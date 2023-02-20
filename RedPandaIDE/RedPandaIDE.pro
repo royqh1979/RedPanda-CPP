@@ -81,13 +81,11 @@ LIBS += advapi32.lib user32.lib
 SOURCES += \
     autolinkmanager.cpp \
     caretlist.cpp \
-    codeformatter.cpp \
     codesnippetsmanager.cpp \
     colorscheme.cpp \
     compiler/compilerinfo.cpp \
     compiler/ojproblemcasesrunner.cpp \
     compiler/projectcompiler.cpp \
-    compiler/xmakecompiler.cpp \
     compiler/runner.cpp \
     customfileiconprovider.cpp \
     gdbmiresultparser.cpp \
@@ -218,7 +216,6 @@ HEADERS += \
     SimpleIni.h \
     autolinkmanager.h \
     caretlist.h \
-    codeformatter.h \
     codesnippetsmanager.h \
     colorscheme.h \
     compiler/compiler.h \
@@ -226,7 +223,6 @@ HEADERS += \
     compiler/compilermanager.h \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
-    compiler/xmakecompiler.h \
     compiler/ojproblemcasesrunner.h \
     compiler/projectcompiler.h \
     compiler/runner.h \
