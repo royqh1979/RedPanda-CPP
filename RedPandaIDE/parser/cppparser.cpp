@@ -3398,20 +3398,30 @@ void CppParser::handleStructs(bool isTypedef)
             }
         }
         if (!firstSynonym) {
-            //anonymous union/struct/class, add as a block
-            firstSynonym=addStatement(
-                      getCurrentScope(),
-                      mCurrentFile,
-                      "",
-                      "",
-                      "",
-                      "",
-                      "",
-                      mTokenizer[mIndex]->line,
-                      StatementKind::skBlock,
-                      getScope(),
-                      mClassScope,
-                      StatementProperty::spHasDefinition);
+            PStatement scope = getCurrentScope();
+            if (scope && scope->kind == StatementKind::skClass
+                    && mIndex<mTokenizer.tokenCount() && mTokenizer[mIndex]->text=="{") {
+                //C11 anonymous union/struct
+                addSoloScopeLevel(scope, mTokenizer[mIndex]->line);
+                //skip {
+                mIndex++;
+                return;
+            } else {
+                //anonymous union/struct/class, add as a block
+                firstSynonym=addStatement(
+                          getCurrentScope(),
+                          mCurrentFile,
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                          mTokenizer[mIndex]->line,
+                          StatementKind::skBlock,
+                          getScope(),
+                          mClassScope,
+                          StatementProperty::spHasDefinition);
+            }
         }
         if (mIndex < mTokenizer.tokenCount())
             addSoloScopeLevel(firstSynonym,mTokenizer[mIndex]->line);

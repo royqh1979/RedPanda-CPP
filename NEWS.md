@@ -3,6 +3,7 @@ Red Panda C++ Version 2.13
   - fix: Only C/C++/GAS files can set breakpoints.
   - Enhancement: Don't show breakpoints/watch related menuitems in context menu for non-C/C++/GAS files.
   - Enhancement: Disable reformat code for non-C/C++ files.
+  - Enhancement: Support C11 ano
 
 Red Panda C++ Version 2.12
 
