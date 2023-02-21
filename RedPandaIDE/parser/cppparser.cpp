@@ -5389,6 +5389,7 @@ int CppParser::indexOfNextPeriodOrSemicolon(int index, int endIndex)
         switch(mTokenizer[index]->text[0].unicode()) {
         case ';':
         case ',':
+        case '}':
             return index;
         case '(':
             index = mTokenizer[index]->matchIndex+1;

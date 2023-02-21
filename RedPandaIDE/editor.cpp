@@ -1275,21 +1275,22 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
     // if ctrl+clicked
     if ((event->modifiers() == Qt::ControlModifier)
             && (event->button() == Qt::LeftButton)) {
-
-        QSynedit::BufferCoord p;
-        if (mParser && pointToCharLine(event->pos(),p)) {
-            QString s = document()->getLine(p.line - 1);
-            if (mParser->isIncludeNextLine(s)) {
-                QString filename = mParser->getHeaderFileName(mFilename,s, true);
-                pMainWindow->openFile(filename);
-                return;
-            } if (mParser->isIncludeLine(s)) {
-                QString filename = mParser->getHeaderFileName(mFilename,s);
-                pMainWindow->openFile(filename);
-                return;
-            } else if (mParser->enabled()) {
-                gotoDefinition(p);
-                return;
+        if (!mCurrentWord.isEmpty()) {
+            QSynedit::BufferCoord p;
+            if (mParser && pointToCharLine(event->pos(),p)) {
+                QString s = document()->getLine(p.line - 1);
+                if (mParser->isIncludeNextLine(s)) {
+                    QString filename = mParser->getHeaderFileName(mFilename,s, true);
+                    pMainWindow->openFile(filename);
+                    return;
+                } if (mParser->isIncludeLine(s)) {
+                    QString filename = mParser->getHeaderFileName(mFilename,s);
+                    pMainWindow->openFile(filename);
+                    return;
+                } else if (mParser->enabled()) {
+                    gotoDefinition(p);
+                    return;
+                }
             }
         }
     }

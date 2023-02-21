@@ -38,17 +38,26 @@ PTemplateUnit ProjectTemplate::unit(int index)
         return PTemplateUnit();
     QString section = QString("Unit%1").arg(index);
     PTemplateUnit unit = std::make_shared<TemplateUnit>();
-    unit->Source = fromByteArray(mIni->GetValue(toByteArray(section), "Source", ""));
-    unit->Target = fromByteArray(mIni->GetValue(toByteArray(section), "Target", ""));
-    unit->CText = fromByteArray(mIni->GetValue(toByteArray(section), "C", ""));
-    unit->CppText = fromByteArray(mIni->GetValue(toByteArray(section), "Cpp", ""));
+    QString lang = pSettings->environment().language();
+    if (!lang.isEmpty()) {
+        unit->Source = fromByteArray(mIni->GetValue(toByteArray(section), QString("Source[%1]").arg(lang).toUtf8(), ""));
+        unit->CText = fromByteArray(mIni->GetValue(toByteArray(section), QString("C[%1]").arg(lang).toUtf8(), ""));
+        unit->CppText = fromByteArray(mIni->GetValue(toByteArray(section), QString("Cpp[%1]").arg(lang).toUtf8(), ""));
+    }
+    if (unit->Source.isEmpty())
+        unit->Source = fromByteArray(mIni->GetValue(toByteArray(section), "Source", ""));
+    if (unit->CText.isEmpty())
+        unit->CText = fromByteArray(mIni->GetValue(toByteArray(section), "C", ""));
+    if (unit->CppText.isEmpty())
+        unit->CppText = fromByteArray(mIni->GetValue(toByteArray(section), "Cpp", ""));
     if (unit->CppText.isEmpty())
         unit->CppText = unit->CText;
-
     unit->CName = fromByteArray(mIni->GetValue(toByteArray(section), "CName", ""));
     unit->CppName = fromByteArray(mIni->GetValue(toByteArray(section), "CppName", ""));
     if (unit->CppName.isEmpty())
         unit->CppName = unit->CName;
+    unit->Target = fromByteArray(mIni->GetValue(toByteArray(section), "Target", ""));
+
     return unit;
 }
 
