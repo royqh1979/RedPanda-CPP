@@ -27,6 +27,7 @@
 #include <QTime>
 
 static QAtomicInt cppParserCount(0);
+
 CppParser::CppParser(QObject *parent) : QObject(parent),
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mMutex()
@@ -3010,11 +3011,6 @@ void CppParser::handleScope(KeywordType keywordType)
     mIndex+=2; // the scope is followed by a ':'
 }
 
-
-#ifdef QT_DEBUG
-static int lastIndex=-1;
-#endif
-
 bool CppParser::handleStatement()
 {
     QString funcType,funcName;
@@ -3024,8 +3020,8 @@ bool CppParser::handleStatement()
     KeywordType keywordType;
 #ifdef QT_DEBUG
 //    qDebug()<<lastIndex<<mIndex;
-    Q_ASSERT(mIndex>=lastIndex);
-    lastIndex=mIndex;
+    Q_ASSERT(mIndex>=mLastIndex);
+    mLastIndex=mIndex;
 #endif
 
     if (mIndex >= idx2) {
@@ -3826,7 +3822,7 @@ void CppParser::internalParse(const QString &fileName)
 //        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
-        lastIndex = -1;
+        mLastIndex = -1;
 #endif
     // Process the token list
     while(true) {

@@ -665,7 +665,9 @@ private:
     bool mParsing;
     QHash<QString,PStatementList> mNamespaces;  // namespace and the statements in its scope
     QSet<QString> mInlineNamespaces;
-
+#ifdef QT_DEBUG
+    int mLastIndex;
+#endif
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mMutex;
 #else
