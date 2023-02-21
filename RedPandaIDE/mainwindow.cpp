@@ -2273,7 +2273,7 @@ void MainWindow::debug()
 
                 prepareDebugger();
                 QString filePath = debugFile.filePath().replace('\\','/');
-                if (!mDebugger->start(pSettings->compilerSets().defaultIndex(),filePath, binDirs))
+                if (!mDebugger->start(pSettings->compilerSets().defaultIndex(),filePath, binDirs,e->filename()))
                     return;
                 mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(filePath));
             }

@@ -71,9 +71,9 @@ Debugger::~Debugger()
 //    delete mMemoryModel;
 }
 
-bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs)
+bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs, const QString& sourceFile)
 {
-
+    mCurrentSourceFile = sourceFile;
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
     if (!compilerSet) {
         compilerSet = pSettings->compilerSets().defaultSet();
@@ -218,6 +218,7 @@ void Debugger::stop() {
         }
         mReader->stopDebug();
     }
+    mCurrentSourceFile="";
 }
 void Debugger::cleanUpReader()
 {
@@ -347,7 +348,11 @@ void Debugger::addBreakpoint(int line, const QString &filename, bool forProject)
     bp->timestamp = QDateTime::currentMSecsSinceEpoch();
     mBreakpointModel->addBreakpoint(bp,forProject);
     if (mExecuting) {
-        sendBreakpointCommand(bp);
+        if (forProject && mBreakpointModel->isForProject()) {
+            sendBreakpointCommand(bp);
+        } else if (filename == mCurrentSourceFile) {
+            sendBreakpointCommand(bp);
+        }
     }
 }
 
@@ -430,7 +435,11 @@ void Debugger::setBreakPointCondition(int index, const QString &condition, bool 
 void Debugger::sendAllBreakpointsToDebugger()
 {
     for (PBreakpoint breakpoint:mBreakpointModel->breakpoints(mBreakpointModel->isForProject())) {
-        sendBreakpointCommand(breakpoint);
+        if (mBreakpointModel->isForProject()) {
+            sendBreakpointCommand(breakpoint);
+        } else if (breakpoint->filename == mCurrentSourceFile) {
+            sendBreakpointCommand(breakpoint);
+        }
     }
 }
 
@@ -747,7 +756,9 @@ void Debugger::save(const QString &filename, const QString& projectFolder)
         QJsonObject rootObj;
         rootObj["timestamp"] = QString("%1").arg(saveTimestamp);
 
-        rootObj["breakpoints"] = mBreakpointModel->toJson(projectFolder);
+        if (forProject) {
+            rootObj["breakpoints"] = mBreakpointModel->toJson(projectFolder);
+        }
         rootObj["watchvars"] = mWatchModel->toJson(forProject);
         QJsonDocument doc;
         doc.setObject(rootObj);

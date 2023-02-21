@@ -307,7 +307,7 @@ public:
     explicit Debugger(QObject *parent = nullptr);
     ~Debugger();
     // Play/pause
-    bool start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs);
+    bool start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs, const QString& sourceFile=QString());
     void sendCommand(const QString& command, const QString& params,
                      DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
@@ -415,6 +415,7 @@ private:
     int mLeftPageIndexBackup;
     qint64 mLastLoadtime;
     qint64 mProjectLastLoadtime;
+    QString mCurrentSourceFile;
 };
 
 class DebugTarget: public QThread {

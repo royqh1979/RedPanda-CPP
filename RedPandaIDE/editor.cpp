@@ -1034,7 +1034,7 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
             } else {
                 icon = pIconsManager->getPixmap(IconsManager::GUTTER_SYNTAX_WARNING);
             }
-        } else if (hasBookmark(aLine)) {            
+        } else if (hasBookmark(aLine)) {
             icon = pIconsManager->getPixmap(IconsManager::GUTTER_BOOKMARK);
         }
     }
@@ -4810,7 +4810,7 @@ void Editor::reformat(bool doReparse)
     }
 #endif
     //we must remove all breakpoints and syntax issues
-    onLinesDeleted(1,document()->count());
+//    onLinesDeleted(1,document()->count());
     QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
     //qDebug()<<args;
