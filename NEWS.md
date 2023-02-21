@@ -6,6 +6,7 @@ Red Panda C++ Version 2.13
   - Enhancement: Support C11 anonymous struct/union
   - fix: Can't debug when debug a file while other file has breakpoints
   - change: Don't save breakpoints for non-project files
+  - Enhancement: Correctly init panel sizes when first run.
 
 Red Panda C++ Version 2.12
 

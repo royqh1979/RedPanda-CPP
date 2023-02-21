@@ -334,9 +334,9 @@ bool Settings::_Base::boolValue(const QString &key, bool defaultValue)
     return value(key,defaultValue).toBool();
 }
 
-QSize Settings::_Base::sizeValue(const QString &key)
+QSize Settings::_Base::sizeValue(const QString &key, const QSize& size)
 {
-    return value(key,QSize()).toSize();
+    return value(key,size).toSize();
 }
 
 int Settings::_Base::intValue(const QString &key, int defaultValue)
@@ -5722,8 +5722,8 @@ void Settings::UI::doLoad()
 
     mShrinkExplorerTabs = boolValue("shrink_explorer_tabs",false);
     mShrinkMessagesTabs = boolValue("shrink_messages_tabs",false);
-    mExplorerTabsSize = sizeValue("explorer_tabs_size");
-    mMessagesTabsSize = sizeValue("messages_tabs_size");
+    mExplorerTabsSize = sizeValue("explorer_tabs_size",QSize(300,600));
+    mMessagesTabsSize = sizeValue("messages_tabs_size",QSize(450,150));
 
     //view
     mShowToolbar = boolValue("show_toolbar",true);

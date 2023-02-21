@@ -3653,7 +3653,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                     QString args;
                     cmd=mTokenizer[mIndex]->text;
                     parseCommandTypeAndArgs(cmd,suffix,args);
-                    if (!cmd.isEmpty()) {
+                    if (!cmd.isEmpty() && !isKeyword(cmd)) {
                         addedVar = addChildStatement(
                                     getCurrentScope(),
                                     mCurrentFile,

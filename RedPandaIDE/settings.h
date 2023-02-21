@@ -68,7 +68,7 @@ private:
         void saveValue(const QString &key, const QSet<QString>& set);
         QVariant value(const QString &key, const QVariant& defaultValue);
         bool boolValue(const QString &key, bool defaultValue);
-        QSize sizeValue(const QString &key);
+        QSize sizeValue(const QString &key, const QSize& size=QSize());
         int intValue(const QString &key, int defaultValue);
         double doubleValue(const QString& key, double defaultValue);
         unsigned int uintValue(const QString &key, unsigned int defaultValue);
