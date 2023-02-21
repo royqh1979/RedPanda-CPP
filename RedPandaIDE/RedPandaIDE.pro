@@ -10,7 +10,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION = 2.13
+    APP_VERSION = 2.14
 }
 
 macos: {

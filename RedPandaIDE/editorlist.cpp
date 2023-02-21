@@ -180,9 +180,10 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
         PProjectUnit unit = pMainWindow->project()->findUnit(editor);
         pMainWindow->project()->closeUnit(unit);
     } else {
-        if (pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
+        if (!editor->isNew() && pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
             pMainWindow->rebuildOpenedFileHisotryMenu();
         }
+        editor->clearBreakpoints();
         doRemoveEditor(editor);
     }
     updateLayout();

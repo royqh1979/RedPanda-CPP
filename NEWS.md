@@ -1,4 +1,9 @@
 Red Panda C++ Version 2.13
+
+  - change: Remove all breakpoints of the current non-project file, when it is closed.
+
+
+Red Panda C++ Version 2.13
   
   - fix: Only C/C++/GAS files can set breakpoints.
   - Enhancement: Don't show breakpoints/watch related menuitems in context menu for non-C/C++/GAS files.
