@@ -12,7 +12,7 @@ Icon = app.ico
 [Project]
 Type = 1
 IsCpp = 0
-Encoding = SYSTEM
+Encoding = UTF-8
 ClassBrowserType = 0
 UnitCount = 1
 
@@ -20,3 +20,4 @@ UnitCount = 1
 [Unit0]
 CName=main.c
 C=main.c
+C[zh_CN]=main_zh_CN.c

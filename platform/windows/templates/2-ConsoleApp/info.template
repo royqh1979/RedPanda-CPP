@@ -11,8 +11,8 @@ Category[zh_CN]=基础
 [Unit0]
 CName=main.c
 CppName=main.cpp
-C=consoleapp_c.txt
-Cpp=consoleapp_cpp.txt
+C=ConsoleApp_c.txt
+Cpp=ConsoleApp_cpp.txt
 
 [Project]
 UnitCount=1

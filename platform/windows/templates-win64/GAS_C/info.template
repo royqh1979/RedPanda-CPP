@@ -19,9 +19,12 @@ UnitCount = 2
 
 [Unit0]
 Source = utils.s
+Source[zh_CN] = utils_zh_CN.s
 Target = utils.s
+
 
 
 [Unit1]
 Cpp = main.cpp
+Cpp[zh_CN] = main.cpp
 CppName = main.cpp

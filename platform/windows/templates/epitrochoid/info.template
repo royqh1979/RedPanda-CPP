@@ -11,10 +11,12 @@ Category[zh_CN]=游戏
 [Unit0]
 CName=main.c
 C=epitrochoid_c.txt
+C[zh_CN]=epitrochoid_zh_CN.c
 
 [Project]
 UnitCount=1
 Type=1
 IsCpp=0
 linker=-lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
-ExecEncoding=UTF-8
+Encoding = UTF-8
+ExecEncoding = UTF-8

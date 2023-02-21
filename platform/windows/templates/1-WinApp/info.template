@@ -11,8 +11,11 @@ Category[zh_CN]=基础
 [Unit0]
 CName=main.c
 CppName=main.cpp
-C=winapp_c.txt
-Cpp=winapp_c.txt
+C=WinApp_c.txt
+Cpp=WinApp_c.txt
+C[zh_CN]=WinApp_zh_CN.c
+Cpp[zh_CN]=WinApp_zh_CN.c
+
 
 [Project]
 UnitCount=1

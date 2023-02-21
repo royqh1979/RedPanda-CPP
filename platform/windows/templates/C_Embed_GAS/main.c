@@ -6,11 +6,11 @@ int add(int x,int y) {
 		"movl %%eax, %1 \n"
 		"addl %%eax, %2 \n"
 		"movl %0, %%eax \n"
-		:"=m"(result)		//output operands used in the instructions
-		:"m"(x),"m"(y)		//input operands used in the instructions
+		:"=r"(result)		//output operands used in the instructions
+		:"r"(x),"r"(y)		//input operands used in the instructions
 		:"eax"				//registers changed by the assembler instructions
 		);
-	return x+y;
+	return result;
 }
 
 int main() {
