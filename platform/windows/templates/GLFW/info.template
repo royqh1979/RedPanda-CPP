@@ -21,9 +21,11 @@ Cpp[zh_CN]=GLFW_shader_zh_CN.h
 CppName=shader.frag
 Cpp=GLFW_shader.frag.txt
 
+
 [Unit3]
 CppName=shader.vs
 Cpp=GLFW_shader.vs.txt
+Cpp[zh_CN]=GLFW_shader_zh_CN.vs
 
 [Project]
 UnitCount=4

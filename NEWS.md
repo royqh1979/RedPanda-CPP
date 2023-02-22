@@ -7,6 +7,7 @@ Red Panda C++ Version 2.14
   - enhancement: Check and remove all non-exist breakpoints before debug a project
   - change: Remove nasm support
   - change: Don't stop debug when breakpoint can't be set
+  - fix: "Generate assembly" menu item is wrongly enabled for new GNU assembly files 
 
 Red Panda C++ Version 2.13
   
