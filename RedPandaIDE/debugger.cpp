@@ -196,8 +196,6 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
             &MainWindow::setActiveBreakpoint);
     connect(mReader, &DebugReader::errorNoSymbolTable,pMainWindow,
             &MainWindow::stopDebugForNoSymbolTable);
-    connect(mReader, &DebugReader::errorNoSourceFile,pMainWindow,
-            &MainWindow::stopDebugForNoSourceFile);
     connect(mReader, &DebugReader::inferiorStopped,this,
             &Debugger::refreshAll);
 
@@ -1196,11 +1194,6 @@ void DebugReader::processError(const QByteArray &errorLine)
     int idx=s.indexOf(",msg=\"No symbol table is loaded");
     if (idx>0) {
         emit errorNoSymbolTable();
-        return;
-    }
-    idx=s.indexOf(",msg=\"No source file named ");
-    if (idx>0) {
-        emit errorNoSourceFile();
         return;
     }
 }

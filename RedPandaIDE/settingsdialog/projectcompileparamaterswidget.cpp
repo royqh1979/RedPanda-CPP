@@ -52,7 +52,6 @@ void ProjectCompileParamatersWidget::doLoad()
     ui->txtCPPCompiler->setPlainText(pMainWindow->project()->options().cppCompilerCmd);
     ui->txtLinker->setPlainText(pMainWindow->project()->options().linkerCmd);
     ui->txtResource->setPlainText(pMainWindow->project()->options().resourceCmd);
-    ui->txtAssembler->setPlainText(pMainWindow->project()->options().assemblerArgs);
     ui->grpAllowParallelBuilding->setChecked(pMainWindow->project()->options().allowParallelBuilding);
     ui->spinParallelJobs->setValue(pMainWindow->project()->options().parellelBuildingJobs);
 }
@@ -63,7 +62,6 @@ void ProjectCompileParamatersWidget::doSave()
     pMainWindow->project()->options().cppCompilerCmd = ui->txtCPPCompiler->toPlainText();
     pMainWindow->project()->options().linkerCmd = ui->txtLinker->toPlainText();
     pMainWindow->project()->options().resourceCmd = ui->txtResource->toPlainText();
-    pMainWindow->project()->options().assemblerArgs = ui->txtAssembler->toPlainText();
     pMainWindow->project()->options().allowParallelBuilding = ui->grpAllowParallelBuilding->isChecked();
     pMainWindow->project()->options().parellelBuildingJobs = ui->spinParallelJobs->value();
     pMainWindow->project()->saveOptions();

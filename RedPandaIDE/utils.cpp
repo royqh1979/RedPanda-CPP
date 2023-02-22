@@ -83,9 +83,6 @@ QStringList splitProcessCommand(const QString &cmd)
 
 FileType getFileType(const QString &filename)
 {
-    if (filename.endsWith(".asm",PATH_SENSITIVITY)) {
-        return FileType::ASM;
-    }
     if (filename.endsWith(".s",PATH_SENSITIVITY)) {
         return FileType::GAS;
     }

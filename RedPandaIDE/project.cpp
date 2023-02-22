@@ -961,8 +961,7 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 unit = newUnit(mRootNode, target);
 
                 FileType fileType=getFileType(unit->fileName());
-                if (fileType==FileType::ASM
-                        || fileType==FileType::GAS
+                if ( fileType==FileType::GAS
                         || isCFile(unit->fileName()) || isHFile(unit->fileName())) {
                     Editor * editor = mEditorList->newEditor(
                                 unit->fileName(),
@@ -1058,8 +1057,6 @@ bool Project::saveAsTemplate(const QString &templateFolder,
         ini->SetValue("Project", "Linker",textToLines(mOptions.linkerCmd).join(";CONFIG_LINE;").toUtf8());
     if (!mOptions.resourceCmd.isEmpty())
         ini->SetValue("Project", "ResourceCommand",textToLines(mOptions.resourceCmd).join(";CONFIG_LINE;").toUtf8());
-    if (!mOptions.assemblerArgs.isEmpty())
-        ini->SetValue("Project", "AssemblerArgs",textToLines(mOptions.assemblerArgs).join(";CONFIG_LINE;").toUtf8());
     ini->SetBoolValue("Project", "IsCpp", mOptions.isCpp);
     if (mOptions.includeVersionInfo)
         ini->SetBoolValue("Project", "IncludeVersionInfo", true);
@@ -1158,7 +1155,6 @@ void Project::saveOptions()
     ini.SetValue("Project","PrivateResource", toByteArray(mOptions.privateResource));
     ini.SetValue("Project","Compiler", toByteArray(textToLines(mOptions.compilerCmd).join(";CONFIG_LINE;")));
     ini.SetValue("Project","CppCompiler", toByteArray(textToLines(mOptions.cppCompilerCmd).join(";CONFIG_LINE;")));
-    ini.SetValue("Project","AssemblerArgs",toByteArray(textToLines(mOptions.assemblerArgs).join(";CONFIG_LINE;")));
     ini.SetValue("Project","Linker", toByteArray(textToLines(mOptions.linkerCmd).join(";CONFIG_LINE;")));
     ini.SetValue("Project", "ResourceCommand", toByteArray(textToLines(mOptions.resourceCmd).join(";CONFIG_LINE;")));
     ini.SetLongValue("Project","IsCpp", mOptions.isCpp);
@@ -1289,11 +1285,6 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
   // Determine compilation flags
     switch(getFileType(inFileName)) {
     case FileType::GAS:
-        newUnit->setCompile(true);
-        newUnit->setCompileCpp(false);
-        newUnit->setLink(true);
-        break;
-    case FileType::ASM:
         newUnit->setCompile(true);
         newUnit->setCompileCpp(false);
         newUnit->setLink(true);
@@ -1970,7 +1961,6 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", "")).replace(";CONFIG_LINE;","\n");
         mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", "")).replace(";CONFIG_LINE;","\n");
         mOptions.resourceCmd = fromByteArray(ini.GetValue("Project", "ResourceCommand", "")).replace(";CONFIG_LINE;","\n");
-        mOptions.assemblerArgs = fromByteArray(ini.GetValue("Project","AssemblerArgs","")).replace(";CONFIG_LINE;","\n");
         mOptions.binDirs = absolutePaths(fromByteArray(ini.GetValue("Project", "Bins", "")).split(";",
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
             Qt::SkipEmptyParts

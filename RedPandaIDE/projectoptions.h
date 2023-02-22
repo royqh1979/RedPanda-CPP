@@ -67,7 +67,6 @@ struct ProjectOptions{
     QString cppCompilerCmd;
     QString linkerCmd;
     QString resourceCmd;
-    QString assemblerArgs;
     QStringList binDirs;
     QStringList includeDirs;
     QStringList libDirs;

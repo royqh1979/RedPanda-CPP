@@ -2177,7 +2177,8 @@ void MainWindow::debug()
 //        mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
 
         foreach(const PProjectUnit& unit, mProject->unitList()) {
-            unitFiles.insert(unit->fileName());
+            if (fileExists(unit->fileName()))
+                unitFiles.insert(unit->fileName());
         }
         mDebugger->deleteInvalidProjectBreakpoints(unitFiles);
         if (!mDebugger->start(mProject->options().compilerSet, filePath, binDirs))
@@ -4962,20 +4963,6 @@ void MainWindow::stopDebugForNoSymbolTable()
                           tr("The executable doesn't have symbol table, and can't be debugged.")
                           +"<BR /><BR />"
                           +tr("Please turn off your compiler set's \"Strip executable (-s)\" option, recompile and retry debug.")
-                          );
-}
-
-void MainWindow::stopDebugForNoSourceFile()
-{
-    mDebugger->stop();
-    QMessageBox::critical(this,
-                          tr("Debug Failed"),
-                          tr("The executable doesn't have enough debug info to set breakpoint.")
-                          +"<BR /><BR />"
-                          +tr("Please choose a Debug compiler set in the toolbar, or turn on your compiler set's \"Generate debug info (-g3)\" option in the options dialog.")
-                          +tr("Then recompile and retry debug.")
-                          +"<BR /><BR/>"
-                          +tr("Or you can remove all breakpoints, open cpu info dialog, and try debug machine codes.")
                           );
 }
 

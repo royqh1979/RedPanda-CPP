@@ -98,7 +98,6 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->txtDebugger->setText(pSet->debugger());
     ui->txtGDBServer->setText(pSet->debugServer());
     ui->txtResourceCompiler->setText(pSet->resourceCompiler());
-    ui->txtAssembler->setText(pSet->assembler());
 
     if (pSet->execCharset() == ENCODING_AUTO_DETECT
             || pSet->execCharset() == ENCODING_SYSTEM_DEFAULT
@@ -207,7 +206,6 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     pSet->setDebugger(ui->txtDebugger->text().trimmed());
     pSet->setDebugServer(ui->txtGDBServer->text().trimmed());
     pSet->setResourceCompiler(ui->txtResourceCompiler->text().trimmed());
-    pSet->setAssembler(ui->txtAssembler->text().trimmed());
 
     pSet->binDirs()=mBinDirWidget->dirList();
 
@@ -333,7 +331,6 @@ void CompilerSetOptionWidget::updateIcons(const QSize& /*size*/)
     pIconsManager->setIcon(ui->btnChooseGDB, IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnChooseGDBServer, IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnChooseMake, IconsManager::ACTION_FILE_OPEN_FOLDER);
-    pIconsManager->setIcon(ui->btnChooseAssembler, IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnChooseResourceCompiler, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
@@ -431,17 +428,5 @@ void CompilerSetOptionWidget::on_btnChooseResourceCompiler_clicked()
                 tr("Executable files (*.exe)"));
     if (fileExists(fileName))
         ui->txtResourceCompiler->setText(fileName);
-}
-
-
-void CompilerSetOptionWidget::on_btnChooseAssembler_clicked()
-{
-    QString fileName = QFileDialog::getOpenFileName(
-                this,
-                tr("Locate nasm"),
-                getBinDir(),
-                tr("Executable files (*.exe)"));
-    if (fileExists(fileName))
-        ui->txtAssembler->setText(fileName);
 }
 

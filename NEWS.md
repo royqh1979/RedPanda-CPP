@@ -4,8 +4,9 @@ Red Panda C++ Version 2.14
   - fix: Enum value defines is not correctly parsed.
   - enhancement: Use differenct source file for each language in project templates
   - fix: Ctrl+click is too sensitive.
-  - enhancement: Remove all breakpoints for a closed non-project file.
   - enhancement: Check and remove all non-exist breakpoints before debug a project
+  - change: Remove nasm support
+  - change: Don't stop debug when breakpoint can't be set
 
 Red Panda C++ Version 2.13
   

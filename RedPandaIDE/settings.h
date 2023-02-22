@@ -1320,7 +1320,6 @@ public:
         bool canCompileCPP();
         bool canMake();
         bool canDebug();
-        bool canAssemble();
 //        bool dirsValid(QString& msg);
 //        bool validateExes(QString& msg);
         //properties
@@ -1405,8 +1404,6 @@ public:
         QString getOutputFilename(const QString& sourceFilename,Settings::CompilerSet::CompilationStage stage);
         bool isOutputExecutable();
         bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
-        const QString &assembler() const;
-        void setAssembler(const QString &newAssembler);
 
     private:
         void setDirectories(const QString& binDir, CompilerType mCompilerType);
@@ -1427,7 +1424,6 @@ public:
         QString mDebugger;
         QString mResourceCompiler;
         QString mDebugServer;
-        QString mAssembler;
 
         // Directories, mostly hardcoded too
         QStringList mBinDirs;

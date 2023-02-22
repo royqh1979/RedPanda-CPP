@@ -1709,7 +1709,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mDebugger(set.mDebugger),
     mResourceCompiler(set.mResourceCompiler),
     mDebugServer(set.mDebugServer),
-    mAssembler(set.assembler()),
 
     mBinDirs(set.mBinDirs),
     mCIncludeDirs(set.mCIncludeDirs),
@@ -2335,7 +2334,6 @@ void Settings::CompilerSet::setExecutables()
     }
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
-    mAssembler = findProgramInBinDirs(ASSEMBLER);
 }
 
 void Settings::CompilerSet::setDirectories(const QString& binDir,CompilerType compilerType)
@@ -2513,11 +2511,6 @@ bool Settings::CompilerSet::canDebug()
     return fileExists(mDebugger);
 }
 
-bool Settings::CompilerSet::canAssemble()
-{
-    return fileExists(mAssembler);
-}
-
 void Settings::CompilerSet::setUserInput()
 {
     mUseCustomCompileParams = false;
@@ -2561,16 +2554,6 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
                 false,
                 env);
     return result.trimmed();
-}
-
-const QString &Settings::CompilerSet::assembler() const
-{
-    return mAssembler;
-}
-
-void Settings::CompilerSet::setAssembler(const QString &newAssembler)
-{
-    mAssembler = newAssembler;
 }
 
 Settings::CompilerSet::CompilationStage Settings::CompilerSet::compilationStage() const
@@ -3079,7 +3062,6 @@ void Settings::CompilerSets::saveSet(int index)
     savePath("debug_server", pSet->debugServer());
     savePath("make", pSet->make());
     savePath("windres", pSet->resourceCompiler());
-    savePath("assembler", pSet->assembler());
 
     mSettings->mSettings.remove("Options");
     foreach(const PCompilerOption& option, CompilerInfoManager::getInstance()->getCompilerOptions(pSet->compilerType())) {
@@ -3156,7 +3138,6 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setDebugServer(loadPath("debug_server"));
     pSet->setMake(loadPath("make"));
     pSet->setResourceCompiler(loadPath("windres"));
-    pSet->setAssembler(loadPath("assembler"));
 
     pSet->setDumpMachine(mSettings->mSettings.value("DumpMachine").toString());
     pSet->setVersion(mSettings->mSettings.value("Version").toString());

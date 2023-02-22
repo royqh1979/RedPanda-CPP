@@ -519,7 +519,6 @@ signals:
     void cmdFinished();
 
     void errorNoSymbolTable();
-    void errorNoSourceFile();
     void breakpointInfoGetted(const QString& filename, int line, int number);
     void inferiorContinued();
     void inferiorStopped(const QString& filename, int line, bool setFocus);
