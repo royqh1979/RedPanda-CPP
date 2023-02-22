@@ -753,11 +753,7 @@
     </message>
     <message>
         <source>Assembler</source>
-        <translation type="unfinished">Assembler</translation>
-    </message>
-    <message>
-        <source>Locate nasm</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">Assembler</translation>
     </message>
 </context>
 <context>
@@ -1580,7 +1576,19 @@
     </message>
     <message>
         <source>New File Template</source>
-        <translation>Novo arquivo de modelo</translation>
+        <translation type="vanished">Novo arquivo de modelo</translation>
+    </message>
+    <message>
+        <source>New C File Template</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New C++ File Template</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New GAS File Template</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -5032,22 +5040,6 @@
         <source>Please turn off your compiler set&apos;s &quot;Strip executable (-s)&quot; option, recompile and retry debug.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>The executable doesn&apos;t have enough debug info to set breakpoint.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Then recompile and retry debug.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Or you can remove all breakpoints, open cpu info dialog, and try debug machine codes.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please choose a Debug compiler set in the toolbar, or turn on your compiler set&apos;s &quot;Generate debug info (-g3)&quot; option in the options dialog.</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -5503,7 +5495,7 @@
     </message>
     <message>
         <source>Assembler</source>
-        <translation type="unfinished">Assembler</translation>
+        <translation type="obsolete">Assembler</translation>
     </message>
 </context>
 <context>
@@ -6580,10 +6572,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>ASM files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Lua files</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7531,48 +7519,28 @@
 <context>
     <name>XMakeCompiler</name>
     <message>
-        <source>Building xmake.lua file...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>- Filename: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Can&apos;t open &apos;%1&apos; for write!</source>
-        <translation type="unfinished">Impossível abrir &apos;%1&apos; para gravar!</translation>
+        <translation type="obsolete">Impossível abrir &apos;%1&apos; para gravar!</translation>
     </message>
     <message>
         <source>Compiling project changes...</source>
-        <translation type="unfinished">Compilando alterações em projeto ...</translation>
+        <translation type="obsolete">Compilando alterações em projeto ...</translation>
     </message>
     <message>
         <source>- Project Filename: %1</source>
-        <translation type="unfinished">- Nome de arquivo de projeto: %1</translation>
-    </message>
-    <message>
-        <source>- Compiler Set Name: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please check the &quot;program&quot; page of compiler settings.</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">- Nome de arquivo de projeto: %1</translation>
     </message>
     <message>
         <source>Processing makefile:</source>
-        <translation type="unfinished">Processando makefile:</translation>
+        <translation type="obsolete">Processando makefile:</translation>
     </message>
     <message>
         <source>- makefile processer: %1</source>
-        <translation type="unfinished">- Processador do makefile: %1</translation>
+        <translation type="obsolete">- Processador do makefile: %1</translation>
     </message>
     <message>
         <source>- Command: %1 %2</source>
-        <translation type="unfinished">- Comando: %1 %2</translation>
+        <translation type="obsolete">- Comando: %1 %2</translation>
     </message>
 </context>
 <context>

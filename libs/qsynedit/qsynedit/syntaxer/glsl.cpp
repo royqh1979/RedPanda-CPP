@@ -83,9 +83,6 @@ const QSet<QString> GLSLSyntaxer::Keywords {
 
 GLSLSyntaxer::GLSLSyntaxer(): Syntaxer()
 {
-    mAsmAttribute = std::make_shared<TokenAttribute>(SYNS_AttrAssembler,
-                                                           TokenType::Embeded);
-    addAttribute(mAsmAttribute);
     mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter,
                                                             TokenType::Character);
     addAttribute(mCharAttribute);
@@ -129,11 +126,6 @@ GLSLSyntaxer::GLSLSyntaxer(): Syntaxer()
     addAttribute(mVariableAttribute);
 
     resetState();
-}
-
-const PTokenAttribute &GLSLSyntaxer::asmAttribute() const
-{
-    return mAsmAttribute;
 }
 
 const PTokenAttribute &GLSLSyntaxer::preprocessorAttribute() const
@@ -1279,8 +1271,6 @@ QString GLSLSyntaxer::getToken() const
 const PTokenAttribute &GLSLSyntaxer::getTokenAttribute() const
 {
     switch (mTokenId) {
-    case TokenId::Asm:
-        return mAsmAttribute;
     case TokenId::Comment:
         return mCommentAttribute;
     case TokenId::Directive:

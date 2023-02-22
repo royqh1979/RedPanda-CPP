@@ -93,6 +93,8 @@
 #define DEV_SYMBOLUSAGE_FILE  "symbolusage.json"
 #define DEV_CODESNIPPET_FILE  "codesnippets.json"
 #define DEV_NEWFILETEMPLATES_FILE "newfiletemplate.txt"
+#define DEV_NEWCFILETEMPLATES_FILE "newcfiletemplate.txt"
+#define DEV_NEWGASFILETEMPLATES_FILE "newgasfiletemplate.txt"
 #define DEV_AUTOLINK_FILE "autolink.json"
 #define DEV_SHORTCUT_FILE "shortcuts.json"
 #define DEV_TOOLS_FILE "tools.json"

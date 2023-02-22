@@ -24,7 +24,6 @@ namespace QSynedit {
 class GLSLSyntaxer: public Syntaxer
 {
     enum class TokenId {
-        Asm,
         Comment,
         Directive,
         Identifier,
@@ -56,8 +55,6 @@ public:
     explicit GLSLSyntaxer();
     GLSLSyntaxer(const GLSLSyntaxer&)=delete;
     GLSLSyntaxer& operator=(const GLSLSyntaxer&)=delete;
-
-    const PTokenAttribute &asmAttribute() const;
 
     const PTokenAttribute &preprocessorAttribute() const;
 
@@ -148,7 +145,6 @@ private:
     int mLeftBraces;
     int mRightBraces;
 
-    PTokenAttribute mAsmAttribute;
     PTokenAttribute mPreprocessorAttribute;
     PTokenAttribute mInvalidAttribute;
     PTokenAttribute mNumberAttribute;

@@ -62,18 +62,27 @@ public:
 
     void setSnippets(const QList<PCodeSnippet> &newSnippets);
 
-    const QString &newFileTemplate() const;
-    void setNewFileTemplate(const QString &newNewFileTemplate);
+    const QString &newCppFileTemplate() const;
+    void setNewCppFileTemplate(const QString &newContent);
+
+    QString newCFileTemplate() const;
+    void setNewCFileTemplate(const QString &newContent);
+
+    QString newGASFileTemplate() const;
+    void setNewGASFileTemplate(const QString &newContent);
 
 private:
     void loadSnippets();
     void saveSnippets();
-    void loadNewFileTemplate();
-    void saveNewFileTemplate();
+    QString loadNewFileTemplate(const QString &filename);
+
+    void saveNewFileTemplate(const QString &filename, const QString &templateContent);
 
 private:
     QList<PCodeSnippet> mSnippets;
-    QString mNewFileTemplate;
+    QString mNewCppFileTemplate; //C++ file template
+    QString mNewCFileTemplate;
+    QString mNewGASFileTemplate;
 };
 
 using PCodeSnippetManager = std::shared_ptr<CodeSnippetsManager>;

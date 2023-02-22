@@ -36,7 +36,6 @@ SOURCES += qsynedit/codefolding.cpp \
     qsynedit/searcher/regexsearcher.cpp \
     qsynedit/syntaxer/asm.cpp \
     qsynedit/syntaxer/cpp.cpp \
-    qsynedit/syntaxer/customhighlighterv1.cpp \
     qsynedit/syntaxer/glsl.cpp \
     qsynedit/syntaxer/lua.cpp \
     qsynedit/types.cpp \
@@ -62,7 +61,6 @@ HEADERS += \
     qsynedit/searcher/regexsearcher.h \
     qsynedit/syntaxer/asm.h \
     qsynedit/syntaxer/cpp.h \
-    qsynedit/syntaxer/customhighlighterv1.h \
     qsynedit/syntaxer/glsl.h \
     qsynedit/syntaxer/lua.h \
     qsynedit/syntaxer/makefile.h \

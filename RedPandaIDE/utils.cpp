@@ -86,6 +86,9 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".s",PATH_SENSITIVITY)) {
         return FileType::GAS;
     }
+    if (filename.endsWith(".S",PATH_SENSITIVITY)) {
+        return FileType::GAS;
+    }
     if (filename.endsWith(".dev",PATH_SENSITIVITY)) {
         return FileType::Project;
     }

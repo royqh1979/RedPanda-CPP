@@ -164,7 +164,21 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     mCanAutoSave = false;
     if (isNew && parentPageControl!=nullptr ) {
-        QString fileTemplate = pMainWindow->codeSnippetManager()->newFileTemplate();
+        FileType fileType = getFileType(filename);
+        QString fileTemplate;
+        switch (fileType) {
+        case FileType::CSource:
+            fileTemplate = pMainWindow->codeSnippetManager()->newCFileTemplate();
+            break;
+        case FileType::CppSource:
+            fileTemplate = pMainWindow->codeSnippetManager()->newCppFileTemplate();
+            break;
+        case FileType::GAS:
+            fileTemplate = pMainWindow->codeSnippetManager()->newGASFileTemplate();
+            break;
+        default:
+            break;
+        }
         if (!fileTemplate.isEmpty()) {
             insertCodeSnippet(fileTemplate);
             setCaretPosition(1,1);

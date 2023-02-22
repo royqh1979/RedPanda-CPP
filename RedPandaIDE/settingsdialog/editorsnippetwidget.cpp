@@ -19,6 +19,7 @@
 #include "../mainwindow.h"
 #include "../codesnippetsmanager.h"
 #include "../iconsmanager.h"
+#include "../syntaxermanager.h"
 
 #include <QItemSelectionModel>
 
@@ -57,8 +58,13 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
             mUpdatingCode = false;
         }
     });
-    connect(ui->editFileTemplate,&Editor::changed,
+    connect(ui->editCppFileTemplate,&Editor::changed,
             this, &SettingsWidget::setSettingsChanged);
+    connect(ui->editCFileTemplate,&Editor::changed,
+            this, &SettingsWidget::setSettingsChanged);
+    connect(ui->editGASFileTemplate,&Editor::changed,
+            this, &SettingsWidget::setSettingsChanged);
+    ui->editGASFileTemplate->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::ATTAssembly));
 }
 
 EditorSnippetWidget::~EditorSnippetWidget()
@@ -69,13 +75,17 @@ EditorSnippetWidget::~EditorSnippetWidget()
 void EditorSnippetWidget::doLoad()
 {
     mModel.updateSnippets(pMainWindow->codeSnippetManager()->snippets());
-    ui->editFileTemplate->document()->setText(pMainWindow->codeSnippetManager()->newFileTemplate());
+    ui->editCppFileTemplate->document()->setText(pMainWindow->codeSnippetManager()->newCppFileTemplate());
+    ui->editCFileTemplate->document()->setText(pMainWindow->codeSnippetManager()->newCFileTemplate());
+    ui->editGASFileTemplate->document()->setText(pMainWindow->codeSnippetManager()->newGASFileTemplate());
 }
 
 void EditorSnippetWidget::doSave()
 {
     pMainWindow->codeSnippetManager()->setSnippets(mModel.snippets());
-    pMainWindow->codeSnippetManager()->setNewFileTemplate(ui->editFileTemplate->text());
+    pMainWindow->codeSnippetManager()->setNewCppFileTemplate(ui->editCppFileTemplate->text());
+    pMainWindow->codeSnippetManager()->setNewCFileTemplate(ui->editCFileTemplate->text());
+    pMainWindow->codeSnippetManager()->setNewGASFileTemplate(ui->editGASFileTemplate->text());
     pMainWindow->codeSnippetManager()->save();
 }
 
