@@ -8,8 +8,8 @@ RUN sed -i 's|^mirrorlist=|#mirrorlist=|g; s|^#baseurl=http://mirror.centos.org/
     sed -i 's|^mirrorlist=|#mirrorlist=|g; s|^#baseurl=http://mirror.centos.org/centos|baseurl=https://mirrors.ustc.edu.cn/centos|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo && \
     sed -i 's|^metalink=|#metalink=|g; s|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.ustc.edu.cn/epel/|g' /etc/yum.repos.d/epel.repo && \
     yum upgrade -y && \
-    yum install -y cargo cmake3 file make patchelf which \
-        at-spi2-core-devel dbus-devel fontconfig-devel freetype-devel glib2-devel libXrender-devel libicu-devel libxcb-devel libxkbcommon-devel libxkbcommon-x11-devel mesa-libGL-devel xcb-util-devel \
+    yum install -y cargo cmake3 file make which \
+        at-spi2-core-devel dbus-devel fontconfig-devel freetype-devel glib2-devel libXrender-devel libxcb-devel libxkbcommon-devel libxkbcommon-x11-devel mesa-libGL-devel xcb-util-devel \
         devtoolset-7-gcc devtoolset-7-gcc-c++
 
 ARG DEVTOOLSET_ROOTPATH=/opt/rh/devtoolset-7/root
@@ -30,7 +30,7 @@ RUN mkdir -p /build/qt5 && \
         -prefix /usr/local \
         -opensource -confirm-license \
         -optimize-size -no-shared -static -platform linux-g++ -no-use-gold-linker \
-        -qt-zlib -qt-doubleconversion -no-iconv -icu -qt-pcre -no-openssl -system-freetype -fontconfig -qt-harfbuzz -qt-libjpeg -qt-libpng -qt-xcb -qt-sqlite \
+        -qt-zlib -qt-doubleconversion -iconv -no-icu -qt-pcre -no-openssl -system-freetype -fontconfig -qt-harfbuzz -qt-libjpeg -qt-libpng -qt-xcb -qt-sqlite \
         -nomake examples -nomake tests -nomake tools && \
     make -j$(nproc) && \
     make install && \

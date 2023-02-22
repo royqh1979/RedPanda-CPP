@@ -31,7 +31,7 @@ apt install gcc g++ make gdb gdbserver
 ### 2. Install Qt 5 and Other Dependencies
 
 ```bash
-apt install qtbase5-dev qttools5-dev-tools libicu-dev libqt5svg5-dev git qterminal
+apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
 ```
 
 ### 3. Fetch Source Code

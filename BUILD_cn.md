@@ -34,7 +34,7 @@ apt install gcc g++ make gdb gdbserver
 ### 2.安装QT5和依赖包
 
 ```bash
-apt install qtbase5-dev qttools5-dev-tools libicu-dev libqt5svg5-dev git qterminal
+apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
 ```
 
 ### 3.下载源码

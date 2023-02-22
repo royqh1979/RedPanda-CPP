@@ -7,8 +7,8 @@ RUN sed -i 's|ports.ubuntu.com|mirrors.ustc.edu.cn|g' /etc/apt/sources.list && \
     export DEBIAN_FRONTEND=noninteractive && \
     apt update && \
     apt upgrade -y && \
-    apt install --no-install-recommends -y ca-certificates cargo curl cmake file gcc g++ make patchelf \
-        libatspi2.0-dev libdbus-1-dev libfontconfig1-dev libfreetype6-dev libgl1-mesa-dev libicu-dev libxkbcommon-x11-dev
+    apt install --no-install-recommends -y ca-certificates cargo curl cmake file gcc g++ make \
+        libatspi2.0-dev libdbus-1-dev libfontconfig1-dev libfreetype6-dev libgl1-mesa-dev libxkbcommon-x11-dev
 
 # AppImageKit
 RUN curl -L -o /usr/local/bin/appimagetool 'https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-aarch64.AppImage' && \
@@ -24,7 +24,7 @@ RUN mkdir -p /build/qt5 && \
         -prefix /usr/local \
         -opensource -confirm-license \
         -optimize-size -no-shared -static -platform linux-g++ -no-use-gold-linker \
-        -qt-zlib -qt-doubleconversion -no-iconv -icu -qt-pcre -no-openssl -system-freetype -fontconfig -qt-harfbuzz -qt-libjpeg -qt-libpng -qt-xcb -qt-sqlite \
+        -qt-zlib -qt-doubleconversion -iconv -no-icu -qt-pcre -no-openssl -system-freetype -fontconfig -qt-harfbuzz -qt-libjpeg -qt-libpng -qt-xcb -qt-sqlite \
         -nomake examples -nomake tests -nomake tools && \
     make -j$(nproc) && \
     make install && \
