@@ -10,10 +10,12 @@ Category[zh_CN]=3D
 [Unit0]
 CppName=main.cpp
 Cpp=GLFW_main.cpp.txt
+Cpp[zh_CN]=GLFW_main_zh_CN.cpp
 
 [Unit1]
 CppName=shader.h
 Cpp=GLFW_shader.h.txt
+Cpp[zh_CN]=GLFW_shader_zh_CN.h
 
 [Unit2]
 CppName=shader.frag
@@ -32,7 +34,7 @@ CppCompiler=
 Linker=-lglfw3 -lglew32 -lopengl32 -lwinmm -lgdi32_@@__@@_
 CompilerSettings=0000000000110000000001000
 CompilerSet=1
-UseUTF8=0
+Encoding = UTF-8
 StaticLink=1
 AddCharset=1
 IncludeVersionInfo=0

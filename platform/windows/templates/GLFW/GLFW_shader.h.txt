@@ -50,18 +50,18 @@ public:
         GLint success;
         GLchar infoLog[512];
         // Vertex Shader
-        vertex = glCreateShader(GL_VERTEX_SHADER);//创建顶点着色器
-        glShaderSource(vertex, 1, &vShaderCode, NULL);//指定源代码
-        glCompileShader(vertex);//编译着色器
+        vertex = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertex, 1, &vShaderCode, NULL);
+        glCompileShader(vertex);
         // Print compile errors if any
-        glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);//查看是否编译成功
+        glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
         if (!success)
         {
             glGetShaderInfoLog(vertex, 512, NULL, infoLog);
             std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
         }
         // Fragment Shader
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);//创建片段着色器
+        fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         // Print compile errors if any
@@ -72,10 +72,10 @@ public:
             std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
         }
         // Shader Program
-        this->Program = glCreateProgram();//创建着色程序
-        glAttachShader(this->Program, vertex);//关联顶点着色器
-        glAttachShader(this->Program, fragment);//关联片段着色器
-        glLinkProgram(this->Program);//链接编译器
+        this->Program = glCreateProgram();
+        glAttachShader(this->Program, vertex);
+        glAttachShader(this->Program, fragment);
+        glLinkProgram(this->Program);
         // Print linking errors if any
         glGetProgramiv(this->Program, GL_LINK_STATUS, &success);
         if (!success)

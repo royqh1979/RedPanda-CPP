@@ -2,10 +2,10 @@
 Ver = 3
 Name = GAS & C
 Category = Assembly
-Description = C and GAS mixing programming demo
+Description = C and GNU assembly mixing programming demo
 Name[zh_CN] = GAS与C
 Category[zh_CN] = 汇编
-Description[zh_CN] = C和GAS汇编混合编程示例
+Description[zh_CN] = C和GNU汇编混合编程示例
 Icon = app.ico
 
 

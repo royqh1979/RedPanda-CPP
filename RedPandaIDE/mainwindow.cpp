@@ -691,7 +691,7 @@ void MainWindow::updateCompileActions(const Editor *e)
             if (!e->inProject()) {
                 FileType fileType = getFileType(e->filename());
                 if (fileType == FileType::CSource
-                        || fileType == FileType::CppSource || e->isNew()) {
+                        || fileType == FileType::CppSource) {
                     canGenerateAssembly = true;
                     canCompile = true;
                     canRun = true;
