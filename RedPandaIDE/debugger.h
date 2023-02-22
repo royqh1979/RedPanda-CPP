@@ -324,6 +324,7 @@ public:
     void deleteBreakpoints(const QString& filename, bool forProject);
     void deleteBreakpoints(const Editor* editor);
     void deleteBreakpoints(bool forProject);
+    void deleteInvalidProjectBreakpoints(const QSet<QString> unitFiles);
     void removeBreakpoint(int line, const Editor* editor);
     void removeBreakpoint(int line, const QString& filename, bool forProject);
     void removeBreakpoint(int index, bool forProject);

@@ -377,7 +377,16 @@ void Debugger::deleteBreakpoints(bool forProject)
     mBreakpointModel->clear(forProject);
 //    for (int i=mBreakpointModel->breakpoints().size()-1;i>=0;i--) {
 //        removeBreakpoint(i);
-//    }
+    //    }
+}
+
+void Debugger::deleteInvalidProjectBreakpoints(const QSet<QString> unitFiles)
+{
+    for(int i=mBreakpointModel->breakpoints(true).count()-1;i>=0;i--) {
+        const PBreakpoint& bp=mBreakpointModel->breakpoint(i,true);
+        if (!unitFiles.contains(bp->filename))
+            mBreakpointModel->removeBreakpoint(i, true);
+    }
 }
 
 void Debugger::removeBreakpoint(int line, const Editor *editor)

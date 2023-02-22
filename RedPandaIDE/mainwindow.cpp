@@ -2088,6 +2088,7 @@ void MainWindow::debug()
     QString filePath;
     QFileInfo debugFile;
     QStringList binDirs;
+    QSet<QString> unitFiles;
     switch(getCompileTarget()) {
     case CompileTarget::Project:
         compilerSet=pSettings->compilerSets().getSet(mProject->options().compilerSet);
@@ -2175,6 +2176,10 @@ void MainWindow::debug()
 
 //        mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
 
+        foreach(const PProjectUnit& unit, mProject->unitList()) {
+            unitFiles.insert(unit->fileName());
+        }
+        mDebugger->deleteInvalidProjectBreakpoints(unitFiles);
         if (!mDebugger->start(mProject->options().compilerSet, filePath, binDirs))
             return;
         filePath.replace('\\','/');
