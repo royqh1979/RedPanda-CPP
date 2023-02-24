@@ -125,7 +125,7 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
 
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
-        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onProjectCompileStarted);
         connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::clearToolsOutput);
 
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
@@ -159,7 +159,7 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
 
         connect(mCompiler, &Compiler::compileIssue, this, &CompilerManager::onCompileIssue);
-        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+        connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::onProjectCompileStarted);
         connect(mCompiler, &Compiler::compileStarted, pMainWindow, &MainWindow::clearToolsOutput);
 
         connect(mCompiler, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
@@ -210,7 +210,7 @@ void CompilerManager::checkSyntax(const QString &filename, const QByteArray& enc
         mBackgroundSyntaxChecker->setProject(project);
         connect(mBackgroundSyntaxChecker, &Compiler::finished, mBackgroundSyntaxChecker, &QThread::deleteLater);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);
-        connect(mBackgroundSyntaxChecker, &Compiler::compileStarted, pMainWindow, &MainWindow::onCompileStarted);
+        connect(mBackgroundSyntaxChecker, &Compiler::compileStarted, pMainWindow, &MainWindow::onSyntaxCheckStarted);
         connect(mBackgroundSyntaxChecker, &Compiler::compileFinished, this, &CompilerManager::onSyntaxCheckFinished);
         //connect(mBackgroundSyntaxChecker, &Compiler::compileOutput, pMainWindow, &MainWindow::logToolsOutput);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, pMainWindow, &MainWindow::onCompileIssue);

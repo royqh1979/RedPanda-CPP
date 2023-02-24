@@ -8,7 +8,8 @@ Red Panda C++ Version 2.14
   - change: Remove nasm support
   - change: Don't stop debug when breakpoint can't be set
   - fix: "Generate assembly" menu item is wrongly enabled for new GNU assembly files 
-  - Enhancement: New file templates for C / C++ / GAS files
+  - enhancement: New file templates for C / C++ / GAS files
+  - enhancement: Keep project compile warning & error infos in the issues table, before project file is edited.
 
 Red Panda C++ Version 2.13
   

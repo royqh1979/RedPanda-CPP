@@ -109,20 +109,22 @@ static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent),
-      ui(new Ui::MainWindow),
-      mFullInitialized(false),
-      mSearchInFilesDialog(nullptr),
-      mSearchDialog(nullptr),
-      mReplaceDialog(nullptr),
-      mQuitting(false),
-      mClosingProject(false),
-      mCheckSyntaxInBack(false),
-      mShouldRemoveAllSettings(false),
-      mClosing(false),
-      mClosingAll(false),
-      mOpenningFiles(false),
-      mSystemTurnedOff(false)
+    : QMainWindow{parent},
+      ui{new Ui::MainWindow},
+      mFullInitialized{false},
+      mSearchInFilesDialog{nullptr},
+      mSearchDialog{nullptr},
+      mReplaceDialog{nullptr},
+      mQuitting{false},
+      mClosingProject{false},
+      mCheckSyntaxInBack{false},
+      mShouldRemoveAllSettings{false},
+      mClosing{false},
+      mClosingAll{false},
+      mOpenningFiles{false},
+      mSystemTurnedOff{false},
+      mCompileIssuesState{CompileIssuesState::None}
+
 {
     ui->setupUi(this);
     addActions( this->findChildren<QAction *>(QString(), Qt::FindChildrenRecursively));
@@ -1846,15 +1848,13 @@ void MainWindow::checkSyntaxInBack(Editor *e)
 //    if not devEditor.AutoCheckSyntax then
 //      Exit;
     //not c or cpp file
-    if (!e->isNew()) {
-        FileType fileType = getFileType(e->filename());
-        if (fileType != FileType::CSource
-                && fileType != FileType::CppSource
-                && fileType != FileType::CHeader
-                && fileType != FileType::CppHeader
-                )
-            return;
-    }
+    FileType fileType = getFileType(e->filename());
+    if (fileType != FileType::CSource
+            && fileType != FileType::CppSource
+            && fileType != FileType::CHeader
+            && fileType != FileType::CppHeader
+            )
+        return;
     if (mCompilerManager->backgroundSyntaxChecking())
         return;
     if (mCompilerManager->compiling())
@@ -1863,6 +1863,14 @@ void MainWindow::checkSyntaxInBack(Editor *e)
         return;
     if (mCheckSyntaxInBack)
         return;
+
+    if (mCompileIssuesState==CompileIssuesState::ProjectCompilationResultFilled
+            || mCompileIssuesState==CompileIssuesState::ProjectCompiling) {
+        if (e->inProject() && mProject) {
+            if (!e->modified())
+                return;
+        }
+    }
 
     mCheckSyntaxInBack=true;
     clearIssues();
@@ -5442,6 +5450,8 @@ void MainWindow::on_actionSave_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor) {
+        if (editor->inProject() && mCompileIssuesState == CompileIssuesState::ProjectCompilationResultFilled)
+            mCompileIssuesState = CompileIssuesState::None;
         editor->save();
 //            if (editor->inProject() && (mProject))
 //                mProject->saveAll();
@@ -5505,6 +5515,10 @@ void MainWindow::logToolsOutput(const QString& msg)
 
 void MainWindow::onCompileIssue(PCompileIssue issue)
 {
+    if (issue->filename.isEmpty())
+        return;
+    if (issue->filename.contains("*"))
+        return;
     ui->tableIssues->addIssue(issue);
 
     // Update tab caption
@@ -5538,7 +5552,17 @@ void MainWindow::clearTodos()
 
 void MainWindow::onCompileStarted()
 {
-    //do nothing
+    mCompileIssuesState = CompileIssuesState::Compiling;
+}
+
+void MainWindow::onProjectCompileStarted()
+{
+    mCompileIssuesState = CompileIssuesState::ProjectCompiling;
+}
+
+void MainWindow::onSyntaxCheckStarted()
+{
+    mCompileIssuesState = CompileIssuesState::SyntaxChecking;
 }
 
 void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
@@ -5550,6 +5574,7 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
             mCompileSuccessionTask = nullptr;
         return;
     }
+
     // Update tab caption
     int i = ui->tabMessages->indexOf(ui->tabIssues);
     if (i!=-1) {
@@ -5569,6 +5594,21 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
             }
         }
     }
+
+    switch(mCompileIssuesState) {
+    case CompileIssuesState::Compiling:
+        mCompileIssuesState = CompileIssuesState::CompilationResultFilled;
+        break;
+    case CompileIssuesState::ProjectCompiling:
+        mCompileIssuesState = CompileIssuesState::ProjectCompilationResultFilled;
+        break;
+    case CompileIssuesState::SyntaxChecking:
+        mCompileIssuesState = CompileIssuesState::SyntaxCheckResultFilled;
+        break;
+    default:
+        break;
+    }
+
 
     if (isCheckSyntax) {
         if (!CompilerInfoManager::supportSyntaxCheck(pSettings->compilerSets().defaultSet()->compilerType())) {
@@ -6795,6 +6835,8 @@ void MainWindow::on_actionSaveAll_triggered()
         mFileSystemWatcher.blockSignals(oldBlock);
     });
     if (mProject) {
+        if (mCompileIssuesState == CompileIssuesState::ProjectCompilationResultFilled)
+            mCompileIssuesState = CompileIssuesState::None;
         mProject->saveAll();
     }
 
@@ -7738,6 +7780,7 @@ void MainWindow::clearIssues()
         ui->tabMessages->setTabText(i, tr("Issues"));
     }
     ui->tableIssues->clearIssues();
+    mCompileIssuesState = CompileIssuesState::None;
 }
 
 void MainWindow::doCompileRun(RunType runType)

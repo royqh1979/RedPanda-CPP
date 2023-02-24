@@ -80,6 +80,17 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+
+    enum class CompileIssuesState{
+        CompilationResultFilled,
+        Compiling,
+        ProjectCompilationResultFilled,
+        ProjectCompiling,
+        SyntaxChecking,
+        SyntaxCheckResultFilled,
+        None
+    };
+
     enum class CompileSuccessionTaskType {
         None,
         RunNormal,
@@ -225,6 +236,8 @@ public slots:
     void clearToolsOutput();
     void clearTodos();
     void onCompileStarted();
+    void onProjectCompileStarted();
+    void onSyntaxCheckStarted();
     void onCompileFinished(QString filename, bool isCheckSyntax);
     void onCompileErrorOccured(const QString& reason);
     void onRunErrorOccured(const QString& reason);
@@ -852,6 +865,7 @@ private:
     QPoint mEditorContextMenuPos;
     QTcpServer mTcpServer;
     QColor mErrorColor;
+    CompileIssuesState mCompileIssuesState;
 
     QSet<QString> mFilesChangedNotifying;
 
