@@ -6586,6 +6586,134 @@
         <source>Value</source>
         <translation>Valor</translation>
     </message>
+    <message>
+        <source>64-bit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>General purpose</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>32-bit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>16-bit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>128-bit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point control</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point tag word</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point operation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SSE status and control</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accumulator for operands and results data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pointer to data in the DS segment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Counter for string and loop operations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>I/O pointer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Source index for string operations; Pointer to data in the segment pointed to by the DS register</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Destination index for string operations; Pointer to data (or destination) in the segment pointed to by the ES register</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stack pointer (in the SS segment)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pointer to data on the stack (in the SS segment)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Flags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code segment selector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Data segment selector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Extra data segment selector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point last instruction segment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point last instruction offset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point last operand segment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Floating-point last operand offset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Instruction pointer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>lower 16 bits of %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>lower 8 bits of %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>8 high bits of lower 16 bits of %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stack segment selector</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ReplaceDialog</name>

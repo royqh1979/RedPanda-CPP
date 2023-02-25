@@ -2648,7 +2648,141 @@ bool WatchModel::hasChildren(const QModelIndex &parent) const
 
 RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
 {
+    QString cpuArch=QSysInfo::currentCpuArchitecture();
+    if (cpuArch=="x86_64" || cpuArch=="i386") {
+//https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
+        mRegisterDescriptions.insert("rax",tr("64-bit")+" "+tr("Accumulator for operands and results data"));
+        mRegisterDescriptions.insert("rbx",tr("64-bit")+" "+tr("Pointer to data in the DS segment"));
+        mRegisterDescriptions.insert("rcx",tr("64-bit")+" "+tr("Counter for string and loop operations"));
+        mRegisterDescriptions.insert("rdx",tr("64-bit")+" "+tr("I/O pointer"));
+        mRegisterDescriptions.insert("rsi",tr("64-bit")+" "+tr("Source index for string operations; Pointer to data in the segment pointed to by the DS register"));
+        mRegisterDescriptions.insert("rdi",tr("64-bit")+" "+tr("Destination index for string operations; Pointer to data (or destination) in the segment pointed to by the ES register"));
+        mRegisterDescriptions.insert("rsp",tr("64-bit")+" "+tr("Stack pointer (in the SS segment)"));
+        mRegisterDescriptions.insert("rbp",tr("64-bit")+" "+tr("Pointer to data on the stack (in the SS segment)"));
+        mRegisterDescriptions.insert("r8",tr("64-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r9",tr("64-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r10",tr("64-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r11",tr("64-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r12",tr("64-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r13",tr("64-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r14",tr("64-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r15",tr("64-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("rip",tr("64-bit")+" "+tr("Instruction pointer"));
+        mRegisterDescriptions.insert("rflags",tr("Flags"));
+        mRegisterDescriptions.insert("eflags",tr("Flags"));
 
+        mRegisterDescriptions.insert("eax",tr("32-bit")+" "+tr("Accumulator for operands and results data"));
+        mRegisterDescriptions.insert("ebx",tr("32-bit")+" "+tr("Pointer to data in the DS segment"));
+        mRegisterDescriptions.insert("ecx",tr("32-bit")+" "+tr("Counter for string and loop operations"));
+        mRegisterDescriptions.insert("edx",tr("32-bit")+" "+tr("I/O pointer"));
+        mRegisterDescriptions.insert("esi",tr("32-bit")+" "+tr("Source index for string operations; Pointer to data in the segment pointed to by the DS register"));
+        mRegisterDescriptions.insert("edi",tr("32-bit")+" "+tr("Destination index for string operations; Pointer to data (or destination) in the segment pointed to by the ES register"));
+        mRegisterDescriptions.insert("esp",tr("32-bit")+" "+tr("Stack pointer (in the SS segment)"));
+        mRegisterDescriptions.insert("ebp",tr("32-bit")+" "+tr("Pointer to data on the stack (in the SS segment)"));
+        mRegisterDescriptions.insert("r8d",tr("32-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r9d",tr("32-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r10d",tr("32-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r11d",tr("32-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r12d",tr("32-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r13d",tr("32-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r14d",tr("32-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("r15d",tr("32-bit")+" "+tr("General purpose"));
+        mRegisterDescriptions.insert("eip",tr("32-bit")+" "+tr("Instruction pointer"));
+
+        mRegisterDescriptions.insert("ax",tr("lower 16 bits of %1").arg("rax/eax"));
+        mRegisterDescriptions.insert("bx",tr("lower 16 bits of %1").arg("rbx/rbx"));
+        mRegisterDescriptions.insert("cx",tr("lower 16 bits of %1").arg("rcx/ecx"));
+        mRegisterDescriptions.insert("dx",tr("lower 16 bits of %1").arg("rdx/edx"));
+        mRegisterDescriptions.insert("si",tr("lower 16 bits of %1").arg("rsi/esi"));
+        mRegisterDescriptions.insert("di",tr("lower 16 bits of %1").arg("rdi/edi"));
+        mRegisterDescriptions.insert("sp",tr("lower 16 bits of %1").arg("rsp/esp"));
+        mRegisterDescriptions.insert("bp",tr("lower 16 bits of %1").arg("rbp/esp"));
+        mRegisterDescriptions.insert("r8w",tr("lower 16 bits of %1").arg("r8"));
+        mRegisterDescriptions.insert("r9w",tr("lower 16 bits of %1").arg("r9"));
+        mRegisterDescriptions.insert("r10w",tr("lower 16 bits of %1").arg("r10"));
+        mRegisterDescriptions.insert("r11w",tr("lower 16 bits of %1").arg("r11"));
+        mRegisterDescriptions.insert("r12w",tr("lower 16 bits of %1").arg("r12"));
+        mRegisterDescriptions.insert("r13w",tr("lower 16 bits of %1").arg("r13"));
+        mRegisterDescriptions.insert("r14w",tr("lower 16 bits of %1").arg("r14"));
+        mRegisterDescriptions.insert("r15w",tr("lower 16 bits of %1").arg("r15"));
+        mRegisterDescriptions.insert("ip",tr("lower 16 bits of %1").arg("rip/eip"));
+
+        mRegisterDescriptions.insert("al",tr("lower 8 bits of %1").arg("rax/eax"));
+        mRegisterDescriptions.insert("bl",tr("lower 8 bits of %1").arg("rbx/rbx"));
+        mRegisterDescriptions.insert("cl",tr("lower 8 bits of %1").arg("rcx/ecx"));
+        mRegisterDescriptions.insert("dl",tr("lower 8 bits of %1").arg("rdx/edx"));
+        mRegisterDescriptions.insert("sil",tr("lower 8 bits of %1").arg("rsi/esi"));
+        mRegisterDescriptions.insert("dil",tr("lower 8 bits of %1").arg("rdi/edi"));
+        mRegisterDescriptions.insert("spl",tr("lower 8 bits of %1").arg("rsp/esp"));
+        mRegisterDescriptions.insert("bpl",tr("lower 8 bits of %1").arg("rbp/esp"));
+        mRegisterDescriptions.insert("r8b",tr("lower 8 bits of %1").arg("r8"));
+        mRegisterDescriptions.insert("r9b",tr("lower 8 bits of %1").arg("r9"));
+        mRegisterDescriptions.insert("r10b",tr("lower 8 bits of %1").arg("r10"));
+        mRegisterDescriptions.insert("r11b",tr("lower 8 bits of %1").arg("r11"));
+        mRegisterDescriptions.insert("r12b",tr("lower 8 bits of %1").arg("r12"));
+        mRegisterDescriptions.insert("r13b",tr("lower 8 bits of %1").arg("r13"));
+        mRegisterDescriptions.insert("r14b",tr("lower 8 bits of %1").arg("r14"));
+        mRegisterDescriptions.insert("r15b",tr("lower 8 bits of %1").arg("r15"));
+
+        mRegisterDescriptions.insert("ah",tr("8 high bits of lower 16 bits of %1").arg("rax/eax"));
+        mRegisterDescriptions.insert("bh",tr("8 high bits of lower 16 bits of %1").arg("rbx/rbx"));
+        mRegisterDescriptions.insert("ch",tr("8 high bits of lower 16 bits of %1").arg("rcx/ecx"));
+        mRegisterDescriptions.insert("dh",tr("8 high bits of lower 16 bits of %1").arg("rdx/edx"));
+
+        mRegisterDescriptions.insert("cs",tr("16-bit")+" "+tr("Code segment selector"));
+        mRegisterDescriptions.insert("ds",tr("16-bit")+" "+tr("Data segment selector"));
+        mRegisterDescriptions.insert("es",tr("16-bit")+" "+tr("Extra data segment selector"));
+        mRegisterDescriptions.insert("fs",tr("16-bit")+" "+tr("Extra data segment selector"));
+        mRegisterDescriptions.insert("gs",tr("16-bit")+" "+tr("Extra data segment selector"));
+        mRegisterDescriptions.insert("ss",tr("16-bit")+" "+tr("Stack segment selector"));
+
+//x87 fpu
+        mRegisterDescriptions.insert("st0",tr("Floating-point data"));
+        mRegisterDescriptions.insert("st1",tr("Floating-point data"));
+        mRegisterDescriptions.insert("st2",tr("Floating-point data"));
+        mRegisterDescriptions.insert("st3",tr("Floating-point data"));
+        mRegisterDescriptions.insert("st4",tr("Floating-point data"));
+        mRegisterDescriptions.insert("st5",tr("Floating-point data"));
+        mRegisterDescriptions.insert("st6",tr("Floating-point data"));
+        mRegisterDescriptions.insert("st7",tr("Floating-point data"));
+
+        mRegisterDescriptions.insert("fctrl",tr("Floating-point control"));
+        mRegisterDescriptions.insert("fstat",tr("Floating-point status"));
+        mRegisterDescriptions.insert("ftag",tr("Floating-point tag word"));
+        mRegisterDescriptions.insert("fop",tr("Floating-point operation"));
+        mRegisterDescriptions.insert("fiseg",tr("Floating-point last instruction segment"));
+        mRegisterDescriptions.insert("fioff",tr("Floating-point last instruction offset"));
+        mRegisterDescriptions.insert("foseg",tr("Floating-point last operand segment"));
+        mRegisterDescriptions.insert("fooff",tr("Floating-point last operand offset"));
+
+        mRegisterDescriptions.insert("mm0",tr("64-bit")+" "+"MMX");
+        mRegisterDescriptions.insert("mm1",tr("64-bit")+" "+"MMX");
+        mRegisterDescriptions.insert("mm2",tr("64-bit")+" "+"MMX");
+        mRegisterDescriptions.insert("mm3",tr("64-bit")+" "+"MMX");
+        mRegisterDescriptions.insert("mm4",tr("64-bit")+" "+"MMX");
+        mRegisterDescriptions.insert("mm5",tr("64-bit")+" "+"MMX");
+        mRegisterDescriptions.insert("mm6",tr("64-bit")+" "+"MMX");
+        mRegisterDescriptions.insert("mm7",tr("64-bit")+" "+"MMX");
+
+        mRegisterDescriptions.insert("xmm0",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm1",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm2",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm3",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm4",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm5",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm6",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm7",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm8",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm9",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm11",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm12",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm13",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm14",tr("128-bit")+" "+"XMM");
+        mRegisterDescriptions.insert("xmm15",tr("128-bit")+" "+"XMM");
+
+        mRegisterDescriptions.insert("mxscr",tr("SSE status and control"));
+
+    }
 }
 
 int RegisterModel::rowCount(const QModelIndex &) const
@@ -2676,12 +2810,22 @@ QVariant RegisterModel::data(const QModelIndex &index, int role) const
             return mRegisterValues.value(
                         mRegisterNameIndex.value(index.row(),-1)
                         ,"");
-        default:
-            return QVariant();
         }
+        break;
+    case Qt::ToolTipRole:
+        switch (index.column()) {
+        case 0:
+            return mRegisterDescriptions.value(mRegisterNames[index.row()],"");
+        case 1:
+            return mRegisterValues.value(
+                        mRegisterNameIndex.value(index.row(),-1)
+                        ,"");
+        }
+        break;
     default:
-        return QVariant();
+        break;
     }
+    return QVariant();
 }
 
 QVariant RegisterModel::headerData(int section, Qt::Orientation orientation, int role) const

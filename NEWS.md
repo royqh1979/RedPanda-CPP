@@ -2,6 +2,7 @@ Red Panda C++ Version 2.15
 
   - fix: Static class members is not correctly recognized as static.
   - fix: Function with reference type return value is not correctly parsed.
+  - enhancement: Add descriptions for x86 registers in the cpu info dialog.
 
 Red Panda C++ Version 2.14
 

@@ -117,6 +117,7 @@ public:
     void updateValues(const QHash<int,QString> registerValues);
     void clear();
 private:
+    QHash<QString,QString> mRegisterDescriptions;
     QStringList mRegisterNames;
     QHash<int,int> mRegisterNameIndex;
     QHash<int,QString> mRegisterValues;
