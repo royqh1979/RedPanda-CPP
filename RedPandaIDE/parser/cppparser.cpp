@@ -1816,6 +1816,12 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
             if (currentText=="::") {
                 sName = currentText;
             } else {
+                if (currentText == "static")
+                    isStatic = true;
+                else if (currentText == "friend")
+                    isFriend = true;
+                else if (currentText == "extern")
+                    isExtern = true;
                 sType = currentText;
             }
         }

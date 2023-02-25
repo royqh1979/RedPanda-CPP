@@ -14,7 +14,7 @@ qsynedit.subdir = libs/qsynedit
 
 APP_NAME = RedPandaCPP
 
-APP_VERSION = 2.14
+APP_VERSION = 2.15
 
 # Add the dependencies so that the RedPandaIDE project can add the depended programs
 # into the main app bundle

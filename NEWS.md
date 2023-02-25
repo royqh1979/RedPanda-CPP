@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.15
+
+  - fix: Static class members is not correctly recognized as static.
+
 Red Panda C++ Version 2.14
 
   - change: Remove all breakpoints of the current non-project file, when it is closed.
