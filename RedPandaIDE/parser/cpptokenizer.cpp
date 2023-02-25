@@ -537,7 +537,7 @@ bool CppTokenizer::isPreprocessor()
 
 bool CppTokenizer::isWord()
 {
-    bool result = isLetterChar(*mCurrent);
+    bool result = isIdentChar(*mCurrent);
     if (result && (*(mCurrent+1) == '"'))
         result = false;
     return result;
