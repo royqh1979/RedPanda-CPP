@@ -53,6 +53,8 @@ int RegexSearcher::findAll(const QString &text)
     QRegularExpressionMatchIterator it = mRegex.globalMatch(text);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
+        if (match.capturedLength()==0)
+            continue;
         mLengths.append(match.capturedLength());
         mResults.append(match.capturedStart());
     }

@@ -5173,7 +5173,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 // Is the search result entirely in the search range?
                 bool isInValidSearchRange = true;
                 int first = nFound;
-                int last = nFound + nSearchLen;
+                int last = nFound + nSearchLen -1;
                 if ((mActiveSelectionMode == SelectionMode::Normal)
                         || !sOptions.testFlag(ssoSelectedOnly)) {
                     if (((ptCurrent.line == ptStart.line) && (first < ptStart.ch)) ||
@@ -5238,10 +5238,11 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
             }
 
             // search next / previous line
-            if (bBackward)
+            if (bBackward) {
                 ptCurrent.line--;
-            else
+            } else {
                 ptCurrent.line++;
+            }
             if (((ptCurrent.line < ptStart.line) || (ptCurrent.line > ptEnd.line))
                     && bFromCursor ){
                 if (!sOptions.testFlag(ssoWrapAround) && confirmAroundCallback && !confirmAroundCallback())

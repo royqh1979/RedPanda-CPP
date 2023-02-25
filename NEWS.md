@@ -7,6 +7,7 @@ Red Panda C++ Version 2.15
   - change: Default value for the debugger debugger panel "memory view's columns" is changed from 8 to 16.
   - change: Default value for the debugger debugger panel "memory view's rows" is changed from 8 to 16.
   - enhancement: Display hex value as ascii chars in the debugger panel memory view tab.
+  - fix: Word on the last line's end can't be searched.
 
 Red Panda C++ Version 2.14
 
