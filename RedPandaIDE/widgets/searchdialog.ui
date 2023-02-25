@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>609</width>
-    <height>242</height>
+    <height>297</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -179,27 +179,10 @@
             <property name="bottomMargin">
              <number>7</number>
             </property>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="chkCaseSensetive">
-              <property name="text">
-               <string>Case Sensitive</string>
-              </property>
-             </widget>
-            </item>
             <item row="3" column="0">
              <widget class="QCheckBox" name="chkWrapAround">
               <property name="text">
                <string>Wrap Around</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QCheckBox" name="chkPrompt">
-              <property name="text">
-               <string>Prompt on replace</string>
               </property>
               <property name="checked">
                <bool>true</bool>
@@ -226,6 +209,13 @@
               </property>
              </widget>
             </item>
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="chkCaseSensetive">
+              <property name="text">
+               <string>Case Sensitive</string>
+              </property>
+             </widget>
+            </item>
             <item row="2" column="1">
              <widget class="QLabel" name="txtRegExpHelp">
               <property name="sizePolicy">
@@ -242,7 +232,7 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="0">
+            <item row="4" column="0">
              <widget class="QCheckBox" name="chkCloseAfterSearch">
               <property name="text">
                <string>Close after search</string>

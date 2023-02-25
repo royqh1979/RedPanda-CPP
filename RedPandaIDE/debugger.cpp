@@ -44,7 +44,7 @@ Debugger::Debugger(QObject *parent) : QObject(parent),
     mBacktraceModel = std::make_shared<BacktraceModel>(this);
     mWatchModel = std::make_shared<WatchModel>(this);
     mRegisterModel = std::make_shared<RegisterModel>(this);
-    mMemoryModel = std::make_shared<MemoryModel>(8,this);
+    mMemoryModel = std::make_shared<MemoryModel>(16,this);
 
     connect(mMemoryModel.get(),&MemoryModel::setMemoryData,
             this, &Debugger::setMemoryData);
@@ -3089,7 +3089,7 @@ int MemoryModel::rowCount(const QModelIndex &/*parent*/) const
 
 int MemoryModel::columnCount(const QModelIndex &/*parent*/) const
 {
-    return mDataPerLine;
+    return mDataPerLine+1;
 }
 
 QVariant MemoryModel::data(const QModelIndex &index, int role) const
@@ -3100,10 +3100,21 @@ QVariant MemoryModel::data(const QModelIndex &index, int role) const
         return QVariant();
     PMemoryLine line = mLines[index.row()];
     int col = index.column();
-    if (col<0  || col>=line->datas.count())
+    if (col<0  || col>line->datas.count())
         return QVariant();
-    if (role == Qt::DisplayRole)
-        return QString("%1").arg(line->datas[col],2,16,QChar('0'));
+    if (role == Qt::DisplayRole) {
+        if (col==line->datas.count()) {
+            QString s;
+            foreach (unsigned char ch, line->datas) {
+                if (ch<' ' || ch>=128)
+                    s+='.';
+                else
+                    s+=ch;
+            }
+            return s;
+        } else
+            return QString("%1").arg(line->datas[col],2,16,QChar('0'));
+    }
     return QVariant();
 }
 

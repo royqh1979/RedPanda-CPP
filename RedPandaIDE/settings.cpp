@@ -3961,8 +3961,8 @@ void Settings::Debugger::doLoad()
     mUseGDBServer = boolValue("use_gdb_server", true);
 #endif
     mGDBServerPort = intValue("gdb_server_port",41234);
-    mMemoryViewRows = intValue("memory_view_rows",8);
-    mMemoryViewColumns = intValue("memory_view_columns",8);
+    mMemoryViewRows = intValue("memory_view_rows",16);
+    mMemoryViewColumns = intValue("memory_view_columns",16);
 }
 
 Settings::CodeCompletion::CodeCompletion(Settings *settings):_Base(settings, SETTING_CODE_COMPLETION)
