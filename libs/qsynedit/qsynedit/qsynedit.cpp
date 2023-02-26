@@ -5121,10 +5121,10 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
             ptCurrent = ptStart;
         }
     } else {
-        ptStart.ch = 1;
+        ptStart.ch = 0;
         ptStart.line = 1;
         ptEnd.line = mDocument->count();
-        ptEnd.ch = mDocument->getLine(ptEnd.line - 1).length();
+        ptEnd.ch = mDocument->getLine(ptEnd.line - 1).length()+1;
         if (bFromCursor) {
             if (bBackward)
                 ptEnd = caretXY();
@@ -5173,12 +5173,19 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 // Is the search result entirely in the search range?
                 bool isInValidSearchRange = true;
                 int first = nFound;
-                int last = nFound + nSearchLen -1;
+                int last = nFound + nSearchLen;
                 if ((mActiveSelectionMode == SelectionMode::Normal)
                         || !sOptions.testFlag(ssoSelectedOnly)) {
-                    if (((ptCurrent.line == ptStart.line) && (first < ptStart.ch)) ||
-                            ((ptCurrent.line == ptEnd.line) && (last > ptEnd.ch)))
+//                    qDebug()<<ptStart.line<<ptStart.ch<<ptEnd.line<<ptEnd.ch<<ptCurrent.line<<first<<last;
+                    if  ((nSearchLen==0) &&
+                         (((ptCurrent.line == ptStart.line) && (first == ptStart.ch) && !bBackward)
+                          ||  ((ptCurrent.line == ptEnd.line) && (last == ptEnd.ch) && bBackward))
+                         ) {
                         isInValidSearchRange = false;
+                    } else if (((ptCurrent.line == ptStart.line) && (first < ptStart.ch)) ||
+                            ((ptCurrent.line == ptEnd.line) && (last > ptEnd.ch))) {
+                        isInValidSearchRange = false;
+                    }
                 } else if (mActiveSelectionMode == SelectionMode::Column) {
                     // solves bug in search/replace when smColumn mode active and no selection
                     isInValidSearchRange = ((first >= ptStart.ch) && (last <= ptEnd.ch))
@@ -5249,15 +5256,17 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                     break;
                 //search start from cursor, search has finished but no result founds
                 bFromCursor = false;
-                ptStart.ch = 1;
+                ptStart.ch = 0;
                 ptStart.line = 1;
                 ptEnd.line = mDocument->count();
-                ptEnd.ch = mDocument->getLine(ptEnd.line - 1).length();
+                ptEnd.ch = mDocument->getLine(ptEnd.line - 1).length()+1;
                 if (bBackward) {
                     ptStart = originCaretXY;
+                    ptEnd.ch++;
                     ptCurrent = ptEnd;
                 } else {
                     ptEnd= originCaretXY;
+                    ptStart.ch--;
                     ptCurrent = ptStart;
                 }
             }

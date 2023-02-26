@@ -1058,6 +1058,16 @@ int MainWindow::calIconSize(const QString &fontName, int fontPointSize)
     return metrics.ascent();
 }
 
+void MainWindow::hideAllSearchDialogs()
+{
+    if (mReplaceDialog)
+        mReplaceDialog->hide();
+    if (mSearchDialog)
+        mSearchDialog->hide();
+    if (mSearchInFilesDialog)
+        mSearchInFilesDialog->hide();
+}
+
 void MainWindow::prepareSearchDialog()
 {
     if (!mSearchDialog)
@@ -1068,6 +1078,13 @@ void MainWindow::prepareReplaceDialog()
 {
     if (!mReplaceDialog)
         mReplaceDialog = new ReplaceDialog(this);
+}
+
+void MainWindow::prepareSearchInFilesDialog()
+{
+    if (mSearchInFilesDialog==nullptr) {
+        mSearchInFilesDialog = new SearchInFileDialog(this);
+    }
 }
 
 void MainWindow::updateAppTitle()
@@ -6270,15 +6287,15 @@ void MainWindow::on_actionFind_triggered()
     if (!e)
         return;
     QString s = e->wordAtCursor();
+    hideAllSearchDialogs();
     prepareSearchDialog();
     mSearchDialog->find(s);
 }
 
 void MainWindow::on_actionFind_in_files_triggered()
 {
-    if (mSearchInFilesDialog==nullptr) {
-        mSearchInFilesDialog = new SearchInFileDialog(this);
-    }
+    hideAllSearchDialogs();
+    prepareSearchInFilesDialog();
     Editor *e = mEditorList->getEditor();
     if (e) {
         QString s = e->wordAtCursor();
@@ -6295,6 +6312,7 @@ void MainWindow::on_actionReplace_triggered()
         return;
 
     QString s = e->wordAtCursor();
+    hideAllSearchDialogs();
     prepareReplaceDialog();
     mReplaceDialog->replace(s);
 }
@@ -6341,9 +6359,7 @@ void MainWindow::on_cbSearchHistory_currentIndexChanged(int index)
 
 void MainWindow::on_btnSearchAgain_clicked()
 {
-    if (mSearchInFilesDialog==nullptr) {
-        mSearchInFilesDialog = new SearchInFileDialog(this);
-    }
+    hideAllSearchDialogs();
     PSearchResults results=mSearchResultModel.currentResults();
     if (!results)
         return;

@@ -965,7 +965,6 @@
        <widget class="IssuesTable" name="tableIssues">
         <property name="font">
          <font>
-          <weight>50</weight>
           <bold>false</bold>
          </font>
         </property>

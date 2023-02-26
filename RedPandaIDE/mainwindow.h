@@ -274,8 +274,10 @@ public slots:
 
 private:
     int calIconSize(const QString &fontName, int fontPointSize);
+    void hideAllSearchDialogs();
     void prepareSearchDialog();
     void prepareReplaceDialog();
+    void prepareSearchInFilesDialog();
     void prepareProjectForCompile();
     void closeProject(bool refreshEditor);
     void updateProjectView();
