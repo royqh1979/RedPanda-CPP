@@ -793,6 +793,10 @@ private slots:
 
     void on_actionGNU_Assembler_Manual_triggered();
 
+    void on_actionx86_Assembly_Language_Reference_Manual_triggered();
+
+    void on_actionIA_32_Assembly_Language_Reference_Manual_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;

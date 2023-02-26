@@ -104,6 +104,7 @@ public:
       Preprocessor, // cursor hovers above preprocessor line
       Identifier, // cursor hovers above identifier
       Selection, // cursor hovers above selection
+      Keyword,
       None, // mouseover not allowed
       Error //Cursor hovers above error line/item;
     };

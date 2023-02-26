@@ -5040,6 +5040,14 @@
         <source>Please turn off your compiler set&apos;s &quot;Strip executable (-s)&quot; option, recompile and retry debug.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>x86 Assembly Language Reference Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>IA-32 Assembly Language Reference Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -6771,7 +6779,7 @@
     </message>
     <message>
         <source>Prompt on replace</source>
-        <translation type="unfinished">Perguntar ao substituir</translation>
+        <translation type="obsolete">Perguntar ao substituir</translation>
     </message>
     <message>
         <source>Case Sensitive</source>
@@ -6850,7 +6858,7 @@
     </message>
     <message>
         <source>Prompt on replace</source>
-        <translation>Perguntar ao substituir</translation>
+        <translation type="vanished">Perguntar ao substituir</translation>
     </message>
     <message>
         <source>Scope:</source>

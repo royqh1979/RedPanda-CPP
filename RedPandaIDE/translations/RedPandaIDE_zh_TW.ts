@@ -4793,6 +4793,14 @@
         <source>Please turn off your compiler set&apos;s &quot;Strip executable (-s)&quot; option, recompile and retry debug.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>x86 Assembly Language Reference Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>IA-32 Assembly Language Reference Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>
@@ -6351,10 +6359,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Prompt on replace</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Case Sensitive</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6419,10 +6423,6 @@
     </message>
     <message>
         <source>Wrap Around</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Prompt on replace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

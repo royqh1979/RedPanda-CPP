@@ -80,7 +80,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QSynedit::QSynEdit" name="txtCode">
+        <widget class="Editor" name="txtCode">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>3</horstretch>
@@ -230,9 +230,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QSynedit::QSynEdit</class>
+   <class>Editor</class>
    <extends>QFrame</extends>
-   <header location="global">qsynedit/qsynedit.h</header>
+   <header>editor.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

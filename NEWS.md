@@ -2,7 +2,7 @@ Red Panda C++ Version 2.15
 
   - fix: Static class members is not correctly recognized as static.
   - fix: Function with reference type return value is not correctly parsed.
-  - enhancement: Add descriptions for x86 registers in the cpu info dialog.
+  - enhancement: Add description tooltips for x86 registers in the cpu info dialog.
   - fix: Search dialog shouldn't have "prompt when replace".
   - change: Default value for the debugger debugger panel "memory view's columns" is changed from 8 to 16.
   - change: Default value for the debugger debugger panel "memory view's rows" is changed from 8 to 16.
@@ -11,6 +11,8 @@ Red Panda C++ Version 2.15
   - enhancement: Auto close other search/replace dialogs when start to search/replace.
   - change: Remove "prompt when replace" in the replace.
   - fix: Search/replace with regex is not correctly handled.
+  - enhancement: Show descriptions mouse tip for assebmly instructions. (editor / cpu info dialog)
+  - fix: When completing resigter names, an extra '%' is wrongly added.  
 
 Red Panda C++ Version 2.14
 

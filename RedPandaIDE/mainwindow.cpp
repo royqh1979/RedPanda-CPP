@@ -415,6 +415,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->menuProject, &QMenu::aboutToShow,
             this, &MainWindow::updateProjectActions);
 
+    QString cpuArch = QSysInfo::currentCpuArchitecture();
+    if (cpuArch == "i386") {
+        ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(true);
+        ui->actionx86_Assembly_Language_Reference_Manual->setVisible(false);
+    } else if (cpuArch=="x86_64") {
+        ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(true);
+        ui->actionx86_Assembly_Language_Reference_Manual->setVisible(true);
+    } else {
+        ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(false);
+        ui->actionx86_Assembly_Language_Reference_Manual->setVisible(false);
+    }
     ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
     ui->actionDocument->setVisible(pSettings->environment().language()=="zh_CN");
 
@@ -9553,3 +9564,15 @@ void MainWindow::on_actionGNU_Assembler_Manual_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://sourceware.org/binutils/docs/as/index.html"));
 }
+
+void MainWindow::on_actionx86_Assembly_Language_Reference_Manual_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://docs.oracle.com/cd/E19120-01/open.solaris/817-5477/index.html"));
+}
+
+
+void MainWindow::on_actionIA_32_Assembly_Language_Reference_Manual_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://docs.oracle.com/cd/E19455-01/806-3773/index.html"));
+}
+

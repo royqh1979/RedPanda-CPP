@@ -5278,33 +5278,11 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
 void QSynEdit::doLinesDeleted(int firstLine, int count)
 {
     emit linesDeleted(firstLine, count);
-//    // gutter marks
-//    for i := 0 to Marks.Count - 1 do begin
-//      if Marks[i].Line >= FirstLine + Count then
-//        Marks[i].Line := Marks[i].Line - Count
-//      else if Marks[i].Line > FirstLine then
-//        Marks[i].Line := FirstLine;
-//    end;
-//    // plugins
-//    if fPlugins <> nil then begin
-//      for i := 0 to fPlugins.Count - 1 do
-//        TSynEditPlugin(fPlugins[i]).LinesDeleted(FirstLine, Count);
-    //    end;
 }
 
 void QSynEdit::doLinesInserted(int firstLine, int count)
 {
     emit linesInserted(firstLine, count);
-//    // gutter marks
-//    for i := 0 to Marks.Count - 1 do begin
-//      if Marks[i].Line >= FirstLine then
-//        Marks[i].Line := Marks[i].Line + Count;
-//    end;
-//    // plugins
-//    if fPlugins <> nil then begin
-//      for i := 0 to fPlugins.Count - 1 do
-//        TSynEditPlugin(fPlugins[i]).LinesInserted(FirstLine, Count);
-//    end;
 }
 
 void QSynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)

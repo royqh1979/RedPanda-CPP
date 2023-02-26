@@ -206,9 +206,10 @@ Editor::Editor(QWidget *parent, const QString& filename,
         mAutoBackupTimer.setInterval(1);
         connect(&mAutoBackupTimer, &QTimer::timeout,
             this, &Editor::onAutoBackupTimer);
-        connect(&mTooltipTimer, &QTimer::timeout,
-                this, &Editor::onTooltipTimer);
     }
+
+    connect(&mTooltipTimer, &QTimer::timeout,
+            this, &Editor::onTooltipTimer);
 
     connect(horizontalScrollBar(), &QScrollBar::valueChanged,
             this, &Editor::onScrollBarValueChanged);
@@ -1909,6 +1910,17 @@ void Editor::onTooltipTimer()
             s = expression.join(""); // information during coding
         }
         break;
+    case TipType::Keyword:
+        if (syntaxer() &&
+                (syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
+                 || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
+                ) {
+            if (!mCompletionPopup->isVisible()
+                 && !mHeaderCompletionPopup->isVisible()) {
+                s = wordAtRowCol(p);
+            }
+        }
+        break;
     case TipType::Selection:
         s = selText(); // when a selection is available, always only use that
         break;
@@ -1938,7 +1950,6 @@ void Editor::onTooltipTimer()
             mHoverModifiedLine=line;
         }
     }
-
     // Remove hint
     cancelHint();
     mCurrentWord = s;
@@ -1966,8 +1977,18 @@ void Editor::onTooltipTimer()
             if (pMainWindow->debugger()->executing()
                     && (pSettings->editor().enableDebugTooltips())) {
                 showDebugHint(s,p.line);
-            } else if (pSettings->editor().enableIdentifierToolTips()) { //if devEditor.ParserHints {
+            } else if (pSettings->editor().enableIdentifierToolTips()) {
                 hint = getParserHint(expression, s, p.line);
+            }
+        }
+        break;
+    case TipType::Keyword:
+        if (pSettings->editor().enableIdentifierToolTips()) {
+            if (syntaxer() &&
+                    (syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
+                     || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
+                    ) {
+                hint = QSynedit::ASMSyntaxer::Instructions.value(s.toLower(),"");
             }
         }
         break;
@@ -3324,7 +3345,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                 else if (word.startsWith("%"))
                     keywords = QSynedit::ASMSyntaxer::ATTRegisters;
                 else
-                    keywords = QSynedit::ASMSyntaxer::Instructions;
+                    keywords = QSynedit::ASMSyntaxer::InstructionNames;
             } else {
                 int pos = word.lastIndexOf(".");
                 if (pos>=0) {
@@ -3557,7 +3578,7 @@ void Editor::completionInsert(bool appendFunc)
     QSynedit::BufferCoord pStart = wordStart();
     if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
         if (statement->command.startsWith(".")
-                || statement->command.startsWith("#"))
+                || statement->command.startsWith("%"))
             pStart.ch--;
     }
     setCaretAndSelection(pStart,pStart,p);
@@ -3828,8 +3849,11 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
                         return TipType::Selection;
                 } else if (mParser && mParser->isIncludeLine(document()->getLine(pos.line-1))) {
                     return TipType::Preprocessor;
-                }else if (attr == syntaxer()->identifierAttribute())
+                }else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
                     return TipType::Identifier;
+                } else if (attr->tokenType() == QSynedit::TokenType::Keyword) {
+                    return TipType::Keyword;
+                }
             }
         }
     }
@@ -3843,7 +3867,6 @@ void Editor::cancelHint()
         mHoverModifiedLine=-1;
     }
 
-    //MainForm.Debugger.OnEvalReady := nil;
 
     // disable editor hint
     QToolTip::hideText();

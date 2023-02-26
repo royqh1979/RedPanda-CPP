@@ -67,3 +67,6 @@ HEADERS += \
     qsynedit/syntaxer/syntaxer.h
 
 INCLUDEPATH += ../redpanda_qt_utils
+
+TRANSLATIONS += \
+    qsynedit_zh_CN.ts

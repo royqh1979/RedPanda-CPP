@@ -963,8 +963,8 @@ void QSynEditPainter::paintLines()
                     sToken = edit->mSyntaxer->getToken();
                     // Maybe should also test whether GetTokenPos changed...
                     if (sToken.isEmpty()) {
-                        qDebug()<<QSynEdit::tr("The highlighter seems to be in an infinite loop");
-                        throw BaseError(QSynEdit::tr("The highlighter seems to be in an infinite loop"));
+                        //qDebug()<<QSynEdit::tr("The highlighter seems to be in an infinite loop");
+                        throw BaseError(QSynEdit::tr("The syntaxer seems to be in an infinite loop"));
                     }
                 }
                 //nTokenColumnsBefore = edit->charToColumn(sLine,edit->mHighlighter->getTokenPos()+1)-1;

@@ -53,7 +53,8 @@ public:
     const PTokenAttribute &labelAttribute() const;
     const PTokenAttribute &registerAttribute() const;
 
-    static const QSet<QString> Instructions;
+    static QMap<QString,QString> Instructions;
+    static QSet<QString> InstructionNames;
     static const QSet<QString> Registers;
     static const QSet<QString> ATTRegisters;
     static const QSet<QString> Directives;
@@ -91,6 +92,7 @@ private:
     void SymbolProc();
     void UnknownProc();
     bool isIdentStartChar(const QChar& ch);
+    static void initData();
 
     // SynHighlighter interface
 public:
