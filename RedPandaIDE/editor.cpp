@@ -4902,9 +4902,6 @@ void Editor::checkSyntaxInBack()
         return;
     if (!syntaxer())
         return;
-    if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP
-             && syntaxer()->language()!=QSynedit::ProgrammingLanguage::ATTAssembly)
-        return;
     pMainWindow->checkSyntaxInBack(this);
 }
 
