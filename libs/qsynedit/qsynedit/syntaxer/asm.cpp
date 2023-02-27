@@ -339,8 +339,11 @@ void ASMSyntaxer::initData()
         Instructions.insert("bswapl",QObject::tr("byte swap."));
         Instructions.insert("bswapq",QObject::tr("byte swap."));
         Instructions.insert("cbtw",QObject::tr("convert %1 to %2.").arg(QObject::tr("byte"),QObject::tr("word")));
+        Instructions.insert("cbw",QObject::tr("convert %1 to %2.").arg(QObject::tr("byte"),QObject::tr("word")));
         Instructions.insert("cltd",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("double word"),"%eax",QObject::tr("quad word"),"%edx:%eax"));
+        Instructions.insert("cdq",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("double word"),"%eax",QObject::tr("quad word"),"%edx:%eax"));
         Instructions.insert("cltq",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("double word"),"%eax",QObject::tr("quad word"),"%rax"));
+        Instructions.insert("cdqe",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("double word"),"%eax",QObject::tr("quad word"),"%rax"));
         Instructions.insert("cmove",QObject::tr("Conditional move if equal"));
         Instructions.insert("cmovz",QObject::tr("Conditional move if zero."));
         Instructions.insert("cmovne",QObject::tr("Conditional move if not equal."));
@@ -373,10 +376,12 @@ void ASMSyntaxer::initData()
         Instructions.insert("cmovpo",QObject::tr("Conditional move if parity odd."));
         Instructions.insert("cmpxchg",QObject::tr("Compare and exchange."));
         Instructions.insert("cmpxchg8b",QObject::tr("Compare and exchange 8 bytes."));
-        Instructions.insert("cqtd",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("quad word"),"%rax",QObject::tr("oct word"),"%rdx:%rax"));
         Instructions.insert("cqto",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("quad word"),"%rax",QObject::tr("oct word"),"%rdx:%rax"));
+        Instructions.insert("cqo",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("quad word"),"%rax",QObject::tr("oct word"),"%rdx:%rax"));
         Instructions.insert("cwtd",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("word"),"%ax",QObject::tr("double word"),"%dx:%ax"));
+        Instructions.insert("cwd",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("word"),"%ax",QObject::tr("double word"),"%dx:%ax"));
         Instructions.insert("cwtl",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("word"),"%ax",QObject::tr("double word"),"%eax"));
+        Instructions.insert("cwde",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("word"),"%ax",QObject::tr("double word"),"%eax"));
         Instructions.insert("mov",QObject::tr("move data between immediate values, general purpose registers, segment registers, and memory."));
         Instructions.insert("movb",QObject::tr("move %1 data between immediate values, general purpose registers, segment registers, and memory.").arg(QObject::tr("byte")));
         Instructions.insert("movw",QObject::tr("Move %1.").arg(QObject::tr("word")));
@@ -654,9 +659,9 @@ void ASMSyntaxer::initData()
         Instructions.insert("jb",QObject::tr("jump if below."));
         Instructions.insert("jbe",QObject::tr("jump if below or equal."));
         Instructions.insert("jc",QObject::tr("jump if carry."));
-        Instructions.insert("jcxz",QObject::tr("jump register %cx zero"));
+        Instructions.insert("jcxz",QObject::tr("jump register %cx zero"));
         Instructions.insert("je",QObject::tr("jump if equal."));
-        Instructions.insert("jecxz",QObject::tr("jump register %ecx zero"));
+        Instructions.insert("jecxz",QObject::tr("jump register %ecx zero"));
         Instructions.insert("jg",QObject::tr("jump if greater."));
         Instructions.insert("jge",QObject::tr("jump if greater or equal."));
         Instructions.insert("jl",QObject::tr("jump if less."));
@@ -683,11 +688,11 @@ void ASMSyntaxer::initData()
         Instructions.insert("jz",QObject::tr("jump if zero."));
         Instructions.insert("lcall",QObject::tr("call far procedure."));
         Instructions.insert("leave",QObject::tr("high-level procedure exit."));
-        Instructions.insert("loop",QObject::tr("loop with %ecx counter"));
-        Instructions.insert("loope",QObject::tr("loop with %ecx and equal"));
-        Instructions.insert("loopne",QObject::tr("loop with %ecx and not equal"));
-        Instructions.insert("loopnz",QObject::tr("loop with %ecx and not zero"));
-        Instructions.insert("loopz",QObject::tr("loop with %ecx and zero"));
+        Instructions.insert("loop",QObject::tr("loop with %ecx counter"));
+        Instructions.insert("loope",QObject::tr("loop with %ecx and equal"));
+        Instructions.insert("loopne",QObject::tr("loop with %ecx and not equal"));
+        Instructions.insert("loopnz",QObject::tr("loop with %ecx and not zero"));
+        Instructions.insert("loopz",QObject::tr("loop with %ecx and zero"));
         Instructions.insert("lret",QObject::tr("return from far procedure."));
         Instructions.insert("ret",QObject::tr("return."));
 
@@ -707,7 +712,7 @@ void ASMSyntaxer::initData()
         Instructions.insert("movsw",QObject::tr("move %1 string.").arg(QObject::tr("word")));
         Instructions.insert("movsl",QObject::tr("move %1 string.").arg(QObject::tr("double word")));
         Instructions.insert("movsq",QObject::tr("move %1 string.").arg(QObject::tr("quad word")));
-        Instructions.insert("rep",QObject::tr("repeat while %ecx not zero"));
+        Instructions.insert("rep",QObject::tr("repeat while %ecx not zero"));
         Instructions.insert("repnz",QObject::tr("repeat while not equal."));
         Instructions.insert("repnz",QObject::tr("repeat while not zero."));
         Instructions.insert("repz",QObject::tr("repeat while equal."));
@@ -738,21 +743,21 @@ void ASMSyntaxer::initData()
         Instructions.insert("cld",QObject::tr("clear direction flag."));
         Instructions.insert("cli",QObject::tr("clear interrupt flag."));
         Instructions.insert("cmc",QObject::tr("complement carry flag."));
-        Instructions.insert("lahf",QObject::tr("load flags into %ah register"));
-        Instructions.insert("popfw",QObject::tr("pop %eflags from stack"));
-        Instructions.insert("popf{lq}",QObject::tr("pop %eflags from stack"));
-        Instructions.insert("pushfw",QObject::tr("push %eflags onto stack"));
-        Instructions.insert("pushf{lq}",QObject::tr("push %eflags onto stack"));
-        Instructions.insert("sahf",QObject::tr("store %ah register into flags"));
+        Instructions.insert("lahf",QObject::tr("load flags into %ah register"));
+        Instructions.insert("popfw",QObject::tr("pop %eflags from stack"));
+        Instructions.insert("popf{lq}",QObject::tr("pop %eflags from stack"));
+        Instructions.insert("pushfw",QObject::tr("push %eflags onto stack"));
+        Instructions.insert("pushf{lq}",QObject::tr("push %eflags onto stack"));
+        Instructions.insert("sahf",QObject::tr("store %ah register into flags"));
         Instructions.insert("stc",QObject::tr("set carry flag."));
         Instructions.insert("std",QObject::tr("set direction flag."));
         Instructions.insert("sti",QObject::tr("set interrupt flag."));
         //Segment Register Instructions
-        Instructions.insert("lds",QObject::tr("load far pointer using %ds"));
-        Instructions.insert("les",QObject::tr("load far pointer using %es"));
-        Instructions.insert("lfs",QObject::tr("load far pointer using %fs"));
-        Instructions.insert("lgs",QObject::tr("load far pointer using %gs"));
-        Instructions.insert("lss",QObject::tr("load far pointer using %ss"));
+        Instructions.insert("lds",QObject::tr("load far pointer using %ds"));
+        Instructions.insert("les",QObject::tr("load far pointer using %es"));
+        Instructions.insert("lfs",QObject::tr("load far pointer using %fs"));
+        Instructions.insert("lgs",QObject::tr("load far pointer using %gs"));
+        Instructions.insert("lss",QObject::tr("load far pointer using %ss"));
 
         Instructions.insert("cpuid",QObject::tr("processor identification."));
         Instructions.insert("lea",QObject::tr("load effective address."));
@@ -782,7 +787,7 @@ void ASMSyntaxer::initData()
         Instructions.insert("fld",QObject::tr("load floating-point value."));
         Instructions.insert("fst",QObject::tr("store floating-point value."));
         Instructions.insert("fstp",QObject::tr("store floating-point value and pop."));
-        Instructions.insert("fxch",QObject::tr("exchange registers ."));
+        Instructions.insert("fxch",QObject::tr("exchange registers ."));
         //Basic Arithmetic Instructions (Floating-Point)
         Instructions.insert("fabs",QObject::tr("absolute value."));
         Instructions.insert("fadd",QObject::tr("add floating-point."));
@@ -809,26 +814,26 @@ void ASMSyntaxer::initData()
         Instructions.insert("fsubp",QObject::tr("subtract floating-point and pop."));
         Instructions.insert("fsubr",QObject::tr("subtract floating-point reverse."));
         Instructions.insert("fsubrp",QObject::tr("subtract floating-point reverse and pop."));
-        Instructions.insert("fxtract",QObject::tr("extract exponent and significand ."));
+        Instructions.insert("fxtract",QObject::tr("extract exponent and significand ."));
         //Comparison Instructions (Floating-Point)
         Instructions.insert("fcom",QObject::tr("compare floating-point."));
-        Instructions.insert("fcomi",QObject::tr("compare floating-point and set %eflags."));
-        Instructions.insert("fcomip",QObject::tr("compare floating-point, set %eflags, and pop."));
+        Instructions.insert("fcomi",QObject::tr("compare floating-point and set %eflags."));
+        Instructions.insert("fcomip",QObject::tr("compare floating-point, set %eflags, and pop."));
         Instructions.insert("fcomp",QObject::tr("compare floating-point and pop."));
         Instructions.insert("fcompp",QObject::tr("compare floating-point and pop twice."));
         Instructions.insert("ficom",QObject::tr("compare integer."));
         Instructions.insert("ficomp",QObject::tr("compare integer and pop."));
         Instructions.insert("ftst",QObject::tr("test floating-point (compare with 0.0)."));
         Instructions.insert("fucom",QObject::tr("unordered compare floating-point."));
-        Instructions.insert("fucomi",QObject::tr("unordered compare floating-point and set %eflags."));
-        Instructions.insert("fucomip",QObject::tr("unordered compare floating-point, set %eflags, and pop."));
+        Instructions.insert("fucomi",QObject::tr("unordered compare floating-point and set %eflags."));
+        Instructions.insert("fucomip",QObject::tr("unordered compare floating-point, set %eflags, and pop."));
         Instructions.insert("fucomp",QObject::tr("unordered compare floating-point and pop."));
         Instructions.insert("fucompp",QObject::tr("compare floating-point and pop twice."));
-        Instructions.insert("fxam",QObject::tr("examine floating-point ."));
+        Instructions.insert("fxam",QObject::tr("examine floating-point ."));
         Instructions.insert("transcendental",QObject::tr("instructions (floating-point)	."));
         Instructions.insert("the",QObject::tr("transcendental instructions perform trigonometric and logarithmic operations on floating-point operands.	."));
         Instructions.insert("table",QObject::tr("3–16 transcendental instructions (floating-point)."));
-        Instructions.insert("solaris",QObject::tr("mnemonic 	description."));
+        Instructions.insert("solaris",QObject::tr("mnemonic 	description."));
         Instructions.insert("f2xm1",QObject::tr("computes 2x-1."));
         Instructions.insert("fcos",QObject::tr("cosine."));
         Instructions.insert("fpatan",QObject::tr("partial arctangent."));
@@ -844,7 +849,7 @@ void ASMSyntaxer::initData()
         Instructions.insert("fldlg2",QObject::tr("load log102."));
         Instructions.insert("fldln2",QObject::tr("load loge2."));
         Instructions.insert("fldpi",QObject::tr("load π."));
-        Instructions.insert("fldz",QObject::tr("load +0.0 ."));
+        Instructions.insert("fldz",QObject::tr("load +0.0 ."));
         //Control Instructions (Floating-Point)
         Instructions.insert("fclex",QObject::tr("clear floating-point exception flags after checking for error conditions."));
         Instructions.insert("fdecstp",QObject::tr("decrement floating-point register stack pointer."));
@@ -930,7 +935,7 @@ void ASMSyntaxer::initData()
         //SSE Instructions
         //SIMD Single-Precision Floating-Point Instructions (SSE)
         //Data Transfer Instructions (SSE)
-        Instructions.insert("solaris",QObject::tr("mnemonic 	description."));
+        Instructions.insert("solaris",QObject::tr("mnemonic 	description."));
         Instructions.insert("movaps",QObject::tr("move four aligned packed single-precision floating-point values between xmm registers or memory."));
         Instructions.insert("movhlps",QObject::tr("move two packed single-precision floating-point values from the high quadword of an xmm register to the low quadword of another xmm register."));
         Instructions.insert("movhps",QObject::tr("move two packed single-precision floating-point values to or from the high quadword of an xmm register or memory."));
@@ -980,8 +985,8 @@ void ASMSyntaxer::initData()
         Instructions.insert("cvttps2pi",QObject::tr("convert with truncation packed single-precision floating-point values to packed doubleword integers."));
         Instructions.insert("cvttss2si",QObject::tr("convert with truncation scalar single-precision floating-point value to scalar doubleword integer."));
         //MXCSR State Management Instructions (SSE)
-        Instructions.insert("ldmxcsr",QObject::tr("load %mxcsr register."));
-        Instructions.insert("stmxcsr",QObject::tr("save %mxcsr register state."));
+        Instructions.insert("ldmxcsr",QObject::tr("load %mxcsr register."));
+        Instructions.insert("stmxcsr",QObject::tr("save %mxcsr register state."));
         //64–Bit SIMD Integer Instructions (SSE)
         Instructions.insert("pavgb",QObject::tr("compute average of packed unsigned byte integers."));
         Instructions.insert("pavgw",QObject::tr("compute average of packed unsigned byte integers."));
