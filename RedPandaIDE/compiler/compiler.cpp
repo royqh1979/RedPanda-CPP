@@ -98,6 +98,9 @@ QString Compiler::getFileNameFromOutputLine(QString &line) {
         if (temp.compare("<stdin>", Qt::CaseInsensitive)==0 ) {
             temp = mFilename;
             return temp;
+        } else if (temp.compare("{standard input}", Qt::CaseInsensitive)==0 ) {
+            temp = mFilename;
+            return temp;
         }
 
         QFileInfo fileInfo(temp);

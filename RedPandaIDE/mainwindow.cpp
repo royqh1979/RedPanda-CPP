@@ -1873,14 +1873,14 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     if (!pSettings->editor().syntaxCheck()) {
         return;
     }
-//    if not devEditor.AutoCheckSyntax then
-//      Exit;
+
     //not c or cpp file
     FileType fileType = getFileType(e->filename());
     if (fileType != FileType::CSource
             && fileType != FileType::CppSource
             && fileType != FileType::CHeader
             && fileType != FileType::CppHeader
+            && fileType != FileType::GAS
             )
         return;
     if (mCompilerManager->backgroundSyntaxChecking())

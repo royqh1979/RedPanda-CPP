@@ -13,6 +13,7 @@ Red Panda C++ Version 2.15
   - fix: Search/replace with regex is not correctly handled.
   - enhancement: Show descriptions mouse tip for assebmly instructions. (editor / cpu info dialog)
   - fix: When completing resigter names, an extra '%' is wrongly added.  
+  - enhancement: Syntax check for assembly files.
 
 Red Panda C++ Version 2.14
 

@@ -1903,7 +1903,8 @@ void Editor::onTooltipTimer()
         break;
     case TipType::Identifier:
         if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning())
-            s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
+            if (mParentPageControl)
+                s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
         else if (!mCompletionPopup->isVisible()
                  && !mHeaderCompletionPopup->isVisible()) {
             expression = getExpressionAtPosition(p);
@@ -4901,7 +4902,8 @@ void Editor::checkSyntaxInBack()
         return;
     if (!syntaxer())
         return;
-    if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
+    if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP
+             && syntaxer()->language()!=QSynedit::ProgrammingLanguage::ATTAssembly)
         return;
     pMainWindow->checkSyntaxInBack(this);
 }

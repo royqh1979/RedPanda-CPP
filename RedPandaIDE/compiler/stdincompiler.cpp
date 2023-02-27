@@ -54,6 +54,14 @@ bool StdinCompiler::prepareForCompile()
         strFileType = "C";
         mCompiler = compilerSet()->CCompiler();
         break;
+    case FileType::GAS:
+        mArguments += " -x assembler - ";
+        mArguments += getCCompileArguments(mOnlyCheckSyntax);
+        mArguments += getCIncludeArguments();
+        mArguments += getProjectIncludeArguments();
+        strFileType = "GAS";
+        mCompiler = compilerSet()->CCompiler();
+        break;
     case FileType::CppSource:
     case FileType::CppHeader:
     case FileType::CHeader:
