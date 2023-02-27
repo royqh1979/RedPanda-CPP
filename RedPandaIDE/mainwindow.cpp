@@ -415,17 +415,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->menuProject, &QMenu::aboutToShow,
             this, &MainWindow::updateProjectActions);
 
-    QString cpuArch = QSysInfo::currentCpuArchitecture();
-    if (cpuArch == "i386") {
+#ifdef ARCH_X86
         ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(true);
         ui->actionx86_Assembly_Language_Reference_Manual->setVisible(false);
-    } else if (cpuArch=="x86_64") {
+#elif defined(ARCH_X86_64)
         ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(true);
         ui->actionx86_Assembly_Language_Reference_Manual->setVisible(true);
-    } else {
+#else
         ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(false);
         ui->actionx86_Assembly_Language_Reference_Manual->setVisible(false);
-    }
+#endif
     ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
     ui->actionDocument->setVisible(pSettings->environment().language()=="zh_CN");
 

@@ -2648,9 +2648,8 @@ bool WatchModel::hasChildren(const QModelIndex &parent) const
 
 RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
 {
-    QString cpuArch=QSysInfo::currentCpuArchitecture();
-    if (cpuArch=="x86_64" || cpuArch=="i386") {
-//https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
+    //https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
         mRegisterDescriptions.insert("rax",tr("64-bit")+" "+tr("Accumulator for operands and results data"));
         mRegisterDescriptions.insert("rbx",tr("64-bit")+" "+tr("Pointer to data in the DS segment"));
         mRegisterDescriptions.insert("rcx",tr("64-bit")+" "+tr("Counter for string and loop operations"));
@@ -2782,7 +2781,7 @@ RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
 
         mRegisterDescriptions.insert("mxscr",tr("SSE status and control"));
 
-    }
+#endif
 }
 
 int RegisterModel::rowCount(const QModelIndex &) const

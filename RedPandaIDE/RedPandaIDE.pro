@@ -13,6 +13,14 @@ isEmpty(APP_VERSION) {
     APP_VERSION = 2.15
 }
 
+contains(QMAKE_HOST.arch, x86_64):{
+    contains(QMAKE_HOST.arch, x86_64):{
+        DEFINES += ARCH_X86_64=1
+    } else : {
+        DEFINES += ARCH_X86=1
+    }
+}
+
 macos: {
     # This package needs to be installed via homebrew before we can compile it
     INCLUDEPATH += \

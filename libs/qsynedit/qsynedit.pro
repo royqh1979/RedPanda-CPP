@@ -5,6 +5,14 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 CONFIG += nokey
 CONFIG += staticlib
+contains(QMAKE_HOST.arch, x86_64):{
+    contains(QMAKE_HOST.arch, x86_64):{
+        DEFINES += ARCH_X86_64=1
+    } else : {
+        DEFINES += ARCH_X86=1
+    }
+}
+
 
 win32: {
 DEFINES += _WIN32_WINNT=0x0601

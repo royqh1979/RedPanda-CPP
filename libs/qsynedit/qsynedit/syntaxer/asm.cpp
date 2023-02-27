@@ -24,6 +24,7 @@ QSet<QString> ASMSyntaxer::InstructionNames;
 QMap<QString,QString> ASMSyntaxer::Instructions;
 
 const QSet<QString> ASMSyntaxer::Registers {
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
     "ah","al","ax","eax",
     "bh","bl","bx","ebx",
     "ch","cl","cx","ecx",
@@ -50,9 +51,11 @@ const QSet<QString> ASMSyntaxer::Registers {
     "xmm4","xmm5","xmm6","xmm7",
     "xmm8","xmm9","xmm10","xmm11",
     "xmm12","xmm13","xmm14","xmm15",
+#endif
 };
 
 const QSet<QString> ASMSyntaxer::ATTRegisters {
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
     "%ah","%al","%ax","%eax",
     "%bh","%bl","%bx","%ebx",
     "%ch","%cl","%cx","%ecx",
@@ -79,16 +82,20 @@ const QSet<QString> ASMSyntaxer::ATTRegisters {
     "%xmm4","%xmm5","%xmm6","%xmm7",
     "%xmm8","%xmm9","%xmm10","%xmm11",
     "%xmm12","%xmm13","%xmm14","%xmm15",
+#endif
 };
 
 const QSet<QString> ASMSyntaxer::Directives {
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
     "section","global","extern","segment",
     "db","dw","dd","dq","dt","do","dy","dz",
     "resb","resw","resd","resq","rest","reso","resy","resz",
     "equ","times","word","dword","byte","tword"
+#endif
 };
 
 const QSet<QString> ASMSyntaxer::ATTDirectives {
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
     ".abort",".align",".altmacro",".ascii",
     ".asciz",".attach",".balign",".bss",
     ".bundle",".byte",".comm",".data",
@@ -117,6 +124,7 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".title", ".tls", ".type", ".uleb128", ".val",".version",
     ".vtable", ".warning",".weak",".weakref",".word",
     ".zero",".2byte",".4byte",".8byte"
+#endif
 };
 
 ASMSyntaxer::ASMSyntaxer(bool isATT):
@@ -335,6 +343,7 @@ void ASMSyntaxer::initData()
     if (Instructions.isEmpty()) {
         // https://docs.oracle.com/cd/E19120-01/open.solaris/817-5477/ennbz/index.html
         //Data Transfer Instruction
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
         Instructions.insert("bswap",QObject::tr("byte swap."));
         Instructions.insert("bswapl",QObject::tr("byte swap."));
         Instructions.insert("bswapq",QObject::tr("byte swap."));
@@ -1090,7 +1099,7 @@ void ASMSyntaxer::initData()
         Instructions.insert("movnti",QObject::tr("non-temporal store of a doubleword from a general-purpose register into memory."));
         Instructions.insert("movntpd",QObject::tr("non-temporal store of two packed double-precision floating-point values from an xmm register into memory."));
         Instructions.insert("pause",QObject::tr("improves the performance of spin-wait loops."));
-
+#endif
         InstructionNames=QSet<QString>(Instructions.keyBegin(),Instructions.keyEnd());
     }
 }
