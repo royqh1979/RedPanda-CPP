@@ -3345,8 +3345,9 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                     keywords = QSynedit::ASMSyntaxer::ATTDirectives;
                 else if (word.startsWith("%"))
                     keywords = QSynedit::ASMSyntaxer::ATTRegisters;
-                else
+                else {
                     keywords = QSynedit::ASMSyntaxer::InstructionNames;
+                }
             } else {
                 int pos = word.lastIndexOf(".");
                 if (pos>=0) {

@@ -37,10 +37,10 @@
 #define SETTING_ENVIRONMENT "Environment"
 #define SETTING_EXECUTOR "Executor"
 #define SETTING_DEBUGGER "Debugger"
-#define SETTING_EXTTOOLS "ExtTools"
 #define SETTING_HISTORY "History"
 #define SETTING_UI "UI"
 #define SETTING_VCS "VCS"
+#define SETTING_LANGUAGES "Languages"
 #define SETTING_CODE_COMPLETION "CodeCompletion"
 #define SETTING_CODE_FORMATTER "CodeFormatter"
 #define SETTING_COMPILTER_SETS "CompilerSets"
@@ -975,6 +975,31 @@ public:
         void doLoad() override;
     };
 
+    class Languages: public _Base {
+    public:
+        enum class X86ASMDialect {
+            ATT,
+            Intel
+        };
+        explicit Languages(Settings *settings);
+        bool noDebugDirectivesWhenGenerateASM() const;
+        void setNoDebugDirectivesWhenGenerateASM(bool newNoDebugDirectivesWhenGenerateASM);
+
+        bool noSEHDirectivesWhenGenerateASM() const;
+        void setNoSEHDirectivesWhenGenerateASM(bool newNoSEHDirectivesWhenGenerateASM);
+
+        X86ASMDialect x86DialectOfASMGenerated() const;
+        void setX86DialectOfASMGenerated(X86ASMDialect newX86DialectOfASMGenerated);
+
+    private:
+        bool mNoDebugDirectivesWhenGenerateASM;
+        bool mNoSEHDirectivesWhenGenerateASM;
+        X86ASMDialect mX86DialectOfASMGenerated;
+    protected:
+        void doSave() override;
+        void doLoad() override;
+    };
+
     class UI: public _Base {
     public:
         explicit UI(Settings *settings);
@@ -1271,22 +1296,6 @@ public:
         void doLoad() override;
     };
 
-    class ExtTools: public _Base {
-    public:
-        explicit ExtTools(Settings* settings);
-
-        const QString &xMakePath() const;
-        void setXMakePath(const QString &newXMakePath);
-
-    private:
-        QString mXMakePath;
-        // _Base interface
-    protected:
-        void doSave() override;
-        void doLoad() override;
-    };
-
-
     class CompilerSet {
     public:
         enum class CompilationStage {
@@ -1531,9 +1540,8 @@ public:
     CodeFormatter &codeFormatter();
     UI &ui();
     VCS &vcs();
-    ExtTools &extTools();
+    Languages &languages();
     QString filename() const;
-
 
 private:
     QString mFilename;
@@ -1548,8 +1556,7 @@ private:
     CodeFormatter mCodeFormatter;
     UI mUI;
     VCS mVCS;
-    ExtTools mExtTools;
-
+    Languages mLanguages;
 };
 
 

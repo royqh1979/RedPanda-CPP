@@ -14,6 +14,13 @@ Red Panda C++ Version 2.15
   - enhancement: Show descriptions mouse tip for assebmly instructions. (editor / cpu info dialog)
   - fix: When completing resigter names, an extra '%' is wrongly added.  
   - enhancement: Syntax check for assembly files.
+  - enhancement: Add "Languages" page group in the options dialog.
+  - enhancement: Add "ASM Generation" page in the options dialog.
+  - change: Move "Custom C/C++ keywords" from group "Editor" to "Lanauges" in the options dialog.
+  - change: Rename "Folder" page to "Folder / Reset default settings" in the options dialog.
+  - enhancement: Generate asm with/without SEH directives.
+  - enhancement: Generate asm using intel style/att style.
+  - enhancement: make description for jump/cmov/setb instructions more explicit. (used for signed or unsigned)
 
 Red Panda C++ Version 2.14
 

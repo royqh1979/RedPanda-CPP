@@ -3052,6 +3052,33 @@
     </message>
 </context>
 <context>
+    <name>LanguageAsmGenerationWidget</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">Configuração</translation>
+    </message>
+    <message>
+        <source>Don&apos;t generate debug directives</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t generate SEH directives </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AT&amp;&amp;T</source>
+        <translation type="unfinished">AT&amp;&amp;T</translation>
+    </message>
+    <message>
+        <source>Intel</source>
+        <translation type="unfinished">Intel</translation>
+    </message>
+    <message>
+        <source>Instruction syntax:</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MacroInfoModel</name>
     <message>
         <source>The default directory</source>
@@ -7161,7 +7188,7 @@
     </message>
     <message>
         <source>Folders</source>
-        <translation>Pastas</translation>
+        <translation type="vanished">Pastas</translation>
     </message>
     <message>
         <source>Terminal</source>
@@ -7301,6 +7328,18 @@
     </message>
     <message>
         <source>Custom C/C++ Keywords</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Folders / Restore Default Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Languages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ASM Generation</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

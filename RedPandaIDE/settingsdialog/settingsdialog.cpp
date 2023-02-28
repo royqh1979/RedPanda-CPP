@@ -39,6 +39,7 @@
 #include "executorproblemsetwidget.h"
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
+#include "languageasmgenerationwidget.h"
 #include "projectgeneralwidget.h"
 #include "projectfileswidget.h"
 #include "projectcompilerwidget.h"
@@ -149,19 +150,19 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new EnvironmentShortcutWidget(tr("Shortcuts"),tr("Environment"));
     dialog->addWidget(widget);
 
-    widget = new EnvironmentFoldersWidget(tr("Folders"),tr("Environment"));
-    connect((EnvironmentFoldersWidget*)widget,
-            &EnvironmentFoldersWidget::shouldQuitApp,
-            dialog.get(),
-            &SettingsDialog::closeAndQuit);
-    dialog->addWidget(widget);
-
 #ifdef Q_OS_LINUX
     widget = new EnvironmentProgramsWidget(tr("Terminal"),tr("Environment"));
     dialog->addWidget(widget);
 #endif
 
     widget = new EnvironmentPerformanceWidget(tr("Performance"),tr("Environment"));
+    dialog->addWidget(widget);
+
+    widget = new EnvironmentFoldersWidget(tr("Folders / Restore Default Settings"),tr("Environment"));
+    connect((EnvironmentFoldersWidget*)widget,
+            &EnvironmentFoldersWidget::shouldQuitApp,
+            dialog.get(),
+            &SettingsDialog::closeAndQuit);
     dialog->addWidget(widget);
 
     widget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));
@@ -200,10 +201,13 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new EditorAutoSaveWidget(tr("Auto save"),tr("Editor"));
     dialog->addWidget(widget);
 
-    widget = new EditorCustomCTypeKeywordsWidget(tr("Custom C/C++ Keywords"),tr("Editor"));
+    widget = new EditorMiscWidget(tr("Misc"),tr("Editor"));
     dialog->addWidget(widget);
 
-    widget = new EditorMiscWidget(tr("Misc"),tr("Editor"));
+    widget = new EditorCustomCTypeKeywordsWidget(tr("Custom C/C++ Keywords"),tr("Languages"));
+    dialog->addWidget(widget);
+
+    widget = new LanguageAsmGenerationWidget(tr("ASM Generation"),tr("Languages"));
     dialog->addWidget(widget);
 
     widget = new ExecutorGeneralWidget(tr("General"),tr("Program Runner"));

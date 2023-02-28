@@ -17,7 +17,6 @@
 #ifndef PROJECTCOMPILEPARAMATERSWIDGET_H
 #define PROJECTCOMPILEPARAMATERSWIDGET_H
 
-#include <QWidget>
 #include "settingswidget.h"
 
 namespace Ui {

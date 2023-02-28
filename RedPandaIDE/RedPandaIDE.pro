@@ -127,6 +127,7 @@ SOURCES += \
     settingsdialog/environmentshortcutwidget.cpp \
     settingsdialog/executorproblemsetwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
+    settingsdialog/languageasmgenerationwidget.cpp \
     settingsdialog/projectcompileparamaterswidget.cpp \
     settingsdialog/projectcompilerwidget.cpp \
     settingsdialog/projectdirectorieswidget.cpp \
@@ -262,6 +263,7 @@ HEADERS += \
     settingsdialog/environmentshortcutwidget.h \
     settingsdialog/executorproblemsetwidget.h \
     settingsdialog/formattergeneralwidget.h \
+    settingsdialog/languageasmgenerationwidget.h \
     settingsdialog/projectcompileparamaterswidget.h \
     settingsdialog/projectcompilerwidget.h \
     settingsdialog/projectdirectorieswidget.h \
@@ -369,6 +371,7 @@ FORMS += \
     settingsdialog/environmentshortcutwidget.ui \
     settingsdialog/executorproblemsetwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
+    settingsdialog/languageasmgenerationwidget.ui \
     settingsdialog/projectcompileparamaterswidget.ui \
     settingsdialog/projectcompilerwidget.ui \
     settingsdialog/projectdirectorieswidget.ui \

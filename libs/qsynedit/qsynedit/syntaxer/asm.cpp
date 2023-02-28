@@ -90,8 +90,8 @@ const QSet<QString> ASMSyntaxer::Directives {
     "section","global","extern","segment",
     "db","dw","dd","dq","dt","do","dy","dz",
     "resb","resw","resd","resq","rest","reso","resy","resz",
-    "equ","times","byte""word","dword","qword","tword",
-    "xmmword","ymmword","zmmword","fword","tbyte","oword"
+    "equ","times","byte","word","dword","qword","tword",
+    "xmmword","ymmword","zmmword","fword","tbyte","oword","ptr",
 #endif
 };
 
@@ -101,6 +101,13 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".intel_style",".att_syntax",
     ".intel_mnemonic",".att_mnemonic",
     ".tfloat",".hfloat",".bfloat16",
+#endif
+#ifdef Q_OS_WIN
+    ".seh_proc",".seh_endprologue",".seh_handler",
+    ".seh_eh",".seh_32",".seh_no32",".seh_endproc",
+    ".seh_setframe",".seh_stackalloc",".seh_pushreg",
+    ".seh_savereg",".seh_savemm",".seh_savexmm",
+    ".seh_pushframe",".seh_scope",
 #endif
     ".abort",".align",".altmacro",".ascii",
     ".asciz",".attach",".balign",".bss",
@@ -121,9 +128,6 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".previous",".print",".protected",".psize",
     ".purgem",".pushsection",".quad",".reloc",
     ".rept", ".sbttl", ".scl", ".section",
-    ".seh_pushreg",".seh_setframe",
-    ".seh_stackalloc",".seh_endprologue",
-    ".seh_proc",".seh_endproc",
     ".set", ".short", ".single", ".size",
     ".skip", ".sleb128", ".space_size", ".stabd",
     ".stabn", ".stabs", ".string", ".string8", ".string16",

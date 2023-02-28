@@ -49,7 +49,8 @@ bool FileCompiler::prepareForCompile()
         break;
     case CppCompileType::GenerateAssemblyOnly:
         stage = Settings::CompilerSet::CompilationStage::CompilationProperOnly;
-        compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_OFF);
+        if (pSettings->languages().noDebugDirectivesWhenGenerateASM())
+            compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_OFF);
         break;
     default:
         stage = oldStage;
@@ -65,7 +66,7 @@ bool FileCompiler::prepareForCompile()
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
     log("");
     FileType fileType = getFileType(mFilename);
-    mArguments= QString(" \"%1\"").arg(mFilename);
+    mArguments = QString(" \"%1\"").arg(mFilename);
     if (!mOnlyCheckSyntax) {
         switch(compilerSet()->compilationStage()) {
         case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
@@ -86,6 +87,14 @@ bool FileCompiler::prepareForCompile()
 
         mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
 
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
+        if (mCompileType == CppCompileType::GenerateAssemblyOnly) {
+            if (pSettings->languages().noSEHDirectivesWhenGenerateASM())
+                mArguments+=" -fno-asynchronous-unwind-tables";
+            if (pSettings->languages().x86DialectOfASMGenerated()==Settings::Languages::X86ASMDialect::Intel)
+                mArguments+=" -masm=intel";
+        }
+#endif
         //remove the old file if it exists
         QFile outputFile(mOutputFile);
         if (outputFile.exists()) {

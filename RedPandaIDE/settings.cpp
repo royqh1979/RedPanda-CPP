@@ -49,7 +49,7 @@ Settings::Settings(const QString &filename):
     mCodeFormatter(this),
     mUI(this),
     mVCS(this),
-    mExtTools(this)
+    mLanguages(this)
 {
     //load();
 }
@@ -113,7 +113,7 @@ void Settings::load()
     mUI.load();
     mDirs.load();
     mVCS.load();
-    mExtTools.load();
+    mLanguages.load();
 }
 
 Settings::Dirs &Settings::dirs()
@@ -146,9 +146,9 @@ QString Settings::filename() const
     return mFilename;
 }
 
-Settings::ExtTools &Settings::extTools()
+Settings::Languages &Settings::languages()
 {
-    return mExtTools;
+    return mLanguages;
 }
 
 Settings::CodeCompletion& Settings::codeCompletion()
@@ -5831,27 +5831,51 @@ void Settings::VCS::detectGitInPath()
     }
 }
 
-const QString &Settings::ExtTools::xMakePath() const
+Settings::Languages::Languages(Settings *settings):
+    _Base(settings,SETTING_LANGUAGES)
 {
-    return mXMakePath;
 }
 
-void Settings::ExtTools::setXMakePath(const QString &newXMakePath)
+Settings::Languages::X86ASMDialect Settings::Languages::x86DialectOfASMGenerated() const
 {
-    mXMakePath = newXMakePath;
+    return mX86DialectOfASMGenerated;
 }
 
-void Settings::ExtTools::doSave()
+void Settings::Languages::setX86DialectOfASMGenerated(X86ASMDialect newX86DialectOfASMGenerated)
 {
-    saveValue("xmake_path", mXMakePath);
+    mX86DialectOfASMGenerated = newX86DialectOfASMGenerated;
 }
 
-void Settings::ExtTools::doLoad()
+void Settings::Languages::doSave()
 {
-    mXMakePath=stringValue("xmake_path","");
+    saveValue("no_debug_directives_when_generate_asm",mNoDebugDirectivesWhenGenerateASM);
+    saveValue("no_seh_directives_when_generate_asm",mNoSEHDirectivesWhenGenerateASM);
+    saveValue("x86_dialect_of_asm_generated",(int)mX86DialectOfASMGenerated);
 }
 
-Settings::ExtTools::ExtTools(Settings *settings):_Base(settings, SETTING_EXTTOOLS)
+void Settings::Languages::doLoad()
 {
+    mNoDebugDirectivesWhenGenerateASM = boolValue("no_debug_directives_when_generate_asm",true);
+    mNoSEHDirectivesWhenGenerateASM = boolValue("no_seh_directives_when_generate_asm",false);
+    mX86DialectOfASMGenerated = (X86ASMDialect)intValue("x86_dialect_of_asm_generated",(int)X86ASMDialect::ATT);
+}
 
+bool Settings::Languages::noSEHDirectivesWhenGenerateASM() const
+{
+    return mNoSEHDirectivesWhenGenerateASM;
+}
+
+void Settings::Languages::setNoSEHDirectivesWhenGenerateASM(bool newNoSEHDirectivesWhenGenerateASM)
+{
+    mNoSEHDirectivesWhenGenerateASM = newNoSEHDirectivesWhenGenerateASM;
+}
+
+bool Settings::Languages::noDebugDirectivesWhenGenerateASM() const
+{
+    return mNoDebugDirectivesWhenGenerateASM;
+}
+
+void Settings::Languages::setNoDebugDirectivesWhenGenerateASM(bool newNoDebugDirectivesWhenGenerateASM)
+{
+    mNoDebugDirectivesWhenGenerateASM = newNoDebugDirectivesWhenGenerateASM;
 }
