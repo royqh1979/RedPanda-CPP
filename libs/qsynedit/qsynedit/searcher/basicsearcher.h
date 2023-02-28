@@ -34,8 +34,6 @@ public:
     int findAll(const QString &text) override;
     QString replace(const QString &aOccurrence, const QString &aReplacement) override;
 private:
-    bool isDelimitChar(QChar ch);
-private:
     QList<int> mResults;
 };
 }

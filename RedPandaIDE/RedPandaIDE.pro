@@ -1,6 +1,4 @@
-QT       += core gui printsupport network svg xml
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui printsupport network svg xml widgets
 
 CONFIG += c++17
 CONFIG += nokey
@@ -213,7 +211,6 @@ SOURCES += \
     widgets/projectalreadyopendialog.cpp \
     widgets/qconsole.cpp \
     widgets/qpatchedcombobox.cpp \
-    widgets/replacedialog.cpp \
     widgets/searchdialog.cpp \
     widgets/searchinfiledialog.cpp \
     widgets/searchresultview.cpp \
@@ -349,7 +346,6 @@ HEADERS += \
     widgets/projectalreadyopendialog.h \
     widgets/qconsole.h \
     widgets/qpatchedcombobox.h \
-    widgets/replacedialog.h \
     widgets/searchdialog.h \
     widgets/searchinfiledialog.h \
     widgets/searchresultview.h \
@@ -417,7 +413,6 @@ FORMS += \
     widgets/newtemplatedialog.ui \
     widgets/ojproblempropertywidget.ui \
     widgets/projectalreadyopendialog.ui \
-    widgets/replacedialog.ui \
     widgets/searchdialog.ui \
     widgets/searchinfiledialog.ui \
     widgets/signalmessagedialog.ui

@@ -114,7 +114,6 @@ MainWindow::MainWindow(QWidget *parent)
       mFullInitialized{false},
       mSearchInFilesDialog{nullptr},
       mSearchDialog{nullptr},
-      mReplaceDialog{nullptr},
       mQuitting{false},
       mClosingProject{false},
       mCheckSyntaxInBack{false},
@@ -1070,8 +1069,6 @@ int MainWindow::calIconSize(const QString &fontName, int fontPointSize)
 
 void MainWindow::hideAllSearchDialogs()
 {
-    if (mReplaceDialog)
-        mReplaceDialog->hide();
     if (mSearchDialog)
         mSearchDialog->hide();
     if (mSearchInFilesDialog)
@@ -1082,12 +1079,6 @@ void MainWindow::prepareSearchDialog()
 {
     if (!mSearchDialog)
         mSearchDialog = new SearchDialog(this);
-}
-
-void MainWindow::prepareReplaceDialog()
-{
-    if (!mReplaceDialog)
-        mReplaceDialog = new ReplaceDialog(this);
 }
 
 void MainWindow::prepareSearchInFilesDialog()
@@ -6296,10 +6287,12 @@ void MainWindow::on_actionFind_triggered()
     Editor *e = mEditorList->getEditor();
     if (!e)
         return;
-    QString s = e->wordAtCursor();
     hideAllSearchDialogs();
     prepareSearchDialog();
-    mSearchDialog->find(s);
+    if (e->selAvail())
+        mSearchDialog->find(e->selText());
+    else
+        mSearchDialog->find(e->wordAtCursor());
 }
 
 void MainWindow::on_actionFind_in_files_triggered()
@@ -6308,8 +6301,10 @@ void MainWindow::on_actionFind_in_files_triggered()
     prepareSearchInFilesDialog();
     Editor *e = mEditorList->getEditor();
     if (e) {
-        QString s = e->wordAtCursor();
-        mSearchInFilesDialog->findInFiles(s);
+        if (e->selAvail())
+            mSearchInFilesDialog->findInFiles(e->selText());
+        else
+            mSearchInFilesDialog->findInFiles(e->wordAtCursor());
     } else {
         mSearchInFilesDialog->findInFiles("");
     }
@@ -6321,10 +6316,12 @@ void MainWindow::on_actionReplace_triggered()
     if (!e)
         return;
 
-    QString s = e->wordAtCursor();
     hideAllSearchDialogs();
-    prepareReplaceDialog();
-    mReplaceDialog->replace(s);
+    prepareSearchDialog();
+    if (e->selAvail())
+        mSearchDialog->replace(e->selText());
+    else
+        mSearchDialog->replace(e->wordAtCursor());
 }
 
 void MainWindow::on_actionFind_Next_triggered()

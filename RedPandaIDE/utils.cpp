@@ -530,7 +530,7 @@ QString getSizeString(int size)
 }
 
 void saveComboHistory(QComboBox* cb,const QString& text) {
-    QString s = text.trimmed();
+    QString s = text;
     if (s.isEmpty())
         return;
     int i = cb->findText(s);

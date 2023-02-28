@@ -21,6 +21,10 @@ Red Panda C++ Version 2.15
   - enhancement: Generate asm with/without SEH directives.
   - enhancement: Generate asm using intel style/att style.
   - enhancement: make description for jump/cmov/setb instructions more explicit. (used for signed or unsigned)
+  - fix: Lead and end spaces in search/replace text is wrongly trimmed.
+  - change: Merge search and replace to one dialog.
+  - fix: Search dialog's "Match whole word" option doesn't work with "Use Regular expresion".
+  - fix：Search dialog's "Close after search" option doesn't work.
 
 Red Panda C++ Version 2.14
 

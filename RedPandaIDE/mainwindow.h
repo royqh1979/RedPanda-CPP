@@ -67,7 +67,6 @@ class CPUDialog;
 class QPlainTextEdit;
 class SearchInFileDialog;
 class SearchDialog;
-class ReplaceDialog;
 class Project;
 struct ProjectModelNode;
 class ProjectUnit;
@@ -276,7 +275,6 @@ private:
     int calIconSize(const QString &fontName, int fontPointSize);
     void hideAllSearchDialogs();
     void prepareSearchDialog();
-    void prepareReplaceDialog();
     void prepareSearchInFilesDialog();
     void prepareProjectForCompile();
     void closeProject(bool refreshEditor);
@@ -818,7 +816,6 @@ private:
     CPUDialog *mCPUDialog;
     SearchInFileDialog *mSearchInFilesDialog;
     SearchDialog *mSearchDialog;
-    ReplaceDialog *mReplaceDialog;
     bool mQuitting;
     bool mClosingProject;
     QElapsedTimer mParserTimer;

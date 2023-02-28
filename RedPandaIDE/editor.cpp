@@ -1902,10 +1902,10 @@ void Editor::onTooltipTimer()
         }
         break;
     case TipType::Identifier:
-        if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning())
+        if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning()) {
             if (mParentPageControl)
                 s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
-        else if (!mCompletionPopup->isVisible()
+        } else if (!mCompletionPopup->isVisible()
                  && !mHeaderCompletionPopup->isVisible()) {
             expression = getExpressionAtPosition(p);
             s = expression.join(""); // information during coding

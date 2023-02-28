@@ -41,4 +41,9 @@ void BaseSearcher::setOptions(const SearchOptions &options)
 {
     mOptions = options;
 }
+
+bool BaseSearcher::isDelimitChar(const QChar& ch) const
+{
+    return !(ch == '_' || ch.isLetterOrNumber());
+}
 }

@@ -79,8 +79,4 @@ QString BasicSearcher::replace(const QString &, const QString &aReplacement)
     return aReplacement;
 }
 
-bool BasicSearcher::isDelimitChar(QChar ch)
-{
-    return !(ch == '_' || ch.isLetterOrNumber());
-}
 }

@@ -49,6 +49,8 @@ public:
     virtual QString replace(const QString& aOccurrence, const QString& aReplacement) = 0;
     SearchOptions options() const;
     virtual void setOptions(const SearchOptions &options);
+protected:
+    bool isDelimitChar(const QChar& ch) const;
 
 private:
     QString mPattern;

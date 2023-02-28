@@ -6754,55 +6754,55 @@
     <name>ReplaceDialog</name>
     <message>
         <source>Replace</source>
-        <translation type="unfinished">Substituir</translation>
+        <translation type="obsolete">Substituir</translation>
     </message>
     <message>
         <source>Text to Find:</source>
-        <translation type="unfinished">Texto a procurar:</translation>
+        <translation type="obsolete">Texto a procurar:</translation>
     </message>
     <message>
         <source>Replace with:</source>
-        <translation type="unfinished">Substituir por:</translation>
+        <translation type="obsolete">Substituir por:</translation>
     </message>
     <message>
         <source>Scope:</source>
-        <translation type="unfinished">Escopo:</translation>
+        <translation type="obsolete">Escopo:</translation>
     </message>
     <message>
         <source>Global</source>
-        <translation type="unfinished">Global</translation>
+        <translation type="obsolete">Global</translation>
     </message>
     <message>
         <source>Selection</source>
-        <translation type="unfinished">Seleção</translation>
+        <translation type="obsolete">Seleção</translation>
     </message>
     <message>
         <source>Origin:</source>
-        <translation type="unfinished">Origem:</translation>
+        <translation type="obsolete">Origem:</translation>
     </message>
     <message>
         <source>From cursor</source>
-        <translation type="unfinished">A partir do cursor</translation>
+        <translation type="obsolete">A partir do cursor</translation>
     </message>
     <message>
         <source>Entire scope</source>
-        <translation type="unfinished">Escopo inteiro</translation>
+        <translation type="obsolete">Escopo inteiro</translation>
     </message>
     <message>
         <source>Options:</source>
-        <translation type="unfinished">Opções:</translation>
+        <translation type="obsolete">Opções:</translation>
     </message>
     <message>
         <source>Whole words only</source>
-        <translation type="unfinished">Apenas palavras inteiras</translation>
+        <translation type="obsolete">Apenas palavras inteiras</translation>
     </message>
     <message>
         <source>Wrap Around</source>
-        <translation type="unfinished">Wrap Around</translation>
+        <translation type="obsolete">Wrap Around</translation>
     </message>
     <message>
         <source>Regular Expression</source>
-        <translation type="unfinished">Expressão regular</translation>
+        <translation type="obsolete">Expressão regular</translation>
     </message>
     <message>
         <source>Prompt on replace</source>
@@ -6810,43 +6810,27 @@
     </message>
     <message>
         <source>Case Sensitive</source>
-        <translation type="unfinished">Sensibilidade a maiúsculas/minúsculas</translation>
+        <translation type="obsolete">Sensibilidade a maiúsculas/minúsculas</translation>
     </message>
     <message>
         <source>Find Previous</source>
-        <translation type="unfinished">Procurar anterior</translation>
+        <translation type="obsolete">Procurar anterior</translation>
     </message>
     <message>
         <source>Find Next</source>
-        <translation type="unfinished">Procurar outro</translation>
-    </message>
-    <message>
-        <source>Replace All</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Close</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Beginning of file has been reached. </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do you want to continue from file&apos;s end?</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">Procurar outro</translation>
     </message>
     <message>
         <source>End of file has been reached. </source>
-        <translation type="unfinished">Encontrado fim de arquivo.</translation>
+        <translation type="obsolete">Encontrado fim de arquivo.</translation>
     </message>
     <message>
         <source>Do you want to continue from file&apos;s beginning?</source>
-        <translation type="unfinished">Quer continuar a partir do início do arquivo?</translation>
+        <translation type="obsolete">Quer continuar a partir do início do arquivo?</translation>
     </message>
     <message>
         <source>Continue Search</source>
-        <translation type="unfinished">Continuar a procura</translation>
+        <translation type="obsolete">Continuar a procura</translation>
     </message>
 </context>
 <context>
@@ -6861,7 +6845,7 @@
     </message>
     <message>
         <source>Replace with:</source>
-        <translation type="vanished">Substituir por:</translation>
+        <translation>Substituir por:</translation>
     </message>
     <message>
         <source>Options:</source>
@@ -6949,7 +6933,7 @@
     </message>
     <message>
         <source>Replace</source>
-        <translation type="vanished">Substituir</translation>
+        <translation>Substituir</translation>
     </message>
     <message>
         <source>Find in files</source>
@@ -7002,6 +6986,14 @@
     <message>
         <source>Do you want to continue from file&apos;s end?</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replace All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Procurar</translation>
     </message>
 </context>
 <context>
