@@ -25,6 +25,7 @@ Red Panda C++ Version 2.15
   - change: Merge search and replace to one dialog.
   - fix: Search dialog's "Match whole word" option doesn't work with "Use Regular expresion".
   - fix：Search dialog's "Close after search" option doesn't work.
+  - change: Fill the search dialog with the current selection if it's available.
 
 Red Panda C++ Version 2.14
 
