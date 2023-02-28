@@ -90,12 +90,18 @@ const QSet<QString> ASMSyntaxer::Directives {
     "section","global","extern","segment",
     "db","dw","dd","dq","dt","do","dy","dz",
     "resb","resw","resd","resq","rest","reso","resy","resz",
-    "equ","times","word","dword","byte","tword"
+    "equ","times","byte""word","dword","qword","tword",
+    "xmmword","ymmword","zmmword","fword","tbyte","oword"
 #endif
 };
 
 const QSet<QString> ASMSyntaxer::ATTDirectives {
 #if defined(ARCH_X86_64) || defined(ARCH_X86)
+    ".lcomm",".largecomm","value"
+    ".intel_style",".att_syntax",
+    ".intel_mnemonic",".att_mnemonic",
+    ".tfloat",".hfloat",".bfloat16",
+#endif
     ".abort",".align",".altmacro",".ascii",
     ".asciz",".attach",".balign",".bss",
     ".bundle",".byte",".comm",".data",
@@ -117,6 +123,7 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".rept", ".sbttl", ".scl", ".section",
     ".seh_pushreg",".seh_setframe",
     ".seh_stackalloc",".seh_endprologue",
+    ".seh_proc",".seh_endproc",
     ".set", ".short", ".single", ".size",
     ".skip", ".sleb128", ".space_size", ".stabd",
     ".stabn", ".stabs", ".string", ".string8", ".string16",
@@ -124,7 +131,6 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".title", ".tls", ".type", ".uleb128", ".val",".version",
     ".vtable", ".warning",".weak",".weakref",".word",
     ".zero",".2byte",".4byte",".8byte"
-#endif
 };
 
 ASMSyntaxer::ASMSyntaxer(bool isATT):
@@ -353,36 +359,42 @@ void ASMSyntaxer::initData()
         Instructions.insert("cdq",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("double word"),"%eax",QObject::tr("quad word"),"%edx:%eax"));
         Instructions.insert("cltq",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("double word"),"%eax",QObject::tr("quad word"),"%rax"));
         Instructions.insert("cdqe",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("double word"),"%eax",QObject::tr("quad word"),"%rax"));
-        Instructions.insert("cmove",QObject::tr("Conditional move if equal"));
-        Instructions.insert("cmovz",QObject::tr("Conditional move if zero."));
-        Instructions.insert("cmovne",QObject::tr("Conditional move if not equal."));
-        Instructions.insert("cmovnz",QObject::tr("Conditional move if not equal."));
-        Instructions.insert("cmova",QObject::tr("Conditional move if above."));
-        Instructions.insert("cmovbe",QObject::tr("Conditional move if not below or equal."));
-        Instructions.insert("cmovae",QObject::tr("Conditional move if above or equal."));
-        Instructions.insert("cmovnb",QObject::tr("Conditional move if not below."));
-        Instructions.insert("cmovb",QObject::tr("Conditional move if below."));
-        Instructions.insert("cmovnae",QObject::tr("Conditional move if not above or equal."));
-        Instructions.insert("cmovbe",QObject::tr("Conditional move if below or equal."));
-        Instructions.insert("cmovna",QObject::tr("Conditional move if not above."));
-        Instructions.insert("cmovg",QObject::tr("Conditional move if greater."));
-        Instructions.insert("cmovnle",QObject::tr("Conditional move if not less or equal."));
-        Instructions.insert("cmovge",QObject::tr("Conditional move if greater or equal."));
-        Instructions.insert("cmovnl",QObject::tr("Conditional move if not less."));
-        Instructions.insert("cmovl",QObject::tr("Conditional move if less."));
-        Instructions.insert("cmovnge",QObject::tr("Conditional move if not greater or equal."));
-        Instructions.insert("cmovle",QObject::tr("Conditional move if less or equal."));
-        Instructions.insert("cmovng",QObject::tr("Conditional move if not greater."));
-        Instructions.insert("cmovc",QObject::tr("Conditional move if carry."));
-        Instructions.insert("cmovnc",QObject::tr("Conditional move if not carry."));
-        Instructions.insert("cmovo",QObject::tr("Conditional move if overflow."));
-        Instructions.insert("cmovno",QObject::tr("Conditional move if not overflow."));
-        Instructions.insert("cmovs",QObject::tr("Conditional move if sign (negative)."));
-        Instructions.insert("cmovns",QObject::tr("Conditional move if not sign (non-negative)."));
-        Instructions.insert("cmovp",QObject::tr("Conditional move if parity."));
-        Instructions.insert("cmovpe",QObject::tr("Conditional move if parity even."));
-        Instructions.insert("cmovnp",QObject::tr("Conditional move if not parity."));
-        Instructions.insert("cmovpo",QObject::tr("Conditional move if parity odd."));
+
+        Instructions.insert("cmove",QObject::tr("Conditional move %1").arg(QObject::tr("if equal")));
+        Instructions.insert("cmovz",QObject::tr("Conditional move %1").arg(QObject::tr("if zero.")));
+        Instructions.insert("cmovne",QObject::tr("Conditional move %1").arg(QObject::tr("if not equal.")));
+        Instructions.insert("cmovnz",QObject::tr("Conditional move %1").arg(QObject::tr("if not zero.")));
+
+        Instructions.insert("cmovs",QObject::tr("Conditional move %1").arg(QObject::tr("if sign (negative).")));
+        Instructions.insert("cmovns",QObject::tr("Conditional move %1").arg(QObject::tr("if not sign (non-negative).")));
+
+        Instructions.insert("cmovg",QObject::tr("Conditional move %1").arg(QObject::tr("if greater(signed >).")));
+        Instructions.insert("cmovnle",QObject::tr("Conditional move %1").arg(QObject::tr("if not less or equal(signed >).")));
+        Instructions.insert("cmovge",QObject::tr("Conditional move %1").arg(QObject::tr("if greater or equal(signed >=).")));
+        Instructions.insert("cmovnl",QObject::tr("Conditional move %1").arg(QObject::tr("if not less(signed >=).")));
+        Instructions.insert("cmovl",QObject::tr("Conditional move %1").arg(QObject::tr("if less(signed <).")));
+        Instructions.insert("cmovnge",QObject::tr("Conditional move %1").arg(QObject::tr("if not greater or equal(signed <).")));
+        Instructions.insert("cmovle",QObject::tr("Conditional move %1").arg(QObject::tr("if less or equal(signed <=).")));
+        Instructions.insert("cmovng",QObject::tr("Conditional move %1").arg(QObject::tr("if not greater(signed <=).")));
+
+        Instructions.insert("cmova",QObject::tr("Conditional move %1").arg(QObject::tr("if above(unsigned >).")));
+        Instructions.insert("cmovnbe",QObject::tr("Conditional move %1").arg(QObject::tr("if not below or equal(unsigned >).")));
+        Instructions.insert("cmovae",QObject::tr("Conditional move %1").arg(QObject::tr("if above or equal(unsigned >=).")));
+        Instructions.insert("cmovnb",QObject::tr("Conditional move %1").arg(QObject::tr("if not below(unsigned >=).")));
+        Instructions.insert("cmovb",QObject::tr("Conditional move %1").arg(QObject::tr("if below(unsigned <).")));
+        Instructions.insert("cmovnae",QObject::tr("Conditional move %1").arg(QObject::tr("if not above or equal(unsigned <).")));
+        Instructions.insert("cmovbe",QObject::tr("Conditional move %1").arg(QObject::tr("if below or equal(unsigned <=).")));
+        Instructions.insert("cmovna",QObject::tr("Conditional move %1").arg(QObject::tr("if not above(unsigned <=).")));
+
+        Instructions.insert("cmovc",QObject::tr("Conditional move %1").arg(QObject::tr("if carry.")));
+        Instructions.insert("cmovnc",QObject::tr("Conditional move %1").arg(QObject::tr("if not carry.")));
+        Instructions.insert("cmovo",QObject::tr("Conditional move %1").arg(QObject::tr("if overflow.")));
+        Instructions.insert("cmovno",QObject::tr("Conditional move %1").arg(QObject::tr("if not overflow.")));
+        Instructions.insert("cmovp",QObject::tr("Conditional move %1").arg(QObject::tr("if parity.")));
+        Instructions.insert("cmovpe",QObject::tr("Conditional move %1").arg(QObject::tr("if parity even.")));
+        Instructions.insert("cmovnp",QObject::tr("Conditional move %1").arg(QObject::tr("if not parity.")));
+        Instructions.insert("cmovpo",QObject::tr("Conditional move %1").arg(QObject::tr("if parity odd.")));
+
         Instructions.insert("cmpxchg",QObject::tr("Compare and exchange."));
         Instructions.insert("cmpxchg8b",QObject::tr("Compare and exchange 8 bytes."));
         Instructions.insert("cqto",QObject::tr("convert %1 in %2 to %3 in %4.").arg(QObject::tr("quad word"),"%rax",QObject::tr("oct word"),"%rdx:%rax"));
@@ -618,36 +630,42 @@ void ASMSyntaxer::initData()
         Instructions.insert("btsw",QObject::tr("bit test and set in the %1 operand.").arg(QObject::tr("word")));
         Instructions.insert("btsl",QObject::tr("bit test and set in the %1 operand.").arg(QObject::tr("double word")));
         Instructions.insert("btsq",QObject::tr("bit test and set in the %1 operand.").arg(QObject::tr("quad word")));
-        Instructions.insert("seta",QObject::tr("set byte if above."));
-        Instructions.insert("setae",QObject::tr("set byte if above or equal."));
-        Instructions.insert("setb",QObject::tr("set byte if below."));
-        Instructions.insert("setbe",QObject::tr("set byte if below or equal."));
-        Instructions.insert("setc",QObject::tr("set byte if carry."));
-        Instructions.insert("sete",QObject::tr("set byte if equal."));
-        Instructions.insert("setg",QObject::tr("set byte if greater."));
-        Instructions.insert("setge",QObject::tr("set byte if greater or equal."));
-        Instructions.insert("setl",QObject::tr("set byte if less."));
-        Instructions.insert("setle",QObject::tr("set byte if less or equal."));
-        Instructions.insert("setna",QObject::tr("set byte if not above."));
-        Instructions.insert("setnae",QObject::tr("set byte if not above or equal."));
-        Instructions.insert("setnb",QObject::tr("set byte if not below."));
-        Instructions.insert("setnbe",QObject::tr("set byte if not below or equal."));
-        Instructions.insert("setnc",QObject::tr("set byte if not carry."));
-        Instructions.insert("setne",QObject::tr("set byte if not equal."));
-        Instructions.insert("setng",QObject::tr("set byte if not greater."));
-        Instructions.insert("setnge",QObject::tr("set byte if not greater or equal."));
-        Instructions.insert("setnl",QObject::tr("set byte if not less."));
-        Instructions.insert("setnle",QObject::tr("set byte if not less or equal."));
-        Instructions.insert("setno",QObject::tr("set byte if not overflow."));
-        Instructions.insert("setnp",QObject::tr("set byte if not parity."));
-        Instructions.insert("setns",QObject::tr("set byte if not sign (non-negative)."));
-        Instructions.insert("setnz",QObject::tr("set byte if not zero."));
-        Instructions.insert("seto",QObject::tr("set byte if overflow."));
-        Instructions.insert("setp",QObject::tr("set byte if parity."));
-        Instructions.insert("setpe",QObject::tr("set byte if parity even."));
-        Instructions.insert("setpo",QObject::tr("set byte if parity odd."));
-        Instructions.insert("sets",QObject::tr("set byte if sign (negative)."));
-        Instructions.insert("setz",QObject::tr("set byte if zero."));
+
+        Instructions.insert("sete",QObject::tr("set byte %1").arg(QObject::tr("if equal.")));
+        Instructions.insert("setz",QObject::tr("set byte %1").arg(QObject::tr("if zero.")));
+        Instructions.insert("setne",QObject::tr("set byte %1").arg(QObject::tr("if not equal.")));
+        Instructions.insert("setnz",QObject::tr("set byte %1").arg(QObject::tr("if not zero.")));
+
+        Instructions.insert("sets",QObject::tr("set byte %1").arg(QObject::tr("if sign (negative).")));
+        Instructions.insert("setns",QObject::tr("set byte %1").arg(QObject::tr("if not sign (non-negative).")));
+
+        Instructions.insert("setg",QObject::tr("set byte %1").arg(QObject::tr("if greater(signed >).")));
+        Instructions.insert("setnle",QObject::tr("set byte %1").arg(QObject::tr("if not less or equal(signed >).")));
+        Instructions.insert("setge",QObject::tr("set byte %1").arg(QObject::tr("if greater or equal(signed >=).")));
+        Instructions.insert("setnl",QObject::tr("set byte %1").arg(QObject::tr("if not less(signed >=).")));
+        Instructions.insert("setl",QObject::tr("set byte %1").arg(QObject::tr("if less(siged <).")));
+        Instructions.insert("setnge",QObject::tr("set byte %1").arg(QObject::tr("if not greater or equal(siged <).")));
+        Instructions.insert("setle",QObject::tr("set byte %1").arg(QObject::tr("if less or equal(siged <=).")));
+        Instructions.insert("setng",QObject::tr("set byte %1").arg(QObject::tr("if not greater(siged <=).")));
+
+        Instructions.insert("seta",QObject::tr("set byte %1").arg(QObject::tr("if above(unsigned >).")));
+        Instructions.insert("setnbe",QObject::tr("set byte %1").arg(QObject::tr("if not below or equal(unsigned >).")));
+        Instructions.insert("setae",QObject::tr("set byte %1").arg(QObject::tr("if above or equal(unsigned >=).")));
+        Instructions.insert("setnb",QObject::tr("set byte %1").arg(QObject::tr("if not below(unsigned >=).")));
+        Instructions.insert("setb",QObject::tr("set byte %1").arg(QObject::tr("if below(unsigned <).")));
+        Instructions.insert("setnae",QObject::tr("set byte %1").arg(QObject::tr("if not above or equal(unsigned <).")));
+        Instructions.insert("setbe",QObject::tr("set byte %1").arg(QObject::tr("if below or equal(unsigned <=).")));
+        Instructions.insert("setna",QObject::tr("set byte %1").arg(QObject::tr("if not above(unsigned <=).")));
+
+        Instructions.insert("setc",QObject::tr("set byte %1").arg(QObject::tr("if carry.")));
+        Instructions.insert("setnc",QObject::tr("set byte %1").arg(QObject::tr("if not carry.")));
+        Instructions.insert("setno",QObject::tr("set byte %1").arg(QObject::tr("if not overflow.")));
+        Instructions.insert("setnp",QObject::tr("set byte %1").arg(QObject::tr("if not parity.")));
+        Instructions.insert("seto",QObject::tr("set byte %1").arg(QObject::tr("if overflow.")));
+        Instructions.insert("setp",QObject::tr("set byte %1").arg(QObject::tr("if parity.")));
+        Instructions.insert("setpe",QObject::tr("set byte %1").arg(QObject::tr("if parity even.")));
+        Instructions.insert("setpo",QObject::tr("set byte %1").arg(QObject::tr("if parity odd.")));
+
         Instructions.insert("test",QObject::tr("logical compare."));
         Instructions.insert("testb",QObject::tr("logical compare %1.").arg(QObject::tr("byte")));
         Instructions.insert("testw",QObject::tr("logical compare %1.").arg(QObject::tr("word")));
@@ -663,38 +681,45 @@ void ASMSyntaxer::initData()
         Instructions.insert("int",QObject::tr("software interrupt."));
         Instructions.insert("into",QObject::tr("interrupt on overflow."));
         Instructions.insert("iret",QObject::tr("return from interrupt."));
-        Instructions.insert("ja",QObject::tr("jump if above."));
-        Instructions.insert("jae",QObject::tr("jump if above or equal."));
-        Instructions.insert("jb",QObject::tr("jump if below."));
-        Instructions.insert("jbe",QObject::tr("jump if below or equal."));
-        Instructions.insert("jc",QObject::tr("jump if carry."));
-        Instructions.insert("jcxz",QObject::tr("jump register %cx zero"));
-        Instructions.insert("je",QObject::tr("jump if equal."));
-        Instructions.insert("jecxz",QObject::tr("jump register %ecx zero"));
-        Instructions.insert("jg",QObject::tr("jump if greater."));
-        Instructions.insert("jge",QObject::tr("jump if greater or equal."));
-        Instructions.insert("jl",QObject::tr("jump if less."));
-        Instructions.insert("jle",QObject::tr("jump if less or equal."));
+
         Instructions.insert("jmp",QObject::tr("jump."));
-        Instructions.insert("jnae",QObject::tr("jump if not above or equal."));
-        Instructions.insert("jnb",QObject::tr("jump if not below."));
-        Instructions.insert("jnbe",QObject::tr("jump if not below or equal."));
-        Instructions.insert("jnc",QObject::tr("jump if not carry."));
-        Instructions.insert("jne",QObject::tr("jump if not equal."));
-        Instructions.insert("jng",QObject::tr("jump if not greater."));
-        Instructions.insert("jnge",QObject::tr("jump if not greater or equal."));
-        Instructions.insert("jnl",QObject::tr("jump if not less."));
-        Instructions.insert("jnle",QObject::tr("jump if not less or equal."));
-        Instructions.insert("jno",QObject::tr("jump if not overflow."));
-        Instructions.insert("jnp",QObject::tr("jump if not parity."));
-        Instructions.insert("jns",QObject::tr("jump if not sign (non-negative)."));
-        Instructions.insert("jnz",QObject::tr("jump if not zero."));
-        Instructions.insert("jo",QObject::tr("jump if overflow."));
-        Instructions.insert("jp",QObject::tr("jump if parity."));
-        Instructions.insert("jpe",QObject::tr("jump if parity even."));
-        Instructions.insert("jpo",QObject::tr("jump if parity odd."));
-        Instructions.insert("js",QObject::tr("jump if sign (negative)."));
-        Instructions.insert("jz",QObject::tr("jump if zero."));
+        Instructions.insert("je",QObject::tr("jump %1").arg(QObject::tr("if equal.")));
+        Instructions.insert("jz",QObject::tr("jump %1").arg(QObject::tr("if zero.")));
+        Instructions.insert("jne",QObject::tr("jump %1").arg(QObject::tr("if not equal.")));
+        Instructions.insert("jnz",QObject::tr("jump %1").arg(QObject::tr("if not zero.")));
+
+        Instructions.insert("js",QObject::tr("jump %1").arg(QObject::tr("if sign (negative).")));
+        Instructions.insert("jns",QObject::tr("jump %1").arg(QObject::tr("if not sign (non-negative).")));
+
+        Instructions.insert("jg",QObject::tr("jump %1").arg(QObject::tr("if greater(signed >).")));
+        Instructions.insert("jnle",QObject::tr("jump %1").arg(QObject::tr("if not less or equal(signed >).")));
+        Instructions.insert("jge",QObject::tr("jump %1").arg(QObject::tr("if greater or equal(signed >=).")));
+        Instructions.insert("jnl",QObject::tr("jump %1").arg(QObject::tr("if not less(signed >=).")));
+        Instructions.insert("jl",QObject::tr("jump %1").arg(QObject::tr("if less(signed <).")));
+        Instructions.insert("jnge",QObject::tr("jump %1").arg(QObject::tr("if not greater or equal(signed <).")));
+        Instructions.insert("jle",QObject::tr("jump %1").arg(QObject::tr("if less or equal(signed <=).")));
+        Instructions.insert("jng",QObject::tr("jump %1").arg(QObject::tr("if not greater(signed <=).")));
+
+        Instructions.insert("ja",QObject::tr("jump %1").arg(QObject::tr("if above(unsigned >).")));
+        Instructions.insert("jnbe",QObject::tr("jump %1").arg(QObject::tr("if not below or equal(unsigned >).")));
+        Instructions.insert("jae",QObject::tr("jump %1").arg(QObject::tr("if above or equal(unsigned >=).")));
+        Instructions.insert("jnb",QObject::tr("jump %1").arg(QObject::tr("if not below(unsigned >=).")));
+        Instructions.insert("jb",QObject::tr("jump %1").arg(QObject::tr("if below(unsigned <).")));
+        Instructions.insert("jnae",QObject::tr("jump %1").arg(QObject::tr("if not above or equal(unsigned <).")));
+        Instructions.insert("jbe",QObject::tr("jump %1").arg(QObject::tr("if below or equal(unsigned <=).")));
+        Instructions.insert("jna",QObject::tr("jump %1").arg(QObject::tr("if not above(unsigned <=).")));
+
+        Instructions.insert("jc",QObject::tr("jump %1").arg(QObject::tr("if carry.")));
+        Instructions.insert("jcxz",QObject::tr("jump %1").arg(QObject::tr("register %cx zero")));
+        Instructions.insert("jecxz",QObject::tr("jump %1").arg(QObject::tr("register %ecx zero")));
+        Instructions.insert("jnc",QObject::tr("jump %1").arg(QObject::tr("if not carry.")));
+        Instructions.insert("jno",QObject::tr("jump %1").arg(QObject::tr("if not overflow.")));
+        Instructions.insert("jnp",QObject::tr("jump %1").arg(QObject::tr("if not parity.")));
+        Instructions.insert("jo",QObject::tr("jump %1").arg(QObject::tr("if overflow.")));
+        Instructions.insert("jp",QObject::tr("jump %1").arg(QObject::tr("if parity.")));
+        Instructions.insert("jpe",QObject::tr("jump %1").arg(QObject::tr("if parity even.")));
+        Instructions.insert("jpo",QObject::tr("jump %1").arg(QObject::tr("if parity odd.")));
+
         Instructions.insert("lcall",QObject::tr("call far procedure."));
         Instructions.insert("leave",QObject::tr("high-level procedure exit."));
         Instructions.insert("loop",QObject::tr("loop with %ecx counter"));
