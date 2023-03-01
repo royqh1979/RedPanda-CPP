@@ -108,6 +108,16 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".seh_setframe",".seh_stackalloc",".seh_pushreg",
     ".seh_savereg",".seh_savemm",".seh_savexmm",
     ".seh_pushframe",".seh_scope",
+#elif defined(Q_OS_LINUX)
+    ".cfi_sections",".cfi_startproc",".cfi_endproc",
+    ".cfi_personality",".cfi_personality_id",".cfi_fde_data",
+    ".cfi_lsda",".cfi_inline_lsda",".cfi_def_cfa",
+    ".cfi_def_cfa_register",".cfi_def_cfa_offset",".cfi_adjust_cfa_offset",
+    ".cfi_offset",".cfi_val_offset",".cfi_rel_offset",
+    ".cfi_register",".cfi_restore",".cfi_undefined",
+    ".cfi_same_value",".cfi_remember_state",".cfi_restore_state",
+    ".cfi_return_column",".cfi_signal_frame",".cfi_window_save",
+    ".cfi_escape",".cfi_val_encoded_addr",
 #endif
     ".abort",".align",".altmacro",".ascii",
     ".asciz",".attach",".balign",".bss",
