@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.16
+
+  - fix: Project files that not in the project folder is not correctly handled in makefile.
+  - enhancement: Improve support for function pointer typedefs.
+
 Red Panda C++ Version 2.15
 
   - fix: Static class members is not correctly recognized as static.

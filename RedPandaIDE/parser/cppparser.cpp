@@ -2479,17 +2479,13 @@ void CppParser::handleLambda(int index, int endIndex)
                         i++;
                 } else if (mTokenizer[i]->text==';') {
                     break;
-                } else if (isWordChar(mTokenizer[i]->text[0])) {
+                } else if (isIdentChar(mTokenizer[i]->text[0])) {
                     QString cmd=mTokenizer[i]->text;
-                    while (cmd.startsWith('*')) {
-                        cmd=cmd.mid(1);
-                    }
                     if (cmd=="const") {
                         tempType="const";
                     } else {
                         QString suffix;
                         QString args;
-                        cmd=mTokenizer[i]->text;
                         parseCommandTypeAndArgs(cmd,suffix,args);
                         if (!cmd.isEmpty()) {
                             addChildStatement(
@@ -2872,7 +2868,6 @@ void CppParser::handleOtherTypedefs()
             break;
         } else if (mTokenizer[mIndex]->text == '(') {
             int paramStart=mTokenizer[mIndex]->matchIndex+1;
-            QString newType = mTokenizer[mIndex+1]->text;
             if (paramStart>=mTokenizer.tokenCount()
                     || mTokenizer[paramStart]->text!='(') {
                 //not valid function pointer (no args)
@@ -2880,8 +2875,7 @@ void CppParser::handleOtherTypedefs()
                 mIndex=indexOfNextSemicolon(paramStart)+1;
                 return;
             }
-            if (newType.startsWith('*'))
-                newType = newType.mid(1);
+            QString newType = findFunctionPointerName(mIndex);
             if (!newType.isEmpty()) {
                 addStatement(
                         getCurrentScope(),
@@ -3608,17 +3602,16 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
             }
         } else if (mTokenizer[mIndex]->text==';') {
             break;
-        } else if (isWordChar(mTokenizer[mIndex]->text[0])) {
+        } else if (isIdentChar(mTokenizer[mIndex]->text[0])) {
             QString cmd=mTokenizer[mIndex]->text;
             if (mIndex+1< mTokenizer.tokenCount() && mTokenizer[mIndex+1]->text=='('
                     && mTokenizer[mIndex+1]->matchIndex+1<mTokenizer.tokenCount()
                     && mTokenizer[mTokenizer[mIndex+1]->matchIndex+1]->text=='(') {
                         //function pointer
-                cmd = mTokenizer[mIndex+2]->text;
+
+                cmd = findFunctionPointerName(mIndex+1);
                 int argStart=mTokenizer[mIndex+1]->matchIndex+1;
                 int argEnd=mTokenizer[argStart]->matchIndex;
-                if (cmd.startsWith("*"))
-                    cmd = cmd.mid(1);
 
                 if (!cmd.isEmpty()) {
                     QString type=lastType;
@@ -3645,9 +3638,6 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                 mIndex=indexOfNextSemicolonOrLeftBrace(argEnd+1);
             }  else {
                 //normal var
-                while (cmd.startsWith('*')) {
-                    cmd=cmd.mid(1);
-                }
                 if (cmd=="const") {
                     tempType=mTokenizer[mIndex]->text;
                 } else {
@@ -4890,6 +4880,20 @@ void CppParser::doSkipInExpression(const QStringList &expression, int &pos, cons
     }
 }
 
+QString CppParser::findFunctionPointerName(int startIdx)
+{
+    Q_ASSERT(mTokenizer[startIdx]->text=="(");
+    int i=startIdx+1;
+    int endIdx = mTokenizer[startIdx]->matchIndex;
+    while (i<endIdx) {
+        if (isIdentChar(mTokenizer[i]->text[0])) {
+            return mTokenizer[i]->text;
+        }
+        i++;
+    }
+    return QString();
+}
+
 PStatement CppParser::doParseEvalTypeInfo(
         const QString &fileName,
         const PStatement &scope,
@@ -5076,9 +5080,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
             //function pointer
             int argStart=mTokenizer[i]->matchIndex+1;
             int argEnd=mTokenizer[argStart]->matchIndex;
-            QString cmd=mTokenizer[i+1]->text;
-            if (cmd.startsWith('*'))
-                cmd=cmd.mid(1);
+            QString cmd=findFunctionPointerName(i);
             QString args=mergeArgs(argStart,argEnd);
             if (!cmd.isEmpty()) {
                 addStatement(
@@ -5642,10 +5644,15 @@ QString CppParser::mergeArgs(int startIndex, int endIndex)
 
 void CppParser::parseCommandTypeAndArgs(QString &command, QString &typeSuffix, QString &args)
 {
-    typeSuffix="";
-    while (command.startsWith('*') || command.startsWith('&')) {
-        typeSuffix=command.front();
-        command=command.mid(1);
+    int prefix=0;
+    while (prefix<command.length() && (command[prefix]=='*' || command[prefix]=='&')) {
+        prefix++;
+    }
+    if (prefix>0) {
+        typeSuffix=command.left(prefix);
+        command=command.mid(prefix);
+    } else {
+        typeSuffix="";
     }
     int pos=command.indexOf('[');
     if (pos>=0) {

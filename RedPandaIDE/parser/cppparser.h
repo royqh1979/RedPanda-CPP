@@ -340,6 +340,7 @@ private:
     PEvalStatement doCreateEvalLiteral(const QString& type);
     void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol);
 
+    QString findFunctionPointerName(int startIdx);
     bool isIdentifier(const QString& token) const {
         return (!token.isEmpty() && isIdentChar(token.front())
                 && !token.contains('\"'));
