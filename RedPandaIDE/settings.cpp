@@ -1447,7 +1447,7 @@ void Settings::Editor::doLoad()
     //scroll
     mAutoHideScrollbar = boolValue("auto_hide_scroll_bar", false);
     mScrollPastEof = boolValue("scroll_past_eof", true);
-    mScrollPastEol = boolValue("scroll_past_eol", true);
+    mScrollPastEol = boolValue("scroll_past_eol", false);
     mScrollByOneLess = boolValue("scroll_by_one_less", false);
     mHalfPageScroll = boolValue("half_page_scroll",false);
     mMouseWheelScrollSpeed = intValue("mouse_wheel_scroll_speed", 3);

@@ -5,6 +5,8 @@ Red Panda C++ Version 2.16
   - fix: Can't debug project when project is saved after it's compiled.
   - fix: Icons for buttons in the cpu info dialog is not correctly set.
   - enhancement: Add cfi directives for asm syntaxer in linux.
+  - change: Editor option "Scroll past end of line" default to false.
+  - emhancement: Improve display of disassembled codes in the cpu info dialog.
 
 Red Panda C++ Version 2.15
 

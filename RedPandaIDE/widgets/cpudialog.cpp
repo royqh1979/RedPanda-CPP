@@ -42,6 +42,10 @@ CPUDialog::CPUDialog(QWidget *parent) :
     ui->txtCode->setGutterWidth(0);
     ui->txtCode->setUseCodeFolding(false);
     ui->txtCode->setRightEdge(0);
+    QSynedit::EditorOptions options=ui->txtCode->getOptions();
+    options.setFlag(QSynedit::EditorOption::eoScrollPastEof,false);
+    options.setFlag(QSynedit::EditorOption::eoScrollPastEol,false);
+    ui->txtCode->setOptions(options);
     syntaxerManager.applyColorScheme(ui->txtCode->syntaxer(),
                                         pSettings->editor().colorScheme());
     PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
@@ -114,16 +118,15 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
 {
     ui->txtFunctionName->setText(QString("%1:%2").arg(file, funcName));
     int activeLine = -1;
-    ui->txtCode->document()->clear();
     for (int i=0;i<lines.size();i++) {
         QString line = lines[i];
         if (line.startsWith("=>")) {
             activeLine = i;
         }
-        ui->txtCode->document()->addLine(line);
     }
+    ui->txtCode->document()->setContents(lines);
     if (activeLine!=-1)
-        ui->txtCode->setCaretXYEx(true,QSynedit::BufferCoord{1,activeLine+1});
+        ui->txtCode->setCaretXYCentered(QSynedit::BufferCoord{1,activeLine+1});
 }
 
 void CPUDialog::resetEditorFont(float dpi)
