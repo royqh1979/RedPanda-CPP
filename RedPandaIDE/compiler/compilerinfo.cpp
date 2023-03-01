@@ -60,12 +60,12 @@ void CompilerInfo::prepareCompilerOptions()
     groupName = QObject::tr("Code Generation");
     // Optimization
     sl.clear();
-    sl.append(QPair<QString,QString>("Low","1"));
-    sl.append(QPair<QString,QString>("Med","2"));
-    sl.append(QPair<QString,QString>("High","3"));
-    sl.append(QPair<QString,QString>("Highest (fast)","fast"));
-    sl.append(QPair<QString,QString>("Size (s)","s"));
-    sl.append(QPair<QString,QString>("Debug (g)","g"));
+    sl.append(QPair<QString,QString>("Low (-O1)","1"));
+    sl.append(QPair<QString,QString>("Med (-O2)","2"));
+    sl.append(QPair<QString,QString>("High (-O3)","3"));
+    sl.append(QPair<QString,QString>("Highest (-Ofast)","fast"));
+    sl.append(QPair<QString,QString>("Size (-Os)","s"));
+    sl.append(QPair<QString,QString>("Debug (-Og)","g"));
     addOption(CC_CMD_OPT_OPTIMIZE, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", sl);
 
     // C++ Language Standards

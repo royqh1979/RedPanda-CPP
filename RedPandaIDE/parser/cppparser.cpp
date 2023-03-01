@@ -1719,10 +1719,12 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
         return;
     }
     QString currentText=mTokenizer[mIndex]->text;
+    bool declAuto=false;
     if (keywordType==KeywordType::DeclType) {
         if (mTokenizer[mIndex+1]->text=='(') {
             currentText="auto";
             mIndex=mTokenizer[mIndex+1]->matchIndex+1;
+            declAuto=true;
         } else {
             currentText=mTokenizer[mIndex+1]->text;
             mIndex+=2;
@@ -1742,14 +1744,10 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                 handleMethod(StatementKind::skFunction,"",
                              mergeArgs(mIndex+1,mTokenizer[mIndex]->matchIndex-1),
                              indexAfterParentheis,false,false);
-//            } else if (currentText.endsWith("::operator")) {
-//                mIndex=indexAfterParentheis;
-//                handleMethod(StatementKind::skFunction,"",
-//                             mergeArgs(mIndex+1,mTokenizer[mIndex]->matchIndex-1),
-//                             indexAfterParentheis,false,false);
             } else {
                 //function pointer var
-                handleVar(currentText,false,false);
+                mIndex--;
+                handleVar("",false,false);
             }
         } else {
             if (currentText=="operator") {
@@ -3602,7 +3600,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
             }
         } else if (mTokenizer[mIndex]->text==';') {
             break;
-        } else if (isIdentChar(mTokenizer[mIndex]->text[0])) {
+        } else if (isIdentChar(mTokenizer[mIndex]->text[0])
+                   || mTokenizer[mIndex]->text[0]==')') { //decltype(auto)
             QString cmd=mTokenizer[mIndex]->text;
             if (mIndex+1< mTokenizer.tokenCount() && mTokenizer[mIndex+1]->text=='('
                     && mTokenizer[mIndex+1]->matchIndex+1<mTokenizer.tokenCount()
@@ -3615,10 +3614,22 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
 
                 if (!cmd.isEmpty()) {
                     QString type=lastType;
+                    QString s1=mTokenizer[mIndex]->text;
+                    if (s1==")") // decltype(auto)
+                        s1="auto";
+                    if(type.endsWith("::"))
+                        type+=tempType;
+                    else
+                        type+=" "+tempType;
+                    if(type.endsWith("::"))
+                        type+=s1;
+                    else
+                        type+=" "+s1;
+
                     addedVar = addChildStatement(
                                 getCurrentScope(),
                                 mCurrentFile,
-                                (lastType+" "+tempType+" "+mTokenizer[mIndex]->text).trimmed(),
+                                type.trimmed(),
                                 cmd,
                                 mergeArgs(argStart,argEnd),
                                 "",
