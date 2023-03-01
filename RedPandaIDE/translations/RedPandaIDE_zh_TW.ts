@@ -2914,6 +2914,10 @@
         <source>Instruction syntax:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Don&apos;t generate cli directives.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MacroInfoModel</name>

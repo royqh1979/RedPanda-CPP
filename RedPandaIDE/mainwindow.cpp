@@ -5673,9 +5673,9 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
                     if (e && editor) {
                         int line = e->caretY();
                         int startLine = 1;
-                        QString s = " # "+e->filename()+":";
+                        QString s = "# "+e->filename()+":";
                         for(int i=0;i<editor->document()->count();i++) {
-                            QString t=editor->document()->getLine(i);
+                            QString t=editor->document()->getLine(i).trimmed();
                             if (t.startsWith(s,PATH_SENSITIVITY)) {
                                 t=t.mid(s.length());
                                 int pos = t.indexOf(":");

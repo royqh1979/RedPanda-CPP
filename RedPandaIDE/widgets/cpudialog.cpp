@@ -67,6 +67,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     ui->chkBlendMode->setChecked(pSettings->debugger().blendMode());
     resize(pSettings->ui().CPUDialogWidth(),pSettings->ui().CPUDialogHeight());
 
+    onUpdateIcons();
     connect(pIconsManager,&IconsManager::actionIconsUpdated,
             this, &CPUDialog::onUpdateIcons);
 }
@@ -106,6 +107,7 @@ void CPUDialog::updateDPI(float dpi)
             p->setFont(font);
     }
     resetEditorFont(dpi);
+    onUpdateIcons();
 }
 
 void CPUDialog::setDisassembly(const QString& file, const QString& funcName,const QStringList& lines)

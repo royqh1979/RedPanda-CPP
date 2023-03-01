@@ -81,7 +81,7 @@ void IconsManager::updateParserIcons(const QString &iconSet, int size)
 
 void IconsManager::updateActionIcons(const QString& iconSet, int size)
 {
-    QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"actions");
+    QString iconFolder = mIconSetTemplate.arg(iconSetsFolder(),iconSet,"actions");
     updateMakeDisabledIconDarker(iconSet);
     mActionIconSize = QSize(size,size);
     mIconPixmaps.insert(ACTION_MISC_BACK, createSVGIcon(iconFolder+"00Misc-01Back.svg",size,size));
