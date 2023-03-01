@@ -2,6 +2,7 @@ Red Panda C++ Version 2.16
 
   - fix: Project files that not in the project folder is not correctly handled in makefile.
   - enhancement: Improve support for function pointer typedefs.
+  - fix: Can't debug project when project is saved after it's compiled.
 
 Red Panda C++ Version 2.15
 

@@ -2051,7 +2051,7 @@ void MainWindow::runExecutable(RunType runType)
         QStringList binDirs = mProject->binDirs();
         QFileInfo execInfo(mProject->executable());
         QDateTime execModTime = execInfo.lastModified();
-        if (execInfo.exists() && mProject->modifiedSince(execModTime)) {
+        if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)) {
             //mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
@@ -2166,14 +2166,14 @@ void MainWindow::debug()
         {
             QFileInfo execInfo(mProject->executable());
             QDateTime execModTime = execInfo.lastModified();
-            if (execInfo.exists() && mProject->modifiedSince(execModTime)) {
+            if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)) {
                 //mProject->saveAll();
                 mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                 mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
                 mCompileSuccessionTask->execName=mProject->executable();
                 mCompileSuccessionTask->isExecutable=true;
                 mCompileSuccessionTask->binDirs=binDirs;
-                compile();
+                compile(true);
                 return;
             }
         }
