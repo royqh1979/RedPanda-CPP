@@ -7,6 +7,7 @@ Red Panda C++ Version 2.16
   - enhancement: Add cfi directives for asm syntaxer in linux.
   - change: Editor option "Scroll past end of line" default to false.
   - emhancement: Improve display of disassembled codes in the cpu info dialog.
+  - change: Set optimization level to -Og for Debug compiler settings by default. 
 
 Red Panda C++ Version 2.15
 

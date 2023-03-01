@@ -7,7 +7,9 @@ LanguageAsmGenerationWidget::LanguageAsmGenerationWidget(const QString &name, co
     ui(new Ui::LanguageAsmGenerationWidget)
 {
     ui->setupUi(this);
+#ifndef Q_OS_WIN
     ui->chkNoSEHDirectives->setText(tr("Don't generate cli directives."));
+#endif
 #if !defined(ARCH_X86_64) && !defined(ARCH_X86)
     ui->grpX86Syntax->setVisible(false);
 #endif
