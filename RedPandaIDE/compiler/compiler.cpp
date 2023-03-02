@@ -62,6 +62,9 @@ void Compiler::run()
         QElapsedTimer timer;
         timer.start();
         runCommand(mCompiler, mArguments, mDirectory, pipedText());
+        for(int i=0;i<mExtraArgumentsList.count();i++) {
+            runCommand(mExtraCompilersList[i],mExtraArgumentsList[i],mDirectory, pipedText());
+        }
         log("");
         log(tr("Compile Result:"));
         log("------------------");

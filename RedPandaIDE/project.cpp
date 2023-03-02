@@ -189,8 +189,6 @@ bool Project::modifiedSince(const QDateTime &time)
 {
     if (modified())
         return true;
-    if (unitsModifiedSince(time))
-        return true;
     QFileInfo info(filename());
     return (info.lastModified()>time);
 }

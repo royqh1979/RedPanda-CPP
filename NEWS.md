@@ -11,6 +11,9 @@ Red Panda C++ Version 2.16
   - fix: Can't correctly parse function pointer var definition.
   - enhancement: Improve support for function pointer typedefs.
   - enhancement: Improve support for function pointer vars.
+  - enhancement: When first display two editor panes, auto make them the same width
+  - change: Don't rebuild the whole project when run/debug, if only contents of project unit file is modified.
+  - fix: rebuild may not work, if project's parallel build option is enabled.
 
 Red Panda C++ Version 2.15
 

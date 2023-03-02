@@ -2051,7 +2051,19 @@ void MainWindow::runExecutable(RunType runType)
         QStringList binDirs = mProject->binDirs();
         QFileInfo execInfo(mProject->executable());
         QDateTime execModTime = execInfo.lastModified();
+        if (execInfo.exists() && mProject->modifiedSince(execModTime)) {
+            //if project options changed, or units added/removed
+            //mProject->saveAll();
+            mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+            mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+            mCompileSuccessionTask->execName=mProject->executable();
+            mCompileSuccessionTask->isExecutable=true;
+            mCompileSuccessionTask->binDirs=binDirs;
+            compile(true);
+            return;
+        }
         if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)) {
+            //if units modified;
             //mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
@@ -2166,7 +2178,8 @@ void MainWindow::debug()
         {
             QFileInfo execInfo(mProject->executable());
             QDateTime execModTime = execInfo.lastModified();
-            if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)) {
+            if (execInfo.exists() && mProject->modifiedSince(execModTime)) {
+                //if project options changed, or units added/removed
                 //mProject->saveAll();
                 mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                 mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
@@ -2174,6 +2187,17 @@ void MainWindow::debug()
                 mCompileSuccessionTask->isExecutable=true;
                 mCompileSuccessionTask->binDirs=binDirs;
                 compile(true);
+                return;
+            }
+            if (execInfo.exists() && mProject->unitsModifiedSince(execModTime)) {
+                //if units modified
+                //mProject->saveAll();
+                mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
+                mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
+                mCompileSuccessionTask->execName=mProject->executable();
+                mCompileSuccessionTask->isExecutable=true;
+                mCompileSuccessionTask->binDirs=binDirs;
+                compile();
                 return;
             }
         }

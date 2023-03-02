@@ -90,6 +90,8 @@ protected:
     bool mOnlyCheckSyntax;
     QString mCompiler;
     QString mArguments;
+    QStringList mExtraCompilersList;
+    QStringList mExtraArgumentsList;
     QString mOutputFile;
     int mErrorCount;
     int mWarningCount;

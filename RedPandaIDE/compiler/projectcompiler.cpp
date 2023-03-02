@@ -603,10 +603,14 @@ bool ProjectCompiler::prepareForCompile()
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
     } else if (mRebuild) {
-        mArguments = QString(" %1 -f \"%2\" clean all").arg(parallelParam,
-                                                            extractRelativePath(
+        mArguments = QString(" -f \"%1\" clean").arg(extractRelativePath(
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
+        mExtraCompilersList.append(mCompiler);
+        mExtraArgumentsList.append(QString(" %1 -f \"%2\" all").arg(parallelParam,
+                                                            extractRelativePath(
+                                                            mProject->directory(),
+                                                            mProject->makeFileName())));
     } else {
         mArguments = QString(" %1 -f \"%2\" all").arg(parallelParam,
                                                       extractRelativePath(
@@ -619,6 +623,9 @@ bool ProjectCompiler::prepareForCompile()
     log("--------");
     log(tr("- makefile processer: %1").arg(mCompiler));
     log(tr("- Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
+    for(int i=0;i<mExtraCompilersList.count();i++) {
+        log(tr("- Command: %1 %2").arg(extractFileName(mExtraCompilersList[i])).arg(mExtraArgumentsList[i]));
+    }
     log("");
 
     return true;

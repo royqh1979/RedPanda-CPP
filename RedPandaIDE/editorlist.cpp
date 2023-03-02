@@ -103,6 +103,14 @@ void EditorList::showLayout(LayoutShowType layout)
     case LayoutShowType::lstBoth:
         mLeftPageWidget->setVisible(true);
         mRightPageWidget->setVisible(true);
+        {
+            QList<int> sizes=mSplitter->sizes();
+            int total = sizes[0]+sizes[1];
+            sizes[0] = total / 2;
+            sizes[1] = total - sizes[0];
+            mSplitter->setSizes(sizes);
+        }
+        break;
     }
 }
 
