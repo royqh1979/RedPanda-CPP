@@ -603,7 +603,7 @@ bool ProjectCompiler::prepareForCompile()
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
     } else if (mRebuild) {
-        mArguments = QString(" -f \"%1\" clean").arg(extractRelativePath(
+        mArguments = QString("  -f \"%1\" clean").arg(extractRelativePath(
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
         mExtraCompilersList.append(mCompiler);
