@@ -3600,8 +3600,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
             }
         } else if (mTokenizer[mIndex]->text==';') {
             break;
-        } else if (isIdentChar(mTokenizer[mIndex]->text[0])
-                   || mTokenizer[mIndex]->text[0]==')') { //decltype(auto)
+        } else if (isIdentChar(mTokenizer[mIndex]->text[0])) {
             QString cmd=mTokenizer[mIndex]->text;
             if (mIndex+1< mTokenizer.tokenCount() && mTokenizer[mIndex+1]->text=='('
                     && mTokenizer[mIndex+1]->matchIndex+1<mTokenizer.tokenCount()
@@ -3615,8 +3614,6 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                 if (!cmd.isEmpty()) {
                     QString type=lastType;
                     QString s1=mTokenizer[mIndex]->text;
-                    if (s1==")") // decltype(auto)
-                        s1="auto";
                     if(type.endsWith("::"))
                         type+=tempType;
                     else
