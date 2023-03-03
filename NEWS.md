@@ -19,6 +19,7 @@ Red Panda C++ Version 2.16
   - enhancement: Switch current call stack frame in the CPU info dialog
   - fix: Shouldn't try evaluate value of the selection in the cpu info dialog.
   - enhancement: Show oct/bin/bin value in the memory view's tooltip.
+  - fix: Hex float point literal is not correctly colored.
 
 Red Panda C++ Version 2.15
 

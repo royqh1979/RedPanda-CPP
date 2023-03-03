@@ -686,7 +686,7 @@ void CppSyntaxer::numberProc()
             }
             break;
         case '.':
-            if (mTokenId != TokenId::Hex && mTokenId != TokenId::Octal) {
+            if (mTokenId != TokenId::Octal) {
                 mTokenId = TokenId::Float;
             } else {
                 mTokenId = TokenId::Unknown;
@@ -724,13 +724,10 @@ void CppSyntaxer::numberProc()
             break;
         case 'p':
         case 'P':
-            if (mTokenId!=TokenId::Hex) {
-                mTokenId = TokenId::Float;
+            mTokenId = TokenId::Float;
+            mRun++;
+            if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
                 mRun++;
-                if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
-                    mRun++;
-            break;
-            }
             break;
         default:
             return;
