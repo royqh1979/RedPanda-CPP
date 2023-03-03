@@ -170,6 +170,7 @@
     <addaction name="actionStop_Execution"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_Watch"/>
+    <addaction name="actionAdd_Watchpoint"/>
     <addaction name="actionView_CPU_Window"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -935,7 +936,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>2</number>
     </property>
     <property name="iconSize">
      <size>
@@ -1131,7 +1132,7 @@
           <enum>QTabWidget::North</enum>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabDebugConsole">
           <attribute name="title">
@@ -3290,6 +3291,9 @@
    <property name="text">
     <string>Generate Assembly</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+F9</string>
+   </property>
   </action>
   <action name="actionTrim_trailing_spaces">
    <property name="text">
@@ -3332,6 +3336,14 @@
   <action name="actionIA_32_Assembly_Language_Reference_Manual">
    <property name="text">
     <string>IA-32 Assembly Language Reference Manual</string>
+   </property>
+  </action>
+  <action name="actionAdd_Watchpoint">
+   <property name="text">
+    <string>Add Watchpoint...</string>
+   </property>
+   <property name="toolTip">
+    <string>Add a watchpoint that's triggered when it's modified.</string>
    </property>
   </action>
  </widget>

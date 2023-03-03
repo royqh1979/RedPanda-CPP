@@ -1903,8 +1903,7 @@ void Editor::onTooltipTimer()
         break;
     case TipType::Identifier:
         if (pMainWindow->debugger()->executing() && !pMainWindow->debugger()->inferiorRunning()) {
-            if (mParentPageControl)
-                s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
+            s = getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpEvaluation); // debugging
         } else if (!mCompletionPopup->isVisible()
                  && !mHeaderCompletionPopup->isVisible()) {
             expression = getExpressionAtPosition(p);
@@ -1977,7 +1976,9 @@ void Editor::onTooltipTimer()
                 && !mHeaderCompletionPopup->isVisible()) {
             if (pMainWindow->debugger()->executing()
                     && (pSettings->editor().enableDebugTooltips())) {
-                showDebugHint(s,p.line);
+                if (mParentPageControl) {
+                    showDebugHint(s,p.line);
+                }
             } else if (pSettings->editor().enableIdentifierToolTips()) {
                 hint = getParserHint(expression, s, p.line);
             }
@@ -3851,7 +3852,7 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
                         return TipType::Selection;
                 } else if (mParser && mParser->isIncludeLine(document()->getLine(pos.line-1))) {
                     return TipType::Preprocessor;
-                }else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
+                } else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
                     return TipType::Identifier;
                 } else if (attr->tokenType() == QSynedit::TokenType::Keyword) {
                     return TipType::Keyword;

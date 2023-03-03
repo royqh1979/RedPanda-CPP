@@ -7,7 +7,6 @@ Red Panda C++ Version 2.16
   - enhancement: Add cfi directives for asm syntaxer in linux.
   - change: Editor option "Scroll past end of line" default to false.
   - emhancement: Improve display of disassembled codes in the cpu info dialog.
-  - change: Set optimization level to -Og for Debug compiler settings by default. 
   - fix: Can't correctly parse function pointer var definition.
   - enhancement: Improve support for function pointer typedefs.
   - enhancement: Improve support for function pointer vars.
@@ -15,6 +14,11 @@ Red Panda C++ Version 2.16
   - change: Don't rebuild the whole project when run/debug, if only contents of project unit file is modified.
   - fix: rebuild may not work, if project's parallel build option is enabled.
   - enhancement: Add "Close window" and "Move to other view" in the "Window" menu
+  - enhancement: Auto open CPU info dialog, if the program in debug is stopped at a position that have no source file.
+  - enhancement: "add watchpoint" when debug. It's hitted when the watch variable is modified, or it's out of scope.
+  - enhancement: Switch current call stack frame in the CPU info dialog
+  - fix: Shouldn't try evaluate value of the selection in the cpu info dialog.
+  - enhancement: Show oct/bin/bin value in the memory view's tooltip.
 
 Red Panda C++ Version 2.15
 

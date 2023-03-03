@@ -229,6 +229,8 @@ public:
 
     QList<QAction*> listShortCutableActions();
 
+    void switchCurrentStackTrace(int idx);
+
 public slots:
     void logToolsOutput(const QString& msg);
     void onCompileIssue(PCompileIssue issue);
@@ -267,6 +269,7 @@ public slots:
     void onTodoParseStarted();
     void onTodoFound(const QString& filename, int lineNo, int ch, const QString& line);
     void onTodoParseFinished();
+    void onWatchpointHitted(const QString& var, const QString& oldVal, const QString& newVal);
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
     void updateDPI(int oldDPI, int newDPI);
     void onFileSaved(const QString& path, bool inProject);
@@ -794,6 +797,8 @@ private slots:
     void on_actionx86_Assembly_Language_Reference_Manual_triggered();
 
     void on_actionIA_32_Assembly_Language_Reference_Manual_triggered();
+
+    void on_actionAdd_Watchpoint_triggered();
 
 private:
     Ui::MainWindow *ui;

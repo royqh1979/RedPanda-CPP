@@ -74,8 +74,8 @@ public:
         const QByteArray &value() const;
         const QList<ParseValue> &array() const;
         const ParseObject &object() const;
-        int intValue(int defaultValue=-1) const;
-        int hexValue(int defaultValue=-1) const;
+        qlonglong intValue(int defaultValue=-1) const;
+        qulonglong hexValue(bool &ok) const;
 
         QString pathValue() const;
         QString utf8PathValue() const;

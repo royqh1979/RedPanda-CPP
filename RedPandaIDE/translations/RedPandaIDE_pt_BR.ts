@@ -5079,6 +5079,57 @@
         <source>IA-32 Assembly Language Reference Manual</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Add Watchpoint...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a watchpoint that&apos;s triggered when it&apos;s modified.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Old value: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Watchpoint variable name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop execution when the following variable is modified (it must be visible from the currect scope):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Watchpoint hitted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Value of &quot;%1&quot; has changed:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New value: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MemoryModel</name>
+    <message>
+        <source>dec: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>hex: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>bin: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ascii: &apos;%1&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewClassDialog</name>

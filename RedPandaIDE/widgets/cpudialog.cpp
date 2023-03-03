@@ -27,7 +27,8 @@
 CPUDialog::CPUDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CPUDialog),
-    mInited(false)
+    mInited(false),
+    mSetting(false)
 {
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
@@ -84,6 +85,7 @@ CPUDialog::~CPUDialog()
 void CPUDialog::updateInfo()
 {
     if (pMainWindow->debugger()->executing()) {
+        pMainWindow->debugger()->sendCommand("-stack-info-frame", "");
         // Load the registers..
         sendSyntaxCommand();
         pMainWindow->debugger()->sendCommand("-data-list-register-values", "N");
@@ -114,9 +116,17 @@ void CPUDialog::updateDPI(float dpi)
     onUpdateIcons();
 }
 
-void CPUDialog::setDisassembly(const QString& file, const QString& funcName,const QStringList& lines)
+void CPUDialog::setDisassembly(const QString& file, const QString& funcName,const QStringList& lines,const QList<PTrace>& traces)
 {
-    ui->txtFunctionName->setText(QString("%1:%2").arg(file, funcName));
+    mSetting=true;
+    ui->cbCallStack->clear();
+    int currentIndex=-1;
+    for (int i=0;i<traces.count();i++) {
+        ui->cbCallStack->addItem(QString("%1:%2").arg(traces[i]->filename, traces[i]->funcname));
+        if (file==traces[i]->filename && funcName == traces[i]->funcname)
+            currentIndex=i;
+    }
+    ui->cbCallStack->setCurrentIndex(currentIndex);
     int activeLine = -1;
     for (int i=0;i<lines.size();i++) {
         QString line = lines[i];
@@ -127,6 +137,7 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
     ui->txtCode->document()->setContents(lines);
     if (activeLine!=-1)
         ui->txtCode->setCaretXYCentered(QSynedit::BufferCoord{1,activeLine+1});
+    mSetting=false;
 }
 
 void CPUDialog::resetEditorFont(float dpi)
@@ -214,5 +225,13 @@ void CPUDialog::showEvent(QShowEvent *event)
         sizes[1] = std::max(0,totalSize - sizes[0]);
         ui->splitter->setSizes(sizes);
     }
+}
+
+
+void CPUDialog::on_cbCallStack_currentIndexChanged(int index)
+{
+    if (mSetting)
+        return ;
+    pMainWindow->switchCurrentStackTrace(index);
 }
 

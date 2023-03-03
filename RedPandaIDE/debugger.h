@@ -340,6 +340,7 @@ public:
     void loadForNonproject(const QString &filename);
     void loadForProject(const QString& filename, const QString& projectFolder);
 
+    void addWatchpoint(const QString& expression);
     //watch vars
     void addWatchVar(const QString& expression);
     void modifyWatchVarExpression(const QString& oldExpr, const QString& newExpr);
@@ -522,6 +523,7 @@ signals:
     void errorNoSymbolTable();
     void breakpointInfoGetted(const QString& filename, int line, int number);
     void inferiorContinued();
+    void watchpointHitted(const QString& var, const QString& oldVal, const QString& newVal);
     void inferiorStopped(const QString& filename, int line, bool setFocus);
     void localsUpdated(const QStringList& localsValue);
     void evalUpdated(const QString& value);
@@ -554,6 +556,7 @@ private:
 
     bool outputTerminated(const QByteArray& text);
     void handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint);
+    void handleFrame(const GDBMIResultParser::ParseValue &frame);
     void handleStack(const QList<GDBMIResultParser::ParseValue> & stack);
     void handleLocalVariables(const QList<GDBMIResultParser::ParseValue> & variables);
     void handleEvaluation(const QString& value);
@@ -606,7 +609,7 @@ private:
     bool mReceivedSFWarning;
 
     int mCurrentLine;
-    int mCurrentAddress;
+    qulonglong mCurrentAddress;
     QString mCurrentFunc;
     QString mCurrentFile;
     QStringList mConsoleOutput;

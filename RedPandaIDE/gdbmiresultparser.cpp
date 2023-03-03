@@ -37,6 +37,7 @@ GDBMIResultParser::GDBMIResultParser()
     mResultTypes.insert("-var-create",GDBMIResultType::CreateVar);
     mResultTypes.insert("-var-list-children",GDBMIResultType::ListVarChildren);
     mResultTypes.insert("-var-update",GDBMIResultType::UpdateVarValue);
+    mResultTypes.insert("-stack-info-frame",GDBMIResultType::Frame);
 }
 
 bool GDBMIResultParser::parse(const QByteArray &record, const QString& command, GDBMIResultType &type, ParseObject& multiValues)
@@ -349,26 +350,22 @@ const GDBMIResultParser::ParseObject &GDBMIResultParser::ParseValue::object() co
     return mObject;
 }
 
-int GDBMIResultParser::ParseValue::intValue(int defaultValue) const
+int64_t GDBMIResultParser::ParseValue::intValue(int defaultValue) const
 {
     //Q_ASSERT(mType == ParseValueType::Value);
     bool ok;
-    int value = QString(mValue).toInt(&ok);
+    qlonglong value = QString(mValue).toLongLong(&ok);
     if (ok)
         return value;
     else
         return defaultValue;
 }
 
-int GDBMIResultParser::ParseValue::hexValue(int defaultValue) const
+qulonglong GDBMIResultParser::ParseValue::hexValue(bool &ok) const
 {
     //Q_ASSERT(mType == ParseValueType::Value);
-    bool ok;
-    int value = QString(mValue).toInt(&ok,16);
-    if (ok)
-        return value;
-    else
-        return defaultValue;
+    qulonglong value = QString(mValue).toULongLong(&ok,16);
+    return value;
 }
 
 QString GDBMIResultParser::ParseValue::pathValue() const

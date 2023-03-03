@@ -1019,16 +1019,17 @@ void MainWindow::removeActiveBreakpoints()
 void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
 {
     removeActiveBreakpoints();
-    if (!fileExists(fileName))
-        return;
     // Then active the current line in the current file
     Editor *e = openFile(fileName);
     if (e!=nullptr) {
         e->setActiveBreakpointFocus(Line,setFocus);
+        if (setFocus) {
+            activateWindow();
+        }
+    } else {
+        pMainWindow->showCPUInfoDialog();
     }
-    if (setFocus) {
-        activateWindow();
-    }
+    return;
 }
 
 void MainWindow::updateDPI(int oldDPI, int /*newDPI*/)
@@ -4892,6 +4893,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addSeparator();
         if (canDebug) {
             menu.addAction(ui->actionAdd_Watch);
+            menu.addAction(ui->actionAdd_Watchpoint);
             menu.addAction(ui->actionToggle_Breakpoint);
             menu.addAction(ui->actionClear_all_breakpoints);
             menu.addSeparator();
@@ -4981,6 +4983,7 @@ void MainWindow::disableDebugActions()
     ui->actionStep_Out->setEnabled(false);
     ui->actionRun_To_Cursor->setEnabled(false);
     ui->actionContinue->setEnabled(false);
+    ui->actionAdd_Watchpoint->setEnabled(false);
     ui->cbEvaluate->setEnabled(false);
     ui->cbMemoryAddress->setEnabled(false);
     if (mCPUDialog) {
@@ -4997,6 +5000,7 @@ void MainWindow::enableDebugActions()
     ui->actionStep_Out->setEnabled(!mDebugger->inferiorRunning());
     ui->actionRun_To_Cursor->setEnabled(!mDebugger->inferiorRunning());
     ui->actionContinue->setEnabled(!mDebugger->inferiorRunning());
+    ui->actionAdd_Watchpoint->setEnabled(!mDebugger->inferiorRunning());
     ui->cbEvaluate->setEnabled(!mDebugger->inferiorRunning());
     ui->cbMemoryAddress->setEnabled(!mDebugger->inferiorRunning());
     if (mCPUDialog) {
@@ -5032,6 +5036,17 @@ void MainWindow::onTodoFound(const QString& filename, int lineNo, int ch, const 
 
 void MainWindow::onTodoParseFinished()
 {
+}
+
+void MainWindow::onWatchpointHitted(const QString &var, const QString &oldVal, const QString &newVal)
+{
+    QMessageBox::information(this,
+                             tr("Watchpoint hitted"),
+                             tr("Value of \"%1\" has changed:").arg(var)
+                             +"<br />"
+                             +tr("Old value: %1").arg(oldVal)
+                             +"<br />"
+                             +tr("New value: %1").arg(newVal));
 }
 
 void MainWindow::prepareProjectForCompile()
@@ -6698,19 +6713,7 @@ void MainWindow::on_searchView_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_tblStackTrace_doubleClicked(const QModelIndex &index)
 {
-    PTrace trace = mDebugger->backtraceModel()->backtrace(index.row());
-    if (trace) {
-        Editor *e = openFile(trace->filename);
-        if (e) {
-            e->setCaretPositionAndActivate(trace->line,1);
-        }
-        mDebugger->sendCommand("-stack-select-frame", QString("%1").arg(trace->level));
-        mDebugger->sendCommand("-stack-list-variables", "--all-values");
-        mDebugger->sendCommand("-var-update", "--all-values *");
-        if (this->mCPUDialog) {
-            this->mCPUDialog->updateInfo();
-        }
-    }
+    switchCurrentStackTrace(index.row());
 }
 
 
@@ -7637,8 +7640,12 @@ void MainWindow::updateVCSActions()
         canBranch =!mFileSystemModelIconProvider.VCSRepository()->hasChangedFiles()
                 && !mFileSystemModelIconProvider.VCSRepository()->hasStagedFiles();
     }
+
     ui->actionGit_Remotes->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Create_Repository->setEnabled(!hasRepository && shouldEnable);
+    ui->actionGit_Push->setEnabled(hasRepository && shouldEnable);
+    ui->actionGit_Pull->setEnabled(hasRepository && shouldEnable);
+    ui->actionGit_Fetch->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Log->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Commit->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Branch->setEnabled(hasRepository && shouldEnable && canBranch);
@@ -8466,6 +8473,27 @@ QList<QAction *> MainWindow::listShortCutableActions()
 {
     QList<QAction*> actions = findChildren<QAction *>(QString(), Qt::FindDirectChildrenOnly);
     return actions;
+}
+
+void MainWindow::switchCurrentStackTrace(int idx)
+{
+    PTrace trace = mDebugger->backtraceModel()->backtrace(idx);
+    if (trace) {
+        Editor *e = openFile(trace->filename);
+        if (e) {
+            e->setCaretPositionAndActivate(trace->line,1);
+        }
+        mDebugger->sendCommand("-stack-select-frame", QString("%1").arg(trace->level));
+        mDebugger->sendCommand("-stack-list-variables", "--all-values");
+        mDebugger->sendCommand("-var-update", "--all-values *");
+        if (this->mCPUDialog) {
+            this->mCPUDialog->updateInfo();
+        }
+        if (idx!=ui->tblStackTrace->currentIndex().row()) {
+            ui->tblStackTrace->setCurrentIndex(ui->tblStackTrace->model()->index(idx,0));
+        }
+    }
+
 }
 
 
@@ -9593,5 +9621,21 @@ void MainWindow::on_actionx86_Assembly_Language_Reference_Manual_triggered()
 void MainWindow::on_actionIA_32_Assembly_Language_Reference_Manual_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://docs.oracle.com/cd/E19455-01/806-3773/index.html"));
+}
+
+
+void MainWindow::on_actionAdd_Watchpoint_triggered()
+{
+    QString s = "";
+    bool isOk;
+    s=QInputDialog::getText(this,
+                              tr("Watchpoint variable name"),
+                              tr("Stop execution when the following variable is modified (it must be visible from the currect scope):"),
+                            QLineEdit::Normal,
+                            s,&isOk);
+    if (!isOk)
+        return;
+    s = s.trimmed();
+    mDebugger->addWatchpoint(s);
 }
 

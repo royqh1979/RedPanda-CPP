@@ -194,6 +194,8 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
             &MainWindow::removeActiveBreakpoints);
     connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
             &MainWindow::setActiveBreakpoint);
+    connect(mReader, &DebugReader::watchpointHitted,pMainWindow,
+            &MainWindow::onWatchpointHitted);
     connect(mReader, &DebugReader::errorNoSymbolTable,pMainWindow,
             &MainWindow::stopDebugForNoSymbolTable);
     connect(mReader, &DebugReader::inferiorStopped,this,
@@ -482,6 +484,14 @@ void Debugger::loadForProject(const QString &filename, const QString &projectFol
         }
         mBreakpointModel->setBreakpoints(pConfig->breakpoints,forProject);
         mWatchModel->setWatchVars(pConfig->watchVars,forProject);
+    }
+}
+
+void Debugger::addWatchpoint(const QString &expression)
+{
+    QString s=expression.trimmed();
+    if (!s.isEmpty()) {
+        sendCommand("-break-watch",s,DebugCommandSource::Other);
     }
 }
 
@@ -923,7 +933,7 @@ void Debugger::updateEval(const QString &value)
 void Debugger::updateDisassembly(const QString& file, const QString& func, const QStringList &value)
 {
     if (pMainWindow->cpuDialog()) {
-        pMainWindow->cpuDialog()->setDisassembly(file,func,value);
+        pMainWindow->cpuDialog()->setDisassembly(file,func,value,mBacktraceModel->backtraces());
     }
 }
 
@@ -1088,11 +1098,13 @@ void DebugReader::processResult(const QByteArray &result)
         return;
     switch(resultType) {
     case GDBMIResultType::BreakpointTable:
-    case GDBMIResultType::Frame:
     case GDBMIResultType::Locals:
         break;
     case GDBMIResultType::Breakpoint:
         handleBreakpoint(multiValues["bkpt"].object());
+        return;
+    case GDBMIResultType::Frame:
+        handleFrame(multiValues["frame"]);
         return;
     case GDBMIResultType::FrameStack:
         handleStack(multiValues["stack"].array());
@@ -1163,27 +1175,33 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             return;
         }
         mUpdateCPUInfo = true;
-        GDBMIResultParser::ParseValue frame(multiValues["frame"]);
-        if (frame.isValid()) {
-            GDBMIResultParser::ParseObject frameObj = frame.object();
-            mCurrentAddress = frameObj["addr"].hexValue();
-            mCurrentLine = frameObj["line"].intValue();
-            if (mDebugger->forceUTF8())
-                mCurrentFile = frameObj["fullname"].utf8PathValue();
-            else
-                mCurrentFile = frameObj["fullname"].pathValue();
-            mCurrentFunc = frameObj["func"].value();
-        }
+        handleFrame(multiValues["frame"]);
         if (reason == "signal-received") {
             mSignalReceived = true;
             mSignalName = multiValues["signal-name"].value();
             mSignalMeaning = multiValues["signal-meaning"].value();
+        } else if (reason == "watchpoint-trigger") {
+            QString var,oldVal,newVal;
+            GDBMIResultParser::ParseValue wpt=multiValues["wpt"];
+            if (wpt.isValid()) {
+                GDBMIResultParser::ParseObject wptObj = wpt.object();
+                var=wptObj["exp"].value();
+            }
+            GDBMIResultParser::ParseValue varValue=multiValues["value"];
+            if (varValue.isValid()) {
+                GDBMIResultParser::ParseObject valueObj = varValue.object();
+                oldVal=valueObj["old"].value();
+                newVal=valueObj["new"].value();
+            }
+            if (!var.isEmpty()) {
+                emit watchpointHitted(var,oldVal,newVal);
+            }
         }
         runInferiorStoppedHook();
         if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
-            emit inferiorStopped(mCurrentFile, mCurrentLine,false);
+            emit inferiorStopped(mCurrentFile, mCurrentLine, false);
         else
-            emit inferiorStopped(mCurrentFile, mCurrentLine,true);
+            emit inferiorStopped(mCurrentFile, mCurrentLine, true);
     }
 }
 
@@ -1464,6 +1482,23 @@ void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpo
     int line = breakpoint["line"].intValue();
     int number = breakpoint["number"].intValue();
     emit breakpointInfoGetted(filename, line , number);
+}
+
+void DebugReader::handleFrame(const GDBMIResultParser::ParseValue &frame)
+{
+    if (frame.isValid()) {
+        GDBMIResultParser::ParseObject frameObj = frame.object();
+        bool ok;
+        mCurrentAddress = frameObj["addr"].hexValue(ok);
+        if (!ok)
+            mCurrentAddress=0;
+        mCurrentLine = frameObj["line"].intValue();
+        if (mDebugger->forceUTF8())
+            mCurrentFile = frameObj["fullname"].utf8PathValue();
+        else
+            mCurrentFile = frameObj["fullname"].pathValue();
+        mCurrentFunc = frameObj["func"].value();
+    }
 }
 
 void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack)
@@ -3113,6 +3148,31 @@ QVariant MemoryModel::data(const QModelIndex &index, int role) const
             return s;
         } else
             return QString("%1").arg(line->datas[col],2,16,QChar('0'));
+    } else if (role == Qt::ToolTipRole) {
+        if (col<line->datas.count()) {
+            QString s =tr("dec: %1").arg(line->datas[col])
+                           +"<br/>"
+                           +tr("hex: %1").arg(line->datas[col],2,16,QChar('0'))
+                           +"<br/>"
+                           +tr("bin: %1").arg(line->datas[col],8,2,QChar('0'))
+                           +"<br/>";
+            QString chVal;
+            if (line->datas[col]==0) {
+                chVal="\\0";
+            } else if (line->datas[col]=='\n') {
+                chVal="\\n";
+            } else if (line->datas[col]=='\t') {
+                chVal="\\t";
+            } else if (line->datas[col]=='\r') {
+                chVal="\\r";
+            } else if (line->datas[col]>'\n' && line->datas[col]<127) {
+                chVal=QChar(line->datas[col]);
+            }
+            if (!chVal.isEmpty()) {
+                s+=tr("ascii: \'%1\'").arg(chVal);
+            }
+            return s;
+        }
     }
     return QVariant();
 }

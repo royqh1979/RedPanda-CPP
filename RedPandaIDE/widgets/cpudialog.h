@@ -18,6 +18,7 @@
 #define CPUDIALOG_H
 
 #include <QDialog>
+#include "../debugger.h"
 
 namespace Ui {
 class CPUDialog;
@@ -34,7 +35,7 @@ public:
     void updateButtonStates(bool enable);
 public slots:
     void updateDPI(float dpi);
-    void setDisassembly(const QString& file, const QString& funcName,const QStringList& lines);
+    void setDisassembly(const QString& file, const QString& funcName,const QStringList& linesconst,const QList<PTrace>& traces);
     void resetEditorFont(float dpi);
 signals:
     void closed();
@@ -43,6 +44,7 @@ private:
 private:
     Ui::CPUDialog *ui;
     bool mInited;
+    bool mSetting;
     // QWidget interface
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -55,6 +57,8 @@ private slots:
     void onUpdateIcons();
 
     // QWidget interface
+    void on_cbCallStack_currentIndexChanged(int index);
+
 protected:
     void showEvent(QShowEvent *event) override;
 };
