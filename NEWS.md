@@ -14,6 +14,7 @@ Red Panda C++ Version 2.16
   - enhancement: When first display two editor panes, auto make them the same width
   - change: Don't rebuild the whole project when run/debug, if only contents of project unit file is modified.
   - fix: rebuild may not work, if project's parallel build option is enabled.
+  - enhancement: Add "Close window" and "Move to other view" in the "Window" menu
 
 Red Panda C++ Version 2.15
 

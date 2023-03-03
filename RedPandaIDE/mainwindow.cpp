@@ -592,6 +592,8 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Declaration->setEnabled(false);
         ui->actionGoto_Definition->setEnabled(false);
         ui->actionFind_references->setEnabled(false);
+
+        ui->actionMove_To_Other_View->setEnabled(false);
     } else {
         ui->actionAuto_Detect->setEnabled(true);
         ui->actionEncode_in_ANSI->setEnabled(true);
@@ -653,6 +655,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Declaration->setEnabled(e->parser()!=nullptr);
         ui->actionGoto_Definition->setEnabled(e->parser()!=nullptr);
         ui->actionFind_references->setEnabled(e->parser()!=nullptr);
+        ui->actionMove_To_Other_View->setEnabled(editorList()->pageCount()>1);
     }
 
     updateCompileActions(e);
@@ -4964,10 +4967,6 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
     menu.addAction(ui->actionMove_To_Other_View);
     menu.addSeparator();
     menu.addAction(ui->actionFile_Properties);
-    ui->actionMove_To_Other_View->setEnabled(
-                tabWidget==ui->EditorTabsRight
-                || tabWidget->count()>1
-                );
     if (editor ) {
         ui->actionLocate_in_Files_View->setEnabled(!editor->isNew());
     }
