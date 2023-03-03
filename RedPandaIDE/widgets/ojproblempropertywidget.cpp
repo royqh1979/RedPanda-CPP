@@ -79,13 +79,13 @@ void OJProblemPropertyWidget::saveToProblem(POJProblem problem)
     problem->description = ui->txtDescription->toHtml();
     problem->memoryLimit = ui->spinMemoryLimit->value();
     problem->timeLimit = ui->spinTimeLimit->value();
-    if (ui->cbTimeLimitUnit->currentText()=="sec")
+    if (ui->cbTimeLimitUnit->currentText()==tr("sec"))
         problem->timeLimitUnit = ProblemTimeLimitUnit::Seconds;
     else
         problem->timeLimitUnit = ProblemTimeLimitUnit::Milliseconds;
-    if (ui->cbTimeLimitUnit->currentText()=="KB")
+    if (ui->cbMemoryLimitUnit->currentText()==tr("KB"))
         problem->memoryLimitUnit = ProblemMemoryLimitUnit::KB;
-    else if (ui->cbTimeLimitUnit->currentText()=="MB")
+    else if (ui->cbMemoryLimitUnit->currentText()==tr("MB"))
         problem->memoryLimitUnit = ProblemMemoryLimitUnit::MB;
     else
         problem->memoryLimitUnit = ProblemMemoryLimitUnit::GB;

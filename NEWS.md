@@ -20,6 +20,7 @@ Red Panda C++ Version 2.16
   - fix: Shouldn't try evaluate value of the selection in the cpu info dialog.
   - enhancement: Show oct/bin/bin value in the memory view's tooltip.
   - fix: Hex float point literal is not correctly colored.
+  - fix: Problem's memory limit unit can't be correctly saved.
 
 Red Panda C++ Version 2.15
 
