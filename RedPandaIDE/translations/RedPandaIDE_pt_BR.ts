@@ -5111,23 +5111,31 @@
         <source>New value: %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Ctrl+F12</source>
+        <translation type="unfinished">Ctrl+F12</translation>
+    </message>
+    <message>
+        <source>New Text File</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>
+    <message>
+        <source>ascii: &apos;%1&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>dec: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>hex: %1</source>
+        <source>oct: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>bin: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>ascii: &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6802,6 +6810,10 @@
     </message>
     <message>
         <source>Stack segment selector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>256-bit</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

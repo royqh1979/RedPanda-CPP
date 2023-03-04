@@ -2856,6 +2856,1434 @@
         <source>improves the performance of spin-wait loops.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1143"/>
+        <source>Add Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1144"/>
+        <source>Add Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1145"/>
+        <source>Add Scalar Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1146"/>
+        <source>Add Scalar Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1147"/>
+        <source>Packed Double-FP Add/Subtract.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1148"/>
+        <source>Packed Single-FP Add/Subtract.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1149"/>
+        <source>Bitwise Logical AND NOT of Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1150"/>
+        <source>Bitwise Logical AND NOT of Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1151"/>
+        <source>Bitwise Logical AND of Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1152"/>
+        <source>Bitwise Logical AND of Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1153"/>
+        <source>Blend Packed Double Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1154"/>
+        <source>Blend Packed Single Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1155"/>
+        <source>Variable Blend Packed Double Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1156"/>
+        <source>Variable Blend Packed Single Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1157"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1158"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1159"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1160"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1161"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1162"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1163"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1164"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1165"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1166"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1167"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1168"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1169"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1170"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1171"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1172"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1173"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1174"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1175"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1176"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1177"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1178"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1179"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1180"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1181"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1182"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1183"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1184"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1185"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1186"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1187"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1188"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1189"/>
+        <source>Compare Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1190"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1191"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1192"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1193"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1194"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1195"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1196"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1197"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1198"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1199"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1200"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1201"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1202"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1203"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1204"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1205"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1206"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1207"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1208"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1209"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1210"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1211"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1212"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1213"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1214"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1215"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1216"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1217"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1218"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1219"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1220"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1221"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1222"/>
+        <source>Compare Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1223"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1224"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1225"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1226"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1227"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1228"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1229"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1230"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1231"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1232"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1233"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1234"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1235"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1236"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1237"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1238"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1239"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1240"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1241"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1242"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1243"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1244"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1245"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1246"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1247"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1248"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1249"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1250"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1251"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1252"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1253"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1254"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1255"/>
+        <source>Compare Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1256"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1257"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1258"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1259"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1260"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1261"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1262"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1263"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1264"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1265"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1266"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1267"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1268"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1269"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1270"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1271"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1272"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1273"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1274"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1275"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1276"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1277"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1278"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1279"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1280"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1281"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1282"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1283"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1284"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1285"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1286"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1287"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1288"/>
+        <source>Compare Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1289"/>
+        <source>Compare Scalar Ordered Double-Precision Floating-Point Values and Set EFLAGS.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1290"/>
+        <source>Compare Scalar Ordered Single-Precision Floating-Point Values and Set EFLAGS.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1291"/>
+        <source>Convert Packed Doubleword Integers to Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1292"/>
+        <source>Convert Packed Doubleword Integers to Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1293"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1294"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1295"/>
+        <source>Convert Packed Double-Precision Floating-Point Values to Packed Doubleword Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1296"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1297"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1298"/>
+        <source>Convert Packed Double-Precision Floating-Point Values to Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1299"/>
+        <source>Convert Packed Single-Precision Floating-Point Values to Packed Signed Doubleword Integer Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1300"/>
+        <source>Convert Packed Single-Precision Floating-Point Values to Packed Double-Precision Floating-Point.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1301"/>
+        <source>Convert Scalar Double-Precision Floating-Point Value to Doubleword Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1302"/>
+        <source>Convert Scalar Double-Precision Floating-Point Value to quad word Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1303"/>
+        <source>Convert Scalar Double-Precision Floating-Point Value to double word Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1304"/>
+        <source>Convert Scalar Double-Precision Floating-Point Value to Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1305"/>
+        <source>Convert Doubleword Integer to Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1306"/>
+        <source>Convert quad word Integer to Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1307"/>
+        <source>Convert double word Integer to Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1308"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1310"/>
+        <source>Convert Doubleword Integer to Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1309"/>
+        <source>Convert quad word Integer to Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1311"/>
+        <source>Convert Scalar Single-Precision Floating-Point Value to Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1312"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1314"/>
+        <source>Convert Scalar Single-Precision Floating-Point Value to Doubleword Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1313"/>
+        <source>Convert Scalar Single-Precision Floating-Point Value to quad word Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1315"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1316"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1317"/>
+        <source>Convert with Truncation Packed Double-Precision Floating-Point Values to Packed Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1318"/>
+        <source>Convert with Truncation Packed Single-Precision Floating-Point Values to Packed Signed Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1319"/>
+        <source>Convert with Truncation Scalar Double-Precision Floating-Point Value to Signed Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1320"/>
+        <source>Convert with Truncation Scalar Double-Precision Floating-Point Value to Signed quad word Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1321"/>
+        <source>Convert with Truncation Scalar Double-Precision Floating-Point Value to Signed double word Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1322"/>
+        <source>Convert with Truncation Scalar Single-Precision Floating-Point Value to Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1323"/>
+        <source>Convert with Truncation Scalar Single-Precision Floating-Point Value to quad word Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1324"/>
+        <source>Convert with Truncation Scalar Single-Precision Floating-Point Value to double word Integer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1325"/>
+        <source>Divide Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1326"/>
+        <source>Divide Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1327"/>
+        <source>Divide Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1328"/>
+        <source>Divide Scalar Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1329"/>
+        <source>Dot Product of Packed Double Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1330"/>
+        <source>Dot Product of Packed Single Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1331"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1552"/>
+        <source>Extract Packed Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1332"/>
+        <source>Packed Double-FP Horizontal Add.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1333"/>
+        <source>Packed Single-FP Horizontal Add.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1334"/>
+        <source>Packed Double-FP Horizontal Subtract.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1335"/>
+        <source>Packed Single-FP Horizontal Subtract.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1336"/>
+        <source>Insert Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1337"/>
+        <source>Load Unaligned Integer 128 Bits.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1338"/>
+        <source>Load MXCSR Register.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1339"/>
+        <source>Store Selected Bytes of Double Quadword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1340"/>
+        <source>Maximum of Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1341"/>
+        <source>Maximum of Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1342"/>
+        <source>Return Maximum Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1343"/>
+        <source>Return Maximum Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1344"/>
+        <source>Minimum of Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1345"/>
+        <source>Minimum of Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1346"/>
+        <source>Return Minimum Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1347"/>
+        <source>Return Minimum Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1348"/>
+        <source>Move Aligned Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1349"/>
+        <source>Move Aligned Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1350"/>
+        <source>Move Doubleword and Quadword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1351"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1370"/>
+        <source>Move Quadword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1352"/>
+        <source>Move Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1353"/>
+        <source>Replicate Double FP Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1354"/>
+        <source>Move Aligned Packed Integer Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1355"/>
+        <source>Move Unaligned Packed Integer Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1358"/>
+        <source>Move Packed Single-Precision Floating-Point Values High to Low.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1359"/>
+        <source>Move High Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1360"/>
+        <source>Move High Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1361"/>
+        <source>Move Packed Single-Precision Floating-Point Values Low to High.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1362"/>
+        <source>Move Low Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1363"/>
+        <source>Move Low Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1364"/>
+        <source>Extract Packed Double-Precision Floating-Point Sign Mask.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1365"/>
+        <source>Extract Packed Single-Precision Floating-Point Sign Mask.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1366"/>
+        <source>Store Packed Integers Using Non-Temporal Hint.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1367"/>
+        <source>Load Double Quadword Non-Temporal Aligned Hint.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1368"/>
+        <source>Store Packed Double-Precision Floating-Point Values Using Non-Temporal Hint.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1369"/>
+        <source>Store Packed Single-Precision Floating-Point Values Using Non-Temporal Hint.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1371"/>
+        <source>Move or Merge Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1372"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1373"/>
+        <source>Replicate Single FP Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1374"/>
+        <source>Move or Merge Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1375"/>
+        <source>Move Unaligned Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1376"/>
+        <source>Move Unaligned Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1377"/>
+        <source>Compute Multiple Packed Sums of Absolute Difference.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1378"/>
+        <source>Multiply Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1379"/>
+        <source>Multiply Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1380"/>
+        <source>Multiply Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1381"/>
+        <source>Multiply Scalar Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1382"/>
+        <source>Bitwise Logical OR of Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1383"/>
+        <source>Bitwise Logical OR of Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1384"/>
+        <source>Packed Absolute Quadword Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1385"/>
+        <source>Packed Absolute Word Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1386"/>
+        <source>Packed Absolute Byte Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1387"/>
+        <source>Packed Absolute Doubleword Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1388"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1389"/>
+        <source>Pack with Signed Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1390"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1391"/>
+        <source>Pack with Unsigned Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1392"/>
+        <source>Add Packed Quadword Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1393"/>
+        <source>Add Packed Word Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1394"/>
+        <source>Add Packed Byte Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1395"/>
+        <source>Add Packed Doubleword Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1397"/>
+        <source>Add Packed Signed Word Integers with Signed Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1398"/>
+        <source>Add Packed Signed Byte Integers with Signed Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1400"/>
+        <source>Add Packed Unsigned Word Integers with Unsigned Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1401"/>
+        <source>Add Packed Unsigned Byte Integers with Unsigned Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1403"/>
+        <source>Packed Align Right.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1404"/>
+        <source>Logical AND.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1405"/>
+        <source>Logical AND NOT.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1406"/>
+        <source>Average Packed Word Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1407"/>
+        <source>Average Packed Byte Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1409"/>
+        <source>Variable Blend Packed Bytes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1410"/>
+        <source>Blend Packed Words.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1411"/>
+        <source>Compare Packed Quadword Integers for Equality.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1412"/>
+        <source>Compare Packed Word Integers for Equality.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1413"/>
+        <source>Compare Packed Byte Integers for Equality.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1414"/>
+        <source>Compare Packed Doubleword Integers for Equality.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1416"/>
+        <source>Packed Compare Explicit Length Strings, Return Index.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1417"/>
+        <source>Packed Compare Explicit Length Strings, Return Mask.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1418"/>
+        <source>Compare Packed Quadword Integers for Greater Than.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1419"/>
+        <source>Compare Packed Word Integers for Greater Than.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1420"/>
+        <source>Compare Packed Byte Integers for Greater Than.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1421"/>
+        <source>Compare Packed Doubleword Integers for Greater Than.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1423"/>
+        <source>Packed Compare Implicit Length Strings, Return Index.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1424"/>
+        <source>Packed Compare Implicit Length Strings, Return Mask.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1425"/>
+        <source>Extract Quadword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1426"/>
+        <source>Extract Byte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1427"/>
+        <source>Extract Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1430"/>
+        <source>Extract Word.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1431"/>
+        <source>Packed Horizontal Add and Saturate.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1432"/>
+        <source>Packed Horizontal Add Word.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1433"/>
+        <source>Packed Horizontal Add Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1435"/>
+        <source>Packed Horizontal Word Minimum.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1436"/>
+        <source>Packed Horizontal Subtract and Saturate.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1437"/>
+        <source>Packed Horizontal Subtract Word.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1438"/>
+        <source>Packed Horizontal Subtract Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1439"/>
+        <source>Insert Quadword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1440"/>
+        <source>Insert Byte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1441"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1443"/>
+        <source>Insert Word.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1442"/>
+        <source>Insert Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1444"/>
+        <source>Multiply and Add Packed Signed and Unsigned Bytes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1445"/>
+        <source>Multiply and Add Packed Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1446"/>
+        <source>Maximum of Packed Signed Quadword Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1447"/>
+        <source>Maximum of Packed Signed Word Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1448"/>
+        <source>Maximum of Packed Signed Byte Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1449"/>
+        <source>Maximum of Packed Signed Doubleword Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1450"/>
+        <source>Maximum of Packed Unsigned Byte Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1451"/>
+        <source>Maximum of Packed Unsigned Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1452"/>
+        <source>Maximum of Packed Word Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1453"/>
+        <source>Minimum of Packed Signed Byte Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1454"/>
+        <source>Minimum of Packed Signed Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1455"/>
+        <source>Minimum of Packed Signed Word Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1456"/>
+        <source>Minimum of Packed Unsigned Byte Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1457"/>
+        <source>Minimum of Packed Unsigned Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1458"/>
+        <source>Minimum of Packed Word Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1459"/>
+        <source>Move Byte Mask.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1460"/>
+        <source>Packed Move byte to double word with Sign Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1461"/>
+        <source>Packed Move byte to quad word with Sign Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1462"/>
+        <source>Packed Move byte to word with Sign Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1463"/>
+        <source>Packed Move double word to quad word with Sign Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1464"/>
+        <source>Packed Move word to double word with Sign Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1465"/>
+        <source>Packed Move word to quad word with Sign Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1466"/>
+        <source>Packed Move byte to double word with Zero Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1467"/>
+        <source>Packed Move byte to quad word with Zero Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1468"/>
+        <source>Packed Move byte to word with Zero Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1469"/>
+        <source>Packed Move double word to quad word with Zero Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1470"/>
+        <source>Packed Move word to double word with Zero Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1471"/>
+        <source>Packed Move word to quad word with Zero Extend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1472"/>
+        <source>Multiply Packed Doubleword Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1473"/>
+        <source>Packed Multiply High with Round and Scale.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1474"/>
+        <source>Multiply Packed Unsigned Integers and Store High Result.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1475"/>
+        <source>Multiply Packed Signed Integers and Store High Result.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1476"/>
+        <source>Multiply Packed Integers and Store Low Result.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1477"/>
+        <source>Multiply Packed Signed Integers and Store Low Result.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1478"/>
+        <source>Multiply Packed Unsigned Doubleword Integers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1479"/>
+        <source>Bitwise Logical Or.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1480"/>
+        <source>Compute Sum of Absolute Differences.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1481"/>
+        <source>Packed Shuffle Bytes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1482"/>
+        <source>Shuffle Packed Doublewords.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1483"/>
+        <source>Shuffle Packed High Words.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1484"/>
+        <source>Shuffle Packed Low Words.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1485"/>
+        <source>Packed SIGN Word.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1486"/>
+        <source>Packed SIGN Byte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1487"/>
+        <source>Packed SIGN Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1489"/>
+        <source>Shift Double Quadword Left Logical.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1490"/>
+        <source>Bit Shift Left Quadword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1491"/>
+        <source>Bit Shift Left Word.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1492"/>
+        <source>Bit Shift Left Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1494"/>
+        <source>Bit Shift Arithmetic Right Word.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1495"/>
+        <source>Bit Shift Arithmetic Right Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1496"/>
+        <source>Shift Double Quadword Right Logical.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1497"/>
+        <source>Shift Packed Data Right Logical Quadword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1498"/>
+        <source>Shift Packed Data Right Logical Word.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1499"/>
+        <source>Shift Packed Data Right Logical Doubleword.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1501"/>
+        <source>Packed Quadword Integer Subtract.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1502"/>
+        <source>Packed Word Integer Subtract.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1503"/>
+        <source>Packed Byte Integer Subtract.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1504"/>
+        <source>Packed Doubleword Integer Subtract.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1506"/>
+        <source>Subtract Packed Signed Word Integers with Signed Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1507"/>
+        <source>Subtract Packed Signed Byte Integers with Signed Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1509"/>
+        <source>Subtract Packed Unsigned Word Integers with Unsigned Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1510"/>
+        <source>Subtract Packed Unsigned Byte Integers with Unsigned Saturation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1512"/>
+        <source>Logical Compare.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1513"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1514"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1515"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1516"/>
+        <source>Unpack High Data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1517"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1518"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1519"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1520"/>
+        <source>Unpack Low Data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1522"/>
+        <source>Exclusive Or.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1524"/>
+        <source>Compute Reciprocals of Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1525"/>
+        <source>Compute Reciprocal of Scalar Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1526"/>
+        <source>Round Packed Double Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1527"/>
+        <source>Round Packed Single Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1528"/>
+        <source>Round Scalar Double Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1529"/>
+        <source>Round Scalar Single Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1530"/>
+        <source>Compute Reciprocals of Square Roots of Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1531"/>
+        <source>Compute Reciprocal of Square Root of Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1532"/>
+        <source>Shuffle Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1533"/>
+        <source>Shuffle Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1534"/>
+        <source>Square Root of Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1535"/>
+        <source>Square Root of Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1536"/>
+        <source>Compute Square Root of Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1537"/>
+        <source>Compute Square Root of Scalar Single-Precision Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1538"/>
+        <source>Store MXCSR Register State.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1539"/>
+        <source>Subtract Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1540"/>
+        <source>Subtract Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1541"/>
+        <source>Subtract Scalar Double-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1542"/>
+        <source>Subtract Scalar Single-Precision Floating-Point Value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1543"/>
+        <source>Unordered Compare Scalar Double-Precision Floating-Point Values and Set EFLAGS.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1544"/>
+        <source>Unordered Compare Scalar Single-Precision Floating-Point Values and Set EFLAGS.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1545"/>
+        <source>Unpack and Interleave High Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1546"/>
+        <source>Unpack and Interleave High Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1547"/>
+        <source>Unpack and Interleave Low Packed Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1548"/>
+        <source>Unpack and Interleave Low Packed Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1549"/>
+        <source>Load with Broadcast Floating-Point Data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1550"/>
+        <source>Load with Broadcast Double-Precision Floating-Point Data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1551"/>
+        <source>Load with Broadcast Single-Precision Floating-Point Data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1553"/>
+        <source>Insert Packed Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1554"/>
+        <source>Conditional SIMD Packed Double-Precision Loads and Stores.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1555"/>
+        <source>Conditional SIMD Packed Single-Precision Loads and Stores.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1556"/>
+        <source>Permute Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1557"/>
+        <source>Permute Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1558"/>
+        <source>Permute Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1559"/>
+        <source>Packed Double-Precision Bit Test.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1560"/>
+        <source>Packed Single-Precision Bit Test.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1561"/>
+        <source>Zero All YMM Registers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1562"/>
+        <source>Zero Upper Bits of YMM Registers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1563"/>
+        <source>Bitwise Logical XOR for Double-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1564"/>
+        <source>Bitwise Logical XOR for Single-Precision Floating-Point Values.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="1565"/>
+        <source>Carry-Less Multiplication Quadword, Requires PCLMULQDQ CPUID-flag.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QSynedit::Document</name>

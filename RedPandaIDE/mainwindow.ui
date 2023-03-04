@@ -3292,7 +3292,7 @@
     <string>Generate Assembly</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+F9</string>
+    <string>Ctrl+F12</string>
    </property>
   </action>
   <action name="actionTrim_trailing_spaces">
@@ -3344,6 +3344,11 @@
    </property>
    <property name="toolTip">
     <string>Add a watchpoint that's triggered when it's modified.</string>
+   </property>
+  </action>
+  <action name="actionNew_Text_File">
+   <property name="text">
+    <string>New Text File</string>
    </property>
   </action>
  </widget>

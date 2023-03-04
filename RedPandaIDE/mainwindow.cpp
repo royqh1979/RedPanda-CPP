@@ -217,6 +217,7 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew->setTitle(tr("New"));
     mMenuNew->addAction(ui->actionNew);
     mMenuNew->addAction(ui->actionNew_GAS_File);
+    mMenuNew->addAction(ui->actionNew_Text_File);
     mMenuNew->addAction(ui->actionNew_Project);
     mMenuNew->addSeparator();
     mMenuNew->addAction(ui->actionNew_Template);
@@ -9614,7 +9615,7 @@ void MainWindow::on_actionGNU_Assembler_Manual_triggered()
 
 void MainWindow::on_actionx86_Assembly_Language_Reference_Manual_triggered()
 {
-    QDesktopServices::openUrl(QUrl("https://docs.oracle.com/cd/E19120-01/open.solaris/817-5477/index.html"));
+    QDesktopServices::openUrl(QUrl("https://docs.oracle.com/cd/E53394_01/html/E54851/index.html"));
 }
 
 
@@ -9637,5 +9638,20 @@ void MainWindow::on_actionAdd_Watchpoint_triggered()
         return;
     s = s.trimmed();
     mDebugger->addWatchpoint(s);
+}
+
+
+void MainWindow::on_actionNew_Text_File_triggered()
+{
+    if (mProject) {
+        if (QMessageBox::question(this,
+                                  tr("New Project File?"),
+                                  tr("Do you want to add the new file to the project?"),
+                                  QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+            newProjectUnitFile("txt");
+            return;
+        }
+    }
+    newEditor("txt");
 }
 

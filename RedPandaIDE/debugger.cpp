@@ -2814,6 +2814,22 @@ RegisterModel::RegisterModel(QObject *parent):QAbstractTableModel(parent)
         mRegisterDescriptions.insert("xmm14",tr("128-bit")+" "+"XMM");
         mRegisterDescriptions.insert("xmm15",tr("128-bit")+" "+"XMM");
 
+        mRegisterDescriptions.insert("ymm0",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm1",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm2",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm3",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm4",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm5",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm6",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm7",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm8",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm9",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm11",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm12",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm13",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm14",tr("256-bit")+" "+"YMM");
+        mRegisterDescriptions.insert("ymm15",tr("256-bit")+" "+"YMM");
+
         mRegisterDescriptions.insert("mxscr",tr("SSE status and control"));
 
 #endif
@@ -3151,11 +3167,11 @@ QVariant MemoryModel::data(const QModelIndex &index, int role) const
     } else if (role == Qt::ToolTipRole) {
         if (col<line->datas.count()) {
             QString s =tr("dec: %1").arg(line->datas[col])
-                           +"<br/>"
-                           +tr("hex: %1").arg(line->datas[col],2,16,QChar('0'))
-                           +"<br/>"
-                           +tr("bin: %1").arg(line->datas[col],8,2,QChar('0'))
-                           +"<br/>";
+                    +"<br/>"
+                    +tr("oct: %1").arg(line->datas[col],0,8)
+                    +"<br/>"
+                    +tr("bin: %1").arg(line->datas[col],8,2,QChar('0'))
+                    +"<br/>";
             QString chVal;
             if (line->datas[col]==0) {
                 chVal="\\0";
@@ -3165,11 +3181,12 @@ QVariant MemoryModel::data(const QModelIndex &index, int role) const
                 chVal="\\t";
             } else if (line->datas[col]=='\r') {
                 chVal="\\r";
-            } else if (line->datas[col]>'\n' && line->datas[col]<127) {
+            } else if (line->datas[col]>=' ' && line->datas[col]<127) {
                 chVal=QChar(line->datas[col]);
             }
             if (!chVal.isEmpty()) {
-                s+=tr("ascii: \'%1\'").arg(chVal);
+                s+=tr("ascii: \'%1\'").arg(chVal)
+                        +"<br/>";
             }
             return s;
         }

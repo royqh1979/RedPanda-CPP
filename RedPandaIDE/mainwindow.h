@@ -800,6 +800,8 @@ private slots:
 
     void on_actionAdd_Watchpoint_triggered();
 
+    void on_actionNew_Text_File_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;
