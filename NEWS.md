@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.17
+
+  - enhancement: Add X86_64 AVX/AVX instruction descriptions to asm syntaxer.
+  - enhancement: Update to the newest x86 Assembly manual.
+
 Red Panda C++ Version 2.16
 
   - fix: Project files that not in the project folder is not correctly handled in makefile.
