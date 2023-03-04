@@ -1564,7 +1564,14 @@ void ASMSyntaxer::initData()
         Instructions.insert("vxorps",QObject::tr("Bitwise Logical XOR for Single-Precision Floating-Point Values."));
         Instructions.insert("vpclmulqdq",QObject::tr("Carry-Less Multiplication Quadword, Requires PCLMULQDQ CPUID-flag."));
 #endif
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
         InstructionNames=QSet<QString>(Instructions.keyBegin(),Instructions.keyEnd());
+#else
+        InstructionNames.clear();
+        foreach(const QString& s,Instructions.keys()) {
+            InstructionNames.insert(s);
+        }
+#endif
     }
 }
 
