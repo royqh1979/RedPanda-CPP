@@ -350,7 +350,7 @@ const GDBMIResultParser::ParseObject &GDBMIResultParser::ParseValue::object() co
     return mObject;
 }
 
-int64_t GDBMIResultParser::ParseValue::intValue(int defaultValue) const
+qlonglong GDBMIResultParser::ParseValue::intValue(int defaultValue) const
 {
     //Q_ASSERT(mType == ParseValueType::Value);
     bool ok;
