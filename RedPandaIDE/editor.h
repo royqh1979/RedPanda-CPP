@@ -105,6 +105,7 @@ public:
       Identifier, // cursor hovers above identifier
       Selection, // cursor hovers above selection
       Keyword,
+      Number,
       None, // mouseover not allowed
       Error //Cursor hovers above error line/item;
     };

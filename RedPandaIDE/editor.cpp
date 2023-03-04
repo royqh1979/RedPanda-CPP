@@ -1882,6 +1882,15 @@ void Editor::onTooltipTimer()
             pError = issues->front();
         }
     }
+    if (reason == TipType::Number) {
+        if (!syntaxer() ||
+            (syntaxer()->language() != QSynedit::ProgrammingLanguage::Assembly
+             && syntaxer()->language() != QSynedit::ProgrammingLanguage::ATTAssembly
+             )
+            ) {
+            reason=TipType::None;
+        }
+    }
 
     // Get subject
     bool isIncludeLine = false;
@@ -1927,6 +1936,19 @@ void Editor::onTooltipTimer()
     case TipType::Error:
         s = pError->token;
         break;
+    case TipType::Number:
+        if (!mCompletionPopup->isVisible()
+             && !mHeaderCompletionPopup->isVisible()) {
+            QSynedit::PTokenAttribute attr;
+            int start;
+            if (getTokenAttriAtRowColEx(p,s,start,attr)) {
+                QString line=document()->getLine(p.line-1);
+                int idx=start-2;
+                if (idx>=0 && idx<line.length() && line[idx]=='-')
+                    s='-'+s;
+            }
+        }
+        break;
     case TipType::None:
         cancelHint();
         mCurrentWord = "";
@@ -1955,7 +1977,6 @@ void Editor::onTooltipTimer()
     mCurrentWord = s;
     mCurrentTipType = reason;
 
-
     // Determine what to do with subject
     QString hint = "";
     switch (reason) {
@@ -1981,6 +2002,33 @@ void Editor::onTooltipTimer()
                 }
             } else if (pSettings->editor().enableIdentifierToolTips()) {
                 hint = getParserHint(expression, s, p.line);
+            }
+        }
+        break;
+    case TipType::Number:
+        if (syntaxer() &&
+                (syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
+                 || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
+                ) {
+            qDebug()<<s;
+            bool neg=false;
+            LONGLONG val;
+            bool ok;
+            if (s.startsWith("-")) {
+                s=s.mid(1);
+                neg=true;
+            }
+            if (s.startsWith("0x")) {
+                val=s.toLongLong(&ok,16);
+            } else {
+                val=s.toLongLong(&ok,10);
+            }
+            if (ok) {
+                if (neg)
+                    val = -val;
+                hint=tr("hex: %1").arg((ULONGLONG)val,0,16)
+                        +"<br />"
+                     +tr("dec: %1").arg(val,0,10);
             }
         }
         break;
@@ -3854,6 +3902,8 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
                     return TipType::Preprocessor;
                 } else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
                     return TipType::Identifier;
+                } else if (attr->tokenType() == QSynedit::TokenType::Number) {
+                    return TipType::Number;
                 } else if (attr->tokenType() == QSynedit::TokenType::Keyword) {
                     return TipType::Keyword;
                 }

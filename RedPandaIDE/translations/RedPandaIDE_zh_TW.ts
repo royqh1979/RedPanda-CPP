@@ -927,6 +927,14 @@
         <source>Error Load File</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>hex: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>dec: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorAutoSaveWidget</name>
@@ -4889,6 +4897,10 @@
     </message>
     <message>
         <source>bin: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>addr: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -1,8 +1,10 @@
 Red Panda C++ Version 2.17
 
   - enhancement: Add X86_64 AVX/AVX instruction descriptions to asm syntaxer.
-  - enhancement: Update to the newest x86 Assembly manual.
+  - enhancement: Update x86 Assembly manual link to the newest website.
   - enhancement: Add "New Text File" in the File menu
+  - enhancement: Add "address" in the memory view's mouse tip.
+  - enhancement: Show mousetip for numbers in the GNU assembly file. 
 
 Red Panda C++ Version 2.16
 

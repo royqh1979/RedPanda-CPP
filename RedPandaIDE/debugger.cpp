@@ -3166,7 +3166,10 @@ QVariant MemoryModel::data(const QModelIndex &index, int role) const
             return QString("%1").arg(line->datas[col],2,16,QChar('0'));
     } else if (role == Qt::ToolTipRole) {
         if (col<line->datas.count()) {
-            QString s =tr("dec: %1").arg(line->datas[col])
+            QString s =
+                    tr("addr: %1").arg(line->startAddress+col,0,16)
+                    +"<br/>"
+                    +tr("dec: %1").arg(line->datas[col])
                     +"<br/>"
                     +tr("oct: %1").arg(line->datas[col],0,8)
                     +"<br/>"

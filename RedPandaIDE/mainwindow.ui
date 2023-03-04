@@ -439,6 +439,7 @@
    <addaction name="actionStep_Over"/>
    <addaction name="actionStep_Into"/>
    <addaction name="actionStep_Out"/>
+   <addaction name="actionRun_To_Cursor"/>
    <addaction name="actionContinue"/>
    <addaction name="actionStop_Execution"/>
    <addaction name="separator"/>
@@ -2398,6 +2399,10 @@
    </property>
   </action>
   <action name="actionRun_To_Cursor">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/images/newlook24/052-next.png</normaloff>:/icons/images/newlook24/052-next.png</iconset>
+   </property>
    <property name="text">
     <string>Run To Cursor</string>
    </property>
