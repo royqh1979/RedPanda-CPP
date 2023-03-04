@@ -7000,7 +7000,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../debugger.cpp" line="3170"/>
         <source>addr: %1</source>
-        <translation type="unfinished">地址: %1</translation>
+        <translation>地址: %1</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="3172"/>
