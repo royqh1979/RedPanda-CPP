@@ -288,7 +288,7 @@ void CompilerManager::run(
             newArguments = QString(" -e \"%1\" %2")
                 .arg(localizePath(escapeSpacesInString(filename))).arg(arguments);
         }
-        execRunner = new ExecutableRunner(pSettings->environment().terminalPath(),newArguments,workDir);
+        execRunner = new ExecutableRunner(pSettings->environment().terminalPathForExec(),newArguments,workDir);
         execRunner->setShareMemoryId(sharedMemoryId);
 #endif
         execRunner->setStartConsole(true);

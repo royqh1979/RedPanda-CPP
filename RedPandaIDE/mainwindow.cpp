@@ -4537,7 +4537,7 @@ void MainWindow::onFilesViewOpenInTerminal()
 #ifdef Q_OS_WIN
         openShell(fileInfo.path(),"cmd.exe",getDefaultCompilerSetBinDirs());
 #else
-        openShell(fileInfo.path(),pSettings->environment().terminalPath(),getDefaultCompilerSetBinDirs());
+        openShell(fileInfo.path(),pSettings->environment().terminalPathForExec(),getDefaultCompilerSetBinDirs());
 #endif
     }
 }
@@ -6679,7 +6679,7 @@ void MainWindow::on_actionOpen_Terminal_triggered()
 #ifdef Q_OS_WIN
             openShell(info.path(),"cmd.exe",getBinDirsForCurrentEditor());
 #else
-            openShell(info.path(),pSettings->environment().terminalPath(),getBinDirsForCurrentEditor());
+            openShell(info.path(),pSettings->environment().terminalPathForExec(),getBinDirsForCurrentEditor());
 #endif
         }
     }
@@ -7010,7 +7010,7 @@ void MainWindow::on_actionProject_Open_In_Terminal_triggered()
 #ifdef Q_OS_WIN
     openShell(mProject->directory(),"cmd.exe",mProject->binDirs());
 #else
-    openShell(mProject->directory(),pSettings->environment().terminalPath(),mProject->binDirs());
+    openShell(mProject->directory(),pSettings->environment().terminalPathForExec(),mProject->binDirs());
 #endif
 }
 

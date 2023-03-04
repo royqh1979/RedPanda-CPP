@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 12~),
 	       qtbase5-dev,
                qtbase5-dev-tools,
 	       qttools5-dev-tools,
-               libicu-dev,
                libqt5svg5-dev
 Standards-Version: 4.3.0
 Homepage: https://github.com/royqh1979/RedPanda-CPP

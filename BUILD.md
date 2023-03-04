@@ -31,7 +31,7 @@ apt install gcc g++ make gdb gdbserver
 ### 2. Install Qt 5 and Other Dependencies
 
 ```bash
-apt install qtbase5-dev qttools5-dev-tools libicu-dev libqt5svg5-dev git qterminal
+apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
 ```
 
 ### 3. Fetch Source Code
@@ -65,30 +65,34 @@ Note that makepkg checks out HEAD of the repo, so any change should be committed
 
 ## AppImage
 
-1. Install dependency: cURL, Docker.
+1. Install dependency: Docker or Podman.
 
    Extra requirements for Windows host:
    - Docker uses WSL 2 based engine, or enable file sharing on the project folder (Settings > Resources > File sharing);
-   - PowerShell (previously “PowerShell Core”, not “Windows PowerShell”).
+   - PowerShell (Core) or Windows PowerShell.
 2. Prepare build environment. Linux host:
    ```bash
-   arch=x86_64 # or aarch64
-   curl -L -o packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
-   docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
+   ARCH=x86_64 # or aarch64
+   DOCKER=docker # or podman
+   $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
    Windows host:
    ```ps1
-   $arch = "x86_64" # or "aarch64" someday Docker is available on WoA
-   Invoke-WebRequest -OutFile packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage -Uri https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
-   docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
+   $ARCH = "x86_64" # or "aarch64" someday Docker or Podman is available on WoA
+   $DOCKER = "docker" # or "podman"
+   & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
 3. Build AppImage. Linux host:
    ```bash
-   ./packages/appimage/build-x86_64.sh # or *-aarch64.sh
+   ARCH=x86_64
+   DOCKER=docker
+   $DOCKER run --rm -v $PWD:/build/RedPanda-CPP -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
    ```
    Windows host:
    ```ps1
-   ./packages/appimage/build-x86_64.ps1 # or *-aarch64.ps1 someday Docker is available on WoA
+   $ARCH = "x86_64"
+   $DOCKER = "docker"
+   & $DOCKER run --rm -v "$(Get-Location):/build/RedPanda-CPP" -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
    ```
 4. Run Red Panda C++.
    ```bash

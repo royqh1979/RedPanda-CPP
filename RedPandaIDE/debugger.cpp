@@ -2982,7 +2982,7 @@ void DebugTarget::run()
     cmd= mGDBServer;
     arguments = QString(" localhost:%1 \"%2\" %3").arg(mPort).arg(mInferior,mArguments);
 #else
-    cmd= pSettings->environment().terminalPath();
+    cmd= pSettings->environment().terminalPathForExec();
     arguments = QString(" -e \"%1\" localhost:%2 \"%3\"").arg(mGDBServer).arg(mPort).arg(mInferior);
 #endif
     QString workingDir = QFileInfo(mInferior).path();

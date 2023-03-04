@@ -25,6 +25,7 @@
 #include <memory>
 #include <QThread>
 #include <QProcessEnvironment>
+#define SI_NO_CONVERSION
 #include "SimpleIni.h"
 #include "qt_utils/utils.h"
 

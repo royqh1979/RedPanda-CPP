@@ -1,6 +1,6 @@
 _pkgname=RedPanda-CPP
 pkgname=${_pkgname,,}-git
-pkgver=2.7.r10.g0caaad84
+pkgver=2.12.r1.g57c4c5bc
 pkgrel=1
 pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (development version)'
 arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64')
@@ -9,10 +9,16 @@ license=('GPL3')
 depends=(qt5-base qt5-svg gcc gdb)
 makedepends=(git qt5-tools)
 optdepends=(
-    'clang: alternate C/C++ compiler'
-    'qterminal: run in terminal'
-    'konsole: run in terminal (alternate)'
+    'clang: C/C++ compiler (alternative)'
     'git: git integration'
+    'alacritty: run in terminal'
+    'kitty: run in terminal'
+    'tilix: run in terminal'
+    'cool-retro-term: run in terminal'
+    'konsole: run in terminal'
+    'deepin-terminal: run in terminal'
+    'qterminal: run in terminal'
+    'lxterminal: run in terminal'
 )
 conflicts=("${_pkgname,,}")
 provides=("${_pkgname,,}")

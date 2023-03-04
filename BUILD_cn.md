@@ -34,7 +34,7 @@ apt install gcc g++ make gdb gdbserver
 ### 2.安装QT5和依赖包
 
 ```bash
-apt install qtbase5-dev qttools5-dev-tools libicu-dev libqt5svg5-dev git qterminal
+apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
 ```
 
 ### 3.下载源码
@@ -68,30 +68,34 @@ RedPandaIDE
 
 ## AppImage
 
-1. 安装依赖包：cURL、Docker。
+1. 安装依赖包：Docker 或 Podman。
 
    Windows 宿主的额外要求：
    - Docker 使用基于 WSL 2 的引擎，或者对此项目文件夹启用文件共享（Settings > Resources > File sharing）；
-   - PowerShell（曾用名 “PowerShell Core”，不是 “Windows PowerShell”）。
+   - PowerShell (Core) 或 Windows PowerShell。
 2. 准备构建环境。Linux 宿主：
    ```bash
-   arch=x86_64 # 或 aarch64
-   curl -L -o packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
-   docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
+   ARCH=x86_64 # 或 aarch64
+   DOCKER=docker # 或 podman
+   $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
    Windows 宿主：
    ```ps1
-   $arch = "x86_64" # 或 "aarch64"（如果将来 Docker 支持 WoA）
-   Invoke-WebRequest -OutFile packages/appimage/dockerfile-$arch/appimagetool-$arch.AppImage -Uri https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-$arch.AppImage
-   docker build -t redpanda-builder-$arch packages/appimage/dockerfile-$arch
+   $ARCH = "x86_64" # 或 "aarch64"（如果将来 Docker 或 Podman 支持 WoA）
+   $DOCKER = "docker" # 或 "podman"
+   & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
 3. 构建 AppImage。Linux 宿主：
    ```bash
-   ./packages/appimage/build-x86_64.sh # 或 *-aarch64.sh
+   ARCH=x86_64
+   DOCKER=docker
+   $DOCKER run --rm -v $PWD:/build/RedPanda-CPP -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
    ```
    Windows 宿主：
    ```ps1
-   ./packages/appimage/build-x86_64.ps1 # 或 *-aarch64.ps1（如果将来 Docker 支持 WoA）
+   $ARCH = "x86_64"
+   $DOCKER = "docker"
+   & $DOCKER run --rm -v "$(Get-Location):/build/RedPanda-CPP" -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
    ```
 4. 运行小熊猫 C++.
    ```bash
