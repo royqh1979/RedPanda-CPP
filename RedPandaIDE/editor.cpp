@@ -2010,9 +2010,8 @@ void Editor::onTooltipTimer()
                 (syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
                  || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
                 ) {
-            qDebug()<<s;
             bool neg=false;
-            LONGLONG val;
+            qlonglong val;
             bool ok;
             if (s.startsWith("-")) {
                 s=s.mid(1);
@@ -2026,7 +2025,7 @@ void Editor::onTooltipTimer()
             if (ok) {
                 if (neg)
                     val = -val;
-                hint=tr("hex: %1").arg((ULONGLONG)val,0,16)
+                hint=tr("hex: %1").arg((qulonglong)val,0,16)
                         +"<br />"
                      +tr("dec: %1").arg(val,0,10);
             }
