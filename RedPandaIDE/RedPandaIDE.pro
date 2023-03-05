@@ -12,9 +12,12 @@ isEmpty(APP_VERSION) {
 }
 
 contains(QMAKE_HOST.arch, x86_64):{
-    contains(QMAKE_HOST.arch, x86_64):{
-        DEFINES += ARCH_X86_64=1
-    } else : {
+    DEFINES += ARCH_X86_64=1
+} else: {
+    contains(QMAKE_HOST.arch, i386):{
+        DEFINES += ARCH_X86=1
+    }
+    contains(QMAKE_HOST.arch, i686):{
         DEFINES += ARCH_X86=1
     }
 }

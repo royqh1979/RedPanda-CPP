@@ -419,7 +419,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(true);
         ui->actionx86_Assembly_Language_Reference_Manual->setVisible(false);
 #elif defined(ARCH_X86_64)
-        ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(true);
+        ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(false);
         ui->actionx86_Assembly_Language_Reference_Manual->setVisible(true);
 #else
         ui->actionIA_32_Assembly_Language_Reference_Manual->setVisible(false);
@@ -9610,20 +9610,40 @@ void MainWindow::on_actionNew_GAS_File_triggered()
 
 void MainWindow::on_actionGNU_Assembler_Manual_triggered()
 {
+    QFileInfo fileInfo{includeTrailingPathDelimiter(pSettings->dirs().appDir())+
+                       QString{"Using GNU Assembler.pdf"}};
+    if (fileInfo.exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+        return;
+    }
     QDesktopServices::openUrl(QUrl("https://sourceware.org/binutils/docs/as/index.html"));
 }
 
+#ifdef ARCH_X86_64
 void MainWindow::on_actionx86_Assembly_Language_Reference_Manual_triggered()
 {
+    QFileInfo fileInfo{includeTrailingPathDelimiter(pSettings->dirs().appDir())+
+                       QString{"x86 Assembly Language Reference Manual.pdf"}};
+    if (fileInfo.exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+        return;
+    }
     QDesktopServices::openUrl(QUrl("https://docs.oracle.com/cd/E53394_01/html/E54851/index.html"));
 }
+#endif
 
-
+#ifdef ARCH_X86
 void MainWindow::on_actionIA_32_Assembly_Language_Reference_Manual_triggered()
 {
+    QFileInfo fileInfo{includeTrailingPathDelimiter(pSettings->dirs().appDir())+
+                       QString{"IA-32 Assembly Language Reference Manual.pdf"}};
+    if (fileInfo.exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
+        return;
+    }
     QDesktopServices::openUrl(QUrl("https://docs.oracle.com/cd/E19455-01/806-3773/index.html"));
 }
-
+#endif
 
 void MainWindow::on_actionAdd_Watchpoint_triggered()
 {

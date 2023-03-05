@@ -5,6 +5,7 @@ Red Panda C++ Version 2.17
   - enhancement: Add "New Text File" in the File menu
   - enhancement: Add "address" in the memory view's mouse tip.
   - enhancement: Show mousetip for numbers in the GNU assembly file. 
+  - enhancement: Open offline gnu as/x86 assembly manual if exists.
 
 Red Panda C++ Version 2.16
 
