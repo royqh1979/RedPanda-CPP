@@ -6,6 +6,7 @@ Red Panda C++ Version 2.17
   - enhancement: Add "address" in the memory view's mouse tip.
   - enhancement: Show mousetip for numbers in the GNU assembly file. 
   - enhancement: Open offline gnu as/x86 assembly manual if exists.
+  - fix: Hex number with 'f' in not is not correctly colored.
 
 Red Panda C++ Version 2.16
 

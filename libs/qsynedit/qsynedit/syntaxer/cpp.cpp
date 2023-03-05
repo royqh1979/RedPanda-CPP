@@ -684,14 +684,18 @@ void CppSyntaxer::numberProc()
             if (mTokenId != TokenId::Number) {
                 return;
             }
+            mRun++;
             break;
         case '.':
-            if (mTokenId != TokenId::Octal) {
+            if (mTokenId == TokenId::Number) {
                 mTokenId = TokenId::Float;
+            } else if (mTokenId == TokenId::Hex) {
+                mTokenId = TokenId::HexFloat;
             } else {
                 mTokenId = TokenId::Unknown;
                 return;
             }
+            mRun++;
             break;
         case '0':
         case '1':
@@ -701,38 +705,60 @@ void CppSyntaxer::numberProc()
         case '5':
         case '6':
         case '7':
+            mRun++;
+            break;
         case '8':
         case '9':
+            if (mTokenId == TokenId::Octal)
+                return;
+            else {
+                mRun++;
+                break;
+            }
         case 'a':
         case 'b':
         case 'c':
         case 'd':
+        case 'f':
         case 'A':
         case 'B':
         case 'C':
         case 'D':
+        case 'F':
+            if (mTokenId != TokenId::Hex
+                    && mTokenId != TokenId::HexFloat)
+                return;
+            else {
+                mRun++;
+                break;
+            }
+            mRun++;
             break;
         case 'e':
         case 'E':
-            if (mTokenId==TokenId::Number) {
+            if (mTokenId==TokenId::Number || mTokenId == TokenId::Float) {
                 mTokenId = TokenId::Float;
                 mRun++;
                 if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
                     mRun++;
-            break;
-            }
+            } else if (mTokenId==TokenId::Octal) {
+                return;
+            } else
+                mRun++;
             break;
         case 'p':
         case 'P':
-            mTokenId = TokenId::Float;
-            mRun++;
-            if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
+            if (mTokenId==TokenId::Hex || mTokenId==TokenId::HexFloat) {
+                mTokenId = TokenId::HexFloat;
                 mRun++;
-            break;
+                if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
+                    mRun++;
+                break;
+            } else
+                return;
         default:
             return;
         }
-        mRun+=1;
     }
 }
 
