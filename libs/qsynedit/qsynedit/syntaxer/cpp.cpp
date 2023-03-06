@@ -271,7 +271,7 @@ CppSyntaxer::TokenId CppSyntaxer::getTokenId()
     }
 }
 
-void CppSyntaxer::andSymbolProc()
+void CppSyntaxer::procAndSymbol()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -287,10 +287,10 @@ void CppSyntaxer::andSymbolProc()
     mRun+=1;
 }
 
-void CppSyntaxer::ansiCppProc()
+void CppSyntaxer::procCppStyleComment()
 {
     if (mRun>=mLineSize) {
-        nullProc();
+        procNull();
         return;
     }
     mTokenId = TokenId::Comment;
@@ -307,12 +307,12 @@ void CppSyntaxer::ansiCppProc()
         mRange.state = RangeState::rsUnknown;
 }
 
-void CppSyntaxer::ansiCProc()
+void CppSyntaxer::procAnsiCStyleComment()
 {
     bool finishProcess = false;
     mTokenId = TokenId::Comment;
     if (mRun>=mLineSize) {
-        nullProc();
+        procNull();
         return;
     }
     while (mRun<mLineSize) {
@@ -345,7 +345,7 @@ void CppSyntaxer::ansiCProc()
     }
 }
 
-void CppSyntaxer::asciiCharProc()
+void CppSyntaxer::procAsciiChar()
 {
     mTokenId = TokenId::Char;
     do {
@@ -361,7 +361,7 @@ void CppSyntaxer::asciiCharProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void CppSyntaxer::braceCloseProc()
+void CppSyntaxer::procBraceClose()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -384,7 +384,7 @@ void CppSyntaxer::braceCloseProc()
     popIndents(IndentType::Block);
 }
 
-void CppSyntaxer::braceOpenProc()
+void CppSyntaxer::procBraceOpen()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -414,7 +414,7 @@ void CppSyntaxer::braceOpenProc()
         pushIndents(IndentType::Block);
 }
 
-void CppSyntaxer::colonProc()
+void CppSyntaxer::procColon()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]==':') {
@@ -424,13 +424,13 @@ void CppSyntaxer::colonProc()
     }
 }
 
-void CppSyntaxer::commaProc()
+void CppSyntaxer::procComma()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
 }
 
-void CppSyntaxer::directiveProc()
+void CppSyntaxer::procDirective()
 {
     QString preContents = mLine.left(mRun).trimmed();
     if (!preContents.isEmpty()) { // '#' is not first non-space char on the line, treat it as an invalid char
@@ -473,7 +473,7 @@ void CppSyntaxer::directiveProc()
     }
 }
 
-void CppSyntaxer::defineIdentProc()
+void CppSyntaxer::procDefineIdent()
 {
     mTokenId = TokenId::Identifier;
 
@@ -482,7 +482,7 @@ void CppSyntaxer::defineIdentProc()
     mRange.state = RangeState::rsDefineRemaining;
 }
 
-void CppSyntaxer::defineRemainingProc()
+void CppSyntaxer::procDefineRemaining()
 {
     mTokenId = TokenId::Directive;
     while (mRun<mLineSize) {
@@ -515,11 +515,11 @@ void CppSyntaxer::defineRemainingProc()
     mRange.state=RangeState::rsUnknown;
 }
 
-void CppSyntaxer::directiveEndProc()
+void CppSyntaxer::procDirectiveEnd()
 {
     mTokenId = TokenId::Directive;
     if (mRun >= mLineSize) {
-        nullProc();
+        procNull();
         return;
     }
     mRange.state = RangeState::rsUnknown;
@@ -549,7 +549,7 @@ void CppSyntaxer::directiveEndProc()
     } while (mRun < mLineSize);
 }
 
-void CppSyntaxer::equalProc()
+void CppSyntaxer::procEqual()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '=') {
@@ -559,7 +559,7 @@ void CppSyntaxer::equalProc()
     }
 }
 
-void CppSyntaxer::greaterProc()
+void CppSyntaxer::procGreater()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -579,7 +579,7 @@ void CppSyntaxer::greaterProc()
     mRun+=1;
 }
 
-void CppSyntaxer::identProc()
+void CppSyntaxer::procIdentifier()
 {
     int wordEnd = mRun;
     while (wordEnd<mLineSize && isIdentChar(mLine[wordEnd])) {
@@ -597,7 +597,7 @@ void CppSyntaxer::identProc()
     }
 }
 
-void CppSyntaxer::lowerProc()
+void CppSyntaxer::procLower()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -617,7 +617,7 @@ void CppSyntaxer::lowerProc()
     mRun+=1;
 }
 
-void CppSyntaxer::minusProc()
+void CppSyntaxer::procMinus()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -640,7 +640,7 @@ void CppSyntaxer::minusProc()
     mRun += 1;
 }
 
-void CppSyntaxer::modSymbolProc()
+void CppSyntaxer::procMod()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
@@ -650,7 +650,7 @@ void CppSyntaxer::modSymbolProc()
     }
 }
 
-void CppSyntaxer::notSymbolProc()
+void CppSyntaxer::procNot()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
@@ -660,24 +660,44 @@ void CppSyntaxer::notSymbolProc()
     }
 }
 
-void CppSyntaxer::nullProc()
+void CppSyntaxer::procNull()
 {
     mTokenId = TokenId::Null;
 }
 
-void CppSyntaxer::numberProc()
+void CppSyntaxer::procNumber(bool isFloat)
 {
-    mTokenId = TokenId::Number;
-    if (mRun+1<mLineSize && mLine[mRun]=='0') {
-        if (mLine[mRun+1]=='x' || mLine[mRun+1]=='X') {
-            mTokenId=TokenId::Hex;
-            mRun+=2;
-        } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='7') {
-            mTokenId=TokenId::Octal;
-            mRun+=2;
-        }
-    } else
-        mRun+=1;
+    if (isFloat) {
+        mTokenId = TokenId::Float;
+        mRun++;
+    } else {
+        mTokenId = TokenId::Number;
+        if (mRun+1<mLineSize && mLine[mRun]=='0') {
+            if (mLine[mRun+1]=='x' || mLine[mRun+1]=='X') {
+                mTokenId=TokenId::Hex;
+                mRun+=2;
+            } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='7') {
+                mTokenId=TokenId::Octal;
+                mRun+=2;
+            }
+        } else
+            mRun+=1;
+    }
+    switch(mTokenId) {
+    case TokenId::Hex:
+        procHexNumber();
+        break;
+    case TokenId::Octal:
+        procOctNumber();
+        break;
+    default:
+        procDecNumber();
+    }
+}
+
+void CppSyntaxer::procDecNumber()
+{
+
     while (mRun<mLineSize) {
         switch(mLine[mRun].unicode()) {
         case '\'':
@@ -687,14 +707,11 @@ void CppSyntaxer::numberProc()
             mRun++;
             break;
         case '.':
-            if (mTokenId == TokenId::Number) {
-                mTokenId = TokenId::Float;
-            } else if (mTokenId == TokenId::Hex) {
-                mTokenId = TokenId::HexFloat;
-            } else {
+            if (mTokenId != TokenId::Number) {
                 mTokenId = TokenId::Unknown;
                 return;
             }
+            mTokenId = TokenId::Float;
             mRun++;
             break;
         case '0':
@@ -705,64 +722,95 @@ void CppSyntaxer::numberProc()
         case '5':
         case '6':
         case '7':
-            mRun++;
-            break;
         case '8':
         case '9':
-            if (mTokenId == TokenId::Octal)
-                return;
-            else {
-                mRun++;
-                break;
-            }
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'f':
-        case 'A':
-        case 'B':
-        case 'C':
-        case 'D':
-        case 'F':
-            if (mTokenId != TokenId::Hex
-                    && mTokenId != TokenId::HexFloat)
-                return;
-            else {
-                mRun++;
-                break;
-            }
             mRun++;
             break;
         case 'e':
         case 'E':
-            if (mTokenId==TokenId::Number || mTokenId == TokenId::Float) {
-                mTokenId = TokenId::Float;
-                mRun++;
-                if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
-                    mRun++;
-            } else if (mTokenId==TokenId::Octal) {
-                return;
-            } else
+            mTokenId = TokenId::Float;
+            mRun++;
+            if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
                 mRun++;
             break;
-        case 'p':
-        case 'P':
-            if (mTokenId==TokenId::Hex || mTokenId==TokenId::HexFloat) {
-                mTokenId = TokenId::HexFloat;
-                mRun++;
-                if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
-                    mRun++;
-                break;
-            } else
-                return;
         default:
             return;
         }
     }
 }
 
-void CppSyntaxer::orSymbolProc()
+void CppSyntaxer::procHexNumber()
+{
+
+    while (mRun<mLineSize) {
+        switch(mLine[mRun].unicode()) {
+        case '.':
+            if (mTokenId != TokenId::Hex) {
+                mTokenId = TokenId::Unknown;
+                return;
+            }
+            mTokenId = TokenId::HexFloat;
+            mRun++;
+            break;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+        case 'E':
+        case 'F':
+            mRun++;
+            break;
+        case 'p':
+        case 'P':
+            mTokenId = TokenId::HexFloat;
+            mRun++;
+            if (mRun < mLineSize && (mLine[mRun]== '+' || mLine[mRun]== '-'))  // number = float, but no exponent. an arithmetic operator
+                mRun++;
+            break;
+        default:
+            return;
+        }
+    }
+}
+
+void CppSyntaxer::procOctNumber()
+{
+
+    while (mRun<mLineSize) {
+        switch(mLine[mRun].unicode()) {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+            mRun++;
+            break;
+        default:
+            return;
+        }
+    }
+}
+
+void CppSyntaxer::procOr()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -778,7 +826,7 @@ void CppSyntaxer::orSymbolProc()
     mRun+=1;
 }
 
-void CppSyntaxer::plusProc()
+void CppSyntaxer::procPlus()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize) {
@@ -794,7 +842,7 @@ void CppSyntaxer::plusProc()
     mRun+=1;
 }
 
-void CppSyntaxer::pointProc()
+void CppSyntaxer::procPoint()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '*' ) {
@@ -802,19 +850,19 @@ void CppSyntaxer::pointProc()
     } else if (mRun+2<mLineSize && mLine[mRun+1] == '.' && mLine[mRun+2] == '.') {
         mRun+=3;
     } else if (mRun+1<mLineSize && mLine[mRun+1]>='0' && mLine[mRun+1]<='9') {
-        numberProc();
+        procNumber(true);
     } else {
         mRun+=1;
     }
 }
 
-void CppSyntaxer::questionProc()
+void CppSyntaxer::procQuestion()
 {
     mTokenId = TokenId::Symbol;
     mRun+=1;
 }
 
-void CppSyntaxer::rawStringProc()
+void CppSyntaxer::procRawString()
 {
     bool noEscaping = false;
     mTokenId = TokenId::RawString;
@@ -842,7 +890,7 @@ void CppSyntaxer::rawStringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void CppSyntaxer::roundCloseProc()
+void CppSyntaxer::procRoundClose()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -852,7 +900,7 @@ void CppSyntaxer::roundCloseProc()
     popIndents(IndentType::Parenthesis);
 }
 
-void CppSyntaxer::roundOpenProc()
+void CppSyntaxer::procRoundOpen()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -860,7 +908,7 @@ void CppSyntaxer::roundOpenProc()
     pushIndents(IndentType::Parenthesis);
 }
 
-void CppSyntaxer::semiColonProc()
+void CppSyntaxer::procSemiColon()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
@@ -871,7 +919,7 @@ void CppSyntaxer::semiColonProc()
     }
 }
 
-void CppSyntaxer::slashProc()
+void CppSyntaxer::procSlash()
 {
     if (mRun+1<mLineSize) {
         switch(mLine[mRun+1].unicode()) {
@@ -896,7 +944,7 @@ void CppSyntaxer::slashProc()
             }
             mRun += 2;
             if (mRun < mLineSize)
-                ansiCProc();
+                procAnsiCStyleComment();
             return;
         case '=':
             mRun+=2;
@@ -908,7 +956,7 @@ void CppSyntaxer::slashProc()
     mTokenId = TokenId::Symbol;
 }
 
-void CppSyntaxer::backSlashProc()
+void CppSyntaxer::procBackSlash()
 {
     if (mRun+1==mLineSize-1) {
         mTokenId = TokenId::Symbol;
@@ -918,7 +966,7 @@ void CppSyntaxer::backSlashProc()
     mRun+=1;
 }
 
-void CppSyntaxer::spaceProc()
+void CppSyntaxer::procSpace()
 {
     mRun += 1;
     mTokenId = TokenId::Space;
@@ -931,7 +979,7 @@ void CppSyntaxer::spaceProc()
     }
 }
 
-void CppSyntaxer::squareCloseProc()
+void CppSyntaxer::procSquareClose()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
@@ -941,7 +989,7 @@ void CppSyntaxer::squareCloseProc()
     popIndents(IndentType::Bracket);
 }
 
-void CppSyntaxer::squareOpenProc()
+void CppSyntaxer::procSquareOpen()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
@@ -949,7 +997,7 @@ void CppSyntaxer::squareOpenProc()
     pushIndents(IndentType::Bracket);
 }
 
-void CppSyntaxer::starProc()
+void CppSyntaxer::procStar()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1] == '=') {
@@ -1016,7 +1064,7 @@ void CppSyntaxer::starProc()
 //    }
 //}
 
-void CppSyntaxer::stringEscapeSeqProc()
+void CppSyntaxer::procStringEscapeSeq()
 {
     mTokenId = TokenId::StringEscapeSeq;
     mRun+=1;
@@ -1071,7 +1119,7 @@ void CppSyntaxer::stringEscapeSeqProc()
     mRange.state = RangeState::rsString;
 }
 
-void CppSyntaxer::stringProc()
+void CppSyntaxer::procString()
 {
     if (mRun >= mLineSize) {
         mRange.state = RangeState::rsUnknown;
@@ -1124,7 +1172,7 @@ void CppSyntaxer::stringProc()
     mRange.state = RangeState::rsUnknown;
 }
 
-void CppSyntaxer::stringStartProc()
+void CppSyntaxer::procStringStart()
 {
     mTokenId = TokenId::String;
     mRun += 1;
@@ -1132,22 +1180,22 @@ void CppSyntaxer::stringStartProc()
         mRange.state = RangeState::rsUnknown;
         return;
     }
-    stringProc();
+    procString();
 }
 
-void CppSyntaxer::tildeProc()
+void CppSyntaxer::procTilde()
 {
     mRun+=1;
     mTokenId = TokenId::Symbol;
 }
 
-void CppSyntaxer::unknownProc()
+void CppSyntaxer::procUnknown()
 {
     mRun+=1;
     mTokenId = TokenId::Unknown;
 }
 
-void CppSyntaxer::xorSymbolProc()
+void CppSyntaxer::procXor()
 {
     mTokenId = TokenId::Symbol;
     if (mRun+1<mLineSize && mLine[mRun+1]=='=') {
@@ -1160,53 +1208,53 @@ void CppSyntaxer::xorSymbolProc()
 void CppSyntaxer::processChar()
 {
     if (mRun>=mLineSize) {
-        nullProc();
+        procNull();
     } else {
         switch(mLine[mRun].unicode()) {
         case '&':
-            andSymbolProc();
+            procAndSymbol();
             break;
         case '\'':
-            asciiCharProc();
+            procAsciiChar();
             break;
         case '}':
-            braceCloseProc();
+            procBraceClose();
             break;
         case '{':
-            braceOpenProc();
+            procBraceOpen();
             break;
         case ':':
-            colonProc();
+            procColon();
             break;
         case ',':
-            commaProc();
+            procComma();
             break;
         case '#':
-            directiveProc();
+            procDirective();
             break;
         case '=':
-            equalProc();
+            procEqual();
             break;
         case '>':
-            greaterProc();
+            procGreater();
             break;
         case '?':
-            questionProc();
+            procQuestion();
             break;
         case '<':
-            lowerProc();
+            procLower();
             break;
         case '-':
-            minusProc();
+            procMinus();
             break;
         case '%':
-            modSymbolProc();
+            procMod();
             break;
         case '!':
-            notSymbolProc();
+            procNot();
             break;
         case '\\':
-            backSlashProc();
+            procBackSlash();
             break;
         case '0':
         case '1':
@@ -1218,52 +1266,52 @@ void CppSyntaxer::processChar()
         case '7':
         case '8':
         case '9':
-            numberProc();
+            procNumber();
             break;
         case '|':
-            orSymbolProc();
+            procOr();
             break;
         case '+':
-            plusProc();
+            procPlus();
             break;
         case '.':
-            pointProc();
+            procPoint();
             break;
         case ')':
-            roundCloseProc();
+            procRoundClose();
             break;
         case '(':
-            roundOpenProc();
+            procRoundOpen();
             break;
         case ';':
-            semiColonProc();
+            procSemiColon();
             break;
         case '/':
-            slashProc();
+            procSlash();
             break;
         case ']':
-            squareCloseProc();
+            procSquareClose();
             break;
         case '[':
-            squareOpenProc();
+            procSquareOpen();
             break;
         case '*':
-            starProc();
+            procStar();
             break;
         case '"':
-            stringStartProc();
+            procStringStart();
             break;
         case '~':
-            tildeProc();
+            procTilde();
             break;
         case '^':
-            xorSymbolProc();
+            procXor();
             break;
         default:
             if (isIdentChar(mLine[mRun])) {
-                identProc();
+                procIdentifier();
             } else {
-                unknownProc();
+                procUnknown();
             }
         }
     }
@@ -1409,7 +1457,7 @@ void CppSyntaxer::next()
     mTokenPos = mRun;
     do {
         if (mRun<mLineSize && isSpaceChar(mLine[mRun])) {
-            spaceProc();
+            procSpace();
             break;
         }
         switch (mRange.state) {
@@ -1418,19 +1466,19 @@ void CppSyntaxer::next()
         case RangeState::rsAnsiCAsmBlock:
         case RangeState::rsDirectiveComment:
             //qDebug()<<"*0-0-0*";
-            ansiCProc();
+            procAnsiCStyleComment();
             break;
         case RangeState::rsString:
             //qDebug()<<"*1-0-0*";
-            stringProc();
+            procString();
             break;
         case RangeState::rsCppComment:
             //qDebug()<<"*2-0-0*";
-            ansiCppProc();
+            procCppStyleComment();
             break;
         case RangeState::rsMultiLineDirective:
             //qDebug()<<"*3-0-0*";
-            directiveEndProc();
+            procDirectiveEnd();
             break;
 //        case RangeState::rsMultiLineString:
 //            //qDebug()<<"*4-0-0*";
@@ -1438,46 +1486,46 @@ void CppSyntaxer::next()
 //            break;
         case RangeState::rsStringEscapeSeq:
             //qDebug()<<"*6-0-0*";
-            stringEscapeSeqProc();
+            procStringEscapeSeq();
             break;
         case RangeState::rsChar:
             //qDebug()<<"*7-0-0*";
             if (mRun>=mLineSize) {
-                nullProc();
+                procNull();
             } else if (mLine[mRun]=='\'') {
                 mRange.state = rsUnknown;
                 mTokenId = TokenId::Char;
                 mRun+=1;
             } else {
-                asciiCharProc();
+                procAsciiChar();
             }
             break;
         case RangeState::rsDefineIdentifier:
             //qDebug()<<"*8-0-0*";
-            defineIdentProc();
+            procDefineIdent();
             break;
         case RangeState::rsDefineRemaining:
             //qDebug()<<"*9-0-0*";
-            defineRemainingProc();
+            procDefineRemaining();
             break;
         default:
             //qDebug()<<"*a-0-0*";
             mRange.state = RangeState::rsUnknown;
             if (mRun>=mLineSize) {
                 //qDebug()<<"*b-0-0*";
-                nullProc();
+                procNull();
             } else if (mRun+1<mLineSize && mLine[mRun] == 'R' && mLine[mRun+1] == '"') {
                 //qDebug()<<"*c-0-0*";
                 mRun+=2;
-                rawStringProc();
+                procRawString();
             } else if (mRun+1<mLineSize && (mLine[mRun] == 'L' || mLine[mRun] == 'u' || mLine[mRun]=='U') && mLine[mRun+1]=='\"') {
                 //qDebug()<<"*d-0-0*";
                 mRun+=1;
-                stringStartProc();
+                procStringStart();
             } else if (mRun+2<mLineSize && mLine[mRun] == 'u' && mLine[mRun+1] == '8' && mLine[mRun+2]=='\"') {
                 //qDebug()<<"*e-0-0*";
                 mRun+=2;
-                stringStartProc();
+                procStringStart();
             } else {
                 //qDebug()<<"*f-0-0*";
                 processChar();
