@@ -21,6 +21,7 @@
 #include "settings.h"
 #include "../systemconsts.h"
 #include "../iconsmanager.h"
+#include "qt_utils/charsetinfo.h"
 
 #include <QFileDialog>
 #include <QIcon>
@@ -79,7 +80,26 @@ void ProjectGeneralWidget::doLoad()
                           .arg(totalCount).arg(srcCount).arg(headerCount)
                           .arg(resCount).arg(otherCount));
 
-    ui->cbDefaultEncoding->setCurrentText(project->options().encoding);
+    QByteArray defaultEncoding = project->options().encoding;
+    if (defaultEncoding == ENCODING_AUTO_DETECT
+            || defaultEncoding == ENCODING_SYSTEM_DEFAULT
+            || defaultEncoding == ENCODING_UTF8
+            || defaultEncoding == ENCODING_UTF8_BOM) {
+        int index =ui->cbEncoding->findData(defaultEncoding);
+        ui->cbEncoding->setCurrentIndex(index);
+        ui->cbEncodingDetail->clear();
+        ui->cbEncodingDetail->setVisible(false);
+    } else {
+        QString language = pCharsetInfoManager->findLanguageByCharsetName(defaultEncoding);
+        ui->cbEncoding->setCurrentText(language);
+        ui->cbEncodingDetail->setVisible(true);
+        ui->cbEncodingDetail->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(language);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetail->addItem(info->name);
+        }
+        ui->cbEncodingDetail->setCurrentText(defaultEncoding);
+    }
 
     ui->lstType->setCurrentRow( static_cast<int>(project->options().type));
 
@@ -97,7 +117,11 @@ void ProjectGeneralWidget::doSave()
         return;
     project->setName(ui->txtName->text().trimmed());
 
-    project->setEncoding(ui->cbDefaultEncoding->currentText().toUtf8());
+    if (ui->cbEncodingDetail->isVisible()) {
+        project->setEncoding(ui->cbEncodingDetail->currentText().toUtf8());
+    } else {
+        project->setEncoding(ui->cbEncoding->currentData().toByteArray());
+    }
 
     int row = std::max(0,ui->lstType->currentRow());
     project->options().type = static_cast<ProjectType>(row);
@@ -164,13 +188,35 @@ void ProjectGeneralWidget::on_btnRemove_clicked()
     setSettingsChanged();
 }
 
+void ProjectGeneralWidget::on_cbEncoding_currentTextChanged(const QString &arg1)
+{
+    QString userData = ui->cbEncoding->currentData().toString();
+    if (userData == ENCODING_AUTO_DETECT
+            || userData == ENCODING_SYSTEM_DEFAULT
+            || userData == ENCODING_UTF8
+            || userData == ENCODING_UTF8_BOM) {
+        ui->cbEncodingDetail->setVisible(false);
+        ui->cbEncodingDetail->clear();
+    } else {
+        ui->cbEncodingDetail->setVisible(true);
+        ui->cbEncodingDetail->clear();
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(userData);
+        foreach (const PCharsetInfo& info, infos) {
+            ui->cbEncodingDetail->addItem(info->name);
+        }
+    }
+}
+
 void ProjectGeneralWidget::init()
 {
-    ui->cbDefaultEncoding->clear();
-    QStringList codecNames=pSystemConsts->codecNames();
-    //project encoding shouldn't be auto
-    codecNames.removeAll(ENCODING_AUTO_DETECT);
-    ui->cbDefaultEncoding->addItems(codecNames);
+    ui->cbEncodingDetail->setVisible(false);
+    ui->cbEncoding->clear();
+    ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
+    ui->cbEncoding->addItem(tr("UTF-8 BOM"),ENCODING_UTF8_BOM);
+    foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
+        ui->cbEncoding->addItem(langName,langName);
+    }
     SettingsWidget::init();
 }
 

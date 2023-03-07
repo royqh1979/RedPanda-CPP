@@ -1131,7 +1131,8 @@ void Project::setEncoding(const QByteArray &encoding)
                 continue;
             Editor * e=unitEditor(unit);
             if (e) {
-                e->setEncodingOption(mOptions.encoding);
+                e->setEncodingOption(ENCODING_PROJECT);
+                unit->setEncoding(ENCODING_PROJECT);
             }
         }
     }

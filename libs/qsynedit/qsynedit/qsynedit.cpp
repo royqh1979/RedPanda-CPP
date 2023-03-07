@@ -149,6 +149,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mContentImage = std::make_shared<QImage>(clientWidth()*dpr,clientHeight()*dpr,QImage::Format_ARGB32);
     mContentImage->setDevicePixelRatio(dpr);
 
+    mAllFoldRanges = std::make_shared<CodeFoldingRanges>();
     mUseCodeFolding = true;
     m_blinkTimerId = 0;
     m_blinkStatus = 0;
@@ -947,8 +948,8 @@ int QSynEdit::lineToRow(int aLine) const
 int QSynEdit::foldRowToLine(int Row) const
 {
     int result = Row;
-    for (int i=0;i<mAllFoldRanges.count();i++) {
-        PCodeFoldingRange range = mAllFoldRanges[i];
+    for (int i=0;i<mAllFoldRanges->count();i++) {
+        PCodeFoldingRange range = (*mAllFoldRanges)[i];
         if (range->collapsed && !range->parentCollapsed() && range->fromLine < result) {
             result += range->linesCollapsed;
         }
@@ -959,8 +960,8 @@ int QSynEdit::foldRowToLine(int Row) const
 int QSynEdit::foldLineToRow(int Line) const
 {
     int result = Line;
-    for (int i=mAllFoldRanges.count()-1;i>=0;i--) {
-        PCodeFoldingRange range =mAllFoldRanges[i];
+    for (int i=mAllFoldRanges->count()-1;i>=0;i--) {
+        PCodeFoldingRange range =(*mAllFoldRanges)[i];
         if (range->collapsed && !range->parentCollapsed()) {
             // Line is found after fold
             if (range->toLine < Line)
@@ -1223,8 +1224,8 @@ bool QSynEdit::inputMethodOn()
 void QSynEdit::collapseAll()
 {
     incPaintLock();
-    for (int i = mAllFoldRanges.count()-1;i>=0;i--){
-        collapse(mAllFoldRanges[i]);
+    for (int i = mAllFoldRanges->count()-1;i>=0;i--){
+        collapse((*mAllFoldRanges)[i]);
     }
     decPaintLock();
 }
@@ -1232,8 +1233,8 @@ void QSynEdit::collapseAll()
 void QSynEdit::unCollpaseAll()
 {
     incPaintLock();
-    for (int i = mAllFoldRanges.count()-1;i>=0;i--){
-        uncollapse(mAllFoldRanges[i]);
+    for (int i = mAllFoldRanges->count()-1;i>=0;i--){
+        uncollapse((*mAllFoldRanges)[i]);
     }
     decPaintLock();
 }
@@ -3428,8 +3429,8 @@ void QSynEdit::collapse(PCodeFoldingRange FoldRange)
 void QSynEdit::foldOnListInserted(int Line, int Count)
 {
     // Delete collapsed inside selection
-    for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
-        PCodeFoldingRange range = mAllFoldRanges[i];
+    for (int i = mAllFoldRanges->count()-1;i>=0;i--) {
+        PCodeFoldingRange range = (*mAllFoldRanges)[i];
         if (range->fromLine == Line - 1) {// insertion starts at fold line
             if (range->collapsed)
                 uncollapse(range);
@@ -3441,13 +3442,13 @@ void QSynEdit::foldOnListInserted(int Line, int Count)
 void QSynEdit::foldOnListDeleted(int Line, int Count)
 {
     // Delete collapsed inside selection
-    for (int i = mAllFoldRanges.count()-1;i>=0;i--) {
-        PCodeFoldingRange range = mAllFoldRanges[i];
+    for (int i = mAllFoldRanges->count()-1;i>=0;i--) {
+        PCodeFoldingRange range = (*mAllFoldRanges)[i];
         if (range->fromLine == Line && Count == 1)  {// open up because we are messing with the starting line
             if (range->collapsed)
                 uncollapse(range);
         } else if (range->fromLine >= Line - 1 && range->fromLine < Line + Count) // delete inside affectec area
-            mAllFoldRanges.remove(i);
+            mAllFoldRanges->remove(i);
         else if (range->fromLine >= Line + Count) // Move after affected area
             range->move(-Count);
 
@@ -3457,7 +3458,7 @@ void QSynEdit::foldOnListDeleted(int Line, int Count)
 
 void QSynEdit::foldOnListCleared()
 {
-    mAllFoldRanges.clear();
+    mAllFoldRanges->clear();
 }
 
 void QSynEdit::rescanFolds()
@@ -3473,8 +3474,6 @@ void QSynEdit::rescanFolds()
     invalidateGutter();
 }
 
-static void null_deleter(CodeFoldingRanges *) {}
-
 void QSynEdit::rescanForFoldRanges()
 {
     // Delete all uncollapsed folds
@@ -3485,13 +3484,13 @@ void QSynEdit::rescanForFoldRanges()
 //    }
 
     // Did we leave any collapsed folds and are we viewing a code file?
-    if (mAllFoldRanges.count() > 0) {
+    if (mAllFoldRanges->count() > 0) {
         QMap<QString,PCodeFoldingRange> rangeIndexes;
-        foreach(const PCodeFoldingRange& r, mAllFoldRanges.ranges()) {
+        foreach(const PCodeFoldingRange& r, mAllFoldRanges->ranges()) {
             if (r->collapsed)
                 rangeIndexes.insert(QString("%1-%2").arg(r->fromLine).arg(r->toLine),r);
         }
-        mAllFoldRanges.clear();
+        mAllFoldRanges->clear();
         // Add folds to a separate list
         PCodeFoldingRanges temporaryAllFoldRanges = std::make_shared<CodeFoldingRanges>();
         scanForFoldRanges(temporaryAllFoldRanges);
@@ -3507,11 +3506,11 @@ void QSynEdit::rescanForFoldRanges()
                 tempFoldRange->collapsed=true;
                 tempFoldRange->linesCollapsed=r2->linesCollapsed;
             }
-            mAllFoldRanges.add(tempFoldRange);
+            mAllFoldRanges->add(tempFoldRange);
         }
     } else {
         // We ended up with no folds after deleting, just pass standard data...
-        PCodeFoldingRanges temp(&mAllFoldRanges, null_deleter);
+        PCodeFoldingRanges temp{mAllFoldRanges};
         scanForFoldRanges(temp);
     }
 }
@@ -3612,10 +3611,10 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
 
 PCodeFoldingRange QSynEdit::collapsedFoldStartAtLine(int Line)
 {
-    for (int i = 0; i< mAllFoldRanges.count() - 1; i++ ) {
-        if (mAllFoldRanges[i]->collapsed && mAllFoldRanges[i]->fromLine == Line) {
-            return mAllFoldRanges[i];
-        } else if (mAllFoldRanges[i]->fromLine > Line) {
+    for (int i = 0; i< mAllFoldRanges->count() - 1; i++ ) {
+        if ((*mAllFoldRanges)[i]->collapsed && (*mAllFoldRanges)[i]->fromLine == Line) {
+            return (*mAllFoldRanges)[i];
+        } else if ((*mAllFoldRanges)[i]->fromLine > Line) {
             break; // sorted by line. don't bother scanning further
         }
     }
@@ -3629,8 +3628,8 @@ void QSynEdit::initializeCaret()
 
 PCodeFoldingRange QSynEdit::foldStartAtLine(int Line) const
 {
-    for (int i = 0; i<mAllFoldRanges.count();i++) {
-        PCodeFoldingRange range = mAllFoldRanges[i];
+    for (int i = 0; i<mAllFoldRanges->count();i++) {
+        PCodeFoldingRange range = (*mAllFoldRanges)[i];
         if (range->fromLine == Line ){
             return range;
         } else if (range->fromLine>Line)
@@ -3641,8 +3640,8 @@ PCodeFoldingRange QSynEdit::foldStartAtLine(int Line) const
 
 bool QSynEdit::foldCollapsedBetween(int startLine, int endLine) const
 {
-    for (int i = 0; i<mAllFoldRanges.count();i++) {
-        PCodeFoldingRange range = mAllFoldRanges[i];
+    for (int i = 0; i<mAllFoldRanges->count();i++) {
+        PCodeFoldingRange range = (*mAllFoldRanges)[i];
         if (startLine >=range->fromLine && range->fromLine<=endLine
                 && (range->collapsed || range->parentCollapsed())){
             return true;
@@ -3696,32 +3695,32 @@ QString QSynEdit::substringByColumns(const QString &s, int startColumn, int &col
     return result;
 }
 
-PCodeFoldingRange QSynEdit::foldAroundLine(int Line)
+PCodeFoldingRange QSynEdit::foldAroundLine(int line)
 {
-    return foldAroundLineEx(Line,false,false,false);
+    return foldAroundLineEx(line,false,false,false);
 }
 
-PCodeFoldingRange QSynEdit::foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+PCodeFoldingRange QSynEdit::foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine)
 {
     // Check global list
-    PCodeFoldingRange Result = checkFoldRange(&mAllFoldRanges, Line, WantCollapsed, AcceptFromLine, AcceptToLine);
+    PCodeFoldingRange result = checkFoldRange(mAllFoldRanges, line, wantCollapsed, acceptFromLine, acceptToLine);
 
     // Found an item in the top level list?
-    if (Result) {
+    if (result) {
         while (true) {
-            PCodeFoldingRange ResultChild = checkFoldRange(Result->subFoldRanges.get(), Line, WantCollapsed, AcceptFromLine, AcceptToLine);
+            PCodeFoldingRange ResultChild = checkFoldRange(result->subFoldRanges, line, wantCollapsed, acceptFromLine, acceptToLine);
             if (!ResultChild)
                 break;
-            Result = ResultChild; // repeat for this one
+            result = ResultChild; // repeat for this one
         }
     }
-    return Result;
+    return result;
 }
 
-PCodeFoldingRange QSynEdit::checkFoldRange(CodeFoldingRanges *FoldRangeToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
+PCodeFoldingRange QSynEdit::checkFoldRange(PCodeFoldingRanges foldRangesToCheck, int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine)
 {
-    for (int i = 0; i< FoldRangeToCheck->count(); i++) {
-        PCodeFoldingRange range = (*FoldRangeToCheck)[i];
+    for (int i = 0; i< foldRangesToCheck->count(); i++) {
+        PCodeFoldingRange range = (*foldRangesToCheck)[i];
         if (((range->fromLine < Line) || ((range->fromLine <= Line) && AcceptFromLine)) &&
           ((range->toLine > Line) || ((range->toLine >= Line) && AcceptToLine))) {
             if (range->collapsed == WantCollapsed) {
@@ -3734,8 +3733,8 @@ PCodeFoldingRange QSynEdit::checkFoldRange(CodeFoldingRanges *FoldRangeToCheck, 
 
 PCodeFoldingRange QSynEdit::foldEndAtLine(int Line)
 {
-    for (int i = 0; i<mAllFoldRanges.count();i++) {
-        PCodeFoldingRange range = mAllFoldRanges[i];
+    for (int i = 0; i<mAllFoldRanges->count();i++) {
+        PCodeFoldingRange range = (*mAllFoldRanges)[i];
         if (range->toLine == Line ){
             return range;
         } else if (range->fromLine>Line)

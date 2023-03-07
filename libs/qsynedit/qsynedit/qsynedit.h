@@ -520,10 +520,10 @@ private:
     PCodeFoldingRange foldStartAtLine(int Line) const;
     bool foldCollapsedBetween(int startLine, int endLine) const;
     QString substringByColumns(const QString& s, int startColumn, int& colLen);
-    PCodeFoldingRange foldAroundLine(int Line);
-    PCodeFoldingRange foldAroundLineEx(int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
-    PCodeFoldingRange checkFoldRange(CodeFoldingRanges* FoldRangeToCheck,int Line, bool WantCollapsed, bool AcceptFromLine, bool AcceptToLine);
-    PCodeFoldingRange foldEndAtLine(int Line);
+    PCodeFoldingRange foldAroundLine(int line);
+    PCodeFoldingRange foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
+    PCodeFoldingRange checkFoldRange(PCodeFoldingRanges foldRangesToCheck,int line, bool wantCollapsed, bool AcceptFromLine, bool AcceptToLine);
+    PCodeFoldingRange foldEndAtLine(int line);
     void paintCaret(QPainter& painter, const QRect rcClip);
     int textOffset() const;
     EditCommand TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers);
@@ -639,7 +639,7 @@ private slots:
 
 private:
     std::shared_ptr<QImage> mContentImage;
-    CodeFoldingRanges mAllFoldRanges;
+    PCodeFoldingRanges mAllFoldRanges;
     CodeFoldingOptions mCodeFolding;
     int mEditingCount;
     bool mUseCodeFolding;

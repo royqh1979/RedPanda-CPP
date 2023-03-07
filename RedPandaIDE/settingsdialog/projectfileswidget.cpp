@@ -255,13 +255,28 @@ void ProjectFilesWidget::init()
     ui->spinPriority->setMaximum(9999);
     ui->cbEncodingDetail->setVisible(false);
     ui->cbEncoding->clear();
-    ui->cbEncoding->addItem(tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)),ENCODING_PROJECT);
+    if (pMainWindow->project()->options().encoding==ENCODING_SYSTEM_DEFAULT) {
+        ui->cbEncoding->addItem(tr("Project(%1)").arg(tr("ANSI"),ENCODING_PROJECT));
+    } else {
+        ui->cbEncoding->addItem(tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)),ENCODING_PROJECT);
+    }
     ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
         ui->cbEncoding->addItem(langName,langName);
     }
     SettingsWidget::init();
+}
+
+void ProjectFilesWidget::showEvent(QShowEvent *event)
+{
+    if (ui->cbEncoding->count()>0) {
+        if (pMainWindow->project()->options().encoding==ENCODING_SYSTEM_DEFAULT) {
+            ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(tr("ANSI")));
+        } else {
+            ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)));
+        }
+    }
 }
 
 

@@ -44,6 +44,7 @@ protected:
 private slots:
     void on_btnBrowse_clicked();
     void on_btnRemove_clicked();
+    void on_cbEncoding_currentTextChanged(const QString &arg1);
 
     // SettingsWidget interface
 public:

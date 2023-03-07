@@ -751,8 +751,8 @@ void QSynEditPainter::paintFoldAttributes()
     // Paint collapsed lines using changed pen
     if (edit->mCodeFolding.showCollapsedLine) {
         painter->setPen(edit->mCodeFolding.collapsedLineColor);
-        for (int i=0; i< edit->mAllFoldRanges.count();i++) {
-            PCodeFoldingRange range = edit->mAllFoldRanges[i];
+        for (int i=0; i< edit->mAllFoldRanges->count();i++) {
+            PCodeFoldingRange range = (*edit->mAllFoldRanges)[i];
             if (range->collapsed && !range->parentCollapsed() &&
                     (range->fromLine <= vLastLine) && (range->fromLine >= vFirstLine) ) {
                 // Get starting and end points

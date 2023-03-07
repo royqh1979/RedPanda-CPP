@@ -7,6 +7,9 @@ Red Panda C++ Version 2.17
   - enhancement: Show mousetip for numbers in the GNU assembly file. 
   - enhancement: Open offline gnu as/x86 assembly manual if exists.
   - fix: Hex number with 'f' in not is not correctly colored.
+  - fix: After project's default encoding is changed in the project options dialog, all project files' encoding are wrongly setted to the new encoding.(They should be "Project default")
+  - enhancement: Make project's default encoding setting in the project options dialog more user friendly.
+  - fix: In project options dialog's file page, Project's default encoding name is not updated when it's changed.
 
 Red Panda C++ Version 2.16
 
