@@ -1028,7 +1028,7 @@ void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
             activateWindow();
         }
     } else {
-        pMainWindow->showCPUInfoDialog();
+        showCPUInfoDialog();
     }
     return;
 }

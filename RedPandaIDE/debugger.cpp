@@ -1198,6 +1198,10 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             }
         }
         runInferiorStoppedHook();
+        if (reason.isEmpty() && mCurrentFunc == "_start" && mCurrentFile.isEmpty()) {
+            //gdb-server connected, just ignore it
+            return;
+        }
         if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
             emit inferiorStopped(mCurrentFile, mCurrentLine, false);
         else

@@ -13,7 +13,7 @@ Red Panda C++ Version 2.17
   - enhancement: Improve the compatibility with Dev-C++ for project configuations saved by Redpanda-C++.
   - enhancement: Syntax color support for binaray integer literals.
   - enhancement: Syntax color support for suffix in integer/float literals.
-
+  - fix: Cpu info window is auto openned, when debug using gdb-server.
 
 Red Panda C++ Version 2.16
 

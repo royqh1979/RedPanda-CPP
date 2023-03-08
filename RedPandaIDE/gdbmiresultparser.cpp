@@ -213,8 +213,8 @@ bool GDBMIResultParser::parseStringValue(const char *&p, QByteArray& stringValue
                 }
                 QByteArray numStr(p,i);
                 bool ok;
-                unsigned char ch = numStr.toInt(&ok,8);
-                stringValue+=ch;
+                char ch = numStr.toInt(&ok,8);
+                stringValue.append(ch);
                 p+=i;
                 break;
             }
