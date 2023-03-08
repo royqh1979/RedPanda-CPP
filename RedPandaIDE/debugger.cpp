@@ -1198,9 +1198,13 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
             }
         }
         runInferiorStoppedHook();
-        if (reason.isEmpty() && mCurrentFunc == "_start" && mCurrentFile.isEmpty()) {
-            //gdb-server connected, just ignore it
-            return;
+        if (reason.isEmpty()) {
+            QMutexLocker locker(&mCmdQueueMutex);
+            foreach (const PDebugCommand& cmd, mCmdQueue) {
+                //gdb-server connected, just ignore it
+                if (cmd->command=="-exec-continue")
+                    return;
+            }
         }
         if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
             emit inferiorStopped(mCurrentFile, mCurrentLine, false);
@@ -1303,6 +1307,7 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
 
 void DebugReader::runInferiorStoppedHook()
 {
+    QMutexLocker locker(&mCmdQueueMutex);
     foreach (const PDebugCommand& cmd, mInferiorStoppedHookCommands) {
         mCmdQueue.push_front(cmd);
     }
