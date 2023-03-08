@@ -10,6 +10,7 @@ Red Panda C++ Version 2.17
   - fix: After project's default encoding is changed in the project options dialog, all project files' encoding are wrongly setted to the new encoding.(They should be "Project default")
   - enhancement: Make project's default encoding setting in the project options dialog more user friendly.
   - fix: In project options dialog's file page, Project's default encoding name is not updated when it's changed.
+  - fix: Cpu info window is auto openned, when debug using gdb-server.
 
 Red Panda C++ Version 2.16
 
