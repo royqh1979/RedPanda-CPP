@@ -41,6 +41,7 @@ class CppSyntaxer: public Syntaxer
         Hex,
         HexFloat,
         Octal,
+        Binary,
         RawString
     };
 
@@ -88,6 +89,8 @@ public:
 
     static const QSet<QString> Keywords;
 
+    static const QSet<QString> ValidIntegerSuffixes;
+
     TokenId getTokenId();
 private:
     void procAndSymbol();
@@ -114,6 +117,11 @@ private:
     void procDecNumber();
     void procHexNumber();
     void procOctNumber();
+    void procBinNumber();
+    void procNumberSuffix();
+    void procIntegerSuffix();
+    void procFloatSuffix();
+
     void procOr();
     void procPlus();
     void procPoint();

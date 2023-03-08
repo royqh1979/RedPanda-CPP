@@ -1048,13 +1048,13 @@ bool Project::saveAsTemplate(const QString &templateFolder,
     if (!mOptions.libDirs.isEmpty())
         ini->SetValue("Project", "Libs", relativePaths(mOptions.libDirs).join(";").toUtf8());
     if (!mOptions.compilerCmd.isEmpty())
-        ini->SetValue("Project", "Compiler", textToLines(mOptions.compilerCmd).join(";CONFIG_LINE;").toUtf8());
+        ini->SetValue("Project", "Compiler", textToLines(mOptions.compilerCmd).join(" ").toUtf8());
     if (!mOptions.cppCompilerCmd.isEmpty())
-        ini->SetValue("Project", "CppCompiler", textToLines(mOptions.cppCompilerCmd).join(";CONFIG_LINE;").toUtf8());
+        ini->SetValue("Project", "CppCompiler", textToLines(mOptions.cppCompilerCmd).join(" ").toUtf8());
     if (!mOptions.linkerCmd.isEmpty())
-        ini->SetValue("Project", "Linker",textToLines(mOptions.linkerCmd).join(";CONFIG_LINE;").toUtf8());
+        ini->SetValue("Project", "Linker",textToLines(mOptions.linkerCmd).join(" ").toUtf8());
     if (!mOptions.resourceCmd.isEmpty())
-        ini->SetValue("Project", "ResourceCommand",textToLines(mOptions.resourceCmd).join(";CONFIG_LINE;").toUtf8());
+        ini->SetValue("Project", "ResourceCommand",textToLines(mOptions.resourceCmd).join(" ").toUtf8());
     ini->SetBoolValue("Project", "IsCpp", mOptions.isCpp);
     if (mOptions.includeVersionInfo)
         ini->SetBoolValue("Project", "IncludeVersionInfo", true);
@@ -1152,10 +1152,10 @@ void Project::saveOptions()
     ini.SetValue("Project","ResourceIncludes", toByteArray(relativePaths(mOptions.resourceIncludes).join(";")));
     ini.SetValue("Project","MakeIncludes", toByteArray(relativePaths(mOptions.makeIncludes).join(";")));
     ini.SetValue("Project","PrivateResource", toByteArray(mOptions.privateResource));
-    ini.SetValue("Project","Compiler", toByteArray(textToLines(mOptions.compilerCmd).join(";CONFIG_LINE;")));
-    ini.SetValue("Project","CppCompiler", toByteArray(textToLines(mOptions.cppCompilerCmd).join(";CONFIG_LINE;")));
-    ini.SetValue("Project","Linker", toByteArray(textToLines(mOptions.linkerCmd).join(";CONFIG_LINE;")));
-    ini.SetValue("Project", "ResourceCommand", toByteArray(textToLines(mOptions.resourceCmd).join(";CONFIG_LINE;")));
+    ini.SetValue("Project","Compiler", toByteArray(textToLines(mOptions.compilerCmd).join(" ")));
+    ini.SetValue("Project","CppCompiler", toByteArray(textToLines(mOptions.cppCompilerCmd).join(" ")));
+    ini.SetValue("Project","Linker", toByteArray(textToLines(mOptions.linkerCmd).join(" ")));
+    ini.SetValue("Project", "ResourceCommand", toByteArray(textToLines(mOptions.resourceCmd).join(" ")));
     ini.SetLongValue("Project","IsCpp", mOptions.isCpp);
     ini.SetValue("Project","Icon", toByteArray(extractRelativePath(directory(), mOptions.icon)));
     ini.SetValue("Project","ExeOutput", toByteArray(extractRelativePath(directory(),mOptions.exeOutput)));
@@ -1956,6 +1956,8 @@ void Project::loadOptions(SimpleIni& ini)
         }
 
         mOptions.type = static_cast<ProjectType>(ini.GetLongValue("Project", "type", 0));
+        // ;CONFIG_LINE; is used in olded version config files (<2.17)
+        // keep it for compatibility
         mOptions.compilerCmd = fromByteArray(ini.GetValue("Project", "Compiler", "")).replace(";CONFIG_LINE;","\n");
         mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", "")).replace(";CONFIG_LINE;","\n");
         mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", "")).replace(";CONFIG_LINE;","\n");

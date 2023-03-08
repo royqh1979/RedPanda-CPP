@@ -41,7 +41,6 @@ protected:
 private slots:
     void on_btnChooseLib_clicked();
 
-    // SettingsWidget interface
 protected:
     void updateIcons(const QSize &size) override;
 };

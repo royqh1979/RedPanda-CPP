@@ -93,3 +93,4 @@ void ProjectCompileParamatersWidget::updateIcons(const QSize &/*size*/)
     pIconsManager->setIcon(ui->btnChooseLib, IconsManager::ACTION_MISC_FOLDER);
 }
 
+

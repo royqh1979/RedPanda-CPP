@@ -31,7 +31,18 @@ static const QSet<QString> CppStatementKeyWords {
     "while",
     "do"
 };
-
+const QSet<QString> CppSyntaxer::ValidIntegerSuffixes {
+    "u",
+    "ll",
+    "z",
+    "l",
+    "uz",
+    "zu",
+    "ull",
+    "llu",
+    "lu",
+    "ul"
+};
 
 
 const QSet<QString> CppSyntaxer::Keywords {
@@ -676,6 +687,9 @@ void CppSyntaxer::procNumber(bool isFloat)
             if (mLine[mRun+1]=='x' || mLine[mRun+1]=='X') {
                 mTokenId=TokenId::Hex;
                 mRun+=2;
+            } else if (mLine[mRun+1]=='b' || mLine[mRun+1]=='B') {
+                    mTokenId=TokenId::Binary;
+                    mRun+=2;
             } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='7') {
                 mTokenId=TokenId::Octal;
                 mRun+=2;
@@ -690,6 +704,9 @@ void CppSyntaxer::procNumber(bool isFloat)
     case TokenId::Octal:
         procOctNumber();
         break;
+    case TokenId::Binary:
+        procBinNumber();
+        break;
     default:
         procDecNumber();
     }
@@ -700,12 +717,6 @@ void CppSyntaxer::procDecNumber()
 
     while (mRun<mLineSize) {
         switch(mLine[mRun].unicode()) {
-        case '\'':
-            if (mTokenId != TokenId::Number) {
-                return;
-            }
-            mRun++;
-            break;
         case '.':
             if (mTokenId != TokenId::Number) {
                 mTokenId = TokenId::Unknown;
@@ -724,6 +735,7 @@ void CppSyntaxer::procDecNumber()
         case '7':
         case '8':
         case '9':
+        case '\'':
             mRun++;
             break;
         case 'e':
@@ -734,6 +746,7 @@ void CppSyntaxer::procDecNumber()
                 mRun++;
             break;
         default:
+            procNumberSuffix();
             return;
         }
     }
@@ -774,6 +787,7 @@ void CppSyntaxer::procHexNumber()
         case 'D':
         case 'E':
         case 'F':
+        case '\'':
             mRun++;
             break;
         case 'p':
@@ -784,6 +798,7 @@ void CppSyntaxer::procHexNumber()
                 mRun++;
             break;
         default:
+            procNumberSuffix();
             return;
         }
     }
@@ -802,12 +817,83 @@ void CppSyntaxer::procOctNumber()
         case '5':
         case '6':
         case '7':
+        case '\'':
             mRun++;
             break;
         default:
+            procIntegerSuffix();
             return;
         }
     }
+}
+
+void CppSyntaxer::procBinNumber()
+{
+    while (mRun<mLineSize) {
+        switch(mLine[mRun].unicode()) {
+        case '0':
+        case '1':
+        case '\'':
+            mRun++;
+            break;
+        default:
+            procIntegerSuffix();
+            return;
+        }
+    }
+}
+
+void CppSyntaxer::procNumberSuffix()
+{
+    if (mTokenId==TokenId::HexFloat
+            || mTokenId==TokenId::Float )
+        procFloatSuffix();
+    else
+        procIntegerSuffix();
+}
+
+void CppSyntaxer::procIntegerSuffix()
+{
+    if (mRun>=mLineSize)
+        return;
+    int i=mRun;
+    bool shouldExit = false;
+    while (i<mLineSize && !shouldExit) {
+        switch (mLine[i].unicode()) {
+        case 'u':
+        case 'U':
+        case 'l':
+        case 'L':
+        case 'z':
+        case 'Z':
+            i++;
+            break;
+        default:
+            shouldExit=true;
+        }
+    }
+    if (i>mRun) {
+        QString s=mLine.mid(mRun,i-mRun).toLower();
+        if (ValidIntegerSuffixes.contains(s)) {
+            mRun=i;
+        }
+    }
+    return ;
+}
+
+void CppSyntaxer::procFloatSuffix()
+{
+    if (mRun>=mLineSize)
+        return;
+    switch (mLine[mRun].unicode()) {
+    case 'f':
+    case 'F':
+    case 'l':
+    case 'L':
+        mRun++;
+        break;
+    }
+    return ;
 }
 
 void CppSyntaxer::procOr()
@@ -1426,6 +1512,8 @@ const PTokenAttribute &CppSyntaxer::getTokenAttribute() const
     case TokenId::Hex:
         return mHexAttribute;
     case TokenId::Octal:
+        return mOctAttribute;
+    case TokenId::Binary:
         return mOctAttribute;
     case TokenId::Space:
         return mWhitespaceAttribute;
