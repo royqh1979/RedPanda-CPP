@@ -11,7 +11,7 @@ Icon = app.ico
 
 [Project]
 Type = 1
-IsCpp = true
+IsCpp = 0
 Encoding = UTF-8
 ClassBrowserType = 0
 UnitCount = 2
