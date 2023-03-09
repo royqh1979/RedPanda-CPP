@@ -606,7 +606,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
         ui->actionConvert_to_UTF_8_BOM->setEnabled(e->encodingOption()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
 
-        ui->actionCopy->setEnabled(e->selAvail());
+        ui->actionCopy->setEnabled(true);
         ui->actionCut->setEnabled(true);
         ui->actionFoldAll->setEnabled(e->document()->count()>0);
         ui->actionIndent->setEnabled(!e->readOnly());

@@ -468,6 +468,8 @@ protected:
     virtual void onEndFirstPaintLock();
     virtual void onBeginFirstPaintLock();
 
+protected:
+    void doSelectLine();
 private:
     void beginEditingWithoutUndo();
     void endEditingWithoutUndo();
@@ -588,7 +590,7 @@ private:
     void doDeleteToWordEnd();
     void doDeleteFromBOL();
     void doDeleteLine();
-    void doSelecteLine();
+
     void doDuplicateLine();
     void doMoveSelUp();
     void doMoveSelDown();

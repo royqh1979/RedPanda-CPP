@@ -184,7 +184,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
             setCaretPosition(1,1);
             mCanAutoSave = true;
         }
-    }    
+    }
     if (!isNew && parentPageControl) {
         resetBookmarks();
         resetBreakpoints();
@@ -1455,6 +1455,7 @@ void Editor::copyToClipboard()
             return;
         }
     }
+
     switch(pSettings->editor().copyWithFormatAs()) {
     case 1: //HTML
         copyAsHTML();
@@ -1485,8 +1486,9 @@ void Editor::cutToClipboard()
 
 void Editor::copyAsHTML()
 {
-    if (!selAvail())
-        return;
+    if (!selAvail()) {
+        doSelectLine();
+    }
     QSynedit::HTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());

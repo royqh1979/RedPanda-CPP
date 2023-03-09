@@ -2189,13 +2189,15 @@ void QSynEdit::doDeleteLine()
     }
 }
 
-void QSynEdit::doSelecteLine()
+void QSynEdit::doSelectLine()
 {
-    setBlockBegin(BufferCoord{1,mCaretY});
+    BufferCoord ptBegin=BufferCoord{1,mCaretY};
+    BufferCoord ptEnd;
     if (mCaretY==mDocument->count())
-        setBlockEnd(BufferCoord{lineText().length()+1,mCaretY});
+        ptEnd = BufferCoord{lineText().length()+1,mCaretY};
     else
-        setBlockEnd(BufferCoord{1,mCaretY+1});
+        ptEnd = BufferCoord{1,mCaretY+1};
+    setCaretAndSelection(ptBegin,ptBegin,ptEnd);
 }
 
 void QSynEdit::doDuplicateLine()
@@ -2954,7 +2956,7 @@ void QSynEdit::doCutToClipboard()
     addCaretToUndo();
     addSelectionToUndo();
     if (!selAvail()) {
-        doSelecteLine();
+        doSelectLine();
     }
     internalDoCopyToClipboard(selText());
     setSelectedTextEmpty();
@@ -2966,14 +2968,10 @@ void QSynEdit::doCopyToClipboard()
 {
     bool selected=selAvail();
     if (!selected)
-        doSelecteLine();
+        doSelectLine();
     QString sText;
     sText = selText();
     internalDoCopyToClipboard(sText);
-    if (!selected) {
-        setBlockBegin(caretXY());
-        setBlockEnd(caretXY());
-    }
 }
 
 void QSynEdit::internalDoCopyToClipboard(const QString &s)
