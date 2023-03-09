@@ -4840,15 +4840,16 @@ void QSynEdit::moveCaretVert(int DY, bool isSelection)
 {
     DisplayCoord ptO = displayXY();
     DisplayCoord ptDst = ptO;
-
-
     ptDst.Row+=DY;
+
     if (DY >= 0) {
-        if (rowToLine(ptDst.Row) > mDocument->count())
+        if (rowToLine(ptDst.Row) > mDocument->count()) {
             ptDst.Row = std::max(1, displayLineCount());
+        }
     } else {
-        if (ptDst.Row < 1)
+        if (ptDst.Row < 1) {
             ptDst.Row = 1;
+        }
     }
 
     if (ptO.Row != ptDst.Row) {
@@ -4863,7 +4864,17 @@ void QSynEdit::moveCaretVert(int DY, bool isSelection)
             setActiveSelectionMode(SelectionMode::Normal);
     }
 
-    BufferCoord vDstLineChar = displayToBufferPos(ptDst);
+    BufferCoord vDstLineChar;
+    if (ptDst.Row == ptO.Row && isSelection && DY!=0) {
+        if (ptDst.Row==1) {
+            vDstLineChar.ch=1;
+            vDstLineChar.line=1;
+        } else {
+            vDstLineChar.line = mDocument->count();
+            vDstLineChar.ch = mDocument->getLine(vDstLineChar.line-1).length()+1;
+        }
+    } else
+        vDstLineChar = displayToBufferPos(ptDst);
 
     if (mActiveSelectionMode==SelectionMode::Column) {
         QString s=mDocument->getLine(vDstLineChar.line-1);

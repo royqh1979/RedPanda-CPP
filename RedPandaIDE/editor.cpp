@@ -184,7 +184,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
             setCaretPosition(1,1);
             mCanAutoSave = true;
         }
-    }
+    }    
     if (!isNew && parentPageControl) {
         resetBookmarks();
         resetBreakpoints();
