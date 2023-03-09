@@ -40,6 +40,7 @@
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
 #include "languageasmgenerationwidget.h"
+#include "languagecformatwidget.h"
 #include "projectgeneralwidget.h"
 #include "projectfileswidget.h"
 #include "projectcompilerwidget.h"
@@ -207,6 +208,8 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new EditorCustomCTypeKeywordsWidget(tr("Custom C/C++ Keywords"),tr("Languages"));
     dialog->addWidget(widget);
 
+//    widget = new LanguageCFormatWidget(tr("C/C++ Format"),tr("Languages"));
+//    dialog->addWidget(widget);
     widget = new LanguageAsmGenerationWidget(tr("ASM Generation"),tr("Languages"));
     dialog->addWidget(widget);
 

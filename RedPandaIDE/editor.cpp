@@ -117,13 +117,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
         setUseCodeFolding(false);
     }
 
-    if (formatter()) {
-        if (formatter()->supportLanguage()==QSynedit::ProgrammingLanguage::CPP) {
-            formatter()->setOption("IndentClassMemberVisibilityKeywords",pSettings->languages().indentCClassMemberVisibilityKeywords());
-            formatter()->setOption("IndentSwitchCases",pSettings->languages().indentCSwitchCaseKeywords());
-        }
-    }
-
     if (mProject) {
         if (syntaxer && syntaxer->language() == QSynedit::ProgrammingLanguage::CPP)
             mParser = mProject->cppParser();
@@ -495,12 +488,6 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         setFormatter(syntaxerManager.getFormatter(QSynedit::ProgrammingLanguage::Unknown));
     }
     setSyntaxer(newSyntaxer);
-    if (formatter()) {
-        if (formatter()->supportLanguage()==QSynedit::ProgrammingLanguage::CPP) {
-            formatter()->setOption("IndentClassMemberVisibilityKeywords",pSettings->languages().indentCClassMemberVisibilityKeywords());
-            formatter()->setOption("IndentSwitchCases",pSettings->languages().indentCSwitchCaseKeywords());
-        }
-    }
 
     if (!newSyntaxer || newSyntaxer->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
@@ -5197,13 +5184,6 @@ void Editor::applySettings()
     } else {
         if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(QSet<QString>());
-        }
-    }
-
-    if (formatter()) {
-        if (formatter()->supportLanguage()==QSynedit::ProgrammingLanguage::CPP) {
-            formatter()->setOption("IndentClassMemberVisibilityKeywords",pSettings->languages().indentCClassMemberVisibilityKeywords());
-            formatter()->setOption("IndentSwitchCases",pSettings->languages().indentCSwitchCaseKeywords());
         }
     }
 

@@ -5961,8 +5961,8 @@ void Settings::Languages::doSave()
     saveValue("x86_dialect_of_asm_generated",(int)mX86DialectOfASMGenerated);
 
     //C/C++
-    saveValue("ident_c_class_member_visibility_keywords",mIndentCClassMemberVisibilityKeywords);
-    saveValue("ident_c_switch_case_keywords",mIndentCSwitchCaseKeywords);
+//    saveValue("ident_c_class_member_visibility_keywords",mIndentCClassMemberVisibilityKeywords);
+//    saveValue("ident_c_switch_case_keywords",mIndentCSwitchCaseKeywords);
 }
 
 void Settings::Languages::doLoad()
@@ -5973,8 +5973,8 @@ void Settings::Languages::doLoad()
 
 
     //C/C++
-    mIndentCClassMemberVisibilityKeywords = boolValue("ident_c_class_member_visibility_keywords",true);
-    mIndentCSwitchCaseKeywords = boolValue("ident_c_switch_case_keywords",true);
+//    mIndentCClassMemberVisibilityKeywords = boolValue("ident_c_class_member_visibility_keywords",false);
+//    mIndentCSwitchCaseKeywords = boolValue("ident_c_switch_case_keywords",false);
 }
 
 bool Settings::Languages::noSEHDirectivesWhenGenerateASM() const
