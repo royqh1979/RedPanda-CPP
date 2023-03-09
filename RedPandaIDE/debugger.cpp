@@ -1082,7 +1082,8 @@ void DebugReader::processConsoleOutput(const QByteArray& line)
                 p++;
             }
         }
-        mConsoleOutput.append(QString::fromLocal8Bit(stringValue));
+        //mConsoleOutput.append(QString::fromLocal8Bit(stringValue));
+        mConsoleOutput.append(QString::fromUtf8(stringValue));
     }
 }
 
@@ -1242,7 +1243,7 @@ void DebugReader::processResultRecord(const QByteArray &line)
             processResult(result);
         } else if (mCurrentCmd && !(mCurrentCmd->command.startsWith('-'))) {
             if (mCurrentCmd->command == "disas") {
-                 QStringList disOutput = mConsoleOutput;
+                QStringList disOutput = mConsoleOutput;
                 if (disOutput.length()>=3) {
                     disOutput.pop_back();
                     disOutput.pop_front();
