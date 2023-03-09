@@ -30,6 +30,8 @@ msvc {
 SOURCES += qsynedit/codefolding.cpp \
     qsynedit/constants.cpp \
     qsynedit/document.cpp \
+    qsynedit/formatter/cppformatter.cpp \
+    qsynedit/formatter/formatter.cpp \
     qsynedit/keystrokes.cpp \
     qsynedit/miscprocs.cpp \
     qsynedit/exporter/exporter.cpp \
@@ -54,6 +56,8 @@ HEADERS += \
     qsynedit/codefolding.h \
     qsynedit/constants.h \
     qsynedit/document.h \
+    qsynedit/formatter/cppformatter.h \
+    qsynedit/formatter/formatter.h \
     qsynedit/keystrokes.h \
     qsynedit/miscprocs.h \
     qsynedit/types.h \

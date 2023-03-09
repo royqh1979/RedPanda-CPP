@@ -992,10 +992,18 @@ public:
         X86ASMDialect x86DialectOfASMGenerated() const;
         void setX86DialectOfASMGenerated(X86ASMDialect newX86DialectOfASMGenerated);
 
+        bool indentCClassMemberVisibilityKeywords() const;
+        void setIndentCClassMemberVisibilityKeywords(bool newIndentCClassMemberVisibilityKeywords);
+
+        bool indentCSwitchCaseKeywords() const;
+        void setIndentCSwitchCaseKeywords(bool newIndentCSwitchCaseKeywords);
+
     private:
         bool mNoDebugDirectivesWhenGenerateASM;
         bool mNoSEHDirectivesWhenGenerateASM;
         X86ASMDialect mX86DialectOfASMGenerated;
+        bool mIndentCClassMemberVisibilityKeywords;
+        bool mIndentCSwitchCaseKeywords;
     protected:
         void doSave() override;
         void doLoad() override;

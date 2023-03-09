@@ -5933,11 +5933,36 @@ void Settings::Languages::setX86DialectOfASMGenerated(X86ASMDialect newX86Dialec
     mX86DialectOfASMGenerated = newX86DialectOfASMGenerated;
 }
 
+bool Settings::Languages::indentCSwitchCaseKeywords() const
+{
+    return mIndentCSwitchCaseKeywords;
+}
+
+void Settings::Languages::setIndentCSwitchCaseKeywords(bool newIndentCSwitchCaseKeywords)
+{
+    mIndentCSwitchCaseKeywords = newIndentCSwitchCaseKeywords;
+}
+
+bool Settings::Languages::indentCClassMemberVisibilityKeywords() const
+{
+    return mIndentCClassMemberVisibilityKeywords;
+}
+
+void Settings::Languages::setIndentCClassMemberVisibilityKeywords(bool newIndentCClassMemberVisibilityKeywords)
+{
+    mIndentCClassMemberVisibilityKeywords = newIndentCClassMemberVisibilityKeywords;
+}
+
 void Settings::Languages::doSave()
 {
+    //ASM
     saveValue("no_debug_directives_when_generate_asm",mNoDebugDirectivesWhenGenerateASM);
     saveValue("no_seh_directives_when_generate_asm",mNoSEHDirectivesWhenGenerateASM);
     saveValue("x86_dialect_of_asm_generated",(int)mX86DialectOfASMGenerated);
+
+    //C/C++
+    saveValue("ident_c_class_member_visibility_keywords",mIndentCClassMemberVisibilityKeywords);
+    saveValue("ident_c_switch_case_keywords",mIndentCSwitchCaseKeywords);
 }
 
 void Settings::Languages::doLoad()
@@ -5945,6 +5970,11 @@ void Settings::Languages::doLoad()
     mNoDebugDirectivesWhenGenerateASM = boolValue("no_debug_directives_when_generate_asm",true);
     mNoSEHDirectivesWhenGenerateASM = boolValue("no_seh_directives_when_generate_asm",false);
     mX86DialectOfASMGenerated = (X86ASMDialect)intValue("x86_dialect_of_asm_generated",(int)X86ASMDialect::ATT);
+
+
+    //C/C++
+    mIndentCClassMemberVisibilityKeywords = boolValue("ident_c_class_member_visibility_keywords",true);
+    mIndentCSwitchCaseKeywords = boolValue("ident_c_switch_case_keywords",true);
 }
 
 bool Settings::Languages::noSEHDirectivesWhenGenerateASM() const

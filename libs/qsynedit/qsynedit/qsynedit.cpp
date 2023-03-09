@@ -1551,36 +1551,20 @@ void QSynEdit::doShrinkSelection(const BufferCoord &/*pos*/)
     //todo
 }
 
-int QSynEdit::findCommentStartLine(int searchStartLine)
-{
-    int commentStartLine = searchStartLine;
-    SyntaxState range;
-    while (commentStartLine>=1) {
-        range = mDocument->getSyntaxState(commentStartLine-1);
-        if (!mSyntaxer->isLastLineCommentNotFinished(range.state)){
-            commentStartLine++;
-            break;
-        }
-        commentStartLine--;
-    }
-    if (commentStartLine<1)
-        commentStartLine = 1;
-    return commentStartLine;
-}
-
 int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent)
 {
-    if (!mSyntaxer)
-        return 0;
     line = std::min(line, mDocument->count()+1);
     if (line<=1)
         return 0;
+    if (mFormatter) {
+        return mFormatter->calcIndentSpaces(line,lineText,addIndent,this);
+    }
     // find the first non-empty preceeding line
     int startLine = line-1;
     QString startLineText;
     while (startLine>=1) {
         startLineText = mDocument->getLine(startLine-1);
-        if (!startLineText.startsWith('#') && !startLineText.trimmed().isEmpty()) {
+        if (!startLineText.trimmed().isEmpty()) {
             break;
         }
         startLine -- ;
@@ -1589,71 +1573,6 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
     if (startLine>=1) {
         //calculate the indents of last statement;
         indentSpaces = leftSpaces(startLineText);
-        if (mSyntaxer->language() != ProgrammingLanguage::CPP)
-            return indentSpaces;
-        SyntaxState rangePreceeding = mDocument->getSyntaxState(startLine-1);
-        if (addIndent) {
-//            QString trimmedS = s.trimmed();
-            QString trimmedLineText = lineText.trimmed();
-            mSyntaxer->setState(rangePreceeding);
-            mSyntaxer->setLine(trimmedLineText,line-1);
-            SyntaxState rangeAfterFirstToken = mSyntaxer->getState();
-            QString firstToken = mSyntaxer->getToken();
-            PTokenAttribute attr = mSyntaxer->getTokenAttribute();
-            if (
-                    (attr->tokenType() == TokenType::Keyword
-                         && (
-                         firstToken == "public" || firstToken == "private"
-                         || firstToken == "protected" || firstToken == "case"
-                         || firstToken == "default"
-                         )
-                     )
-                    &&  lineText.endsWith(':')
-                    ) {
-                // public: private: protecte: case: should indents like it's parent statement
-                mSyntaxer->setState(rangePreceeding);
-                mSyntaxer->setLine("}",line-1);
-                rangeAfterFirstToken = mSyntaxer->getState();
-                firstToken = mSyntaxer->getToken();
-                attr = mSyntaxer->getTokenAttribute();
-            }
-//            qDebug()<<line<<lineText;
-//            qDebug()<<(int)rangeAfterFirstToken.lastUnindent.type<<rangeAfterFirstToken.lastUnindent.line;
-            if (trimmedLineText.startsWith('#')
-                       && attr == ((CppSyntaxer *)mSyntaxer.get())->preprocessorAttribute()) {
-                indentSpaces=0;
-            } else if (mSyntaxer->isLastLineCommentNotFinished(rangePreceeding.state)
-                       ) {
-                // last line is a not finished comment,
-                if  (trimmedLineText.startsWith("*")) {
-                    // this line start with "* "
-                    // it means this line is a docstring, should indents according to
-                    // the line the comment beginning , and add 1 additional space
-                    int commentStartLine = findCommentStartLine(startLine-1);
-                    SyntaxState range;
-                    indentSpaces = leftSpaces(mDocument->getLine(commentStartLine-1))+1;
-                    range = mDocument->getSyntaxState(commentStartLine-1);
-                } else {
-                    //indents according to the beginning of the comment and 2 additional space
-                    int commentStartLine = findCommentStartLine(startLine-1);
-                    SyntaxState range;
-                    indentSpaces = leftSpaces(mDocument->getLine(commentStartLine-1))+2;
-                    range = mDocument->getSyntaxState(commentStartLine-1);
-                }
-            } else if (rangeAfterFirstToken.lastUnindent.type!=IndentType::None
-                       && firstToken=="}") {
-                IndentInfo matchingIndents = rangeAfterFirstToken.lastUnindent;
-                indentSpaces = leftSpaces(mDocument->getLine(matchingIndents.line));
-            } else if (firstToken=="{") {
-                IndentInfo matchingIndents = rangeAfterFirstToken.getLastIndent();
-                indentSpaces = leftSpaces(mDocument->getLine(matchingIndents.line));
-            } else if (rangePreceeding.getLastIndentType()!=IndentType::None) {
-                IndentInfo matchingIndents = rangePreceeding.getLastIndent();
-                indentSpaces = leftSpaces(mDocument->getLine(matchingIndents.line))+tabWidth();
-            } else {
-                indentSpaces = 0;
-            }
-        }
     }
     return std::max(0,indentSpaces);
 }
@@ -3851,6 +3770,16 @@ void QSynEdit::onScrolled(int)
     mLeftChar = horizontalScrollBar()->value();
     mTopLine = verticalScrollBar()->value();
     invalidate();
+}
+
+const PFormatter &QSynEdit::formatter() const
+{
+    return mFormatter;
+}
+
+void QSynEdit::setFormatter(const PFormatter &newFormatter)
+{
+    mFormatter = newFormatter;
 }
 
 const QDateTime &QSynEdit::lastModifyTime() const

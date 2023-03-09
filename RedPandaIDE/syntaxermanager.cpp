@@ -23,6 +23,7 @@
 #include "qsynedit/syntaxer/glsl.h"
 #include "qsynedit/syntaxer/lua.h"
 #include "qsynedit/syntaxer/makefile.h"
+#include "qsynedit/formatter/cppformatter.h"
 
 #include "qsynedit/constants.h"
 #include "colorscheme.h"
@@ -34,7 +35,7 @@ SyntaxerManager::SyntaxerManager()
 
 }
 
-QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage language)
+QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage language) const
 {
     switch(language) {
     case QSynedit::ProgrammingLanguage::CPP:
@@ -49,12 +50,38 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage l
         return std::make_shared<QSynedit::GLSLSyntaxer>();
     case QSynedit::ProgrammingLanguage::LUA:
         return std::make_shared<QSynedit::LuaSyntaxer>();
+    case QSynedit::ProgrammingLanguage::XMAKE: {
+        auto syntaxer=getSyntaxer(QSynedit::ProgrammingLanguage::LUA);
+        QSynedit::LuaSyntaxer* pSyntaxer= (QSynedit::LuaSyntaxer*)syntaxer.get();
+        pSyntaxer->setUseXMakeLibs(true);
+        return syntaxer;
+    }
     default:
         return QSynedit::PSyntaxer();
     }
 }
 
-QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename)
+QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename) const
+{
+    return getSyntaxer(getLanguage(filename));
+}
+
+QSynedit::PFormatter SyntaxerManager::getFormatter(QSynedit::ProgrammingLanguage language) const
+{
+    switch(language) {
+    case QSynedit::ProgrammingLanguage::CPP:
+        return std::make_shared<QSynedit::CppFormatter>();
+    default:
+        return QSynedit::PFormatter();
+    }
+}
+
+QSynedit::PFormatter SyntaxerManager::getFormatter(const QString &filename) const
+{
+    return getFormatter(getLanguage(filename));
+}
+
+QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(const QString &filename) const
 {
     QFileInfo info(filename);
     QString suffix = info.suffix();
@@ -64,37 +91,34 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename)
             || suffix == "hxx" || suffix == "hh" || suffix == "C"
             || suffix == "CPP" || suffix =="H" || suffix == "c++"
             || suffix == "h++") {
-        return getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
+        return QSynedit::ProgrammingLanguage::CPP;
     } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
-        return getSyntaxer(QSynedit::ProgrammingLanguage::GLSL);
+        return QSynedit::ProgrammingLanguage::GLSL;
     } else if (suffix == "asm") {
-        return getSyntaxer(QSynedit::ProgrammingLanguage::Assembly);
+        return QSynedit::ProgrammingLanguage::Assembly;
     } else if (suffix == "s" || suffix == "S") {
-        return getSyntaxer(QSynedit::ProgrammingLanguage::ATTAssembly);
+        return QSynedit::ProgrammingLanguage::ATTAssembly;
     } else if (suffix == "lua") {
         if (basename=="xmake") {
-            auto syntaxer=getSyntaxer(QSynedit::ProgrammingLanguage::LUA);
-            QSynedit::LuaSyntaxer* pSyntaxer= (QSynedit::LuaSyntaxer*)syntaxer.get();
-            pSyntaxer->setUseXMakeLibs(true);
-            return syntaxer;
+            return QSynedit::ProgrammingLanguage::XMAKE;
         } else
-            return getSyntaxer(QSynedit::ProgrammingLanguage::LUA);
+            return QSynedit::ProgrammingLanguage::LUA;
     } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
-        return getSyntaxer(QSynedit::ProgrammingLanguage::Makefile);
+        return QSynedit::ProgrammingLanguage::Makefile;
     } else if (suffix.isEmpty()) {
-        return getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
+        return QSynedit::ProgrammingLanguage::CPP;
     }
-    return QSynedit::PSyntaxer();
+    return QSynedit::ProgrammingLanguage::Unknown;
 }
 
-QSynedit::PSyntaxer SyntaxerManager::copy(QSynedit::PSyntaxer syntaxer)
+QSynedit::PSyntaxer SyntaxerManager::copy(QSynedit::PSyntaxer syntaxer) const
 {
     if (!syntaxer)
         return QSynedit::PSyntaxer();
     return getSyntaxer(syntaxer->language());
 }
 
-void SyntaxerManager::applyColorScheme(QSynedit::PSyntaxer syntaxer, const QString &schemeName)
+void SyntaxerManager::applyColorScheme(QSynedit::PSyntaxer syntaxer, const QString &schemeName) const
 {
     if (!syntaxer)
         return;

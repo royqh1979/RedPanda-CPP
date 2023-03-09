@@ -91,18 +91,6 @@ enum class TokenType {
     Embeded  //language embeded in others
     };
 
-enum class ProgrammingLanguage {
-    DecideBySuffix,
-    Composition,
-    Assembly,
-    ATTAssembly,
-    CPP,
-    GLSL,
-    Makefile,
-    LUA,
-    Custom
-};
-
 class TokenAttribute {
 public:
     explicit TokenAttribute(const QString& name, TokenType mTokenType);

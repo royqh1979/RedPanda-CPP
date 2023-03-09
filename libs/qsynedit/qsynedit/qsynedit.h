@@ -30,6 +30,7 @@
 #include "document.h"
 #include "keystrokes.h"
 #include "searcher/baseseacher.h"
+#include "formatter/formatter.h"
 
 namespace QSynedit {
 
@@ -569,8 +570,6 @@ private:
 
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
-    int findCommentStartLine(int searchStartLine);
-    int findStatementStartLine(int searchStartLine);
 
     void processGutterClick(QMouseEvent* event);
 
@@ -749,6 +748,8 @@ private:
     int mWheelAccumulatedDeltaX;
     int mWheelAccumulatedDeltaY;
 
+    PFormatter mFormatter;
+
 friend class QSynEditPainter;
 
 // QWidget interface
@@ -790,6 +791,9 @@ protected:
     void setLineSpacingFactor(double newLineSpacingFactor);
 
     const QDateTime &lastModifyTime() const;
+
+    const PFormatter &formatter() const;
+    void setFormatter(const PFormatter &newFormatter);
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;

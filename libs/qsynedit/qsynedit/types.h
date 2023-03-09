@@ -26,6 +26,20 @@ namespace QSynedit {
 
 enum class SelectionMode {Normal, Line, Column};
 
+enum class ProgrammingLanguage {
+    DecideBySuffix,
+    Composition,
+    Assembly,
+    ATTAssembly,
+    CPP,
+    GLSL,
+    Makefile,
+    LUA,
+    XMAKE,
+    Custom,
+    Unknown
+};
+
 struct BufferCoord {
     int ch;
     int line;

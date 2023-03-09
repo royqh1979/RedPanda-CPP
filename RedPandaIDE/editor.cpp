@@ -111,9 +111,17 @@ Editor::Editor(QWidget *parent, const QString& filename,
     resolveAutoDetectEncodingOption();
     if (syntaxer) {
         setSyntaxer(syntaxer);
+        setFormatter(syntaxerManager.getFormatter(syntaxer->language()));
         setUseCodeFolding(true);
     } else {
         setUseCodeFolding(false);
+    }
+
+    if (formatter()) {
+        if (formatter()->supportLanguage()==QSynedit::ProgrammingLanguage::CPP) {
+            formatter()->setOption("IndentClassMemberVisibilityKeywords",pSettings->languages().indentCClassMemberVisibilityKeywords());
+            formatter()->setOption("IndentSwitchCases",pSettings->languages().indentCSwitchCaseKeywords());
+        }
     }
 
     if (mProject) {
@@ -481,10 +489,19 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     QSynedit::PSyntaxer newSyntaxer = syntaxerManager.getSyntaxer(mFilename);
     if (newSyntaxer) {
         setUseCodeFolding(true);
+        setFormatter(syntaxerManager.getFormatter(newSyntaxer->language()));
     } else {
         setUseCodeFolding(false);
+        setFormatter(syntaxerManager.getFormatter(QSynedit::ProgrammingLanguage::Unknown));
     }
     setSyntaxer(newSyntaxer);
+    if (formatter()) {
+        if (formatter()->supportLanguage()==QSynedit::ProgrammingLanguage::CPP) {
+            formatter()->setOption("IndentClassMemberVisibilityKeywords",pSettings->languages().indentCClassMemberVisibilityKeywords());
+            formatter()->setOption("IndentSwitchCases",pSettings->languages().indentCSwitchCaseKeywords());
+        }
+    }
+
     if (!newSyntaxer || newSyntaxer->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
     }
@@ -5180,6 +5197,13 @@ void Editor::applySettings()
     } else {
         if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(QSet<QString>());
+        }
+    }
+
+    if (formatter()) {
+        if (formatter()->supportLanguage()==QSynedit::ProgrammingLanguage::CPP) {
+            formatter()->setOption("IndentClassMemberVisibilityKeywords",pSettings->languages().indentCClassMemberVisibilityKeywords());
+            formatter()->setOption("IndentSwitchCases",pSettings->languages().indentCSwitchCaseKeywords());
         }
     }
 
