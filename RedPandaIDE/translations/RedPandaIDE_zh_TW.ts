@@ -5586,6 +5586,18 @@
         <source>Image Files (*.ico *.png *.jpg)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>ANSI</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>UTF-8</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>UTF-8 BOM</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ProjectMakefileWidget</name>
