@@ -445,10 +445,9 @@ private:
     void handleLambda(int index, int endIndex);
     void handleOperatorOverloading(
             const QString& sType,
-            const QString& prefix,
+//            const QString& prefix,
             int operatorTokenIndex,
-            bool isStatic,
-            bool isFriend);
+            bool isStatic);
     void handleMethod(
             StatementKind functionKind,
             const QString& sType,

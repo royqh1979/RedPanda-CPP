@@ -1731,9 +1731,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
     } else {
         if (currentText=="operator") {
             handleOperatorOverloading("",
-                                  "",
                                   mIndex,
-                                  false,
                                   false);
             return;
         }
@@ -1760,9 +1758,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                 // operator overloading
                 handleOperatorOverloading(
                             "",
-                            "",
                             mIndex,
-                            false,
                             false);
                 return;
             }
@@ -1834,10 +1830,9 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
         while (mIndex+1 < mTokenizer.tokenCount()) {
             if (mTokenizer[mIndex]->text=="operator") {
                 handleOperatorOverloading(sType,
-                                      sName,
+                                      //sName,
                                       mIndex,
-                                      isStatic,
-                                      isFriend);
+                                      isStatic);
                 return;
             } else if (mTokenizer[mIndex + 1]->text == '(') {
                 if (mIndex+2<mTokenizer.tokenCount() && mTokenizer[mIndex+2]->text == '*') {
@@ -2524,7 +2519,9 @@ void CppParser::handleLambda(int index, int endIndex)
     removeScopeLevel(mTokenizer[bodyEnd]->line);
 }
 
-void CppParser::handleOperatorOverloading(const QString &sType, const QString &prefix, int operatorTokenIndex, bool isStatic, bool isFriend)
+void CppParser::handleOperatorOverloading(const QString &sType,
+                                          //const QString &prefix,
+                                          int operatorTokenIndex, bool isStatic)
 {
     //operatorTokenIndex is the token index of "operator"
     int index=operatorTokenIndex+1;
@@ -2561,13 +2558,23 @@ void CppParser::handleOperatorOverloading(const QString &sType, const QString &p
         return;
     }
     Q_ASSERT(!op.isEmpty());
-    handleMethod(StatementKind::skFunction,
+    if (isIdentChar(op.front())) {
+        handleMethod(StatementKind::skFunction,
+                     sType+" "+op,
+                     "operator("+op+")",
+                     index,
+                     isStatic,
+                     false,
+                     true);
+    } else {
+        handleMethod(StatementKind::skFunction,
                  sType,
-                 prefix+"operator"+(isIdentChar(op.front())?op+" ":op),
+                 "operator"+op,
                  index,
                  isStatic,
-                 isFriend,
+                 false,
                  true);
+    }
 }
 
 void CppParser::handleMethod(StatementKind functionKind,const QString &sType, const QString &sName, int argStart, bool isStatic, bool isFriend,bool isOperatorOverload)
