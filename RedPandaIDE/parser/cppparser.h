@@ -455,7 +455,8 @@ private:
             const QString& sName,
             int argStart,
             bool isStatic,
-            bool isFriend);
+            bool isFriend,
+            bool isOperatorOverload=false);
     void handleNamespace(KeywordType skipType);
     void handleOtherTypedefs();
     void handlePreprocessor();

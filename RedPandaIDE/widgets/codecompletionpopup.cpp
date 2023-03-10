@@ -252,7 +252,8 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
         return;
     if (statement->kind == StatementKind::skConstructor
             || statement->kind == StatementKind::skDestructor
-            || statement->kind == StatementKind::skBlock)
+            || statement->kind == StatementKind::skBlock
+            || statement->properties.testFlag(StatementProperty::spOperatorOverloading))
         return;
     if ((line!=-1)
             && (line < statement->line)

@@ -141,16 +141,17 @@ struct StatementMatchPosition{
 };
 
 enum StatementProperty {
-    spNone = 0x0,
-    spStatic = 0x0001,
-    spHasDefinition = 0x0002,
-    spInProject = 0x0004,
-    spInSystemHeader = 0x0008,
-    spInherited = 0x0010,
-    spVirtual = 0x0020,
-    spOverride = 0x0040,
-    spConstexpr = 0x0080,
-    spFunctionPointer = 0x0100
+    spNone =                0x0,
+    spStatic =              0x0001,
+    spHasDefinition =       0x0002,
+    spInProject =           0x0004,
+    spInSystemHeader =      0x0008,
+    spInherited =           0x0010,
+    spVirtual =             0x0020,
+    spOverride =            0x0040,
+    spConstexpr =           0x0080,
+    spFunctionPointer =     0x0100,
+    spOperatorOverloading = 0x0200
 };
 
 Q_DECLARE_FLAGS(StatementProperties, StatementProperty)

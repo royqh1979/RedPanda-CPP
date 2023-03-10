@@ -19,7 +19,10 @@ Red Panda C++ Version 2.17
   - enhancement: If no selection, Ctrl+C (Copy) auto selects the current line and put the cursor to the beginning.
   - fix: Chinese characters in the source code is not correctly displayed in the CPU info window.
   - fix: Can't undo & save after copy by drag with mouse.
-  - fix: '::' is not correctly handle when skip to next ':' in the parser.
+  - fix: '::' is not correctly handled when skip to next ':' in the parser.
+  - fix: '::' is not correctly handled when parsing class definitions.
+  - enhancement: Don't show operator overloading functions in the complete suggestions
+  - enhancement: Correctly hanlde operator overloading functions like "operator ClassA"
 
 Red Panda C++ Version 2.16
 
