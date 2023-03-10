@@ -252,6 +252,10 @@ int main(int argc, char *argv[])
 //    qputenv("QT_AUTO_SCREEN_SCALE_FACTOR","false");
 //#endif
     QApplication app(argc, argv);
+#ifdef Q_OS_MACOS
+    // Fix macOS overgrown icon size issue
+    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
     QFile tempFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
     {
         bool firstRun;
