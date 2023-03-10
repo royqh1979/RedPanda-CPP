@@ -3817,7 +3817,7 @@ void CppParser::internalParse(const QString &fileName)
 
     QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-//        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
 //        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
@@ -3831,7 +3831,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-//        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -3842,8 +3842,8 @@ void CppParser::internalParse(const QString &fileName)
             break;
     }
 #ifdef QT_DEBUG
-//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
@@ -5441,9 +5441,14 @@ int CppParser::indexOfNextSemicolonOrLeftBrace(int index)
 int CppParser::indexOfNextColon(int index)
 {
     while (index<mTokenizer.tokenCount()) {
-        switch(mTokenizer[index]->text[0].unicode()) {
+        QString s =mTokenizer[index]->text;
+        switch(s[0].unicode()) {
         case ':':
-            return index;
+            if (s.length()==1)
+                return index;
+            else
+                index++;
+            break;
         case '(':
             index = mTokenizer[index]->matchIndex+1;
             break;

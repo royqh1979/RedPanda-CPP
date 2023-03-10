@@ -188,7 +188,7 @@ void ProjectGeneralWidget::on_btnRemove_clicked()
     setSettingsChanged();
 }
 
-void ProjectGeneralWidget::on_cbEncoding_currentTextChanged(const QString &arg1)
+void ProjectGeneralWidget::on_cbEncoding_currentTextChanged(const QString &/*arg1*/)
 {
     QString userData = ui->cbEncoding->currentData().toString();
     if (userData == ENCODING_AUTO_DETECT
