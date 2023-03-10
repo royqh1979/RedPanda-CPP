@@ -6388,9 +6388,8 @@ void QSynEdit::dropEvent(QDropEvent *event)
                 }
             }
         }
-        endEditing();
-
     }
+    endEditing();
     event->acceptProposedAction();
     mDropped = true;
     setTopLine(topLine);

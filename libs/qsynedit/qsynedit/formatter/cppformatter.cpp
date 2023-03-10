@@ -1,7 +1,7 @@
 #include "cppformatter.h"
 #include "../qsynedit.h"
 #include "../syntaxer/cpp.h"
-
+#include <QDebug>
 
 namespace QSynedit {
     CppFormatter::CppFormatter()
@@ -53,15 +53,13 @@ namespace QSynedit {
 
                         &&  lineText.endsWith(':')
                         && (
-                            (getBoolOption("IndentClassMemberVisibilityKeywords",true)
-                              && (
+                            ( (
                                 firstToken == "public" || firstToken == "private"
                                 || firstToken == "protected"
                                  )
                             )
                             ||
-                            (getBoolOption("IndentSwitchCases",true)
-                              && (
+                            ( (
                                  firstToken == "case"
                                  || firstToken == "default"
                                  )
@@ -135,7 +133,5 @@ namespace QSynedit {
 
     void CppFormatter::doInitOptions()
     {
-        mOptions.insert("IndentClassMemberVisibilityKeywords",true);
-        mOptions.insert("IndentSwitchCases",true);
     }
 }

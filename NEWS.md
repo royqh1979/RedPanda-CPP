@@ -18,6 +18,7 @@ Red Panda C++ Version 2.17
   - enhancement: Shift+Down in the last line will expand selection to the end of the line.
   - enhancement: If no selection, Ctrl+C (Copy) auto selects the current line and put the cursor to the beginning.
   - fix: Chinese characters in the source code is not correctly displayed in the CPU info window.
+  - fix: Can't undo & save after copy by drag with mouse.
 
 
 Red Panda C++ Version 2.16

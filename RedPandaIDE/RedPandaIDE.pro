@@ -129,7 +129,7 @@ SOURCES += \
     settingsdialog/executorproblemsetwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
     settingsdialog/languageasmgenerationwidget.cpp \
-    settingsdialog/languagecformatwidget.cpp \
+#    settingsdialog/languagecformatwidget.cpp \
     settingsdialog/projectcompileparamaterswidget.cpp \
     settingsdialog/projectcompilerwidget.cpp \
     settingsdialog/projectdirectorieswidget.cpp \
@@ -265,7 +265,7 @@ HEADERS += \
     settingsdialog/executorproblemsetwidget.h \
     settingsdialog/formattergeneralwidget.h \
     settingsdialog/languageasmgenerationwidget.h \
-    settingsdialog/languagecformatwidget.h \
+#    settingsdialog/languagecformatwidget.h \
     settingsdialog/projectcompileparamaterswidget.h \
     settingsdialog/projectcompilerwidget.h \
     settingsdialog/projectdirectorieswidget.h \
@@ -373,7 +373,7 @@ FORMS += \
     settingsdialog/executorproblemsetwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
     settingsdialog/languageasmgenerationwidget.ui \
-    settingsdialog/languagecformatwidget.ui \
+#    settingsdialog/languagecformatwidget.ui \
     settingsdialog/projectcompileparamaterswidget.ui \
     settingsdialog/projectcompilerwidget.ui \
     settingsdialog/projectdirectorieswidget.ui \
