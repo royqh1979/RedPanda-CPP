@@ -19,7 +19,7 @@ Red Panda C++ Version 2.17
   - enhancement: If no selection, Ctrl+C (Copy) auto selects the current line and put the cursor to the beginning.
   - fix: Chinese characters in the source code is not correctly displayed in the CPU info window.
   - fix: Can't undo & save after copy by drag with mouse.
-
+  - fix: '::' is not correctly handle when skip to next ':' in the parser.
 
 Red Panda C++ Version 2.16
 
