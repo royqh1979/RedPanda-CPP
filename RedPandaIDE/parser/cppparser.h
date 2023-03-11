@@ -497,7 +497,7 @@ private:
     PStatement doFindStatementInScope(const QString& name,
                                       const QString& noNameArgs,
                                       StatementKind kind,
-                                      const PStatement& scope);
+                                      const PStatement& scope) const;
     void internalInvalidateFile(const QString& fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
     QSet<QString> calculateFilesToBeReparsed(const QString& fileName);

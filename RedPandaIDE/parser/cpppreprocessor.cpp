@@ -15,12 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "cpppreprocessor.h"
-#include "../utils.h"
 
 #include <QFile>
 #include <QTextCodec>
 #include <QDebug>
 #include <QMessageBox>
+#include "../utils.h"
 
 CppPreprocessor::CppPreprocessor()
 {

@@ -1,6 +1,9 @@
 Red Panda C++ Version 2.18
 
-  - fix: macos icon size overgrown
+  - fix: macos icon size overgrown (by RigoLigo).
+  - enhancement: Code completion for embedded stl containers.
+  - enhancement: Slightly speed up code parsing.
+  - enhancement: Sort header completion infos by suffix-trimmed filename.
 
 Red Panda C++ Version 2.17
 

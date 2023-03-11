@@ -1958,6 +1958,8 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
 
 PStatement CppParser::doFindTypeDefinitionOf(const QString &fileName, const QString &aType, const PStatement &currentClass) const
 {
+    if (aType.isEmpty())
+        return PStatement();
     // Remove pointer stuff from type
     QString s = aType; // 'Type' is a keyword
     int position = s.length()-1;
@@ -1993,6 +1995,8 @@ QString CppParser::doFindFirstTemplateParamOf(const QString &fileName, const QSt
 
 QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString &phrase, int index, const PStatement &currentScope) const
 {
+    if (phrase.isEmpty())
+        return QString();
     // Remove pointer stuff from type
     QString s = phrase; // 'Type' is a keyword
     int i = s.indexOf('<');
@@ -4073,12 +4077,12 @@ PStatement CppParser::findStatementInScope(const QString &name, const QString &n
         if (!namespaceStatementsList)
             return PStatement();
         foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
-            PStatement result=findStatementInScope(name,noNameArgs,kind,namespaceStatement);
+            PStatement result=doFindStatementInScope(name,noNameArgs,kind,namespaceStatement);
             if (result)
                 return result;
         }
     } else {
-        return findStatementInScope(name,noNameArgs,kind,scope);
+        return doFindStatementInScope(name,noNameArgs,kind,scope);
     }
     return PStatement();
 }
@@ -4249,9 +4253,11 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result->definitionString=typeName;
                             result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
+                        } else {
+                            result = PEvalStatement();
                         }
                     }
                 } else {
@@ -4262,17 +4268,19 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                         && result->baseStatement) {
                         PStatement parentScope = result->baseStatement->parentScope.lock();
                         QString typeName;
-                        if (result->definitionString.isEmpty())
+                        if (!previousResult || previousResult->definitionString.isEmpty())
                             typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
                         else
-                            typeName = doFindFirstTemplateParamOf(fileName,result->definitionString,parentScope);
+                            typeName = doFindFirstTemplateParamOf(fileName,previousResult->definitionString,parentScope);
 
     //                    qDebug()<<"typeName"<<typeName;
                         typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result->definitionString=typeName;
                             result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
+                        } else {
+                            result = PEvalStatement();
                         }
                     }
                 }
@@ -4398,7 +4406,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
             } else if (result->kind == EvalStatementKind::Function) {
                 doSkipInExpression(phraseExpression,pos,"(",")");
 //                qDebug()<<"????"<<(result->baseStatement!=nullptr)<<(lastResult!=nullptr);
-                if (result->baseStatement && lastResult && lastResult->baseStatement) {
+                if (result->baseStatement && lastResult) {
                     PStatement parentScope = result->baseStatement->parentScope.lock();
                     if (parentScope
                         && STLContainers.contains(parentScope->fullName)
@@ -4407,16 +4415,20 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                     //stl container methods
                         PStatement typeStatement = result->effectiveTypeStatement;
                         QString typeName;
-                        if (result->definitionString.isEmpty())
+                        if (!lastResult->definitionString.isEmpty())
+                            typeName = doFindFirstTemplateParamOf(fileName,lastResult->definitionString,parentScope);
+                        else if (lastResult->baseStatement)
                             typeName = doFindFirstTemplateParamOf(fileName,lastResult->baseStatement->type, parentScope);
-                        else
-                            typeName = doFindFirstTemplateParamOf(fileName,result->definitionString,parentScope);
 //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
-                        typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (!typeName.isEmpty())
+                            typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result->definitionString = typeName;
                             result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString = typeName;
                             result->kind = EvalStatementKind::Variable;
+                            lastResult = result;
+                        } else {
+                            return PEvalStatement();
                         }
                     }
                 }
@@ -4436,17 +4448,22 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         && result->baseStatement) {
                     PStatement parentScope = result->baseStatement->parentScope.lock();
                     QString typeName;
-                    if (result->definitionString.isEmpty())
+                    if (!lastResult || lastResult->definitionString.isEmpty())
                         typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
                     else
-                        typeName = doFindFirstTemplateParamOf(fileName,result->definitionString,parentScope);
+                        typeName = doFindFirstTemplateParamOf(fileName,lastResult->definitionString,parentScope);
                     typeStatement = doFindTypeDefinitionOf(fileName, typeName,
                                                      parentScope);
                     if (typeStatement) {
-                        result->definitionString=typeName;
                         result = doCreateEvalType(fileName,typeStatement);
+                        result->definitionString=typeName;
                         result->kind = EvalStatementKind::Variable;
+                        lastResult = result;
+                    } else {
+                        return PEvalStatement();
                     }
+                } else {
+                    return PEvalStatement();
                 }
             }
         } else if (phraseExpression[pos] == ".") {
@@ -4470,16 +4487,18 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         && result->baseStatement) {
                     PStatement parentScope = result->baseStatement->parentScope.lock();
                     QString typeName;
-                    if (result->definitionString.isEmpty())
+                    if (!previousResult || previousResult->definitionString.isEmpty())
                         typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
                     else
-                        typeName = doFindFirstTemplateParamOf(fileName,result->definitionString,parentScope);
+                        typeName = doFindFirstTemplateParamOf(fileName,previousResult->definitionString,parentScope);
 //                    qDebug()<<"typeName"<<typeName;
                     typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                     if (typeStatement) {
-                        result->definitionString=typeName;
                         result = doCreateEvalType(fileName,typeStatement);
+                        result->definitionString=typeName;
                         result->kind = EvalStatementKind::Variable;
+                    } else {
+                        return PEvalStatement();
                     }
                 }
             } else {
@@ -4864,7 +4883,7 @@ PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatem
         return std::make_shared<EvalStatement>(
                 typeStatement->fullName,
                 EvalStatementKind::Type,
-                PStatement(),
+                typeStatement,
                 typeStatement,
                 typeStatement);
     }
@@ -5092,9 +5111,9 @@ int CppParser::getBracketEnd(const QString &s, int startAt) const
 PStatement CppParser::doFindStatementInScope(const QString &name,
                                              const QString &noNameArgs,
                                              StatementKind kind,
-                                             const PStatement& scope)
+                                             const PStatement& scope) const
 {
-    const StatementMap& statementMap =mStatementList.childrenStatements(scope);
+    const StatementMap& statementMap = mStatementList.childrenStatements(scope);
 
     foreach (const PStatement& statement, statementMap.values(name)) {
         if (statement->kind == kind && statement->noNameArgs == noNameArgs) {

@@ -31,6 +31,8 @@ enum class HeaderCompletionListItemType {
 struct HeaderCompletionListItem {
     QString filename;
     QString fullpath;
+    QString suffix;
+    QString noSuffixFilename;
     bool isFolder;
     int usageCount;
     HeaderCompletionListItemType itemType;

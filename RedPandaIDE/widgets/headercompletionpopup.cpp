@@ -20,6 +20,7 @@
 #include <QFileInfo>
 #include <QVBoxLayout>
 #include <QDebug>
+#include "systemconsts.h"
 #include "../utils.h"
 
 HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget(parent)
@@ -144,7 +145,10 @@ static bool sortByUsage(const PHeaderCompletionListItem& item1,const PHeaderComp
     if (item1->itemType != item2->itemType)
         return item1->itemType<item2->itemType;
 
-    return item1->filename < item2->filename;
+    int code = QString::compare(item1->noSuffixFilename, item2->noSuffixFilename, PATH_SENSITIVITY);
+    if (code!=0)
+        return code<0;
+    return item1->suffix < item2->suffix;
 }
 
 
@@ -231,6 +235,8 @@ void HeaderCompletionPopup::addFile(const QDir& dir, const QFileInfo& fileInfo, 
         return;
     PHeaderCompletionListItem item = std::make_shared<HeaderCompletionListItem>();
     item->filename = fileName;
+    item->noSuffixFilename = fileInfo.baseName();
+    item->suffix = fileInfo.suffix();
     item->itemType = type;
     item->fullpath = cleanPath(dir.absoluteFilePath(fileName));
     item->usageCount = mHeaderUsageCounts.value(item->fullpath,0);
