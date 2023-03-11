@@ -4,6 +4,7 @@ Red Panda C++ Version 2.18
   - enhancement: Code completion for embedded stl containers.
   - enhancement: Slightly speed up code parsing.
   - enhancement: Sort header completion infos by suffix-trimmed filename.
+  - fix: Code completion info for stl::map/std::unordered_map is not correct.
 
 Red Panda C++ Version 2.17
 

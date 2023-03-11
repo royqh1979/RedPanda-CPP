@@ -257,14 +257,14 @@ void initParser()
     STLContainers.insert("std::list");
 
     STLContainers.insert("std::set");
-    STLContainers.insert("std::map");
-    STLContainers.insert("std::multilist");
-    STLContainers.insert("std::multimap");
+//    STLContainers.insert("std::map");
+//    STLContainers.insert("std::multilist");
+//    STLContainers.insert("std::multimap");
 
     STLContainers.insert("std::unordered_set");
-    STLContainers.insert("std::unordered_map");
+//    STLContainers.insert("std::unordered_map");
     STLContainers.insert("std::unordered_multiset");
-    STLContainers.insert("std::unordered_multimap");
+//    STLContainers.insert("std::unordered_multimap");
 
     STLContainers.insert("std::stack");
     STLContainers.insert("std::queue");

@@ -399,6 +399,16 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
                                                       lastScopeParent );
                     typeStatement=doFindTypeDefinitionOf(fileName, typeName,
                                                        lastScopeParent );
+                } else if (parentScope
+                    && STLMaps.contains(parentScope->fullName)
+                    && STLElementMethods.contains(statement->command)
+                    && lastScopeStatement) {
+                    isSTLContainerFunctions = true;
+                    PStatement lastScopeParent = lastScopeStatement->parentScope.lock();
+                    typeName=doFindTemplateParamOf(fileName,lastScopeStatement->type,1,
+                                                      lastScopeParent );
+                    typeStatement=doFindTypeDefinitionOf(fileName, typeName,
+                                                       lastScopeParent );
                 }
             }
             if (!isSTLContainerFunctions)
@@ -413,6 +423,15 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
                 typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
             } else if ((typeStatement)
                        && STLContainers.contains(typeStatement->fullName)
+                       && nextScopeWord.endsWith(']')) {
+                //it's a std container
+                PStatement parentScope = statement->parentScope.lock();
+                typeName = doFindFirstTemplateParamOf(fileName,statement->type,
+                                                    parentScope);
+                typeStatement = doFindTypeDefinitionOf(fileName, typeName,
+                                                     parentScope);
+            } else if ((typeStatement)
+                       && STLMaps.contains(typeStatement->fullName)
                        && nextScopeWord.endsWith(']')) {
                 //it's a std container
                 PStatement parentScope = statement->parentScope.lock();
@@ -3645,11 +3664,10 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                             getCurrentScope(),
                                             PEvalStatement(),
                                             true);
-                    if(aliasStatement && aliasStatement->effectiveTypeStatement
-                            && STLContainers.contains(aliasStatement->effectiveTypeStatement->fullName)) {
+                    if(aliasStatement && aliasStatement->effectiveTypeStatement) {
                         if (STLMaps.contains(aliasStatement->effectiveTypeStatement->fullName)) {
                             addedVar->type = "std::pair"+aliasStatement->templateParams;
-                        } else {
+                        } else if (STLContainers.contains(aliasStatement->effectiveTypeStatement->fullName)){
                             QString type=doFindFirstTemplateParamOf(mCurrentFile,aliasStatement->templateParams,
                                                                   getCurrentScope());
                             if (!type.isEmpty())
@@ -3725,6 +3743,9 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                             PStatement parentStatement = aliasStatement->typeStatement->parentScope.lock();
                             if (parentStatement
                                     && STLContainers.contains(parentStatement->fullName)) {
+                                addedVar->type = parentStatement->fullName+aliasStatement->templateParams+"::"+aliasStatement->typeStatement->command;
+                            } else if (parentStatement
+                                    && STLMaps.contains(parentStatement->fullName)) {
                                 addedVar->type = parentStatement->fullName+aliasStatement->templateParams+"::"+aliasStatement->typeStatement->command;
                             }
                         }
@@ -3821,6 +3842,9 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                             PStatement parentStatement = aliasStatement->typeStatement->parentScope.lock();
                             if (parentStatement
                                     && STLContainers.contains(parentStatement->fullName)) {
+                                addedVar->type = parentStatement->fullName+aliasStatement->templateParams+"::"+aliasStatement->typeStatement->command;
+                            } else if (parentStatement
+                                    && STLMaps.contains(parentStatement->fullName)) {
                                 addedVar->type = parentStatement->fullName+aliasStatement->templateParams+"::"+aliasStatement->typeStatement->command;
                             }
                         }
@@ -4259,7 +4283,19 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                         } else {
                             result = PEvalStatement();
                         }
+                    } else if (STLMaps.contains(parentScope->fullName)) {
+                        QString typeName=doFindTemplateParamOf(fileName,result->templateParams,1,parentScope);
+    //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                        PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (typeStatement) {
+                            result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString=typeName;
+                            result->kind = EvalStatementKind::Variable;
+                        } else {
+                            result = PEvalStatement();
+                        }
                     }
+
                 } else {
                     PStatement typeStatement = result->effectiveTypeStatement;
                     if ((typeStatement)
@@ -4409,28 +4445,49 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                 if (result->baseStatement && lastResult) {
                     PStatement parentScope = result->baseStatement->parentScope.lock();
                     if (parentScope
-                        && STLContainers.contains(parentScope->fullName)
                         && STLElementMethods.contains(result->baseStatement->command)
                     ) {
-                    //stl container methods
-                        PStatement typeStatement = result->effectiveTypeStatement;
-                        QString typeName;
-                        if (!lastResult->definitionString.isEmpty())
-                            typeName = doFindFirstTemplateParamOf(fileName,lastResult->definitionString,parentScope);
-                        else if (lastResult->baseStatement)
-                            typeName = doFindFirstTemplateParamOf(fileName,lastResult->baseStatement->type, parentScope);
-//                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
-                        if (!typeName.isEmpty())
-                            typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
-                        if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
-                            result->definitionString = typeName;
-                            result->kind = EvalStatementKind::Variable;
-                            lastResult = result;
-                        } else {
-                            return PEvalStatement();
+                        if (STLContainers.contains(parentScope->fullName)) {
+                            //stl container methods
+                            PStatement typeStatement = result->effectiveTypeStatement;
+                            QString typeName;
+                            if (!lastResult->definitionString.isEmpty())
+                                typeName = doFindFirstTemplateParamOf(fileName,lastResult->definitionString,parentScope);
+                            else if (lastResult->baseStatement)
+                                typeName = doFindFirstTemplateParamOf(fileName,lastResult->baseStatement->type, parentScope);
+    //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                            if (!typeName.isEmpty())
+                                typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                            if (typeStatement) {
+                                result = doCreateEvalType(fileName,typeStatement);
+                                result->definitionString = typeName;
+                                result->kind = EvalStatementKind::Variable;
+                                lastResult = result;
+                            } else {
+                                return PEvalStatement();
+                            }
+                        } else if (STLMaps.contains(parentScope->fullName)) {
+                            //stl map methods
+                            PStatement typeStatement = result->effectiveTypeStatement;
+                            QString typeName;
+                            if (!lastResult->definitionString.isEmpty())
+                                typeName = doFindTemplateParamOf(fileName,lastResult->definitionString,1,parentScope);
+                            else if (lastResult->baseStatement)
+                                typeName = doFindTemplateParamOf(fileName,lastResult->baseStatement->type,1, parentScope);
+    //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                            if (!typeName.isEmpty())
+                                typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                            if (typeStatement) {
+                                result = doCreateEvalType(fileName,typeStatement);
+                                result->definitionString = typeName;
+                                result->kind = EvalStatementKind::Variable;
+                                lastResult = result;
+                            } else {
+                                return PEvalStatement();
+                            }
                         }
                     }
+
                 }
                 result->kind = EvalStatementKind::Variable;
             } else
@@ -4443,25 +4500,44 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
             else {
                 PStatement typeStatement = result->effectiveTypeStatement;
                 if (typeStatement
-                        && STLContainers.contains(typeStatement->fullName)
                         && result->kind == EvalStatementKind::Variable
                         && result->baseStatement) {
-                    PStatement parentScope = result->baseStatement->parentScope.lock();
-                    QString typeName;
-                    if (!lastResult || lastResult->definitionString.isEmpty())
-                        typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
-                    else
-                        typeName = doFindFirstTemplateParamOf(fileName,lastResult->definitionString,parentScope);
-                    typeStatement = doFindTypeDefinitionOf(fileName, typeName,
-                                                     parentScope);
-                    if (typeStatement) {
-                        result = doCreateEvalType(fileName,typeStatement);
-                        result->definitionString=typeName;
-                        result->kind = EvalStatementKind::Variable;
-                        lastResult = result;
-                    } else {
-                        return PEvalStatement();
+                    if (STLContainers.contains(typeStatement->fullName)) {
+                        PStatement parentScope = result->baseStatement->parentScope.lock();
+                        QString typeName;
+                        if (!lastResult || lastResult->definitionString.isEmpty())
+                            typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+                        else
+                            typeName = doFindFirstTemplateParamOf(fileName,lastResult->definitionString,parentScope);
+                        typeStatement = doFindTypeDefinitionOf(fileName, typeName,
+                                                         parentScope);
+                        if (typeStatement) {
+                            result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString=typeName;
+                            result->kind = EvalStatementKind::Variable;
+                            lastResult = result;
+                        } else {
+                            return PEvalStatement();
+                        }
+                    } else if (STLMaps.contains(typeStatement->fullName)) {
+                        PStatement parentScope = result->baseStatement->parentScope.lock();
+                        QString typeName;
+                        if (!lastResult || lastResult->definitionString.isEmpty())
+                            typeName = doFindTemplateParamOf(fileName,result->baseStatement->type, 1,parentScope);
+                        else
+                            typeName = doFindTemplateParamOf(fileName,lastResult->definitionString,1,parentScope);
+                        typeStatement = doFindTypeDefinitionOf(fileName, typeName,
+                                                         parentScope);
+                        if (typeStatement) {
+                            result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString=typeName;
+                            result->kind = EvalStatementKind::Variable;
+                            lastResult = result;
+                        } else {
+                            return PEvalStatement();
+                        }
                     }
+
                 } else {
                     return PEvalStatement();
                 }
@@ -4689,6 +4765,9 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                     PStatement parentStatement = result->typeStatement->parentScope.lock();
                     if (parentStatement
                             && STLContainers.contains(parentStatement->fullName)) {
+                        result->templateParams = previousResult->templateParams;
+                    } else if (parentStatement
+                            && STLMaps.contains(parentStatement->fullName)) {
                         result->templateParams = previousResult->templateParams;
                     }
                 }
