@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.18
+
+  - fix: macos icon size overgrown
+
 Red Panda C++ Version 2.17
 
   - enhancement: Add X86_64 AVX/AVX instruction descriptions to asm syntaxer.

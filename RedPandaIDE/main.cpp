@@ -243,19 +243,10 @@ void setTheme(const QString& theme) {
 
 int main(int argc, char *argv[])
 {
-    //QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-//#ifdef Q_OS_WIN
-//    QApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-//    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
-//    qputenv("QT_SCALE_FACTOR_ROUNDING_POLICY","PassThrough");
-//    qputenv("QT_DEVICE_PIXEL_RATIO ","auto");
-//    qputenv("QT_AUTO_SCREEN_SCALE_FACTOR","false");
-//#endif
     QApplication app(argc, argv);
-#ifdef Q_OS_MACOS
-    // Fix macOS overgrown icon size issue
+
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
-#endif
+
     QFile tempFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
     {
         bool firstRun;
