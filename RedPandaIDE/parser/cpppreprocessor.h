@@ -86,6 +86,8 @@ public:
 
     QHash<QString, PFileIncludes> &includesList();
 
+    const QHash<QString, PFileIncludes> &includesList() const;
+
     QSet<QString> &scannedFiles();
 
     const QSet<QString> &includePaths();

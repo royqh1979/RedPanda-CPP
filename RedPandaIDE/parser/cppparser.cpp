@@ -141,7 +141,7 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     if (mParsing)
         return result;
 
-    PStatement statement = findStatementOf(fileName,phrase, line);
+    PStatement statement = doFindStatementOf(fileName,phrase, line);
     if (!statement)
         return result;
     PStatement parentScope;
@@ -150,7 +150,7 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     } else
         parentScope = statement->parentScope.lock();
     if (parentScope && parentScope->kind == StatementKind::skNamespace) {
-        PStatementList namespaceStatementsList = findNamespace(parentScope->command);
+        PStatementList namespaceStatementsList = doFindNamespace(parentScope->command);
         if (namespaceStatementsList) {
             for (PStatement& namespaceStatement  : *namespaceStatementsList) {
                 result.append(
@@ -170,6 +170,11 @@ PStatement CppParser::findScopeStatement(const QString &filename, int line)
     if (mParsing) {
         return PStatement();
     }
+    return doFindScopeStatement(filename,line);
+}
+
+PStatement CppParser::doFindScopeStatement(const QString &filename, int line) const
+{
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename);
     if (!fileIncludes)
         return PStatement();
@@ -232,12 +237,23 @@ int CppParser::findLastOperator(const QString &phrase) const
 PStatementList CppParser::findNamespace(const QString &name)
 {
     QMutexLocker locker(&mMutex);
+    return doFindNamespace(name);
+}
+
+PStatementList CppParser::doFindNamespace(const QString &name) const
+{
     return mNamespaces.value(name,PStatementList());
 }
+
 
 PStatement CppParser::findStatement(const QString &fullname)
 {
     QMutexLocker locker(&mMutex);
+    return doFindStatement(fullname);
+}
+
+PStatement CppParser::doFindStatement(const QString &fullname) const
+{
     if (fullname.isEmpty())
         return PStatement();
     QStringList phrases = fullname.split("::");
@@ -247,7 +263,7 @@ PStatement CppParser::findStatement(const QString &fullname)
     PStatement statement;
     foreach (const QString& phrase, phrases) {
         if (parentStatement && parentStatement->kind == StatementKind::skNamespace) {
-            PStatementList lst = findNamespace(parentStatement->fullName);
+            PStatementList lst = doFindNamespace(parentStatement->fullName);
             foreach (const PStatement& namespaceStatement, *lst) {
                 statement = findMemberOfStatement(phrase,namespaceStatement);
                 if (statement)
@@ -268,20 +284,31 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QString &ph
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return PStatement();
-    return findStatementOf(fileName,phrase,findScopeStatement(fileName,line));
+    return doFindStatementOf(fileName,phrase,line);
+}
+PStatement CppParser::doFindStatementOf(const QString &fileName, const QString &phrase, int line) const
+{
+    return doFindStatementOf(fileName,phrase,doFindScopeStatement(fileName,line));
 }
 
 PStatement CppParser::findStatementOf(const QString &fileName,
                                       const QString &phrase,
                                       const PStatement& currentScope,
-                                      PStatement &parentScopeType,
-                                      bool force)
+                                      PStatement &parentScopeType)
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return PStatement();
+    return doFindStatementOf(fileName,phrase,currentScope,parentScopeType);
+}
+
+PStatement CppParser::doFindStatementOf(const QString &fileName,
+                                      const QString &phrase,
+                                      const PStatement& currentScope,
+                                      PStatement &parentScopeType) const
+{
     PStatement result;
     parentScopeType = currentScope;
-    if (mParsing && !force)
-        return PStatement();
 
     //find the start scope statement
     QString namespaceName, remainder;
@@ -328,14 +355,14 @@ PStatement CppParser::findStatementOf(const QString &fileName,
     parentScopeType = currentScope;
 
     if (!memberName.isEmpty() && (statement->kind == StatementKind::skTypedef)) {
-        PStatement typeStatement = findTypeDefinitionOf(fileName,statement->type, parentScopeType);
+        PStatement typeStatement = doFindTypeDefinitionOf(fileName,statement->type, parentScopeType);
         if (typeStatement)
             statement = typeStatement;
     }
 
     //using alias like 'using std::vector;'
     if (statement->kind == StatementKind::skAlias) {
-        statement = findAliasedStatement(statement);
+        statement = doFindAliasedStatement(statement);
         if (!statement)
             return PStatement();
     }
@@ -368,30 +395,30 @@ PStatement CppParser::findStatementOf(const QString &fileName,
                     && lastScopeStatement) {
                     isSTLContainerFunctions = true;
                     PStatement lastScopeParent = lastScopeStatement->parentScope.lock();
-                    typeName=findFirstTemplateParamOf(fileName,lastScopeStatement->type,
+                    typeName=doFindFirstTemplateParamOf(fileName,lastScopeStatement->type,
                                                       lastScopeParent );
-                    typeStatement=findTypeDefinitionOf(fileName, typeName,
+                    typeStatement=doFindTypeDefinitionOf(fileName, typeName,
                                                        lastScopeParent );
                 }
             }
             if (!isSTLContainerFunctions)
-                typeStatement = findTypeDefinitionOf(fileName,statement->type, parentScopeType);
+                typeStatement = doFindTypeDefinitionOf(fileName,statement->type, parentScopeType);
 
             //it's stl smart pointer
             if ((typeStatement)
                     && STLPointers.contains(typeStatement->fullName)
                     && (operatorToken == "->")) {
                 PStatement parentScope = statement->parentScope.lock();
-                typeName=findFirstTemplateParamOf(fileName,statement->type, parentScope);
-                typeStatement=findTypeDefinitionOf(fileName, typeName,parentScope);
+                typeName=doFindFirstTemplateParamOf(fileName,statement->type, parentScope);
+                typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
             } else if ((typeStatement)
                        && STLContainers.contains(typeStatement->fullName)
                        && nextScopeWord.endsWith(']')) {
                 //it's a std container
                 PStatement parentScope = statement->parentScope.lock();
-                typeName = findFirstTemplateParamOf(fileName,statement->type,
+                typeName = doFindFirstTemplateParamOf(fileName,statement->type,
                                                     parentScope);
-                typeStatement = findTypeDefinitionOf(fileName, typeName,
+                typeStatement = doFindTypeDefinitionOf(fileName, typeName,
                                                      parentScope);
             }
             lastScopeStatement = statement;
@@ -407,7 +434,7 @@ PStatement CppParser::findStatementOf(const QString &fileName,
         parentScopeType=statement;
         statement = memberStatement;
         if (!memberName.isEmpty() && (statement->kind == StatementKind::skTypedef)) {
-            PStatement typeStatement = findTypeDefinitionOf(fileName,statement->type, parentScopeType);
+            PStatement typeStatement = doFindTypeDefinitionOf(fileName,statement->type, parentScopeType);
             if (typeStatement)
                 statement = typeStatement;
         }
@@ -433,17 +460,23 @@ PEvalStatement CppParser::evalExpression(
                             true);
 }
 
-PStatement CppParser::findStatementOf(const QString &fileName, const QString &phrase, const PStatement& currentClass, bool force)
+PStatement CppParser::doFindStatementOf(const QString &fileName, const QString &phrase, const PStatement& currentClass) const
 {
     PStatement statementParentType;
-    return findStatementOf(fileName,phrase,currentClass,statementParentType,force);
+    return doFindStatementOf(fileName,phrase,currentClass,statementParentType);
 }
+
 
 PStatement CppParser::findStatementOf(const QString &fileName, const QStringList &expression, const PStatement &currentScope)
 {
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return PStatement();
+    return doFindStatementOf(fileName,expression,currentScope);
+}
+
+PStatement CppParser::doFindStatementOf(const QString &fileName, const QStringList &expression, const PStatement &currentScope) const
+{
     QString memberOperator;
     QStringList memberExpression;
     QStringList ownerExpression = getOwnerExpressionAndMember(expression,memberOperator,memberExpression);
@@ -468,7 +501,7 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QStringList
         }
         if (ownerEvalStatement->effectiveTypeStatement &&
                 ownerEvalStatement->effectiveTypeStatement->kind == StatementKind::skNamespace) {
-            PStatementList lst = findNamespace(ownerEvalStatement->effectiveTypeStatement->fullName);
+            PStatementList lst = doFindNamespace(ownerEvalStatement->effectiveTypeStatement->fullName);
             foreach (const PStatement& namespaceStatement, *lst) {
                 PStatement statement = findMemberOfStatement(phrase,namespaceStatement);
                 if (statement)
@@ -486,7 +519,12 @@ PStatement CppParser::findStatementOf(const QString &fileName, const QStringList
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return PStatement();
-    PStatement statement = findStatementOf(fileName,expression,findScopeStatement(fileName,line));
+    return doFindStatementOf(fileName,expression,line);
+}
+
+PStatement CppParser::doFindStatementOf(const QString &fileName, const QStringList &expression, int line) const
+{
+    PStatement statement = doFindStatementOf(fileName,expression,doFindScopeStatement(fileName,line));
     if (statement && statement->line != line
             && statement->definitionLine != line) {
         PStatement parentStatement = statement->parentScope.lock();
@@ -503,6 +541,10 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement)
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return PStatement();
+    return doFindAliasedStatement(statement);
+}
+PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const
+{
     if (!statement)
         return PStatement();
     QString alias = statement->type;
@@ -511,7 +553,7 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement)
         return PStatement();
     QString nsName=statement->type.mid(0,pos);
     QString name = statement->type.mid(pos+2);
-    PStatementList namespaceStatements = findNamespace(nsName);
+    PStatementList namespaceStatements = doFindNamespace(nsName);
     if (!namespaceStatements)
         return PStatement();
     foreach (const PStatement& namespaceStatement, *namespaceStatements) {
@@ -524,7 +566,7 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement)
     return PStatement();
 }
 
-PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope)
+PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope) const
 {
     PStatement scopeStatement = startScope;
 
@@ -551,7 +593,7 @@ PStatement CppParser::findStatementStartingFrom(const QString &fileName, const Q
         return result;
 
     //Find in all global usings
-    const QSet<QString>& fileUsings = getFileUsings(fileName);
+    const QSet<QString>& fileUsings = internalGetFileUsings(fileName);
     // add members of all fusings
     for (const QString& namespaceName:fileUsings) {
         result = findStatementInNamespace(phrase,namespaceName);
@@ -568,32 +610,7 @@ PStatement CppParser::findTypeDefinitionOf(const QString &fileName, const QStrin
     if (mParsing)
         return PStatement();
 
-    // Remove pointer stuff from type
-    QString s = aType; // 'Type' is a keyword
-    int position = s.length()-1;
-    while ((position >= 0) && (s[position] == '*'
-                               || s[position] == ' '
-                               || s[position] == '&'))
-        position--;
-    if (position != s.length()-1)
-        s.truncate(position+1);
-
-    // Strip template stuff
-    position = s.indexOf('<');
-    if (position >= 0) {
-        int endPos = getBracketEnd(s,position);
-        s.remove(position,endPos-position+1);
-    }
-
-    // Use last word only (strip 'const', 'static', etc)
-    position = s.lastIndexOf(' ');
-    if (position >= 0)
-        s = s.mid(position+1);
-
-    PStatement scopeStatement = currentClass;
-
-    PStatement statement = findStatementOf(fileName,s,currentClass);
-    return getTypeDef(statement,fileName,aType);
+    return doFindTypeDefinitionOf(fileName,aType,currentClass);
 }
 
 PStatement CppParser::findTypeDef(const PStatement &statement, const QString &fileName)
@@ -685,6 +702,11 @@ QSet<QString> CppParser::getFileIncludes(const QString &filename)
 QSet<QString> CppParser::getFileUsings(const QString &filename)
 {
     QMutexLocker locker(&mMutex);
+    return internalGetFileUsings(filename);
+}
+
+QSet<QString> CppParser::internalGetFileUsings(const QString &filename) const
+{
     QSet<QString> result;
     if (filename.isEmpty())
         return result;
@@ -991,7 +1013,7 @@ bool CppParser::isFileParsed(const QString &filename)
     return mPreprocessor.scannedFiles().contains(filename);
 }
 
-QString CppParser::getScopePrefix(const PStatement& statement){
+QString CppParser::getScopePrefix(const PStatement& statement) const{
     switch (statement->classScope) {
     case StatementClassScope::Public:
         return "public";
@@ -1082,7 +1104,7 @@ QString CppParser::getTemplateParam(const PStatement& statement,
                                     const QString& filename,
                                     const QString& phrase,
                                     int index,
-                                    const PStatement& currentScope)
+                                    const PStatement& currentScope) const
 {
     if (!statement)
         return "";
@@ -1093,7 +1115,7 @@ QString CppParser::getTemplateParam(const PStatement& statement,
     return doFindTemplateParamOf(filename,statement->type,index,currentScope);
 }
 
-int CppParser::getTemplateParamStart(const QString &s, int startAt, int index)
+int CppParser::getTemplateParamStart(const QString &s, int startAt, int index) const
 {
     int i = startAt+1;
     int count=0;
@@ -1104,7 +1126,7 @@ int CppParser::getTemplateParamStart(const QString &s, int startAt, int index)
     return i;
 }
 
-int CppParser::getTemplateParamEnd(const QString &s, int startAt) {
+int CppParser::getTemplateParamEnd(const QString &s, int startAt) const {
     int i = startAt;
     int level = 1; // pretend we start on top of '<'
     while (i < s.length()) {
@@ -1387,8 +1409,8 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
                         basename.truncate(pBegin);
                 }
                 // Find the corresponding PStatement
-                PStatement statement = findStatementOf(mCurrentFile,basename,
-                                                       classStatement->parentScope.lock(),true);
+                PStatement statement = doFindStatementOf(mCurrentFile,basename,
+                                                       classStatement->parentScope.lock());
                 if (statement && statement->kind == StatementKind::skClass) {
                     inheritClassStatement(classStatement,isStruct,statement,lastInheritScopeType);
                 }
@@ -1404,7 +1426,7 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
     }
 }
 
-bool CppParser::isCurrentScope(const QString &command)
+bool CppParser::isCurrentScope(const QString &command) const
 {
     PStatement statement = getCurrentScope();
     if (!statement)
@@ -1934,12 +1956,42 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
     }
 }
 
-QString CppParser::doFindFirstTemplateParamOf(const QString &fileName, const QString &phrase, const PStatement &currentScope)
+PStatement CppParser::doFindTypeDefinitionOf(const QString &fileName, const QString &aType, const PStatement &currentClass) const
+{
+    // Remove pointer stuff from type
+    QString s = aType; // 'Type' is a keyword
+    int position = s.length()-1;
+    while ((position >= 0) && (s[position] == '*'
+                               || s[position] == ' '
+                               || s[position] == '&'))
+        position--;
+    if (position != s.length()-1)
+        s.truncate(position+1);
+
+    // Strip template stuff
+    position = s.indexOf('<');
+    if (position >= 0) {
+        int endPos = getBracketEnd(s,position);
+        s.remove(position,endPos-position+1);
+    }
+
+    // Use last word only (strip 'const', 'static', etc)
+    position = s.lastIndexOf(' ');
+    if (position >= 0)
+        s = s.mid(position+1);
+
+    PStatement scopeStatement = currentClass;
+
+    PStatement statement = doFindStatementOf(fileName,s,currentClass);
+    return getTypeDef(statement,fileName,aType);
+}
+
+QString CppParser::doFindFirstTemplateParamOf(const QString &fileName, const QString &phrase, const PStatement &currentScope) const
 {
     return doFindTemplateParamOf(fileName,phrase,0,currentScope);
 }
 
-QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString &phrase, int index, const PStatement &currentScope)
+QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString &phrase, int index, const PStatement &currentScope) const
 {
     // Remove pointer stuff from type
     QString s = phrase; // 'Type' is a keyword
@@ -1960,32 +2012,32 @@ QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString 
 
     PStatement scopeStatement = currentScope;
 
-    PStatement statement = findStatementOf(fileName,s,currentScope);
+    PStatement statement = doFindStatementOf(fileName,s,currentScope);
     return getTemplateParam(statement,fileName, phrase,index, currentScope);
 }
 
-int CppParser::getCurrentBlockEndSkip()
+int CppParser::getCurrentBlockEndSkip() const
 {
     if (mBlockEndSkips.isEmpty())
         return mTokenizer.tokenCount()+1;
     return mBlockEndSkips.back();
 }
 
-int CppParser::getCurrentBlockBeginSkip()
+int CppParser::getCurrentBlockBeginSkip() const
 {
     if (mBlockBeginSkips.isEmpty())
         return mTokenizer.tokenCount()+1;
     return mBlockBeginSkips.back();
 }
 
-int CppParser::getCurrentInlineNamespaceEndSkip()
+int CppParser::getCurrentInlineNamespaceEndSkip() const
 {
     if (mInlineNamespaceEndSkips.isEmpty())
         return mTokenizer.tokenCount()+1;
     return mInlineNamespaceEndSkips.back();
 }
 
-PStatement CppParser::getCurrentScope()
+PStatement CppParser::getCurrentScope() const
 {
     if (mCurrentScope.isEmpty()) {
         return PStatement();
@@ -1993,7 +2045,7 @@ PStatement CppParser::getCurrentScope()
     return mCurrentScope.back();
 }
 
-void CppParser::getFullNamespace(const QString &phrase, QString &sNamespace, QString &member)
+void CppParser::getFullNamespace(const QString &phrase, QString &sNamespace, QString &member) const
 {
     sNamespace = "";
     member = phrase;
@@ -2029,7 +2081,7 @@ void CppParser::getFullNamespace(const QString &phrase, QString &sNamespace, QSt
     }
 }
 
-QString CppParser::getFullStatementName(const QString &command, const PStatement& parent)
+QString CppParser::getFullStatementName(const QString &command, const PStatement& parent) const
 {
     PStatement scopeStatement=parent;
     while (scopeStatement && !isNamedScope(scopeStatement->kind))
@@ -2048,7 +2100,7 @@ PStatement CppParser::getIncompleteClass(const QString &command, const PStatemen
     if (p>=0) {
         s.truncate(p);
     }
-    PStatement result = findStatementOf(mCurrentFile,s,parentScope,true);
+    PStatement result = doFindStatementOf(mCurrentFile,s,parentScope);
     if (result && result->kind!=StatementKind::skClass)
         return PStatement();
     return result;
@@ -2068,13 +2120,13 @@ StatementScope CppParser::getScope()
         return StatementScope::Local;
 }
 
-QString CppParser::getStatementKey(const QString &sName, const QString &sType, const QString &sNoNameArgs)
+QString CppParser::getStatementKey(const QString &sName, const QString &sType, const QString &sNoNameArgs) const
 {
     return sName + "--" + sType + "--" + sNoNameArgs;
 }
 
 PStatement CppParser::getTypeDef(const PStatement& statement,
-                                 const QString& fileName, const QString& aType)
+                                 const QString& fileName, const QString& aType) const
 {
     if (!statement) {
         return PStatement();
@@ -2086,12 +2138,12 @@ PStatement CppParser::getTypeDef(const PStatement& statement,
     } else if (statement->kind == StatementKind::skTypedef) {
         if (statement->type == aType) // prevent infinite loop
             return statement;
-        PStatement result = findTypeDefinitionOf(fileName,statement->type, statement->parentScope.lock());
+        PStatement result = doFindTypeDefinitionOf(fileName,statement->type, statement->parentScope.lock());
         if (!result) // found end of typedef trail, return result
             return statement;
         return result;
     } else if (statement->kind == StatementKind::skAlias) {
-        PStatement result = findAliasedStatement(statement);
+        PStatement result = doFindAliasedStatement(statement);
         if (!result) // found end of typedef trail, return result
             return statement;
         return result;
@@ -2995,7 +3047,7 @@ handlePreprocessorEnd:
     mIndex++;
 }
 
-StatementClassScope CppParser::getClassScope(const QString& text) {
+StatementClassScope CppParser::getClassScope(const QString& text) const {
     if (!text.isEmpty() && text[0]=='p') {
         if (text=="public")
             return StatementClassScope::Public;
@@ -3007,7 +3059,7 @@ StatementClassScope CppParser::getClassScope(const QString& text) {
     return StatementClassScope::None;
 }
 
-StatementClassScope CppParser::getClassScope(KeywordType keywordType)
+StatementClassScope CppParser::getClassScope(KeywordType keywordType) const
 {
     switch(keywordType) {
     case KeywordType::Public:
@@ -3927,7 +3979,7 @@ void CppParser::fillListOfFunctions(const QString& fileName, int line,
     }
 }
 
-QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int line, const PStatement &statement, const PStatement &scopeStatement)
+QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int line, const PStatement &statement, const PStatement &scopeStatement) const
 {
     QList<PStatement> result;
     StatementMap children = mStatementList.childrenStatements(scopeStatement);
@@ -3946,7 +3998,7 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int lin
     return result;
 }
 
-PStatement CppParser::findMacro(const QString &phrase, const QString &fileName)
+PStatement CppParser::findMacro(const QString &phrase, const QString &fileName) const
 {
     const StatementMap& statementMap =mStatementList.childrenStatements(nullptr);
     if (statementMap.isEmpty())
@@ -3965,7 +4017,7 @@ PStatement CppParser::findMacro(const QString &phrase, const QString &fileName)
 }
 
 PStatement CppParser::findMemberOfStatement(const QString &phrase,
-                                            const PStatement& scopeStatement)
+                                            const PStatement& scopeStatement) const
 {
     const StatementMap& statementMap =mStatementList.childrenStatements(scopeStatement);
     if (statementMap.isEmpty())
@@ -3989,7 +4041,7 @@ PStatement CppParser::findMemberOfStatement(const QString &phrase,
     return statementMap.value(s,PStatement());
 }
 
-QList<PStatement> CppParser::findMembersOfStatement(const QString &phrase, const PStatement &scopeStatement)
+QList<PStatement> CppParser::findMembersOfStatement(const QString &phrase, const PStatement &scopeStatement) const
 {
     const StatementMap& statementMap =mStatementList.childrenStatements(scopeStatement);
     if (statementMap.isEmpty())
@@ -4014,24 +4066,24 @@ QList<PStatement> CppParser::findMembersOfStatement(const QString &phrase, const
 }
 
 PStatement CppParser::findStatementInScope(const QString &name, const QString &noNameArgs,
-                                           StatementKind kind, const PStatement& scope)
+                                           StatementKind kind, const PStatement& scope) const
 {
     if (scope && scope->kind == StatementKind::skNamespace) {
-        PStatementList namespaceStatementsList = findNamespace(scope->command);
+        PStatementList namespaceStatementsList = doFindNamespace(scope->command);
         if (!namespaceStatementsList)
             return PStatement();
         foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
-            PStatement result=doFindStatementInScope(name,noNameArgs,kind,namespaceStatement);
+            PStatement result=findStatementInScope(name,noNameArgs,kind,namespaceStatement);
             if (result)
                 return result;
         }
     } else {
-        return doFindStatementInScope(name,noNameArgs,kind,scope);
+        return findStatementInScope(name,noNameArgs,kind,scope);
     }
     return PStatement();
 }
 
-PStatement CppParser::findStatementInScope(const QString &name, const PStatement &scope)
+PStatement CppParser::findStatementInScope(const QString &name, const PStatement &scope) const
 {
     if (!scope)
         return findMemberOfStatement(name,scope);
@@ -4042,9 +4094,9 @@ PStatement CppParser::findStatementInScope(const QString &name, const PStatement
     }
 }
 
-PStatement CppParser::findStatementInNamespace(const QString &name, const QString &namespaceName)
+PStatement CppParser::findStatementInNamespace(const QString &name, const QString &namespaceName) const
 {
-    PStatementList namespaceStatementsList=findNamespace(namespaceName);
+    PStatementList namespaceStatementsList=doFindNamespace(namespaceName);
     if (!namespaceStatementsList)
         return PStatement();
     foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
@@ -4060,7 +4112,7 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
                                        int &pos,
                                        const PStatement& scope,
                                        const PEvalStatement& previousResult,
-                                       bool freeScoped)
+                                       bool freeScoped) const
 {
     //dummy function to easy later upgrades
     return doEvalPointerArithmetic(fileName,
@@ -4071,7 +4123,7 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
                                    freeScoped);
 }
 
-PEvalStatement CppParser::doEvalPointerArithmetic(const QString &fileName, QStringList &phraseExpression, int &pos, const PStatement &scope, const PEvalStatement &previousResult, bool freeScoped)
+PEvalStatement CppParser::doEvalPointerArithmetic(const QString &fileName, QStringList &phraseExpression, int &pos, const PStatement &scope, const PEvalStatement &previousResult, bool freeScoped) const
 {
     if (pos>=phraseExpression.length())
         return PEvalStatement();
@@ -4126,7 +4178,7 @@ PEvalStatement CppParser::doEvalPointerToMembers(
         int &pos,
         const PStatement &scope,
         const PEvalStatement &previousResult,
-        bool freeScoped)
+        bool freeScoped) const
 {
     if (pos>=phraseExpression.length())
         return PEvalStatement();
@@ -4169,7 +4221,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                                                    int &pos,
                                                    const PStatement& scope,
                                                    const PEvalStatement& previousResult,
-                                                   bool freeScoped)
+                                                   bool freeScoped) const
 {
     if (pos>=phraseExpression.length())
         return PEvalStatement();
@@ -4193,10 +4245,11 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                 ) {
                     PStatement parentScope = result->typeStatement->parentScope.lock();
                     if (STLContainers.contains(parentScope->fullName)) {
-                        QString typeName=findFirstTemplateParamOf(fileName,result->templateParams, parentScope);
+                        QString typeName=doFindFirstTemplateParamOf(fileName,result->templateParams, parentScope);
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
-                        PStatement typeStatement=findTypeDefinitionOf(fileName, typeName,parentScope);
+                        PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
+                            result->definitionString=typeName;
                             result = doCreateEvalType(fileName,typeStatement);
                             result->kind = EvalStatementKind::Variable;
                         }
@@ -4208,10 +4261,16 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
                         && result->kind == EvalStatementKind::Variable
                         && result->baseStatement) {
                         PStatement parentScope = result->baseStatement->parentScope.lock();
-                        QString typeName=findFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+                        QString typeName;
+                        if (result->definitionString.isEmpty())
+                            typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+                        else
+                            typeName = doFindFirstTemplateParamOf(fileName,result->definitionString,parentScope);
+
     //                    qDebug()<<"typeName"<<typeName;
-                        typeStatement=findTypeDefinitionOf(fileName, typeName,parentScope);
+                        typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
+                            result->definitionString=typeName;
                             result = doCreateEvalType(fileName,typeStatement);
                             result->kind = EvalStatementKind::Variable;
                         }
@@ -4301,8 +4360,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                                                    int &pos,
                                                    const PStatement& scope,
                                                    const PEvalStatement& previousResult,
-                                                   bool freeScoped)
-
+                                                   bool freeScoped) const
 {
 //    qDebug()<<"eval member access "<<pos<<phraseExpression;
     PEvalStatement result;
@@ -4348,10 +4406,15 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                     ) {
                     //stl container methods
                         PStatement typeStatement = result->effectiveTypeStatement;
-                        QString typeName=findFirstTemplateParamOf(fileName,lastResult->baseStatement->type, parentScope);
+                        QString typeName;
+                        if (result->definitionString.isEmpty())
+                            typeName = doFindFirstTemplateParamOf(fileName,lastResult->baseStatement->type, parentScope);
+                        else
+                            typeName = doFindFirstTemplateParamOf(fileName,result->definitionString,parentScope);
 //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
-                        typeStatement=findTypeDefinitionOf(fileName, typeName,parentScope);
+                        typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
+                            result->definitionString = typeName;
                             result = doCreateEvalType(fileName,typeStatement);
                             result->kind = EvalStatementKind::Variable;
                         }
@@ -4372,11 +4435,15 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         && result->kind == EvalStatementKind::Variable
                         && result->baseStatement) {
                     PStatement parentScope = result->baseStatement->parentScope.lock();
-                    QString typeName = findFirstTemplateParamOf(fileName,result->baseStatement->type,
-                                                    parentScope);
-                    typeStatement = findTypeDefinitionOf(fileName, typeName,
+                    QString typeName;
+                    if (result->definitionString.isEmpty())
+                        typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+                    else
+                        typeName = doFindFirstTemplateParamOf(fileName,result->definitionString,parentScope);
+                    typeStatement = doFindTypeDefinitionOf(fileName, typeName,
                                                      parentScope);
                     if (typeStatement) {
+                        result->definitionString=typeName;
                         result = doCreateEvalType(fileName,typeStatement);
                         result->kind = EvalStatementKind::Variable;
                     }
@@ -4392,7 +4459,6 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         scope,
                         result,
                         false);
-//            qDebug()<<(result!=nullptr)<<pos<<"after .";
         } else if (phraseExpression[pos] == "->") {
             pos++;
 //            qDebug()<<"pointer level"<<result->pointerLevel;
@@ -4403,10 +4469,15 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         && result->kind == EvalStatementKind::Variable
                         && result->baseStatement) {
                     PStatement parentScope = result->baseStatement->parentScope.lock();
-                    QString typeName=findFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+                    QString typeName;
+                    if (result->definitionString.isEmpty())
+                        typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+                    else
+                        typeName = doFindFirstTemplateParamOf(fileName,result->definitionString,parentScope);
 //                    qDebug()<<"typeName"<<typeName;
-                    typeStatement=findTypeDefinitionOf(fileName, typeName,parentScope);
+                    typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                     if (typeStatement) {
+                        result->definitionString=typeName;
                         result = doCreateEvalType(fileName,typeStatement);
                         result->kind = EvalStatementKind::Variable;
                     }
@@ -4433,7 +4504,7 @@ PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
                                                    int &pos,
                                                    const PStatement& scope,
                                                    const PEvalStatement& previousResult,
-                                                   bool freeScoped)
+                                                   bool freeScoped) const
 {
 //    qDebug()<<"eval scope res "<<pos<<phraseExpression;
     PEvalStatement result;
@@ -4488,7 +4559,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                                                    int &pos,
                                                    const PStatement& scope,
                                                    const PEvalStatement& previousResult,
-                                                   bool freeScoped)
+                                                   bool freeScoped) const
 {
 //    if (previousResult) {
 //        qDebug()<<"eval term "<<pos<<phraseExpression<<previousResult->baseType<<freeScoped;
@@ -4562,7 +4633,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                     result = doCreateEvalNamespace(statement);
                     break;
                 case StatementKind::skAlias: {
-                    statement = findAliasedStatement(statement);
+                    statement = doFindAliasedStatement(statement);
                     if (statement)
                         result = doCreateEvalNamespace(statement);
                 }
@@ -4643,7 +4714,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
     return result;
 }
 
-bool CppParser::expandMacro(QStringList &phraseExpression, int &pos, const PStatement &macro)
+bool CppParser::expandMacro(QStringList &phraseExpression, int &pos, const PStatement &macro) const
 {
     QString s;
     if (macro->args.isEmpty()) {
@@ -4751,7 +4822,7 @@ bool CppParser::expandMacro(QStringList &phraseExpression, int &pos, const PStat
     return true;
 }
 
-PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceStatement)
+PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceStatement) const
 {
     if (!namespaceStatement)
         return PEvalStatement();
@@ -4763,7 +4834,7 @@ PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceState
                 namespaceStatement);
 }
 
-PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatement &typeStatement)
+PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatement &typeStatement) const
 {
     if (!typeStatement)
         return PEvalStatement();
@@ -4799,7 +4870,7 @@ PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatem
     }
 }
 
-PEvalStatement CppParser::doCreateEvalType(const QString &primitiveType)
+PEvalStatement CppParser::doCreateEvalType(const QString &primitiveType) const
 {
     return std::make_shared<EvalStatement>(
                 primitiveType,
@@ -4813,7 +4884,7 @@ PEvalStatement CppParser::doCreateEvalVariable(
         const QString &fileName,
         const PStatement& varStatement,
         const QString& baseTemplateParams,
-        const PStatement& scope)
+        const PStatement& scope) const
 {
     if (!varStatement)
         return PEvalStatement();
@@ -4866,7 +4937,7 @@ PEvalStatement CppParser::doCreateEvalVariable(
 
 PEvalStatement CppParser::doCreateEvalFunction(
         const QString &fileName,
-        const PStatement& funcStatement)
+        const PStatement& funcStatement) const
 {
     if (!funcStatement)
         return PEvalStatement();
@@ -4893,7 +4964,7 @@ PEvalStatement CppParser::doCreateEvalFunction(
                 );
 }
 
-PEvalStatement CppParser::doCreateEvalLiteral(const QString &type)
+PEvalStatement CppParser::doCreateEvalLiteral(const QString &type) const
 {
     return std::make_shared<EvalStatement>(
                 type,
@@ -4903,7 +4974,7 @@ PEvalStatement CppParser::doCreateEvalLiteral(const QString &type)
                 PStatement());
 }
 
-void CppParser::doSkipInExpression(const QStringList &expression, int &pos, const QString &startSymbol, const QString &endSymbol)
+void CppParser::doSkipInExpression(const QStringList &expression, int &pos, const QString &startSymbol, const QString &endSymbol) const
 {
     int level = 0;
     while (pos<expression.length()) {
@@ -4942,7 +5013,7 @@ PStatement CppParser::doParseEvalTypeInfo(
         QString &baseType,
         PStatement& typeStatement,
         int &pointerLevel,
-        QString& templateParams)
+        QString& templateParams) const
 {
     // Remove pointer stuff from type
     QString s = type;
@@ -4995,11 +5066,11 @@ PStatement CppParser::doParseEvalTypeInfo(
         }
         position--;
     }
-    typeStatement = findStatementOf(fileName,baseType,scope,true);
+    typeStatement = doFindStatementOf(fileName,baseType,scope);
     return getTypeDef(typeStatement,fileName,baseType);
 }
 
-int CppParser::getBracketEnd(const QString &s, int startAt)
+int CppParser::getBracketEnd(const QString &s, int startAt) const
 {
     int i = startAt;
     int level = 0; // assume we start on top of [
@@ -5155,7 +5226,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                 QString args,suffix;
                 parseCommandTypeAndArgs(cmd,suffix,args);
                 if (!cmd.isEmpty()) {
-                    PStatement statement = findStatementOf(mCurrentFile,cmd,functionStatement,true);
+                    PStatement statement = doFindStatementOf(mCurrentFile,cmd,functionStatement);
                     bool noCmd = (statement && isTypeStatement(statement->kind));
                     if (!noCmd) {
                         addStatement(
@@ -5189,7 +5260,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
 }
 
 QString CppParser::splitPhrase(const QString &phrase, QString &sClazz,
-                               QString &sOperator, QString &sMember)
+                               QString &sOperator, QString &sMember) const
 {
     sClazz="";
     sMember="";
@@ -5256,7 +5327,7 @@ QString CppParser::splitPhrase(const QString &phrase, QString &sClazz,
     return result;
 }
 
-QString CppParser::removeTemplateParams(const QString &phrase)
+QString CppParser::removeTemplateParams(const QString &phrase) const
 {
     int pos = phrase.indexOf('<');
     if (pos>=0) {
@@ -5360,7 +5431,7 @@ bool CppParser::isNotFuncArgs(int startIndex)
                 if (isCppKeyword(currentText))
                     return false;
 
-                PStatement statement =findStatementOf(mCurrentFile,word,getCurrentScope(),true);
+                PStatement statement = doFindStatementOf(mCurrentFile,word,getCurrentScope());
                 //template arguments
                 if (!statement)
                     return false;

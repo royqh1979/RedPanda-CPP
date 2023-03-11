@@ -243,6 +243,7 @@ struct EvalStatement {
     QString templateParams;
     EvalStatementKind kind; // namespace / type / variable / function / literal
     int pointerLevel; // 0 for "int", 1 for "int *", 2 for "int **"...
+    QString definitionString; // std::vector<int> etc...
     PStatement baseStatement; // if not literal or primitive type, the base statement
     PStatement typeStatement;
     PStatement effectiveTypeStatement;

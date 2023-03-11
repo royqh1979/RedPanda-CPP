@@ -18,7 +18,6 @@
 #include "../utils.h"
 #include "../settings.h"
 #include "../systemconsts.h"
-#include "../widgets/ojproblemsetmodel.h"
 #include <QElapsedTimer>
 #include <QProcess>
 #ifdef Q_OS_WINDOWS

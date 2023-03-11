@@ -1814,3 +1814,7 @@ QHash<QString, PFileIncludes> &CppPreprocessor::includesList()
     return mIncludesList;
 }
 
+const QHash<QString, PFileIncludes> &CppPreprocessor::includesList() const
+{
+    return mIncludesList;
+}

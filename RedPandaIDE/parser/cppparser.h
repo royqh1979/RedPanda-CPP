@@ -63,12 +63,7 @@ public:
     PStatement findStatementOf(const QString& fileName,
                                const QString& phrase,
                                const PStatement& currentScope,
-                               PStatement& parentScopeType,
-                               bool force = false);
-    PStatement findStatementOf(const QString& fileName,
-                               const QString& phrase,
-                               const PStatement& currentClass,
-                               bool force = false);
+                               PStatement& parentScopeType);
 
     PStatement findStatementOf(const QString& fileName,
                                const QStringList& expression,
@@ -202,11 +197,11 @@ private:
             const StatementClassScope& classScope,
             StatementProperties properties);
     void setInheritance(int index, const PStatement& classStatement, bool isStruct);
-    bool isCurrentScope(const QString& command);
+    bool isCurrentScope(const QString& command) const;
     void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock=false); // adds new solo level
     void removeScopeLevel(int line); // removes level
 
-    int indexOfMatchingBrace(int startAt) {
+    int indexOfMatchingBrace(int startAt) const {
         return mTokenizer[startAt]->matchIndex;
     }
 
@@ -226,42 +221,70 @@ private:
 
     void checkAndHandleMethodOrVar(KeywordType keywordType);
 
+    QSet<QString> internalGetFileUsings(const QString& filename) const;
+
+    PStatement doFindScopeStatement(const QString& filename, int line) const;
+
+    PStatementList doFindNamespace(const QString& name) const; // return a list of PSTATEMENTS (of the namespace)
+    PStatement doFindStatement(const QString& fullname) const;
+    PStatement doFindStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               int line) const;
+    PStatement doFindStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               const PStatement& currentScope,
+                               PStatement& parentScopeType) const;
+    PStatement doFindStatementOf(const QString& fileName,
+                               const QString& phrase,
+                               const PStatement& currentClass) const;
+
+    PStatement doFindStatementOf(const QString& fileName,
+                               const QStringList& expression,
+                               const PStatement& currentScope) const;
+    PStatement doFindStatementOf(const QString& fileName,
+                               const QStringList& expression,
+                               int line) const;
+    PStatement doFindAliasedStatement(const PStatement& statement) const;
+
+    PStatement doFindTypeDefinitionOf(const QString& fileName,
+                                    const QString& aType,
+                                    const PStatement& currentClass) const;
     QString doFindFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
-                                     const PStatement& currentScope);
+                                     const PStatement& currentScope) const;
     QString doFindTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
                                      int index,
-                                     const PStatement& currentScope);
+                                     const PStatement& currentScope) const;
 
     void fillListOfFunctions(const QString& fileName, int line,
                              const PStatement& statement,
                              const PStatement& scopeStatement, QStringList& list);
     QList<PStatement> getListOfFunctions(const QString& fileName, int line,
                                          const PStatement& statement,
-                                         const PStatement& scopeStatement);
-    PStatement findMacro(const QString& phrase, const QString& fileName);
+                                         const PStatement& scopeStatement) const;
+    PStatement findMacro(const QString& phrase, const QString& fileName) const;
     PStatement findMemberOfStatement(
             const QString& phrase,
-            const PStatement& scopeStatement);
+            const PStatement& scopeStatement) const ;
     QList<PStatement> findMembersOfStatement(const QString& phrase,
-                                             const PStatement& scopeStatement);
+                                             const PStatement& scopeStatement) const;
     PStatement findStatementInScope(
             const QString& name,
             const QString& noNameArgs,
             StatementKind kind,
-            const PStatement& scope);
+            const PStatement& scope) const;
     PStatement findStatementInScope(
             const QString& name,
-            const PStatement& scope);
+            const PStatement& scope) const;
     PStatement findStatementInNamespace(
             const QString& name,
-            const QString& namespaceName);
+            const QString& namespaceName) const;
 
     //{Find statement starting from startScope}
     PStatement findStatementStartingFrom(const QString& fileName,
                                          const QString& phrase,
-                                         const PStatement& startScope);
+                                         const PStatement& startScope) const;
 
     /**
      * @brief evaluate the expression (starting from pos) in the scope
@@ -278,7 +301,7 @@ private:
                                int &pos,
                                const PStatement& scope,
                                const PEvalStatement& previousResult,
-                               bool freeScoped);
+                               bool freeScoped) const;
 
     PEvalStatement doEvalPointerArithmetic(
             const QString& fileName,
@@ -286,59 +309,59 @@ private:
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
-            bool freeScoped);
+            bool freeScoped) const;
     PEvalStatement doEvalPointerToMembers(
             const QString& fileName,
             QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
-            bool freeScoped);
+            bool freeScoped) const;
     PEvalStatement doEvalCCast(
             const QString& fileName,
             QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
-            bool freeScoped);
+            bool freeScoped) const;
     PEvalStatement doEvalMemberAccess(
             const QString& fileName,
             QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
-            bool freeScoped);
+            bool freeScoped) const;
     PEvalStatement doEvalScopeResolution(
             const QString& fileName,
             QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
-            bool freeScoped);
+            bool freeScoped) const;
     PEvalStatement doEvalTerm(
             const QString& fileName,
             QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
-            bool freeScoped);
+            bool freeScoped) const;
 
     bool expandMacro(QStringList& phraseExpression,int &pos,
-                     const PStatement& macro);
+                     const PStatement& macro) const;
 
-    PEvalStatement doCreateEvalNamespace(const PStatement& namespaceStatement);
+    PEvalStatement doCreateEvalNamespace(const PStatement& namespaceStatement) const;
 
-    PEvalStatement doCreateEvalType(const QString& fileName,const PStatement& typeStatement);
-    PEvalStatement doCreateEvalType(const QString& primitiveType);
+    PEvalStatement doCreateEvalType(const QString& fileName,const PStatement& typeStatement) const;
+    PEvalStatement doCreateEvalType(const QString& primitiveType) const;
 
     PEvalStatement doCreateEvalVariable(
             const QString& fileName,
             const PStatement& varStatement,
             const QString& baseTemplateParams,
-            const PStatement& scope);
-    PEvalStatement doCreateEvalFunction(const QString& fileName, const PStatement& funcStatement);
-    PEvalStatement doCreateEvalLiteral(const QString& type);
-    void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol);
+            const PStatement& scope) const;
+    PEvalStatement doCreateEvalFunction(const QString& fileName, const PStatement& funcStatement) const;
+    PEvalStatement doCreateEvalLiteral(const QString& type) const;
+    void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol) const;
 
     QString findFunctionPointerName(int startIdx);
     bool isIdentifier(const QString& token) const {
@@ -407,37 +430,37 @@ private:
             QString& baseType,
             PStatement& typeStatement,
             int& pointerLevel,
-            QString& templateParams);
+            QString& templateParams) const;
 
-    int getBracketEnd(const QString& s, int startAt);
-    StatementClassScope getClassScope(const QString& text);
-    StatementClassScope getClassScope(KeywordType keywordType);
-    int getCurrentBlockBeginSkip();
-    int getCurrentBlockEndSkip();
-    int getCurrentInlineNamespaceEndSkip();
-    PStatement getCurrentScope(); // gets last item from last level
+    int getBracketEnd(const QString& s, int startAt) const;
+    StatementClassScope getClassScope(const QString& text) const;
+    StatementClassScope getClassScope(KeywordType keywordType) const;
+    int getCurrentBlockBeginSkip() const;
+    int getCurrentBlockEndSkip() const;
+    int getCurrentInlineNamespaceEndSkip() const;
+    PStatement getCurrentScope() const; // gets last item from last level
     QString getTemplateParam(const PStatement& statement, const QString& filename,
-                                  const QString& phrase, int index, const PStatement& currentScope);
-    int getTemplateParamStart(const QString& s, int startAt, int index);
-    int getTemplateParamEnd(const QString& s, int startAt);
+                                  const QString& phrase, int index, const PStatement& currentScope) const;
+    int getTemplateParamStart(const QString& s, int startAt, int index) const;
+    int getTemplateParamEnd(const QString& s, int startAt) const ;
 
     void getFullNamespace(
             const QString& phrase,
             QString& sNamespace,
-            QString& member);
+            QString& member) const;
     QString getFullStatementName(
             const QString& command,
-            const PStatement& parent);
+            const PStatement& parent) const;
     PStatement getIncompleteClass(
             const QString& command,
             const PStatement& parentScope);
-    QString getScopePrefix(const PStatement& statement);
+    QString getScopePrefix(const PStatement& statement) const;
     StatementScope  getScope();
     QString getStatementKey(const QString& sName,
                             const QString& sType,
-                            const QString& sNoNameArgs);
+                            const QString& sNoNameArgs) const;
     PStatement getTypeDef(const PStatement& statement,
-                          const QString& fileName, const QString& aType);
+                          const QString& fileName, const QString& aType) const;
     void handleCatchBlock();
     void handleEnum(bool isTypedef);
     void handleForBlock();
@@ -489,8 +512,8 @@ private:
             const PStatement& functionStatement,
             int argStart);
     QString splitPhrase(const QString& phrase, QString& sClazz,
-                QString& sOperator, QString &sMember);
-    QString removeTemplateParams(const QString& phrase);
+                QString& sOperator, QString &sMember) const;
+    QString removeTemplateParams(const QString& phrase) const;
 
     bool splitLastMember(const QString& token, QString& lastMember, QString& remaining);
 

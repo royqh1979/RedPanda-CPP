@@ -19,7 +19,6 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QTextCodec>
-#include "qt_utils/charsetinfo.h"
 
 StdinCompiler::StdinCompiler(const QString &filename,const QByteArray& encoding, const QString& content,bool silent, bool onlyCheckSyntax):
     Compiler(filename,silent, onlyCheckSyntax),
