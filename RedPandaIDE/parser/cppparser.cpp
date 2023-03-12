@@ -1669,17 +1669,17 @@ bool CppParser::checkForAccessibilitySpecifiers(KeywordType keywordType)
 bool CppParser::checkForStructs(KeywordType keywordType)
 {
     int dis = 0;
-    if (keywordType == KeywordType::Friend
-            || keywordType == KeywordType::Public
-            || keywordType == KeywordType::Private)
-        dis = 1;
+
 //    int keyLen = calcKeyLenForStruct(word);
 //    if (keyLen<0)
 //        return false;
 //    bool result = (word.length() == keyLen) || isSpaceChar(word[keyLen])
 //            || (word[keyLen] == '[');
     bool result;
-    if (dis!=0) {
+    if (keywordType == KeywordType::Friend
+            || keywordType == KeywordType::Public
+            || keywordType == KeywordType::Private) {
+        dis = 1;
         result = (mCppKeywords.value(mTokenizer[mIndex+dis]->text,KeywordType::None)==KeywordType::Struct);
     } else {
         result = (keywordType==KeywordType::Struct);
@@ -3242,7 +3242,7 @@ void CppParser::handleStructs(bool isTypedef)
     }
     // Check if were dealing with a struct or union
     prefix = mTokenizer[mIndex]->text;
-    bool isStruct = ("struct" == prefix) || ("union"==prefix);
+    bool isStruct = ("class" != prefix); //struct/union
     int startLine = mTokenizer[mIndex]->line;
 
     mIndex++; //skip struct/class/union
@@ -3258,15 +3258,15 @@ void CppParser::handleStructs(bool isTypedef)
         return;
     }
     // Forward class/struct decl *or* typedef, e.g. typedef struct some_struct synonym1, synonym2;
-    if (mTokenizer[i]->text.front() == ';') {
+    if (mTokenizer[i]->text == ";") {
         // typdef struct Foo Bar
         if (isTypedef) {
             QString oldType = mTokenizer[mIndex]->text;
             while(true) {
                 // Add definition statement for the synonym
                 if ((mIndex + 1 < mTokenizer.tokenCount())
-                        && (mTokenizer[mIndex + 1]->text.front()==','
-                            || mTokenizer[mIndex + 1]->text.front()==';')) {
+                        && (mTokenizer[mIndex + 1]->text==","
+                            || mTokenizer[mIndex + 1]->text==";")) {
                     QString newType = mTokenizer[mIndex]->text;
                     addStatement(
                                 getCurrentScope(),
