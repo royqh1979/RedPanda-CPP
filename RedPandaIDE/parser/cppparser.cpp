@@ -1631,6 +1631,7 @@ bool CppParser::checkForKeyword(KeywordType& keywordType)
     case KeywordType::None:
     case KeywordType::NotKeyword:
     case KeywordType::DeclType:
+    case KeywordType::Operator:
         return false;
     default:
         return true;
@@ -1753,13 +1754,12 @@ bool CppParser::checkForTypedefStruct()
 bool CppParser::checkForUsing(KeywordType keywordType)
 {
     return keywordType==KeywordType::Using && (mIndex < mTokenizer.tokenCount()-1);
-
 }
 
 void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
 {
     if (mIndex+2>=mTokenizer.tokenCount()) {
-        mIndex+=2; // left's finish;
+        mIndex+=2; // let's finish;
         return;
     }
     QString currentText=mTokenizer[mIndex]->text;
@@ -1773,7 +1773,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
             mIndex+=2;
         }
     } else {
-        if (currentText=="operator") {
+        if (keywordType == KeywordType::Operator) {
             handleOperatorOverloading("",
                                   mIndex,
                                   false);

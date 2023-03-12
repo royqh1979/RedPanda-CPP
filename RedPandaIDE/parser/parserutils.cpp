@@ -184,8 +184,9 @@ void initParser()
     CppKeywords.insert("const",KeywordType::None);
     CppKeywords.insert("extern",KeywordType::None);
 
+    CppKeywords.insert("operator",KeywordType::Operator);
+
     // handled elsewhere
-    CppKeywords.insert("operator",KeywordType::None);    
     CppKeywords.insert("static",KeywordType::None);
 
     //struct/class/union

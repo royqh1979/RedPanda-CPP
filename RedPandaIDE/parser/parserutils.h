@@ -76,6 +76,7 @@ enum class KeywordType {
     Typedef, //typedef
     Using, //using
     DeclType, // decltype
+    Operator, //operator
     None, // It's a keyword but don't process here
     NotKeyword
 };
