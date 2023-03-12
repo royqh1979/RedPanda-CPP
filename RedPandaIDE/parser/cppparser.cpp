@@ -3925,10 +3925,12 @@ void CppParser::internalParse(const QString &fileName)
 //    if (!isCfile(fileName) && !isHfile(fileName))  // support only known C/C++ files
 //        return;
 
+    //QElapsedTimer timer;
     // Preprocess the file...
     auto action = finally([this]{
         mTokenizer.clear();
     });
+    //timer.start();
     // Let the preprocessor augment the include records
     mPreprocessor.setScanOptions(mParseGlobalHeaders, mParseLocalHeaders);
     mPreprocessor.preprocess(fileName);
@@ -3939,13 +3941,18 @@ void CppParser::internalParse(const QString &fileName)
 //        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
+    //qDebug()<<"preprocess"<<timer.elapsed();
     //reduce memory usage
+    //timer.restart();
     mPreprocessor.clearTempResults();
+    //qDebug()<<"preprocess clean"<<timer.elapsed();
 
+    //timer.restart();
     // Tokenize the preprocessed buffer file
     mTokenizer.tokenize(preprocessResult);
     //reduce memory usage
     preprocessResult.clear();
+    //qDebug()<<"tokenize"<<timer.elapsed();
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
@@ -3954,11 +3961,13 @@ void CppParser::internalParse(const QString &fileName)
 #ifdef QT_DEBUG
         mLastIndex = -1;
 #endif
+    //    timer.restart();
     // Process the token list
     while(true) {
         if (!handleStatement())
             break;
     }
+    //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
 //        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
 //        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));

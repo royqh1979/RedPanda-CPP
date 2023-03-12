@@ -323,7 +323,7 @@ QString CppPreprocessor::getNextPreprocessor()
     QString result;
     for (int i=preProcFrom;i<=preProcTo;i++) {
         if (mBuffer[i].endsWith('\\')) {
-            result+=mBuffer[i].mid(0,mBuffer[i].size()-1)+' ';
+            result+=mBuffer[i].leftRef(mBuffer[i].size()-1)+' ';
         } else {
             result+=mBuffer[i]+' ';
         }
@@ -937,10 +937,12 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
         QString s;
         int pos = 0;
         bool stopProcess=false;
-        while (pos<line.length()) {
+        int lineLen=line.length();
+        s.reserve(line.length());
+        while (pos<lineLen) {
             QChar ch =line[pos];
             if (currentType == ContentType::AnsiCComment) {
-                if (ch=='*' && (pos+1<line.length()) && line[pos+1]=='/') {
+                if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
                     pos+=2;
                     currentType = ContentType::Other;
                 } else {
@@ -986,7 +988,7 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                 s+=ch;
                 break;
             case 'R':
-                if (currentType == ContentType::Other && pos+1<line.length() && line[pos+1]=='"') {
+                if (currentType == ContentType::Other && pos+1<lineLen && line[pos+1]=='"') {
                     s+=ch;
                     pos++;
                     ch = line[pos];
@@ -1010,11 +1012,11 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                 break;
             case '/':
                 if (currentType == ContentType::Other) {
-                    if (pos+1<line.length() && line[pos+1]=='/') {
+                    if (pos+1<lineLen && line[pos+1]=='/') {
                         // line comment , skip all remainings of the current line
                         stopProcess = true;
                         break;
-                    } else if (pos+1<line.length() && line[pos+1]=='*') {
+                    } else if (pos+1<lineLen && line[pos+1]=='*') {
                         /* ansi c comment */
                         pos++;
                         currentType = ContentType::AnsiCComment;
@@ -1029,7 +1031,7 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                 case ContentType::Character:
                     pos++;
                     s+=ch;
-                    if (pos<line.length()) {
+                    if (pos<lineLen) {
                         ch = line[pos];
                         s+=ch;
                     }
@@ -1069,16 +1071,17 @@ void CppPreprocessor::preprocessBuffer()
 
 void CppPreprocessor::skipToEndOfPreprocessor()
 {
+    int bufferCount = mBuffer.count();
     // Skip until last char of line is NOT \ anymore
-    while ((mIndex < mBuffer.count()) && mBuffer[mIndex].endsWith('\\'))
+    while ((mIndex < bufferCount) && mBuffer[mIndex].endsWith('\\'))
         mIndex++;
 }
 
 void CppPreprocessor::skipToPreprocessor()
 {
-
+    int bufferCount = mBuffer.count();
 // Increment until a line begins with a #
-    while ((mIndex < mBuffer.count()) && !mBuffer[mIndex].startsWith('#')) {
+    while ((mIndex < bufferCount) && !mBuffer[mIndex].startsWith('#')) {
         if (getCurrentBranch()) // if not skipping, expand current macros
             mResult.append(expandMacros(mBuffer[mIndex],1));
         else // If skipping due to a failed branch, clear line
