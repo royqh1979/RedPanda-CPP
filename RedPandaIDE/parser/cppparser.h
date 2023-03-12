@@ -652,7 +652,7 @@ private:
     QString mergeArgs(int startIndex, int endIndex);
     void parseCommandTypeAndArgs(QString& command,
                                  QString& typeSuffix,
-                                 QString& args);
+                                 QString& args) const;
 private:
     int mParserId;
     ParserLanguage mLanguage;
