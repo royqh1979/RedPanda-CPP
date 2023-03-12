@@ -5,6 +5,8 @@ Red Panda C++ Version 2.18
   - enhancement: Slightly speed up code parsing.
   - enhancement: Sort header completion infos by suffix-trimmed filename.
   - fix: Code completion info for stl::map/std::unordered_map is not correct.
+  - enhancement: Warn user and stop compile if project has missing files.
+  - enhancement: Warn user when exit and save settings failed.
 
 Red Panda C++ Version 2.17
 

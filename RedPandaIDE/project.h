@@ -99,8 +99,8 @@ public:
     PProjectModelNode &node();
     void setNode(const PProjectModelNode &newNode);
 
-    bool FileMissing() const;
-    void setFileMissing(bool newDontSave);
+//    bool FileMissing() const;
+//    void setFileMissing(bool newDontSave);
 
     void setNew(bool newNew);
 
@@ -121,7 +121,7 @@ private:
     QByteArray mEncoding;
     QByteArray mRealEncoding;
     PProjectModelNode mNode;
-    bool mFileMissing;
+//    bool mFileMissing;
 };
 
 using PProjectUnit = std::shared_ptr<ProjectUnit>;

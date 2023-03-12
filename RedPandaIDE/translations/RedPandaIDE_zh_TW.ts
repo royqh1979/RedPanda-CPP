@@ -4880,6 +4880,18 @@
         <source>New Text File</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Missing Project Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The following files is missing, can&apos;t build the project:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save settings failed!</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>

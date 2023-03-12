@@ -228,7 +228,7 @@ void Project::open()
 //                                  QMessageBox::Ok);
 //            newUnit->setModified(true);
 //        } else {
-        newUnit->setFileMissing(!QFileInfo(newUnit->fileName()).exists());
+//        newUnit->setFileMissing(!QFileInfo(newUnit->fileName()).exists());
         newUnit->setFolder(fromByteArray(ini.GetValue(groupName,"Folder","")));
         newUnit->setCompile(ini.GetBoolValue(groupName,"Compile", true));
         newUnit->setCompileCpp(
@@ -2347,7 +2347,7 @@ ProjectUnit::ProjectUnit(Project* parent)
 {
     mNode = nullptr;
     mParent = parent;
-    mFileMissing = false;
+//    mFileMissing = false;
     mPriority=0;
     mNew = true;
     mEncoding=ENCODING_PROJECT;
@@ -2490,15 +2490,15 @@ void ProjectUnit::setNode(const PProjectModelNode &newNode)
     mNode = newNode;
 }
 
-bool ProjectUnit::FileMissing() const
-{
-    return mFileMissing;
-}
+//bool ProjectUnit::FileMissing() const
+//{
+//    return mFileMissing;
+//}
 
-void ProjectUnit::setFileMissing(bool newDontSave)
-{
-    mFileMissing = newDontSave;
-}
+//void ProjectUnit::setFileMissing(bool newDontSave)
+//{
+//    mFileMissing = newDontSave;
+//}
 
 ProjectModel::ProjectModel(Project *project, QObject *parent):
     QAbstractItemModel(parent),

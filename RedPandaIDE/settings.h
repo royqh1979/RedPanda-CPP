@@ -1538,6 +1538,7 @@ public:
     QVariant value(const QString& group, const QString &key, const QVariant& defaultValue);
     QVariant value(const QString &key, const QVariant& defaultValue);
     void load();
+    QSettings::Status sync();
 
     Dirs& dirs();
     Editor& editor();

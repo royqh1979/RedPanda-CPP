@@ -1923,6 +1923,27 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
     mCompilerManager->stopPausing();
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project && compileType == CppCompileType::Normal) {
+        QStringList missedUnits;
+        foreach(const PProjectUnit &unit, mProject->unitList()) {
+            if (!fileExists(unit->fileName())) {
+                missedUnits.append(
+                            extractRelativePath(
+                                mProject->directory(),
+                            unit->fileName()));
+            }
+        }
+        if (!missedUnits.empty()) {
+            ui->actionProject->setChecked(true);
+            showHideInfosTab(ui->tabProject,true);
+            ui->tabExplorer->setCurrentWidget(ui->tabProject);
+            QString s=missedUnits.join("<br/>");
+            QMessageBox::critical(this,
+                                  tr("Missing Project Files"),
+                                  tr("The following files is missing, can't build the project:")
+                                  +"<br/><br/>"
+                                  +s);
+            return false;
+        }
         if (mProject->modified()) {
             mProject->saveAll();
         }
@@ -1985,10 +2006,9 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
             mCompilerManager->compile(editor->filename(),editor->fileEncoding(),rebuild,compileType);
             updateCompileActions();
             updateAppTitle();
-            return true;
         }
     }
-    return false;
+    return true;
 }
 
 void MainWindow::runExecutable(
@@ -5366,9 +5386,16 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         settings.setShrinkMessagesTabs(ui->tabMessages->isShrinked());
         settings.save();
 
+        if (pSettings->sync()!=QSettings::NoError) {
+            QMessageBox::warning(nullptr,
+                             tr("Save Error"),
+                             tr("Save settings failed!"));
+        }
+
         //save current folder ( for files view )
         pSettings->environment().setDefaultOpenFolder(QDir::currentPath());
         pSettings->environment().save();
+
         try {
             mBookmarkModel->saveBookmarks(includeTrailingPathDelimiter(pSettings->dirs().config())
                              +DEV_BOOKMARK_FILE);

@@ -56,7 +56,7 @@ Settings::Settings(const QString &filename):
 
 Settings::~Settings()
 {
-    mEditor.save();
+    //mEditor.save();
 }
 
 void Settings::beginGroup(const QString &group)
@@ -114,6 +114,12 @@ void Settings::load()
     mDirs.load();
     mVCS.load();
     mLanguages.load();
+}
+
+QSettings::Status Settings::sync()
+{
+    mSettings.sync();
+    return mSettings.status();
 }
 
 Settings::Dirs &Settings::dirs()
