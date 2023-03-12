@@ -1620,6 +1620,7 @@ bool CppParser::checkForKeyword(KeywordType& keywordType)
     case KeywordType::For:
     case KeywordType::Public:
     case KeywordType::Private:
+    case KeywordType::Struct:
     case KeywordType::Enum:
     case KeywordType::Inline:
     case KeywordType::Namespace:
@@ -1674,16 +1675,21 @@ bool CppParser::checkForStructs(KeywordType keywordType)
             || keywordType == KeywordType::Public
             || keywordType == KeywordType::Private)
         dis = 1;
-    if (mIndex >= mTokenizer.tokenCount() - 2 - dis)
-        return false;
-    QString word = mTokenizer[mIndex+dis]->text;
-    int keyLen = calcKeyLenForStruct(word);
-    if (keyLen<0)
-        return false;
-    bool result = (word.length() == keyLen) || isSpaceChar(word[keyLen])
-            || (word[keyLen] == '[');
+//    int keyLen = calcKeyLenForStruct(word);
+//    if (keyLen<0)
+//        return false;
+//    bool result = (word.length() == keyLen) || isSpaceChar(word[keyLen])
+//            || (word[keyLen] == '[');
+    bool result;
+    if (dis!=0) {
+        result = (mCppKeywords.value(mTokenizer[mIndex+dis]->text,KeywordType::None)==KeywordType::Struct);
+    } else {
+        result = (keywordType==KeywordType::Struct);
+    }
 
     if (result) {
+        if (mIndex >= mTokenizer.tokenCount() - 2 - dis)
+            return false;
         if (mTokenizer[mIndex + 2+dis]->text[0] != ';') { // not: class something;
             int i = mIndex+dis +1;
             // the check for ']' was added because of this example:
@@ -1735,11 +1741,13 @@ bool CppParser::checkForTypedefStruct()
     //should call CheckForTypedef first!!!
     if (mIndex+1 >= mTokenizer.tokenCount())
         return false;
-    QString word = mTokenizer[mIndex + 1]->text;
-    int keyLen = calcKeyLenForStruct(word);
-    if (keyLen<0)
-        return false;
-    return (word.length() == keyLen) || isSpaceChar(word[keyLen]) || word[keyLen]=='[';
+    return (mCppKeywords.value(mTokenizer[mIndex+1]->text,KeywordType::None)==KeywordType::Struct);
+
+//    QString word = mTokenizer[mIndex + 1]->text;
+//    int keyLen = calcKeyLenForStruct(word);
+//    if (keyLen<0)
+//        return false;
+//    return (word.length() == keyLen) || isSpaceChar(word[keyLen]) || word[keyLen]=='[';
 }
 
 bool CppParser::checkForUsing(KeywordType keywordType)
@@ -5260,15 +5268,15 @@ QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
     return result;
 }
 
-int CppParser::calcKeyLenForStruct(const QString &word)
-{
-    if (word.startsWith("struct"))
-        return 6;
-    else if (word.startsWith("class")
-             || word.startsWith("union"))
-        return 5;
-    return -1;
-}
+//int CppParser::calcKeyLenForStruct(const QString &word)
+//{
+//    if (word.startsWith("struct"))
+//        return 6;
+//    else if (word.startsWith("class")
+//             || word.startsWith("union"))
+//        return 5;
+//    return -1;
+//}
 
 void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart)
 {

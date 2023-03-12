@@ -501,7 +501,7 @@ private:
     void internalInvalidateFile(const QString& fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
     QSet<QString> calculateFilesToBeReparsed(const QString& fileName);
-    int calcKeyLenForStruct(const QString& word);
+//    int calcKeyLenForStruct(const QString& word);
 //    {
 //    function GetClass(const Phrase: AnsiString): AnsiString;
 //    function GetMember(const Phrase: AnsiString): AnsiString;

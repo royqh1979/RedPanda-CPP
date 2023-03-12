@@ -185,11 +185,13 @@ void initParser()
     CppKeywords.insert("extern",KeywordType::None);
 
     // handled elsewhere
-    CppKeywords.insert("class",KeywordType::None);
     CppKeywords.insert("operator",KeywordType::None);    
     CppKeywords.insert("static",KeywordType::None);
-    CppKeywords.insert("struct",KeywordType::None);
-    CppKeywords.insert("union",KeywordType::None);
+
+    //struct/class/union
+    CppKeywords.insert("class",KeywordType::Struct);
+    CppKeywords.insert("struct",KeywordType::Struct);
+    CppKeywords.insert("union",KeywordType::Struct);
 
 
     CppKeywords.insert("for",KeywordType::For);

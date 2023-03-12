@@ -69,6 +69,7 @@ enum class KeywordType {
     Private,
     Protected,
     Friend,
+    Struct, // struct/class/enum
     Enum, //enum
     Inline, // inline
     Namespace, //namespace
