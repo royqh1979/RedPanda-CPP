@@ -299,15 +299,15 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
         if (statement->scope == StatementScope::Global)
             return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_METHOD));
         if (statement->isInherited()) {
-            if (statement->classScope == StatementClassScope::Protected) {
+            if (statement->accessibility == StatementAccessibility::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
-            } else if (statement->classScope == StatementClassScope::Public) {
+            } else if (statement->accessibility == StatementAccessibility::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_METHOD));
             }
         } else {
-            if (statement->classScope == StatementClassScope::Protected) {
+            if (statement->accessibility == StatementAccessibility::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_METHOD));
-            } else if (statement->classScope == StatementClassScope::Public) {
+            } else if (statement->accessibility == StatementAccessibility::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_METHOD));
             } else {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_METHOD));
@@ -320,15 +320,15 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
         return *(pIconsManager->getPixmap(IconsManager::PARSER_LOCAL_VAR));
     case StatementKind::skVariable:
         if (statement->isInherited()) {
-            if (statement->classScope == StatementClassScope::Protected) {
+            if (statement->accessibility == StatementAccessibility::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
-            } else if (statement->classScope == StatementClassScope::Public) {
+            } else if (statement->accessibility == StatementAccessibility::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_VAR));
             }
         } else {
-            if (statement->classScope == StatementClassScope::Protected) {
+            if (statement->accessibility == StatementAccessibility::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_VAR));
-            } else if (statement->classScope == StatementClassScope::Public) {
+            } else if (statement->accessibility == StatementAccessibility::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_VAR));
             } else {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_VAR));

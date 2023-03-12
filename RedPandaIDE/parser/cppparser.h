@@ -154,7 +154,7 @@ private:
     PStatement addInheritedStatement(
             const PStatement& derived,
             const PStatement& inherit,
-            StatementClassScope access);
+            StatementAccessibility access);
 
     PStatement addChildStatement(
             // support for multiple parents (only typedef struct/union use multiple parents)
@@ -168,7 +168,7 @@ private:
             int line,
             StatementKind kind,
             const StatementScope& scope,
-            const StatementClassScope& classScope,
+            const StatementAccessibility& classScope,
             StatementProperties properties); // TODO: InheritanceList not supported
     PStatement addStatement(
             const PStatement& parent,
@@ -181,7 +181,7 @@ private:
             int line,
             StatementKind kind,
             const StatementScope& scope,
-            const StatementClassScope& classScope,
+            const StatementAccessibility& classScope,
             StatementProperties properties);
     PStatement addStatement(
             const PStatement& parent,
@@ -194,7 +194,7 @@ private:
             int line,
             StatementKind kind,
             const StatementScope& scope,
-            const StatementClassScope& classScope,
+            const StatementAccessibility& classScope,
             StatementProperties properties);
     void setInheritance(int index, const PStatement& classStatement, bool isStruct);
     bool isCurrentScope(const QString& command) const;
@@ -213,7 +213,7 @@ private:
     bool checkForNamespace(KeywordType keywordType);
     bool checkForPreprocessor();
 //    bool checkForLambda();
-    bool checkForScope(KeywordType keywordType);
+    bool checkForAccessibilitySpecifiers(KeywordType keywordType);
     bool checkForStructs(KeywordType keywordType);
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
@@ -433,8 +433,8 @@ private:
             QString& templateParams) const;
 
     int getBracketEnd(const QString& s, int startAt) const;
-    StatementClassScope getClassScope(const QString& text) const;
-    StatementClassScope getClassScope(KeywordType keywordType) const;
+    StatementAccessibility getClassMemberAccessibility(const QString& text) const;
+    StatementAccessibility getClassMemberAccessibility(KeywordType keywordType) const;
     int getCurrentBlockBeginSkip() const;
     int getCurrentBlockEndSkip() const;
     int getCurrentInlineNamespaceEndSkip() const;
@@ -482,7 +482,7 @@ private:
     void handleNamespace(KeywordType skipType);
     void handleOtherTypedefs();
     void handlePreprocessor();
-    void handleScope(KeywordType keywordType);
+    void handleAccessibilitySpecifiers(KeywordType keywordType);
     bool handleStatement();
     void handleStructs(bool isTypedef = false);
     void handleUsing();
@@ -493,7 +493,7 @@ private:
             const PStatement& derived,
             bool isStruct,
             const PStatement& base,
-            StatementClassScope access);
+            StatementAccessibility access);
     PStatement doFindStatementInScope(const QString& name,
                                       const QString& noNameArgs,
                                       StatementKind kind,
@@ -667,9 +667,9 @@ private:
 //  stack list , each element is a list of one/many scopes(like intypedef struct  s1,s2;
 //  It's used for store scope nesting infos
     QVector<PStatement> mCurrentScope;
-    QVector<StatementClassScope> mCurrentClassScope;
+    QVector<StatementAccessibility> mMemberAccessibilities;
 
-    StatementClassScope mClassScope;
+    StatementAccessibility mCurrentMemberAccessibility;
     StatementModel mStatementList;
     //It's used in preprocessor, so we can't use fIncludeList instead
 

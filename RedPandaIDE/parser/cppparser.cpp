@@ -953,7 +953,7 @@ void CppParser::parseHardDefines()
                         -1,
                         StatementKind::skPreprocessor,
                         StatementScope::Global,
-                        StatementClassScope::None,
+                        StatementAccessibility::None,
                         StatementProperty::spHasDefinition);
         }
     }
@@ -994,7 +994,7 @@ void CppParser::resetParser()
         mFilesToScanCount = 0;
 
         mCurrentScope.clear();
-        mCurrentClassScope.clear();
+        mMemberAccessibilities.clear();
         mStatementList.clear();
 
         mProjectFiles.clear();
@@ -1028,12 +1028,12 @@ bool CppParser::isFileParsed(const QString &filename)
 }
 
 QString CppParser::getScopePrefix(const PStatement& statement) const{
-    switch (statement->classScope) {
-    case StatementClassScope::Public:
+    switch (statement->accessibility) {
+    case StatementAccessibility::Public:
         return "public";
-    case StatementClassScope::Private:
+    case StatementAccessibility::Private:
         return "private";
-    case StatementClassScope::Protected:
+    case StatementAccessibility::Protected:
         return "protected";
     default:
         return "";
@@ -1177,7 +1177,7 @@ void CppParser::addProjectFile(const QString &fileName, bool needScan)
     }
 }
 
-PStatement CppParser::addInheritedStatement(const PStatement& derived, const PStatement& inherit, StatementClassScope access)
+PStatement CppParser::addInheritedStatement(const PStatement& derived, const PStatement& inherit, StatementAccessibility access)
 {
 
     PStatement statement = addStatement(
@@ -1201,7 +1201,7 @@ PStatement CppParser::addChildStatement(const PStatement& parent, const QString 
                                         const QString &command, const QString &args,
                                         const QString& noNameArgs,
                                         const QString &value, int line, StatementKind kind,
-                                        const StatementScope& scope, const StatementClassScope& classScope,
+                                        const StatementScope& scope, const StatementAccessibility& classScope,
                                         StatementProperties properties)
 {
     return addStatement(
@@ -1228,7 +1228,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
                                    const QString &value,
                                    int line, StatementKind kind,
                                    const StatementScope& scope,
-                                   const StatementClassScope& classScope,
+                                   const StatementAccessibility& accessibility,
                                    StatementProperties properties)
 {
     // Move '*', '&' to type rather than cmd (it's in the way for code-completion)
@@ -1279,7 +1279,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
     result->value = value;
     result->kind = kind;
     result->scope = scope;
-    result->classScope = classScope;
+    result->accessibility = accessibility;
     result->properties = properties;
     result->line = line;
     result->definitionLine = line;
@@ -1325,7 +1325,7 @@ PStatement CppParser::addStatement(const PStatement &parent,
                                    int argStart, int argEnd,
                                    const QString &value, int line,
                                    StatementKind kind, const StatementScope &scope,
-                                   const StatementClassScope &classScope,
+                                   const StatementAccessibility &classScope,
                                    StatementProperties properties)
 {
     Q_ASSERT(mTokenizer[argStart]->text=='(');
@@ -1404,15 +1404,15 @@ PStatement CppParser::addStatement(const PStatement &parent,
 void CppParser::setInheritance(int index, const PStatement& classStatement, bool isStruct)
 {
     // Clear it. Assume it is assigned
-    StatementClassScope lastInheritScopeType = StatementClassScope::None;
+    StatementAccessibility lastInheritScopeType = StatementAccessibility::None;
     // Assemble a list of statements in text form we inherit from
     while (true) {
-        StatementClassScope inheritScopeType = getClassScope(mTokenizer[index]->text);
+        StatementAccessibility inheritScopeType = getClassMemberAccessibility(mTokenizer[index]->text);
         QString currentText = mTokenizer[index]->text;
         if (currentText=='(') {
             //skip to matching ')'
             index=mTokenizer[index]->matchIndex;
-        } else if (inheritScopeType == StatementClassScope::None) {
+        } else if (inheritScopeType == StatementAccessibility::None) {
             if (currentText !=','
                     && currentText!=':') {
                 QString basename = currentText;
@@ -1477,8 +1477,8 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
             statement.reset();
     }
 
-    if (mCurrentClassScope.count()>0) {
-        mCurrentClassScope.back() = mClassScope;
+    if (mMemberAccessibilities.count()>0) {
+        mMemberAccessibilities.back() = mCurrentMemberAccessibility;
     }
 
     mCurrentScope.append(statement);
@@ -1491,14 +1491,14 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
 
     // Set new scope
     if (!statement)
-        mClassScope = StatementClassScope::None; // {}, namespace or class that doesn't exist
+        mCurrentMemberAccessibility = StatementAccessibility::None; // {}, namespace or class that doesn't exist
     else if (statement->kind == StatementKind::skNamespace)
-        mClassScope = StatementClassScope::None;
+        mCurrentMemberAccessibility = StatementAccessibility::None;
     else if (statement->type == "class")
-        mClassScope = StatementClassScope::Private; // classes are private by default
+        mCurrentMemberAccessibility = StatementAccessibility::Private; // classes are private by default
     else
-        mClassScope = StatementClassScope::Public; // structs are public by default
-    mCurrentClassScope.append(mClassScope);
+        mCurrentMemberAccessibility = StatementAccessibility::Public; // structs are public by default
+    mMemberAccessibilities.push_back(mCurrentMemberAccessibility);
 #ifdef QT_DEBUG
 //    if (mCurrentClassScope.count()<=2)
 //        qDebug()<<"++add scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
@@ -1532,7 +1532,7 @@ void CppParser::removeScopeLevel(int line)
         }
     }
     mCurrentScope.pop_back();
-    mCurrentClassScope.pop_back();
+    mMemberAccessibilities.pop_back();
 
     // Set new scope
     currentScope = getCurrentScope();
@@ -1542,18 +1542,18 @@ void CppParser::removeScopeLevel(int line)
     }
 
     if (!currentScope) {
-        mClassScope = StatementClassScope::None;
+        mCurrentMemberAccessibility = StatementAccessibility::None;
     } else {
-        mClassScope = mCurrentClassScope.back();
+        mCurrentMemberAccessibility = mMemberAccessibilities.back();
     }
 }
 
 void CppParser::internalClear()
 {
     mCurrentScope.clear();
-    mCurrentClassScope.clear();
+    mMemberAccessibilities.clear();
     mIndex = 0;
-    mClassScope = StatementClassScope::None;
+    mCurrentMemberAccessibility = StatementAccessibility::None;
     mBlockBeginSkips.clear();
     mBlockEndSkips.clear();
     mInlineNamespaceEndSkips.clear();
@@ -1660,13 +1660,10 @@ bool CppParser::checkForPreprocessor()
 //            && mTokenizer[mIndex+1]->text=='(');
 //}
 
-bool CppParser::checkForScope(KeywordType keywordType)
+bool CppParser::checkForAccessibilitySpecifiers(KeywordType keywordType)
 {
-    return ( (keywordType == KeywordType::Public || keywordType == KeywordType::Protected
-              || keywordType == KeywordType::Private)
-            && mIndex+1 < mTokenizer.tokenCount()
-            && mTokenizer[mIndex + 1]->text == ':'
-                );
+    return (keywordType == KeywordType::Public || keywordType == KeywordType::Protected
+              || keywordType == KeywordType::Private);
 }
 
 bool CppParser::checkForStructs(KeywordType keywordType)
@@ -2210,7 +2207,7 @@ void CppParser::handleCatchBlock()
                 startLine,
                 StatementKind::skBlock,
                 getScope(),
-                mClassScope,
+                mCurrentMemberAccessibility,
                 StatementProperty::spHasDefinition);
     addSoloScopeLevel(block,startLine);
     scanMethodArgs(block,mIndex);
@@ -2277,7 +2274,7 @@ void CppParser::handleEnum(bool isTypedef)
                     startLine,
                     StatementKind::skEnumClassType,
                     getScope(),
-                    mClassScope,
+                    mCurrentMemberAccessibility,
                     StatementProperty::spHasDefinition);
     } else {
         enumStatement=addStatement(
@@ -2291,7 +2288,7 @@ void CppParser::handleEnum(bool isTypedef)
                     startLine,
                     StatementKind::skEnumType,
                     getScope(),
-                    mClassScope,
+                    mCurrentMemberAccessibility,
                     StatementProperty::spHasDefinition);
     }
     if (isAdhocVar) {
@@ -2317,7 +2314,7 @@ void CppParser::handleEnum(bool isTypedef)
                                 mTokenizer[i]->line,
                                 StatementKind::skVariable,
                                 getScope(),
-                                mClassScope,
+                                mCurrentMemberAccessibility,
                                 StatementProperty::spHasDefinition);
                 }
             } else if (name!=',') {
@@ -2360,7 +2357,7 @@ void CppParser::handleEnum(bool isTypedef)
                           mTokenizer[mIndex]->line,
                           StatementKind::skEnum,
                           getScope(),
-                          mClassScope,
+                          mCurrentMemberAccessibility,
                           StatementProperty::spHasDefinition);
                     }
                 } else {
@@ -2376,7 +2373,7 @@ void CppParser::handleEnum(bool isTypedef)
                           mTokenizer[mIndex]->line,
                           StatementKind::skEnum,
                           getScope(),
-                          mClassScope,
+                          mCurrentMemberAccessibility,
                           StatementProperty::spHasDefinition);
                     }
                     addStatement(
@@ -2390,7 +2387,7 @@ void CppParser::handleEnum(bool isTypedef)
                                 mTokenizer[mIndex]->line,
                                 StatementKind::skEnum,
                                 getScope(),
-                                mClassScope,
+                                mCurrentMemberAccessibility,
                                 StatementProperty::spHasDefinition);
                 }
             }
@@ -2436,7 +2433,7 @@ void CppParser::handleForBlock()
                 startLine,
                 StatementKind::skBlock,
                 getScope(),
-                mClassScope,
+                mCurrentMemberAccessibility,
                 StatementProperty::spHasDefinition);
 
     addSoloScopeLevel(block,startLine);
@@ -2503,7 +2500,7 @@ void CppParser::handleLambda(int index, int endIndex)
                 startLine,
                 StatementKind::skBlock,
                 StatementScope::Local,
-                StatementClassScope::None,
+                StatementAccessibility::None,
                 StatementProperty::spHasDefinition);
     scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,mTokenizer[bodyStart]->line);
@@ -2572,7 +2569,7 @@ void CppParser::handleLambda(int index, int endIndex)
                                         mTokenizer[mIndex]->line,
                                         StatementKind::skVariable,
                                         getScope(),
-                                        mClassScope,
+                                        mCurrentMemberAccessibility,
                                         StatementProperty::spHasDefinition); // TODO: not supported to pass list
                             tempType="";
                         }
@@ -2744,7 +2741,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         startLine,
                         functionKind,
                         getScope(),
-                        mClassScope,
+                        mCurrentMemberAccessibility,
                         StatementProperty::spHasDefinition
                         | (isStatic?StatementProperty::spStatic:StatementProperty::spNone)
                         | (isOperatorOverload?StatementProperty::spOperatorOverloading:StatementProperty::spNone));
@@ -2764,7 +2761,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                             startLine,
                             StatementKind::skVariable,
                             StatementScope::Local,
-                            StatementClassScope::None,
+                            StatementAccessibility::None,
                             StatementProperty::spHasDefinition
                             | (isOperatorOverload?StatementProperty::spOperatorOverloading:StatementProperty::spNone));
             }
@@ -2781,7 +2778,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         startLine+1,
                         StatementKind::skVariable,
                         StatementScope::Local,
-                        StatementClassScope::None,
+                        StatementAccessibility::None,
                         StatementProperty::spHasDefinition
                         | (isOperatorOverload?StatementProperty::spOperatorOverloading:StatementProperty::spNone));
 
@@ -2798,7 +2795,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
                         startLine,
                         functionKind,
                         getScope(),
-                        mClassScope,
+                        mCurrentMemberAccessibility,
                         (isStatic?StatementProperty::spStatic:StatementProperty::spNone)
                         | (isOperatorOverload?StatementProperty::spOperatorOverloading:StatementProperty::spNone));
         }
@@ -2862,7 +2859,7 @@ void CppParser::handleNamespace(KeywordType skipType)
             startLine,
             StatementKind::skNamespaceAlias,
             getScope(),
-            mClassScope,
+            mCurrentMemberAccessibility,
             StatementProperty::spHasDefinition);
         mIndex+=2; //skip ;
         return;
@@ -2890,7 +2887,7 @@ void CppParser::handleNamespace(KeywordType skipType)
                     startLine,
                     StatementKind::skNamespace,
                     getScope(),
-                    mClassScope,
+                    mCurrentMemberAccessibility,
                     StatementProperty::spHasDefinition);
 
         // find next '{' or ';'
@@ -2982,7 +2979,7 @@ void CppParser::handleOtherTypedefs()
                         startLine,
                         StatementKind::skTypedef,
                         getScope(),
-                        mClassScope,
+                        mCurrentMemberAccessibility,
                         StatementProperty::spHasDefinition);
             }
             mIndex = mTokenizer[paramStart]->matchIndex+1;
@@ -3004,7 +3001,7 @@ void CppParser::handleOtherTypedefs()
                             startLine,
                             StatementKind::skTypedef,
                             getScope(),
-                            mClassScope,
+                            mCurrentMemberAccessibility,
                             StatementProperty::spHasDefinition);
                 newType = "";
                 mIndex++;
@@ -3066,43 +3063,40 @@ void CppParser::handlePreprocessor()
                   mTokenizer[mIndex]->line,
                   StatementKind::skPreprocessor,
                   StatementScope::Global,
-                  StatementClassScope::None,
+                  StatementAccessibility::None,
                   StatementProperty::spHasDefinition);
     } // TODO: undef ( define has limited scope)
 handlePreprocessorEnd:
     mIndex++;
 }
 
-StatementClassScope CppParser::getClassScope(const QString& text) const {
-    if (!text.isEmpty() && text[0]=='p') {
-        if (text=="public")
-            return StatementClassScope::Public;
-        else if (text=="private")
-            return StatementClassScope::Private;
-        else if (text=="protected")
-            return StatementClassScope::Protected;
-    }
-    return StatementClassScope::None;
+StatementAccessibility CppParser::getClassMemberAccessibility(const QString& text) const {
+    KeywordType type = mCppKeywords.value(text,KeywordType::None);
+    return getClassMemberAccessibility(type);
 }
 
-StatementClassScope CppParser::getClassScope(KeywordType keywordType) const
+StatementAccessibility CppParser::getClassMemberAccessibility(KeywordType keywordType) const
 {
     switch(keywordType) {
     case KeywordType::Public:
-        return StatementClassScope::Public;
+        return StatementAccessibility::Public;
     case KeywordType::Private:
-        return StatementClassScope::Private;
+        return StatementAccessibility::Private;
     case KeywordType::Protected:
-        return StatementClassScope::Protected;
+        return StatementAccessibility::Protected;
     default:
-        return StatementClassScope::None;
+        return StatementAccessibility::None;
     }
 }
 
-void CppParser::handleScope(KeywordType keywordType)
+void CppParser::handleAccessibilitySpecifiers(KeywordType keywordType)
 {
-    mClassScope = getClassScope(keywordType);
-    mIndex+=2; // the scope is followed by a ':'
+    mCurrentMemberAccessibility = getClassMemberAccessibility(keywordType);
+    mIndex++;
+
+    if (mIndex < mTokenizer.tokenCount()
+            && mTokenizer[mIndex]->text == ':')
+        mIndex++;   // skip ':'
 }
 
 bool CppParser::handleStatement()
@@ -3150,7 +3144,7 @@ bool CppParser::handleStatement()
                     mTokenizer[mIndex]->line,
                     StatementKind::skBlock,
                     getScope(),
-                    mClassScope,
+                    mCurrentMemberAccessibility,
                     StatementProperty::spHasDefinition);
         addSoloScopeLevel(block,mTokenizer[mIndex]->line,true);
         mIndex++;
@@ -3190,8 +3184,8 @@ bool CppParser::handleStatement()
         handleForBlock();
     } else if (keywordType==KeywordType::Catch) { // (for/catch)
         handleCatchBlock();
-    } else if (checkForScope(keywordType)) { // public /private/proteced
-        handleScope(keywordType);
+    } else if (checkForAccessibilitySpecifiers(keywordType)) { // public /private/proteced
+        handleAccessibilitySpecifiers(keywordType);
     } else if (keywordType==KeywordType::Enum) {
         handleEnum(false);
     } else if (keywordType==KeywordType::Typedef) {
@@ -3285,7 +3279,7 @@ void CppParser::handleStructs(bool isTypedef)
                                 mTokenizer[mIndex]->line,
                                 StatementKind::skTypedef,
                                 getScope(),
-                                mClassScope,
+                                mCurrentMemberAccessibility,
                                 StatementProperty::spHasDefinition);
                 }
                 mIndex++;
@@ -3345,7 +3339,7 @@ void CppParser::handleStructs(bool isTypedef)
                                     //startLine,
                                     StatementKind::skClass,
                                     getScope(),
-                                    mClassScope,
+                                    mCurrentMemberAccessibility,
                                     StatementProperty::spHasDefinition);
                         command = "";
                     }
@@ -3370,7 +3364,7 @@ void CppParser::handleStructs(bool isTypedef)
                                     //startLine,
                                     StatementKind::skClass,
                                     getScope(),
-                                    mClassScope,
+                                    mCurrentMemberAccessibility,
                                     StatementProperty::spHasDefinition);
                         command="";
                     }
@@ -3439,7 +3433,7 @@ void CppParser::handleStructs(bool isTypedef)
                                             //startLine,
                                             StatementKind::skClass,
                                             getScope(),
-                                            mClassScope,
+                                            mCurrentMemberAccessibility,
                                             StatementProperty::spHasDefinition);
                             }
                             if (isTypedef) {
@@ -3455,7 +3449,7 @@ void CppParser::handleStructs(bool isTypedef)
                                             mTokenizer[mIndex]->line,
                                             StatementKind::skTypedef,
                                             getScope(),
-                                            mClassScope,
+                                            mCurrentMemberAccessibility,
                                             StatementProperty::spHasDefinition); // typedef
                             } else {
                                 //variable define
@@ -3470,7 +3464,7 @@ void CppParser::handleStructs(bool isTypedef)
                                   mTokenizer[i]->line,
                                   StatementKind::skVariable,
                                   getScope(),
-                                  mClassScope,
+                                  mCurrentMemberAccessibility,
                                   StatementProperty::spHasDefinition); // TODO: not supported to pass list
                             }
                         }
@@ -3509,7 +3503,7 @@ void CppParser::handleStructs(bool isTypedef)
                           mTokenizer[mIndex]->line,
                           StatementKind::skBlock,
                           getScope(),
-                          mClassScope,
+                          mCurrentMemberAccessibility,
                           StatementProperty::spHasDefinition);
             }
         }
@@ -3557,7 +3551,7 @@ void CppParser::handleUsing()
                     startLine,
                     StatementKind::skTypedef,
                     getScope(),
-                    mClassScope,
+                    mCurrentMemberAccessibility,
                     StatementProperty::spHasDefinition);
         // skip ;
         mIndex++;
@@ -3586,7 +3580,7 @@ void CppParser::handleUsing()
                         startLine,
                         StatementKind::skAlias,
                         getScope(),
-                        mClassScope,
+                        mCurrentMemberAccessibility,
                         StatementProperty::spHasDefinition);
         }
         //skip ;
@@ -3793,7 +3787,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                 mTokenizer[mIndex]->line,
                                 StatementKind::skVariable,
                                 getScope(),
-                                mClassScope,
+                                mCurrentMemberAccessibility,
                                 //True,
                                 (isExtern?StatementProperty::spNone:StatementProperty::spHasDefinition)
                                 | (isStatic?StatementProperty::spStatic:StatementProperty::spNone)
@@ -3889,7 +3883,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                     mTokenizer[mIndex]->line,
                                     StatementKind::skVariable,
                                     getScope(),
-                                    mClassScope,
+                                    mCurrentMemberAccessibility,
                                     //True,
                                     (isExtern?StatementProperty::spNone:StatementProperty::spHasDefinition)
                                     | (isStatic?StatementProperty::spStatic:StatementProperty::spNone));
@@ -3958,33 +3952,33 @@ void CppParser::internalParse(const QString &fileName)
 }
 
 void CppParser::inheritClassStatement(const PStatement& derived, bool isStruct,
-                                      const PStatement& base, StatementClassScope access)
+                                      const PStatement& base, StatementAccessibility access)
 {
     //differentiate class and struct
-    if (access == StatementClassScope::None) {
+    if (access == StatementAccessibility::None) {
         if (isStruct)
-            access = StatementClassScope::Public;
+            access = StatementAccessibility::Public;
         else
-            access = StatementClassScope::Private;
+            access = StatementAccessibility::Private;
     }
     foreach (const PStatement& statement, base->children) {
-        if (statement->classScope == StatementClassScope::Private
+        if (statement->accessibility == StatementAccessibility::Private
                 || statement->kind == StatementKind::skConstructor
                 || statement->kind == StatementKind::skDestructor)
             continue;
-        StatementClassScope m_acc;
+        StatementAccessibility m_acc;
         switch(access) {
-        case StatementClassScope::Public:
-            m_acc = statement->classScope;
+        case StatementAccessibility::Public:
+            m_acc = statement->accessibility;
             break;
-        case StatementClassScope::Protected:
-            m_acc = StatementClassScope::Protected;
+        case StatementAccessibility::Protected:
+            m_acc = StatementAccessibility::Protected;
             break;
-        case StatementClassScope::Private:
-            m_acc = StatementClassScope::Private;
+        case StatementAccessibility::Private:
+            m_acc = StatementAccessibility::Private;
             break;
         default:
-            m_acc = StatementClassScope::Private;
+            m_acc = StatementAccessibility::Private;
         }
         //inherit
         addInheritedStatement(derived,statement,m_acc);
@@ -5307,7 +5301,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                             mTokenizer[i+1]->line,
                             StatementKind::skParameter,
                             StatementScope::Local,
-                            StatementClassScope::None,
+                            StatementAccessibility::None,
                             StatementProperty::spHasDefinition);
             }
             i=argEnd+1;
@@ -5341,7 +5335,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                                     mTokenizer[i]->line,
                                     StatementKind::skParameter,
                                     StatementScope::Local,
-                                    StatementClassScope::None,
+                                    StatementAccessibility::None,
                                     StatementProperty::spHasDefinition);
                     }
                 }

@@ -741,7 +741,7 @@ void CodeCompletionPopup::getCompletionFor(
                     if (children.isEmpty())
                         return;
                     foreach (const PStatement& childStatement, children) {
-                        if ((childStatement->classScope==StatementClassScope::Public)
+                        if ((childStatement->accessibility==StatementAccessibility::Public)
                                 && !(
                                     childStatement->kind == StatementKind::skConstructor
                                     || childStatement->kind == StatementKind::skDestructor)
@@ -798,7 +798,7 @@ void CodeCompletionPopup::getCompletionFor(
                                 || childStatement->kind == StatementKind::skEnumClassType
                                 || childStatement->kind == StatementKind::skEnumType
                                    )) {
-                                if (childStatement->classScope == StatementClassScope::Public)
+                                if (childStatement->accessibility == StatementAccessibility::Public)
                                     addStatement(childStatement,fileName,-1);
                             }
                         }

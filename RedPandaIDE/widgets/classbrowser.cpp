@@ -398,7 +398,7 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
     result->type = statement->type;
     result->value = statement->value;
     result->scope = statement->scope;
-    result->classScope = statement->classScope;
+    result->accessibility = statement->accessibility;
     result->properties = statement->properties;
     result->fileName= statement->fileName;
     result->line = statement->line;

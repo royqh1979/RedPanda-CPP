@@ -115,7 +115,7 @@ enum class StatementScope {
     ClassLocal
 };
 
-enum class StatementClassScope {
+enum class StatementAccessibility {
   None,
   Private,
   Protected,
@@ -179,7 +179,7 @@ struct Statement {
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
     StatementKind kind; // kind of statement class/variable/function/etc
     StatementScope scope; // global/local/classlocal
-    StatementClassScope classScope; // protected/private/public
+    StatementAccessibility accessibility; // protected/private/public
     int line; // declaration
     int definitionLine; // definition
     QString fileName; // declaration

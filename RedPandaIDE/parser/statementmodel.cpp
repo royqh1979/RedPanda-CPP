@@ -144,7 +144,7 @@ void StatementModel::dumpStatementMap(StatementMap &map, QTextStream &out, int l
          .arg(statement->noNameArgs)
          .arg(statement->args)
          .arg((size_t)(statement->parentScope.lock().get()))
-         .arg((int)statement->classScope)
+         .arg((int)statement->accessibility)
          .arg(statement->fileName)
          .arg(statement->line)
          .arg(statement->definitionFileName)
