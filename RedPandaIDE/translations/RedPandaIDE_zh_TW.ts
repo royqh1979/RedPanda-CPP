@@ -652,6 +652,14 @@
         <source>Locate windres</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>MB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Syntax error for objects larger than</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CppRefacter</name>

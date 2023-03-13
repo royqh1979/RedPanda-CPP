@@ -755,6 +755,14 @@
         <source>Assembler</source>
         <translation type="obsolete">Assembler</translation>
     </message>
+    <message>
+        <source>MB</source>
+        <translation type="unfinished">MB</translation>
+    </message>
+    <message>
+        <source>Syntax error for objects larger than</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CppRefacter</name>

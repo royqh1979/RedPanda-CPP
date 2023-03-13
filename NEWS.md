@@ -8,6 +8,7 @@ Red Panda C++ Version 2.18
   - enhancement: Warn user and stop compile if project has missing files.
   - enhancement: Warn user when exit and save settings failed.
   - change: Remove compiler set options that's rarely used.
+  - enhancement: Options in compiler set settings, to generate syntax error for large stack objects.
 
 Red Panda C++ Version 2.17
 

@@ -1409,7 +1409,7 @@ public:
         const QString &preprocessingSuffix() const;
         void setPreprocessingSuffix(const QString &newPreprocessingSuffix);
 
-        const QString &compilationProperSuffix() const;
+        const QString &warnBigObject() const;
         void setCompilationProperSuffix(const QString &newCompilationProperSuffix);
 
         const QString &assemblingSuffix() const;
@@ -1422,6 +1422,12 @@ public:
         QString getOutputFilename(const QString& sourceFilename,Settings::CompilerSet::CompilationStage stage);
         bool isOutputExecutable();
         bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
+
+        double maxObjectSize() const;
+        void setMaxObjectSize(double maxObjectSize);
+
+        bool warnLargeObject() const;
+        void setWarnLargeObject(bool newWarnLargeObject);
 
     private:
         void setDirectories(const QString& binDir, CompilerType mCompilerType);
@@ -1468,6 +1474,8 @@ public:
         bool mAutoAddCharsetParams;
         QString mExecCharset;
         bool mStaticLink;
+        double mMaxObjectSize;
+        bool mWarnLargeObject;
 
         QString mPreprocessingSuffix;
         QString mCompilationProperSuffix;
@@ -1478,6 +1486,7 @@ public:
 
         // Options
         QMap<QString,QString> mCompileOptions;
+        Q_PROPERTY(bool warnStackExcceeded READ warnStackExcceeded WRITE setWarnStackExcceeded NOTIFY warnStackExcceededChanged)
     };
 
     typedef std::shared_ptr<CompilerSet> PCompilerSet;

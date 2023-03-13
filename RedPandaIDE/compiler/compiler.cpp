@@ -19,6 +19,7 @@
 #include "compilermanager.h"
 #include "../systemconsts.h"
 
+#include <cmath>
 #include <QFileInfo>
 #include <QProcess>
 #include <QString>
@@ -422,6 +423,11 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
             foreach(const QString& param, params)
                 result += " "+ parseMacros(param);
         }
+    } else {
+        if (compilerSet()->maxObjectSize()>0 && compilerSet()->warnLargeObject()) {
+            long long size = std::ceil(compilerSet()->maxObjectSize()*1024*1024);
+            result += QString(" -Werror=larger-than-%1").arg(size);
+        }
     }
     return result;
 }
@@ -461,6 +467,11 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
             QStringList params = textToLines(s);
             foreach(const QString& param, params)
                 result += " "+ parseMacros(param);
+        }
+    } else {
+        if (compilerSet()->maxObjectSize()>0 && compilerSet()->warnLargeObject()) {
+            long long size = std::ceil(compilerSet()->maxObjectSize()*1024*1024);
+            result += QString(" -Werror=larger-than-%1").arg(size);
         }
     }
     return result;
@@ -589,8 +600,10 @@ QString Compiler::getLibraryArguments(FileType fileType)
         }
         if (mProject->options().staticLink)
             result += " -static";
-    } else if (compilerSet()->staticLink()) {
-        result += " -static";
+    } else {
+        if (compilerSet()->staticLink()) {
+            result += " -static";
+        }
     }
     return result;
 }

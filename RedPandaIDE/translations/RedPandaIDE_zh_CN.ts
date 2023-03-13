@@ -533,62 +533,62 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>Compiler</name>
     <message>
-        <location filename="../compiler/compiler.cpp" line="58"/>
+        <location filename="../compiler/compiler.cpp" line="59"/>
         <source>Clean before rebuild failed.</source>
         <translation>重编译前的清理准备工作失败！</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="69"/>
+        <location filename="../compiler/compiler.cpp" line="70"/>
         <source>Compile Result:</source>
         <translation>编译结果：</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="71"/>
+        <location filename="../compiler/compiler.cpp" line="72"/>
         <source>- Errors: %1</source>
         <translation>- 错误数: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="72"/>
+        <location filename="../compiler/compiler.cpp" line="73"/>
         <source>- Warnings: %1</source>
         <translation>- 警告数: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="74"/>
+        <location filename="../compiler/compiler.cpp" line="75"/>
         <source>- Output Filename: %1</source>
         <translation>- 输出文件名: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="76"/>
+        <location filename="../compiler/compiler.cpp" line="77"/>
         <source>- Output Size: %1</source>
         <translation>- 输出文件大小: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="78"/>
+        <location filename="../compiler/compiler.cpp" line="79"/>
         <source>- Compilation Time: %1 secs</source>
         <translation>- 编译时间: %1 秒</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="174"/>
+        <location filename="../compiler/compiler.cpp" line="175"/>
         <source>[Error] </source>
         <translation>[错误]</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="178"/>
+        <location filename="../compiler/compiler.cpp" line="179"/>
         <source>[Warning] </source>
         <translation>[警告]</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="182"/>
+        <location filename="../compiler/compiler.cpp" line="183"/>
         <source>[Info] </source>
         <translation>[信息]</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="186"/>
+        <location filename="../compiler/compiler.cpp" line="187"/>
         <source>[Note] </source>
         <translation>[说明]</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="726"/>
+        <location filename="../compiler/compiler.cpp" line="739"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
         <translation>无法启动编译器进程&apos;%1&apos;。</translation>
     </message>
@@ -597,27 +597,27 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">无法启动编译进程。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="730"/>
+        <location filename="../compiler/compiler.cpp" line="743"/>
         <source>The compiler process crashed after starting successfully.</source>
         <translation>编译进程启动后崩溃。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="733"/>
+        <location filename="../compiler/compiler.cpp" line="746"/>
         <source>The last waitFor...() function timed out.</source>
         <translation>waitFor()函数等待超时。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="736"/>
+        <location filename="../compiler/compiler.cpp" line="749"/>
         <source>An error occurred when attempting to write to the compiler process.</source>
         <translation>在向编译进程输入内容时出错。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="739"/>
+        <location filename="../compiler/compiler.cpp" line="752"/>
         <source>An error occurred when attempting to read from the compiler process.</source>
         <translation>在从编译进程读取内容时出错。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="742"/>
+        <location filename="../compiler/compiler.cpp" line="755"/>
         <source>An unknown error occurred.</source>
         <translation>发生了未知错误。</translation>
     </message>
@@ -760,12 +760,17 @@ p, li { white-space: pre-wrap; }
         <translation>编译器配置方案</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="258"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="270"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="297"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="329"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="344"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="375"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="192"/>
+        <source>Syntax error for objects larger than</source>
+        <translation type="unfinished">当变量占用栈空间大于此值时报错</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="322"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="334"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="361"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="393"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="408"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="439"/>
         <source>...</source>
         <translation>...</translation>
     </message>
@@ -775,12 +780,12 @@ p, li { white-space: pre-wrap; }
         <translation>基本选项</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="164"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="228"/>
         <source>Add the following arguments when calling the compiler</source>
         <translation>编译时加入下列选项：</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="174"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="238"/>
         <source>Add the following arguments when calling the linker</source>
         <translation>链接时加入下列选项</translation>
     </message>
@@ -825,22 +830,27 @@ p, li { white-space: pre-wrap; }
         <translation>将可执行文件中的字符串转码为</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="157"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="170"/>
         <source>Statically link libraries</source>
         <translation>用静态链接方式链接库文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="185"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="199"/>
+        <source>MB</source>
+        <translation>MB</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="249"/>
         <source>Settings</source>
         <translation>编译/链接选项</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="211"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="275"/>
         <source>Directories</source>
         <translation>文件夹</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="240"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="304"/>
         <source>Programs</source>
         <translation>程序</translation>
     </message>
@@ -849,36 +859,36 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">汇编器(NASM)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="418"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="482"/>
         <source>Output</source>
         <translation>输出</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="430"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="494"/>
         <source>Compilation Stages</source>
         <translation>编译阶段</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="436"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="500"/>
         <source>Stop after the preprocessing stage</source>
         <translation>在完成预处理后停止编译</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="443"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="507"/>
         <source>Stop after the compilation proper stage</source>
-        <translation type="unfinished">在生成汇编代码后停止。</translation>
+        <translation>在生成汇编代码后停止。</translation>
     </message>
     <message>
         <source>Stop after the assembling stage</source>
         <translation type="vanished">在完成汇编后停止。</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="450"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="514"/>
         <source>Link and generate the executable </source>
         <translation>链接得到可执行文件。</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="499"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="563"/>
         <source>Preprocessing output suffix</source>
         <translation>预处理输出后缀</translation>
     </message>
@@ -887,12 +897,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">编译输出后缀</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="506"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="570"/>
         <source>Compiling output suffix</source>
-        <translation type="unfinished">编译（汇编代码）输出后缀</translation>
+        <translation>编译（汇编代码）输出后缀</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="479"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="543"/>
         <source>Executable suffix</source>
         <translation>可执行文件后缀</translation>
     </message>
@@ -901,37 +911,37 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">选项</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="394"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="458"/>
         <source>gdb</source>
         <translation>gdb</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="359"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="423"/>
         <source>gdb server</source>
         <translation>gdb server</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="281"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="345"/>
         <source>Resource Compiler（windres)</source>
         <translation>资源编辑器(winres)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="387"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="451"/>
         <source>C++ Compiler(g++)</source>
         <translation>C++编译器(g++)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="326"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="390"/>
         <source>Choose C++ Compiler</source>
         <translation>选择C++编译器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="341"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="405"/>
         <source>Choose C Compiler</source>
         <translation>选择C编译器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="309"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="373"/>
         <source>C Compiler(gcc)</source>
         <translation>C编译器(gcc)</translation>
     </message>
@@ -944,22 +954,22 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">性能分析器(gprof)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="316"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="380"/>
         <source>make</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="294"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="358"/>
         <source>Choose make</source>
         <translation>选择make</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="255"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="319"/>
         <source>Choose Debugger</source>
         <translation>选择调试器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="372"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="436"/>
         <source>Choose Resource Compiler</source>
         <translation>选择资源编译器</translation>
     </message>
@@ -968,12 +978,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">选择性能分析器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="258"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="262"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="250"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="254"/>
         <source>Red Panda C++ will clear current compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Are you really want to continue?</source>
         <oldsource>Red Panda C++ will clear current compiler list and search for compilers in the following locations:
  &apos;%1&apos;
@@ -992,80 +1002,80 @@ Are you really want to continue?</oldsource>
         <translation>UTF-8</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="255"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="259"/>
         <source>Red Panda C++ will clear current compiler list and search for compilers in the the PATH. &lt;br /&gt;Are you really want to continue?</source>
         <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在PATH路径中搜索gcc编译器.&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="266"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="290"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="270"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="294"/>
         <source>Failed</source>
         <translation>失败</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="266"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="290"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="270"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="294"/>
         <source>Can&apos;t find any compiler.</source>
         <translation>找不到编译器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="272"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="299"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="276"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="303"/>
         <source>Compiler Set Name</source>
         <translation>编译器配置名称</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="272"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="276"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="281"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="285"/>
         <source>Compiler Set Folder</source>
         <translation>编译器所在文件夹</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="299"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="303"/>
         <source>New name</source>
         <translation>新名称</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="366"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="370"/>
         <source>Locate C Compiler</source>
         <translation>定位C编译器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="368"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="380"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="392"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="404"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="416"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="428"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="372"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="384"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="396"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="408"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="420"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="432"/>
         <source>Executable files (*.exe)</source>
         <translation>可执行文件 (*.exe)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="378"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="382"/>
         <source>Locate C++ Compiler</source>
         <translation>定位C++编译器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="390"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="394"/>
         <source>Locate Make</source>
         <translation>定位make程序</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="402"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="406"/>
         <source>Locate GDB</source>
         <translation>定位gdb程序</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="414"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="418"/>
         <source>Locate GDB Server</source>
         <translation>定位gdb server程序</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="426"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="430"/>
         <source>Locate windres</source>
         <translation>定位windres程序</translation>
     </message>
@@ -8527,7 +8537,7 @@ Are you really want to continue?</oldsource>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2958"/>
+        <location filename="../settings.cpp" line="2990"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -8640,7 +8650,7 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2960"/>
+        <location filename="../settings.cpp" line="2992"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -8661,13 +8671,13 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2950"/>
-        <location filename="../settings.cpp" line="2956"/>
+        <location filename="../settings.cpp" line="2982"/>
+        <location filename="../settings.cpp" line="2988"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2952"/>
+        <location filename="../settings.cpp" line="2984"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -8692,12 +8702,12 @@ Are you really want to continue?</oldsource>
         <translation>C++包含文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="312"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="316"/>
         <source>Remove</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="313"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="317"/>
         <source>Do you really want to remove &quot;%1&quot;?</source>
         <translation>您确定要删除&quot;%1&quot;吗？</translation>
     </message>

@@ -1664,30 +1664,34 @@ void Settings::Editor::setTabToSpaces(bool tabToSpaces)
 }
 
 Settings::CompilerSet::CompilerSet():
-    mFullLoaded(false),
-    mCompilerType(CompilerType::Unknown),
-    mAutoAddCharsetParams(false),
-    mExecCharset(ENCODING_SYSTEM_DEFAULT),
-    mStaticLink(false),
-    mPreprocessingSuffix(DEFAULT_PREPROCESSING_SUFFIX),
-    mCompilationProperSuffix(DEFAULT_COMPILATION_SUFFIX),
-    mAssemblingSuffix(DEFAULT_ASSEMBLING_SUFFIX),
-    mExecutableSuffix(DEFAULT_EXECUTABLE_SUFFIX),
-    mCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable)
+    mFullLoaded{false},
+    mCompilerType{CompilerType::Unknown},
+    mAutoAddCharsetParams{false},
+    mExecCharset{ENCODING_SYSTEM_DEFAULT},
+    mStaticLink{false},
+    mMaxObjectSize{0},
+    mWarnLargeObject{false},
+    mPreprocessingSuffix{DEFAULT_PREPROCESSING_SUFFIX},
+    mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
+    mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
+    mExecutableSuffix{DEFAULT_EXECUTABLE_SUFFIX},
+    mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable}
 {
 
 }
 
 
 Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString& c_prog):
-    mAutoAddCharsetParams(true),
-    mExecCharset(ENCODING_SYSTEM_DEFAULT),
-    mStaticLink(true),
-    mPreprocessingSuffix(DEFAULT_PREPROCESSING_SUFFIX),
-    mCompilationProperSuffix(DEFAULT_COMPILATION_SUFFIX),
-    mAssemblingSuffix(DEFAULT_ASSEMBLING_SUFFIX),
-    mExecutableSuffix(DEFAULT_EXECUTABLE_SUFFIX),
-    mCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable)
+    mAutoAddCharsetParams{true},
+    mExecCharset{ENCODING_SYSTEM_DEFAULT},
+    mStaticLink{true},
+    mMaxObjectSize{0},
+    mWarnLargeObject{false},
+    mPreprocessingSuffix{DEFAULT_PREPROCESSING_SUFFIX},
+    mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
+    mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
+    mExecutableSuffix{DEFAULT_EXECUTABLE_SUFFIX},
+    mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable}
 {
     QDir dir(compilerFolder);
     if (dir.exists(c_prog)) {
@@ -1708,42 +1712,45 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
 }
 
 Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
-    mFullLoaded(set.mFullLoaded),
-    mCCompiler(set.mCCompiler),
-    mCppCompiler(set.mCppCompiler),
-    mMake(set.mMake),
-    mDebugger(set.mDebugger),
-    mResourceCompiler(set.mResourceCompiler),
-    mDebugServer(set.mDebugServer),
+    mFullLoaded{set.mFullLoaded},
+    mCCompiler{set.mCCompiler},
+    mCppCompiler{set.mCppCompiler},
+    mMake{set.mMake},
+    mDebugger{set.mDebugger},
+    mResourceCompiler{set.mResourceCompiler},
+    mDebugServer{set.mDebugServer},
 
-    mBinDirs(set.mBinDirs),
-    mCIncludeDirs(set.mCIncludeDirs),
-    mCppIncludeDirs(set.mCppIncludeDirs),
-    mLibDirs(set.mLibDirs),
-    mDefaultLibDirs(set.mDefaultLibDirs),
-    mDefaultCIncludeDirs(set.mDefaultCIncludeDirs),
-    mDefaultCppIncludeDirs(set.mDefaultCppIncludeDirs),
+    mBinDirs{set.mBinDirs},
+    mCIncludeDirs{set.mCIncludeDirs},
+    mCppIncludeDirs{set.mCppIncludeDirs},
+    mLibDirs{set.mLibDirs},
+    mDefaultLibDirs{set.mDefaultLibDirs},
+    mDefaultCIncludeDirs{set.mDefaultCIncludeDirs},
+    mDefaultCppIncludeDirs{set.mDefaultCppIncludeDirs},
 
-    mDumpMachine(set.mDumpMachine),
-    mVersion(set.mVersion),
-    mType(set.mType),
-    mName(set.mName),
-    mTarget(set.mTarget),
-    mCompilerType(set.mCompilerType),
+    mDumpMachine{set.mDumpMachine},
+    mVersion{set.mVersion},
+    mType{set.mType},
+    mName{set.mName},
+    mTarget{set.mTarget},
+    mCompilerType{set.mCompilerType},
 
-    mUseCustomCompileParams(set.mUseCustomCompileParams),
-    mUseCustomLinkParams(set.mUseCustomLinkParams),
-    mCustomCompileParams(set.mCustomCompileParams),
-    mCustomLinkParams(set.mCustomLinkParams),
-    mAutoAddCharsetParams(set.mAutoAddCharsetParams),
-    mExecCharset(set.mExecCharset),
-    mStaticLink(set.mStaticLink),
-    mPreprocessingSuffix(set.mPreprocessingSuffix),
-    mCompilationProperSuffix(set.mCompilationProperSuffix),
-    mAssemblingSuffix(set.mAssemblingSuffix),
-    mExecutableSuffix(set.mExecutableSuffix),
-    mCompilationStage(set.mCompilationStage),
-    mCompileOptions(set.mCompileOptions)
+    mUseCustomCompileParams{set.mUseCustomCompileParams},
+    mUseCustomLinkParams{set.mUseCustomLinkParams},
+    mCustomCompileParams{set.mCustomCompileParams},
+    mCustomLinkParams{set.mCustomLinkParams},
+    mAutoAddCharsetParams{set.mAutoAddCharsetParams},
+    mExecCharset{set.mExecCharset},
+    mStaticLink{set.mStaticLink},
+    mMaxObjectSize{set.mMaxObjectSize},
+    mWarnLargeObject{set.mWarnLargeObject},
+
+    mPreprocessingSuffix{set.mPreprocessingSuffix},
+    mCompilationProperSuffix{set.mCompilationProperSuffix},
+    mAssemblingSuffix{set.mAssemblingSuffix},
+    mExecutableSuffix{set.mExecutableSuffix},
+    mCompilationStage{set.mCompilationStage},
+    mCompileOptions{set.mCompileOptions}
 {
 
 }
@@ -2562,6 +2569,26 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
+bool Settings::CompilerSet::warnLargeObject() const
+{
+    return mWarnLargeObject;
+}
+
+void Settings::CompilerSet::setWarnLargeObject(bool newWarnLargeObject)
+{
+    mWarnLargeObject = newWarnLargeObject;
+}
+
+double Settings::CompilerSet::maxObjectSize() const
+{
+    return mMaxObjectSize;
+}
+
+void Settings::CompilerSet::setMaxObjectSize(double maxObjectSize)
+{
+    mMaxObjectSize = maxObjectSize;
+}
+
 Settings::CompilerSet::CompilationStage Settings::CompilerSet::compilationStage() const
 {
     return mCompilationStage;
@@ -2583,7 +2610,7 @@ QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename, 
     case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
         return changeFileExt(sourceFilename, preprocessingSuffix());
     case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
-        return changeFileExt(sourceFilename, compilationProperSuffix());
+        return changeFileExt(sourceFilename, warnBigObject());
     case Settings::CompilerSet::CompilationStage::AssemblingOnly:
         return changeFileExt(sourceFilename, assemblingSuffix());
     case Settings::CompilerSet::CompilationStage::GenerateExecutable:
@@ -2612,7 +2639,7 @@ void Settings::CompilerSet::setAssemblingSuffix(const QString &newAssemblingSuff
     mAssemblingSuffix = newAssemblingSuffix;
 }
 
-const QString &Settings::CompilerSet::compilationProperSuffix() const
+const QString &Settings::CompilerSet::warnBigObject() const
 {
     return mCompilationProperSuffix;
 }
@@ -2731,6 +2758,8 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
     pSet->setCompileOption(LINK_CMD_OPT_STRIP_EXE, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
     pSet->setStaticLink(true);
+    pSet->setMaxObjectSize(2); //default stack size of gcc is 2MB
+    pSet->setWarnLargeObject(false);
 }
 
 static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false) {
@@ -2746,6 +2775,9 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
         pSet->setUseCustomLinkParams(true);
     }
     pSet->setStaticLink(false);
+
+    pSet->setMaxObjectSize(2); //default stack size of gcc is 2MB
+    pSet->setWarnLargeObject(true);
 }
 
 bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_prog) {
@@ -3087,9 +3119,11 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
     mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
     mSettings->mSettings.setValue("ExecCharset", pSet->execCharset());
+    mSettings->mSettings.setValue("WarnLargeObject",pSet->warnLargeObject());
+    mSettings->mSettings.setValue("MaxObjectSize",pSet->maxObjectSize());
 
     mSettings->mSettings.setValue("preprocessingSuffix", pSet->preprocessingSuffix());
-    mSettings->mSettings.setValue("compilationProperSuffix", pSet->compilationProperSuffix());
+    mSettings->mSettings.setValue("compilationProperSuffix", pSet->warnBigObject());
     mSettings->mSettings.setValue("assemblingSuffix", pSet->assemblingSuffix());
     mSettings->mSettings.setValue("executableSuffix", pSet->executableSuffix());
     mSettings->mSettings.setValue("compilationStage", (int)pSet->compilationStage());
@@ -3170,6 +3204,9 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset", true).toBool());
     pSet->setStaticLink(mSettings->mSettings.value("StaticLink", false).toBool());
+    pSet->setMaxObjectSize(mSettings->mSettings.value("MaxObjectSize", 2).toDouble());
+    pSet->setWarnLargeObject(mSettings->mSettings.value("WarnLargeObject", false).toBool());
+
     pSet->setExecCharset(mSettings->mSettings.value("ExecCharset", ENCODING_SYSTEM_DEFAULT).toString());
     if (pSet->execCharset().isEmpty()) {
         pSet->setExecCharset(ENCODING_SYSTEM_DEFAULT);
