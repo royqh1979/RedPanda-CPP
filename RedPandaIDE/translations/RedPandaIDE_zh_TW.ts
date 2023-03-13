@@ -6075,22 +6075,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>C options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Support all ANSI standard C programs (-ansi)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Code Generation</source>
         <translation type="unfinished"></translation>
     </message>

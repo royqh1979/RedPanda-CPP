@@ -6435,19 +6435,19 @@
     </message>
     <message>
         <source>C options</source>
-        <translation>Opções para C</translation>
+        <translation type="vanished">Opções para C</translation>
     </message>
     <message>
         <source>Support all ANSI standard C programs (-ansi)</source>
-        <translation>Suporte para todos os programas C padrão ANSI (-ansi)</translation>
+        <translation type="vanished">Suporte para todos os programas C padrão ANSI (-ansi)</translation>
     </message>
     <message>
         <source>Do not recognize asm,inline or typeof as a keyword (-fno-asm)</source>
-        <translation>Não reconhecer como palavras-chave asm, inline ou typeof (-fno-asm)</translation>
+        <translation type="vanished">Não reconhecer como palavras-chave asm, inline ou typeof (-fno-asm)</translation>
     </message>
     <message>
         <source>Imitate traditional C preprocessors (-traditional-cpp)</source>
-        <translation>Imitar preprocessores C tradicionais (-traditional-cpp)</translation>
+        <translation type="vanished">Imitar preprocessores C tradicionais (-traditional-cpp)</translation>
     </message>
     <message>
         <source>Code Generation</source>

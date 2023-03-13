@@ -7,6 +7,7 @@ Red Panda C++ Version 2.18
   - fix: Code completion info for stl::map/std::unordered_map is not correct.
   - enhancement: Warn user and stop compile if project has missing files.
   - enhancement: Warn user when exit and save settings failed.
+  - change: Remove compiler set options that's rarely used.
 
 Red Panda C++ Version 2.17
 
