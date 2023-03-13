@@ -1409,7 +1409,7 @@ public:
         const QString &preprocessingSuffix() const;
         void setPreprocessingSuffix(const QString &newPreprocessingSuffix);
 
-        const QString &warnBigObject() const;
+        const QString &compilationProperSuffix() const;
         void setCompilationProperSuffix(const QString &newCompilationProperSuffix);
 
         const QString &assemblingSuffix() const;
@@ -1486,7 +1486,6 @@ public:
 
         // Options
         QMap<QString,QString> mCompileOptions;
-        Q_PROPERTY(bool warnStackExcceeded READ warnStackExcceeded WRITE setWarnStackExcceeded NOTIFY warnStackExcceededChanged)
     };
 
     typedef std::shared_ptr<CompilerSet> PCompilerSet;

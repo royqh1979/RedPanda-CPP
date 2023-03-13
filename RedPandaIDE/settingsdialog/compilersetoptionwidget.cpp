@@ -122,7 +122,7 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     }
 
     ui->txtPreprocessingSuffix->setText(pSet->preprocessingSuffix());
-    ui->txtCompilationSuffix->setText(pSet->warnBigObject());
+    ui->txtCompilationSuffix->setText(pSet->compilationProperSuffix());
     ui->txtExecutableSuffix->setText(pSet->executableSuffix());
     switch(pSet->compilationStage()) {
     case Settings::CompilerSet::CompilationStage::PreprocessingOnly:

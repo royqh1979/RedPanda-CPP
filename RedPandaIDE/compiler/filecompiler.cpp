@@ -74,7 +74,7 @@ bool FileCompiler::prepareForCompile()
             mArguments+=" -E";
             break;
         case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
-            mOutputFile=changeFileExt(mFilename,compilerSet()->warnBigObject());
+            mOutputFile=changeFileExt(mFilename,compilerSet()->compilationProperSuffix());
             mArguments+=" -S -fverbose-asm";
             break;
         case Settings::CompilerSet::CompilationStage::AssemblingOnly:

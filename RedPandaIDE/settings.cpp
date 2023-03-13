@@ -2610,7 +2610,7 @@ QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename, 
     case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
         return changeFileExt(sourceFilename, preprocessingSuffix());
     case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
-        return changeFileExt(sourceFilename, warnBigObject());
+        return changeFileExt(sourceFilename, compilationProperSuffix());
     case Settings::CompilerSet::CompilationStage::AssemblingOnly:
         return changeFileExt(sourceFilename, assemblingSuffix());
     case Settings::CompilerSet::CompilationStage::GenerateExecutable:
@@ -2639,7 +2639,7 @@ void Settings::CompilerSet::setAssemblingSuffix(const QString &newAssemblingSuff
     mAssemblingSuffix = newAssemblingSuffix;
 }
 
-const QString &Settings::CompilerSet::warnBigObject() const
+const QString &Settings::CompilerSet::compilationProperSuffix() const
 {
     return mCompilationProperSuffix;
 }
@@ -3123,7 +3123,7 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("MaxObjectSize",pSet->maxObjectSize());
 
     mSettings->mSettings.setValue("preprocessingSuffix", pSet->preprocessingSuffix());
-    mSettings->mSettings.setValue("compilationProperSuffix", pSet->warnBigObject());
+    mSettings->mSettings.setValue("compilationProperSuffix", pSet->compilationProperSuffix());
     mSettings->mSettings.setValue("assemblingSuffix", pSet->assemblingSuffix());
     mSettings->mSettings.setValue("executableSuffix", pSet->executableSuffix());
     mSettings->mSettings.setValue("compilationStage", (int)pSet->compilationStage());
