@@ -2768,12 +2768,15 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
     pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL, COMPILER_OPTION_ON);
     //pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
+
     if (enableAsan) {
-        pSet->setCustomCompileParams("-fsanitize=address");
-        pSet->setUseCustomCompileParams(true);
-        pSet->setCustomLinkParams("-fsanitize=address");
-        pSet->setUseCustomLinkParams(true);
+        pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, "address");
+//        pSet->setCustomCompileParams("-fsanitize=address");
+//        pSet->setUseCustomCompileParams(true);
+//        pSet->setCustomLinkParams("-fsanitize=address");
+//        pSet->setUseCustomLinkParams(true);
     }
+    pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
     pSet->setStaticLink(false);
 
     pSet->setMaxObjectSize(2); //default stack size of gcc is 2MB

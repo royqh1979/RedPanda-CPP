@@ -6503,7 +6503,7 @@
     </message>
     <message>
         <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
-        <translation>Verificar conformidade ISO C/C++/C++0x (-pedantic)</translation>
+        <translation type="vanished">Verificar conformidade ISO C/C++/C++0x (-pedantic)</translation>
     </message>
     <message>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
@@ -6715,6 +6715,18 @@
     </message>
     <message>
         <source>Lua files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Check for stack smashing attacks (-fstack-protector)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Check ISO C/C++ conformance (-pedantic)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Sanitizer (-fsanitize=)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -37,6 +37,8 @@
 #define LINK_CMD_OPT_NO_CONSOLE "link_cmd_opt_no_console"
 #define LINK_CMD_OPT_STRIP_EXE "link_cmd_opt_strip_exe"
 #define CC_CMD_OPT_DEBUG_INFO "cc_cmd_opt_debug_info"
+#define CC_CMD_OPT_ADDRESS_SANITIZER "cc_cmd_opt_address_sanitizer"
+#define CC_CMD_OPT_STACK_PROTECTOR "cc_cmd_opt_stack_protector"
 
 #define CC_CMD_OPT_VERBOSE_ASM "cc_cmd_opt_verbose_asm"
 #define CC_CMD_OPT_ONLY_GEN_ASM_CODE "cc_cmd_opt_only_gen_asm_code"

@@ -762,7 +762,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="192"/>
         <source>Syntax error for objects larger than</source>
-        <translation type="unfinished">当变量占用栈空间大于此值时报错</translation>
+        <translation>当变量占用栈空间大于此值时报错</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="322"/>
@@ -8537,7 +8537,7 @@ Are you really want to continue?</oldsource>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2990"/>
+        <location filename="../settings.cpp" line="2992"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -8547,7 +8547,7 @@ Are you really want to continue?</oldsource>
         <translation>生成性能分析信息(-pg)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="156"/>
+        <location filename="../compiler/compilerinfo.cpp" line="165"/>
         <source>Warnings</source>
         <translation>代码警告</translation>
     </message>
@@ -8566,42 +8566,60 @@ Are you really want to continue?</oldsource>
         <translation>C语言标准 (-std)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="157"/>
+        <source>Enable AddressSanitizer (-fsanitize=address)</source>
+        <translation type="obsolete">启用</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilerinfo.cpp" line="154"/>
+        <source>Check for stack smashing attacks (-fstack-protector)</source>
+        <translation>检查栈溢出(stack smashing)错误 (-fstack-protector)</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilerinfo.cpp" line="161"/>
+        <source>Enable Sanitizer (-fsanitize=)</source>
+        <translation>启用地址消毒(-fsanitize=)</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilerinfo.cpp" line="166"/>
         <source>Inhibit all warning messages (-w)</source>
         <translation>忽略所有警告信息(-w)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="158"/>
+        <location filename="../compiler/compilerinfo.cpp" line="167"/>
         <source>Show most warnings (-Wall)</source>
         <translation>启用常见问题警告(-Wall)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="159"/>
+        <location filename="../compiler/compilerinfo.cpp" line="168"/>
         <source>Show some more warnings (-Wextra)</source>
         <translation>启用更多问题警告(-Wextra)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="160"/>
-        <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
-        <translation>检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
+        <location filename="../compiler/compilerinfo.cpp" line="169"/>
+        <source>Check ISO C/C++ conformance (-pedantic)</source>
+        <translation>检查是否严格遵守ISO C/C++标准</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="161"/>
+        <source>Check ISO C/C++/C++0x conformance (-pedantic)</source>
+        <translation type="vanished">检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilerinfo.cpp" line="170"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="162"/>
+        <location filename="../compiler/compilerinfo.cpp" line="171"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation>将警告作为错误处理(-Werror)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="163"/>
+        <location filename="../compiler/compilerinfo.cpp" line="172"/>
         <source>Abort compilation on first error (-Wfatal-errors)</source>
         <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="173"/>
+        <location filename="../compiler/compilerinfo.cpp" line="182"/>
         <source>Linker</source>
         <translation>链接器</translation>
     </message>
@@ -8610,17 +8628,17 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">链接Objective-C程序 (-lobjc)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="176"/>
+        <location filename="../compiler/compilerinfo.cpp" line="185"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>不使用标准库和系统启动文件(-nostdlib)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="177"/>
+        <location filename="../compiler/compilerinfo.cpp" line="186"/>
         <source>Do not create a console window (-mwindows)</source>
         <translation>不产生控制台窗口(-mwindows)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="178"/>
+        <location filename="../compiler/compilerinfo.cpp" line="187"/>
         <source>Strip executable (-s)</source>
         <translation>剥除附加信息(-s)</translation>
     </message>
@@ -8641,7 +8659,7 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">仅预处理（-E)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="174"/>
+        <location filename="../compiler/compilerinfo.cpp" line="183"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>编译时使用管道而不是临时文件(-pipe)</translation>
     </message>
@@ -8650,7 +8668,7 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2992"/>
+        <location filename="../settings.cpp" line="2994"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -8671,13 +8689,13 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2982"/>
-        <location filename="../settings.cpp" line="2988"/>
+        <location filename="../settings.cpp" line="2984"/>
+        <location filename="../settings.cpp" line="2990"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="2984"/>
+        <location filename="../settings.cpp" line="2986"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
