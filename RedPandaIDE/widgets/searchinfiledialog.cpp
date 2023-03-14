@@ -27,6 +27,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QProgressDialog>
+#include <QCompleter>
 
 
 SearchInFileDialog::SearchInFileDialog(QWidget *parent) :
@@ -38,6 +39,8 @@ SearchInFileDialog::SearchInFileDialog(QWidget *parent) :
     mSearchOptions&=0;
     mBasicSearchEngine= QSynedit::PSynSearchBase(new QSynedit::BasicSearcher());
     mRegexSearchEngine= QSynedit::PSynSearchBase(new QSynedit::RegexSearcher());
+    ui->cbFind->completer()->setCaseSensitivity(Qt::CaseSensitive);
+
 }
 
 SearchInFileDialog::~SearchInFileDialog()

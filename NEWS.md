@@ -11,6 +11,12 @@ Red Panda C++ Version 2.18
   - enhancement: Options in compiler set settings, to generate syntax error for large stack objects. （Enable for Debug settings by default)
   - enhancement: Options in compiler set settings, to generate protection code for stack smashing attack. （Enable for Debug settings by default)
   - enhancement: Options in compiler set settings, to enable address sanitizer. Not available in windows.（Enable for Debug settings by default)
+  - fix: The comboxbox to input search keyword in the search dialog is case insensitive.
+  - fix: The comboxbox to input replace text in the search dialog is case insensitive.
+  - fix: The comboxbox to input search keyword in the search in files dialog is case insensitive.
+  - fix: The comboxbox to input address expression in the debug panel's memory view is case insensitive.
+  - fix: The comboxbox to input evaluation expression in the debug panel is case insensitive.
+  - fix: The comboxbox to input replace text in the search panel is case insensitive.
 
 Red Panda C++ Version 2.17
 

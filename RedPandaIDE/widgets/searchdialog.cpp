@@ -1,6 +1,7 @@
 #include "searchdialog.h"
 #include "ui_searchdialog.h"
 
+#include <QCompleter>
 #include <QMessageBox>
 #include <memory>
 #include <qsynedit/searcher/basicsearcher.h>
@@ -29,6 +30,8 @@ SearchDialog::SearchDialog(QWidget *parent) :
     onTabBarCurrentChanged(mSearchTabIdx);
     mBasicSearchEngine = std::make_shared<QSynedit::BasicSearcher>();
     mRegexSearchEngine = std::make_shared<QSynedit::RegexSearcher>();
+    ui->cbFind->completer()->setCaseSensitivity(Qt::CaseSensitive);
+    ui->cbReplace->completer()->setCaseSensitivity(Qt::CaseSensitive);
 }
 
 SearchDialog::~SearchDialog()

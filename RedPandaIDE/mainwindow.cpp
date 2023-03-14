@@ -77,6 +77,7 @@
 #include <QMimeDatabase>
 #include <QMimeType>
 #include <QToolTip>
+#include <QCompleter>
 
 #include "mainwindow.h"
 #include <QScrollBar>
@@ -259,6 +260,11 @@ MainWindow::MainWindow(QWidget *parent)
 //    updateProjectView();
 //    updateEditorActions();
 //    updateCaretActions();
+
+    ui->cbReplaceInHistory->completer()->setCaseSensitivity(Qt::CaseSensitive);
+    ui->cbEvaluate->completer()->setCaseSensitivity(Qt::CaseSensitive);
+    ui->cbMemoryAddress->completer()->setCaseSensitivity(Qt::CaseSensitive);
+    ui->cbFilesPath->completer()->setCaseSensitivity(Qt::CaseInsensitive);
 
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
     connect(ui->cbEvaluate->lineEdit(), &QLineEdit::returnPressed,
