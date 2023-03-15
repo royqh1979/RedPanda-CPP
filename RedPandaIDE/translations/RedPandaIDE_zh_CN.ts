@@ -3220,7 +3220,7 @@ Are you really want to continue?</oldsource>
         <location filename="../settingsdialog/formattergeneralwidget.ui" line="498"/>
         <source>Insert empty lines around all blocks</source>
         <oldsource>Insert empy lines around all blocks</oldsource>
-        <translation>在所有代码段之间加入空格</translation>
+        <translation type="unfinished">在所有代码段之间加入空行</translation>
     </message>
     <message>
         <location filename="../settingsdialog/formattergeneralwidget.ui" line="505"/>
