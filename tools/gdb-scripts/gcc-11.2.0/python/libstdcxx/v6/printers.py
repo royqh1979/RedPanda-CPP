@@ -441,11 +441,21 @@ class StdVectorPrinter:
         self.typename = strip_versioned_namespace(typename)
         self.val = val
         self.is_bool = val.type.template_argument(0).code == gdb.TYPE_CODE_BOOL
+        start = self.val['_M_impl']['_M_start']
+        finish = self.val['_M_impl']['_M_finish']
+        end = self.val['_M_impl']['_M_end_of_storage']
+        if int(finish - start)<0 or int(end - start)<0 or finish > end :
+            self.valid = False
+        else:
+            self.valid = True
 
     def children(self):
-        return self._iterator(self.val['_M_impl']['_M_start'],
+        if self.valid:
+            return self._iterator(self.val['_M_impl']['_M_start'],
                               self.val['_M_impl']['_M_finish'],
                               self.is_bool)
+        else:
+            return None
 
     def to_string(self):
         start = self.val['_M_impl']['_M_start']
@@ -462,8 +472,11 @@ class StdVectorPrinter:
             return ('%s<bool> of length %d, capacity %d'
                     % (self.typename, int (length), int (capacity)))
         else:
-            return ('%s of length %d, capacity %d'
+            if self.valid: 
+                return ('%s of length %d, capacity %d'
                     % (self.typename, int (finish - start), int (end - start)))
+            else: 
+                return ('Not initialized')
 
     def display_hint(self):
         return 'array'
