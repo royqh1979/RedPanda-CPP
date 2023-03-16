@@ -84,6 +84,7 @@ void StatementModel::clear() {
 #endif
 }
 
+#ifdef QT_DEBUG
 void StatementModel::dump(const QString &logFile)
 {
     QFile file(logFile);
@@ -93,7 +94,6 @@ void StatementModel::dump(const QString &logFile)
     }
 }
 
-#ifdef QT_DEBUG
 void StatementModel::dumpAll(const QString &logFile)
 {
     QFile file(logFile);
@@ -104,11 +104,16 @@ void StatementModel::dumpAll(const QString &logFile)
              .arg(statement->command).arg(int(statement->kind))
              .arg(statement->type).arg(statement->fullName)
              .arg((size_t)(statement->parentScope.lock().get()))
-             .arg((int)statement->classScope)
+             .arg((int)statement->accessibility)
              .arg(statement->fileName)
              .arg(statement->line)
              .arg(statement->definitionFileName)
-             .arg(statement->definitionLine)<<endl;
+             .arg(statement->definitionLine)<<
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
+                 Qt::endl;
+#else
+                 endl;
+#endif
         }
     }
 }

@@ -1780,7 +1780,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         }
     }
 
-    if (changes.testFlag(QSynedit::scInsertMode) | changes.testFlag(QSynedit::scReadOnly))
+    if (changes.testFlag(QSynedit::scInsertMode) || changes.testFlag(QSynedit::scReadOnly))
         pMainWindow->updateForStatusbarModeInfo();
 
     pMainWindow->updateEditorActions();
@@ -3573,45 +3573,71 @@ void Editor::cleanAutoBackup()
     }
 }
 
-bool Editor::testInFunc(int x, int y)
+bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
 {
-    bool result = false;
-    QString s = document()->getLine(y);
-    int posY = y;
-    int posX = std::min(x,s.length()-1); // x is started from 1
-    int bracketLevel=0;
-    while (true) {
-        while (posX < 0) {
-            posY--;
-            if (posY < 0)
-                return false;
-            s = document()->getLine(posY);
-            posX = s.length()-1;
-        }
-        if (s[posX] == '>'
-                || s[posX] == ']') {
-            bracketLevel++;
-        } else if (s[posX] == '<'
-                   || s[posX] == '[') {
-            bracketLevel--;
-        } else if (bracketLevel==0) {
-            switch (s[posX].unicode()) {
-            case '(':
-                return true;
-            case ';':
-            case '{':
-                return false;
-            }
-            if (!(isIdentChar(s[posX])
-                  || s[posX] == ' '
-                  || s[posX] == '\t'
-                  || s[posX] == '*'
-                  || s[posX] == '&'))
-                break;;
-        }
-        posX--;
+    int y=pos.line-1;
+    int x=pos.ch;
+    if (!syntaxer() || syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
+        return false;
+    if (y==0)
+        syntaxer()->resetState();
+    else
+        syntaxer()->setState(document()->getSyntaxState(y-1));
+    syntaxer()->setLine(document()->getLine(y),y);
+//    qDebug()<<x<<document()->getLine(y).length();
+    QSynedit::SyntaxState state = syntaxer()->getState();
+    while(!syntaxer()->eol()) {
+        int start = syntaxer()->getTokenPos();
+        QString token = syntaxer()->getToken();
+        int end = start + token.length();
+//        qDebug()<<syntaxer()->getToken()<<start<<end;
+        if (end>=x)
+            break;
+        state = syntaxer()->getState();
+        syntaxer()->next();
     }
-    return result;
+//    qDebug()<<state.parenthesisLevel;
+    return state.parenthesisLevel>0;
+
+
+//    bool result = false;
+//    QString s = document()->getLine(y);
+//    int posY = y;
+//    int posX = std::min(x,s.length()-1); // x is started from 1
+//    int bracketLevel=0;
+
+//    while (true) {
+//        while (posX < 0) {
+//            posY--;
+//            if (posY < 0)
+//                return false;
+//            s = document()->getLine(posY);
+//            posX = s.length()-1;
+//        }
+//        if (s[posX] == '>'
+//                || s[posX] == ']') {
+//            bracketLevel++;
+//        } else if (s[posX] == '<'
+//                   || s[posX] == '[') {
+//            bracketLevel--;
+//        } else if (bracketLevel==0) {
+//            switch (s[posX].unicode()) {
+//            case '(':
+//                return true;
+//            case ';':
+//            case '{':
+//                return false;
+//            }
+//            if (!(isIdentChar(s[posX])
+//                  || s[posX] == ' '
+//                  || s[posX] == '\t'
+//                  || s[posX] == '*'
+//                  || s[posX] == '&'))
+//                break;;
+//        }
+//        posX--;
+//    }
+//    return result;
 }
 
 void Editor::completionInsert(bool appendFunc)
@@ -4188,7 +4214,6 @@ void Editor::updateFunctionTip(bool showTip)
     QSynedit::BufferCoord pWordBegin, pWordEnd;
 
     QString s = getWordAtPosition(this, functionNamePos, pWordBegin,pWordEnd, WordPurpose::wpInformation);
-
     int x = pWordBegin.ch-1-1;
     QString line = document()->getLine(pWordBegin.line-1);
     bool hasPreviousWord=false;
@@ -4206,9 +4231,10 @@ void Editor::updateFunctionTip(bool showTip)
         break;
     }
 
+    //handle class initializer
     if (x >= 0 && hasPreviousWord) {
         QSynedit::BufferCoord pos = pWordBegin;
-        pos.ch = x+1;
+        pos.ch = pWordBegin.ch;
         QString previousWord = getPreviousWordAtPositionForSuggestion(pos);
 
         PStatement statement = mParser->findStatementOf(
@@ -4779,7 +4805,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
     if ((p.line<1) || (p.line>document()->count())) {
         return "";
     }
-    bool inFunc = testInFunc(p.ch-1,p.line-1);
+    bool inFunc = testInFunc(p);
 
     QString s = document()->getLine(p.line - 1);
     int wordBegin;
@@ -4800,7 +4826,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
               else
                   return "";
           } else if (bracketLevel==0) {
-              //we can't differentiate multiple definition and function parameter define here , so we don't handle ','
+              //Differentiate multiple definition and function parameter define here
               if (s[wordEnd] == ',') {
                   if (inFunc) // in func, dont skip ','
                       break;

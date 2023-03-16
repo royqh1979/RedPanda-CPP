@@ -271,7 +271,7 @@ private:
     void saveAutoBackup();
     void cleanAutoBackup();
 
-    bool testInFunc(int x,int y);
+    bool testInFunc(const QSynedit::BufferCoord& pos);
 
     void completionInsert(bool appendFunc=false);
 

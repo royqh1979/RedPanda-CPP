@@ -18,6 +18,8 @@ Red Panda C++ Version 2.18
   - fix: The comboxbox to input evaluation expression in the debug panel is case insensitive.
   - fix: The comboxbox to input replace text in the search panel is case insensitive.
   - fix: None initialized std::vector is not correctly displayed in the gdb of the gcc distributed with redpanda-c++ (Windows 64bit).
+  - fix: Don't show completion info when input parameters for function definitions.
+  - fix: Don't show function info tips when typing class variable definitions.
 
 Red Panda C++ Version 2.17
 
