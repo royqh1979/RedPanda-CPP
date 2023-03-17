@@ -4020,6 +4020,16 @@ void Settings::Debugger::setAutosave(bool newAutosave)
     mAutosave = newAutosave;
 }
 
+int Settings::Debugger::arrayElements() const
+{
+    return mArrayElements;
+}
+
+void Settings::Debugger::setArrayElements(int newArrayElements)
+{
+    mArrayElements = newArrayElements;
+}
+
 bool Settings::Debugger::useIntelStyle() const
 {
     return mUseIntelStyle;
@@ -4068,6 +4078,7 @@ void Settings::Debugger::doSave()
     saveValue("gdb_server_port",mGDBServerPort);
     saveValue("memory_view_rows",mMemoryViewRows);
     saveValue("memory_view_columns",mMemoryViewColumns);
+    saveValue("array_elements",mArrayElements);
 }
 
 void Settings::Debugger::doLoad()
@@ -4096,6 +4107,7 @@ void Settings::Debugger::doLoad()
     mGDBServerPort = intValue("gdb_server_port",41234);
     mMemoryViewRows = intValue("memory_view_rows",16);
     mMemoryViewColumns = intValue("memory_view_columns",16);
+    mArrayElements = intValue("array_elements",300);
 }
 
 Settings::CodeCompletion::CodeCompletion(Settings *settings):_Base(settings, SETTING_CODE_COMPLETION)

@@ -15,6 +15,58 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QCheckBox" name="chkAutosave">
+     <property name="text">
+      <string>Autosave watches</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_5" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Max number of array elements displayed</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinArrayElements">
+        <property name="maximum">
+         <number>99999999</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_5">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="grpUseGDBServer">
      <property name="title">
       <string>Use GDB Server to debug</string>
@@ -23,6 +75,18 @@
       <bool>true</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>7</number>
+      </property>
+      <property name="topMargin">
+       <number>7</number>
+      </property>
+      <property name="rightMargin">
+       <number>7</number>
+      </property>
+      <property name="bottomMargin">
+       <number>7</number>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
@@ -57,24 +121,58 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkSkipSystemLib">
-     <property name="text">
-      <string>Skip system header and library files when step into</string>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Skip header files when step into</string>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="chkSkipProjectLib">
-     <property name="text">
-      <string>Skip project header and library files when step into</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="chkSkipCustomLib">
-     <property name="text">
-      <string>Skip custom header and library files when step into</string>
-     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <property name="leftMargin">
+       <number>7</number>
+      </property>
+      <property name="topMargin">
+       <number>7</number>
+      </property>
+      <property name="rightMargin">
+       <number>7</number>
+      </property>
+      <property name="bottomMargin">
+       <number>7</number>
+      </property>
+      <item>
+       <widget class="QCheckBox" name="chkSkipSystemLib">
+        <property name="text">
+         <string>System library</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkSkipProjectLib">
+        <property name="text">
+         <string>Project library</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkSkipCustomLib">
+        <property name="text">
+         <string>Custom library</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -87,16 +185,16 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="leftMargin">
-       <number>11</number>
+       <number>7</number>
       </property>
       <property name="topMargin">
-       <number>11</number>
+       <number>7</number>
       </property>
       <property name="rightMargin">
-       <number>11</number>
+       <number>7</number>
       </property>
       <property name="bottomMargin">
-       <number>11</number>
+       <number>7</number>
       </property>
       <item>
        <widget class="QWidget" name="widget" native="true">
@@ -169,7 +267,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="sbFontSize"/>
+          <widget class="QSpinBox" name="sbFontSize">
+           <property name="maximum">
+            <number>999</number>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer_2">
@@ -202,127 +304,68 @@
      <property name="title">
       <string>Memory View</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_6">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
       <property name="leftMargin">
        <number>7</number>
       </property>
       <property name="topMargin">
        <number>7</number>
       </property>
+      <property name="rightMargin">
+       <number>7</number>
+      </property>
+      <property name="bottomMargin">
+       <number>7</number>
+      </property>
       <item>
-       <widget class="QWidget" name="widget_5" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Memory View Rows</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="spinMemoryViewRows">
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>999</number>
-           </property>
-           <property name="value">
-            <number>8</number>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="QWidget" name="widget_6" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Memory View Columns</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="spinMemoryViewColumns">
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="value">
-            <number>8</number>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_5">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>437</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Autosave</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <widget class="QCheckBox" name="chkAutosave">
+       <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Autosave breakpoints and watches</string>
+         <string>Rows</string>
         </property>
        </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinMemoryViewRows">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>999</number>
+        </property>
+        <property name="value">
+         <number>8</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Columns</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinMemoryViewColumns">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>8</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
@@ -333,10 +376,29 @@
       <string>CPU Window</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="leftMargin">
+       <number>7</number>
+      </property>
+      <property name="topMargin">
+       <number>7</number>
+      </property>
+      <property name="rightMargin">
+       <number>7</number>
+      </property>
+      <property name="bottomMargin">
+       <number>7</number>
+      </property>
       <item>
        <widget class="QCheckBox" name="chkShowCPUWhenSignaled">
         <property name="text">
          <string>Show CPU Window when signal received</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkBlendMode">
+        <property name="text">
+         <string>Show disassembly code in blend mode</string>
         </property>
        </widget>
       </item>
@@ -373,7 +435,7 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_5">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
             <property name="leftMargin">
              <number>0</number>
             </property>
@@ -387,6 +449,16 @@
              <number>0</number>
             </property>
             <item>
+             <widget class="QRadioButton" name="rbATT">
+              <property name="text">
+               <string>AT&amp;&amp;T</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string notr="true">grpCPUDisassembly</string>
+              </attribute>
+             </widget>
+            </item>
+            <item>
              <widget class="QRadioButton" name="rbIntel">
               <property name="text">
                <string>Intel</string>
@@ -397,26 +469,22 @@
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="rbATT">
-              <property name="text">
-               <string>AT&amp;&amp;T</string>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-              <attribute name="buttonGroup">
-               <string notr="true">grpCPUDisassembly</string>
-              </attribute>
-             </widget>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </widget>
          </item>
         </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="chkBlendMode">
-        <property name="text">
-         <string>Show disassembly code in blend mode</string>
-        </property>
        </widget>
       </item>
      </layout>
