@@ -56,6 +56,7 @@ void DebugGeneralWidget::doLoad()
     ui->spinGDBServerPort->setValue(pSettings->debugger().GDBServerPort());
     ui->spinMemoryViewRows->setValue(pSettings->debugger().memoryViewRows());
     ui->spinMemoryViewColumns->setValue(pSettings->debugger().memoryViewColumns());
+    ui->spinArrayElements->setValue(pSettings->debugger().arrayElements());
 }
 
 void DebugGeneralWidget::doSave()
@@ -78,6 +79,8 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setGDBServerPort(ui->spinGDBServerPort->value());
     pSettings->debugger().setMemoryViewRows(ui->spinMemoryViewRows->value());
     pSettings->debugger().setMemoryViewColumns(ui->spinMemoryViewColumns->value());
+    pSettings->debugger().setArrayElements(ui->spinArrayElements->value());
+
     pSettings->debugger().save();
     pMainWindow->updateDebuggerSettings();
 }

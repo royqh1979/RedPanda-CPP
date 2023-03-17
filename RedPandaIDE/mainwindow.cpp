@@ -77,6 +77,7 @@
 #include <QMimeDatabase>
 #include <QMimeType>
 #include <QToolTip>
+#include <QCompleter>
 
 #include "mainwindow.h"
 #include <QScrollBar>
@@ -259,6 +260,11 @@ MainWindow::MainWindow(QWidget *parent)
 //    updateProjectView();
 //    updateEditorActions();
 //    updateCaretActions();
+
+    ui->cbReplaceInHistory->completer()->setCaseSensitivity(Qt::CaseSensitive);
+    ui->cbEvaluate->completer()->setCaseSensitivity(Qt::CaseSensitive);
+    ui->cbMemoryAddress->completer()->setCaseSensitivity(Qt::CaseSensitive);
+    ui->cbFilesPath->completer()->setCaseSensitivity(Qt::CaseInsensitive);
 
     connect(ui->debugConsole,&QConsole::commandInput,this,&MainWindow::onDebugCommandInput);
     connect(ui->cbEvaluate->lineEdit(), &QLineEdit::returnPressed,
@@ -2389,7 +2395,7 @@ void MainWindow::debug()
     mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
     mDebugger->sendCommand("-gdb-set", "confirm off");
     mDebugger->sendCommand("-gdb-set", "print repeats 0"); // don't repeat elements
-    mDebugger->sendCommand("-gdb-set", "print elements 0"); // don't limit elements
+    mDebugger->sendCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 500
     mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(filePath))); // restore working directory
     if (pSettings->debugger().useGDBServer()) {
         mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));

@@ -127,4 +127,9 @@ void ShortcutManager::applyTo(QAction *action)
     if (item && item->isAction) {
         action->setShortcut(QKeySequence::fromString(item->shortcut));
     }
+    if (!action->shortcut().isEmpty()){
+        action->setToolTip(action->text()+QString("(%1)").arg(action->shortcut().toString()));
+    } else {
+        action->setToolTip(action->text());
+    }
 }

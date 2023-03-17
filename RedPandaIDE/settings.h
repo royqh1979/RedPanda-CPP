@@ -1281,6 +1281,9 @@ public:
         bool autosave() const;
         void setAutosave(bool newAutosave);
 
+        int arrayElements() const;
+        void setArrayElements(int newArrayElements);
+
     private:
         bool mEnableDebugConsole;
         bool mShowDetailLog;
@@ -1298,6 +1301,7 @@ public:
         int mGDBServerPort;
         int mMemoryViewRows;
         int mMemoryViewColumns;
+        int mArrayElements;
 
         // _Base interface
     protected:
