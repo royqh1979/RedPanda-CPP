@@ -714,18 +714,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Skip system header and library files when step into</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Skip project header and library files when step into</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Skip custom header and library files when step into</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Debug Console</source>
         <translation type="unfinished"></translation>
     </message>
@@ -743,10 +731,6 @@
     </message>
     <message>
         <source>Show detail debug logs</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Autosave</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -778,15 +762,35 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Memory View Rows</source>
+        <source>Autosave watches</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Memory View Columns</source>
+        <source>Max number of array elements displayed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Autosave breakpoints and watches</source>
+        <source>Skip header files when step into</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>System library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Project library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rows</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Columns</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3285,10 +3289,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>F10</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Undo</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4898,6 +4898,10 @@
     </message>
     <message>
         <source>Save settings failed!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>F11</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

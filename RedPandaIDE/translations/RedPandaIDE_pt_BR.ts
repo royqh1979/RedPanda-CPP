@@ -818,15 +818,15 @@
     </message>
     <message>
         <source>Skip system header and library files when step into</source>
-        <translation>Ignorar os cabeçalho de sistema e os arquivos de biblioteca ao avançar</translation>
+        <translation type="vanished">Ignorar os cabeçalho de sistema e os arquivos de biblioteca ao avançar</translation>
     </message>
     <message>
         <source>Skip project header and library files when step into</source>
-        <translation>Ignorar o cabeçalho de projeto e os arquivos de biblioteca ao avançar</translation>
+        <translation type="vanished">Ignorar o cabeçalho de projeto e os arquivos de biblioteca ao avançar</translation>
     </message>
     <message>
         <source>Skip custom header and library files when step into</source>
-        <translation>Ignorar o cabeçalho personalizado e os arquivos de biblioteca ao avançar</translation>
+        <translation type="vanished">Ignorar o cabeçalho personalizado e os arquivos de biblioteca ao avançar</translation>
     </message>
     <message>
         <source>Debug Console</source>
@@ -850,7 +850,7 @@
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Salvar automaticamente</translation>
+        <translation type="vanished">Salvar automaticamente</translation>
     </message>
     <message>
         <source>Autosave breakpoints</source>
@@ -858,7 +858,7 @@
     </message>
     <message>
         <source>Autosave watches</source>
-        <translation type="vanished">Salvar automaticamente as observações</translation>
+        <translation>Salvar automaticamente as observações</translation>
     </message>
     <message>
         <source>Show CPU Window when signal received</source>
@@ -890,14 +890,38 @@
     </message>
     <message>
         <source>Memory View Rows</source>
-        <translation>Linhas da memória</translation>
+        <translation type="vanished">Linhas da memória</translation>
     </message>
     <message>
         <source>Memory View Columns</source>
-        <translation>Colunas da memória</translation>
+        <translation type="vanished">Colunas da memória</translation>
     </message>
     <message>
-        <source>Autosave breakpoints and watches</source>
+        <source>Max number of array elements displayed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skip header files when step into</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>System library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Project library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rows</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Columns</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3453,7 +3477,7 @@
     </message>
     <message>
         <source>F10</source>
-        <translation>F10</translation>
+        <translation type="vanished">F10</translation>
     </message>
     <message>
         <source>Undo</source>
@@ -3561,7 +3585,7 @@
     </message>
     <message>
         <source>F11</source>
-        <translation type="vanished">F11</translation>
+        <translation>F11</translation>
     </message>
     <message>
         <source>Rebuild All</source>
