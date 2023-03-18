@@ -2522,6 +2522,22 @@
         <source>Don&apos;t break multimple statements residing on one line</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>No minimal indent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Indent at least one additional indent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Indent at least two additional indents</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Indent at least one-half an additional indent.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FormatterPathWidget</name>

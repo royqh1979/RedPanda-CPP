@@ -29,6 +29,11 @@ FormatterGeneralWidget::FormatterGeneralWidget(const QString& name, const QStrin
     ui->editDemo->setReadOnly(true);
     connect(this, &SettingsWidget::settingsChanged,
                this, &FormatterGeneralWidget::updateDemo);
+
+    ui->cbMinConditionalIndent->addItem(tr("No minimal indent"),0);
+    ui->cbMinConditionalIndent->addItem(tr("Indent at least one additional indent"),1);
+    ui->cbMinConditionalIndent->addItem(tr("Indent at least two additional indents"),2);
+    ui->cbMinConditionalIndent->addItem(tr("Indent at least one-half an additional indent."),3);
 }
 
 FormatterGeneralWidget::~FormatterGeneralWidget()
@@ -77,7 +82,8 @@ void FormatterGeneralWidget::doLoad()
     ui->chkIndentPreprocCond->setChecked(format.indentPreprocCond());
     ui->chkIndentPreprocDefine->setChecked(format.indentPreprocDefine());
     ui->chkIndentCol1Comments->setChecked(format.indentCol1Comments());
-    ui->spinMinConditionalIndent->setValue(format.minConditionalIndent());
+    int index=ui->cbMinConditionalIndent->findData(format.minConditionalIndent());
+    ui->cbMinConditionalIndent->setCurrentIndex(index);
     ui->spinMaxContinuationIndent->setValue(format.maxContinuationIndent());
     ui->chkBreakBlocks->setChecked(format.breakBlocks());
     ui->chkBreakBlocksAll->setChecked(format.breakBlocksAll());
@@ -363,7 +369,7 @@ void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format
     format.setIndentPreprocCond(ui->chkIndentPreprocCond->isChecked());
     format.setIndentPreprocDefine(ui->chkIndentPreprocDefine->isChecked());
     format.setIndentCol1Comments(ui->chkIndentCol1Comments->isChecked());
-    format.setMinConditionalIndent(ui->spinMinConditionalIndent->value());
+    format.setMinConditionalIndent(ui->cbMinConditionalIndent->currentData().toInt());
     format.setMaxContinuationIndent(ui->spinMaxContinuationIndent->value());
     format.setBreakBlocks(ui->chkBreakBlocks->isChecked());
     format.setBreakBlocksAll(ui->chkBreakBlocksAll->isChecked());

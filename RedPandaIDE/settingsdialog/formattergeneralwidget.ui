@@ -296,7 +296,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="spinMinConditionalIndent"/>
+           <widget class="QComboBox" name="cbMinConditionalIndent"/>
           </item>
           <item>
            <spacer name="horizontalSpacer_4">
@@ -340,6 +340,9 @@
            <widget class="QSpinBox" name="spinMaxContinuationIndent">
             <property name="minimum">
              <number>40</number>
+            </property>
+            <property name="maximum">
+             <number>120</number>
             </property>
            </widget>
           </item>

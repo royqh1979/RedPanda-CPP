@@ -75,6 +75,8 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+
+    // SettingsWidget interface
 };
 
 #endif // FORMATTERGENERALWIDGET_H
