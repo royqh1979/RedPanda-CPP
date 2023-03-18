@@ -408,7 +408,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../widgets/choosethemedialog.ui" line="78"/>
         <source>Default Language:</source>
-        <translation>缺省语言：</translation>
+        <translation>默认语言：</translation>
     </message>
     <message>
         <location filename="../widgets/choosethemedialog.ui" line="85"/>
@@ -432,13 +432,13 @@ p, li { white-space: pre-wrap; }
         <location filename="../codesnippetsmanager.cpp" line="57"/>
         <location filename="../codesnippetsmanager.cpp" line="67"/>
         <source>Load default code snippets failed</source>
-        <translation>载入缺省代码模板失败</translation>
+        <translation>载入默认代码模板失败</translation>
     </message>
     <message>
         <location filename="../codesnippetsmanager.cpp" line="58"/>
         <location filename="../codesnippetsmanager.cpp" line="68"/>
         <source>Can&apos;t copy default code snippets &apos;%1&apos; to &apos;%2&apos;.</source>
-        <translation>无法将缺省代码模板&apos;%1&apos;复制到&apos;%2&apos;。</translation>
+        <translation>无法将默认代码模板&apos;%1&apos;复制到&apos;%2&apos;。</translation>
     </message>
     <message>
         <location filename="../codesnippetsmanager.cpp" line="79"/>
@@ -1219,7 +1219,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../settingsdialog/debuggeneralwidget.ui" line="394"/>
         <source>Show CPU Window when signal received</source>
-        <translation>程序收到信号停止时缺省打开CPU窗口</translation>
+        <translation>程序收到信号停止时打开CPU窗口</translation>
     </message>
     <message>
         <source>Show full gdb annotations</source>
@@ -2204,12 +2204,12 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../settingsdialog/editormiscwidget.ui" line="179"/>
         <source>Default file encoding</source>
-        <translation>缺省文件编码</translation>
+        <translation>默认文件编码</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editormiscwidget.ui" line="207"/>
         <source>Default file type</source>
-        <translation>缺省文件类型</translation>
+        <translation>默认文件类型</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editormiscwidget.ui" line="220"/>
@@ -4195,7 +4195,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../widgets/macroinfomodel.cpp" line="21"/>
         <source>The default directory</source>
-        <translation>缺省文件夹</translation>
+        <translation>默认文件夹</translation>
     </message>
     <message>
         <location filename="../widgets/macroinfomodel.cpp" line="22"/>
@@ -7192,7 +7192,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../widgets/newprojectdialog.ui" line="109"/>
         <source>Make default language</source>
-        <translation>设为缺省语言</translation>
+        <translation>设为默认语言</translation>
     </message>
     <message>
         <location filename="../widgets/newprojectdialog.ui" line="116"/>
@@ -7217,7 +7217,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../widgets/newprojectdialog.ui" line="189"/>
         <source>Use as the default project location</source>
-        <translation>设为缺省项目位置</translation>
+        <translation>设为默认项目位置</translation>
     </message>
     <message>
         <source>Location:</source>
@@ -7910,7 +7910,7 @@ Are you really want to continue?</oldsource>
         <location filename="../settingsdialog/projectfileswidget.cpp" line="275"/>
         <location filename="../settingsdialog/projectfileswidget.cpp" line="277"/>
         <source>Project(%1)</source>
-        <translation>项目缺省(%1)</translation>
+        <translation>项目默认(%1)</translation>
     </message>
     <message>
         <location filename="../settingsdialog/projectfileswidget.cpp" line="259"/>
@@ -7959,7 +7959,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../settingsdialog/projectgeneralwidget.ui" line="65"/>
         <source>Default encoding:</source>
-        <translation>缺省编码：</translation>
+        <translation>默认编码：</translation>
     </message>
     <message>
         <location filename="../settingsdialog/projectgeneralwidget.ui" line="81"/>
@@ -8004,7 +8004,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../settingsdialog/projectgeneralwidget.ui" line="231"/>
         <source>Default to C++ when creating new files</source>
-        <translation>新文件缺省为C++文件</translation>
+        <translation>新文件默认为C++文件</translation>
     </message>
     <message>
         <location filename="../settingsdialog/projectgeneralwidget.ui" line="238"/>
@@ -9035,7 +9035,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../colorscheme.cpp" line="571"/>
         <source>Editor Text</source>
-        <translation>编辑器缺省</translation>
+        <translation>编辑器默认</translation>
     </message>
     <message>
         <location filename="../colorscheme.cpp" line="576"/>
