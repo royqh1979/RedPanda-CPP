@@ -1071,9 +1071,9 @@ void CppPreprocessor::preprocessBuffer()
 
 void CppPreprocessor::skipToEndOfPreprocessor()
 {
-    int bufferCount = mBuffer.count();
+    int indexLimit = mBuffer.count()-1;
     // Skip until last char of line is NOT \ anymore
-    while ((mIndex < bufferCount) && mBuffer[mIndex].endsWith('\\'))
+    while ((mIndex < indexLimit) && mBuffer[mIndex].endsWith('\\'))
         mIndex++;
 }
 
