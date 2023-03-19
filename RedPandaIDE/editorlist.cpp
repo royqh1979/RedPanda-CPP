@@ -185,8 +185,12 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
 //    }
 
     if (editor->inProject() && pMainWindow->project()) {
-        PProjectUnit unit = pMainWindow->project()->findUnit(editor);
-        pMainWindow->project()->closeUnit(unit);
+        if (fileExists(pMainWindow->project()->directory())) {
+            PProjectUnit unit = pMainWindow->project()->findUnit(editor);
+            pMainWindow->project()->closeUnit(unit);
+        } else {
+            editor->setProject(nullptr);
+        }
     } else {
         if (!editor->isNew() && pMainWindow->visitHistoryManager()->addFile(editor->filename())) {
             pMainWindow->rebuildOpenedFileHisotryMenu();

@@ -2,6 +2,7 @@ Red Panda C++ Version 2.19
 
   - fix: Crash when directive line ends with '\' and at the last line.
   - fix: The option "Minimal indent for a continuous conditional beloning to a conditional header:" for formatter is not correct.
+  - fix: Crash when a project is removed from the disk while it is openned in RedPanda-C++.
 
 Red Panda C++ Version 2.18
 

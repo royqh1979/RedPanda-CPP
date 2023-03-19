@@ -340,6 +340,7 @@ private slots:
     void onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave);
     void onAutoSaveTimeout();
     void onFileChanged(const QString &path);
+    void onDirChanged(const QString &path);
     void onFilesViewPathChanged();
     void onWatchViewContextMenu(const QPoint& pos);
     void onBookmarkContextMenu(const QPoint& pos);

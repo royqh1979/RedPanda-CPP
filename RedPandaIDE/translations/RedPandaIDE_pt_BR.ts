@@ -5187,6 +5187,18 @@
         <source>Save settings failed!</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Project folder removed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Folder for project &apos;%1&apos; was removed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It will be closed.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>

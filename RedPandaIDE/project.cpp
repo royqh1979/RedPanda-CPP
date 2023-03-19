@@ -61,6 +61,7 @@ Project::Project(const QString &filename, const QString &name,
                 std::bind(
                     &EditorList::getContentFromOpenedEditor,mEditorList,
                     std::placeholders::_1, std::placeholders::_2));
+    mFileSystemWatcher->addPath(directory());
 }
 
 std::shared_ptr<Project> Project::load(const QString &filename, EditorList *editorList, QFileSystemWatcher *fileSystemWatcher, QObject *parent)
@@ -103,12 +104,14 @@ std::shared_ptr<Project> Project::create(
 
 Project::~Project()
 {
+    mFileSystemWatcher->removePath(directory());
     mEditorList->beginUpdate();
     foreach (const PProjectUnit& unit, mUnits) {
         Editor * editor = unitEditor(unit);
         if (editor) {
             editor->setProject(nullptr);
-            mEditorList->forceCloseEditor(editor);
+            if (fileExists(directory()))
+                mEditorList->forceCloseEditor(editor);
         }
     }
     mEditorList->endUpdate();
@@ -259,15 +262,15 @@ void Project::open()
     }
 }
 
-void Project::setFileName(QString value)
-{
-    value = QFileInfo(value).absoluteFilePath();
-    if (mFilename!=value) {
-        QFile::rename(mFilename,value);
-        mFilename = value;
-        setModified(true);
-    }
-}
+//void Project::setFileName(QString value)
+//{
+//    value = QFileInfo(value).absoluteFilePath();
+//    if (mFilename!=value) {
+//        QFile::rename(mFilename,value);
+//        mFilename = value;
+//        setModified(true);
+//    }
+//}
 
 void Project::setModified(bool value)
 {
@@ -611,6 +614,9 @@ void Project::saveAll()
 
 void Project::saveLayout()
 {
+    if (!fileExists(directory()))
+        return;
+
     QHash<QString, PProjectEditorLayout> oldLayouts = loadLayout();
 
     QHash<QString,int> editorOrderSet;
@@ -669,9 +675,6 @@ void Project::saveLayout()
         QJsonDocument doc(jsonLayouts);
         file.write(doc.toJson(QJsonDocument::Indented));
         file.close();
-    } else {
-        throw FileError(QObject::tr("Can't open file '%1' for write.")
-                        .arg(jsonFilename));
     }
 }
 
@@ -711,6 +714,8 @@ void Project::renameUnit(PProjectUnit& unit, const QString &newFileName)
 
 bool Project::saveUnits()
 {
+    if (!fileExists(directory()))
+        return false;
     int count = 0;
     SimpleIni ini;
     SI_Error error = ini.LoadFile(mFilename.toLocal8Bit());
@@ -1140,6 +1145,8 @@ void Project::setEncoding(const QByteArray &encoding)
 
 void Project::saveOptions()
 {
+    if (!fileExists(directory()))
+        return;
     SimpleIni ini;
     ini.LoadFile(mFilename.toLocal8Bit());
     ini.SetValue("Project","FileName", toByteArray(extractRelativePath(directory(), mFilename)));

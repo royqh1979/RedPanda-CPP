@@ -1430,10 +1430,11 @@ void Editor::hideEvent(QHideEvent */*event*/)
                 this,
                 &Editor::onEndParsing);
     }
-    pMainWindow->updateForEncodingInfo(nullptr);
-    pMainWindow->updateStatusbarForLineCol(nullptr);
-    pMainWindow->updateForStatusbarModeInfo(nullptr);
-
+    if (!pMainWindow->isQuitting()) {
+        pMainWindow->updateForEncodingInfo(nullptr);
+        pMainWindow->updateStatusbarForLineCol(nullptr);
+        pMainWindow->updateForStatusbarModeInfo(nullptr);
+    }
     setHideTime(QDateTime::currentDateTime());
 }
 

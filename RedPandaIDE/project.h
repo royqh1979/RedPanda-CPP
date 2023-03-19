@@ -218,7 +218,7 @@ public:
     bool unitsModifiedSince(const QDateTime& time);
     bool modified() const;
     bool modifiedSince(const QDateTime& time);
-    void setFileName(QString value);
+//    void setFileName(QString value);
     void setModified(bool value);
 
     PProjectModelNode addFolder(PProjectModelNode parentFolder, const QString& s);

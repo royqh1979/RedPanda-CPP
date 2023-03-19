@@ -402,6 +402,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(&mFileSystemWatcher,&QFileSystemWatcher::fileChanged,
             this, &MainWindow::onFileChanged);
+    connect(&mFileSystemWatcher,&QFileSystemWatcher::directoryChanged,
+            this, &MainWindow::onDirChanged);
 
     mStatementColors = std::make_shared<QHash<StatementKind, PColorSchemeItem> >();
     mCompletionPopup = std::make_shared<CodeCompletionPopup>();
@@ -463,6 +465,8 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     mQuitting=true;
+    if (mProject)
+        mProject=nullptr;
     delete mProjectProxyModel;
     delete mEditorList;
     delete ui;
@@ -5106,51 +5110,56 @@ void MainWindow::closeProject(bool refreshEditor)
         //save all files
 
         // TODO: should we save watches?
-        if (mEditorList->projectEditorsModified()) {
-            QString s;
-            if (mProject->name().isEmpty()) {
-                s = mProject->filename();
-            } else {
-                s = mProject->name();
-            }
-            if (mSystemTurnedOff) {
-                mProject->saveAll();
-                mEditorList->saveAllForProject();
-            } else {
-                int answer = QMessageBox::question(
-                            this,
-                            tr("Save project"),
-                            tr("The project '%1' has modifications.").arg(s)
-                            + "<br />"
-                            + tr("Do you want to save it?"),
-                            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
-                            QMessageBox::Yes);
-                switch (answer) {
-                case QMessageBox::Yes:
+        if (fileExists(mProject->directory())){
+            if (mEditorList->projectEditorsModified()) {
+                QString s;
+                if (mProject->name().isEmpty()) {
+                    s = mProject->filename();
+                } else {
+                    s = mProject->name();
+                }
+                if (mSystemTurnedOff) {
                     mProject->saveAll();
                     mEditorList->saveAllForProject();
-                    break;
-                case QMessageBox::No:
-                    mEditorList->clearProjectEditorsModified();
-                    mProject->setModified(false);
-                    mProject->saveLayout();
-                    break;
-                case QMessageBox::Cancel:
-                    mProject->saveLayout();
-                    return;
+                } else {
+                    int answer = QMessageBox::question(
+                                this,
+                                tr("Save project"),
+                                tr("The project '%1' has modifications.").arg(s)
+                                + "<br />"
+                                + tr("Do you want to save it?"),
+                                QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+                                QMessageBox::Yes);
+                    switch (answer) {
+                    case QMessageBox::Yes:
+                        mProject->saveAll();
+                        mEditorList->saveAllForProject();
+                        break;
+                    case QMessageBox::No:
+                        mEditorList->clearProjectEditorsModified();
+                        mProject->setModified(false);
+                        mProject->saveLayout();
+                        break;
+                    case QMessageBox::Cancel:
+                        mProject->saveLayout();
+                        return;
+                    }
                 }
-            }
-        } else
-            mProject->saveAll(); // always save layout, but not when SaveAll has been called
+            } else
+                mProject->saveAll(); // always save layout, but not when SaveAll has been called
+        }
 
         mClosingProject=true;
-        mBookmarkModel->saveProjectBookmarks(
-                    changeFileExt(mProject->filename(), PROJECT_BOOKMARKS_EXT),
-                    mProject->directory());
 
-        mDebugger->saveForProject(
-                    changeFileExt(mProject->filename(), PROJECT_DEBUG_EXT),
-                    mProject->directory());
+        if (fileExists(mProject->directory())){
+            mBookmarkModel->saveProjectBookmarks(
+                        changeFileExt(mProject->filename(), PROJECT_BOOKMARKS_EXT),
+                        mProject->directory());
+
+            mDebugger->saveForProject(
+                        changeFileExt(mProject->filename(), PROJECT_DEBUG_EXT),
+                        mProject->directory());
+        }
 
         mClassBrowserModel.beginUpdate();
         // Remember it
@@ -5247,6 +5256,22 @@ void MainWindow::onFileChanged(const QString &path)
                 e->setModified(true);
             }
         }
+    }
+    mFilesChangedNotifying.remove(path);
+}
+
+void MainWindow::onDirChanged(const QString &path)
+{
+    if (mFilesChangedNotifying.contains(path))
+        return;
+    mFilesChangedNotifying.insert(path);
+    if (mProject && QString::compare(mProject->directory(),path,PATH_SENSITIVITY)==0
+            && !fileExists(path)) {
+        QMessageBox::information(this,tr("Project folder removed."),
+                                  tr("Folder for project '%1' was removed.").arg(path)
+                                 +"<BR /><BR />"
+                                 + tr("It will be closed."));
+        closeProject(false);
     }
     mFilesChangedNotifying.remove(path);
 }
