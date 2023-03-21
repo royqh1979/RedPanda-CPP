@@ -66,7 +66,7 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setFontSize(ui->sbFontSize->value());
     pSettings->debugger().setEnableDebugConsole(ui->grpEnableDebugConsole->isChecked());
     pSettings->debugger().setShowDetailLog(ui->chkShowDetailLog->isChecked());
-    pSettings->debugger().setOpenCPUInfoWhenSignaled(ui->chkShowCPUWhenSignaled);
+    pSettings->debugger().setOpenCPUInfoWhenSignaled(ui->chkShowCPUWhenSignaled->isChecked());
     pSettings->debugger().setUseIntelStyle(ui->rbIntel->isChecked());
     pSettings->debugger().setBlendMode(ui->chkBlendMode->isChecked());
     pSettings->debugger().setSkipSystemLibraries(ui->chkSkipSystemLib->isChecked());
@@ -77,6 +77,7 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setUseGDBServer(ui->grpUseGDBServer->isChecked());
 #endif
     pSettings->debugger().setGDBServerPort(ui->spinGDBServerPort->value());
+
     pSettings->debugger().setMemoryViewRows(ui->spinMemoryViewRows->value());
     pSettings->debugger().setMemoryViewColumns(ui->spinMemoryViewColumns->value());
     pSettings->debugger().setArrayElements(ui->spinArrayElements->value());
