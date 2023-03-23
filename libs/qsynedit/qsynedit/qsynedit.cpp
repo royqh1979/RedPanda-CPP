@@ -6352,7 +6352,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
         mDropped = true;
         return;
     }
-    if (coord.line<=0 || coord.line>=mDocument->lengthOfLongestLine()) {
+    if (coord.line<=0 || coord.line>=mDocument->count()) {
         //do nothing if drag out of range
         event->acceptProposedAction();
         mDropped = true;
