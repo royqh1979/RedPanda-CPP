@@ -6352,6 +6352,13 @@ void QSynEdit::dropEvent(QDropEvent *event)
         mDropped = true;
         return;
     }
+    if (coord.line<=0 || coord.line>=mDocument->lengthOfLongestLine()) {
+        //do nothing if drag out of range
+        event->acceptProposedAction();
+        mDropped = true;
+        return;
+    }
+
     int topLine = mTopLine;
     int leftChar = mLeftChar;
     QStringList text=splitStrings(event->mimeData()->text());
