@@ -124,6 +124,8 @@ QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const 
                            bool inheritEnvironment = false,
                            const QProcessEnvironment& env = QProcessEnvironment() );
 
+void openFileFolderInExplorer(const QString& path);
+
 void executeFile(const QString& fileName,
                  const QString& params,
                  const QString& workingDir,

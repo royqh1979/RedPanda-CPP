@@ -4546,16 +4546,7 @@ void MainWindow::onFilesViewOpenInExplorer()
 {
     QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
     if (!path.isEmpty()) {
-        QFileInfo info(path);
-        if (info.isFile()){
-            QDesktopServices::openUrl(
-                        QUrl("file:///"+
-                             includeTrailingPathDelimiter(info.path()),QUrl::TolerantMode));
-        } else if (info.isDir()){
-            QDesktopServices::openUrl(
-                        QUrl("file:///"+
-                             includeTrailingPathDelimiter(path),QUrl::TolerantMode));
-        }
+        openFileFolderInExplorer(path);
     }
 }
 
@@ -6718,12 +6709,13 @@ void MainWindow::on_actionOpen_Containing_Folder_triggered()
 {
     Editor* editor = mEditorList->getEditor();
     if (editor) {
-        QFileInfo info(editor->filename());
-        if (!info.path().isEmpty()) {
-            QDesktopServices::openUrl(
-                        QUrl("file:///"+
-                             includeTrailingPathDelimiter(info.path()),QUrl::TolerantMode));
-        }
+        openFileFolderInExplorer(editor->filename());
+//        QFileInfo info(editor->filename());
+//        if (!info.path().isEmpty()) {
+//            QDesktopServices::openUrl(
+//                        QUrl("file:///"+
+//                             includeTrailingPathDelimiter(info.path()),QUrl::TolerantMode));
+//        }
     }
 }
 

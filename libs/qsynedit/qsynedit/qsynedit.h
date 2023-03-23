@@ -472,6 +472,7 @@ protected:
 protected:
     void doSelectLine();
 private:
+    BufferCoord ensureBufferCoordValid(const BufferCoord& coord);
     void beginEditingWithoutUndo();
     void endEditingWithoutUndo();
     void clearAreaList(EditingAreaList areaList);

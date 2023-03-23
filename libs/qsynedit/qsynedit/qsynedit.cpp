@@ -230,24 +230,7 @@ void QSynEdit::setCaretXY(const BufferCoord &value)
 
 void QSynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
 {
-    int nMaxX;
-    if (value.line > mDocument->count())
-        value.line = mDocument->count();
-    if (mActiveSelectionMode!=SelectionMode::Column) {
-        if (value.line < 1) {
-            // this is just to make sure if Lines stringlist should be empty
-            value.line = 1;
-            if (!mOptions.testFlag(EditorOption::eoScrollPastEol)) {
-                nMaxX = 1;
-            } else {
-                nMaxX = getDisplayStringAtLine(value.line).length()+1;
-            }
-        } else {
-            nMaxX = getDisplayStringAtLine(value.line).length()+1;
-        }
-        value.ch = std::min(value.ch,nMaxX);
-    }
-    value.ch = std::max(value.ch,1);
+    value = ensureBufferCoordValid(value);
 //    if ((value.Char > nMaxX) && (! (mOptions.testFlag(SynEditorOption::eoScrollPastEol)) ) )
 //        value.Char = nMaxX;
 //    if (value.Char < 1)
@@ -2119,6 +2102,30 @@ void QSynEdit::doSelectLine()
     setCaretAndSelection(ptBegin,ptBegin,ptEnd);
 }
 
+BufferCoord QSynEdit::ensureBufferCoordValid(const BufferCoord &coord)
+{
+    int nMaxX;
+    BufferCoord value = coord;
+    if (value.line > mDocument->count())
+        value.line = mDocument->count();
+    if (mActiveSelectionMode!=SelectionMode::Column) {
+        if (value.line < 1) {
+            // this is just to make sure if Lines stringlist should be empty
+            value.line = 1;
+            if (!mOptions.testFlag(EditorOption::eoScrollPastEol)) {
+                nMaxX = 1;
+            } else {
+                nMaxX = getDisplayStringAtLine(value.line).length()+1;
+            }
+        } else {
+            nMaxX = getDisplayStringAtLine(value.line).length()+1;
+        }
+        value.ch = std::min(value.ch,nMaxX);
+    }
+    value.ch = std::max(value.ch,1);
+    return value;
+}
+
 void QSynEdit::doDuplicateLine()
 {
     if (!mReadOnly && (mDocument->count() > 0)) {
@@ -2126,9 +2133,9 @@ void QSynEdit::doDuplicateLine()
         if (foldRange && foldRange->collapsed)
             return;
         QString s = lineText();
+        beginEditing();
         mDocument->insertLine(mCaretY, lineText());
         doLinesInserted(mCaretY + 1, 1);
-        beginEditing();
         addCaretToUndo();
         mUndoList->addChange(ChangeReason::LineBreak,
                              BufferCoord{s.length()+1,mCaretY},
@@ -6352,12 +6359,12 @@ void QSynEdit::dropEvent(QDropEvent *event)
         mDropped = true;
         return;
     }
-    if (coord.line<=0 || coord.line>=mDocument->count()) {
-        //do nothing if drag out of range
-        event->acceptProposedAction();
-        mDropped = true;
-        return;
-    }
+//    if (coord.line<=0 || coord.line>=mDocument->count()) {
+//        //do nothing if drag out of range
+//        event->acceptProposedAction();
+//        mDropped = true;
+//        return;
+//    }
 
     int topLine = mTopLine;
     int leftChar = mLeftChar;
@@ -6368,6 +6375,21 @@ void QSynEdit::dropEvent(QDropEvent *event)
     addSelectionToUndo();
     internalSetCaretXY(coord);
     if (event->proposedAction() == Qt::DropAction::CopyAction) {
+        if (coord.line>mDocument->count()) {
+            int line=mDocument->count();
+            QString s=mDocument->getLine(line-1);
+            beginEditing();
+            mDocument->addLine("");
+
+            mUndoList->addChange(ChangeReason::LineBreak,
+                                 BufferCoord{s.length()+1,line},
+                                 BufferCoord{s.length()+1,line}, QStringList(), SelectionMode::Normal);
+            endEditing();
+            coord.line = line+1;
+            coord.ch=1;
+        } else {
+            coord = ensureBufferCoordValid(coord);
+        }
         //just copy it
         doInsertText(coord,text,mActiveSelectionMode,coord.line,coord.line+text.length()-1);
     } else if (event->proposedAction() == Qt::DropAction::MoveAction)  {
@@ -6377,6 +6399,21 @@ void QSynEdit::dropEvent(QDropEvent *event)
             //paste to new position
             doInsertText(coord,text,mActiveSelectionMode,coord.line,coord.line+text.length()-1);
         } else {
+            if (coord.line>mDocument->count()) {
+                int line=mDocument->count();
+                QString s=mDocument->getLine(line-1);
+                beginEditing();
+                mDocument->addLine("");
+
+                mUndoList->addChange(ChangeReason::LineBreak,
+                                     BufferCoord{s.length()+1,line},
+                                     BufferCoord{s.length()+1,line}, QStringList(), SelectionMode::Normal);
+                endEditing();
+                coord.line = line+1;
+                coord.ch=1;
+            } else {
+                coord = ensureBufferCoordValid(coord);
+            }
             //paste to new position
             doInsertText(coord,text,mActiveSelectionMode,coord.line,coord.line+text.length()-1);
             //delete old

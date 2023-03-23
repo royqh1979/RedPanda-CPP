@@ -5,6 +5,8 @@ Red Panda C++ Version 2.19
   - fix: Crash when a project is removed from the disk while it is openned in RedPanda-C++.
   - fix: The option "Open CPU info dialog when signal received" can't be correctly set in the options dialog's debugger page.
   - fix: Crash when drag the selection beyond the end of the document.
+  - enhancement: Drag the selection beyond the end of the document, and move/copy it beyond the last line.
+  - enhancement: Open Containing folder will auto select the file in windows file explore.
 
 Red Panda C++ Version 2.18
 

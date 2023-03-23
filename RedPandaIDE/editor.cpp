@@ -2708,6 +2708,7 @@ bool Editor::handleBraceCompletion()
         setSelText(text);
         processCommand(QSynedit::EditCommand::InsertLine);
     }
+
     processCommand(QSynedit::EditCommand::Char,'}');
     if (
         ( (s.startsWith("struct")

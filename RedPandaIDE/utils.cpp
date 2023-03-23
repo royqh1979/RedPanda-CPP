@@ -12,6 +12,7 @@
 #include "compiler/executablerunner.h"
 #include <QComboBox>
 #ifdef Q_OS_WIN
+#include <QDesktopServices>
 #include <windows.h>
 #endif
 
@@ -539,4 +540,29 @@ void saveComboHistory(QComboBox* cb,const QString& text) {
     }
     cb->insertItem(0,s);
     cb->setCurrentText(s);
+}
+
+void openFileFolderInExplorer(const QString &path)
+{
+    QFileInfo info(path);
+    if (info.isFile()){
+#ifdef Q_OS_WIN
+        QProcess process;
+        QStringList args;
+        QString filepath=info.absoluteFilePath().replace("/","\\");
+        args.append("/n,");
+        args.append("/select,");
+        args.append(QString("%1").arg(filepath));
+        process.startDetached("explorer.exe",args);
+#else
+        QDesktopServices::openUrl(
+                    QUrl("file:///"+
+                         includeTrailingPathDelimiter(info.path()),QUrl::TolerantMode));
+#endif
+    } else if (info.isDir()){
+        QDesktopServices::openUrl(
+                    QUrl("file:///"+
+                         includeTrailingPathDelimiter(path),QUrl::TolerantMode));
+    }
+
 }
