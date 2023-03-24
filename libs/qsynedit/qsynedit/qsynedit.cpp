@@ -6342,6 +6342,7 @@ void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
         internalSetCaretXY(coord);
         setBlockBegin(mDragSelBeginSave);
         setBlockEnd(mDragSelEndSave);
+        mDocument->addLine("");
         showCaret();
         computeScroll(true);
     }
@@ -6354,6 +6355,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
     BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
                                                                     event->pos().y()));
     if (coord>=mDragSelBeginSave && coord<=mDragSelEndSave) {
+        mDocument->deleteAt(mDocument->count()-1);
         //do nothing if drag onto itself
         event->acceptProposedAction();
         mDropped = true;
@@ -6365,31 +6367,21 @@ void QSynEdit::dropEvent(QDropEvent *event)
 //        mDropped = true;
 //        return;
 //    }
-
+    coord = ensureBufferCoordValid(coord);
     int topLine = mTopLine;
     int leftChar = mLeftChar;
+    int line=mDocument->count()-1;
+    QString s=mDocument->getLine(line-1);
     QStringList text=splitStrings(event->mimeData()->text());
     beginEditing();
+    mUndoList->addChange(ChangeReason::LineBreak,
+                         BufferCoord{s.length()+1,line},
+                         BufferCoord{s.length()+1,line}, QStringList(), SelectionMode::Normal);
     addLeftTopToUndo();
     addCaretToUndo();
     addSelectionToUndo();
     internalSetCaretXY(coord);
     if (event->proposedAction() == Qt::DropAction::CopyAction) {
-        if (coord.line>mDocument->count()) {
-            int line=mDocument->count();
-            QString s=mDocument->getLine(line-1);
-            beginEditing();
-            mDocument->addLine("");
-
-            mUndoList->addChange(ChangeReason::LineBreak,
-                                 BufferCoord{s.length()+1,line},
-                                 BufferCoord{s.length()+1,line}, QStringList(), SelectionMode::Normal);
-            endEditing();
-            coord.line = line+1;
-            coord.ch=1;
-        } else {
-            coord = ensureBufferCoordValid(coord);
-        }
         //just copy it
         doInsertText(coord,text,mActiveSelectionMode,coord.line,coord.line+text.length()-1);
     } else if (event->proposedAction() == Qt::DropAction::MoveAction)  {
@@ -6412,7 +6404,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
                 coord.line = line+1;
                 coord.ch=1;
             } else {
-                coord = ensureBufferCoordValid(coord);
+
             }
             //paste to new position
             doInsertText(coord,text,mActiveSelectionMode,coord.line,coord.line+text.length()-1);
@@ -6465,6 +6457,7 @@ void QSynEdit::dragMoveEvent(QDragMoveEvent *event)
 
 void QSynEdit::dragLeaveEvent(QDragLeaveEvent *)
 {
+    mDocument->deleteAt(mDocument->count()-1);
 //    setCaretXY(mDragCaretSave);
 //    setBlockBegin(mDragSelBeginSave);
 //    setBlockEnd(mDragSelEndSave);
