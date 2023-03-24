@@ -1930,10 +1930,14 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                         return;
                     }
                 }
+                bool isDestructor = false;
                 if (!sName.isEmpty()) {
                     if (sName.endsWith("::"))
                         sName+=mTokenizer[mIndex]->text;
-                    else {
+                    else if (sName.endsWith("~")) {
+                        isDestructor=true;
+                        sName+=mTokenizer[mIndex]->text;
+                    } else {
                         sType += " "+sName;
                         sName = mTokenizer[mIndex]->text;
                     }
@@ -1941,8 +1945,18 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                     sName = mTokenizer[mIndex]->text;
                 mIndex++;
 
-                handleMethod(StatementKind::skFunction,sType,
+                if (isDestructor)
+                    handleMethod(StatementKind::skDestructor,sType,
+                                 sName,mIndex,false,isFriend);
+                else {
+                    sType=sType.trimmed();
+                    if (sType.isEmpty())
+                        handleMethod(StatementKind::skConstructor,sType,
+                                 sName,mIndex,false,isFriend);
+                    else
+                        handleMethod(StatementKind::skFunction,sType,
                              sName,mIndex,isStatic,isFriend);
+                }
 
                 return;
             } else if (
@@ -1956,6 +1970,9 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
             } else if ( mTokenizer[mIndex + 1]->text == "::") {
                 sName = sName + mTokenizer[mIndex]->text+ "::";
                 mIndex+=2;
+            } else if (mTokenizer[mIndex]->text == "~") {
+                sName = sName + "~";
+                mIndex++;
             } else {
                 QString s = mTokenizer[mIndex]->text;
                 if (sName.endsWith("::")) {
@@ -3178,10 +3195,11 @@ bool CppParser::handleStatement()
         mIndex++;
     } else if (mTokenizer[mIndex]->text.startsWith('~')) {
         //it should be a destructor
-        if (mIndex+1<tokenCount
-                && mTokenizer[mIndex+1]->text=='(') {
+        if (mIndex+2<tokenCount
+                && isIdentChar(mTokenizer[mIndex+1]->text[0])
+                && mTokenizer[mIndex+2]->text=='(') {
             //dont further check to speed up
-            handleMethod(StatementKind::skDestructor, "", '~'+mTokenizer[mIndex]->text, mIndex+1, false, false);
+            handleMethod(StatementKind::skDestructor, "", '~'+mTokenizer[mIndex+1]->text, mIndex+2, false, false);
         } else {
             //error
             mIndex=moveToEndOfStatement(mIndex,false);

@@ -7,6 +7,7 @@ Red Panda C++ Version 2.19
   - fix: Crash when drag the selection beyond the end of the document.
   - enhancement: Drag the selection beyond the end of the document, and move/copy it beyond the last line.
   - enhancement: Open Containing folder will auto select the file in windows file explore.
+  - fix: Class constructor & destructor is not correctly handled.
 
 Red Panda C++ Version 2.18
 
