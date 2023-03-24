@@ -6342,7 +6342,7 @@ void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
         internalSetCaretXY(coord);
         setBlockBegin(mDragSelBeginSave);
         setBlockEnd(mDragSelEndSave);
-        mDocument->addLine("");
+        mDocument->addLine(""); //add a line to handle drag to the last
         showCaret();
         computeScroll(true);
     }
