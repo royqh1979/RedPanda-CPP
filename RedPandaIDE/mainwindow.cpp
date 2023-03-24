@@ -7006,6 +7006,7 @@ void MainWindow::on_actionRemove_from_project_triggered()
                               tr("Remove the file from disk?"),
                               QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes);
 
+    QList<PProjectUnit> units;
     foreach (const QModelIndex& index, ui->projectView->selectionModel()->selectedIndexes()){
         if (!index.isValid())
             continue;
@@ -7015,8 +7016,11 @@ void MainWindow::on_actionRemove_from_project_triggered()
         if (!folderNode)
             continue;
         PProjectUnit unit = folderNode->pUnit.lock();
+        units.append(unit);
+    }
+    for(PProjectUnit& unit: units) {
         mProject->removeUnit(unit, true, removeFile);
-    };
+    }
     mClassBrowserModel.beginUpdate();
     mClassBrowserModel.endUpdate();
     ui->projectView->selectionModel()->clearSelection();
