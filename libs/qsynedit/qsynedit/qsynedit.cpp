@@ -6368,15 +6368,19 @@ void QSynEdit::dropEvent(QDropEvent *event)
 //        return;
 //    }
     coord = ensureBufferCoordValid(coord);
+    bool lastLineUsed = coord.line == mDocument->count();
     int topLine = mTopLine;
     int leftChar = mLeftChar;
     int line=mDocument->count()-1;
     QString s=mDocument->getLine(line-1);
     QStringList text=splitStrings(event->mimeData()->text());
     beginEditing();
-    mUndoList->addChange(ChangeReason::LineBreak,
+    if (lastLineUsed)
+        mUndoList->addChange(ChangeReason::LineBreak,
                          BufferCoord{s.length()+1,line},
                          BufferCoord{s.length()+1,line}, QStringList(), SelectionMode::Normal);
+    else
+        mDocument->deleteAt(mDocument->count()-1);
     addLeftTopToUndo();
     addCaretToUndo();
     addSelectionToUndo();

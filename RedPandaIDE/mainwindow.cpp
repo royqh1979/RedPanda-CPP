@@ -52,8 +52,6 @@
 #include "visithistorymanager.h"
 #include "widgets/projectalreadyopendialog.h"
 #include "widgets/searchdialog.h"
-#include "widgets/replacedialog.h"
-
 
 #include <QCloseEvent>
 #include <QComboBox>
