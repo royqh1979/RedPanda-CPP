@@ -379,6 +379,7 @@
    <addaction name="actionNew"/>
    <addaction name="actionOpen"/>
    <addaction name="actionSave"/>
+   <addaction name="actionSaveAs"/>
    <addaction name="actionSaveAll"/>
   </widget>
   <widget class="QToolBar" name="toolbarCode">
@@ -2114,6 +2115,9 @@
    <property name="toolTip">
     <string>Save As</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
   </action>
   <action name="actionSaveAll">
    <property name="icon">
@@ -2125,7 +2129,7 @@
     <string>Save All</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+S</string>
+    <string>Ctrl+K, Ctrl+S</string>
    </property>
   </action>
   <action name="actionOptions">

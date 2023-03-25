@@ -33,6 +33,7 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
+
 };
 
 #endif // SHORTCUTINPUTEDIT_H

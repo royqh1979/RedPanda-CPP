@@ -46,6 +46,15 @@ void ToolsManager::load()
         item->parameters = "<EXENAME>";
         item->pauseAfterExit = false;
         mTools.append(item);
+//#ifdef Q_OS_WIN
+//        item = std::make_shared<ToolItem>();
+//        item->title = tr("Open compiled in explorer");
+//        item->program = "explorer.exe";
+//        item->workingDirectory = "<SOURCEPATH>";
+//        item->parameters = " /n, /select, <EXENAME>";
+//        item->pauseAfterExit = false;
+//        mTools.append(item);
+//#endif
         return;
     }
     //read config file

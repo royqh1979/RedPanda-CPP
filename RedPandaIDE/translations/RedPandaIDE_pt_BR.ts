@@ -5199,6 +5199,10 @@
         <source>It will be closed.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Ctrl+K, Ctrl+S</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>
@@ -7817,6 +7821,10 @@
     <message>
         <source>Write to tools config file &apos;%1&apos; failed.</source>
         <translation>Falha ao gravar o arquivo de configurações &apos;%1&apos;.</translation>
+    </message>
+    <message>
+        <source>Open compiled in explorer</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

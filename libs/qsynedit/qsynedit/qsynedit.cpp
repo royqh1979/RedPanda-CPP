@@ -1194,6 +1194,7 @@ void QSynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoor
 {
     incPaintLock();
     internalSetCaretXY(ptCaret);
+    setActiveSelectionMode(SelectionMode::Normal);
     setBlockBegin(ptSelBegin);
     setBlockEnd(ptSelEnd);
     decPaintLock();
@@ -2730,11 +2731,11 @@ void QSynEdit::doBlockUnindent()
     endEditing();
 }
 
-void QSynEdit::doAddChar(QChar AChar)
+void QSynEdit::doAddChar(const QChar& ch)
 {
     if (mReadOnly)
         return;
-    if (!AChar.isPrint() && AChar!='\t')
+    if (!ch.isPrint() && ch!='\t')
         return;
     //DoOnPaintTransient(ttBefore);
     //mCaretX will change after setSelLength;
@@ -2759,12 +2760,31 @@ void QSynEdit::doAddChar(QChar AChar)
         }
     }
 
-    if (isIdentChar(AChar)) {
-        doSetSelText(AChar);
-    } else if (AChar.isSpace()) {
+    QChar lastCh{0};
+    if (!selAvail()) {
+        PUndoItem undoItem = mUndoList->peekItem();
+        if (undoItem && undoItem->changeReason()==ChangeReason::Insert
+                && undoItem->changeEndPos().line == mCaretY
+                && undoItem->changeEndPos().ch == mCaretX
+                && undoItem->changeStartPos().line == mCaretY
+                && undoItem->changeStartPos().ch == mCaretX-1) {
+            QString s = mDocument->getLine(mCaretY-1);
+            int i=mCaretX-2;
+            if (i>=0 && i<s.length())
+                lastCh=s[i];
+        }
+    }
+    if (isIdentChar(ch)) {
+        if (!isIdentChar(lastCh)) {
+            mUndoList->addGroupBreak();
+        }
+        doSetSelText(ch);
+    } else if (ch.isSpace()) {
         // break group undo chain
-        mUndoList->addGroupBreak();
-        doSetSelText(AChar);
+        if (!lastCh.isSpace()) {
+            mUndoList->addGroupBreak();
+        }
+        doSetSelText(ch);
         // break group undo chain
 //        if (mActiveSelectionMode!=SynSelectionMode::smColumn)
 //            mUndoList->AddChange(SynChangeReason::crNothing,
@@ -2772,8 +2792,11 @@ void QSynEdit::doAddChar(QChar AChar)
 //                                 BufferCoord{0, 0},
 //                                 "", SynSelectionMode::smNormal);
     } else {
+        if (lastCh.isSpace() || isIdentChar(lastCh)) {
+            mUndoList->addGroupBreak();
+        }
         beginEditing();
-        doSetSelText(AChar);
+        doSetSelText(ch);
         int oldCaretX=mCaretX-1;
         int oldCaretY=mCaretY;
         // auto
@@ -2784,7 +2807,7 @@ void QSynEdit::doAddChar(QChar AChar)
                 && (oldCaretY<=mDocument->count()) ) {
 
             //unindent if ':' at end of the line
-            if (AChar == ':') {
+            if (ch == ':') {
                 QString line = mDocument->getLine(oldCaretY-1);
                 if (line.length() <= oldCaretX) {
                     int indentSpaces = calcIndentSpaces(oldCaretY,line+":", true);
@@ -2810,7 +2833,7 @@ void QSynEdit::doAddChar(QChar AChar)
                                     );
                     }
                 }
-            } else if (AChar == '*') {
+            } else if (ch == '*') {
                 QString line = mDocument->getLine(oldCaretY-1);
                 if (line.length() <= oldCaretX) {
                     int indentSpaces = calcIndentSpaces(oldCaretY,line+"*", true);
@@ -2836,12 +2859,12 @@ void QSynEdit::doAddChar(QChar AChar)
                                     );
                     }
                 }
-            } else if (AChar == '{' || AChar == '}' || AChar == '#') {
+            } else if (ch == '{' || ch == '}' || ch == '#') {
                 //Reindent line when add '{' '}' and '#' at the beginning
                 QString left = mDocument->getLine(oldCaretY-1).mid(0,oldCaretX-1);
                 // and the first nonblank char is this new {
                 if (left.trimmed().isEmpty()) {
-                    int indentSpaces = calcIndentSpaces(oldCaretY,AChar, true);
+                    int indentSpaces = calcIndentSpaces(oldCaretY,ch, true);
                     if (indentSpaces != leftSpaces(left)) {
                         QString right = mDocument->getLine(oldCaretY-1).mid(oldCaretX-1);
                         QString newLeft = GetLeftSpacing(indentSpaces,true);
@@ -6674,7 +6697,6 @@ void QSynEdit::clearSelection()
 
 void QSynEdit::setBlockEnd(BufferCoord value)
 {
-    //setActiveSelectionMode(mSelectionMode);
     value.line = minMax(value.line, 1, mDocument->count());
     if (mActiveSelectionMode == SelectionMode::Normal) {
       if (value.line >= 1 && value.line <= mDocument->count())
@@ -6782,7 +6804,6 @@ void QSynEdit::setBlockBegin(BufferCoord value)
 {
     int nInval1, nInval2;
     bool SelChanged;
-    //setActiveSelectionMode(mSelectionMode);
     value.line = minMax(value.line, 1, mDocument->count());
     if (mActiveSelectionMode == SelectionMode::Normal) {
         if (value.line >= 1 && value.line <= mDocument->count())

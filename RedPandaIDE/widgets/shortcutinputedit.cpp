@@ -31,6 +31,7 @@ ShortcutInputEdit::ShortcutInputEdit(QWidget* parent):QLineEdit(parent)
 
 void ShortcutInputEdit::keyPressEvent(QKeyEvent *event)
 {
+    QString lastKeys=text();
     if (event->key()==Qt::Key_Delete && event->modifiers()==Qt::NoModifier) {
         setText("");
     } else if (event->key()==Qt::Key_Backspace && event->modifiers()==Qt::NoModifier) {
@@ -66,11 +67,13 @@ void ShortcutInputEdit::keyPressEvent(QKeyEvent *event)
                 && event->text().at(0).unicode()<127) {
             s = s.mid(0,s.lastIndexOf('+')+1) + event->text().at(0);
         }
+        if (!lastKeys.isEmpty())
+            s=lastKeys+","+s;
         setText(s);
-        if (key!=Qt::Key_Tab
-                && key!=Qt::Key_Enter
-                && key!=Qt::Key_Return)
-            emit inputFinished(this);
+//        if (key!=Qt::Key_Tab
+//                && key!=Qt::Key_Enter
+//                && key!=Qt::Key_Return)
+//            emit inputFinished(this);
     }
     event->accept();
 }
@@ -78,7 +81,10 @@ void ShortcutInputEdit::keyPressEvent(QKeyEvent *event)
 bool ShortcutInputEdit::event(QEvent *event)
 {
     if (event->type()==QEvent::ShortcutOverride) {
-        keyPressEvent((QKeyEvent*)event);
+        QKeyEvent* keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->key()==Qt::Key_Tab)
+            keyPressEvent((QKeyEvent*)event);
+
         event->accept();
         return true;
     } else if (event->type()==QEvent::KeyPress) {

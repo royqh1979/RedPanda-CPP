@@ -600,7 +600,7 @@ private:
     void doShiftTabKey();
     void doBlockIndent();
     void doBlockUnindent();
-    void doAddChar(QChar AChar);
+    void doAddChar(const QChar& ch);
     void doCutToClipboard();
     void doCopyToClipboard();
     void internalDoCopyToClipboard(const QString& s);

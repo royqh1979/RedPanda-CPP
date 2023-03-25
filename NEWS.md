@@ -9,6 +9,11 @@ Red Panda C++ Version 2.19
   - enhancement: Open Containing folder will auto select the file in windows file explore.
   - fix: Class constructor & destructor is not correctly handled.
   - fix: Remove multiple files in the project panel is not correctly handled.
+  - fix: Reformat code when select contents in column mode will mess up the document.
+  - enhancement: Add "save as" icon to the toolbar.
+  - enhancement: Use key sequences as shortcut to actions in the options dialog's environment->shortcut page.
+  - change: Use ctrl+shift+S as the shortcut for "save as".
+  - change: Use ctrl+K,ctrl+S as the shortcut for "save all".
 
 Red Panda C++ Version 2.18
 
