@@ -4956,7 +4956,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../mainwindow.ui" line="2132"/>
         <source>Ctrl+K, Ctrl+S</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2259"/>
@@ -10765,7 +10765,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../toolsmanager.cpp" line="51"/>
         <source>Open compiled in explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>在文件管理器中打开编译结果</translation>
     </message>
     <message>
         <location filename="../toolsmanager.cpp" line="64"/>

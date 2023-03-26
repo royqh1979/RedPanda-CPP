@@ -231,6 +231,8 @@ public:
 
     void switchCurrentStackTrace(int idx);
 
+    static CompileSuccessionTaskType runTypeToCompileSuccessionTaskType(RunType runType);
+
 public slots:
     void logToolsOutput(const QString& msg);
     void onCompileIssue(PCompileIssue issue);

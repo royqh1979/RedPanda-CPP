@@ -14,6 +14,7 @@ Red Panda C++ Version 2.19
   - enhancement: Use key sequences as shortcut to actions in the options dialog's environment->shortcut page.
   - change: Use ctrl+shift+S as the shortcut for "save as".
   - change: Use ctrl+K,ctrl+S as the shortcut for "save all".
+  - fix: "Run all problem cases" with project is not correctly handled.
 
 Red Panda C++ Version 2.18
 

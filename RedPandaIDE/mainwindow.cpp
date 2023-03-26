@@ -2088,7 +2088,7 @@ void MainWindow::runExecutable(RunType runType)
             //if project options changed, or units added/removed
             //mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-            mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+            mCompileSuccessionTask->type = runTypeToCompileSuccessionTaskType(runType);
             mCompileSuccessionTask->execName=mProject->executable();
             mCompileSuccessionTask->isExecutable=true;
             mCompileSuccessionTask->binDirs=binDirs;
@@ -2099,7 +2099,7 @@ void MainWindow::runExecutable(RunType runType)
             //if units modified;
             //mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
-            mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+            mCompileSuccessionTask->type = runTypeToCompileSuccessionTaskType(runType);
             mCompileSuccessionTask->execName=mProject->executable();
             mCompileSuccessionTask->isExecutable=true;
             mCompileSuccessionTask->binDirs=binDirs;
@@ -7902,16 +7902,7 @@ void MainWindow::doCompileRun(RunType runType)
     }
     mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
     mCompileSuccessionTask->binDirs=binDirs;
-    switch (runType) {
-    case RunType::CurrentProblemCase:
-        mCompileSuccessionTask->type = CompileSuccessionTaskType::RunCurrentProblemCase;
-        break;
-    case RunType::ProblemCases:
-        mCompileSuccessionTask->type = CompileSuccessionTaskType::RunProblemCases;
-        break;
-    default:
-        mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
-    }
+    mCompileSuccessionTask->type = runTypeToCompileSuccessionTaskType(runType);
     compile();
 }
 
@@ -8547,6 +8538,18 @@ void MainWindow::switchCurrentStackTrace(int idx)
         }
     }
 
+}
+
+MainWindow::CompileSuccessionTaskType MainWindow::runTypeToCompileSuccessionTaskType(RunType runType)
+{
+    switch (runType) {
+    case RunType::CurrentProblemCase:
+        return CompileSuccessionTaskType::RunCurrentProblemCase;
+    case RunType::ProblemCases:
+        return CompileSuccessionTaskType::RunProblemCases;
+    default:
+        return CompileSuccessionTaskType::RunNormal;
+    }
 }
 
 
