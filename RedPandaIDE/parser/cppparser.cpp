@@ -5061,6 +5061,13 @@ PEvalStatement CppParser::doCreateEvalVariable(
                 pointerLevel,
                 templateParams);
     }
+    if (!varStatement->args.isEmpty()) {
+        int j = 0;
+        while ((j = varStatement->args.indexOf("[", j)) != -1) {
+            ++j;
+            pointerLevel++;
+        }
+    }
 //    qDebug()<<"parse ..."<<baseType<<pointerLevel;
     return std::make_shared<EvalStatement>(
                 baseType,
