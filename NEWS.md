@@ -15,6 +15,7 @@ Red Panda C++ Version 2.19
   - change: Use ctrl+shift+S as the shortcut for "save as".
   - change: Use ctrl+K,ctrl+S as the shortcut for "save all".
   - fix: "Run all problem cases" with project is not correctly handled.
+  - fix: When adding files to project and there'are duplicates, the warning info is not complete.
 
 Red Panda C++ Version 2.18
 

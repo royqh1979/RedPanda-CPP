@@ -1266,7 +1266,7 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
     if (fileAlreadyExists(inFileName)) {
         QMessageBox::critical(nullptr,
                                  tr("File Exists"),
-                                 tr("File '%1' is already in the project"),
+                                 tr("File '%1' is already in the project").arg(inFileName),
                               QMessageBox::Ok);
         return PProjectUnit();
     }
