@@ -17,6 +17,7 @@ Red Panda C++ Version 2.19
   - fix: "Run all problem cases" with project is not correctly handled.
   - fix: When adding files to project and there'are duplicates, the warning info is not complete.
   - enhancement: Improve code completion suggestion for arrays.
+  - fix: File's real encoding is not correctly calculated when save it using system default encoding.
 
 Red Panda C++ Version 2.18
 
