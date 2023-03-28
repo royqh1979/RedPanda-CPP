@@ -3,6 +3,7 @@
 #include <QDate>
 #include <QDateTime>
 #include <QApplication>
+#include <QDesktopServices>
 #include "editor.h"
 #include "editorlist.h"
 #include "settings.h"
