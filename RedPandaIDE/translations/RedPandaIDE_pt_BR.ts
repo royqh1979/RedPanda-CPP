@@ -760,7 +760,7 @@
         <translation type="unfinished">MB</translation>
     </message>
     <message>
-        <source>Syntax error for objects larger than</source>
+        <source>Syntax error for stack frame larger than</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7821,10 +7821,6 @@
     <message>
         <source>Write to tools config file &apos;%1&apos; failed.</source>
         <translation>Falha ao gravar o arquivo de configurações &apos;%1&apos;.</translation>
-    </message>
-    <message>
-        <source>Open compiled in explorer</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

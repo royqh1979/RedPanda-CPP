@@ -424,9 +424,9 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
                 result += " "+ parseMacros(param);
         }
     } else {
-        if (compilerSet()->maxObjectSize()>0 && compilerSet()->warnLargeObject()) {
-            long long size = std::ceil(compilerSet()->maxObjectSize()*1024*1024);
-            result += QString(" -Werror=larger-than-%1").arg(size);
+        if (compilerSet()->maxFrameSize()>0 && compilerSet()->warnLargeFrame()) {
+            long long size = std::ceil(compilerSet()->maxFrameSize()*1024*1024);
+            result += QString(" -Werror=frame-larger-than=%1").arg(size);
         }
     }
     return result;
@@ -469,9 +469,9 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
                 result += " "+ parseMacros(param);
         }
     } else {
-        if (compilerSet()->maxObjectSize()>0 && compilerSet()->warnLargeObject()) {
-            long long size = std::ceil(compilerSet()->maxObjectSize()*1024*1024);
-            result += QString(" -Werror=larger-than-%1").arg(size);
+        if (compilerSet()->maxFrameSize()>0 && compilerSet()->warnLargeFrame()) {
+            long long size = std::ceil(compilerSet()->maxFrameSize()*1024*1024);
+            result += QString(" -Werror=frame-larger-than=%1").arg(size);
         }
     }
     return result;

@@ -189,7 +189,7 @@
           <item>
            <widget class="QCheckBox" name="chkWarnLargeObject">
             <property name="text">
-             <string>Syntax error for objects larger than</string>
+             <string>Syntax error for stack frame larger than</string>
             </property>
            </widget>
           </item>

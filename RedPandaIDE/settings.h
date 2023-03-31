@@ -1427,11 +1427,11 @@ public:
         bool isOutputExecutable();
         bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
 
-        double maxObjectSize() const;
-        void setMaxObjectSize(double maxObjectSize);
+        double maxFrameSize() const;
+        void setMaxFrameSize(double maxFrameSize);
 
-        bool warnLargeObject() const;
-        void setWarnLargeObject(bool newWarnLargeObject);
+        bool warnLargeFrame() const;
+        void setWarnLargeFrame(bool newWarnLargeObject);
 
     private:
         void setDirectories(const QString& binDir, CompilerType mCompilerType);
@@ -1478,7 +1478,7 @@ public:
         bool mAutoAddCharsetParams;
         QString mExecCharset;
         bool mStaticLink;
-        double mMaxObjectSize;
+        double mMaxFrameSize;
         bool mWarnLargeObject;
 
         QString mPreprocessingSuffix;

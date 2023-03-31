@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.20
+ 
+  - change: Change compiler set option "Syntax error when object larger than" to "Syntax error when function frame larger than"
+  - fix: Projects created by some templates are not correct when editor's default encoding is not utf8.
+
 Red Panda C++ Version 2.19
 
   - fix: Crash when directive line ends with '\' and at the last line.

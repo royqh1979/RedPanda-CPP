@@ -8,7 +8,7 @@ isEmpty(APP_NAME) {
 }
 
 isEmpty(APP_VERSION) {
-    APP_VERSION = 2.19
+    APP_VERSION = 2.20
 }
 
 contains(QMAKE_HOST.arch, x86_64):{

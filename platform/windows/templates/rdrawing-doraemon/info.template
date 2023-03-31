@@ -17,4 +17,5 @@ UnitCount=1
 Type=1
 IsCpp=0
 linker=-lrdrawing -lraylib -lopengl32 -lgdi32 -lwinmm
+Encoding=UTF-8
 ExecEncoding=UTF-8

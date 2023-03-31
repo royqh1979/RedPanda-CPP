@@ -88,8 +88,8 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->txtCustomLinkParams->setEnabled(pSet->useCustomLinkParams());
     ui->chkAutoAddCharset->setChecked(pSet->autoAddCharsetParams());
     ui->chkStaticLink->setChecked(pSet->staticLink());
-    ui->spinMaxObjectSize->setValue(pSet->maxObjectSize());
-    ui->chkWarnLargeObject->setChecked(pSet->warnLargeObject());
+    ui->spinMaxObjectSize->setValue(pSet->maxFrameSize());
+    ui->chkWarnLargeObject->setChecked(pSet->warnLargeFrame());
     //rest tabs in the options widget
 
     ui->optionTabs->resetUI(pSet,pSet->compileOptions());
@@ -201,8 +201,8 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     pSet->setCustomLinkParams(ui->txtCustomLinkParams->toPlainText().trimmed());
     pSet->setAutoAddCharsetParams(ui->chkAutoAddCharset->isChecked());
     pSet->setStaticLink(ui->chkStaticLink->isChecked());
-    pSet->setMaxObjectSize(ui->spinMaxObjectSize->value());
-    pSet->setWarnLargeObject(ui->chkWarnLargeObject->isChecked());
+    pSet->setMaxFrameSize(ui->spinMaxObjectSize->value());
+    pSet->setWarnLargeFrame(ui->chkWarnLargeObject->isChecked());
 
     pSet->setCCompiler(ui->txtCCompiler->text().trimmed());
     pSet->setCppCompiler(ui->txtCppCompiler->text().trimmed());

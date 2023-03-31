@@ -657,7 +657,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Syntax error for objects larger than</source>
+        <source>Syntax error for stack frame larger than</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7156,10 +7156,6 @@
     </message>
     <message>
         <source>Write to tools config file &apos;%1&apos; failed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open compiled in explorer</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
