@@ -2,6 +2,7 @@ Red Panda C++ Version 2.20
  
   - change: Change compiler set option "Syntax error when object larger than" to "Syntax error when function frame larger than"
   - fix: Projects created by some templates are not correct when editor's default encoding is not utf8.
+  - fix: File/Project visit histories are not correctly saved when clearing.
 
 Red Panda C++ Version 2.19
 

@@ -28,11 +28,13 @@ const QList<PVisitRecord> &VisitHistoryManager::projects() const
 void VisitHistoryManager::clearFiles()
 {
     mFiles.clear();
+    save();
 }
 
 void VisitHistoryManager::clearProjects()
 {
     mProjects.clear();
+    save();
 }
 
 static int indexOf(const QList<PVisitRecord> &list, const QString& filename) {
