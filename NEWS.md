@@ -4,6 +4,7 @@ Red Panda C++ Version 2.20
   - fix: Projects created by some templates are not correct when editor's default encoding is not utf8.
   - fix: File/Project visit histories are not correctly saved when clearing.
   - change: Default max function frame size is 2MB under windows / 8MB others.
+  - fix: Octal numeric escape sequences is not correctly syntax highlighted.
 
 Red Panda C++ Version 2.19
 

@@ -1177,7 +1177,13 @@ void CppSyntaxer::procStringEscapeSeq()
         case '5':
         case '6':
         case '7':
-            mRun+=3;
+            for (int i=0;i<3;i++) {
+                if (mRun>=mLineSize ||
+                   (mLine[mRun]<'0' || mLine[mRun]>'7')
+                   )
+                    break;
+                mRun+=1;
+            }
             break;
         case '8':
         case '9':
@@ -1190,6 +1196,14 @@ void CppSyntaxer::procStringEscapeSeq()
                    (mLine[mRun]>='0' && mLine[mRun]<='9')
                  ||  (mLine[mRun]>='a' && mLine[mRun]<='f')
                  ||  (mLine[mRun]>='A' && mLine[mRun]<='F')
+                   ))  {
+                mRun+=1;
+            }
+            break;
+        case 'o':
+            mRun+=1;
+            while (mRun<mLineSize && (
+                   (mLine[mRun]>='0' && mLine[mRun]<='7')
                    ))  {
                 mRun+=1;
             }
