@@ -2758,7 +2758,11 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
     pSet->setCompileOption(LINK_CMD_OPT_STRIP_EXE, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
     pSet->setStaticLink(true);
-    pSet->setMaxFrameSize(2); //default stack size of gcc is 2MB
+#ifdef Q_OS_WIN
+    pSet->setMaxFrameSize(2); //default stack size of gcc is 2MB on windows
+#else
+    pSet->setMaxFrameSize(8);
+#endif
     pSet->setWarnLargeFrame(false);
 }
 
@@ -2779,7 +2783,11 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
     pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
     pSet->setStaticLink(false);
 
-    pSet->setMaxFrameSize(2); //default stack size of gcc is 2MB
+#ifdef Q_OS_WIN
+    pSet->setMaxFrameSize(2); //default stack size of gcc is 2MB on windows
+#else
+    pSet->setMaxFrameSize(8);
+#endif
     pSet->setWarnLargeFrame(true);
 }
 
@@ -3208,7 +3216,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset", true).toBool());
     pSet->setStaticLink(mSettings->mSettings.value("StaticLink", false).toBool());
-    pSet->setMaxFrameSize(mSettings->mSettings.value("MaxFrameSize", 1).toDouble());
+    pSet->setMaxFrameSize(mSettings->mSettings.value("MaxFrameSize", 2).toDouble());
     pSet->setWarnLargeFrame(mSettings->mSettings.value("WarnLargeFrame", false).toBool());
 
     pSet->setExecCharset(mSettings->mSettings.value("ExecCharset", ENCODING_SYSTEM_DEFAULT).toString());
