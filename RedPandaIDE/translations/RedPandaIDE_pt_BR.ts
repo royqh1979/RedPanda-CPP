@@ -4241,7 +4241,7 @@
     </message>
     <message>
         <source>Enable debugging</source>
-        <translation>Habilitar depuração</translation>
+        <translation type="vanished">Habilitar depuração</translation>
     </message>
     <message>
         <source>You have not enabled debugging info (-g3) and/or stripped it from the executable (-s) in Compiler Options.&lt;BR /&gt;&lt;BR /&gt;Do you want to correct this now?</source>
@@ -5080,51 +5080,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Correct compiler setting</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You are using a Debug compiler set with wrong compile/link settings: </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source> - &quot;Generate debug info (-g3)&quot; should be turned on</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source> - &quot;Strip executable (-s)&quot; should be turned off</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do you want to correct it now?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Can&apos;t Debug</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your compiler set&apos;s &quot;Strip executable (-s)&quot; options is turnned on</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please correct it, recompile and retry debug.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The generated executable doesn&apos;t have symbol table, and can&apos;t be debugged.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Debug Failed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The executable doesn&apos;t have symbol table, and can&apos;t be debugged.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please turn off your compiler set&apos;s &quot;Strip executable (-s)&quot; option, recompile and retry debug.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5201,6 +5157,38 @@
     </message>
     <message>
         <source>Ctrl+K, Ctrl+S</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Correct compile settings for debug</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The generated executable won&apos;t have debug symbol infos, and can&apos;t be debugged.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Or you can manually change the following settings in the options dialog&apos;s compiler set page:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Turned on the &quot;Generate debug info (-g3)&quot; option.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Turned off the &quot;Strip executable (-s)&quot; option.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Turned off the &quot;Optimization level (-O)&quot; option or set it to &quot;Debug (-Og)&quot;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you are using the Release compiler set, please use choose the Debug version from toolbar.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to mannually change the compiler set settings now?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

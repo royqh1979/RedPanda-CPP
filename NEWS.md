@@ -5,6 +5,8 @@ Red Panda C++ Version 2.20
   - fix: File/Project visit histories are not correctly saved when clearing.
   - change: Default max function frame size is 2MB under windows / 8MB others.
   - fix: Octal numeric escape sequences is not correctly syntax highlighted.
+  - enhancement: Refine suggestion info when try debug and the compiler settings are not correct.
+  - enhancement: Open the options dialog/project options dialog when user want to correct compiler settings for debug.
 
 Red Panda C++ Version 2.19
 
