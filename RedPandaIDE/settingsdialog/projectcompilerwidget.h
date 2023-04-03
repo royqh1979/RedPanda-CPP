@@ -37,6 +37,7 @@ private:
 private:
     Ui::ProjectCompilerWidget *ui;
     QMap<QString,QString> mOptions;
+    bool mInitialized;
 
     // SettingsWidget interface
 protected:

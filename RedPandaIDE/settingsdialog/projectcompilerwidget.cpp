@@ -20,11 +20,13 @@
 #include "../project.h"
 #include "../mainwindow.h"
 #include <qt_utils/charsetinfo.h>
+#include <QMessageBox>
 
 ProjectCompilerWidget::ProjectCompilerWidget(const QString &name, const QString &group, QWidget *parent) :
     SettingsWidget(name,group,parent),
     ui(new Ui::ProjectCompilerWidget)
 {
+    mInitialized=false;
     ui->setupUi(this);
 }
 
@@ -77,6 +79,7 @@ void ProjectCompilerWidget::doLoad()
     ui->cbCompilerSet->setCurrentIndex(pMainWindow->project()->options().compilerSet);
     ui->chkAddCharset->setChecked(pMainWindow->project()->options().addCharset);
     ui->chkStaticLink->setChecked(pMainWindow->project()->options().staticLink);
+    mInitialized=true;
 }
 
 void ProjectCompilerWidget::doSave()
@@ -115,9 +118,28 @@ void ProjectCompilerWidget::init()
     SettingsWidget::init();
 }
 
-void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int)
+void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int index)
 {
-    refreshOptions();
+    std::shared_ptr<Project> project = pMainWindow->project();
+    auto action = finally([this]{
+        this->refreshOptions();
+    });
+    if (!mInitialized || index==project->options().compilerSet) {
+        return;
+    }
+    if (QMessageBox::warning(
+                this,
+                MainWindow::tr("Change Project Compiler Set"),
+                MainWindow::tr("Change the project's compiler set will lose all custom compiler set options.")
+                +"<br />"
+                + MainWindow::tr("Do you really want to do that?"),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No) != QMessageBox::Yes) {
+        ui->cbCompilerSet->setCurrentIndex(project->options().compilerSet);
+        return;
+    }
+    project->setCompilerSet(index);
+    project->saveOptions();
 }
 
 void ProjectCompilerWidget::on_cbEncoding_currentTextChanged(const QString &/*arg1*/)

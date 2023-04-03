@@ -7,6 +7,8 @@ Red Panda C++ Version 2.20
   - fix: Octal numeric escape sequences is not correctly syntax highlighted.
   - enhancement: Refine suggestion info when try debug and the compiler settings are not correct.
   - enhancement: Open the options dialog/project options dialog when user want to correct compiler settings for debug.
+  - enhancement: Open project's option dialog instead of the option dialog, when click the compiler set settings button in the toolbar and the current editor is for project.
+  - enhancement: Reset project compile options when change compiler set in the project options dialog.
 
 Red Panda C++ Version 2.19
 

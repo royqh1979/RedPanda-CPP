@@ -5191,6 +5191,10 @@
         <source>Do you want to mannually change the compiler set settings now?</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>You should recompile after change the compiler set or it&apos;s settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>

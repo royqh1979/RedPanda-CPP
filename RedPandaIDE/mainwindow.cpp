@@ -2198,6 +2198,8 @@ void MainWindow::debug()
                                   +"<BR />"
                                   +tr(" - Turned off the \"Optimization level (-O)\" option or set it to \"Debug (-Og)\".")
                                   +"<BR /><BR />"
+                                  +tr("You should recompile after change the compiler set or it's settings.")
+                                  +"<BR /><BR />"
                                   +tr("Do you want to mannually change the compiler set settings now?")
                                   )== QMessageBox::Yes) {
                 changeProjectOptions(
@@ -2299,18 +2301,20 @@ void MainWindow::debug()
             if (stripEnabled && !debugEnabled) {
                 if (QMessageBox::question(this,
                                       tr("Correct compile settings for debug"),
-                                      tr("The generated executable won't have debug symbol infos, and can't be debugged.")
-                                      +"<BR /><BR />"
-                                      +tr("If you are using the Release compiler set, please use choose the Debug version from toolbar.")
-                                      +"<BR /><BR />"
-                                      +tr("Or you can manually change the following settings in the options dialog's compiler set page:")
-                                      +"<BR />"
-                                      +tr(" - Turned on the \"Generate debug info (-g3)\" option.")
-                                      +"<BR />"
-                                      +tr(" - Turned off the \"Strip executable (-s)\" option.")
-                                      +"<BR />"
-                                      +tr(" - Turned off the \"Optimization level (-O)\" option or set it to \"Debug (-Og)\".")
-                                      +"<BR /><BR />"
+                                          tr("The generated executable won't have debug symbol infos, and can't be debugged.")
+                                          +"<BR /><BR />"
+                                          +tr("If you are using the Release compiler set, please use choose the Debug version from toolbar.")
+                                          +"<BR /><BR />"
+                                          +tr("Or you can manually change the following settings in the options dialog's compiler set page:")
+                                          +"<BR />"
+                                          +tr(" - Turned on the \"Generate debug info (-g3)\" option.")
+                                          +"<BR />"
+                                          +tr(" - Turned off the \"Strip executable (-s)\" option.")
+                                          +"<BR />"
+                                          +tr(" - Turned off the \"Optimization level (-O)\" option or set it to \"Debug (-Og)\".")
+                                          +"<BR /><BR />"
+                                          +tr("You should recompile after change the compiler set or it's settings.")
+                                          +"<BR /><BR />"
                                           +tr("Do you want to mannually change the compiler set settings now?")
                                       )== QMessageBox::Yes) {
                     changeOptions(
@@ -5036,33 +5040,38 @@ void MainWindow::stopDebugForNoSymbolTable()
 {
     mDebugger->stop();
     if (QMessageBox::question(this,
-                          tr("Correct compile settings for debug"),
-                          tr("The executable doesn't have symbol table, and can't be debugged.")
-                          +"<BR /><BR />"
-                          +tr("If you are using the Release compiler set, please use choose the Debug version from toolbar.")
-                          +"<BR /><BR />"
-                          +tr("Or you can manually change the following settings in the options dialog's compiler set page:")
-                          +"<BR />"
-                          +tr(" - Turned on the \"Generate debug info (-g3)\" option.")
-                          +"<BR />"
-                          +tr(" - Turned off the \"Strip executable (-s)\" option.")
-                          +"<BR />"
-                          +tr(" - Turned off the \"Optimization level (-O)\" option or set it to \"Debug (-Og)\".")
-                          +"<BR /><BR />"
+                              tr("Correct compile settings for debug"),
+                              tr("The executable doesn't have symbol table, and can't be debugged.")
+                              +"<BR /><BR />"
+                              +tr("If you are using the Release compiler set, please use choose the Debug version from toolbar.")
+                              +"<BR /><BR />"
+                              +tr("Or you can manually change the following settings in the options dialog's compiler set page:")
+                              +"<BR />"
+                              +tr(" - Turned on the \"Generate debug info (-g3)\" option.")
+                              +"<BR />"
+                              +tr(" - Turned off the \"Strip executable (-s)\" option.")
+                              +"<BR />"
+                              +tr(" - Turned off the \"Optimization level (-O)\" option or set it to \"Debug (-Og)\".")
+                              +"<BR /><BR />"
+                              +tr("You should recompile after change the compiler set or it's settings.")
+                              +"<BR /><BR />"
+                              +tr("You should recompile after change the compiler set or it's settings.")
+                              +"<BR /><BR />"
                               +tr("Do you want to mannually change the compiler set settings now?")
                           )== QMessageBox::Yes) {
-        Editor * editor = mEditorList->getEditor();
-        if (editor && editor->inProject()) {
-            changeProjectOptions(
-                       SettingsDialog::tr("Compiler Set"),
-                       SettingsDialog::tr("Project")
-                       );
-        } else {
-            changeOptions(
-                       SettingsDialog::tr("Compiler Set"),
-                       SettingsDialog::tr("Compiler")
-                       );
-        }
+        on_actionCompiler_Options_triggered();
+//        Editor * editor = mEditorList->getEditor();
+//        if (!mProject || (editor && !editor->inProject())) {
+//            changeOptions(
+//                       SettingsDialog::tr("Compiler Set"),
+//                       SettingsDialog::tr("Compiler")
+//                       );
+//        } else {
+//            changeProjectOptions(
+//                       SettingsDialog::tr("Compiler Set"),
+//                       SettingsDialog::tr("Project")
+//                       );
+//        }
     }
 }
 
@@ -9440,10 +9449,18 @@ void MainWindow::on_actionEncode_in_UTF_8_BOM_triggered()
 
 void MainWindow::on_actionCompiler_Options_triggered()
 {
-    changeOptions(
-                SettingsDialog::tr("Compiler Set"),
-                SettingsDialog::tr("Compiler")
-                );
+    Editor * editor = mEditorList->getEditor();
+    if (!mProject || (editor && !editor->inProject())) {
+        changeOptions(
+                   SettingsDialog::tr("Compiler Set"),
+                   SettingsDialog::tr("Compiler")
+                   );
+    } else {
+        changeProjectOptions(
+                   SettingsDialog::tr("Compiler Set"),
+                   SettingsDialog::tr("Project")
+                   );
+    }
 }
 
 void MainWindow::on_dockExplorer_dockLocationChanged(const Qt::DockWidgetArea &area)
