@@ -1427,12 +1427,6 @@ public:
         bool isOutputExecutable();
         bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
 
-        double maxFrameSize() const;
-        void setMaxFrameSize(double maxFrameSize);
-
-        bool warnLargeFrame() const;
-        void setWarnLargeFrame(bool newWarnLargeObject);
-
     private:
         void setDirectories(const QString& binDir, CompilerType mCompilerType);
         //load hard defines
@@ -1478,8 +1472,6 @@ public:
         bool mAutoAddCharsetParams;
         QString mExecCharset;
         bool mStaticLink;
-        double mMaxFrameSize;
-        bool mWarnLargeObject;
 
         QString mPreprocessingSuffix;
         QString mCompilationProperSuffix;

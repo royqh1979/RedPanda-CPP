@@ -1,9 +1,8 @@
 Red Panda C++ Version 2.20
  
-  - change: Change compiler set option "Syntax error when object larger than" to "Syntax error when function frame larger than"
+  - change: Remove the compiler set option "Syntax error when object larger than"
   - fix: Projects created by some templates are not correct when editor's default encoding is not utf8.
   - fix: File/Project visit histories are not correctly saved when clearing.
-  - change: Default max function frame size is 2MB under windows / 8MB others.
   - fix: Octal numeric escape sequences is not correctly syntax highlighted.
   - enhancement: Refine suggestion info when try debug and the compiler settings are not correct.
   - enhancement: Open the options dialog/project options dialog when user want to correct compiler settings for debug.

@@ -1669,8 +1669,6 @@ Settings::CompilerSet::CompilerSet():
     mAutoAddCharsetParams{false},
     mExecCharset{ENCODING_SYSTEM_DEFAULT},
     mStaticLink{false},
-    mMaxFrameSize{0},
-    mWarnLargeObject{false},
     mPreprocessingSuffix{DEFAULT_PREPROCESSING_SUFFIX},
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
@@ -1685,8 +1683,6 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mAutoAddCharsetParams{true},
     mExecCharset{ENCODING_SYSTEM_DEFAULT},
     mStaticLink{true},
-    mMaxFrameSize{0},
-    mWarnLargeObject{false},
     mPreprocessingSuffix{DEFAULT_PREPROCESSING_SUFFIX},
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
@@ -1742,8 +1738,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mAutoAddCharsetParams{set.mAutoAddCharsetParams},
     mExecCharset{set.mExecCharset},
     mStaticLink{set.mStaticLink},
-    mMaxFrameSize{set.mMaxFrameSize},
-    mWarnLargeObject{set.mWarnLargeObject},
 
     mPreprocessingSuffix{set.mPreprocessingSuffix},
     mCompilationProperSuffix{set.mCompilationProperSuffix},
@@ -2569,26 +2563,6 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
-bool Settings::CompilerSet::warnLargeFrame() const
-{
-    return mWarnLargeObject;
-}
-
-void Settings::CompilerSet::setWarnLargeFrame(bool newWarnLargeObject)
-{
-    mWarnLargeObject = newWarnLargeObject;
-}
-
-double Settings::CompilerSet::maxFrameSize() const
-{
-    return mMaxFrameSize;
-}
-
-void Settings::CompilerSet::setMaxFrameSize(double maxFrameSize)
-{
-    mMaxFrameSize = maxFrameSize;
-}
-
 Settings::CompilerSet::CompilationStage Settings::CompilerSet::compilationStage() const
 {
     return mCompilationStage;
@@ -2758,12 +2732,6 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
     pSet->setCompileOption(LINK_CMD_OPT_STRIP_EXE, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
     pSet->setStaticLink(true);
-#ifdef Q_OS_WIN
-    pSet->setMaxFrameSize(2); //default stack size of gcc is 2MB on windows
-#else
-    pSet->setMaxFrameSize(8);
-#endif
-    pSet->setWarnLargeFrame(false);
 }
 
 static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false) {
@@ -2783,12 +2751,6 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
     pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
     pSet->setStaticLink(false);
 
-#ifdef Q_OS_WIN
-    pSet->setMaxFrameSize(2); //default stack size of gcc is 2MB on windows
-#else
-    pSet->setMaxFrameSize(8);
-#endif
-    pSet->setWarnLargeFrame(true);
 }
 
 bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_prog) {
@@ -3130,9 +3092,6 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
     mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
     mSettings->mSettings.setValue("ExecCharset", pSet->execCharset());
-    mSettings->mSettings.setValue("WarnLargeFrame",pSet->warnLargeFrame());
-    mSettings->mSettings.setValue("MaxFrameSize",pSet->maxFrameSize());
-
 
     mSettings->mSettings.setValue("preprocessingSuffix", pSet->preprocessingSuffix());
     mSettings->mSettings.setValue("compilationProperSuffix", pSet->compilationProperSuffix());
@@ -3216,8 +3175,6 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset", true).toBool());
     pSet->setStaticLink(mSettings->mSettings.value("StaticLink", false).toBool());
-    pSet->setMaxFrameSize(mSettings->mSettings.value("MaxFrameSize", 2).toDouble());
-    pSet->setWarnLargeFrame(mSettings->mSettings.value("WarnLargeFrame", false).toBool());
 
     pSet->setExecCharset(mSettings->mSettings.value("ExecCharset", ENCODING_SYSTEM_DEFAULT).toString());
     if (pSet->execCharset().isEmpty()) {
