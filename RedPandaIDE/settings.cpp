@@ -2748,7 +2748,8 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
 //        pSet->setCustomLinkParams("-fsanitize=address");
 //        pSet->setUseCustomLinkParams(true);
     }
-    pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
+    //Some windows gcc don't correctly support this
+    //pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
     pSet->setStaticLink(false);
 
 }

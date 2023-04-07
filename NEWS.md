@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.21
+
+  - change: The option "Check for stack smashing attacks (-fstack-protector)" is turned off by default in the Debug compiler set settings.
+
 Red Panda C++ Version 2.20
  
   - change: Remove the compiler set option "Syntax error when object larger than"
