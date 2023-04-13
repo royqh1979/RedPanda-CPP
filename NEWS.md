@@ -2,6 +2,7 @@ Red Panda C++ Version 2.21
 
   - change: The option "Check for stack smashing attacks (-fstack-protector)" is turned off by default in the Debug compiler set settings.
   - fix: Project makefile generated for C files is not correct.
+  - fix: Horizontal scroll with touchpad is not working.
 
 Red Panda C++ Version 2.20
  

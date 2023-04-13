@@ -6326,6 +6326,19 @@ void QSynEdit::wheelEvent(QWheelEvent *event)
             mWheelAccumulatedDeltaY+=120;
             verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
         }
+
+        if ( (mWheelAccumulatedDeltaX>0 &&event->angleDelta().x()<0)
+             || (mWheelAccumulatedDeltaX<0 &&event->angleDelta().x()>0))
+            mWheelAccumulatedDeltaX=0;
+        mWheelAccumulatedDeltaX+=event->angleDelta().x();
+        while (mWheelAccumulatedDeltaX>=120) {
+            mWheelAccumulatedDeltaX-=120;
+            horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
+        }
+        while (mWheelAccumulatedDeltaX<=-120) {
+            mWheelAccumulatedDeltaX+=120;
+            horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
+        }
     }
     event->accept();
 }
