@@ -1005,6 +1005,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
         case ']':
         case '<':
         case '*':
+        case ';':
+        case ',':
             handled = handleSymbolCompletion(ch);
             return;
         case '(': {
@@ -2561,6 +2563,20 @@ bool Editor::handleSymbolCompletion(QChar key)
             return handleGlobalIncludeSkip();
         }
         return false;
+    case ';':
+        if (selAvail())
+            return false;
+        if (pSettings->editor().overwriteSymbols()) {
+            return handleSemiColonSkip();
+        }
+        return false;
+    case ',':
+        if (selAvail())
+            return false;
+        if (pSettings->editor().overwriteSymbols()) {
+            return handlePeriodSkip();
+        }
+        return false;
     }
     return false;
 }
@@ -2756,6 +2772,29 @@ bool Editor::handleBraceSkip()
         }
     }
     return false;
+}
+
+bool Editor::handleSemiColonSkip()
+{
+    if (getCurrentChar() != ';')
+        return false;
+    bool oldInsertMode = insertMode();
+    setInsertMode(false); //set mode to overwrite
+    processCommand(QSynedit::EditCommand::Char,';');
+    setInsertMode(oldInsertMode);
+    return true;
+}
+
+bool Editor::handlePeriodSkip()
+{
+    if (getCurrentChar() != ',')
+        return false;
+
+    bool oldInsertMode = insertMode();
+    setInsertMode(false); //set mode to overwrite
+    processCommand(QSynedit::EditCommand::Char,',');
+    setInsertMode(oldInsertMode);
+    return true;
 }
 
 bool Editor::handleSingleQuoteCompletion()

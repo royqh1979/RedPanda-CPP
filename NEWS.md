@@ -4,6 +4,7 @@ Red Panda C++ Version 2.21
   - fix: Project makefile generated for C files is not correct.
   - fix: Horizontal scroll by touchpad is not working.
   - fix: Horizontal scroll by touchpad is inversed.
+  - enhancement: Auto skip ; and , when input.
 
 Red Panda C++ Version 2.20
  
