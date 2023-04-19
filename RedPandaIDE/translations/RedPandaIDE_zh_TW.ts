@@ -652,14 +652,6 @@
         <source>Locate windres</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>MB</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Syntax error for stack frame larger than</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>CppRefacter</name>
@@ -2046,6 +2038,10 @@
     </message>
     <message>
         <source>OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Characters:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

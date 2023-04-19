@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "filepropertiesdialog.h"
+#include "systemconsts.h"
 #include "ui_filepropertiesdialog.h"
 #include "../mainwindow.h"
 #include "../editorlist.h"
@@ -42,22 +43,25 @@ void FilePropertiesDialog::calcFile(Editor *editor,
                                     int &commentLines,
                                     int &emptyLines,
                                     int &codeLines,
-                                    int &includeLines)
+                                    int &includeLines,
+                                    int &charCounts)
 {
     totalLines = editor->document()->count();
     codeLines = 0;
     commentLines = 0;
     emptyLines = 0;
     includeLines = 0;
+    charCounts = 0;
+    int lineBreakerLen = QString(LINE_BREAKER).length();
     // iterate through all lines of file
     for (int i=0;i<editor->document()->count();i++) {
         QString line = editor->document()->getLine(i);
-        int j=0;
-        while (j<line.length() && (line[j]=='\t' || line[j]==' '))
-            j++;
+        charCounts+=line.length()+lineBreakerLen;
+//        while (j<line.length() && (line[j]=='\t' || line[j]==' '))
+//            j++;
         QString token;
         QSynedit::PTokenAttribute attr;
-        if (editor->getTokenAttriAtRowCol(QSynedit::BufferCoord{j+1,i+1},
+        if (editor->getTokenAttriAtRowCol(QSynedit::BufferCoord{1,i+1},
                                                 token,attr)) {
             // if it is preprocessor...
             if (attr->name() == SYNS_AttrPreprocessor) {
@@ -134,14 +138,15 @@ void FilePropertiesDialog::on_cbFiles_currentIndexChanged(int index)
         ui->txtRelativeToProject->setText("_");
         ui->txtLines->setText(QString("%1").arg(editor->document()->count()));
 
-        int totalLines, codeLines,emptyLines,commentLines,includeLines;
-        calcFile(editor,totalLines,commentLines,emptyLines,codeLines,includeLines);
+        int totalLines, codeLines,emptyLines,commentLines,includeLines, charCounts;
+        calcFile(editor,totalLines,commentLines,emptyLines,codeLines,includeLines,charCounts);
 
         ui->txtLines->setText(QString("%1").arg(totalLines));
         ui->txtEmptyLines->setText(QString("%1").arg(emptyLines));
         ui->txtCodeLines->setText(QString("%1").arg(codeLines));
         ui->txtCommentLines->setText(QString("%1").arg(commentLines));
         ui->txtIncludes->setText(QString("%1").arg(includeLines));
+        ui->txtCharacters->setText(QString("%1").arg(charCounts));
     }
 }
 

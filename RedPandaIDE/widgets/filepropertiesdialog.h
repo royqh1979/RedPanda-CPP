@@ -49,7 +49,8 @@ private:
                   int &commentLines,
                   int &emptyLines,
                   int &codeLines,
-                  int &includeLines);
+                  int &includeLines,
+                  int &charCounts);
 private:
     FilePropertiesModel mModel;
     Editor * mActiveEditor;

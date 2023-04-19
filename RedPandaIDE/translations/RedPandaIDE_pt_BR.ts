@@ -757,11 +757,7 @@
     </message>
     <message>
         <source>MB</source>
-        <translation type="unfinished">MB</translation>
-    </message>
-    <message>
-        <source>Syntax error for stack frame larger than</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">MB</translation>
     </message>
 </context>
 <context>
@@ -2214,6 +2210,10 @@
     <message>
         <source>OK</source>
         <translation>OK</translation>
+    </message>
+    <message>
+        <source>Characters:</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

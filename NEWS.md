@@ -5,6 +5,8 @@ Red Panda C++ Version 2.21
   - fix: Horizontal scroll by touchpad is not working.
   - fix: Horizontal scroll by touchpad is inversed.
   - enhancement: Auto skip ; and , when input.
+  - enhancement: Add 'characters' column in the file properties dialog.
+  - enhancement: Just keeping two digits after the decimal point for file size in the file properties dialog.
 
 Red Panda C++ Version 2.20
  
