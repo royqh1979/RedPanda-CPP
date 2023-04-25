@@ -1,3 +1,14 @@
+Red Panda C++ Version 2.21
+
+  - change: The option "Check for stack smashing attacks (-fstack-protector)" is turned off by default in the Debug compiler set settings.
+  - fix: Project makefile generated for C files is not correct.
+  - fix: Horizontal scroll by touchpad is not working.
+  - fix: Horizontal scroll by touchpad is inversed.
+  - fix: Error message when save bookmarks.
+  - enhancement: Auto skip ; and , when input.
+  - enhancement: Add 'characters' column in the file properties dialog.
+  - enhancement: Just keeping two digits after the decimal point for file size in the file properties dialog.
+
 Red Panda C++ Version 2.20
  
   - change: Remove the compiler set option "Syntax error when object larger than"

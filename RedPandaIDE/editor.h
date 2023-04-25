@@ -254,6 +254,8 @@ private:
     bool handleMultilineCommentCompletion();
     bool handleBraceCompletion();
     bool handleBraceSkip();
+    bool handleSemiColonSkip();
+    bool handlePeriodSkip();
     bool handleSingleQuoteCompletion();
     bool handleDoubleQuoteCompletion();
     bool handleGlobalIncludeCompletion();

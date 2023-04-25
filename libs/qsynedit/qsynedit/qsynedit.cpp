@@ -6307,11 +6307,11 @@ void QSynEdit::wheelEvent(QWheelEvent *event)
         mWheelAccumulatedDeltaX+=event->angleDelta().y();
         while (mWheelAccumulatedDeltaX>=120) {
             mWheelAccumulatedDeltaX-=120;
-            horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
+            horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
         }
         while (mWheelAccumulatedDeltaX<=-120) {
             mWheelAccumulatedDeltaX+=120;
-            horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
+            horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
         }
     } else {
         if ( (mWheelAccumulatedDeltaY>0 &&event->angleDelta().y()<0)
@@ -6325,6 +6325,19 @@ void QSynEdit::wheelEvent(QWheelEvent *event)
         while (mWheelAccumulatedDeltaY<=-120) {
             mWheelAccumulatedDeltaY+=120;
             verticalScrollBar()->setValue(verticalScrollBar()->value()+mMouseWheelScrollSpeed);
+        }
+
+        if ( (mWheelAccumulatedDeltaX>0 &&event->angleDelta().x()<0)
+             || (mWheelAccumulatedDeltaX<0 &&event->angleDelta().x()>0))
+            mWheelAccumulatedDeltaX=0;
+        mWheelAccumulatedDeltaX+=event->angleDelta().x();
+        while (mWheelAccumulatedDeltaX>=120) {
+            mWheelAccumulatedDeltaX-=120;
+            horizontalScrollBar()->setValue(horizontalScrollBar()->value()+mMouseWheelScrollSpeed);
+        }
+        while (mWheelAccumulatedDeltaX<=-120) {
+            mWheelAccumulatedDeltaX+=120;
+            horizontalScrollBar()->setValue(horizontalScrollBar()->value()-mMouseWheelScrollSpeed);
         }
     }
     event->accept();

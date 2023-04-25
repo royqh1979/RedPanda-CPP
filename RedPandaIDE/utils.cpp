@@ -523,7 +523,7 @@ QString getSizeString(int size)
     if (size < 1024) {
         return QString("%1 ").arg(size)+QObject::tr("bytes");
     } else if (size < 1024 * 1024) {
-        return QString("%1 ").arg(size / 1024.0)+QObject::tr("KB");
+        return QString("%1 ").arg(size / 1024.0,0,'f',2)+QObject::tr("KB");
     } else if (size < 1024 * 1024 * 1024) {
         return QString("%1 ").arg(size / 1024.0 / 1024.0)+QObject::tr("MB");
     } else {
