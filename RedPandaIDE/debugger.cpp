@@ -745,7 +745,13 @@ void Debugger::save(const QString &filename, const QString& projectFolder)
     foreach (const PWatchVar& watchVar, watchVars) {
         watchVarCompareSet.insert(watchVar->expression);
     }
-    std::shared_ptr<DebugConfig> pConfig = load(filename, forProject);
+    std::shared_ptr<DebugConfig> pConfig;
+    try {
+        pConfig = load(filename, forProject);
+    } catch (FileError& e) {
+
+    }
+
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         foreach (const PBreakpoint& breakpoint, pConfig->breakpoints) {

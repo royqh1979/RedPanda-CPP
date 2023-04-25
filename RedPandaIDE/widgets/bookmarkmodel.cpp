@@ -226,7 +226,13 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
         QString key = QString("%1-%2").arg(filename).arg(bookmark->line);
         compareHash.insert(key,i);
     }
-    QList<PBookmark> fileBookmarks=load(filename, t,&fileTimestamp);
+    QList<PBookmark> fileBookmarks;
+    try {
+        fileBookmarks=load(filename, t,&fileTimestamp);
+    } catch (FileError& e) {
+
+    }
+
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {        
 
