@@ -4034,8 +4034,10 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
     } else {
         mProblemSet_RemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel.problem(idx.row());
-        if (problem && !problem->answerProgram.isEmpty()) {
-            openFile(problem->answerProgram);
+        if (mFullInitialized) {
+            if (problem && !problem->answerProgram.isEmpty()) {
+                openFile(problem->answerProgram);
+            }
         }
         mOJProblemModel.setProblem(problem);
         updateProblemTitle();

@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.22
+
+  - fix: Crash at startup when current problem in the problem set is connected with source file.
+
 Red Panda C++ Version 2.21
 
   - change: The option "Check for stack smashing attacks (-fstack-protector)" is turned off by default in the Debug compiler set settings.
