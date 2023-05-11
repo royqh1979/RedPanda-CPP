@@ -1,6 +1,7 @@
 Red Panda C++ Version 2.22
 
   - fix: Crash at startup when current problem in the problem set is connected with source file.
+  - fix: Double-clicking on touchpad can't select current word.
 
 Red Panda C++ Version 2.21
 

@@ -1748,6 +1748,8 @@ void QSynEdit::doMouseScroll(bool isDragging)
         mDropped=false;
         return;
     }
+    if (mStateFlags.testFlag(StateFlag::sfDblClicked))
+        return;
     if (!hasFocus())
         return;
     Qt::MouseButtons buttons = qApp->mouseButtons();
