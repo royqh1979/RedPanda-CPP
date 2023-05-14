@@ -540,29 +540,29 @@ QString CppPreprocessor::expandMacros(const QString &line, int depth)
 void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString &word, int &i, int depth)
 {
     int lenLine = line.length();
-    if (word.startsWith("__")
-            && word.endsWith("__")) {
-//    if (word == "__attribute__") {
-        //skip gcc __attribute__
-        while ((i<lenLine) && (line[i] == ' ' || line[i]=='\t'))
-            i++;
-        if ((i<lenLine) && (line[i]=="(")) {
-            int level=0;
-            while (i<lenLine) {
-                switch(line[i].unicode()) {
-                    case '(':
-                        level++;
-                    break;
-                    case ')':
-                        level--;
-                    break;
-                }
-                i++;
-                if (level==0)
-                    break;
-            }
-        }
-    } else {
+//    if (word.startsWith("__")
+//            && word.endsWith("__")) {
+////    if (word == "__attribute__") {
+//        //skip gcc __attribute__
+//        while ((i<lenLine) && (line[i] == ' ' || line[i]=='\t'))
+//            i++;
+//        if ((i<lenLine) && (line[i]=="(")) {
+//            int level=0;
+//            while (i<lenLine) {
+//                switch(line[i].unicode()) {
+//                    case '(':
+//                        level++;
+//                    break;
+//                    case ')':
+//                        level--;
+//                    break;
+//                }
+//                i++;
+//                if (level==0)
+//                    break;
+//            }
+//        }
+//    } else {
         PDefine define = getDefine(word);
         if (define && define->args=="" ) {
             if (define->value != word )
@@ -601,7 +601,7 @@ void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString
         } else {
             newLine += word;
         }
-    }
+//    }
 }
 
 QString CppPreprocessor::removeGCCAttributes(const QString &line)
