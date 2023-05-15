@@ -146,7 +146,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     problemCase->runningMemory = 0;
 #ifdef Q_OS_WIN
     if (hProcess!=NULL) {
-        PROCESS_MEMORY_COUNTERS counter{0};
+        PROCESS_MEMORY_COUNTERS counter{};
         counter.cb = sizeof(counter);
         if (GetProcessMemoryInfo(hProcess,&counter,
                                  sizeof(counter))){

@@ -55,6 +55,7 @@ DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
 gcc {
     QMAKE_CXXFLAGS_RELEASE += -Werror=return-type
     QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
+    QMAKE_CXXFLAGS +=  -Wno-unused-parameter
 }
 
 msvc {
