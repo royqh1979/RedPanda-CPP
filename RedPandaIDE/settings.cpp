@@ -1476,7 +1476,7 @@ void Settings::Editor::doLoad()
     mFontName = stringValue("font_name","Dejavu Sans Mono");
     mNonAsciiFontName = stringValue("non_ascii_font_name","Dejavu Sans Mono");
 #endif
-    mFontSize = intValue("font_size",12);
+    mFontSize = intValue("font_size",10);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.0);
     mEnableLigaturesSupport = boolValue("enable_ligatures_support", false);
@@ -3323,7 +3323,7 @@ void Settings::Environment::doLoad()
         }
     }
     mInterfaceFont = stringValue("interface_font",defaultFontName);
-    mInterfaceFontSize = intValue("interface_font_size",11);
+    mInterfaceFontSize = intValue("interface_font_size",9);
     mIconZoomFactor = doubleValue("icon_zoom_factor",1.0);
     mLanguage = stringValue("language", defaultLocaleName);
     mIconSet = stringValue("icon_set","contrast");
@@ -3822,7 +3822,7 @@ void Settings::Executor::doLoad()
     mRedirectInput = boolValue("redirect_input",false);
     mInputFilename = stringValue("input_filename","");
 
-    mEnableProblemSet = boolValue("enable_proble_set",true);
+    mEnableProblemSet = boolValue("enable_proble_set",false);
     mEnableCompetitiveCompanion = boolValue("enable_competivie_companion",true);
     mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
     mConvertHTMLToTextForInput = boolValue("input_convert_html", false);
@@ -4058,7 +4058,7 @@ void Settings::Debugger::doLoad()
     mFontName = stringValue("font_name","Dejavu Sans Mono");
 #endif
     mOnlyShowMono = boolValue("only_show_mono",true);
-    mFontSize = intValue("font_size",14);
+    mFontSize = intValue("font_size",10);
     mUseIntelStyle = boolValue("use_intel_style",false);
     mBlendMode = boolValue("blend_mode",true);
     mSkipSystemLibraries = boolValue("skip_system_lib",true);
