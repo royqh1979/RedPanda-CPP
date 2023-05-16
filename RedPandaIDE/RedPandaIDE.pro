@@ -56,6 +56,7 @@ gcc {
     QMAKE_CXXFLAGS_RELEASE += -Werror=return-type
     QMAKE_CXXFLAGS_DEBUG += -Werror=return-type
     QMAKE_CXXFLAGS +=  -Wno-unused-parameter
+    QMAKE_CXXFLAGS +=  -Wno-implicit-fallthrough
 }
 
 msvc {
