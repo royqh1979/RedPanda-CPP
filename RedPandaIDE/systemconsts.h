@@ -56,6 +56,7 @@
 #define LLDB_MI_PROGRAM   "lldb-mi"
 #define LLDB_SERVER_PROGRAM   "lldb-server"
 #elif defined(Q_OS_MACOS)
+#define CONSOLE_PAUSER  "consolepauser"
 #define ASSEMBLER   "nasm"
 #define GCC_PROGRAM     "gcc"
 #define GPP_PROGRAM     "g++"
