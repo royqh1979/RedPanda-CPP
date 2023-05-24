@@ -4,6 +4,7 @@ Red Panda C++ Version 2.22
   - fix: Double-clicking on touchpad can't select current word.
   - fix: foreach-loops are not correctly parsed.
   - fix: '^' is not correctly handled as operator.
+  - fix: lambda expression  is not correctly handled.
 
 Red Panda C++ Version 2.21
 
