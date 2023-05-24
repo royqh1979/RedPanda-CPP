@@ -526,7 +526,7 @@ private:
                 || ch == '_'
                 || ch == '*'
                 || ch == '&';
-    }
+    }    
 
     bool isIdentifier(const QChar& ch) const {
         return ch.isLetter()

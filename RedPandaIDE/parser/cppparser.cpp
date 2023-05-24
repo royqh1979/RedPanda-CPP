@@ -1901,10 +1901,17 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                     return;
                 }
                 //it's not a function define
-                if (mTokenizer[indexAfter]->text[0] == ',') {
-                    // var decl with init
-                    handleVar(sType+" "+sName,isExtern,isStatic);
-                    return;
+                if (mTokenizer[indexAfter]->text != ';'
+                        && mTokenizer[indexAfter]->text != '{'
+                        && mTokenizer[indexAfter]->text != "->") {
+
+                    if (mTokenizer[indexAfter]->text == ',') {
+                        // var decl with init
+                        handleVar(sType+" "+sName,isExtern,isStatic);
+                        return;
+                    }
+
+                    return ;
                 }
                 if (mTokenizer[indexAfter]->text[0] == ';' && sType!="void") {
                     //function can only be defined in global/namespaces/classes
@@ -3664,6 +3671,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
     } else if (typePrefix=="static") {
         isStatic=true;
     } else {
+        if (typePrefix.back()==':')
+            return;
         lastType=typePrefix.trimmed();
     }
 
@@ -3981,7 +3990,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-//        mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+//       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
