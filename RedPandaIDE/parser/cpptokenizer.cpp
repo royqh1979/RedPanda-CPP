@@ -373,6 +373,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
             case '|':
             case '+':
             case '~':
+            case '^':
                 if (*(mCurrent + 1) == '=') {
                     countLines();
                     result = *mCurrent;

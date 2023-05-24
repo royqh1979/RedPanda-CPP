@@ -1122,26 +1122,26 @@ bool CppPreprocessor::isSpaceChar(const QChar &ch)
     return ch == ' ' || ch == '\t';
 }
 
-bool CppPreprocessor::isOperatorChar(const QChar &ch)
-{
+//bool CppPreprocessor::isOperatorChar(const QChar &ch)
+//{
 
-    switch(ch.unicode()) {
-    case '+':
-    case '-':
-    case '*':
-    case '/':
-    case '!':
-    case '=':
-    case '<':
-    case '>':
-    case '&':
-    case '|':
-    case '^':
-        return true;
-    default:
-        return false;
-    }
-}
+//    switch(ch.unicode()) {
+//    case '+':
+//    case '-':
+//    case '*':
+//    case '/':
+//    case '!':
+//    case '=':
+//    case '<':
+//    case '>':
+//    case '&':
+//    case '|':
+//    case '^':
+//        return true;
+//    default:
+//        return false;
+//    }
+//}
 
 bool CppPreprocessor::isMacroIdentChar(const QChar &ch)
 {

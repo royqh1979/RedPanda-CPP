@@ -176,7 +176,7 @@ static  bool isSpaceChar(const QChar& ch);
     /*
      * '+', '-', '*', '/', '!', '=', '<', '>', '&', '|', '^'
      */
-static  bool isOperatorChar(const QChar& ch);
+//static  bool isOperatorChar(const QChar& ch);
 
     /*
      * 'A'..'Z', 'a'..'z', '_'
