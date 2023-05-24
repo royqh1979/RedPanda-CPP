@@ -1901,17 +1901,10 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                     return;
                 }
                 //it's not a function define
-                if (mTokenizer[indexAfter]->text != ';'
-                        && mTokenizer[indexAfter]->text != '{'
-                        && mTokenizer[indexAfter]->text != "->") {
-
-                    if (mTokenizer[indexAfter]->text == ',') {
-                        // var decl with init
-                        handleVar(sType+" "+sName,isExtern,isStatic);
-                        return;
-                    }
-
-                    return ;
+                if (mTokenizer[indexAfter]->text == ',') {
+                    // var decl with init
+                    handleVar(sType+" "+sName,isExtern,isStatic);
+                    return;
                 }
                 if (mTokenizer[indexAfter]->text[0] == ';' && sType!="void") {
                     //function can only be defined in global/namespaces/classes
