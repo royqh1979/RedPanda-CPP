@@ -72,6 +72,8 @@ void initParser()
     CppKeywords.insert("explicit",KeywordType::SkipItself);
     CppKeywords.insert("export",KeywordType::SkipItself);
     CppKeywords.insert("false",KeywordType::SkipItself);
+    CppKeywords.insert("__extension__",KeywordType::SkipItself);
+
     //CppKeywords.insert("for",SkipType::skItself);
     CppKeywords.insert("mutable",KeywordType::SkipItself);
     CppKeywords.insert("noexcept",KeywordType::SkipItself);
