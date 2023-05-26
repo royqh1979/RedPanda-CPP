@@ -329,6 +329,7 @@ bool isCppFile(const QString& filename);
 bool isCppKeyword(const QString& word);
 bool isCppControlKeyword(const QString& word);
 bool isScopeTypeKind(StatementKind kind);
+bool isTypeKind(StatementKind kind);
 MemberOperatorType getOperatorType(const QString& phrase, int index);
 QStringList getOwnerExpressionAndMember(
         const QStringList expression,

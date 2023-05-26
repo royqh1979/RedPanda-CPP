@@ -1,11 +1,12 @@
 Red Panda C++ Version 2.22
 
-  - enhancement: ignore '__extension__' when parsing C/C++  codes.
   - fix: Crash at startup when current problem in the problem set is connected with source file.
   - fix: Double-clicking on touchpad can't select current word.
   - fix: foreach-loops are not correctly parsed.
   - fix: '^' is not correctly handled as operator.
   - fix: lambda expression  is not correctly handled.
+  - fix: '__extension__' should be ignored when parsing C/C++ codes.
+  - enhancement: show completion for return type of lambda expressions.
   
 
 Red Panda C++ Version 2.21

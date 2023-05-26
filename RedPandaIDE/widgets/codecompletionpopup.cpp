@@ -183,7 +183,10 @@ PStatement CodeCompletionPopup::selectedStatement()
         return PStatement();
 }
 
-void CodeCompletionPopup::addChildren(const PStatement& scopeStatement, const QString &fileName, int line)
+void CodeCompletionPopup::addChildren(const PStatement& scopeStatement,
+                                      const QString &fileName,
+                                      int line,
+                                      bool onlyTypes)
 {
     if (scopeStatement && !isIncluded(scopeStatement->fileName)
       && !isIncluded(scopeStatement->definitionFileName))
@@ -192,23 +195,49 @@ void CodeCompletionPopup::addChildren(const PStatement& scopeStatement, const QS
     if (children.isEmpty())
         return;
 
-    if (!scopeStatement) { //Global scope
-        for (const PStatement& childStatement: children) {
-            if (childStatement->fileName.isEmpty()) {
-                // hard defines
-                addStatement(childStatement,fileName,-1);
-            } else if (
-                       isIncluded(childStatement->fileName)
-                       || isIncluded(childStatement->definitionFileName)
-                       ) {
-                //we must check if the statement is included by the file
+    if (onlyTypes) {
+        if (!scopeStatement) { //Global scope
+            for (const PStatement& childStatement: children) {
+                if (!isTypeKind(childStatement->kind))
+                    continue;
+                if (childStatement->fileName.isEmpty()) {
+                    // hard defines
+                    addStatement(childStatement,fileName,-1);
+                } else if (
+                           isIncluded(childStatement->fileName)
+                           || isIncluded(childStatement->definitionFileName)
+                           ) {
+                    //we must check if the statement is included by the file
+                    addStatement(childStatement,fileName,line);
+                }
+            }
+        } else {
+            for (const PStatement& childStatement: children) {
+                if (!isTypeKind(childStatement->kind))
+                    continue;
                 addStatement(childStatement,fileName,line);
             }
         }
     } else {
-        for (const PStatement& childStatement: children) {
-            addStatement(childStatement,fileName,line);
+        if (!scopeStatement) { //Global scope
+            for (const PStatement& childStatement: children) {
+                if (childStatement->fileName.isEmpty()) {
+                    // hard defines
+                    addStatement(childStatement,fileName,-1);
+                } else if (
+                           isIncluded(childStatement->fileName)
+                           || isIncluded(childStatement->definitionFileName)
+                           ) {
+                    //we must check if the statement is included by the file
+                    addStatement(childStatement,fileName,line);
+                }
+            }
+        } else {
+            for (const PStatement& childStatement: children) {
+                addStatement(childStatement,fileName,line);
+            }
         }
+
     }
 }
 
@@ -557,6 +586,11 @@ void CodeCompletionPopup::getCompletionFor(
     if (memberOperator.isEmpty() && ownerExpression.isEmpty() && memberExpression.isEmpty())
         return;
 
+    bool isLambdaReturnType = (
+                memberOperator=="->"
+                && ownerExpression.startsWith("[")
+                && ownerExpression.endsWith(")"));
+
     if (memberOperator.isEmpty()) {
         //C++ preprocessor directives
         if (mMemberPhrase.startsWith('#')) {
@@ -602,6 +636,10 @@ void CodeCompletionPopup::getCompletionFor(
                 }
             }
         }
+    } else if  (isLambdaReturnType) {
+            foreach (const QString& keyword,CppTypeKeywords) {
+                addKeyword(keyword);
+            }
     }
 
     if (!mParser || !mParser->enabled())
@@ -614,15 +652,15 @@ void CodeCompletionPopup::getCompletionFor(
             mParser->unFreeze();
         });
 
-        if (memberOperator.isEmpty()) {
+        if (memberOperator.isEmpty() || isLambdaReturnType) {
             PStatement scopeStatement = mCurrentScope;
             // repeat until reach global
             while (scopeStatement) {
                 //add members of current scope that not added before
                 if (scopeStatement->kind == StatementKind::skClass) {
-                    addChildren(scopeStatement, fileName, -1);
+                    addChildren(scopeStatement, fileName, -1, isLambdaReturnType);
                 } else {
-                    addChildren(scopeStatement, fileName, line);
+                    addChildren(scopeStatement, fileName, line, isLambdaReturnType);
                 }
 
                 // add members of all usings (in current scope ) and not added before
@@ -632,14 +670,14 @@ void CodeCompletionPopup::getCompletionFor(
                     if (!namespaceStatementsList)
                         continue;
                     foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
-                        addChildren(namespaceStatement, fileName, line);
+                        addChildren(namespaceStatement, fileName, line, isLambdaReturnType);
                     }
                 }
                 scopeStatement=scopeStatement->parentScope.lock();
             }
 
             // add all global members and not added before
-            addChildren(nullptr, fileName, line);
+            addChildren(nullptr, fileName, line, isLambdaReturnType);
 
             // add members of all fusings
             mUsings = mParser->getFileUsings(fileName);
@@ -649,7 +687,7 @@ void CodeCompletionPopup::getCompletionFor(
                 if (!namespaceStatementsList)
                     continue;
                 foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
-                    addChildren(namespaceStatement, fileName, line);
+                    addChildren(namespaceStatement, fileName, line, isLambdaReturnType);
                 }
             }
 

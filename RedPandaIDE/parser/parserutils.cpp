@@ -714,3 +714,18 @@ bool isCppControlKeyword(const QString &word)
 //    counter--;
 //    qDebug()<<"statement deleted:"<<counter<<fullName<<kind<<extractFileName(fileName)<<line;
 //}
+
+bool isTypeKind(StatementKind kind)
+{
+    switch(kind) {
+    case StatementKind::skClass:
+    case StatementKind::skNamespace:
+    case StatementKind::skEnumType:
+    case StatementKind::skEnumClassType:
+    case StatementKind::skTypedef:
+    case StatementKind::skPreprocessor:
+        return true;
+    default:
+        return false;
+    }
+}
