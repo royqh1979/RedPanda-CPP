@@ -196,6 +196,7 @@ private:
             const StatementScope& scope,
             const StatementAccessibility& classScope,
             StatementProperties properties);
+    void addMethodParameterStatement(QStringList words,int line, const PStatement& functionStatement);
     void setInheritance(int index, const PStatement& classStatement, bool isStruct);
     bool isCurrentScope(const QString& command) const;
     void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock=false); // adds new solo level

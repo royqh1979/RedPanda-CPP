@@ -1402,6 +1402,35 @@ PStatement CppParser::addStatement(const PStatement &parent,
                 properties);
 }
 
+void CppParser::addMethodParameterStatement(QStringList words, int line, const PStatement &functionStatement)
+{
+    if (words.isEmpty())
+        return;
+    QString args,suffix;
+    QString cmd=words.last();
+    parseCommandTypeAndArgs(cmd,suffix,args);
+    words.pop_back();
+    if (!cmd.isEmpty()) {
+        PStatement statement = doFindStatementOf(mCurrentFile,cmd,functionStatement);
+        bool noCmd = (statement && isTypeStatement(statement->kind));
+        if (!noCmd) {
+            addStatement(
+                        functionStatement,
+                        mCurrentFile,
+                        words.join(" ")+" "+suffix, // 'int*'
+                        cmd, // a
+                        args,
+                        "",
+                        "",
+                        line,
+                        StatementKind::skParameter,
+                        StatementScope::Local,
+                        StatementAccessibility::None,
+                        StatementProperty::spHasDefinition);
+        }
+    }
+}
+
 void CppParser::setInheritance(int index, const PStatement& classStatement, bool isStruct)
 {
     int tokenCount = mTokenizer.tokenCount();
@@ -5338,7 +5367,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
     int paramStart = argStart+1;
     int i = paramStart ; // assume it starts with ( and ends with )
     // Keep going and stop on top of the variable name
-    QString varType = "";
+    QStringList words;
     while (i < argEnd) {
         if (mTokenizer[i]->text=='('
                 && mTokenizer[i]->matchIndex+1<argEnd
@@ -5352,7 +5381,7 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                 addStatement(
                             functionStatement,
                             mCurrentFile,
-                            varType, // 'int*'
+                            words.join(" "), // 'int*'
                             cmd, // a
                             args,
                             "",
@@ -5364,51 +5393,28 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
                             StatementProperty::spHasDefinition);
             }
             i=argEnd+1;
-            varType="";
+            words.clear();
         } else if (mTokenizer[i]->text=='{') {
             i=mTokenizer[i]->matchIndex+1;
-        } else if (mTokenizer[i]->text=='(') {
-            i=mTokenizer[i]->matchIndex+1;
         } else if (mTokenizer[i]->text.endsWith('=')) {
+            addMethodParameterStatement(words,mTokenizer[i]->line,functionStatement);
             i=skipAssignment(i,argEnd);
         } else if (mTokenizer[i]->text=="::") {
-            varType+=mTokenizer[i]->text;
+            words.append(mTokenizer[i]->text);
             i++;
+        } else if (mTokenizer[i]->text==',') {
+           addMethodParameterStatement(words,mTokenizer[i]->line,functionStatement);
+           i++;
+           words.clear();
         } else if (isWordChar(mTokenizer[i]->text[0])) {
             QString cmd=mTokenizer[i]->text;
-            if (i+1==argEnd || mTokenizer[i+1]->text==',' || mTokenizer[i+1]->text=='=') {
-                QString args,suffix;
-                parseCommandTypeAndArgs(cmd,suffix,args);
-                if (!cmd.isEmpty()) {
-                    PStatement statement = doFindStatementOf(mCurrentFile,cmd,functionStatement);
-                    bool noCmd = (statement && isTypeStatement(statement->kind));
-                    if (!noCmd) {
-                        addStatement(
-                                    functionStatement,
-                                    mCurrentFile,
-                                    varType+suffix, // 'int*'
-                                    cmd, // a
-                                    args,
-                                    "",
-                                    "",
-                                    mTokenizer[i]->line,
-                                    StatementKind::skParameter,
-                                    StatementScope::Local,
-                                    StatementAccessibility::None,
-                                    StatementProperty::spHasDefinition);
-                    }
-                }
-            } else {
-                if (!varType.isEmpty())
-                    varType+=' ';
-                varType+=cmd;
-            }
+            words.append(cmd);
             i++;
         } else {
             i++;
-            varType="";
         }
     }
+    addMethodParameterStatement(words,mTokenizer[i-1]->line,functionStatement);
 
 
 }

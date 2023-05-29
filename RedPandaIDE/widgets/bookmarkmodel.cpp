@@ -236,7 +236,7 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {        
 
-        QList<PBookmark> saveBookmarks;
+//        QList<PBookmark> saveBookmarks;
 
         QDir dir(projectFolder);
         foreach (const PBookmark& bookmark, fileBookmarks) {
