@@ -814,7 +814,7 @@ PDebugConfig Debugger::load(const QString &filename, bool forProject)
             return pConfig;
         QJsonParseError error;        
         QJsonDocument doc(QJsonDocument::fromJson(content,&error));
-        if (error.error  == QJsonParseError::NoError) {
+        if (error.error  != QJsonParseError::NoError) {
             throw FileError(tr("Error in json file '%1':%2 : %3")
                             .arg(filename)
                             .arg(error.offset)
