@@ -809,10 +809,12 @@ PDebugConfig Debugger::load(const QString &filename, bool forProject)
     if (!file.exists())
         return pConfig;
     if (file.open(QFile::ReadOnly)) {
-        QByteArray content = file.readAll();
-        QJsonParseError error;
+        QByteArray content = file.readAll().trimmed();
+        if (content.isEmpty())
+            return pConfig;
+        QJsonParseError error;        
         QJsonDocument doc(QJsonDocument::fromJson(content,&error));
-        if (error.error  != QJsonParseError::NoError) {
+        if (error.error  == QJsonParseError::NoError) {
             throw FileError(tr("Error in json file '%1':%2 : %3")
                             .arg(filename)
                             .arg(error.offset)

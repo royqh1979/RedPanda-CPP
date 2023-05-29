@@ -7,8 +7,9 @@ Red Panda C++ Version 2.22
   - fix: lambda expression  is not correctly handled.
   - fix: '__extension__' should be ignored when parsing C/C++ codes.
   - enhancement: show completion for return type of lambda expressions.
-  - upgrade raylib to 4.5, raygui to 3.6
-  
+  - enhancement: support function arguments like "int (&t)[]"  
+  - change: Don't show error dialog when bookmark/debug configuration json files are empty.
+  - upgrade raylib to 4.5, raygui to 3.6  
 
 Red Panda C++ Version 2.21
 

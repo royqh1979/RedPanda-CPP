@@ -307,7 +307,9 @@ QList<PBookmark> BookmarkModel::load(const QString& filename, qint64 criteriaTim
     if (!file.exists())
         return bookmarks;
     if (file.open(QFile::ReadOnly)) {
-        QByteArray content = file.readAll();
+        QByteArray content = file.readAll().trimmed();
+        if (content.isEmpty())
+            return bookmarks;
         QJsonParseError error;
         QJsonDocument doc(QJsonDocument::fromJson(content,&error));
         if (error.error  != QJsonParseError::NoError) {
