@@ -12,7 +12,6 @@
 *       - GuiComboBox()
 *       - GuiListView()
 *       - GuiToggleGroup()
-*       - GuiTextBoxMulti()
 *       - GuiColorPicker()
 *       - GuiSlider()
 *       - GuiSliderBar()
@@ -22,24 +21,24 @@
 *
 *
 *   DEPENDENCIES:
-*       raylib 4.0 - Windowing/input management and drawing.
-*       raygui 3.2 - Immediate-mode GUI controls.
+*       raylib 4.5          - Windowing/input management and drawing
+*       raygui 3.5          - Immediate-mode GUI controls with custom styling and icons
 *
 *   COMPILATION (Windows - MinGW):
 *       gcc -o $(NAME_PART).exe $(FILE_NAME) -I../../src -lraylib -lopengl32 -lgdi32 -std=c99
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2016-2022 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2016-2023 Ramon Santamaria (@raysan5)
 *
 **********************************************************************************************/
 
-#include <raylib.h>
+#include "raylib.h"
 
 #define RAYGUI_IMPLEMENTATION
 //#define RAYGUI_CUSTOM_ICONS     // It requires providing gui_icons.h in the same directory
 //#include "gui_icons.h"          // External icons data provided, it can be generated with rGuiIcons tool
-#include <raygui.h>
+#include "raygui.h"
 
 #include <string.h>             // Required for: strcpy()
 
@@ -58,7 +57,6 @@ int main()
 
     // GUI controls initialization
     //----------------------------------------------------------------------------------
-	//GuiSetStyle(DEFAULT,TEXT_SIZE,16);
     int dropdownBox000Active = 0;
     bool dropDown000EditMode = false;
 
@@ -127,16 +125,14 @@ int main()
 
         if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_S)) showTextInputBox = true;
 
-// incompatible with raylib 4.0
-//        if (IsFileDropped())
-//        {
-//            int dropFileCount = 0;
-//            char **droppedFiles = LoadDroppedFiles(&dropFileCount);
-//
-//            if ((dropFileCount > 0) && IsFileExtension(droppedFiles[0], ".rgs")) GuiLoadStyle(droppedFiles[0]);
-//
-//            UnloadDroppedFiles();    // Clear internal buffers
-//        }
+        if (IsFileDropped())
+        {
+            FilePathList droppedFiles = LoadDroppedFiles();
+
+            if ((droppedFiles.count > 0) && IsFileExtension(droppedFiles.paths[0], ".rgs")) GuiLoadStyle(droppedFiles.paths[0]);
+
+            UnloadDroppedFiles(droppedFiles);    // Clear internal buffers
+        }
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -147,9 +143,9 @@ int main()
 
             // raygui: controls drawing
             //----------------------------------------------------------------------------------
-            if (dropDown000EditMode || dropDown001EditMode) GuiLock();
-            else if (!dropDown000EditMode && !dropDown001EditMode) GuiUnlock();
-            //GuiDisable();
+            // Check all possible events that require GuiLock
+            if (dropDown000EditMode ||
+                dropDown001EditMode) GuiLock();
 
             // First GUI column
             //GuiSetStyle(CHECKBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
@@ -178,6 +174,7 @@ int main()
             comboBoxActive = GuiComboBox((Rectangle){ 25, 470, 125, 30 }, "ONE;TWO;THREE;FOUR", comboBoxActive);
 
             // NOTE: GuiDropdownBox must draw after any other control that can be covered on unfolding
+            GuiUnlock();
             GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
             if (GuiDropdownBox((Rectangle){ 25, 65, 125, 30 }, "#01#ONE;#02#TWO;#03#THREE;#04#FOUR", &dropdownBox001Active, dropDown001EditMode)) dropDown001EditMode = !dropDown001EditMode;
 
@@ -191,7 +188,7 @@ int main()
             toggleGroupActive = GuiToggleGroup((Rectangle){ 165, 400, 140, 25 }, "#1#ONE\n#3#TWO\n#8#THREE\n#23#", toggleGroupActive);
 
             // Third GUI column
-            if (GuiTextBoxMulti((Rectangle){ 320, 25, 225, 140 }, multiTextBoxText, 256, multiTextBoxEditMode)) multiTextBoxEditMode = !multiTextBoxEditMode;
+            GuiPanel((Rectangle){ 320, 25, 225, 140 }, "Panel Info");
             colorPickerValue = GuiColorPicker((Rectangle){ 320, 185, 196, 192 }, NULL, colorPickerValue);
 
             sliderValue = GuiSlider((Rectangle){ 355, 400, 165, 20 }, "TEST", TextFormat("%2.2f", (float)sliderValue), sliderValue, -50, 100);
@@ -199,11 +196,9 @@ int main()
             progressValue = GuiProgressBar((Rectangle){ 320, 460, 200, 20 }, NULL, NULL, progressValue, 0, 1);
 
             // NOTE: View rectangle could be used to perform some scissor test
-            Rectangle view = GuiScrollPanel((Rectangle){ 560, 25, 100, 160 }, NULL, (Rectangle){ 560, 25, 200, 400 }, &viewScroll);
+            Rectangle view = GuiScrollPanel((Rectangle){ 560, 25, 102, 354 }, NULL, (Rectangle){ 560, 25, 300, 1200 }, &viewScroll);
 
-            GuiPanel((Rectangle){ 560, 25 + 180, 100, 160 }, "Panel Info");
-
-            GuiGrid((Rectangle) { 560, 25 + 180 + 180, 100, 120 }, NULL, 20, 2);
+            GuiGrid((Rectangle) { 560, 25 + 180 + 195, 100, 120 }, NULL, 20, 2);
 
             GuiStatusBar((Rectangle){ 0, (float)GetScreenHeight() - 20, (float)GetScreenWidth(), 20 }, "This is a status bar");
 
