@@ -45,6 +45,8 @@ enum class FileType{
     WindowsResourceSource, // resource source (.res)
     Project, //Red Panda C++ Project (.dev)
     Text, // text file
+    FragmentShader,
+    VerticeShader,
     Other // any others
 };
 

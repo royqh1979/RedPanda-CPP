@@ -145,11 +145,23 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".txt",PATH_SENSITIVITY)) {
         return FileType::Text;
     }
+    if (filename.endsWith(".md",PATH_SENSITIVITY)) {
+        return FileType::Text;
+    }
+    if (filename.endsWith(".info",PATH_SENSITIVITY)) {
+        return FileType::Text;
+    }
     if (filename.endsWith(".dat",PATH_SENSITIVITY)) {
         return FileType::Text;
     }
     if (filename.endsWith(".lua",PATH_SENSITIVITY)) {
         return FileType::LUA;
+    }
+    if (filename.endsWith(".fs",PATH_SENSITIVITY)) {
+        return FileType::FragmentShader;
+    }
+    if (filename.endsWith(".vs",PATH_SENSITIVITY)) {
+        return FileType::VerticeShader;
     }
     QFileInfo info(filename);
     if (info.suffix().isEmpty()) {

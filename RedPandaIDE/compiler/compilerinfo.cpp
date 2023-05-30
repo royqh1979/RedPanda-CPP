@@ -75,11 +75,13 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("ISO C++14","c++14"));
     sl.append(QPair<QString,QString>("ISO C++17","c++17"));
     sl.append(QPair<QString,QString>("ISO C++20","c++2a"));
+    sl.append(QPair<QString,QString>("ISO C++23","c++2b"));
     sl.append(QPair<QString,QString>("GNU C++","gnu++98"));
     sl.append(QPair<QString,QString>("GNU C++11","gnu++11"));
     sl.append(QPair<QString,QString>("GNU C++14","gnu++14"));
     sl.append(QPair<QString,QString>("GNU C++17","gnu++17"));
     sl.append(QPair<QString,QString>("GNU C++20","gnu++2a"));
+    sl.append(QPair<QString,QString>("GNU C++23","gnu++2b"));
     addOption(CC_CMD_OPT_STD, QObject::tr("C++ Language standard (-std)"), groupName, false, true, false, "-std=", sl);
 
     sl.clear();

@@ -10,6 +10,8 @@ Red Panda C++ Version 2.22
   - enhancement: support function arguments like "int (&t)[]"  
   - change: Don't show error dialog when bookmark/debug configuration json files are empty.
   - upgrade raylib to 4.5, raygui to 3.6  
+  - enhancement: support -std=c++2d gcc parameter
+  - fix: vertice shader(.vs) and fragment shader(.fs) files can't be openned by double click in the project browser.
 
 Red Panda C++ Version 2.21
 
@@ -1062,7 +1064,7 @@ Red Panda C++ Version 0.13.2
   - fix: in linux, projects no need of winres to be built
 
 Red Panda C++ Version 0.13.1
- - enhancement: suppoort localization info in project templates
+ - enhancement: support localization info in project templates
  - change: template / project files use utf-8 encoding instead of ANSI
  - fix: .rc file shouldn't be syntax checked
  - enhancement: auto save/restore size of the new project dialog
