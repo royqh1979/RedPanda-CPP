@@ -12,6 +12,8 @@ Red Panda C++ Version 2.22
   - upgrade raylib to 4.5, raygui to 3.6  
   - enhancement: support -std=c++2d gcc parameter
   - fix: vertice shader(.vs) and fragment shader(.fs) files can't be openned by double click in the project browser.
+  - enhancement: Add various menu items for cursor actions using Home/End/Page Up/Page Down keys.
+  - enhancement: Filter names in the shortcut config page of options dialog.
 
 Red Panda C++ Version 2.21
 

@@ -809,6 +809,38 @@ private slots:
 
     void on_actionNew_Text_File_triggered();
 
+    void on_actionPage_Up_triggered();
+
+    void on_actionPage_Down_triggered();
+
+    void on_actionGoto_Line_Start_triggered();
+
+    void on_actionGoto_Line_End_triggered();
+
+    void on_actionGoto_File_Start_triggered();
+
+    void on_actionGoto_File_End_triggered();
+
+    void on_actionPage_Up_and_Select_triggered();
+
+    void on_actionPage_Down_and_Select_triggered();
+
+    void on_actionGoto_Page_Start_triggered();
+
+    void on_actionGoto_Page_End_triggered();
+
+    void on_actionGoto_Page_Start_and_Select_triggered();
+
+    void on_actionGoto_Page_End_and_Select_triggered();
+
+    void on_actionGoto_Line_Start_and_Select_triggered();
+
+    void on_actionGoto_Line_End_and_Select_triggered();
+
+    void on_actionGoto_File_Start_and_Select_triggered();
+
+    void on_actionGoto_File_End_and_Select_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;

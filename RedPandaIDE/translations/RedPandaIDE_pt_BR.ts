@@ -1952,6 +1952,10 @@
         <source>Form</source>
         <translation>Configuração</translation>
     </message>
+    <message>
+        <source>Keyword</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ExecutableRunner</name>
@@ -5193,6 +5197,74 @@
     </message>
     <message>
         <source>You should recompile after change the compiler set or it&apos;s settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Move Cursor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Page Up</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Page Down</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Line Start</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Line End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto File Start</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto File End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Page Up and Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Page Down and Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Page Start</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Page End</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Page Start and Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Page End and Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Line Start and Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto Line End and Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto File Start and Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Goto File End and Select</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

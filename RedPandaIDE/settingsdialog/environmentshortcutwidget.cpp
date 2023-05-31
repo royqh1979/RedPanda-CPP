@@ -27,9 +27,12 @@ EnvironmentShortcutWidget::EnvironmentShortcutWidget(const QString& name, const 
     ui(new Ui::EnvironmentShortcutWidget)
 {
     ui->setupUi(this);
+    mFilterProxy = new QSortFilterProxyModel(this);
+    mFilterProxy->setSourceModel(&mModel);
+    mFilterProxy->setFilterKeyColumn(0);
     mDelegate =new EnvironmentShortcutDelegate(this);
     QItemSelectionModel* m=ui->tblShortcut->selectionModel();
-    ui->tblShortcut->setModel(&mModel);
+    ui->tblShortcut->setModel(mFilterProxy);
     delete m;
     ui->tblShortcut->setItemDelegate(mDelegate);
     connect(&mModel, &EnvironmentShortcutModel::shortcutChanged,
@@ -220,3 +223,9 @@ void EnvironmentShortcutDelegate::onEditingFinished(QWidget* editor)
     emit commitData(editor);
     emit closeEditor(editor, QAbstractItemDelegate::SubmitModelCache);
 }
+
+void EnvironmentShortcutWidget::on_txtKeyword_textChanged(const QString &arg1)
+{
+    mFilterProxy->setFilterFixedString(arg1);
+}
+

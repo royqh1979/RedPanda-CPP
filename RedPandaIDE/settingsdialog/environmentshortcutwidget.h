@@ -18,6 +18,7 @@
 #define ENVIRONMENTSHORTCUTWIDGET_H
 
 #include <QAbstractTableModel>
+#include <QSortFilterProxyModel>
 #include <QStyledItemDelegate>
 #include <QWidget>
 #include "settingswidget.h"
@@ -79,8 +80,12 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+private slots:
+    void on_txtKeyword_textChanged(const QString &arg1);
+
 private:
     EnvironmentShortcutModel mModel;
+    QSortFilterProxyModel* mFilterProxy;
     EnvironmentShortcutDelegate* mDelegate;
 };
 

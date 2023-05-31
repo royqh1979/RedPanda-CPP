@@ -9776,3 +9776,147 @@ void MainWindow::on_actionNew_Text_File_triggered()
     newEditor("txt");
 }
 
+
+void MainWindow::on_actionPage_Up_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::PageUp);
+    }
+}
+
+
+void MainWindow::on_actionPage_Down_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::PageDown);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Line_Start_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::LineStart);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Line_End_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::LineEnd);
+    }
+}
+
+
+void MainWindow::on_actionGoto_File_Start_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::EditorStart);
+    }
+}
+
+
+void MainWindow::on_actionGoto_File_End_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::EditorEnd);
+    }
+}
+
+
+void MainWindow::on_actionPage_Up_and_Select_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::SelPageUp);
+    }
+}
+
+
+void MainWindow::on_actionPage_Down_and_Select_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::SelPageDown);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Page_Start_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::PageTop);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Page_End_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::PageBottom);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Page_Start_and_Select_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::SelPageTop);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Page_End_and_Select_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::SelPageBottom);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Line_Start_and_Select_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::SelLineStart);
+    }
+}
+
+
+void MainWindow::on_actionGoto_Line_End_and_Select_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::SelLineEnd);
+    }
+}
+
+
+void MainWindow::on_actionGoto_File_Start_and_Select_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::SelEditorStart);
+    }
+}
+
+
+void MainWindow::on_actionGoto_File_End_and_Select_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (editor && editor->hasFocus()) {
+        editor->processCommand(QSynedit::EditCommand::SelEditorEnd);
+    }
+}
+

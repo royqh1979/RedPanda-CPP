@@ -177,6 +177,19 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <widget class="QMenu" name="menuMove_Cursor">
+     <property name="title">
+      <string>Move Cursor</string>
+     </property>
+     <addaction name="actionPage_Up"/>
+     <addaction name="actionPage_Down"/>
+     <addaction name="actionGoto_Line_Start"/>
+     <addaction name="actionGoto_Line_End"/>
+     <addaction name="actionGoto_File_Start"/>
+     <addaction name="actionGoto_File_End"/>
+     <addaction name="actionGoto_Page_Start"/>
+     <addaction name="actionGoto_Page_End"/>
+    </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="separator"/>
@@ -193,6 +206,7 @@
     <addaction name="actionFoldAll"/>
     <addaction name="actionUnfoldAll"/>
     <addaction name="separator"/>
+    <addaction name="menuMove_Cursor"/>
     <addaction name="actionDelete_Line"/>
     <addaction name="actionDuplicate_Line"/>
     <addaction name="actionDelete_Word"/>
@@ -344,6 +358,15 @@
     <addaction name="separator"/>
     <addaction name="actionMove_Selection_Up"/>
     <addaction name="actionMove_Selection_Down"/>
+    <addaction name="separator"/>
+    <addaction name="actionPage_Up_and_Select"/>
+    <addaction name="actionPage_Down_and_Select"/>
+    <addaction name="actionGoto_Page_Start_and_Select"/>
+    <addaction name="actionGoto_Page_End_and_Select"/>
+    <addaction name="actionGoto_Line_Start_and_Select"/>
+    <addaction name="actionGoto_Line_End_and_Select"/>
+    <addaction name="actionGoto_File_Start_and_Select"/>
+    <addaction name="actionGoto_File_End_and_Select"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -3357,6 +3380,134 @@
   <action name="actionNew_Text_File">
    <property name="text">
     <string>New Text File</string>
+   </property>
+  </action>
+  <action name="actionPage_Up">
+   <property name="text">
+    <string>Page Up</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
+   </property>
+  </action>
+  <action name="actionPage_Down">
+   <property name="text">
+    <string>Page Down</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_Line_Start">
+   <property name="text">
+    <string>Goto Line Start</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_Line_End">
+   <property name="text">
+    <string>Goto Line End</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_File_Start">
+   <property name="text">
+    <string>Goto File Start</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_File_End">
+   <property name="text">
+    <string>Goto File End</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionPage_Up_and_Select">
+   <property name="text">
+    <string>Page Up and Select</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionPage_Down_and_Select">
+   <property name="text">
+    <string>Page Down and Select</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_Page_Start">
+   <property name="text">
+    <string>Goto Page Start</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_Page_End">
+   <property name="text">
+    <string>Goto Page End</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_Page_Start_and_Select">
+   <property name="text">
+    <string>Goto Page Start and Select</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_Page_End_and_Select">
+   <property name="text">
+    <string>Goto Page End and Select</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_Line_Start_and_Select">
+   <property name="text">
+    <string>Goto Line Start and Select</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_Line_End_and_Select">
+   <property name="text">
+    <string>Goto Line End and Select</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_File_Start_and_Select">
+   <property name="text">
+    <string>Goto File Start and Select</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionGoto_File_End_and_Select">
+   <property name="text">
+    <string>Goto File End and Select</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
  </widget>
