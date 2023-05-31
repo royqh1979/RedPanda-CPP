@@ -4808,7 +4808,7 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 case StatementKind::skAlias: {
                     statement = doFindAliasedStatement(statement);
                     if (statement)
-                        result = doCreateEvalNamespace(statement);
+                        result = doCreateEvalType(fileName,statement);
                 }
                     break;
                 case StatementKind::skVariable:
