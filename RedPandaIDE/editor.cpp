@@ -1296,7 +1296,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
     // if ctrl+clicked
     if ((event->modifiers() == Qt::ControlModifier)
             && (event->button() == Qt::LeftButton)) {
-        if (!mCurrentWord.isEmpty()) {
+        if (!selAvail() && !mCurrentWord.isEmpty()) {
             QSynedit::BufferCoord p;
             if (mParser && pointToCharLine(event->pos(),p)) {
                 QString s = document()->getLine(p.line - 1);

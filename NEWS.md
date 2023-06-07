@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.23
+
+  - fix: When selection is availalbe, Ctrl+Click shouldn't jump to declaration/definition.
+
 Red Panda C++ Version 2.22
 
   - fix: Crash at startup when current problem in the problem set is connected with source file.
