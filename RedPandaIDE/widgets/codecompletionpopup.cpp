@@ -752,6 +752,28 @@ void CodeCompletionPopup::getCompletionFor(
 
                 if (!classTypeStatement)
                     return;
+                // It's a iterator
+                if (ownerStatement
+                        && ownerStatement->typeStatement
+                        && STLIterators.contains(ownerStatement->typeStatement->command)
+                        && (memberOperator == "->"
+                            || memberOperator == "->*")
+                ) {
+                    PStatement parentScope = ownerStatement->typeStatement->parentScope.lock();
+                    if (STLContainers.contains(parentScope->fullName)) {
+                        QString typeName=mParser->findFirstTemplateParamOf(fileName,ownerStatement->templateParams, parentScope);
+//                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                        classTypeStatement=mParser->findTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (!classTypeStatement)
+                            return;
+                    } else if (STLMaps.contains(parentScope->fullName)) {
+                        QString typeName=mParser->findTemplateParamOf(fileName,ownerStatement->templateParams,1,parentScope);
+    //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                        classTypeStatement=mParser->findTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (!classTypeStatement)
+                            return;
+                    }
+                }
                 //is a smart pointer
                 if (STLPointers.contains(classTypeStatement->fullName)
                    && (memberOperator == "->"

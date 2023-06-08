@@ -303,8 +303,10 @@ void initParser()
     STLPointers.insert("std::shared_ptr");
     STLPointers.insert("std::weak_ptr");
     //STLPointers.insert("__gnu_cxx::__normal_iterator");
-    //STLPointers.insert("std::reverse_iterator");
-    //STLPointers.insert("std::iterator");
+//    STLPointers.insert("std::reverse_iterator");
+//    STLPointers.insert("std::iterator");
+//    STLPointers.insert("std::const_iterator");
+//    STLPointers.insert("std::const_reverse_iterator");
 
     AutoTypes.insert("auto");
     AutoTypes.insert("auto &");

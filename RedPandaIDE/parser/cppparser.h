@@ -52,6 +52,10 @@ public:
     QString findFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
                                      const PStatement& currentScope);
+    QString findTemplateParamOf(const QString& fileName,
+                                     const QString& phrase,
+                                     int index,
+                                     const PStatement& currentScope);
     PStatement findFunctionAt(const QString& fileName,
                             int line);
     int findLastOperator(const QString& phrase) const;

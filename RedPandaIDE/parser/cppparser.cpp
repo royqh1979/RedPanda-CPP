@@ -193,6 +193,14 @@ QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QStri
     return doFindFirstTemplateParamOf(fileName,phrase,currentScope);
 }
 
+QString CppParser::findTemplateParamOf(const QString &fileName, const QString &phrase, int index, const PStatement &currentScope)
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return "";
+    return doFindTemplateParamOf(fileName,phrase,index,currentScope);
+}
+
 PStatement CppParser::findFunctionAt(const QString &fileName, int line)
 {
     QMutexLocker locker(&mMutex);
@@ -4632,27 +4640,57 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         false);
         } else if (phraseExpression[pos] == "->") {
             pos++;
-//            qDebug()<<"pointer level"<<result->pointerLevel;
             if (result->pointerLevel==0) {
-                PStatement typeStatement = result->effectiveTypeStatement;
-                if ((typeStatement)
-                        && STLPointers.contains(typeStatement->fullName)
-                        && result->kind == EvalStatementKind::Variable
-                        && result->baseStatement) {
-                    PStatement parentScope = result->baseStatement->parentScope.lock();
-                    QString typeName;
-                    if (!previousResult || previousResult->definitionString.isEmpty())
-                        typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
-                    else
-                        typeName = doFindFirstTemplateParamOf(fileName,previousResult->definitionString,parentScope);
-//                    qDebug()<<"typeName"<<typeName;
-                    typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
-                    if (typeStatement) {
-                        result = doCreateEvalType(fileName,typeStatement);
-                        result->definitionString=typeName;
-                        result->kind = EvalStatementKind::Variable;
-                    } else {
-                        return PEvalStatement();
+                // iterator
+                if (result->typeStatement
+                        && STLIterators.contains(result->typeStatement->command)
+                ) {
+                    PStatement parentScope = result->typeStatement->parentScope.lock();
+                    if (STLContainers.contains(parentScope->fullName)) {
+                        QString typeName=doFindFirstTemplateParamOf(fileName,result->templateParams, parentScope);
+//                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                        PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (typeStatement) {
+                            result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString=typeName;
+                            result->kind = EvalStatementKind::Variable;
+                        } else {
+                            result = PEvalStatement();
+                        }
+                    } else if (STLMaps.contains(parentScope->fullName)) {
+                        QString typeName=doFindTemplateParamOf(fileName,result->templateParams,1,parentScope);
+    //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                        PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (typeStatement) {
+                            result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString=typeName;
+                            result->kind = EvalStatementKind::Variable;
+                        } else {
+                            result = PEvalStatement();
+                        }
+                    }
+                } else {
+                    //smart pointer
+                    PStatement typeStatement = result->effectiveTypeStatement;
+                    if ((typeStatement)
+                            && STLPointers.contains(typeStatement->fullName)
+                            && result->kind == EvalStatementKind::Variable
+                            && result->baseStatement) {
+                        PStatement parentScope = result->baseStatement->parentScope.lock();
+                        QString typeName;
+                        if (!previousResult || previousResult->definitionString.isEmpty())
+                            typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+                        else
+                            typeName = doFindFirstTemplateParamOf(fileName,previousResult->definitionString,parentScope);
+    //                    qDebug()<<"typeName"<<typeName;
+                        typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                        if (typeStatement) {
+                            result = doCreateEvalType(fileName,typeStatement);
+                            result->definitionString=typeName;
+                            result->kind = EvalStatementKind::Variable;
+                        } else {
+                            return PEvalStatement();
+                        }
                     }
                 }
             } else {

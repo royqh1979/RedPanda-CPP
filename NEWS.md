@@ -1,6 +1,7 @@
 Red Panda C++ Version 2.23
 
   - fix: When selection is availalbe, Ctrl+Click shouldn't jump to declaration/definition.
+  - enhancement: Code completion for '->' operator on std iterators.
 
 Red Panda C++ Version 2.22
 
