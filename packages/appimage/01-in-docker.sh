@@ -9,7 +9,7 @@ APPIMAGE_FILE=RedPandaIDE-$VERSION-$CARCH.AppImage
 mkdir -p /build/redpanda-build
 cd /build/redpanda-build
 qmake PREFIX='/usr' XDG_ADAPTIVE_ICON=ON /build/RedPanda-CPP/Red_Panda_CPP.pro
-make -j$(nproc)
+make LINUX_STATIC_IME_PLUGIN=ON -j$(nproc)
 
 # install RedPanda C++ to AppDir
 make install INSTALL_ROOT=/build/RedPandaIDE.AppDir
