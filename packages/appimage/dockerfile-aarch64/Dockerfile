@@ -7,7 +7,7 @@ RUN sed -i 's|ports.ubuntu.com|mirrors.ustc.edu.cn|g' /etc/apt/sources.list && \
     export DEBIAN_FRONTEND=noninteractive && \
     apt update && \
     apt upgrade -y && \
-    apt install --no-install-recommends -y ca-certificates cargo curl cmake file gcc g++ make \
+    apt install --no-install-recommends -y ca-certificates cargo curl cmake extra-cmake-modules file gcc g++ make \
         libatspi2.0-dev libdbus-1-dev libfontconfig1-dev libfreetype6-dev libgl1-mesa-dev libxkbcommon-x11-dev
 
 # AppImageKit
@@ -17,7 +17,9 @@ RUN curl -L -o /usr/local/bin/appimagetool 'https://github.com/AppImage/AppImage
 # Qt 5
 RUN mkdir -p /build/qt5 && \
     cd /build/qt5 && \
-    curl -O 'https://mirrors.ustc.edu.cn/qtproject/archive/qt/5.12/5.12.12/submodules/qt{base,svg,tools}-everywhere-src-5.12.12.tar.xz' && \
+    curl -O 'https://download.qt.io/archive/qt/5.12/5.12.12/submodules/qt{base,svg,tools}-everywhere-src-5.12.12.tar.xz' && \
+    # fcitx5-qt 5.0.6 is the last version compatible with ubuntu 18.04’s cmake 3.10
+    curl -L -o fcitx5-qt-5.0.6.tar.gz 'https://github.com/fcitx/fcitx5-qt/archive/refs/tags/5.0.6.tar.gz' && \
     tar xf qtbase-everywhere-src-5.12.12.tar.xz && \
     cd qtbase-everywhere-src-5.12.12 && \
     ./configure \
@@ -42,6 +44,14 @@ RUN mkdir -p /build/qt5 && \
     qmake . && \
     make -j$(nproc) && \
     make install && \
+    # fcitx5 package
+    cd /build/qt5 && \
+    tar xf fcitx5-qt-5.0.6.tar.gz && \
+    cd fcitx5-qt-5.0.6 && \
+    cmake . -Bbuild -DCMAKE_MODULE_PATH=/usr/local/lib/cmake -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_BUILD_TYPE=Release -DENABLE_QT4=Off -DENABLE_QT5=On -DENABLE_QT6=Off -DBUILD_ONLY_PLUGIN=On -DBUILD_STATIC_PLUGIN=On && \
+    # cmake 3.10 is too old to build with `--parallel` option
+    cmake --build build -- -j$(nproc) && \
+    cmake --install build && \
     # cleanup
     cd / && \
     rm -r /build/qt5

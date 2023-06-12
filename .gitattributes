@@ -6,6 +6,7 @@
 /packages/appimage/01-in-docker.sh eol=lf
 
 # text files to be packed
+/packages/appimage/AppRun.sh eol=lf
 /platform/linux/install.sh eol=lf
 /platform/linux/redpandaide.desktop.in eol=lf
 /platform/linux/redpandaide.svg eol=lf
