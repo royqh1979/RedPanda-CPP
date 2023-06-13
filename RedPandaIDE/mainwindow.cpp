@@ -589,6 +589,7 @@ void MainWindow::updateEditorActions(const Editor *e)
 
         ui->actionClose->setEnabled(false);
         ui->actionClose_All->setEnabled(false);
+        ui->actionClose_Others->setEnabled(false);
 
         ui->actionAdd_bookmark->setEnabled(false);
         ui->actionRemove_Bookmark->setEnabled(false);
@@ -650,6 +651,7 @@ void MainWindow::updateEditorActions(const Editor *e)
 
         ui->actionClose->setEnabled(true);
         ui->actionClose_All->setEnabled(true);
+        ui->actionClose_Others->setEnabled(mEditorList->pageCount()>1);
 
         int line = e->caretY();
         ui->actionAdd_bookmark->setEnabled(e->document()->count()>0 && !e->hasBookmark(line));
@@ -1725,6 +1727,7 @@ void MainWindow::updateActionIcons()
     ui->actionClose->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE));
     ui->actionClose_Project->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_CLOSE));
     ui->actionClose_All->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE_ALL));
+    ui->actionClose_Others->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_CLOSE_ALL));
     ui->actionPrint->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_PRINT));
 
     ui->actionUndo->setIcon(pIconsManager->getIcon(IconsManager::ACTION_EDIT_UNDO));
@@ -4989,6 +4992,7 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
     }
     menu.addAction(ui->actionClose);
     menu.addAction(ui->actionClose_All);
+    menu.addAction(ui->actionClose_Others);
     menu.addSeparator();
     menu.addAction(ui->actionToggle_Readonly);
     menu.addSeparator();
@@ -9918,5 +9922,16 @@ void MainWindow::on_actionGoto_File_End_and_Select_triggered()
     if (editor && editor->hasFocus()) {
         editor->processCommand(QSynedit::EditCommand::SelEditorEnd);
     }
+}
+
+
+void MainWindow::on_actionClose_Others_triggered()
+{
+    mClosing = true;
+    Editor* e = mEditorList->getEditor();
+    if (e) {
+        mEditorList->closeOthers(e);
+    }
+    mClosing = false;
 }
 

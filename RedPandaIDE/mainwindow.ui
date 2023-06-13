@@ -3510,6 +3510,14 @@
     <enum>QAction::NoRole</enum>
    </property>
   </action>
+  <action name="actionClose_Others">
+   <property name="text">
+    <string>Close Others</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

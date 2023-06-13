@@ -56,6 +56,7 @@ public:
     void clearProjectEditorsModified();
 
     bool closeAll(bool force = false);
+    bool closeOthers(Editor* editor);
 
     void forceCloseEditor(Editor* editor);
 

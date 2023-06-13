@@ -387,6 +387,25 @@ bool EditorList::closeAll(bool force) {
     return true;
 }
 
+bool EditorList::closeOthers(Editor *editor)
+{
+    QList<Editor*> editors;
+    for (int i=0;i<mLeftPageWidget->count();i++) {
+        editors.append(static_cast<Editor*>(mLeftPageWidget->widget(i)));
+    }
+    for (int i=0;i<mRightPageWidget->count();i++) {
+        editors.append(static_cast<Editor*>(mRightPageWidget->widget(i)));
+    }
+    for (Editor* e: editors ) {
+        if (e!=editor) {
+            if (!closeEditor(e,false,false)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void EditorList::forceCloseEditor(Editor *editor)
 {
     beginUpdate();

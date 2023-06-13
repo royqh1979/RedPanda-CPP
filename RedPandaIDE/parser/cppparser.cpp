@@ -531,6 +531,29 @@ PStatement CppParser::doFindStatementOf(const QString &fileName, const QStringLi
                     return statement;
             }
             return PStatement();
+        } else if (ownerEvalStatement->typeStatement
+                   && STLIterators.contains(ownerEvalStatement->typeStatement->command)
+                   && memberOperator=="->"
+                      ) {
+            PStatement parentScope = ownerEvalStatement->typeStatement->parentScope.lock();
+            if (STLContainers.contains(parentScope->fullName)) {
+                QString typeName=doFindFirstTemplateParamOf(fileName,ownerEvalStatement->templateParams, parentScope);
+                PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                if (typeStatement) {
+                    return findMemberOfStatement(phrase, typeStatement);
+                } else {
+                    return PStatement();
+                }
+            } else if (STLMaps.contains(parentScope->fullName)) {
+                QString typeName=doFindTemplateParamOf(fileName,ownerEvalStatement->templateParams,1,parentScope);
+            //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
+                PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
+                if (typeStatement) {
+                    return findMemberOfStatement(phrase, typeStatement);
+                } else {
+                    return PStatement();
+                }
+            }
         }
         return findMemberOfStatement(phrase, ownerEvalStatement->effectiveTypeStatement);
     }

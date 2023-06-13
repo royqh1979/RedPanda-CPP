@@ -4992,6 +4992,10 @@
         <source>Goto File End and Select</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Close Others</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>

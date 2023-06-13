@@ -841,6 +841,8 @@ private slots:
 
     void on_actionGoto_File_End_and_Select_triggered();
 
+    void on_actionClose_Others_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;
