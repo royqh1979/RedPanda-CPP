@@ -1453,10 +1453,15 @@ void MainWindow::openFiles(const QStringList &files)
         e->activate();
 }
 
-Editor* MainWindow::openFile(const QString &filename, bool activate, QTabWidget* page)
+Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page)
 {
     if (!fileExists(filename))
         return nullptr;
+
+    QFileInfo info=QFileInfo(filename);
+    if (info.isAbsolute())
+        filename = info.absoluteFilePath();
+
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
         if (activate) {
@@ -1501,11 +1506,14 @@ Editor* MainWindow::openFile(const QString &filename, bool activate, QTabWidget*
     return nullptr;
 }
 
-void MainWindow::openProject(const QString &filename, bool openFiles)
+void MainWindow::openProject(QString filename, bool openFiles)
 {
     if (!fileExists(filename)) {
         return;
     }
+    QFileInfo info=QFileInfo(filename);
+    if (info.isAbsolute())
+        filename = info.absoluteFilePath();
     Editor* oldEditor=nullptr;
     if (mProject) {
         if (mProject->filename() == filename)

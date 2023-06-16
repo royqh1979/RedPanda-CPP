@@ -5,6 +5,7 @@ Red Panda C++ Version 2.23
   - enhancement: Tooltip support for '->' operator on std iterators.
   - enhancement: Close other editors.
   - fix: Goto definition/Goto declaration/Info tips can't be correctly triggered when mouse pointer is at the last half character of current word.
+  - fix: Use "/" as path seperator when starting app by double clicking c/c++ files in the explorer.
 
 Red Panda C++ Version 2.22
 
