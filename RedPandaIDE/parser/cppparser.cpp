@@ -5199,13 +5199,13 @@ PEvalStatement CppParser::doCreateEvalVariable(
                 pointerLevel,
                 templateParams);
     }
-    if (!varStatement->args.isEmpty()) {
-        int j = 0;
-        while ((j = varStatement->args.indexOf("[", j)) != -1) {
-            ++j;
-            pointerLevel++;
-        }
-    }
+//    if (!varStatement->args.isEmpty()) {
+//        int j = 0;
+//        while ((j = varStatement->args.indexOf("[", j)) != -1) {
+//            ++j;
+//            pointerLevel++;
+//        }
+//    }
 //    qDebug()<<"parse ..."<<baseType<<pointerLevel;
     return std::make_shared<EvalStatement>(
                 baseType,
@@ -5359,7 +5359,7 @@ PStatement CppParser::doParseEvalTypeInfo(
         level++;
         baseType="";
         syntaxer.resetState();
-        syntaxer.setLine(effectiveTypeStatement->type,0);
+        syntaxer.setLine(effectiveTypeStatement->type+effectiveTypeStatement->args,0);
         int bracketLevel = 0;
         int templateLevel  = 0;
         while(!syntaxer.eol()) {
