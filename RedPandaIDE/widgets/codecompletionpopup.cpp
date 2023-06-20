@@ -773,12 +773,11 @@ void CodeCompletionPopup::getCompletionFor(
                         if (!classTypeStatement)
                             return;
                     }
-                }
-                //is a smart pointer
-                if (STLPointers.contains(classTypeStatement->fullName)
+                } else if (STLPointers.contains(classTypeStatement->fullName)
                    && (memberOperator == "->"
                        || memberOperator == "->*")
                         && ownerStatement->baseStatement) {
+                                   //is a smart pointer
                     QString typeName= mParser->findFirstTemplateParamOf(
                                 fileName,
                                 ownerStatement->baseStatement->type,
@@ -789,13 +788,15 @@ void CodeCompletionPopup::getCompletionFor(
                                 scope);
                     if (!classTypeStatement)
                         return;
+                } else {
+                    //normal member access
+                    if (memberOperator=="." && ownerStatement->pointerLevel !=0)
+                        return;
+                    if (memberOperator=="->" && ownerStatement->pointerLevel!=1)
+                        return;
                 }
                 if (!isIncluded(classTypeStatement->fileName) &&
                     !isIncluded(classTypeStatement->definitionFileName))
-                    return;
-                if (memberOperator=="." && ownerStatement->pointerLevel !=0)
-                    return;
-                if (memberOperator=="->" && ownerStatement->pointerLevel!=1)
                     return;
                 if ((classTypeStatement == scopeTypeStatement) || (ownerStatement->effectiveTypeStatement->command == "this")) {
                     //we can use all members

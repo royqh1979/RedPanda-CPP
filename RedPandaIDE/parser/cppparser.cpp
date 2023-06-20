@@ -4400,7 +4400,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
+                            result = doCreateEvalType(fileName,typeName,parentScope);
                             result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
                         } else {
@@ -4411,7 +4411,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
+                            result = doCreateEvalType(fileName,typeName,parentScope);
                             result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
                         } else {
@@ -4435,7 +4435,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
     //                    qDebug()<<"typeName"<<typeName;
                         typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
+                            result = doCreateEvalType(fileName,typeName,parentScope);
                             result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
                         } else {
@@ -4582,7 +4582,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                             if (!typeName.isEmpty())
                                 typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                             if (typeStatement) {
-                                result = doCreateEvalType(fileName,typeStatement);
+                                result = doCreateEvalType(fileName,typeName,parentScope);
                                 result->definitionString = typeName;
                                 result->kind = EvalStatementKind::Variable;
                                 lastResult = result;
@@ -4601,7 +4601,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                             if (!typeName.isEmpty())
                                 typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                             if (typeStatement) {
-                                result = doCreateEvalType(fileName,typeStatement);
+                                result = doCreateEvalType(fileName,typeName,parentScope);
                                 result->definitionString = typeName;
                                 result->kind = EvalStatementKind::Variable;
                                 lastResult = result;
@@ -4635,7 +4635,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         typeStatement = doFindTypeDefinitionOf(fileName, typeName,
                                                          parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
+                            result = doCreateEvalType(fileName,typeName,parentScope);
                             result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
                             lastResult = result;
@@ -4652,7 +4652,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         typeStatement = doFindTypeDefinitionOf(fileName, typeName,
                                                          parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
+                            result = doCreateEvalType(fileName,typeName,parentScope);
                             result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
                             lastResult = result;
@@ -4688,7 +4688,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
 //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
+                            result = doCreateEvalType(fileName,typeName,parentScope);
                             result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
                         } else {
@@ -4699,7 +4699,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
+                            result = doCreateEvalType(fileName,typeName,parentScope);
                             result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
                         } else {
@@ -4722,7 +4722,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
     //                    qDebug()<<"typeName"<<typeName;
                         typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeStatement);
+                            result = doCreateEvalType(fileName,typeName,parentScope);
                             result->definitionString=typeName;
                             result->kind = EvalStatementKind::Variable;
                         } else {
@@ -5085,6 +5085,31 @@ PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceState
                 namespaceStatement);
 }
 
+PEvalStatement CppParser::doCreateEvalType(const QString &fileName, const QString &typeName, const PStatement& parentScope) const
+{
+    QString baseType;
+    PStatement typeStatement;
+    int pointerLevel=0;
+    QString templateParams;
+    PStatement effectiveTypeStatement =  doParseEvalTypeInfo(
+                fileName,
+                parentScope,
+                typeName,
+                baseType,
+                typeStatement,
+                pointerLevel,
+                templateParams);
+    return std::make_shared<EvalStatement>(
+                baseType,
+                EvalStatementKind::Type,
+                PStatement(),
+                typeStatement,
+                effectiveTypeStatement,
+                pointerLevel,
+                templateParams
+                );
+}
+
 PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatement &typeStatement) const
 {
     if (!typeStatement)
@@ -5325,55 +5350,55 @@ PStatement CppParser::doParseEvalTypeInfo(
         position--;
     }
     typeStatement = doFindStatementOf(fileName,baseType,scope);
+    PStatement effectiveTypeStatement = typeStatement;
     int level=0;
-    while (typeStatement && (typeStatement->kind == StatementKind::skTypedef
-           || typeStatement->kind == StatementKind::skPreprocessor)) {
-           if (level >20) // prevent infinite loop
-               break;
-           level++;
-           baseType="";
-           syntaxer.resetState();
-           syntaxer.setLine(typeStatement->type,0);
-           int bracketLevel = 0;
-           int templateLevel  = 0;
-           while(!syntaxer.eol()) {
-               QString token = syntaxer.getToken();
-               if (bracketLevel == 0 && templateLevel ==0) {
-                   if (token == "*")
-                       pointerLevel++;
-                   else if (token == "&")
-                       pointerLevel--;
-                   else if (syntaxer.getTokenAttribute()->tokenType() == QSynedit::TokenType::Identifier) {
-                       baseType += token;
-                   } else if (token == "[") {
-                       pointerLevel++;
-                       bracketLevel++;
-                   } else if (token == "<") {
-                       templateLevel++;
-                       templateParams += token;
-                   } else if (token == "::") {
-                       baseType += token;
-                   }
-               } else if (bracketLevel > 0) {
-                   if (token == "[") {
-                       bracketLevel++;
-                   } else if (token == "]") {
-                       bracketLevel--;
-                   }
-               } else if (templateLevel > 0) {
-                   if (token == "<") {
-                       templateLevel++;
-                   } else if (token == ">") {
-                       templateLevel--;
-                   }
-                   templateParams += token;
-               }
-               syntaxer.next();
-           }
-           typeStatement = doFindStatementOf(fileName,baseType, typeStatement->parentScope.lock());
+    while (effectiveTypeStatement && (effectiveTypeStatement->kind == StatementKind::skTypedef
+           || effectiveTypeStatement->kind == StatementKind::skPreprocessor)) {
+        if (level >20) // prevent infinite loop
+            break;
+        level++;
+        baseType="";
+        syntaxer.resetState();
+        syntaxer.setLine(effectiveTypeStatement->type,0);
+        int bracketLevel = 0;
+        int templateLevel  = 0;
+        while(!syntaxer.eol()) {
+            QString token = syntaxer.getToken();
+            if (bracketLevel == 0 && templateLevel ==0) {
+                if (token == "*")
+                    pointerLevel++;
+                else if (token == "&")
+                    pointerLevel--;
+                else if (syntaxer.getTokenAttribute()->tokenType() == QSynedit::TokenType::Identifier) {
+                    baseType += token;
+                } else if (token == "[") {
+                    pointerLevel++;
+                    bracketLevel++;
+                } else if (token == "<") {
+                    templateLevel++;
+                    templateParams += token;
+                } else if (token == "::") {
+                    baseType += token;
+                }
+            } else if (bracketLevel > 0) {
+                if (token == "[") {
+                    bracketLevel++;
+                } else if (token == "]") {
+                    bracketLevel--;
+                }
+            } else if (templateLevel > 0) {
+                if (token == "<") {
+                    templateLevel++;
+                } else if (token == ">") {
+                    templateLevel--;
+                }
+            }
+            syntaxer.next();
+        }
+        effectiveTypeStatement = doFindStatementOf(fileName,baseType, effectiveTypeStatement->parentScope.lock());
     }
-    typeStatement = getTypeDef(typeStatement,fileName,baseType);
-    return typeStatement;
+    effectiveTypeStatement = getTypeDef(effectiveTypeStatement,fileName,baseType);
+    return effectiveTypeStatement;
 }
 
 int CppParser::getBracketEnd(const QString &s, int startAt) const

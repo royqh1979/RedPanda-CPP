@@ -356,6 +356,7 @@ private:
 
     PEvalStatement doCreateEvalNamespace(const PStatement& namespaceStatement) const;
 
+    PEvalStatement doCreateEvalType(const QString& fileName,const QString& typeName, const PStatement& parentScope) const;
     PEvalStatement doCreateEvalType(const QString& fileName,const PStatement& typeStatement) const;
     PEvalStatement doCreateEvalType(const QString& primitiveType) const;
 
