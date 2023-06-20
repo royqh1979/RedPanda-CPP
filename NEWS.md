@@ -7,6 +7,9 @@ Red Panda C++ Version 2.23
   - fix: Goto definition/Goto declaration/Info tips can't be correctly triggered when mouse pointer is at the last half character of current word.
   - fix: Use "/" as path seperator when starting app by double clicking c/c++ files in the explorer.
   - enhancement: differenciate -> and . when displaying completion suggestion infos.
+  - enhancement: improve code completion for std iterators defined with "using namespace std"
+  - enhancement: improve pointer calculation when inferencing type info
+  - enhancement: improve parsing for multiple vars defined in one line
 
 Red Panda C++ Version 2.22
 

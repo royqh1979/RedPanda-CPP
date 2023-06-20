@@ -756,8 +756,8 @@ QSet<QString> CppParser::internalGetFileUsings(const QString &filename) const
     QSet<QString> result;
     if (filename.isEmpty())
         return result;
-    if (mParsing)
-        return result;
+//    if (mParsing)
+//        return result;
     PFileIncludes fileIncludes= mPreprocessor.includesList().value(filename,PFileIncludes());
     if (fileIncludes) {
         foreach (const QString& usingName, fileIncludes->usings) {
@@ -3817,7 +3817,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
             return;
         case '=':
             if (mIndex+1<tokenCount
-                    && isIdentifier(mTokenizer[mIndex+1]->text)
+                    && mTokenizer[mIndex+1]->text!="{"
                     && addedVar
                     && !(addedVar->properties & StatementProperty::spFunctionPointer)
                     && AutoTypes.contains(addedVar->type)) {
@@ -3963,7 +3963,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                             }
                         }
                     } else
-                        addedVar->type = aliasStatement->baseType + aliasStatement->templateParams;
+                        addedVar->type = aliasStatement->baseType  + aliasStatement->templateParams;
                     if (aliasStatement->pointerLevel>0)
                         addedVar->type += QString(aliasStatement->pointerLevel,'*');
                 }
@@ -5312,8 +5312,6 @@ PStatement CppParser::doParseEvalTypeInfo(
         if (bracketLevel == 0 && templateLevel ==0) {
             if (token == "*")
                 pointerLevel++;
-            else if (token == "&")
-                pointerLevel--;
             else if (syntaxer.getTokenAttribute()->tokenType() == QSynedit::TokenType::Identifier) {
                 baseType += token;
             } else if (token == "[") {
@@ -5367,8 +5365,6 @@ PStatement CppParser::doParseEvalTypeInfo(
             if (bracketLevel == 0 && templateLevel ==0) {
                 if (token == "*")
                     pointerLevel++;
-                else if (token == "&")
-                    pointerLevel--;
                 else if (syntaxer.getTokenAttribute()->tokenType() == QSynedit::TokenType::Identifier) {
                     baseType += token;
                 } else if (token == "[") {
