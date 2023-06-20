@@ -793,6 +793,10 @@ void CodeCompletionPopup::getCompletionFor(
                 if (!isIncluded(classTypeStatement->fileName) &&
                     !isIncluded(classTypeStatement->definitionFileName))
                     return;
+                if (memberOperator=="." && ownerStatement->pointerLevel !=0)
+                    return;
+                if (memberOperator=="->" && ownerStatement->pointerLevel!=1)
+                    return;
                 if ((classTypeStatement == scopeTypeStatement) || (ownerStatement->effectiveTypeStatement->command == "this")) {
                     //we can use all members
                     addChildren(classTypeStatement,fileName,-1);
