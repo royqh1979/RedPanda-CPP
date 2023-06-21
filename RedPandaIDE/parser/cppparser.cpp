@@ -5554,6 +5554,12 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
             QString cmd=mTokenizer[i]->text;
             words.append(cmd);
             i++;
+        } else if (mTokenizer[i]->text.startsWith("[")) {
+            if (!words.isEmpty()) {
+                int lastIdx=words.count()-1;
+                words[lastIdx]=words[lastIdx]+mTokenizer[i]->text;
+            }
+            i++;
         } else {
             i++;
         }
