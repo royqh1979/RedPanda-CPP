@@ -2242,7 +2242,7 @@ void Settings::CompilerSet::setProperties(const QString& binDir, const QString& 
 #endif
             } else {
 #ifdef Q_OS_WIN
-                mName = "MinGW GCC " + mVersion;
+                mName = "MinGW-w64 GCC " + mVersion;
 #else
                 mName = "GCC " + mVersion;
 #endif
