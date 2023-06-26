@@ -6386,7 +6386,13 @@ void QSynEdit::dropEvent(QDropEvent *event)
 
     BufferCoord coord = displayToBufferPos(pixelsToNearestRowColumn(event->pos().x(),
                                                                     event->pos().y()));
-    if (coord>=mDragSelBeginSave && coord<=mDragSelEndSave) {
+    if (
+            (event->proposedAction() == Qt::DropAction::CopyAction
+             && coord>mDragSelBeginSave && coord<mDragSelEndSave)
+             ||
+             (event->proposedAction() != Qt::DropAction::CopyAction
+             && coord>=mDragSelBeginSave && coord<=mDragSelEndSave)
+            ) {
         mDocument->deleteAt(mDocument->count()-1);
         //do nothing if drag onto itself
         event->acceptProposedAction();

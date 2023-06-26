@@ -11,6 +11,7 @@ Red Panda C++ Version 2.23
   - enhancement: improve pointer calculation when inferencing type info
   - enhancement: improve parsing for multiple vars defined in one line
   - enhancement: improve parsing result for function parameters like 'Node (&node)[10]'
+  - fix: Can't copy by ctrl+dray&drop to current selection's begin/end
 
 Red Panda C++ Version 2.22
 
