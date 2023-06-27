@@ -162,10 +162,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Disassemble</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Step over one machine instruction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -183,6 +179,10 @@
     </message>
     <message>
         <source>Blend Mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Callstack</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

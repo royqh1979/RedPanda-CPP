@@ -85,6 +85,27 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         return false;
     }
     setForceUTF8(CompilerInfoManager::forceUTF8InDebugger(compilerSet->compilerType()));
+    setDebugInfosUsingUTF8(false);
+#ifdef Q_OS_WIN
+
+    bool isOk;
+    int productVersion = QSysInfo::productVersion().toInt(&isOk);
+//    qDebug()<<productVersion<<isOk;
+    if (!isOk) {
+        if (QSysInfo::productVersion().startsWith("7"))
+            productVersion=7;
+        else if (QSysInfo::productVersion().startsWith("10"))
+            productVersion=10;
+        else if (QSysInfo::productVersion().startsWith("11"))
+            productVersion=11;
+        else
+            productVersion=10;
+    }
+
+    if (compilerSet->mainVersion()>=13 && compilerSet->compilerType()==CompilerType::GCC
+            && productVersion>=10)
+        setDebugInfosUsingUTF8(true);
+#endif
     if (compilerSet->debugger().endsWith(LLDB_MI_PROGRAM))
         setDebuggerType(DebuggerType::LLDB_MI);
     else
@@ -558,6 +579,16 @@ void Debugger::fetchVarChildren(const QString &varName)
     if (mExecuting) {
         sendCommand("-var-list-children",varName);
     }
+}
+
+bool Debugger::debugInfosUsingUTF8() const
+{
+    return mDebugInfosUsingUTF8;
+}
+
+void Debugger::setDebugInfosUsingUTF8(bool newDebugInfosUsingUTF8)
+{
+    mDebugInfosUsingUTF8 = newDebugInfosUsingUTF8;
 }
 
 DebuggerType Debugger::debuggerType() const
@@ -1356,6 +1387,13 @@ void DebugReader::runNextCmd()
     //clang compatibility
     if (mDebugger->forceUTF8()) {
         params = pCmd->params.toUtf8();
+    } else if (mDebugger->debugInfosUsingUTF8() &&
+               (pCmd->command=="-break-insert"
+                || pCmd->command=="-var-create"
+                || pCmd->command=="-data-read-memory"
+                || pCmd->command=="-data-evaluate-expression"
+                )) {
+        params = pCmd->params.toUtf8();
     }
     if (pCmd->command == "-var-create") {
         //hack for variable creation,to easy remember var expression
@@ -1493,7 +1531,7 @@ void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpo
 {
     QString filename;
     // gdb use system encoding for file path
-    if (mDebugger->forceUTF8())
+    if (mDebugger->forceUTF8() || mDebugger->debugInfosUsingUTF8())
         filename = breakpoint["fullname"].utf8PathValue();
     else
         filename = breakpoint["fullname"].pathValue();
@@ -1511,7 +1549,8 @@ void DebugReader::handleFrame(const GDBMIResultParser::ParseValue &frame)
         if (!ok)
             mCurrentAddress=0;
         mCurrentLine = frameObj["line"].intValue();
-        if (mDebugger->forceUTF8())
+        if (mDebugger->forceUTF8()
+                || mDebugger->debugInfosUsingUTF8())
             mCurrentFile = frameObj["fullname"].utf8PathValue();
         else
             mCurrentFile = frameObj["fullname"].pathValue();
@@ -1526,7 +1565,7 @@ void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack
         GDBMIResultParser::ParseObject frameObject = frameValue.object();
         PTrace trace = std::make_shared<Trace>();
         trace->funcname = frameObject["func"].value();
-        if (mDebugger->forceUTF8())
+        if (mDebugger->forceUTF8() || mDebugger->debugInfosUsingUTF8())
             trace->filename = frameObject["fullname"].utf8PathValue();
         else
             trace->filename = frameObject["fullname"].pathValue();

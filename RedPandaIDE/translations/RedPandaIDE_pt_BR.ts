@@ -183,7 +183,7 @@
     </message>
     <message>
         <source>Disassemble</source>
-        <translation>Disassemble</translation>
+        <translation type="vanished">Disassemble</translation>
     </message>
     <message>
         <source>Step over one machine instruction</source>
@@ -204,6 +204,10 @@
     <message>
         <source>Blend Mode</source>
         <translation>Modo mesclado</translation>
+    </message>
+    <message>
+        <source>Callstack</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
