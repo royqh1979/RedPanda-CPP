@@ -4412,6 +4412,13 @@ void MainWindow::onFilesViewRemoveFiles()
                 QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
             return;
         doFilesViewRemoveFile(index);
+    } else if (indexList.count()==1) {
+        QModelIndex index = indexList[0];
+        if (QMessageBox::question(ui->treeFiles,tr("Delete")
+                                  ,tr("Do you really want to delete %1?").arg(mFileSystemModel.fileName(index)),
+                QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
+            return;
+        doFilesViewRemoveFile(index);
     } else {
         if (QMessageBox::question(ui->treeFiles,tr("Delete")
                                   ,tr("Do you really want to delete %1 files?").arg(indexList.count()),
@@ -7445,9 +7452,19 @@ void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
                                       + tr("Do you really want to delete it?"),
                             QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
             return;
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,2)
+        if (!QFile::moveToTrash(dir.absolutePath()))
+            dir.removeRecursively();
+#else
         dir.removeRecursively();
+#endif
     } else {
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,2)
+        if (!QFile::moveToTrash(mFileSystemModel.filePath(index)))
+            QFile::remove(mFileSystemModel.filePath(index));
+#else
         QFile::remove(mFileSystemModel.filePath(index));
+#endif
     }
 }
 

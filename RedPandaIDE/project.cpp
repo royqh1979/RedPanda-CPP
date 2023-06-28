@@ -525,7 +525,12 @@ bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeF
     }
 
     if (removeFile) {
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,2)
+        if (!QFile::moveToTrash(unit->fileName()))
+            QFile::remove(unit->fileName());
+#else
         QFile::remove(unit->fileName());
+#endif
     }
 
 //if not fUnits.GetItem(index).fNew then

@@ -85,6 +85,8 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     mDefaultFileNameFilters.append("*.dat");
     mDefaultFileNameFilters.append("*.md");
     mDefaultFileNameFilters.append("*.dev");
+    mDefaultFileNameFilters.append("*.s");
+    mDefaultFileNameFilters.append("*.S");
 }
 
 const QStringList &SystemConsts::defaultFileFilters() const noexcept
