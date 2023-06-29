@@ -3368,16 +3368,21 @@ void CppParser::handleStructs(bool isTypedef)
         // typdef struct Foo Bar
         if (isTypedef) {
             QString oldType = mTokenizer[mIndex]->text;
+            QString tempType = "";
+            bool isFirstLoop=true;
             while(true) {
                 // Add definition statement for the synonym
                 if ((mIndex + 1 < tokenCount)
                         && (mTokenizer[mIndex + 1]->text==","
                             || mTokenizer[mIndex + 1]->text==";")) {
                     QString newType = mTokenizer[mIndex]->text;
+                    QString type=oldType;
+                    if (!tempType.isEmpty())
+                        type+=tempType;
                     addStatement(
                                 getCurrentScope(),
                                 mCurrentFile,
-                                oldType,
+                                type,
                                 newType,
                                 "", // args
                                 "", // noname args
@@ -3387,7 +3392,10 @@ void CppParser::handleStructs(bool isTypedef)
                                 getScope(),
                                 mCurrentMemberAccessibility,
                                 StatementProperty::spHasDefinition);
-                }
+                    tempType="";
+                } else if (!isFirstLoop)
+                    tempType+= mTokenizer[mIndex]->text;
+                isFirstLoop=false;
                 mIndex++;
                 if (mIndex >= tokenCount)
                     break;
