@@ -5904,7 +5904,7 @@ int CppParser::indexPassParenthesis(int index)
 int CppParser::indexPassBraces(int index)
 {
     int tokenCount = mTokenizer.tokenCount();
-    while (tokenCount) {
+    while (index<tokenCount) {
         switch(mTokenizer[index]->text[0].unicode()) {
         case '{':
             return mTokenizer[index]->matchIndex+1;

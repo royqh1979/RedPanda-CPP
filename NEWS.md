@@ -18,6 +18,7 @@ Red Panda C++ Version 2.23
   - fix: "typedef struct" that don't have definition of the struct is not correctly parsed.
   - enhancement: correctly highlight multiline raw string literals.
   - change: remove "Assembly" color scheme item (it's not used anymore).
+  - fix: crash when parsing files containing inline assembly code.
 
 Red Panda C++ Version 2.22
 
