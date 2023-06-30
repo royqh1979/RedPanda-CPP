@@ -80,6 +80,7 @@ public:
 
     void load(const QString& filename);
 
+    bool useQtFusionStyle() const;
     bool isDark() const;
 
     const QString &defaultColorScheme() const;
@@ -98,6 +99,7 @@ private:
     QHash<int,QColor> mColors;
     QString mName;
     QString mDisplayName;
+    bool mUseQtFusionStyle;
     bool mIsDark;
     QString mDefaultColorScheme;
     QString mDefaultIconSet;

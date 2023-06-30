@@ -29,8 +29,10 @@ class ChooseThemeDialog : public QDialog
 
 public:
     enum class Theme {
+        Unknown = -1,
+        AutoFollowSystem = 0,
         Dark,
-        Light
+        Light,
     };
     enum class Language {
         C,

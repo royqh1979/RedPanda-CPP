@@ -1,6 +1,7 @@
 {
-    "name":"dark",
+    "name":"Dark",
     "name_zh_CN": "深色主题",
+    "useQtFusionStyle": true,
     "isDark": true,
     "default scheme": "VS Code",
     "default iconset": "contrast",

@@ -243,6 +243,11 @@ void setTheme(const QString& theme) {
 
 int main(int argc, char *argv[])
 {
+#ifdef Q_OS_WINDOWS
+    // Make title bar and palette follow system-wide dark mode setting on recent Windows releases.
+    qputenv("QT_QPA_PLATFORM", "windows:darkmode=2");
+#endif
+
     QApplication app(argc, argv);
 
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -339,8 +344,14 @@ int main(int argc, char *argv[])
             ChooseThemeDialog themeDialog;
             themeDialog.exec();
             switch (themeDialog.theme()) {
+            case ChooseThemeDialog::Theme::AutoFollowSystem:
+                setTheme("system");
+                break;
             case ChooseThemeDialog::Theme::Dark:
                 setTheme("dark");
+                break;
+            case ChooseThemeDialog::Theme::Light:
+                setTheme("default");
                 break;
             default:
                 setTheme("default");

@@ -5276,6 +5276,17 @@ static QSynedit::PTokenAttribute createRainbowAttribute(const QString& attrName,
     }
     return QSynedit::PTokenAttribute();
 }
+
+QColor Editor::alphaBlend(const QColor &lower, const QColor &upper) {
+    qreal wu = upper.alphaF(); // weight of upper color
+    qreal wl = 1 - wu;         // weight of lower color
+    return QColor(
+        int(lower.red() * wl + upper.red() * wu),
+        int(lower.green() * wl + upper.green() * wu),
+        int(lower.blue() * wl + upper.blue() * wu)
+    );
+}
+
 void Editor::applyColorScheme(const QString& schemeName)
 {
     QSynedit::EditorOptions options = getOptions();
@@ -5302,7 +5313,7 @@ void Editor::applyColorScheme(const QString& schemeName)
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER);
     if (item) {
         gutter().setTextColor(item->foreground());
-        gutter().setColor(item->background());
+        gutter().setColor(alphaBlend(palette().color(QPalette::Base), item->background()));
     }
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER_ACTIVE_LINE);
     if (item) {
@@ -5345,7 +5356,7 @@ void Editor::applyColorScheme(const QString& schemeName)
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_TEXT);
     if (item) {
         this->setForegroundColor(item->foreground());
-        this->setBackgroundColor(item->background());
+        this->setBackgroundColor(alphaBlend(palette().color(QPalette::Base), item->background()));
     } else {
         this->setForegroundColor(palette().color(QPalette::Text));
         this->setBackgroundColor(palette().color(QPalette::Base));

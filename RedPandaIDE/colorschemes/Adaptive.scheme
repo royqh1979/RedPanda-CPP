@@ -1,0 +1,110 @@
+{
+    "Character" : {
+        "foreground" : "#ce543b"
+    },
+    "Class" : {
+        "foreground" : "#267f99"
+    },
+    "Comment" : {
+        "foreground" : "#3b9827"
+    },
+    "Escape sequences" : {
+        "foreground" : "#e28346"
+    },
+    "Float" : {
+        "foreground" : "#4bc854"
+    },
+    "Function" : {
+        "foreground" : "#c4b65f"
+    },
+    "Global variable" : {
+        "foreground" : "#2381fe"
+    },
+    "Hexadecimal" : {
+        "foreground" : "#4bc854"
+    },
+    "Identifier" : {
+        "foreground" : "#ce543b"
+    },
+    "Illegal Char" : {
+        "foreground" : "#e63b3b"
+    },
+    "Local Variable" : {
+        "foreground" : "#2381fe"
+    },
+    "Number" : {
+        "foreground" : "#4bc854"
+    },
+    "Octal" : {
+        "foreground" : "#4bc854"
+    },
+    "Preprocessor" : {
+        "foreground" : "#cf46d5"
+    },
+    "Reserve Word for Types": {
+        "foreground": "#336be5"
+    },
+    "Reserved Word" : {
+        "foreground" : "#cf46d5"
+    },
+    "Space" : {
+        "foreground" : "#40808080"
+    },
+    "String" : {
+        "foreground" : "#ce543b"
+    },
+    "Symbol" : {
+        "foreground" : "#e0808080"
+    },
+    "Variable" : {
+        "foreground" : "#2381fe"
+    },
+    "Editor Text": {
+        "foreground" : "#808080",
+        "background" : "#00000000"
+    },
+    "Current Highlighted Word": {
+        "background": "#20808080"
+    },
+    "Selected text" : {
+        "background" : "#3c55aaff"
+    },
+    "Gutter" : {
+        "foreground" : "#c0808080",
+        "background" : "#20808080"
+    },
+    "Gutter Active Line" : {
+        "foreground" : "#808080"
+    },
+    "Error" : {
+        "foreground" : "#f52a22"
+    },
+    "Active Breakpoint" : {
+        "foreground" : "#FFFFCE",
+        "background" : "#00376F"
+    },
+    "Fold Line" : {
+        "foreground" : "#808080"
+    },
+    "Active Line" : {
+        "background" : "#10808080"
+    },
+    "Warning" : {
+        "foreground" : "#c69901"
+    },
+    "Indent Guide Line" : {
+        "foreground" : "#80808080"
+    },
+    "brace/parenthesis/bracket level 1" : {
+        "foreground" : "#569CD6"
+    },
+    "brace/parenthesis/bracket level 2" : {
+        "foreground" : "#E080C0"
+    },
+    "brace/parenthesis/bracket level 3" : {
+        "foreground" : "#D69D85"
+    },
+    "brace/parenthesis/bracket level 4" : {
+        "foreground" : "#4EC9B0"
+    }
+}

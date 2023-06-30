@@ -216,6 +216,10 @@
         <source>C++</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Auto (follow system style and color)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CodeSnippetsManager</name>

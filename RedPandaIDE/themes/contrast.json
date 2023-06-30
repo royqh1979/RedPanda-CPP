@@ -1,6 +1,7 @@
 {
-    "name":"contrast",
+    "name":"Contract",
     "name_zh_CN": "高对比度主题",
+    "useQtFusionStyle": true,
     "isDark": true,
     "default scheme": "Twilight",
     "default iconset": "contrast",	
