@@ -24,7 +24,6 @@ namespace QSynedit {
 class CppSyntaxer: public Syntaxer
 {
     enum class TokenId {
-        Asm,
         Comment,
         Directive,
         Identifier,
@@ -46,8 +45,7 @@ class CppSyntaxer: public Syntaxer
     };
 
     enum RangeState {
-        rsUnknown, rsAnsiC, rsAnsiCAsm, rsAnsiCAsmBlock, rsAsm,
-        rsAsmBlock, rsDirective, rsDirectiveComment, rsString,
+        rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment, rsString,
         rsMultiLineString, rsMultiLineDirective, rsCppComment,
         rsStringEscapeSeq,
         rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,rsChar,
@@ -58,8 +56,6 @@ public:
     explicit CppSyntaxer();
     CppSyntaxer(const CppSyntaxer&)=delete;
     CppSyntaxer operator=(const CppSyntaxer&)=delete;
-
-    const PTokenAttribute &asmAttribute() const;
 
     const PTokenAttribute &preprocessorAttribute() const;
 
@@ -148,7 +144,6 @@ private:
     void pushIndents(IndentType indentType, int line=-1);
 
 private:
-    bool mAsmStart;
     SyntaxState mRange;
 //    SynRangeState mSpaceRange;
     QString mLine;
@@ -164,7 +159,6 @@ private:
 
     QSet<QString> mCustomTypeKeywords;
 
-    PTokenAttribute mAsmAttribute;
     PTokenAttribute mPreprocessorAttribute;
     PTokenAttribute mInvalidAttribute;
     PTokenAttribute mNumberAttribute;

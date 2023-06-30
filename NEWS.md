@@ -16,6 +16,8 @@ Red Panda C++ Version 2.23
   - enhancement: When deleteing files in the files/project view, try moving to the trash bin instead.
   - fix: GNU assembly files (.s) are not shown in the files view.
   - fix: "typedef struct" that don't have definition of the struct is not correctly parsed.
+  - enhancement: correctly highlight multiline raw string literals.
+  - change: remove "Assembly" color scheme item (it's not used anymore).
 
 Red Panda C++ Version 2.22
 

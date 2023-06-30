@@ -429,10 +429,10 @@ void ColorManager::loadSchemesInDir(const QString &dirName, bool isBundled, bool
 void ColorManager::initItemDefines()
 {
     //Token highlight colors
-    addDefine(SYNS_AttrAssembler,
-              QObject::tr("Assembler"),
-              QObject::tr("Syntax"),
-              true,true,true);
+//    addDefine(SYNS_AttrAssembler,
+//              QObject::tr("Assembler"),
+//              QObject::tr("Syntax"),
+//              true,true,true);
     addDefine(SYNS_AttrCharacter,
               QObject::tr("Character"),
               QObject::tr("Syntax"),

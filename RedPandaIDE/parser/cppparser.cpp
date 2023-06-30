@@ -3338,7 +3338,7 @@ bool CppParser::handleStatement()
 }
 
 void CppParser::handleStructs(bool isTypedef)
-{
+{    
     bool isFriend = false;
     QString prefix = mTokenizer[mIndex]->text;
     if (prefix == "friend") {
