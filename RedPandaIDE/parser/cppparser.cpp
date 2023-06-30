@@ -3367,24 +3367,22 @@ void CppParser::handleStructs(bool isTypedef)
     if (mTokenizer[i]->text == ";") {
         // typdef struct Foo Bar
         if (isTypedef) {
-            QString oldType = mTokenizer[mIndex]->text;
+            QString structTypeName = mTokenizer[mIndex]->text;
             QString tempType = "";
-            bool isFirstLoop=true;
-            while(true) {
+            mIndex++; // skip struct/class name
+            while(mIndex+1 < tokenCount) {
                 // Add definition statement for the synonym
-                if ((mIndex + 1 < tokenCount)
-                        && (mTokenizer[mIndex + 1]->text==","
+                if ( (mTokenizer[mIndex + 1]->text==","
                             || mTokenizer[mIndex + 1]->text==";")) {
                     QString newType = mTokenizer[mIndex]->text;
-                    QString type=oldType;
-                    if (!tempType.isEmpty())
-                        type+=tempType;
+                    QString suffix,tempArgs;
+                    parseCommandTypeAndArgs(newType,suffix,tempArgs);
                     addStatement(
                                 getCurrentScope(),
                                 mCurrentFile,
-                                type,
+                                structTypeName + " "+ tempType + " " + suffix,
                                 newType,
-                                "", // args
+                                tempArgs, // args
                                 "", // noname args
                                 "", // values
                                 mTokenizer[mIndex]->line,
@@ -3393,14 +3391,12 @@ void CppParser::handleStructs(bool isTypedef)
                                 mCurrentMemberAccessibility,
                                 StatementProperty::spHasDefinition);
                     tempType="";
-                } else if (!isFirstLoop)
+                    mIndex++; //skip , ;
+                    if (mTokenizer[mIndex]->text.front() == ';')
+                        break;
+                } else
                     tempType+= mTokenizer[mIndex]->text;
-                isFirstLoop=false;
                 mIndex++;
-                if (mIndex >= tokenCount)
-                    break;
-                if (mTokenizer[mIndex]->text.front() == ';')
-                    break;
             }
         } else {
             if (isFriend) { // friend class
