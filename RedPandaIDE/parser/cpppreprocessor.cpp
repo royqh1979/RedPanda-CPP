@@ -537,32 +537,40 @@ QString CppPreprocessor::expandMacros(const QString &line, int depth)
     return newLine;
 }
 
+QString CppPreprocessor::expandMacros()
+{
+    //prevent infinit recursion
+    QString word;
+    QString newLine;
+    QString line = mBuffer[mIndex];
+    int i=0;
+    while (mIndex < mBuffer.size() && i<line.length()) {
+        QChar ch=line[i];
+        if (isWordChar(ch)) {
+            word += ch;
+        } else {
+            if (!word.isEmpty()) {
+                expandMacro(newLine,word,i,1);
+                if (mIndex>=mBuffer.length())
+                    return newLine;
+                line = mBuffer[mIndex];
+            }
+            word = "";
+            if (i< line.length()) {
+                newLine += line[i];
+            }
+        }
+        i++;
+    }
+    if (!word.isEmpty()) {
+        expandMacro(newLine,word,i,1);
+    }
+    return newLine;
+}
+
 void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString &word, int &i, int depth)
 {
     int lenLine = line.length();
-//    if (word.startsWith("__")
-//            && word.endsWith("__")) {
-////    if (word == "__attribute__") {
-//        //skip gcc __attribute__
-//        while ((i<lenLine) && (line[i] == ' ' || line[i]=='\t'))
-//            i++;
-//        if ((i<lenLine) && (line[i]=="(")) {
-//            int level=0;
-//            while (i<lenLine) {
-//                switch(line[i].unicode()) {
-//                    case '(':
-//                        level++;
-//                    break;
-//                    case ')':
-//                        level--;
-//                    break;
-//                }
-//                i++;
-//                if (level==0)
-//                    break;
-//            }
-//        }
-//    } else {
         PDefine define = getDefine(word);
         if (define && define->args=="" ) {
             if (define->value != word )
@@ -578,14 +586,23 @@ void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString
             if ((i<lenLine) && (line[i]=='(')) {
                 argStart =i+1;
                 int level=0;
+                bool inString=false;
                 while (i<lenLine) {
                     switch(line[i].unicode()) {
-                        case '(':
+                    case '\\':
+                        if (inString)
+                            i++;
+                    break;
+                    case '"':
+                        inString = !inString;
+                    break;
+                    case '(':
+                        if (!inString)
                             level++;
-                        break;
-                        case ')':
+                    break;
+                    case ')':
+                        if (!inString)
                             level--;
-                        break;
                     }
                     i++;
                     if (level==0)
@@ -601,7 +618,96 @@ void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString
         } else {
             newLine += word;
         }
-//    }
+        //    }
+}
+
+void CppPreprocessor::expandMacro(QString &newLine, QString &word, int &i, int depth)
+{
+    QString line = mBuffer[mIndex];
+    PDefine define = getDefine(word);
+//    if (define && define->name == "DEFHOOKPODX")
+//        qDebug()<<define->args<<define->argList<<define->formatValue;
+    if (define && define->args=="" ) {
+        if (define->value != word )
+          newLine += expandMacros(define->value,depth+1);
+        else
+          newLine += word;
+    } else if (define && (define->args!="")) {
+        while(true) {
+            while ((i<line.length()) && (line[i] == ' ' || line[i]=='\t'))
+                i++;
+            if (i<line.length())
+                break;
+            mIndex++;
+            if (mIndex>=mBuffer.length())
+                return;
+            line = mBuffer[mIndex];
+            i=0;
+        }
+        int argStart=-1;
+        int argEnd=-1;
+        int argLineStart=mIndex;
+        int argLineEnd=mIndex;
+        if ((i<line.length()) && (line[i]=='(')) {
+            argStart =i+1;
+            int level=0;
+            bool inString=false;
+            while (true) {
+                while (i<line.length()) {
+                    switch(line[i].unicode()) {
+                        case '\\':
+                            if (inString)
+                                i++;
+                        break;
+                        case '"':
+                            inString = !inString;
+                        break;
+                        case '(':
+                            if (!inString)
+                                level++;
+                        break;
+                        case ')':
+                            if (!inString)
+                                level--;
+                        break;
+                    }
+                    i++;
+                    if (level==0)
+                        break;
+                }
+                if (level==0)
+                    break;
+                mIndex++;
+                i=0;
+                if (mIndex>=mBuffer.length())
+                    break;
+                line = mBuffer[mIndex];
+            } ;
+            if (level==0) {
+                argEnd = i-1;
+                argLineEnd = mIndex;
+                QString args;
+                if (argLineStart==argLineEnd) {
+                    args = line.mid(argStart,argEnd-argStart).trimmed();
+                    //qDebug()<<"--"<<args;
+                } else {
+                    args = mBuffer[argLineStart].mid(argStart);
+                    for (int i=argLineStart+1;i<argLineEnd;i++) {
+                        args += mBuffer[i];
+                    }
+                    args += mBuffer[argLineEnd].left(argEnd);
+//                    if (define && define->name == "DEFHOOK")
+//                        qDebug()<<args;
+                }
+                QString formattedValue = expandFunction(define,args);
+                if (define && define->name == "DEFHOOKPODX")
+                    qDebug()<<formattedValue;
+                newLine += expandMacros(formattedValue,depth+1);
+            }
+        }
+    } else {
+        newLine += word;
+    }
 }
 
 QString CppPreprocessor::removeGCCAttributes(const QString &line)
@@ -1082,9 +1188,15 @@ void CppPreprocessor::skipToPreprocessor()
     int bufferCount = mBuffer.count();
 // Increment until a line begins with a #
     while ((mIndex < bufferCount) && !mBuffer[mIndex].startsWith('#')) {
-        if (getCurrentBranch()) // if not skipping, expand current macros
-            mResult.append(expandMacros(mBuffer[mIndex],1));
-        else // If skipping due to a failed branch, clear line
+        if (getCurrentBranch()) { // if not skipping, expand current macros
+            int startIndex = mIndex;
+            QString expanded = expandMacros();
+            mResult.append(expanded);
+            for (int i=startIndex;i<mIndex;i++) {
+                mResult.append("");
+            }
+            //mResult.append(expandMacros(mBuffer[mIndex],1));
+        } else // If skipping due to a failed branch, clear line
             mResult.append("");
         mIndex++;
     }
@@ -1309,7 +1421,29 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
         args = args.mid(1,args.length()-2);
     }
 
-    QStringList argValues = args.split(",");
+    QStringList argValues;
+    int i=0;
+    bool inString = false;
+    int lastSplit=0;
+    while (i<args.length()) {
+        switch(args[i].unicode()) {
+            case '\\':
+                if (inString)
+                    i++;
+            break;
+            case '"':
+                inString = !inString;
+            break;
+            case ',':
+                if (!inString) {
+                    argValues.append(args.mid(lastSplit,i-lastSplit));
+                    lastSplit=i+1;
+                }
+            break;
+        }
+        i++;
+    }
+    argValues.append(args.mid(lastSplit,i-lastSplit));
     if (argValues.length() == define->argList.length()
             && argValues.length()>0) {
         for (int i=0;i<argValues.length();i++) {

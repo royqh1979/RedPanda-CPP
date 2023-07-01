@@ -114,7 +114,9 @@ private:
     void handlePreprocessor(const QString& value);
     void handleUndefine(const QString& line);
     QString expandMacros(const QString& line, int depth);
+    QString expandMacros();
     void expandMacro(const QString& line, QString& newLine, QString& word, int& i, int depth);
+    void expandMacro(QString& newLine, QString& word, int& i, int depth);
     QString removeGCCAttributes(const QString& line);
     void removeGCCAttribute(const QString&line, QString& newLine, int &i, const QString& word);
     PDefine getDefine(const QString& name) const{
