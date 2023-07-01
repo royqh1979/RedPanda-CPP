@@ -4904,10 +4904,10 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                     result = doCreateEvalFunction(fileName,statement);
                     break;
                 case StatementKind::skPreprocessor:
-                    //qDebug()<<"before"<<phraseExpression;
+                    // qDebug()<<"before"<<phraseExpression;
                     pos--;
                     if (expandMacro(phraseExpression,pos,statement)) {
-                        //qDebug()<<"after"<<phraseExpression;
+                        // qDebug()<<"after"<<phraseExpression;
                         result = doEvalExpression(fileName,phraseExpression,pos,scope,previousResult,freeScoped);
                     } else
                         result = PEvalStatement();
@@ -5067,6 +5067,13 @@ bool CppParser::expandMacro(QStringList &phraseExpression, int &pos, const PStat
         switch(attr->tokenType()) {
         case QSynedit::TokenType::Space:
         case QSynedit::TokenType::Comment:
+            break;
+        case QSynedit::TokenType::Identifier:
+            if (token!=macro->command)
+                phraseExpression.insert(pos+i,token);
+            else
+                phraseExpression.insert(pos+i,token+"_expanded");
+            i++;
             break;
         default:
             phraseExpression.insert(pos+i,token);

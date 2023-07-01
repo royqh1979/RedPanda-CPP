@@ -19,6 +19,7 @@ Red Panda C++ Version 2.23
   - enhancement: correctly highlight multiline raw string literals.
   - change: remove "Assembly" color scheme item (it's not used anymore).
   - fix: crash when parsing files containing inline assembly code.
+  - fix: crash when source files contains macro definitions like "#define cfun (cfun + 0)"
 
 Red Panda C++ Version 2.22
 
