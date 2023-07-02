@@ -286,11 +286,15 @@
     <addaction name="actionDocument"/>
     <addaction name="actionC_Reference"/>
     <addaction name="actionC_C_Reference"/>
+    <addaction name="separator"/>
+    <addaction name="actionOI_Wiki"/>
+    <addaction name="actionRaylib_Manual"/>
+    <addaction name="actionEGE_Manual"/>
+    <addaction name="actionTurtle_Graphics_Manual"/>
+    <addaction name="separator"/>
     <addaction name="actionGNU_Assembler_Manual"/>
     <addaction name="actionx86_Assembly_Language_Reference_Manual"/>
     <addaction name="actionIA_32_Assembly_Language_Reference_Manual"/>
-    <addaction name="actionRaylib_Manual"/>
-    <addaction name="actionEGE_Manual"/>
     <addaction name="separator"/>
     <addaction name="actionWebsite"/>
     <addaction name="actionSubmit_Issues"/>
@@ -3513,6 +3517,22 @@
   <action name="actionClose_Others">
    <property name="text">
     <string>Close Others</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionOI_Wiki">
+   <property name="text">
+    <string>OI Wiki</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionTurtle_Graphics_Manual">
+   <property name="text">
+    <string>Turtle Graphics Tutorial</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

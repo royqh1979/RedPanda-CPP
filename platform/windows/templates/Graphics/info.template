@@ -1,7 +1,8 @@
 [Template]
 ver=2
 Name=Graphics.h
-Icon=CL_Graphics.ico
+Name[zh_CN]=xege
+Icon=xege.ico
 Description=A simple program use Easy Graphics Engine
 Description[zh_CN]=使用EGE库的简单绘图程序
 Category=Multimedia

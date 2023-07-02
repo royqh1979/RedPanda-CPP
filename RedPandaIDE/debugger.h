@@ -571,6 +571,7 @@ private:
     void handleListVarChildren(const GDBMIResultParser::ParseObject& multiVars);
     void handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes);
     void processConsoleOutput(const QByteArray& line);
+    void processLogOutput(const QByteArray& line);
     void processResult(const QByteArray& result);
     void processExecAsyncRecord(const QByteArray& line);
     void processError(const QByteArray& errorLine);
@@ -597,6 +598,7 @@ private:
     PDebugCommand mCurrentCmd;
     std::shared_ptr<QProcess> mProcess;
     QStringList mBinDirs;
+    QMap<QString,QStringList> mFileCache;
 
     //fWatchView: TTreeView;
 

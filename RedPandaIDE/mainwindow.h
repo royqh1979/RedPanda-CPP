@@ -843,6 +843,10 @@ private slots:
 
     void on_actionClose_Others_triggered();
 
+    void on_actionOI_Wiki_triggered();
+
+    void on_actionTurtle_Graphics_Manual_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;

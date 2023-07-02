@@ -432,6 +432,8 @@ MainWindow::MainWindow(QWidget *parent)
         ui->actionx86_Assembly_Language_Reference_Manual->setVisible(false);
 #endif
     ui->actionEGE_Manual->setVisible(pSettings->environment().language()=="zh_CN");
+    ui->actionOI_Wiki->setVisible(pSettings->environment().language()=="zh_CN");
+    ui->actionTurtle_Graphics_Manual->setVisible(pSettings->environment().language()=="zh_CN");
     ui->actionDocument->setVisible(pSettings->environment().language()=="zh_CN");
 
     connect(ui->EditorTabsLeft, &EditorsTabWidget::middleButtonClicked,
@@ -9959,3 +9961,15 @@ void MainWindow::on_actionClose_Others_triggered()
     }
     mClosing = false;
 }
+
+void MainWindow::on_actionOI_Wiki_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://oi-wiki.org/"));
+}
+
+
+void MainWindow::on_actionTurtle_Graphics_Manual_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://zhuanlan.zhihu.com/p/538666844"));
+}
+

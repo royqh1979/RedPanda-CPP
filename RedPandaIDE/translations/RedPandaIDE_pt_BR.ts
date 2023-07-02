@@ -5275,6 +5275,14 @@
         <source>Close Others</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>OI Wiki</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turtle Graphics Tutorial</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>
@@ -6323,7 +6331,7 @@
     </message>
     <message>
         <source>Assembler</source>
-        <translation>Assembler</translation>
+        <translation type="vanished">Assembler</translation>
     </message>
     <message>
         <source>Syntax</source>

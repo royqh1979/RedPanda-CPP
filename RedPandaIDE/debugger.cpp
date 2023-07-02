@@ -21,7 +21,7 @@
 #include "settings.h"
 #include "widgets/cpudialog.h"
 #include "systemconsts.h"
-
+#include "editorlist.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -1126,6 +1126,20 @@ void DebugReader::processConsoleOutput(const QByteArray& line)
     }
 }
 
+void DebugReader::processLogOutput(const QByteArray &line)
+{
+    if (mDebugger->debugInfosUsingUTF8() && line.endsWith(": No such file or directory.\n\"")) {
+        QByteArray newLine = line;
+        newLine[0]='~';
+        int p=newLine.lastIndexOf(':');
+        if (p>0) {
+            newLine=newLine.left(p);
+            qDebug()<<newLine;
+            processConsoleOutput(newLine);
+        }
+    }
+}
+
 void DebugReader::processResult(const QByteArray &result)
 {
     GDBMIResultParser parser;
@@ -1263,6 +1277,7 @@ void DebugReader::processError(const QByteArray &errorLine)
         return;
     }
 }
+static QRegularExpression reGdbSourceLine("^(\\d)+\\s+in\\s+(.+)$");
 
 void DebugReader::processResultRecord(const QByteArray &line)
 {
@@ -1287,6 +1302,36 @@ void DebugReader::processResultRecord(const QByteArray &line)
                     disOutput.pop_back();
                     disOutput.pop_front();
                     disOutput.pop_front();
+                }
+                if (mDebugger->debugInfosUsingUTF8()) {
+                    QStringList newOutput;
+                    foreach(const QString& s, disOutput) {
+                        QString line = s;
+                        if (!s.isEmpty() && s.front().isDigit()) {
+                            QRegularExpressionMatch match = reGdbSourceLine.match(s);
+//                            qDebug()<<s;
+                            if (match.hasMatch()) {
+                                bool isOk;
+                                int lineno=match.captured(1).toInt(&isOk)-1;;
+                                QString filename = match.captured(2).trimmed();
+                                if (isOk && fileExists(filename)) {
+                                    QStringList contents;
+                                    if (mFileCache.contains(filename))
+                                        contents = mFileCache.value(filename);
+                                    else {
+                                        if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,contents))
+                                            contents = readFileToLines(filename);
+                                        mFileCache[filename]=contents;
+                                    }
+                                    if (lineno>=0 && lineno<contents.size()) {
+                                        line = QString("%1\t%2").arg(lineno+1).arg(contents[lineno]);
+                                    }
+                                }
+                            }
+                        }
+                        newOutput.append(line);
+                    }
+                    disOutput=newOutput;
                 }
                 emit disassemblyUpdate(mCurrentFile,mCurrentFunc, disOutput);
             }
@@ -1327,7 +1372,9 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
              processConsoleOutput(line);
              break;
          case '@': // target stream output
+             break;
          case '&': // log stream output
+             processLogOutput(line);
              break;
          case '^': // result record
              processResultRecord(line);

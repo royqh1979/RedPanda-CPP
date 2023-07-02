@@ -4996,6 +4996,14 @@
         <source>Close Others</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>OI Wiki</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turtle Graphics Tutorial</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>
@@ -5984,10 +5992,6 @@
     </message>
     <message>
         <source>Can&apos;t remove the color scheme file %1!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Assembler</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
