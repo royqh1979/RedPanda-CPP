@@ -337,8 +337,8 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
         for (QString define:compilerSet->defines(parser->language()==ParserLanguage::CPlusPlus)) {
             parser->addHardDefineByLine(define);
         }
-        // add a Red Pand C++ 's own macro
-        parser->addHardDefineByLine("#define EGE_FOR_AUTO_CODE_COMPLETETION_ONLY");
+//        // add a Red Pand C++ 's own macro
+//        parser->addHardDefineByLine("#define EGE_FOR_AUTO_CODE_COMPLETETION_ONLY");
         // add C/C++ default macro
         parser->addHardDefineByLine("#define __FILE__  1");
         parser->addHardDefineByLine("#define __LINE__  1");
