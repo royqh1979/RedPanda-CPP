@@ -6757,7 +6757,7 @@ void MainWindow::on_actionFind_references_triggered()
     if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
         CppRefacter refactor;
         refactor.findOccurence(editor,pos);
-        showSearchPanel(true);
+        showSearchPanel(false);
     }
 }
 

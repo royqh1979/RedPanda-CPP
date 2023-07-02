@@ -23,6 +23,7 @@ Red Panda C++ Version 2.23
   - improvement: Correctly expands multi-line macros when parsing;
   - improvement: Correctly eppands macros when real param string contains '(' or  ')'.
   - enhancement: add "OI Wiki" and "turtle graphics tutorial" in help menu for zh_CN locale.
+  - fix: Replace panel should be hidden after finding occurrencies.
 
 Red Panda C++ Version 2.22
 

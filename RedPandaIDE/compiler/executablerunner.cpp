@@ -135,7 +135,7 @@ void ExecutableRunner::run()
             args->flags &= ~CREATE_NO_WINDOW;
         }
         if (!mRedirectInput) {
-            args->startupInfo -> dwFlags &= ~STARTF_USESTDHANDLES;
+            args->startupInfo->dwFlags &= ~STARTF_USESTDHANDLES;
         }
     });
     HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
