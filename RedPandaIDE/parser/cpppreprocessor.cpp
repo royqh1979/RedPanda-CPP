@@ -633,6 +633,8 @@ void CppPreprocessor::expandMacro(QString &newLine, QString &word, int &i, int d
         else
           newLine += word;
     } else if (define && (define->args!="")) {
+        int origI=i;
+        int origIndex=mIndex;
         while(true) {
             while ((i<line.length()) && (line[i] == ' ' || line[i]=='\t'))
                 i++;
@@ -682,6 +684,9 @@ void CppPreprocessor::expandMacro(QString &newLine, QString &word, int &i, int d
                 if (mIndex>=mBuffer.length())
                     break;
                 line = mBuffer[mIndex];
+                if (!inString && line.startsWith('#')) {
+                    break;
+                }
             } ;
             if (level==0) {
                 argEnd = i-1;
@@ -700,10 +705,14 @@ void CppPreprocessor::expandMacro(QString &newLine, QString &word, int &i, int d
 //                        qDebug()<<args;
                 }
                 QString formattedValue = expandFunction(define,args);
-                if (define && define->name == "DEFHOOKPODX")
-                    qDebug()<<formattedValue;
+//                if (define && define->name == "DEFHOOKPODX")
+//                    qDebug()<<formattedValue;
                 newLine += expandMacros(formattedValue,depth+1);
             }
+        } else {
+            newLine+=word;
+            i=origI;
+            mIndex=origIndex;
         }
     } else {
         newLine += word;
