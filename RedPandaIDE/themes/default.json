@@ -29,8 +29,8 @@
         "PaletteBaseDisabled":"#efefef",
         "PaletteTextDisabled":"#bebebe",
         "PaletteButtonDisabled": "#efefef",
-        "PaletteButtonTextDisabled":"#bebebe",
-        "PaletteHighlightDisabled":"#919191",
-        "PaletteHighlightedTextDisabled":"#ffffff"
+        "PaletteButtonTextDisabled":"#bebebe",    
+		"PaletteHighlight":"#ffdddddd",
+		"PaletteHighlightedText":"#ff000000"
     }
 }
