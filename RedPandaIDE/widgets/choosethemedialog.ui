@@ -20,14 +20,23 @@
       <string>Choose Theme</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="rbDark">
+      <item row="2" column="1">
+       <widget class="QLabel" name="label_2">
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Sunken</enum>
+        </property>
         <property name="text">
-         <string>Dark Theme</string>
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap resource="../icons.qrc">:/demos/light.png</pixmap>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="label">
         <property name="frameShape">
          <enum>QFrame::Box</enum>
@@ -43,26 +52,24 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="rbDark">
+        <property name="text">
+         <string>Dark Theme</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
        <widget class="QRadioButton" name="rbLight">
         <property name="text">
          <string>Light Theme</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_2">
-        <property name="frameShape">
-         <enum>QFrame::Box</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Sunken</enum>
-        </property>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="rbAuto">
         <property name="text">
-         <string/>
-        </property>
-        <property name="pixmap">
-         <pixmap resource="../icons.qrc">:/demos/light.png</pixmap>
+         <string>Auto (follow system style and color)</string>
         </property>
        </widget>
       </item>

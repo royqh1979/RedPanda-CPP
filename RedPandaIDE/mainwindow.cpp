@@ -67,6 +67,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QScreen>
+#include <QStyleFactory>
 #include <QTcpSocket>
 #include <QTemporaryFile>
 #include <QTextBlock>
@@ -867,10 +868,15 @@ void MainWindow::applySettings()
     themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
     try {
         PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
-        if (appTheme->isDark())
-            QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
-        else
-            QApplication::setStyle(new LightFusionStyle());//app takes the onwership
+        if (appTheme->useQtFusionStyle()) {
+            if (appTheme->isDark())
+                QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
+            else
+                QApplication::setStyle(new LightFusionStyle());//app takes the onwership
+        } else {
+            QString systemStyle = QStyleFactory::keys()[0]; // Breeze for KDE, etc.
+            QApplication::setStyle(systemStyle);
+        }
         qApp->setPalette(appTheme->palette());
         //fix for qstatusbar bug
         mFileEncodingStatus->setPalette(appTheme->palette());
@@ -1715,6 +1721,7 @@ void MainWindow::updateActionIcons()
     ui->toolbarCode->setIconSize(iconSize);
     ui->toolbarCompile->setIconSize(iconSize);
     ui->toolbarDebug->setIconSize(iconSize);
+    ui->toolbarCompilerSet->setIconSize(iconSize);
     for (QToolButton* btn: mClassBrowserToolbar->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
     }

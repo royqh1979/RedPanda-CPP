@@ -33,9 +33,13 @@ ChooseThemeDialog::~ChooseThemeDialog()
 
 ChooseThemeDialog::Theme ChooseThemeDialog::theme()
 {
+    if (ui->rbAuto->isChecked())
+        return Theme::AutoFollowSystem;
     if (ui->rbDark->isChecked())
         return Theme::Dark;
-    return Theme::Light;
+    if (ui->rbLight->isChecked())
+        return Theme::Light;
+    return Theme::Unknown;
 }
 
 ChooseThemeDialog::Language ChooseThemeDialog::language()
@@ -48,3 +52,7 @@ void ChooseThemeDialog::on_btnOk_clicked()
     accept();
 }
 
+void ChooseThemeDialog::hideAutoFollowSystemTheme()
+{
+    ui->rbAuto->hide();
+}

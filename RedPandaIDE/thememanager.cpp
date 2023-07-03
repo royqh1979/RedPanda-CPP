@@ -194,6 +194,7 @@ void AppTheme::load(const QString &filename)
         QString localeName = obj["name_"+pSettings->environment().language()].toString();
         if (!localeName.isEmpty())
             mDisplayName = localeName;
+        mUseQtFusionStyle = obj["useQtFusionStyle"].toBool(true);
         mIsDark = obj["isDark"].toBool(false);
         mDefaultColorScheme = obj["default scheme"].toString();
         mDefaultIconSet = obj["default iconset"].toString();
@@ -266,6 +267,11 @@ const QString &AppTheme::defaultColorScheme() const
 void AppTheme::setDefaultColorScheme(const QString &newDefaultColorScheme)
 {
     mDefaultColorScheme = newDefaultColorScheme;
+}
+
+bool AppTheme::useQtFusionStyle() const
+{
+    return mUseQtFusionStyle;
 }
 
 bool AppTheme::isDark() const

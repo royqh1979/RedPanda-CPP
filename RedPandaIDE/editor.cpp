@@ -5307,7 +5307,7 @@ void Editor::applyColorScheme(const QString& schemeName)
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER);
     if (item) {
         gutter().setTextColor(item->foreground());
-        gutter().setColor(item->background());
+        gutter().setColor(alphaBlend(palette().color(QPalette::Base), item->background()));
     }
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_GUTTER_ACTIVE_LINE);
     if (item) {
@@ -5350,7 +5350,7 @@ void Editor::applyColorScheme(const QString& schemeName)
     item = pColorManager->getItem(schemeName,COLOR_SCHEME_TEXT);
     if (item) {
         this->setForegroundColor(item->foreground());
-        this->setBackgroundColor(item->background());
+        this->setBackgroundColor(alphaBlend(palette().color(QPalette::Base), item->background()));
     } else {
         this->setForegroundColor(palette().color(QPalette::Text));
         this->setBackgroundColor(palette().color(QPalette::Base));

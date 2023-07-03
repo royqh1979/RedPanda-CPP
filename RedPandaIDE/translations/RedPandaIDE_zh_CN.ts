@@ -410,6 +410,11 @@ p, li { white-space: pre-wrap; }
         <translation>浅色主题</translation>
     </message>
     <message>
+        <location filename="../widgets/choosethemedialog.ui" line="72"/>
+        <source>Auto (follow system style and color)</source>
+        <translation>自动（跟随系统样式和颜色）</translation>
+    </message>
+    <message>
         <location filename="../widgets/choosethemedialog.ui" line="78"/>
         <source>Default Language:</source>
         <translation>默认语言：</translation>

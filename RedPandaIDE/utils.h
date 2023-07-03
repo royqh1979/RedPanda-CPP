@@ -156,5 +156,6 @@ QString getSizeString(int size);
 class QComboBox;
 void saveComboHistory(QComboBox* cb,const QString& text);
 
+QColor alphaBlend(const QColor &lower, const QColor &upper);
 
 #endif // UTILS_H

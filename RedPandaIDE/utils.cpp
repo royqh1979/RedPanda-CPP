@@ -579,3 +579,13 @@ void openFileFolderInExplorer(const QString &path)
     }
 
 }
+
+QColor alphaBlend(const QColor &lower, const QColor &upper) {
+    qreal wu = upper.alphaF(); // weight of upper color
+    qreal wl = 1 - wu;         // weight of lower color
+    return QColor(
+        int(lower.red() * wl + upper.red() * wu),
+        int(lower.green() * wl + upper.green() * wu),
+        int(lower.blue() * wl + upper.blue() * wu)
+        );
+}
