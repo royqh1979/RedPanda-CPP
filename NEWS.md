@@ -24,6 +24,7 @@ Red Panda C++ Version 2.23
   - improvement: Correctly eppands macros when real param string contains '(' or  ')'.
   - enhancement: add "OI Wiki" and "turtle graphics tutorial" in help menu for zh_CN locale.
   - fix: Replace panel should be hidden after finding occurrencies.
+  - enhancement: Show code completion suggestion after "typedef" and "const".
 
 Red Panda C++ Version 2.22
 

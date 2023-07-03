@@ -77,6 +77,8 @@ public:
                                int line);
     PStatement findAliasedStatement(const PStatement& statement);
 
+    QList<PStatement> listTypeStatements(const QString& fileName,int line);
+
     /**
      * @brief evaluate the expression
      * @param fileName
@@ -250,6 +252,8 @@ private:
                                const QStringList& expression,
                                int line) const;
     PStatement doFindAliasedStatement(const PStatement& statement) const;
+
+    QList<PStatement> doListTypeStatements(const QString& fileName,int line) const;
 
     PStatement doFindTypeDefinitionOf(const QString& fileName,
                                     const QString& aType,

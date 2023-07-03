@@ -857,7 +857,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 } else {
                     QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
                     if (mParser && !lastWord.isEmpty()) {
-                        if (lastWord == "using") {
+                        if (lastWord == "typedef" || lastWord == "const") {
+                            processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                            showCompletion(lastWord,false, CodeCompletionType::Types);
+                            handled=true;
+                            return;
+                        } else if (lastWord == "using") {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
                             handled=true;

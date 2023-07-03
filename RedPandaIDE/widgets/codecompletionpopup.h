@@ -42,6 +42,7 @@ enum class CodeCompletionType {
     ComplexKeyword,
     FunctionWithoutDefinition,
     Namespaces,
+    Types,
     KeywordsOnly
 };
 
@@ -151,8 +152,11 @@ private:
             const QString& fileName,
             int line);
 
-    void getCompletionListForTypeKeywordComplex(const QString& preWord);
+    void getCompletionListForComplexKeyword(const QString& preWord);
     void getCompletionListForNamespaces(const QString &preWord,
+                                        const QString& fileName,
+                                        int line);
+    void getCompletionListForTypes(const QString &preWord,
                                         const QString& fileName,
                                         int line);
     void addKeyword(const QString& keyword);

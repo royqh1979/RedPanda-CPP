@@ -94,7 +94,11 @@ void CodeCompletionPopup::prepareSearch(
     mMemberOperator = memberOperator;
     switch(type) {
     case CodeCompletionType::ComplexKeyword:
-        getCompletionListForTypeKeywordComplex(preWord);
+        getCompletionListForComplexKeyword(preWord);
+        break;
+    case CodeCompletionType::Types:
+        mIncludedFiles = mParser->getFileIncludes(filename);
+        getCompletionListForTypes(preWord,filename,line);
         break;
     case CodeCompletionType::FunctionWithoutDefinition:
         mIncludedFiles = mParser->getFileIncludes(filename);
@@ -892,7 +896,7 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
         });
 
         if (memberOperator.isEmpty()) {
-            getCompletionListForTypeKeywordComplex(preWord);
+            getCompletionListForComplexKeyword(preWord);
             PStatement scopeStatement = mCurrentScope;
             //add members of current scope that not added before
             while (scopeStatement && scopeStatement->kind!=StatementKind::skNamespace
@@ -960,7 +964,7 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
     }
 }
 
-void CodeCompletionPopup::getCompletionListForTypeKeywordComplex(const QString &preWord)
+void CodeCompletionPopup::getCompletionListForComplexKeyword(const QString &preWord)
 {
     mFullCompletionStatementList.clear();
     if (preWord == "long") {
@@ -1008,6 +1012,39 @@ void CodeCompletionPopup::getCompletionListForNamespaces(const QString &/*preWor
                 }
             }
 
+        }
+    }
+}
+
+void CodeCompletionPopup::getCompletionListForTypes(const QString &preWord, const QString &fileName, int line)
+{
+    if (preWord=="typedef") {
+        addKeyword("const");
+        addKeyword("struct");
+        addKeyword("class");
+    }
+
+    if (mShowKeywords) {
+        //add keywords
+        foreach (const QString& keyword,CppTypeKeywords) {
+            addKeyword(keyword);
+        }
+    }
+    if (!mParser->enabled())
+        return;
+
+    if (!mParser->freeze())
+        return;
+    {
+        auto action = finally([this]{
+            mParser->unFreeze();
+        });
+        QList<PStatement> statements = mParser->listTypeStatements(fileName,line);
+        foreach(const PStatement& statement, statements) {
+            if (isIncluded(statement->fileName)
+                    || isIncluded(statement->definitionFileName)) {
+                addStatement(statement,fileName,line);
+            }
         }
     }
 }

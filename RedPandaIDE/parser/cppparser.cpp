@@ -589,6 +589,15 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement)
         return PStatement();
     return doFindAliasedStatement(statement);
 }
+
+QList<PStatement> CppParser::listTypeStatements(const QString &fileName, int line)
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return QList<PStatement>();
+    return doListTypeStatements(fileName,line);
+}
+
 PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const
 {
     if (!statement)
@@ -610,6 +619,36 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const
         }
     }
     return PStatement();
+}
+
+QList<PStatement> CppParser::doListTypeStatements(const QString &fileName, int line) const
+{
+    QList<PStatement> result;
+    QSet<QString> usedNamespaces;
+    PStatement scopeStatement = doFindScopeStatement(fileName,line);
+    while (true) {
+        const StatementMap& statementMap = mStatementList.childrenStatements(scopeStatement);
+        foreach (const PStatement statement, statementMap.values()) {
+            if (isTypeStatement(statement->kind))
+                result.append(statement);
+        }
+        if (!scopeStatement)
+            break;
+        usedNamespaces = usedNamespaces.unite(scopeStatement->usingList);
+        scopeStatement=scopeStatement->parentScope.lock();
+    }
+    usedNamespaces = usedNamespaces.unite(internalGetFileUsings(fileName));
+    foreach(const QString& ns, usedNamespaces) {
+        PStatementList namespaceStatementsList=doFindNamespace(ns);
+        foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
+            const StatementMap& statementMap = mStatementList.childrenStatements(namespaceStatement);
+            foreach (const PStatement statement, statementMap.values()) {
+                if (isTypeStatement(statement->kind))
+                    result.append(statement);
+            }
+        }
+    }
+    return result;
 }
 
 PStatement CppParser::findStatementStartingFrom(const QString &fileName, const QString &phrase, const PStatement& startScope) const
