@@ -519,6 +519,10 @@ iconsets_files.files += $$files(resources/iconsets/*.json, true)
 theme_files.files += $$files(themes/*.json, false)
 theme_files.files += $$files(themes/*.png, false)
 
+windows: {
+    theme_files.files -= themes/system.json
+}
+
 colorscheme_files.files += $$files(colorschemes/*.scheme, false)
 colorscheme_files.prefix = /colorschemes
 
