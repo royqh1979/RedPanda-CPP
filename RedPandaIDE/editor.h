@@ -298,7 +298,6 @@ private:
     void onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int column, const QString& token,
         QSynedit::PTokenAttribute &attr);
     void onScrollBarValueChanged();
-    static QColor alphaBlend(const QColor &lower, const QColor &upper);
 private:
     bool mInited;
     QDateTime mBackupTime;
