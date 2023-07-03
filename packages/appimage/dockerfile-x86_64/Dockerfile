@@ -8,7 +8,7 @@ RUN sed -i 's|^mirrorlist=|#mirrorlist=|g; s|^#baseurl=http://mirror.centos.org/
     sed -i 's|^mirrorlist=|#mirrorlist=|g; s|^#baseurl=http://mirror.centos.org/centos|baseurl=https://mirrors.ustc.edu.cn/centos|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo && \
     sed -i 's|^metalink=|#metalink=|g; s|^#baseurl=https\?://download.fedoraproject.org/pub/epel/|baseurl=https://mirrors.ustc.edu.cn/epel/|g' /etc/yum.repos.d/epel.repo && \
     yum upgrade -y && \
-    yum install -y cargo cmake3 file make which \
+    yum install -y cargo cmake3 extra-cmake-modules file make which \
         at-spi2-core-devel dbus-devel fontconfig-devel freetype-devel glib2-devel libXrender-devel libxcb-devel libxkbcommon-devel libxkbcommon-x11-devel mesa-libGL-devel xcb-util-devel \
         devtoolset-7-gcc devtoolset-7-gcc-c++
 
@@ -23,7 +23,8 @@ RUN curl -L -o /usr/local/bin/appimagetool 'https://github.com/AppImage/AppImage
 # Qt 5
 RUN mkdir -p /build/qt5 && \
     cd /build/qt5 && \
-    curl -O 'https://mirrors.ustc.edu.cn/qtproject/archive/qt/5.12/5.12.12/submodules/qt{base,svg,tools}-everywhere-src-5.12.12.tar.xz' && \
+    curl -O 'https://download.qt.io/archive/qt/5.12/5.12.12/submodules/qt{base,svg,tools}-everywhere-src-5.12.12.tar.xz' && \
+    curl -L -o fcitx5-qt-5.0.17.tar.gz 'https://github.com/fcitx/fcitx5-qt/archive/refs/tags/5.0.17.tar.gz' && \
     tar xf qtbase-everywhere-src-5.12.12.tar.xz && \
     cd qtbase-everywhere-src-5.12.12 && \
     ./configure \
@@ -48,6 +49,13 @@ RUN mkdir -p /build/qt5 && \
     qmake . && \
     make -j$(nproc) && \
     make install && \
+    # fcitx5 package
+    cd /build/qt5 && \
+    tar xf fcitx5-qt-5.0.17.tar.gz && \
+    cd fcitx5-qt-5.0.17 && \
+    cmake3 . -Bbuild -DCMAKE_MODULE_PATH=/usr/local/lib/cmake -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_BUILD_TYPE=Release -DENABLE_QT4=Off -DENABLE_QT5=On -DENABLE_QT6=Off -DBUILD_ONLY_PLUGIN=On -DBUILD_STATIC_PLUGIN=On && \
+    cmake3 --build build --parallel && \
+    cmake3 --install build && \
     # cleanup
     cd / && \
     rm -r /build/qt5

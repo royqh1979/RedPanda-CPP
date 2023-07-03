@@ -454,6 +454,17 @@ unix: {
 linux: {
     LIBS+= \
     -lrt
+
+    _LINUX_STATIC_IME_PLUGIN = $$(LINUX_STATIC_IME_PLUGIN)
+    equals(_LINUX_STATIC_IME_PLUGIN, "ON") {
+        SOURCES += \
+            resources/linux_static_ime_plugin.cpp
+        QTPLUGIN.platforminputcontexts += \
+            composeplatforminputcontextplugin \
+            fcitx5platforminputcontextplugin \
+            ibusplatforminputcontextplugin
+        LIBS += -L$$[QT_INSTALL_PLUGINS]/platforminputcontexts
+    }
 }
 
 TRANSLATIONS += \
