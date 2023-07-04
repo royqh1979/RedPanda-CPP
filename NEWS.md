@@ -27,6 +27,7 @@ Red Panda C++ Version 2.23
   - enhancement: Show code completion suggestion after "typedef" and "const".
   - fix: GLFW project template.
   - fix: Inherited class/struct members are not correctly shown in the completion suggestions.
+  - enhancement: Sort symbols by their declaration pos in the Class Browser, if not sort by alpha order.
 
 Red Panda C++ Version 2.22
 

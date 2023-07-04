@@ -295,6 +295,25 @@ void ClassBrowserModel::addMembers()
 
 void ClassBrowserModel::sortNode(ClassBrowserNode *node)
 {
+    if (!pSettings->ui().classBrowserSortAlpha()) {
+        if (mClassBrowserType==ProjectClassBrowserType::CurrentFile) {
+            std::sort(node->children.begin(),node->children.end(),
+                      [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+                return (node1->statement->line < node2->statement->line);
+            });
+        } else {
+            std::sort(node->children.begin(),node->children.end(),
+                      [](ClassBrowserNode* node1,ClassBrowserNode* node2) {
+                int comp=QString::compare(node1->statement->fileName, node2->statement->fileName);
+                if (comp<0)
+                    return true;
+                else if (comp==0)
+                    return (node1->statement->line < node2->statement->line);
+                return false;
+            });
+        };
+    }
+
     if (pSettings->ui().classBrowserSortAlpha()
             && pSettings->ui().classBrowserSortType()) {
         std::sort(node->children.begin(),node->children.end(),
