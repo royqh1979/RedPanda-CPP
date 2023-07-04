@@ -102,7 +102,7 @@ static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
     for (int i=0;i<tabWidget->count();i++) {
         if (w==tabWidget->widget(i))
             return i;
-    }
+    }    
     return -1;
 }
 

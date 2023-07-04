@@ -467,7 +467,11 @@ void CppSyntaxer::procDefineIdent()
 
     while(mRun < mLineSize && isIdentChar(mLine[mRun]))
         mRun++;
-    mRange.state = RangeState::rsDefineRemaining;
+
+    if (mRun<mLineSize)
+        mRange.state = RangeState::rsDefineRemaining;
+    else
+        mRange.state = RangeState::rsUnknown;
 }
 
 void CppSyntaxer::procDefineRemaining()
@@ -1031,7 +1035,8 @@ void CppSyntaxer::procSpace()
         mRun+=1;
     if (mRun>=mLineSize) {
         mRange.hasTrailingSpaces = true;
-        if (mRange.state==RangeState::rsCppComment)
+        if (mRange.state==RangeState::rsCppComment
+                || mRange.state == RangeState::rsDefineRemaining)
             mRange.state = RangeState::rsUnknown;
     }
 }
