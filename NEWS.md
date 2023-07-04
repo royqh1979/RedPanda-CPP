@@ -26,6 +26,7 @@ Red Panda C++ Version 2.23
   - fix: Replace panel should be hidden after finding occurrencies.
   - enhancement: Show code completion suggestion after "typedef" and "const".
   - fix: GLFW project template.
+  - fix: Inherited class/struct members are not correctly shown in the completion suggestions.
 
 Red Panda C++ Version 2.22
 

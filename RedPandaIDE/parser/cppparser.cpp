@@ -1263,7 +1263,7 @@ PStatement CppParser::addInheritedStatement(const PStatement& derived, const PSt
                 inherit->kind,
                 inherit->scope,
                 access,
-                inherit->properties & StatementProperty::spInherited);
+                inherit->properties | StatementProperty::spInherited);
     return statement;
 }
 
@@ -1386,6 +1386,9 @@ PStatement CppParser::addStatement(const PStatement& parent,
             fileIncludes->statements.insert(result->fullName,result);
         }
     }
+//    if (result->command=="sync_with_stdio") {
+//        qDebug()<<result->fullName<<result->isStatic()<<(int)result->accessibility;
+//    }
     return result;
 }
 
