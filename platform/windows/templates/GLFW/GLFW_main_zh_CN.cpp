@@ -40,7 +40,7 @@ int main()
 
 
     // 读取shader文件，并编译，见shader.h代码
-    Shader ourShader("shader.vs", "shader.frag");
+    Shader ourShader("shader.vs", "shader.fs");
 
 
     // 一维数组，每六个代表一个顶点属性，前三个代表位置属性，后三个代表颜色属性

@@ -25,6 +25,7 @@ Red Panda C++ Version 2.23
   - enhancement: add "OI Wiki" and "turtle graphics tutorial" in help menu for zh_CN locale.
   - fix: Replace panel should be hidden after finding occurrencies.
   - enhancement: Show code completion suggestion after "typedef" and "const".
+  - fix: GLFW project template.
 
 Red Panda C++ Version 2.22
 

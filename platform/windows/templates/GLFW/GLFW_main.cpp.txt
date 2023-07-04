@@ -40,7 +40,7 @@ int main()
     glViewport(0, 0, WIDTH, HEIGHT);
 
 
-    Shader ourShader("shader.vs", "shader.frag");
+    Shader ourShader("shader.vs", "shader.fs");
 
     GLfloat vertices[] = {
         // Positions         // Colors

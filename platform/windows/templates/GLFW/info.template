@@ -18,8 +18,8 @@ Cpp=GLFW_shader.h.txt
 Cpp[zh_CN]=GLFW_shader_zh_CN.h
 
 [Unit2]
-CppName=shader.frag
-Cpp=GLFW_shader.frag.txt
+CppName=shader.fs
+Cpp=GLFW_shader.fs.txt
 
 
 [Unit3]
