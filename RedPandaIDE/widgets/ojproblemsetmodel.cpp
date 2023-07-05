@@ -456,8 +456,7 @@ QString OJProblemModel::getTooltip()
     QString s;
     s=QString("<h3>%1</h3>").arg(mProblem->name);
     if (!mProblem->description.isEmpty())
-        s+=QString("<p>%1</p>")
-            .arg(mProblem->description);
+        s+=mProblem->description;
     return s;
 }
 
