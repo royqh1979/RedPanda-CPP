@@ -428,12 +428,12 @@ void SearchInFileDialog::on_btnReplace_clicked()
 
 void SearchInFileDialog::on_rbFolder_toggled(bool checked)
 {
-    ui->lblFilters->setVisible(checked);
-    ui->txtFilters->setVisible(checked);
-    ui->lblFolder->setVisible(checked);
-    ui->txtFolder->setVisible(checked);
-    ui->btnChangeFolder->setVisible(checked);
-    ui->cbSearchSubFolders->setVisible(checked);
+//    ui->lblFilters->setVisible(checked);
+    ui->txtFilters->setEnabled(checked);
+//    ui->lblFolder->setVisible(checked);
+    ui->txtFolder->setEnabled(checked);
+    ui->btnChangeFolder->setEnabled(checked);
+    ui->cbSearchSubFolders->setEnabled(checked);
     if (checked) {
         if (!directoryExists(ui->txtFolder->text()))
             ui->txtFolder->setText(pSettings->environment().currentFolder());

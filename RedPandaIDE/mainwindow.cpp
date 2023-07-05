@@ -9733,7 +9733,7 @@ void MainWindow::on_actionSubmit_Issues_triggered()
 
 void MainWindow::on_actionDocument_triggered()
 {
-    QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/docsy/docs/"));
+    QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/docsy/docs/usage"));
 }
 
 
