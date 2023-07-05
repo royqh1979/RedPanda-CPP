@@ -2595,10 +2595,10 @@ void CppParser::handleKeyword(KeywordType skipType)
         // Skip to {
         mIndex = indexOfNextLeftBrace(mIndex);
         break;
-    case KeywordType::MoveToRightBrace:
-        // Skip pass {}
-        mIndex = indexPassBraces(mIndex);
-        break;
+//    case KeywordType::MoveToRightBrace:
+//        // Skip pass {}
+//        mIndex = indexPassBraces(mIndex);
+//        break;
     default:
         break;
     }
@@ -5950,22 +5950,22 @@ int CppParser::indexPassParenthesis(int index)
     return index;
 }
 
-int CppParser::indexPassBraces(int index)
-{
-    int tokenCount = mTokenizer.tokenCount();
-    while (index<tokenCount) {
-        switch(mTokenizer[index]->text[0].unicode()) {
-        case '{':
-            return mTokenizer[index]->matchIndex+1;
-        case '(':
-            index = mTokenizer[index]->matchIndex+1;
-            break;
-        default:
-            index++;
-        }
-    }
-    return index;
-}
+//int CppParser::indexPassBraces(int index)
+//{
+//    int tokenCount = mTokenizer.tokenCount();
+//    while (index<tokenCount) {
+//        switch(mTokenizer[index]->text[0].unicode()) {
+//        case '{':
+//            return mTokenizer[index]->matchIndex+1;
+//        case '(':
+//            index = mTokenizer[index]->matchIndex+1;
+//            break;
+//        default:
+//            index++;
+//        }
+//    }
+//    return index;
+//}
 
 void CppParser::skipNextSemicolon(int index)
 {

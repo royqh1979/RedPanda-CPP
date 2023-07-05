@@ -127,8 +127,8 @@ void initParser()
     CppKeywords.insert("_Pragma",KeywordType::SkipNextParenthesis);
 
     // Skip to }
-    CppKeywords.insert("asm",KeywordType::MoveToRightBrace);
-    CppKeywords.insert("__asm",KeywordType::MoveToRightBrace);
+    CppKeywords.insert("asm",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("__asm",KeywordType::SkipNextParenthesis);
     // Skip to {
 
     // wont handle

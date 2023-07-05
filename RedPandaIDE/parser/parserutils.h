@@ -62,7 +62,7 @@ enum class KeywordType {
     SkipNextColon, // move to : and skip it
     SkipNextParenthesis, // move to ) and skip it
     MoveToLeftBrace,// move to {
-    MoveToRightBrace, // move to }
+//    MoveToRightBrace, // move to }
     For, //for
     Catch, //catch
     Public, // public

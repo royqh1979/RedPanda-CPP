@@ -653,7 +653,7 @@ private:
     int indexOfNextColon(int index);
     int indexOfNextLeftBrace(int index);
     int indexPassParenthesis(int index);
-    int indexPassBraces(int index);
+//    int indexPassBraces(int index);
     int skipAssignment(int index, int endIndex);
     void skipNextSemicolon(int index);
     int moveToEndOfStatement(int index, bool checkLambda, int endIndex=-1);
