@@ -53,7 +53,8 @@ enum class FileType{
 enum class SearchFileScope {
     currentFile,
     wholeProject,
-    openedFiles
+    openedFiles,
+    Folder
 };
 
 enum AutoSaveTarget {

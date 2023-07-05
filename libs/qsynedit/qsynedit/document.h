@@ -50,6 +50,11 @@ class Document;
 
 typedef std::shared_ptr<Document> PDocument;
 
+class BinaryFileError : public FileError {
+public:
+    explicit BinaryFileError (const QString& reason);
+};
+
 class Document : public QObject
 {  
     Q_OBJECT

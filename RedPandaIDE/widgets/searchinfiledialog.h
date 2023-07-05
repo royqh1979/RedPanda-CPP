@@ -36,7 +36,7 @@ public:
     explicit SearchInFileDialog(QWidget *parent = nullptr);
     ~SearchInFileDialog();
     void findInFiles(const QString& text);
-    void findInFiles(const QString& keyword, SearchFileScope scope, QSynedit::SearchOptions options);
+    void findInFiles(const QString& keyword, SearchFileScope scope, QSynedit::SearchOptions options, const QString& folder, const QString& filters, bool searchSubfolders );
     QSynedit::PSynSearchBase searchEngine() const;
 
 private slots:
@@ -46,6 +46,10 @@ private slots:
 
    void on_btnExecute_clicked();
    void on_btnReplace_clicked();
+
+   void on_rbFolder_toggled(bool checked);
+
+   void on_btnChangeFolder_clicked();
 
 private:
    void doSearch(bool replace);

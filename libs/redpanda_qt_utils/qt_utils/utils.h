@@ -69,6 +69,7 @@ public:
 /* text processing utils */
 const QByteArray guessTextEncoding(const QByteArray& text);
 
+bool isBinaryContent(const QByteArray& text);
 bool isTextAllAscii(const QByteArray& text);
 bool isTextAllAscii(const QString& text);
 

@@ -20,7 +20,7 @@
 #include <QStyledItemDelegate>
 #include "mainwindow.h"
 
-PSearchResults SearchResultModel::addSearchResults(const QString &keyword, QSynedit::SearchOptions options, SearchFileScope scope)
+PSearchResults SearchResultModel::addSearchResults(const QString &keyword, QSynedit::SearchOptions options, SearchFileScope scope, const QString& folder, const QString& filters, bool searchSubfolders)
 {
     int index=-1;
     for (int i=0;i<mSearchResults.size();i++) {
@@ -42,6 +42,9 @@ PSearchResults SearchResultModel::addSearchResults(const QString &keyword, QSyne
     results->options = options;
     results->scope = scope;
     results->searchType = SearchType::Search;
+    results->folder=folder;
+    results->filters=filters;
+    results->searchSubfolders=searchSubfolders;
     mSearchResults.push_front(results);
     mCurrentIndex = 0;
     return results;
@@ -384,6 +387,8 @@ QVariant SearchResultListModel::data(const QModelIndex &index, int role) const
                 return tr("Files In Project:") + QString(" \"%1\"").arg(results->keyword);
             case SearchFileScope::openedFiles:
                 return tr("Open Files:") + QString(" \"%1\"").arg(results->keyword);
+            case SearchFileScope::Folder:
+                return tr("\"%1\" in Folder \"%2\"").arg(results->keyword).arg(results->folder);
             }
         } else if (results->searchType == SearchType::FindOccurences) {
             if (results->scope == SearchFileScope::currentFile) {

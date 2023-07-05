@@ -30,6 +30,8 @@ Red Panda C++ Version 2.23
   - enhancement: Sort symbols by their declaration pos in the Class Browser, if not sort by alpha order.
   - fix: Keyword asm is not correctly parsed.
   - fix: Tips for problem is not correctly displayed.
+  - enhancement: Folder mode in "File in files" dialog.
+  - enhancement: When open a file, test if it contains binary contains.
 
 Red Panda C++ Version 2.22
 

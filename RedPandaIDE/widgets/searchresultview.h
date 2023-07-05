@@ -52,6 +52,9 @@ struct SearchResults{
     SearchFileScope scope;
     SearchType searchType;
     QString filename;
+    QString folder;
+    QString filters;
+    bool searchSubfolders;
     QList<PSearchResultTreeItem> results;
 };
 
@@ -62,7 +65,7 @@ class SearchResultModel : public QObject {
 public:
     explicit SearchResultModel(QObject* parent=nullptr);
     PSearchResults addSearchResults(const QString& keyword,QSynedit::SearchOptions options,
-                                    SearchFileScope scope);
+                                    SearchFileScope scope, const QString& folder=QString(), const QString& filters=QString(), bool searchSubfolders=true);
     PSearchResults addSearchResults(
             const QString& keyword,
             const QString& symbolFullname,

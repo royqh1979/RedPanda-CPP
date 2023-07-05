@@ -645,6 +645,8 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
             } else if (line.endsWith("\n")){
                 line.remove(line.length()-1,1);
             }
+            if (isBinaryContent(line))
+                throw BinaryFileError(tr("This is a binaray File!"));
             if (allAscii) {
                 allAscii = isTextAllAscii(line);
             }
@@ -1298,6 +1300,12 @@ bool RedoList::canRedo()
 int RedoList::itemCount()
 {
     return mItems.count();
+}
+
+BinaryFileError::BinaryFileError(const QString& reason):
+    FileError(reason)
+{
+
 }
 
 }

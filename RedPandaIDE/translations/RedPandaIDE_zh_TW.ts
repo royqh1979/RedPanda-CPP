@@ -6707,6 +6707,34 @@
         <source>Abort</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>*.*</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filters:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Folder:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in subfolders</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SearchResultListModel</name>
@@ -6728,6 +6756,10 @@
     </message>
     <message>
         <source>Find Usages in Project: &apos;%1&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&quot;%1&quot; in Folder &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -53,6 +53,13 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
+         <item row="1" column="1" colspan="2">
+          <widget class="QLineEdit" name="txtFilters">
+           <property name="text">
+            <string>*.*</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="0">
           <widget class="QLabel" name="lblFind">
            <property name="text">
@@ -60,7 +67,21 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="1" column="0">
+          <widget class="QLabel" name="lblFilters">
+           <property name="text">
+            <string>Filters:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QToolButton" name="btnChangeFolder">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="2">
           <widget class="QComboBox" name="cbFind">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -73,6 +94,26 @@
            </property>
            <property name="insertPolicy">
             <enum>QComboBox::InsertAtTop</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="txtFolder"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="lblFolder">
+           <property name="text">
+            <string>Folder:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" colspan="3">
+          <widget class="QCheckBox" name="cbSearchSubFolders">
+           <property name="text">
+            <string>Search in subfolders</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -127,6 +168,13 @@
                 <widget class="QRadioButton" name="rbOpenFiles">
                  <property name="text">
                   <string>Open Files</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="rbFolder">
+                 <property name="text">
+                  <string>Folder</string>
                  </property>
                 </widget>
                </item>

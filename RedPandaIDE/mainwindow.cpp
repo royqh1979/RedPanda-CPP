@@ -6526,9 +6526,13 @@ void MainWindow::on_btnSearchAgain_clicked()
         if (results->scope==SearchFileScope::wholeProject
                 && pMainWindow->project()==nullptr)
             return;
-        mSearchInFilesDialog->findInFiles(results->keyword,
-                                   results->scope,
-                                   results->options);
+        mSearchInFilesDialog->findInFiles(
+                    results->keyword,
+                    results->scope,
+                    results->options,
+                    results->folder,
+                    results->filters,
+                    results->searchSubfolders);
     } else if (results->searchType == SearchType::FindOccurences) {
         CppRefacter refactor;
         refactor.findOccurence(results->statementFullname,results->scope);
