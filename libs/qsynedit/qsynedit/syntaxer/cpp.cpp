@@ -558,12 +558,14 @@ void CppSyntaxer::procGreater()
         switch (mLine[mRun+1].unicode()) {
         case '=':
             mRun += 2;
+            if (mRun<mLineSize && mLine[mRun]=='>') // C++20 <=>
+                mRun++;
             return;
         case '>':
-            if (mRun+2<mLineSize && mLine[mRun+2] == '=') {
+            if (mRun+2<mLineSize && mLine[mRun+2] == '=') { // >>=
                 mRun+=3;
             } else {
-                mRun += 2;
+                mRun += 2; // >>
             }
             return;
         }

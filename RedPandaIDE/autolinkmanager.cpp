@@ -27,7 +27,6 @@ AutolinkManager* pAutolinkManager;
 
 AutolinkManager::AutolinkManager()
 {
-
 }
 
 PAutolink AutolinkManager::getLink(const QString &header) const

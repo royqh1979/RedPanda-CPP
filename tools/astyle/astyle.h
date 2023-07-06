@@ -273,6 +273,7 @@ public:
 	static const string AS_GCC_MIN_ASSIGN, AS_GCC_MAX_ASSIGN;
 	static const string AS_EQUAL, AS_PLUS_PLUS, AS_MINUS_MINUS, AS_NOT_EQUAL, AS_GR_EQUAL;
 	static const string AS_LS_EQUAL, AS_LS_LS_LS, AS_LS_LS, AS_GR_GR_GR, AS_GR_GR;
+    static const string AS_THREEWAY_COMPARISION;
 	static const string AS_QUESTION_QUESTION, AS_LAMBDA;
 	static const string AS_ARROW, AS_AND, AS_OR;
 	static const string AS_SCOPE_RESOLUTION;

@@ -32,6 +32,7 @@ Red Panda C++ Version 2.23
   - fix: Tips for problem is not correctly displayed.
   - enhancement: Folder mode in "File in files" dialog.
   - enhancement: When open a file, test if it contains binary contains.
+  - enhancement: Correctly reformat C++ three-way comparision operator "<=>"
 
 Red Panda C++ Version 2.22
 
