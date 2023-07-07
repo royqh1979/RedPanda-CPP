@@ -34,6 +34,7 @@ Red Panda C++ Version 2.23
   - enhancement: When open a file, test if it contains binary contains.
   - enhancement: Correctly reformat C++ three-way comparision operator "<=>"
   - enhancement: Auto insert spaces between #include and <> when reformat
+  - enhancement: Auto insert spaces between #include and "" when reformat
   
 
 Red Panda C++ Version 2.22
