@@ -16,8 +16,6 @@
         "PaletteButton": "#efefef",
         "PaletteButtonText":"#000000",
         "PaletteBrightText": "#ffffff",
-        "PaletteHighlight":"#308cc6",
-        "PaletteHighlightedText":"#ffffff",
         "PaletteLink":"#0000ff",
         "PaletteLinkVisited":"#ff00ff",
         "PaletteLight": "#ffffff",
@@ -30,7 +28,7 @@
         "PaletteTextDisabled":"#bebebe",
         "PaletteButtonDisabled": "#efefef",
         "PaletteButtonTextDisabled":"#bebebe",    
-		"PaletteHighlight":"#ffdddddd",
-		"PaletteHighlightedText":"#ff000000"
+        "PaletteHighlight":"#ffdddddd",
+        "PaletteHighlightedText":"#ff000000"
     }
 }
