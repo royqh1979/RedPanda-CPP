@@ -210,6 +210,7 @@ void ASFormatter::init(ASSourceIterator* si)
 	isInPreprocessor = false;
 	isInPreprocessorDefineDef = false;
 	isInPreprocessorBeautify = false;
+    isInPreprocessorInclude = false;
 	doesLineStartComment = false;
 	lineEndsInCommentOnly = false;
 	lineIsCommentOnly = false;
@@ -592,6 +593,13 @@ string ASFormatter::nextLine()
 		if (currentChar == '"'
 		        || (currentChar == '\'' && !isDigitSeparator(currentLine, charNum)))
 		{
+
+            if (isInPreprocessor && isInPreprocessorInclude &&
+                        currentChar=='\"') {
+                if (previousChar!=' ' && previousChar!='\t')
+                    appendSpacePad();
+                isInPreprocessorInclude=false;
+            }
 			formatQuoteOpener();
 			testForTimeToSplitFormattedLine();
 			continue;
@@ -626,9 +634,17 @@ string ASFormatter::nextLine()
 
 		if (isInPreprocessor)
 		{
+            if (isInPreprocessorInclude &&
+                    (currentChar=='<' || currentChar=='\"')) {
+                if (previousChar!=' ' && previousChar!='\t')
+                    appendSpacePad();
+                isInPreprocessorInclude=false;
+            }
+
 			appendCurrentChar();
 			continue;
 		}
+
 
 		if (isInTemplate && shouldCloseTemplates)
 		{
@@ -2673,6 +2689,7 @@ bool ASFormatter::getNextLine(bool emptyLineWasDeleted /*false*/)
 	        && (previousNonWSChar != '\\'
 	            || isEmptyLine(currentLine)))
 	{
+        isInPreprocessorInclude = false;
 		isInPreprocessor = false;
 		isInPreprocessorDefineDef = false;
 	}
@@ -5652,7 +5669,11 @@ void ASFormatter::processPreprocessor()
 			for (int i = 0; i < addedPreproc; i++)
 				braceTypeStack->pop_back();
 		}
-	}
+    }
+    else if (currentLine.compare(preproc, 7, "include") == 0)
+    {
+        isInPreprocessorInclude = true;
+    }
 	else if (currentLine.compare(preproc, 6, "define") == 0)
 		isInPreprocessorDefineDef = true;
 }

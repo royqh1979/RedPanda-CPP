@@ -939,7 +939,8 @@ private:  // variables
 	bool noTrimCommentContinuation;
 	bool isInPreprocessor;
 	bool isInPreprocessorDefineDef;
-	bool isInPreprocessorBeautify;
+    bool isInPreprocessorBeautify;
+    bool isInPreprocessorInclude;
 	bool isInTemplate;
 	bool doesLineStartComment;
 	bool lineEndsInCommentOnly;

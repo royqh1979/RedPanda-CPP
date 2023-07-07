@@ -240,8 +240,8 @@ void ASResource::buildCastOperators(vector<const string*>* castOperators)
  */
 void ASResource::buildHeaders(vector<const string*>* headers, int fileType, bool beautifier)
 {
-	const size_t elements = 25;
-	headers->reserve(elements);
+    const size_t elements = 25;
+    headers->reserve(elements);
 
 	headers->emplace_back(&AS_IF);
 	headers->emplace_back(&AS_ELSE);
@@ -262,7 +262,7 @@ void ASResource::buildHeaders(vector<const string*>* headers, int fileType, bool
 	{
 		headers->emplace_back(&_AS_TRY);		// __try
 		headers->emplace_back(&_AS_FINALLY);	// __finally
-		headers->emplace_back(&_AS_EXCEPT);	// __except
+        headers->emplace_back(&_AS_EXCEPT);	// __except
 	}
 	if (fileType == JAVA_TYPE)
 	{
@@ -295,7 +295,7 @@ void ASResource::buildHeaders(vector<const string*>* headers, int fileType, bool
 		}
 	}
 
-	assert(headers->size() < elements);
+    assert(headers->size() < elements);
     sort(headers->begin(), headers->end(), sortOnName);
 }
 

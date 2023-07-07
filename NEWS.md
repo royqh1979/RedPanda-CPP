@@ -33,6 +33,8 @@ Red Panda C++ Version 2.23
   - enhancement: Folder mode in "File in files" dialog.
   - enhancement: When open a file, test if it contains binary contains.
   - enhancement: Correctly reformat C++ three-way comparision operator "<=>"
+  - enhancement: Auto insert spaces between #include and <> when reformat
+  
 
 Red Panda C++ Version 2.22
 
