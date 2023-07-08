@@ -31,7 +31,6 @@
 #define USER_CODE_IN_REPL_POS_BEGIN "%REPL_BEGIN%"
 #define USER_CODE_IN_REPL_POS_END "%REPL_END%"
 
-
 class Project;
 struct TabStop {
     int x;

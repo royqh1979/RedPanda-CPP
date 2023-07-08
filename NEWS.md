@@ -35,6 +35,8 @@ Red Panda C++ Version 2.23
   - enhancement: Correctly reformat C++ three-way comparision operator "<=>"
   - enhancement: Auto insert spaces between #include and <> when reformat
   - enhancement: Auto insert spaces between #include and "" when reformat
+  - fix: Click editor's gutter won't toggle breakpoint in KDE debian 12 
+  - fix: "Toggle breakpoint " in the editor gutter's context menu doesn't work.
   
 
 Red Panda C++ Version 2.22

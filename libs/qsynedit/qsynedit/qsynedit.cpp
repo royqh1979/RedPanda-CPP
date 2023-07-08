@@ -69,6 +69,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mDocument = std::make_shared<Document>(mFontDummy, mFontDummy, this);
     //fPlugins := TList.Create;
     mMouseMoved = false;
+    mMouseOrigin = QPoint(0,0);
     mUndoing = false;
     mDocument->connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
     mDocument->connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
@@ -656,10 +657,13 @@ bool QSynEdit::pointToCharLine(const QPoint &point, BufferCoord &coord)
 
 bool QSynEdit::pointToLine(const QPoint &point, int &line)
 {
-    BufferCoord coord;
-    bool result = pointToCharLine(point,coord);
-    if (result)
-        line=coord.line;
+    if ((point.y() < clientTop())
+            || (point.y() > clientTop()+clientHeight())) {
+        return false;
+    }
+    line = rowToLine(
+        std::max(1, mTopLine + (point.y() / mTextHeight))
+    );
     return true;
 }
 
@@ -6143,6 +6147,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
     bool bWasSel = false;
     bool bStartDrag = false;
     mMouseMoved = false;
+    mMouseOrigin = event->pos();
     Qt::MouseButton button = event->button();
     int X=event->pos().x();
     int Y=event->pos().y();
@@ -6227,7 +6232,9 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
 void QSynEdit::mouseMoveEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseMoveEvent(event);
-    mMouseMoved = true;
+    if ( (std::abs(event->pos().y()-mMouseOrigin.y()) > 2)
+            || (std::abs(event->pos().x()-mMouseOrigin.x()) > 2) )
+        mMouseMoved = true;
     Qt::MouseButtons buttons = event->buttons();
     if (mStateFlags.testFlag(StateFlag::sfWaitForDragging)
             && !mReadOnly) {
