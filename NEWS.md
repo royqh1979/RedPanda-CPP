@@ -17,6 +17,7 @@ Red Panda C++ Version 2.23
   - fix: GNU assembly files (.s) are not shown in the files view.
   - fix: "typedef struct" that don't have definition of the struct is not correctly parsed.
   - enhancement: correctly highlight multiline raw string literals.
+  - enhancement: correctly highlight multiline string literals.
   - change: remove "Assembly" color scheme item (it's not used anymore).
   - fix: crash when parsing files containing inline assembly code.
   - fix: crash when source files contains macro definitions like "#define cfun (cfun + 0)"

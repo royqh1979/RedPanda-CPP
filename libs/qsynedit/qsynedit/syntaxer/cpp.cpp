@@ -1530,6 +1530,8 @@ int CppSyntaxer::getTokenPos()
 void CppSyntaxer::next()
 {
     mTokenPos = mRun;
+    if (mLineSize == 0 && mRange.state == RangeState::rsString)
+        mRange.state=RangeState::rsUnknown;
     do {
         if (mRun>=mLineSize) {
             procNull();
