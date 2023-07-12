@@ -1651,7 +1651,7 @@ void QSynEdit::doUncomment()
             continue;
         // Find // after blanks only
         int j = 0;
-        while ((j+1 < s.length()) && (s[j] == '\n' || s[j] == '\t'))
+        while ((j+1 < s.length()) && (s[j] == ' ' || s[j] == '\t'))
             j++;
         s.remove(j,symbolLen);
         mDocument->putLine(i,s);

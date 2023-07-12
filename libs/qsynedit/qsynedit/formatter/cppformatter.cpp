@@ -102,7 +102,13 @@ namespace QSynedit {
                     indentSpaces = editor->leftSpaces(editor->document()->getLine(matchingIndents.line));
                 } else if (firstToken=="{") {
                     IndentInfo matchingIndents = rangeAfterFirstToken.getLastIndent();
-                    indentSpaces = editor->leftSpaces(editor->document()->getLine(matchingIndents.line));
+                    if (matchingIndents.line!=line-1) {
+                        indentSpaces = editor->leftSpaces(editor->document()->getLine(matchingIndents.line));
+                    } else if (rangeAfterFirstToken.indents.count()>=2){
+                        IndentInfo info =  rangeAfterFirstToken.indents[rangeAfterFirstToken.indents.count()-2];
+                        indentSpaces = editor->leftSpaces(editor->document()->getLine(info.line))+editor->tabWidth();
+                    } else
+                        indentSpaces = 0;
                 } else if (rangePreceeding.getLastIndentType()!=IndentType::None) {
                     IndentInfo matchingIndents = rangePreceeding.getLastIndent();
                     indentSpaces = editor->leftSpaces(editor->document()->getLine(matchingIndents.line))+editor->tabWidth();

@@ -42,7 +42,8 @@ Red Panda C++ Version 2.23
   - enhancement: When problem case's expected output is not too large (<= 5000 line), highlight text in the first different line in the expected output.
   - enhancement: Highlight text in the first different line using the error color.
   - enhancement: Add the option "redirect stderr to the Tools output panel" in the options dialog -> executor -> problem set page.
-  
+  - fix: Can't correctly uncomment multiple "//" comment lines that doesn't have spaces at linestarts.
+  - fix: Autoindent for "{" is not correct.  
 
 Red Panda C++ Version 2.22
 
