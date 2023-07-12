@@ -40,6 +40,7 @@ void ExecutorProblemSetWidget::doLoad()
     ui->chkConvertExpectedHTML->setChecked(pSettings->executor().convertHTMLToTextForExpected());
 
     ui->chkIgnoreSpacesWhenValidatingCases->setChecked(pSettings->executor().ignoreSpacesWhenValidatingCases());
+    ui->chkRedirectStderr->setChecked(pSettings->executor().redirectStderrToToolLog());
 
     ui->cbFont->setCurrentFont(QFont(pSettings->executor().caseEditorFontName()));
     ui->spinFontSize->setValue(pSettings->executor().caseEditorFontSize());
@@ -58,6 +59,7 @@ void ExecutorProblemSetWidget::doSave()
     pSettings->executor().setConvertHTMLToTextForInput(ui->chkConvertInputHTML->isChecked());
     pSettings->executor().setConvertHTMLToTextForExpected(ui->chkConvertExpectedHTML->isChecked());
     pSettings->executor().setIgnoreSpacesWhenValidatingCases(ui->chkIgnoreSpacesWhenValidatingCases->isChecked());
+    pSettings->executor().setRedirectStderrToToolLog(ui->chkRedirectStderr->isChecked());
     pSettings->executor().setCaseEditorFontName(ui->cbFont->currentFont().family());
     pSettings->executor().setCaseEditorFontOnlyMonospaced(ui->chkOnlyMonospaced->isChecked());
     pSettings->executor().setCaseEditorFontSize(ui->spinFontSize->value());

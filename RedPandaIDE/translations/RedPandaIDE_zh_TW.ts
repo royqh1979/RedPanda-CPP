@@ -1930,6 +1930,10 @@
         <source>Expected Output</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Redirect STDERR to Tools output panel</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FileAssociationModel</name>

@@ -83,7 +83,12 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     }
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
-    process.setProcessChannelMode(QProcess::MergedChannels);
+    if (pSettings->executor().redirectStderrToToolLog()) {
+        emit logStderrOutput("\n");
+    } else {
+        process.setProcessChannelMode(QProcess::MergedChannels);
+        process.setReadChannel(QProcess::StandardOutput);
+    }
     process.connect(
                 &process, &QProcess::errorOccurred,
                 [&](){
@@ -129,6 +134,11 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         }
         if (errorOccurred)
             break;
+        if (pSettings->executor().redirectStderrToToolLog()) {
+            QString s = QString::fromLocal8Bit(process.readAllStandardError());
+            if (!s.isEmpty())
+                emit logStderrOutput(s);
+        }
         readed = process.read(mBufferSize);
         buffer += readed;
         if (buffer.length()>=mBufferSize || noOutputTime > mOutputRefreshTime) {
@@ -171,6 +181,11 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         problemCase->output = tr("Memory limit exceeded!");
         emit resetOutput(problemCase->getId(), problemCase->output);
     } else {
+        if (pSettings->executor().redirectStderrToToolLog()) {
+            QString s = QString::fromLocal8Bit(process.readAllStandardError());
+            if (!s.isEmpty())
+                emit logStderrOutput(s);
+        }
         if (process.state() == QProcess::ProcessState::NotRunning)
             buffer += process.readAll();
         emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));

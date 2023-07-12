@@ -86,6 +86,9 @@ QList<QByteArray> splitByteArrayToLines(const QByteArray& content);
 QString trimRight(const QString& s);
 QString trimLeft(const QString& s);
 
+class QTextEdit;
+void clearQPlainTextEditFormat(QTextEdit* editor);
+
 int countLeadingWhitespaceChars(const QString& line);
 
 bool stringIsBlank(const QString& s);

@@ -118,6 +118,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="chkRedirectStderr">
+        <property name="text">
+         <string>Redirect STDERR to Tools output panel</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="chkIgnoreSpacesWhenValidatingCases">
         <property name="text">
          <string>Ignore spaces when validating problem cases</string>

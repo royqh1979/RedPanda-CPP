@@ -38,6 +38,10 @@ Red Panda C++ Version 2.23
   - enhancement: Auto insert spaces between #include and "" when reformat
   - fix: Click editor's gutter won't toggle breakpoint in KDE debian 12 
   - fix: "Toggle breakpoint " in the editor gutter's context menu doesn't work.
+  - fix: Shouldn't auto indent lines starts with "\\".
+  - enhancement: When problem case's expected output is not too large (<= 5000 line), highlight text in the first different line in the expected output.
+  - enhancement: Highlight text in the first different line using the error color.
+  - enhancement: Add the option "redirect stderr to the Tools output panel" in the options dialog -> executor -> problem set page.
   
 
 Red Panda C++ Version 2.22

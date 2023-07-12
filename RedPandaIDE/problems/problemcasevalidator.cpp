@@ -34,9 +34,17 @@ bool ProblemCaseValidator::validate(POJProblemCase problemCase, bool ignoreSpace
         expected = textToLines(problemCase->expected);
     problemCase->outputLineCounts = output.count();
     problemCase->expectedLineCounts = expected.count();
-    if (output.count()!=expected.count())
-        return false;
-    for (int i=0;i<output.count();i++) {
+    if (problemCase->expectedLineCounts>5000) {
+        if (output.count()<expected.count()) {
+            problemCase->firstDiffLine=output.count();
+            return false;
+        }  else if (output.count()>expected.count()) {
+            problemCase->firstDiffLine=expected.count();
+            return false;
+        }
+    }
+    int count=std::min(output.count(), expected.count());
+    for (int i=0;i<count;i++) {
         if (ignoreSpaces) {
             if (!equalIgnoringSpaces(output[i],expected[i])) {
                 problemCase->firstDiffLine = i;
@@ -48,6 +56,13 @@ bool ProblemCaseValidator::validate(POJProblemCase problemCase, bool ignoreSpace
                 return false;
             }
         }
+    }
+    if (output.count()<expected.count()) {
+        problemCase->firstDiffLine=output.count();
+        return false;
+    }  else if (output.count()>expected.count()) {
+        problemCase->firstDiffLine=expected.count();
+        return false;
     }
     return true;
 }

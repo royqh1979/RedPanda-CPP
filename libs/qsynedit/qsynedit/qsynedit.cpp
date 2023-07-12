@@ -1538,6 +1538,8 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
     line = std::min(line, mDocument->count()+1);
     if (line<=1)
         return 0;
+    if (lineText.startsWith("//"))
+        return 0;
     if (mFormatter) {
         return mFormatter->calcIndentSpaces(line,lineText,addIndent,this);
     }

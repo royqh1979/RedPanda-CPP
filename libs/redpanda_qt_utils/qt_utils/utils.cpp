@@ -32,6 +32,7 @@
 #include <QWindow>
 #include <QScreen>
 #include <QDirIterator>
+#include <QTextEdit>
 #ifdef Q_OS_WIN
 #include <QDirIterator>
 #include <QFont>
@@ -733,4 +734,12 @@ bool isBinaryContent(const QByteArray &text)
         }
     }
     return false;
+}
+
+void clearQPlainTextEditFormat(QTextEdit *editor)
+{
+    QTextCursor cursor = editor->textCursor();
+    cursor.select(QTextCursor::Document);
+    cursor.setCharFormat(QTextCharFormat());
+    cursor.clearSelection();
 }

@@ -931,6 +931,9 @@ public:
         bool convertHTMLToTextForExpected() const;
         void setConvertHTMLToTextForExpected(bool newConvertHTMLToTextForExpected);
 
+        bool redirectStderrToToolLog() const;
+        void setRedirectStderrToToolLog(bool newRedirectStderrToToolLog);
+
     private:
         // general
         bool mPauseConsole;
@@ -947,6 +950,7 @@ public:
         bool mConvertHTMLToTextForInput;
         bool mConvertHTMLToTextForExpected;
         bool mIgnoreSpacesWhenValidatingCases;
+        bool mRedirectStderrToToolLog;
         QString mCaseEditorFontName;
         int mCaseEditorFontSize;
         bool mCaseEditorFontOnlyMonospaced;

@@ -4294,17 +4294,22 @@
     </message>
     <message>
         <location filename="qsynedit/document.cpp" line="630"/>
-        <location filename="qsynedit/document.cpp" line="751"/>
+        <location filename="qsynedit/document.cpp" line="753"/>
         <source>Can&apos;t load codec &apos;%1&apos;!</source>
         <translation>无法加载字符编码&quot;%1&quot;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="754"/>
+        <location filename="qsynedit/document.cpp" line="649"/>
+        <source>This is a binaray File!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qsynedit/document.cpp" line="756"/>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
         <translation>无法保存文件&quot;%1&quot;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="777"/>
+        <location filename="qsynedit/document.cpp" line="779"/>
         <source>Data not correctly writed to file &apos;%1&apos;.</source>
         <translation>数据未能正确写入文件&quot;%1&quot;。</translation>
     </message>

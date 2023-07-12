@@ -61,6 +61,13 @@ void LineNumberTextEditor::updateLineNumberArea(const QRect &rect, int dy)
         updateLineNumberAreaWidth(0);
 }
 
+void LineNumberTextEditor::clearStartFormat()
+{
+    moveCursor(QTextCursor::Start);
+    QTextCursor cursor = textCursor();
+    cursor.setCharFormat(QTextCharFormat());
+}
+
 const QColor &LineNumberTextEditor::lineNumberAreaCurrentLine() const
 {
     return mLineNumberAreaCurrentLine;
@@ -72,6 +79,20 @@ void LineNumberTextEditor::setLineNumberAreaCurrentLine(const QColor &newLineNum
         return;
     mLineNumberAreaCurrentLine = newLineNumberAreaCurrentLine;
     emit lineNumberAreaCurrentLineChanged();
+}
+
+void LineNumberTextEditor::clearFormat()
+{
+    QTextCursor cursor = textCursor();
+    cursor.select(QTextCursor::Document);
+    cursor.setCharFormat(QTextCharFormat());
+    cursor.clearSelection();
+}
+
+void LineNumberTextEditor::clearAll()
+{
+    clear();
+    clearStartFormat();
 }
 
 const QColor &LineNumberTextEditor::lineNumberAreaBackground() const

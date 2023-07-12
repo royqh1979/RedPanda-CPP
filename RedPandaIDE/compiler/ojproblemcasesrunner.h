@@ -54,6 +54,7 @@ signals:
     void caseFinished(const QString &caseId, int current, int total);
     void newOutputGetted(const QString &caseId, const QString &newOutputLine);
     void resetOutput(const QString &caseId, const QString &newOutputLine);
+    void logStderrOutput(const QString& msg);
 private:
     void runCase(int index, POJProblemCase problemCase);
 private:

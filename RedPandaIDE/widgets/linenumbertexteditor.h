@@ -37,6 +37,10 @@ public:
     const QColor &lineNumberAreaCurrentLine() const;
     void setLineNumberAreaCurrentLine(const QColor &newLineNumberAreaCurrentLine);
 
+    void clearFormat();
+
+    void clearAll();
+
 signals:
     void lineNumberAreaCurrentLineChanged();
 
@@ -47,6 +51,8 @@ private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void highlightCurrentLine();
     void updateLineNumberArea(const QRect &rect, int dy);
+private:
+    void clearStartFormat();
 
 private:
     QWidget *lineNumberArea;
