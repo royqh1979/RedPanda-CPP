@@ -791,6 +791,13 @@
     </message>
 </context>
 <context>
+    <name>DebugReader</name>
+    <message>
+        <source>&lt;repeats \1 times&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Debugger</name>
     <message>
         <source>No compiler set</source>

@@ -95,6 +95,39 @@ void LineNumberTextEditor::clearAll()
     clearStartFormat();
 }
 
+void LineNumberTextEditor::highlightLine(int line, QColor highlightColor)
+{
+    QTextBlock block = document()->findBlockByLineNumber(line);
+    if (!block.isValid())
+        return;
+    QTextCursor cur(block);
+    if (cur.isNull())
+        return;
+    QTextCharFormat oldFormat = cur.charFormat();
+    QTextCharFormat format = QTextCharFormat(cur.charFormat());
+    cur.select(QTextCursor::LineUnderCursor);
+    format.setUnderlineColor(highlightColor);
+    format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
+    format.setTextOutline(highlightColor);
+    cur.setCharFormat(format);
+    cur.clearSelection();
+    cur.setCharFormat(oldFormat);
+    setTextCursor(cur);
+    moveCursor(QTextCursor::MoveOperation::StartOfLine);
+}
+
+void LineNumberTextEditor::locateLine(int line)
+{
+    QTextBlock block = document()->findBlockByLineNumber(line);
+    if (!block.isValid())
+        return;
+    QTextCursor cur(block);
+    if (cur.isNull())
+        return;
+    setTextCursor(cur);
+    moveCursor(QTextCursor::MoveOperation::StartOfLine);
+}
+
 const QColor &LineNumberTextEditor::lineNumberAreaBackground() const
 {
     return mLineNumberAreaBackground;

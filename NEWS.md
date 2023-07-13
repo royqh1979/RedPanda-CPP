@@ -44,6 +44,7 @@ Red Panda C++ Version 2.23
   - enhancement: Add the option "redirect stderr to the Tools output panel" in the options dialog -> executor -> problem set page.
   - fix: Can't correctly uncomment multiple "//" comment lines that doesn't have spaces at linestarts.
   - fix: Autoindent for "{" is not correct.  
+  - change: Don't print repeated values in gdb individually
 
 Red Panda C++ Version 2.22
 

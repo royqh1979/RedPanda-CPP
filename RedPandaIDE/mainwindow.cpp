@@ -2424,7 +2424,7 @@ void MainWindow::debug()
     mDebugger->sendCommand("-data-list-register-names","");
     mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
     mDebugger->sendCommand("-gdb-set", "confirm off");
-    mDebugger->sendCommand("-gdb-set", "print repeats 0"); // don't repeat elements
+    mDebugger->sendCommand("-gdb-set", "print repeats 10");
     mDebugger->sendCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 500
     //mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(filePath))); // restore working directory
     if (pSettings->debugger().useGDBServer()) {
@@ -8015,49 +8015,17 @@ void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
         } else
             return;
         if (diffLine < problemCase->outputLineCounts) {
-            QTextBlock block = ui->txtProblemCaseOutput->document()->findBlockByLineNumber(diffLine);
-            if (!block.isValid())
-                return;
-            QTextCursor cur(block);
-            if (cur.isNull())
-                return;
-            cur = QTextCursor(block);
-            QTextCharFormat oldFormat = cur.charFormat();
-            QTextCharFormat format = QTextCharFormat(cur.charFormat());
-            cur.select(QTextCursor::LineUnderCursor);
-            format.setUnderlineColor(mErrorColor);
-            format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-            format.setTextOutline(mErrorColor);
-            cur.setCharFormat(format);
-            cur.clearSelection();
-            cur.setCharFormat(oldFormat);
-            ui->txtProblemCaseOutput->setTextCursor(cur);
-            ui->txtProblemCaseOutput->moveCursor(QTextCursor::MoveOperation::StartOfLine);
+            ui->txtProblemCaseOutput->highlightLine(diffLine, mErrorColor);
         } else {
             ui->txtProblemCaseOutput->moveCursor(QTextCursor::MoveOperation::End);
             ui->txtProblemCaseOutput->moveCursor(QTextCursor::MoveOperation::StartOfLine);
         }
         if (diffLine < problemCase->expectedLineCounts) {
-            QTextBlock block = ui->txtProblemCaseExpected->document()->findBlockByLineNumber(diffLine);
-            if (!block.isValid())
-                return;
-            QTextCursor cur(block);
-            if (cur.isNull())
-                return;
-            cur = QTextCursor(block);
             if (ui->txtProblemCaseExpected->document()->blockCount()<=5000) {
-                QTextCharFormat oldFormat = cur.charFormat();
-                QTextCharFormat format = QTextCharFormat(cur.charFormat());
-                cur.select(QTextCursor::LineUnderCursor);
-                format.setUnderlineColor(mErrorColor);
-                format.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-                format.setTextOutline(mErrorColor);
-                cur.setCharFormat(format);
-                cur.clearSelection();
-                cur.setCharFormat(oldFormat);
+                ui->txtProblemCaseExpected->highlightLine(diffLine, mErrorColor);
+            } else {
+                ui->txtProblemCaseExpected->locateLine(diffLine);
             }
-            ui->txtProblemCaseExpected->setTextCursor(cur);
-            ui->txtProblemCaseExpected->moveCursor(QTextCursor::MoveOperation::StartOfLine);
         } else {
             ui->txtProblemCaseExpected->moveCursor(QTextCursor::MoveOperation::End);
             ui->txtProblemCaseExpected->moveCursor(QTextCursor::MoveOperation::StartOfLine);

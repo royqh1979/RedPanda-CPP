@@ -18,6 +18,7 @@
 #define LINENUMBERTEXTEDITOR_H
 
 #include <QPlainTextEdit>
+#include <QSyntaxHighlighter>
 
 class LineNumberTextEditor : public QPlainTextEdit
 {
@@ -40,6 +41,10 @@ public:
     void clearFormat();
 
     void clearAll();
+
+    void highlightLine(int line, QColor highlightColor);
+
+    void locateLine(int line);
 
 signals:
     void lineNumberAreaCurrentLineChanged();
