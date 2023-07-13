@@ -45,6 +45,7 @@ Red Panda C++ Version 2.23
   - fix: Can't correctly uncomment multiple "//" comment lines that doesn't have spaces at linestarts.
   - fix: Autoindent for "{" is not correct.  
   - change: Don't print repeated values in gdb individually
+  - enhancement: Don't show "\000" of string values in the debug local variables panel.
 
 Red Panda C++ Version 2.22
 
