@@ -1288,6 +1288,9 @@ public:
         int arrayElements() const;
         void setArrayElements(int newArrayElements);
 
+        int characters() const;
+        void setCharacters(int newCharacters);
+
     private:
         bool mEnableDebugConsole;
         bool mShowDetailLog;
@@ -1306,6 +1309,7 @@ public:
         int mMemoryViewRows;
         int mMemoryViewColumns;
         int mArrayElements;
+        int mCharacters;
 
         // _Base interface
     protected:

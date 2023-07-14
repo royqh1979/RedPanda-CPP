@@ -1626,11 +1626,10 @@ void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack
 void DebugReader::handleLocalVariables(const QList<GDBMIResultParser::ParseValue> &variables)
 {
     QStringList locals;
-    QRegularExpression exp("<repeats\\s+(\\d+)\\s+times>");
     foreach (const GDBMIResultParser::ParseValue& varValue, variables) {
         GDBMIResultParser::ParseObject varObject = varValue.object();
         QString name = QString(varObject["name"].value());
-        QString value = QString(varObject["value"].value()).replace(exp, tr("<repeats \\1 times>"));
+        QString value = QString(varObject["value"].value());
         locals.append(
                     QString("%1 = %2")
                     .arg(

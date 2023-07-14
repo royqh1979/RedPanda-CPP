@@ -2426,7 +2426,8 @@ void MainWindow::debug()
     mDebugger->sendCommand("-gdb-set", "confirm off");
     mDebugger->sendCommand("-gdb-set", "print repeats 10");
     mDebugger->sendCommand("-gdb-set", "print null-stop");
-    mDebugger->sendCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 500
+    mDebugger->sendCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
+    mDebugger->sendCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
     //mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(filePath))); // restore working directory
     if (pSettings->debugger().useGDBServer()) {
         mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));

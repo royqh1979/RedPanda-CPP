@@ -24,6 +24,7 @@ DebugGeneralWidget::DebugGeneralWidget(const QString& name, const QString& group
     ui(new Ui::DebugGeneralWidget)
 {
     ui->setupUi(this);
+    ui->panelCharacters->setVisible(false);
 }
 
 DebugGeneralWidget::~DebugGeneralWidget()
@@ -57,6 +58,7 @@ void DebugGeneralWidget::doLoad()
     ui->spinMemoryViewRows->setValue(pSettings->debugger().memoryViewRows());
     ui->spinMemoryViewColumns->setValue(pSettings->debugger().memoryViewColumns());
     ui->spinArrayElements->setValue(pSettings->debugger().arrayElements());
+    ui->spinCharacters->setValue(pSettings->debugger().characters());
 }
 
 void DebugGeneralWidget::doSave()
@@ -81,6 +83,7 @@ void DebugGeneralWidget::doSave()
     pSettings->debugger().setMemoryViewRows(ui->spinMemoryViewRows->value());
     pSettings->debugger().setMemoryViewColumns(ui->spinMemoryViewColumns->value());
     pSettings->debugger().setArrayElements(ui->spinArrayElements->value());
+    pSettings->debugger().setCharacters(ui->spinCharacters->value());
 
     pSettings->debugger().save();
     pMainWindow->updateDebuggerSettings();

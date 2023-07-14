@@ -789,11 +789,8 @@
         <source>Columns</source>
         <translation type="unfinished"></translation>
     </message>
-</context>
-<context>
-    <name>DebugReader</name>
     <message>
-        <source>&lt;repeats \1 times&gt;</source>
+        <source>Max  characters of a string displayed</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
