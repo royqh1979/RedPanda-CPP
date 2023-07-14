@@ -844,6 +844,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     QChar ch = t[0];
     if (isIdentChar(ch)) {
         mLastIdCharPressed++;
+        qDebug()<<mLastIdCharPressed<<pSettings->codeCompletion().minCharRequired();
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput()
                 && mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()) {
@@ -855,7 +856,10 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 } else {
-                    QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                    QSynedit::BufferCoord cursor=caretXY();
+                    cursor.ch = std::max(1, cursor.ch-mLastIdCharPressed+1);
+
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(cursor);
                     if (mParser && !lastWord.isEmpty()) {
                         if (lastWord == "typedef" || lastWord == "const") {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
@@ -926,7 +930,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             return;
                         }
                     }
-                    lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(caretXY());
+                    lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(cursor);
                     if (mParser && !lastWord.isEmpty()) {
                         PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
                         while(currentScope && currentScope->kind==StatementKind::skBlock) {
@@ -4919,7 +4923,7 @@ QString Editor::getPreviousWordAtPositionForCompleteFunctionDefinition(const QSy
 
     QString s = document()->getLine(p.line - 1);
     int wordBegin;
-    int wordEnd = p.ch-1;
+    int wordEnd = p.ch-2;
     if (wordEnd >= s.length())
         wordEnd = s.length()-1;
     while (wordEnd > 0 &&  (isIdentChar(s[wordEnd]) || s[wordEnd] == ':')) {
