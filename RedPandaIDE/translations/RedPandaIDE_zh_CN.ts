@@ -1276,7 +1276,7 @@ Are you really want to continue?</oldsource>
     <message>
         <location filename="../settingsdialog/debuggeneralwidget.ui" line="87"/>
         <source>Max  characters of a string displayed</source>
-        <translation type="unfinished"></translation>
+        <translation>字符串最多显示多少字符</translation>
     </message>
     <message>
         <location filename="../settingsdialog/debuggeneralwidget.ui" line="171"/>

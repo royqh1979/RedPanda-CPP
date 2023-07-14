@@ -60,8 +60,8 @@ echo "Making installer..."
 pushd .
 cd "${PACKAGE_DIR}"
 cp  -a "${MINGW}" .
-rm -rf "${MINGW_NAME}/share/gcc-11.2.0"
-cp  -a "${SOURCE_DIR}/tools/gdb-scripts/gcc-11.2.0" "${MINGW_NAME}/share"
+#rm -rf "${MINGW_NAME}/share/gcc-11.2.0"
+#cp  -a "${SOURCE_DIR}/tools/gdb-scripts/gcc-11.2.0" "${MINGW_NAME}/share"
 
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-x64.nsi" .
