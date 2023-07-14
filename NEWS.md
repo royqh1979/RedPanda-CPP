@@ -1,3 +1,7 @@
+Red Panda C++ Version 2.24
+
+  - fix: members of elements of stl maps are not correctly suggested.
+
 Red Panda C++ Version 2.23
 
   - fix: When selection is availalbe, Ctrl+Click shouldn't jump to declaration/definition.

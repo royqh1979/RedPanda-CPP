@@ -23,6 +23,7 @@
 #include <QDate>
 #include <QHash>
 #include <QQueue>
+#include <QRegularExpression>
 #include <QThread>
 #include <QTime>
 
@@ -1205,7 +1206,7 @@ int CppParser::getTemplateParamStart(const QString &s, int startAt, int index) c
     int i = startAt+1;
     int count=0;
     while (count<index) {
-        i = getTemplateParamEnd(s,i) + 2;
+        i = getTemplateParamEnd(s,i)+1;
         count++;
     }
     return i;
@@ -2147,7 +2148,7 @@ QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString 
         i=getTemplateParamStart(s,i,index);
         int t=getTemplateParamEnd(s,i);
         //qDebug()<<index<<s<<s.mid(i,t-i)<<i<<t;
-        return s.mid(i,t-i);
+        return s.mid(i,t-i).replace(QRegularExpression("\\s+"),"");
     }
     int position = s.length()-1;
     while ((position >= 0) && (s[position] == '*'
