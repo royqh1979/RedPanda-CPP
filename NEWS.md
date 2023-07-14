@@ -1,6 +1,7 @@
 Red Panda C++ Version 2.24
 
   - fix: members of elements of stl maps are not correctly suggested.
+  - fix: memory view's cell size is too wide in linux.
 
 Red Panda C++ Version 2.23
 
