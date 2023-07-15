@@ -836,7 +836,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
     QChar ch = t[0];
     QSynedit::BufferCoord ws=wordStart();
     int idCharPressed=caretX()-ws.ch;
-    qDebug()<<idCharPressed;
     if (isIdentChar(ch)) {
         idCharPressed++;
         if (pSettings->codeCompletion().enabled()
