@@ -325,7 +325,6 @@ private:
     PCppParser mParser;
     std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
     std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
-    int mLastIdCharPressed;
     bool mUseCppSyntax;
     QString mCurrentWord;
     QString mCurrentDebugTipWord;

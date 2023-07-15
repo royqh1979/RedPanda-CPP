@@ -77,7 +77,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mSyntaxWarningColor{"orange"},
   mLineCount{0},
   mActiveBreakpointLine{-1},
-  mLastIdCharPressed{0},
   mCurrentTipType{TipType::None},
   mSaving{false},
   mHoverModifiedLine{-1},
@@ -285,7 +284,6 @@ void Editor::loadFile(QString filename) {
         reparseTodo();
     }
 
-    mLastIdCharPressed = 0;
     saveAutoBackup();
 }
 
@@ -702,7 +700,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
     switch (event->key()) {
     case Qt::Key_Return:
     case Qt::Key_Enter:
-        mLastIdCharPressed = 0;
         if (mTabStopBegin>=0) { // editing user code template
             handled = true;
             mTabStopBegin = -1;
@@ -783,7 +780,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
         }
         return;
     case Qt::Key_Escape: // Update function tip
-        mLastIdCharPressed = 0;
         if (mTabStopBegin>=0) {
             mTabStopBegin = -1;
             setBlockEnd(caretXY());
@@ -805,7 +801,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
             handled = true;
             pMainWindow->functionTip()->previousTip();
         } else {
-            mLastIdCharPressed = 0;
             clearUserCodeInTabStops();
         }
         return;
@@ -814,20 +809,17 @@ void Editor::keyPressEvent(QKeyEvent *event)
             handled = true;
             pMainWindow->functionTip()->nextTip();
         } else {
-            mLastIdCharPressed = 0;
             clearUserCodeInTabStops();
         }
         return;
     case Qt::Key_Delete:
         // remove completed character
-        mLastIdCharPressed = 0;
         if (!selAvail()) {
             undoSymbolCompletion(caretX());
         }
         return;
     case Qt::Key_Backspace:
         // remove completed character
-        mLastIdCharPressed = 0;
         if (!selAvail()) {
             undoSymbolCompletion(caretX()-1);
         }
@@ -842,12 +834,14 @@ void Editor::keyPressEvent(QKeyEvent *event)
         return;
 
     QChar ch = t[0];
+    QSynedit::BufferCoord ws=wordStart();
+    int idCharPressed=caretX()-ws.ch;
+    qDebug()<<idCharPressed;
     if (isIdentChar(ch)) {
-        mLastIdCharPressed++;
-        qDebug()<<mLastIdCharPressed<<pSettings->codeCompletion().minCharRequired();
+        idCharPressed++;
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput()
-                && mLastIdCharPressed==pSettings->codeCompletion().minCharRequired()) {
+                && idCharPressed>=pSettings->codeCompletion().minCharRequired()) {
             if (mParser) {
                 if (mParser->isIncludeLine(lineText())) {
                     // is a #include line
@@ -856,10 +850,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 } else {
-                    QSynedit::BufferCoord cursor=caretXY();
-                    cursor.ch = std::max(1, cursor.ch-mLastIdCharPressed+1);
-
-                    QString lastWord = getPreviousWordAtPositionForSuggestion(cursor);
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(ws);
                     if (mParser && !lastWord.isEmpty()) {
                         if (lastWord == "typedef" || lastWord == "const") {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
@@ -930,7 +921,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             return;
                         }
                     }
-                    lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(cursor);
+                    lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(ws);
                     if (mParser && !lastWord.isEmpty()) {
                         PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
                         while(currentScope && currentScope->kind==StatementKind::skBlock) {
@@ -962,17 +953,15 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
             if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
                 //preprocessor ?
-                if ((mLastIdCharPressed==0) && (ch=='#') && lineText().isEmpty()) {
-                    mLastIdCharPressed++;
+                if ((idCharPressed==0) && (ch=='#') && lineText().isEmpty()) {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::Normal);
                     handled=true;
                     return;
                 }
                 //javadoc directive?
-                if  ((mLastIdCharPressed==0) && (ch=='@') &&
+                if  ((idCharPressed==0) && (ch=='@') &&
                       lineText().trimmed().startsWith('*')) {
-                    mLastIdCharPressed++;
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::Normal);
                     handled=true;
@@ -980,22 +969,19 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 }
             } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::LUA) {
                 if (ch=='.') {
-                    mLastIdCharPressed++;
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::KeywordsOnly);
                     handled=true;
                     return;
                 }
             } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
-                if ((mLastIdCharPressed==0) && (ch=='.')) {
-                    mLastIdCharPressed++;
+                if ((idCharPressed==0) && (ch=='.')) {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::KeywordsOnly);
                     handled=true;
                     return;
                 }
-                if ((mLastIdCharPressed==0) && (ch=='%')) {
-                    mLastIdCharPressed++;
+                if ((idCharPressed==0) && (ch=='%')) {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::KeywordsOnly);
                     handled=true;
@@ -1003,7 +989,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 }
             }
         }
-        mLastIdCharPressed = 0;
         switch (ch.unicode()) {
         case '"':
         case '\'':
@@ -1298,10 +1283,6 @@ bool Editor::event(QEvent *event)
 
 void Editor::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() | Qt::LeftButton) {
-        mLastIdCharPressed = 0;
-    }
-
     // if ctrl+clicked
     if ((event->modifiers() == Qt::ControlModifier)
             && (event->button() == Qt::LeftButton)) {
@@ -1337,10 +1318,12 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
         onCompletionInputMethod(event);
         return;
     } else {
-        mLastIdCharPressed+=s.length();
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
-            if (mLastIdCharPressed>=pSettings->codeCompletion().minCharRequired()) {
+            QSynedit::BufferCoord ws=wordStart();
+            int idCharPressed=caretX()-ws.ch;
+            idCharPressed += s.length();
+            if (idCharPressed>=pSettings->codeCompletion().minCharRequired()) {
                 QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
                 if (mParser && !lastWord.isEmpty()) {
                     if (CppTypeKeywords.contains(lastWord)) {
@@ -3239,9 +3222,9 @@ void Editor::insertCodeSnippet(const QString &code)
         mTabStopEnd = caretX();
         popUserCodeInTabStops();
     }
-    if (!code.isEmpty()) {
-        mLastIdCharPressed = 0;
-    }
+//    if (!code.isEmpty()) {
+//        mLastIdCharPressed = 0;
+//    }
 }
 
 void Editor::print()
@@ -3758,8 +3741,8 @@ void Editor::completionInsert(bool appendFunc)
         } else
             setSelText(statement->command + funcAddOn);
 
-        if (!funcAddOn.isEmpty())
-            mLastIdCharPressed = 0;
+//        if (!funcAddOn.isEmpty())
+//            mLastIdCharPressed = 0;
 
         // Move caret inside the ()'s, only when the user has something to do there...
         if (!funcAddOn.isEmpty()
@@ -3843,7 +3826,6 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
             phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             purpose);
-        mLastIdCharPressed = phrase.length();
         if (phrase.isEmpty()) {
             mCompletionPopup->hide();
         } else {
@@ -3875,7 +3857,6 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
             phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             purpose);
-        mLastIdCharPressed = phrase.length();
         mCompletionPopup->search(phrase, false);
         return true;
     } else {
@@ -3902,7 +3883,6 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         phrase = getWordAtPosition(this,caretXY(),
                                    pBeginPos,pEndPos,
                                    WordPurpose::wpHeaderCompletion);
-        mLastIdCharPressed = phrase.length();
         mHeaderCompletionPopup->search(phrase, false);
         return true;
     case Qt::Key_Escape:
@@ -3932,7 +3912,6 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
         phrase = getWordAtPosition(this,caretXY(),
                                             pBeginPos,pEndPos,
                                             WordPurpose::wpHeaderCompletion);
-        mLastIdCharPressed = phrase.length();
         mHeaderCompletionPopup->search(phrase, false);
         return true;
     } else {
@@ -3952,7 +3931,6 @@ bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
     QString s=event->commitString();
     if (mParser && !s.isEmpty()) {
         QString phrase = getWordForCompletionSearch(caretXY(),mCompletionPopup->memberOperator()=="::");
-        mLastIdCharPressed = phrase.length();
         mCompletionPopup->search(phrase, false);
         return true;
     }
