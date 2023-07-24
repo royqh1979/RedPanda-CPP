@@ -2751,7 +2751,7 @@ bool ProjectModel::setData(const QModelIndex &index, const QVariant &value, int 
             }
             // Target filename does not exist anymore. Do a rename
             // change name in project file first (no actual file renaming on disk)
-            //save old file, if it is openned;
+            //save old file, if it is opened;
             // remove old file from monitor list
             mProject->fileSystemWatcher()->removePath(oldName);
 

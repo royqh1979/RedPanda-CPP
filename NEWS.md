@@ -3,6 +3,7 @@ Red Panda C++ Version 2.24
   - fix: members of elements of stl maps are not correctly suggested.
   - fix: memory view's cell size is too wide in linux.
   - fix: Code completion doesn't work if "min id length to show completion" is not 1.
+  - fix: english typos. (thanks for sangiye0@github)
 
 Red Panda C++ Version 2.23
 

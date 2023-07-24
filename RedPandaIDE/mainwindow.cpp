@@ -5526,7 +5526,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
             return ;
         }
     } /*else {
-        //if don't save last open files, close project before editors, to save project openned editors;
+        //if don't save last open files, close project before editors, to save project opened editors;
 
     }*/
     if (mProject) {

@@ -23,7 +23,7 @@
       <item>
        <widget class="QRadioButton" name="rbOpenInMultiApplication">
         <property name="text">
-         <string>Independant Red Panda C++ applications</string>
+         <string>Independent Red Panda C++ applications</string>
         </property>
        </widget>
       </item>

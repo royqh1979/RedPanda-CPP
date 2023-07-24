@@ -71,7 +71,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -738,7 +738,7 @@
        <item row="7" column="0">
         <widget class="QCheckBox" name="chkKeepOneLineStatements">
          <property name="text">
-          <string>Don't break multimple statements residing on one line</string>
+          <string>Don't break multiple statements residing on one line</string>
          </property>
         </widget>
        </item>
@@ -890,7 +890,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="pointerBtnGroup"/>
   <buttongroup name="referenceBtnGroup"/>
+  <buttongroup name="pointerBtnGroup"/>
  </buttongroups>
 </ui>

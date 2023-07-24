@@ -429,7 +429,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
 
     if (pMainWindow->editorList()->getOpenedEditorByFilename(newName)) {
         QMessageBox::critical(pMainWindow,tr("Error"),
-                              tr("File %1 already openned!").arg(newName));
+                              tr("File %1 already opened!").arg(newName));
         return false;
     }
     // Update project information

@@ -97,7 +97,7 @@
          <item>
           <widget class="QRadioButton" name="rbAllOpennedFiles">
            <property name="text">
-            <string>All files openned</string>
+            <string>All files opened</string>
            </property>
           </widget>
          </item>

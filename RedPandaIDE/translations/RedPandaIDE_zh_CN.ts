@@ -1518,7 +1518,7 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="../editor.cpp" line="434"/>
-        <source>File %1 already openned!</source>
+        <source>File %1 already opened!</source>
         <translation>文件%1已经被打开！</translation>
     </message>
     <message>
@@ -1632,7 +1632,7 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="../settingsdialog/editorautosavewidget.ui" line="100"/>
-        <source>All files openned</source>
+        <source>All files opened</source>
         <translation>所有打开的文件</translation>
     </message>
     <message>
@@ -2520,7 +2520,7 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="../settingsdialog/environmentfileassociationwidget.ui" line="26"/>
-        <source>Independant Red Panda C++ applications</source>
+        <source>Independent Red Panda C++ applications</source>
         <translation>独立的小熊猫C++程序进程</translation>
     </message>
     <message>
@@ -3427,7 +3427,7 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="../settingsdialog/formattergeneralwidget.ui" line="741"/>
-        <source>Don&apos;t break multimple statements residing on one line</source>
+        <source>Don&apos;t break multiple statements residing on one line</source>
         <translation>不对同一行上的多条语句断行</translation>
     </message>
     <message>
@@ -10365,7 +10365,7 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="../settingsdialog/settingsdialog.cpp" line="143"/>
-        <source>Appearence</source>
+        <source>Appearance</source>
         <translation>外观</translation>
     </message>
     <message>

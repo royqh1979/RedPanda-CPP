@@ -1035,7 +1035,7 @@
         <translation>Salvar como</translation>
     </message>
     <message>
-        <source>File %1 already openned!</source>
+        <source>File %1 already opened!</source>
         <translation>Arquivo %1 já aberto!</translation>
     </message>
     <message>
@@ -1122,7 +1122,7 @@
         <translation>Arquivo atual</translation>
     </message>
     <message>
-        <source>All files openned</source>
+        <source>All files opened</source>
         <translation>Todos os arquivos abertos</translation>
     </message>
     <message>
@@ -1834,7 +1834,7 @@
         <translation>Basta marcar ou desmarcar quais tipos de arquivos o Red Panda C++ irá registrar como aplicativos padrões para abrí-los ...</translation>
     </message>
     <message>
-        <source>Independant Red Panda C++ applications</source>
+        <source>Independent Red Panda C++ applications</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2539,7 +2539,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Don&apos;t break multimple statements residing on one line</source>
+        <source>Don&apos;t break multiple statements residing on one line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -7466,7 +7466,7 @@
         <translation>Conjunto de problemas</translation>
     </message>
     <message>
-        <source>Appearence</source>
+        <source>Appearance</source>
         <translation>Aparência</translation>
     </message>
     <message>

@@ -888,7 +888,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>File %1 already openned!</source>
+        <source>File %1 already opened!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -975,7 +975,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>All files openned</source>
+        <source>All files opened</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1651,7 +1651,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Independant Red Panda C++ applications</source>
+        <source>Independent Red Panda C++ applications</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2324,7 +2324,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Don&apos;t break multimple statements residing on one line</source>
+        <source>Don&apos;t break multiple statements residing on one line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6820,7 +6820,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Appearence</source>
+        <source>Appearance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
