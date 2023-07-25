@@ -592,7 +592,7 @@ public:
 
     private:
 
-        //Appearence
+        //Appearance
         QString mTheme;
         QString mInterfaceFont;
         int mInterfaceFontSize;

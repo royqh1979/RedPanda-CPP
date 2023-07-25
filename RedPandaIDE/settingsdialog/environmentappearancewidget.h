@@ -14,26 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef ENVIRONMENTAPPEARENCEWIDGET_H
-#define ENVIRONMENTAPPEARENCEWIDGET_H
+#ifndef ENVIRONMENTAPPEARANCEWIDGET_H
+#define ENVIRONMENTAPPEARANCEWIDGET_H
 
 #include <QWidget>
 #include "settingswidget.h"
 
 namespace Ui {
-class EnvironmentAppearenceWidget;
+class EnvironmentAppearanceWidget;
 }
 
-class EnvironmentAppearenceWidget : public SettingsWidget
+class EnvironmentAppearanceWidget : public SettingsWidget
 {
     Q_OBJECT
 
 public:
-    explicit EnvironmentAppearenceWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
-    ~EnvironmentAppearenceWidget();
+    explicit EnvironmentAppearanceWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
+    ~EnvironmentAppearanceWidget();
 
 private:
-    Ui::EnvironmentAppearenceWidget *ui;
+    Ui::EnvironmentAppearanceWidget *ui;
 
     // SettingsWidget interface
 protected:
@@ -47,4 +47,4 @@ private slots:
     void on_cbTheme_currentIndexChanged(int index);
 };
 
-#endif // ENVIRONMENTAPPEARENCEWIDGET_H
+#endif // ENVIRONMENTAPPEARANCEWIDGET_H

@@ -3304,7 +3304,7 @@ Settings::Environment::Environment(Settings *settings):_Base(settings, SETTING_E
 
 void Settings::Environment::doLoad()
 {
-    //Appearence
+    //Appearance
     mTheme = stringValue("theme","dark");
     QString defaultFontName = "Segoe UI";
     QString defaultLocaleName = QLocale::system().name();
@@ -3563,7 +3563,7 @@ void Settings::Environment::setIconZoomFactor(double newIconZoomFactor)
 
 void Settings::Environment::doSave()
 {
-    //Appearence
+    //Appearance
     saveValue("theme", mTheme);
     saveValue("interface_font", mInterfaceFont);
     saveValue("interface_font_size", mInterfaceFontSize);
@@ -4318,7 +4318,7 @@ void Settings::CodeCompletion::doSave()
 
 void Settings::CodeCompletion::doLoad()
 {
-    //Appearence
+    //Appearance
     mWidth = intValue("width",700);
     mHeight = intValue("height",400);
     mEnabled = boolValue("enabled",true);

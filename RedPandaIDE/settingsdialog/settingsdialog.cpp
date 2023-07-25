@@ -31,7 +31,7 @@
 #include "editorsnippetwidget.h"
 #include "editorcustomctypekeywords.h"
 #include "editormiscwidget.h"
-#include "environmentappearencewidget.h"
+#include "environmentappearancewidget.h"
 #include "environmentshortcutwidget.h"
 #include "environmentfolderswidget.h"
 #include "environmentperformancewidget.h"
@@ -140,7 +140,7 @@ PSettingsDialog SettingsDialog::optionDialog()
     dialog->setWindowTitle(tr("Options"));
 
     SettingsWidget* widget;
-    widget = new EnvironmentAppearenceWidget(tr("Appearance"),tr("Environment"));
+    widget = new EnvironmentAppearanceWidget(tr("Appearance"),tr("Environment"));
     dialog->addWidget(widget);
 
 #ifdef Q_OS_WIN

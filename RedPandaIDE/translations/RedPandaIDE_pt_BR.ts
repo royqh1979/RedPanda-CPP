@@ -1749,7 +1749,7 @@
     </message>
 </context>
 <context>
-    <name>EnvironmentAppearenceWidget</name>
+    <name>EnvironmentAppearanceWidget</name>
     <message>
         <source>Form</source>
         <translation>Configuração</translation>

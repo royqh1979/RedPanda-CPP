@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "environmentappearencewidget.h"
-#include "ui_environmentappearencewidget.h"
+#include "environmentappearancewidget.h"
+#include "ui_environmentappearancewidget.h"
 
 #include <QApplication>
 #include <QStyleFactory>
@@ -24,19 +24,19 @@
 #include "../thememanager.h"
 #include "../iconsmanager.h"
 
-EnvironmentAppearenceWidget::EnvironmentAppearenceWidget(const QString& name, const QString& group, QWidget *parent) :
+EnvironmentAppearanceWidget::EnvironmentAppearanceWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
-    ui(new Ui::EnvironmentAppearenceWidget)
+    ui(new Ui::EnvironmentAppearanceWidget)
 {
     ui->setupUi(this);
 }
 
-EnvironmentAppearenceWidget::~EnvironmentAppearenceWidget()
+EnvironmentAppearanceWidget::~EnvironmentAppearanceWidget()
 {
     delete ui;
 }
 
-void EnvironmentAppearenceWidget::doLoad()
+void EnvironmentAppearanceWidget::doLoad()
 {
     for (int i=0; i<ui->cbTheme->count();i++) {
         if (ui->cbTheme->itemData(i) == pSettings->environment().theme()) {
@@ -64,7 +64,7 @@ void EnvironmentAppearenceWidget::doLoad()
     }
 }
 
-void EnvironmentAppearenceWidget::doSave()
+void EnvironmentAppearanceWidget::doSave()
 {
     if (pSettings->environment().theme()!=ui->cbTheme->currentData().toString()) {
         ThemeManager themeManager;
@@ -90,7 +90,7 @@ void EnvironmentAppearenceWidget::doSave()
     pMainWindow->applySettings();
 }
 
-void EnvironmentAppearenceWidget::init()
+void EnvironmentAppearanceWidget::init()
 {
     ThemeManager themeManager;
     QList<PAppTheme> appThemes = themeManager.getThemes();
@@ -108,7 +108,7 @@ void EnvironmentAppearenceWidget::init()
     SettingsWidget::init();
 }
 
-void EnvironmentAppearenceWidget::on_cbTheme_currentIndexChanged(int /* index */)
+void EnvironmentAppearanceWidget::on_cbTheme_currentIndexChanged(int /* index */)
 {
     ThemeManager themeManager;
     PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());

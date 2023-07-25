@@ -2434,74 +2434,74 @@ Are you really want to continue?</oldsource>
     </message>
 </context>
 <context>
-    <name>EnvironmentAppearenceWidget</name>
+    <name>EnvironmentAppearanceWidget</name>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="14"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="14"/>
         <source>Form</source>
         <translation>表单</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="160"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="160"/>
         <source>Theme:</source>
         <translation>主题:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="137"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="137"/>
         <source>Use custom theme</source>
         <translation>使用自定义主题</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="20"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="20"/>
         <source>Icon Set:</source>
         <translation>图标集：</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="192"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="192"/>
         <source>Use custom icon set</source>
         <translation>使用自定义图标</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="263"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="263"/>
         <source>Icon Zoom:</source>
         <translation>图标缩放：</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="65"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="65"/>
         <source>Font:</source>
         <translation>字体:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="215"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="215"/>
         <source>Language:</source>
         <translation>语言:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="240"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="240"/>
         <source>*Needs restart</source>
         <translation>*需要重启之后生效</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.ui" line="167"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="167"/>
         <source>Font Size:</source>
         <translation>大小:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.cpp" line="100"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="100"/>
         <source>English</source>
         <translation>英语</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.cpp" line="101"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="101"/>
         <source>Portuguese</source>
         <translation>葡萄牙语</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.cpp" line="102"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="102"/>
         <source>Simplified Chinese</source>
         <translation>简体中文</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearencewidget.cpp" line="103"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="103"/>
         <source>Traditional Chinese</source>
         <translation>繁体中文</translation>
     </message>

@@ -75,7 +75,7 @@ private:
 //    EditorFontWidget *pEditorFontWidget;
 //    EditorClipboardWidget *pEditorClipboardWidget;
 //    EditorColorSchemeWidget *pEditorColorSchemeWidget;
-//    EnvironmentAppearenceWidget *pEnvironmentAppearenceWidget;
+//    EnvironmentAppearanceWidget *pEnvironmentAppearanceWidget;
 //    EditorSymbolCompletionWidget *pEditorSymbolCompletionWidget;
 //    EditorCodeCompletionWidget *pEditorCodeCompletionWidget;
 //    EditorSyntaxCheckWidget *pEditorSyntaxCheckWidget;
