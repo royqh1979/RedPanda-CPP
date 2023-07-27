@@ -4,6 +4,7 @@ Red Panda C++ Version 2.24
   - fix: memory view's cell size is too wide in linux.
   - fix: Code completion doesn't work if "min id length to show completion" is not 1.
   - fix: english typos. (thanks for sangiye0@github)
+  - fix: Goto definition/declaration may choose wrong symbol is multiple files are opened and symbols have the same name.
 
 Red Panda C++ Version 2.23
 

@@ -268,7 +268,7 @@ void ProjectFilesWidget::init()
     SettingsWidget::init();
 }
 
-void ProjectFilesWidget::showEvent(QShowEvent *event)
+void ProjectFilesWidget::showEvent(QShowEvent */*event*/)
 {
     if (ui->cbEncoding->count()>0) {
         if (pMainWindow->project()->options().encoding==ENCODING_SYSTEM_DEFAULT) {

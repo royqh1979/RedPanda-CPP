@@ -274,6 +274,10 @@ private:
                                          const PStatement& scopeStatement) const;
     PStatement findMacro(const QString& phrase, const QString& fileName) const;
     PStatement findMemberOfStatement(
+            const QString& filename,
+            const QString& phrase,
+            const PStatement& scopeStatement) const ;
+    PStatement findMemberOfStatement(
             const QString& phrase,
             const PStatement& scopeStatement) const ;
     QList<PStatement> findMembersOfStatement(const QString& phrase,

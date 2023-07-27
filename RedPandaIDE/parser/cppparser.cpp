@@ -511,7 +511,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName, const QStringLi
     if (memberOperator.isEmpty()) {
         return findStatementStartingFrom(fileName,phrase,currentScope);
     } else if (ownerExpression.isEmpty()) {
-        return findMemberOfStatement(phrase,PStatement());
+        return findMemberOfStatement(fileName, phrase,PStatement());
     } else {
         int pos = 0;
         PEvalStatement ownerEvalStatement = doEvalExpression(fileName,
@@ -674,7 +674,7 @@ PStatement CppParser::findStatementStartingFrom(const QString &fileName, const Q
     }
 
     // Search all global members
-    result = findMemberOfStatement(phrase,PStatement());
+    result = findMemberOfStatement(fileName, phrase,PStatement());
     if (result)
         return result;
 
@@ -4237,6 +4237,46 @@ PStatement CppParser::findMemberOfStatement(const QString &phrase,
         s.truncate(p);
 
     return statementMap.value(s,PStatement());
+}
+
+
+PStatement CppParser::findMemberOfStatement(const QString& filename,
+                                            const QString &phrase,
+                                            const PStatement& scopeStatement) const
+{
+    const StatementMap& statementMap =mStatementList.childrenStatements(scopeStatement);
+    if (statementMap.isEmpty())
+        return PStatement();
+
+    QString s = phrase;
+    //remove []
+    int p = phrase.indexOf('[');
+    if (p>=0)
+        s.truncate(p);
+    //remove ()
+    p = phrase.indexOf('(');
+    if (p>=0)
+        s.truncate(p);
+
+    //remove <>
+    p =s.indexOf('<');
+    if (p>=0)
+        s.truncate(p);
+    if (scopeStatement) {
+        return statementMap.value(s,PStatement());
+    } else {
+        QList<PStatement> stats = statementMap.values(s);
+        PFileIncludes fileIncludes =  mPreprocessor.includesList().value(filename,PFileIncludes());
+        foreach(const PStatement &s,stats) {
+            if (s->fileName == filename || s->definitionFileName==filename) {
+                return s;
+            } else if (fileIncludes && (fileIncludes->includeFiles.contains(s->fileName)
+                    || fileIncludes->includeFiles.contains(s->definitionFileName))) {
+                return s;
+            }
+        }
+        return PStatement();
+    }
 }
 
 QList<PStatement> CppParser::findMembersOfStatement(const QString &phrase, const PStatement &scopeStatement) const
