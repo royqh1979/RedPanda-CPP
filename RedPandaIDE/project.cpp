@@ -242,7 +242,10 @@ void Project::open()
         newUnit->setOverrideBuildCmd(ini.GetBoolValue(groupName,"OverrideBuildCmd", false));
         newUnit->setBuildCmd(fromByteArray(ini.GetValue(groupName,"BuildCmd", "")));
         newUnit->setEncoding(ini.GetValue(groupName, "FileEncoding",ENCODING_PROJECT));
-        if (QTextCodec::codecForName(newUnit->encoding())==nullptr) {
+        if (newUnit->encoding()!=ENCODING_UTF16_BOM &&
+                newUnit->encoding()!=ENCODING_UTF8_BOM &&
+                newUnit->encoding()!=ENCODING_UTF32_BOM &&
+                QTextCodec::codecForName(newUnit->encoding())==nullptr) {
             newUnit->setEncoding(ENCODING_PROJECT);
         }
         newUnit->setRealEncoding(ini.GetValue(groupName, "RealEncoding",ENCODING_ASCII));

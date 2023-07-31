@@ -337,6 +337,13 @@ void Editor::convertToEncoding(const QByteArray &encoding)
     mEncodingOption = encoding;
     setModified(true);
     save();
+    if (mProject) {
+        PProjectUnit unit = mProject->findUnit(this);
+        if (unit) {
+            unit->setEncoding(mEncodingOption);
+            unit->setRealEncoding(mFileEncoding);
+        }
+    }
 }
 
 bool Editor::save(bool force, bool doReparse) {
