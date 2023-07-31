@@ -5,6 +5,8 @@ Simplified Chinese Website: [https://royqh1979.gitee.io/redpandacpp/](https://ro
 
 English Website: [https://sourceforge.net/projects/redpanda-cpp](https://sourceforge.net/projects/redpanda-cpp)
 
+[Donate to this project](https://ko-fi.com/royqh1979)
+
 New Features (Compared with Red Panda Dev-C++ 6):
 * Cross Platform (Windows/Linux/MacOS)
 * Problem Set (run and test program against predefined input / expected output data)
