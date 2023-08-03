@@ -7,6 +7,9 @@ Red Panda C++ Version 2.24
   - fix: Goto definition/declaration may choose wrong symbol is multiple files are opened and symbols have the same name.
   - fix: "UTF-8 BOM" can't be correctly loaded as project file's encoding.
   - fix: Project file's encoding is not correctly updated after converted manually.
+  - enhancement: Press left/right arrow will move caret to the begin/end of the selection.
+  - enhancement: Press up/down arrow will move caret up/down from the begin/end of the selection.
+  
 
 Red Panda C++ Version 2.23
 

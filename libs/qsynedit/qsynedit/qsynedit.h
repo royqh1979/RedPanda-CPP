@@ -536,8 +536,8 @@ private:
      * @param DX
      * @param SelectionCommand
      */
-    void moveCaretHorz(int DX, bool isSelection);
-    void moveCaretVert(int DY, bool isSelection);
+    void moveCaretHorz(int deltaX, bool isSelection);
+    void moveCaretVert(int deltaY, bool isSelection);
     void moveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
                                bool isSelection);
     void moveCaretToLineStart(bool isSelection);

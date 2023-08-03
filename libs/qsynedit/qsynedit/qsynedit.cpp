@@ -4739,54 +4739,60 @@ void QSynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
     onCommandProcessed(Command, AChar, pData);
 }
 
-void QSynEdit::moveCaretHorz(int DX, bool isSelection)
+void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 {
     BufferCoord ptO = caretXY();
     BufferCoord ptDst = ptO;
     QString s = displayLineText();
     int nLineLen = s.length();
-
-    if (mOptions.testFlag(eoAltSetsColumnMode) &&
-                         (mActiveSelectionMode != SelectionMode::Line)) {
-        if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly) {
-            setActiveSelectionMode(SelectionMode::Column);
-        } else
-            setActiveSelectionMode(SelectionMode::Normal);
-    }
-
-    // only moving or selecting one char can change the line
-    //bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
-    bool bChangeY=true;
-    if (bChangeY && (DX == -1) && (ptO.ch == 1) && (ptO.line > 1)) {
-        // end of previous line
-        if (mActiveSelectionMode==SelectionMode::Column) {
-            return;
-        }
-        int row = lineToRow(ptDst.line);
-        row--;
-        int line = rowToLine(row);
-        if (line!=ptDst.line && line>=1) {
-            ptDst.line = line;
-            ptDst.ch = getDisplayStringAtLine(ptDst.line).length() + 1;
-        }
-    } else if (bChangeY && (DX == 1) && (ptO.ch > nLineLen) && (ptO.line < mDocument->count())) {
-        // start of next line
-        if (mActiveSelectionMode==SelectionMode::Column) {
-            return;
-        }
-        int row = lineToRow(ptDst.line);
-        row++;
-        int line = rowToLine(row);
-//        qDebug()<<line<<ptDst.Line;
-        if (line!=ptDst.line && line<=mDocument->count()) {
-            ptDst.line = line;
-            ptDst.ch = 1;
-        }
+    if (!isSelection && selAvail() && (deltaX!=0)) {
+        if (deltaX<0)
+            ptDst = blockBegin();
+        else
+            ptDst = blockEnd();
     } else {
-        ptDst.ch = std::max(1, ptDst.ch + DX);
-        // don't go past last char when ScrollPastEol option not set
-        if ((DX > 0) && bChangeY)
-          ptDst.ch = std::min(ptDst.ch, nLineLen + 1);
+        if (mOptions.testFlag(eoAltSetsColumnMode) &&
+                             (mActiveSelectionMode != SelectionMode::Line)) {
+            if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly) {
+                setActiveSelectionMode(SelectionMode::Column);
+            } else
+                setActiveSelectionMode(SelectionMode::Normal);
+        }
+
+        // only moving or selecting one char can change the line
+        //bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
+        bool bChangeY=true;
+        if (bChangeY && (deltaX == -1) && (ptO.ch == 1) && (ptO.line > 1)) {
+            // end of previous line
+            if (mActiveSelectionMode==SelectionMode::Column) {
+                return;
+            }
+            int row = lineToRow(ptDst.line);
+            row--;
+            int line = rowToLine(row);
+            if (line!=ptDst.line && line>=1) {
+                ptDst.line = line;
+                ptDst.ch = getDisplayStringAtLine(ptDst.line).length() + 1;
+            }
+        } else if (bChangeY && (deltaX == 1) && (ptO.ch > nLineLen) && (ptO.line < mDocument->count())) {
+            // start of next line
+            if (mActiveSelectionMode==SelectionMode::Column) {
+                return;
+            }
+            int row = lineToRow(ptDst.line);
+            row++;
+            int line = rowToLine(row);
+    //        qDebug()<<line<<ptDst.Line;
+            if (line!=ptDst.line && line<=mDocument->count()) {
+                ptDst.line = line;
+                ptDst.ch = 1;
+            }
+        } else {
+            ptDst.ch = std::max(1, ptDst.ch + deltaX);
+            // don't go past last char when ScrollPastEol option not set
+            if ((deltaX > 0) && bChangeY)
+              ptDst.ch = std::min(ptDst.ch, nLineLen + 1);
+        }
     }
     // set caret and block begin / end
     incPaintLock();
@@ -4795,13 +4801,19 @@ void QSynEdit::moveCaretHorz(int DX, bool isSelection)
     decPaintLock();
 }
 
-void QSynEdit::moveCaretVert(int DY, bool isSelection)
+void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 {
     DisplayCoord ptO = displayXY();
     DisplayCoord ptDst = ptO;
-    ptDst.Row+=DY;
+    if (!isSelection && selAvail()) {
+        if (deltaY<0)
+            ptDst = bufferToDisplayPos(blockBegin());
+        else
+            ptDst = bufferToDisplayPos(blockEnd());
+    }
+    ptDst.Row+=deltaY;
 
-    if (DY >= 0) {
+    if (deltaY >= 0) {
         if (rowToLine(ptDst.Row) > mDocument->count()) {
             ptDst.Row = std::max(1, displayLineCount());
         }
@@ -4824,7 +4836,7 @@ void QSynEdit::moveCaretVert(int DY, bool isSelection)
     }
 
     BufferCoord vDstLineChar;
-    if (ptDst.Row == ptO.Row && isSelection && DY!=0) {
+    if (ptDst.Row == ptO.Row && isSelection && deltaY!=0) {
         if (ptDst.Row==1) {
             vDstLineChar.ch=1;
             vDstLineChar.line=1;
