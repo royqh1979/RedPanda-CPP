@@ -4,11 +4,12 @@ Red Panda C++ Version 2.24
   - fix: memory view's cell size is too wide in linux.
   - fix: Code completion doesn't work if "min id length to show completion" is not 1.
   - fix: english typos. (thanks for sangiye0@github)
-  - fix: Goto definition/declaration may choose wrong symbol is multiple files are opened and symbols have the same name.
+  - fix: Goto definition/declaration may choose wrong symbol when multiple files are opened and symbols have the same name.
   - fix: "UTF-8 BOM" can't be correctly loaded as project file's encoding.
   - fix: Project file's encoding is not correctly updated after converted manually.
   - enhancement: Press left/right arrow will move caret to the begin/end of the selection.
   - enhancement: Press up/down arrow will move caret up/down from the begin/end of the selection.
+  - enhancement: Show progress dialog if the time for searching compilers is too long.
   
 
 Red Panda C++ Version 2.23

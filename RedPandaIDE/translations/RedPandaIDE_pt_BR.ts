@@ -767,6 +767,18 @@
         <source>MB</source>
         <translation type="obsolete">MB</translation>
     </message>
+    <message>
+        <source>Searching for compilers...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Abort</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CppRefacter</name>
@@ -1819,7 +1831,7 @@
     </message>
     <message>
         <source>Independent Red Panda C++ applications</source>
-        <translation type="vanished">Aplicativos independentes do Red Panda C++</translation>
+        <translation>Aplicativos independentes do Red Panda C++</translation>
     </message>
     <message>
         <source>The same Red Panda C++ application</source>
@@ -1832,10 +1844,6 @@
     <message>
         <source>Just check or uncheck for which file types Red Panda C++ wil be registered as the default application to open them ... </source>
         <translation>Basta marcar ou desmarcar quais tipos de arquivos o Red Panda C++ irá registrar como aplicativos padrões para abrí-los ...</translation>
-    </message>
-    <message>
-        <source>Independent Red Panda C++ applications</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2500,7 +2508,7 @@
     </message>
     <message>
         <source>Don&apos;t break multiple statements residing on one line</source>
-        <translation type="vanished">Não separar instruções múltiplas que estejam em uma mesma linha</translation>
+        <translation>Não separar instruções múltiplas que estejam em uma mesma linha</translation>
     </message>
     <message>
         <source>Break return type from the function name in its declaration</source>
@@ -2536,10 +2544,6 @@
     </message>
     <message>
         <source>Insert empty lines arround unrelated blocks</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Don&apos;t break multiple statements residing on one line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
