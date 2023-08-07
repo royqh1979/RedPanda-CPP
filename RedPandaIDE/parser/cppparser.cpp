@@ -1847,12 +1847,14 @@ int CppParser::evaluateConstExprTerm(int endIndex, bool &ok)
                || mTokenizer[mIndex]->text=="::") {
         QString s = mTokenizer[mIndex]->text;
         QSet<QString> searched;
+        bool isGlobal = false;
         mIndex++;
         if (s=="::") {
             if (mIndex>=endIndex || !isIdentChar(mTokenizer[mIndex]->text[0])) {
                 ok=false;
                 return result;
             }
+            isGlobal = true;
             s+=mTokenizer[mIndex]->text;
             mIndex++;
         }
@@ -1869,7 +1871,10 @@ int CppParser::evaluateConstExprTerm(int endIndex, bool &ok)
                 return result;
             }
             searched.insert(s);
-            PStatement statement = doFindStatement(s);
+            PStatement statement = doFindStatementOf(
+                        mCurrentFile,s,
+                        isGlobal?PStatement():getCurrentScope());
+
             if (!statement) {
                 ok=false;
                 return result;
@@ -1877,6 +1882,11 @@ int CppParser::evaluateConstExprTerm(int endIndex, bool &ok)
             if (statement->kind == StatementKind::skEnum) {
                 result = statement->value.toInt(&ok);
                 break;
+            } else if (statement->kind == StatementKind::skAlias) {
+                s = statement->value;
+            } else  {
+                ok=false;
+                return result;
             }
         }
     } else {
