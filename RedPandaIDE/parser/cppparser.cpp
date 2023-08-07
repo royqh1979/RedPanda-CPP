@@ -266,7 +266,9 @@ PStatement CppParser::doFindStatement(const QString &fullname) const
         return PStatement();
     PStatement parentStatement;
     PStatement statement;
-    foreach (const QString& phrase, phrases) {
+
+    for (int i=(phrases[0].isEmpty()?1:0);i<phrases.count();i++) {
+        const QString& phrase=phrases[i];
         if (parentStatement && parentStatement->kind == StatementKind::skNamespace) {
             PStatementList lst = doFindNamespace(parentStatement->fullName);
             foreach (const PStatement& namespaceStatement, *lst) {
@@ -1143,7 +1145,13 @@ QString CppParser::prettyPrintStatement(const PStatement& statement, const QStri
         result = "enum "+statement->command;
         break;
     case StatementKind::skEnum:
-        result = statement->type + "::" + statement->command;
+        if (!statement->type.isEmpty())
+            result = statement->type + "::";
+        else
+            result = "";
+        result += statement->command;
+        if (!statement->value.isEmpty())
+            result += "(" + statement->value + ")";
         break;
     case StatementKind::skTypedef:
         result = "typedef "+statement->type+" "+statement->command;
@@ -1518,25 +1526,53 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
             //skip to matching ')'
             index=mTokenizer[index]->matchIndex;
         } else if (inheritScopeType == StatementAccessibility::None) {
-            if (currentText !=','
-                    && currentText!=':') {
+            if (currentText=="::"
+                    || isIdentChar(currentText[0])) {
+
+
                 QString basename = currentText;
+                bool isGlobal = false;
+                index++;
+                if (basename=="::") {
+                    if (index>=tokenCount || !isIdentChar(mTokenizer[index]->text[0])) {
+                        return;
+                    }
+                    isGlobal=true;
+                    basename=mTokenizer[index]->text;
+                    index++;
+                }
+
                 //remove template staff
                 if (basename.endsWith('>')) {
                     int pBegin = basename.indexOf('<');
                     if (pBegin>=0)
                         basename.truncate(pBegin);
                 }
+
+                while (index+1<tokenCount
+                       && mTokenizer[index]->text=="::"
+                       && isIdentChar(mTokenizer[index+1]->text[0])){
+                    basename += "::" + mTokenizer[index+1]->text;
+                    index+=2;
+                    //remove template staff
+                    if (basename.endsWith('>')) {
+                        int pBegin = basename.indexOf('<');
+                        if (pBegin>=0)
+                            basename.truncate(pBegin);
+                    }
+                }
+
                 // Find the corresponding PStatement
                 PStatement statement = doFindStatementOf(mCurrentFile,basename,
-                                                       classStatement->parentScope.lock());
+                                                         isGlobal?PStatement():classStatement->parentScope.lock());
                 if (statement && statement->kind == StatementKind::skClass) {
                     inheritClassStatement(classStatement,isStruct,statement,lastInheritScopeType);
                 }
             }
+        } else {
+            lastInheritScopeType = inheritScopeType;
         }
         index++;
-        lastInheritScopeType = inheritScopeType;
         if (index >= tokenCount)
             break;
         if (mTokenizer[index]->text.front() == '{'
@@ -1714,6 +1750,174 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
         if (!saveScannedFiles.contains(file))
             mPreprocessor.removeScannedFile(file);
     }
+    return result;
+}
+
+int CppParser::evaluateConstExpr(int endIndex, bool &ok)
+{
+    int result = 0;
+    if (mIndex>=endIndex) {
+        ok=false;
+        return 0;
+    }
+    result = evaluateAdditionConstExpr(endIndex,ok);
+    if (mIndex!=endIndex)
+        ok = false;
+    return result;
+}
+
+int CppParser::evaluateAdditionConstExpr(int endIndex, bool &ok)
+{
+    int result = 0;
+    if (mIndex>=endIndex) {
+        ok=false;
+        return 0;
+    }
+    result = evaluateMultiplyConstExpr(endIndex,ok);
+    if (!ok)
+        return result;
+    while (mIndex<endIndex) {
+        if (mTokenizer[mIndex]->text=='+') {
+            mIndex++;
+            int temp = evaluateMultiplyConstExpr(endIndex,ok);
+            if (!ok)
+                return result;
+            result+=temp;
+        } else if (mTokenizer[mIndex]->text=='-') {
+            mIndex++;
+            int temp = evaluateMultiplyConstExpr(endIndex,ok);
+            if (!ok)
+                return result;
+            result-=temp;
+        } else
+            break;
+    }
+    return result;
+}
+
+int CppParser::evaluateMultiplyConstExpr(int endIndex, bool &ok)
+{
+    int result = 0;
+    if (mIndex>=endIndex) {
+        ok=false;
+        return 0;
+    }
+    result = evaluateConstExprTerm(endIndex,ok);
+    if (!ok)
+        return result;
+    while (mIndex<endIndex) {
+        if (mTokenizer[mIndex]->text=='*') {
+            mIndex++;
+            int temp = evaluateConstExprTerm(endIndex,ok);
+            if (!ok)
+                return result;
+            result*=temp;
+        } else if (mTokenizer[mIndex]->text=='/') {
+            mIndex++;
+            int temp = evaluateConstExprTerm(endIndex,ok);
+            if (!ok)
+                return result;
+            result/=temp;
+        } else if (mTokenizer[mIndex]->text=='%') {
+            mIndex++;
+            int temp = evaluateConstExprTerm(endIndex,ok);
+            if (!ok)
+                return result;
+            result%=temp;
+        } else
+            break;
+    }
+    return result;
+}
+
+int CppParser::evaluateConstExprTerm(int endIndex, bool &ok)
+{
+    int result = 0;
+    if (mIndex>=endIndex) {
+        ok=false;
+        return 0;
+    }
+    if (mTokenizer[mIndex]->text=="(") {
+        mIndex++;
+        result = evaluateConstExpr(endIndex, ok);
+        if (mIndex>=endIndex || mTokenizer[mIndex]->text!=')')
+            ok=false;
+        mIndex++;
+    } else if (isIdentChar(mTokenizer[mIndex]->text[0])
+               || mTokenizer[mIndex]->text=="::") {
+        QString s = mTokenizer[mIndex]->text;
+        QSet<QString> searched;
+        mIndex++;
+        if (s=="::") {
+            if (mIndex>=endIndex || !isIdentChar(mTokenizer[mIndex]->text[0])) {
+                ok=false;
+                return result;
+            }
+            s+=mTokenizer[mIndex]->text;
+            mIndex++;
+        }
+        while (mIndex+1<endIndex
+               && mTokenizer[mIndex]->text=="::"
+               && isIdentChar(mTokenizer[mIndex+1]->text[0])){
+            s += "::" + mTokenizer[mIndex+1]->text;
+            mIndex+=2;
+        }
+        while (true){
+            //prevent infinite loop
+            if (searched.contains(s)) {
+                ok=false;
+                return result;
+            }
+            searched.insert(s);
+            PStatement statement = doFindStatement(s);
+            if (!statement) {
+                ok=false;
+                return result;
+            }
+            if (statement->kind == StatementKind::skEnum) {
+                result = statement->value.toInt(&ok);
+                break;
+            } else if (statement->kind == StatementKind::skPreprocessor) {
+                if (!statement->args.isEmpty()) {
+                    ok=false;
+                    return result;
+                }
+                QString macroText = statement->value;
+                if (macroText.isEmpty()) {
+                    ok=false;
+                    return result;
+                }
+                if (isDigitChar(macroText[0])) {
+                    result = evaluateLiteralNumber(endIndex,ok);
+                } else {
+                    s = macroText;
+                }
+            }
+        }
+    } else {
+        result = evaluateLiteralNumber(endIndex,ok);
+        mIndex++;
+    }
+    return result;
+}
+
+int CppParser::evaluateLiteralNumber(int endIndex, bool &ok)
+{
+    int result = 0;
+    if (mIndex>=endIndex) {
+        ok=false;
+        return 0;
+    }
+    if (mTokenizer[mIndex]->text.startsWith("0x")
+          || mTokenizer[mIndex]->text.startsWith("0X"))
+        result = mTokenizer[mIndex]->text.mid(2).toInt(&ok,16);
+    else if (mTokenizer[mIndex]->text.startsWith("0b")
+          || mTokenizer[mIndex]->text.startsWith("0B"))
+        result = mTokenizer[mIndex]->text.mid(2).toInt(&ok,2);
+    else if (mTokenizer[mIndex]->text.startsWith("0"))
+        result = mTokenizer[mIndex]->text.toInt(&ok,8);
+    else
+        result = mTokenizer[mIndex]->text.toInt(&ok);
     return result;
 }
 
@@ -2349,9 +2553,9 @@ void CppParser::handleEnum(bool isTypedef)
         //enum class
         isEnumClass = true;
         mIndex++; //skip class
-
     }
     bool isAdhocVar=false;
+    bool isNonameEnum=false;
     int endIndex=-1;
     if ((mIndex< tokenCount) && mTokenizer[mIndex]->text.startsWith('{')) { // enum {...} NAME
         // Skip to the closing brace
@@ -2360,9 +2564,12 @@ void CppParser::handleEnum(bool isTypedef)
         if (i + 1 < tokenCount) {
             enumName = mTokenizer[i + 1]->text.trimmed();
             if (!isIdentifierOrPointer(enumName)) {
-                //not a valid enum, skip to j
-                mIndex=indexOfNextSemicolon(i+1)+1;
-                return;
+                if (isTypedef || isEnumClass) {
+                    //not a valid enum, skip to j
+                    mIndex=indexOfNextSemicolon(i+1)+1;
+                    return;
+                } else
+                    isNonameEnum = true;
             }
             if (!isTypedef) {
                 //it's an ad-hoc enum var define;
@@ -2371,13 +2578,20 @@ void CppParser::handleEnum(bool isTypedef)
                     mIndex=indexOfNextSemicolon(i+1)+1;
                     return;
                 }
-                enumName = "__enum__"+enumName+"__";
+                enumName = "__@enum@__"+enumName+"__";
                 isAdhocVar=true;
             }
         }
         endIndex=i+1;
     } else if (mIndex+1< tokenCount && mTokenizer[mIndex+1]->text.startsWith('{')){ // enum NAME {...};
         enumName = mTokenizer[mIndex]->text;
+        mIndex++;
+    } else if (mIndex+1< tokenCount && mTokenizer[mIndex+1]->text.startsWith(':')){ // enum NAME:int {...};
+        enumName = mTokenizer[mIndex]->text;
+        //skip :
+        mIndex = indexOfNextLeftBrace(mIndex);
+        if (mIndex>tokenCount)
+            return;
     } else {
         // enum NAME blahblah
         // it's an old c-style enum variable definition
@@ -2386,34 +2600,37 @@ void CppParser::handleEnum(bool isTypedef)
 
     // Add statement for enum name too
     PStatement enumStatement;
-    if (isEnumClass) {
-        enumStatement=addStatement(
-                    getCurrentScope(),
-                    mCurrentFile,
-                    "enum class",
-                    enumName,
-                    "",
-                    "",
-                    "",
-                    startLine,
-                    StatementKind::skEnumClassType,
-                    getScope(),
-                    mCurrentMemberAccessibility,
-                    StatementProperty::spHasDefinition);
-    } else {
-        enumStatement=addStatement(
-                    getCurrentScope(),
-                    mCurrentFile,
-                    "enum",
-                    enumName,
-                    "",
-                    "",
-                    "",
-                    startLine,
-                    StatementKind::skEnumType,
-                    getScope(),
-                    mCurrentMemberAccessibility,
-                    StatementProperty::spHasDefinition);
+    if (!isNonameEnum) {
+        if (isEnumClass) {
+            enumStatement=addStatement(
+                        getCurrentScope(),
+                        mCurrentFile,
+                        "enum class",
+                        enumName,
+                        "",
+                        "",
+                        "",
+                        startLine,
+                        StatementKind::skEnumClassType,
+                        getScope(),
+                        mCurrentMemberAccessibility,
+                        StatementProperty::spHasDefinition);
+        } else {
+            enumStatement=addStatement(
+                        getCurrentScope(),
+                        mCurrentFile,
+                        "enum",
+                        enumName,
+                        "",
+                        "",
+                        "",
+                        startLine,
+                        StatementKind::skEnumType,
+                        getScope(),
+                        mCurrentMemberAccessibility,
+                        isAdhocVar?(StatementProperty::spHasDefinition|StatementProperty::spDummyStatement)
+                            :StatementProperty::spHasDefinition );
+        }
     }
     if (isAdhocVar) {
         //Ad-hoc var definition
@@ -2454,69 +2671,81 @@ void CppParser::handleEnum(bool isTypedef)
     mIndex++;
 
     // Call every member "enum NAME ITEMNAME"
-    QString lastType("enum");
-    if (!enumName.isEmpty())
-        lastType += ' ' + enumName;
+    QString lastType;
+    if (enumStatement && !isAdhocVar)
+        lastType = "enum " + enumName;
     QString cmd;
     QString args;
-    if (mTokenizer[mIndex]->text!='}') {
-        while ((mIndex < tokenCount) &&
-                         mTokenizer[mIndex]->text!='}') {
-            if (mTokenizer[mIndex]->text=="=") {
-                mIndex=indexOfNextPeriodOrSemicolon(mIndex);
-                continue;
-            } else if (tokenIsIdentifier(mTokenizer[mIndex]->text)) {
-                cmd = mTokenizer[mIndex]->text;
-                args = "";
-                if (isEnumClass) {
-                    if (enumStatement) {
-                        addStatement(
-                          enumStatement,
-                          mCurrentFile,
-                          lastType,
-                          cmd,
-                          args,
-                          "",
-                          "",
-                          mTokenizer[mIndex]->line,
-                          StatementKind::skEnum,
-                          getScope(),
-                          mCurrentMemberAccessibility,
-                          StatementProperty::spHasDefinition);
+    int value=0;
+    bool canCalcValue=true;
+    while ((mIndex < tokenCount) &&
+                     mTokenizer[mIndex]->text!='}') {
+        if (tokenIsIdentifier(mTokenizer[mIndex]->text)) {
+            cmd = mTokenizer[mIndex]->text;
+            args = "";
+            if (mIndex+1<tokenCount &&
+                    mTokenizer[mIndex+1]->text=="=") {
+                mIndex+=2;
+                if (mIndex<tokenCount) {
+                    bool ok;
+                    int endIndex = indexOfNextPeriodOrSemicolon(mIndex);
+                    value = evaluateConstExpr(endIndex,ok);
+                    if (!ok) {
+                        canCalcValue=false;
                     }
-                } else {
-                    if (enumStatement) {
-                        addStatement(
-                          enumStatement,
-                          mCurrentFile,
-                          lastType,
-                          cmd,
-                          args,
-                          "",
-                          "",
-                          mTokenizer[mIndex]->line,
-                          StatementKind::skEnum,
-                          getScope(),
-                          mCurrentMemberAccessibility,
-                          StatementProperty::spHasDefinition);
-                    }
-                    addStatement(
-                                getCurrentScope(),
-                                mCurrentFile,
-                                lastType,
-                                cmd,
-                                "",
-                                "",
-                                "",
-                                mTokenizer[mIndex]->line,
-                                StatementKind::skEnum,
-                                getScope(),
-                                mCurrentMemberAccessibility,
-                                StatementProperty::spHasDefinition);
+                    mIndex = endIndex - 1;
                 }
             }
-            mIndex ++ ;
+            if (isEnumClass) {
+                if (enumStatement) {
+                    addStatement(
+                      enumStatement,
+                      mCurrentFile,
+                      lastType,
+                      cmd,
+                      args,
+                      "",
+                      canCalcValue?QString("%1").arg(value):"",
+                      mTokenizer[mIndex]->line,
+                      StatementKind::skEnum,
+                      getScope(),
+                      mCurrentMemberAccessibility,
+                      StatementProperty::spHasDefinition);
+                }
+            } else {
+                QString strValue=canCalcValue?QString("%1").arg(value):"";
+                if (enumStatement) {
+                    addStatement(
+                      enumStatement,
+                      mCurrentFile,
+                      lastType,
+                      cmd,
+                      args,
+                      "",
+                      strValue,
+                      mTokenizer[mIndex]->line,
+                      StatementKind::skEnum,
+                      getScope(),
+                      mCurrentMemberAccessibility,
+                      StatementProperty::spHasDefinition);
+                }
+                addStatement(
+                            getCurrentScope(),
+                            mCurrentFile,
+                            lastType,
+                            cmd,
+                            "",
+                            "",
+                            strValue,
+                            mTokenizer[mIndex]->line,
+                            StatementKind::skEnum,
+                            getScope(),
+                            mCurrentMemberAccessibility,
+                            StatementProperty::spHasDefinition);
+            }
+            value++;
         }
+        mIndex ++ ;
     }
     if (mIndex<endIndex)
         mIndex=endIndex;
@@ -3474,6 +3703,7 @@ void CppParser::handleStructs(bool isTypedef)
                     PStatement scopeStatement=getCurrentScope();
                     QString scopelessName;
                     QString parentName;
+
                     if (splitLastMember(command,scopelessName,parentName)) {
                         scopeStatement = getIncompleteClass(parentName,getCurrentScope());
                     } else {
@@ -3580,7 +3810,7 @@ void CppParser::handleStructs(bool isTypedef)
                                             getCurrentScope(),
                                             mCurrentFile,
                                             prefix,
-                                            "__"+command,
+                                            "_@dummy@_"+command,
                                             "",
                                             "",
                                             "",
@@ -3589,7 +3819,7 @@ void CppParser::handleStructs(bool isTypedef)
                                             StatementKind::skClass,
                                             getScope(),
                                             mCurrentMemberAccessibility,
-                                            StatementProperty::spHasDefinition);
+                                            StatementProperty::spHasDefinition | StatementProperty::spDummyStatement);
                             }
                             if (isTypedef) {
                                 //typedef

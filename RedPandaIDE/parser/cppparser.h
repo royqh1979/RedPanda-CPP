@@ -216,6 +216,12 @@ private:
 
     QStringList sortFilesByIncludeRelations(const QSet<QString> &files);
 
+    int evaluateConstExpr(int endIndex, bool &ok);
+    int evaluateAdditionConstExpr(int endIndex, bool &ok);
+    int evaluateMultiplyConstExpr(int endIndex, bool &ok);
+    int evaluateConstExprTerm(int endIndex, bool &ok);
+    int evaluateLiteralNumber(int endIndex, bool &ok);
+
     bool checkForKeyword(KeywordType &keywordType);
     bool checkForNamespace(KeywordType keywordType);
     bool checkForPreprocessor();

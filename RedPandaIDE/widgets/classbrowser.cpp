@@ -148,12 +148,18 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         if (node->statement) {
-            if (!(node->statement->type.isEmpty()) &&
-                    ((node->statement->kind == StatementKind::skFunction)
+            if (!(node->statement->type.isEmpty())) {
+                if ((node->statement->kind == StatementKind::skFunction)
                      || (node->statement->kind == StatementKind::skVariable)
                      || (node->statement->kind == StatementKind::skTypedef)
-                     )) {
-                return node->statement->command + node->statement->args + " : " + node->statement->type;
+                     ) {
+                    return node->statement->command + node->statement->args + " : " + node->statement->type;
+                } else if (node->statement->kind == StatementKind::skEnum) {
+                    if (!node->statement->value.isEmpty())
+                        return node->statement->command + node->statement->args + QString("(%1)").arg(node->statement->value);
+                    else
+                        return node->statement->command;
+                }
             }
             return node->statement->command + node->statement->args;
         }
@@ -351,9 +357,12 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
 
         if (mProcessedStatements.contains(statement.get()))
             continue;
+//        if (statement->properties.testFlag(StatementProperty::spDummyStatement))
+//            continue;
 
         if (statement->kind == StatementKind::skBlock)
             continue;
+
         if (statement->isInherited() && !pSettings->ui().classBrowserShowInherited())
             continue;
 

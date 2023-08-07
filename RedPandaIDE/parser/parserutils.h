@@ -153,7 +153,8 @@ enum StatementProperty {
     spOverride =            0x0040,
     spConstexpr =           0x0080,
     spFunctionPointer =     0x0100,
-    spOperatorOverloading = 0x0200
+    spOperatorOverloading = 0x0200,
+    spDummyStatement     =  0x0400
 };
 
 Q_DECLARE_FLAGS(StatementProperties, StatementProperty)

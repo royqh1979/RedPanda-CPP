@@ -4018,28 +4018,6 @@ QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/
     if (statement->kind == StatementKind::skFunction
             || statement->kind == StatementKind::skConstructor
             || statement->kind == StatementKind::skDestructor) {
-        //PStatement parentScope = statement->parentScope.lock();
-//        if (parentScope && parentScope->kind == StatementKind::skNamespace) {
-//            PStatementList namespaceStatementsList =
-//                    mParser->findNamespace(parentScope->command);
-//            if (namespaceStatementsList) {
-//                int counts=0;
-//                foreach (const PStatement& namespaceStatement, *namespaceStatementsList) {
-//                    QString hint = getHintForFunction(statement,namespaceStatement,
-//                                                      mFilename,line);
-//                    if (!hint.isEmpty()) {
-//                        counts++;
-//                        if (!result.isEmpty())
-//                            result += "\n";
-//                        if (counts>4) {
-//                            result += "...";
-//                            break;
-//                        }
-//                        result += hint;
-//                    }
-//                }
-//            }
-//        } else
           result = getHintForFunction(statement,mFilename,line);
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);

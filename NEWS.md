@@ -10,6 +10,12 @@ Red Panda C++ Version 2.24
   - enhancement: Press left/right arrow will move caret to the begin/end of the selection.
   - enhancement: Press up/down arrow will move caret up/down from the begin/end of the selection.
   - enhancement: Show progress dialog if the time for searching compilers is too long.
+  - fix: Dummy struct/enum symbols shouldn't be shown in the completion suggestion.
+  - enhancement: Support optional enum name.
+  - enhancement: Support optional enum type.
+  - enhancement: Support simple const expression evaluation for enum values.
+  - fix: Accessibilty for inherited members are not correct calculated in multiple inheritance.
+  - fix: Can't handle full class name when handle inheritance.
   
 
 Red Panda C++ Version 2.23
@@ -1054,7 +1060,7 @@ Red Panda C++ Version 0.14.0
   - enhancement: show custom icon set folder in options -> enviroment -> folders 
   - enhancement: new class ( to project) wizard
   - enhancement: greatly speed up code completion 
-  - fix: code folding calcuation not correct when some codes are folded and editing after them
+  - fix: code folding calculation not correct when some codes are folded and editing after them
   - enhancement: code completion ui redesigned
   - fix: mainwindow action's short cut doesn't work,  if the action is not in menu or toolbar
   - fix: when run all cases for a problem, processing of output is slow
