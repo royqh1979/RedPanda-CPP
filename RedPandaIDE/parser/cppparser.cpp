@@ -1877,21 +1877,6 @@ int CppParser::evaluateConstExprTerm(int endIndex, bool &ok)
             if (statement->kind == StatementKind::skEnum) {
                 result = statement->value.toInt(&ok);
                 break;
-            } else if (statement->kind == StatementKind::skPreprocessor) {
-                if (!statement->args.isEmpty()) {
-                    ok=false;
-                    return result;
-                }
-                QString macroText = statement->value;
-                if (macroText.isEmpty()) {
-                    ok=false;
-                    return result;
-                }
-                if (isDigitChar(macroText[0])) {
-                    result = evaluateLiteralNumber(endIndex,ok);
-                } else {
-                    s = macroText;
-                }
             }
         }
     } else {
@@ -2687,12 +2672,8 @@ void CppParser::handleEnum(bool isTypedef)
                     mTokenizer[mIndex+1]->text=="=") {
                 mIndex+=2;
                 if (mIndex<tokenCount) {
-                    bool ok;
                     int endIndex = indexOfNextPeriodOrSemicolon(mIndex);
-                    value = evaluateConstExpr(endIndex,ok);
-                    if (!ok) {
-                        canCalcValue=false;
-                    }
+                    value = evaluateConstExpr(endIndex,canCalcValue);
                     mIndex = endIndex - 1;
                 }
             }

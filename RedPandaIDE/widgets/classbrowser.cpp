@@ -154,12 +154,13 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                      || (node->statement->kind == StatementKind::skTypedef)
                      ) {
                     return node->statement->command + node->statement->args + " : " + node->statement->type;
-                } else if (node->statement->kind == StatementKind::skEnum) {
-                    if (!node->statement->value.isEmpty())
-                        return node->statement->command + node->statement->args + QString("(%1)").arg(node->statement->value);
-                    else
-                        return node->statement->command;
                 }
+            }
+            if (node->statement->kind == StatementKind::skEnum) {
+                if (!node->statement->value.isEmpty())
+                    return node->statement->command + node->statement->args + QString("(%1)").arg(node->statement->value);
+                else
+                    return node->statement->command;
             }
             return node->statement->command + node->statement->args;
         }
