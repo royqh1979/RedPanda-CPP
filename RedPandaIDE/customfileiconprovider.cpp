@@ -16,33 +16,45 @@
  */
 #include "customfileiconprovider.h"
 #include "iconsmanager.h"
+#ifdef ENABLE_VCS
 #include "vcs/gitrepository.h"
+#endif
 
 CustomFileIconProvider::CustomFileIconProvider()
 {
     //provider delete it in the destructor
+#ifdef ENABLE_VCS
     mVCSRepository = new GitRepository("");
+#endif
 }
 
 CustomFileIconProvider::~CustomFileIconProvider()
 {
+#ifdef ENABLE_VCS
     delete mVCSRepository;
+#endif
 }
 
 void CustomFileIconProvider::setRootFolder(const QString &folder)
 {
+#ifdef ENABLE_VCS
     mVCSRepository->setFolder(folder);
+#endif
 }
 
 void CustomFileIconProvider::update()
 {
+#ifdef ENABLE_VCS
     mVCSRepository->update();
+#endif
 }
 
+#ifdef ENABLE_VCS
 GitRepository *CustomFileIconProvider::VCSRepository() const
 {
     return mVCSRepository;
 }
+#endif
 
 QIcon CustomFileIconProvider::icon(IconType type) const
 {
@@ -59,6 +71,7 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
 {
     QIcon icon;
     if (info.isDir()) {
+#ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_CONFLICT);
@@ -69,10 +82,12 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             else
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER_VCS_NOCHANGE);
         } else
+#endif
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FOLDER);
     } else if (!info.exists()) {
         icon = pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS);
     } else  if (isHFile(info.fileName())) {
+#ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_CONFLICT);
@@ -83,8 +98,10 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             else
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE_VCS_NOCHANGE);
         } else
+#endif
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_HFILE);
     } else if (isCppFile(info.fileName())) {
+#ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_CONFLICT);
@@ -95,8 +112,10 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             else
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE_VCS_NOCHANGE);
         } else
+#endif
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CPPFILE);
     } else if (isCFile(info.fileName())) {
+#ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_CONFLICT);
@@ -107,8 +126,10 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             else
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE_VCS_NOCHANGE);
         } else
+#endif
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_CFILE);
     } else if (info.suffix()=="dev") {
+#ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_CONFLICT);
@@ -119,8 +140,10 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
             else
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE_VCS_NOCHANGE);
         } else
+#endif
             icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_PROJECTFILE);
     } else {
+#ifdef ENABLE_VCS
         if (mVCSRepository->isFileInRepository(info)) {
             if (mVCSRepository->isFileConflicting(info))
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CONFLICT);
@@ -130,7 +153,9 @@ QIcon CustomFileIconProvider::icon(const QFileInfo &info) const
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_CHANGED);
             else
                 icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_FILE_VCS_NOCHANGE);
-        } //use default system icon
+        }
+#endif
+        //use default system icon
     }
     if (!icon.isNull())
         return icon;

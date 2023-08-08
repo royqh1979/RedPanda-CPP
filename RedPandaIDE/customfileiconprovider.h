@@ -28,12 +28,16 @@ public:
     void setRootFolder(const QString& folder);
     void update();
 private:
+#ifdef ENABLE_VCS
     GitRepository* mVCSRepository;
+#endif
     // QFileIconProvider interface
 public:
     QIcon icon(IconType type) const override;
     QIcon icon(const QFileInfo &info) const override;
+#ifdef ENABLE_VCS
     GitRepository *VCSRepository() const;
+#endif
 };
 
 #endif // CUSTOMFILEICONPROVIDER_H

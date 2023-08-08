@@ -31,8 +31,8 @@ RedPandaIDE.depends += redpanda-win-git-askpass
 unix: {
 SUBDIRS += \
     redpanda-git-askpass
-redpanda-git-askpass.subdir = tools/redpanda-git-askpass
-RedPandaIDE.depends += redpanda-git-askpass
+    redpanda-git-askpass.subdir = tools/redpanda-git-askpass
+    RedPandaIDE.depends += redpanda-git-askpass
 }
 
 linux: {

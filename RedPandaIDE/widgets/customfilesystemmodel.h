@@ -20,8 +20,6 @@
 #include <QFileSystemModel>
 #include <QTimer>
 
-class GitRepository;
-class GitManager;
 class CustomFileSystemModel : public QFileSystemModel
 {
     Q_OBJECT

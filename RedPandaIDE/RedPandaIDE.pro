@@ -3,6 +3,9 @@ QT       += core gui printsupport network svg xml widgets
 CONFIG += c++17
 CONFIG += nokey
 
+# uncomment the following line to enable vcs (git) support
+# CONFIG += ENABLE_VCS
+
 isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP
 }
@@ -140,25 +143,12 @@ SOURCES += \
     settingsdialog/projectoutputwidget.cpp \
     settingsdialog/projectprecompilewidget.cpp \
     settingsdialog/toolsgeneralwidget.cpp \
-    settingsdialog/toolsgitwidget.cpp \
     shortcutmanager.cpp \
     symbolusagemanager.cpp \
     syntaxermanager.cpp \
     thememanager.cpp \
     todoparser.cpp \
     toolsmanager.cpp \
-    vcs/gitbranchdialog.cpp \
-    vcs/gitfetchdialog.cpp \
-    vcs/gitlogdialog.cpp \
-    vcs/gitmanager.cpp \
-    vcs/gitmergedialog.cpp \
-    vcs/gitpulldialog.cpp \
-    vcs/gitpushdialog.cpp \
-    vcs/gitremotedialog.cpp \
-    vcs/gitrepository.cpp \
-    vcs/gitresetdialog.cpp \
-    vcs/gituserconfigdialog.cpp \
-    vcs/gitutils.cpp \
     visithistorymanager.cpp \
     widgets/aboutdialog.cpp \
     widgets/bookmarkmodel.cpp \
@@ -276,25 +266,12 @@ HEADERS += \
     settingsdialog/projectoutputwidget.h \
     settingsdialog/projectprecompilewidget.h \
     settingsdialog/toolsgeneralwidget.h \
-    settingsdialog/toolsgitwidget.h \
     shortcutmanager.h \
     symbolusagemanager.h \
     syntaxermanager.h \
     thememanager.h \
     todoparser.h \
     toolsmanager.h \
-    vcs/gitbranchdialog.h \
-    vcs/gitfetchdialog.h \
-    vcs/gitlogdialog.h \
-    vcs/gitmanager.h \
-    vcs/gitmergedialog.h \
-    vcs/gitpulldialog.h \
-    vcs/gitpushdialog.h \
-    vcs/gitremotedialog.h \
-    vcs/gitrepository.h \
-    vcs/gitresetdialog.h \
-    vcs/gituserconfigdialog.h \
-    vcs/gitutils.h \
     visithistorymanager.h \
     widgets/aboutdialog.h \
     widgets/bookmarkmodel.h \
@@ -384,16 +361,6 @@ FORMS += \
     settingsdialog/projectoutputwidget.ui \
     settingsdialog/projectprecompilewidget.ui \
     settingsdialog/toolsgeneralwidget.ui \
-    settingsdialog/toolsgitwidget.ui \
-    vcs/gitbranchdialog.ui \
-    vcs/gitfetchdialog.ui \
-    vcs/gitlogdialog.ui \
-    vcs/gitmergedialog.ui \
-    vcs/gitpulldialog.ui \
-    vcs/gitpushdialog.ui \
-    vcs/gitremotedialog.ui \
-    vcs/gitresetdialog.ui \
-    vcs/gituserconfigdialog.ui \
     widgets/aboutdialog.ui \
     widgets/choosethemedialog.ui \
     widgets/cpudialog.ui \
@@ -422,6 +389,53 @@ FORMS += \
     widgets/searchdialog.ui \
     widgets/searchinfiledialog.ui \
     widgets/signalmessagedialog.ui
+
+ENABLE_VCS {
+
+    DEFINES += ENABLE_VCS
+    SOURCES += \
+        vcs/gitbranchdialog.cpp \
+        vcs/gitfetchdialog.cpp \
+        vcs/gitlogdialog.cpp \
+        vcs/gitmanager.cpp \
+        vcs/gitmergedialog.cpp \
+        vcs/gitpulldialog.cpp \
+        vcs/gitpushdialog.cpp \
+        vcs/gitremotedialog.cpp \
+        vcs/gitrepository.cpp \
+        vcs/gitresetdialog.cpp \
+        vcs/gituserconfigdialog.cpp \
+        vcs/gitutils.cpp \
+        settingsdialog/toolsgitwidget.cpp
+
+    HEADERS += \
+        vcs/gitbranchdialog.h \
+        vcs/gitfetchdialog.h \
+        vcs/gitlogdialog.h \
+        vcs/gitmanager.h \
+        vcs/gitmergedialog.h \
+        vcs/gitpulldialog.h \
+        vcs/gitpushdialog.h \
+        vcs/gitremotedialog.h \
+        vcs/gitrepository.h \
+        vcs/gitresetdialog.h \
+        vcs/gituserconfigdialog.h \
+        vcs/gitutils.h \
+        settingsdialog/toolsgitwidget.h
+
+
+    FORMS += \
+        vcs/gitbranchdialog.ui \
+        vcs/gitfetchdialog.ui \
+        vcs/gitlogdialog.ui \
+        vcs/gitmergedialog.ui \
+        vcs/gitpulldialog.ui \
+        vcs/gitpushdialog.ui \
+        vcs/gitremotedialog.ui \
+        vcs/gitresetdialog.ui \
+        vcs/gituserconfigdialog.ui \
+        settingsdialog/toolsgitwidget.ui
+}
 
 win32: {
     FORMS +=  \

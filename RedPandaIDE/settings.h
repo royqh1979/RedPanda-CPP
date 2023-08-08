@@ -962,7 +962,7 @@ public:
         void doSave() override;
         void doLoad() override;
     };
-
+#ifdef ENABLE_VCS
     class VCS: public _Base {
     public:
         explicit VCS(Settings *settings);
@@ -979,6 +979,7 @@ public:
         void doSave() override;
         void doLoad() override;
     };
+#endif
 
     class Languages: public _Base {
     public:
@@ -1565,7 +1566,9 @@ public:
     CodeCompletion &codeCompletion();
     CodeFormatter &codeFormatter();
     UI &ui();
+#ifdef ENABLE_VCS
     VCS &vcs();
+#endif
     Languages &languages();
     QString filename() const;
 
@@ -1581,7 +1584,9 @@ private:
     CodeCompletion mCodeCompletion;
     CodeFormatter mCodeFormatter;
     UI mUI;
+#ifdef ENABLE_VCS
     VCS mVCS;
+#endif
     Languages mLanguages;
 };
 

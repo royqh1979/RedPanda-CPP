@@ -15,8 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "customfilesystemmodel.h"
-#include "../vcs/gitmanager.h"
-#include "../vcs/gitrepository.h"
 
 CustomFileSystemModel::CustomFileSystemModel(QObject *parent) : QFileSystemModel(parent)
 {

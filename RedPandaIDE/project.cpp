@@ -2627,11 +2627,13 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
     if (!p)
         return QVariant();
     if (role == Qt::DisplayRole) {
+#ifdef ENABLE_VCS
         if (p == mProject->rootNode().get()) {
             QString branch;
             if (mIconProvider->VCSRepository()->hasRepository(branch))
                 return QString("%1 [%2]").arg(p->text,branch);
         }
+#endif
         return p->text;
     } else if (role==Qt::EditRole) {
         return p->text;
@@ -2643,9 +2645,11 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
                 icon = mIconProvider->icon(unit->fileName());
         } else {
             if (p == mProject->rootNode().get()) {
+#ifdef ENABLE_VCS
                 QString branch;
                 if (mIconProvider->VCSRepository()->hasRepository(branch))
                     icon = pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT);
+#endif
             } else {
                 switch(p->folderNodeType) {
                 case ProjectModelNodeType::DUMMY_HEADERS_FOLDER:

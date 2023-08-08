@@ -48,7 +48,9 @@ Settings::Settings(const QString &filename):
     mCodeCompletion(this),
     mCodeFormatter(this),
     mUI(this),
+#ifdef ENABLE_VCS
     mVCS(this),
+#endif
     mLanguages(this)
 {
     //load();
@@ -112,7 +114,9 @@ void Settings::load()
     mCodeFormatter.load();
     mUI.load();
     mDirs.load();
+#ifdef ENABLE_VCS
     mVCS.load();
+#endif
     mLanguages.load();
 }
 
@@ -172,10 +176,12 @@ Settings::UI &Settings::ui()
     return mUI;
 }
 
+#ifdef ENABLE_VCS
 Settings::VCS &Settings::vcs()
 {
     return mVCS;
 }
+#endif
 
 Settings::Debugger& Settings::debugger()
 {
@@ -5935,6 +5941,7 @@ void Settings::UI::doLoad()
     mNewHeaderDialogHeight = intValue("new_header_dialog_height", 300*qApp->desktop()->height()/1080);
 }
 
+#ifdef ENABLE_VCS
 Settings::VCS::VCS(Settings *settings):_Base(settings,SETTING_VCS),
     mGitOk(false)
 {
@@ -6010,6 +6017,7 @@ void Settings::VCS::detectGitInPath()
 
     }
 }
+#endif
 
 Settings::Languages::Languages(Settings *settings):
     _Base(settings,SETTING_LANGUAGES)

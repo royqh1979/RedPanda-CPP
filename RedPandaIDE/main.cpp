@@ -365,7 +365,9 @@ int main(int argc, char *argv[])
             pSettings->editor().save();
 
             //auto detect git in path
+#ifdef ENABLE_VCS
             pSettings->vcs().detectGitInPath();
+#endif
         }
         //Color scheme settings must be loaded after translation
         ColorManager colorManager;

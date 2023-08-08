@@ -51,7 +51,9 @@
 #include "projectmakefilewidget.h"
 #include "projectdllhostwidget.h"
 #include "toolsgeneralwidget.h"
+#ifdef ENABLE_VCS
 #include "toolsgitwidget.h"
+#endif
 #ifdef Q_OS_WIN
 #include "environmentfileassociationwidget.h"
 #include "projectversioninfowidget.h"
@@ -233,9 +235,10 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new ToolsGeneralWidget(tr("General"),tr("Tools"));
     dialog->addWidget(widget);
 
+#ifdef ENABLE_VCS
     widget = new ToolsGitWidget(tr("Git"),tr("Tools"));
     dialog->addWidget(widget);
-
+#endif
 
     dialog->selectFirstWidget();
 

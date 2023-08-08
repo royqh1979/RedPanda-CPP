@@ -338,7 +338,9 @@ private slots:
     void onProjectViewNodeRenamed();
     void setDockExplorerToArea(const Qt::DockWidgetArea &area);
     void setDockMessagesToArea(const Qt::DockWidgetArea &area);
+#ifdef ENABLE_VCS
     void updateVCSActions();
+#endif
     void invalidateProjectProxyModel();
     void onEditorRenamed(const QString &oldFilename, const QString &newFilename, bool firstSave);
     void onAutoSaveTimeout();
@@ -702,6 +704,7 @@ private slots:
 
     void on_actionNew_Header_triggered();
 
+#ifdef ENABLE_VCS
     void on_actionGit_Create_Repository_triggered();
 
     void on_actionGit_Add_Files_triggered();
@@ -709,8 +712,6 @@ private slots:
     void on_actionGit_Commit_triggered();
 
     void on_actionGit_Restore_triggered();
-
-    void on_actionWebsite_triggered();
 
     void on_actionGit_Branch_triggered();
 
@@ -725,6 +726,8 @@ private slots:
     void on_actionGit_Pull_triggered();
 
     void on_actionGit_Push_triggered();
+#endif
+    void on_actionWebsite_triggered();
 
     void on_actionFilesView_Hide_Non_Support_Files_toggled(bool arg1);
 

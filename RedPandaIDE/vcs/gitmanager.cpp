@@ -1,4 +1,6 @@
+#ifdef ENABLE_VCS
 #include "gitmanager.h"
+#endif
 #include "../utils.h"
 #include "../settings.h"
 

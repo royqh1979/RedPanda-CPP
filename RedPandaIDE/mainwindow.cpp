@@ -40,6 +40,7 @@
 #include "iconsmanager.h"
 #include "widgets/newclassdialog.h"
 #include "widgets/newheaderdialog.h"
+#ifdef ENABLE_VCS
 #include "vcs/gitmanager.h"
 #include "vcs/gitrepository.h"
 #include "vcs/gitbranchdialog.h"
@@ -47,6 +48,7 @@
 #include "vcs/gitlogdialog.h"
 #include "vcs/gitremotedialog.h"
 #include "vcs/gituserconfigdialog.h"
+#endif
 #include "widgets/infomessagebox.h"
 #include "widgets/newtemplatedialog.h"
 #include "visithistorymanager.h"
@@ -444,9 +446,10 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::on_EditorTabsRight_tabCloseRequested);
 
     //git menu
+#ifdef ENABLE_VCS
     connect(ui->menuGit, &QMenu::aboutToShow,
             this, &MainWindow::updateVCSActions);
-
+#endif
     initToolButtons();
     buildContextMenus();
     updateAppTitle();
@@ -959,9 +962,11 @@ void MainWindow::applySettings()
 //    for (int i=0;i<ui->cbFilesPath->count();i++) {
 //        ui->cbFilesPath->setItemIcon(i,pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT));
 //    }
-
+#ifdef ENABLE_VCS
     ui->menuGit->menuAction()->setVisible(pSettings->vcs().gitOk());
-
+#else
+    ui->menuGit->menuAction()->setVisible(false);
+#endif
     stretchExplorerPanel(!ui->tabExplorer->isShrinked());
     stretchMessagesPanel(!ui->tabMessages->isShrinked());
 }
@@ -1060,6 +1065,7 @@ void MainWindow::updateDPI(int oldDPI, int /*newDPI*/)
 
 void MainWindow::onFileSaved(const QString &path, bool inProject)
 {
+#ifdef ENABLE_VCS
     if (pSettings->vcs().gitOk()) {
         QString branch;
         if (inProject && mProject && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
@@ -1080,6 +1086,7 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
             ui->treeFiles->update(index);
         }
     }
+#endif
     //updateForEncodingInfo();
 }
 
@@ -3684,12 +3691,14 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
             onRoot = true;
         }
     }
-    GitManager vcsManager;
-    QString branch;
-    bool hasRepository = vcsManager.hasRepository(mProject->folder(),branch);
 
     QMenu menu(this);
+#ifdef ENABLE_VCS
     QMenu vcsMenu(this);
+    QString branch;
+    GitManager vcsManager;
+    bool hasRepository = vcsManager.hasRepository(mProject->folder(),branch);
+#endif
     updateProjectActions();
     menu.addAction(ui->actionProject_New_File);
     menu.addAction(ui->actionNew_Class);
@@ -3702,6 +3711,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         menu.addAction(mProject_Rename_Unit);
     }
     menu.addSeparator();
+#ifdef ENABLE_VCS
     if (pSettings->vcs().gitOk()) {
         if (hasRepository) {
             menu.addMenu(&vcsMenu);
@@ -3711,6 +3721,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         }
         menu.addSeparator();
     }
+#endif
     if (onFolder && mProject->modelType()==ProjectModelType::Custom) {
         menu.addAction(mProject_Add_Folder);
         if (!onRoot) {
@@ -3733,6 +3744,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
     menu.addSeparator();
     menu.addAction(ui->actionClose_Project);
 
+#ifdef ENABLE_VCS
     if (pSettings->vcs().gitOk() && hasRepository) {
         mProject->model()->iconProvider()->update();
         vcsMenu.setTitle(tr("Version Control"));
@@ -3771,7 +3783,8 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
         vcsMenu.addAction(ui->actionGit_Commit);
         vcsMenu.addAction(ui->actionGit_Restore);
 
-        bool canBranch = !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles()
+        bool canBranch = false;
+        canBranch = !mProject->model()->iconProvider()->VCSRepository()->hasChangedFiles()
                 && !mProject->model()->iconProvider()->VCSRepository()->hasStagedFiles();
         ui->actionGit_Branch->setEnabled(canBranch);
         ui->actionGit_Merge->setEnabled(canBranch);
@@ -3785,6 +3798,7 @@ void MainWindow::onProjectViewContextMenu(const QPoint &pos)
 //        ui->actionGit_Reset->setEnabled(true);
 //        ui->actionGit_Revert->setEnabled(true);
     }
+#endif
     menu.exec(ui->projectView->mapToGlobal(pos));
 }
 
@@ -3849,11 +3863,13 @@ void MainWindow::onFileEncodingContextMenu(const QPoint &pos)
 
 void MainWindow::onFilesViewContextMenu(const QPoint &pos)
 {
+    QMenu menu(this);
+#ifdef ENABLE_VCS
     GitManager vcsManager;
     QString branch;
     bool hasRepository = vcsManager.hasRepository(pSettings->environment().currentFolder(),branch);
-    QMenu menu(this);
     QMenu vcsMenu(this);
+#endif
     menu.addAction(ui->actionOpen_Folder);
     menu.addSeparator();
     menu.addAction(mFilesView_CreateFolder);
@@ -3861,6 +3877,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     menu.addAction(mFilesView_RemoveFile);
     menu.addAction(mFilesView_Rename);
     menu.addSeparator();
+#ifdef ENABLE_VCS
     if (pSettings->vcs().gitOk()) {
         if (hasRepository) {
             menu.addMenu(&vcsMenu);
@@ -3870,6 +3887,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
         }
         menu.addSeparator();
     }
+#endif
     menu.addAction(mFilesView_Open);
     menu.addAction(mFilesView_OpenWithExternal);
     menu.addSeparator();
@@ -3886,6 +3904,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
     mFilesView_Rename->setEnabled(!path.isEmpty());
     mFilesView_RemoveFile->setEnabled(!path.isEmpty() || !ui->treeFiles->selectionModel()->selectedRows().isEmpty());
 
+#ifdef ENABLE_VCS
     if (pSettings->vcs().gitOk() && hasRepository) {
         mFileSystemModelIconProvider.update();
         vcsMenu.setTitle(tr("Version Control"));
@@ -3927,6 +3946,7 @@ void MainWindow::onFilesViewContextMenu(const QPoint &pos)
 //        ui->actionGit_Reset->setEnabled(true);
 //        ui->actionGit_Revert->setEnabled(true);
     }
+#endif
     menu.exec(ui->treeFiles->mapToGlobal(pos));
 }
 
@@ -7045,6 +7065,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
         foreach (const QString& filename, dialog.selectedFiles()) {
             PProjectUnit newUnit = mProject->addUnit(filename,folderNode);
             mProject->cppParser()->addProjectFile(filename,true);
+#ifdef ENABLE_VCS
             QString branch;
             if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
                 QString output;
@@ -7053,6 +7074,7 @@ void MainWindow::on_actionAdd_to_project_triggered()
                             output
                             );
             }
+#endif
             if (newUnit) {
                 QModelIndex index = mProject->model()->getNodeIndex(newUnit->node().get());
                 index = mProjectProxyModel->mapFromSource(index);
@@ -7418,11 +7440,13 @@ void MainWindow::newProjectUnitFile(const QString& suffix)
     if (editor)
         editor->activate();
     QString branch;
+#ifdef ENABLE_VCS
     if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
         QString output;
         mProject->model()->iconProvider()->VCSRepository()->add(newFileName,output);
         mProject->model()->refreshIcon(newFileName);
     }
+#endif
     updateProjectView();
 }
 
@@ -7761,6 +7785,7 @@ void MainWindow::setDockMessagesToArea(const Qt::DockWidgetArea &area)
     }
 }
 
+#ifdef ENABLE_VCS
 void MainWindow::updateVCSActions()
 {
     bool hasRepository = false;
@@ -7795,6 +7820,7 @@ void MainWindow::updateVCSActions()
     ui->actionGit_Restore->setEnabled(hasRepository && shouldEnable);
     ui->actionGit_Revert->setEnabled(hasRepository && shouldEnable);
 }
+#endif
 
 void MainWindow::invalidateProjectProxyModel()
 {
@@ -8958,7 +8984,7 @@ void MainWindow::on_actionNew_Class_triggered()
     pSettings->ui().setNewHeaderDialogHeight(dialog.height());
 }
 
-
+#ifdef ENABLE_VCS
 void MainWindow::on_actionGit_Create_Repository_triggered()
 {
     if (ui->treeFiles->isVisible()) {
@@ -9131,15 +9157,6 @@ void MainWindow::on_actionGit_Restore_triggered()
 }
 
 
-void MainWindow::on_actionWebsite_triggered()
-{
-    if (pSettings->environment().language()=="zh_CN") {
-        QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/"));
-    } else {
-        QDesktopServices::openUrl(QUrl("https://sourceforge.net/projects/redpanda-cpp/"));
-    }
-}
-
 
 void MainWindow::on_actionGit_Branch_triggered()
 {
@@ -9161,7 +9178,6 @@ void MainWindow::on_actionGit_Branch_triggered()
         setFilesViewRoot(pSettings->environment().currentFolder());
     }
 }
-
 
 void MainWindow::on_actionGit_Merge_triggered()
 {
@@ -9311,6 +9327,16 @@ void MainWindow::on_actionGit_Push_triggered()
     }
 }
 
+#endif
+
+void MainWindow::on_actionWebsite_triggered()
+{
+    if (pSettings->environment().language()=="zh_CN") {
+        QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/"));
+    } else {
+        QDesktopServices::openUrl(QUrl("https://sourceforge.net/projects/redpanda-cpp/"));
+    }
+}
 
 void MainWindow::on_actionFilesView_Hide_Non_Support_Files_toggled(bool /* arg1 */)
 {
