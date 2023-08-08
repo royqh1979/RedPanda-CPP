@@ -1520,16 +1520,19 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
     StatementAccessibility lastInheritScopeType = StatementAccessibility::None;
     // Assemble a list of statements in text form we inherit from
     while (true) {
-        StatementAccessibility inheritScopeType = getClassMemberAccessibility(mTokenizer[index]->text);
         QString currentText = mTokenizer[index]->text;
         if (currentText=='(') {
             //skip to matching ')'
             index=mTokenizer[index]->matchIndex;
-        } else if (inheritScopeType == StatementAccessibility::None) {
-            if (currentText=="::"
-                    || isIdentChar(currentText[0])) {
-
-
+        } else if (currentText=="::"
+                   || (isIdentChar(currentText[0]))) {
+            KeywordType keywordType = mCppKeywords.value(currentText, KeywordType::None);
+            if (keywordType!=KeywordType::None) {
+                StatementAccessibility inheritScopeType = getClassMemberAccessibility(mTokenizer[index]->text);
+                if (inheritScopeType != StatementAccessibility::None) {
+                    lastInheritScopeType = inheritScopeType;
+                }
+            } else {
                 QString basename = currentText;
                 bool isGlobal = false;
                 index++;
@@ -1565,13 +1568,13 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
                 // Find the corresponding PStatement
                 PStatement statement = doFindStatementOf(mCurrentFile,basename,
                                                          isGlobal?PStatement():classStatement->parentScope.lock());
+
                 if (statement && statement->kind == StatementKind::skClass) {
                     inheritClassStatement(classStatement,isStruct,statement,lastInheritScopeType);
                 }
             }
-        } else {
-            lastInheritScopeType = inheritScopeType;
         }
+
         index++;
         if (index >= tokenCount)
             break;
@@ -1924,6 +1927,7 @@ bool CppParser::checkForKeyword(KeywordType& keywordType)
     case KeywordType::For:
     case KeywordType::Public:
     case KeywordType::Private:
+    case KeywordType::Protected:
     case KeywordType::Struct:
     case KeywordType::Enum:
     case KeywordType::Inline:
@@ -1931,7 +1935,6 @@ bool CppParser::checkForKeyword(KeywordType& keywordType)
     case KeywordType::Typedef:
     case KeywordType::Using:
     case KeywordType::Friend:
-    case KeywordType::Protected:
     case KeywordType::None:
     case KeywordType::NotKeyword:
     case KeywordType::DeclType:
