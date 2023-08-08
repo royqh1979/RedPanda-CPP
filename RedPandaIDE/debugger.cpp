@@ -84,28 +84,8 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return false;
     }
-    setForceUTF8(CompilerInfoManager::forceUTF8InDebugger(compilerSet->compilerType()));
-    setDebugInfosUsingUTF8(false);
-#ifdef Q_OS_WIN
-
-    bool isOk;
-    int productVersion = QSysInfo::productVersion().toInt(&isOk);
-//    qDebug()<<productVersion<<isOk;
-    if (!isOk) {
-        if (QSysInfo::productVersion().startsWith("7"))
-            productVersion=7;
-        else if (QSysInfo::productVersion().startsWith("10"))
-            productVersion=10;
-        else if (QSysInfo::productVersion().startsWith("11"))
-            productVersion=11;
-        else
-            productVersion=10;
-    }
-
-    if (compilerSet->mainVersion()>=13 && compilerSet->compilerType()==CompilerType::GCC
-            && productVersion>=10)
-        setDebugInfosUsingUTF8(true);
-#endif
+    setForceUTF8(compilerSet->forceUTF8());
+    setDebugInfosUsingUTF8(compilerSet->isDebugInfoUsingUTF8());
     if (compilerSet->debugger().endsWith(LLDB_MI_PROGRAM))
         setDebuggerType(DebuggerType::LLDB_MI);
     else

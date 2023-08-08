@@ -1342,14 +1342,14 @@ public:
         void unsetCompileOption(const QString& key);
         void setCompileOptions(const QMap<QString, QString> options);
 
-        QString getCompileOptionValue(const QString& key);
+        QString getCompileOptionValue(const QString& key) const;
 
-        int mainVersion();
+        int mainVersion() const;
 
-        bool canCompileC();
-        bool canCompileCPP();
-        bool canMake();
-        bool canDebug();
+        bool canCompileC() const;
+        bool canCompileCPP() const;
+        bool canMake() const;
+        bool canDebug() const;
 //        bool dirsValid(QString& msg);
 //        bool validateExes(QString& msg);
         //properties
@@ -1434,6 +1434,10 @@ public:
         QString getOutputFilename(const QString& sourceFilename,Settings::CompilerSet::CompilationStage stage);
         bool isOutputExecutable();
         bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
+
+        bool isDebugInfoUsingUTF8() const;
+        bool forceUTF8() const;
+        bool isCompilerInfoUsingUTF8() const;
 
     private:
         void setDirectories(const QString& binDir, CompilerType mCompilerType);

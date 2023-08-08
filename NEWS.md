@@ -16,8 +16,8 @@ Red Panda C++ Version 2.24
   - enhancement: Support simple const expression evaluation for enum values.
   - fix: Accessibilty for inherited members are not correct calculated in multiple inheritance.
   - fix: Can't parse full class name when handle inheritance.
-  - fix: Can't parse virtual inherit.
-  
+  - fix: Can't parse virtual inherit.  
+  - fix: Filename in the gcc 13.1 error messages when building project is using wrong encoding.
 
 Red Panda C++ Version 2.23
 

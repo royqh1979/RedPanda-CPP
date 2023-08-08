@@ -664,6 +664,8 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     bool errorOccurred = false;
     process.setProgram(cmd);
     QString cmdDir = extractFileDir(cmd);
+    bool compilerErrorUTF8=compilerSet()->isCompilerInfoUsingUTF8();
+    bool outputUTF8=compilerSet()->forceUTF8();
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     if (!cmdDir.isEmpty()) {
         QString path = env.value("PATH");
@@ -682,18 +684,19 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     process.setArguments(splitProcessCommand(arguments));
     process.setWorkingDirectory(workingDir);
 
+
     process.connect(&process, &QProcess::errorOccurred,
                     [&](){
                         errorOccurred= true;
                     });
-    process.connect(&process, &QProcess::readyReadStandardError,[&process,this](){
-        if (compilerSet()->compilerType() == CompilerType::Clang)
+    process.connect(&process, &QProcess::readyReadStandardError,[&process,this,compilerErrorUTF8](){
+        if (compilerErrorUTF8)
             this->error(QString::fromUtf8(process.readAllStandardError()));
         else
             this->error(QString::fromLocal8Bit( process.readAllStandardError()));
     });
-    process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this](){
-        if (compilerSet()->compilerType() == CompilerType::Clang)
+    process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this,outputUTF8](){
+        if (outputUTF8)
             this->log(QString::fromUtf8(process.readAllStandardOutput()));
         else
             this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));

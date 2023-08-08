@@ -1794,7 +1794,7 @@ void Settings::CompilerSet::setCompileOptions(const QMap<QString, QString> optio
     mCompileOptions=options;
 }
 
-QString Settings::CompilerSet::getCompileOptionValue(const QString &key)
+QString Settings::CompilerSet::getCompileOptionValue(const QString &key) const
 {
     return mCompileOptions.value(key,QString());
 }
@@ -2485,7 +2485,7 @@ void Settings::CompilerSet::setDirectories(const QString& binDir,CompilerType co
     }
 }
 
-int Settings::CompilerSet::mainVersion()
+int Settings::CompilerSet::mainVersion() const
 {
     int i = mVersion.indexOf('.');
     if (i<0)
@@ -2498,22 +2498,22 @@ int Settings::CompilerSet::mainVersion()
 
 }
 
-bool Settings::CompilerSet::canCompileC()
+bool Settings::CompilerSet::canCompileC() const
 {
     return fileExists(mCCompiler);
 }
 
-bool Settings::CompilerSet::canCompileCPP()
+bool Settings::CompilerSet::canCompileCPP() const
 {
     return fileExists(mCppCompiler);
 }
 
-bool Settings::CompilerSet::canMake()
+bool Settings::CompilerSet::canMake() const
 {
     return fileExists(mMake);
 }
 
-bool Settings::CompilerSet::canDebug()
+bool Settings::CompilerSet::canDebug() const
 {
     return fileExists(mDebugger);
 }
@@ -2601,6 +2601,49 @@ bool Settings::CompilerSet::isOutputExecutable()
 bool Settings::CompilerSet::isOutputExecutable(CompilationStage stage)
 {
     return stage == CompilationStage::GenerateExecutable;
+}
+
+bool Settings::CompilerSet::isDebugInfoUsingUTF8() const
+{
+    switch(mCompilerType) {
+    case CompilerType::Clang:
+    case CompilerType::GCC_UTF8:
+        return true;
+    case CompilerType::GCC:
+#ifdef Q_OS_WIN
+        if (mainVersion()>=13) {
+            bool isOk;
+            int productVersion = QSysInfo::productVersion().toInt(&isOk);
+        //    qDebug()<<productVersion<<isOk;
+            if (!isOk) {
+                if (QSysInfo::productVersion().startsWith("7"))
+                    productVersion=7;
+                else if (QSysInfo::productVersion().startsWith("10"))
+                    productVersion=10;
+                else if (QSysInfo::productVersion().startsWith("11"))
+                    productVersion=11;
+                else
+                    productVersion=10;
+            }
+            return productVersion>=10;
+        }
+#else
+        break;
+#endif
+    default:
+        break;
+    }
+    return false;
+}
+
+bool Settings::CompilerSet::forceUTF8() const
+{
+    return CompilerInfoManager::forceUTF8InDebugger(mCompilerType);
+}
+
+bool Settings::CompilerSet::isCompilerInfoUsingUTF8() const
+{
+    return isDebugInfoUsingUTF8();
 }
 
 const QString &Settings::CompilerSet::assemblingSuffix() const
