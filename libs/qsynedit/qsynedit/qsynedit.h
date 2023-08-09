@@ -298,6 +298,7 @@ public:
     bool pointToCharLine(const QPoint& point, BufferCoord& coord);
     bool pointToLine(const QPoint& point, int& line);
     bool isIdentChar(const QChar& ch);
+    bool isIdentStartChar(const QChar& ch);
 
     void setRainbowAttrs(const PTokenAttribute &attr0,
                          const PTokenAttribute &attr1,

@@ -1386,7 +1386,7 @@ void CppSyntaxer::processChar()
             procXor();
             break;
         default:
-            if (isIdentChar(mLine[mRun])) {
+            if (isIdentStartChar(mLine[mRun])) {
                 procIdentifier();
             } else {
                 procUnknown();
@@ -1684,6 +1684,11 @@ SyntaxState CppSyntaxer::getState() const
 bool CppSyntaxer::isIdentChar(const QChar &ch) const
 {
     return ch=='_' || ch.isDigit() || ch.isLetter();
+}
+
+bool CppSyntaxer::isIdentStartChar(const QChar &ch) const
+{
+    return ch=='_' || ch.isLetter();
 }
 
 QSet<QString> CppSyntaxer::keywords()

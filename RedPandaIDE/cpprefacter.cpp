@@ -121,7 +121,7 @@ void CppRefacter::renameSymbol(Editor *editor, const QSynedit::BufferCoord &pos,
     // get full phrase (such as s.name instead of name)
     QStringList expression;
     QChar s=editor->charAt(pos);
-    if (!editor->isIdentChar(s)) {
+    if (!editor->isIdentStartChar(s)) {
         expression = editor->getExpressionAtPosition(QSynedit::BufferCoord{pos.ch-1,pos.line});
     } else {
         expression = editor->getExpressionAtPosition(pos);

@@ -1670,14 +1670,14 @@ void ASMSyntaxer::next()
         CommentProc();
         break;
     case '.':
-        if (isIdentChar(mLine[mRun+1])) {
+        if (isIdentStartChar(mLine[mRun+1])) {
             mRun++;
             IdentProc(IdentPrefix::Period);
         } else
             SymbolProc();
         break;
     case '%':
-        if (isIdentChar(mLine[mRun+1])) {
+        if (isIdentStartChar(mLine[mRun+1])) {
             mRun++;
             IdentProc(IdentPrefix::Percent);
         } else
@@ -1699,7 +1699,7 @@ void ASMSyntaxer::next()
     default:
         if (mLine[mRun]>='0' && mLine[mRun]<='9') {
             NumberProc();
-        } else if (isIdentChar(mLine[mRun])) {
+        } else if (isIdentStartChar(mLine[mRun])) {
             IdentProc(IdentPrefix::None);
         } else if (mLine[mRun]<=32) {
             SpaceProc();

@@ -1186,6 +1186,11 @@ bool LuaSyntaxer::isIdentChar(const QChar &ch) const
     return ch=='_' || ch.isDigit() || ch.isLetter();
 }
 
+bool LuaSyntaxer::isIdentStartChar(const QChar &ch) const
+{
+    return ch=='_' || ch.isLetter();
+}
+
 QSet<QString> LuaSyntaxer::keywords() {
     if (mKeywordsCache.isEmpty()) {
         mKeywordsCache = Keywords;

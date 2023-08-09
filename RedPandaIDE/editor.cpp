@@ -843,7 +843,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     QChar ch = t[0];
     QSynedit::BufferCoord ws=wordStart();
     int idCharPressed=caretX()-ws.ch;
-    if (isIdentChar(ch)) {
+    if (isIdentStartChar(ch)) {
         idCharPressed++;
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput()
@@ -2255,7 +2255,7 @@ QStringList Editor::getExpressionAtPosition(
                 if (token==">") {
                     lastSymbolType=LastSymbolType::MatchingAngleQuotation;
                     symbolMatchingLevel=0;
-                } else if (isIdentChar(token.front())) {
+                } else if (isIdentStartChar(token.front())) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -2270,7 +2270,7 @@ QStringList Editor::getExpressionAtPosition(
                 } else if (token == "]") {
                     lastSymbolType=LastSymbolType::MatchingBracket;
                     symbolMatchingLevel = 0;
-                } else if (isIdentChar(token.front())) {
+                } else if (isIdentStartChar(token.front())) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -2307,7 +2307,7 @@ QStringList Editor::getExpressionAtPosition(
                     lastSymbolType=LastSymbolType::AsteriskSign;
                 } else if (token == "&") {
                     lastSymbolType=LastSymbolType::AmpersandSign;
-                } else if (isIdentChar(token.front())) {
+                } else if (isIdentStartChar(token.front())) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -2319,13 +2319,13 @@ QStringList Editor::getExpressionAtPosition(
                 } else if (token == "]") {
                     lastSymbolType=LastSymbolType::MatchingBracket;
                     symbolMatchingLevel = 0;
-                } else if (isIdentChar(token.front())) {
+                } else if (isIdentStartChar(token.front())) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
                 break;
             case LastSymbolType::AngleQuotationMatched: //before '<>'
-                if (isIdentChar(token.front())) {
+                if (isIdentStartChar(token.front())) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -2347,7 +2347,7 @@ QStringList Editor::getExpressionAtPosition(
                 } else if (token == "]") {
                     lastSymbolType=LastSymbolType::MatchingBracket;
                     symbolMatchingLevel = 0;
-                } else if (isIdentChar(token.front())) {
+                } else if (isIdentStartChar(token.front())) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;

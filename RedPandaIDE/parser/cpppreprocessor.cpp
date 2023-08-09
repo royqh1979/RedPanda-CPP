@@ -39,7 +39,8 @@ void CppPreprocessor::clear()
 
     //option data for the parser
     //{ List of current project's include path }
-    mHardDefines.clear(); // set by "cpp -dM -E -xc NUL"
+    mDefines.clear();
+    //mHardDefines.clear(); // set by "cpp -dM -E -xc NUL"
     mProjectIncludePaths.clear();
     //we also need include paths in order (for #include_next)
     mIncludePathList.clear();
@@ -57,7 +58,7 @@ void CppPreprocessor::clearTempResults()
     mCurrentIncludes=nullptr;
     mIncludes.clear(); // stack of files we've stepped into. last one is current file, first one is source file
     mBranchResults.clear();// stack of branch results (boolean). last one is current branch, first one is outermost branch
-    mDefines.clear(); // working set, editable
+    //mDefines.clear(); // working set, editable
     mProcessed.clear(); // dictionary to save filename already processed
 }
 
@@ -74,9 +75,10 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     define->hardCoded = hardCoded;
     if (!args.isEmpty())
         parseArgs(define);
-    if (hardCoded)
+    if (hardCoded) {
         mHardDefines.insert(name,define);
-    else {
+        mDefines.insert(name,define);
+    } else {
         PDefineMap defineMap = mFileDefines.value(mFileName,PDefineMap());
         if (!defineMap) {
             defineMap = std::make_shared<DefineMap>();
@@ -159,7 +161,7 @@ void CppPreprocessor::preprocess(const QString &fileName)
 {
     clearTempResults();
     mFileName = fileName;
-    mDefines = mHardDefines;
+    //mDefines = mHardDefines;
     openInclude(fileName);
     //    StringsToFile(mBuffer,"f:\\buffer.txt");
     preprocessBuffer();
@@ -237,37 +239,37 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
         #else
                          <<endl;
         #endif
-            stream<<"\t**using:**"
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
-            foreach (const QString& s,fileIncludes->usings) {
-                stream<<"\t++"+s
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
-            }
-            stream<<"\t**statements:**"
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
-            foreach (const PStatement& statement,fileIncludes->statements) {
-                if (statement) {
-                    stream<<QString("\t**%1 , %2")
-                            .arg(statement->command,statement->fullName)
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
-                }
-            }
+//            stream<<"\t**using:**"
+//        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
+//                         <<Qt::endl;
+//        #else
+//                         <<endl;
+//        #endif
+//            foreach (const QString& s,fileIncludes->usings) {
+//                stream<<"\t++"+s
+//        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
+//                         <<Qt::endl;
+//        #else
+//                         <<endl;
+//        #endif
+//            }
+//            stream<<"\t**statements:**"
+//        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
+//                         <<Qt::endl;
+//        #else
+//                         <<endl;
+//        #endif
+//            foreach (const PStatement& statement,fileIncludes->statements) {
+//                if (statement) {
+//                    stream<<QString("\t**%1 , %2")
+//                            .arg(statement->command,statement->fullName)
+//        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
+//                         <<Qt::endl;
+//        #else
+//                         <<endl;
+//        #endif
+//                }
+//            }
         }
     }
 }
@@ -302,6 +304,7 @@ void CppPreprocessor::clearProjectIncludePaths()
 
 void CppPreprocessor::removeScannedFile(const QString &filename)
 {
+    invalidDefinesInFile(filename);
     mScannedFiles.remove(filename);
     mIncludesList.remove(filename);
     mFileDefines.remove(filename);

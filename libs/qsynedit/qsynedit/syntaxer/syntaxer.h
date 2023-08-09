@@ -143,6 +143,7 @@ public:
     const PTokenAttribute& symbolAttribute() const;
 
     virtual bool isIdentChar(const QChar& ch) const;
+    virtual bool isIdentStartChar(const QChar& ch) const;
 
     virtual bool getTokenFinished() const = 0;
     virtual bool isLastLineCommentNotFinished(int state) const = 0;

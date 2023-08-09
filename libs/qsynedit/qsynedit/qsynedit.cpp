@@ -5959,6 +5959,24 @@ bool QSynEdit::isIdentChar(const QChar &ch)
     }
 }
 
+bool QSynEdit::isIdentStartChar(const QChar &ch)
+{
+    if (mSyntaxer) {
+        return mSyntaxer->isIdentStartChar(ch);
+    } else {
+        if (ch == '_') {
+            return true;
+        }
+        if ((ch>='a') && (ch <= 'z')) {
+            return true;
+        }
+        if ((ch>='A') && (ch <= 'Z')) {
+            return true;
+        }
+        return false;
+    }
+}
+
 void QSynEdit::setRainbowAttrs(const PTokenAttribute &attr0, const PTokenAttribute &attr1, const PTokenAttribute &attr2, const PTokenAttribute &attr3)
 {
     mRainbowAttr0 = attr0;

@@ -169,6 +169,20 @@ bool Syntaxer::isIdentChar(const QChar &ch) const
     return false;
 }
 
+bool Syntaxer::isIdentStartChar(const QChar &ch) const
+{
+    if (ch == '_') {
+        return true;
+    }
+    if ((ch>='a') && (ch <= 'z')) {
+        return true;
+    }
+    if ((ch>='A') && (ch <= 'Z')) {
+        return true;
+    }
+    return false;
+}
+
 void Syntaxer::addAttribute(PTokenAttribute attribute)
 {
     mAttributes[attribute->name()]=attribute;

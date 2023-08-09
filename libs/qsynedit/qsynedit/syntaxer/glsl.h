@@ -183,10 +183,6 @@ public:
 
     // SynHighlighter interface
 public:
-    bool isIdentChar(const QChar &ch) const override;
-
-    // SynHighlighter interface
-public:
     QSet<QString> keywords() override;
 
     // Highlighter interface

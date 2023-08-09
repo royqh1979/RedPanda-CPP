@@ -198,6 +198,7 @@ public:
     // SynHighlighter interface
 public:
     bool isIdentChar(const QChar &ch) const override;
+    bool isIdentStartChar(const QChar &ch) const override;
 
     // SynHighlighter interface
 public:

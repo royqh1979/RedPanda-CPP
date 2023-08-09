@@ -19,6 +19,8 @@ Red Panda C++ Version 2.24
   - fix: Can't parse virtual inherit.  
   - fix: Filename in the gcc 13.1 error messages when building project is using wrong encoding.
   - change: Git support is disabled in the distributed buildings. 
+  - fix: Wrong code suggestion while inputing numbers in assembly files.
+  - fix: Defines in all files are wrongly cleared when reparsing.
 
 Red Panda C++ Version 2.23
 
