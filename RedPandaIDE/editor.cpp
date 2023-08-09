@@ -182,7 +182,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
         if (!fileTemplate.isEmpty()) {
             insertCodeSnippet(fileTemplate);
             setCaretPosition(1,1);
-            mCanAutoSave = true;
+            setModified(false);
         }
     }
     if (!isNew && parentPageControl) {

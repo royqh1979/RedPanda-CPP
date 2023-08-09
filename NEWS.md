@@ -21,6 +21,7 @@ Red Panda C++ Version 2.24
   - change: Git support is disabled in the distributed buildings. 
   - fix: Wrong code suggestion while inputing numbers in assembly files.
   - fix: Defines in all files are wrongly cleared when reparsing.
+  - change: New file created by file template is set as unmodified by default.
 
 Red Panda C++ Version 2.23
 
