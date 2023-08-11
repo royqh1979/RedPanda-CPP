@@ -872,6 +872,8 @@ private:
     SearchInFileDialog *mSearchInFilesDialog;
     SearchDialog *mSearchDialog;
     bool mQuitting;
+    bool mOpeningFiles;
+    bool mOpeningProject;
     bool mClosingProject;
     QElapsedTimer mParserTimer;
     QFileSystemWatcher mFileSystemWatcher;
@@ -1028,6 +1030,8 @@ public:
     bool isQuitting() const;
     const std::shared_ptr<VisitHistoryManager> &visitHistoryManager() const;
     bool closingProject() const;
+    bool openingFiles() const;
+    bool openingProject() const;
 };
 
 extern MainWindow* pMainWindow;

@@ -117,6 +117,8 @@ MainWindow::MainWindow(QWidget *parent)
       mSearchInFilesDialog{nullptr},
       mSearchDialog{nullptr},
       mQuitting{false},
+      mOpeningFiles{false},
+      mOpeningProject{false},
       mClosingProject{false},
       mCheckSyntaxInBack{false},
       mShouldRemoveAllSettings{false},
@@ -445,8 +447,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->EditorTabsRight, &EditorsTabWidget::middleButtonClicked,
             this, &MainWindow::on_EditorTabsRight_tabCloseRequested);
 
-    //git menu
 #ifdef ENABLE_VCS
+    //git menu
     connect(ui->menuGit, &QMenu::aboutToShow,
             this, &MainWindow::updateVCSActions);
 #endif
@@ -1442,6 +1444,10 @@ void MainWindow::setProjectCurrentFile(const QString &filename)
 
 void MainWindow::openFiles(const QStringList &files)
 {
+    mOpeningFiles=true;
+    auto action=finally([this]{
+        mOpeningFiles=false;
+    });
     mEditorList->beginUpdate();
     mOpenningFiles = true;
     auto end = finally([this] {
@@ -1464,8 +1470,12 @@ void MainWindow::openFiles(const QStringList &files)
     }
     mEditorList->endUpdate();
     Editor* e=mEditorList->getEditor();
-    if (e)
+    if (e) {
+        e->reparse(false);
+        e->checkSyntaxInBack();
+        e->reparseTodo();
         e->activate();
+    }
 }
 
 Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page)
@@ -1523,6 +1533,10 @@ Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page)
 
 void MainWindow::openProject(QString filename, bool openFiles)
 {
+    mOpeningProject=true;
+    auto action=finally([this]{
+        mOpeningProject=false;
+    });
     if (!fileExists(filename)) {
         return;
     }
@@ -3189,6 +3203,10 @@ bool MainWindow::saveLastOpens()
 
 void MainWindow::loadLastOpens()
 {
+    mOpeningFiles=true;
+    auto action=finally([this]{
+        mOpeningFiles=false;
+    });
     QString filename = includeTrailingPathDelimiter(pSettings->dirs().config()) + DEV_LASTOPENS_FILE;
     if (!fileExists(filename))
         return;
@@ -3275,8 +3293,15 @@ void MainWindow::loadLastOpens()
         updateEditorActions();
         //updateForEncodingInfo();
     }
-    if (focusedEditor)
+    if (!focusedEditor) {
+        focusedEditor = mEditorList->getEditor();
+    }
+    if (focusedEditor) {
+        focusedEditor->reparse(false);
+        focusedEditor->checkSyntaxInBack();
+        focusedEditor->reparseTodo();
         focusedEditor->activate();
+    }
 }
 
 void MainWindow::updateTools()
@@ -7548,7 +7573,8 @@ void MainWindow::reparseNonProjectEditors()
     for (int i=0;i<mEditorList->pageCount();i++) {
         Editor* e=(*mEditorList)[i];
         if (!e->inProject()) {
-            if (!pSettings->codeCompletion().clearWhenEditorHidden() || e->isVisible()) {
+//            if (!pSettings->codeCompletion().clearWhenEditorHidden() || e->isVisible()) {
+            if (e->isVisible()) {
                 e->reparse(true);
                 e->checkSyntaxInBack();
             }
@@ -7959,6 +7985,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
     refactor.renameSymbol(editor,oldCaretXY,newWord);
     editor->reparse(true);
     editor->checkSyntaxInBack();
+    editor->reparseTodo();
 }
 
 
@@ -10012,5 +10039,15 @@ void MainWindow::on_actionOI_Wiki_triggered()
 void MainWindow::on_actionTurtle_Graphics_Manual_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://zhuanlan.zhihu.com/p/538666844"));
+}
+
+bool MainWindow::openingProject() const
+{
+    return mOpeningProject;
+}
+
+bool MainWindow::openingFiles() const
+{
+    return mOpeningFiles;
 }
 

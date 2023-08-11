@@ -6526,6 +6526,7 @@ void parseFile(PCppParser parser, const QString& fileName, bool inProject, bool 
         return;
     if (!parser->enabled())
         return;
+//    qDebug()<<"parsing "<<fileName;
     //delete when finished
     CppFileParserThread* thread = new CppFileParserThread(parser,fileName,inProject,onlyIfNotParsed,updateView);
     thread->connect(thread,

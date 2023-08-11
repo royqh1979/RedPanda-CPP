@@ -4166,32 +4166,32 @@ void Settings::CodeCompletion::setShowCodeIns(bool newShowCodeIns)
     mShowCodeIns = newShowCodeIns;
 }
 
-bool Settings::CodeCompletion::clearWhenEditorHidden()
-{
-    if (!mShareParser) {
-#ifdef Q_OS_WIN
-        MEMORYSTATUSEX statex;
-        statex.dwLength = sizeof (statex);
-        GlobalMemoryStatusEx (&statex);
+//bool Settings::CodeCompletion::clearWhenEditorHidden()
+//{
+//    if (!mShareParser) {
+//#ifdef Q_OS_WIN
+//        MEMORYSTATUSEX statex;
+//        statex.dwLength = sizeof (statex);
+//        GlobalMemoryStatusEx (&statex);
 
-        if (statex.ullAvailPhys < (long long int)2*1024*1024*1024) {
-            return true;
-        }
-#elif defined(Q_OS_LINUX)
-        struct sysinfo si;
-        sysinfo(&si);
-        if (si.freeram < (long long int)2*1024*1024*1024) {
-            return true;
-        }
-#endif
-    }
-    return mClearWhenEditorHidden;
-}
+//        if (statex.ullAvailPhys < (long long int)2*1024*1024*1024) {
+//            return true;
+//        }
+//#elif defined(Q_OS_LINUX)
+//        struct sysinfo si;
+//        sysinfo(&si);
+//        if (si.freeram < (long long int)2*1024*1024*1024) {
+//            return true;
+//        }
+//#endif
+//    }
+//    return mClearWhenEditorHidden;
+//}
 
-void Settings::CodeCompletion::setClearWhenEditorHidden(bool newClearWhenEditorHidden)
-{
-    mClearWhenEditorHidden = newClearWhenEditorHidden;
-}
+//void Settings::CodeCompletion::setClearWhenEditorHidden(bool newClearWhenEditorHidden)
+//{
+//    mClearWhenEditorHidden = newClearWhenEditorHidden;
+//}
 
 int Settings::CodeCompletion::minCharRequired() const
 {
@@ -4357,7 +4357,7 @@ void Settings::CodeCompletion::doSave()
     saveValue("ignore_case",mIgnoreCase);
     saveValue("append_func",mAppendFunc);
     saveValue("show_code_ins",mShowCodeIns);
-    saveValue("clear_when_editor_hidden",mClearWhenEditorHidden);
+    //saveValue("clear_when_editor_hidden",mClearWhenEditorHidden);
     saveValue("min_char_required",mMinCharRequired);
     saveValue("hide_symbols_start_with_two_underline", mHideSymbolsStartsWithTwoUnderLine);
     saveValue("hide_symbols_start_with_underline", mHideSymbolsStartsWithUnderLine);
@@ -4412,7 +4412,7 @@ void Settings::CodeCompletion::doLoad()
 //        shouldShare = false;
 //    }
 //#endif
-    mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
+    //mClearWhenEditorHidden = boolValue("clear_when_editor_hidden",doClear);
     mShareParser = boolValue("share_parser",shouldShare);
 }
 

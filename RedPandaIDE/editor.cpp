@@ -217,9 +217,12 @@ Editor::Editor(QWidget *parent, const QString& filename,
             this, &Editor::onScrollBarValueChanged);
     mInited=true;
 
-    reparse(false);
-    checkSyntaxInBack();
-    reparseTodo();
+//    if (!pMainWindow->openingFiles()
+//            && !pMainWindow->openingProject()) {
+//        reparse(false);
+//        checkSyntaxInBack();
+//        reparseTodo();
+//    }
 }
 
 Editor::~Editor() {
@@ -1386,7 +1389,8 @@ void Editor::showEvent(QShowEvent */*event*/)
                 &CppParser::onEndParsing,
                 this,
                 &Editor::onEndParsing);
-        reparse(false);
+        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
+            reparse(false);
     }
     if (mParentPageControl) {
         pMainWindow->debugger()->setIsForProject(inProject());
@@ -1395,7 +1399,9 @@ void Editor::showEvent(QShowEvent */*event*/)
     }
 
     if (!pMainWindow->isClosingAll()
-                && !pMainWindow->isQuitting()) {
+                && !pMainWindow->isQuitting()
+            && !pMainWindow->openingFiles()
+            && !pMainWindow->openingProject()) {
         if (!inProject() || !pMainWindow->closingProject()) {
             checkSyntaxInBack();
             reparseTodo();
@@ -1418,12 +1424,13 @@ void Editor::showEvent(QShowEvent */*event*/)
 
 void Editor::hideEvent(QHideEvent */*event*/)
 {
-    if (pSettings->codeCompletion().clearWhenEditorHidden()
-            && !inProject() && mParser
-            && !pMainWindow->isMinimized()) {
-        //recreate a parser, to totally clean memories the parser uses;
-        resetCppParser(mParser);
-    }
+//    if (pSettings->codeCompletion().clearWhenEditorHidden()
+//            && !inProject() && mParser
+//            && !pMainWindow->isMinimized()) {
+//        //recreate a parser, to totally clean memories the parser uses;
+//        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
+//            resetCppParser(mParser);
+//    }
     if (mParser) {
         disconnect(mParser.get(),
                 &CppParser::onEndParsing,
