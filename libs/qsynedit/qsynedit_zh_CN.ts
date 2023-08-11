@@ -4300,8 +4300,9 @@
     </message>
     <message>
         <location filename="qsynedit/document.cpp" line="649"/>
-        <source>This is a binaray File!</source>
-        <translation type="unfinished"></translation>
+        <source>&apos;%1&apos; is a binaray File!</source>
+        <oldsource>This is a binaray File!</oldsource>
+        <translation>&apos;%1&apos;是二进制文件！</translation>
     </message>
     <message>
         <location filename="qsynedit/document.cpp" line="756"/>
@@ -4320,7 +4321,7 @@
         <location filename="qsynedit/painter.cpp" line="967"/>
         <source>The syntaxer seems to be in an infinite loop</source>
         <oldsource>The highlighter seems to be in an infinite loop</oldsource>
-        <translation type="unfinished">代码分析器似乎死循环了。</translation>
+        <translation>代码分析器似乎死循环了。</translation>
     </message>
 </context>
 </TS>

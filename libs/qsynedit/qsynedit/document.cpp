@@ -646,7 +646,7 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
                 line.remove(line.length()-1,1);
             }
             if (isBinaryContent(line))
-                throw BinaryFileError(tr("This is a binaray File!"));
+                throw BinaryFileError(tr("'%1' is a binaray File!").arg(filename));
             if (allAscii) {
                 allAscii = isTextAllAscii(line);
             }
