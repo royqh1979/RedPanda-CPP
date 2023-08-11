@@ -24,6 +24,7 @@ Red Panda C++ Version 2.24
   - change: New file created by file template is set as unmodified by default.
   - change: Remove option "clear all symbols when current editor is hidden".
   - fix: When opening multiple files, only the active file should be parsed.
+  - fix: Wrong compiler settings if xcode is not installed in mac os.
 
 Red Panda C++ Version 2.23
 

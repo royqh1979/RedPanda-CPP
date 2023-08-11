@@ -2254,7 +2254,7 @@ void Settings::CompilerSet::setProperties(const QString& binDir, const QString& 
 #endif
             }
         }
-    }
+    }        
 
     // Set compiler folder
     QDir tmpDir(binDir);
@@ -2810,7 +2810,7 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
     }
     // Default, release profile
     PCompilerSet baseSet = addSet(folder,c_prog);
-    if (!baseSet)
+    if (!baseSet || baseSet->name().isEmpty())
         return false;
     QString baseName = baseSet->name();
     QString platformName;
