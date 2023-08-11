@@ -60,19 +60,20 @@ public:
 
     void forceCloseEditor(Editor* editor);
 
-    Editor* getOpenedEditorByFilename(QString filename);
+    Editor* getOpenedEditorByFilename(QString filename) const;
 
-    bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer);
+    bool getContentFromOpenedEditor(const QString& filename, QStringList& buffer) const;
 
-    void getVisibleEditors(Editor*& left, Editor*& right);
+    void getVisibleEditors(Editor*& left, Editor*& right) const;
     void updateLayout();
 
     void beginUpdate();
     void endUpdate();
     void applySettings();
     void applyColorSchemes(const QString& name);
-    bool isFileOpened(const QString& name);
-    int pageCount();
+    bool isFileOpened(const QString& fullfilepath) const;
+    bool hasFilename(const QString& filename) const;
+    int pageCount() const;
     void selectNextPage();
     void selectPreviousPage();
 

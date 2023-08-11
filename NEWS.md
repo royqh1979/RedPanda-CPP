@@ -25,6 +25,7 @@ Red Panda C++ Version 2.24
   - change: Remove option "clear all symbols when current editor is hidden".
   - fix: When opening multiple files, only the active file should be parsed.
   - fix: Wrong compiler settings if xcode is not installed in mac os.
+  - enhancement: Name for new files will not be different from files openned.
 
 Red Panda C++ Version 2.23
 

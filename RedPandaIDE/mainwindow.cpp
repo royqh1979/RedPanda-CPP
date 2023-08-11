@@ -3362,14 +3362,19 @@ void MainWindow::updateTools()
 void MainWindow::newEditor(const QString& suffix)
 {
     try {
-        QString filename=QString("untitled%1").arg(getNewFileNumber());
-        if (suffix.isEmpty()) {
-            if (pSettings->editor().defaultFileCpp())
-                filename+=".cpp";
-            else
-                filename+=".c";
-        } else
-            filename+= "." + suffix;
+        QString filename;
+
+        do {
+            filename = QString("untitled%1").arg(getNewFileNumber());
+            if (suffix.isEmpty()) {
+                if (pSettings->editor().defaultFileCpp())
+                    filename+=".cpp";
+                else
+                    filename+=".c";
+            } else
+                filename+= "." + suffix;
+
+        } while(mEditorList->hasFilename(filename));
         Editor * editor=mEditorList->newEditor(filename,
                                                pSettings->editor().defaultEncoding(),
                                                nullptr,true);

@@ -4385,7 +4385,7 @@ void Settings::CodeCompletion::doLoad()
     mHideSymbolsStartsWithUnderLine = boolValue("hide_symbols_start_with_underline", false);
 
     bool shouldShare= true;
-    bool doClear = false;
+//    bool doClear = false;
 
 //#ifdef Q_OS_WIN
 //    MEMORYSTATUSEX statex;
