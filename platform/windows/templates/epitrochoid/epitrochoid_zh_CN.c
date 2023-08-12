@@ -21,7 +21,7 @@ void updateRadius(int baseL, int outerL, int pointL, int *pBaseR, int *pOuterR, 
 		totalL+=pointL;
 	else
 		totalL+=outerL;
-	int totalR = 420;
+	int totalR = 340;
 	int remainder = totalR % totalL;
 	if (remainder!=0) {
 		if (remainder < totalL / 2) {
@@ -41,14 +41,14 @@ int main() {
 	int outerL=13;	//默认外旋轮相对半径
 	int pointL=3;	//默认笔尖在滚动圆中相对位置
 	int baseR,outerR,pointR;
-	int cx=450,cy=450;
+	int cx=350,cy=350;
 	int speed = 1;
 	
 	Color trackColor = BLUE;
 	updateRadius(baseL, outerL, pointL, &baseR, &outerR, & pointR);
 	
 	//初始化绘图窗口
-	InitWindow(1300,900,"Epitrochoid");
+	InitWindow(1000,700,"Epitrochoid");
 	SetTraceLogLevel(LOG_WARNING);
 	SetTargetFPS(60);
 	
@@ -68,13 +68,13 @@ int main() {
 	GuiSetStyle(DEFAULT,TEXT_SIZE,20);
 	
 	// 轨迹图层
-	Image trackImage=GenImageColor(900,900,WHITE);
+	Image trackImage=GenImageColor(700,700,WHITE);
 	// 绘制图层边框
-	ImageFillRectangleEx(&trackImage,0,0,900,900,LIGHTGRAY);
-	ImageFillRectangleEx(&trackImage,5,5,890,890,WHITE);
+	ImageFillRectangleEx(&trackImage,0,0,700,700,LIGHTGRAY);
+	ImageFillRectangleEx(&trackImage,5,5,690,690,WHITE);
 	
 	//转动圆图层
-	Image circlesImage = GenImageColor(900,900,BLANK);
+	Image circlesImage = GenImageColor(700,700,BLANK);
 	float r=0;
 	int lastx,lasty;
 	lasty=cy;
@@ -90,7 +90,7 @@ int main() {
 		speed = GuiSliderBar((Rectangle){ 90, 150, 180, 30 },"速度",TextFormat("%i", (int)speed), speed, 1, 50);
 		GuiLabel((Rectangle){ 20, 220, 180, 30 },TextFormat("颜色: 0x%02X%02X%02X",(int)(trackColor.r), (int)(trackColor.g),(int)(trackColor.b)));
 		trackColor= GuiColorPicker((Rectangle){ 50, 250, 196, 192 }, NULL, trackColor);
-		int doClear = GuiButton((Rectangle){ 120, 700, 80, 30 },"清除");
+		int doClear = GuiButton((Rectangle){ 120, 500, 80, 30 },"清除");
 		if (newOuterL!=outerL || newBaseL!=baseL || newPointL!=pointL) {
 			//圆参数有变化，清除轨迹图层
 			if (newOuterL!=outerL) 
@@ -104,13 +104,13 @@ int main() {
 			lastx=cx+(baseR+outerR-pointR);
 			r=0;
 			ImageClearBackground(&trackImage,WHITE); 
-			ImageFillRectangleEx(&trackImage,0,0,900,900,LIGHTGRAY);
-			ImageFillRectangleEx(&trackImage,5,5,890,890,WHITE);			
+			ImageFillRectangleEx(&trackImage,0,0,700,700,LIGHTGRAY);
+			ImageFillRectangleEx(&trackImage,5,5,690,690,WHITE);			
 		} else if (doClear) {
 			//按下了清除按钮，清除轨迹图层
 			ImageClearBackground(&trackImage,WHITE);
-			ImageFillRectangleEx(&trackImage,0,0,900,900,LIGHTGRAY);
-			ImageFillRectangleEx(&trackImage,5,5,890,890,WHITE);						
+			ImageFillRectangleEx(&trackImage,0,0,700,700,LIGHTGRAY);
+			ImageFillRectangleEx(&trackImage,5,5,690,690,WHITE);						
 		}
 		
 		//更新圆位置
