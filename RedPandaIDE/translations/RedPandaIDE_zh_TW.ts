@@ -2013,6 +2013,10 @@
         <source>Checking single file...</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>GNU Assembler</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FilePropertiesDialog</name>

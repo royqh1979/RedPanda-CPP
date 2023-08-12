@@ -112,7 +112,7 @@ bool FileCompiler::prepareForCompile()
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
         mArguments += getProjectIncludeArguments();
-        strFileType = "GNU Assembler";
+        strFileType = tr("GNU Assembler");
         mCompiler = compilerSet()->CCompiler();
         break;
     case FileType::CSource:
