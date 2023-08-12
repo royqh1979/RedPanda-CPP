@@ -83,7 +83,7 @@ RedPandaIDE
    ```
    Windows 宿主：
    ```ps1
-   $ARCH = "x86_64" # 或 "aarch64"（如果将来 Docker 或 Podman 支持 WoA）
+   $ARCH = "x86_64" # 或 "aarch64"
    $DOCKER = "docker" # 或 "podman"
    & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
@@ -104,4 +104,20 @@ RedPandaIDE
    ./dist/RedPandaIDE-x86_64.AppImage # 或 *-aarch64.AppImage
    ```
 
-注意：AppImage 与 QEMU 用户态模拟不兼容，使用此格式的 AppImageKit 工具自然不能用 QEMU 用户态模拟来运行。因此不能在 x86-64 系统上构建 AArch64 AppImage，反之亦然。
+## 异架构的模拟本机构建（emulated native build）
+
+可以借助 QEMU 用户空间模拟，运行目标架构的本机工具链，来构建小熊猫 C++。
+
+注意：始终**在容器中**运行模拟本机构建，因为混用不同架构的程序和库可能会损坏系统。
+
+对于 Linux 宿主，需要安装静态链接的 QEMU 用户空间模拟器（包名通常为 `qemu-user-static`）并确认已经启用 binfmt 支持。
+
+对于 Windows 宿主，Docker 和 Podman 应该已经启用了 QEMU 用户空间模拟。如果没有启用，
+* Docker：
+  ```ps1
+  docker run --rm --privileged multiarch/qemu-user-static:register
+  ```
+* Podman（其虚拟机基于 Fedora WSL）只需要启用 binfmt 支持：
+  ```ps1
+  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
+  ```

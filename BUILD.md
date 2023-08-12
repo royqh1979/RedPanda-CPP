@@ -80,7 +80,7 @@ Note that makepkg checks out HEAD of the repo, so any change should be committed
    ```
    Windows host:
    ```ps1
-   $ARCH = "x86_64" # or "aarch64" someday Docker or Podman is available on WoA
+   $ARCH = "x86_64" # or "aarch64"
    $DOCKER = "docker" # or "podman"
    & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
@@ -101,4 +101,20 @@ Note that makepkg checks out HEAD of the repo, so any change should be committed
    ./dist/RedPandaIDE-x86_64.AppImage # or *-aarch64.AppImage
    ```
 
-Note: AppImage, in which format AppImageKit is shipped, is incompatable with QEMU user space emulator, so you cannot build AArch64 AppImage on x86-64, and vice versa.
+## Emulated Native Build for Foreign Architectures
+
+It is possible to build Red Panda C++ for foreign architectures using targets’ native toolchains with QEMU user space emulation.
+
+Note: Always run emulated native build **in containers**. Mixing architectures may kill your system.
+
+For Linux host, install statically linked QEMU user space emulator (package name is likely `qemu-user-static`) and make sure that binfmt support is enabled.
+
+For Windows host, Docker and Podman should have QEMU user space emulation enabled. If not,
+* For Docker:
+  ```ps1
+  docker run --rm --privileged multiarch/qemu-user-static:register
+  ```
+* For Podman, whose virtual machine is based on Fedora WSL, simply enable binfmt support:
+  ```ps1
+  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
+  ```
