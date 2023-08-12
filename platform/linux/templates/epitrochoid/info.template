@@ -11,6 +11,7 @@ Category[zh_CN]=游戏
 [Unit0]
 CName=main.c
 C=epitrochoid_c.txt
+C[zh_CN]=epitrochoid_zh_CN.c
 
 [Project]
 UnitCount=1
