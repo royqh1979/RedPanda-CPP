@@ -74,13 +74,13 @@ Note that makepkg checks out HEAD of the repo, so any change should be committed
    - PowerShell (Core) or Windows PowerShell.
 2. Prepare build environment. Linux host:
    ```bash
-   ARCH=x86_64 # or aarch64
+   ARCH=x86_64 # or aarch64, riscv64
    DOCKER=docker # or podman
    $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
    Windows host:
    ```ps1
-   $ARCH = "x86_64" # or "aarch64"
+   $ARCH = "x86_64" # or "aarch64", "riscv64"
    $DOCKER = "docker" # or "podman"
    & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
@@ -98,7 +98,7 @@ Note that makepkg checks out HEAD of the repo, so any change should be committed
    ```
 4. Run Red Panda C++.
    ```bash
-   ./dist/RedPandaIDE-x86_64.AppImage # or *-aarch64.AppImage
+   ./dist/RedPandaIDE-x86_64.AppImage # or *-aarch64.AppImage, *-riscv64.AppImage
    ```
 
 ## Emulated Native Build for Foreign Architectures
@@ -117,4 +117,5 @@ For Windows host, Docker and Podman should have QEMU user space emulation enable
 * For Podman, whose virtual machine is based on Fedora WSL, simply enable binfmt support:
   ```ps1
   wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
+  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-riscv64-static.conf /proc/sys/fs/binfmt_misc/register
   ```

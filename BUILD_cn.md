@@ -77,13 +77,13 @@ RedPandaIDE
    - PowerShell (Core) 或 Windows PowerShell。
 2. 准备构建环境。Linux 宿主：
    ```bash
-   ARCH=x86_64 # 或 aarch64
+   ARCH=x86_64 # 或 aarch64、riscv64
    DOCKER=docker # 或 podman
    $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
    Windows 宿主：
    ```ps1
-   $ARCH = "x86_64" # 或 "aarch64"
+   $ARCH = "x86_64" # 或 "aarch64"、"riscv64"
    $DOCKER = "docker" # 或 "podman"
    & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
    ```
@@ -101,7 +101,7 @@ RedPandaIDE
    ```
 4. 运行小熊猫 C++.
    ```bash
-   ./dist/RedPandaIDE-x86_64.AppImage # 或 *-aarch64.AppImage
+   ./dist/RedPandaIDE-x86_64.AppImage # 或 *-aarch64.AppImage、*-riscv64.AppImage
    ```
 
 ## 异架构的模拟本机构建（emulated native build）
@@ -120,4 +120,5 @@ RedPandaIDE
 * Podman（其虚拟机基于 Fedora WSL）只需要启用 binfmt 支持：
   ```ps1
   wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
+  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-riscv64-static.conf /proc/sys/fs/binfmt_misc/register
   ```
