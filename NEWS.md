@@ -26,6 +26,7 @@ Red Panda C++ Version 2.24
   - fix: When opening multiple files, only the active file should be parsed.
   - fix: Wrong compiler settings if xcode is not installed in mac os.
   - enhancement: Name for new files will not be different from files openned.
+  - fix: Crash if close file while auto syntax checking.
 
 Red Panda C++ Version 2.23
 

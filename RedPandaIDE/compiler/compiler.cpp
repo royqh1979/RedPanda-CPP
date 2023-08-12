@@ -323,7 +323,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileTyp
     // test if force utf8 from autolink infos
     if ((fileType == FileType::CSource ||
             fileType == FileType::CppSource) && pSettings->editor().enableAutolink() ){
-        Editor* editor = pMainWindow->editorList()->getEditor();
+        Editor* editor = pMainWindow->editorList()->getOpenedEditorByFilename(mFilename);
         if (editor) {
             PCppParser parser = editor->parser();
             if (parser) {
@@ -340,7 +340,7 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileTyp
                 }
                 QSet<QString> parsedFiles;
                 forceExecUTF8 = parseForceUTF8ForAutolink(
-                            editor->filename(),
+                            mFilename,
                             parsedFiles,
                             parser);
             }

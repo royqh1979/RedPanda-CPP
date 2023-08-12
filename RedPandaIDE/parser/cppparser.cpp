@@ -66,6 +66,7 @@ CppParser::CppParser(QObject *parent) : QObject(parent)
 
 CppParser::~CppParser()
 {
+    //qDebug()<<"delete parser";
     while (true) {
         //wait for all methods finishes running
         {
@@ -75,6 +76,7 @@ CppParser::~CppParser()
               break;
             }
         }
+        //qDebug()<<"waiting for parse finished";
         QThread::msleep(50);
         QCoreApplication* app = QApplication::instance();
         app->processEvents();

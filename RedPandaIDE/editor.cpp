@@ -192,6 +192,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     mStatementColors = pMainWindow->statementColors();
     if (mParentPageControl) {
+        //first showEvent triggered here
         mParentPageControl->addTab(this,"");
         updateCaption();
     }
@@ -217,12 +218,13 @@ Editor::Editor(QWidget *parent, const QString& filename,
             this, &Editor::onScrollBarValueChanged);
     mInited=true;
 
-//    if (!pMainWindow->openingFiles()
-//            && !pMainWindow->openingProject()) {
-//        reparse(false);
-//        checkSyntaxInBack();
-//        reparseTodo();
-//    }
+    //show event is trigged when this is added to the qtabwidget
+    if (!pMainWindow->openingFiles()
+            && !pMainWindow->openingProject()) {
+        reparse(false);
+        checkSyntaxInBack();
+        reparseTodo();
+    }
 }
 
 Editor::~Editor() {
@@ -3106,7 +3108,7 @@ void Editor::reparse(bool resetParser)
         return;
     if (!mParser->enabled())
         return;
-
+    //qDebug()<<"reparse "<<mFilename;
     //mParser->setEnabled(pSettings->codeCompletion().enabled());
     ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
     if (!inProject()) {
