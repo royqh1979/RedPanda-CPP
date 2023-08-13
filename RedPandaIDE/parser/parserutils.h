@@ -26,7 +26,8 @@ using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>
 
 enum ParserLanguage {
     C,
-    CPlusPlus
+    CPlusPlus,
+    SDCC
 };
 
 struct CodeSnippet {
@@ -303,6 +304,8 @@ using PFileIncludes = std::shared_ptr<FileIncludes>;
 extern QStringList CppDirectives;
 extern QStringList JavadocTags;
 extern QMap<QString,KeywordType> CppKeywords;
+extern QMap<QString,KeywordType> SDCCKeywords;
+extern QSet<QString> SDCCTypeKeywords;
 extern QSet<QString> CppControlKeyWords;
 extern QSet<QString> CKeywords;
 extern QSet<QString> CppTypeKeywords;

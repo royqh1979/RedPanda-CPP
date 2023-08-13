@@ -8,6 +8,7 @@
 #define COMPILER_CLANG "Clang"
 #define COMPILER_GCC "GCC"
 #define COMPILER_GCC_UTF8 "GCC_UTF8"
+#define COMPILER_SDCC "SDCC"
 
 #define C_CMD_OPT_STD "c_cmd_opt_std"
 
@@ -45,6 +46,9 @@
 #define CC_CMD_OPT_STOP_AFTER_PREPROCESSING "cc_cmd_opt_stop_after_preprocessing"
 #define CC_CMD_OPT_USE_PIPE "cc_cmd_opt_use_pipe"
 
+#define SDCC_CMD_OPT_PROCESSOR "sdcc_cmd_opt_processor"
+#define SDCC_CMD_OPT_STD "sdcc_cmd_opt_std"
+
 #define COMPILER_OPTION_ON "on"
 #define COMPILER_OPTION_OFF ""
 
@@ -52,6 +56,7 @@ enum class CompilerType {
     GCC,
     GCC_UTF8,
     Clang,
+    SDCC,
     Unknown
 };
 
@@ -87,6 +92,8 @@ public:
     virtual bool supportConvertingCharset()=0;
     virtual bool forceUTF8InDebugger()=0;
     virtual bool forceUTF8InMakefile()=0;
+    virtual bool supportStaticLink()=0;
+    virtual bool supportSyntaxCheck();
 protected:
     void addOption(const QString& key,
                    const QString& name,
@@ -112,12 +119,13 @@ using PCompilerInfoManager = std::shared_ptr<CompilerInfoManager>;
 class CompilerInfoManager {
 public:
     CompilerInfoManager();
-    static bool supportSyntaxCheck(CompilerType compilerType);
     static PCompilerInfo getInfo(CompilerType compilerType);
     static bool hasCompilerOption(CompilerType compilerType, const QString& optKey);
     static PCompilerOption getCompilerOption(CompilerType compilerType, const QString& optKey);
     static QList<PCompilerOption> getCompilerOptions(CompilerType compilerType);
     static bool supportCovertingCharset(CompilerType compilerType);
+    static bool supportStaticLink(CompilerType compilerType);
+    static bool supportSyntaxCheck(CompilerType compilerType);
     static bool forceUTF8InDebugger(CompilerType compilerType);
     static PCompilerInfoManager getInstance();
     static void addInfo(CompilerType compilerType, PCompilerInfo info);
@@ -132,6 +140,7 @@ public:
     bool supportConvertingCharset() override;
     bool forceUTF8InDebugger() override;
     bool forceUTF8InMakefile() override;
+    bool supportStaticLink() override;
 };
 
 class GCCCompilerInfo: public CompilerInfo{
@@ -140,6 +149,7 @@ public:
     bool supportConvertingCharset() override;
     bool forceUTF8InDebugger() override;
     bool forceUTF8InMakefile() override;
+    bool supportStaticLink() override;
 };
 
 class GCCUTF8CompilerInfo: public CompilerInfo{
@@ -148,8 +158,20 @@ public:
     bool supportConvertingCharset() override;
     bool forceUTF8InDebugger() override;
     bool forceUTF8InMakefile() override;
+    bool supportStaticLink() override;
 };
 
+class SDCCCompilerInfo: public CompilerInfo{
+public:
+    SDCCCompilerInfo();
+    bool supportConvertingCharset() override;
+    bool forceUTF8InDebugger() override;
+    bool forceUTF8InMakefile() override;
+    bool supportStaticLink() override;
+    bool supportSyntaxCheck() override;
+protected:
+    void prepareCompilerOptions() override;
+};
 
 
 #endif // COMPILERINFO_H

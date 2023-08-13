@@ -1441,7 +1441,11 @@ public:
         bool isCompilerInfoUsingUTF8() const;
 
     private:
-        void setDirectories(const QString& binDir, CompilerType mCompilerType);
+        void setGCCProperties(const QString& binDir, const QString& c_prog);
+        void setSDCCProperties(const QString& binDir, const QString& c_prog);
+        void setDirectories(const QString& binDir);
+        void setGCCDirectories(const QString& binDir);
+        void setSDCCDirectories(const QString& binDir);
         //load hard defines
         void setExecutables();
         void setUserInput();

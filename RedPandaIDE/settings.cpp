@@ -26,6 +26,7 @@
 #include <QStandardPaths>
 #include <QScreen>
 #include <QDesktopWidget>
+#include <QRegularExpression>
 #ifdef Q_OS_LINUX
 #include <sys/sysinfo.h>
 #endif
@@ -1701,7 +1702,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
         setProperties(compilerFolder,c_prog);
 
         //manually set the directories
-        setDirectories(compilerFolder, mCompilerType);
+        setDirectories(compilerFolder);
 
         setExecutables();
 
@@ -2008,7 +2009,7 @@ QStringList &Settings::CompilerSet::defaultCIncludeDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0],mCompilerType);
+        setDirectories(binDirs()[0]);
     }
     return mDefaultCIncludeDirs;
 }
@@ -2017,7 +2018,7 @@ QStringList &Settings::CompilerSet::defaultCppIncludeDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0],mCompilerType);
+        setDirectories(binDirs()[0]);
     }
     return mDefaultCppIncludeDirs;
 }
@@ -2026,7 +2027,7 @@ QStringList &Settings::CompilerSet::defaultLibDirs()
 {
     if (!mFullLoaded && !binDirs().isEmpty()) {
         mFullLoaded=true;
-        setDirectories(binDirs()[0],mCompilerType);
+        setDirectories(binDirs()[0]);
     }
     return mLibDirs;
 }
@@ -2154,6 +2155,15 @@ static void addExistingDirectory(QStringList& dirs, const QString& directory) {
 
 void Settings::CompilerSet::setProperties(const QString& binDir, const QString& c_prog)
 {
+    if (c_prog == SDCC_PROGRAM) {
+        setSDCCProperties(binDir,c_prog);
+    } else {
+        setGCCProperties(binDir,c_prog);
+    }
+}
+
+void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QString& c_prog)
+{
     // We have tested before the call
 //    if (!fileExists(c_prog))
 //        return;
@@ -2268,10 +2278,6 @@ void Settings::CompilerSet::setProperties(const QString& binDir, const QString& 
 
     // Add the default directories
     addExistingDirectory(mBinDirs, includeTrailingPathDelimiter(folder) +  "bin");
-//    addExistingDirectory(mDefaultLibDirs, includeTrailingPathDelimiter(folder) + "lib");
-//    addExistingDirectory(mDefaultCIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
-//    addExistingDirectory(mDefaultCppIncludeDirs, includeTrailingPathDelimiter(folder) + "include");
-
     if (!mDumpMachine.isEmpty()) {
         //mingw-w64 bin folder
         addExistingDirectory(mBinDirs,
@@ -2281,6 +2287,39 @@ void Settings::CompilerSet::setProperties(const QString& binDir, const QString& 
     }
 }
 
+void Settings::CompilerSet::setSDCCProperties(const QString& binDir, const QString& c_prog)
+{
+    // We have tested before the call
+//    if (!fileExists(c_prog))
+//        return;
+    // Obtain version number and compiler distro etc
+    QStringList arguments;
+    arguments.append("-v");
+    QByteArray output = getCompilerOutput(binDir, c_prog,arguments);
+
+    if (!output.startsWith("SDCC"))
+        return;
+
+    //Target
+    int delimPos = 0;
+    while (delimPos<output.length() && (output[delimPos]>=32))
+        delimPos++;
+    QString triplet = output.mid(0,delimPos);
+
+    qDebug()<<triplet;
+    QRegularExpression re("\\s+(\\d+\\.\\d+\\.\\d+)\\s+");
+    QRegularExpressionMatch match = re.match(triplet);
+    if (match.hasMatch())
+        mVersion = match.captured(1);
+    if (mVersion.isEmpty())
+        mName = "SDCC";
+    else
+        mName = "SDCC "+mVersion;
+    mCompilerType=CompilerType::SDCC;
+
+    addExistingDirectory(mBinDirs, binDir);
+}
+
 QStringList Settings::CompilerSet::defines(bool isCpp) {
     // get default defines
     QStringList arguments;
@@ -2288,12 +2327,17 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
     arguments.append("-E");
     arguments.append("-x");
     QString key;
-    if (isCpp) {
-        arguments.append("c++");
-        key=CC_CMD_OPT_STD;
-    } else {
+    if (mCompilerType==CompilerType::SDCC) {
         arguments.append("c");
-        key=C_CMD_OPT_STD;
+        key=SDCC_CMD_OPT_PROCESSOR;
+    } else {
+        if (isCpp) {
+            arguments.append("c++");
+            key=CC_CMD_OPT_STD;
+        } else {
+            arguments.append("c");
+            key=C_CMD_OPT_STD;
+        }
     }
     //language standard
     PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerType(), key);
@@ -2321,7 +2365,11 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
 
 void Settings::CompilerSet::setExecutables()
 {
-    if (mCompilerType == CompilerType::Clang) {
+    if (mCompilerType == CompilerType::SDCC) {
+        mCCompiler =  findProgramInBinDirs(SDCC_PROGRAM);
+        if (mCCompiler.isEmpty())
+            mCCompiler =  findProgramInBinDirs(SDCC_PROGRAM);
+    } else if (mCompilerType == CompilerType::Clang) {
         mCCompiler =  findProgramInBinDirs(CLANG_PROGRAM);
         mCppCompiler = findProgramInBinDirs(CLANG_CPP_PROGRAM);
         mDebugger = findProgramInBinDirs(GDB_PROGRAM);
@@ -2349,11 +2397,20 @@ void Settings::CompilerSet::setExecutables()
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
 }
 
-void Settings::CompilerSet::setDirectories(const QString& binDir,CompilerType compilerType)
+void Settings::CompilerSet::setDirectories(const QString& binDir)
+{
+    if (mCompilerType == CompilerType::SDCC) {
+        setSDCCDirectories(binDir);
+    } else {
+        setGCCDirectories(binDir);
+    }
+}
+
+void Settings::CompilerSet::setGCCDirectories(const QString& binDir)
 {
     QString folder = QFileInfo(binDir).absolutePath();
     QString c_prog;
-    if (compilerType==CompilerType::Clang)
+    if (mCompilerType==CompilerType::Clang)
         c_prog = CLANG_PROGRAM;
     else
         c_prog = GCC_PROGRAM;
@@ -2491,6 +2548,62 @@ void Settings::CompilerSet::setDirectories(const QString& binDir,CompilerType co
     }
 }
 
+void Settings::CompilerSet::setSDCCDirectories(const QString& binDir)
+{
+    QString folder = QFileInfo(binDir).absolutePath();
+    QString c_prog = SDCC_PROGRAM;
+    // Find default directories
+    // C include dirs
+    QStringList arguments;
+    arguments.clear();
+    arguments.append("--print-search-dirs");
+    QByteArray output = getCompilerOutput(binDir,c_prog,arguments);
+
+    //bindirs
+    QByteArray targetStr = QByteArray("programs:");
+    int delimPos1 = output.indexOf(targetStr);
+    int delimPos2 = output.indexOf("datadir:");
+    if (delimPos1 >0 && delimPos2>delimPos1 ) {
+        delimPos1 += targetStr.length();
+        QList<QByteArray> lines = output.mid(delimPos1, delimPos2-delimPos1).split('\n');
+        for (QByteArray& line:lines) {
+            QByteArray trimmedLine = line.trimmed();
+            if (!trimmedLine.isEmpty()) {
+                addExistingDirectory(mBinDirs,trimmedLine);
+            }
+        }
+    }
+
+    targetStr = QByteArray("includedir:");
+    delimPos1 = output.indexOf(targetStr);
+    delimPos2 = output.indexOf("libdir:");
+    if (delimPos1 >0 && delimPos2>delimPos1 ) {
+        delimPos1 += targetStr.length();
+        QList<QByteArray> lines = output.mid(delimPos1, delimPos2-delimPos1).split('\n');
+        for (QByteArray& line:lines) {
+            QByteArray trimmedLine = line.trimmed();
+            if (!trimmedLine.isEmpty()) {
+                addExistingDirectory(mDefaultCIncludeDirs,trimmedLine);
+            }
+        }
+    }
+
+    targetStr = QByteArray("libdir:");
+    delimPos1 = output.indexOf(targetStr);
+    delimPos2 = output.indexOf("libpath:");
+    if (delimPos1 >0 && delimPos2>delimPos1 ) {
+        delimPos1 += targetStr.length();
+        QList<QByteArray> lines = output.mid(delimPos1, delimPos2-delimPos1).split('\n');
+        for (QByteArray& line:lines) {
+            QByteArray trimmedLine = line.trimmed();
+            if (!trimmedLine.isEmpty()) {
+                addExistingDirectory(mDefaultLibDirs,trimmedLine);
+            }
+        }
+    }
+
+}
+
 int Settings::CompilerSet::mainVersion() const
 {
     int i = mVersion.indexOf('.');
@@ -2528,8 +2641,13 @@ void Settings::CompilerSet::setUserInput()
 {
     mUseCustomCompileParams = false;
     mUseCustomLinkParams = false;
-    mAutoAddCharsetParams = true;
-    mStaticLink = true;
+    if (mCompilerType==CompilerType::SDCC) {
+        mAutoAddCharsetParams = false;
+        mStaticLink = false;
+    } else {
+        mAutoAddCharsetParams = true;
+        mStaticLink = true;
+    }
 }
 
 
@@ -2812,45 +2930,44 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
     PCompilerSet baseSet = addSet(folder,c_prog);
     if (!baseSet || baseSet->name().isEmpty())
         return false;
-    QString baseName = baseSet->name();
-    QString platformName;
-    if (isTarget64Bit(baseSet->target())) {
-        if (baseName.startsWith("TDM-GCC ")) {
-            PCompilerSet set= addSet(baseSet);
-            platformName = "32-bit";
-            set->setName(baseName + " " + platformName + " Release");
-            set64_32Options(set);
-            setReleaseOptions(set);
-
-            set = addSet(baseSet);
-            set->setName(baseName + " " + platformName + " Debug");
-            set64_32Options(set);
-            setDebugOptions(set);
-        }
-        platformName = "64-bit";
+    if (c_prog == SDCC_PROGRAM) {
+        //sdcc do nothing
     } else {
-        platformName = "32-bit";
-    }
+        QString baseName = baseSet->name();
+        QString platformName;
+        if (isTarget64Bit(baseSet->target())) {
+            if (baseName.startsWith("TDM-GCC ")) {
+                PCompilerSet set= addSet(baseSet);
+                platformName = "32-bit";
+                set->setName(baseName + " " + platformName + " Release");
+                set64_32Options(set);
+                setReleaseOptions(set);
+
+                set = addSet(baseSet);
+                set->setName(baseName + " " + platformName + " Debug");
+                set64_32Options(set);
+                setDebugOptions(set);
+            }
+            platformName = "64-bit";
+        } else {
+            platformName = "32-bit";
+        }
 
 
-    PCompilerSet debugSet = addSet(baseSet);
-    debugSet->setName(baseName + " " + platformName + " Debug");
-    setDebugOptions(debugSet);
+        PCompilerSet debugSet = addSet(baseSet);
+        debugSet->setName(baseName + " " + platformName + " Debug");
+        setDebugOptions(debugSet);
 
-    // Enable ASan compiler set if it is supported and gdb works with ASan.
+        // Enable ASan compiler set if it is supported and gdb works with ASan.
 #ifdef Q_OS_LINUX
-    PCompilerSet debugAsanSet = addSet(baseSet);
-    debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
-    setDebugOptions(debugAsanSet, true);
+        PCompilerSet debugAsanSet = addSet(baseSet);
+        debugAsanSet->setName(baseName + " " + platformName + " Debug with ASan");
+        setDebugOptions(debugAsanSet, true);
 #endif
 
-    baseSet->setName(baseName + " " + platformName + " Release");
-    setReleaseOptions(baseSet);
-
-//    baseSet = addSet(folder);
-//    baseSet->setName(baseName + " " + platformName + " Profiling");
-//    baseSet->setCompilerSetType(CompilerSetType::CST_PROFILING);
-//    setProfileOptions(baseSet);
+        baseSet->setName(baseName + " " + platformName + " Release");
+        setReleaseOptions(baseSet);
+    }
 
 #ifdef Q_OS_LINUX
 # if defined(__x86_64__) || __SIZEOF_POINTER__ == 4
@@ -2870,17 +2987,19 @@ bool Settings::CompilerSets::addSets(const QString &folder)
 {
     if (!directoryExists(folder))
         return false;
-    if (!fileExists(folder, GCC_PROGRAM) && !fileExists(folder, CLANG_PROGRAM)) {
-        return false;
-    }
     if (fileExists(folder, GCC_PROGRAM)) {
         addSets(folder,GCC_PROGRAM);
+        return true;
     }
     if (fileExists(folder, CLANG_PROGRAM)) {
         addSets(folder,CLANG_PROGRAM);
+        return true;
     }
-    return true;
-
+    if (fileExists(folder, SDCC_PROGRAM)) {
+        addSets(folder,SDCC_PROGRAM);
+        return true;
+    }
+    return false;
 }
 
 void Settings::CompilerSets::clearSets()
@@ -3214,6 +3333,8 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
         pSet->setCompilerType(CompilerType::GCC);
     } else if (temp==COMPILER_GCC_UTF8) {
         pSet->setCompilerType(CompilerType::GCC_UTF8);
+    } else if (temp==COMPILER_SDCC) {
+        pSet->setCompilerType(CompilerType::SDCC);
     } else {
         pSet->setCompilerType((CompilerType)mSettings->mSettings.value("CompilerType").toInt());
     }

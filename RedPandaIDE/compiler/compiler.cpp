@@ -41,8 +41,10 @@ Compiler::Compiler(const QString &filename, bool silent, bool onlyCheckSyntax):
     mSilent(silent),
     mOnlyCheckSyntax(onlyCheckSyntax),
     mFilename(filename),
-    mRebuild(false)
+    mRebuild(false),
+    mParser()
 {
+    getParserForFile(filename);
 }
 
 void Compiler::run()
@@ -170,11 +172,12 @@ CompileIssueType Compiler::getIssueTypeFromOutputLine(QString &line)
     int pos = line.indexOf(':');
     if (pos>=0) {
         QString s=line.mid(0,pos);
-        if (s == "error" || s == "fatal error") {
+        if (s == "error" || s == "fatal error"
+                || s == "syntax error") {
             mErrorCount += 1;
             line = tr("[Error] ")+line.mid(pos+1);
             result = CompileIssueType::Error;
-        } else if (s == "warning") {
+        } else if (s.startsWith("warning")) {
             mWarningCount += 1;
             line = tr("[Warning] ")+line.mid(pos+1);
             result = CompileIssueType::Warning;
@@ -322,30 +325,25 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileTyp
     bool forceExecUTF8=false;
     // test if force utf8 from autolink infos
     if ((fileType == FileType::CSource ||
-            fileType == FileType::CppSource) && pSettings->editor().enableAutolink() ){
-        Editor* editor = pMainWindow->editorList()->getOpenedEditorByFilename(mFilename);
-        if (editor) {
-            PCppParser parser = editor->parser();
-            if (parser) {
-                int waitCount = 0;
-                //wait parsing ends, at most 1 second
-                while(parser->parsing()) {
-                    if (waitCount>10)
-                        break;
-                    waitCount++;
-                    QThread::msleep(100);
-                    QApplication *app=dynamic_cast<QApplication*>(
-                                QApplication::instance());
-                    app->processEvents();
-                }
-                QSet<QString> parsedFiles;
-                forceExecUTF8 = parseForceUTF8ForAutolink(
-                            mFilename,
-                            parsedFiles,
-                            parser);
-            }
+            fileType == FileType::CppSource) && pSettings->editor().enableAutolink()
+            && mParser){
+        int waitCount = 0;
+        //wait parsing ends, at most 1 second
+        while(mParser->parsing()) {
+            if (waitCount>10)
+                break;
+            waitCount++;
+            QThread::msleep(100);
+            QApplication *app=dynamic_cast<QApplication*>(
+                        QApplication::instance());
+            app->processEvents();
         }
-
+        if (waitCount<=10) {
+            QSet<QString> parsedFiles;
+            forceExecUTF8 = parseForceUTF8ForAutolink(
+                        mFilename,
+                        parsedFiles);
+        }
     }
     if ((forceExecUTF8 || compilerSet()->autoAddCharsetParams()) && encoding != ENCODING_ASCII
             && compilerSet()->compilerType()!=CompilerType::Clang) {
@@ -517,30 +515,25 @@ QString Compiler::getLibraryArguments(FileType fileType)
     //Add auto links
     // is file and auto link enabled
     if (pSettings->editor().enableAutolink() && (fileType == FileType::CSource ||
-            fileType == FileType::CppSource)){
-        Editor* editor = pMainWindow->editorList()->getEditor();
-        if (editor) {
-            PCppParser parser = editor->parser();
-            if (parser) {
-                int waitCount = 0;
-                //wait parsing ends, at most 1 second
-                while(parser->parsing()) {
-                    if (waitCount>10)
-                        break;
-                    waitCount++;
-                    QThread::msleep(100);
-                    QApplication *app=dynamic_cast<QApplication*>(
-                                QApplication::instance());
-                    app->processEvents();
-                }
-                QSet<QString> parsedFiles;
-                result += parseFileIncludesForAutolink(
-                            editor->filename(),
-                            parsedFiles,
-                            parser);
-            }
+            fileType == FileType::CppSource)
+            && mParser){
+        int waitCount = 0;
+        //wait parsing ends, at most 1 second
+        while(mParser->parsing()) {
+            if (waitCount>10)
+                break;
+            waitCount++;
+            QThread::msleep(100);
+            QApplication *app=dynamic_cast<QApplication*>(
+                        QApplication::instance());
+            app->processEvents();
         }
-
+        if (waitCount<=10) {
+            QSet<QString> parsedFiles;
+            result += parseFileIncludesForAutolink(
+                        mFilename,
+                        parsedFiles);
+        }
     }
 
     //add compiler set link options
@@ -600,8 +593,7 @@ QString Compiler::getLibraryArguments(FileType fileType)
 
 QString Compiler::parseFileIncludesForAutolink(
         const QString &filename,
-        QSet<QString>& parsedFiles,
-        PCppParser& parser)
+        QSet<QString>& parsedFiles)
 {
     QString result;
     if (parsedFiles.contains(filename))
@@ -611,7 +603,7 @@ QString Compiler::parseFileIncludesForAutolink(
     if (autolink) {
         result += ' '+autolink->linkOption;
     }
-    QStringList includedFiles = parser->getFileDirectIncludes(filename);
+    QStringList includedFiles = mParser->getFileDirectIncludes(filename);
 //    log(QString("File %1 included:").arg(filename));
 //    for (int i=includedFiles.size()-1;i>=0;i--) {
 //        QString includeFilename = includedFiles[i];
@@ -622,13 +614,12 @@ QString Compiler::parseFileIncludesForAutolink(
         QString includeFilename = includedFiles[i];
         result += parseFileIncludesForAutolink(
                     includeFilename,
-                    parsedFiles,
-                    parser);
+                    parsedFiles);
     }
     return result;
 }
 
-bool Compiler::parseForceUTF8ForAutolink(const QString &filename, QSet<QString> &parsedFiles, PCppParser &parser)
+bool Compiler::parseForceUTF8ForAutolink(const QString &filename, QSet<QString> &parsedFiles)
 {
     bool result;
     if (parsedFiles.contains(filename))
@@ -638,7 +629,7 @@ bool Compiler::parseForceUTF8ForAutolink(const QString &filename, QSet<QString> 
     if (autolink && autolink->execUseUTF8) {
         return true;
     }
-    QStringList includedFiles = parser->getFileDirectIncludes(filename);
+    QStringList includedFiles = mParser->getFileDirectIncludes(filename);
 //    log(QString("File %1 included:").arg(filename));
 //    for (int i=includedFiles.size()-1;i>=0;i--) {
 //        QString includeFilename = includedFiles[i];
@@ -649,8 +640,7 @@ bool Compiler::parseForceUTF8ForAutolink(const QString &filename, QSet<QString> 
         QString includeFilename = includedFiles[i];
         result = parseForceUTF8ForAutolink(
                     includeFilename,
-                    parsedFiles,
-                    parser);
+                    parsedFiles);
         if (result)
             return true;
     }
@@ -746,6 +736,23 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
             break;
         default:
             throw CompileError(tr("An unknown error occurred."));
+        }
+    }
+}
+
+PCppParser Compiler::parser() const
+{
+    return mParser;
+}
+
+void Compiler::getParserForFile(const QString &filename)
+{
+    FileType fileType = getFileType(filename);
+    if (fileType == FileType::CSource ||
+            fileType == FileType::CppSource){
+        Editor* editor = pMainWindow->editorList()->getOpenedEditorByFilename(filename);
+        if (editor && editor->parser()) {
+            mParser=editor->parser();
         }
     }
 }

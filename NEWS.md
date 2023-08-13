@@ -27,6 +27,7 @@ Red Panda C++ Version 2.24
   - fix: Wrong compiler settings if xcode is not installed in mac os.
   - enhancement: Name for new files will not be different from files openned.
   - fix: Crash if close file while auto syntax checking.
+  - enhancement: support sdcc compiler.
 
 Red Panda C++ Version 2.23
 

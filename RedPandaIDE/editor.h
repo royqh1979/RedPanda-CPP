@@ -262,6 +262,7 @@ private:
 
     bool handleCodeCompletion(QChar key);
     void initParser();
+    ParserLanguage calcParserLanguage();
     void undoSymbolCompletion(int pos);
     QuoteStatus getQuoteStatus();
 

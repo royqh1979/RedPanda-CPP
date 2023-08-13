@@ -2948,14 +2948,10 @@ void Editor::initParser()
     if (pSettings->codeCompletion().enabled()
         && (isCFile(mFilename) || isHFile(mFilename))) {
         if (pSettings->codeCompletion().shareParser()) {
-            mParser = sharedParser(mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C);
+            mParser = sharedParser(calcParserLanguage());
         } else {
             mParser = std::make_shared<CppParser>();
-            if (mUseCppSyntax) {
-                mParser->setLanguage(ParserLanguage::CPlusPlus);
-            } else {
-                mParser->setLanguage(ParserLanguage::C);
-            }
+            mParser->setLanguage(calcParserLanguage());
             mParser->setOnGetFileStream(
                         std::bind(
                             &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
@@ -2968,6 +2964,16 @@ void Editor::initParser()
     } else {
         mParser = nullptr;
     }
+}
+
+ParserLanguage Editor::calcParserLanguage()
+{
+    if (!inProject()
+            && pSettings->compilerSets().defaultSet()
+            && pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
+        return ParserLanguage::SDCC;
+    }
+    return mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
 }
 
 Editor::QuoteStatus Editor::getQuoteStatus()
@@ -3110,8 +3116,8 @@ void Editor::reparse(bool resetParser)
         return;
     //qDebug()<<"reparse "<<mFilename;
     //mParser->setEnabled(pSettings->codeCompletion().enabled());
-    ParserLanguage language = mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
     if (!inProject()) {
+        ParserLanguage language = calcParserLanguage();
         if (pSettings->codeCompletion().shareParser()) {
             if (language!=mParser->language()) {
                 mParser->invalidateFile(mFilename);
@@ -3461,12 +3467,21 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                     keywords = syntaxer()->keywords();
             }
         } else {
-            if (mUseCppSyntax) {
+            switch(calcParserLanguage()) {
+            case ParserLanguage::CPlusPlus:
                 foreach (const QString& keyword, CppKeywords.keys()) {
                     keywords.insert(keyword);
                 }
-            } else {
+                break;
+            case ParserLanguage::C:
                 keywords = CKeywords;
+                break;
+            case ParserLanguage::SDCC:
+                keywords = CKeywords;
+                foreach (const QString& keyword, SDCCKeywords.keys()) {
+                    keywords.insert(keyword);
+                }
+                break;
             }
             if (pSettings->editor().enableCustomCTypeKeywords()) {
                 foreach (const QString& keyword, pSettings->editor().customCTypeKeywords()) {
@@ -5223,6 +5238,14 @@ void Editor::applySettings()
     }
 
     if (pSettings->editor().enableCustomCTypeKeywords()) {
+        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
+            QSet<QString> set;
+            foreach(const QString& s, pSettings->editor().customCTypeKeywords())
+                set.insert(s);
+            ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
+        }
+    } else if (!inProject() && pSettings->compilerSets().defaultSet()
+               && pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
         if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             QSet<QString> set;
             foreach(const QString& s, pSettings->editor().customCTypeKeywords())

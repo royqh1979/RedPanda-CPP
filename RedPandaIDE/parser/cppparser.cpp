@@ -2188,6 +2188,23 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                                       isStatic);
                 return;
             } else if (mTokenizer[mIndex + 1]->text == '(') {
+                if (mLanguage==ParserLanguage::SDCC && mTokenizer[mIndex]->text=="__at") {
+                    if (!sName.isEmpty()) {
+                        sType = sType+" "+sName;
+                        sName = "";
+                    }
+                    sType+=" __at";
+                    mIndex++;
+                    int idx= mTokenizer[mIndex]->matchIndex;
+                    if (idx<tokenCount) {
+                        for (int i=mIndex;i<=idx;i++) {
+                            sType+=mTokenizer[i]->text;
+                        }
+                    }
+                    mIndex=idx+1;
+                    continue;
+                }
+
                 if (mIndex+2<tokenCount && mTokenizer[mIndex+2]->text == '*') {
                     //foo(*blabla), it's a function pointer var
                     handleVar(sType+" "+sName,isExtern,isStatic);
@@ -2295,8 +2312,9 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                         isFriend = true;
                     else if (s == "extern")
                         isExtern = true;
-                    if (!s.isEmpty() && !(s=="extern"))
+                    if (!s.isEmpty() && !(s=="extern")) {
                         sType = sType + ' '+ s;
+                    }
                 }
                 mIndex++;
             }
@@ -6401,7 +6419,18 @@ ParserLanguage CppParser::language() const
 
 void CppParser::setLanguage(ParserLanguage newLanguage)
 {
-    mLanguage = newLanguage;
+    if (mLanguage != newLanguage) {
+        mLanguage = newLanguage;
+        if (mLanguage == ParserLanguage::SDCC) {
+            mCppKeywords = CppKeywords;
+            mCppTypeKeywords = CppTypeKeywords;
+            mCppKeywords.insert(SDCCKeywords);
+            mCppTypeKeywords.unite(SDCCTypeKeywords);
+        } else {
+            mCppKeywords = CppKeywords;
+            mCppTypeKeywords = CppTypeKeywords;
+        }
+    }
 }
 
 

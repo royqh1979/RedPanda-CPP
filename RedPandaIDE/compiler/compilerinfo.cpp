@@ -27,6 +27,11 @@ bool CompilerInfo::hasCompilerOption(const QString &key) const
     return mCompilerOptions.contains(key);
 }
 
+bool CompilerInfo::supportSyntaxCheck()
+{
+    return true;
+}
+
 void CompilerInfo::addOption(const QString &key, const QString &name, const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting, const CompileOptionChoiceList &choices)
 {
     PCompilerOption pOption = std::make_shared<CompilerOption>();
@@ -197,18 +202,7 @@ CompilerInfoManager::CompilerInfoManager()
     mInfos.insert(CompilerType::Clang, std::make_shared<ClangCompilerInfo>());
     mInfos.insert(CompilerType::GCC, std::make_shared<GCCCompilerInfo>());
     mInfos.insert(CompilerType::GCC_UTF8, std::make_shared<GCCUTF8CompilerInfo>());
-}
-
-bool CompilerInfoManager::supportSyntaxCheck(CompilerType compilerType)
-{
-    switch(compilerType) {
-    case CompilerType::GCC:
-    case CompilerType::GCC_UTF8:
-    case CompilerType::Clang:
-        return true;
-    default:
-        return false;
-    }
+    mInfos.insert(CompilerType::SDCC, std::make_shared<SDCCCompilerInfo>());
 }
 
 PCompilerInfo CompilerInfoManager::getInfo(CompilerType compilerType)
@@ -246,6 +240,22 @@ bool CompilerInfoManager::supportCovertingCharset(CompilerType compilerType)
     if (!pInfo)
         return false;
     return pInfo->supportConvertingCharset();
+}
+
+bool CompilerInfoManager::supportStaticLink(CompilerType compilerType)
+{
+    PCompilerInfo pInfo = getInfo(compilerType);
+    if (!pInfo)
+        return false;
+    return pInfo->supportStaticLink();
+}
+
+bool CompilerInfoManager::supportSyntaxCheck(CompilerType compilerType)
+{
+    PCompilerInfo pInfo = getInfo(compilerType);
+    if (!pInfo)
+        return false;
+    return pInfo->supportSyntaxCheck();
 }
 
 bool CompilerInfoManager::forceUTF8InDebugger(CompilerType compilerType)
@@ -290,6 +300,11 @@ bool ClangCompilerInfo::forceUTF8InMakefile()
     return false;
 }
 
+bool ClangCompilerInfo::supportStaticLink()
+{
+    return true;
+}
+
 GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
 {
 }
@@ -309,6 +324,11 @@ bool GCCCompilerInfo::forceUTF8InMakefile()
     return false;
 }
 
+bool GCCCompilerInfo::supportStaticLink()
+{
+    return true;
+}
+
 GCCUTF8CompilerInfo::GCCUTF8CompilerInfo():CompilerInfo(COMPILER_GCC_UTF8)
 {
 }
@@ -326,4 +346,87 @@ bool GCCUTF8CompilerInfo::forceUTF8InDebugger()
 bool GCCUTF8CompilerInfo::forceUTF8InMakefile()
 {
     return true;
+}
+
+bool GCCUTF8CompilerInfo::supportStaticLink()
+{
+    return true;
+}
+
+SDCCCompilerInfo::SDCCCompilerInfo():CompilerInfo(COMPILER_SDCC)
+{
+
+}
+
+bool SDCCCompilerInfo::supportConvertingCharset()
+{
+    return false;
+}
+
+bool SDCCCompilerInfo::forceUTF8InDebugger()
+{
+    return false;
+}
+
+bool SDCCCompilerInfo::forceUTF8InMakefile()
+{
+    return false;
+}
+
+bool SDCCCompilerInfo::supportStaticLink()
+{
+    return false;
+}
+
+bool SDCCCompilerInfo::supportSyntaxCheck()
+{
+    return false;
+}
+
+void SDCCCompilerInfo::prepareCompilerOptions()
+{
+    QList<QPair<QString,QString>> sl;
+    QString groupName;
+//    // C options
+//    groupName = QObject::tr("C options");
+//    addOption(CC_CMD_OPT_ANSI, QObject::tr("Support all ANSI standard C programs (-ansi)"), groupName, true, true, false, "-ansi");
+//    addOption(CC_CMD_OPT_NO_ASM, QObject::tr("Do not recognize asm,inline or typeof as a keyword (-fno-asm)"), groupName, true, true, false, "-fno-asm");
+//    addOption(CC_CMD_OPT_TRADITIONAL_CPP, QObject::tr("Imitate traditional C preprocessors (-traditional-cpp)"), groupName, true, true, false, "-traditional-cpp");
+
+    groupName = QObject::tr("Code Generation");
+    // Optimization
+    sl.clear();
+    sl.append(QPair<QString,QString>("Intel MCS51","mcs51"));
+    sl.append(QPair<QString,QString>("Dallas DS80C390","ds390"));
+    sl.append(QPair<QString,QString>("Dallas DS80C400","ds400"));
+    sl.append(QPair<QString,QString>("Freescale/Motorola HC08","hc08"));
+    sl.append(QPair<QString,QString>("Freescale/Motorola S08","s08"));
+    sl.append(QPair<QString,QString>("Zilog Z80","z80"));
+    sl.append(QPair<QString,QString>("Zilog Z180","z180"));
+    sl.append(QPair<QString,QString>("Rabbit 2000/3000","r2k"));
+    sl.append(QPair<QString,QString>("Rabbit 3000","r3ka"));
+    sl.append(QPair<QString,QString>("Sharp SM83","sm83"));
+    sl.append(QPair<QString,QString>("Toshiba TLCS-90","tlcs90"));
+    sl.append(QPair<QString,QString>("Zilog eZ80","ez80_z80"));
+    sl.append(QPair<QString,QString>("STM8","stm8"));
+    sl.append(QPair<QString,QString>("Padauk processors with 13 bit wide program memory","pdk13"));
+    sl.append(QPair<QString,QString>("Padauk processors with 14 bit wide program memory","pdk14"));
+    sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
+    sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
+    sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
+    addOption(SDCC_CMD_OPT_PROCESSOR, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-m", sl);
+
+    // C++ Language Standards
+    sl.clear();
+    sl.append(QPair<QString,QString>("ANSI C89/ISO C90","c89"));
+    sl.append(QPair<QString,QString>("ISO C99","c99"));
+    sl.append(QPair<QString,QString>("ISO C11","c11"));
+    sl.append(QPair<QString,QString>("ISO C17","c17"));
+    sl.append(QPair<QString,QString>("ISO C2x","c2x"));
+    sl.append(QPair<QString,QString>("SDCC C89","sdcc89"));
+    sl.append(QPair<QString,QString>("SDCC C99","sdcc99"));
+    sl.append(QPair<QString,QString>("SDCC C11","sdcc11"));
+    sl.append(QPair<QString,QString>("SDCC C17","sdcc17"));
+    sl.append(QPair<QString,QString>("SDCC C2x","sdcc2x"));
+    addOption(SDCC_CMD_OPT_STD, QObject::tr("Language standard (-std)"), groupName, false, true, false, "-std-", sl);
 }

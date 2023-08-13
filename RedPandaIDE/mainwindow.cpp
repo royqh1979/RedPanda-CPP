@@ -1945,8 +1945,6 @@ void MainWindow::checkSyntaxInBack(Editor *e)
         return;
     if (mCompilerManager->compiling())
         return;
-    if (!pSettings->compilerSets().defaultSet())
-        return;
     if (mCheckSyntaxInBack)
         return;
 
@@ -1962,8 +1960,15 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     clearIssues();
     CompileTarget target =getCompileTarget();
     if (target ==CompileTarget::Project) {
+        int index = mProject->options().compilerSet;
+        Settings::PCompilerSet set = pSettings->compilerSets().getSet(index);
+        if (!set || !CompilerInfoManager::supportSyntaxCheck(set->compilerType()))
+            return;
         mCompilerManager->checkSyntax(e->filename(), e->fileEncoding(), e->text(), mProject);
     } else {
+        Settings::PCompilerSet set = pSettings->compilerSets().defaultSet();
+        if (!set || !CompilerInfoManager::supportSyntaxCheck(set->compilerType()))
+            return;
         mCompilerManager->checkSyntax(e->filename(),e->fileEncoding(),e->text(), nullptr);
     }
 }
@@ -3363,13 +3368,17 @@ void MainWindow::newEditor(const QString& suffix)
 {
     try {
         QString filename;
-
         do {
             filename = QString("untitled%1").arg(getNewFileNumber());
             if (suffix.isEmpty()) {
-                if (pSettings->editor().defaultFileCpp())
-                    filename+=".cpp";
-                else
+                if (pSettings->editor().defaultFileCpp()) {
+                    Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
+                    if (compilerSet && !compilerSet->canCompileCPP()) {
+                        filename+=".c";
+                    } else {
+                        filename+=".cpp";
+                    }
+                } else
                     filename+=".c";
             } else
                 filename+= "." + suffix;

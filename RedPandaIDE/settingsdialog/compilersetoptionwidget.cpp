@@ -74,12 +74,17 @@ void CompilerSetOptionWidget::init()
 
 
 static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSetOptionWidget* ui) {
-    ui->chkAutoAddCharset->setEnabled(pSet->compilerType() != CompilerType::Clang);
-    ui->chkAutoAddCharset->setVisible(pSet->compilerType() != CompilerType::Clang);
-    ui->cbEncoding->setEnabled(pSet->compilerType() != CompilerType::Clang);
-    ui->cbEncoding->setVisible(pSet->compilerType() != CompilerType::Clang);
-    ui->cbEncodingDetails->setEnabled(pSet->compilerType() != CompilerType::Clang);
-    ui->cbEncodingDetails->setVisible(pSet->compilerType() != CompilerType::Clang);
+    bool supportCharset = CompilerInfoManager::supportCovertingCharset(pSet->compilerType());
+    ui->chkAutoAddCharset->setEnabled(supportCharset);
+    ui->cbEncoding->setEnabled(supportCharset);
+    ui->cbEncodingDetails->setEnabled(supportCharset);
+    ui->panelCharset->setVisible(supportCharset);
+    ui->chkAutoAddCharset->setEnabled(supportCharset);
+    ui->chkAutoAddCharset->setVisible(supportCharset);
+
+    bool supportStaticLink = CompilerInfoManager::supportStaticLink(pSet->compilerType());
+    ui->chkStaticLink->setEnabled(supportStaticLink);
+    ui->chkStaticLink->setVisible(supportStaticLink);
 
     ui->chkUseCustomCompilerParams->setChecked(pSet->useCustomCompileParams());
     ui->txtCustomCompileParams->setPlainText(pSet->customCompileParams());

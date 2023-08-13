@@ -26,6 +26,8 @@
 QStringList CppDirectives;
 QStringList JavadocTags;
 QMap<QString,KeywordType> CppKeywords;
+QMap<QString,KeywordType> SDCCKeywords;
+QSet<QString> SDCCTypeKeywords;
 QSet<QString> CppControlKeyWords;
 QSet<QString> CppTypeKeywords;
 QSet<QString> CKeywords;
@@ -162,6 +164,27 @@ void initParser()
     CppKeywords.insert("unsigned",KeywordType::None);
     CppKeywords.insert("void",KeywordType::None);
     CppKeywords.insert("wchar_t",KeywordType::None);
+
+    SDCCKeywords.insert("__sfr",KeywordType::None);
+    SDCCKeywords.insert("__sfr16",KeywordType::None);
+    SDCCKeywords.insert("__sfr32",KeywordType::None);
+    SDCCKeywords.insert("__sbit",KeywordType::None);
+    SDCCKeywords.insert("__bit",KeywordType::None);
+    SDCCKeywords.insert("__data",KeywordType::SkipItself);
+    SDCCKeywords.insert("__near",KeywordType::SkipItself);
+    SDCCKeywords.insert("__xdata",KeywordType::SkipItself);
+    SDCCKeywords.insert("__far",KeywordType::SkipItself);
+    SDCCKeywords.insert("__idata",KeywordType::SkipItself);
+    SDCCKeywords.insert("__pdata",KeywordType::SkipItself);
+    SDCCKeywords.insert("__code",KeywordType::SkipItself);
+    SDCCKeywords.insert("__banked",KeywordType::SkipItself);
+    SDCCKeywords.insert("__at",KeywordType::SkipNextParenthesis);
+
+    SDCCTypeKeywords.insert("__sfr");
+    SDCCTypeKeywords.insert("__sfr16");
+    SDCCTypeKeywords.insert("__sfr32");
+    SDCCTypeKeywords.insert("__sbit");
+    SDCCTypeKeywords.insert("__bit");
 
     // type keywords
     CppTypeKeywords.insert("auto");

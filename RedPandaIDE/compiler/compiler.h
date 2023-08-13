@@ -44,6 +44,8 @@ public:
     const std::shared_ptr<Project> &project() const;
     void setProject(const std::shared_ptr<Project> &newProject);
 
+    PCppParser parser() const;
+
 signals:
     void compileStarted();
     void compileFinished(QString filename);
@@ -56,6 +58,7 @@ public slots:
 protected:
     void run() override;
     void processOutput(QString& line);
+    void getParserForFile(const QString& filename);
     virtual QString getFileNameFromOutputLine(QString &line);
     virtual int getLineNumberFromOutputLine(QString &line);
     virtual int getColunmnFromOutputLine(QString &line);
@@ -75,12 +78,10 @@ protected:
     virtual QString getLibraryArguments(FileType fileType);
     virtual QString parseFileIncludesForAutolink(
             const QString& filename,
-            QSet<QString>& parsedFiles,
-            PCppParser& parser);
+            QSet<QString>& parsedFiles);
     virtual bool parseForceUTF8ForAutolink(
             const QString& filename,
-            QSet<QString>& parsedFiles,
-            PCppParser& parser);
+            QSet<QString>& parsedFiles);
     void log(const QString& msg);
     void error(const QString& msg);
     void runCommand(const QString& cmd, const QString& arguments, const QString& workingDir, const QByteArray& inputText=QByteArray());
@@ -101,6 +102,7 @@ protected:
     bool mRebuild;
     std::shared_ptr<Project> mProject;
     bool mSetLANG;
+    PCppParser mParser;
 
 private:
     bool mStop;

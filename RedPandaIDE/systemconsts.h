@@ -37,6 +37,7 @@
 #define CLANG_CPP_PROGRAM   "clang++.exe"
 #define LLDB_MI_PROGRAM   "lldb-mi.exe"
 #define LLDB_SERVER_PROGRAM   "lldb-server.exe"
+#define SDCC_PROGRAM   "sdcc.exe"
 #elif defined(Q_OS_LINUX)
 #define CONSOLE_PAUSER  "consolepauser"
 #define ASSEMBLER   "nasm"
@@ -55,6 +56,7 @@
 #define CLANG_CPP_PROGRAM   "clang++"
 #define LLDB_MI_PROGRAM   "lldb-mi"
 #define LLDB_SERVER_PROGRAM   "lldb-server"
+#define SDCC_PROGRAM   "sdcc"
 #elif defined(Q_OS_MACOS)
 #define CONSOLE_PAUSER  "consolepauser"
 #define ASSEMBLER   "nasm"
@@ -72,6 +74,7 @@
 #define CLANG_CPP_PROGRAM   "clang++"
 #define LLDB_MI_PROGRAM   "lldb-mi"
 #define LLDB_SERVER_PROGRAM   "lldb-server"
+#define SDCC_PROGRAM   "sdcc"
 #else
 #error "Only support windows, Linux and MacOS now!"
 #endif
