@@ -894,8 +894,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             if (lastWord == "long" ||
                                     lastWord == "short" ||
                                     lastWord == "signed" ||
-                                    lastWord == "unsigned"
-                                    ) {
+                                    lastWord == "unsigned") {
                                 processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                                 showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
                                 handled=true;
