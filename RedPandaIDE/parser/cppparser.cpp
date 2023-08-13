@@ -2597,7 +2597,7 @@ void CppParser::handleEnum(bool isTypedef)
                     mIndex=indexOfNextSemicolon(i+1)+1;
                     return;
                 }
-                enumName = "__@enum@__"+enumName+"__";
+                enumName = "___enum___"+enumName+"__";
                 isAdhocVar=true;
             }
         }
@@ -3825,7 +3825,7 @@ void CppParser::handleStructs(bool isTypedef)
                                             getCurrentScope(),
                                             mCurrentFile,
                                             prefix,
-                                            "_@dummy@_"+command,
+                                            "___dummy___"+command,
                                             "",
                                             "",
                                             "",
