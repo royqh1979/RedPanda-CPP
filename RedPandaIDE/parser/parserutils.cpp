@@ -182,6 +182,14 @@ void initParser()
     SDCCKeywords.insert("__code",KeywordType::SkipItself);
     SDCCKeywords.insert("__banked",KeywordType::SkipItself);
     SDCCKeywords.insert("__at",KeywordType::SkipNextParenthesis);
+    SDCCKeywords.insert("__reentrant",KeywordType::SkipItself);
+    SDCCKeywords.insert("__interrupt",KeywordType::SkipItself);
+    SDCCKeywords.insert("__using",KeywordType::SkipItself);
+    SDCCKeywords.insert("__critical",KeywordType::SkipItself);
+    SDCCKeywords.insert("__trap",KeywordType::SkipItself);
+    SDCCKeywords.insert("__asm",KeywordType::SkipItself);
+    SDCCKeywords.insert("__endasm",KeywordType::SkipItself);
+    SDCCKeywords.insert("__naked",KeywordType::SkipItself);
 
     SDCCTypeKeywords.insert("__sfr");
     SDCCTypeKeywords.insert("__sfr16");
