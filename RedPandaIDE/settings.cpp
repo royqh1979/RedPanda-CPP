@@ -1715,7 +1715,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
 
 #ifdef ENABLE_SDCC
         if (mCompilerType == CompilerType::SDCC) {
-            mExecutableSuffix = "ihx";
+            mExecutableSuffix = SDCC_HEX_SUFFIX;
         }
 #endif
         mFullLoaded = true;
@@ -2679,7 +2679,7 @@ void Settings::CompilerSet::setUserInput()
 }
 
 
-QString Settings::CompilerSet::findProgramInBinDirs(const QString name)
+QString Settings::CompilerSet::findProgramInBinDirs(const QString name) const
 {
     for (const QString& dir : mBinDirs) {
         QFileInfo f(includeTrailingPathDelimiter(dir) + name);

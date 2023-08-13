@@ -19,6 +19,7 @@
 #include "../mainwindow.h"
 #include "compilermanager.h"
 #include "qsynedit/syntaxer/asm.h"
+#include "../systemconsts.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -84,7 +85,11 @@ bool FileCompiler::prepareForCompile()
         case Settings::CompilerSet::CompilationStage::GenerateExecutable:
             mOutputFile = changeFileExt(mFilename,compilerSet()->executableSuffix());
         }
+        if (compilerSet()->compilerType()==CompilerType::SDCC) {
+            if (compilerSet()->executableSuffix()==SDCC_IHX_SUFFIX) {
 
+            }
+        }
         mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
 
 #if defined(ARCH_X86_64) || defined(ARCH_X86)

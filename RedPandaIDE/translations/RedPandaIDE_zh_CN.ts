@@ -547,57 +547,72 @@ p, li { white-space: pre-wrap; }
         <translation>重编译前的清理准备工作失败！</translation>
     </message>
     <message>
+        <location filename="../compiler/compiler.cpp" line="70"/>
+        <source> - Command: %1 %2</source>
+        <translation>- 命令: %1 %2</translation>
+    </message>
+    <message>
         <location filename="../compiler/compiler.cpp" line="72"/>
+        <source> - Command: %1 %2 &gt; &quot;%3&quot;</source>
+        <translation>- 命令: %1 %2 &gt; &quot;%3&quot;</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compiler.cpp" line="77"/>
         <source>Compile Result:</source>
         <translation>编译结果：</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="74"/>
+        <location filename="../compiler/compiler.cpp" line="79"/>
         <source>- Errors: %1</source>
         <translation>- 错误数: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="75"/>
+        <location filename="../compiler/compiler.cpp" line="80"/>
         <source>- Warnings: %1</source>
         <translation>- 警告数: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="77"/>
+        <location filename="../compiler/compiler.cpp" line="82"/>
         <source>- Output Filename: %1</source>
         <translation>- 输出文件名: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="79"/>
+        <location filename="../compiler/compiler.cpp" line="84"/>
         <source>- Output Size: %1</source>
         <translation>- 输出文件大小: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="81"/>
+        <location filename="../compiler/compiler.cpp" line="86"/>
         <source>- Compilation Time: %1 secs</source>
         <translation>- 编译时间: %1 秒</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="178"/>
+        <location filename="../compiler/compiler.cpp" line="183"/>
         <source>[Error] </source>
         <translation>[错误]</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="182"/>
+        <location filename="../compiler/compiler.cpp" line="187"/>
         <source>[Warning] </source>
         <translation>[警告]</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="186"/>
+        <location filename="../compiler/compiler.cpp" line="191"/>
         <source>[Info] </source>
         <translation>[信息]</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="190"/>
+        <location filename="../compiler/compiler.cpp" line="195"/>
         <source>[Note] </source>
         <translation>[说明]</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="722"/>
+        <location filename="../compiler/compiler.cpp" line="685"/>
+        <source>Can&apos;t open file &quot;%1&quot; for write!</source>
+        <translation>无法写入文件“%1”。</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compiler.cpp" line="737"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
         <translation>无法启动编译器进程&apos;%1&apos;。</translation>
     </message>
@@ -606,27 +621,27 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">无法启动编译进程。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="726"/>
+        <location filename="../compiler/compiler.cpp" line="741"/>
         <source>The compiler process crashed after starting successfully.</source>
         <translation>编译进程启动后崩溃。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="729"/>
+        <location filename="../compiler/compiler.cpp" line="744"/>
         <source>The last waitFor...() function timed out.</source>
         <translation>waitFor()函数等待超时。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="732"/>
+        <location filename="../compiler/compiler.cpp" line="747"/>
         <source>An error occurred when attempting to write to the compiler process.</source>
         <translation>在向编译进程输入内容时出错。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="735"/>
+        <location filename="../compiler/compiler.cpp" line="750"/>
         <source>An error occurred when attempting to read from the compiler process.</source>
         <translation>在从编译进程读取内容时出错。</translation>
     </message>
     <message>
-        <location filename="../compiler/compiler.cpp" line="738"/>
+        <location filename="../compiler/compiler.cpp" line="753"/>
         <source>An unknown error occurred.</source>
         <translation>发生了未知错误。</translation>
     </message>
@@ -672,29 +687,29 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>CompilerManager</name>
     <message>
-        <location filename="../compiler/compilermanager.cpp" line="78"/>
-        <location filename="../compiler/compilermanager.cpp" line="109"/>
-        <location filename="../compiler/compilermanager.cpp" line="141"/>
-        <location filename="../compiler/compilermanager.cpp" line="175"/>
-        <location filename="../compiler/compilermanager.cpp" line="194"/>
+        <location filename="../compiler/compilermanager.cpp" line="81"/>
+        <location filename="../compiler/compilermanager.cpp" line="117"/>
+        <location filename="../compiler/compilermanager.cpp" line="149"/>
+        <location filename="../compiler/compilermanager.cpp" line="183"/>
+        <location filename="../compiler/compilermanager.cpp" line="202"/>
         <source>No compiler set</source>
         <translation>无编译器设置</translation>
     </message>
     <message>
-        <location filename="../compiler/compilermanager.cpp" line="79"/>
-        <location filename="../compiler/compilermanager.cpp" line="110"/>
-        <location filename="../compiler/compilermanager.cpp" line="142"/>
-        <location filename="../compiler/compilermanager.cpp" line="176"/>
-        <location filename="../compiler/compilermanager.cpp" line="195"/>
+        <location filename="../compiler/compilermanager.cpp" line="82"/>
+        <location filename="../compiler/compilermanager.cpp" line="118"/>
+        <location filename="../compiler/compilermanager.cpp" line="150"/>
+        <location filename="../compiler/compilermanager.cpp" line="184"/>
+        <location filename="../compiler/compilermanager.cpp" line="203"/>
         <source>No compiler set is configured.</source>
         <translation>没有配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="../compiler/compilermanager.cpp" line="79"/>
-        <location filename="../compiler/compilermanager.cpp" line="110"/>
-        <location filename="../compiler/compilermanager.cpp" line="142"/>
-        <location filename="../compiler/compilermanager.cpp" line="176"/>
-        <location filename="../compiler/compilermanager.cpp" line="195"/>
+        <location filename="../compiler/compilermanager.cpp" line="82"/>
+        <location filename="../compiler/compilermanager.cpp" line="118"/>
+        <location filename="../compiler/compilermanager.cpp" line="150"/>
+        <location filename="../compiler/compilermanager.cpp" line="184"/>
+        <location filename="../compiler/compilermanager.cpp" line="203"/>
         <source>Can&apos;t start debugging.</source>
         <translation>无法启动调试器</translation>
     </message>
@@ -711,12 +726,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">程序中的文字内容可能无法被正确处理和显示。</translation>
     </message>
     <message>
-        <location filename="../compiler/compilermanager.cpp" line="266"/>
+        <location filename="../compiler/compilermanager.cpp" line="274"/>
         <source>Can&apos;t find Console Pauser</source>
         <translation>找不到Console Pauser程序</translation>
     </message>
     <message>
-        <location filename="../compiler/compilermanager.cpp" line="267"/>
+        <location filename="../compiler/compilermanager.cpp" line="275"/>
         <source>Console Pauser &quot;%1&quot; doesn&apos;t exists!</source>
         <translation>找不到Console Pauser程序&quot;%1&quot;！</translation>
     </message>
@@ -843,6 +858,11 @@ p, li { white-space: pre-wrap; }
         <translation>用静态链接方式链接库文件</translation>
     </message>
     <message>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="529"/>
+        <source>Binary suffix</source>
+        <translation>二进制文件类型</translation>
+    </message>
+    <message>
         <source>Syntax error for stack frame larger than</source>
         <translation type="vanished">单个函数栈大小超过指定值时报错：</translation>
     </message>
@@ -875,17 +895,17 @@ p, li { white-space: pre-wrap; }
         <translation>输出</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="443"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="464"/>
         <source>Compilation Stages</source>
         <translation>编译阶段</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="449"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="470"/>
         <source>Stop after the preprocessing stage</source>
         <translation>在完成预处理后停止编译</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="456"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="477"/>
         <source>Stop after the compilation proper stage</source>
         <translation>在生成汇编代码后停止。</translation>
     </message>
@@ -894,12 +914,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">在完成汇编后停止。</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="463"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="484"/>
         <source>Link and generate the executable </source>
         <translation>链接得到可执行文件。</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="512"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="500"/>
         <source>Preprocessing output suffix</source>
         <translation>预处理输出后缀</translation>
     </message>
@@ -908,12 +928,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">编译输出后缀</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="519"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="450"/>
         <source>Compiling output suffix</source>
         <translation>编译（汇编代码）输出后缀</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="492"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.ui" line="457"/>
         <source>Executable suffix</source>
         <translation>可执行文件后缀</translation>
     </message>
@@ -989,12 +1009,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">选择性能分析器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="264"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="305"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="256"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="297"/>
         <source>Red Panda C++ will clear current compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Are you really want to continue?</source>
         <oldsource>Red Panda C++ will clear current compiler list and search for compilers in the following locations:
  &apos;%1&apos;
@@ -1003,105 +1023,105 @@ Are you really want to continue?</oldsource>
         <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在下列文件夹中搜索编译器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="67"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="68"/>
         <source>ANSI</source>
         <translation>ANSI</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="68"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="69"/>
         <source>UTF-8</source>
         <translation>UTF-8</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="261"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="302"/>
         <source>Red Panda C++ will clear current compiler list and search for compilers in the the PATH. &lt;br /&gt;Are you really want to continue?</source>
         <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在PATH路径中搜索gcc编译器.&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="268"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="309"/>
         <source>Searching for compilers...</source>
         <translation>正在搜索编译器……</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="269"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="310"/>
         <source>Abort</source>
         <translation>中止</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="276"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="317"/>
         <source>Searching...</source>
         <translation>正在查找...</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="285"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="309"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="326"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="350"/>
         <source>Failed</source>
         <translation>失败</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="285"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="309"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="326"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="350"/>
         <source>Can&apos;t find any compiler.</source>
         <translation>找不到编译器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="291"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="318"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="332"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="359"/>
         <source>Compiler Set Name</source>
         <translation>编译器配置名称</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="291"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="332"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="300"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="341"/>
         <source>Compiler Set Folder</source>
         <translation>编译器所在文件夹</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="318"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="359"/>
         <source>New name</source>
         <translation>新名称</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="385"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="426"/>
         <source>Locate C Compiler</source>
         <translation>定位C编译器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="387"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="399"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="411"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="423"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="435"/>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="447"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="428"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="440"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="452"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="464"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="476"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="488"/>
         <source>Executable files (*.exe)</source>
         <translation>可执行文件 (*.exe)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="397"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="438"/>
         <source>Locate C++ Compiler</source>
         <translation>定位C++编译器</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="409"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="450"/>
         <source>Locate Make</source>
         <translation>定位make程序</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="421"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="462"/>
         <source>Locate GDB</source>
         <translation>定位gdb程序</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="433"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="474"/>
         <source>Locate GDB Server</source>
         <translation>定位gdb server程序</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="445"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="486"/>
         <source>Locate windres</source>
         <translation>定位windres程序</translation>
     </message>
@@ -1567,14 +1587,14 @@ Are you really want to continue?</oldsource>
         <translation>十进制: %1</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="3256"/>
+        <location filename="../editor.cpp" line="3258"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4025"/>
-        <location filename="../editor.cpp" line="4050"/>
-        <location filename="../editor.cpp" line="4097"/>
+        <location filename="../editor.cpp" line="4029"/>
+        <location filename="../editor.cpp" line="4054"/>
+        <location filename="../editor.cpp" line="4101"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+单击以获取更多信息</translation>
     </message>
@@ -1583,27 +1603,27 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4966"/>
+        <location filename="../editor.cpp" line="4970"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="4967"/>
+        <location filename="../editor.cpp" line="4971"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation>找不到astyle程序&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="5127"/>
+        <location filename="../editor.cpp" line="5131"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="5128"/>
+        <location filename="../editor.cpp" line="5132"/>
         <source>Enter the condition of the breakpoint:</source>
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="5381"/>
+        <location filename="../editor.cpp" line="5387"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -2946,65 +2966,65 @@ Are you really want to continue?</oldsource>
 <context>
     <name>FileCompiler</name>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="60"/>
+        <location filename="../compiler/filecompiler.cpp" line="61"/>
         <source>Checking single file...</source>
         <translation>检查单个文件...</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="62"/>
+        <location filename="../compiler/filecompiler.cpp" line="63"/>
         <source>Compiling single file...</source>
         <translation>编译单个文件...</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="65"/>
+        <location filename="../compiler/filecompiler.cpp" line="66"/>
         <source>- Filename: %1</source>
         <translation>- 文件名: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="66"/>
+        <location filename="../compiler/filecompiler.cpp" line="67"/>
         <source>- Compiler Set Name: %1</source>
         <translation>- 编译器配置: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="102"/>
-        <location filename="../compiler/filecompiler.cpp" line="195"/>
+        <location filename="../compiler/filecompiler.cpp" line="107"/>
+        <location filename="../compiler/filecompiler.cpp" line="200"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
         <translation>无法删除旧的可执行文件&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="115"/>
+        <location filename="../compiler/filecompiler.cpp" line="120"/>
         <source>GNU Assembler</source>
         <translation>GNU汇编</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="133"/>
+        <location filename="../compiler/filecompiler.cpp" line="138"/>
         <source>Can&apos;t find the compiler for file %1</source>
         <oldsource>Can&apos;t the compiler for file %1</oldsource>
         <translation>找不到适合文件%1的编译器</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="174"/>
+        <location filename="../compiler/filecompiler.cpp" line="179"/>
         <source>The Compiler &apos;%1&apos; doesn&apos;t exists!</source>
         <translation>编译器程序&quot;%1&quot;不存在！</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="176"/>
+        <location filename="../compiler/filecompiler.cpp" line="181"/>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation>请检查编译器设置中的“程序”页。</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="179"/>
+        <location filename="../compiler/filecompiler.cpp" line="184"/>
         <source>Processing %1 source file:</source>
         <translation>正在处理%1源程序文件:</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="181"/>
+        <location filename="../compiler/filecompiler.cpp" line="186"/>
         <source>%1 Compiler: %2</source>
         <translation>%1编译器: %2</translation>
     </message>
     <message>
-        <location filename="../compiler/filecompiler.cpp" line="182"/>
+        <location filename="../compiler/filecompiler.cpp" line="187"/>
         <source>Command: %1 %2</source>
         <translation>命令: %1 %2</translation>
     </message>
@@ -7982,18 +8002,17 @@ Are you really want to continue?</oldsource>
         <translation>请检查编译器配置中的“程序”页。</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="624"/>
+        <location filename="../compiler/projectcompiler.cpp" line="625"/>
         <source>Processing makefile:</source>
         <translation>正在处理makefile...</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="626"/>
+        <location filename="../compiler/projectcompiler.cpp" line="627"/>
         <source>- makefile processer: %1</source>
         <translation>- makefile处理器: %1</translation>
     </message>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="627"/>
-        <location filename="../compiler/projectcompiler.cpp" line="629"/>
+        <location filename="../compiler/projectcompiler.cpp" line="628"/>
         <source>- Command: %1 %2</source>
         <translation>- 命令: %1 %2</translation>
     </message>
@@ -8778,7 +8797,7 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="64"/>
-        <location filename="../compiler/compilerinfo.cpp" line="406"/>
+        <location filename="../compiler/compilerinfo.cpp" line="409"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
@@ -8806,12 +8825,12 @@ Are you really want to continue?</oldsource>
         <translation>使用下列指针大小编译(-mx)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="427"/>
+        <location filename="../compiler/compilerinfo.cpp" line="430"/>
         <source>Processor (-m)</source>
-        <translation type="unfinished"></translation>
+        <translation>处理器类型(-m)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="441"/>
+        <location filename="../compiler/compilerinfo.cpp" line="444"/>
         <source>Language standard (-std)</source>
         <translation>语言标准(-std)</translation>
     </message>
@@ -8825,7 +8844,7 @@ Are you really want to continue?</oldsource>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3132"/>
+        <location filename="../settings.cpp" line="3162"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -8956,7 +8975,7 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3134"/>
+        <location filename="../settings.cpp" line="3164"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -8977,43 +8996,43 @@ Are you really want to continue?</oldsource>
         <translation type="vanished">如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3124"/>
-        <location filename="../settings.cpp" line="3130"/>
+        <location filename="../settings.cpp" line="3154"/>
+        <location filename="../settings.cpp" line="3160"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3126"/>
+        <location filename="../settings.cpp" line="3156"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="38"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="39"/>
         <source>Binaries</source>
         <translation>二进制文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="40"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="41"/>
         <source>Libraries</source>
         <translation>库文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="42"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="43"/>
         <source>C Includes</source>
         <translation>C包含文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="44"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="45"/>
         <source>C++ Includes</source>
         <translation>C++包含文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="331"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="372"/>
         <source>Remove</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="332"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="373"/>
         <source>Do you really want to remove &quot;%1&quot;?</source>
         <translation>您确定要删除&quot;%1&quot;吗？</translation>
     </message>
@@ -9836,6 +9855,62 @@ Are you really want to continue?</oldsource>
     <message>
         <source>Continue Search</source>
         <translation type="vanished">继续查找</translation>
+    </message>
+</context>
+<context>
+    <name>SDCCFileCompiler</name>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="41"/>
+        <source>Compiling single file...</source>
+        <translation>编译单个文件...</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="43"/>
+        <source>- Filename: %1</source>
+        <translation>- 文件名: %1</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="44"/>
+        <source>- Compiler Set Name: %1</source>
+        <translation>- 编译器配置: %1</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="73"/>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="84"/>
+        <source>Can&apos;t find &quot;%1&quot;.
+</source>
+        <translation>找不到文件&quot;%1&quot;.</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="102"/>
+        <source>The Compiler &apos;%1&apos; doesn&apos;t exists!</source>
+        <translation>找不到编译器&apos;%1&apos;.</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="104"/>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
+        <translation>请检查编译器设置页中的“程序”页。</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="107"/>
+        <source>Processing %1 source file:</source>
+        <translation>正在处理%1源程序文件:</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="109"/>
+        <source>- %1 Compiler: %2</source>
+        <translation>- %1 编译器: %2</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="110"/>
+        <source>- Command: %1 %2</source>
+        <translation>- 命令: %1 %2</translation>
+    </message>
+    <message>
+        <location filename="../compiler/sdccfilecompiler.cpp" line="123"/>
+        <source>Can&apos;t delete the old executable file &quot;%1&quot;.
+</source>
+        <translation>无法删除旧的可执行文件&quot;%1&quot;.</translation>
     </message>
 </context>
 <context>

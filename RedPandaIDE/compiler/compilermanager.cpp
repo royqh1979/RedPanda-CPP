@@ -16,6 +16,9 @@
  */
 #include "compilermanager.h"
 #include "filecompiler.h"
+#ifdef ENABLE_SDCC
+#include "sdccfilecompiler.h"
+#endif
 #include "stdincompiler.h"
 #include "../mainwindow.h"
 #include "executablerunner.h"
@@ -87,7 +90,12 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
         //deleted when thread finished
-        mCompiler = new FileCompiler(filename,encoding,compileType,false,false);
+#ifdef ENABLE_SDCC
+        if (pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
+            mCompiler = new SDCCFileCompiler(filename,encoding,compileType);
+        } else
+#endif
+            mCompiler = new FileCompiler(filename,encoding,compileType,false,false);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);

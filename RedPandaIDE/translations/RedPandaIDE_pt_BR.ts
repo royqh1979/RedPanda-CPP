@@ -463,6 +463,18 @@
         <source>An unknown error occurred.</source>
         <translation>Erro desconhecido detectado.</translation>
     </message>
+    <message>
+        <source> - Command: %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Command: %1 %2 &gt; &quot;%3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open file &quot;%1&quot; for write!</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CompilerAutolinkWidget</name>
@@ -777,6 +789,10 @@
     </message>
     <message>
         <source>Searching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Binary suffix</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7114,6 +7130,51 @@
     <message>
         <source>Continue Search</source>
         <translation type="obsolete">Continuar a procura</translation>
+    </message>
+</context>
+<context>
+    <name>SDCCFileCompiler</name>
+    <message>
+        <source>Compiling single file...</source>
+        <translation type="unfinished">Compilando arquivo único...</translation>
+    </message>
+    <message>
+        <source>- Filename: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Compiler Set Name: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t find &quot;%1&quot;.
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Compiler &apos;%1&apos; doesn&apos;t exists!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Processing %1 source file:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- %1 Compiler: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Command: %1 %2</source>
+        <translation type="unfinished">- Comando: %1 %2</translation>
+    </message>
+    <message>
+        <source>Can&apos;t delete the old executable file &quot;%1&quot;.
+</source>
+        <translation type="unfinished">Impossível remover o antigo arquivo executável &quot;%1&quot;.</translation>
     </message>
 </context>
 <context>

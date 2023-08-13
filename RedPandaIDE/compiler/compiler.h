@@ -84,7 +84,7 @@ protected:
             QSet<QString>& parsedFiles);
     void log(const QString& msg);
     void error(const QString& msg);
-    void runCommand(const QString& cmd, const QString& arguments, const QString& workingDir, const QByteArray& inputText=QByteArray());
+    void runCommand(const QString& cmd, const QString& arguments, const QString& workingDir, const QByteArray& inputText=QByteArray(), const QString& outputFile=QString());
 
 protected:
     bool mSilent;
@@ -93,6 +93,7 @@ protected:
     QString mArguments;
     QStringList mExtraCompilersList;
     QStringList mExtraArgumentsList;
+    QStringList mExtraOutputFilesList;
     QString mOutputFile;
     int mErrorCount;
     int mWarningCount;

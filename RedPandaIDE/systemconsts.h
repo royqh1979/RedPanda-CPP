@@ -38,6 +38,8 @@
 #define LLDB_MI_PROGRAM   "lldb-mi.exe"
 #define LLDB_SERVER_PROGRAM   "lldb-server.exe"
 #define SDCC_PROGRAM   "sdcc.exe"
+#define PACKIHX_PROGRAM   "packihx.exe"
+#define MAKEBIN_PROGRAM   "makebin.exe"
 #elif defined(Q_OS_LINUX)
 #define CONSOLE_PAUSER  "consolepauser"
 #define ASSEMBLER   "nasm"
@@ -75,6 +77,8 @@
 #define LLDB_MI_PROGRAM   "lldb-mi"
 #define LLDB_SERVER_PROGRAM   "lldb-server"
 #define SDCC_PROGRAM   "sdcc"
+#define PACKIHX_PROGRAM   "packihx"
+#define MAKEBIN_PROGRAM   "makebin"
 #else
 #error "Only support windows, Linux and MacOS now!"
 #endif
@@ -137,8 +141,13 @@
 #   define XMAKEFILE_NAME    "xmake.lua"
 #   define ALL_FILE_WILDCARD "*"
 #else
-#error "Only support windows and linux now!"
+#error "Only support windows, linux and macos now!"
 #endif
+
+#define SDCC_IHX_SUFFIX "ihx"
+#define SDCC_BIN_SUFFIX "bin"
+#define SDCC_HEX_SUFFIX "hex"
+
 
 class SystemConsts
 {

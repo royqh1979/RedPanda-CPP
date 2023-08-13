@@ -609,6 +609,7 @@ bool ProjectCompiler::prepareForCompile()
                                                             mProject->directory(),
                                                             mProject->makeFileName()));
         mExtraCompilersList.append(mCompiler);
+        mExtraOutputFilesList.append("");
         mExtraArgumentsList.append(QString(" %1 -f \"%2\" all").arg(parallelParam,
                                                             extractRelativePath(
                                                             mProject->directory(),
@@ -625,9 +626,6 @@ bool ProjectCompiler::prepareForCompile()
     log("--------");
     log(tr("- makefile processer: %1").arg(mCompiler));
     log(tr("- Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
-    for(int i=0;i<mExtraCompilersList.count();i++) {
-        log(tr("- Command: %1 %2").arg(extractFileName(mExtraCompilersList[i])).arg(mExtraArgumentsList[i]));
-    }
     log("");
 
     return true;

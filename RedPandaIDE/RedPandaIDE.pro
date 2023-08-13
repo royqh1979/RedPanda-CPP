@@ -7,7 +7,7 @@ CONFIG += nokey
 # CONFIG += ENABLE_VCS
 
 # uncomment the following line to enable sdcc support
-# CONFIG += ENABLE_SDCC
+CONFIG += ENABLE_SDCC
 
 isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP
@@ -395,6 +395,13 @@ FORMS += \
 
 ENABLE_SDCC {
     DEFINES += ENABLE_SDCC
+
+    SOURCES += \
+        compiler/sdccfilecompiler.cpp
+
+    HEADERS += \
+        compiler/sdccfilecompiler.h
+
 }
 
 ENABLE_VCS {

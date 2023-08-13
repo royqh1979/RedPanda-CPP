@@ -66,7 +66,12 @@ void Compiler::run()
         timer.start();
         runCommand(mCompiler, mArguments, mDirectory, pipedText());
         for(int i=0;i<mExtraArgumentsList.count();i++) {
-            runCommand(mExtraCompilersList[i],mExtraArgumentsList[i],mDirectory, pipedText());
+            if (mExtraOutputFilesList[i].isEmpty()) {
+                log(tr(" - Command: %1 %2").arg(extractFileName(mExtraCompilersList[i]),mExtraArgumentsList[i]));
+            } else {
+                log(tr(" - Command: %1 %2 > \"%3\"").arg(extractFileName(mExtraCompilersList[i]), mExtraArgumentsList[i], mExtraOutputFilesList[i]));
+            }
+            runCommand(mExtraCompilersList[i],mExtraArgumentsList[i],mDirectory, pipedText(),mExtraOutputFilesList[i]);
         }
         log("");
         log(tr("Compile Result:"));
@@ -647,7 +652,7 @@ bool Compiler::parseForceUTF8ForAutolink(const QString &filename, QSet<QString> 
     return false;
 }
 
-void Compiler::runCommand(const QString &cmd, const QString  &arguments, const QString &workingDir, const QByteArray& inputText)
+void Compiler::runCommand(const QString &cmd, const QString  &arguments, const QString &workingDir, const QByteArray& inputText, const QString& outputFile)
 {
     QProcess process;
     mStop = false;
@@ -673,8 +678,14 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
     process.setProcessEnvironment(env);
     process.setArguments(splitProcessCommand(arguments));
     process.setWorkingDirectory(workingDir);
-
-
+    QFile output;
+    if (!outputFile.isEmpty()) {
+        output.setFileName(outputFile);
+        if (!output.open(QFile::WriteOnly | QFile::Truncate)) {
+            this->error(tr("Can't open file \"%1\" for write!"));
+            return;
+        };
+    }
     process.connect(&process, &QProcess::errorOccurred,
                     [&](){
                         errorOccurred= true;
@@ -685,11 +696,15 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
         else
             this->error(QString::fromLocal8Bit( process.readAllStandardError()));
     });
-    process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this,outputUTF8](){
-        if (outputUTF8)
-            this->log(QString::fromUtf8(process.readAllStandardOutput()));
-        else
-            this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
+    process.connect(&process, &QProcess::readyReadStandardOutput,[&process,this,outputUTF8,&outputFile,&output](){
+        if (!outputFile.isEmpty()) {
+            output.write(process.readAllStandardOutput());
+        } else {
+            if (outputUTF8)
+                this->log(QString::fromUtf8(process.readAllStandardOutput()));
+            else
+                this->log(QString::fromLocal8Bit( process.readAllStandardOutput()));
+        }
     });
     process.connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),[this](){
         this->error(COMPILE_PROCESS_END);
@@ -738,6 +753,8 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
             throw CompileError(tr("An unknown error occurred."));
         }
     }
+    if (!outputFile.isEmpty())
+        output.close();
 }
 
 PCppParser Compiler::parser() const

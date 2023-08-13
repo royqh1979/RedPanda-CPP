@@ -23,6 +23,7 @@
 #include <QProgressDialog>
 #include "../utils.h"
 #include "../iconsmanager.h"
+#include "../systemconsts.h"
 #include <qt_utils/charsetinfo.h>
 #include <QDebug>
 #include <QFileDialog>
@@ -138,6 +139,38 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     default:
         ui->rbGenerateExecutable->setChecked(true);
     }
+#ifdef ENABLE_SDCC
+    bool isSDCC = (pSet->compilerType()==CompilerType::SDCC);
+    ui->grpCompilationStages->setVisible(!isSDCC);
+    ui->lbPreprocessingSuffix->setVisible(!isSDCC);
+    ui->txtPreprocessingSuffix->setVisible(!isSDCC);
+    ui->lbCompilingSuffix->setVisible(!isSDCC);
+    ui->txtCompilationSuffix->setVisible(!isSDCC);
+    ui->lbExecSuffix->setVisible(!isSDCC);
+    ui->txtExecutableSuffix->setVisible(!isSDCC);
+    ui->lbBinarySuffix->setVisible(isSDCC);
+    ui->cbBinarySuffix->setVisible(isSDCC);
+    if (isSDCC) {
+        ui->cbBinarySuffix->clear();
+        ui->cbBinarySuffix->addItem(SDCC_IHX_SUFFIX);
+        ui->cbBinarySuffix->addItem(SDCC_HEX_SUFFIX);
+        ui->cbBinarySuffix->addItem(SDCC_BIN_SUFFIX);
+        ui->cbBinarySuffix->setCurrentText(pSet->executableSuffix());
+    } else {
+        ui->txtExecutableSuffix->setText(pSet->executableSuffix());
+    }
+#else
+    ui->grpCompilationStages->setVisible(true);
+    ui->lbPreprocessingSuffix->setVisible(true);
+    ui->txtPreprocessingSuffix->setVisible(true);
+    ui->lbCompilingSuffix->setVisible(true);
+    ui->txtCompilationSuffix->setVisible(true);
+    ui->lbExecSuffix->setVisible(true);
+    ui->txtExecutableSuffix->setVisible(true);
+    ui->lbBinarySuffix->setVisible(false);
+    ui->cbBinarySuffix->setVisible(false);
+    ui->txtExecutableSuffix->setText(pSet->executableSuffix());
+#endif
 }
 
 void CompilerSetOptionWidget::doLoad()
@@ -237,7 +270,15 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     }
     pSet->setPreprocessingSuffix(ui->txtPreprocessingSuffix->text());
     pSet->setCompilationProperSuffix(ui->txtCompilationSuffix->text());
+#ifdef ENABLE_SDCC
+    if (pSet->compilerType()==CompilerType::SDCC) {
+        pSet->setExecutableSuffix(ui->cbBinarySuffix->currentText());
+    } else {
+        pSet->setExecutableSuffix(ui->txtExecutableSuffix->text());
+    }
+#else
     pSet->setExecutableSuffix(ui->txtExecutableSuffix->text());
+#endif
 }
 
 QString CompilerSetOptionWidget::getBinDir()

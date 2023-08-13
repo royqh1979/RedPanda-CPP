@@ -1346,6 +1346,7 @@ public:
         QString getCompileOptionValue(const QString& key) const;
 
         int mainVersion() const;
+        QString findProgramInBinDirs(const QString name) const;
 
         bool canCompileC() const;
         bool canCompileCPP() const;
@@ -1452,7 +1453,6 @@ public:
         void setExecutables();
         void setUserInput();
 
-        QString findProgramInBinDirs(const QString name);
 
         QByteArray getCompilerOutput(const QString& binDir, const QString& binFile,
                                      const QStringList& arguments);
