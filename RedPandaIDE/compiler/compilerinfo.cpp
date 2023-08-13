@@ -4,7 +4,6 @@
 CompilerInfo::CompilerInfo(const QString &name):
     mName(name)
 {
-    init();
 }
 
 const QList<PCompilerOption> &CompilerInfo::compilerOptions() const
@@ -199,10 +198,21 @@ void CompilerInfo::prepareCompilerOptions()
 
 CompilerInfoManager::CompilerInfoManager()
 {
-    mInfos.insert(CompilerType::Clang, std::make_shared<ClangCompilerInfo>());
-    mInfos.insert(CompilerType::GCC, std::make_shared<GCCCompilerInfo>());
-    mInfos.insert(CompilerType::GCC_UTF8, std::make_shared<GCCUTF8CompilerInfo>());
-    mInfos.insert(CompilerType::SDCC, std::make_shared<SDCCCompilerInfo>());
+    PCompilerInfo compilerInfo = std::make_shared<ClangCompilerInfo>();
+    compilerInfo->init();
+    mInfos.insert(CompilerType::Clang, compilerInfo);
+
+    compilerInfo = std::make_shared<GCCCompilerInfo>();
+    compilerInfo->init();
+    mInfos.insert(CompilerType::GCC, compilerInfo);
+
+    compilerInfo = std::make_shared<GCCUTF8CompilerInfo>();
+    compilerInfo->init();
+    mInfos.insert(CompilerType::GCC_UTF8, compilerInfo);
+
+    compilerInfo = std::make_shared<SDCCCompilerInfo>();
+    compilerInfo->init();
+    mInfos.insert(CompilerType::SDCC, compilerInfo);
 }
 
 PCompilerInfo CompilerInfoManager::getInfo(CompilerType compilerType)
@@ -414,7 +424,7 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
     sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
     sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
-    addOption(SDCC_CMD_OPT_PROCESSOR, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-m", sl);
+    addOption(SDCC_CMD_OPT_PROCESSOR, QObject::tr("Processor (-m)"), groupName, true, true, false, "-m", sl);
 
     // C++ Language Standards
     sl.clear();

@@ -1701,12 +1701,21 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
 
         setProperties(compilerFolder,c_prog);
 
+        if (mName.isEmpty()) {
+            mFullLoaded = false;
+            return;
+        }
+
         //manually set the directories
         setDirectories(compilerFolder);
 
         setExecutables();
 
         setUserInput();
+
+        if (mCompilerType == CompilerType::SDCC) {
+            mExecutableSuffix = "ihx";
+        }
 
         mFullLoaded = true;
     } else {

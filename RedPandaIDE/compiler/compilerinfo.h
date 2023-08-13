@@ -88,6 +88,7 @@ public:
     const QString &name() const;
     PCompilerOption getCompilerOption(const QString& key) const;
     bool hasCompilerOption(const QString& key) const;
+    void init();
 
     virtual bool supportConvertingCharset()=0;
     virtual bool forceUTF8InDebugger()=0;
@@ -103,7 +104,6 @@ protected:
                    bool isLinker,
                    const QString& setting,
                    const CompileOptionChoiceList& choices = CompileOptionChoiceList());
-    void init();
     virtual void prepareCompilerOptions();
 protected:
     CompilerOptionMap mCompilerOptions;

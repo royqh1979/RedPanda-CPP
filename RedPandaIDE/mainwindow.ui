@@ -120,7 +120,7 @@
      <x>0</x>
      <y>0</y>
      <width>955</width>
-     <height>30</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -965,7 +965,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>1</number>
     </property>
     <property name="iconSize">
      <size>
@@ -1055,7 +1055,7 @@
          <bool>false</bool>
         </property>
         <property name="lineWrapMode">
-         <enum>QPlainTextEdit::NoWrap</enum>
+         <enum>QPlainTextEdit::WidgetWidth</enum>
         </property>
         <property name="readOnly">
          <bool>true</bool>

@@ -6418,6 +6418,14 @@
         <source>Enable Sanitizer (-fsanitize=)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Processor (-m)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Language standard (-std)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>
