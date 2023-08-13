@@ -25,40 +25,83 @@ qmake 变量:
 - `XDG_ADAPTIVE_ICON=ON`：遵循 [freedesktop.org 图标主题规范](https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html)安装图标，以适应不同的主题和尺寸。AppImage 需要启用此项；Linux 打包 `PREFIX=/usr` 时推荐启用此项。
 - `LINUX_STATIC_IME_PLUGIN=ON`（make 阶段）：静态链接输入法插件。推荐在使用静态版本的 Qt 编译时启用；**不要**在使用动态版本的 Qt 编译时启用。
 
-## Ubuntu
+## Debian 及其衍生版本
 
-### 1.安装编译器
+### 适用于当前系统的 deb 包
 
-```bash
-apt install gcc g++ make gdb gdbserver
-```
+1. 安装依赖包：
+   ```bash
+   sudo apt install \
+     build-essential debhelper \
+     libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
+   ```
+2. 构建 deb 包：
+   ```bash
+   ./packages/debian/builddeb.sh
+   ```
+3. 安装 deb 包：
+   ```bash
+   sudo apt install /tmp/redpanda-cpp_*.deb
+   ```
+4. 运行小熊猫 C++：
+   ```bash
+   RedPandaIDE
+   ```
 
-### 2.安装QT5和依赖包
+### 在容器中构建适用于多架构/版本的包
 
-```bash
-apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
-```
+Windows 宿主的额外要求：
+- Docker 使用基于 WSL 2 的引擎，或者对此项目文件夹启用文件共享（Settings > Resources > File sharing）；
+- PowerShell (Core) 或 Windows PowerShell。
 
-### 3.下载源码
+* Linux 宿主：
+  ```bash
+  DOCKER=docker # 或 podman
+  SOURCE_DIR=/build/RedPanda-CPP # *容器内*的源代码路径
 
-```bash
-git clone https://gitee.com/royqh1979/RedPanda-CPP.git
-```
+  MIRROR=mirrors.ustc.edu.cn # 留空以使用默认的镜像站
+  PLATFORM=linux/amd64 # 或 linux/386、linux/arm64/v8、linux/arm/v7、linux/riscv64
+  IMAGE=debian:12 # 或 Ubuntu（如 ubuntu:22.04）
 
-### 4.编译
+  $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -v $PWD:$SOURCE_DIR --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
+  ```
+* Windows 宿主：
+  ```ps1
+  $DOCKER = "docker" # 或 "podman"
+  $SOURCE_DIR = "/build/RedPanda-CPP" # *容器内*的源代码路径
 
-```bash
-cd RedPanda-CPP/
-qmake Red_Panda_CPP.pro
-make -j$(nproc)
-sudo make install
-```
+  $MIRROR = "mirrors.ustc.edu.cn" # 留空以使用默认的镜像站
+  $PLATFORM = "linux/amd64" # 或 "linux/386"、"linux/arm64/v8"、"linux/arm/v7"、"linux/riscv64"
+  $IMAGE = "debian:12" # 或 Ubuntu（如 "ubuntu:22.04"）
 
-### 5.运行
+  & $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -v "$(Get-Location):$SOURCE_DIR" --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
+  ```
 
-```bash
-RedPandaIDE
-```
+### 手动安装
+
+1. 安装编译器
+   ```bash
+   apt install gcc g++ make gdb gdbserver
+   ```
+2. 安装 Qt 5 和依赖包
+   ```bash
+   apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
+   ```
+3. 下载源码
+   ```bash
+   git clone https://gitee.com/royqh1979/RedPanda-CPP.git
+   ```
+4. 编译
+   ```bash
+   cd RedPanda-CPP/
+   qmake Red_Panda_CPP.pro
+   make -j$(nproc)
+   sudo make install
+   ```
+5. 运行
+   ```bash
+   RedPandaIDE
+   ```
 
 ## Arch Linux 及衍生版本
 

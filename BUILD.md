@@ -22,40 +22,83 @@ qmake variables:
 - `XDG_ADAPTIVE_ICON=ON`: install the icon file following [freedesktop.org Icon Theme Specification](https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html) for adaptiveness to themes and sizes. Required by AppImage; recommended for Linux packaging if `PREFIX` set to `/usr`.
 - `LINUX_STATIC_IME_PLUGIN=ON` (make phase): link to static ime plugin. Recommended for building with static version of Qt; **DO NOT** set for dynamic version of Qt.
 
-## Ubuntu
+## Debian and Its Derivatives
 
-### 1. Install Compiler
+### “deb” Package for Current OS
 
-```bash
-apt install gcc g++ make gdb gdbserver
-```
+1. Install dependency:
+   ```bash
+   sudo apt install \
+     build-essential debhelper \
+     libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
+   ```
+2. Build the package:
+   ```bash
+   ./packages/debian/builddeb.sh
+   ```
+3. Install the package:
+   ```bash
+   sudo apt install /tmp/redpanda-cpp_*.deb
+   ```
+4. Run Red Panda C++:
+   ```bash
+   RedPandaIDE
+   ```
 
-### 2. Install Qt 5 and Other Dependencies
+### Build Packages for Multiple Architectures and Versions in Containers
 
-```bash
-apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
-```
+Extra requirements for Windows host:
+- Docker uses WSL 2 based engine, or enable file sharing on the project folder (Settings > Resources > File sharing);
+- PowerShell (Core) or Windows PowerShell.
 
-### 3. Fetch Source Code
+* Linux host:
+  ```bash
+  DOCKER=docker # or podman
+  SOURCE_DIR=/build/RedPanda-CPP # source directory *in container*
 
-```bash
-git clone https://github.com/royqh1979/RedPanda-CPP.git
-```
+  MIRROR=mirrors.kernel.org # leave empty for default mirror
+  PLATFORM=linux/amd64 # or linux/386, linux/arm64/v8, linux/arm/v7, linux/riscv64
+  IMAGE=debian:12 # or Ubuntu (e.g. ubuntu:22.04)
 
-### 4. Build
+  $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -v $PWD:$SOURCE_DIR --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
+  ```
+* Windows host:
+  ```ps1
+  $DOCKER = "docker" # or "podman"
+  $SOURCE_DIR = "/build/RedPanda-CPP" # source directory *in container*
 
-```bash
-cd RedPanda-CPP/
-qmake Red_Panda_CPP.pro
-make -j$(nproc)
-sudo make install
-```
+  $MIRROR = "mirrors.kernel.org" # leave empty for default mirror
+  $PLATFORM = "linux/amd64" # or "linux/386", "linux/arm64/v8", "linux/arm/v7", "linux/riscv64"
+  $IMAGE = "debian:12" # or Ubuntu (e.g. "ubuntu:22.04")
 
-### 5. Run
+  & $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -v "$(Get-Location):$SOURCE_DIR" --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
+  ```
 
-```bash
-RedPandaIDE
-```
+### Manual Install
+
+1. Install compiler
+   ```bash
+   apt install gcc g++ make gdb gdbserver
+   ```
+2. Install Qt 5 and other dependencies
+   ```bash
+   apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
+   ```
+3. Fetch source code
+   ```bash
+   git clone https://github.com/royqh1979/RedPanda-CPP.git
+   ```
+4. Build
+   ```bash
+   cd RedPanda-CPP/
+   qmake Red_Panda_CPP.pro
+   make -j$(nproc)
+   sudo make install
+   ```
+5. Run
+   ```bash
+   RedPandaIDE
+   ```
 
 ## Arch Linux
 
