@@ -210,9 +210,11 @@ CompilerInfoManager::CompilerInfoManager()
     compilerInfo->init();
     mInfos.insert(CompilerType::GCC_UTF8, compilerInfo);
 
+#ifdef ENABLE_SDCC
     compilerInfo = std::make_shared<SDCCCompilerInfo>();
     compilerInfo->init();
     mInfos.insert(CompilerType::SDCC, compilerInfo);
+#endif
 }
 
 PCompilerInfo CompilerInfoManager::getInfo(CompilerType compilerType)
@@ -363,6 +365,7 @@ bool GCCUTF8CompilerInfo::supportStaticLink()
     return true;
 }
 
+#ifdef ENABLE_SDCC
 SDCCCompilerInfo::SDCCCompilerInfo():CompilerInfo(COMPILER_SDCC)
 {
 
@@ -440,3 +443,4 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("SDCC C2x","sdcc2x"));
     addOption(SDCC_CMD_OPT_STD, QObject::tr("Language standard (-std)"), groupName, false, true, false, "-std-", sl);
 }
+#endif

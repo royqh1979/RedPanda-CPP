@@ -1442,10 +1442,12 @@ public:
 
     private:
         void setGCCProperties(const QString& binDir, const QString& c_prog);
-        void setSDCCProperties(const QString& binDir, const QString& c_prog);
         void setDirectories(const QString& binDir);
         void setGCCDirectories(const QString& binDir);
+#ifdef ENABLE_SDCC
+        void setSDCCProperties(const QString& binDir, const QString& c_prog);
         void setSDCCDirectories(const QString& binDir);
+#endif
         //load hard defines
         void setExecutables();
         void setUserInput();

@@ -2968,11 +2968,13 @@ void Editor::initParser()
 
 ParserLanguage Editor::calcParserLanguage()
 {
+#ifdef ENABLE_SDCC
     if (!inProject()
             && pSettings->compilerSets().defaultSet()
             && pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
         return ParserLanguage::SDCC;
     }
+#endif
     return mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
 }
 
@@ -3476,12 +3478,14 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
             case ParserLanguage::C:
                 keywords = CKeywords;
                 break;
+#ifdef ENABLE_SDCC
             case ParserLanguage::SDCC:
                 keywords = CKeywords;
                 foreach (const QString& keyword, SDCCKeywords.keys()) {
                     keywords.insert(keyword);
                 }
                 break;
+#endif
             }
             if (pSettings->editor().enableCustomCTypeKeywords()) {
                 foreach (const QString& keyword, pSettings->editor().customCTypeKeywords()) {
@@ -5244,6 +5248,7 @@ void Editor::applySettings()
                 set.insert(s);
             ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
         }
+#ifdef ENABLE_SDCC
     } else if (!inProject() && pSettings->compilerSets().defaultSet()
                && pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
         if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
@@ -5252,6 +5257,7 @@ void Editor::applySettings()
                 set.insert(s);
             ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
         }
+#endif
     } else {
         if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(QSet<QString>());

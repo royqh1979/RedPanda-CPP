@@ -6,6 +6,9 @@ CONFIG += nokey
 # uncomment the following line to enable vcs (git) support
 # CONFIG += ENABLE_VCS
 
+# uncomment the following line to enable sdcc support
+# CONFIG += ENABLE_SDCC
+
 isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP
 }
@@ -389,6 +392,10 @@ FORMS += \
     widgets/searchdialog.ui \
     widgets/searchinfiledialog.ui \
     widgets/signalmessagedialog.ui
+
+ENABLE_SDCC {
+    DEFINES += ENABLE_SDCC
+}
 
 ENABLE_VCS {
 
