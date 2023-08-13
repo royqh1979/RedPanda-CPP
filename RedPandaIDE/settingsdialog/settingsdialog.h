@@ -53,7 +53,11 @@ public:
 
 private slots:
     void closeAndQuit();
+    void showWidget(const QModelIndex &index);
+
     void widget_settings_changed(bool value);
+
+    void onWidgetsViewCurrentChanged(const QModelIndex &index, const QModelIndex &previous);
     void on_widgetsView_clicked(const QModelIndex &index);
 
     void on_btnCancel_pressed();

@@ -78,6 +78,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->widgetsView->setModel(&model);
     delete m;
 
+    connect(ui->widgetsView->selectionModel(), &QItemSelectionModel::currentChanged,
+            this, &SettingsDialog::onWidgetsViewCurrentChanged);
+
     model.setHorizontalHeaderLabels(QStringList());
 
     ui->btnApply->setEnabled(false);
@@ -308,30 +311,17 @@ bool SettingsDialog::setCurrentWidget(const QString &widgetName, const QString &
 
 void SettingsDialog::on_widgetsView_clicked(const QModelIndex &index)
 {
-    if (!index.isValid())
-        return;
-    int i = index.data(GetWidgetIndexRole).toInt();
-    if (i>=0) {
-        saveCurrentPageSettings(true);
-        SettingsWidget* pWidget = mSettingWidgets[i];
-        if (ui->scrollArea->widget()!=nullptr) {
-            QWidget* w = ui->scrollArea->takeWidget();
-            w->setParent(nullptr);
-        }
-        ui->scrollArea->setWidget(pWidget);
-        ui->lblWidgetCaption->setText(QString("%1 > %2").arg(pWidget->group()).arg(pWidget->name()));
-
-        ui->btnApply->setEnabled(false);
-    } else if (model.hasChildren(index)) {
-        ui->widgetsView->expand(index);
-        QModelIndex childIndex = this->model.index(0,0,index);
-        emit ui->widgetsView->clicked(childIndex);
-    }
+    showWidget(index);
 }
 
 void SettingsDialog::widget_settings_changed(bool value)
 {
     ui->btnApply->setEnabled(value);
+}
+
+void SettingsDialog::onWidgetsViewCurrentChanged(const QModelIndex &index, const QModelIndex &/*previous*/)
+{
+    showWidget(index);
 }
 
 void SettingsDialog::on_btnCancel_pressed()
@@ -387,4 +377,27 @@ void SettingsDialog::closeAndQuit()
 {
     mAppShouldQuit = true;
     close();
+}
+
+void SettingsDialog::showWidget(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+    int i = index.data(GetWidgetIndexRole).toInt();
+    if (i>=0) {
+        saveCurrentPageSettings(true);
+        SettingsWidget* pWidget = mSettingWidgets[i];
+        if (ui->scrollArea->widget()!=nullptr) {
+            QWidget* w = ui->scrollArea->takeWidget();
+            w->setParent(nullptr);
+        }
+        ui->scrollArea->setWidget(pWidget);
+        ui->lblWidgetCaption->setText(QString("%1 > %2").arg(pWidget->group()).arg(pWidget->name()));
+
+        ui->btnApply->setEnabled(false);
+    } else if (model.hasChildren(index)) {
+        ui->widgetsView->expand(index);
+        QModelIndex childIndex = this->model.index(0,0,index);
+        emit ui->widgetsView->clicked(childIndex);
+    }
 }
