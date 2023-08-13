@@ -4,6 +4,8 @@ set -xe
 
 VERSION=$(sed -nr -e '/APP_VERSION\s*=/ s/APP_VERSION\s*=\s*(([0-9]+\.)*[0-9]+)\s*/\1/p' /build/RedPanda-CPP/Red_Panda_CPP.pro)
 APPIMAGE_FILE=RedPandaIDE-$VERSION-$CARCH.AppImage
+RUNTIME_FILE=/opt/appimage-runtime
+RUNTIME_SIZE=$(wc -c <$RUNTIME_FILE)
 
 # build RedPanda C++
 mkdir -p /build/redpanda-build
@@ -27,7 +29,9 @@ cp /usr/local/bin/alacritty usr/bin
 
 # create AppImage
 cd /build
-appimagetool --appimage-extract-and-run RedPandaIDE.AppDir $APPIMAGE_FILE
+mksquashfs RedPandaIDE.AppDir $APPIMAGE_FILE -offset $RUNTIME_SIZE -comp zstd -root-owned -noappend -b 1M -mkfs-time 0
+dd if=$RUNTIME_FILE of=$APPIMAGE_FILE conv=notrunc
+chmod +x $APPIMAGE_FILE
 
 # copy back to host
 mkdir -p /build/RedPanda-CPP/dist

@@ -1,12 +1,18 @@
-##########################
-# AppImage on Windows host
-##########################
+##################################
+# Linux packageing on Windows host
+##################################
 
 # script run in docker
 /packages/appimage/01-in-docker.sh eol=lf
+/packages/debian/01-in-docker.sh eol=lf
+/packages/debian/rules eol=lf
 
 # text files to be packed
 /packages/appimage/AppRun.sh eol=lf
+/packages/debian/changelog eol=lf
+/packages/debian/compat eol=lf
+/packages/debian/control eol=lf
+/packages/debian/copyright eol=lf
 /platform/linux/install.sh eol=lf
 /platform/linux/redpandaide.desktop.in eol=lf
 /platform/linux/redpandaide.svg eol=lf

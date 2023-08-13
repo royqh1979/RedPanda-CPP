@@ -1,9 +1,9 @@
 _pkgname=RedPanda-CPP
 pkgname=${_pkgname,,}-git
-pkgver=2.12.r1.g57c4c5bc
+pkgver=2.23.r14.gd1214e3d
 pkgrel=1
 pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (development version)'
-arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64')
+arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64' 'riscv64')
 url="https://github.com/royqh1979/$_pkgname"
 license=('GPL3')
 depends=(qt5-base qt5-svg gcc gdb)
