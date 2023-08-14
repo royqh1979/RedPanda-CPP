@@ -427,7 +427,7 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
     sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
     sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
-    addOption(SDCC_CMD_OPT_PROCESSOR, QObject::tr("Processor (-m)"), groupName, true, true, false, "-m", sl);
+    addOption(SDCC_CMD_OPT_PROCESSOR, QObject::tr("Processor (-m)"), groupName, true, false, false, "-m", sl);
 
     // C++ Language Standards
     sl.clear();
@@ -441,6 +441,6 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("SDCC C11","sdcc11"));
     sl.append(QPair<QString,QString>("SDCC C17","sdcc17"));
     sl.append(QPair<QString,QString>("SDCC C2x","sdcc2x"));
-    addOption(SDCC_CMD_OPT_STD, QObject::tr("Language standard (-std)"), groupName, false, true, false, "-std-", sl);
+    addOption(SDCC_CMD_OPT_STD, QObject::tr("Language standard (--std)"), groupName, true, false, false, "--std-", sl);
 }
 #endif

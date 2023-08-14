@@ -92,6 +92,9 @@ bool SDCCFileCompiler::prepareForCompile()
         mExtraOutputFilesList.append("");
     }
 
+    mArguments += getCCompileArguments(false);
+    mArguments += getCIncludeArguments();
+    mArguments += getProjectIncludeArguments();
     QString strFileType = "C";
     mCompiler = compilerSet()->CCompiler();
 

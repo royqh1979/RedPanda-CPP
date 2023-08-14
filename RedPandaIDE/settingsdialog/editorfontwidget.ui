@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>876</width>
-    <height>643</height>
+    <height>713</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,7 +39,14 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QFontComboBox" name="cbNonAsciiFont"/>
+          <widget class="QFontComboBox" name="cbNonAsciiFont">
+           <property name="editable">
+            <bool>false</bool>
+           </property>
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer_7">
@@ -184,7 +191,7 @@
             <bool>false</bool>
            </property>
            <property name="sizeAdjustPolicy">
-            <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+            <enum>QComboBox::AdjustToContents</enum>
            </property>
            <property name="fontFilters">
             <set>QFontComboBox::AllFonts</set>
@@ -569,7 +576,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizeAdjustPolicy">
-                  <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+                  <enum>QComboBox::AdjustToContents</enum>
                  </property>
                  <property name="fontFilters">
                   <set>QFontComboBox::AllFonts</set>
