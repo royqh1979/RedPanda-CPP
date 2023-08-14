@@ -37,6 +37,8 @@ private:
     CppCompileType mCompileType;
     QDateTime mStartCompileTime;
     QString mIhxFilename;
+    QString mRelFilename;
+    bool mNoStartup;
     // Compiler interface
 protected:
     bool prepareForRebuild() override;

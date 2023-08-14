@@ -6655,7 +6655,7 @@
     </message>
     <message>
         <source>Language standard (-std)</source>
-        <translation>Linguagem padrão (-std)</translation>
+        <translation type="vanished">Linguagem padrão (-std)</translation>
     </message>
     <message>
         <source>Warnings</source>
@@ -6903,6 +6903,14 @@
     </message>
     <message>
         <source>Processor (-m)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Language standard (--std)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t generate startup code</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

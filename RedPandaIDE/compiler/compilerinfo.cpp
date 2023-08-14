@@ -442,5 +442,7 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("SDCC C17","sdcc17"));
     sl.append(QPair<QString,QString>("SDCC C2x","sdcc2x"));
     addOption(SDCC_CMD_OPT_STD, QObject::tr("Language standard (--std)"), groupName, true, false, false, "--std-", sl);
+
+    addOption(SDCC_OPT_NOSTARTUP, QObject::tr("Don't generate startup code"),groupName,false,false,false,"nostartup");
 }
 #endif

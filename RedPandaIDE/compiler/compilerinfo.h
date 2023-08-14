@@ -51,6 +51,7 @@
 #ifdef ENABLE_SDCC
 #define SDCC_CMD_OPT_PROCESSOR "sdcc_cmd_opt_processor"
 #define SDCC_CMD_OPT_STD "sdcc_cmd_opt_std"
+#define SDCC_OPT_NOSTARTUP "sdcc_opt_nostartup"
 #endif
 
 #define COMPILER_OPTION_ON "on"

@@ -6439,7 +6439,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Language standard (-std)</source>
+        <source>Language standard (--std)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t generate startup code</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

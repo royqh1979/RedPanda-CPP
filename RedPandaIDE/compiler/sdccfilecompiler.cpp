@@ -16,9 +16,7 @@
  */
 #include "sdccfilecompiler.h"
 #include "utils.h"
-#include "../mainwindow.h"
 #include "compilermanager.h"
-#include "qsynedit/syntaxer/asm.h"
 #include "../systemconsts.h"
 
 #include <QFile>
@@ -30,7 +28,8 @@ SDCCFileCompiler::SDCCFileCompiler(const QString &filename, const QByteArray &en
                            CppCompileType compileType):
     Compiler(filename, false,false),
     mEncoding(encoding),
-    mCompileType(compileType)
+    mCompileType(compileType),
+    mNoStartup(false)
 {
 
 }
@@ -43,29 +42,38 @@ bool SDCCFileCompiler::prepareForCompile()
     log(tr("- Filename: %1").arg(mFilename));
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
     log("");
-    mIhxFilename = changeFileExt(mFilename,SDCC_IHX_SUFFIX);
+
+    QString strFileType = "C";
+    mCompiler = compilerSet()->CCompiler();
+    mArguments += getCCompileArguments(false);
+    mArguments += getCIncludeArguments();
+    mArguments += getProjectIncludeArguments();
+    mArguments += getLibraryArguments(FileType::CSource);
+
+    if (!fileExists(mCompiler)) {
+        throw CompileError(
+                    tr("The Compiler '%1' doesn't exists!").arg(mCompiler)
+                    +"<br />"
+                    +tr("Please check the \"program\" page of compiler settings."));
+    }
+
     mOutputFile=changeFileExt(mFilename, compilerSet()->executableSuffix());
-    mArguments = QString(" \"%1\"").arg(mFilename);
-    mArguments+=QString(" -o \"%1\"").arg(mIhxFilename);
+    mIhxFilename = changeFileExt(mFilename,SDCC_IHX_SUFFIX);
 
-    //remove the old file if it exists
-    QFile outputFile(mOutputFile);
-//    if (outputFile.exists()) {
-//        if (!outputFile.remove()) {
-//            error(tr("Can't delete the old binary file 2 \"%1\".\n").arg(mOutputFile));
-//            return false;
-//        }
-//    }
-
-
-//    QFile ihxOutputFile(ihxFile);
-//    if (ihxOutputFile.exists()) {
-//        if (!outputFile.remove()) {
-//            error(tr("Can't delete the old binary file 1 \"%1\".\n").arg(ihxFile));
-//            return false;
-//        }
-//    }
-
+    QString val = compilerSet()->compileOptions().value(SDCC_OPT_NOSTARTUP);
+    mNoStartup = (val==COMPILER_OPTION_ON);
+    if (mNoStartup) {
+        mRelFilename = changeFileExt(mFilename,SDCC_REL_SUFFIX);
+        mArguments = QString(" -c \"%1\"").arg(mFilename);
+        mExtraCompilersList.append(mCompiler);
+        QString args;
+        args = QString(" -o \"%1\" \"%2\" ").arg(mIhxFilename, mRelFilename);
+        mExtraArgumentsList.append(args);
+        mExtraOutputFilesList.append("");
+    } else {
+        mArguments = QString(" \"%1\"").arg(mFilename);
+        mArguments+=QString(" -o \"%1\"").arg(mIhxFilename);
+    }
 
     if (compilerSet()->executableSuffix() == SDCC_HEX_SUFFIX) {
         QString packihx = compilerSet()->findProgramInBinDirs(PACKIHX_PROGRAM);
@@ -92,21 +100,6 @@ bool SDCCFileCompiler::prepareForCompile()
         mExtraOutputFilesList.append("");
     }
 
-    mArguments += getCCompileArguments(false);
-    mArguments += getCIncludeArguments();
-    mArguments += getProjectIncludeArguments();
-    QString strFileType = "C";
-    mCompiler = compilerSet()->CCompiler();
-
-    mArguments += getLibraryArguments(FileType::CSource);
-
-    if (!fileExists(mCompiler)) {
-        throw CompileError(
-                    tr("The Compiler '%1' doesn't exists!").arg(mCompiler)
-                    +"<br />"
-                    +tr("Please check the \"program\" page of compiler settings."));
-    }
-
     log(tr("Processing %1 source file:").arg(strFileType));
     log("------------------");
     log(tr("- %1 Compiler: %2").arg(strFileType).arg(mCompiler));
@@ -118,9 +111,19 @@ bool SDCCFileCompiler::prepareForCompile()
 
 bool SDCCFileCompiler::beforeRunExtraCommand(int idx)
 {
-    if (idx==0) {
-        QFileInfo file(mIhxFilename);
-        return file.exists() && (file.lastModified()>mStartCompileTime);
+    if (mNoStartup) {
+        if (idx==0) {
+            QFileInfo file(mRelFilename);
+            return file.exists() && (file.lastModified()>mStartCompileTime);
+        } else if (idx==1) {
+            QFileInfo file(mIhxFilename);
+            return file.exists() && (file.lastModified()>mStartCompileTime);
+        }
+    } else {
+        if (idx==0) {
+            QFileInfo file(mIhxFilename);
+            return file.exists() && (file.lastModified()>mStartCompileTime);
+        }
     }
     return true;
 }

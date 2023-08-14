@@ -147,6 +147,7 @@
 #define SDCC_IHX_SUFFIX "ihx"
 #define SDCC_BIN_SUFFIX "bin"
 #define SDCC_HEX_SUFFIX "hex"
+#define SDCC_REL_SUFFIX "rel"
 
 
 class SystemConsts
