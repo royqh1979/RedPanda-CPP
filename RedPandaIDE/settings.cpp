@@ -2318,7 +2318,7 @@ void Settings::CompilerSet::setSDCCProperties(const QString& binDir, const QStri
 
     //Target
     int delimPos = 0;
-    while (delimPos<output.length() && (output[delimPos]>=32))
+    while (delimPos<output.length() && (output[delimPos]>=((char)32)))
         delimPos++;
     QString triplet = output.mid(0,delimPos);
 
@@ -2369,26 +2369,10 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
 
     arguments.append(NULL_FILE);
 
-//    QStringList args;
-//    args.append("-nostdinc");
-//    args.append("-Wall");
-//    args.append("-std=c11");
-//    args.append("--obj-ext=.rel");
-//    args.append("-d\"M\"");
-//    args.append("-E");
-//    args.append("-isystem");
-//    args.append("D:\\sdcc\\bin\\..\\include\\mcs51");
-//    args.append("-xc");
-//    args.append("NUL");
-//    QFileInfo info(findProgramInBinDirs("sdcpp.exe"));
-//    qDebug()<<"**"<<getCompilerOutput(info.absolutePath(),info.fileName(),args);
-
-//    qDebug()<<mCCompiler<<arguments;
     QFileInfo ccompiler(mCCompiler);
     QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
     // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
 //    qDebug()<<"------------------";
-//    qDebug()<<output.split('\n');
     QStringList result;
 #ifdef ENABLE_SDCC
     if (mCompilerType==CompilerType::SDCC) {
