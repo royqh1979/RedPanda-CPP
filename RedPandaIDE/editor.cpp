@@ -5240,27 +5240,20 @@ void Editor::applySettings()
         setRightEdge(0);
     }
 
-    if (pSettings->editor().enableCustomCTypeKeywords()) {
-        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
-            QSet<QString> set;
+    if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
+        QSet<QString> set;
+        if (pSettings->editor().enableCustomCTypeKeywords()) {
             foreach(const QString& s, pSettings->editor().customCTypeKeywords())
                 set.insert(s);
-            ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
         }
 #ifdef ENABLE_SDCC
-    } else if (!inProject() && pSettings->compilerSets().defaultSet()
+        if (!inProject() && pSettings->compilerSets().defaultSet()
                && pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
-        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
-            QSet<QString> set;
-            foreach(const QString& s, pSettings->editor().customCTypeKeywords())
+            foreach(const QString& s, SDCCKeywords.keys())
                 set.insert(s);
-            ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
         }
 #endif
-    } else {
-        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
-            ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(QSet<QString>());
-        }
+        ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
     }
 
     this->setUndoLimit(pSettings->editor().undoLimit());

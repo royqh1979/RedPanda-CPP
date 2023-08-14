@@ -135,7 +135,7 @@ void SettingsDialog::selectFirstWidget()
                 widgetIndex,
                 QItemSelectionModel::Select
                 );
-    on_widgetsView_clicked(widgetIndex);
+    showWidget(widgetIndex);
 }
 
 PSettingsDialog SettingsDialog::optionDialog()
@@ -301,17 +301,11 @@ bool SettingsDialog::setCurrentWidget(const QString &widgetName, const QString &
         QStandardItem* pWidgetItem = pGroupItem->child(i);
         if (pWidgetItem->text() == widgetName) {
             ui->widgetsView->setCurrentIndex(pWidgetItem->index());
-            on_widgetsView_clicked(pWidgetItem->index());
+            showWidget(pWidgetItem->index());
             return true;
         }
     }
     return false;
-}
-
-
-void SettingsDialog::on_widgetsView_clicked(const QModelIndex &index)
-{
-    showWidget(index);
 }
 
 void SettingsDialog::widget_settings_changed(bool value)

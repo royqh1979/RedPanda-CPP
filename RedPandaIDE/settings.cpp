@@ -2346,6 +2346,7 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
 #ifdef ENABLE_SDCC
     if (mCompilerType==CompilerType::SDCC) {
         arguments.append("c");
+        arguments.append("-V");
         key=SDCC_CMD_OPT_PROCESSOR;
     } else {
 #endif
@@ -2367,17 +2368,62 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
     }
 
     arguments.append(NULL_FILE);
-    //qDebug()<<arguments;
+
+//    QStringList args;
+//    args.append("-nostdinc");
+//    args.append("-Wall");
+//    args.append("-std=c11");
+//    args.append("--obj-ext=.rel");
+//    args.append("-d\"M\"");
+//    args.append("-E");
+//    args.append("-isystem");
+//    args.append("D:\\sdcc\\bin\\..\\include\\mcs51");
+//    args.append("-xc");
+//    args.append("NUL");
+//    QFileInfo info(findProgramInBinDirs("sdcpp.exe"));
+//    qDebug()<<"**"<<getCompilerOutput(info.absolutePath(),info.fileName(),args);
+
+//    qDebug()<<mCCompiler<<arguments;
     QFileInfo ccompiler(mCCompiler);
     QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
     // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
-
+//    qDebug()<<"------------------";
+//    qDebug()<<output.split('\n');
     QStringList result;
-    QList<QByteArray> lines = output.split('\n');
-    for (QByteArray& line:lines) {
-        QByteArray trimmedLine = line.trimmed();
-        if (!trimmedLine.isEmpty()) {
-            result.append(trimmedLine);
+#ifdef ENABLE_SDCC
+    if (mCompilerType==CompilerType::SDCC) {
+        QList<QByteArray> lines = output.split('\n');
+        QByteArray currentLine;
+        for (QByteArray& line:lines) {
+            QByteArray trimmedLine = line.trimmed();
+            if (trimmedLine.startsWith("+")) {
+                currentLine = line;
+                break;
+            }
+        }
+        lines = currentLine.split(' ');
+        for (QByteArray& line:lines) {
+            QByteArray trimmedLine = line.trimmed();
+            if (trimmedLine.startsWith("-D")) {
+                trimmedLine = trimmedLine.mid(2);
+                if (trimmedLine.contains("=")) {
+                    QList<QByteArray> items=trimmedLine.split('=');
+                    result.append(QString("#define %1 %2").arg(items[0],items[1]));
+                } else {
+                    result.append("#define "+trimmedLine);
+                }
+            }
+        }
+    } else {
+#else
+    {
+#endif
+        QList<QByteArray> lines = output.split('\n');
+        for (QByteArray& line:lines) {
+            QByteArray trimmedLine = line.trimmed();
+            if (!trimmedLine.isEmpty()) {
+                result.append(trimmedLine);
+            }
         }
     }
     return result;
@@ -2648,6 +2694,10 @@ bool Settings::CompilerSet::canCompileC() const
 
 bool Settings::CompilerSet::canCompileCPP() const
 {
+#ifdef ENABLE_SDCC
+    if (mCompilerType==CompilerType::SDCC)
+        return false;
+#endif
     return fileExists(mCppCompiler);
 }
 
@@ -2658,6 +2708,10 @@ bool Settings::CompilerSet::canMake() const
 
 bool Settings::CompilerSet::canDebug() const
 {
+#ifdef ENABLE_SDCC
+    if (mCompilerType==CompilerType::SDCC)
+        return false;
+#endif
     return fileExists(mDebugger);
 }
 
@@ -2705,6 +2759,8 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
 {
     QProcessEnvironment env;
     env.insert("LANG","en");
+    QString path = binDir;
+    env.insert("PATH",path);
     QByteArray result = runAndGetOutput(
                 includeTrailingPathDelimiter(binDir)+binFile,
                 binDir,

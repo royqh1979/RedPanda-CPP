@@ -718,35 +718,57 @@ void MainWindow::updateCompileActions(const Editor *e)
     } else {
         bool forProject=false;
         bool canRun = false;
+        bool canDebug = false;
         bool canCompile = false;
         bool canGenerateAssembly=false;
-        if (e) {
-            if (!e->inProject()) {
-                FileType fileType = getFileType(e->filename());
-                if (fileType == FileType::CSource
-                        || fileType == FileType::CppSource) {
-                    canGenerateAssembly = true;
-                    canCompile = true;
-                    canRun = true;
-                } else if (fileType == FileType::GAS) {
-                    canCompile = true;
-                    canRun = true;
-                }
-            } else {
-                 forProject = (mProject!=nullptr);
-            }
-        }  else {
-            forProject = (mProject!=nullptr);
-        }
-        if (forProject) {
-            canCompile = true;
-            canRun = (mProject->options().type !=ProjectType::DynamicLib)
-                    && (mProject->options().type !=ProjectType::StaticLib);
+        Settings::PCompilerSet set=pSettings->compilerSets().getSet(mCompilerSet->currentIndex());
+        if (set) {
             if (e) {
-                FileType fileType = getFileType(e->filename());
-                if (fileType == FileType::CSource
-                        || fileType == FileType::CppSource) {
-                    canGenerateAssembly = true;
+                if (!e->inProject()) {
+                    FileType fileType = getFileType(e->filename());
+                    switch(fileType) {
+                    case FileType::CSource:
+                        canCompile = set->canCompileC();
+#ifdef ENABLE_SDCC
+                        if (set->compilerType()!=CompilerType::SDCC)
+#endif
+                        {
+                            canGenerateAssembly = canCompile;
+                            canRun = canCompile ;
+                        }
+                        canDebug = set->canDebug();
+                        break;
+                    case FileType::CppSource:
+                        canCompile = set->canCompileCPP();
+                        canGenerateAssembly = canCompile;
+                        canRun = canCompile;
+                        canDebug = set->canDebug();
+                        break;
+                    case FileType::GAS:
+                        if (set->compilerType()==CompilerType::GCC) {
+                            canCompile = true;
+                            canRun = canCompile;
+                            canDebug = set->canDebug();
+                        }
+                        break;
+                    }
+                } else {
+                     forProject = (mProject!=nullptr);
+                }
+            }  else {
+                forProject = (mProject!=nullptr);
+            }
+            if (forProject) {
+                canCompile = true;
+                canRun = (mProject->options().type !=ProjectType::DynamicLib)
+                        && (mProject->options().type !=ProjectType::StaticLib);
+                canDebug = set->canDebug() && canRun;
+                if (e) {
+                    FileType fileType = getFileType(e->filename());
+                    if (fileType == FileType::CSource
+                            || fileType == FileType::CppSource) {
+                        canGenerateAssembly = true;
+                    }
                 }
             }
         }
@@ -754,7 +776,7 @@ void MainWindow::updateCompileActions(const Editor *e)
         ui->actionRun->setEnabled(canRun);
         ui->actionRebuild->setEnabled(canCompile);
         ui->actionGenerate_Assembly->setEnabled(canGenerateAssembly);
-        ui->actionDebug->setEnabled(canRun);
+        ui->actionDebug->setEnabled(canDebug);
         mProblem_RunAllCases->setEnabled(canRun && mOJProblemModel.count()>0);
     }
     if (!mDebugger->executing()) {

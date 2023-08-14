@@ -69,6 +69,7 @@ protected:
     virtual bool prepareForCompile() = 0;
     virtual QByteArray pipedText();
     virtual bool prepareForRebuild() = 0;
+    virtual bool beforeRunExtraCommand(int idx);
     virtual QString getCharsetArgument(const QByteArray& encoding, FileType fileType, bool onlyCheckSyntax);
     virtual QString getCCompileArguments(bool checkSyntax);
     virtual QString getCppCompileArguments(bool checkSyntax);
@@ -103,7 +104,7 @@ protected:
     bool mRebuild;
     std::shared_ptr<Project> mProject;
     bool mSetLANG;
-    PCppParser mParser;
+    PCppParser mParserForFile;
 
 private:
     bool mStop;

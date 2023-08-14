@@ -30,10 +30,13 @@ public:
 
 protected:
     bool prepareForCompile() override;
+    bool beforeRunExtraCommand(int idx) override;
 
 private:
     QByteArray mEncoding;
     CppCompileType mCompileType;
+    QDateTime mStartCompileTime;
+    QString mIhxFilename;
     // Compiler interface
 protected:
     bool prepareForRebuild() override;

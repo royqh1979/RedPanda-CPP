@@ -43,10 +43,10 @@ bool SDCCFileCompiler::prepareForCompile()
     log(tr("- Filename: %1").arg(mFilename));
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
     log("");
-    QString ihxFile = changeFileExt(mFilename,SDCC_IHX_SUFFIX);
+    mIhxFilename = changeFileExt(mFilename,SDCC_IHX_SUFFIX);
     mOutputFile=changeFileExt(mFilename, compilerSet()->executableSuffix());
     mArguments = QString(" \"%1\"").arg(mFilename);
-    mArguments+=QString(" -o \"%1\"").arg(ihxFile);
+    mArguments+=QString(" -o \"%1\"").arg(mIhxFilename);
 
     //remove the old file if it exists
     QFile outputFile(mOutputFile);
@@ -75,7 +75,7 @@ bool SDCCFileCompiler::prepareForCompile()
         }
         mExtraCompilersList.append(packihx);
         QString args;
-        args = QString(" \"%1\"").arg(ihxFile);
+        args = QString(" \"%1\"").arg(mIhxFilename);
         mExtraArgumentsList.append(args);
         mExtraOutputFilesList.append(mOutputFile);
     } else if (compilerSet()->executableSuffix() == SDCC_BIN_SUFFIX) {
@@ -86,7 +86,7 @@ bool SDCCFileCompiler::prepareForCompile()
         }
         mExtraCompilersList.push_back(makebin);
         QString args;
-        args = QString(" \"%1\"").arg(ihxFile);
+        args = QString(" \"%1\"").arg(mIhxFilename);
         args+=QString(" \"%1\"").arg(mOutputFile);
         mExtraArgumentsList.push_back(args);
         mExtraOutputFilesList.append("");
@@ -109,6 +109,16 @@ bool SDCCFileCompiler::prepareForCompile()
     log(tr("- %1 Compiler: %2").arg(strFileType).arg(mCompiler));
     log(tr("- Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
     mDirectory = extractFileDir(mFilename);
+    mStartCompileTime = QDateTime::currentDateTime();
+    return true;
+}
+
+bool SDCCFileCompiler::beforeRunExtraCommand(int idx)
+{
+    if (idx==0) {
+        QFileInfo file(mIhxFilename);
+        return file.exists() && (file.lastModified()>mStartCompileTime);
+    }
     return true;
 }
 

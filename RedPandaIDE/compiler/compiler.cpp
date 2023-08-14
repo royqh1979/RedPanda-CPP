@@ -42,7 +42,7 @@ Compiler::Compiler(const QString &filename, bool silent, bool onlyCheckSyntax):
     mOnlyCheckSyntax(onlyCheckSyntax),
     mFilename(filename),
     mRebuild(false),
-    mParser()
+    mParserForFile()
 {
     getParserForFile(filename);
 }
@@ -66,6 +66,8 @@ void Compiler::run()
         timer.start();
         runCommand(mCompiler, mArguments, mDirectory, pipedText());
         for(int i=0;i<mExtraArgumentsList.count();i++) {
+            if (!beforeRunExtraCommand(i))
+                break;
             if (mExtraOutputFilesList[i].isEmpty()) {
                 log(tr(" - Command: %1 %2").arg(extractFileName(mExtraCompilersList[i]),mExtraArgumentsList[i]));
             } else {
@@ -215,6 +217,11 @@ QByteArray Compiler::pipedText()
     return QByteArray();
 }
 
+bool Compiler::beforeRunExtraCommand(int idx)
+{
+    return true;
+}
+
 void Compiler::processOutput(QString &line)
 {
     if (line == COMPILE_PROCESS_END) {
@@ -331,10 +338,10 @@ QString Compiler::getCharsetArgument(const QByteArray& encoding,FileType fileTyp
     // test if force utf8 from autolink infos
     if ((fileType == FileType::CSource ||
             fileType == FileType::CppSource) && pSettings->editor().enableAutolink()
-            && mParser){
+            && mParserForFile){
         int waitCount = 0;
         //wait parsing ends, at most 1 second
-        while(mParser->parsing()) {
+        while(mParserForFile->parsing()) {
             if (waitCount>10)
                 break;
             waitCount++;
@@ -521,10 +528,10 @@ QString Compiler::getLibraryArguments(FileType fileType)
     // is file and auto link enabled
     if (pSettings->editor().enableAutolink() && (fileType == FileType::CSource ||
             fileType == FileType::CppSource)
-            && mParser){
+            && mParserForFile){
         int waitCount = 0;
         //wait parsing ends, at most 1 second
-        while(mParser->parsing()) {
+        while(mParserForFile->parsing()) {
             if (waitCount>10)
                 break;
             waitCount++;
@@ -608,7 +615,7 @@ QString Compiler::parseFileIncludesForAutolink(
     if (autolink) {
         result += ' '+autolink->linkOption;
     }
-    QStringList includedFiles = mParser->getFileDirectIncludes(filename);
+    QStringList includedFiles = mParserForFile->getFileDirectIncludes(filename);
 //    log(QString("File %1 included:").arg(filename));
 //    for (int i=includedFiles.size()-1;i>=0;i--) {
 //        QString includeFilename = includedFiles[i];
@@ -634,7 +641,7 @@ bool Compiler::parseForceUTF8ForAutolink(const QString &filename, QSet<QString> 
     if (autolink && autolink->execUseUTF8) {
         return true;
     }
-    QStringList includedFiles = mParser->getFileDirectIncludes(filename);
+    QStringList includedFiles = mParserForFile->getFileDirectIncludes(filename);
 //    log(QString("File %1 included:").arg(filename));
 //    for (int i=includedFiles.size()-1;i>=0;i--) {
 //        QString includeFilename = includedFiles[i];
@@ -759,7 +766,7 @@ void Compiler::runCommand(const QString &cmd, const QString  &arguments, const Q
 
 PCppParser Compiler::parser() const
 {
-    return mParser;
+    return mParserForFile;
 }
 
 void Compiler::getParserForFile(const QString &filename)
@@ -769,7 +776,7 @@ void Compiler::getParserForFile(const QString &filename)
             fileType == FileType::CppSource){
         Editor* editor = pMainWindow->editorList()->getOpenedEditorByFilename(filename);
         if (editor && editor->parser()) {
-            mParser=editor->parser();
+            mParserForFile=editor->parser();
         }
     }
 }
