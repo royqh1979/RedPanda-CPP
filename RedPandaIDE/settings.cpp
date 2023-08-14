@@ -2348,6 +2348,19 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
         arguments.append("c");
         arguments.append("-V");
         key=SDCC_CMD_OPT_PROCESSOR;
+        //language standard
+        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerType(), key);
+        if (pOption) {
+            if (!mCompileOptions[key].isEmpty())
+                arguments.append(pOption->setting + mCompileOptions[key]);
+        }
+        key=SDCC_CMD_OPT_STD;
+        //language standard
+        pOption = CompilerInfoManager::getCompilerOption(compilerType(), key);
+        if (pOption) {
+            if (!mCompileOptions[key].isEmpty())
+                arguments.append(pOption->setting + mCompileOptions[key]);
+        }
     } else {
 #endif
         if (isCpp) {
@@ -2357,15 +2370,16 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
             arguments.append("c");
             key=C_CMD_OPT_STD;
         }
+        //language standard
+        PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerType(), key);
+        if (pOption) {
+            if (!mCompileOptions[key].isEmpty())
+                arguments.append(pOption->setting + mCompileOptions[key]);
+        }
 #ifdef ENABLE_SDCC
     }
 #endif
-    //language standard
-    PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerType(), key);
-    if (pOption) {
-        if (!mCompileOptions[key].isEmpty())
-            arguments.append(pOption->setting + mCompileOptions[key]);
-    }
+
 
     arguments.append(NULL_FILE);
 
@@ -2610,6 +2624,12 @@ void Settings::CompilerSet::setSDCCDirectories(const QString& binDir)
     QStringList arguments;
     arguments.clear();
     arguments.append("--print-search-dirs");
+    QString key = SDCC_CMD_OPT_PROCESSOR;
+    PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerType(), key);
+    if (pOption) {
+        if (!mCompileOptions[key].isEmpty())
+            arguments.append(pOption->setting + mCompileOptions[key]);
+    }
     QByteArray output = getCompilerOutput(binDir,c_prog,arguments);
 
     //bindirs

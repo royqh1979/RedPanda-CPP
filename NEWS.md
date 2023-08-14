@@ -30,6 +30,7 @@ Red Panda C++ Version 2.24
   - enhancement: Support sdcc compiler.
   - enhancement: Autowrap tool output text.
   - fix: Press up/down arrow key in the option dialog's left panel won't switch page.
+  - fix: Can't suggest header filename starting with numbers.
 
 Red Panda C++ Version 2.23
 

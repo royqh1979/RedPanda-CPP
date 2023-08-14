@@ -961,7 +961,13 @@ void Editor::keyPressEvent(QKeyEvent *event)
     } else {
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
-            if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
+            if (mParser && mParser->isIncludeLine(lineText())) {
+                // is a #include line
+                processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                showHeaderCompletion(false);
+                handled=true;
+                return;
+            } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
                 //preprocessor ?
                 if ((idCharPressed==0) && (ch=='#') && lineText().isEmpty()) {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
