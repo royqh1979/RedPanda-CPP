@@ -16,7 +16,6 @@
  */
 #include "filecompiler.h"
 #include "utils.h"
-#include "../mainwindow.h"
 #include "compilermanager.h"
 #include "qsynedit/syntaxer/asm.h"
 #include "../systemconsts.h"
@@ -27,8 +26,8 @@
 
 
 FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,
-                           CppCompileType compileType,bool silent,bool onlyCheckSyntax):
-    Compiler(filename, silent,onlyCheckSyntax),
+                           CppCompileType compileType, bool onlyCheckSyntax):
+    Compiler(filename, onlyCheckSyntax),
     mEncoding(encoding),
     mCompileType(compileType)
 {

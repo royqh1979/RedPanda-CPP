@@ -23,8 +23,8 @@
 
 #include <QDir>
 
-ProjectCompiler::ProjectCompiler(std::shared_ptr<Project> project, bool silent, bool onlyCheckSyntax):
-    Compiler("",silent,onlyCheckSyntax),
+ProjectCompiler::ProjectCompiler(std::shared_ptr<Project> project, bool onlyCheckSyntax):
+    Compiler("",onlyCheckSyntax),
     mOnlyClean(false)
 {
     setProject(project);

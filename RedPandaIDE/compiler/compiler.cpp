@@ -36,9 +36,8 @@
 
 #define COMPILE_PROCESS_END "---//END//----"
 
-Compiler::Compiler(const QString &filename, bool silent, bool onlyCheckSyntax):
+Compiler::Compiler(const QString &filename, bool onlyCheckSyntax):
     QThread(),
-    mSilent(silent),
     mOnlyCheckSyntax(onlyCheckSyntax),
     mFilename(filename),
     mRebuild(false),

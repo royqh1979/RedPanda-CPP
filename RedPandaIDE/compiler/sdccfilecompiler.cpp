@@ -25,8 +25,8 @@
 
 
 SDCCFileCompiler::SDCCFileCompiler(const QString &filename, const QByteArray &encoding,
-                           CppCompileType compileType):
-    Compiler(filename, false,false),
+                           CppCompileType compileType, bool onlyCheckSyntax):
+    Compiler(filename, onlyCheckSyntax),
     mEncoding(encoding),
     mCompileType(compileType),
     mNoStartup(false)
@@ -36,7 +36,17 @@ SDCCFileCompiler::SDCCFileCompiler(const QString &filename, const QByteArray &en
 
 bool SDCCFileCompiler::prepareForCompile()
 {
-    compilerSet()->setCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable);
+    //compilerSet()->setCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable);
+
+    if (mOnlyCheckSyntax) {
+        mCompiler = compilerSet()->CCompiler();
+        mArguments += getCCompileArguments(false);
+        mArguments += getCIncludeArguments();
+        mArguments += getProjectIncludeArguments();
+        mArguments = QString("--syntax-only \"%1\"").arg(mFilename);
+        mDirectory = extractFileDir(mFilename);
+        return true;
+    }
     log(tr("Compiling single file..."));
     log("------------------");
     log(tr("- Filename: %1").arg(mFilename));

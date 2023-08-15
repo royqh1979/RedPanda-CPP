@@ -92,10 +92,10 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
         //deleted when thread finished
 #ifdef ENABLE_SDCC
         if (pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
-            mCompiler = new SDCCFileCompiler(filename,encoding,compileType);
+            mCompiler = new SDCCFileCompiler(filename,encoding,compileType,false);
         } else
 #endif
-            mCompiler = new FileCompiler(filename,encoding,compileType,false,false);
+            mCompiler = new FileCompiler(filename,encoding,compileType,false);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
@@ -126,7 +126,7 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
         //deleted when thread finished
-        mCompiler = new ProjectCompiler(project,false,false);
+        mCompiler = new ProjectCompiler(project,false);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
@@ -158,7 +158,7 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
         //deleted when thread finished
-        ProjectCompiler* compiler = new ProjectCompiler(project,false,false);
+        ProjectCompiler* compiler = new ProjectCompiler(project,false);
         compiler->setOnlyClean(true);
         mCompiler = compiler;
         mCompiler->setRebuild(false);
@@ -189,7 +189,7 @@ void CompilerManager::buildProjectMakefile(std::shared_ptr<Project> project)
         if (mCompiler!=nullptr) {
             return;
         }
-        ProjectCompiler compiler(project,false,false);
+        ProjectCompiler compiler(project,false);
         compiler.buildMakeFile();
     }
 
@@ -213,7 +213,7 @@ void CompilerManager::checkSyntax(const QString &filename, const QByteArray& enc
         mSyntaxCheckIssueCount = 0;
 
         //deleted when thread finished
-        mBackgroundSyntaxChecker = new StdinCompiler(filename,encoding, content,true,true);
+        mBackgroundSyntaxChecker = new StdinCompiler(filename,encoding, content,true);
         mBackgroundSyntaxChecker->setProject(project);
         connect(mBackgroundSyntaxChecker, &Compiler::finished, mBackgroundSyntaxChecker, &QThread::deleteLater);
         connect(mBackgroundSyntaxChecker, &Compiler::compileIssue, this, &CompilerManager::onSyntaxCheckIssue);

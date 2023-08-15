@@ -24,7 +24,7 @@ class StdinCompiler : public Compiler
     Q_OBJECT
 
 public:
-    explicit StdinCompiler(const QString& filename, const QByteArray& encoding, const QString& content, bool silent,bool onlyCheckSyntax);
+    explicit StdinCompiler(const QString& filename, const QByteArray& encoding, const QString& content, bool onlyCheckSyntax);
     StdinCompiler(const StdinCompiler&)=delete;
     StdinCompiler& operator=(const StdinCompiler&)=delete;
 

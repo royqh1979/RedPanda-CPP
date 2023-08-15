@@ -34,7 +34,7 @@ public:
         Project,
         StdIn
     };
-    Compiler(const QString& filename, bool silent,bool onlyCheckSyntax);
+    Compiler(const QString& filename, bool onlyCheckSyntax);
     Compiler(const Compiler&)=delete;
     Compiler& operator=(const Compiler&)=delete;
 
@@ -88,7 +88,6 @@ protected:
     void runCommand(const QString& cmd, const QString& arguments, const QString& workingDir, const QByteArray& inputText=QByteArray(), const QString& outputFile=QString());
 
 protected:
-    bool mSilent;
     bool mOnlyCheckSyntax;
     QString mCompiler;
     QString mArguments;

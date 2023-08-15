@@ -3018,9 +3018,13 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
     PCompilerSet baseSet = addSet(folder,c_prog);
     if (!baseSet || baseSet->name().isEmpty())
         return false;
+#if ENABLE_SDCC
     if (c_prog == SDCC_PROGRAM) {
-        //sdcc do nothing
+        baseSet->setCompileOption(SDCC_OPT_NOSTARTUP,COMPILER_OPTION_ON);
     } else {
+#else
+    {
+#endif
         QString baseName = baseSet->name();
         QString platformName;
         if (isTarget64Bit(baseSet->target())) {

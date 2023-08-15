@@ -25,7 +25,7 @@ class FileCompiler : public Compiler
 public:
     FileCompiler(const QString& filename, const QByteArray& encoding,
                  CppCompileType compileType,
-                 bool silent,bool onlyCheckSyntax);
+                 bool onlyCheckSyntax);
     FileCompiler(const FileCompiler&)=delete;
     FileCompiler& operator=(const FileCompiler&)=delete;
 
