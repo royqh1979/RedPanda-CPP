@@ -422,11 +422,9 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Toshiba TLCS-90","tlcs90"));
     sl.append(QPair<QString,QString>("Zilog eZ80","ez80_z80"));
     sl.append(QPair<QString,QString>("STM8","stm8"));
-    sl.append(QPair<QString,QString>("Padauk processors with 13 bit wide program memory","pdk13"));
-    sl.append(QPair<QString,QString>("Padauk processors with 14 bit wide program memory","pdk14"));
-    sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
-    sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
-    sl.append(QPair<QString,QString>("Padauk processors with 15 bit wide program memory","pdk15"));
+    sl.append(QPair<QString,QString>("Padauk processors-13bit width memory","pdk13"));
+    sl.append(QPair<QString,QString>("Padauk processors-14bit width memory","pdk14"));
+    sl.append(QPair<QString,QString>("Padauk processors-15bit width memory","pdk15"));
     addOption(SDCC_CMD_OPT_PROCESSOR, QObject::tr("Processor (-m)"), groupName, true, false, false, "-m", sl);
 
     // C++ Language Standards

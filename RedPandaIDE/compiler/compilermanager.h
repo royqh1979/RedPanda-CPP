@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <QMutex>
+#include "qt_utils/utils.h"
 #include "../common.h"
 
 class Runner;

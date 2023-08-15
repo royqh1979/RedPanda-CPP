@@ -31,6 +31,7 @@ Red Panda C++ Version 2.24
   - enhancement: Autowrap tool output text.
   - fix: Press up/down arrow key in the option dialog's left panel won't switch page.
   - fix: Can't suggest header filename starting with numbers.
+  - enhancement: Better layout for compiler options page.
 
 Red Panda C++ Version 2.23
 

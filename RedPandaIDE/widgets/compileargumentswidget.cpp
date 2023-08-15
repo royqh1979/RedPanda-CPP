@@ -109,7 +109,7 @@ void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QSt
             QCheckBox* pCheckbox = new QCheckBox(pWidget);
             pCheckbox->setText(pOption->name);
             pCheckbox->setChecked(options.value(pOption->key,"")==COMPILER_OPTION_ON);
-            pLayout->addWidget(pCheckbox,row,1);
+            pLayout->addWidget(pCheckbox,row,1,1,2);
         } else {
             pLayout->addWidget(new QLabel(pOption->name,pWidget),row,1);
             QComboBox* pCombo = new QComboBox(pWidget);
