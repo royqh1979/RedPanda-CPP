@@ -82,19 +82,24 @@ CONFIG(debug_and_release_target) {
     }
 }
 
-INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils
+INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils ../libs/lua
 
 gcc | clang {
 LIBS += $$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD}libqsynedit.a \
-        $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}libredpanda_qt_utils.a
+        $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}libredpanda_qt_utils.a \
+        $$OUT_PWD/../libs/lua/$${OBJ_OUT_PWD}liblua.a
 }
 msvc {
 LIBS += $$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD}qsynedit.lib \
-        $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}redpanda_qt_utils.lib
+        $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}redpanda_qt_utils.lib \
+        $$OUT_PWD/../libs/lua/$${OBJ_OUT_PWD}lua.lib
 LIBS += advapi32.lib user32.lib
 }
 
 SOURCES += \
+    addon/api.cpp \
+    addon/executor.cpp \
+    addon/runtime.cpp \
     autolinkmanager.cpp \
     caretlist.cpp \
     codesnippetsmanager.cpp \
@@ -219,6 +224,9 @@ SOURCES += \
 
 HEADERS += \
     SimpleIni.h \
+    addon/api.h \
+    addon/executor.h \
+    addon/runtime.h \
     autolinkmanager.h \
     caretlist.h \
     codesnippetsmanager.h \
@@ -484,7 +492,7 @@ unix: {
 
 linux: {
     # legacy glibc compatibility -- modern Unices have all components in `libc.so`
-    LIBS += -lrt
+    LIBS += -lrt -ldl
 
     _LINUX_STATIC_IME_PLUGIN = $$(LINUX_STATIC_IME_PLUGIN)
     equals(_LINUX_STATIC_IME_PLUGIN, "ON") {
@@ -558,12 +566,8 @@ qmake_qm_files.prefix = $$QM_FILES_RESOURCE_PREFIX
 iconsets_files.files += $$files(resources/iconsets/*.svg, true)
 iconsets_files.files += $$files(resources/iconsets/*.json, true)
 
-theme_files.files += $$files(themes/*.json, false)
+theme_files.files += $$files(themes/*.lua, false)
 theme_files.files += $$files(themes/*.png, false)
-
-windows: {
-    theme_files.files -= themes/system.json
-}
 
 colorscheme_files.files += $$files(colorschemes/*.scheme, false)
 colorscheme_files.prefix = /colorschemes

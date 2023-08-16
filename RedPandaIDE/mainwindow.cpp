@@ -32,6 +32,8 @@
 #include "shortcutmanager.h"
 #include "colorscheme.h"
 #include "thememanager.h"
+#include "addon/executor.h"
+#include "addon/runtime.h"
 #include "widgets/darkfusionstyle.h"
 #include "widgets/lightfusionstyle.h"
 #include "problems/problemcasevalidator.h"
@@ -902,21 +904,23 @@ void MainWindow::applySettings()
     themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
     try {
         PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
-        if (appTheme->useQtFusionStyle()) {
-            if (appTheme->isDark())
-                QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
-            else
-                QApplication::setStyle(new LightFusionStyle());//app takes the onwership
-        } else {
-            QString systemStyle = QStyleFactory::keys()[0]; // Breeze for KDE, etc.
-            QApplication::setStyle(systemStyle);
-        }
+        const QString& style = appTheme->style();
+        if (style == "RedPandaDarkFusion")
+            QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
+        else if (style == "RedPandaLightFusion")
+            QApplication::setStyle(new LightFusionStyle());//app takes the onwership
+        else
+            QApplication::setStyle(style);
         qApp->setPalette(appTheme->palette());
         //fix for qstatusbar bug
         mFileEncodingStatus->setPalette(appTheme->palette());
         mFileModeStatus->setPalette(appTheme->palette());
         mFileInfoStatus->setPalette(appTheme->palette());
     } catch (FileError e) {
+        QMessageBox::critical(this,
+                              tr("Load Theme Error"),
+                              e.reason());
+    } catch (AddOn::LuaError e) {
         QMessageBox::critical(this,
                               tr("Load Theme Error"),
                               e.reason());

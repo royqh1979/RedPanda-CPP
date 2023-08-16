@@ -1,9 +1,0 @@
-{
-    "name":"Auto (follow system style and color)",
-    "name_zh_CN":"自动（跟随系统样式和颜色）",
-    "useQtFusionStyle": false,
-    "isDark": false,
-    "default scheme": "Adaptive",
-    "default iconset": "newlook",
-    "palette": {}
-}
