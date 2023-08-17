@@ -2456,7 +2456,34 @@ void Settings::CompilerSet::setExecutables()
         mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
     }
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
+#ifdef Q_OS_WIN
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
+    if (mMake.isEmpty()) {
+        mMake = findProgramInBinDirs(MAKE2_PROGRAM);
+    }
+    if (mMake.isEmpty()) {
+        QSet<QString> searched;
+
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        QString path = env.value("PATH");
+        QStringList pathList = path.split(PATH_SEPARATOR);
+        QString folder;
+        for (int i=pathList.count()-1;i>=0;i--) {
+            folder = pathList[i];
+            if (searched.contains(folder))
+                continue;
+            searched.insert(folder);
+            QDir dir(folder);
+            if (dir.exists(MAKE_PROGRAM)) {
+                mMake = dir.absoluteFilePath(MAKE_PROGRAM);
+                break;
+            } else if (dir.exists(MAKE2_PROGRAM)) {
+                mMake = dir.absoluteFilePath(MAKE2_PROGRAM);
+                break;
+            }
+        }
+    }
+#endif
 }
 
 void Settings::CompilerSet::setDirectories(const QString& binDir)

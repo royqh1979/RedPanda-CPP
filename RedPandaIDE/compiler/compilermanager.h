@@ -25,6 +25,7 @@
 class Runner;
 class Project;
 class Compiler;
+class ProjectCompiler;
 struct OJProblem;
 using POJProblem = std::shared_ptr<OJProblem>;
 struct OJProblemCase;
@@ -85,7 +86,8 @@ private slots:
     void onCompileIssue(PCompileIssue issue);
     void onSyntaxCheckFinished(QString filename);
     void onSyntaxCheckIssue(PCompileIssue issue);
-
+private:
+    ProjectCompiler* createProjectCompiler(std::shared_ptr<Project> project);
 private:
     Compiler* mCompiler;
     int mCompileErrorCount;

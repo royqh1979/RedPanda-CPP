@@ -16,8 +16,10 @@
  */
 #include "compilermanager.h"
 #include "filecompiler.h"
+#include "../project.h"
 #ifdef ENABLE_SDCC
 #include "sdccfilecompiler.h"
+#include "sdccprojectcompiler.h"
 #endif
 #include "stdincompiler.h"
 #include "../mainwindow.h"
@@ -126,7 +128,7 @@ void CompilerManager::compileProject(std::shared_ptr<Project> project, bool rebu
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
         //deleted when thread finished
-        mCompiler = new ProjectCompiler(project,false);
+        mCompiler = createProjectCompiler(project);
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);
@@ -158,7 +160,7 @@ void CompilerManager::cleanProject(std::shared_ptr<Project> project)
         mCompileErrorCount = 0;
         mCompileIssueCount = 0;
         //deleted when thread finished
-        ProjectCompiler* compiler = new ProjectCompiler(project,false);
+        ProjectCompiler* compiler = createProjectCompiler(project);
         compiler->setOnlyClean(true);
         mCompiler = compiler;
         mCompiler->setRebuild(false);
@@ -189,10 +191,10 @@ void CompilerManager::buildProjectMakefile(std::shared_ptr<Project> project)
         if (mCompiler!=nullptr) {
             return;
         }
-        ProjectCompiler compiler(project,false);
-        compiler.buildMakeFile();
+        ProjectCompiler* pCompiler=createProjectCompiler(project);
+        pCompiler->buildMakeFile();
+        delete pCompiler;
     }
-
 }
 
 void CompilerManager::checkSyntax(const QString &filename, const QByteArray& encoding, const QString &content, std::shared_ptr<Project> project)
@@ -459,6 +461,14 @@ void CompilerManager::onSyntaxCheckIssue(PCompileIssue issue)
     if (issue->type == CompileIssueType::Error ||
             issue->type == CompileIssueType::Warning)
         mSyntaxCheckIssueCount++;
+}
+
+ProjectCompiler *CompilerManager::createProjectCompiler(std::shared_ptr<Project> project)
+{
+    if (project->options().type==ProjectType::MicroController)
+        return new SDCCProjectCompiler(project);
+    else
+        return new ProjectCompiler(project);
 }
 
 int CompilerManager::syntaxCheckIssueCount() const

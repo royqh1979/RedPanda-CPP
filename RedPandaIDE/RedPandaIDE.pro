@@ -397,10 +397,12 @@ ENABLE_SDCC {
     DEFINES += ENABLE_SDCC
 
     SOURCES += \
-        compiler/sdccfilecompiler.cpp
+        compiler/sdccfilecompiler.cpp \
+        compiler/sdccprojectcompiler.cpp
 
     HEADERS += \
-        compiler/sdccfilecompiler.h
+        compiler/sdccfilecompiler.h \
+        compiler/sdccprojectcompiler.h
 
 }
 

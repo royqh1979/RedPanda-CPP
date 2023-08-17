@@ -130,6 +130,14 @@ QString Project::executable() const
         exeFileName = mOptions.overridenOutput;
     } else {
         switch(mOptions.type) {
+        case ProjectType::MicroController: {
+            Settings::PCompilerSet pSet=pSettings->compilerSets().getSet(mOptions.compilerSet);
+            if (pSet)
+                exeFileName = changeFileExt(extractFileName(mFilename),pSet->executableSuffix());
+            else
+                exeFileName = changeFileExt(extractFileName(mFilename),SDCC_HEX_SUFFIX);
+            }
+            break;
         case ProjectType::StaticLib:
             exeFileName = changeFileExt(extractFileName(mFilename),STATIC_LIB_EXT);
             if (!exeFileName.startsWith("lib"))

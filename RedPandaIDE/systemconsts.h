@@ -40,6 +40,7 @@
 #define SDCC_PROGRAM   "sdcc.exe"
 #define PACKIHX_PROGRAM   "packihx.exe"
 #define MAKEBIN_PROGRAM   "makebin.exe"
+#define MAKE2_PROGRAM  "make.exe"
 #elif defined(Q_OS_LINUX)
 #define CONSOLE_PAUSER  "consolepauser"
 #define ASSEMBLER   "nasm"

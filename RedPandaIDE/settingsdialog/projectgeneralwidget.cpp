@@ -53,6 +53,14 @@ void ProjectGeneralWidget::doLoad()
     std::shared_ptr<Project> project = pMainWindow->project();
     if (!project)
         return;
+
+    bool isMicroControllerProject=(project->options().type==ProjectType::MicroController);
+
+    ui->grpType->setVisible(!isMicroControllerProject);
+    ui->grpIcon->setVisible(!isMicroControllerProject);
+    ui->lblEncoding->setVisible(!isMicroControllerProject);
+    ui->panelEncoding->setVisible(!isMicroControllerProject);
+
     ui->txtName->setText(project->name());
     ui->txtFileName->setText(project->filename());
     ui->txtOutputFile->setText(project->executable());

@@ -127,12 +127,34 @@ void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int index)
     if (!mInitialized || index==project->options().compilerSet) {
         return;
     }
+    Settings::PCompilerSet pSet=pSettings->compilerSets().getSet(index);
+    if (pSet) {
+        if (project->options().type==ProjectType::MicroController) {
+            if (pSet->compilerType()!=CompilerType::SDCC) {
+                QMessageBox::information(this,
+                                         tr("Wrong Compiler Type"),
+                                         tr("Compiler %1 can't compile a microcontroller project.").arg(pSet->name())
+                                         );
+                ui->cbCompilerSet->setCurrentIndex(project->options().compilerSet);
+                return;
+            }
+        } else {
+            if (pSet->compilerType()==CompilerType::SDCC) {
+                QMessageBox::information(this,
+                                         tr("Wrong Compiler Type"),
+                                         tr("Compiler %1 can only compile microcontroller project.").arg(pSet->name())
+                                         );
+                ui->cbCompilerSet->setCurrentIndex(project->options().compilerSet);
+                return;
+            }
+        }
+    }
     if (QMessageBox::warning(
                 this,
-                MainWindow::tr("Change Project Compiler Set"),
-                MainWindow::tr("Change the project's compiler set will lose all custom compiler set options.")
+                tr("Change Project Compiler Set"),
+                tr("Change the project's compiler set will lose all custom compiler set options.")
                 +"<br />"
-                + MainWindow::tr("Do you really want to do that?"),
+                + tr("Do you really want to do that?"),
                 QMessageBox::Yes | QMessageBox::No,
                 QMessageBox::No) != QMessageBox::Yes) {
         ui->cbCompilerSet->setCurrentIndex(project->options().compilerSet);

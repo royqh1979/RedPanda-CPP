@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "../mainwindow.h"
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
 #include "settingswidget.h"
@@ -40,7 +41,6 @@
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
 #include "languageasmgenerationwidget.h"
-#include "languagecformatwidget.h"
 #include "projectgeneralwidget.h"
 #include "projectfileswidget.h"
 #include "projectcompilerwidget.h"
@@ -252,6 +252,13 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
 {
     PSettingsDialog dialog = std::make_shared<SettingsDialog>();
 
+
+    bool isMicroControllerProject=false;
+    std::shared_ptr<Project> project = pMainWindow->project();
+    if (project)
+        isMicroControllerProject=(project->options().type==ProjectType::MicroController);
+
+
     dialog->setWindowTitle(tr("Project Options"));
 
     SettingsWidget* widget = new ProjectGeneralWidget(tr("General"),tr("Project"));
@@ -269,8 +276,10 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     widget = new ProjectDirectoriesWidget(tr("Directories"),tr("Project"));
     dialog->addWidget(widget);
 
-    widget = new ProjectPreCompileWidget(tr("Precompiled Header"),tr("Project"));
-    dialog->addWidget(widget);
+    if (!isMicroControllerProject) {
+        widget = new ProjectPreCompileWidget(tr("Precompiled Header"),tr("Project"));
+        dialog->addWidget(widget);
+    }
 
     widget = new ProjectMakefileWidget(tr("Makefile"),tr("Project"));
     dialog->addWidget(widget);
@@ -278,12 +287,16 @@ PSettingsDialog SettingsDialog::projectOptionDialog()
     widget = new ProjectOutputWidget(tr("Output"),tr("Project"));
     dialog->addWidget(widget);
 
-    widget = new ProjectDLLHostWidget(tr("DLL host"),tr("Project"));
-    dialog->addWidget(widget);
+    if (!isMicroControllerProject) {
+        widget = new ProjectDLLHostWidget(tr("DLL host"),tr("Project"));
+        dialog->addWidget(widget);
+    }
 
 #ifdef Q_OS_WIN
-    widget = new ProjectVersionInfoWidget(tr("Version info"),tr("Project"));
-    dialog->addWidget(widget);
+    if (!isMicroControllerProject) {
+        widget = new ProjectVersionInfoWidget(tr("Version info"),tr("Project"));
+        dialog->addWidget(widget);
+    }
 #endif
 
     dialog->selectFirstWidget();

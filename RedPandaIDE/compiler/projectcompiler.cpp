@@ -23,8 +23,8 @@
 
 #include <QDir>
 
-ProjectCompiler::ProjectCompiler(std::shared_ptr<Project> project, bool onlyCheckSyntax):
-    Compiler("",onlyCheckSyntax),
+ProjectCompiler::ProjectCompiler(std::shared_ptr<Project> project):
+    Compiler("",false),
     mOnlyClean(false)
 {
     setProject(project);
@@ -66,10 +66,8 @@ void ProjectCompiler::createStaticMakeFile()
     QFile file(mProject->makeFileName());
     newMakeFile(file);
     writeln(file,"$(BIN): $(LINKOBJ)");
-    if (!mOnlyCheckSyntax) {
-        writeln(file,"\tar r $(BIN) $(LINKOBJ)");
-        writeln(file,"\tranlib $(BIN)");
-    }
+    writeln(file,"\tar r $(BIN) $(LINKOBJ)");
+    writeln(file,"\tranlib $(BIN)");
     writeMakeObjFilesRules(file);
 }
 
@@ -78,12 +76,10 @@ void ProjectCompiler::createDynamicMakeFile()
     QFile file(mProject->makeFileName());
     newMakeFile(file);
     writeln(file,"$(BIN): $(LINKOBJ)");
-    if (!mOnlyCheckSyntax) {
-        if (mProject->options().isCpp) {
-            writeln(file, "\t$(CPP) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
-        } else {
-            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
-        }
+    if (mProject->options().isCpp) {
+        writeln(file, "\t$(CPP) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+    } else {
+        writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o $(BIN) $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
     }
     writeMakeObjFilesRules(file);
 }
@@ -136,11 +132,6 @@ void ProjectCompiler::writeMakeHeader(QFile &file)
     writeln(file,"# Project: " + mProject->name());
     writeln(file,QString("# Makefile created by Red Panda C++ ") + REDPANDA_CPP_VERSION);
     writeln(file);
-    if (mOnlyCheckSyntax) {
-        writeln(file,"# This Makefile is written for syntax check!");
-        writeln(file,"# Regenerate it if you want to use this Makefile to build.");
-        writeln(file);
-    }
 }
 
 void ProjectCompiler::writeMakeDefines(QFile &file)
@@ -221,8 +212,8 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     log("");
 
     // Get list of applicable flags
-    QString cCompileArguments = getCCompileArguments(mOnlyCheckSyntax);
-    QString cppCompileArguments = getCppCompileArguments(mOnlyCheckSyntax);
+    QString cCompileArguments = getCCompileArguments(false);
+    QString cppCompileArguments = getCppCompileArguments(false);
     QString libraryArguments = getLibraryArguments(FileType::Project);
     QString cIncludeArguments = getCIncludeArguments() + " " + getProjectIncludeArguments();
     QString cppIncludeArguments = getCppIncludeArguments() + " " +getProjectIncludeArguments();
@@ -240,7 +231,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 #endif
     if (!objResFile.isEmpty()) {
       writeln(file,"RES      = " + objResFile2);
-      writeln(file,"OBJ      = " + Objects + " $(RES)");
+      writeln(file,"OBJ      = " + Objects);
       writeln(file,"LINKOBJ  = " + LinkObjects + " " + objResFile);
 #ifdef Q_OS_WIN
       writeln(file,"CLEANOBJ  = " + cleanObjects +
@@ -314,10 +305,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 
 void ProjectCompiler::writeMakeTarget(QFile &file)
 {
-    if (mOnlyCheckSyntax)
-        writeln(file, ".PHONY: all all-before all-after clean clean-custom $(OBJ) $(BIN)");
-    else
-        writeln(file, ".PHONY: all all-before all-after clean clean-custom");
+    writeln(file, ".PHONY: all all-before all-after clean clean-custom");
     writeln(file);
     writeln(file, "all: all-before $(BIN) all-after");
     writeln(file);
@@ -468,21 +456,12 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             }
 
             if (fileType==FileType::CSource || fileType==FileType::CppSource) {
-                if (mOnlyCheckSyntax) {
-                    if (unit->compileCpp())
-                        writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " $(CXXFLAGS) " + encodingStr);
-                    else
-                        writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " $(CFLAGS) " + encodingStr);
-                } else {
-                    if (unit->compileCpp())
-                        writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CXXFLAGS) " + encodingStr);
-                    else
-                        writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
-                }
-            } else if (fileType==FileType::GAS) {
-                if (!mOnlyCheckSyntax) {
+                if (unit->compileCpp())
+                    writeln(file, "\t$(CPP) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CXXFLAGS) " + encodingStr);
+                else
                     writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
-                }
+            } else if (fileType==FileType::GAS) {
+                writeln(file, "\t$(CC) -c " + genMakePath1(shortFileName) + " -o " + objFileName2 + " $(CFLAGS) " + encodingStr);
             }
         }
     }
@@ -499,17 +478,15 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 
         QString resFiles;
         // Concatenate all resource filenames (not created when syntax checking)
-        if (!mOnlyCheckSyntax) {
-            foreach(const PProjectUnit& unit, mProject->unitList()) {
-                if (getFileType(unit->fileName())!=FileType::WindowsResourceSource)
-                    continue;
-                if (fileExists(unit->fileName())) {
-                    QString ResFile = extractRelativePath(mProject->makeFileName(), unit->fileName());
-                    resFiles = resFiles + genMakePath2(ResFile) + ' ';
-                }
+        foreach(const PProjectUnit& unit, mProject->unitList()) {
+            if (getFileType(unit->fileName())!=FileType::WindowsResourceSource)
+                continue;
+            if (fileExists(unit->fileName())) {
+                QString ResFile = extractRelativePath(mProject->makeFileName(), unit->fileName());
+                resFiles = resFiles + genMakePath2(ResFile) + ' ';
             }
-            resFiles = resFiles.trimmed();
         }
+        resFiles = resFiles.trimmed();
 
         // Determine resource output file
         QString fullName;
@@ -530,16 +507,10 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         if (mProject->getCompileOption(CC_CMD_OPT_POINTER_SIZE)=="32")
               windresArgs = " -F pe-i386";
 
-        if (mOnlyCheckSyntax) {
-            writeln(file);
-            writeln(file, objFileName2 + ':');
-            writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o nul -O coff $(WINDRESFLAGS)" + ResIncludes);
-        } else {
-            writeln(file);
-            writeln(file, objFileName2 + ": " + privResName2 + ' ' + resFiles);
-            writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o " + objFileName + " -O coff $(WINDRESFLAGS)"
-                + ResIncludes);
-        }
+        writeln(file);
+        writeln(file, objFileName2 + ": " + privResName2 + ' ' + resFiles);
+        writeln(file, "\t$(WINDRES) -i " + privResName + windresArgs + " --input-format=rc -o " + objFileName + " -O coff $(WINDRESFLAGS)"
+            + ResIncludes);
         writeln(file);
     }
 #endif

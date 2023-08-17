@@ -121,7 +121,17 @@ void NewProjectDialog::addTemplate(const QString &filename)
         return;
     PProjectTemplate t = std::make_shared<ProjectTemplate>();
     t->readTemplateFile(filename);
-    mTemplates.append(t);
+    Settings::PCompilerSet pSet=pSettings->compilerSets().defaultSet();
+    if (pSet) {
+        if (pSet->compilerType()==CompilerType::SDCC) {
+            if (t->options().type==ProjectType::MicroController)
+                mTemplates.append(t);
+        } else {
+            if (t->options().type!=ProjectType::MicroController)
+                mTemplates.append(t);
+        }
+    } else
+        mTemplates.append(t);
 }
 
 void NewProjectDialog::readTemplateDirs()

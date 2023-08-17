@@ -855,6 +855,9 @@ QString CppParser::getHeaderFileName(const QString &relativeTo, const QString &h
 bool CppParser::isLineVisible(const QString &fileName, int line)
 {
     QMutexLocker locker(&mMutex);
+    if (mParsing) {
+        return true;
+    }
     PFileIncludes fileIncludes = mPreprocessor.includesList().value(fileName);
     if (!fileIncludes)
         return true;

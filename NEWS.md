@@ -33,6 +33,7 @@ Red Panda C++ Version 2.24
   - fix: Can't suggest header filename starting with numbers.
   - enhancement: Better layout for compiler options page.
   - enhancement: False branches are displayed as comments.
+  - enhancement: Support SDCC Project.
 
 Red Panda C++ Version 2.23
 

@@ -1,0 +1,18 @@
+[Template]
+ver=2
+Name=MCS51
+Name[zh_CN]=MCS51
+Icon=microcontroller.ico
+Description=A simple MCS51 program
+Description[zh_CN]=MCS51单片机程序
+Category=SDCC
+Category[zh_CN]=SDCC
+
+[Unit0]
+CName=main.c
+C=main.c
+
+[Project]
+UnitCount=1
+Type=4
+IsCpp=0

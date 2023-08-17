@@ -14,30 +14,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef PROJECTCOMPILER_H
-#define PROJECTCOMPILER_H
+#ifndef SDCCPROJECTCOMPILER_H
+#define SDCCPROJECTCOMPILER_H
 
-#include "compiler.h"
+#include "projectcompiler.h"
 #include <QObject>
 #include <QFile>
 
 class Project;
-class ProjectCompiler : public Compiler
+class SDCCProjectCompiler : public ProjectCompiler
 {
     Q_OBJECT
 public:
-    ProjectCompiler(std::shared_ptr<Project> project);
-    ProjectCompiler(const ProjectCompiler&)=delete;
-    ProjectCompiler& operator=(const ProjectCompiler&)=delete;
-    virtual void buildMakeFile();
-
-    bool onlyClean() const;
-    void setOnlyClean(bool newOnlyClean);
+    SDCCProjectCompiler(std::shared_ptr<Project> project);
+    SDCCProjectCompiler(const SDCCProjectCompiler&)=delete;
+    SDCCProjectCompiler& operator=(const SDCCProjectCompiler&)=delete;
+    void buildMakeFile();
 
 private:
     void createStandardMakeFile();
-    void createStaticMakeFile();
-    void createDynamicMakeFile();
     void newMakeFile(QFile& file);
     void writeMakeHeader(QFile& file);
     void writeMakeDefines(QFile& file);
@@ -47,8 +42,6 @@ private:
     void writeMakeObjFilesRules(QFile& file);
     void writeln(QFile& file, const QString& s="");
     // Compiler interface
-private:
-    bool mOnlyClean;
 protected:
     bool prepareForCompile() override;
     bool prepareForRebuild() override;
