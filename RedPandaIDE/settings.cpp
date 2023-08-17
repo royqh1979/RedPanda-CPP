@@ -2406,7 +2406,7 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
                 trimmedLine = trimmedLine.mid(2);
                 if (trimmedLine.contains("=")) {
                     QList<QByteArray> items=trimmedLine.split('=');
-                    result.append(QString("#define %1 %2").arg(items[0],items[1]));
+                    result.append(QString("#define %1 %2").arg(QString(items[0]),QString(items[1])));
                 } else {
                     result.append("#define "+trimmedLine);
                 }

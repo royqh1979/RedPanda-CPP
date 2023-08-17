@@ -6438,7 +6438,12 @@ void CppParser::setLanguage(ParserLanguage newLanguage)
         mCppTypeKeywords = CppTypeKeywords;
 #ifdef ENABLE_SDCC
         if (mLanguage == ParserLanguage::SDCC) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
             mCppKeywords.insert(SDCCKeywords);
+#else
+            for (auto &k : SDCCKeywords.keys())
+                mCppKeywords[k] = SDCCKeywords[k];
+#endif
             mCppTypeKeywords.unite(SDCCTypeKeywords);
         }
 #endif

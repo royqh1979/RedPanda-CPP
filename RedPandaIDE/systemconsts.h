@@ -60,6 +60,8 @@
 #define LLDB_MI_PROGRAM   "lldb-mi"
 #define LLDB_SERVER_PROGRAM   "lldb-server"
 #define SDCC_PROGRAM   "sdcc"
+#define PACKIHX_PROGRAM   "packihx"
+#define MAKEBIN_PROGRAM   "makebin"
 #elif defined(Q_OS_MACOS)
 #define CONSOLE_PAUSER  "consolepauser"
 #define ASSEMBLER   "nasm"
