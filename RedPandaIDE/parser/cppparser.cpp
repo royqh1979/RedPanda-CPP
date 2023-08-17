@@ -849,7 +849,16 @@ QString CppParser::getHeaderFileName(const QString &relativeTo, const QString &h
         projectIncludes = mPreprocessor.projectIncludePathList();
     }
     return ::getHeaderFilename(relativeTo, headerName, includes,
-                             projectIncludes);
+                               projectIncludes);
+}
+
+bool CppParser::isLineVisible(const QString &fileName, int line)
+{
+    QMutexLocker locker(&mMutex);
+    PFileIncludes fileIncludes = mPreprocessor.includesList().value(fileName);
+    if (!fileIncludes)
+        return true;
+    return fileIncludes->isLineVisible(line);
 }
 
 void CppParser::invalidateFile(const QString &fileName)

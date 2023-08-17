@@ -765,3 +765,15 @@ bool isTypeKind(StatementKind kind)
         return false;
     }
 }
+
+bool FileIncludes::isLineVisible(int line)
+{
+    int lastI=-1;
+    foreach(int i,branches.keys()) {
+        if (line<i)
+            break;
+        else
+            lastI = i;
+    }
+    return lastI<0?true:branches[lastI];
+}

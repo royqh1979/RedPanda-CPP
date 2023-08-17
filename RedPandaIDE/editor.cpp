@@ -1136,6 +1136,13 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         return;
 
     if (mParser && syntaxer()) {
+        if (!mParser->isLineVisible(mFilename, line)) {
+            if (syntaxer()->commentAttribute()->foreground().isValid())
+                foreground = syntaxer()->commentAttribute()->foreground();
+            if (syntaxer()->commentAttribute()->background().isValid())
+                background = syntaxer()->commentAttribute()->background();
+            return;
+        }
         QString lineText = document()->getLine(line-1);
         if (mParser->isIncludeLine(lineText)) {
             if (cursor() == Qt::PointingHandCursor) {

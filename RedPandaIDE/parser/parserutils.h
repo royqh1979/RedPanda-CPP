@@ -300,6 +300,8 @@ struct FileIncludes {
     StatementMap statements; // but we don't save temporary statements (full name as key)
     StatementMap declaredStatements; // statements declared in this file (full name as key)
     CppScopes scopes; // int is start line of the statement scope
+    QMap<int,bool> branches;
+    bool isLineVisible(int line);
 };
 using PFileIncludes = std::shared_ptr<FileIncludes>;
 

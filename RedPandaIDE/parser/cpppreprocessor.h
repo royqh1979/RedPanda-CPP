@@ -137,11 +137,19 @@ private:
             return true;
     }
     void setCurrentBranch(bool value){
+        if (value!=getCurrentBranch()) {
+            mCurrentIncludes->branches.insert(mIndex+1,value);
+        }
         mBranchResults.append(value);
     }
     void removeCurrentBranch(){
-        if (mBranchResults.size()>0)
+        bool result = getCurrentBranch();
+        if (mBranchResults.size()>0) {
             mBranchResults.pop_back();
+        }
+        if (getCurrentBranch()!=result) {
+            mCurrentIncludes->branches.insert(mIndex,getCurrentBranch());
+        }
     };
     // include stuff
     PFileIncludes getFileIncludesEntry(const QString& fileName){

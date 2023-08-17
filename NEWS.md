@@ -32,6 +32,7 @@ Red Panda C++ Version 2.24
   - fix: Press up/down arrow key in the option dialog's left panel won't switch page.
   - fix: Can't suggest header filename starting with numbers.
   - enhancement: Better layout for compiler options page.
+  - enhancement: False branches are displayed as comments.
 
 Red Panda C++ Version 2.23
 

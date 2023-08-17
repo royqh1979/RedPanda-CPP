@@ -104,6 +104,7 @@ public:
     QString getHeaderFileName(const QString& relativeTo, const QString& headerName, bool fromNext=false);// both
 
     void invalidateFile(const QString& fileName);
+    bool isLineVisible(const QString& fileName, int line);
     bool isIncludeLine(const QString &line);
     bool isIncludeNextLine(const QString &line);
     bool isProjectHeaderFile(const QString& fileName);
