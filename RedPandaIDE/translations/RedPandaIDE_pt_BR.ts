@@ -309,7 +309,11 @@
     </message>
     <message>
         <source>Auto (follow system style and color)</source>
-        <translation type="unfinished"></translation>
+        <translation>Auto (seguir estilo e cor do sistema)</translation>
+    </message>
+    <message>
+        <source>Random Light</source>
+        <translation>Clara aleatória</translation>
     </message>
 </context>
 <context>

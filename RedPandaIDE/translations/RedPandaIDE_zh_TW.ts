@@ -194,11 +194,11 @@
     </message>
     <message>
         <source>Dark Theme</source>
-        <translation type="unfinished"></translation>
+        <translation>深色主題</translation>
     </message>
     <message>
         <source>Light Theme</source>
-        <translation type="unfinished"></translation>
+        <translation>淺色主題</translation>
     </message>
     <message>
         <source>Ok</source>
@@ -218,7 +218,11 @@
     </message>
     <message>
         <source>Auto (follow system style and color)</source>
-        <translation type="unfinished"></translation>
+        <translation>自動（跟隨系統樣式和顏色）</translation>
+    </message>
+    <message>
+        <source>Random Light</source>
+        <translation>隨機淺色</translation>
     </message>
 </context>
 <context>

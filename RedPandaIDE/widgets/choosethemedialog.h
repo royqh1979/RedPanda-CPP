@@ -33,6 +33,7 @@ public:
         AutoFollowSystem = 0,
         Dark,
         Light,
+        RandomLight,
     };
     enum class Language {
         C,
