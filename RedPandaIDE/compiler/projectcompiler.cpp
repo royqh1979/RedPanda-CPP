@@ -231,7 +231,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 #endif
     if (!objResFile.isEmpty()) {
       writeln(file,"RES      = " + objResFile2);
-      writeln(file,"OBJ      = " + Objects);
+      writeln(file,"OBJ      = " + Objects + " $(RES)");
       writeln(file,"LINKOBJ  = " + LinkObjects + " " + objResFile);
 #ifdef Q_OS_WIN
       writeln(file,"CLEANOBJ  = " + cleanObjects +
