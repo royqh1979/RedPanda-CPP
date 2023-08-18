@@ -961,7 +961,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
     } else {
         if (pSettings->codeCompletion().enabled()
                 && pSettings->codeCompletion().showCompletionWhileInput() ) {
-            if (mParser && mParser->isIncludeLine(lineText())) {
+            if (mParser && mParser->isIncludeLine(lineText())
+                    && ch.isDigit()) {
                 // is a #include line
                 processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                 showHeaderCompletion(false);
