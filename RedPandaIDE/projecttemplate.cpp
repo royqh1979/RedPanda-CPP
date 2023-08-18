@@ -110,6 +110,7 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
         mName = fromByteArray(mIni->GetValue("Template", "Name", ""));
     if (mDescription.isEmpty())
         mDescription = fromByteArray(mIni->GetValue("Template", "Description", ""));
+    mIconInfo=fromByteArray(mIni->GetValue("Template", "IconInfo", ""));
 
     mOptions.icon = mIni->GetValue("Project", "Icon", "");
     mOptions.type = static_cast<ProjectType>(mIni->GetLongValue("Project", "Type", 0)); // default = gui
@@ -251,5 +252,15 @@ int ProjectTemplate::version() const
 void ProjectTemplate::setVersion(int newVersion)
 {
     mVersion = newVersion;
+}
+
+QString ProjectTemplate::iconInfo() const
+{
+    return mIconInfo;
+}
+
+void ProjectTemplate::setIconInfo(const QString &newIconInfo)
+{
+    mIconInfo = newIconInfo;
 }
 

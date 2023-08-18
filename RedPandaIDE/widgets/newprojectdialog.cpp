@@ -255,11 +255,18 @@ void NewProjectDialog::on_lstTemplates_currentItemChanged(QListWidgetItem *curre
                 ui->rdCProject->setChecked(true);
             }
         }
+        if (t->iconInfo().isEmpty()) {
+            ui->panelIconInfo->setVisible(false);
+        } else {
+            ui->panelIconInfo->setVisible(true);
+            ui->lblIconInfo->setText(t->iconInfo());
+        }
     } else {
         ui->lblDescription->setText("");
         ui->rdCProject->setChecked(false);
         ui->rdCppProject->setChecked(false);
         ui->chkMakeDefaultLanguage->setChecked(false);
+        ui->panelIconInfo->setVisible(false);
     }
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
                 current && !ui->txtProjectName->text().isEmpty()

@@ -5463,6 +5463,14 @@
         <source>Choose directory</source>
         <translation>Escolher pasta</translation>
     </message>
+    <message>
+        <source>Icon Info:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TextLabel</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewProjectUnitDialog</name>
@@ -5880,6 +5888,30 @@
     <message>
         <source>Set Encoding for the executable:</source>
         <translation>Definir codificação para o executável:</translation>
+    </message>
+    <message>
+        <source>Wrong Compiler Type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiler %1 can&apos;t compile a microcontroller project.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compiler %1 can only compile microcontroller project.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change Project Compiler Set</source>
+        <translation type="unfinished">Alterar o compilador do projeto</translation>
+    </message>
+    <message>
+        <source>Change the project&apos;s compiler set will lose all custom compiler set options.</source>
+        <translation type="unfinished">Alterar o compilador do projeto resultará na perda de todas as opções personalizadas para compilação.</translation>
+    </message>
+    <message>
+        <source>Do you really want to do that?</source>
+        <translation type="unfinished">Quer mesmo fazer isso?</translation>
     </message>
 </context>
 <context>
@@ -7183,6 +7215,53 @@
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
         <translation type="unfinished">Impossível remover o antigo arquivo executável &quot;%1&quot;.</translation>
+    </message>
+</context>
+<context>
+    <name>SDCCProjectCompiler</name>
+    <message>
+        <source>Building makefile...</source>
+        <translation type="unfinished">Montando makefile ...</translation>
+    </message>
+    <message>
+        <source>- Filename: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t open &apos;%1&apos; for write!</source>
+        <translation type="unfinished">Impossível abrir &apos;%1&apos; para gravar!</translation>
+    </message>
+    <message>
+        <source>Compiling project changes...</source>
+        <translation type="unfinished">Compilando alterações em projeto ...</translation>
+    </message>
+    <message>
+        <source>- Project Filename: %1</source>
+        <translation type="unfinished">- Nome de arquivo de projeto: %1</translation>
+    </message>
+    <message>
+        <source>- Compiler Set Name: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the &quot;program&quot; page of compiler settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Processing makefile:</source>
+        <translation type="unfinished">Processando makefile:</translation>
+    </message>
+    <message>
+        <source>- makefile processer: %1</source>
+        <translation type="unfinished">- Processador do makefile: %1</translation>
+    </message>
+    <message>
+        <source>- Command: %1 %2</source>
+        <translation type="unfinished">- Comando: %1 %2</translation>
     </message>
 </context>
 <context>

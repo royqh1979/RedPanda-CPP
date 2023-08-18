@@ -65,6 +65,9 @@ public:
 
     void setVersion(int newVersion);
 
+    QString iconInfo() const;
+    void setIconInfo(const QString &newIconInfo);
+
 private:
     QString mFileName;
     ProjectOptions mOptions;
@@ -72,6 +75,7 @@ private:
     QString mCategory;
     QString mName;
     QString mIcon; // icon in project form
+    QString mIconInfo;
     PSimpleIni mIni;
     int mVersion;
 };

@@ -3,6 +3,7 @@ ver=2
 Name=DLL
 Name[zh_CN]=动态链接库
 Icon=DLL.ico
+IconInfo=<a href="https://www.flaticon.com/free-icons/dll" title="dll icons">Dll icons created by Freepik - Flaticon</a>
 Description=A Dynamic Link Library (DLL)
 Description[zh_CN]=动态链接库(DLL)
 Category=Basic
