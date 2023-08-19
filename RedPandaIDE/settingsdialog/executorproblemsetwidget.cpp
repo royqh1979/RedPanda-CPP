@@ -24,6 +24,10 @@ ExecutorProblemSetWidget::ExecutorProblemSetWidget(const QString& name, const QS
     ui(new Ui::ExecutorProblemSetWidget)
 {
     ui->setupUi(this);
+    ui->cbProblemCaseValidateType->addItem(tr("Exact"));
+    ui->cbProblemCaseValidateType->addItem(tr("Ignore leading/trailing spaces"));
+    ui->cbProblemCaseValidateType->addItem(tr("Ignore spaces"));
+
 }
 
 ExecutorProblemSetWidget::~ExecutorProblemSetWidget()
@@ -39,7 +43,7 @@ void ExecutorProblemSetWidget::doLoad()
     ui->chkConvertInputHTML->setChecked(pSettings->executor().convertHTMLToTextForInput());
     ui->chkConvertExpectedHTML->setChecked(pSettings->executor().convertHTMLToTextForExpected());
 
-    ui->chkIgnoreSpacesWhenValidatingCases->setChecked(pSettings->executor().ignoreSpacesWhenValidatingCases());
+    ui->cbProblemCaseValidateType->setCurrentIndex((int)(pSettings->executor().problemCaseValidateType()));
     ui->chkRedirectStderr->setChecked(pSettings->executor().redirectStderrToToolLog());
 
     ui->cbFont->setCurrentFont(QFont(pSettings->executor().caseEditorFontName()));
@@ -58,7 +62,7 @@ void ExecutorProblemSetWidget::doSave()
     pSettings->executor().setCompetivieCompanionPort(ui->spinPortNumber->value());
     pSettings->executor().setConvertHTMLToTextForInput(ui->chkConvertInputHTML->isChecked());
     pSettings->executor().setConvertHTMLToTextForExpected(ui->chkConvertExpectedHTML->isChecked());
-    pSettings->executor().setIgnoreSpacesWhenValidatingCases(ui->chkIgnoreSpacesWhenValidatingCases->isChecked());
+    pSettings->executor().setProblemCaseValidateType((ProblemCaseValidateType)(ui->cbProblemCaseValidateType->currentIndex()));
     pSettings->executor().setRedirectStderrToToolLog(ui->chkRedirectStderr->isChecked());
     pSettings->executor().setCaseEditorFontName(ui->cbFont->currentFont().family());
     pSettings->executor().setCaseEditorFontOnlyMonospaced(ui->chkOnlyMonospaced->isChecked());
@@ -79,4 +83,3 @@ void ExecutorProblemSetWidget::on_chkOnlyMonospaced_stateChanged(int )
         ui->cbFont->setFontFilters(QFontComboBox::FontFilter::AllFonts);
     }
 }
-

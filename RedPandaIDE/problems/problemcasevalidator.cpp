@@ -15,14 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "problemcasevalidator.h"
-#include "../utils.h"
 
 ProblemCaseValidator::ProblemCaseValidator()
 {
 
 }
 
-bool ProblemCaseValidator::validate(POJProblemCase problemCase, bool ignoreSpaces)
+bool ProblemCaseValidator::validate(POJProblemCase problemCase, ProblemCaseValidateType type)
 {
     if (!problemCase)
         return false;
@@ -44,18 +43,31 @@ bool ProblemCaseValidator::validate(POJProblemCase problemCase, bool ignoreSpace
         }
     }
     int count=std::min(output.count(), expected.count());
-    for (int i=0;i<count;i++) {
-        if (ignoreSpaces) {
-            if (!equalIgnoringSpaces(output[i],expected[i])) {
-                problemCase->firstDiffLine = i;
-                return false;
-            }
-        } else {
+    switch(type) {
+    case ProblemCaseValidateType::Exact:
+        for (int i=0;i<count;i++) {
             if (output[i]!=expected[i]) {
                 problemCase->firstDiffLine = i;
                 return false;
             }
         }
+        break;
+    case ProblemCaseValidateType::IgnoreLeadingTrailingSpaces:
+        for (int i=0;i<count;i++) {
+            if (output[i].trimmed()!=expected[i].trimmed()) {
+                problemCase->firstDiffLine = i;
+                return false;
+            }
+        }
+        break;
+    case ProblemCaseValidateType::IgnoreSpaces:
+        for (int i=0;i<count;i++) {
+            if (!equalIgnoringSpaces(output[i],expected[i])) {
+                problemCase->firstDiffLine = i;
+                return false;
+            }
+        }
+        break;
     }
     if (output.count()<expected.count()) {
         problemCase->firstDiffLine=output.count();

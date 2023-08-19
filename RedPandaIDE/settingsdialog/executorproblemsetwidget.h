@@ -39,6 +39,7 @@ protected:
     void doSave() override;
 private slots:
     void on_chkOnlyMonospaced_stateChanged(int arg1);
+
 };
 
 #endif // EXECUTORPROBLEMSETWIDGET_H

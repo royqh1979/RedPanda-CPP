@@ -34,6 +34,7 @@ Red Panda C++ Version 2.24
   - enhancement: Better layout for compiler options page.
   - enhancement: False branches are displayed as comments.
   - enhancement: Support SDCC Project.
+  - enhancement: 3 compare mode for problem cases.
 
 Red Panda C++ Version 2.23
 

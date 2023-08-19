@@ -2458,31 +2458,6 @@ void Settings::CompilerSet::setExecutables()
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
 #ifdef Q_OS_WIN
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
-    if (mMake.isEmpty()) {
-        mMake = findProgramInBinDirs(MAKE2_PROGRAM);
-    }
-    if (mMake.isEmpty()) {
-        QSet<QString> searched;
-
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        QString path = env.value("PATH");
-        QStringList pathList = path.split(PATH_SEPARATOR);
-        QString folder;
-        for (int i=pathList.count()-1;i>=0;i--) {
-            folder = pathList[i];
-            if (searched.contains(folder))
-                continue;
-            searched.insert(folder);
-            QDir dir(folder);
-            if (dir.exists(MAKE_PROGRAM)) {
-                mMake = dir.absoluteFilePath(MAKE_PROGRAM);
-                break;
-            } else if (dir.exists(MAKE2_PROGRAM)) {
-                mMake = dir.absoluteFilePath(MAKE2_PROGRAM);
-                break;
-            }
-        }
-    }
 #endif
 }
 
@@ -3962,16 +3937,6 @@ void Settings::Executor::setCompetivieCompanionPort(int newCompetivieCompanionPo
     mCompetivieCompanionPort = newCompetivieCompanionPort;
 }
 
-bool Settings::Executor::ignoreSpacesWhenValidatingCases() const
-{
-    return mIgnoreSpacesWhenValidatingCases;
-}
-
-void Settings::Executor::setIgnoreSpacesWhenValidatingCases(bool newIgnoreSpacesWhenValidatingCases)
-{
-    mIgnoreSpacesWhenValidatingCases = newIgnoreSpacesWhenValidatingCases;
-}
-
 bool Settings::Executor::caseEditorFontOnlyMonospaced() const
 {
     return mCaseEditorFontOnlyMonospaced;
@@ -4020,6 +3985,16 @@ bool Settings::Executor::redirectStderrToToolLog() const
 void Settings::Executor::setRedirectStderrToToolLog(bool newRedirectStderrToToolLog)
 {
     mRedirectStderrToToolLog = newRedirectStderrToToolLog;
+}
+
+ProblemCaseValidateType Settings::Executor::problemCaseValidateType() const
+{
+    return mProblemCaseValidateType;
+}
+
+void Settings::Executor::setProblemCaseValidateType(ProblemCaseValidateType newProblemCaseValidateType)
+{
+    mProblemCaseValidateType = newProblemCaseValidateType;
 }
 
 bool Settings::Executor::convertHTMLToTextForInput() const
@@ -4096,7 +4071,7 @@ void Settings::Executor::doSave()
     saveValue("competitive_companion_port", mCompetivieCompanionPort);
     saveValue("input_convert_html", mConvertHTMLToTextForInput);
     saveValue("expected_convert_html", mConvertHTMLToTextForExpected);
-    saveValue("ignore_spaces_when_validating_cases", mIgnoreSpacesWhenValidatingCases);
+    saveValue("problem_case_validate_type", (int)mProblemCaseValidateType);
     saveValue("redirect_stderr_to_toollog", mRedirectStderrToToolLog);
     saveValue("case_editor_font_name",mCaseEditorFontName);
     saveValue("case_editor_font_size",mCaseEditorFontSize);
@@ -4131,7 +4106,7 @@ void Settings::Executor::doLoad()
     mCompetivieCompanionPort = intValue("competitive_companion_port",10045);
     mConvertHTMLToTextForInput = boolValue("input_convert_html", false);
     mConvertHTMLToTextForExpected = boolValue("expected_convert_html", false);
-    mIgnoreSpacesWhenValidatingCases = boolValue("ignore_spaces_when_validating_cases",false);
+    mProblemCaseValidateType =(ProblemCaseValidateType)intValue("problem_case_validate_type", (int)ProblemCaseValidateType::Exact);
     mRedirectStderrToToolLog = boolValue("redirect_stderr_to_toollog", false);
 
 #ifdef Q_OS_WIN

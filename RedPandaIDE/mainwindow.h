@@ -767,8 +767,6 @@ private slots:
 
     void on_actionToggle_Messages_Panel_triggered();
 
-    void on_chkIgnoreSpaces_stateChanged(int arg1);
-
     void on_actionRaylib_Manual_triggered();
 
     void on_actionSelect_Word_triggered();
@@ -849,6 +847,8 @@ private slots:
     void on_actionOI_Wiki_triggered();
 
     void on_actionTurtle_Graphics_Manual_triggered();
+
+    void on_cbProblemCaseValidateType_currentIndexChanged(int index);
 
 private:
     Ui::MainWindow *ui;

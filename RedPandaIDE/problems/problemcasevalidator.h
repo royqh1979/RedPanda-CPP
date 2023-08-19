@@ -18,12 +18,13 @@
 #define PROBLEMCASEVALIDATOR_H
 
 #include "ojproblemset.h"
+#include "../utils.h"
 
 class ProblemCaseValidator
 {
 public:
     ProblemCaseValidator();
-    bool validate(POJProblemCase problemCase,bool ignoreSpaces);
+    bool validate(POJProblemCase problemCase, ProblemCaseValidateType type);
 private:
     bool equalIgnoringSpaces(const QString& s1, const QString& s2);
     QStringList split(const QString& s);

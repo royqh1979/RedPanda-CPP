@@ -1911,10 +1911,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ignore spaces when validating problem cases</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Case Editor Font</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1964,6 +1960,22 @@
     </message>
     <message>
         <source>Redirect STDERR to Tools output panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Problem Case Validate type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore leading/trailing spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore spaces</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4661,10 +4673,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ignore Spaces</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Raylib Manual</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5048,6 +5056,18 @@
         <source>Turtle Graphics Tutorial</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Exact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore leading/trailing spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>
@@ -5190,10 +5210,6 @@
     </message>
     <message>
         <source>Icon Info:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>TextLabel</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

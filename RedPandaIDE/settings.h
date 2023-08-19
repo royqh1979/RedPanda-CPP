@@ -904,9 +904,6 @@ public:
         int competivieCompanionPort() const;
         void setCompetivieCompanionPort(int newCompetivieCompanionPort);
 
-        bool ignoreSpacesWhenValidatingCases() const;
-        void setIgnoreSpacesWhenValidatingCases(bool newIgnoreSpacesWhenValidatingCases);
-
         const QString &caseEditorFontName() const;
         void setCaseEditorFontName(const QString &newCaseEditorFontName);
 
@@ -934,6 +931,9 @@ public:
         bool redirectStderrToToolLog() const;
         void setRedirectStderrToToolLog(bool newRedirectStderrToToolLog);
 
+        ProblemCaseValidateType problemCaseValidateType() const;
+        void setProblemCaseValidateType(ProblemCaseValidateType newProblemCaseValidateType);
+
     private:
         // general
         bool mPauseConsole;
@@ -950,6 +950,7 @@ public:
         bool mConvertHTMLToTextForInput;
         bool mConvertHTMLToTextForExpected;
         bool mIgnoreSpacesWhenValidatingCases;
+        ProblemCaseValidateType mProblemCaseValidateType;
         bool mRedirectStderrToToolLog;
         QString mCaseEditorFontName;
         int mCaseEditorFontSize;

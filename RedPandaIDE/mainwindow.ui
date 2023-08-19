@@ -965,7 +965,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>6</number>
     </property>
     <property name="iconSize">
      <size>
@@ -2060,11 +2060,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QCheckBox" name="chkIgnoreSpaces">
-               <property name="text">
-                <string>Ignore Spaces</string>
-               </property>
-              </widget>
+              <widget class="QComboBox" name="cbProblemCaseValidateType"/>
              </item>
             </layout>
            </widget>

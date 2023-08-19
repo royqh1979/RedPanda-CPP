@@ -130,6 +130,11 @@ MainWindow::MainWindow(QWidget *parent)
 
 {
     ui->setupUi(this);
+    ui->cbProblemCaseValidateType->blockSignals(true);
+    ui->cbProblemCaseValidateType->addItem(tr("Exact"));
+    ui->cbProblemCaseValidateType->addItem(tr("Ignore leading/trailing spaces"));
+    ui->cbProblemCaseValidateType->addItem(tr("Ignore spaces"));
+    ui->cbProblemCaseValidateType->blockSignals(false);
     addActions( this->findChildren<QAction *>(QString(), Qt::FindChildrenRecursively));
 
     //custom actions
@@ -968,7 +973,7 @@ void MainWindow::applySettings()
     showHideMessagesTab(ui->tabProblem, pSettings->ui().showProblem()
                         && pSettings->executor().enableProblemSet());
 
-    ui->chkIgnoreSpaces->setChecked(pSettings->executor().ignoreSpacesWhenValidatingCases());
+    ui->cbProblemCaseValidateType->setCurrentIndex((int)(pSettings->executor().problemCaseValidateType()));
     ui->actionInterrupt->setVisible(pSettings->debugger().useGDBServer());
     //icon sets for editors
     updateEditorSettings();
@@ -6057,7 +6062,7 @@ void MainWindow::onOJProblemCaseFinished(const QString& id, int current, int tot
     if (row>=0) {
         POJProblemCase problemCase = mOJProblemModel.getCase(row);
         ProblemCaseValidator validator;
-        problemCase->testState = validator.validate(problemCase,pSettings->executor().ignoreSpacesWhenValidatingCases())?
+        problemCase->testState = validator.validate(problemCase,pSettings->executor().problemCaseValidateType())?
                     ProblemCaseTestState::Passed:
                     ProblemCaseTestState::Failed;
         mOJProblemModel.update(row);
@@ -9623,14 +9628,6 @@ void MainWindow::on_actionToggle_Messages_Panel_triggered()
     stretchMessagesPanel(ui->tabMessages->isShrinked());
 }
 
-
-void MainWindow::on_chkIgnoreSpaces_stateChanged(int /*arg1*/)
-{
-    pSettings->executor().setIgnoreSpacesWhenValidatingCases(ui->chkIgnoreSpaces->isChecked());
-}
-
-
-
 void MainWindow::on_actionRaylib_Manual_triggered()
 {
     if (pSettings->environment().language()=="zh_CN") {
@@ -10085,5 +10082,12 @@ bool MainWindow::openingProject() const
 bool MainWindow::openingFiles() const
 {
     return mOpeningFiles;
+}
+
+
+void MainWindow::on_cbProblemCaseValidateType_currentIndexChanged(int index)
+{
+    pSettings->executor().setProblemCaseValidateType((ProblemCaseValidateType)index);
+    pSettings->executor().save();
 }
 

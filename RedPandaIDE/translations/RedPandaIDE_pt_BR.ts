@@ -2079,7 +2079,7 @@
     </message>
     <message>
         <source>Ignore spaces when validating problem cases</source>
-        <translation>Ignorar espaços ao validar casos de problemas</translation>
+        <translation type="vanished">Ignorar espaços ao validar casos de problemas</translation>
     </message>
     <message>
         <source>Timeout for Case Valdation</source>
@@ -2135,6 +2135,22 @@
     </message>
     <message>
         <source>Redirect STDERR to Tools output panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Problem Case Validate type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore leading/trailing spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore spaces</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4925,7 +4941,7 @@
     </message>
     <message>
         <source>Ignore Spaces</source>
-        <translation>Ignorar espaços</translation>
+        <translation type="vanished">Ignorar espaços</translation>
     </message>
     <message>
         <source>Raylib Manual</source>
@@ -5319,6 +5335,18 @@
         <source>Turtle Graphics Tutorial</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Exact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore leading/trailing spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>
@@ -5465,10 +5493,6 @@
     </message>
     <message>
         <source>Icon Info:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>TextLabel</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

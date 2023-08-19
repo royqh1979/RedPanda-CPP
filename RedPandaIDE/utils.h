@@ -107,6 +107,12 @@ enum class SplitProcessCommandQuoteType {
     Double
 };
 
+enum class ProblemCaseValidateType {
+    Exact,
+    IgnoreLeadingTrailingSpaces,
+    IgnoreSpaces
+};
+
 FileType getFileType(const QString& filename);
 QStringList splitProcessCommand(const QString& cmd);
 
