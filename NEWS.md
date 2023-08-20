@@ -35,6 +35,7 @@ Red Panda C++ Version 2.24
   - enhancement: False branches are displayed as comments.
   - enhancement: Support SDCC Project.
   - enhancement: 3 compare mode for problem cases.
+  - fix: Can't find other compilers that in the same folder with gcc.
 
 Red Panda C++ Version 2.23
 

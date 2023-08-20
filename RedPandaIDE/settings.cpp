@@ -3079,23 +3079,25 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
 
 bool Settings::CompilerSets::addSets(const QString &folder)
 {
+    bool found = false;
     if (!directoryExists(folder))
-        return false;
+        return found;
     if (fileExists(folder, GCC_PROGRAM)) {
         addSets(folder,GCC_PROGRAM);
-        return true;
+        found=true;
     }
     if (fileExists(folder, CLANG_PROGRAM)) {
         addSets(folder,CLANG_PROGRAM);
-        return true;
+        found=true;
     }
 #ifdef ENABLE_SDCC
+    qDebug()<<folder;
     if (fileExists(folder, SDCC_PROGRAM)) {
         addSets(folder,SDCC_PROGRAM);
-        return true;
+        found=true;
     }
 #endif
-    return false;
+    return found;
 }
 
 void Settings::CompilerSets::clearSets()
