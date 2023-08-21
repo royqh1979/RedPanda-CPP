@@ -58,7 +58,6 @@ bool SDCCFileCompiler::prepareForCompile()
     mArguments += getCCompileArguments(false);
     mArguments += getCIncludeArguments();
     mArguments += getProjectIncludeArguments();
-    mArguments += getLibraryArguments(FileType::CSource);
 
     if (!fileExists(mCompiler)) {
         throw CompileError(
@@ -74,14 +73,15 @@ bool SDCCFileCompiler::prepareForCompile()
     mNoStartup = (val==COMPILER_OPTION_ON);
     if (mNoStartup) {
         mRelFilename = changeFileExt(mFilename,SDCC_REL_SUFFIX);
-        mArguments = QString(" -c \"%1\"").arg(mFilename);
+        mArguments += QString(" -c \"%1\"").arg(mFilename);
         mExtraCompilersList.append(mCompiler);
-        QString args;
-        args = QString(" -o \"%1\" \"%2\" ").arg(mIhxFilename, mRelFilename);
+        QString args = getLibraryArguments(FileType::CSource);
+        args += QString(" -o \"%1\" \"%2\" ").arg(mIhxFilename, mRelFilename);
         mExtraArgumentsList.append(args);
         mExtraOutputFilesList.append("");
     } else {
-        mArguments = QString(" \"%1\"").arg(mFilename);
+        mArguments += getLibraryArguments(FileType::CSource);
+        mArguments += QString(" \"%1\"").arg(mFilename);
         mArguments+=QString(" -o \"%1\"").arg(mIhxFilename);
     }
 

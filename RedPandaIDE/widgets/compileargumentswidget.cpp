@@ -20,6 +20,7 @@
 #include <QComboBox>
 #include <QGridLayout>
 #include <QLabel>
+#include <QLineEdit>
 
 CompileArgumentsWidget::CompileArgumentsWidget(QWidget *parent) :
     QTabWidget(parent)
@@ -45,7 +46,9 @@ QMap<QString, QString> CompileArgumentsWidget::arguments( bool includeUnset) con
                 PCompilerOption pOption = CompilerInfoManager::getCompilerOption(mCompilerType,key);
                 if (!pOption)
                     continue;
-                if (pOption->choices.isEmpty()) {
+                switch (pOption->type) {
+                case CompilerOptionType::Checkbox:
+                {
                     QCheckBox* pCheckbox = static_cast<QCheckBox *>(pLayout->itemAtPosition(j,1)->widget());
                     if (pCheckbox->isChecked()) {
                         args.insert(key,COMPILER_OPTION_ON);
@@ -55,7 +58,10 @@ QMap<QString, QString> CompileArgumentsWidget::arguments( bool includeUnset) con
                         else
                             args.remove(key);
                     }
-                } else {
+                }
+                    break;
+                case CompilerOptionType::Choice:
+                {
                     QComboBox* pCombo = static_cast<QComboBox *>(pLayout->itemAtPosition(j,2)->widget());
                     if (!pCombo->currentData().toString().isEmpty()) {
                         args.insert(key,pCombo->currentData().toString());
@@ -65,6 +71,22 @@ QMap<QString, QString> CompileArgumentsWidget::arguments( bool includeUnset) con
                         else
                             args.remove(key);
                     }
+                }
+                    break;
+                case CompilerOptionType::Input:
+                {
+                    QLineEdit* pText = static_cast<QLineEdit *>(pLayout->itemAtPosition(j,2)->widget());
+                    QString t=pText->text().trimmed();
+                    if (!t.isEmpty())
+                        args.insert(key,t);
+                    else {
+                        if (includeUnset)
+                            args.insert(key,"");
+                        else
+                            args.remove(key);
+                    }
+                }
+                    break;
                 }
             }
         }
@@ -105,12 +127,17 @@ void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QSt
         QLabel* keyLabel = new QLabel(pOption->key,pWidget);
         keyLabel->setVisible(false);
         pLayout->addWidget(keyLabel,row,0);
-        if (pOption->choices.isEmpty()) {
+        switch(pOption->type) {
+        case CompilerOptionType::Checkbox:
+        {
             QCheckBox* pCheckbox = new QCheckBox(pWidget);
             pCheckbox->setText(pOption->name);
             pCheckbox->setChecked(options.value(pOption->key,"")==COMPILER_OPTION_ON);
             pLayout->addWidget(pCheckbox,row,1,1,2);
-        } else {
+        }
+            break;
+        case CompilerOptionType::Choice:
+        {
             pLayout->addWidget(new QLabel(pOption->name,pWidget),row,1);
             QComboBox* pCombo = new QComboBox(pWidget);
             pCombo->addItem("","");
@@ -121,6 +148,16 @@ void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QSt
                     pCombo->setCurrentIndex(i+1);
             }
             pLayout->addWidget(pCombo,row,2);
+        }
+            break;
+        case CompilerOptionType::Input:
+        {
+            pLayout->addWidget(new QLabel(pOption->name,pWidget),row,1);
+            QLineEdit* pInput = new QLineEdit(pWidget);
+            pInput->setText(options.value(pOption->key,""));
+            pLayout->addWidget(pInput,row,2);
+        }
+            break;
         }
     }
     for (int i=0;i<pTab->count();i++) {

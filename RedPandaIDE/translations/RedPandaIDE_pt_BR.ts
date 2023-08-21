@@ -6969,6 +6969,54 @@
         <source>Don&apos;t generate startup code</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Use external stack</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use movc instead of movx to read from external ram</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t memcpy initialized xram from code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MCU Specification</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Internal ram size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>External ram start location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>External ram size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stack pointer initial value</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>External stack start location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Direct data start location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code segment location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code segment size</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>

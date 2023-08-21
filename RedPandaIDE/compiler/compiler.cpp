@@ -410,8 +410,10 @@ QString Compiler::getCCompileArguments(bool checkSyntax)
             continue;
         PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->compilerType(), key);
         if (pOption && pOption->isC && !pOption->isLinker) {
-            if (pOption->choices.isEmpty())
+            if (pOption->type == CompilerOptionType::Checkbox)
                 result += " " + pOption->setting;
+            else if (pOption->type == CompilerOptionType::Input)
+                result += " " + pOption->setting + " " + compileOptions[key];
             else {
                 result += " " + pOption->setting + compileOptions[key];
             }
@@ -453,10 +455,13 @@ QString Compiler::getCppCompileArguments(bool checkSyntax)
             continue;
         PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->compilerType(), key);
         if (pOption && pOption->isCpp && !pOption->isLinker) {
-            if (pOption->choices.isEmpty())
+            if (pOption->type == CompilerOptionType::Checkbox)
                 result += " " + pOption->setting;
-            else
+            else if (pOption->type == CompilerOptionType::Input)
+                result += " " + pOption->setting + " " + compileOptions[key];
+            else {
                 result += " " + pOption->setting + compileOptions[key];
+            }
         }
     }
     if (compilerSet()->useCustomCompileParams() && !compilerSet()->customCompileParams().isEmpty()) {
@@ -560,10 +565,13 @@ QString Compiler::getLibraryArguments(FileType fileType)
             continue;
         PCompilerOption pOption = CompilerInfoManager::getCompilerOption(compilerSet()->compilerType(), key);
         if (pOption && pOption->isLinker) {
-            if (pOption->choices.isEmpty())
+            if (pOption->type == CompilerOptionType::Checkbox)
                 result += " " + pOption->setting;
-            else
+            else if (pOption->type == CompilerOptionType::Input)
+                result += " " + pOption->setting + " " + compileOptions[key];
+            else {
                 result += " " + pOption->setting + compileOptions[key];
+            }
         }
     }
 

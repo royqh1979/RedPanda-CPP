@@ -51,6 +51,19 @@
 #ifdef ENABLE_SDCC
 #define SDCC_CMD_OPT_PROCESSOR "sdcc_cmd_opt_processor"
 #define SDCC_CMD_OPT_STD "sdcc_cmd_opt_std"
+#define SDCC_OPT_XSTACK "sdcc_opt_xstack"
+#define SDCC_OPT_XRAM_MOVC "sdcc_opt_xram_movc"
+#define SDCC_OPT_NO_XINIT_OPT "sdcc_opt_no_xinit_opt"
+
+#define SDCC_OPT_NOSTARTUP "sdcc_opt_nostartup"
+#define SDCC_OPT_IRAM_SIZE "sdcc_opt_iram_size"
+#define SDCC_OPT_XRAM_SIZE "sdcc_opt_xram_size"
+#define SDCC_OPT_XRAM_LOC "sdcc_opt_xram_loc"
+#define SDCC_OPT_XSTACK_LOC "sdcc_opt_xstack_loc"
+#define SDCC_OPT_CODE_LOC "sdcc_opt_code_loc"
+#define SDCC_OPT_CODE_SIZE "sdcc_opt_code_size"
+#define SDCC_OPT_STACK_LOC "sdcc_opt_stack_loc"
+#define SDCC_OPT_DATA_LOC "sdcc_opt_data_loc"
 #define SDCC_OPT_NOSTARTUP "sdcc_opt_nostartup"
 #endif
 
@@ -67,6 +80,12 @@ enum class CompilerType {
     Unknown
 };
 
+enum class CompilerOptionType {
+    Checkbox,
+    Choice,
+    Input
+};
+
 using CompileOptionChoiceList = QList<QPair<QString,QString>>;
 
 typedef struct {
@@ -77,6 +96,7 @@ typedef struct {
     bool isCpp; // True (C++ option?) - can be both C and C++ option...
     bool isLinker; // Is it a linker param
     QString setting; // "-g3"
+    CompilerOptionType type;
     CompileOptionChoiceList choices; // replaces "Yes/No" standard choices (max 30 different choices)
 } CompilerOption;
 
@@ -110,6 +130,7 @@ protected:
                    bool isCpp,
                    bool isLinker,
                    const QString& setting,
+                   CompilerOptionType type = CompilerOptionType::Checkbox,
                    const CompileOptionChoiceList& choices = CompileOptionChoiceList());
     virtual void prepareCompilerOptions();
 protected:

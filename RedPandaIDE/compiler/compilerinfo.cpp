@@ -1,5 +1,6 @@
 #include "compilerinfo.h"
 #include <QObject>
+#include <QDebug>
 
 CompilerInfo::CompilerInfo(const QString &name):
     mName(name)
@@ -31,8 +32,11 @@ bool CompilerInfo::supportSyntaxCheck()
     return true;
 }
 
-void CompilerInfo::addOption(const QString &key, const QString &name, const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting, const CompileOptionChoiceList &choices)
+void CompilerInfo::addOption(const QString &key, const QString &name,
+                             const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting,
+                             CompilerOptionType type, const CompileOptionChoiceList &choices)
 {
+    Q_ASSERT(choices.isEmpty() || type == CompilerOptionType::Choice);
     PCompilerOption pOption = std::make_shared<CompilerOption>();
     pOption->key = key;
     pOption->name = name;
@@ -41,6 +45,7 @@ void CompilerInfo::addOption(const QString &key, const QString &name, const QStr
     pOption->isCpp = isCpp;
     pOption->isLinker = isLinker;
     pOption->setting= setting;
+    pOption->type = type;
     pOption->choices = choices;
     mCompilerOptions.insert(key,pOption);
     mCompilerOptionList.append(pOption);
@@ -70,7 +75,7 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Highest (-Ofast)","fast"));
     sl.append(QPair<QString,QString>("Size (-Os)","s"));
     sl.append(QPair<QString,QString>("Debug (-Og)","g"));
-    addOption(CC_CMD_OPT_OPTIMIZE, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", sl);
+    addOption(CC_CMD_OPT_OPTIMIZE, QObject::tr("Optimization level (-Ox)"), groupName, true, true, false, "-O", CompilerOptionType::Choice, sl);
 
     // C++ Language Standards
     sl.clear();
@@ -86,7 +91,7 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("GNU C++17","gnu++17"));
     sl.append(QPair<QString,QString>("GNU C++20","gnu++2a"));
     sl.append(QPair<QString,QString>("GNU C++23","gnu++2b"));
-    addOption(CC_CMD_OPT_STD, QObject::tr("C++ Language standard (-std)"), groupName, false, true, false, "-std=", sl);
+    addOption(CC_CMD_OPT_STD, QObject::tr("C++ Language standard (-std)"), groupName, false, true, false, "-std=",CompilerOptionType::Choice, sl);
 
     sl.clear();
     sl.append(QPair<QString,QString>("ISO C90","c90"));
@@ -97,7 +102,7 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("GNU C99","gnu99"));
     sl.append(QPair<QString,QString>("GNU C11","gnu11"));
     sl.append(QPair<QString,QString>("GNU C17","gnu17"));
-    addOption(C_CMD_OPT_STD, QObject::tr("C Language standard (-std)"), groupName, true, false, false, "-std=", sl);
+    addOption(C_CMD_OPT_STD, QObject::tr("C Language standard (-std)"), groupName, true, false, false, "-std=", CompilerOptionType::Choice, sl);
 
     // Optimization for cpu type
 //    sl.clear();
@@ -147,13 +152,13 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("FMA4","fma4"));
     sl.append(QPair<QString,QString>("XOP","xop"));
     sl.append(QPair<QString,QString>("AES","aes"));
-    addOption(CC_CMD_OPT_INSTRUCTION,QObject::tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, "-m", sl);
+    addOption(CC_CMD_OPT_INSTRUCTION,QObject::tr("Enable use of specific instructions (-mx)"), groupName, true, true, false, "-m", CompilerOptionType::Choice, sl);
 
     // 32bit/64bit
     sl.clear();
     sl.append(QPair<QString,QString>("32bit","32"));
     sl.append(QPair<QString,QString>("64bit","64"));
-    addOption(CC_CMD_OPT_POINTER_SIZE, QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, "-m", sl);
+    addOption(CC_CMD_OPT_POINTER_SIZE, QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, "-m", CompilerOptionType::Choice, sl);
 
     addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
     addOption(CC_CMD_OPT_PROFILE_INFO, QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
@@ -171,14 +176,14 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Normal"," "));
     sl.append(QPair<QString,QString>("Strong","-strong"));
     sl.append(QPair<QString,QString>("All","-all"));
-    addOption(CC_CMD_OPT_STACK_PROTECTOR , QObject::tr("Check for stack smashing attacks (-fstack-protector)"), groupName, false, false, true, "-fstack-protector",sl);
+    addOption(CC_CMD_OPT_STACK_PROTECTOR , QObject::tr("Check for stack smashing attacks (-fstack-protector)"), groupName, false, false, true, "-fstack-protector", CompilerOptionType::Choice, sl);
 #if defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
     sl.clear();
     sl.append(QPair<QString,QString>("Address","address"));
     sl.append(QPair<QString,QString>("Thread","thread"));
     sl.append(QPair<QString,QString>("Leak","leak"));
     sl.append(QPair<QString,QString>("Undefined","undefined"));
-    addOption(CC_CMD_OPT_ADDRESS_SANITIZER , QObject::tr("Enable Sanitizer (-fsanitize=)"), groupName, true, true, true, "-fsanitize=",sl);
+    addOption(CC_CMD_OPT_ADDRESS_SANITIZER , QObject::tr("Enable Sanitizer (-fsanitize=)"), groupName, true, true, true, "-fsanitize=",CompilerOptionType::Choice,sl);
 #endif
 
     // Output
@@ -425,7 +430,7 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Padauk processors-13bit width memory","pdk13"));
     sl.append(QPair<QString,QString>("Padauk processors-14bit width memory","pdk14"));
     sl.append(QPair<QString,QString>("Padauk processors-15bit width memory","pdk15"));
-    addOption(SDCC_CMD_OPT_PROCESSOR, QObject::tr("Processor (-m)"), groupName, true, false, false, "-m", sl);
+    addOption(SDCC_CMD_OPT_PROCESSOR, QObject::tr("Processor (-m)"), groupName, true, false, false, "-m", CompilerOptionType::Choice,sl);
 
     // C++ Language Standards
     sl.clear();
@@ -439,8 +444,22 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("SDCC C11","sdcc11"));
     sl.append(QPair<QString,QString>("SDCC C17","sdcc17"));
     sl.append(QPair<QString,QString>("SDCC C2x","sdcc2x"));
-    addOption(SDCC_CMD_OPT_STD, QObject::tr("Language standard (--std)"), groupName, true, false, false, "--std-", sl);
+    addOption(SDCC_CMD_OPT_STD, QObject::tr("Language standard (--std)"), groupName, true, false, false, "--std-", CompilerOptionType::Choice,sl);
 
+    addOption(SDCC_OPT_XSTACK, QObject::tr("Use external stack"),groupName,true,false,false,"--xstack");
+    addOption(SDCC_OPT_XRAM_MOVC, QObject::tr("Use movc instead of movx to read from external ram"),groupName,true,false,false,"--xram-movc");
+    addOption(SDCC_OPT_NO_XINIT_OPT, QObject::tr("Don't memcpy initialized xram from code"),groupName,true,false,false,"--no-xinit-opt");
     addOption(SDCC_OPT_NOSTARTUP, QObject::tr("Don't generate startup code"),groupName,false,false,false,"nostartup");
+
+    groupName = QObject::tr("MCU Specification");
+
+    addOption(SDCC_OPT_IRAM_SIZE, QObject::tr("Internal ram size"), groupName, false, false, true, "--iram-size",CompilerOptionType::Input);
+    addOption(SDCC_OPT_XRAM_LOC, QObject::tr("External ram start location"), groupName, false, false, true, "--xram-loc",CompilerOptionType::Input);
+    addOption(SDCC_OPT_XRAM_SIZE, QObject::tr("External ram size"), groupName, false, false, true, "--xram-size",CompilerOptionType::Input);
+    addOption(SDCC_OPT_STACK_LOC, QObject::tr("Stack pointer initial value"), groupName, false, false, true, "--stack-loc",CompilerOptionType::Input);
+    addOption(SDCC_OPT_XSTACK_LOC, QObject::tr("External stack start location"), groupName, false, false, true, "--xstack-loc",CompilerOptionType::Input);
+    addOption(SDCC_OPT_DATA_LOC, QObject::tr("Direct data start location"), groupName, false, false, true, "--data-loc",CompilerOptionType::Input);
+    addOption(SDCC_OPT_CODE_LOC, QObject::tr("Code segment location"), groupName, false, false, true, "--code-loc",CompilerOptionType::Input);
+    addOption(SDCC_OPT_CODE_SIZE, QObject::tr("Code segment size"), groupName, false, false, true, "--code-size",CompilerOptionType::Input);
 }
 #endif
