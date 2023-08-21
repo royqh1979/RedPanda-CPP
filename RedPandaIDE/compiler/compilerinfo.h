@@ -51,8 +51,10 @@
 #ifdef ENABLE_SDCC
 #define SDCC_CMD_OPT_PROCESSOR "sdcc_cmd_opt_processor"
 #define SDCC_CMD_OPT_STD "sdcc_cmd_opt_std"
+#define SDCC_OPT_MEMORY_MODEL "sdcc_opt_memory_model"
 #define SDCC_OPT_XSTACK "sdcc_opt_xstack"
 #define SDCC_OPT_XRAM_MOVC "sdcc_opt_xram_movc"
+#define SDCC_OPT_ACALL_AJMP "sdcc_opt_acall_ajmp"
 #define SDCC_OPT_NO_XINIT_OPT "sdcc_opt_no_xinit_opt"
 
 #define SDCC_OPT_NOSTARTUP "sdcc_opt_nostartup"

@@ -8981,67 +8981,77 @@ Are you really want to continue?</oldsource>
         <translation>C语言标准(--std)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="449"/>
+        <location filename="../compiler/compilerinfo.cpp" line="455"/>
+        <source>Memory model (--model)</source>
+        <translation>内存模型(--model)</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilerinfo.cpp" line="457"/>
         <source>Use external stack</source>
         <translation>使用外部栈空间</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="450"/>
+        <location filename="../compiler/compilerinfo.cpp" line="458"/>
         <source>Use movc instead of movx to read from external ram</source>
         <translation>使用movc代替movx访问外部RAM</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="451"/>
+        <location filename="../compiler/compilerinfo.cpp" line="459"/>
+        <source>Replaces lcall/ljmp with acall/ajmp</source>
+        <translation>用acall/ajmp代替lcall/ljmp</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilerinfo.cpp" line="460"/>
         <source>Don&apos;t memcpy initialized xram from code</source>
         <translation>Don&apos;t memcpy initialized xram from code</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="452"/>
+        <location filename="../compiler/compilerinfo.cpp" line="461"/>
         <source>Don&apos;t generate startup code</source>
         <translation>无main函数时不生成起始代码(用于edsim51模拟器)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="454"/>
+        <location filename="../compiler/compilerinfo.cpp" line="463"/>
         <source>MCU Specification</source>
         <translation>微处理器参数</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="456"/>
+        <location filename="../compiler/compilerinfo.cpp" line="465"/>
         <source>Internal ram size</source>
         <translation>内部RAM大小</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="457"/>
+        <location filename="../compiler/compilerinfo.cpp" line="466"/>
         <source>External ram start location</source>
         <translation>外部RAM起始地址</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="458"/>
+        <location filename="../compiler/compilerinfo.cpp" line="467"/>
         <source>External ram size</source>
         <translation>外部RAM大小</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="459"/>
+        <location filename="../compiler/compilerinfo.cpp" line="468"/>
         <source>Stack pointer initial value</source>
         <translation>栈指针寄存器初始地址</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="460"/>
+        <location filename="../compiler/compilerinfo.cpp" line="469"/>
         <source>External stack start location</source>
         <translation>外部栈空间起始地址</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="461"/>
+        <location filename="../compiler/compilerinfo.cpp" line="470"/>
         <source>Direct data start location</source>
         <translation>内部数据区起始地址</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="462"/>
+        <location filename="../compiler/compilerinfo.cpp" line="471"/>
         <source>Code segment location</source>
         <translation>代码段起始地址</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="463"/>
+        <location filename="../compiler/compilerinfo.cpp" line="472"/>
         <source>Code segment size</source>
         <translation>代码段大小</translation>
     </message>

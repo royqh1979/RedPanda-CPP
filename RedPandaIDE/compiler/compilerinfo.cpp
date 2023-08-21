@@ -446,8 +446,17 @@ void SDCCCompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("SDCC C2x","sdcc2x"));
     addOption(SDCC_CMD_OPT_STD, QObject::tr("Language standard (--std)"), groupName, true, false, false, "--std-", CompilerOptionType::Choice,sl);
 
+    // Memory Model
+    sl.clear();
+    sl.append(QPair<QString,QString>("Small","-small"));
+    sl.append(QPair<QString,QString>("Medium","-medium"));
+    sl.append(QPair<QString,QString>("Large","-large"));
+    sl.append(QPair<QString,QString>("Huge","-huge"));
+    addOption(SDCC_OPT_MEMORY_MODEL, QObject::tr("Memory model (--model)"), groupName, true, false, false, "--model", CompilerOptionType::Choice,sl);
+
     addOption(SDCC_OPT_XSTACK, QObject::tr("Use external stack"),groupName,true,false,false,"--xstack");
     addOption(SDCC_OPT_XRAM_MOVC, QObject::tr("Use movc instead of movx to read from external ram"),groupName,true,false,false,"--xram-movc");
+    addOption(SDCC_OPT_ACALL_AJMP, QObject::tr("Replaces lcall/ljmp with acall/ajmp"),groupName,true,false,false,"--acall-ajmp");
     addOption(SDCC_OPT_NO_XINIT_OPT, QObject::tr("Don't memcpy initialized xram from code"),groupName,true,false,false,"--no-xinit-opt");
     addOption(SDCC_OPT_NOSTARTUP, QObject::tr("Don't generate startup code"),groupName,false,false,false,"nostartup");
 

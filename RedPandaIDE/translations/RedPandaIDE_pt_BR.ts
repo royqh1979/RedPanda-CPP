@@ -7017,6 +7017,14 @@
         <source>Code segment size</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Memory model (--model)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replaces lcall/ljmp with acall/ajmp</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>
