@@ -39,7 +39,7 @@ LRESULT CALLBACK TxtPasswordWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         if (wParam==VK_RETURN) {
             char s[500+1];
             Edit_GetText(hwndTxtPassword,s,500);
-            printf(s);
+            printf("%s", s);
             DestroyWindow(hMainDlg);
             return TRUE;
         }

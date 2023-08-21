@@ -45,7 +45,7 @@
 // includes for recursive getFileNames() function
 #ifdef _WIN32
 	#undef UNICODE		// use ASCII windows functions
-	#include <Windows.h>
+	#include <windows.h>
 #else
 	#include <dirent.h>
 	#include <sys/stat.h>

@@ -135,7 +135,7 @@ DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG 
     }
     WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
     if ( bSuccess == FALSE ) {
-        printf( "AssignProcessToJobObject failed: error %u\n", GetLastError() );
+        printf( "AssignProcessToJobObject failed: error %lu\n", GetLastError() );
         return 0;
     }
 
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
     hJob= CreateJobObject( &sa, NULL );
 
     if ( hJob == NULL ) {
-        printf( "CreateJobObject failed: error %d\n", GetLastError() );
+        printf( "CreateJobObject failed: error %lu\n", GetLastError() );
         return 0;
     }
 
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
     info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
     WINBOOL bSuccess = SetInformationJobObject( hJob, JobObjectExtendedLimitInformation, &info, sizeof( info ) );
     if ( bSuccess == FALSE ) {
-        printf( "SetInformationJobObject failed: error %d\n", GetLastError() );
+        printf( "SetInformationJobObject failed: error %lu\n", GetLastError() );
         return 0;
     }
 
@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
 
     // Done? Print return value of executed program
     printf("\n--------------------------------");
-    printf("\nProcess exited after %.4g seconds with return value %lu (%.4g ms cpu time, %d KB mem used).\n",seconds,returnvalue, execSeconds, peakMemory);
+    printf("\nProcess exited after %.4g seconds with return value %lu (%.4g ms cpu time, %lld KB mem used).\n",seconds,returnvalue, execSeconds, peakMemory);
     if (pauseAfterExit)
         PauseExit(returnvalue,reInp);
     return 0;
