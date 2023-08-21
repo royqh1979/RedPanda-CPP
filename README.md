@@ -15,6 +15,7 @@ New Features (Compared with Red Panda Dev-C++ 6):
 * Find symbol occurrences
 * Memory View for debugging
 * TODO View
+* Support SDCC Compiler
 
 UI Improvements:
 * Full high-dpi support, including fonts and icons
