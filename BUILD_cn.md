@@ -4,13 +4,199 @@
 
 # Windows
 
- 我使用msys2打包的最新版的GCC和MinGW-w64工具链来编译小熊猫C++。VC和其他版本的gcc不一定能够正常编译。
+| 库 + 工具链 \ 目标 | x86 | x64 | ARM64 |
+| ------------------ | --- | --- | ----- |
+| MSYS2 + 基于 GNU 的 MinGW | ✔️ | ✔️ | ❌ |
+| MSYS2 + 基于 LLVM 的 MinGW | ✔️ | ✔️ | ✔️ |
+| Qt.io + MinGW | ✔️ | ✔️ | ❌ |
+| Qt.io + MSVC | ✔️ | ✔️ | ❌ |
+| vcpkg + MSVC | ✔️ | ✔️ | ❌ |
 
- 编译步骤：
- - 安装msys2 (https://www.msys2.org)
- - 使用msys2的pacman程序安装mingw-w64-x86_64-qt5和mingw-w64-x86_64-gcc
- - 安装qtcreator
- - 使用qtcreator打开Red_Panda_CPP.pro文件
+关于 ARM 上的 Windows 的注记：
+- 小熊猫 C++ 只能在 Windows 11 ARM64 上构建 ARM64 版，成品应该能在 Windows 10 ARM64 上运行（但没有测试过）。
+- 暂不支持以 x64 互操作性著称的 ARM64EC（“仿真兼容”）ABI。
+  - 既然小熊猫 C++ 已经可以构建到 ARM64 经典 ABI，ARM64EC 就不能带来明显的好处。
+  - 但是 ARM64EC 可以支持用户习惯的输入法和喜欢的 Qt 样式。
+- 随着 [Windows 11 Insider Preview Build 25905 弃用 ARM32](https://blogs.windows.com/windows-insider/2023/07/12/announcing-windows-11-insider-preview-build-25905/)，小熊猫 C++ 今后也不会添加 ARM32 支持了。
+
+## MSYS2 的 Qt 库 + MinGW 工具链（推荐）
+
+小熊猫 C++ 应该能在 MSYS2 的 MinGW 工具链上构建，包括 3 个基于 GNU 的环境（MINGW32、MINGW64、UCRT64）中的 GCC 和 Clang，以及 3 个基于 LLVM 的环境（CLANG32、CLANG64、CLANGARM64）中的 Clang，关于环境的详情可参考 [MSYS2 的文档](https://www.msys2.org/docs/environments/)。以下几个工具链测试较充分：
+- MINGW32 GCC，
+- MINGW64 GCC，
+- UCRT64 GCC（x64 推荐），
+- CLANGARM64 Clang（ARM64 唯一可用且推荐的工具链）。
+
+小熊猫 C++ 官方版本使用 MINGW32 GCC 和 MINGW64 GCC 构建。
+
+前置条件：
+
+0. Windows 8.1 x64 或更高版本，或 Windows 11 ARM64。
+1. 安装 MSYS2。
+2. 在选定的环境中，安装工具链和 Qt 5 库：
+   ```bash
+   pacman -S $MINGW_PACKAGE_PREFIX-toolchain $MINGW_PACKAGE_PREFIX-qt5-static
+   ```
+
+仅构建：
+
+1. 在选定的环境中，设置相关变量：
+   ```bash
+   SRC_DIR="/c/src/redpanda-src" # 以 “C:\src\redpanda-src” 为例
+   BUILD_DIR="/c/src/redpanda-build" # 以 “C:\src\redpanda-build” 为例
+   INSTALL_DIR="/c/src/redpanda-pkg" # 以 “C:\src\redpanda-pkg” 为例
+   ```
+2. 定位到构建目录：
+   ```bash
+   rm -rf "$BUILD_DIR" # 根据需要进行全新构建
+   mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
+   ```
+3. 配置、构建、安装：
+   ```bash
+   $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX="$INSTALL_DIR" "$SRC_DIR/Red_Panda_CPP.pro"
+   mingw32-make -j$(nproc)
+   mingw32-make install
+   ```
+
+开发：
+
+1. 安装 Qt Creator（MSYS2 `$MINGW_PACKAGE_PREFIX-qt-creator` 包或 [Qt.io 下载站点](https://download.qt.io/official_releases/qtcreator/)及[镜像站](http://mirrors.sjtug.sjtu.edu.cn/qt/official_releases/qtcreator/)的独立安装包均可）。
+2. 用 Qt Creator 打开 `Red_Panda_CPP.pro` 文件。
+
+## Qt.io 的 Qt 库 + MinGW 工具链或 MSVC 工具链
+
+前置条件：
+
+0. Windows 7 x64 或更高版本。不支持 ARM64。
+1. 用 [Qt.io](https://www.qt.io/download-qt-installer-oss) 或[镜像站](https://mirrors.sjtug.sjtu.edu.cn/docs/qt)的在线安装器安装 Qt。
+   - 选中 Qt 库（“Qt” 组下的 “Qt 5.15.2” 小组，勾选 “MinGW 8.1.0 32-bit” “MinGW 8.1.0 64-bit” “MSVC 2019 32-bit” “MSVC 2019 64-bit” 中的至少一个）。
+   - 对于 MinGW 工具链，选中相应的工具链（“Qt” 组下的 “Developer and Designer Tools” 小组，“MinGW 8.1.0 32-bit” 或 “MinGW 8.1.0 64-bit”，匹配库的版本）。
+   - 根据需要，选中 Qt Creator（“Qt” 组下的 “Developer and Designer Tools” 小组，推荐在使用 MSVC 工具链时选中以支持并行构建）。
+2. 对于 MSVC 工具链，安装 Visual Studio 2019 或更高版本，或 “Visual Studio 构建工具 2019” 或更高版本，附带 “使用 C++ 的桌面开发” 工作负载。
+   - 在 “安装详细信息” 面板，“使用 C++ 的桌面开发” 之下，至少选择一个 “MSVC x86/x64 生成工具” 和一个 Windows SDK。
+
+仅构建：
+
+1. 从开始菜单中打开 Qt 环境。
+2. 在 Qt 环境中，设置相关变量：
+   ```bat
+   rem 即使路径含空格也不加引号
+   set SRC_DIR=C:\src\redpanda-src
+   set BUILD_DIR=C:\src\redpanda-build
+   set INSTALL_DIR=C:\src\redpanda-pkg
+   rem 仅 MSVC 工具链需要设置
+   set VS_INSTALL_PATH=C:\Program Files\Microsoft Visual Studio\2022\Community
+   rem 仅 MSVC 工具链需要设置；或 x86
+   set VC_ARCH=amd64
+   rem 仅 MSVC 工具链需要；如果未安装 Qt Creator 则不要设置
+   set QT_CREATOR_DIR=C:\Qt\Tools\QtCreator
+   ```
+3. 定位到构建目录：
+   ```bat
+   rem 根据需要进行全新构建
+   rmdir /s /q "%BUILD_DIR%"
+   mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
+   ```
+4. 配置、构建、安装。对于 MinGW 工具链：
+   ```bat
+   qmake PREFIX="%INSTALL_DIR%" "%SRC_DIR%\Red_Panda_CPP.pro"
+   mingw32-make -j%NUMBER_OF_PROCESSORS%
+   mingw32-make install
+   windeployqt "%INSTALL_DIR%\RedPandaIDE.exe"
+   ```
+   对于 MSVC 工具链：
+   ```bat
+   call "%VS_INSTALL_PATH%\Common7\Tools\VsDevCmd.bat" -arch=%VC_ARCH%
+   qmake PREFIX="%INSTALL_DIR%" "%SRC_DIR%\Red_Panda_CPP.pro"
+
+   set JOM=%QT_CREATOR_DIR%\bin\jom\jom.exe
+   if "%QT_CREATOR_DIR%" neq "" (
+      "%JOM%" -j%NUMBER_OF_PROCESSORS%
+      "%JOM%" install
+   ) else (
+      nmake
+      nmake install
+   )
+   windeployqt "%INSTALL_DIR%\RedPandaIDE.exe"
+   ```
+
+开发：
+
+1. 用 Qt Creator 打开 `Red_Panda_CPP.pro` 文件。
+
+## 高级选项：vcpkg 的 Qt 静态库 + MSVC 工具链
+
+前置条件：
+
+0. Windows 7 x64 或更高版本。不支持 ARM64。
+   - 在全新安装的 Windows 上，依次安装以下组件：
+     1. SHA-2 代码签名支持（.NET Framework 4.8 的前置条件），
+     2. .NET Framework 4.8（Windows 管理框架 5.1 和 Visual Studio 的前置条件，也是 Git for Windows 的可选依赖），
+     3. Windows 管理框架 5.1（vcpkg 自举的前置条件）。
+1. 安装 Visual Studio 2017 或更高版本，或 “Visual Studio 构建工具 2017” 或更高版本，带有 “使用 C++ 的桌面开发” 工作负载。
+   - 在 “安装详细信息” 面板，“使用 C++ 的桌面开发” 之下，至少选择一个 “MSVC x86/x64 生成工具” 和一个 Windows SDK。
+2. 安装 [vcpkg 的独立版本](https://github.com/microsoft/vcpkg/blob/master/README_zh_CN.md#快速开始-windows)。
+   - 截至 2023.08.09，Windows 7 需要[一个补丁](./packages/windows/vcpkg-win7-2023.08.09.patch)以使用兼容的 Python 版本。受影响的文件可能会被修改，所以最好手动修改这些文件。
+3. 用 vcpkg 安装 Qt。
+   ```ps1
+   $TARGET = "x64-windows-static" # 或 "x86-windows-static"
+   vcpkg install qt5-base:$TARGET qt5-svg:$TARGET qt5-tools:$TARGET
+   ```
+
+在 PowerShell (Core) 或 Windows PowerShell 中用 VS 2019 或更高版本构建：
+
+1. 设置相关变量：
+   ```ps1
+   $SRC_DIR = "C:\src\redpanda-src"
+   $BUILD_DIR = "C:\src\redpanda-build"
+   $INSTALL_DIR = "C:\src\redpanda-pkg"
+   $VCPKG_ROOT = "C:\src\vcpkg"
+   $VCPKG_TARGET = "x64-windows-static" # 或 "x86-windows-static"
+   $VS_INSTALL_PATH = "C:\Program Files\Microsoft Visual Studio\2022\Community"
+   $VC_ARCH = "amd64" # 或 "x86"
+   $JOM = "$VCPKG_ROOT\downloads\tools\jom\jom-1.1.3\jom.exe" # 检查版本号
+   ```
+2. 定位到构建目录：
+   ```ps1
+   Remove-Item -Recurse -Force "$BUILD_DIR" # 根据需要进行全新构建
+   (New-Item -ItemType Directory -Force "$BUILD_DIR") -and (Set-Location "$BUILD_DIR")
+   ```
+3. 配置、构建、安装：
+   ```ps1
+   Import-Module "$VS_INSTALL_PATH\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+   Enter-VsDevShell -VsInstallPath "$VS_INSTALL_PATH" -SkipAutomaticLocation -DevCmdArguments "-arch=$VC_ARCH"
+   & "$VCPKG_ROOT\installed\$VCPKG_TARGET\tools\qt5\bin\qmake.exe" PREFIX="$INSTALL_DIR" "$SRC_DIR\Red_Panda_CPP.pro"
+   & "$JOM" "-j${Env:NUMBER_OF_PROCESSORS}"
+   & "$JOM" install
+   ```
+
+在命令提示符中用 VS 2017 或更高版本构建：
+
+1. 从开始菜单中打开合适的 VC 环境。
+2. 设置相关变量：
+   ```bat
+   rem 即使路径含空格也不加引号
+   set SRC_DIR=C:\src\redpanda-src
+   set BUILD_DIR=C:\src\redpanda-build
+   set INSTALL_DIR=C:\src\redpanda-pkg
+   set VCPKG_ROOT=C:\src\vcpkg
+   rem 或 x86-windows-static
+   set VCPKG_TARGET=x64-windows-static
+   rem 检查版本号
+   set JOM=%VCPKG_ROOT%\downloads\tools\jom\jom-1.1.3\jom.exe
+   ```
+3. 定位到构建目录：
+   ```bat
+   rem 根据需要进行全新构建
+   rmdir /s /q "%BUILD_DIR%"
+   mkdir "%BUILD_DIR%" && cd /d "%BUILD_DIR%"
+   ```
+4. 配置、构建、安装：
+   ```bat
+   "%VCPKG_ROOT%\installed\%VCPKG_TARGET%\tools\qt5\bin\qmake.exe" PREFIX="%INSTALL_DIR%" "%SRC_DIR%\Red_Panda_CPP.pro"
+   "%JOM%" -j%NUMBER_OF_PROCESSORS%
+   "%JOM%" install
+   ```
 
 # Linux
 

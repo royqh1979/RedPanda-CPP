@@ -3,10 +3,6 @@ QT -= gui
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
-msvc {
-    CONFIG += windows
-}
-
 isEmpty(APP_NAME) {
     APP_NAME = RedPandaCPP
 }
