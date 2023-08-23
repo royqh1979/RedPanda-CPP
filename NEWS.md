@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.25
+
+  - change: Symbol completion of '(' won't test current character at the cursor.
+  - change: Symbol completion of '{' won't insert extra new lines.
+  
 Red Panda C++ Version 2.24
 
   - fix: members of elements of stl maps are not correctly suggested.

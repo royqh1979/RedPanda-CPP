@@ -1014,23 +1014,23 @@ void Editor::keyPressEvent(QKeyEvent *event)
         case '}':
         case '[':
         case ']':
-        case '<':
         case '*':
         case ';':
         case ',':
+        case '(':
             handled = handleSymbolCompletion(ch);
             return;
-        case '(': {
-            QChar nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
-            if (!isIdentChar(nextCh) && nextCh!='('
-                    && nextCh!='"' && nextCh!='\''  ){
-                handled = handleSymbolCompletion(ch);
-            }
-            return;
-        }
+//            QChar nextCh;
+//            if (selAvail()) {
+//              nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
+//            } else {
+//                nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
+//            }
+//            if (!isIdentChar(nextCh) && nextCh!='('
+//                    && nextCh!='"' && nextCh!='\''  ){
+        case '<':
         case '>':
-            if ((caretX() <= 1) || lineText().isEmpty()
-                    ||  lineText()[caretX() - 2] != '-') {
+            if (mParser) {
                 handled = handleSymbolCompletion(ch);
                 return;
             }
@@ -2740,9 +2740,7 @@ bool Editor::handleBraceCompletion()
     if (text.isEmpty()) {
         oldCaret = caretXY();
     } else {
-        processCommand(QSynedit::EditCommand::InsertLine);
         setSelText(text);
-        processCommand(QSynedit::EditCommand::InsertLine);
     }
 
     processCommand(QSynedit::EditCommand::Char,'}');
