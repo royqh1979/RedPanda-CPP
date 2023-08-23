@@ -320,6 +320,8 @@ public:
 
     BufferCoord blockBegin() const;
     BufferCoord blockEnd() const;
+    int selectionBeginLine() const;
+    int selectionEndLine() const;
 
     void clearSelection();
     void setBlockBegin(BufferCoord value);

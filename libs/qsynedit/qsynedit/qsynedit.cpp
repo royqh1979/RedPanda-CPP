@@ -2161,9 +2161,12 @@ void QSynEdit::doMoveSelUp()
             addCaretToUndo();
             addSelectionToUndo();
         }
+        int origBlockBeginLine = selectionBeginLine();
+        int origBlockEndLine = selectionEndLine();
         BufferCoord origBlockBegin = blockBegin();
         BufferCoord origBlockEnd = blockEnd();
-        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEnd.line);
+
+        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEndLine);
         if (foldRange && foldRange->collapsed)
             return;
 //        for (int line=origBlockBegin.Line;line<=origBlockEnd.Line;line++) {
@@ -2173,16 +2176,16 @@ void QSynEdit::doMoveSelUp()
 //        }
 
         // Delete line above selection
-        QString s = mDocument->getLine(origBlockBegin.line - 2); // before start, 0 based
-        mDocument->deleteAt(origBlockBegin.line - 2); // before start, 0 based
-        doLinesDeleted(origBlockBegin.line - 1, 1); // before start, 1 based
+        QString s = mDocument->getLine(origBlockBeginLine - 2); // before start, 0 based
+        mDocument->deleteAt(origBlockBeginLine - 2); // before start, 0 based
+        doLinesDeleted(origBlockBeginLine - 1, 1); // before start, 1 based
 
         // Insert line below selection
-        mDocument->insertLine(origBlockEnd.line - 1, s);
-        doLinesInserted(origBlockEnd.line, 1);
+        mDocument->insertLine(origBlockEndLine - 1, s);
+        doLinesInserted(origBlockEndLine, 1);
         // Restore caret and selection
         setCaretAndSelection(
-                  BufferCoord{mCaretX, origBlockBegin.line - 1},
+                  BufferCoord{mCaretX, origBlockBeginLine - 1},
                   BufferCoord{origBlockBegin.ch, origBlockBegin.line - 1},
                   BufferCoord{origBlockEnd.ch, origBlockEnd.line - 1}
         );
@@ -2207,21 +2210,23 @@ void QSynEdit::doMoveSelDown()
             addCaretToUndo();
             addSelectionToUndo();
         }
+        int origBlockBeginLine = selectionBeginLine();
+        int origBlockEndLine = selectionEndLine();
         BufferCoord origBlockBegin = blockBegin();
         BufferCoord origBlockEnd = blockEnd();
 
-        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEnd.line);
+        PCodeFoldingRange foldRange=foldStartAtLine(origBlockEndLine);
         if (foldRange && foldRange->collapsed)
             return;
 
         // Delete line below selection
-        QString s = mDocument->getLine(origBlockEnd.line); // after end, 0 based
-        mDocument->deleteAt(origBlockEnd.line); // after end, 0 based
-        doLinesDeleted(origBlockEnd.line, 1); // before start, 1 based
+        QString s = mDocument->getLine(origBlockEndLine); // after end, 0 based
+        mDocument->deleteAt(origBlockEndLine); // after end, 0 based
+        doLinesDeleted(origBlockEndLine, 1); // before start, 1 based
 
         // Insert line above selection
-        mDocument->insertLine(origBlockBegin.line - 1, s);
-        doLinesInserted(origBlockBegin.line, 1);
+        mDocument->insertLine(origBlockBeginLine  - 1, s);
+        doLinesInserted(origBlockBeginLine , 1);
 
         // Restore caret and selection
         setCaretAndSelection(
@@ -6741,6 +6746,30 @@ BufferCoord QSynEdit::blockEnd() const
         return mBlockBegin;
     else
         return mBlockEnd;
+}
+
+int QSynEdit::selectionBeginLine() const
+{
+    if (mActiveSelectionMode == SelectionMode::Column) {
+        return (mBlockBegin.line < mBlockEnd.line)? mBlockBegin.line : mBlockEnd.line;
+    } else {
+        return (mBlockBegin.line < mBlockEnd.line)? mBlockBegin.line : mBlockEnd.line;
+    }
+}
+
+int QSynEdit::selectionEndLine() const
+{
+    if (mActiveSelectionMode == SelectionMode::Column) {
+        return (mBlockBegin.line < mBlockEnd.line)? mBlockEnd.line : mBlockBegin.line;
+    } else {
+        if (mBlockBegin.line < mBlockEnd.line) {
+            return (mBlockEnd.ch==1)?mBlockEnd.line-1 : mBlockEnd.line;
+        } else if (mBlockBegin.line == mBlockEnd.line){
+            return mBlockBegin.line;
+        } else {
+            return (mBlockBegin.ch==1)?mBlockBegin.line-1 : mBlockBegin.line;
+        }
+    }
 }
 
 void QSynEdit::clearSelection()

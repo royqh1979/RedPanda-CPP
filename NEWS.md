@@ -2,6 +2,7 @@ Red Panda C++ Version 2.25
 
   - fix: Symbol completion of '(' before selection may fail, if cursor is at the beginning of the selection.
   - change: Symbol completion of '{' won't insert extra new lines.
+  - fix: "move selection up/down" of whole lines selection are no correctly handled.
   
 Red Panda C++ Version 2.24
 
