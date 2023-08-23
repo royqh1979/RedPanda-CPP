@@ -1,6 +1,6 @@
 Red Panda C++ Version 2.25
 
-  - change: Symbol completion of '(' won't test current character at the cursor.
+  - fix: Symbol completion of '(' before selection may fail, if cursor is at the beginning of the selection.
   - change: Symbol completion of '{' won't insert extra new lines.
   
 Red Panda C++ Version 2.24

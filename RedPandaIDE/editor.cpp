@@ -1017,17 +1017,20 @@ void Editor::keyPressEvent(QKeyEvent *event)
         case '*':
         case ';':
         case ',':
-        case '(':
             handled = handleSymbolCompletion(ch);
             return;
-//            QChar nextCh;
-//            if (selAvail()) {
-//              nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
-//            } else {
-//                nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
-//            }
-//            if (!isIdentChar(nextCh) && nextCh!='('
-//                    && nextCh!='"' && nextCh!='\''  ){
+        case '(': {
+            if (!selAvail()) {
+                QChar nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
+                if (!isIdentChar(nextCh) && nextCh!='('
+                        && nextCh!='"' && nextCh!='\'' ){
+                    handled = handleSymbolCompletion(ch);
+                }
+            } else {
+                handled = handleSymbolCompletion(ch);
+            }
+            return;
+        }
         case '<':
         case '>':
             if (mParser) {
