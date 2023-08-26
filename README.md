@@ -1,7 +1,7 @@
 # RedPanda C++ 
 Red Panda C++ (Old name: Red Panda Dev-C++ 7) is an fast ,lightweight, open source, and cross platform C/C++/GNU Assembly IDE.
 
-Simplified Chinese Website: [https://royqh1979.gitee.io/redpandacpp/](https://royqh1979.gitee.io/redpandacpp/)
+Simplified Chinese Website: [http://royqh.net/redpandacpp](http://royqh.net/redpandacpp)
 
 English Website: [https://sourceforge.net/projects/redpanda-cpp](https://sourceforge.net/projects/redpanda-cpp)
 
