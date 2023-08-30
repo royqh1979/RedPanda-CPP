@@ -198,11 +198,33 @@ To build with VS 2017 or later in Command Prompt:
    "%JOM%" install
    ```
 
-# Linux
+# Linux and Other freedesktop.org-conforming (XDG) Desktop Systems
 
- - Install gcc and qt5
- - Optionally install fcitx5-qt for building with static version of Qt
- - Open `Red_Panda_CPP.pro` with Qt Creator
+General steps:
+
+- Install recent version of GCC (≥ 7) or Clang (≥ 6) that supports C++17.
+- Install Qt 5 (≥ 5.12) Base, SVG and Tools modules, including both libraries and development files.
+- Optionally install fcitx5-qt for building with static Qt library.
+- Optionally install Qt Creator for development.
+
+For build only:
+
+1. Configure:
+   ```bash
+   qmake PREFIX=/usr/local /path/to/src/Red_Panda_CPP.pro
+   ```
+2. Make:
+   ```bash
+   make -j$(nproc)
+   ```
+3. Install:
+   ```bash
+   sudo make install
+   ```
+
+For development:
+
+1. Open `Red_Panda_CPP.pro` with Qt Creator
 
 qmake variables:
 - `PREFIX`: default to `/usr/local`. It should be set to `/usr` or `/opt/redpanda-cpp` when packaging.
@@ -296,7 +318,7 @@ Enter `RedPandaIDE` to launch RedPanda C++.
 
 Note that makepkg checks out HEAD of the repo, so any change should be committed before building.
 
-## AppImage
+## Linux AppImage
 
 1. Install dependency: Docker or Podman.
 
@@ -336,9 +358,9 @@ Note that makepkg checks out HEAD of the repo, so any change should be committed
 
 It is possible to build Red Panda C++ for foreign architectures using targets’ native toolchains with QEMU user space emulation.
 
-Note: Always run emulated native build **in containers**. Mixing architectures may kill your system.
+Note: Always run emulated native build **in containers or jails**. Mixing architectures may kill your system.
 
-For Linux host, install statically linked QEMU user space emulator (package name is likely `qemu-user-static`) and make sure that binfmt support is enabled.
+For Linux or BSD host, install statically linked QEMU user space emulator (package name is likely `qemu-user-static`) and make sure that binfmt support is enabled.
 
 For Windows host, Docker and Podman should have QEMU user space emulation enabled. If not,
 * For Docker:
@@ -350,3 +372,38 @@ For Windows host, Docker and Podman should have QEMU user space emulation enable
   wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
   wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-riscv64-static.conf /proc/sys/fs/binfmt_misc/register
   ```
+
+# macOS
+
+## Qt.io Qt Library
+
+Prerequisites:
+
+0. macOS 10.13 or later.
+1. Install Xcode Command Line Tools:
+   ```zsh
+   xcode-select --install
+   ```
+2. Install Qt with online installer from [Qt.io](https://www.qt.io/download-qt-installer-oss).
+   - Select the library (in _Qt_ group, _Qt 5.15.2_ subgroup, check _macOS_).
+
+Build:
+
+1. Set related variables:
+   ```bash
+   SRC_DIR="~/redpanda-src"
+   BUILD_DIR="~/redpanda-build"
+   INSTALL_DIR="~/redpanda-pkg"
+   ```
+2. Navigate to build directory:
+   ```bash
+   rm -rf "$BUILD_DIR" # optional for clean build
+   mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
+   ```
+3. Configure, build and install:
+   ```bash
+   ~/Qt/5.15.2/clang_64/bin/qmake PREFIX="$INSTALL_DIR" "$SRC_DIR/Red_Panda_CPP.pro"
+   make -j$(sysctl -n hw.logicalcpu)
+   make install
+   ~/Qt/5.15.2/clang_64/bin/macdeployqt "$INSTALL_DIR/bin/RedPandaIDE.app"
+   ```

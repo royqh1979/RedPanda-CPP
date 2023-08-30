@@ -198,12 +198,33 @@
    "%JOM%" install
    ```
 
-# Linux
+# Linux 和其他符合 freedesktop.org（XDG）规范的桌面系统
 
-步骤:
- - 安装 gcc 和 qt5开发相关包
- - 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt
- - 使用qtcreator打开Red_Panda_CPP.pro文件
+通用步骤:
+
+- 安装支持 C++17 的 GCC（≥ 7）或 Clang（≥ 6）。
+- 安装 Qt 5（≥ 5.12）Base、SVG、Tools 模块，包括库和开发文件。
+- 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt。
+- 根据需要，安装 Qt Creator 用于开发。
+
+仅构建：
+
+1. 配置：
+   ```bash
+   qmake PREFIX=/usr/local /path/to/src/Red_Panda_CPP.pro
+   ```
+2. 构建：
+   ```bash
+   make -j$(nproc)
+   ```
+3. 安装：
+   ```bash
+   sudo make install
+   ```
+
+开发：
+
+1. 使用 Qt Creator 打开 `Red_Panda_CPP.pro` 文件。
 
 qmake 变量:
 - `PREFIX`：默认值是 `/usr/local`。打包时应该定义为 `/usr` 或 `/opt/redpanda-cpp`。
@@ -297,7 +318,7 @@ Windows 宿主的额外要求：
 
 注意：makepkg 签出此存储库的 HEAD，因此构建之前务必提交所有变更。
 
-## AppImage
+## Linux AppImage
 
 1. 安装依赖包：Docker 或 Podman。
 
@@ -337,9 +358,9 @@ Windows 宿主的额外要求：
 
 可以借助 QEMU 用户空间模拟，运行目标架构的本机工具链，来构建小熊猫 C++。
 
-注意：始终**在容器中**运行模拟本机构建，因为混用不同架构的程序和库可能会损坏系统。
+注意：始终**在容器或 jail 中**运行模拟本机构建，因为混用不同架构的程序和库可能会损坏系统。
 
-对于 Linux 宿主，需要安装静态链接的 QEMU 用户空间模拟器（包名通常为 `qemu-user-static`）并确认已经启用 binfmt 支持。
+对于 Linux 或 BSD 宿主，需要安装静态链接的 QEMU 用户空间模拟器（包名通常为 `qemu-user-static`）并确认已经启用 binfmt 支持。
 
 对于 Windows 宿主，Docker 和 Podman 应该已经启用了 QEMU 用户空间模拟。如果没有启用，
 * Docker：
@@ -351,3 +372,38 @@ Windows 宿主的额外要求：
   wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
   wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-riscv64-static.conf /proc/sys/fs/binfmt_misc/register
   ```
+
+# macOS
+
+## Qt.io 的 Qt 库
+
+前置条件：
+
+0. macOS 10.13 或更高版本。
+1. 安装 Xcode 命令行工具：
+   ```bash
+   xcode-select --install
+   ```
+2. 用 [Qt.io](https://www.qt.io/download-qt-installer-oss) 或[镜像站](https://mirrors.sjtug.sjtu.edu.cn/docs/qt)的在线安装器安装 Qt。
+   - 选中 Qt 库（“Qt” 组下的 “Qt 5.15.2” 小组，勾选 “macOS”）。
+
+构建：
+
+1. 设置相关变量：
+   ```bash
+   SRC_DIR="~/redpanda-src"
+   BUILD_DIR="~/redpanda-build"
+   INSTALL_DIR="~/redpanda-pkg"
+   ```
+2. 定位到构建目录：
+   ```bash
+   rm -rf "$BUILD_DIR" # 根据需要进行全新构建
+   mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
+   ```
+3. 配置、构建、安装：
+   ```bash
+   ~/Qt/5.15.2/clang_64/bin/qmake PREFIX="$INSTALL_DIR" "$SRC_DIR/Red_Panda_CPP.pro"
+   make -j$(sysctl -n hw.logicalcpu)
+   make install
+   ~/Qt/5.15.2/clang_64/bin/macdeployqt "$INSTALL_DIR/bin/RedPandaIDE.app"
+   ```
