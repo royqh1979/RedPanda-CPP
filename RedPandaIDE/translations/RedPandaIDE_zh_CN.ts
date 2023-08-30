@@ -2689,7 +2689,72 @@ Are you really want to continue?</oldsource>
         <translation>终端</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentprogramswidget.cpp" line="57"/>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="41"/>
+        <source>Terminal emulator arguments pattern</source>
+        <translation>终端模拟器参数模式</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="54"/>
+        <source>sh -c &quot;echo hello; sleep 3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="74"/>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="95"/>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="116"/>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="137"/>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="158"/>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="179"/>
+        <source>Test</source>
+        <translation>测试</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="88"/>
+        <source>term -e sh -c &quot;echo hello; sleep 3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="109"/>
+        <source>term -x sh -c &quot;echo hello; sleep 3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="130"/>
+        <source>term -- sh -c &quot;echo hello; sleep 3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="151"/>
+        <source>term -e &quot;sh -c \&quot;echo hello; sleep 3\&quot;&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="172"/>
+        <source>term /tmp/redpanda_XXXXXX.command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="186"/>
+        <source>On clicking “Test” for the correct pattern, the terminal emulator</source>
+        <translation>点击正确的模式对应的 “测试” 按钮，终端模拟器将会</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="193"/>
+        <source>• pops up;</source>
+        <translation>• 弹出；</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="200"/>
+        <source>• shows “hello”; and</source>
+        <translation>• 显示 “hello”；</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.ui" line="207"/>
+        <source>• quits in 3 seconds.</source>
+        <translation>• 并在 3 秒后关闭。</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.cpp" line="109"/>
         <source>Choose Terminal Program</source>
         <translation>选择终端程序</translation>
     </message>
@@ -2797,6 +2862,11 @@ Are you really want to continue?</oldsource>
         <location filename="../settingsdialog/executorgeneralwidget.ui" line="53"/>
         <source>Parameters to pass to your program</source>
         <translation>运行程序的命令行参数</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/executorgeneralwidget.ui" line="65"/>
+        <source>Parsed argv array (represented in JSON):</source>
+        <translation>argv 数组解析结果（以 JSON 表示）：</translation>
     </message>
     <message>
         <location filename="../settingsdialog/executorgeneralwidget.ui" line="68"/>

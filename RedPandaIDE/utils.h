@@ -25,6 +25,7 @@
 #include <memory>
 #include <QThread>
 #include <QProcessEnvironment>
+#include <QTemporaryFile>
 #define SI_NO_CONVERSION
 #include "SimpleIni.h"
 #include "qt_utils/utils.h"
@@ -34,6 +35,7 @@
 
 using SimpleIni = CSimpleIniA;
 using PSimpleIni = std::shared_ptr<SimpleIni>;
+using TemporaryFileOwner = std::unique_ptr<QTemporaryFile>;
 
 enum class FileType{
     GAS, // GNU assembler source file (.s)
@@ -113,6 +115,22 @@ enum class ProblemCaseValidateType {
     IgnoreSpaces
 };
 
+enum class UnixExecSemantics {
+    Absolute,
+    RelativeToCwd,
+    SearchInPath,
+};
+
+enum class TerminalEmulatorArgumentsPattern {
+    ImplicitSystem = 0,      //          bash -c  "echo hello, world; sleep 3"
+    MinusEAppendArgs,        // term -e  bash -c  "echo hello, world; sleep 3"   # xterm-compatible
+    MinusXAppendArgs,        // term -x  bash -c  "echo hello, world; sleep 3"   # some VTE-based
+    MinusMinusAppendArgs,    // term --  bash -c  "echo hello, world; sleep 3"   # gnome-terminal, kgx
+    MinusEAppendCommandLine, // term -e "bash -c \"echo hello, world; sleep 3\"" # some lightweighted; alternative form for VTE-based
+
+    WriteCommandLineToTempFileThenTempFilename = 6226700, // macOS Terminal.app and iTerm2.app; 6226700 is how you dial “macOS00”
+};
+
 FileType getFileType(const QString& filename);
 QStringList splitProcessCommand(const QString& cmd);
 
@@ -164,5 +182,16 @@ class QComboBox;
 void saveComboHistory(QComboBox* cb,const QString& text);
 
 QColor alphaBlend(const QColor &lower, const QColor &upper);
+
+UnixExecSemantics getPathUnixExecSemantics(const QString &path);
+
+QStringList getExecutableSearchPaths();
+
+QString escapeArgument(const QString &arg, bool isFirstArg);
+
+auto wrapCommandForTerminalEmulator(const QString &terminal, const TerminalEmulatorArgumentsPattern &argsPattern, const QStringList &argsWithArgv0)
+    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>;
+
+QString defaultShell();
 
 #endif // UTILS_H

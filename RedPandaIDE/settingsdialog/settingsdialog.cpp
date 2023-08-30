@@ -36,6 +36,7 @@
 #include "environmentshortcutwidget.h"
 #include "environmentfolderswidget.h"
 #include "environmentperformancewidget.h"
+#include "environmentprogramswidget.h"
 #include "executorgeneralwidget.h"
 #include "executorproblemsetwidget.h"
 #include "debuggeneralwidget.h"
@@ -59,7 +60,6 @@
 #include "projectversioninfowidget.h"
 #endif
 #ifdef Q_OS_LINUX
-#include "environmentprogramswidget.h"
 #include "formatterpathwidget.h"
 #endif
 #include <QDebug>
@@ -156,10 +156,8 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new EnvironmentShortcutWidget(tr("Shortcuts"),tr("Environment"));
     dialog->addWidget(widget);
 
-#ifdef Q_OS_LINUX
     widget = new EnvironmentProgramsWidget(tr("Terminal"),tr("Environment"));
     dialog->addWidget(widget);
-#endif
 
     widget = new EnvironmentPerformanceWidget(tr("Performance"),tr("Environment"));
     dialog->addWidget(widget);

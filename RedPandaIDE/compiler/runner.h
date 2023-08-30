@@ -23,7 +23,7 @@ class Runner : public QThread
 {
     Q_OBJECT
 public:
-    explicit Runner(const QString& filename, const QString& arguments, const QString& workDir, QObject *parent = nullptr);
+    explicit Runner(const QString& filename, const QStringList& arguments, const QString& workDir, QObject *parent = nullptr);
     Runner(const Runner&)=delete;
     Runner operator=(const Runner&)=delete;
 
@@ -48,7 +48,7 @@ protected:
     bool mPausing;
     bool mStop;
     QString mFilename;
-    QString mArguments;
+    QStringList mArguments; // without argv[0]
     QString mWorkDir;
     int mWaitForFinishTime;
 };

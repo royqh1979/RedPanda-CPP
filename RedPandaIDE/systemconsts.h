@@ -22,7 +22,6 @@
 #define APP_SETTSINGS_FILENAME "redpandacpp.ini"
 #ifdef Q_OS_WIN
 #define CONSOLE_PAUSER  "consolepauser.exe"
-#define ASSEMBLER   "nasm.exe"
 #define GCC_PROGRAM     "gcc.exe"
 #define GPP_PROGRAM     "g++.exe"
 #define GDB_PROGRAM     "gdb.exe"
@@ -42,7 +41,6 @@
 #define MAKEBIN_PROGRAM   "makebin.exe"
 #elif defined(Q_OS_LINUX)
 #define CONSOLE_PAUSER  "consolepauser"
-#define ASSEMBLER   "nasm"
 #define GCC_PROGRAM     "gcc"
 #define GPP_PROGRAM     "g++"
 #define GDB_PROGRAM     "gdb"
@@ -63,7 +61,6 @@
 #define MAKEBIN_PROGRAM   "makebin"
 #elif defined(Q_OS_MACOS)
 #define CONSOLE_PAUSER  "consolepauser"
-#define ASSEMBLER   "nasm"
 #define GCC_PROGRAM     "gcc"
 #define GPP_PROGRAM     "g++"
 #define GDB_PROGRAM     "gdb"

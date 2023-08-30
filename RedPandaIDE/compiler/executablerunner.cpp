@@ -23,7 +23,7 @@
 #ifdef Q_OS_WIN
 #include <QUuid>
 #include <windows.h>
-#elif defined(Q_OS_LINUX)
+#else
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -32,7 +32,7 @@
 #endif
 
 
-ExecutableRunner::ExecutableRunner(const QString &filename, const QString &arguments, const QString &workDir
+ExecutableRunner::ExecutableRunner(const QString &filename, const QStringList &arguments, const QString &workDir
                                    ,QObject* parent):
     Runner(filename,arguments,workDir,parent),
     mRedirectInput(false),
@@ -110,7 +110,7 @@ void ExecutableRunner::run()
 
     mProcess = std::make_shared<QProcess>();
     mProcess->setProgram(mFilename);
-    mProcess->setArguments(splitProcessCommand(mArguments));
+    mProcess->setArguments(mArguments);
     //qDebug()<<splitProcessCommand(mArguments);
     mProcess->setWorkingDirectory(mWorkDir);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -162,7 +162,7 @@ void ExecutableRunner::run()
             }
         }
     }
-#elif defined(Q_OS_LINUX)
+#else
     int BUF_SIZE=1024;
     char* pBuf=nullptr;
     int fd_shm = shm_open(mShareMemoryId.toLocal8Bit().data(),O_RDWR | O_CREAT,S_IRWXU);
@@ -214,7 +214,6 @@ void ExecutableRunner::run()
             }
             break;
         }
-#if defined(Q_OS_WIN) || defined(Q_OS_LINUX)
         if (mStartConsole && !mPausing && pBuf) {
             if (strncmp(pBuf,"FINISHED",sizeof("FINISHED"))==0) {
 #ifdef Q_OS_WIN
@@ -226,7 +225,7 @@ void ExecutableRunner::run()
                     hSharedMemory = INVALID_HANDLE_VALUE;
                     CloseHandle(hSharedMemory);
                 }
-#elif defined(Q_OS_LINUX)
+#else
                 if (pBuf) {
                     munmap(pBuf,BUF_SIZE);
                     pBuf = nullptr;
@@ -240,14 +239,13 @@ void ExecutableRunner::run()
                 emit pausingForFinish();
             }
         }
-#endif
     }
 #ifdef Q_OS_WIN
     if (pBuf)
         UnmapViewOfFile(pBuf);
     if (hSharedMemory!=INVALID_HANDLE_VALUE && hSharedMemory!=NULL)
         CloseHandle(hSharedMemory);
-#elif defined(Q_OS_LINUX)
+#else
     if (pBuf) {
         munmap(pBuf,BUF_SIZE);
     }

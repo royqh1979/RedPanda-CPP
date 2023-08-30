@@ -21,6 +21,8 @@
 #include "../systemconsts.h"
 
 #include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 ExecutorGeneralWidget::ExecutorGeneralWidget(const QString& name, const QString& group, QWidget *parent):
     SettingsWidget(name,group,parent),
@@ -71,5 +73,13 @@ void ExecutorGeneralWidget::on_btnBrowse_clicked()
 void ExecutorGeneralWidget::updateIcons(const QSize &/*size*/)
 {
     pIconsManager->setIcon(ui->btnBrowse,IconsManager::ACTION_FILE_OPEN_FOLDER);
+}
+
+
+void ExecutorGeneralWidget::on_txtExecuteParamaters_textChanged(const QString &commandLine)
+{
+    QStringList parsed = splitProcessCommand(commandLine);
+    QJsonArray obj = QJsonArray::fromStringList(parsed);
+    ui->txtParsedArgsInJson->setText(QJsonDocument{obj}.toJson());
 }
 

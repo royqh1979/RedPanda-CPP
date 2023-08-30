@@ -25,7 +25,7 @@
 #endif
 
 
-OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
+OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStringList& arguments, const QString& workDir,
                                            const QVector<POJProblemCase>& problemCases, QObject *parent):
     Runner(filename,arguments,workDir,parent),
     mExecTimeout(0),
@@ -37,7 +37,7 @@ OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStrin
     setWaitForFinishTime(100);
 }
 
-OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
+OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStringList& arguments, const QString& workDir,
                                            POJProblemCase problemCase, QObject *parent):
     Runner(filename,arguments,workDir,parent),
     mExecTimeout(0),
@@ -64,7 +64,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     QElapsedTimer elapsedTimer;
     bool execTimeouted = false;
     process.setProgram(mFilename);
-    process.setArguments(splitProcessCommand(mArguments));
+    process.setArguments(mArguments);
     process.setWorkingDirectory(mWorkDir);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");

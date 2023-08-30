@@ -20,6 +20,7 @@
 #include <QObject>
 #include <QMutex>
 #include "qt_utils/utils.h"
+#include "../utils.h"
 #include "../common.h"
 
 class Runner;
@@ -96,6 +97,7 @@ private:
     int mSyntaxCheckIssueCount;
     Compiler* mBackgroundSyntaxChecker;
     Runner* mRunner;
+    TemporaryFileOwner mTempFileOwner;
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mCompileMutex;
     QRecursiveMutex mBackgroundSyntaxCheckMutex;

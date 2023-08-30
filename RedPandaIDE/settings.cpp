@@ -3608,58 +3608,85 @@ void Settings::Environment::doLoad()
     if (!fileExists(mDefaultOpenFolder)) {
         mDefaultOpenFolder = QDir::currentPath();
     }
-#ifdef Q_OS_LINUX
 
-#define SYSTEM_TERMINAL(term) "/usr/bin/" #term, "/usr/local/bin/" #term
-    const static QString terminals[] {
+    using AP = TerminalEmulatorArgumentsPattern;
+    struct TerminalSearchItem {
+        QString appName;
+        AP argsPattern;
+    };
+
+#ifdef Q_OS_WINDOWS
+    const TerminalSearchItem terminals[] {
+        /* explicitly installed terminals */
+
+        /* system */
+        {"conhost.exe", AP::ImplicitSystem}, // dummy for system default
+
+        /* will not actually be searched, just a list for users who dig into here */
+        {"conhost.exe",                              AP::MinusMinusAppendArgs}, // yes, it accepts GNU-style (--) arguments
+        {"wt.exe",                                   AP::MinusMinusAppendArgs}, // generally okay, but “Test” does not work
+        {"alacritty.exe",                            AP::MinusEAppendArgs},     // GPU-accelerated
+        {"C:/Program Files/Alacritty/alacritty.exe", AP::MinusEAppendArgs},
+        {"C:/Program Files/konsole/bin/konsole.exe", AP::MinusEAppendArgs},     // generally okay, but “Test” does not work
+        {"C:/Program Files/Git/usr/bin/mintty.exe",  AP::MinusEAppendArgs},     // Git Mintty
+        {"C:/msys64/usr/bin/mintty.exe",             AP::MinusEAppendArgs},     // MSYS2 Mintty
+    };
+#else
+    const TerminalSearchItem terminals[] {
         /* modern, specialized or stylized terminal -- user who installed them are likely to prefer them */
-        SYSTEM_TERMINAL(alacritty),       // GPU-accelerated
-        SYSTEM_TERMINAL(kitty),           // GPU-accelerated
-        SYSTEM_TERMINAL(wayst),           // GPU-accelerated
-        SYSTEM_TERMINAL(tilix),           // tiling
-        SYSTEM_TERMINAL(cool-retro-term), // old CRT style
+        {"alacritty", AP::MinusEAppendArgs}, // GPU-accelerated
+        {"kitty",     AP::MinusEAppendArgs}, // GPU-accelerated
+        {"wayst",     AP::MinusEAppendArgs}, // GPU-accelerated
 
-        /* default terminal for DE */
-        SYSTEM_TERMINAL(konsole),         // KDE
-        SYSTEM_TERMINAL(deepin-terminal), // DDE
-        SYSTEM_TERMINAL(qterminal),       // LXQt
-        SYSTEM_TERMINAL(lxterminal),      // LXDE
+        {"coreterminal", AP::MinusEAppendCommandLine}, // lightweighted
+        {"kermit",       AP::MinusEAppendCommandLine}, // lightweighted
+        {"roxterm",      AP::MinusEAppendCommandLine}, // lightweighted
+        {"sakura",       AP::MinusEAppendCommandLine}, // lightweighted
+        {"termit",       AP::MinusEAppendArgs},        // Lua scripting
+        {"termite",      AP::MinusEAppendCommandLine}, // tiling, keyboard-centric
+        {"tilix",        AP::MinusEAppendArgs},        // tiling
+
+        {"cool-retro-term", AP::MinusEAppendArgs}, // old CRT style
+
+        /* default terminal for XDG DE -- macOS user who installed them are likely to prefer them */
+        {"deepin-terminal",        AP::MinusEAppendArgs},        // DDE
+        {"konsole",                AP::MinusEAppendArgs},        // KDE
+        {"gnome-terminal",         AP::MinusMinusAppendArgs},    // GNOME
+        {"io.elementary.terminal", AP::MinusEAppendCommandLine}, // Pantheon (elementary OS)
+        {"lxterminal",             AP::MinusEAppendArgs},        // LXDE
+        {"mate-terminal",          AP::MinusXAppendArgs},        // MATE
+        {"qterminal",              AP::MinusEAppendArgs},        // LXQt
+        {"terminator",             AP::MinusXAppendArgs},        // tiling, also seen in SBC images
+        {"terminology",            AP::MinusEAppendCommandLine}, // Enlightenment
+        {"xfce4-terminal",         AP::MinusXAppendArgs},        // Xfce
 
         /* bundled terminal in AppImage */
-        "alacritty",
+        {"./alacritty", AP::MinusEAppendArgs},
 
         /* compatible, with minor issue */
-        SYSTEM_TERMINAL(kgx),          // GNOME Console, confirm to quit
-        SYSTEM_TERMINAL(coreterminal), // not so conforming when parsing args
-        SYSTEM_TERMINAL(sakura),       // not so conforming when parsing args
+        {"kgx", AP::MinusMinusAppendArgs}, // GNOME Console, confirm to quit
 
-        /* compatible, without out-of-box hidpi support */
-        SYSTEM_TERMINAL(mlterm),
-        SYSTEM_TERMINAL(st),
-        SYSTEM_TERMINAL(terminology), // also not so conforming when parsing args
-        SYSTEM_TERMINAL(urxvt),
-        SYSTEM_TERMINAL(xterm),
-        SYSTEM_TERMINAL(zutty),
+        /* compatible, without out-of-box hidpi support on Linux */
+        {"mlterm", AP::MinusEAppendArgs},
+        {"st",     AP::MinusEAppendArgs},
+        {"urxvt",  AP::MinusEAppendArgs},
+        {"xterm",  AP::MinusEAppendArgs},
+        {"zutty",  AP::MinusEAppendArgs},
+
+        /* macOS system */
+        {"/Applications/iTerm.app/Contents/MacOS/iTerm2",                       AP::WriteCommandLineToTempFileThenTempFilename},
+        {"/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal", AP::WriteCommandLineToTempFileThenTempFilename},
+        {"/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal",        AP::WriteCommandLineToTempFileThenTempFilename},
 
         /* fallbacks */
-        SYSTEM_TERMINAL(foot),                // Wayland only
-        SYSTEM_TERMINAL(x-terminal-emulator), // Debian alternatives
+        {"foot", AP::MinusEAppendArgs}, // Wayland only
 
         /* parameter incompatible */
-        // "gnome-terminal",
-        // "guake",
-        // "hyper",
-        // "io.elementary.terminal",
-        // "kermit",
-        // "liri-terminal",
-        // "mate-terminal",
-        // "roxterm",
-        // "station",
-        // "terminator",
-        // "termite",
-        // "tilda",
-        // "xfce4-terminal",
-        // "yakuake",
+        // "guake",         // drop down
+        // "hyper",         // no execute support
+        // "liri-terminal", // no execute support
+        // "station",       // no execute support
+        // "tilda",         // drop down
 
         /* incompatible -- other */
         // "aterm",       // AUR broken, unable to test
@@ -3667,22 +3694,49 @@ void Settings::Environment::doLoad()
         // "rxvt",        // no unicode support
         // "shellinabox", // AUR broken, unable to test
     };
-#undef SYSTEM_TERMINAL
+#endif
 
-    auto checkAndSetTerminalPath = [this](QString terminalPath) -> bool {
-        QDir appDir(pSettings->dirs().appDir());
-        QString absoluteTerminalPath = appDir.absoluteFilePath(terminalPath);
-        QFileInfo termPathInfo(absoluteTerminalPath);
-        if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) {
-            mTerminalPath = terminalPath;
-            return true;
-        } else {
-            return false;
+    auto checkAndSetTerminalPath = [this](const TerminalSearchItem &searchItem) -> bool {
+#define DO_CHECK_AND_SET do {                                                                        \
+            if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) { \
+                mTerminalPath = searchItem.appName;                                                  \
+                mTerminalArgumentsPattern = searchItem.argsPattern;                                  \
+                return true;                                                                         \
+            }                                                                                        \
+        } while (0)
+
+        switch (getPathUnixExecSemantics(searchItem.appName)) {
+        case UnixExecSemantics::Absolute: {
+            QFileInfo termPathInfo(searchItem.appName);
+            DO_CHECK_AND_SET;
+            break;
         }
+        case UnixExecSemantics::RelativeToCwd: {
+            QDir appDir(pSettings->dirs().appDir());
+            QString absoluteTerminalPath = appDir.absoluteFilePath(searchItem.appName);
+            QFileInfo termPathInfo(absoluteTerminalPath);
+            DO_CHECK_AND_SET;
+            break;
+        }
+        case UnixExecSemantics::SearchInPath: {
+            auto pathList = getExecutableSearchPaths();
+            for (auto &dir: pathList) {
+                QString absoluteTerminalPath = QDir(dir).absoluteFilePath(searchItem.appName);
+                QFileInfo termPathInfo(absoluteTerminalPath);
+                DO_CHECK_AND_SET;
+            }
+            break;
+        }
+        }
+        return false;
     };
+#undef DO_CHECK_AND_SET
 
     // check saved terminal path
-    if (!checkAndSetTerminalPath(stringValue("terminal_path", ""))) {
+    QString savedTerminalPath = stringValue("terminal_path", "");
+    int savedArgsPattern_ = intValue("terminal_arguments_pattern", int(AP::MinusEAppendArgs)); // smooth migration from old version
+    AP savedArgsPattern = static_cast<AP>(savedArgsPattern_);
+    if (!checkAndSetTerminalPath(TerminalSearchItem{savedTerminalPath, savedArgsPattern})) {
         // if saved terminal path is invalid, try determing terminal from our list
         for (auto terminal: terminals) {
             if (checkAndSetTerminalPath(terminal))
@@ -3691,11 +3745,6 @@ void Settings::Environment::doLoad()
     }
 
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
-#elif defined(Q_OS_MACOS)
-    mTerminalPath = stringValue("terminal_path",
-                                "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal");
-    mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
-#endif
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
     mOpenFilesInSingleInstance = boolValue("open_files_in_single_instance",false);
 }
@@ -3757,13 +3806,11 @@ QString Settings::Environment::terminalPath() const
 
 QString Settings::Environment::terminalPathForExec() const
 {
-#ifdef Q_OS_LINUX
-    // `mTerminalPath` can be reletive (bundled terminal in AppImage).
-    QDir appDir(pSettings->dirs().appDir());
-    return appDir.absoluteFilePath(mTerminalPath);
-#else
-    return mTerminalPath;
-#endif
+    if (getPathUnixExecSemantics(mTerminalPath) == UnixExecSemantics::RelativeToCwd) {
+        QDir appDir(pSettings->dirs().appDir());
+        return appDir.absoluteFilePath(mTerminalPath);
+    } else
+        return mTerminalPath;
 }
 
 void Settings::Environment::setTerminalPath(const QString &terminalPath)
@@ -3779,6 +3826,16 @@ QString Settings::Environment::AStylePath() const
 void Settings::Environment::setAStylePath(const QString &aStylePath)
 {
     mAStylePath = aStylePath;
+}
+
+TerminalEmulatorArgumentsPattern Settings::Environment::terminalArgumentsPattern() const
+{
+    return mTerminalArgumentsPattern;
+}
+
+void Settings::Environment::setTerminalArgumentsPattern(const TerminalEmulatorArgumentsPattern &argsPattern)
+{
+    mTerminalArgumentsPattern = argsPattern;
 }
 
 bool Settings::Environment::useCustomIconSet() const
@@ -3845,10 +3902,9 @@ void Settings::Environment::doSave()
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
-#ifndef Q_OS_WIN
     saveValue("terminal_path",mTerminalPath);
+    saveValue("terminal_arguments_pattern",int(mTerminalArgumentsPattern));
     saveValue("asyle_path",mAStylePath);
-#endif
 
     saveValue("hide_non_support_files_file_view",mHideNonSupportFilesInFileView);
     saveValue("open_files_in_single_instance",mOpenFilesInSingleInstance);

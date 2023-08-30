@@ -25,10 +25,10 @@ class OJProblemCasesRunner : public Runner
 {
     Q_OBJECT
 public:
-    explicit OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
+    explicit OJProblemCasesRunner(const QString& filename, const QStringList& arguments, const QString& workDir,
                                   const QVector<POJProblemCase>& problemCases,
                                   QObject *parent = nullptr);
-    explicit OJProblemCasesRunner(const QString& filename, const QString& arguments, const QString& workDir,
+    explicit OJProblemCasesRunner(const QString& filename, const QStringList& arguments, const QString& workDir,
                                   POJProblemCase problemCase,
                                   QObject *parent = nullptr);
     OJProblemCasesRunner(const OJProblemCasesRunner&)=delete;

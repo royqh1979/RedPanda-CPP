@@ -22,6 +22,7 @@ using std::string;
 using std::vector;
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -184,15 +185,11 @@ int main(int argc, char** argv) {
         //todo: handle error
         printf("shm open failed %d:%s\n",errno,strerror(errno));
     } else {
-        if (ftruncate(fd_shm,BUF_SIZE)==-1){
-            printf("ftruncate failed %d:%s\n",errno,strerror(errno));
-            //todo: set size error
-        } else {
-            pBuf = (char*)mmap(NULL,BUF_SIZE,PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm,0);
-            if (pBuf == MAP_FAILED) {
-                printf("mmap failed %d:%s\n",errno,strerror(errno));
-                pBuf = nullptr;
-            }
+        // `ftruncate` has already done in RedPandaIDE
+        pBuf = (char*)mmap(NULL,BUF_SIZE,PROT_READ | PROT_WRITE, MAP_SHARED, fd_shm,0);
+        if (pBuf == MAP_FAILED) {
+            printf("mmap failed %d:%s\n",errno,strerror(errno));
+            pBuf = nullptr;
         }
     }
 

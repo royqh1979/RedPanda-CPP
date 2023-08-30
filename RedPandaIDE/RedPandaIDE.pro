@@ -29,10 +29,6 @@ contains(QMAKE_HOST.arch, x86_64):{
 }
 
 macos: {
-    # This package needs to be installed via homebrew before we can compile it
-    INCLUDEPATH += \
-        /opt/homebrew/opt/icu4c/include
-
     QT += gui-private
 
     ICON = ../macos/RedPandaIDE.icns
@@ -131,6 +127,7 @@ SOURCES += \
     settingsdialog/editortooltipswidget.cpp \
     settingsdialog/environmentfolderswidget.cpp \
     settingsdialog/environmentperformancewidget.cpp \
+    settingsdialog/environmentprogramswidget.cpp \
     settingsdialog/environmentshortcutwidget.cpp \
     settingsdialog/executorproblemsetwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
@@ -254,6 +251,7 @@ HEADERS += \
     settingsdialog/editortooltipswidget.h \
     settingsdialog/environmentfolderswidget.h \
     settingsdialog/environmentperformancewidget.h \
+    settingsdialog/environmentprogramswidget.h \
     settingsdialog/environmentshortcutwidget.h \
     settingsdialog/executorproblemsetwidget.h \
     settingsdialog/formattergeneralwidget.h \
@@ -349,6 +347,7 @@ FORMS += \
     settingsdialog/editortooltipswidget.ui \
     settingsdialog/environmentfolderswidget.ui \
     settingsdialog/environmentperformancewidget.ui \
+    settingsdialog/environmentprogramswidget.ui \
     settingsdialog/environmentshortcutwidget.ui \
     settingsdialog/executorproblemsetwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
@@ -469,16 +468,13 @@ win32: {
 
 unix: {
     HEADERS += \
-    settingsdialog/formatterpathwidget.h \
-    settingsdialog/environmentprogramswidget.h
+    settingsdialog/formatterpathwidget.h
 
     SOURCES += \
-    settingsdialog/formatterpathwidget.cpp \
-    settingsdialog/environmentprogramswidget.cpp
+    settingsdialog/formatterpathwidget.cpp
 
     FORMS += \
-    settingsdialog/formatterpathwidget.ui \
-    settingsdialog/environmentprogramswidget.ui
+    settingsdialog/formatterpathwidget.ui
 }
 
 linux: {

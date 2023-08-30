@@ -43,6 +43,8 @@ private slots:
     void on_btnBrowse_clicked();
 
     // SettingsWidget interface
+    void on_txtExecuteParamaters_textChanged(const QString &commandLine);
+
 protected:
     void updateIcons(const QSize &size) override;
 };

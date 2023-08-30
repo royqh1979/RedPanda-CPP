@@ -1791,6 +1791,54 @@
         <source>All files (%1)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Terminal emulator arguments pattern</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>sh -c &quot;echo hello; sleep 3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Test</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>term -e sh -c &quot;echo hello; sleep 3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>term -x sh -c &quot;echo hello; sleep 3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>term -- sh -c &quot;echo hello; sleep 3&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>term -e &quot;sh -c \&quot;echo hello; sleep 3\&quot;&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On clicking “Test” for the correct pattern, the terminal emulator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>• pops up;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>• shows “hello”; and</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>• quits in 3 seconds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>term /tmp/redpanda_XXXXXX.command</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnvironmentShortcutModel</name>
@@ -1889,6 +1937,10 @@
     </message>
     <message>
         <source>All files (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Parsed argv array (represented in JSON):</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

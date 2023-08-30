@@ -447,7 +447,7 @@ void executeFile(const QString &fileName, const QString &params, const QString &
 {
     ExecutableRunner* runner=new ExecutableRunner(
                 fileName,
-                params,
+                splitProcessCommand(params),
                 workingDir);
     runner->connect(runner, &QThread::finished,
                     [runner,tempFile](){
@@ -588,4 +588,191 @@ QColor alphaBlend(const QColor &lower, const QColor &upper) {
         int(lower.green() * wl + upper.green() * wu),
         int(lower.blue() * wl + upper.blue() * wu)
         );
+}
+
+UnixExecSemantics getPathUnixExecSemantics(const QString &path)
+{
+    QFileInfo pathInfo(path);
+    if (pathInfo.isRelative()) {
+        if (path.contains('/'))
+            return UnixExecSemantics::RelativeToCwd;
+        else
+            return UnixExecSemantics::SearchInPath;
+    } else
+        return UnixExecSemantics::Absolute;
+}
+
+QStringList getExecutableSearchPaths()
+{
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString path = env.value("PATH");
+    QStringList pathList = path.split(PATH_SEPARATOR);
+    return pathList;
+}
+
+QString escapeArgument(const QString &arg, [[maybe_unused]] bool isFirstArg)
+{
+    auto argContainsOneOf = [&arg](auto... ch) { return (arg.contains(ch) || ...); };
+
+#ifdef Q_OS_WINDOWS
+    // See https://stackoverflow.com/questions/31838469/how-do-i-convert-argv-to-lpcommandline-parameter-of-createprocess ,
+    // and https://learn.microsoft.com/en-gb/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way .
+
+    // TODO: investigate whether we need escaping for cmd.
+
+    if (!arg.isEmpty() && !argContainsOneOf(' ', '\t', '\n', '\v', '"'))
+        return arg;
+
+    QString result = "\"";
+    for (auto it = arg.begin(); ; ++it) {
+        int nBackslash = 0;
+        while (it != arg.end() && *it == '\\') {
+            ++it;
+            ++nBackslash;
+        }
+        if (it == arg.end()) {
+            // Escape all backslashes, but let the terminating double quotation mark we add below be interpreted as a metacharacter.
+            result.append(QString('\\').repeated(nBackslash * 2));
+            break;
+        } else if (*it == '"') {
+            // Escape all backslashes and the following double quotation mark.
+            result.append(QString('\\').repeated(nBackslash * 2 + 1));
+            result.push_back(*it);
+        } else {
+            // Backslashes aren't special here.
+            result.append(QString('\\').repeated(nBackslash));
+            result.push_back(*it);
+        }
+    }
+    result.push_back('"');
+    return result;
+#else
+    /* be speculative, but keep readability.
+     * ref. https://pubs.opengroup.org/onlinepubs/9699919799.2018edition/utilities/V3_chap02.html
+     */
+    if (arg.isEmpty())
+        return R"("")";
+
+    /* POSIX say the following reserved words (may) have special meaning:
+     *   !, {, }, case, do, done, elif, else, esac, fi, for, if, in, then, until, while,
+     *   [[, ]], function, select,
+     * only if used as the _first word_ of a command (or somewhere we dot not care).
+     */
+    const static QSet<QString> reservedWord{
+        "!", "{", "}", "case", "do", "done", "elif", "else", "esac", "fi", "for", "if", "in", "then", "until", "while",
+        "[[", "]]", "function", "select",
+    };
+    if (isFirstArg && reservedWord.contains(arg))
+        return QString(R"("%1")").arg(arg);
+
+    /* POSIX say “shall quote”:
+     *   '|', '&', ';', '<', '>', '(', ')', '$', '`', '\\', '"', '\'', ' ', '\t', '\n';
+     * and “may need to be quoted”:
+     *   '*', '?', '[', '#', '~', '=', '%'.
+     * among which “may need to be quoted” there are 4 kinds:
+     *   - wildcards '*', '?', '[' are “danger anywhere” (handle it as if “shall quote”);
+     *   - comment '#', home '~', is “danger at first char in any word”;
+     *   - (environment) variable '=' is “danger at any char in first word”;
+     *   - foreground '%' is “danger at first char in first word”.
+     * although not mentioned by POSIX, bash’s brace expansion '{', '}' are also “danger anywhere”.
+     */
+    bool isDoubleQuotingDanger = argContainsOneOf('$', '`', '\\', '"');
+    bool isSingleQuotingDanger = arg.contains('\'');
+    bool isDangerAnyChar = isDoubleQuotingDanger || isSingleQuotingDanger || argContainsOneOf(
+        '|', '&', ';', '<', '>', '(', ')', ' ', '\t', '\n',
+        '*', '?', '[',
+        '{', '}'
+    );
+    bool isDangerFirstChar = (arg[0] == '#') || (arg[0] == '~');
+    if (isFirstArg) {
+        isDangerAnyChar = isDangerAnyChar || arg.contains('=');
+        isDangerFirstChar = isDangerFirstChar || (arg[0] == '%');
+    }
+
+    // a “safe” string
+    if (!isDangerAnyChar && !isDangerFirstChar)
+        return arg;
+
+    // prefer more-common double quoting
+    if (!isDoubleQuotingDanger)
+        return QString(R"("%1")").arg(arg);
+
+    // and then check the opportunity of single quoting
+    if (!isSingleQuotingDanger)
+        return QString("'%1'").arg(arg);
+
+    // escaping is necessary
+    // use double quoting since it’s less tricky
+    QString result = "\"";
+    for (auto ch : arg) {
+        if (ch == '$' || ch == '`' || ch == '\\' || ch == '"')
+            result.push_back('\\');
+        result.push_back(ch);
+    }
+    result.push_back('"');
+    return result;
+
+    /* single quoting, which is roughly raw string, is possible and quite simple in programming:
+     *   1. replace each single quote with `'\''`, which contains
+     *      - a single quote to close quoting,
+     *      - an escaped single quote representing the single quote itself, and
+     *      - a single quote to open quoting again;
+     *   2. enclose the string with a pair of single quotes.
+     * e.g. `o'clock` => `'o'\''clock'`, really tricky and hard to read.
+     */
+#endif
+}
+
+auto wrapCommandForTerminalEmulator(const QString &terminal, const TerminalEmulatorArgumentsPattern &argsPattern, const QStringList &argsWithArgv0)
+    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
+{
+    switch (argsPattern) {
+    case TerminalEmulatorArgumentsPattern::ImplicitSystem:
+    default: {
+        return {argsWithArgv0[0], argsWithArgv0.mid(1), nullptr};
+    }
+    case TerminalEmulatorArgumentsPattern::MinusEAppendArgs: {
+        return {terminal, QStringList{"-e"} + argsWithArgv0, nullptr};
+    }
+    case TerminalEmulatorArgumentsPattern::MinusXAppendArgs: {
+        return {terminal, QStringList{"-x"} + argsWithArgv0, nullptr};
+    }
+    case TerminalEmulatorArgumentsPattern::MinusMinusAppendArgs: {
+        return {terminal, QStringList{"--"} + argsWithArgv0, nullptr};
+    }
+    case TerminalEmulatorArgumentsPattern::MinusEAppendCommandLine: {
+        QStringList escapedArgs;
+        for (int i = 0; i < argsWithArgv0.length(); i++) {
+            auto &arg = argsWithArgv0[i];
+            auto escaped = escapeArgument(arg, i == 0);
+            escapedArgs.append(escaped);
+        }
+        return {terminal, QStringList{"-e", escapedArgs.join(' ')}, nullptr};
+    }
+    case TerminalEmulatorArgumentsPattern::WriteCommandLineToTempFileThenTempFilename: {
+        auto fileOwner = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
+        if (fileOwner->open()) {
+            QStringList escapedArgs;
+            for (int i = 0; i < argsWithArgv0.length(); i++) {
+                auto &arg = argsWithArgv0[i];
+                auto escaped = escapeArgument(arg, i == 0);
+                escapedArgs.append(escaped);
+            }
+            fileOwner->write(escapedArgs.join(' ').toUtf8());
+            fileOwner->write(QString('\n').toUtf8());
+            fileOwner->flush();
+        }
+        QFile(fileOwner->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+        return {terminal, QStringList{fileOwner->fileName()}, std::move(fileOwner)};
+    }
+    }
+}
+
+QString defaultShell()
+{
+#ifdef Q_OS_WINDOWS
+    return "powershell.exe";
+#else
+    return "sh";
+#endif
 }

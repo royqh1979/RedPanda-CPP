@@ -35,7 +35,183 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="2">
+   <item row="1" column="0" colspan="3">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Terminal emulator arguments pattern</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="rbImplicitSystem">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+          <family>Menlo</family>
+          <family>Consolas</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>sh -c &quot;echo hello; sleep 3&quot;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pbImplicitSystem">
+        <property name="text">
+         <string>Test</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="rbMinusEAppendArgs">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+          <family>Menlo</family>
+          <family>Consolas</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>term -e sh -c &quot;echo hello; sleep 3&quot;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="pbMinusEAppendArgs">
+        <property name="text">
+         <string>Test</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QRadioButton" name="rbMinusXAppendArgs">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+          <family>Menlo</family>
+          <family>Consolas</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>term -x sh -c &quot;echo hello; sleep 3&quot;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QPushButton" name="pbMinusXAppendArgs">
+        <property name="text">
+         <string>Test</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QRadioButton" name="rbMinusMinusAppendArgs">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+          <family>Menlo</family>
+          <family>Consolas</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>term -- sh -c &quot;echo hello; sleep 3&quot;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QPushButton" name="pbMinusMinusAppendArgs">
+        <property name="text">
+         <string>Test</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QRadioButton" name="rbMinusEAppendCommandLine">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+          <family>Menlo</family>
+          <family>Consolas</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>term -e &quot;sh -c \&quot;echo hello; sleep 3\&quot;&quot;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QPushButton" name="pbMinusEAppendCommandLine">
+        <property name="text">
+         <string>Test</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QRadioButton" name="rbWriteCommandLineToTempFileThenTempFilename">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+          <family>Menlo</family>
+          <family>Consolas</family>
+         </font>
+        </property>
+        <property name="text">
+         <string>term /tmp/redpanda_XXXXXX.command</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QPushButton" name="pbWriteCommandLineToTempFileThenTempFilename">
+        <property name="text">
+         <string>Test</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="3">
+       <widget class="QLabel" name="lExpectedBahavior0">
+        <property name="text">
+         <string>On clicking “Test” for the correct pattern, the terminal emulator</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" colspan="3">
+       <widget class="QLabel" name="lExpectedBahavior1">
+        <property name="text">
+         <string>• pops up;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0" colspan="3">
+       <widget class="QLabel" name="lExpectedBahavior2">
+        <property name="text">
+         <string>• shows “hello”; and</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="3">
+       <widget class="QLabel" name="lExpectedBahavior3">
+        <property name="text">
+         <string>• quits in 3 seconds.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="2">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
