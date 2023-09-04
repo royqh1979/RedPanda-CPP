@@ -203,13 +203,13 @@ QString Settings::Dirs::appResourceDir() const
 {
 #ifdef Q_OS_WIN
     return appDir();
-#elif defined(Q_OS_LINUX)
-    // in AppImage PREFIX is not true, resolve from relative path
-    const static QString absoluteResourceDir(QDir(appDir()).absoluteFilePath("../share/" APP_NAME));
-    return absoluteResourceDir;
 #elif defined(Q_OS_MACOS)
 //    return QApplication::instance()->applicationDirPath();
     return "";
+#else // XDG desktop
+    // in AppImage or tarball PREFIX is not true, resolve from relative path
+    const static QString absoluteResourceDir(QDir(appDir()).absoluteFilePath("../share/" APP_NAME));
+    return absoluteResourceDir;
 #endif
 }
 
@@ -218,13 +218,13 @@ QString Settings::Dirs::appLibexecDir() const
 {
 #ifdef Q_OS_WIN
     return appDir();
-#elif defined(Q_OS_LINUX)
-    // in AppImage LIBEXECDIR is not true, resolve from relative path
+#elif defined(Q_OS_MACOS)
+    return QApplication::instance()->applicationDirPath();
+#else // XDG desktop
+    // in AppImage or tarball LIBEXECDIR is not true, resolve from relative path
     const static QString relativeLibExecDir(QDir(PREFIX "/bin").relativeFilePath(LIBEXECDIR "/" APP_NAME));
     const static QString absoluteLibExecDir(QDir(appDir()).absoluteFilePath(relativeLibExecDir));
     return absoluteLibExecDir;
-#elif defined(Q_OS_MACOS)
-    return QApplication::instance()->applicationDirPath();
 #endif
 }
 
@@ -1473,16 +1473,16 @@ void Settings::Editor::doLoad()
     mRightEdgeLineColor = colorValue("right_edge_line_color",Qt::yellow);
 
     //Editor font
-#ifdef Q_OS_WIN
-    mFontName = stringValue("font_name","consolas");
-    mNonAsciiFontName = stringValue("non_ascii_font_name","consolas");
-#elif defined(Q_OS_MACOS)
-    mFontName = stringValue("font_name","Menlo");
-    mNonAsciiFontName = stringValue("non_ascii_font_name","PingFang SC");
-#else
-    mFontName = stringValue("font_name","Dejavu Sans Mono");
-    mNonAsciiFontName = stringValue("non_ascii_font_name","Dejavu Sans Mono");
-#endif
+    mFontName = stringValue("font_name",DEFAULT_MONO_FONT);
+    QString defaultCjkFontName = CJK_MONO_FONT_SC;
+    QString defaultLocaleName = QLocale::system().name();
+    if (defaultLocaleName == "zh_TW")
+        defaultCjkFontName = CJK_MONO_FONT_TC;
+    else if (defaultLocaleName == "ja_JP")
+        defaultCjkFontName = CJK_MONO_FONT_J;
+    else if (defaultLocaleName == "ko_KR")
+        defaultCjkFontName = CJK_MONO_FONT_K;
+    mNonAsciiFontName = stringValue("non_ascii_font_name",defaultCjkFontName);
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.0);
@@ -1504,11 +1504,7 @@ void Settings::Editor::doLoad()
     mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
     mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
 
-#ifdef Q_OS_WIN
-    mGutterFontName = stringValue("gutter_font_name","consolas");
-#else
-    mGutterFontName = stringValue("gutter_font_name","Dejavu Sans Mono");
-#endif
+    mGutterFontName = stringValue("gutter_font_name",DEFAULT_MONO_FONT);
     mGutterFontSize = intValue("gutter_font_size",12);
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
@@ -2999,11 +2995,11 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
 
     if (enableAsan) {
+#ifdef __aarch64__
+        pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, "hwaddress");
+#else
         pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, "address");
-//        pSet->setCustomCompileParams("-fsanitize=address");
-//        pSet->setUseCustomCompileParams(true);
-//        pSet->setCustomLinkParams("-fsanitize=address");
-//        pSet->setUseCustomLinkParams(true);
+#endif
     }
     //Some windows gcc don't correctly support this
     //pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
@@ -3064,8 +3060,8 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
     }
 
 #ifdef Q_OS_LINUX
-# if defined(__x86_64__) || __SIZEOF_POINTER__ == 4
-    mDefaultIndex = (int)mList.size() - 1; // x86-64 Linux or 32-bit Unix, default to "debug with ASan"
+# if defined(__x86_64__) || defined(__aarch64__) || __SIZEOF_POINTER__ == 4
+    mDefaultIndex = (int)mList.size() - 1; // x86-64, AArch64 Linux or 32-bit Unix, default to "debug with ASan"
 # else
     mDefaultIndex = (int)mList.size() - 2; // other Unix, where ASan can be very slow, default to "debug"
 # endif
@@ -3576,17 +3572,20 @@ void Settings::Environment::doLoad()
 {
     //Appearance
     mTheme = stringValue("theme","dark");
-    QString defaultFontName = "Segoe UI";
+    QString defaultFontName = DEFAULT_UI_FONT;
     QString defaultLocaleName = QLocale::system().name();
-    if (defaultLocaleName == "zh_CN") {
+    {
         QString fontName;
-#ifdef Q_OS_WINDOWS
-        fontName = "Microsoft Yahei";
-#elif defined(Q_OS_MACOS)
-        fontName = "PingFang SC";
-#elif defined(Q_OS_LINUX)
-        fontName = "Noto Sans CJK";
-#endif
+        if (defaultLocaleName == "zh_CN")
+            fontName = CJK_UI_FONT_SC;
+        else if (defaultLocaleName == "zh_TW")
+            fontName = CJK_UI_FONT_TC;
+        else if (defaultLocaleName == "ja_JP")
+            fontName = CJK_UI_FONT_J;
+        else if (defaultLocaleName == "ko_KR")
+            fontName = CJK_UI_FONT_K;
+        else
+            fontName = DEFAULT_UI_FONT;
         QFont font(fontName);
         if (font.exactMatch()) {
             defaultFontName = fontName;
@@ -4167,13 +4166,7 @@ void Settings::Executor::doLoad()
     mProblemCaseValidateType =(ProblemCaseValidateType)intValue("problem_case_validate_type", (int)ProblemCaseValidateType::Exact);
     mRedirectStderrToToolLog = boolValue("redirect_stderr_to_toollog", false);
 
-#ifdef Q_OS_WIN
-    mCaseEditorFontName = stringValue("case_editor_font_name","consolas");
-#elif defined(Q_OS_MACOS)
-    mCaseEditorFontName = stringValue("case_editor_font_name", "Menlo");
-#else
-    mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
-#endif
+    mCaseEditorFontName = stringValue("case_editor_font_name",DEFAULT_MONO_FONT);
     mCaseEditorFontSize = intValue("case_editor_font_size",11);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
     int case_timeout = intValue("case_timeout", -1);

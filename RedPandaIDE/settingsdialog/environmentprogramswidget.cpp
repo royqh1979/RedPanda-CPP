@@ -28,6 +28,13 @@ EnvironmentProgramsWidget::EnvironmentProgramsWidget(const QString& name, const 
     ui(new Ui::EnvironmentProgramsWidget)
 {
     ui->setupUi(this);
+    QFont monoFont(DEFAULT_MONO_FONT);
+    ui->rbImplicitSystem->setFont(monoFont);
+    ui->rbMinusEAppendArgs->setFont(monoFont);
+    ui->rbMinusXAppendArgs->setFont(monoFont);
+    ui->rbMinusMinusAppendArgs->setFont(monoFont);
+    ui->rbMinusEAppendCommandLine->setFont(monoFont);
+    ui->rbWriteCommandLineToTempFileThenTempFilename->setFont(monoFont);
 #ifndef Q_OS_MACOS
     hideMacosSpecificPattern();
 #endif

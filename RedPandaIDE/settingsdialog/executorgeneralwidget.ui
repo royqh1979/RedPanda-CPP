@@ -68,13 +68,6 @@
       </item>
       <item>
        <widget class="QTextBrowser" name="txtParsedArgsInJson">
-        <property name="font">
-         <font>
-          <family>Monospace</family>
-          <family>Menlo</family>
-          <family>Consolas</family>
-         </font>
-        </property>
        </widget>
       </item>
      </layout>

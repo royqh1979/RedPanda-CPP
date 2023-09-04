@@ -478,8 +478,8 @@ unix: {
 }
 
 linux: {
-    LIBS+= \
-    -lrt
+    # legacy glibc compatibility -- modern Unices have all components in `libc.so`
+    LIBS += -lrt
 
     _LINUX_STATIC_IME_PLUGIN = $$(LINUX_STATIC_IME_PLUGIN)
     equals(_LINUX_STATIC_IME_PLUGIN, "ON") {

@@ -29,6 +29,7 @@ ExecutorGeneralWidget::ExecutorGeneralWidget(const QString& name, const QString&
     ui(new Ui::ExecutorGeneralWidget)
 {
     ui->setupUi(this);
+    ui->txtParsedArgsInJson->setFont(QFont(DEFAULT_MONO_FONT));
 }
 
 ExecutorGeneralWidget::~ExecutorGeneralWidget()

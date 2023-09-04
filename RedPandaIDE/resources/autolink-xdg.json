@@ -1,5 +1,13 @@
 [
     {
+        "header": "fmt/core.h",
+        "links": "-lfmt"
+    },
+    {
+        "header": "math.h",
+        "links": "-lm"
+    },
+    {
         "execUseUTF8": true,
         "header": "raylib.h",
         "links": "-lraylib -lGL -lm -lpthread -ldl -lrt -lX11"
@@ -11,5 +19,13 @@
     {
         "header": "rturtle.h",
         "links": "-lrturtle"
+    },
+    {
+        "header": "thread",
+        "links": "-lpthread"
+    },
+    {
+        "header": "threads.h",
+        "links": "-lpthread"
     }
 ]

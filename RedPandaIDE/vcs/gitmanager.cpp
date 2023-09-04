@@ -25,7 +25,7 @@ void GitManager::createRepository(const QString &folder)
     contents.append("*.o");
     contents.append("*.exe");
     contents.append("*.layout");
-#ifdef Q_OS_LINUX
+#ifdef Q_OS_UNIX
     contents.append("*.");
 #endif
 
@@ -593,7 +593,7 @@ QString GitManager::runGit(const QString& workingFolder, const QStringList &args
 #ifdef Q_OS_WIN
     env.insert("PATH",pSettings->dirs().appDir());
     env.insert("GIT_ASKPASS",includeTrailingPathDelimiter(pSettings->dirs().appDir())+"redpanda-win-git-askpass.exe");
-#elif defined(Q_OS_LINUX)
+#else // Unix
     env.insert(QProcessEnvironment::systemEnvironment());
     env.insert("LANG","en");
     env.insert("LANGUAGE","en");

@@ -59,7 +59,7 @@
 #include "environmentfileassociationwidget.h"
 #include "projectversioninfowidget.h"
 #endif
-#ifdef Q_OS_LINUX
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS) // XDG desktop
 #include "formatterpathwidget.h"
 #endif
 #include <QDebug>
@@ -228,7 +228,7 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
     dialog->addWidget(widget);
 
-#ifdef Q_OS_LINUX
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS) // XDG desktop
     widget = new FormatterPathWidget(tr("Program"),tr("Code Formatter"));
     dialog->addWidget(widget);
 #endif

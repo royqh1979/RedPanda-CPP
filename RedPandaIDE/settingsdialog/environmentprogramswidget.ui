@@ -43,13 +43,6 @@
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
        <widget class="QRadioButton" name="rbImplicitSystem">
-        <property name="font">
-         <font>
-          <family>Monospace</family>
-          <family>Menlo</family>
-          <family>Consolas</family>
-         </font>
-        </property>
         <property name="text">
          <string>sh -c &quot;echo hello; sleep 3&quot;</string>
         </property>
@@ -77,13 +70,6 @@
       </item>
       <item row="1" column="0">
        <widget class="QRadioButton" name="rbMinusEAppendArgs">
-        <property name="font">
-         <font>
-          <family>Monospace</family>
-          <family>Menlo</family>
-          <family>Consolas</family>
-         </font>
-        </property>
         <property name="text">
          <string>term -e sh -c &quot;echo hello; sleep 3&quot;</string>
         </property>
@@ -98,13 +84,6 @@
       </item>
       <item row="2" column="0">
        <widget class="QRadioButton" name="rbMinusXAppendArgs">
-        <property name="font">
-         <font>
-          <family>Monospace</family>
-          <family>Menlo</family>
-          <family>Consolas</family>
-         </font>
-        </property>
         <property name="text">
          <string>term -x sh -c &quot;echo hello; sleep 3&quot;</string>
         </property>
@@ -119,13 +98,6 @@
       </item>
       <item row="3" column="0">
        <widget class="QRadioButton" name="rbMinusMinusAppendArgs">
-        <property name="font">
-         <font>
-          <family>Monospace</family>
-          <family>Menlo</family>
-          <family>Consolas</family>
-         </font>
-        </property>
         <property name="text">
          <string>term -- sh -c &quot;echo hello; sleep 3&quot;</string>
         </property>
@@ -140,13 +112,6 @@
       </item>
       <item row="4" column="0">
        <widget class="QRadioButton" name="rbMinusEAppendCommandLine">
-        <property name="font">
-         <font>
-          <family>Monospace</family>
-          <family>Menlo</family>
-          <family>Consolas</family>
-         </font>
-        </property>
         <property name="text">
          <string>term -e &quot;sh -c \&quot;echo hello; sleep 3\&quot;&quot;</string>
         </property>
@@ -161,13 +126,6 @@
       </item>
       <item row="5" column="0">
        <widget class="QRadioButton" name="rbWriteCommandLineToTempFileThenTempFilename">
-        <property name="font">
-         <font>
-          <family>Monospace</family>
-          <family>Menlo</family>
-          <family>Consolas</family>
-         </font>
-        </property>
         <property name="text">
          <string>term /tmp/redpanda_XXXXXX.command</string>
         </property>
