@@ -3087,7 +3087,7 @@ bool Settings::CompilerSets::addSets(const QString &folder)
         found=true;
     }
 #ifdef ENABLE_SDCC
-    qDebug()<<folder;
+    //qDebug()<<folder;
     if (fileExists(folder, SDCC_PROGRAM)) {
         addSets(folder,SDCC_PROGRAM);
         found=true;
@@ -3718,8 +3718,8 @@ void Settings::Environment::doLoad()
             break;
         }
         case UnixExecSemantics::SearchInPath: {
-            auto pathList = getExecutableSearchPaths();
-            for (auto &dir: pathList) {
+            QStringList pathList = getExecutableSearchPaths();
+            for (const QString &dir: pathList) {
                 QString absoluteTerminalPath = QDir(dir).absoluteFilePath(searchItem.appName);
                 QFileInfo termPathInfo(absoluteTerminalPath);
                 DO_CHECK_AND_SET;
