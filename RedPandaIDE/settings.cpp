@@ -3733,7 +3733,15 @@ void Settings::Environment::doLoad()
 
     // check saved terminal path
     QString savedTerminalPath = stringValue("terminal_path", "");
-    int savedArgsPattern_ = intValue("terminal_arguments_pattern", int(AP::MinusEAppendArgs)); // smooth migration from old version
+    int savedArgsPattern_ = intValue("terminal_arguments_pattern",
+#ifdef Q_OS_MACOS
+        // macOS: old versions have set Terminal.app as default terminal
+        // fallback to temp file to work with Terminal.app for smooth migration
+        int(AP::WriteCommandLineToTempFileThenTempFilename)
+#else
+        int(AP::MinusEAppendArgs) // Linux: keep old behaviour
+#endif
+    );
     AP savedArgsPattern = static_cast<AP>(savedArgsPattern_);
     if (!checkAndSetTerminalPath(TerminalSearchItem{savedTerminalPath, savedArgsPattern})) {
         // if saved terminal path is invalid, try determing terminal from our list
