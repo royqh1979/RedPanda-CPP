@@ -31,6 +31,9 @@
 #include <QMessageBox>
 #include <QUuid>
 #include "projectcompiler.h"
+#ifdef Q_OS_MACOS
+#include <sys/posix_shm.h>
+#endif
 
 enum RunProgramFlag {
     RPF_PAUSE_CONSOLE =     0x0001,
@@ -255,20 +258,32 @@ void CompilerManager::run(
 #ifdef Q_OS_WIN
         if (consoleFlag!=0) {
             QString sharedMemoryId = QUuid::createUuid().toString();
-            QString newArguments = QString(" %1 %2 \"%3\" %4")
-                    .arg(consoleFlag)
-                    .arg(sharedMemoryId,localizePath(filename)).arg(arguments);
-
+            QString consolePauserPath = includeTrailingPathDelimiter(pSettings->dirs().appDir()) + CONSOLE_PAUSER;
+            QStringList execArgs = QStringList{
+                consolePauserPath,
+                QString::number(consoleFlag),
+                sharedMemoryId,
+                localizePath(filename)
+            } + splitProcessCommand(arguments);
+            auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
+                pSettings->environment().terminalPathForExec(),
+                pSettings->environment().terminalArgumentsPattern(),
+                execArgs
+            );
             //delete when thread finished
-            execRunner = new ExecutableRunner(includeTrailingPathDelimiter(pSettings->dirs().appDir())+CONSOLE_PAUSER,newArguments,workDir);
+            execRunner = new ExecutableRunner(filename, args, workDir);
             execRunner->setShareMemoryId(sharedMemoryId);
+            mTempFileOwner = std::move(fileOwner);
         } else {
             //delete when thread finished
-            execRunner = new ExecutableRunner(filename,arguments,workDir);
+            execRunner = new ExecutableRunner(filename,splitProcessCommand(arguments),workDir);
         }
 #else
-        QString newArguments;
+        QStringList execArgs;
         QString sharedMemoryId = "/r"+QUuid::createUuid().toString(QUuid::StringFormat::Id128);
+#ifdef Q_OS_MACOS
+        sharedMemoryId = sharedMemoryId.mid(0, PSHMNAMLEN);
+#endif
         if (consoleFlag!=0) {
             QString consolePauserPath=includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser";
             if (!fileExists(consolePauserPath)) {
@@ -280,31 +295,40 @@ void CompilerManager::run(
 
             }
             if (redirectInput) {
-                newArguments = QString(" -e \"%1\" %2 %3 \"%4\" \"%5\" %6")
-                        .arg(consolePauserPath)
-                        .arg(consoleFlag)
-                        .arg(sharedMemoryId)
-                        .arg(escapeSpacesInString(redirectInputFilename))
-                        .arg(localizePath(escapeSpacesInString(filename)))
-                        .arg(arguments);
+                execArgs = QStringList{
+                    consolePauserPath,
+                    QString::number(consoleFlag),
+                    sharedMemoryId,
+                    redirectInputFilename,
+                    localizePath(filename),
+                } + splitProcessCommand(arguments);
             } else {
-                newArguments = QString(" -e \"%1\" %2 %3 \"%4\" %5")
-                    .arg(consolePauserPath)
-                    .arg(consoleFlag)
-                    .arg(sharedMemoryId,localizePath(escapeSpacesInString(filename))).arg(arguments);
+                execArgs = QStringList{
+                    consolePauserPath,
+                    QString::number(consoleFlag),
+                    sharedMemoryId,
+                    localizePath(filename),
+                } + splitProcessCommand(arguments);
             }
         } else {
-            newArguments = QString(" -e \"%1\" %2")
-                .arg(localizePath(escapeSpacesInString(filename))).arg(arguments);
+            execArgs = QStringList{
+                localizePath(filename),
+            } + splitProcessCommand(arguments);
         }
-        execRunner = new ExecutableRunner(pSettings->environment().terminalPathForExec(),newArguments,workDir);
+        auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
+            pSettings->environment().terminalPathForExec(),
+            pSettings->environment().terminalArgumentsPattern(),
+            execArgs
+        );
+        execRunner = new ExecutableRunner(filename, args, workDir);
         execRunner->setShareMemoryId(sharedMemoryId);
+        mTempFileOwner = std::move(fileOwner);
 #endif
         execRunner->setStartConsole(true);
     } else {
         //delete when thread finished
-        execRunner = new ExecutableRunner(filename,arguments,workDir);
-    }    
+        execRunner = new ExecutableRunner(filename,splitProcessCommand(arguments),workDir);
+    }
     if (redirectInput) {
         execRunner->setRedirectInput(true);
         execRunner->setRedirectInputFilename(redirectInputFilename);
@@ -347,7 +371,7 @@ void CompilerManager::doRunProblem(const QString &filename, const QString &argum
     if (mRunner!=nullptr) {
         return;
     }
-    OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,arguments,workDir,problemCases);
+    OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,splitProcessCommand(arguments),workDir,problemCases);
     mRunner = execRunner;
     if (pSettings->executor().enableCaseLimit()) {
         execRunner->setExecTimeout(pSettings->executor().caseTimeout());
@@ -380,6 +404,7 @@ void CompilerManager::stopRun()
         mRunner->stop();
         disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
         mRunner=nullptr;
+        mTempFileOwner=nullptr;
     }
 }
 
@@ -395,6 +420,7 @@ void CompilerManager::stopPausing()
         disconnect(mRunner, &Runner::finished, this ,&CompilerManager::onRunnerTerminated);
         mRunner->stop();
         mRunner=nullptr;
+        mTempFileOwner=nullptr;
     }
 }
 
@@ -428,6 +454,7 @@ void CompilerManager::onRunnerTerminated()
 {
     QMutexLocker locker(&mRunnerMutex);
     mRunner=nullptr;
+    mTempFileOwner=nullptr;
 }
 
 void CompilerManager::onRunnerPausing()
@@ -438,6 +465,7 @@ void CompilerManager::onRunnerPausing()
     disconnect(mRunner, &Runner::runErrorOccurred, pMainWindow ,&MainWindow::onRunErrorOccured);
     connect(this, &CompilerManager::signalStopAllRunners, mRunner, &Runner::stop);
     mRunner=nullptr;
+    mTempFileOwner=nullptr;
 }
 
 void CompilerManager::onCompileIssue(PCompileIssue issue)

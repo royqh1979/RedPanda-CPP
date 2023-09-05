@@ -203,13 +203,13 @@ QString Settings::Dirs::appResourceDir() const
 {
 #ifdef Q_OS_WIN
     return appDir();
-#elif defined(Q_OS_LINUX)
-    // in AppImage PREFIX is not true, resolve from relative path
-    const static QString absoluteResourceDir(QDir(appDir()).absoluteFilePath("../share/" APP_NAME));
-    return absoluteResourceDir;
 #elif defined(Q_OS_MACOS)
 //    return QApplication::instance()->applicationDirPath();
     return "";
+#else // XDG desktop
+    // in AppImage or tarball PREFIX is not true, resolve from relative path
+    const static QString absoluteResourceDir(QDir(appDir()).absoluteFilePath("../share/" APP_NAME));
+    return absoluteResourceDir;
 #endif
 }
 
@@ -218,13 +218,13 @@ QString Settings::Dirs::appLibexecDir() const
 {
 #ifdef Q_OS_WIN
     return appDir();
-#elif defined(Q_OS_LINUX)
-    // in AppImage LIBEXECDIR is not true, resolve from relative path
+#elif defined(Q_OS_MACOS)
+    return QApplication::instance()->applicationDirPath();
+#else // XDG desktop
+    // in AppImage or tarball LIBEXECDIR is not true, resolve from relative path
     const static QString relativeLibExecDir(QDir(PREFIX "/bin").relativeFilePath(LIBEXECDIR "/" APP_NAME));
     const static QString absoluteLibExecDir(QDir(appDir()).absoluteFilePath(relativeLibExecDir));
     return absoluteLibExecDir;
-#elif defined(Q_OS_MACOS)
-    return QApplication::instance()->applicationDirPath();
 #endif
 }
 
@@ -1473,16 +1473,16 @@ void Settings::Editor::doLoad()
     mRightEdgeLineColor = colorValue("right_edge_line_color",Qt::yellow);
 
     //Editor font
-#ifdef Q_OS_WIN
-    mFontName = stringValue("font_name","consolas");
-    mNonAsciiFontName = stringValue("non_ascii_font_name","consolas");
-#elif defined(Q_OS_MACOS)
-    mFontName = stringValue("font_name","Menlo");
-    mNonAsciiFontName = stringValue("non_ascii_font_name","PingFang SC");
-#else
-    mFontName = stringValue("font_name","Dejavu Sans Mono");
-    mNonAsciiFontName = stringValue("non_ascii_font_name","Dejavu Sans Mono");
-#endif
+    mFontName = stringValue("font_name",DEFAULT_MONO_FONT);
+    QString defaultCjkFontName = CJK_MONO_FONT_SC;
+    QString defaultLocaleName = QLocale::system().name();
+    if (defaultLocaleName == "zh_TW")
+        defaultCjkFontName = CJK_MONO_FONT_TC;
+    else if (defaultLocaleName == "ja_JP")
+        defaultCjkFontName = CJK_MONO_FONT_J;
+    else if (defaultLocaleName == "ko_KR")
+        defaultCjkFontName = CJK_MONO_FONT_K;
+    mNonAsciiFontName = stringValue("non_ascii_font_name",defaultCjkFontName);
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.0);
@@ -1504,11 +1504,7 @@ void Settings::Editor::doLoad()
     mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
     mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
 
-#ifdef Q_OS_WIN
-    mGutterFontName = stringValue("gutter_font_name","consolas");
-#else
-    mGutterFontName = stringValue("gutter_font_name","Dejavu Sans Mono");
-#endif
+    mGutterFontName = stringValue("gutter_font_name",DEFAULT_MONO_FONT);
     mGutterFontSize = intValue("gutter_font_size",12);
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
@@ -2999,11 +2995,11 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
 
     if (enableAsan) {
+#ifdef __aarch64__
+        pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, "hwaddress");
+#else
         pSet->setCompileOption(CC_CMD_OPT_ADDRESS_SANITIZER, "address");
-//        pSet->setCustomCompileParams("-fsanitize=address");
-//        pSet->setUseCustomCompileParams(true);
-//        pSet->setCustomLinkParams("-fsanitize=address");
-//        pSet->setUseCustomLinkParams(true);
+#endif
     }
     //Some windows gcc don't correctly support this
     //pSet->setCompileOption(CC_CMD_OPT_STACK_PROTECTOR, "-strong");
@@ -3064,8 +3060,8 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
     }
 
 #ifdef Q_OS_LINUX
-# if defined(__x86_64__) || __SIZEOF_POINTER__ == 4
-    mDefaultIndex = (int)mList.size() - 1; // x86-64 Linux or 32-bit Unix, default to "debug with ASan"
+# if defined(__x86_64__) || defined(__aarch64__) || __SIZEOF_POINTER__ == 4
+    mDefaultIndex = (int)mList.size() - 1; // x86-64, AArch64 Linux or 32-bit Unix, default to "debug with ASan"
 # else
     mDefaultIndex = (int)mList.size() - 2; // other Unix, where ASan can be very slow, default to "debug"
 # endif
@@ -3576,17 +3572,20 @@ void Settings::Environment::doLoad()
 {
     //Appearance
     mTheme = stringValue("theme","dark");
-    QString defaultFontName = "Segoe UI";
+    QString defaultFontName = DEFAULT_UI_FONT;
     QString defaultLocaleName = QLocale::system().name();
-    if (defaultLocaleName == "zh_CN") {
+    {
         QString fontName;
-#ifdef Q_OS_WINDOWS
-        fontName = "Microsoft Yahei";
-#elif defined(Q_OS_MACOS)
-        fontName = "PingFang SC";
-#elif defined(Q_OS_LINUX)
-        fontName = "Noto Sans CJK";
-#endif
+        if (defaultLocaleName == "zh_CN")
+            fontName = CJK_UI_FONT_SC;
+        else if (defaultLocaleName == "zh_TW")
+            fontName = CJK_UI_FONT_TC;
+        else if (defaultLocaleName == "ja_JP")
+            fontName = CJK_UI_FONT_J;
+        else if (defaultLocaleName == "ko_KR")
+            fontName = CJK_UI_FONT_K;
+        else
+            fontName = DEFAULT_UI_FONT;
         QFont font(fontName);
         if (font.exactMatch()) {
             defaultFontName = fontName;
@@ -3608,58 +3607,85 @@ void Settings::Environment::doLoad()
     if (!fileExists(mDefaultOpenFolder)) {
         mDefaultOpenFolder = QDir::currentPath();
     }
-#ifdef Q_OS_LINUX
 
-#define SYSTEM_TERMINAL(term) "/usr/bin/" #term, "/usr/local/bin/" #term
-    const static QString terminals[] {
+    using AP = TerminalEmulatorArgumentsPattern;
+    struct TerminalSearchItem {
+        QString appName;
+        AP argsPattern;
+    };
+
+#ifdef Q_OS_WINDOWS
+    const TerminalSearchItem terminals[] {
+        /* explicitly installed terminals */
+
+        /* system */
+        {"conhost.exe", AP::ImplicitSystem}, // dummy for system default
+
+        /* will not actually be searched, just a list for users who dig into here */
+        {"conhost.exe",                              AP::MinusMinusAppendArgs}, // yes, it accepts GNU-style (--) arguments
+        {"wt.exe",                                   AP::MinusMinusAppendArgs}, // generally okay, but “Test” does not work
+        {"alacritty.exe",                            AP::MinusEAppendArgs},     // GPU-accelerated
+        {"C:/Program Files/Alacritty/alacritty.exe", AP::MinusEAppendArgs},
+        {"C:/Program Files/konsole/bin/konsole.exe", AP::MinusEAppendArgs},     // generally okay, but “Test” does not work
+        {"C:/Program Files/Git/usr/bin/mintty.exe",  AP::MinusEAppendArgs},     // Git Mintty
+        {"C:/msys64/usr/bin/mintty.exe",             AP::MinusEAppendArgs},     // MSYS2 Mintty
+    };
+#else
+    const TerminalSearchItem terminals[] {
         /* modern, specialized or stylized terminal -- user who installed them are likely to prefer them */
-        SYSTEM_TERMINAL(alacritty),       // GPU-accelerated
-        SYSTEM_TERMINAL(kitty),           // GPU-accelerated
-        SYSTEM_TERMINAL(wayst),           // GPU-accelerated
-        SYSTEM_TERMINAL(tilix),           // tiling
-        SYSTEM_TERMINAL(cool-retro-term), // old CRT style
+        {"alacritty", AP::MinusEAppendArgs}, // GPU-accelerated
+        {"kitty",     AP::MinusEAppendArgs}, // GPU-accelerated
+        {"wayst",     AP::MinusEAppendArgs}, // GPU-accelerated
 
-        /* default terminal for DE */
-        SYSTEM_TERMINAL(konsole),         // KDE
-        SYSTEM_TERMINAL(deepin-terminal), // DDE
-        SYSTEM_TERMINAL(qterminal),       // LXQt
-        SYSTEM_TERMINAL(lxterminal),      // LXDE
+        {"coreterminal", AP::MinusEAppendCommandLine}, // lightweighted
+        {"kermit",       AP::MinusEAppendCommandLine}, // lightweighted
+        {"roxterm",      AP::MinusEAppendCommandLine}, // lightweighted
+        {"sakura",       AP::MinusEAppendCommandLine}, // lightweighted
+        {"termit",       AP::MinusEAppendArgs},        // Lua scripting
+        {"termite",      AP::MinusEAppendCommandLine}, // tiling, keyboard-centric
+        {"tilix",        AP::MinusEAppendArgs},        // tiling
+
+        {"cool-retro-term", AP::MinusEAppendArgs}, // old CRT style
+
+        /* default terminal for XDG DE -- macOS user who installed them are likely to prefer them */
+        {"deepin-terminal",        AP::MinusEAppendArgs},        // DDE
+        {"konsole",                AP::MinusEAppendArgs},        // KDE
+        {"gnome-terminal",         AP::MinusMinusAppendArgs},    // GNOME
+        {"io.elementary.terminal", AP::MinusEAppendCommandLine}, // Pantheon (elementary OS)
+        {"lxterminal",             AP::MinusEAppendArgs},        // LXDE
+        {"mate-terminal",          AP::MinusXAppendArgs},        // MATE
+        {"qterminal",              AP::MinusEAppendArgs},        // LXQt
+        {"terminator",             AP::MinusXAppendArgs},        // tiling, also seen in SBC images
+        {"terminology",            AP::MinusEAppendCommandLine}, // Enlightenment
+        {"xfce4-terminal",         AP::MinusXAppendArgs},        // Xfce
 
         /* bundled terminal in AppImage */
-        "alacritty",
+        {"./alacritty", AP::MinusEAppendArgs},
 
         /* compatible, with minor issue */
-        SYSTEM_TERMINAL(kgx),          // GNOME Console, confirm to quit
-        SYSTEM_TERMINAL(coreterminal), // not so conforming when parsing args
-        SYSTEM_TERMINAL(sakura),       // not so conforming when parsing args
+        {"kgx", AP::MinusMinusAppendArgs}, // GNOME Console, confirm to quit
 
-        /* compatible, without out-of-box hidpi support */
-        SYSTEM_TERMINAL(mlterm),
-        SYSTEM_TERMINAL(st),
-        SYSTEM_TERMINAL(terminology), // also not so conforming when parsing args
-        SYSTEM_TERMINAL(urxvt),
-        SYSTEM_TERMINAL(xterm),
-        SYSTEM_TERMINAL(zutty),
+        /* compatible, without out-of-box hidpi support on Linux */
+        {"mlterm", AP::MinusEAppendArgs},
+        {"st",     AP::MinusEAppendArgs},
+        {"urxvt",  AP::MinusEAppendArgs},
+        {"xterm",  AP::MinusEAppendArgs},
+        {"zutty",  AP::MinusEAppendArgs},
+
+        /* macOS system */
+        {"/Applications/iTerm.app/Contents/MacOS/iTerm2",                       AP::WriteCommandLineToTempFileThenTempFilename},
+        {"/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal", AP::WriteCommandLineToTempFileThenTempFilename},
+        {"/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal",        AP::WriteCommandLineToTempFileThenTempFilename},
 
         /* fallbacks */
-        SYSTEM_TERMINAL(foot),                // Wayland only
-        SYSTEM_TERMINAL(x-terminal-emulator), // Debian alternatives
+        {"foot", AP::MinusEAppendArgs}, // Wayland only
 
         /* parameter incompatible */
-        // "gnome-terminal",
-        // "guake",
-        // "hyper",
-        // "io.elementary.terminal",
-        // "kermit",
-        // "liri-terminal",
-        // "mate-terminal",
-        // "roxterm",
-        // "station",
-        // "terminator",
-        // "termite",
-        // "tilda",
-        // "xfce4-terminal",
-        // "yakuake",
+        // "guake",         // drop down
+        // "hyper",         // no execute support
+        // "liri-terminal", // no execute support
+        // "station",       // no execute support
+        // "tilda",         // drop down
 
         /* incompatible -- other */
         // "aterm",       // AUR broken, unable to test
@@ -3667,22 +3693,57 @@ void Settings::Environment::doLoad()
         // "rxvt",        // no unicode support
         // "shellinabox", // AUR broken, unable to test
     };
-#undef SYSTEM_TERMINAL
+#endif
 
-    auto checkAndSetTerminalPath = [this](QString terminalPath) -> bool {
-        QDir appDir(pSettings->dirs().appDir());
-        QString absoluteTerminalPath = appDir.absoluteFilePath(terminalPath);
-        QFileInfo termPathInfo(absoluteTerminalPath);
-        if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) {
-            mTerminalPath = terminalPath;
-            return true;
-        } else {
-            return false;
+    auto checkAndSetTerminalPath = [this](const TerminalSearchItem &searchItem) -> bool {
+#define DO_CHECK_AND_SET do {                                                                        \
+            if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) { \
+                mTerminalPath = searchItem.appName;                                                  \
+                mTerminalArgumentsPattern = searchItem.argsPattern;                                  \
+                return true;                                                                         \
+            }                                                                                        \
+        } while (0)
+
+        switch (getPathUnixExecSemantics(searchItem.appName)) {
+        case UnixExecSemantics::Absolute: {
+            QFileInfo termPathInfo(searchItem.appName);
+            DO_CHECK_AND_SET;
+            break;
         }
+        case UnixExecSemantics::RelativeToCwd: {
+            QDir appDir(pSettings->dirs().appDir());
+            QString absoluteTerminalPath = appDir.absoluteFilePath(searchItem.appName);
+            QFileInfo termPathInfo(absoluteTerminalPath);
+            DO_CHECK_AND_SET;
+            break;
+        }
+        case UnixExecSemantics::SearchInPath: {
+            auto pathList = getExecutableSearchPaths();
+            for (auto &dir: pathList) {
+                QString absoluteTerminalPath = QDir(dir).absoluteFilePath(searchItem.appName);
+                QFileInfo termPathInfo(absoluteTerminalPath);
+                DO_CHECK_AND_SET;
+            }
+            break;
+        }
+        }
+        return false;
     };
+#undef DO_CHECK_AND_SET
 
     // check saved terminal path
-    if (!checkAndSetTerminalPath(stringValue("terminal_path", ""))) {
+    QString savedTerminalPath = stringValue("terminal_path", "");
+    int savedArgsPattern_ = intValue("terminal_arguments_pattern",
+#ifdef Q_OS_MACOS
+        // macOS: old versions have set Terminal.app as default terminal
+        // fallback to temp file to work with Terminal.app for smooth migration
+        int(AP::WriteCommandLineToTempFileThenTempFilename)
+#else
+        int(AP::MinusEAppendArgs) // Linux: keep old behaviour
+#endif
+    );
+    AP savedArgsPattern = static_cast<AP>(savedArgsPattern_);
+    if (!checkAndSetTerminalPath(TerminalSearchItem{savedTerminalPath, savedArgsPattern})) {
         // if saved terminal path is invalid, try determing terminal from our list
         for (auto terminal: terminals) {
             if (checkAndSetTerminalPath(terminal))
@@ -3691,11 +3752,6 @@ void Settings::Environment::doLoad()
     }
 
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
-#elif defined(Q_OS_MACOS)
-    mTerminalPath = stringValue("terminal_path",
-                                "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal");
-    mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
-#endif
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
     mOpenFilesInSingleInstance = boolValue("open_files_in_single_instance",false);
 }
@@ -3757,13 +3813,11 @@ QString Settings::Environment::terminalPath() const
 
 QString Settings::Environment::terminalPathForExec() const
 {
-#ifdef Q_OS_LINUX
-    // `mTerminalPath` can be reletive (bundled terminal in AppImage).
-    QDir appDir(pSettings->dirs().appDir());
-    return appDir.absoluteFilePath(mTerminalPath);
-#else
-    return mTerminalPath;
-#endif
+    if (getPathUnixExecSemantics(mTerminalPath) == UnixExecSemantics::RelativeToCwd) {
+        QDir appDir(pSettings->dirs().appDir());
+        return appDir.absoluteFilePath(mTerminalPath);
+    } else
+        return mTerminalPath;
 }
 
 void Settings::Environment::setTerminalPath(const QString &terminalPath)
@@ -3779,6 +3833,16 @@ QString Settings::Environment::AStylePath() const
 void Settings::Environment::setAStylePath(const QString &aStylePath)
 {
     mAStylePath = aStylePath;
+}
+
+TerminalEmulatorArgumentsPattern Settings::Environment::terminalArgumentsPattern() const
+{
+    return mTerminalArgumentsPattern;
+}
+
+void Settings::Environment::setTerminalArgumentsPattern(const TerminalEmulatorArgumentsPattern &argsPattern)
+{
+    mTerminalArgumentsPattern = argsPattern;
 }
 
 bool Settings::Environment::useCustomIconSet() const
@@ -3845,10 +3909,9 @@ void Settings::Environment::doSave()
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
-#ifndef Q_OS_WIN
     saveValue("terminal_path",mTerminalPath);
+    saveValue("terminal_arguments_pattern",int(mTerminalArgumentsPattern));
     saveValue("asyle_path",mAStylePath);
-#endif
 
     saveValue("hide_non_support_files_file_view",mHideNonSupportFilesInFileView);
     saveValue("open_files_in_single_instance",mOpenFilesInSingleInstance);
@@ -4111,13 +4174,7 @@ void Settings::Executor::doLoad()
     mProblemCaseValidateType =(ProblemCaseValidateType)intValue("problem_case_validate_type", (int)ProblemCaseValidateType::Exact);
     mRedirectStderrToToolLog = boolValue("redirect_stderr_to_toollog", false);
 
-#ifdef Q_OS_WIN
-    mCaseEditorFontName = stringValue("case_editor_font_name","consolas");
-#elif defined(Q_OS_MACOS)
-    mCaseEditorFontName = stringValue("case_editor_font_name", "Menlo");
-#else
-    mCaseEditorFontName = stringValue("case_editor_font_name","Dejavu Sans Mono");
-#endif
+    mCaseEditorFontName = stringValue("case_editor_font_name",DEFAULT_MONO_FONT);
     mCaseEditorFontSize = intValue("case_editor_font_size",11);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
     int case_timeout = intValue("case_timeout", -1);

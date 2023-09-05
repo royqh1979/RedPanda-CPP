@@ -56,15 +56,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mPaintLock = 0;
     mPainterLock = 0;
     mPainting = false;
-#ifdef Q_OS_WIN
-    mFontDummy = QFont("Consolas",12);
-#elif defined(Q_OS_LINUX)
-    mFontDummy = QFont("terminal",14);
-#elif defined(Q_OS_MACOS)
-    mFontDummy = QFont("Menlo", 14);
-#else
-#error "Not supported!"
-#endif
+    mFontDummy = QFont("monospace",14);
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
     mDocument = std::make_shared<Document>(mFontDummy, mFontDummy, this);
     //fPlugins := TList.Create;

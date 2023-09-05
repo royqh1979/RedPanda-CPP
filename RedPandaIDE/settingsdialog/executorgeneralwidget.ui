@@ -55,9 +55,20 @@
      <property name="checkable">
       <bool>true</bool>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QLineEdit" name="txtExecuteParamaters"/>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelParseArgsInJson">
+        <property name="text">
+         <string>Parsed argv array (represented in JSON):</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextBrowser" name="txtParsedArgsInJson">
+       </widget>
       </item>
      </layout>
     </widget>
@@ -75,7 +86,6 @@
        <widget class="QLabel" name="label_3">
         <property name="font">
          <font>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -88,7 +98,6 @@
        <widget class="QLabel" name="label_2">
         <property name="font">
          <font>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -101,7 +110,6 @@
        <widget class="QLabel" name="label_4">
         <property name="font">
          <font>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>

@@ -22,7 +22,6 @@
 #define APP_SETTSINGS_FILENAME "redpandacpp.ini"
 #ifdef Q_OS_WIN
 #define CONSOLE_PAUSER  "consolepauser.exe"
-#define ASSEMBLER   "nasm.exe"
 #define GCC_PROGRAM     "gcc.exe"
 #define GPP_PROGRAM     "g++.exe"
 #define GDB_PROGRAM     "gdb.exe"
@@ -40,9 +39,8 @@
 #define SDCC_PROGRAM   "sdcc.exe"
 #define PACKIHX_PROGRAM   "packihx.exe"
 #define MAKEBIN_PROGRAM   "makebin.exe"
-#elif defined(Q_OS_LINUX)
+#else // Unix
 #define CONSOLE_PAUSER  "consolepauser"
-#define ASSEMBLER   "nasm"
 #define GCC_PROGRAM     "gcc"
 #define GPP_PROGRAM     "g++"
 #define GDB_PROGRAM     "gdb"
@@ -61,28 +59,6 @@
 #define SDCC_PROGRAM   "sdcc"
 #define PACKIHX_PROGRAM   "packihx"
 #define MAKEBIN_PROGRAM   "makebin"
-#elif defined(Q_OS_MACOS)
-#define CONSOLE_PAUSER  "consolepauser"
-#define ASSEMBLER   "nasm"
-#define GCC_PROGRAM     "gcc"
-#define GPP_PROGRAM     "g++"
-#define GDB_PROGRAM     "gdb"
-#define GDB_SERVER_PROGRAM     "gdbserver"
-#define GDB32_PROGRAM   "gdb32"
-#define MAKE_PROGRAM    "make"
-#define WINDRES_PROGRAM ""
-#define CLEAN_PROGRAM   "rm -rf"
-#define CPP_PROGRAM     "cpp"
-#define GIT_PROGRAM     "git"
-#define CLANG_PROGRAM   "clang"
-#define CLANG_CPP_PROGRAM   "clang++"
-#define LLDB_MI_PROGRAM   "lldb-mi"
-#define LLDB_SERVER_PROGRAM   "lldb-server"
-#define SDCC_PROGRAM   "sdcc"
-#define PACKIHX_PROGRAM   "packihx"
-#define MAKEBIN_PROGRAM   "makebin"
-#else
-#error "Only support windows, Linux and MacOS now!"
 #endif
 
 #define DEV_PROJECT_EXT "dev"
@@ -128,7 +104,7 @@
 #   define MAKEFILE_NAME    "makefile.win"
 #   define XMAKEFILE_NAME    "xmake.lua"
 #   define ALL_FILE_WILDCARD "*.*"
-#elif defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
+#else // Unix
 #   define PATH_SENSITIVITY Qt::CaseSensitive
 #   define PATH_SEPARATOR   ":"
 #   define LINE_BREAKER     "\n"
@@ -142,8 +118,6 @@
 #   define MAKEFILE_NAME    "makefile"
 #   define XMAKEFILE_NAME    "xmake.lua"
 #   define ALL_FILE_WILDCARD "*"
-#else
-#error "Only support windows, linux and macos now!"
 #endif
 
 #define SDCC_IHX_SUFFIX "ihx"
@@ -151,6 +125,40 @@
 #define SDCC_HEX_SUFFIX "hex"
 #define SDCC_REL_SUFFIX "rel"
 
+#if defined(Q_OS_WIN)
+#   define DEFAULT_UI_FONT   "Segoe UI"
+#   define CJK_UI_FONT_SC    "Microsoft YaHei UI"
+#   define CJK_UI_FONT_TC    "Microsoft JhengHei UI"
+#   define CJK_UI_FONT_J     "Yu Gothic UI"
+#   define CJK_UI_FONT_K     "Malgun Gothic"
+#   define DEFAULT_MONO_FONT "Consolas"
+#   define CJK_MONO_FONT_SC  "Microsoft YaHei"
+#   define CJK_MONO_FONT_TC  "Microsoft JhengHei"
+#   define CJK_MONO_FONT_J   "Yu Gothic"
+#   define CJK_MONO_FONT_K   "Malgun Gothic"
+#elif defined(Q_OS_MACOS)
+#   define DEFAULT_UI_FONT   "Helvetica Neue"
+#   define CJK_UI_FONT_SC    "PingFang SC"
+#   define CJK_UI_FONT_TC    "PingFang TC"
+#   define CJK_UI_FONT_J     "Hiragino Sans"
+#   define CJK_UI_FONT_K     "Apple SD Gothic Neo"
+#   define DEFAULT_MONO_FONT "Menlo"
+#   define CJK_MONO_FONT_SC  CJK_UI_FONT_SC
+#   define CJK_MONO_FONT_TC  CJK_UI_FONT_TC
+#   define CJK_MONO_FONT_J   CJK_UI_FONT_J
+#   define CJK_MONO_FONT_K   CJK_UI_FONT_K
+#else // XDG desktop
+#   define DEFAULT_UI_FONT   "Sans"             // use fontconfig default
+#   define CJK_UI_FONT_SC    "Noto Sans CJK SC"
+#   define CJK_UI_FONT_TC    "Noto Sans CJK TC"
+#   define CJK_UI_FONT_J     "Noto Sans CJK JP"
+#   define CJK_UI_FONT_K     "Noto Sans CJK KR"
+#   define DEFAULT_MONO_FONT "Monospace"        // use fontconfig default
+#   define CJK_MONO_FONT_SC  CJK_UI_FONT_SC     // intentionally: the "Mono" version is not stricly monospaced either, and has less weights
+#   define CJK_MONO_FONT_TC  CJK_UI_FONT_TC
+#   define CJK_MONO_FONT_J   CJK_UI_FONT_J
+#   define CJK_MONO_FONT_K   CJK_UI_FONT_K
+#endif
 
 class SystemConsts
 {

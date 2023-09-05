@@ -575,6 +575,9 @@ public:
         QString AStylePath() const;
         void setAStylePath(const QString &aStylePath);
 
+        TerminalEmulatorArgumentsPattern terminalArgumentsPattern() const;
+        void setTerminalArgumentsPattern(const TerminalEmulatorArgumentsPattern &argsPattern);
+
         bool useCustomIconSet() const;
         void setUseCustomIconSet(bool newUseCustomIconSet);
 
@@ -606,6 +609,7 @@ public:
         QString mDefaultOpenFolder;
         QString mTerminalPath;
         QString mAStylePath;
+        TerminalEmulatorArgumentsPattern mTerminalArgumentsPattern;
         bool mHideNonSupportFilesInFileView;
         bool mOpenFilesInSingleInstance;
         // _Base interface

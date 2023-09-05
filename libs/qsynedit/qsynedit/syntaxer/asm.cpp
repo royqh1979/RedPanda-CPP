@@ -108,7 +108,7 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".seh_setframe",".seh_stackalloc",".seh_pushreg",
     ".seh_savereg",".seh_savemm",".seh_savexmm",
     ".seh_pushframe",".seh_scope",
-#elif defined(Q_OS_LINUX)
+#else // Unix
     ".cfi_sections",".cfi_startproc",".cfi_endproc",
     ".cfi_personality",".cfi_personality_id",".cfi_fde_data",
     ".cfi_lsda",".cfi_inline_lsda",".cfi_def_cfa",

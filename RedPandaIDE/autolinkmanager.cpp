@@ -62,11 +62,13 @@ void AutolinkManager::load()
         file.write(content);
         file.close();
         preFile.close();
-#elif defined(Q_OS_LINUX)
-        QFile preFile(":/config/autolink-linux.json");
+#elif defined(Q_OS_MACOS)
+        return;
+#else // XDG desktop
+        QFile preFile(":/config/autolink-xdg.json");
         if (!preFile.open(QFile::ReadOnly)) {
             throw FileError(QObject::tr("Can't open file '%1' for read.")
-                            .arg(":/config/autolink-linux.json"));
+                            .arg(":/config/autolink-xdg.json"));
         }
         QByteArray content=preFile.readAll();
         if (!file.open(QFile::WriteOnly|QFile::Truncate)) {
@@ -76,8 +78,6 @@ void AutolinkManager::load()
         file.write(content);
         file.close();
         preFile.close();
-#else
-        return;
 #endif
     }
     if (file.open(QFile::ReadOnly)) {

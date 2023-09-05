@@ -18,6 +18,7 @@
 #define ENVIRONMENTPROGRAMSWIDGET_H
 
 #include "settingswidget.h"
+#include "utils.h"
 
 namespace Ui {
 class EnvironmentProgramsWidget;
@@ -30,6 +31,10 @@ class EnvironmentProgramsWidget : public SettingsWidget
 public:
     explicit EnvironmentProgramsWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
     ~EnvironmentProgramsWidget();
+    void hideMacosSpecificPattern();
+
+private:
+    void testTerminal(const TerminalEmulatorArgumentsPattern &pattern);
 
 private:
     Ui::EnvironmentProgramsWidget *ui;
@@ -41,6 +46,13 @@ protected:
     void updateIcons(const QSize &size) override;
 private slots:
     void on_btnChooseTerminal_clicked();
+    void on_txtTerminal_textChanged(const QString &terminalPath);
+    void on_pbImplicitSystem_clicked();
+    void on_pbMinusEAppendArgs_clicked();
+    void on_pbMinusXAppendArgs_clicked();
+    void on_pbMinusMinusAppendArgs_clicked();
+    void on_pbMinusEAppendCommandLine_clicked();
+    void on_pbWriteCommandLineToTempFileThenTempFilename_clicked();
 };
 
 #endif // ENVIRONMENTPROGRAMSWIDGET_H

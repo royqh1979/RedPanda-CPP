@@ -17,7 +17,7 @@
 #include "runner.h"
 #include <QDebug>
 
-Runner::Runner(const QString &filename, const QString &arguments, const QString &workDir
+Runner::Runner(const QString &filename, const QStringList &arguments, const QString &workDir
                ,QObject *parent) : QThread(parent),
     mPausing(false),
     mStop(false),
