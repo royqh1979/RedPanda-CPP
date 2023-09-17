@@ -1,0 +1,52 @@
+[
+    {
+        "group": "Bundled",
+        "terminals": [
+            {
+                "name": "UTF-8 compatible Console Host",
+                "path": "./OpenConsole.exe",
+                "argsPattern": "$term -- $argv"
+            }
+        ]
+    },
+    {
+        "group": "System",
+        "terminals": [
+            {
+                "name": "System Default",
+                "path": "",
+                "argsPattern": "$argv"
+            }
+        ]
+    },
+    {
+        "group": "Predefined arguments pattern (will not be searched)",
+        "terminals": [
+            {
+                "name": "Console Host",
+                "path": "conhost.exe",
+                "argsPattern": "$term -- $argv"
+            },
+            {
+                "name": "Windows Terminal",
+                "path": "wt.exe",
+                "argsPattern": "$term -- $argv"
+            },
+            {
+                "name": "Alacritty",
+                "path": "alacritty.exe",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "Konsole",
+                "path": "konsole.exe",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "Mintty",
+                "path": "mintty.exe",
+                "argsPattern": "$term -e $argv"
+            }
+        ]
+    }
+]

@@ -2670,103 +2670,74 @@ Are you really want to continue?</oldsource>
         <source>Editors share one code parser</source>
         <translation>编辑器共享同一个代码分析器</translation>
     </message>
-</context>
-<context>
-    <name>EnvironmentProgramsWidget</name>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="14"/>
-        <source>Form</source>
-        <translation>表单</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="23"/>
-        <source>...</source>
-        <translation>...</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="34"/>
-        <source>Terminal</source>
-        <translation>终端</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="41"/>
-        <source>Terminal emulator arguments pattern</source>
-        <translation>终端模拟器参数模式</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="54"/>
-        <source>sh -c &quot;echo hello; sleep 3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="74"/>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="95"/>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="116"/>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="137"/>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="158"/>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="179"/>
-        <source>Test</source>
-        <translation>测试</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="88"/>
-        <source>term -e sh -c &quot;echo hello; sleep 3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="109"/>
-        <source>term -x sh -c &quot;echo hello; sleep 3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="130"/>
-        <source>term -- sh -c &quot;echo hello; sleep 3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="151"/>
-        <source>term -e &quot;sh -c \&quot;echo hello; sleep 3\&quot;&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="172"/>
-        <source>term /tmp/redpanda_XXXXXX.command</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="186"/>
-        <source>On clicking “Test” for the correct pattern, the terminal emulator</source>
-        <translation>点击正确的模式对应的 “测试” 按钮，终端模拟器将会</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="193"/>
-        <source>• pops up;</source>
-        <translation>• 弹出；</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="200"/>
-        <source>• shows “hello”; and</source>
-        <translation>• 显示 “hello”；</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.ui" line="207"/>
-        <source>• quits in 3 seconds.</source>
-        <translation>• 并在 3 秒后关闭。</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.cpp" line="109"/>
-        <source>Choose Terminal Program</source>
-        <translation>选择终端程序</translation>
-    </message>
-    <message>
-        <location filename="../settingsdialog/environmentprogramswidget.cpp" line="59"/>
-        <source>All files (%1)</source>
-        <translation>所有文件 (%1)</translation>
-    </message>
-    <message>
-        <source>All files (*.*)</source>
-        <translation type="vanished">所有文件 (*.*)</translation>
-    </message>
+</context><context>
+<name>EnvironmentProgramsWidget</name>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="14"/>
+    <source>Form</source>
+    <translation>表单</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="20"/>
+    <source>Use custom terminal</source>
+    <translation>使用自定义终端</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="49"/>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="63"/>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="98"/>
+    <source>...</source>
+    <translation>...</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="81"/>
+    <source>Cmd. preview</source>
+    <translation>命令行预览</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="60"/>
+    <source>Auto Detect Terminal Arguments Pattern</source>
+    <translation>自动检测终端参数模式</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="74"/>
+    <source>Terminal</source>
+    <translation>终端</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="95"/>
+    <source>Test Command</source>
+    <translation>测试命令</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="35"/>
+    <source>$term -e $argv</source>
+    <translation type="unfinished"></translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="42"/>
+    <source>Args. pattern</source>
+    <translation>参数模式</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.ui" line="88"/>
+    <source>term -e sh -c &quot;echo hello; sleep 3&quot;</source>
+    <translation type="unfinished"></translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.cpp" line="108"/>
+    <source>Choose Terminal Program</source>
+    <translation>选择终端程序</translation>
+</message>
+<message>
+    <location filename="../settingsdialog/environmentprogramswidget.cpp" line="110"/>
+    <source>All files (%1)</source>
+    <translation>所有文件 (%1)</translation>
+</message>
+<message>
+    <source>All files (*.*)</source>
+    <translation type="vanished">所有文件 (*.*)</translation>
+</message>
 </context>
 <context>
     <name>EnvironmentShortcutModel</name>
@@ -9632,6 +9603,16 @@ Are you really want to continue?</oldsource>
         <location filename="../problems/freeprojectsetformat.cpp" line="188"/>
         <source>Error when writing file &quot;%1&quot;.</source>
         <translation>在写入文件“%1”时出错。</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.cpp" line="74"/>
+        <source>Auto Detection Failed</source>
+        <translation>自动检测失败</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentprogramswidget.cpp" line="75"/>
+        <source>Failed to detect terminal arguments pattern for “%1”.</source>
+        <translation>无法检测适用于 “%1” 的终端参数模式。</translation>
     </message>
 </context>
 <context>

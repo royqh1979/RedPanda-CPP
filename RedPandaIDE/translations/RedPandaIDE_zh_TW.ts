@@ -1792,51 +1792,31 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Terminal emulator arguments pattern</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>sh -c &quot;echo hello; sleep 3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Test</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>term -e sh -c &quot;echo hello; sleep 3&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>term -x sh -c &quot;echo hello; sleep 3&quot;</source>
+        <source>Auto Detect Terminal Arguments Pattern</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>term -- sh -c &quot;echo hello; sleep 3&quot;</source>
+        <source>Test Command</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>term -e &quot;sh -c \&quot;echo hello; sleep 3\&quot;&quot;</source>
+        <source>$term -e $argv</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>On clicking “Test” for the correct pattern, the terminal emulator</source>
+        <source>Use custom terminal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>• pops up;</source>
+        <source>Args. pattern</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>• shows “hello”; and</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>• quits in 3 seconds.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>term /tmp/redpanda_XXXXXX.command</source>
+        <source>Cmd. preview</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6600,6 +6580,14 @@
     </message>
     <message>
         <source>Replaces lcall/ljmp with acall/ajmp</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto Detection Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to detect terminal arguments pattern for “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

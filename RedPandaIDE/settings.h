@@ -575,8 +575,8 @@ public:
         QString AStylePath() const;
         void setAStylePath(const QString &aStylePath);
 
-        TerminalEmulatorArgumentsPattern terminalArgumentsPattern() const;
-        void setTerminalArgumentsPattern(const TerminalEmulatorArgumentsPattern &argsPattern);
+        QString terminalArgumentsPattern() const;
+        void setTerminalArgumentsPattern(const QString &argsPattern);
 
         bool useCustomIconSet() const;
         void setUseCustomIconSet(bool newUseCustomIconSet);
@@ -593,7 +593,22 @@ public:
         double iconZoomFactor() const;
         void setIconZoomFactor(double newIconZoomFactor);
 
+        QJsonArray availableTerminals() const;
+        void setAvailableTerminals(const QJsonArray &availableTerminals);
+
+        QMap<QString, QString> predefinedTerminalArgumentsPattern() const;
+        void setPredefinedTerminalArgumentsPattern(const QMap<QString, QString> &newPredefinedTerminalArgumentsPattern);
+        // it should be `std::optional<QString>`.
+        // `std::unique_ptr` is a work around for Debian 10, where Qt 5.11 doesnt recognize `CONFIG += c++17`,
+        // and macOS, where official Qt 5.15 is built against macOS 10.13 and `std::optional` is explicitly disabled.
+        std::unique_ptr<QString> queryPredefinedTerminalArgumentsPattern(const QString &executable) const;
+
+        bool useCustomTerminal() const;
+        void setUseCustomTerminal(bool newUseCustomTerminal);
+
     private:
+        bool checkAndSetTerminal(QString terminalPath, QString argsPattern);
+        bool updateTerminalList();
 
         //Appearance
         QString mTheme;
@@ -609,7 +624,9 @@ public:
         QString mDefaultOpenFolder;
         QString mTerminalPath;
         QString mAStylePath;
-        TerminalEmulatorArgumentsPattern mTerminalArgumentsPattern;
+        QString mTerminalArgumentsPattern;
+        QMap<QString, QString> mPredefinedTerminalArgumentsPattern;
+        bool mUseCustomTerminal;
         bool mHideNonSupportFilesInFileView;
         bool mOpenFilesInSingleInstance;
         // _Base interface

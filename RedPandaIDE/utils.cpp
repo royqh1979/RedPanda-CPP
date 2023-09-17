@@ -723,49 +723,51 @@ QString escapeArgument(const QString &arg, [[maybe_unused]] bool isFirstArg)
 #endif
 }
 
-auto wrapCommandForTerminalEmulator(const QString &terminal, const TerminalEmulatorArgumentsPattern &argsPattern, const QStringList &argsWithArgv0)
+auto wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
     -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
 {
-    switch (argsPattern) {
-    case TerminalEmulatorArgumentsPattern::ImplicitSystem:
-    default: {
-        return {argsWithArgv0[0], argsWithArgv0.mid(1), nullptr};
-    }
-    case TerminalEmulatorArgumentsPattern::MinusEAppendArgs: {
-        return {terminal, QStringList{"-e"} + argsWithArgv0, nullptr};
-    }
-    case TerminalEmulatorArgumentsPattern::MinusXAppendArgs: {
-        return {terminal, QStringList{"-x"} + argsWithArgv0, nullptr};
-    }
-    case TerminalEmulatorArgumentsPattern::MinusMinusAppendArgs: {
-        return {terminal, QStringList{"--"} + argsWithArgv0, nullptr};
-    }
-    case TerminalEmulatorArgumentsPattern::MinusEAppendCommandLine: {
-        QStringList escapedArgs;
-        for (int i = 0; i < argsWithArgv0.length(); i++) {
-            auto &arg = argsWithArgv0[i];
-            auto escaped = escapeArgument(arg, i == 0);
-            escapedArgs.append(escaped);
-        }
-        return {terminal, QStringList{"-e", escapedArgs.join(' ')}, nullptr};
-    }
-    case TerminalEmulatorArgumentsPattern::WriteCommandLineToTempFileThenTempFilename: {
-        auto fileOwner = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
-        if (fileOwner->open()) {
+    QStringList wrappedArgs;
+    std::unique_ptr<QTemporaryFile> temproryFile;
+    for (const QString &patternItem : argsPattern) {
+        if (patternItem == "$term")
+            wrappedArgs.push_back(terminal);
+        else if (patternItem == "$argv")
+            wrappedArgs.append(payloadArgsWithArgv0);
+        else if (patternItem == "$command") {
             QStringList escapedArgs;
-            for (int i = 0; i < argsWithArgv0.length(); i++) {
-                auto &arg = argsWithArgv0[i];
+            for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                auto &arg = payloadArgsWithArgv0[i];
                 auto escaped = escapeArgument(arg, i == 0);
                 escapedArgs.append(escaped);
             }
-            fileOwner->write(escapedArgs.join(' ').toUtf8());
-            fileOwner->write(QString('\n').toUtf8());
-            fileOwner->flush();
-        }
-        QFile(fileOwner->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
-        return {terminal, QStringList{fileOwner->fileName()}, std::move(fileOwner)};
+            wrappedArgs.push_back(escapedArgs.join(' '));
+        } else if (patternItem == "$tmpfile") {
+            temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
+            if (temproryFile->open()) {
+                QStringList escapedArgs;
+                for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                    auto &arg = payloadArgsWithArgv0[i];
+                    auto escaped = escapeArgument(arg, i == 0);
+                    escapedArgs.append(escaped);
+                }
+                temproryFile->write(escapedArgs.join(' ').toUtf8());
+                temproryFile->write("\n");
+                temproryFile->flush();
+                QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+            }
+            wrappedArgs.push_back(temproryFile->fileName());
+        } else
+            wrappedArgs.push_back(patternItem);
     }
-    }
+    if (wrappedArgs.empty())
+        return {QString(""), QStringList{}, std::move(temproryFile)};
+    return {wrappedArgs[0], wrappedArgs.mid(1), std::move(temproryFile)};
+}
+
+auto wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
+    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
+{
+    return wrapCommandForTerminalEmulator(terminal, splitProcessCommand(argsPattern), payloadArgsWithArgv0);
 }
 
 QString defaultShell()

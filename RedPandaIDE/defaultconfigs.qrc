@@ -3,5 +3,7 @@
         <file alias="autolink.json">resources/autolink.json</file>
         <file alias="codesnippets.json">resources/codesnippets.json</file>
         <file alias="autolink-xdg.json">resources/autolink-xdg.json</file>
+        <file alias="terminal-windows.json">resources/terminal-windows.json</file>
+        <file alias="terminal-unix.json">resources/terminal-unix.json</file>
     </qresource>
 </RCC>
