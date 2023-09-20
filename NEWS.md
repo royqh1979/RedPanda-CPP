@@ -4,6 +4,9 @@ Red Panda C++ Version 2.25
   - change: Symbol completion of '{' won't insert extra new lines.
   - fix: "move selection up/down" of whole lines selection are no correctly handled.
   - enhancement: Improvement of terminal support ( from cyano.CN )
+  - enhancement: Virtual Terminal Sequences Support in windows 10/11 ( from cyano.CN )
+  
+  
   
 Red Panda C++ Version 2.24
 

@@ -30,6 +30,9 @@ using std::string;
 #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #endif
+#ifndef ENABLE_PROCESSED_OUTPUT
+#define ENABLE_PROCESSED_OUTPUT 0x0001
+#endif
 #define MAX_COMMAND_LENGTH 32768
 #define MAX_ERROR_LENGTH 2048
 
@@ -170,11 +173,11 @@ void EnableVtSequence() {
     DWORD mode;
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (GetConsoleMode(hConsole, &mode))
-        SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT);
 
     hConsole = GetStdHandle(STD_ERROR_HANDLE);
     if (GetConsoleMode(hConsole, &mode))
-        SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT);
 }
 
 int main(int argc, char** argv) {
