@@ -27,6 +27,9 @@ using std::string;
 #ifndef WINBOOL
 #define WINBOOL BOOL
 #endif
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
 #define MAX_COMMAND_LENGTH 32768
 #define MAX_ERROR_LENGTH 2048
 
@@ -163,6 +166,17 @@ DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG 
     return result;
 }
 
+void EnableVtSequence() {
+    DWORD mode;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (GetConsoleMode(hConsole, &mode))
+        SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+    hConsole = GetStdHandle(STD_ERROR_HANDLE);
+    if (GetConsoleMode(hConsole, &mode))
+        SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+}
+
 int main(int argc, char** argv) {
 
     const char *sharedMemoryId;
@@ -220,6 +234,7 @@ int main(int argc, char** argv) {
     } else {
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
     }
+    EnableVtSequence();
 
     HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
     int BUF_SIZE=1024;
