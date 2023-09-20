@@ -121,16 +121,6 @@ enum class UnixExecSemantics {
     SearchInPath,
 };
 
-enum class TerminalEmulatorArgumentsPattern {
-    ImplicitSystem = 0,      //          bash -c  "echo hello, world; sleep 3"
-    MinusEAppendArgs,        // term -e  bash -c  "echo hello, world; sleep 3"   # xterm-compatible
-    MinusXAppendArgs,        // term -x  bash -c  "echo hello, world; sleep 3"   # some VTE-based
-    MinusMinusAppendArgs,    // term --  bash -c  "echo hello, world; sleep 3"   # gnome-terminal, kgx
-    MinusEAppendCommandLine, // term -e "bash -c \"echo hello, world; sleep 3\"" # some lightweighted; alternative form for VTE-based
-
-    WriteCommandLineToTempFileThenTempFilename = 6226700, // macOS Terminal.app and iTerm2.app; 6226700 is how you dial “macOS00”
-};
-
 FileType getFileType(const QString& filename);
 QStringList splitProcessCommand(const QString& cmd);
 
@@ -189,7 +179,10 @@ QStringList getExecutableSearchPaths();
 
 QString escapeArgument(const QString &arg, bool isFirstArg);
 
-auto wrapCommandForTerminalEmulator(const QString &terminal, const TerminalEmulatorArgumentsPattern &argsPattern, const QStringList &argsWithArgv0)
+auto wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
+    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>;
+
+auto wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
     -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>;
 
 QString defaultShell();

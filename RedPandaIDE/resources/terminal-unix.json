@@ -1,0 +1,207 @@
+[
+    {
+        "group": "User Installed",
+        "terminals": [
+            {
+                "name": "Alacritty",
+                "path": "alacritty",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "cool-retro-term",
+                "path": "cool-retro-term",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "CoreTerminal",
+                "path": "coreterminal",
+                "argsPattern": "$term -e \"$command\"",
+                "comment": "The pair of quotation mark around `$command` is only a visual symbol, not actually required."
+            },
+            {
+                "name": "iTerm2",
+                "path": "/Applications/iTerm.app/Contents/MacOS/iTerm2",
+                "argsPattern": "$term $tmpfile"
+            },
+            {
+                "name": "kermit",
+                "path": "kermit",
+                "argsPattern": "$term -e \"$command\""
+            },
+            {
+                "name": "Kitty",
+                "path": "kitty",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "ROXTerm",
+                "path": "roxterm",
+                "argsPattern": "$term -e \"$command\""
+            },
+            {
+                "name": "sakura",
+                "path": "sakura",
+                "argsPattern": "$term -e \"$command\""
+            },
+            {
+                "name": "Termit",
+                "path": "termit",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "Termite",
+                "path": "termite",
+                "argsPattern": "$term -e \"$command\""
+            },
+            {
+                "name": "Tilix",
+                "path": "tilix",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "Wayst",
+                "path": "wayst",
+                "argsPattern": "$term -e $argv"
+            }
+        ]
+    },
+    {
+        "group": "Desktop Default",
+        "terminals": [
+            {
+                "name": "Deepin Terminal",
+                "path": "deepin-terminal",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "Konsole (KDE)",
+                "path": "konsole",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "GNOME Terminal",
+                "path": "gnome-terminal",
+                "argsPattern": "$term -- $argv"
+            },
+            {
+                "name": "GNOME Terminator",
+                "path": "terminator",
+                "argsPattern": "$term -x $argv"
+            },
+            {
+                "name": "LXTerminal (LXDE)",
+                "path": "lxterminal",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "MATE Terminal",
+                "path": "mate-terminal",
+                "argsPattern": "$term -x $argv"
+            },
+            {
+                "name": "QTerminal (LXQt)",
+                "path": "qterminal",
+                "argsPattern": "$term -e $argv"
+            },
+            {
+                "name": "Terminal.app (macOS 10.14 or earlier)",
+                "path": "/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal",
+                "argsPattern": "$term $tmpfile"
+            },
+            {
+                "name": "Terminal.app (macOS 10.15 or later)",
+                "path": "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal",
+                "argsPattern": "$term $tmpfile"
+            },
+            {
+                "name": "Terminology (Enlightenment)",
+                "path": "terminology",
+                "argsPattern": "$term -e \"$command\""
+            },
+            {
+                "name": "Xfce Terminal",
+                "path": "xfce4-terminal",
+                "argsPattern": "$term -x $argv"
+            }
+        ]
+    },
+    {
+        "group": "Bundled",
+        "terminals": [
+            {
+                "name": "Alacritty (Bundled)",
+                "path": "./alacritty",
+                "argsPattern": "$term -e $argv"
+            }
+        ]
+    },
+    {
+        "group": "With minor issue",
+        "terminals": [
+            {
+                "name": "Elementary Terminal",
+                "path": "io.elementary.terminal",
+                "argsPattern": "$term -e \"$command\"",
+                "comment": "confirm to quit"
+            },
+            {
+                "name": "foot",
+                "path": "foot",
+                "argsPattern": "$term -e $argv",
+                "comment": "wayland only"
+            },
+            {
+                "name": "GNOME Console",
+                "path": "kgx",
+                "argsPattern": "$term -- $argv",
+                "comment": "confirm to quit"
+            },
+            {
+                "name": "mlterm",
+                "path": "mlterm",
+                "argsPattern": "$term -e $argv",
+                "comment": "no out of box HiDPI support"
+            },
+            {
+                "name": "st",
+                "path": "st",
+                "argsPattern": "$term -e $argv",
+                "comment": "no out of box HiDPI support"
+            },
+            {
+                "name": "urxvt",
+                "path": "urxvt",
+                "argsPattern": "$term -e $argv",
+                "comment": "no out of box HiDPI support"
+            },
+            {
+                "name": "xterm",
+                "path": "xterm",
+                "argsPattern": "$term -e $argv",
+                "comment": "no out of box HiDPI support"
+            },
+            {
+                "name": "zutty",
+                "path": "zutty",
+                "argsPattern": "$term -e $argv",
+                "comment": "no out of box HiDPI support"
+            }
+        ]
+    },
+    {
+        "group": "Unavailable",
+        "terminals": [],
+        "unavailableTerminals": {
+            "aterm": "AUR broken, unable to test",
+            "eterm": "AUR broken, unable to test",
+            "guake": "drop down terminal",
+            "hyper": "no execute support",
+            "liri-terminal": "no execute support",
+            "rxvt": "no unicode support",
+            "shellinabox": "AUR broken, unable to test",
+            "station": "no execute support",
+            "tilda": "drop down terminal",
+            "yakuake": "drop down terminal"
+        }
+    }
+]

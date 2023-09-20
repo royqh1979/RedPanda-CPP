@@ -27,6 +27,9 @@
 #include <QScreen>
 #include <QDesktopWidget>
 #include <QRegularExpression>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #ifdef Q_OS_LINUX
 #include <sys/sysinfo.h>
 #endif
@@ -3608,146 +3611,46 @@ void Settings::Environment::doLoad()
         mDefaultOpenFolder = QDir::currentPath();
     }
 
-    using AP = TerminalEmulatorArgumentsPattern;
-    struct TerminalSearchItem {
-        QString appName;
-        AP argsPattern;
-    };
-
 #ifdef Q_OS_WINDOWS
-    const TerminalSearchItem terminals[] {
-        /* explicitly installed terminals */
-
-        /* system */
-        {"conhost.exe", AP::ImplicitSystem}, // dummy for system default
-
-        /* will not actually be searched, just a list for users who dig into here */
-        {"conhost.exe",                              AP::MinusMinusAppendArgs}, // yes, it accepts GNU-style (--) arguments
-        {"wt.exe",                                   AP::MinusMinusAppendArgs}, // generally okay, but “Test” does not work
-        {"alacritty.exe",                            AP::MinusEAppendArgs},     // GPU-accelerated
-        {"C:/Program Files/Alacritty/alacritty.exe", AP::MinusEAppendArgs},
-        {"C:/Program Files/konsole/bin/konsole.exe", AP::MinusEAppendArgs},     // generally okay, but “Test” does not work
-        {"C:/Program Files/Git/usr/bin/mintty.exe",  AP::MinusEAppendArgs},     // Git Mintty
-        {"C:/msys64/usr/bin/mintty.exe",             AP::MinusEAppendArgs},     // MSYS2 Mintty
-    };
-#else
-    const TerminalSearchItem terminals[] {
-        /* modern, specialized or stylized terminal -- user who installed them are likely to prefer them */
-        {"alacritty", AP::MinusEAppendArgs}, // GPU-accelerated
-        {"kitty",     AP::MinusEAppendArgs}, // GPU-accelerated
-        {"wayst",     AP::MinusEAppendArgs}, // GPU-accelerated
-
-        {"coreterminal", AP::MinusEAppendCommandLine}, // lightweighted
-        {"kermit",       AP::MinusEAppendCommandLine}, // lightweighted
-        {"roxterm",      AP::MinusEAppendCommandLine}, // lightweighted
-        {"sakura",       AP::MinusEAppendCommandLine}, // lightweighted
-        {"termit",       AP::MinusEAppendArgs},        // Lua scripting
-        {"termite",      AP::MinusEAppendCommandLine}, // tiling, keyboard-centric
-        {"tilix",        AP::MinusEAppendArgs},        // tiling
-
-        {"cool-retro-term", AP::MinusEAppendArgs}, // old CRT style
-
-        /* default terminal for XDG DE -- macOS user who installed them are likely to prefer them */
-        {"deepin-terminal",        AP::MinusEAppendArgs},        // DDE
-        {"konsole",                AP::MinusEAppendArgs},        // KDE
-        {"gnome-terminal",         AP::MinusMinusAppendArgs},    // GNOME
-        {"io.elementary.terminal", AP::MinusEAppendCommandLine}, // Pantheon (elementary OS)
-        {"lxterminal",             AP::MinusEAppendArgs},        // LXDE
-        {"mate-terminal",          AP::MinusXAppendArgs},        // MATE
-        {"qterminal",              AP::MinusEAppendArgs},        // LXQt
-        {"terminator",             AP::MinusXAppendArgs},        // tiling, also seen in SBC images
-        {"terminology",            AP::MinusEAppendCommandLine}, // Enlightenment
-        {"xfce4-terminal",         AP::MinusXAppendArgs},        // Xfce
-
-        /* bundled terminal in AppImage */
-        {"./alacritty", AP::MinusEAppendArgs},
-
-        /* compatible, with minor issue */
-        {"kgx", AP::MinusMinusAppendArgs}, // GNOME Console, confirm to quit
-
-        /* compatible, without out-of-box hidpi support on Linux */
-        {"mlterm", AP::MinusEAppendArgs},
-        {"st",     AP::MinusEAppendArgs},
-        {"urxvt",  AP::MinusEAppendArgs},
-        {"xterm",  AP::MinusEAppendArgs},
-        {"zutty",  AP::MinusEAppendArgs},
-
-        /* macOS system */
-        {"/Applications/iTerm.app/Contents/MacOS/iTerm2",                       AP::WriteCommandLineToTempFileThenTempFilename},
-        {"/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal", AP::WriteCommandLineToTempFileThenTempFilename},
-        {"/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal",        AP::WriteCommandLineToTempFileThenTempFilename},
-
-        /* fallbacks */
-        {"foot", AP::MinusEAppendArgs}, // Wayland only
-
-        /* parameter incompatible */
-        // "guake",         // drop down
-        // "hyper",         // no execute support
-        // "liri-terminal", // no execute support
-        // "station",       // no execute support
-        // "tilda",         // drop down
-
-        /* incompatible -- other */
-        // "aterm",       // AUR broken, unable to test
-        // "eterm",       // AUR broken, unable to test
-        // "rxvt",        // no unicode support
-        // "shellinabox", // AUR broken, unable to test
-    };
+# if defined (__aarch64__) || defined(_M_ARM64) || defined (_M_ARM64EC)
+    // the only native MinGW toolchain (LLVM-MinGW) does not have local codepage support
+    // prefer UTF-8 compatible OpenConsole.exe
+    mUseCustomTerminal = boolValue("use_custom_terminal", true);
+# else // x86 or x64
+    mUseCustomTerminal = boolValue("use_custom_terminal", false);
+# endif
+#else // UNIX
+    mUseCustomTerminal = true;
 #endif
 
-    auto checkAndSetTerminalPath = [this](const TerminalSearchItem &searchItem) -> bool {
-#define DO_CHECK_AND_SET do {                                                                        \
-            if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) { \
-                mTerminalPath = searchItem.appName;                                                  \
-                mTerminalArgumentsPattern = searchItem.argsPattern;                                  \
-                return true;                                                                         \
-            }                                                                                        \
-        } while (0)
-
-        switch (getPathUnixExecSemantics(searchItem.appName)) {
-        case UnixExecSemantics::Absolute: {
-            QFileInfo termPathInfo(searchItem.appName);
-            DO_CHECK_AND_SET;
-            break;
-        }
-        case UnixExecSemantics::RelativeToCwd: {
-            QDir appDir(pSettings->dirs().appDir());
-            QString absoluteTerminalPath = appDir.absoluteFilePath(searchItem.appName);
-            QFileInfo termPathInfo(absoluteTerminalPath);
-            DO_CHECK_AND_SET;
-            break;
-        }
-        case UnixExecSemantics::SearchInPath: {
-            QStringList pathList = getExecutableSearchPaths();
-            for (const QString &dir: pathList) {
-                QString absoluteTerminalPath = QDir(dir).absoluteFilePath(searchItem.appName);
-                QFileInfo termPathInfo(absoluteTerminalPath);
-                DO_CHECK_AND_SET;
-            }
-            break;
-        }
-        }
-        return false;
-    };
-#undef DO_CHECK_AND_SET
+#ifdef Q_OS_WINDOWS
+    QString terminalListFilename(":/config/terminal-windows.json");
+#else // UNIX
+    QString terminalListFilename(":/config/terminal-unix.json");
+#endif
+    QFile terminalListFile(terminalListFilename);
+    if (!terminalListFile.open(QFile::ReadOnly))
+        throw FileError(QObject::tr("Can't open file '%1' for read.")
+                            .arg(terminalListFilename));
+    QByteArray terminalListContent = terminalListFile.readAll();
+    QJsonDocument terminalListDocument(QJsonDocument::fromJson(terminalListContent));
 
     // check saved terminal path
     QString savedTerminalPath = stringValue("terminal_path", "");
-    int savedArgsPattern_ = intValue("terminal_arguments_pattern",
-#ifdef Q_OS_MACOS
-        // macOS: old versions have set Terminal.app as default terminal
-        // fallback to temp file to work with Terminal.app for smooth migration
-        int(AP::WriteCommandLineToTempFileThenTempFilename)
-#else
-        int(AP::MinusEAppendArgs) // Linux: keep old behaviour
-#endif
-    );
-    AP savedArgsPattern = static_cast<AP>(savedArgsPattern_);
-    if (!checkAndSetTerminalPath(TerminalSearchItem{savedTerminalPath, savedArgsPattern})) {
-        // if saved terminal path is invalid, try determing terminal from our list
-        for (auto terminal: terminals) {
-            if (checkAndSetTerminalPath(terminal))
-                break;
+    QString savedArgsPattern = stringValue("terminal_arguments_pattern", "");
+    bool terminalSet = checkAndSetTerminal(savedTerminalPath, savedArgsPattern);
+
+    // determing terminal (if not set yet) and build predefined arguments pattern map from our list
+    for (const auto &terminalGroup: terminalListDocument.array()) {
+        const QJsonArray &terminals = terminalGroup.toObject()["terminals"].toArray();
+        for (const auto &terminal_: terminals) {
+            const QJsonObject &terminal = terminal_.toObject();
+            const QString &path = terminal["path"].toString();
+            const QString &executable = QFileInfo(path).fileName();
+            const QString &pattern = terminal["argsPattern"].toString();
+            mPredefinedTerminalArgumentsPattern[executable] = pattern;
+            if (!terminalSet)
+                terminalSet = checkAndSetTerminal(path, pattern);
         }
     }
 
@@ -3835,12 +3738,12 @@ void Settings::Environment::setAStylePath(const QString &aStylePath)
     mAStylePath = aStylePath;
 }
 
-TerminalEmulatorArgumentsPattern Settings::Environment::terminalArgumentsPattern() const
+QString Settings::Environment::terminalArgumentsPattern() const
 {
     return mTerminalArgumentsPattern;
 }
 
-void Settings::Environment::setTerminalArgumentsPattern(const TerminalEmulatorArgumentsPattern &argsPattern)
+void Settings::Environment::setTerminalArgumentsPattern(const QString &argsPattern)
 {
     mTerminalArgumentsPattern = argsPattern;
 }
@@ -3895,6 +3798,89 @@ void Settings::Environment::setIconZoomFactor(double newIconZoomFactor)
     mIconZoomFactor = newIconZoomFactor;
 }
 
+QMap<QString, QString> Settings::Environment::predefinedTerminalArgumentsPattern() const
+{
+    return mPredefinedTerminalArgumentsPattern;
+}
+
+void Settings::Environment::setPredefinedTerminalArgumentsPattern(const QMap<QString, QString> &newPredefinedTerminalArgumentsPattern)
+{
+    mPredefinedTerminalArgumentsPattern = newPredefinedTerminalArgumentsPattern;
+}
+
+std::unique_ptr<QString> Settings::Environment::queryPredefinedTerminalArgumentsPattern(const QString &executable) const
+{
+    auto it = mPredefinedTerminalArgumentsPattern.find(executable);
+    if (it != mPredefinedTerminalArgumentsPattern.end())
+        return std::make_unique<QString>(*it);
+    else
+        return nullptr;
+}
+
+bool Settings::Environment::useCustomTerminal() const
+{
+    return mUseCustomTerminal;
+}
+
+void Settings::Environment::setUseCustomTerminal(bool newUseCustomTerminal)
+{
+    mUseCustomTerminal = newUseCustomTerminal;
+}
+
+bool Settings::Environment::checkAndSetTerminal(QString terminalPath, QString argsPattern)
+{
+    QStringList patternItems = splitProcessCommand(argsPattern);
+
+    if (patternItems.empty() ||
+        !(patternItems.contains("$argv") || patternItems.contains("$command") || patternItems.contains("$tmpfile")) // program not referenced
+    )
+        return false;
+
+    // `term` is not referenced ("$argv"),
+    // or is not directly called ("open -app $term -args $tmpfile"),
+    // do not check terminal path
+    if (patternItems[0] != "$term") {
+        setTerminalPath(terminalPath);
+        setTerminalArgumentsPattern(argsPattern);
+        return true;
+    }
+
+#define DO_CHECK_AND_SET do {                                                                    \
+        if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) { \
+            mTerminalPath = terminalPath;                                                        \
+            mTerminalArgumentsPattern = argsPattern;                                             \
+            return true;                                                                         \
+        }                                                                                        \
+    } while (0)
+
+    switch (getPathUnixExecSemantics(terminalPath)) {
+    case UnixExecSemantics::Absolute: {
+        QFileInfo termPathInfo(terminalPath);
+        DO_CHECK_AND_SET;
+        break;
+    }
+    case UnixExecSemantics::RelativeToCwd: {
+        QDir appDir(pSettings->dirs().appDir());
+        QString absoluteTerminalPath = appDir.absoluteFilePath(terminalPath);
+        QFileInfo termPathInfo(absoluteTerminalPath);
+        DO_CHECK_AND_SET;
+        break;
+    }
+    case UnixExecSemantics::SearchInPath: {
+        QStringList pathList = getExecutableSearchPaths();
+        for (const QString &dir: pathList) {
+            QString absoluteTerminalPath = QDir(dir).absoluteFilePath(terminalPath);
+            QFileInfo termPathInfo(absoluteTerminalPath);
+            DO_CHECK_AND_SET;
+        }
+        break;
+    }
+    }
+#undef DO_CHECK_AND_SET
+
+    return false;
+}
+
 void Settings::Environment::doSave()
 {
     //Appearance
@@ -3910,7 +3896,10 @@ void Settings::Environment::doSave()
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
     saveValue("terminal_path",mTerminalPath);
-    saveValue("terminal_arguments_pattern",int(mTerminalArgumentsPattern));
+    saveValue("terminal_arguments_pattern",mTerminalArgumentsPattern);
+#ifdef Q_OS_WINDOWS
+    saveValue("use_custom_terminal",mUseCustomTerminal);
+#endif
     saveValue("asyle_path",mAStylePath);
 
     saveValue("hide_non_support_files_file_view",mHideNonSupportFilesInFileView);

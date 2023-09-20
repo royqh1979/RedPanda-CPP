@@ -22,21 +22,16 @@
 #include "../compiler/executablerunner.h"
 
 #include <QFileDialog>
+#include <QMessageBox>
 
 EnvironmentProgramsWidget::EnvironmentProgramsWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
     ui(new Ui::EnvironmentProgramsWidget)
 {
     ui->setupUi(this);
-    QFont monoFont(DEFAULT_MONO_FONT);
-    ui->rbImplicitSystem->setFont(monoFont);
-    ui->rbMinusEAppendArgs->setFont(monoFont);
-    ui->rbMinusXAppendArgs->setFont(monoFont);
-    ui->rbMinusMinusAppendArgs->setFont(monoFont);
-    ui->rbMinusEAppendCommandLine->setFont(monoFont);
-    ui->rbWriteCommandLineToTempFileThenTempFilename->setFont(monoFont);
-#ifndef Q_OS_MACOS
-    hideMacosSpecificPattern();
+    ui->labelCmdPreviewResult->setFont(QFont(DEFAULT_MONO_FONT));
+#ifndef Q_OS_WINDOWS
+    ui->grpUseCustomTerminal->setCheckable(false);
 #endif
 }
 
@@ -45,68 +40,67 @@ EnvironmentProgramsWidget::~EnvironmentProgramsWidget()
     delete ui;
 }
 
-void EnvironmentProgramsWidget::hideMacosSpecificPattern()
+auto EnvironmentProgramsWidget::resolveExecArguments(const QString &terminalPath, const QString &argsPattern)
+    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
 {
-    ui->rbWriteCommandLineToTempFileThenTempFilename->setVisible(false);
-    ui->rbWriteCommandLineToTempFileThenTempFilename->setEnabled(false);
-    ui->pbWriteCommandLineToTempFileThenTempFilename->setVisible(false);
-    ui->pbWriteCommandLineToTempFileThenTempFilename->setEnabled(false);
+    QString terminalPathForExec;
+    if (getPathUnixExecSemantics(terminalPath) == UnixExecSemantics::RelativeToCwd) {
+        QDir appDir(pSettings->dirs().appDir());
+        terminalPathForExec = appDir.absoluteFilePath(terminalPath);
+    } else
+        terminalPathForExec = terminalPath;
+
+    QString shell = defaultShell();
+    QStringList payloadArgs{shell, "-c", "echo hello; sleep 3"};
+    return wrapCommandForTerminalEmulator(terminalPathForExec, argsPattern, payloadArgs);
 }
 
-void EnvironmentProgramsWidget::testTerminal(const TerminalEmulatorArgumentsPattern &pattern)
+void EnvironmentProgramsWidget::updateCommandPreview(const QString &terminalPath, const QString &argsPattern)
 {
-    auto [filename, arguments, fileOwner] = wrapCommandForTerminalEmulator(ui->txtTerminal->text(), pattern, {defaultShell(), "-c", "echo hello; sleep 3"});
-    ExecutableRunner runner(filename, arguments, "", nullptr);
-    runner.start();
-    runner.wait();
+    auto [filename, arguments, fileOwner] = resolveExecArguments(terminalPath, argsPattern);
+    for (auto &arg : arguments)
+        arg = escapeArgument(arg, false);
+
+    ui->labelCmdPreviewResult->setText(escapeArgument(filename, true) + " " + arguments.join(' '));
+}
+
+void EnvironmentProgramsWidget::autoDetectAndUpdateArgumentsPattern(const QString &terminalPath)
+{
+    const QString &executable = QFileInfo(terminalPath).fileName();
+    const std::unique_ptr<QString> &pattern = pSettings->environment().queryPredefinedTerminalArgumentsPattern(executable);
+    if (pattern != nullptr)
+        ui->txtArgsPattern->setText(*pattern);
+    else
+        QMessageBox::warning(nullptr,
+                             QObject::tr("Auto Detection Failed"),
+                             QObject::tr("Failed to detect terminal arguments pattern for “%1”.").arg(executable),
+                             QMessageBox::Ok);
 }
 
 void EnvironmentProgramsWidget::doLoad()
 {
+#ifdef Q_OS_WINDOWS
+    ui->grpUseCustomTerminal->setChecked(pSettings->environment().useCustomTerminal());
+#endif
     ui->txtTerminal->setText(pSettings->environment().terminalPath());
-    switch (pSettings->environment().terminalArgumentsPattern()) {
-    case TerminalEmulatorArgumentsPattern::ImplicitSystem:
-        ui->rbImplicitSystem->setChecked(true);
-        break;
-    case TerminalEmulatorArgumentsPattern::MinusEAppendArgs:
-        ui->rbMinusEAppendArgs->setChecked(true);
-        break;
-    case TerminalEmulatorArgumentsPattern::MinusXAppendArgs:
-        ui->rbMinusXAppendArgs->setChecked(true);
-        break;
-    case TerminalEmulatorArgumentsPattern::MinusMinusAppendArgs:
-        ui->rbMinusMinusAppendArgs->setChecked(true);
-        break;
-    case TerminalEmulatorArgumentsPattern::MinusEAppendCommandLine:
-        ui->rbMinusEAppendCommandLine->setChecked(true);
-        break;
-    case TerminalEmulatorArgumentsPattern::WriteCommandLineToTempFileThenTempFilename:
-        ui->rbWriteCommandLineToTempFileThenTempFilename->setChecked(true);
-        break;
-    }
+    ui->txtArgsPattern->setText(pSettings->environment().terminalArgumentsPattern());
 }
 
 void EnvironmentProgramsWidget::doSave()
 {
+#ifdef Q_OS_WINDOWS
+    pSettings->environment().setUseCustomTerminal(ui->grpUseCustomTerminal->isChecked());
+#endif
     pSettings->environment().setTerminalPath(ui->txtTerminal->text());
-    if (ui->rbImplicitSystem->isChecked())
-        pSettings->environment().setTerminalArgumentsPattern(TerminalEmulatorArgumentsPattern::ImplicitSystem);
-    if (ui->rbMinusEAppendArgs->isChecked())
-        pSettings->environment().setTerminalArgumentsPattern(TerminalEmulatorArgumentsPattern::MinusEAppendArgs);
-    if (ui->rbMinusXAppendArgs->isChecked())
-        pSettings->environment().setTerminalArgumentsPattern(TerminalEmulatorArgumentsPattern::MinusXAppendArgs);
-    if (ui->rbMinusMinusAppendArgs->isChecked())
-        pSettings->environment().setTerminalArgumentsPattern(TerminalEmulatorArgumentsPattern::MinusMinusAppendArgs);
-    if (ui->rbMinusEAppendCommandLine->isChecked())
-        pSettings->environment().setTerminalArgumentsPattern(TerminalEmulatorArgumentsPattern::MinusEAppendCommandLine);
-    if (ui->rbWriteCommandLineToTempFileThenTempFilename->isChecked())
-        pSettings->environment().setTerminalArgumentsPattern(TerminalEmulatorArgumentsPattern::WriteCommandLineToTempFileThenTempFilename);
+    pSettings->environment().setTerminalArgumentsPattern(ui->txtArgsPattern->text());
     pSettings->environment().save();
 }
 
 void EnvironmentProgramsWidget::updateIcons(const QSize &)
 {
     pIconsManager->setIcon(ui->btnChooseTerminal,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnAutoDetectArgsPattern,IconsManager::ACTION_EDIT_SEARCH);
+    pIconsManager->setIcon(ui->btnTest,IconsManager::ACTION_RUN_RUN);
 }
 
 void EnvironmentProgramsWidget::on_btnChooseTerminal_clicked()
@@ -118,64 +112,34 @@ void EnvironmentProgramsWidget::on_btnChooseTerminal_clicked()
                 tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!filename.isEmpty() && fileExists(filename) ) {
         ui->txtTerminal->setText(filename);
+        autoDetectAndUpdateArgumentsPattern(filename);
     }
 }
 
 void EnvironmentProgramsWidget::on_txtTerminal_textChanged(const QString &terminalPath)
 {
-    QString terminalPathForExec;
-    if (getPathUnixExecSemantics(terminalPath) == UnixExecSemantics::RelativeToCwd) {
-        QDir appDir(pSettings->dirs().appDir());
-        terminalPathForExec = appDir.absoluteFilePath(terminalPath);
-    } else
-        terminalPathForExec = terminalPath;
-    QString terminalPathEscaped = escapeArgument(terminalPathForExec, true);
-    QString shell = defaultShell();
-    QStringList execArgs{shell, "-c", "echo hello; sleep 3"};
-
-    auto displayCommand = [this, &execArgs](const TerminalEmulatorArgumentsPattern &pattern) {
-        auto [filename, arguments, fileOwner] = wrapCommandForTerminalEmulator(ui->txtTerminal->text(), pattern, execArgs);
-        for (auto &arg : arguments)
-            arg = escapeArgument(arg, false);
-        return escapeArgument(filename, true) + " " + arguments.join(' ');
-    };
-
-    ui->rbImplicitSystem->setText(displayCommand(TerminalEmulatorArgumentsPattern::ImplicitSystem));
-    ui->rbMinusEAppendArgs->setText(displayCommand(TerminalEmulatorArgumentsPattern::MinusEAppendArgs));
-    ui->rbMinusXAppendArgs->setText(displayCommand(TerminalEmulatorArgumentsPattern::MinusXAppendArgs));
-    ui->rbMinusMinusAppendArgs->setText(displayCommand(TerminalEmulatorArgumentsPattern::MinusMinusAppendArgs));
-    ui->rbMinusEAppendCommandLine->setText(displayCommand(TerminalEmulatorArgumentsPattern::MinusEAppendCommandLine));
-    if (ui->rbWriteCommandLineToTempFileThenTempFilename->isEnabled())
-        ui->rbWriteCommandLineToTempFileThenTempFilename->setText(displayCommand(TerminalEmulatorArgumentsPattern::WriteCommandLineToTempFileThenTempFilename));
+    const QString &argsPattern = ui->txtArgsPattern->text();
+    updateCommandPreview(terminalPath, argsPattern);
 }
 
-void EnvironmentProgramsWidget::on_pbImplicitSystem_clicked()
+void EnvironmentProgramsWidget::on_txtArgsPattern_textChanged(const QString &argsPattern)
 {
-    testTerminal(TerminalEmulatorArgumentsPattern::ImplicitSystem);
+    const QString &terminalPath = ui->txtTerminal->text();
+    updateCommandPreview(terminalPath, argsPattern);
 }
 
-void EnvironmentProgramsWidget::on_pbMinusEAppendArgs_clicked()
+void EnvironmentProgramsWidget::on_btnAutoDetectArgsPattern_clicked()
 {
-    testTerminal(TerminalEmulatorArgumentsPattern::MinusEAppendArgs);
+    const QString &terminalPath = ui->txtTerminal->text();
+    autoDetectAndUpdateArgumentsPattern(terminalPath);
 }
 
-void EnvironmentProgramsWidget::on_pbMinusXAppendArgs_clicked()
+void EnvironmentProgramsWidget::on_btnTest_clicked()
 {
-    testTerminal(TerminalEmulatorArgumentsPattern::MinusXAppendArgs);
+    const QString &terminalPath = ui->txtTerminal->text();
+    const QString &argsPattern = ui->txtArgsPattern->text();
+    auto [filename, arguments, fileOwner] = resolveExecArguments(terminalPath, argsPattern);
+    ExecutableRunner runner(filename, arguments, "", nullptr);
+    runner.start();
+    runner.wait();
 }
-
-void EnvironmentProgramsWidget::on_pbMinusMinusAppendArgs_clicked()
-{
-    testTerminal(TerminalEmulatorArgumentsPattern::MinusMinusAppendArgs);
-}
-
-void EnvironmentProgramsWidget::on_pbMinusEAppendCommandLine_clicked()
-{
-    testTerminal(TerminalEmulatorArgumentsPattern::MinusEAppendCommandLine);
-}
-
-void EnvironmentProgramsWidget::on_pbWriteCommandLineToTempFileThenTempFilename_clicked()
-{
-    testTerminal(TerminalEmulatorArgumentsPattern::WriteCommandLineToTempFileThenTempFilename);
-}
-

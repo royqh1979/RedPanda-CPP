@@ -265,15 +265,21 @@ void CompilerManager::run(
                 sharedMemoryId,
                 localizePath(filename)
             } + splitProcessCommand(arguments);
-            auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
-                pSettings->environment().terminalPathForExec(),
-                pSettings->environment().terminalArgumentsPattern(),
-                execArgs
-            );
-            //delete when thread finished
-            execRunner = new ExecutableRunner(filename, args, workDir);
-            execRunner->setShareMemoryId(sharedMemoryId);
-            mTempFileOwner = std::move(fileOwner);
+            if (pSettings->environment().useCustomTerminal()) {
+                auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
+                    pSettings->environment().terminalPathForExec(),
+                    pSettings->environment().terminalArgumentsPattern(),
+                    execArgs
+                );
+                //delete when thread finished
+                execRunner = new ExecutableRunner(filename, args, workDir);
+                execRunner->setShareMemoryId(sharedMemoryId);
+                mTempFileOwner = std::move(fileOwner);
+            } else {
+                //delete when thread finished
+                execRunner = new ExecutableRunner(execArgs[0], execArgs.mid(1), workDir);
+                execRunner->setShareMemoryId(sharedMemoryId);
+            }
         } else {
             //delete when thread finished
             execRunner = new ExecutableRunner(filename,splitProcessCommand(arguments),workDir);
