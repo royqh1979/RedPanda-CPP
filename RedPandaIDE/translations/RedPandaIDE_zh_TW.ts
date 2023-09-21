@@ -1923,6 +1923,10 @@
         <source>Parsed argv array (represented in JSON):</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Enable Virtual Terminal Sequence Support</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ExecutorProblemSetWidget</name>

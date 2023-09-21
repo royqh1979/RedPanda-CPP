@@ -38,7 +38,8 @@ using std::string;
 
 enum RunProgramFlag {
     RPF_PAUSE_CONSOLE =     0x0001,
-    RPF_REDIRECT_INPUT =    0x0002
+    RPF_REDIRECT_INPUT =    0x0002,
+    RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
 };
 
 HANDLE hJob;
@@ -98,11 +99,12 @@ void PauseExit(int exitcode, bool reInp) {
     exit(exitcode);
 }
 
-string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit) {
+string GetCommand(int argc,char** argv,bool &reInp,bool &pauseAfterExit, bool &enableVisualTerminalSeq) {
     string result;
     int flags = atoi(argv[1]);
     reInp = flags & RPF_REDIRECT_INPUT;
     pauseAfterExit = flags & RPF_PAUSE_CONSOLE;
+    enableVisualTerminalSeq = flags & RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     for(int i = 3;i < argc;i++) {
         // Quote the argument in case the path name contains spaces
         result += string("\"") + string(argv[i]) + string("\"");
@@ -219,8 +221,9 @@ int main(int argc, char** argv) {
 
     bool reInp;
     bool pauseAfterExit;
+    bool enableVisualTerminalSeq;
     // Then build the to-run application command
-    string command = GetCommand(argc,argv,reInp, pauseAfterExit);
+    string command = GetCommand(argc,argv,reInp, pauseAfterExit, enableVisualTerminalSeq);
     HANDLE hOutput = NULL;
     if (reInp) {
         SECURITY_ATTRIBUTES sa;
@@ -237,7 +240,9 @@ int main(int argc, char** argv) {
     } else {
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
     }
-    EnableVtSequence();
+    if (enableVisualTerminalSeq) {
+        EnableVtSequence();
+    }
 
     HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
     int BUF_SIZE=1024;
@@ -255,7 +260,7 @@ int main(int argc, char** argv) {
             0,
             BUF_SIZE);
     } else {
-        printf("can't open shared memory!");
+        printf("can't open shared memory!\n");
     }
 
     // Save starting timestamp

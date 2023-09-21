@@ -30,6 +30,11 @@ ExecutorGeneralWidget::ExecutorGeneralWidget(const QString& name, const QString&
 {
     ui->setupUi(this);
     ui->txtParsedArgsInJson->setFont(QFont(DEFAULT_MONO_FONT));
+#ifdef Q_OS_WIN
+    ui->chkVTSeq->setVisible(true);
+#else
+    ui->chkVTSeq->setVisible(false);
+#endif
 }
 
 ExecutorGeneralWidget::~ExecutorGeneralWidget()
@@ -40,6 +45,9 @@ ExecutorGeneralWidget::~ExecutorGeneralWidget()
 void ExecutorGeneralWidget::doLoad()
 {
     ui->chkPauseConsole->setChecked(pSettings->executor().pauseConsole());
+#ifdef Q_OS_WIN
+    ui->chkVTSeq->setChecked(pSettings->executor().enableVirualTerminalSequence());
+#endif
     ui->chkMinimizeOnRun->setChecked(pSettings->executor().minimizeOnRun());
     ui->grpExecuteParameters->setChecked(pSettings->executor().useParams());
     ui->txtExecuteParamaters->setText(pSettings->executor().params());
@@ -50,6 +58,9 @@ void ExecutorGeneralWidget::doLoad()
 void ExecutorGeneralWidget::doSave()
 {
     pSettings->executor().setPauseConsole(ui->chkPauseConsole->isChecked());
+#ifdef Q_OS_WIN
+    pSettings->executor().setEnableVirualTerminalSequence(ui->chkVTSeq->isChecked());
+#endif
     pSettings->executor().setMinimizeOnRun(ui->chkMinimizeOnRun->isChecked());
     pSettings->executor().setUseParams(ui->grpExecuteParameters->isChecked());
     pSettings->executor().setParams(ui->txtExecuteParamaters->text());
@@ -83,4 +94,3 @@ void ExecutorGeneralWidget::on_txtExecuteParamaters_textChanged(const QString &c
     QJsonArray obj = QJsonArray::fromStringList(parsed);
     ui->txtParsedArgsInJson->setText(QJsonDocument{obj}.toJson());
 }
-

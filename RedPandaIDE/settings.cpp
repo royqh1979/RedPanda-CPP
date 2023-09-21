@@ -3623,36 +3623,9 @@ void Settings::Environment::doLoad()
     mUseCustomTerminal = true;
 #endif
 
-#ifdef Q_OS_WINDOWS
-    QString terminalListFilename(":/config/terminal-windows.json");
-#else // UNIX
-    QString terminalListFilename(":/config/terminal-unix.json");
-#endif
-    QFile terminalListFile(terminalListFilename);
-    if (!terminalListFile.open(QFile::ReadOnly))
-        throw FileError(QObject::tr("Can't open file '%1' for read.")
-                            .arg(terminalListFilename));
-    QByteArray terminalListContent = terminalListFile.readAll();
-    QJsonDocument terminalListDocument(QJsonDocument::fromJson(terminalListContent));
-
     // check saved terminal path
-    QString savedTerminalPath = stringValue("terminal_path", "");
-    QString savedArgsPattern = stringValue("terminal_arguments_pattern", "");
-    bool terminalSet = checkAndSetTerminal(savedTerminalPath, savedArgsPattern);
-
-    // determing terminal (if not set yet) and build predefined arguments pattern map from our list
-    for (const auto &terminalGroup: terminalListDocument.array()) {
-        const QJsonArray &terminals = terminalGroup.toObject()["terminals"].toArray();
-        for (const auto &terminal_: terminals) {
-            const QJsonObject &terminal = terminal_.toObject();
-            const QString &path = terminal["path"].toString();
-            const QString &executable = QFileInfo(path).fileName();
-            const QString &pattern = terminal["argsPattern"].toString();
-            mPredefinedTerminalArgumentsPattern[executable] = pattern;
-            if (!terminalSet)
-                terminalSet = checkAndSetTerminal(path, pattern);
-        }
-    }
+    mTerminalPath = stringValue("terminal_path", "");
+    mTerminalArgumentsPattern = stringValue("terminal_arguments_pattern", "");
 
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
@@ -3798,23 +3771,32 @@ void Settings::Environment::setIconZoomFactor(double newIconZoomFactor)
     mIconZoomFactor = newIconZoomFactor;
 }
 
-QMap<QString, QString> Settings::Environment::predefinedTerminalArgumentsPattern() const
+QString Settings::Environment::queryPredefinedTerminalArgumentsPattern(const QString &executable) const
 {
-    return mPredefinedTerminalArgumentsPattern;
-}
+#ifdef Q_OS_WINDOWS
+    QString terminalListFilename(":/config/terminal-windows.json");
+#else // UNIX
+    QString terminalListFilename(":/config/terminal-unix.json");
+#endif
+    QFile terminalListFile(terminalListFilename);
+    if (!terminalListFile.open(QFile::ReadOnly))
+        throw FileError(QObject::tr("Can't open file '%1' for read.")
+                            .arg(terminalListFilename));
+    QByteArray terminalListContent = terminalListFile.readAll();
+    QJsonDocument terminalListDocument(QJsonDocument::fromJson(terminalListContent));
 
-void Settings::Environment::setPredefinedTerminalArgumentsPattern(const QMap<QString, QString> &newPredefinedTerminalArgumentsPattern)
-{
-    mPredefinedTerminalArgumentsPattern = newPredefinedTerminalArgumentsPattern;
-}
-
-std::unique_ptr<QString> Settings::Environment::queryPredefinedTerminalArgumentsPattern(const QString &executable) const
-{
-    auto it = mPredefinedTerminalArgumentsPattern.find(executable);
-    if (it != mPredefinedTerminalArgumentsPattern.end())
-        return std::make_unique<QString>(*it);
-    else
-        return nullptr;
+    // determing terminal (if not set yet) and build predefined arguments pattern map from our list
+    for (const auto &terminalGroup: terminalListDocument.array()) {
+        const QJsonArray &terminals = terminalGroup.toObject()["terminals"].toArray();
+        for (const auto &terminal_: terminals) {
+            const QJsonObject &terminal = terminal_.toObject();
+            const QString &path = terminal["path"].toString();
+            const QString &termExecutable = QFileInfo(path).fileName();
+            const QString &pattern = terminal["argsPattern"].toString();
+            if (QString::compare( executable , termExecutable, PATH_SENSITIVITY)==0) return pattern;
+        }
+    }
+    return QString();
 }
 
 bool Settings::Environment::useCustomTerminal() const
@@ -3827,59 +3809,59 @@ void Settings::Environment::setUseCustomTerminal(bool newUseCustomTerminal)
     mUseCustomTerminal = newUseCustomTerminal;
 }
 
-bool Settings::Environment::checkAndSetTerminal(QString terminalPath, QString argsPattern)
-{
-    QStringList patternItems = splitProcessCommand(argsPattern);
+//bool Settings::Environment::checkAndSetTerminal(QString terminalPath, QString argsPattern)
+//{
+//    QStringList patternItems = splitProcessCommand(argsPattern);
 
-    if (patternItems.empty() ||
-        !(patternItems.contains("$argv") || patternItems.contains("$command") || patternItems.contains("$tmpfile")) // program not referenced
-    )
-        return false;
+//    if (patternItems.empty() ||
+//        !(patternItems.contains("$argv") || patternItems.contains("$command") || patternItems.contains("$tmpfile")) // program not referenced
+//    )
+//        return false;
 
-    // `term` is not referenced ("$argv"),
-    // or is not directly called ("open -app $term -args $tmpfile"),
-    // do not check terminal path
-    if (patternItems[0] != "$term") {
-        setTerminalPath(terminalPath);
-        setTerminalArgumentsPattern(argsPattern);
-        return true;
-    }
+//    // `term` is not referenced ("$argv"),
+//    // or is not directly called ("open -app $term -args $tmpfile"),
+//    // do not check terminal path
+//    if (patternItems[0] != "$term") {
+//        setTerminalPath(terminalPath);
+//        setTerminalArgumentsPattern(argsPattern);
+//        return true;
+//    }
 
-#define DO_CHECK_AND_SET do {                                                                    \
-        if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) { \
-            mTerminalPath = terminalPath;                                                        \
-            mTerminalArgumentsPattern = argsPattern;                                             \
-            return true;                                                                         \
-        }                                                                                        \
-    } while (0)
+//#define DO_CHECK_AND_SET do {                                                                    \
+//        if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) { \
+//            mTerminalPath = terminalPath;                                                        \
+//            mTerminalArgumentsPattern = argsPattern;                                             \
+//            return true;                                                                         \
+//        }                                                                                        \
+//    } while (0)
 
-    switch (getPathUnixExecSemantics(terminalPath)) {
-    case UnixExecSemantics::Absolute: {
-        QFileInfo termPathInfo(terminalPath);
-        DO_CHECK_AND_SET;
-        break;
-    }
-    case UnixExecSemantics::RelativeToCwd: {
-        QDir appDir(pSettings->dirs().appDir());
-        QString absoluteTerminalPath = appDir.absoluteFilePath(terminalPath);
-        QFileInfo termPathInfo(absoluteTerminalPath);
-        DO_CHECK_AND_SET;
-        break;
-    }
-    case UnixExecSemantics::SearchInPath: {
-        QStringList pathList = getExecutableSearchPaths();
-        for (const QString &dir: pathList) {
-            QString absoluteTerminalPath = QDir(dir).absoluteFilePath(terminalPath);
-            QFileInfo termPathInfo(absoluteTerminalPath);
-            DO_CHECK_AND_SET;
-        }
-        break;
-    }
-    }
-#undef DO_CHECK_AND_SET
+//    switch (getPathUnixExecSemantics(terminalPath)) {
+//    case UnixExecSemantics::Absolute: {
+//        QFileInfo termPathInfo(terminalPath);
+//        DO_CHECK_AND_SET;
+//        break;
+//    }
+//    case UnixExecSemantics::RelativeToCwd: {
+//        QDir appDir(pSettings->dirs().appDir());
+//        QString absoluteTerminalPath = appDir.absoluteFilePath(terminalPath);
+//        QFileInfo termPathInfo(absoluteTerminalPath);
+//        DO_CHECK_AND_SET;
+//        break;
+//    }
+//    case UnixExecSemantics::SearchInPath: {
+//        QStringList pathList = getExecutableSearchPaths();
+//        for (const QString &dir: pathList) {
+//            QString absoluteTerminalPath = QDir(dir).absoluteFilePath(terminalPath);
+//            QFileInfo termPathInfo(absoluteTerminalPath);
+//            DO_CHECK_AND_SET;
+//        }
+//        break;
+//    }
+//    }
+//#undef DO_CHECK_AND_SET
 
-    return false;
-}
+//    return false;
+//}
 
 void Settings::Environment::doSave()
 {
@@ -4051,6 +4033,16 @@ void Settings::Executor::setProblemCaseValidateType(ProblemCaseValidateType newP
     mProblemCaseValidateType = newProblemCaseValidateType;
 }
 
+bool Settings::Executor::enableVirualTerminalSequence() const
+{
+    return mEnableVirualTerminalSequence;
+}
+
+void Settings::Executor::setEnableVirualTerminalSequence(bool newEnableVirualTerminalSequence)
+{
+    mEnableVirualTerminalSequence = newEnableVirualTerminalSequence;
+}
+
 bool Settings::Executor::convertHTMLToTextForInput() const
 {
     return mConvertHTMLToTextForInput;
@@ -4114,6 +4106,9 @@ void Settings::Executor::setEnableProblemSet(bool newEnableProblemSet)
 void Settings::Executor::doSave()
 {
     saveValue("pause_console", mPauseConsole);
+#ifdef Q_OS_WIN
+    saveValue("enable_virtual_terminal_sequence", mEnableVirualTerminalSequence);
+#endif
     saveValue("minimize_on_run", mMinimizeOnRun);
     saveValue("use_params",mUseParams);
     saveValue("params",mParams);
@@ -4149,6 +4144,9 @@ void Settings::Executor::setPauseConsole(bool pauseConsole)
 void Settings::Executor::doLoad()
 {
     mPauseConsole = boolValue("pause_console",true);
+#ifdef Q_OS_WIN
+    mEnableVirualTerminalSequence = boolValue("enable_virtual_terminal_sequence", true);
+#endif
     mMinimizeOnRun = boolValue("minimize_on_run",false);
     mUseParams = boolValue("use_params",false);
     mParams = stringValue("params", "");

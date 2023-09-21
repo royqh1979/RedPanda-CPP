@@ -25,6 +25,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="chkVTSeq">
+        <property name="text">
+         <string>Enable Virtual Terminal Sequence Support</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="chkMinimizeOnRun">
         <property name="text">
          <string>Minimize IDE when running programs</string>
@@ -67,8 +74,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QTextBrowser" name="txtParsedArgsInJson">
-       </widget>
+       <widget class="QTextBrowser" name="txtParsedArgsInJson"/>
       </item>
      </layout>
     </widget>

@@ -67,9 +67,9 @@ void EnvironmentProgramsWidget::updateCommandPreview(const QString &terminalPath
 void EnvironmentProgramsWidget::autoDetectAndUpdateArgumentsPattern(const QString &terminalPath)
 {
     const QString &executable = QFileInfo(terminalPath).fileName();
-    const std::unique_ptr<QString> &pattern = pSettings->environment().queryPredefinedTerminalArgumentsPattern(executable);
-    if (pattern != nullptr)
-        ui->txtArgsPattern->setText(*pattern);
+    const QString &pattern = pSettings->environment().queryPredefinedTerminalArgumentsPattern(executable);
+    if (!pattern.isEmpty())
+        ui->txtArgsPattern->setText(pattern);
     else
         QMessageBox::warning(nullptr,
                              QObject::tr("Auto Detection Failed"),

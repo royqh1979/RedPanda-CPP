@@ -37,7 +37,8 @@
 
 enum RunProgramFlag {
     RPF_PAUSE_CONSOLE =     0x0001,
-    RPF_REDIRECT_INPUT =    0x0002
+    RPF_REDIRECT_INPUT =    0x0002,
+    RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
 };
 
 CompilerManager::CompilerManager(QObject *parent) : QObject(parent),
@@ -256,6 +257,8 @@ void CompilerManager::run(
         if (pSettings->executor().pauseConsole())
             consoleFlag |= RPF_PAUSE_CONSOLE;
 #ifdef Q_OS_WIN
+        if (pSettings->executor().enableVirualTerminalSequence())
+            consoleFlag |= RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         if (consoleFlag!=0) {
             QString sharedMemoryId = QUuid::createUuid().toString();
             QString consolePauserPath = includeTrailingPathDelimiter(pSettings->dirs().appDir()) + CONSOLE_PAUSER;

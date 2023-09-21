@@ -596,18 +596,13 @@ public:
         QJsonArray availableTerminals() const;
         void setAvailableTerminals(const QJsonArray &availableTerminals);
 
-        QMap<QString, QString> predefinedTerminalArgumentsPattern() const;
-        void setPredefinedTerminalArgumentsPattern(const QMap<QString, QString> &newPredefinedTerminalArgumentsPattern);
-        // it should be `std::optional<QString>`.
-        // `std::unique_ptr` is a work around for Debian 10, where Qt 5.11 doesnt recognize `CONFIG += c++17`,
-        // and macOS, where official Qt 5.15 is built against macOS 10.13 and `std::optional` is explicitly disabled.
-        std::unique_ptr<QString> queryPredefinedTerminalArgumentsPattern(const QString &executable) const;
+        QString queryPredefinedTerminalArgumentsPattern(const QString &executable) const;
 
         bool useCustomTerminal() const;
         void setUseCustomTerminal(bool newUseCustomTerminal);
 
     private:
-        bool checkAndSetTerminal(QString terminalPath, QString argsPattern);
+//        bool checkAndSetTerminal(QString terminalPath, QString argsPattern);
         bool updateTerminalList();
 
         //Appearance
@@ -625,7 +620,6 @@ public:
         QString mTerminalPath;
         QString mAStylePath;
         QString mTerminalArgumentsPattern;
-        QMap<QString, QString> mPredefinedTerminalArgumentsPattern;
         bool mUseCustomTerminal;
         bool mHideNonSupportFilesInFileView;
         bool mOpenFilesInSingleInstance;
@@ -955,6 +949,8 @@ public:
         ProblemCaseValidateType problemCaseValidateType() const;
         void setProblemCaseValidateType(ProblemCaseValidateType newProblemCaseValidateType);
 
+        bool enableVirualTerminalSequence() const;
+        void setEnableVirualTerminalSequence(bool newEnableVirualTerminalSequence);
     private:
         // general
         bool mPauseConsole;
@@ -963,6 +959,7 @@ public:
         QString mParams;
         bool mRedirectInput;
         QString mInputFilename;
+        bool mEnableVirualTerminalSequence;
 
         //Problem Set
         bool mEnableProblemSet;
