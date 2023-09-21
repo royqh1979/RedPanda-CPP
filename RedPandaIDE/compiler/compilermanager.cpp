@@ -270,7 +270,7 @@ void CompilerManager::run(
             } + splitProcessCommand(arguments);
             if (pSettings->environment().useCustomTerminal()) {
                 auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
-                    pSettings->environment().terminalPathForExec(),
+                    pSettings->environment().terminalPath(),
                     pSettings->environment().terminalArgumentsPattern(),
                     execArgs
                 );

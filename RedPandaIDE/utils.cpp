@@ -590,18 +590,6 @@ QColor alphaBlend(const QColor &lower, const QColor &upper) {
         );
 }
 
-UnixExecSemantics getPathUnixExecSemantics(const QString &path)
-{
-    QFileInfo pathInfo(path);
-    if (pathInfo.isRelative()) {
-        if (path.contains('/'))
-            return UnixExecSemantics::RelativeToCwd;
-        else
-            return UnixExecSemantics::SearchInPath;
-    } else
-        return UnixExecSemantics::Absolute;
-}
-
 QStringList getExecutableSearchPaths()
 {
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -721,53 +709,6 @@ QString escapeArgument(const QString &arg, [[maybe_unused]] bool isFirstArg)
      * e.g. `o'clock` => `'o'\''clock'`, really tricky and hard to read.
      */
 #endif
-}
-
-auto wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
-    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
-{
-    QStringList wrappedArgs;
-    std::unique_ptr<QTemporaryFile> temproryFile;
-    for (const QString &patternItem : argsPattern) {
-        if (patternItem == "$term")
-            wrappedArgs.push_back(terminal);
-        else if (patternItem == "$argv")
-            wrappedArgs.append(payloadArgsWithArgv0);
-        else if (patternItem == "$command") {
-            QStringList escapedArgs;
-            for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
-                auto &arg = payloadArgsWithArgv0[i];
-                auto escaped = escapeArgument(arg, i == 0);
-                escapedArgs.append(escaped);
-            }
-            wrappedArgs.push_back(escapedArgs.join(' '));
-        } else if (patternItem == "$tmpfile") {
-            temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
-            if (temproryFile->open()) {
-                QStringList escapedArgs;
-                for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
-                    auto &arg = payloadArgsWithArgv0[i];
-                    auto escaped = escapeArgument(arg, i == 0);
-                    escapedArgs.append(escaped);
-                }
-                temproryFile->write(escapedArgs.join(' ').toUtf8());
-                temproryFile->write("\n");
-                temproryFile->flush();
-                QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
-            }
-            wrappedArgs.push_back(temproryFile->fileName());
-        } else
-            wrappedArgs.push_back(patternItem);
-    }
-    if (wrappedArgs.empty())
-        return {QString(""), QStringList{}, std::move(temproryFile)};
-    return {wrappedArgs[0], wrappedArgs.mid(1), std::move(temproryFile)};
-}
-
-auto wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
-    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
-{
-    return wrapCommandForTerminalEmulator(terminal, splitProcessCommand(argsPattern), payloadArgsWithArgv0);
 }
 
 QString defaultShell()

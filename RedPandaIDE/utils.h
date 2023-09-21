@@ -115,12 +115,6 @@ enum class ProblemCaseValidateType {
     IgnoreSpaces
 };
 
-enum class UnixExecSemantics {
-    Absolute,
-    RelativeToCwd,
-    SearchInPath,
-};
-
 FileType getFileType(const QString& filename);
 QStringList splitProcessCommand(const QString& cmd);
 
@@ -173,17 +167,9 @@ void saveComboHistory(QComboBox* cb,const QString& text);
 
 QColor alphaBlend(const QColor &lower, const QColor &upper);
 
-UnixExecSemantics getPathUnixExecSemantics(const QString &path);
-
 QStringList getExecutableSearchPaths();
 
 QString escapeArgument(const QString &arg, bool isFirstArg);
-
-auto wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
-    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>;
-
-auto wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
-    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>;
 
 QString defaultShell();
 

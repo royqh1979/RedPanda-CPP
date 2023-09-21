@@ -43,16 +43,9 @@ EnvironmentProgramsWidget::~EnvironmentProgramsWidget()
 auto EnvironmentProgramsWidget::resolveExecArguments(const QString &terminalPath, const QString &argsPattern)
     -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
 {
-    QString terminalPathForExec;
-    if (getPathUnixExecSemantics(terminalPath) == UnixExecSemantics::RelativeToCwd) {
-        QDir appDir(pSettings->dirs().appDir());
-        terminalPathForExec = appDir.absoluteFilePath(terminalPath);
-    } else
-        terminalPathForExec = terminalPath;
-
     QString shell = defaultShell();
     QStringList payloadArgs{shell, "-c", "echo hello; sleep 3"};
-    return wrapCommandForTerminalEmulator(terminalPathForExec, argsPattern, payloadArgs);
+    return wrapCommandForTerminalEmulator(terminalPath, argsPattern, payloadArgs);
 }
 
 void EnvironmentProgramsWidget::updateCommandPreview(const QString &terminalPath, const QString &argsPattern)
@@ -61,7 +54,7 @@ void EnvironmentProgramsWidget::updateCommandPreview(const QString &terminalPath
     for (auto &arg : arguments)
         arg = escapeArgument(arg, false);
 
-    ui->labelCmdPreviewResult->setText(escapeArgument(filename, true) + " " + arguments.join(' '));
+    ui->labelCmdPreviewResult->setPlainText(escapeArgument(filename, true) + " " + arguments.join(' '));
 }
 
 void EnvironmentProgramsWidget::autoDetectAndUpdateArgumentsPattern(const QString &terminalPath)

@@ -575,7 +575,6 @@ public:
         void setIconSet(const QString &newIconSet);
 
         QString terminalPath() const;
-        QString terminalPathForExec() const;
         void setTerminalPath(const QString &terminalPath);
 
         QString AStylePath() const;
@@ -610,6 +609,7 @@ public:
         QList<TerminalItem> loadTerminalList() const;
 
     private:
+        bool isTerminalValid();
         void checkAndSetTerminal();
 
         //Appearance
@@ -1622,6 +1622,10 @@ private:
     Languages mLanguages;
 };
 
+
+std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0);
+
+std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0);
 
 extern Settings* pSettings;
 

@@ -82,13 +82,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="labelCmdPreviewResult">
-        <property name="text">
-         <string>term -e sh -c &quot;echo hello; sleep 3&quot;</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="2">
        <widget class="QToolButton" name="btnTest">
         <property name="toolTip">
@@ -100,6 +93,13 @@
         <property name="icon">
          <iconset resource="../icons.qrc">
           <normaloff>:/icons/images/newlook24/069-run.png</normaloff>:/icons/images/newlook24/069-run.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPlainTextEdit" name="labelCmdPreviewResult">
+        <property name="readOnly">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

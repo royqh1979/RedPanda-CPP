@@ -4,7 +4,7 @@
         "terminals": [
             {
                 "name": "UTF-8 compatible Console Host",
-                "path": "./OpenConsole.exe",
+                "path": "%*APP_DIR*%/OpenConsole.exe",
                 "argsPattern": "$term -- $argv"
             }
         ]

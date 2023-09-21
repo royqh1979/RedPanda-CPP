@@ -3625,6 +3625,7 @@ void Settings::Environment::doLoad()
 
     // check saved terminal path
     mTerminalPath = stringValue("terminal_path", "");
+    mTerminalPath.replace("%*APP_DIR*%",pSettings->dirs().appDir());
     mTerminalArgumentsPattern = stringValue("terminal_arguments_pattern", "");
 
     checkAndSetTerminal();
@@ -3687,15 +3688,6 @@ void Settings::Environment::setIconSet(const QString &newIconSet)
 QString Settings::Environment::terminalPath() const
 {
     return mTerminalPath;
-}
-
-QString Settings::Environment::terminalPathForExec() const
-{
-    if (getPathUnixExecSemantics(mTerminalPath) == UnixExecSemantics::RelativeToCwd) {
-        QDir appDir(pSettings->dirs().appDir());
-        return appDir.absoluteFilePath(mTerminalPath);
-    } else
-        return mTerminalPath;
 }
 
 void Settings::Environment::setTerminalPath(const QString &terminalPath)
@@ -3775,8 +3767,10 @@ void Settings::Environment::setIconZoomFactor(double newIconZoomFactor)
 
 QString Settings::Environment::queryPredefinedTerminalArgumentsPattern(const QString &executable) const
 {
+    QString execName = extractFileName(executable);
     for (const TerminalItem& item: loadTerminalList()) {
-        if (item.terminal.compare(executable,PATH_SENSITIVITY)==0) return item.param;
+        QString termName = extractFileName(item.terminal);
+        if (termName.compare(execName,PATH_SENSITIVITY)==0) return item.param;
     }
     return QString();
 }
@@ -3793,19 +3787,30 @@ void Settings::Environment::setUseCustomTerminal(bool newUseCustomTerminal)
 
 void Settings::Environment::checkAndSetTerminal()
 {
-    if (!mUseCustomTerminal) return;
-    if (!mTerminalPath.isEmpty() && !mTerminalArgumentsPattern.isEmpty()) return;
+    if (isTerminalValid()) return;
 
     QStringList pathList = getExecutableSearchPaths();
     QList<TerminalItem> terminalList = loadTerminalList();
-    for (const QString &dirPath: pathList) {
-        QDir dir{dirPath};
-        for (const TerminalItem& termItem:terminalList) {
-            QString absoluteTerminalPath = dir.absoluteFilePath(termItem.terminal);
+    for (const TerminalItem& termItem:terminalList) {
+        QString term=termItem.terminal;
+        term.replace("%*APP_DIR*%",pSettings->dirs().appDir());
+        QFileInfo info{term};
+        QString absoluteTerminalPath;
+        if (info.isAbsolute()) {
+            absoluteTerminalPath = info.absoluteFilePath();
             if(fileExists(absoluteTerminalPath)) {
                 mTerminalPath = absoluteTerminalPath;
                 mTerminalArgumentsPattern = termItem.param;
-                return;
+            }
+        } else {
+            for (const QString &dirPath: pathList) {
+                QDir dir{dirPath};
+                absoluteTerminalPath = dir.absoluteFilePath(termItem.terminal);
+                if(fileExists(absoluteTerminalPath)) {
+                    mTerminalPath = absoluteTerminalPath;
+                    mTerminalArgumentsPattern = termItem.param;
+                    break;
+                }
             }
         }
     }
@@ -3835,17 +3840,48 @@ QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalLi
     for (const auto &terminalGroup: terminalListDocument.array()) {
         const QJsonArray &terminals = terminalGroup.toObject()["terminals"].toArray();
         for (const auto &terminal_: terminals) {
-            const QJsonObject &terminal = terminal_.toObject();
-            const QString &path = terminal["path"].toString();
-            const QString &termExecutable = QFileInfo(path).fileName();
-            const QString &pattern = terminal["argsPattern"].toString();
+            const QJsonObject& terminal = terminal_.toObject();
+            QString path = terminal["path"].toString();
+            QString termExecutable = QFileInfo(path).fileName();
+            QString pattern = terminal["argsPattern"].toString();
             Settings::Environment::TerminalItem terminalItem;
+            path.replace("%*APP_DIR*%", pSettings->dirs().appDir());
             terminalItem.terminal = path;
             terminalItem.param = pattern;
             result.append(terminalItem);
         }
     }
     return result;
+}
+
+bool Settings::Environment::isTerminalValid()
+{
+    // don't use custom terminal
+    if (!mUseCustomTerminal) return true;
+    // terminal patter is empty
+    if (mTerminalArgumentsPattern.isEmpty()) return false;
+
+    QStringList patternItems = splitProcessCommand(mTerminalArgumentsPattern);
+
+    if (!(patternItems.contains("$argv")
+          || patternItems.contains("$command")
+          || patternItems.contains("$tmpfile"))) {
+        // program not referenced
+        return false;
+    }
+    QFileInfo termPathInfo{mTerminalPath};
+    if (termPathInfo.isAbsolute()) {
+        return termPathInfo.exists();
+    } else {
+        QStringList pathList = getExecutableSearchPaths();
+        for (const QString &dirName: pathList) {
+            QDir dir{dirName};
+            QString absoluteTerminalPath = dir.absoluteFilePath(mTerminalPath);
+            QFileInfo absTermPathInfo(absoluteTerminalPath);
+            if (absTermPathInfo.exists()) return true;
+        }
+    }
+    return false;
 }
 
 void Settings::Environment::doSave()
@@ -3862,7 +3898,10 @@ void Settings::Environment::doSave()
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
-    saveValue("terminal_path",mTerminalPath);
+    QString terminalPath = mTerminalPath;
+    terminalPath.replace(pSettings->dirs().appDir(), "%*APP_DIR*%");
+
+    saveValue("terminal_path",terminalPath);
     saveValue("terminal_arguments_pattern",mTerminalArgumentsPattern);
 #ifdef Q_OS_WINDOWS
     saveValue("use_custom_terminal",mUseCustomTerminal);
@@ -6346,4 +6385,51 @@ bool Settings::Languages::noDebugDirectivesWhenGenerateASM() const
 void Settings::Languages::setNoDebugDirectivesWhenGenerateASM(bool newNoDebugDirectivesWhenGenerateASM)
 {
     mNoDebugDirectivesWhenGenerateASM = newNoDebugDirectivesWhenGenerateASM;
+}
+
+std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
+{
+    QStringList wrappedArgs;
+    std::unique_ptr<QTemporaryFile> temproryFile;
+    for (const QString &patternItem : argsPattern) {
+        if (patternItem == "$term")
+            wrappedArgs.append(terminal);
+        else if (patternItem == "$integrated_term")
+            wrappedArgs.append(includeTrailingPathDelimiter(pSettings->dirs().appDir())+terminal);
+        else if (patternItem == "$argv")
+            wrappedArgs.append(payloadArgsWithArgv0);
+        else if (patternItem == "$command") {
+            QStringList escapedArgs;
+            for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                auto &arg = payloadArgsWithArgv0[i];
+                auto escaped = escapeArgument(arg, i == 0);
+                escapedArgs.append(escaped);
+            }
+            wrappedArgs.push_back(escapedArgs.join(' '));
+        } else if (patternItem == "$tmpfile") {
+            temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
+            if (temproryFile->open()) {
+                QStringList escapedArgs;
+                for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                    auto &arg = payloadArgsWithArgv0[i];
+                    auto escaped = escapeArgument(arg, i == 0);
+                    escapedArgs.append(escaped);
+                }
+                temproryFile->write(escapedArgs.join(' ').toUtf8());
+                temproryFile->write("\n");
+                temproryFile->flush();
+                QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+            }
+            wrappedArgs.push_back(temproryFile->fileName());
+        } else
+            wrappedArgs.push_back(patternItem);
+    }
+    if (wrappedArgs.empty())
+        return {QString(""), QStringList{}, std::move(temproryFile)};
+    return {wrappedArgs[0], wrappedArgs.mid(1), std::move(temproryFile)};
+}
+
+std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
+{
+    return wrapCommandForTerminalEmulator(terminal, splitProcessCommand(argsPattern), payloadArgsWithArgv0);
 }
