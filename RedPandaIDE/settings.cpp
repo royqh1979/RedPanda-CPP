@@ -3899,7 +3899,9 @@ void Settings::Environment::doSave()
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
     QString terminalPath = mTerminalPath;
-    terminalPath.replace(pSettings->dirs().appDir(), "%*APP_DIR*%");
+    if (terminalPath.startsWith(pSettings->dirs().appDir())) {
+        terminalPath="%*APP_DIR*%"+terminalPath.mid(pSettings->dirs().appDir().length());
+    }
 
     saveValue("terminal_path",terminalPath);
     saveValue("terminal_arguments_pattern",mTerminalArgumentsPattern);
