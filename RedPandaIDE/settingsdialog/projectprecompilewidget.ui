@@ -56,11 +56,6 @@
            <property name="text">
             <string>Browse</string>
            </property>
-           <property name="icon">
-            <iconset>
-             <normalon>:/icons/images/newlook24/053-open.png</normalon>
-            </iconset>
-           </property>
           </widget>
          </item>
         </layout>

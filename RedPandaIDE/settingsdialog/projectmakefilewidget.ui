@@ -34,10 +34,6 @@
         <property name="text">
          <string>Browse</string>
         </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-        </property>
        </widget>
       </item>
      </layout>
@@ -47,10 +43,6 @@
     <widget class="QPushButton" name="btnInfo">
      <property name="text">
       <string>Information about using a custom make file </string>
-     </property>
-     <property name="icon">
-      <iconset resource="../icons.qrc">
-       <normaloff>:/icons/images/newlook24/085-tutor.png</normaloff>:/icons/images/newlook24/085-tutor.png</iconset>
      </property>
     </widget>
    </item>

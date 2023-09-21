@@ -28,10 +28,6 @@
         <property name="text">
          <string>browse</string>
         </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-        </property>
        </widget>
       </item>
      </layout>
@@ -50,10 +46,6 @@
        <widget class="QToolButton" name="btnObjOutputDir">
         <property name="text">
          <string>browse</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
         </property>
        </widget>
       </item>
@@ -79,10 +71,6 @@
        <widget class="QToolButton" name="btnCompileLog">
         <property name="text">
          <string>browse</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
         </property>
        </widget>
       </item>

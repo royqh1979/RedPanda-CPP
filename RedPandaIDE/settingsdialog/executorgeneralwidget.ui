@@ -132,10 +132,6 @@
         <property name="text">
          <string>Browse</string>
         </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-        </property>
        </widget>
       </item>
       <item row="0" column="1">

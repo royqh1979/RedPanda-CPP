@@ -2900,17 +2900,14 @@ void MainWindow::createCustomActions()
                 tr("Sort By Type"),
                 ui->tabStructure);
     mClassBrowser_Sort_By_Type->setCheckable(true);
-    mClassBrowser_Sort_By_Type->setIcon(QIcon(":/icons/images/newlook24/077-sort-type.png"));
     mClassBrowser_Sort_By_Name = createAction(
                 tr("Sort alphabetically"),
                 ui->tabStructure);
     mClassBrowser_Sort_By_Name->setCheckable(true);
-    mClassBrowser_Sort_By_Name->setIcon(QIcon(":/icons/images/newlook24/076-sort-alpha.png"));
     mClassBrowser_Show_Inherited = createAction(
                 tr("Show inherited members"),
                 ui->tabStructure);
     mClassBrowser_Show_Inherited->setCheckable(true);
-    mClassBrowser_Show_Inherited->setIcon(QIcon(":/icons/images/newlook24/075-show-inheritance.png"));
     mClassBrowser_goto_declaration = createAction(
                 tr("Goto declaration"),
                 ui->tabStructure);

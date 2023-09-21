@@ -22,10 +22,6 @@
      <property name="text">
       <string>Open in browser</string>
      </property>
-     <property name="icon">
-      <iconset resource="../icons.qrc">
-       <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-     </property>
     </widget>
    </item>
    <item row="5" column="0">
@@ -89,10 +85,6 @@
      <property name="text">
       <string>Open in browser</string>
      </property>
-     <property name="icon">
-      <iconset resource="../icons.qrc">
-       <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-     </property>
     </widget>
    </item>
    <item row="0" column="0">
@@ -126,10 +118,6 @@
      </property>
      <property name="text">
       <string>Open in browser</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../icons.qrc">
-       <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
      </property>
     </widget>
    </item>

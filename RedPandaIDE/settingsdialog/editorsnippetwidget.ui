@@ -82,20 +82,12 @@
                 <property name="text">
                  <string>Add</string>
                 </property>
-                <property name="icon">
-                 <iconset resource="../icons.qrc">
-                  <normaloff>:/icons/images/newlook24/002-add.png</normaloff>:/icons/images/newlook24/002-add.png</iconset>
-                </property>
                </widget>
               </item>
               <item>
                <widget class="QToolButton" name="btnRemove">
                 <property name="text">
                  <string>Remove</string>
-                </property>
-                <property name="icon">
-                 <iconset resource="../icons.qrc">
-                  <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
                 </property>
                </widget>
               </item>

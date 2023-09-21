@@ -74,10 +74,6 @@
             <property name="text">
              <string>Step over one machine instruction</string>
             </property>
-            <property name="icon">
-             <iconset resource="../icons.qrc">
-              <normaloff>:/icons/images/newlook24/052-next.png</normaloff>:/icons/images/newlook24/052-next.png</iconset>
-            </property>
             <property name="toolButtonStyle">
              <enum>Qt::ToolButtonIconOnly</enum>
             </property>
@@ -90,10 +86,6 @@
             </property>
             <property name="text">
              <string>Step into one machine instruction</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../icons.qrc">
-              <normaloff>:/icons/images/newlook24/040-goto.png</normaloff>:/icons/images/newlook24/040-goto.png</iconset>
             </property>
            </widget>
           </item>

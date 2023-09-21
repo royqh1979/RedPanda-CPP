@@ -26,10 +26,6 @@
      <property name="text">
       <string>...</string>
      </property>
-     <property name="icon">
-      <iconset resource="../icons.qrc">
-       <normaloff>:/icons/images/newlook/actions/01File-09Open_Folder.svg</normaloff>:/icons/images/newlook/actions/01File-09Open_Folder.svg</iconset>
-     </property>
     </widget>
    </item>
    <item row="0" column="1">

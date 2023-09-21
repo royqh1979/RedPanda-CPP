@@ -120,7 +120,7 @@
      <x>0</x>
      <y>0</y>
      <width>955</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -515,7 +515,7 @@
      <enum>QTabWidget::West</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>4</number>
     </property>
     <property name="usesScrollButtons">
      <bool>true</bool>
@@ -527,10 +527,6 @@
      <property name="autoFillBackground">
       <bool>true</bool>
      </property>
-     <attribute name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/images/newlook24/018-copy.png</normaloff>:/icons/images/newlook24/018-copy.png</iconset>
-     </attribute>
      <attribute name="title">
       <string>Files</string>
      </attribute>
@@ -612,10 +608,6 @@
      <property name="autoFillBackground">
       <bool>true</bool>
      </property>
-     <attribute name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/images/newlook24/049-newproj.png</normaloff>:/icons/images/newlook24/049-newproj.png</iconset>
-     </attribute>
      <attribute name="title">
       <string>Project</string>
      </attribute>
@@ -666,10 +658,6 @@
      <property name="autoFillBackground">
       <bool>true</bool>
      </property>
-     <attribute name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/images/newlook24/088-watch.png</normaloff>:/icons/images/newlook24/088-watch.png</iconset>
-     </attribute>
      <attribute name="title">
       <string>Watch</string>
      </attribute>
@@ -711,10 +699,6 @@
      <property name="autoFillBackground">
       <bool>true</bool>
      </property>
-     <attribute name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/images/newlook24/087-update.png</normaloff>:/icons/images/newlook24/087-update.png</iconset>
-     </attribute>
      <attribute name="title">
       <string>Structure</string>
      </attribute>
@@ -753,10 +737,6 @@
      <property name="autoFillBackground">
       <bool>true</bool>
      </property>
-     <attribute name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/images/newlook24/014-compopt.png</normaloff>:/icons/images/newlook24/014-compopt.png</iconset>
-     </attribute>
      <attribute name="title">
       <string>Problem Set</string>
      </attribute>
@@ -815,10 +795,6 @@
            <property name="text">
             <string>New Problem Set</string>
            </property>
-           <property name="icon">
-            <iconset resource="icons.qrc">
-             <normaloff>:/icons/images/newlook24/050-newsrc.png</normaloff>:/icons/images/newlook24/050-newsrc.png</iconset>
-           </property>
           </widget>
          </item>
          <item>
@@ -828,10 +804,6 @@
            </property>
            <property name="text">
             <string>Add Problem</string>
-           </property>
-           <property name="icon">
-            <iconset resource="icons.qrc">
-             <normaloff>:/icons/images/newlook24/002-add.png</normaloff>:/icons/images/newlook24/002-add.png</iconset>
            </property>
           </widget>
          </item>
@@ -843,10 +815,6 @@
            <property name="text">
             <string>Remove Problem</string>
            </property>
-           <property name="icon">
-            <iconset resource="icons.qrc">
-             <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
-           </property>
           </widget>
          </item>
          <item>
@@ -856,10 +824,6 @@
            </property>
            <property name="text">
             <string>Save Problem Set</string>
-           </property>
-           <property name="icon">
-            <iconset resource="icons.qrc">
-             <normaloff>:/icons/images/newlook24/072-saveas.png</normaloff>:/icons/images/newlook24/072-saveas.png</iconset>
            </property>
           </widget>
          </item>
@@ -871,10 +835,6 @@
            <property name="text">
             <string>Load Problem Set</string>
            </property>
-           <property name="icon">
-            <iconset resource="icons.qrc">
-             <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-           </property>
           </widget>
          </item>
          <item>
@@ -882,20 +842,12 @@
            <property name="text">
             <string>Import FPS Problem Set</string>
            </property>
-           <property name="icon">
-            <iconset resource="icons.qrc">
-             <normaloff>:/icons/images/newlook24/058-prev.png</normaloff>:/icons/images/newlook24/058-prev.png</iconset>
-           </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="btnExportFPS">
            <property name="text">
             <string>Export FPS Problem Set</string>
-           </property>
-           <property name="icon">
-            <iconset resource="icons.qrc">
-             <normaloff>:/icons/images/newlook24/052-next.png</normaloff>:/icons/images/newlook24/052-next.png</iconset>
            </property>
           </widget>
          </item>
@@ -974,11 +926,6 @@
      </size>
     </property>
     <widget class="QWidget" name="tabIssues">
-     <attribute name="icon">
-      <iconset>
-       <normalon>:/icons/images/newlook24/013-compile.png</normalon>
-      </iconset>
-     </attribute>
      <attribute name="title">
       <string>Issues</string>
      </attribute>
@@ -1028,11 +975,6 @@
      </layout>
     </widget>
     <widget class="QWidget" name="tabToolsOutput">
-     <attribute name="icon">
-      <iconset>
-       <normalon>:/icons/images/newlook24/015-compres.png</normalon>
-      </iconset>
-     </attribute>
      <attribute name="title">
       <string>Tools Output</string>
      </attribute>
@@ -1068,11 +1010,6 @@
      </layout>
     </widget>
     <widget class="QWidget" name="tabDebug">
-     <attribute name="icon">
-      <iconset>
-       <normalon>:/icons/images/newlook24/020-debug.png</normalon>
-      </iconset>
-     </attribute>
      <attribute name="title">
       <string>Debug</string>
      </attribute>
@@ -1160,7 +1097,7 @@
           <enum>QTabWidget::North</enum>
          </property>
          <property name="currentIndex">
-          <number>4</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabDebugConsole">
           <attribute name="title">
@@ -1342,11 +1279,6 @@
      </layout>
     </widget>
     <widget class="QWidget" name="tabSearch">
-     <attribute name="icon">
-      <iconset>
-       <normalon>:/icons/images/newlook24/074-search.png</normalon>
-      </iconset>
-     </attribute>
      <attribute name="title">
       <string>Search</string>
      </attribute>
@@ -1530,10 +1462,6 @@
      </layout>
     </widget>
     <widget class="QWidget" name="tabTODO">
-     <attribute name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/images/newlook24/047-makefl.png</normaloff>:/icons/images/newlook24/047-makefl.png</iconset>
-     </attribute>
      <attribute name="title">
       <string>TODO</string>
      </attribute>
@@ -1560,10 +1488,6 @@
      </layout>
     </widget>
     <widget class="QWidget" name="tabBookmark">
-     <attribute name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/images/newlook24/039-gobook.png</normaloff>:/icons/images/newlook24/039-gobook.png</iconset>
-     </attribute>
      <attribute name="title">
       <string>Bookmark</string>
      </attribute>
@@ -1602,10 +1526,6 @@
      </layout>
     </widget>
     <widget class="QWidget" name="tabProblem">
-     <attribute name="icon">
-      <iconset resource="icons.qrc">
-       <normaloff>:/icons/images/newlook24/015-compres.png</normaloff>:/icons/images/newlook24/015-compres.png</iconset>
-     </attribute>
      <attribute name="title">
       <string>Problem</string>
      </attribute>
@@ -1707,10 +1627,6 @@
                <property name="text">
                 <string>Add Probem Case</string>
                </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/002-add.png</normaloff>:/icons/images/newlook24/002-add.png</iconset>
-               </property>
               </widget>
              </item>
              <item>
@@ -1721,10 +1637,6 @@
                <property name="text">
                 <string>Remove Problem Case</string>
                </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
-               </property>
               </widget>
              </item>
              <item>
@@ -1734,10 +1646,6 @@
                </property>
                <property name="text">
                 <string>Open Anwser Source File</string>
-               </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/091-openproblemanswer.png</normaloff>:/icons/images/newlook24/091-openproblemanswer.png</iconset>
                </property>
               </widget>
              </item>
@@ -1756,20 +1664,12 @@
                <property name="text">
                 <string>Run All Cases</string>
                </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/092-runallproblemcases.png</normaloff>:/icons/images/newlook24/092-runallproblemcases.png</iconset>
-               </property>
               </widget>
              </item>
              <item>
               <widget class="QToolButton" name="btnCaseValidateOptions">
                <property name="text">
                 <string>Problem Cases Validation Options</string>
-               </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/083-toolbar.png</normaloff>:/icons/images/newlook24/083-toolbar.png</iconset>
                </property>
               </widget>
              </item>
@@ -1888,20 +1788,12 @@
                <property name="text">
                 <string>Choose Input File</string>
                </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-               </property>
               </widget>
              </item>
              <item row="0" column="2">
               <widget class="QToolButton" name="btnProblemCaseClearInputFileName">
                <property name="text">
                 <string>Clear</string>
-               </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
                </property>
               </widget>
              </item>
@@ -2004,20 +1896,12 @@
                <property name="text">
                 <string>Clear</string>
                </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/008-close.png</normaloff>:/icons/images/newlook24/008-close.png</iconset>
-               </property>
               </widget>
              </item>
              <item>
               <widget class="QToolButton" name="btnProblemCaseExpectedOutputFileName">
                <property name="text">
                 <string>Choose Expected Output File</string>
-               </property>
-               <property name="icon">
-                <iconset resource="icons.qrc">
-                 <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
                </property>
               </widget>
              </item>
@@ -2088,11 +1972,6 @@
    </widget>
   </widget>
   <action name="actionNew">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/050-newsrc.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>New C/C++ File</string>
    </property>
@@ -2104,11 +1983,6 @@
    </property>
   </action>
   <action name="actionOpen">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/053-open.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Open...</string>
    </property>
@@ -2117,11 +1991,6 @@
    </property>
   </action>
   <action name="actionSave">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/070-save.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Save</string>
    </property>
@@ -2130,11 +1999,6 @@
    </property>
   </action>
   <action name="actionSaveAs">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/072-saveas.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Save As...</string>
    </property>
@@ -2146,11 +2010,6 @@
    </property>
   </action>
   <action name="actionSaveAll">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/071-saveall.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Save All</string>
    </property>
@@ -2159,20 +2018,11 @@
    </property>
   </action>
   <action name="actionOptions">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/061-rebuild.png</normaloff>:/icons/images/newlook24/061-rebuild.png</iconset>
-   </property>
    <property name="text">
     <string>Options</string>
    </property>
   </action>
   <action name="actionCompile">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/013-compile.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Compile</string>
    </property>
@@ -2184,11 +2034,6 @@
    </property>
   </action>
   <action name="actionRun">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/069-run.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Run</string>
    </property>
@@ -2200,11 +2045,6 @@
    </property>
   </action>
   <action name="actionUndo">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/086-undo.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Undo</string>
    </property>
@@ -2213,11 +2053,6 @@
    </property>
   </action>
   <action name="actionRedo">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/062-redo.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Redo</string>
    </property>
@@ -2226,11 +2061,6 @@
    </property>
   </action>
   <action name="actionCut">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/019-cut.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Cut</string>
    </property>
@@ -2239,11 +2069,6 @@
    </property>
   </action>
   <action name="actionCopy">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/018-copy.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Copy</string>
    </property>
@@ -2252,11 +2077,6 @@
    </property>
   </action>
   <action name="actionPaste">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/057-paste.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Paste</string>
    </property>
@@ -2273,11 +2093,6 @@
    </property>
   </action>
   <action name="actionIndent">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/031-Edit-Indent.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Indent</string>
    </property>
@@ -2286,11 +2101,6 @@
    </property>
   </action>
   <action name="actionUnIndent">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/032-Edit-Unindent.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>UnIndent</string>
    </property>
@@ -2345,11 +2155,6 @@
    </property>
   </action>
   <action name="actionRebuild">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/061-rebuild.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Rebuild All</string>
    </property>
@@ -2361,11 +2166,6 @@
    </property>
   </action>
   <action name="actionStop_Execution">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/008-close.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Stop Execution</string>
    </property>
@@ -2374,10 +2174,6 @@
    </property>
   </action>
   <action name="actionDebug">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/022-debug-new-tm.png</normaloff>:/icons/images/newlook24/022-debug-new-tm.png</iconset>
-   </property>
    <property name="text">
     <string>Debug</string>
    </property>
@@ -2389,11 +2185,6 @@
    </property>
   </action>
   <action name="actionStep_Over">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/028-Debug-StepOver.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Step Over</string>
    </property>
@@ -2402,11 +2193,6 @@
    </property>
   </action>
   <action name="actionStep_Into">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/024-Debug-StepInto.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Step Into</string>
    </property>
@@ -2415,11 +2201,6 @@
    </property>
   </action>
   <action name="actionStep_Out">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/026-Debug-StepOut.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Step Out</string>
    </property>
@@ -2428,10 +2209,6 @@
    </property>
   </action>
   <action name="actionRun_To_Cursor">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/052-next.png</normaloff>:/icons/images/newlook24/052-next.png</iconset>
-   </property>
    <property name="text">
     <string>Run To Cursor</string>
    </property>
@@ -2440,11 +2217,6 @@
    </property>
   </action>
   <action name="actionContinue">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/021-Debug-Continue.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Continue</string>
    </property>
@@ -2453,11 +2225,6 @@
    </property>
   </action>
   <action name="actionAdd_Watch">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/088-watch.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Add Watch...</string>
    </property>
@@ -2473,11 +2240,6 @@
    </property>
   </action>
   <action name="actionFind">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/079-srchrep.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Find...</string>
    </property>
@@ -2494,11 +2256,6 @@
    </property>
   </action>
   <action name="actionReplace">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/066-replace.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Replace...</string>
    </property>
@@ -2538,11 +2295,6 @@
    </property>
   </action>
   <action name="actionReformat_Code">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/063-reformat.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Reformat Code</string>
    </property>
@@ -2551,11 +2303,6 @@
    </property>
   </action>
   <action name="actionBack">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/006-Back.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Go back</string>
    </property>
@@ -2564,11 +2311,6 @@
    </property>
   </action>
   <action name="actionForward">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/038-Forward.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Forward</string>
    </property>
@@ -2577,11 +2319,6 @@
    </property>
   </action>
   <action name="actionClose">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/010-closefl.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Close</string>
    </property>
@@ -2590,11 +2327,6 @@
    </property>
   </action>
   <action name="actionClose_All">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/009-closeall.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Close All</string>
    </property>
@@ -2603,11 +2335,6 @@
    </property>
   </action>
   <action name="actionMaximize_Editor">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/030-dos.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Maximize Editor</string>
    </property>
@@ -2616,11 +2343,6 @@
    </property>
   </action>
   <action name="actionNext_Editor">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/038-Forward.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Next</string>
    </property>
@@ -2629,11 +2351,6 @@
    </property>
   </action>
   <action name="actionPrevious_Editor">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/006-Back.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Previous</string>
    </property>
@@ -2686,11 +2403,6 @@
    </property>
   </action>
   <action name="actionOpen_Containing_Folder">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/090-explorer.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Open containing folder</string>
    </property>
@@ -2702,11 +2414,6 @@
    </property>
   </action>
   <action name="actionOpen_Terminal">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/030-dos.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Open a terminal here</string>
    </property>
@@ -2717,40 +2424,21 @@
    </property>
   </action>
   <action name="actionClose_Project">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/008-close.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Close Project</string>
    </property>
   </action>
   <action name="actionProject_options">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/060-projopt.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>Project options</string>
    </property>
   </action>
   <action name="actionNew_Project">
-   <property name="icon">
-    <iconset>
-     <normalon>:/icons/images/newlook24/049-newproj.png</normalon>
-    </iconset>
-   </property>
    <property name="text">
     <string>New Project...</string>
    </property>
   </action>
   <action name="actionProject_New_File">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/050-newsrc.png</normaloff>:/icons/images/newlook24/050-newsrc.png</iconset>
-   </property>
    <property name="text">
     <string>New Project File</string>
    </property>
@@ -2759,19 +2447,11 @@
    </property>
   </action>
   <action name="actionAdd_to_project">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/004-addsrc.png</normaloff>:/icons/images/newlook24/004-addsrc.png</iconset>
-   </property>
    <property name="text">
     <string>Add to project...</string>
    </property>
   </action>
   <action name="actionRemove_from_project">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/064-remsrc.png</normaloff>:/icons/images/newlook24/064-remsrc.png</iconset>
-   </property>
    <property name="text">
     <string>Remove from project</string>
    </property>
@@ -2782,37 +2462,21 @@
    </property>
   </action>
   <action name="actionMakeClean">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/011-clrhist.png</normaloff>:/icons/images/newlook24/011-clrhist.png</iconset>
-   </property>
    <property name="text">
     <string>Clean</string>
    </property>
   </action>
   <action name="actionProject_Open_Folder_In_Explorer">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/090-explorer.png</normaloff>:/icons/images/newlook24/090-explorer.png</iconset>
-   </property>
    <property name="text">
     <string>Open Folder in Explorer</string>
    </property>
   </action>
   <action name="actionProject_Open_In_Terminal">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/030-dos.png</normaloff>:/icons/images/newlook24/030-dos.png</iconset>
-   </property>
    <property name="text">
     <string>Open In Terminal</string>
    </property>
   </action>
   <action name="actionAbout">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/001-about.png</normaloff>:/icons/images/newlook24/001-about.png</iconset>
-   </property>
    <property name="text">
     <string>About</string>
    </property>
@@ -2826,10 +2490,6 @@
    </property>
   </action>
   <action name="actionPrint">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/055-package.png</normaloff>:/icons/images/newlook24/055-package.png</iconset>
-   </property>
    <property name="text">
     <string>Print...</string>
    </property>
@@ -2872,19 +2532,11 @@
    </property>
   </action>
   <action name="actionAdd_bookmark">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/003-addbook.png</normaloff>:/icons/images/newlook24/003-addbook.png</iconset>
-   </property>
    <property name="text">
     <string>Add Bookmark</string>
    </property>
   </action>
   <action name="actionRemove_Bookmark">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/064-remsrc.png</normaloff>:/icons/images/newlook24/064-remsrc.png</iconset>
-   </property>
    <property name="text">
     <string>Remove Bookmark</string>
    </property>
@@ -2895,19 +2547,11 @@
    </property>
   </action>
   <action name="actionLocate_in_Files_View">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/046-Locate.png</normaloff>:/icons/images/newlook24/046-Locate.png</iconset>
-   </property>
    <property name="text">
     <string>Locate in Files View</string>
    </property>
   </action>
   <action name="actionOpen_Folder">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-   </property>
    <property name="text">
     <string>Choose Working Folder</string>
    </property>
@@ -2916,10 +2560,6 @@
    </property>
   </action>
   <action name="actionRun_Parameters">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/014-compopt.png</normaloff>:/icons/images/newlook24/014-compopt.png</iconset>
-   </property>
    <property name="text">
     <string>Running Parameters...</string>
    </property>
@@ -3082,10 +2722,6 @@
    </property>
   </action>
   <action name="actionInterrupt">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/093-pause.png</normaloff>:/icons/images/newlook24/093-pause.png</iconset>
-   </property>
    <property name="text">
     <string>Interrupt</string>
    </property>
@@ -3199,10 +2835,6 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/037-filter.png</normaloff>:/icons/images/newlook24/037-filter.png</iconset>
-   </property>
    <property name="text">
     <string>Hide Non Support Files</string>
    </property>
@@ -3250,10 +2882,6 @@
    </property>
   </action>
   <action name="actionCompiler_Options">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/images/newlook24/084-tools.png</normaloff>:/icons/images/newlook24/084-tools.png</iconset>
-   </property>
    <property name="text">
     <string>Compiler Options...</string>
    </property>

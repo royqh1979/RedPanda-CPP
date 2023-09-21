@@ -43,11 +43,6 @@
         <property name="text">
          <string>Add</string>
         </property>
-        <property name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/002-add.png</normalon>
-         </iconset>
-        </property>
         <property name="autoRaise">
          <bool>false</bool>
         </property>
@@ -61,11 +56,6 @@
         <property name="text">
          <string>Remove</string>
         </property>
-        <property name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/008-close.png</normalon>
-         </iconset>
-        </property>
         <property name="autoRaise">
          <bool>false</bool>
         </property>
@@ -78,11 +68,6 @@
         </property>
         <property name="text">
          <string>Remove Invalid</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/007-bughlp.png</normalon>
-         </iconset>
         </property>
         <property name="toolButtonStyle">
          <enum>Qt::ToolButtonIconOnly</enum>

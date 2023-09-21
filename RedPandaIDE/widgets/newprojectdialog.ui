@@ -207,11 +207,6 @@
         <property name="text">
          <string>...</string>
         </property>
-        <property name="icon">
-         <iconset>
-          <normalon>:/icons/images/newlook24/053-open.png</normalon>
-         </iconset>
-        </property>
        </widget>
       </item>
       <item row="1" column="0">

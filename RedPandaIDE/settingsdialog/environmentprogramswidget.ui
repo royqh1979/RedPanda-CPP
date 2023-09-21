@@ -52,10 +52,6 @@
         <property name="text">
          <string>...</string>
         </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icons/images/newlook24/053-open.png</normaloff>:/icons/images/newlook24/053-open.png</iconset>
-        </property>
        </widget>
       </item>
       <item row="1" column="2">
@@ -65,10 +61,6 @@
         </property>
         <property name="text">
          <string>...</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icons/images/newlook24/087-update.png</normaloff>:/icons/images/newlook24/087-update.png</iconset>
         </property>
        </widget>
       </item>
@@ -93,10 +85,6 @@
         </property>
         <property name="text">
          <string>...</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../icons.qrc">
-          <normaloff>:/icons/images/newlook24/069-run.png</normaloff>:/icons/images/newlook24/069-run.png</iconset>
         </property>
        </widget>
       </item>
