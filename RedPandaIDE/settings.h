@@ -602,8 +602,13 @@ public:
         void setUseCustomTerminal(bool newUseCustomTerminal);
 
     private:
-//        bool checkAndSetTerminal(QString terminalPath, QString argsPattern);
-        bool updateTerminalList();
+        struct TerminalItem {
+            QString terminal;
+            QString param;
+        };
+
+        void checkAndSetTerminal();
+        QList<TerminalItem> loadTerminalList() const;
 
         //Appearance
         QString mTheme;

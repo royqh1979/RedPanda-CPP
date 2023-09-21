@@ -3773,28 +3773,8 @@ void Settings::Environment::setIconZoomFactor(double newIconZoomFactor)
 
 QString Settings::Environment::queryPredefinedTerminalArgumentsPattern(const QString &executable) const
 {
-#ifdef Q_OS_WINDOWS
-    QString terminalListFilename(":/config/terminal-windows.json");
-#else // UNIX
-    QString terminalListFilename(":/config/terminal-unix.json");
-#endif
-    QFile terminalListFile(terminalListFilename);
-    if (!terminalListFile.open(QFile::ReadOnly))
-        throw FileError(QObject::tr("Can't open file '%1' for read.")
-                            .arg(terminalListFilename));
-    QByteArray terminalListContent = terminalListFile.readAll();
-    QJsonDocument terminalListDocument(QJsonDocument::fromJson(terminalListContent));
-
-    // determing terminal (if not set yet) and build predefined arguments pattern map from our list
-    for (const auto &terminalGroup: terminalListDocument.array()) {
-        const QJsonArray &terminals = terminalGroup.toObject()["terminals"].toArray();
-        for (const auto &terminal_: terminals) {
-            const QJsonObject &terminal = terminal_.toObject();
-            const QString &path = terminal["path"].toString();
-            const QString &termExecutable = QFileInfo(path).fileName();
-            const QString &pattern = terminal["argsPattern"].toString();
-            if (QString::compare( executable , termExecutable, PATH_SENSITIVITY)==0) return pattern;
-        }
+    for (const TerminalItem& item: loadTerminalList()) {
+        if (item.terminal.compare(executable,PATH_SENSITIVITY)==0) return item.param;
     }
     return QString();
 }
@@ -3809,59 +3789,60 @@ void Settings::Environment::setUseCustomTerminal(bool newUseCustomTerminal)
     mUseCustomTerminal = newUseCustomTerminal;
 }
 
-//bool Settings::Environment::checkAndSetTerminal(QString terminalPath, QString argsPattern)
-//{
-//    QStringList patternItems = splitProcessCommand(argsPattern);
+void Settings::Environment::checkAndSetTerminal()
+{
+    if (!mUseCustomTerminal || !mTerminalPath.isEmpty()) return;
+    QStringList pathList = getExecutableSearchPaths();
+    QList<TerminalItem> terminalList = loadTerminalList();
+    for (const QString &dirPath: pathList) {
+        QDir dir{dirPath};
+        for (const TerminalItem& termItem:terminalList) {
+            QString absoluteTerminalPath = dir.absoluteFilePath(termItem.terminal);
+            if(fileExists(absoluteTerminalPath)) {
+                mTerminalPath = absoluteTerminalPath;
+                mTerminalArgumentsPattern = termItem.param;
+                return;
+            }
+        }
+    }
+    //Can't Find a term
+    QMessageBox::critical(
+                nullptr,
+                QCoreApplication::tr("Settings","Error"),
+                QCoreApplication::tr("Settings","Can't find terminal program!"));
+}
 
-//    if (patternItems.empty() ||
-//        !(patternItems.contains("$argv") || patternItems.contains("$command") || patternItems.contains("$tmpfile")) // program not referenced
-//    )
-//        return false;
+QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalList() const
+{
+#ifdef Q_OS_WINDOWS
+    QString terminalListFilename(":/config/terminal-windows.json");
+#else // UNIX
+    QString terminalListFilename(":/config/terminal-unix.json");
+#endif
+    QFile terminalListFile(terminalListFilename);
+    if (!terminalListFile.open(QFile::ReadOnly))
+        throw FileError(QObject::tr("Can't open file '%1' for read.")
+                            .arg(terminalListFilename));
+    QByteArray terminalListContent = terminalListFile.readAll();
+    QJsonDocument terminalListDocument(QJsonDocument::fromJson(terminalListContent));
 
-//    // `term` is not referenced ("$argv"),
-//    // or is not directly called ("open -app $term -args $tmpfile"),
-//    // do not check terminal path
-//    if (patternItems[0] != "$term") {
-//        setTerminalPath(terminalPath);
-//        setTerminalArgumentsPattern(argsPattern);
-//        return true;
-//    }
-
-//#define DO_CHECK_AND_SET do {                                                                    \
-//        if (termPathInfo.isFile() && termPathInfo.isReadable() && termPathInfo.isExecutable()) { \
-//            mTerminalPath = terminalPath;                                                        \
-//            mTerminalArgumentsPattern = argsPattern;                                             \
-//            return true;                                                                         \
-//        }                                                                                        \
-//    } while (0)
-
-//    switch (getPathUnixExecSemantics(terminalPath)) {
-//    case UnixExecSemantics::Absolute: {
-//        QFileInfo termPathInfo(terminalPath);
-//        DO_CHECK_AND_SET;
-//        break;
-//    }
-//    case UnixExecSemantics::RelativeToCwd: {
-//        QDir appDir(pSettings->dirs().appDir());
-//        QString absoluteTerminalPath = appDir.absoluteFilePath(terminalPath);
-//        QFileInfo termPathInfo(absoluteTerminalPath);
-//        DO_CHECK_AND_SET;
-//        break;
-//    }
-//    case UnixExecSemantics::SearchInPath: {
-//        QStringList pathList = getExecutableSearchPaths();
-//        for (const QString &dir: pathList) {
-//            QString absoluteTerminalPath = QDir(dir).absoluteFilePath(terminalPath);
-//            QFileInfo termPathInfo(absoluteTerminalPath);
-//            DO_CHECK_AND_SET;
-//        }
-//        break;
-//    }
-//    }
-//#undef DO_CHECK_AND_SET
-
-//    return false;
-//}
+    QList<Settings::Environment::TerminalItem> result;
+    // determing terminal (if not set yet) and build predefined arguments pattern map from our list
+    for (const auto &terminalGroup: terminalListDocument.array()) {
+        const QJsonArray &terminals = terminalGroup.toObject()["terminals"].toArray();
+        for (const auto &terminal_: terminals) {
+            const QJsonObject &terminal = terminal_.toObject();
+            const QString &path = terminal["path"].toString();
+            const QString &termExecutable = QFileInfo(path).fileName();
+            const QString &pattern = terminal["argsPattern"].toString();
+            Settings::Environment::TerminalItem terminalItem;
+            terminalItem.terminal = path;
+            terminalItem.param = pattern;
+            result.append(terminalItem);
+        }
+    }
+    return result;
+}
 
 void Settings::Environment::doSave()
 {
