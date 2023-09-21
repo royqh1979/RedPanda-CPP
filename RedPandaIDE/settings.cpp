@@ -3817,8 +3817,8 @@ void Settings::Environment::checkAndSetTerminal()
     //Can't Find a term
     QMessageBox::critical(
                 nullptr,
-                QCoreApplication::tr("Settings","Error"),
-                QCoreApplication::tr("Settings","Can't find terminal program!"));
+                QCoreApplication::translate("Settings","Error"),
+                QCoreApplication::translate("Settings","Can't find terminal program!"));
 }
 
 QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalList() const

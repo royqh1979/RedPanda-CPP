@@ -1792,19 +1792,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>term -e sh -c &quot;echo hello; sleep 3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Auto Detect Terminal Arguments Pattern</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Test Command</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>$term -e $argv</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -7066,6 +7058,17 @@
     <name>SearchResultTreeViewDelegate</name>
     <message>
         <source>Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Settings</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t find terminal program!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

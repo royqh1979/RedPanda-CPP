@@ -1959,19 +1959,11 @@
         <translation>Todos os arquivos (%1)</translation>
     </message>
     <message>
-        <source>term -e sh -c &quot;echo hello; sleep 3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Auto Detect Terminal Arguments Pattern</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Test Command</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>$term -e $argv</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6424,6 +6416,19 @@
     </message>
 </context>
 <context>
+    <name>QCoreApplication</name>
+    <message>
+        <source>Settings</source>
+        <comment>Error</comment>
+        <translation type="obsolete">Configurações</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <comment>Can&apos;t find terminal program!</comment>
+        <translation type="obsolete">Configurações</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -7713,6 +7718,17 @@
     <message>
         <source>Line</source>
         <translation>Linha</translation>
+    </message>
+</context>
+<context>
+    <name>Settings</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Erro</translation>
+    </message>
+    <message>
+        <source>Can&apos;t find terminal program!</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
