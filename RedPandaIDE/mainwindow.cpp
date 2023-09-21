@@ -734,6 +734,7 @@ void MainWindow::updateCompileActions(const Editor *e)
                     switch(fileType) {
                     case FileType::CSource:
                         canCompile = set->canCompileC();
+                        qDebug()<<(int)set->compilerType();
 #ifdef ENABLE_SDCC
                         if (set->compilerType()!=CompilerType::SDCC)
 #endif
@@ -741,6 +742,7 @@ void MainWindow::updateCompileActions(const Editor *e)
                             canGenerateAssembly = canCompile;
                             canRun = canCompile ;
                         }
+                        qDebug()<<canCompile<<canRun;
                         canDebug = set->canDebug();
                         break;
                     case FileType::CppSource:

@@ -3627,6 +3627,8 @@ void Settings::Environment::doLoad()
     mTerminalPath = stringValue("terminal_path", "");
     mTerminalArgumentsPattern = stringValue("terminal_arguments_pattern", "");
 
+    checkAndSetTerminal();
+
     mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
     mOpenFilesInSingleInstance = boolValue("open_files_in_single_instance",false);
@@ -3791,7 +3793,9 @@ void Settings::Environment::setUseCustomTerminal(bool newUseCustomTerminal)
 
 void Settings::Environment::checkAndSetTerminal()
 {
-    if (!mUseCustomTerminal || !mTerminalPath.isEmpty()) return;
+    if (!mUseCustomTerminal) return;
+    if (!mTerminalPath.isEmpty() && !mTerminalArgumentsPattern.isEmpty()) return;
+
     QStringList pathList = getExecutableSearchPaths();
     QList<TerminalItem> terminalList = loadTerminalList();
     for (const QString &dirPath: pathList) {

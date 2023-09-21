@@ -546,6 +546,12 @@ public:
 
     class Environment: public _Base {
     public:
+        struct TerminalItem {
+            QString name;
+            QString terminal;
+            QString param;
+        };
+
         explicit Environment(Settings * settings);
         QString theme() const;
         void setTheme(const QString &theme);
@@ -601,14 +607,10 @@ public:
         bool useCustomTerminal() const;
         void setUseCustomTerminal(bool newUseCustomTerminal);
 
-    private:
-        struct TerminalItem {
-            QString terminal;
-            QString param;
-        };
-
-        void checkAndSetTerminal();
         QList<TerminalItem> loadTerminalList() const;
+
+    private:
+        void checkAndSetTerminal();
 
         //Appearance
         QString mTheme;
