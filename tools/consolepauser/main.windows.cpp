@@ -259,8 +259,8 @@ int main(int argc, char** argv) {
             0,
             0,
             BUF_SIZE);
-    } else {
-        printf("can't open shared memory!\n");
+//    } else {
+//        printf("can't open shared memory!\n");
     }
 
     // Save starting timestamp
