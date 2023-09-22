@@ -4,9 +4,9 @@ Red Panda C++ Version 2.25
   - change: Symbol completion of '{' won't insert extra new lines.
   - fix: "move selection up/down" of whole lines selection are no correctly handled.
   - enhancement: Improvement of terminal support ( from cyano.CN )
-  - enhancement: Virtual Terminal Sequences Support in windows 10/11 ( from cyano.CN )
-  - enhancement: Option "Enable Virtual Terminal Sequences Support" in Settings -> Executor 
-  - change: Use freetype as the fontengine in windows
+  - enhancement: ANSI escape sequences Support in windows 10/11 ( from cyano.CN )
+  - enhancement: Option "Enable ANSI escape sequences Support" in Settings -> Executor 
+  - change: Use freetype as the fontengine in windows ( from cyano.CN )
   
 Red Panda C++ Version 2.24
 

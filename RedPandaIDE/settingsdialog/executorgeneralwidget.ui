@@ -27,7 +27,7 @@
       <item>
        <widget class="QCheckBox" name="chkVTSeq">
         <property name="text">
-         <string>Enable Virtual Terminal Sequence Support</string>
+         <string>Enable ANSI Escape Sequences Support</string>
         </property>
        </widget>
       </item>
@@ -155,8 +155,6 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

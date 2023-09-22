@@ -2083,7 +2083,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable Virtual Terminal Sequence Support</source>
+        <source>Enable ANSI Escape Sequences Support</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
