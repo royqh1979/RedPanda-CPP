@@ -245,7 +245,8 @@ int main(int argc, char *argv[])
 {
 #ifdef Q_OS_WINDOWS
     // Make title bar and palette follow system-wide dark mode setting on recent Windows releases.
-    qputenv("QT_QPA_PLATFORM", "windows:darkmode=2");
+    // Use freetype as the fontengine
+    qputenv("QT_QPA_PLATFORM", "windows:darkmode=2:fontengine=freetype");
 #endif
 
 #ifdef Q_OS_MACOS
