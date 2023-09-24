@@ -3808,6 +3808,7 @@ void Settings::Environment::checkAndSetTerminal()
             if(fileExists(absoluteTerminalPath)) {
                 mTerminalPath = absoluteTerminalPath;
                 mTerminalArgumentsPattern = termItem.param;
+                return;
             }
         } else {
             for (const QString &dirPath: pathList) {
@@ -3816,7 +3817,7 @@ void Settings::Environment::checkAndSetTerminal()
                 if(fileExists(absoluteTerminalPath)) {
                     mTerminalPath = absoluteTerminalPath;
                     mTerminalArgumentsPattern = termItem.param;
-                    break;
+                    return;
                 }
             }
         }
