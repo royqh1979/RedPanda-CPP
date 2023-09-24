@@ -7,6 +7,7 @@ Red Panda C++ Version 2.25
   - enhancement: ANSI escape sequences Support in windows 10/11 ( from cyano.CN )
   - enhancement: Option "Enable ANSI escape sequences Support" in Settings -> Executor 
   - change: Use freetype as the fontengine in windows ( from cyano.CN )
+  - fix: Custom compile options is not used when retrieve macros defined by the compiler.
   
 Red Panda C++ Version 2.24
 

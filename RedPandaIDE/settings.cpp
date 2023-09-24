@@ -2379,7 +2379,10 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
     }
 #endif
 
-
+    if (mUseCustomCompileParams) {
+        QStringList extraParams = splitProcessCommand(mCustomCompileParams);
+        arguments.append(extraParams);
+    }
     arguments.append(NULL_FILE);
 
     QFileInfo ccompiler(mCCompiler);
