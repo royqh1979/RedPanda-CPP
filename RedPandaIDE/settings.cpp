@@ -3628,7 +3628,11 @@ void Settings::Environment::doLoad()
 
     // check saved terminal path
     mTerminalPath = stringValue("terminal_path", "");
+#ifdef Q_OS_WINDOWS
+    // APP_DIR trick for windows portable app
+    // on other platforms multiple instances share the same configuration and thus the trick may break terminal path
     mTerminalPath.replace("%*APP_DIR*%",pSettings->dirs().appDir());
+#endif
     mTerminalArgumentsPattern = stringValue("terminal_arguments_pattern", "");
 
     checkAndSetTerminal();
@@ -3902,9 +3906,13 @@ void Settings::Environment::doSave()
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
     QString terminalPath = mTerminalPath;
+#ifdef Q_OS_WINDOWS
+    // APP_DIR trick for windows portable app
+    // on other platforms multiple instances share the same configuration and thus the trick may break terminal path
     if (terminalPath.startsWith(pSettings->dirs().appDir())) {
         terminalPath="%*APP_DIR*%"+terminalPath.mid(pSettings->dirs().appDir().length());
     }
+#endif
 
     saveValue("terminal_path",terminalPath);
     saveValue("terminal_arguments_pattern",mTerminalArgumentsPattern);
