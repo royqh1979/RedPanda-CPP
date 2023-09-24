@@ -24,9 +24,6 @@ ln -s usr/share/icons/hicolor/scalable/apps/redpandaide.svg redpandaide.svg
 install -m755 /build/RedPanda-CPP/packages/appimage/AppRun.sh AppRun
 install -m644 /build/RedPanda-CPP/platform/linux/redpandaide.png .DirIcon
 
-# copy dependency
-cp /usr/local/bin/alacritty usr/bin
-
 # create AppImage
 cd /build
 mksquashfs RedPandaIDE.AppDir $APPIMAGE_FILE -offset $RUNTIME_SIZE -comp zstd -root-owned -noappend -b 1M -mkfs-time 0
