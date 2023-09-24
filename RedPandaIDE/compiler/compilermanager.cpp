@@ -325,7 +325,7 @@ void CompilerManager::run(
             } + splitProcessCommand(arguments);
         }
         auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
-            pSettings->environment().terminalPathForExec(),
+            pSettings->environment().terminalPath(),
             pSettings->environment().terminalArgumentsPattern(),
             execArgs
         );
