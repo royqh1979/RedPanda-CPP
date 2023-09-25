@@ -86,19 +86,3 @@ RUN mkdir -p /build/qt5 && \
     # cleanup
     cd / && \
     rm -r /build/qt5
-
-# Alacritty
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.71.1 && \
-    . ~/.cargo/env && \
-    mkdir -p /build/alacritty && \
-    cd /build/alacritty && \
-    curl -L -o alacritty-${ALACRITTY_VERSION}.tar.gz "https://github.com/alacritty/alacritty/archive/refs/tags/v${ALACRITTY_VERSION}.tar.gz" && \
-    tar xf alacritty-${ALACRITTY_VERSION}.tar.gz && \
-    cd alacritty-${ALACRITTY_VERSION} && \
-    echo -e '[profile.minsize]\ninherits="release"\ndebug=false\nstrip=true\nopt-level="s"' >>Cargo.toml && \
-    cargo build --profile minsize && \
-    cp target/minsize/alacritty /usr/local/bin && \
-    # cleanup
-    cd / && \
-    rm -r /build/alacritty && \
-    rustup self uninstall -y
