@@ -3631,7 +3631,6 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand, c
         args->flags |= CREATE_NEW_CONSOLE;
         args->startupInfo->dwFlags &=  ~STARTF_USESTDHANDLES; //
     });
-#endif
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathAdded;
@@ -3644,6 +3643,7 @@ void MainWindow::openShell(const QString &folder, const QString &shellCommand, c
     }
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
+#endif
     process.startDetached();
 }
 
