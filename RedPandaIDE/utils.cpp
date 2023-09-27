@@ -595,7 +595,32 @@ QStringList getExecutableSearchPaths()
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathList = path.split(PATH_SEPARATOR);
+#ifdef Q_OS_WINDOWS
+    /* follow Windows `CreateProcessW` search semantics.
+     * ref. https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw .
+     */
+    QStringList searchList{};
+    wchar_t buffer[MAX_PATH];
+    // 1. the directory from which the application loaded
+    searchList.push_back(QApplication::instance()->applicationDirPath());
+    // 2. the current directory for the parent process
+    // here we add it because launching from GUI the current directory is relatively stable
+    searchList.push_back(QDir::currentPath());
+    // 3. the 32-bit Windows system directory
+    if (GetSystemDirectoryW(buffer, MAX_PATH) > 0)
+        searchList.push_back(QString::fromWCharArray(buffer));
+    if (GetWindowsDirectoryW(buffer, MAX_PATH) > 0) {
+        // 4. the 16-bit Windows system directory
+        searchList.push_back(QString::fromWCharArray(buffer) + "/System");
+        // 5. the Windows directory
+        searchList.push_back(QString::fromWCharArray(buffer));
+    }
+    // 6. the directories that are listed in the PATH environment variable
+    searchList.append(pathList);
+    return searchList;
+#else
     return pathList;
+#endif
 }
 
 QString escapeArgument(const QString &arg, [[maybe_unused]] bool isFirstArg)

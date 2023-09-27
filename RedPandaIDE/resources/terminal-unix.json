@@ -126,16 +126,6 @@
         ]
     },
     {
-        "group": "Bundled",
-        "terminals": [
-            {
-                "name": "Alacritty (Bundled)",
-                "path": "./alacritty",
-                "argsPattern": "$term -e $argv"
-            }
-        ]
-    },
-    {
         "group": "With minor issue",
         "terminals": [
             {

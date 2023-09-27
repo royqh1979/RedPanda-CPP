@@ -83,20 +83,3 @@ RUN mkdir -p /build/qt5 && \
     # cleanup
     cd / && \
     rm -r /build/qt5
-
-# Alacritty
-RUN yum install -y cargo && \
-    mkdir -p /build/alacritty && \
-    cd /build/alacritty && \
-    curl -L -o alacritty-${ALACRITTY_VERSION}.tar.gz "https://github.com/alacritty/alacritty/archive/refs/tags/v${ALACRITTY_VERSION}.tar.gz" && \
-    tar xf alacritty-${ALACRITTY_VERSION}.tar.gz && \
-    cd alacritty-${ALACRITTY_VERSION} && \
-    echo -e '[profile.minsize]\ninherits="release"\ndebug=false\nstrip=true\nopt-level="s"' >>Cargo.toml && \
-    cargo build --profile minsize && \
-    cp target/minsize/alacritty /usr/local/bin && \
-    # cleanup
-    cd / && \
-    rm -r /build/alacritty && \
-    yum autoremove -y cargo && \
-    yum clean all && \
-    rm -r ~/.cargo
