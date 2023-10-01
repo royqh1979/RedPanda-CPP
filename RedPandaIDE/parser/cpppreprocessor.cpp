@@ -912,6 +912,7 @@ CppPreprocessor::BranchResult CppPreprocessor::calcElseBranchResult(BranchResult
     case BranchResult::parentIsFalse: return BranchResult::parentIsFalse;
     }
     Q_ASSERT( false ); //We should fail here.
+    return BranchResult::isFalse;
 }
 
 void CppPreprocessor::addDefinesInFile(const QString &fileName)
