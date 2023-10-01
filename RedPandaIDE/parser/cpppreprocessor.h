@@ -104,6 +104,14 @@ public:
     static QList<PDefineArgToken> tokenizeValue(const QString& value);
 
 private:
+
+    enum class BranchResult {
+        isTrue,   /* This branch is true */
+        isFalse_but_trued, /* This branch is false, but a previous branch is true */
+        isFalse, /* This branch and all previous branches is false */
+        parentIsFalse
+    };
+
     void preprocessBuffer();
     void skipToEndOfPreprocessor();
     void skipToPreprocessor();
@@ -130,27 +138,32 @@ private:
     void closeInclude();
 
     // branch stuff
-    bool getCurrentBranch(){
+    BranchResult getCurrentBranch(){
         if (!mBranchResults.isEmpty())
             return mBranchResults.last();
         else
-            return true;
+            return BranchResult::isTrue;
     }
-    void setCurrentBranch(bool value){
-        if (value!=getCurrentBranch()) {
-            mCurrentIncludes->branches.insert(mIndex+1,value);
+    BranchResult calcElseBranchResult(BranchResult oldResult);
+    bool sameResultWithCurrentBranch(BranchResult value) {
+        return (getCurrentBranch()==BranchResult::isTrue && value == BranchResult::isTrue)
+                || (getCurrentBranch()!=BranchResult::isTrue && value != BranchResult::isTrue);
+    }
+    void setCurrentBranch(BranchResult value){
+        if (!sameResultWithCurrentBranch(value)) {
+            mCurrentIncludes->branches.insert(mIndex+1,value==BranchResult::isTrue);
         }
         mBranchResults.append(value);
     }
     void removeCurrentBranch(){
-        bool result = getCurrentBranch();
+        BranchResult value = getCurrentBranch();
         if (mBranchResults.size()>0) {
             mBranchResults.pop_back();
         }
-        if (getCurrentBranch()!=result) {
-            mCurrentIncludes->branches.insert(mIndex,getCurrentBranch());
+        if (!sameResultWithCurrentBranch(value)) {
+            mCurrentIncludes->branches.insert(mIndex,getCurrentBranch()==BranchResult::isTrue);
         }
-    };
+    }
     // include stuff
     PFileIncludes getFileIncludesEntry(const QString& fileName){
         return mIncludesList.value(fileName,PFileIncludes());
@@ -227,7 +240,6 @@ static  bool isNumberChar(const QChar& ch);
 
     int evaluateExpression(QString line);
 private:
-
     //temporary data when preprocessing single file
     int mIndex; // points to current file buffer.
     QString mFileName;
@@ -236,7 +248,7 @@ private:
     PFileIncludes mCurrentIncludes;
     int mPreProcIndex;    
     QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
-    QList<bool> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
+    QList<BranchResult> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
     DefineMap mDefines; // working set, editable
     QSet<QString> mProcessed; // dictionary to save filename already processed
 

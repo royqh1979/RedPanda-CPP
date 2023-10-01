@@ -206,7 +206,7 @@ struct Statement {
     // definiton line/filename is valid
     bool hasDefinition() {
         return properties.testFlag(StatementProperty::spHasDefinition);
-    };
+    }
     void setHasDefinition(bool on) {
         properties.setFlag(StatementProperty::spHasDefinition,on);
     }
@@ -220,7 +220,7 @@ struct Statement {
     // statement in system header (#include <>)
     bool inSystemHeader() {
         return properties.testFlag(StatementProperty::spInSystemHeader);
-    };
+    }
     void setInSystemHeader(bool on) {
         properties.setFlag(StatementProperty::spInSystemHeader, on);
     }
@@ -232,7 +232,7 @@ struct Statement {
     }
     bool isInherited() {
         return properties.testFlag(StatementProperty::spInherited);
-    }; // inherted member;
+    } // inherted member;
 
 };
 

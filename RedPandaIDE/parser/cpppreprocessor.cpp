@@ -347,12 +347,12 @@ void CppPreprocessor::handleBranch(const QString &line)
 //                return;
 //            }
 //        }
-        if (!getCurrentBranch()) {
-            setCurrentBranch(false);
+        if (getCurrentBranch()!=BranchResult::isTrue) {
+            setCurrentBranch(BranchResult::parentIsFalse);
         } else {
             constexpr int IFDEF_LEN = 5; //length of ifdef;
             QString name = line.mid(IFDEF_LEN).trimmed();
-            setCurrentBranch( getDefine(name)!=nullptr );
+            setCurrentBranch( getDefine(name)!=nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
 
         }
     } else if (line.startsWith("ifndef")) {
@@ -363,12 +363,12 @@ void CppPreprocessor::handleBranch(const QString &line)
 //                return;
 //            }
 //        }
-        if (!getCurrentBranch()) {
-            setCurrentBranch(false);
+        if (getCurrentBranch()!=BranchResult::isTrue) {
+            setCurrentBranch(BranchResult::parentIsFalse);
         } else {
             constexpr int IFNDEF_LEN = 6; //length of ifndef;
             QString name = line.mid(IFNDEF_LEN).trimmed();
-            setCurrentBranch( getDefine(name)==nullptr );
+            setCurrentBranch( getDefine(name)==nullptr?(BranchResult::isTrue):(BranchResult::isFalse) );
         }
     } else if (line.startsWith("if")) {
         //        // if a branch that is not at our level is false, current branch is false too;
@@ -378,29 +378,30 @@ void CppPreprocessor::handleBranch(const QString &line)
         //                return;
         //            }
         //        }
-        if (!getCurrentBranch()) {// we are already inside an if that is NOT being taken
-            setCurrentBranch(false);// so don't take this one either
+        if (getCurrentBranch()!=BranchResult::isTrue) {// we are already inside an if that is NOT being taken
+            setCurrentBranch(BranchResult::parentIsFalse);// so don't take this one either
         } else {
             constexpr int IF_LEN = 2; //length of if;
             QString ifLine = line.mid(IF_LEN).trimmed();
 
             bool testResult = evaluateIf(ifLine);
-            setCurrentBranch(testResult);
+            setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
         }
     } else if (line.startsWith("else")) {
-        bool oldResult = getCurrentBranch(); // take either if or else
+        BranchResult oldResult = getCurrentBranch(); // take either if or else
         removeCurrentBranch();
-        setCurrentBranch(!oldResult);
+        setCurrentBranch(calcElseBranchResult(oldResult));
     } else if (line.startsWith("elif")) {
-        bool oldResult = getCurrentBranch(); // take either if or else
+        BranchResult oldResult = getCurrentBranch(); // take either if or else
         removeCurrentBranch();
-        if (oldResult) { // don't take this one, if  previous has been taken
-            setCurrentBranch(false);
-        } else {
+        BranchResult elseResult = calcElseBranchResult(oldResult);
+        if (elseResult == BranchResult::isTrue) { // don't take this one, if  previous has been taken
             constexpr int ELIF_LEN = 4; //length of if;
             QString ifLine = line.mid(ELIF_LEN).trimmed();
             bool testResult = evaluateIf(ifLine);
-            setCurrentBranch(testResult);
+            setCurrentBranch(testResult?(BranchResult::isTrue):(BranchResult::isFalse));
+        } else {
+            setCurrentBranch(elseResult);
         }
     } else if (line.startsWith("endif")) {
         removeCurrentBranch();
@@ -409,7 +410,7 @@ void CppPreprocessor::handleBranch(const QString &line)
 
 void CppPreprocessor::handleDefine(const QString &line)
 {
-    if (getCurrentBranch()) {
+    if (getCurrentBranch() == BranchResult::isTrue) {
         addDefineByLine(line, false);
         mResult[mPreProcIndex] = '#' + line; // add define to result file so the parser can handle it
     }
@@ -417,7 +418,7 @@ void CppPreprocessor::handleDefine(const QString &line)
 
 void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
 {
-    if (!getCurrentBranch()) // we're skipping due to a branch failure
+    if (getCurrentBranch()!=BranchResult::isTrue) // we're skipping due to a branch failure
         return;
 
     PParsedFile file = mIncludes.back();
@@ -902,6 +903,17 @@ void CppPreprocessor::closeInclude()
                 .arg(parsedFile->index+1));
 }
 
+CppPreprocessor::BranchResult CppPreprocessor::calcElseBranchResult(BranchResult oldResult)
+{
+    switch(oldResult) {
+    case BranchResult::isTrue: return BranchResult::isFalse_but_trued;
+    case BranchResult::isFalse: return BranchResult::isTrue;
+    case BranchResult::isFalse_but_trued: return BranchResult::isFalse_but_trued;
+    case BranchResult::parentIsFalse: return BranchResult::parentIsFalse;
+    }
+    Q_ASSERT( false ); //We should fail here.
+}
+
 void CppPreprocessor::addDefinesInFile(const QString &fileName)
 {
     if (mProcessed.contains(fileName))
@@ -1200,7 +1212,7 @@ void CppPreprocessor::skipToPreprocessor()
     int bufferCount = mBuffer.count();
 // Increment until a line begins with a #
     while ((mIndex < bufferCount) && !mBuffer[mIndex].startsWith('#')) {
-        if (getCurrentBranch()) { // if not skipping, expand current macros
+        if (getCurrentBranch()==BranchResult::isTrue) { // if not skipping, expand current macros
             int startIndex = mIndex;
             QString expanded = expandMacros();
             mResult.append(expanded);

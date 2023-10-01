@@ -439,13 +439,11 @@ PStatement ClassBrowserModel::createDummy(const PStatement& statement)
 
 ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentStatement, int depth)
 {
-    if (depth>10)
-        return nullptr;
-    if (!parentStatement)
-        return mRoot;
-    if (!isScopeStatement(parentStatement)) {
-        return mRoot;
-    }
+    Q_ASSERT(depth<=10);
+    if (depth>10) return mRoot;
+    if (!parentStatement) return mRoot;
+    if (!isScopeStatement(parentStatement)) return mRoot;
+
     PClassBrowserNode parentNode = mScopeNodes.value(parentStatement->fullName,PClassBrowserNode());
     if (!parentNode) {
         PStatement dummyParent = createDummy(parentStatement);
