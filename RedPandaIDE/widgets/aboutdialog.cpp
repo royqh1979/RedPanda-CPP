@@ -49,7 +49,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
 
     QString website="https://sourceforge.net/projects/redpanda-cpp/";
     if (pSettings->environment().language()=="zh_CN") {
-        website = "http://royqh.net/redpandacpp";
+        website = "https://royqh1979.gitee.io/redpandacpp";
     }
     ui->lblHomepage->setText(tr("Website: <a href=\"%1\">%1</a>").arg(website));
 }

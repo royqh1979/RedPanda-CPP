@@ -9399,7 +9399,7 @@ void MainWindow::on_actionGit_Push_triggered()
 void MainWindow::on_actionWebsite_triggered()
 {
     if (pSettings->environment().language()=="zh_CN") {
-        QDesktopServices::openUrl(QUrl("http://royqh.net/redpandacpp"));
+        QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp"));
     } else {
         QDesktopServices::openUrl(QUrl("https://sourceforge.net/projects/redpanda-cpp/"));
     }
@@ -9822,7 +9822,7 @@ void MainWindow::on_actionSubmit_Issues_triggered()
 
 void MainWindow::on_actionDocument_triggered()
 {
-    QDesktopServices::openUrl(QUrl("http://royqh.net/redpandacpp/docsy/docs/usage"));
+    QDesktopServices::openUrl(QUrl("https://royqh1979.gitee.io/redpandacpp/docsy/docs/usage"));
 }
 
 
