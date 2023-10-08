@@ -45,9 +45,10 @@ isEmpty(LIBEXECDIR) {
     LIBEXECDIR = $${PREFIX}/libexec
 }
 
-# windows 7 is the minimum windows version
 win32: {
-DEFINES += _WIN32_WINNT=0x0601
+    DEFINES += _WIN32_WINNT=0x0501
+    LIBS += -lpsapi  # GetModuleFileNameEx, GetProcessMemoryInfo
+    LIBS += -lshlwapi  # SHDeleteKey
 }
 
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"

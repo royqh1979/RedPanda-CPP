@@ -389,9 +389,9 @@ bool isGreenEdition()
     if (!gIsGreenEditionInited) {
         QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
         QString value;
-        if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
+        if (!readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", value)) {
             keyString = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++";
-            if (!readRegistry(HKEY_LOCAL_MACHINE,keyString.toLocal8Bit(),"UninstallString",value)) {
+            if (!readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", value)) {
                 value="";
             }
         }
@@ -465,27 +465,30 @@ void executeFile(const QString &fileName, const QString &params, const QString &
 }
 
 #ifdef Q_OS_WIN
-bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value) {
-    DWORD dataSize;
+bool readRegistry(HKEY key,const QString& subKey, const QString& name, QString& value) {
     LONG result;
-    result = RegGetValueA(key,subKey,
-                 name, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
-                 NULL,
-                 NULL,
-                 &dataSize);
-    if (result!=ERROR_SUCCESS)
+    HKEY hkey;
+    result = RegOpenKeyExW(key, subKey.toStdWString().c_str(), 0, KEY_READ, &hkey);
+    if (result != ERROR_SUCCESS)
         return false;
-    char * buffer = new char[dataSize+10];
-    result = RegGetValueA(key,subKey,
-                 name, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ,
-                 NULL,
-                 buffer,
-                 &dataSize);
-    if (result!=ERROR_SUCCESS) {
+
+    DWORD dataType;
+    DWORD dataSize;
+    result = RegQueryValueExW(hkey, name.toStdWString().c_str(), NULL, &dataType, NULL, &dataSize);
+    if (result != ERROR_SUCCESS || (dataType != REG_SZ && dataType != REG_MULTI_SZ)) {
+        RegCloseKey(hkey);
+        return false;
+    }
+
+    wchar_t * buffer = new wchar_t[dataSize / sizeof(wchar_t) + 10];
+    result = RegQueryValueExW(hkey, name.toStdWString().c_str(), NULL, &dataType, (LPBYTE)buffer, &dataSize);
+    RegCloseKey(hkey);
+    if (result != ERROR_SUCCESS) {
         delete[] buffer;
         return false;
     }
-    value=QString::fromLocal8Bit(buffer);
+
+    value = QString::fromWCharArray(buffer);
     delete [] buffer;
     return true;
 }

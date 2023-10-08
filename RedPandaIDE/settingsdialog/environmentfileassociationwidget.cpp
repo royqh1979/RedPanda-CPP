@@ -21,6 +21,7 @@
 
 #include <QMessageBox>
 #include <windows.h>
+#include <shlwapi.h>
 
 EnvironmentFileAssociationWidget::EnvironmentFileAssociationWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -156,33 +157,33 @@ bool FileAssociationModel::checkAssociation(const QString &extension, const QStr
     HKEY key;
     LONG result;
 
-    result = RegOpenKeyExA(HKEY_CLASSES_ROOT,extension.toLocal8Bit(),0,KEY_READ,&key);
+    result = RegOpenKeyExW(HKEY_CLASSES_ROOT,extension.toStdWString().c_str(),0,KEY_READ,&key);
     RegCloseKey(key);
     if (result != ERROR_SUCCESS )
         return false;
 
-    result = RegOpenKeyExA(HKEY_CLASSES_ROOT,filetype.toLocal8Bit(),0,KEY_READ,&key);
+    result = RegOpenKeyExW(HKEY_CLASSES_ROOT,filetype.toStdWString().c_str(),0,KEY_READ,&key);
     RegCloseKey(key);
     if (result != ERROR_SUCCESS )
         return false;
 
     QString keyString = QString("%1\\Shell\\%2\\Command").arg(filetype).arg(verb);
     QString value1,value2;
-    if (!readRegistry(HKEY_CLASSES_ROOT,keyString.toLocal8Bit(),"",value1))
+    if (!readRegistry(HKEY_CLASSES_ROOT, keyString, "", value1))
         return false;
-    if (!readRegistry(HKEY_CLASSES_ROOT,extension.toLocal8Bit(),"",value2))
+    if (!readRegistry(HKEY_CLASSES_ROOT, extension, "", value2))
         return false;
 
     return (value2 == filetype)
             && (value1.compare(serverApp,PATH_SENSITIVITY)==0);
 }
 
-bool writeRegistry(HKEY parentKey, const QByteArray& subKey, const QByteArray& value) {
+bool writeRegistry(HKEY parentKey, const QString& subKey, const QString& value) {
     DWORD disposition;
     HKEY key;
-    LONG result = RegCreateKeyExA(
+    LONG result = RegCreateKeyExW(
                 parentKey,
-                subKey,
+                subKey.toStdWString().c_str(),
                 0,
                 NULL,
                 REG_OPTION_NON_VOLATILE,
@@ -190,24 +191,23 @@ bool writeRegistry(HKEY parentKey, const QByteArray& subKey, const QByteArray& v
                 NULL,
                 &key,
                 &disposition);
-    RegCloseKey(key);
     if (result != ERROR_SUCCESS ) {
+        RegCloseKey(key);
         return false;
     }
-    result = RegSetKeyValueA(
-                HKEY_CLASSES_ROOT,
-                subKey,
-                "",
+    result = RegSetValueExW(
+                key,
+                L"",
+                0,
                 REG_SZ,
-                (const BYTE*)value.data(),
-                value.length()+1);
+                (const BYTE*)value.toStdWString().c_str(),
+                (value.length() + 1) * sizeof(wchar_t));
+    RegCloseKey(key);
     return result == ERROR_SUCCESS;
 }
 bool FileAssociationModel::registerAssociation(const QString &extension, const QString &filetype)
 {
-    if (!writeRegistry(HKEY_CLASSES_ROOT,
-                         extension.toLocal8Bit(),
-                         filetype.toLocal8Bit())){
+    if (!writeRegistry(HKEY_CLASSES_ROOT, extension, filetype)){
         return false;
     }
     return true;
@@ -217,12 +217,12 @@ bool FileAssociationModel::unregisterAssociation(const QString &extension)
 {
     LONG result;
     HKEY key;
-    result = RegOpenKeyExA(HKEY_CLASSES_ROOT,extension.toLocal8Bit(),0,KEY_READ,&key);
+    result = RegOpenKeyExW(HKEY_CLASSES_ROOT, extension.toStdWString().c_str(), 0, KEY_READ, &key);
     if (result != ERROR_SUCCESS )
         return true;
     RegCloseKey(key);
 
-    result = RegDeleteTreeA(HKEY_CLASSES_ROOT,extension.toLocal8Bit());
+    result = SHDeleteKeyW(HKEY_CLASSES_ROOT, extension.toStdWString().c_str());
     return result == ERROR_SUCCESS;
 
 }
@@ -231,33 +231,27 @@ bool FileAssociationModel::unregisterFileType(const QString &fileType)
 {
     LONG result;
     HKEY key;
-    result = RegOpenKeyExA(HKEY_CLASSES_ROOT,fileType.toLocal8Bit(),0,KEY_READ,&key);
+    result = RegOpenKeyExW(HKEY_CLASSES_ROOT, fileType.toStdWString().c_str(), 0, KEY_READ, &key);
     if (result != ERROR_SUCCESS )
         return true;
     RegCloseKey(key);
 
-    result = RegDeleteTreeA(HKEY_CLASSES_ROOT,fileType.toLocal8Bit());
+    result = SHDeleteKeyW(HKEY_CLASSES_ROOT, fileType.toStdWString().c_str());
     return result == ERROR_SUCCESS;
 }
 
 bool FileAssociationModel::registerFileType(const QString &filetype, const QString &description, const QString &verb, const QString &serverApp, int icon)
 {
-    if (!writeRegistry(HKEY_CLASSES_ROOT,
-                       filetype.toLocal8Bit(),
-                       description.toLocal8Bit()))
+    if (!writeRegistry(HKEY_CLASSES_ROOT, filetype, description))
         return false;
 
     QString keyString = QString("%1\\DefaultIcon").arg(filetype);
     QString value = QString("%1,%2").arg(serverApp).arg(icon);
-    if (!writeRegistry(HKEY_CLASSES_ROOT,
-                         keyString.toLocal8Bit(),
-                         value.toLocal8Bit()))
+    if (!writeRegistry(HKEY_CLASSES_ROOT, keyString, value))
         return false;
     keyString = QString("%1\\Shell\\%2\\Command").arg(filetype).arg(verb);
     value = serverApp+" \"%1\"";
-    if (!writeRegistry(HKEY_CLASSES_ROOT,
-                         keyString.toLocal8Bit(),
-                         value.toLocal8Bit()))
+    if (!writeRegistry(HKEY_CLASSES_ROOT, keyString, value))
         return false;
     return true;
 }
