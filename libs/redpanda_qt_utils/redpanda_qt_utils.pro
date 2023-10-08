@@ -8,7 +8,7 @@ CONFIG += nokey
 CONFIG += staticlib
 
 win32: {
-DEFINES += _WIN32_WINNT=0x0601
+    DEFINES += _WIN32_WINNT=0x0501
 }
 
 gcc {

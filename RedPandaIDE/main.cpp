@@ -59,6 +59,10 @@ public:
     bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) override;
 };
 
+#ifndef WM_DPICHANGED
+# define WM_DPICHANGED 0x02e0
+#endif
+
 #define WM_APP_OPEN_FILE (WM_APP + 6736 /* “OPEN” on dial pad */)
 static_assert(WM_APP_OPEN_FILE < 0xc000);
 

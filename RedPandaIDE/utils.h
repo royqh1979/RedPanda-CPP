@@ -145,7 +145,8 @@ void executeFile(const QString& fileName,
 bool isGreenEdition();
 
 #ifdef Q_OS_WIN
-bool readRegistry(HKEY key,const QByteArray& subKey, const QByteArray& name, QString& value);
+bool readRegistry(HKEY key, const QString& subKey, const QString& name, QString& value);
+bool deleteRegistryTree(HKEY key, const QString &subKey);
 #endif
 
 qulonglong stringToHex(const QString& str, bool &isOk);

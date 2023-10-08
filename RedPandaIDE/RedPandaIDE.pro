@@ -45,9 +45,16 @@ isEmpty(LIBEXECDIR) {
     LIBEXECDIR = $${PREFIX}/libexec
 }
 
-# windows 7 is the minimum windows version
+_NT5_SUPPORT = $$(NT5_SUPPORT)
 win32: {
-DEFINES += _WIN32_WINNT=0x0601
+    equals(_NT5_SUPPORT, "ON") {
+        contains(QMAKE_HOST.arch, x86_64): DEFINES += _WIN32_WINNT=0x0502
+        else: DEFINES += _WIN32_WINNT=0x0501
+        LIBS += -lpsapi  # GetModuleFileNameEx, GetProcessMemoryInfo
+    } else {
+        # defaults to Windows 7 NT 6.1
+        DEFINES += _WIN32_WINNT=0x0601
+    }
 }
 
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
