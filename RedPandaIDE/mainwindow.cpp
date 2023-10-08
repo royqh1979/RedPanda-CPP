@@ -7036,7 +7036,20 @@ void MainWindow::on_actionNew_Project_triggered()
 
 //     if cbDefault.Checked then
 //        devData.DefCpp := rbCpp.Checked;
-
+        QDir projectDir = QDir(location);
+        if (!projectDir.isEmpty()) {
+            if (QMessageBox::question(
+                        nullptr,
+                        tr("Folder Not Empty"),
+                        tr("The project folder is not empty, existing files may be overwritten.")
+                        + "<br/><br/>"
+                        +tr("Do you want to proceed?"),
+                        QMessageBox::Yes | QMessageBox::No,
+                        QMessageBox::No
+                        ) == QMessageBox::No) {
+                return;
+            }
+        }
         s = includeTrailingPathDelimiter(location)
                 + dialog.getProjectName() + "." + DEV_PROJECT_EXT;
 
@@ -7060,6 +7073,7 @@ void MainWindow::on_actionNew_Project_triggered()
                                   tr("New project fail"),
                                   tr("Can't assign project template"),
                                   QMessageBox::Ok);
+            return;
         }
         mProject->saveAll();
         updateProjectView();

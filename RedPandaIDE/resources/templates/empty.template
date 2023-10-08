@@ -8,10 +8,6 @@ Description[zh_CN]=一个空项目
 Category=Basic
 Category[zh_CN]=基础
 
-[Unit0]
-CName=main.c
-CppName=main.cpp
-
 [Project]
 UnitCount=1
 Type=1

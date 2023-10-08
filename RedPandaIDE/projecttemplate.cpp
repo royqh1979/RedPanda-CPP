@@ -57,7 +57,7 @@ PTemplateUnit ProjectTemplate::unit(int index)
     if (unit->CppName.isEmpty())
         unit->CppName = unit->CName;
     unit->Target = fromByteArray(mIni->GetValue(toByteArray(section), "Target", ""));
-
+    unit->overwrite = mIni->GetBoolValue(toByteArray(section), "Overwrite", true);
     return unit;
 }
 

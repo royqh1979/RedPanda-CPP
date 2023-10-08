@@ -9,6 +9,8 @@ Red Panda C++ Version 2.25
   - change: Use freetype as the fontengine in windows ( from cyano.CN )
   - fix: Custom compile options is not used when retrieve macros defined by the compiler.
   - fix: Processing for #if/#elif/#else is not correct.
+  - Change: Empty project template won't auto create main.c/main.cpp
+  - enhancement: When creating project, warn user if the project folder is not empty.
   
 Red Panda C++ Version 2.24
 

@@ -92,13 +92,13 @@ std::shared_ptr<Project> Project::create(
     ini.SetValue("Project","filename", toByteArray(extractRelativePath(project->directory(),
                                                                        project->mFilename)));
     ini.SetValue("Project","name", toByteArray(project->mName));
-    ini.SaveFile(project->mFilename.toLocal8Bit());
     project->mParser->setEnabled(false);
     if (!project->assignTemplate(pTemplate,useCpp))
         return std::shared_ptr<Project>();
     resetCppParser(project->mParser, project->mOptions.compilerSet);
 
     project->mModified = true;
+    ini.SaveFile(project->mFilename.toLocal8Bit());
     return project;
 }
 
@@ -934,8 +934,9 @@ void Project::setCompilerSet(int compilerSetIndex)
 bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, bool useCpp)
 {
     if (!aTemplate) {
-        return true;
+        return false;
     }
+
     mModel.beginUpdate();
     mRootNode = makeProjectNode();
     rebuildNodes();
@@ -974,10 +975,12 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 PProjectUnit unit;
                 if (!templateUnit->Target.isEmpty())
                     target = templateUnit->Target;
-                QFile::copy(
-                            cleanPath(dir.absoluteFilePath(templateUnit->Source)),
-                            includeTrailingPathDelimiter(this->directory())+target);
                 unit = newUnit(mRootNode, target);
+                if (templateUnit->overwrite || !fileExists(unit->fileName()) ) {
+                        QFile::copy(
+                                    cleanPath(dir.absoluteFilePath(templateUnit->Source)),
+                                    includeTrailingPathDelimiter(this->directory())+target);
+                }
 
                 FileType fileType=getFileType(unit->fileName());
                 if ( fileType==FileType::GAS
@@ -1006,20 +1009,22 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                             this,
                             true);
 
-                QString s2 = cleanPath(dir.absoluteFilePath(s));
-                if (fileExists(s2) && !s.isEmpty()) {
-                    try {
-                        editor->loadFile(s2);
-                    } catch(FileError& e) {
-                        QMessageBox::critical(nullptr,
-                                              tr("Error Load File"),
-                                              e.reason());
+                if (templateUnit->overwrite || !fileExists(unit->fileName()) ) {
+                    QString s2 = cleanPath(dir.absoluteFilePath(s));
+                    if (fileExists(s2) && !s.isEmpty()) {
+                        try {
+                            editor->loadFile(s2);
+                        } catch(FileError& e) {
+                            QMessageBox::critical(nullptr,
+                                                  tr("Error Load File"),
+                                                  e.reason());
+                        }
+                    } else {
+                        s.replace("#13#10","\r\n");
+                        editor->insertString(s,false);
                     }
-                } else {
-                    s.replace("#13#10","\r\n");
-                    editor->insertString(s,false);
+                    editor->save(true,false);
                 }
-                editor->save(true,false);
                 editor->activate();
             }
         }

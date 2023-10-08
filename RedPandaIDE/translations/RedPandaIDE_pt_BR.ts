@@ -5375,6 +5375,18 @@
         <source>Ignore spaces</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Folder Not Empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The project folder is not empty, existing files may be overwritten.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>

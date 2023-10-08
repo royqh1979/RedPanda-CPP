@@ -28,6 +28,7 @@ struct TemplateUnit {
   QString CppText;
   QString Source;
   QString Target;
+  bool overwrite;
 };
 
 using PTemplateUnit = std::shared_ptr<TemplateUnit>;
