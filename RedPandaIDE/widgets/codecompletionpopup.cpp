@@ -48,6 +48,7 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     setLayout(new QVBoxLayout());
     layout()->addWidget(mListView);
     layout()->setMargin(0);
+    mListView->setFocus();
 
     mShowKeywords=true;
     mRecordUsage = false;
@@ -1109,11 +1110,6 @@ void CodeCompletionPopup::setColors(const std::shared_ptr<QHash<StatementKind, s
 const QString &CodeCompletionPopup::memberPhrase() const
 {
     return mMemberPhrase;
-}
-
-void CodeCompletionPopup::showEvent(QShowEvent *)
-{
-    mListView->setFocus();
 }
 
 const PStatement &CodeCompletionPopup::currentScope() const
