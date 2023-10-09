@@ -1033,7 +1033,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
         }
         case '<':
         case '>':
-            if (mParser) {
+            if (mParser && mParser->isIncludeLine(lineText())) {
                 handled = handleSymbolCompletion(ch);
                 return;
             }
