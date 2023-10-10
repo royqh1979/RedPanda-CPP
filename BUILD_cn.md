@@ -4,6 +4,8 @@
 
 # Windows
 
+适用于 Windows 7 或更高版本：
+
 | 库 + 工具链 \ 目标 | x86 | x64 | ARM64 |
 | ------------------ | --- | --- | ----- |
 | MSYS2 + 基于 GNU 的 MinGW | ✔️ | ✔️ | ❌ |
@@ -18,6 +20,19 @@
   - 既然小熊猫 C++ 已经可以构建到 ARM64 经典 ABI，ARM64EC 就不能带来明显的好处。
   - 但是 ARM64EC 可以支持用户习惯的输入法和喜欢的 Qt 样式。
 - 随着 [Windows 11 Insider Preview Build 25905 弃用 ARM32](https://blogs.windows.com/windows-insider/2023/07/12/announcing-windows-11-insider-preview-build-25905/)，小熊猫 C++ 今后也不会添加 ARM32 支持了。
+
+适用于旧版 Windows（NT 5.1 – 6.0）：
+
+| 库 + 工具链 \ 目标 | x86 | x64 |
+| ------------------ | --- | --- |
+| Qt.io Qt 5.6 + MinGW GCC 8.1.0 | ✔️ | ❌ |
+| 从源代码构建的 Qt 5.6 + MinGW | ✔️ | ✔️ |
+
+关于旧版 Windows 的注记：
+- 支持的 Windows 版本：
+  - Windows XP SP3 或更高版本；
+  - Windows Server 2003 x64 Edition（也叫 Windows XP x64 Edition）SP2 或更高版本。
+- 小熊猫 C++ 借助 [MinHook](https://github.com/TsudaKageyu/minhook) 对 Win32 `CreateProcessW` 附加挂钩来实现 `QProcess` 缺失的 API。
 
 ## MSYS2 的 Qt 库 + MinGW 工具链（推荐）
 
@@ -197,6 +212,16 @@
    "%JOM%" -j%NUMBER_OF_PROCESSORS%
    "%JOM%" install
    ```
+
+## 旧版 Windows
+
+关于构建的注记：
+- 需要 Windows 7 x64 或更高版本。
+- 从源代码构建 Qt 5.6 并与官方 Qt 安装共存可参考[这个脚本](packages/windows/build-qt5.6-mingw-static.ps1)（使用 Qt.io MinGW GCC 8.1.0）。
+- 在 make 阶段设置变量 `NT5_SUPPORT=ON`，如
+  ```ps1
+  mingw32-make NT5_SUPPORT=ON "-j${Env:NUMBER_OF_PROCESSORS}"
+  ```
 
 # Linux 和其他符合 freedesktop.org（XDG）规范的桌面系统
 
