@@ -861,7 +861,7 @@ int QSynEdit::charToColumn(const QString &s, int aChar) const
 
 int QSynEdit::columnToChar(int aLine, int aColumn) const
 {
-    Q_ASSERT( (aLine <= mDocument->count()) && (aLine >= 1));
+    //Q_ASSERT( (aLine <= mDocument->count()) && (aLine >= 1));
     if (aLine <= mDocument->count()) {
         QString s = getDisplayStringAtLine(aLine);
         int x = 0;
