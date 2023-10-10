@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "linenumbertexteditor.h"
+#include "qt_utils/compat.h"
 
 #include <QPainter>
 #include <QTextBlock>
@@ -40,7 +41,7 @@ int LineNumberTextEditor::lineNumberAreaWidth()
         ++digits;
     }
 
-    int space = 10 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+    int space = 10 + Compat::QFontMetrics_(fontMetrics()).horizontalAdvance(QLatin1Char('9')) * digits;
 
     return space;
 }

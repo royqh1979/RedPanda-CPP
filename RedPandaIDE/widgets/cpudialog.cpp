@@ -31,7 +31,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     mSetting(false)
 {
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
-    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+    disableWindowContextHelpButtonHint(this);
     ui->setupUi(this);
     ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::Assembly));
     ui->txtCode->setReadOnly(true);

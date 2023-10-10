@@ -2693,12 +2693,12 @@ Qt::ItemFlags ProjectModel::flags(const QModelIndex &index) const
     if (p==mProject->rootNode().get())
         return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled | Qt::ItemIsEditable;
     if (mProject && mProject->modelType() == ProjectModelType::FileSystem) {
-        Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+        Compat::QFlags_<Qt::ItemFlag> flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
         if (p->isUnit)
             flags.setFlag(Qt::ItemIsEditable);
         return flags;
     } else {
-        Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
+        Compat::QFlags_<Qt::ItemFlag> flags = Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
         if (!p->isUnit) {
             flags.setFlag(Qt::ItemIsDropEnabled);
             flags.setFlag(Qt::ItemIsDragEnabled,false);

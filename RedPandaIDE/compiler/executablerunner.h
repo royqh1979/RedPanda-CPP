@@ -18,8 +18,10 @@
 #define EXECUTABLERUNNER_H
 
 #include "runner.h"
+#include "qt_utils/compat.h"
 #include <QProcess>
 #include <QSemaphore>
+#include <memory>
 
 class ExecutableRunner : public Runner
 {
@@ -52,7 +54,7 @@ private:
     QString mShareMemoryId;
     bool mRedirectInput;
     bool mStartConsole;
-    std::shared_ptr<QProcess> mProcess;
+    std::shared_ptr<Compat::QProcess_> mProcess;
     QSemaphore mQuitSemaphore;
     QStringList mBinDirs;
 

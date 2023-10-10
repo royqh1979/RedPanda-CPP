@@ -1312,19 +1312,19 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
                 QString t = text.mid(pos,matchPosition->start-pos);
                 painter->setPen(normalColor);
                 painter->drawText(x,y,t);
-                x+=painter->fontMetrics().horizontalAdvance(t);
+                x += Compat::QFontMetrics_(painter->fontMetrics()).horizontalAdvance(t);
             }
             QString t = text.mid(matchPosition->start, matchPosition->end-matchPosition->start);
             painter->setPen(mMatchedColor);
             painter->drawText(x,y,t);
-            x+=painter->fontMetrics().horizontalAdvance(t);
+            x += Compat::QFontMetrics_(painter->fontMetrics()).horizontalAdvance(t);
             pos=matchPosition->end;
         }
         if (pos<text.length()) {
             QString t = text.mid(pos,text.length()-pos);
             painter->setPen(normalColor);
             painter->drawText(x,y,t);
-            x+=painter->fontMetrics().horizontalAdvance(t);
+            x += Compat::QFontMetrics_(painter->fontMetrics()).horizontalAdvance(t);
         }
         painter->restore();
     } else {

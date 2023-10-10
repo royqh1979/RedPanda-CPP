@@ -1582,7 +1582,7 @@ void MainWindow::openProject(QString filename, bool openFiles)
         if (dlg.openType()==ProjectAlreadyOpenDialog::OpenType::ThisWindow) {
             closeProject(false);
         } else {
-            QProcess process;
+            Compat::QProcess_ process;
             process.setProgram(QApplication::instance()->applicationFilePath());
             process.setWorkingDirectory(QDir::currentPath());
             QStringList args;
@@ -2605,7 +2605,7 @@ void MainWindow::doAutoSave(Editor *e)
             filename = parent.filePath(
                         QString("%1.%2.%3")
                         .arg(baseName)
-                        .arg(QDateTime::currentSecsSinceEpoch())
+                        .arg(Compat::QDateTime_::currentSecsSinceEpoch())
                         .arg(suffix));
             break;
         case assAppendFormatedTimeStamp: {
@@ -3525,7 +3525,7 @@ void MainWindow::buildEncodingMenu()
             Editor* editor = mEditorList->getEditor();
             QList<PCharsetInfo> charInfos = pCharsetInfoManager->findCharsetsByLanguageName(langName);
             foreach (const PCharsetInfo& info, charInfos) {
-                QAction * action = new QAction(info->name);
+                QAction * action = new QAction(info->name, nullptr);
                 action->setCheckable(true);
                 if (editor)
                     action->setChecked(info->name == editor->encodingOption());
@@ -3562,7 +3562,7 @@ void MainWindow::buildEncodingMenu()
 
     foreach(const PCharsetInfo& charset, charsetsForLocale) {
         QAction * action = new QAction(
-                    tr("Convert to %1").arg(QString(charset->name)));
+                    tr("Convert to %1").arg(QString(charset->name)), nullptr);
         connect(action, &QAction::triggered,
                 [charset,this](){
             Editor * editor = mEditorList->getEditor();
@@ -3627,11 +3627,11 @@ QStringList MainWindow::getDefaultCompilerSetBinDirs()
 
 void MainWindow::openShell(const QString &folder, const QString &shellCommand, const QStringList& binDirs)
 {
-    QProcess process;
+    Compat::QProcess_ process;
     process.setWorkingDirectory(folder);
     process.setProgram(shellCommand);
 #ifdef Q_OS_WIN
-    process.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments * args){
+    process.setCreateProcessArgumentsModifier([](Compat::QProcess_::CreateProcessArguments * args){
         args->flags |= CREATE_NEW_CONSOLE;
         args->startupInfo->dwFlags &=  ~STARTF_USESTDHANDLES; //
     });
@@ -4496,7 +4496,12 @@ void MainWindow::onFilesViewCreateFile()
         fileName = QString("untitled%1").arg(count)+suffix;
     }
     QFile file(dir.filePath(fileName));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     file.open(QFile::NewOnly);
+#else
+    // workaround: try create but do not truncate
+    file.open(QFile::ReadWrite);
+#endif
     QModelIndex newIndex = mFileSystemModel.index(fileName);
     ui->treeFiles->setCurrentIndex(newIndex);
 }
@@ -7040,7 +7045,7 @@ void MainWindow::on_actionNew_Project_triggered()
 
 //     if cbDefault.Checked then
 //        devData.DefCpp := rbCpp.Checked;
-        QDir projectDir = QDir(location);
+        Compat::QDir_ projectDir(location);
         if (!projectDir.isEmpty()) {
             if (QMessageBox::question(
                         nullptr,
@@ -7572,7 +7577,7 @@ void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
     if (!index.isValid())
         return;
     if (mFileSystemModel.isDir(index)) {
-        QDir dir(mFileSystemModel.fileInfo(index).absoluteFilePath());
+        Compat::QDir_ dir(mFileSystemModel.fileInfo(index).absoluteFilePath());
         if (!dir.isEmpty() &&
                 QMessageBox::question(ui->treeFiles
                                       ,tr("Delete")

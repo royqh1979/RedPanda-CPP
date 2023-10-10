@@ -144,7 +144,7 @@ QString RTFExporter::getFormatName()
 
 QString RTFExporter::getHeader()
 {
-    QFontMetrics fm(mFont);
+    Compat::QFontMetrics_ fm(mFont);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)    
     int tabWidth = mTabSize * fm.horizontalAdvance("M")*72*20/fm.fontDpi();
 #else  

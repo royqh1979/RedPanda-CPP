@@ -32,6 +32,7 @@
 #include <QTimer>
 #include <memory>
 #include "gdbmiresultparser.h"
+#include "qt_utils/compat.h"
 
 enum class DebugCommandSource {
     Console,
@@ -447,7 +448,7 @@ private:
     QString mGDBServer;
     int mPort;
     bool mStop;
-    std::shared_ptr<QProcess> mProcess;
+    std::shared_ptr<Compat::QProcess_> mProcess;
     QSemaphore mStartSemaphore;
     bool mErrorOccured;
     QString mInputFile;

@@ -3179,7 +3179,7 @@ void QSynEdit::recalcCharExtent()
 
     mTextHeight  = 0;
     mCharWidth = 0;
-    QFontMetrics fm(font());
+    Compat::QFontMetrics_ fm(font());
     QFontMetrics fm2(font());
     mTextHeight = std::max(fm.lineSpacing(),fm2.lineSpacing());
     mCharWidth = fm.horizontalAdvance("M");
@@ -3187,7 +3187,7 @@ void QSynEdit::recalcCharExtent()
     if (hasStyles[0]) { // has bold font
         QFont f = font();
         f.setBold(true);
-        QFontMetrics fm(f);
+        Compat::QFontMetrics_ fm(f);
         QFont f2 = font();
         f2.setBold(true);
         QFontMetrics fm2(f);
@@ -3201,7 +3201,7 @@ void QSynEdit::recalcCharExtent()
     if (hasStyles[1]) { // has strike out font
         QFont f = font();
         f.setItalic(true);
-        QFontMetrics fm(f);
+        Compat::QFontMetrics_ fm(f);
         QFont f2 = font();
         f2.setItalic(true);
         QFontMetrics fm2(f);
@@ -3215,7 +3215,7 @@ void QSynEdit::recalcCharExtent()
     if (hasStyles[2]) { // has strikeout
         QFont f = font();
         f.setStrikeOut(true);
-        QFontMetrics fm(f);
+        Compat::QFontMetrics_ fm(f);
         QFont f2 = font();
         f2.setStrikeOut(true);
         QFontMetrics fm2(f);
@@ -3229,7 +3229,7 @@ void QSynEdit::recalcCharExtent()
     if (hasStyles[3]) { // has underline
         QFont f = font();
         f.setUnderline(true);
-        QFontMetrics fm(f);
+        Compat::QFontMetrics_ fm(f);
         QFont f2 = font();
         f2.setUnderline(true);
         QFontMetrics fm2(f);
@@ -3248,7 +3248,7 @@ QString QSynEdit::expandAtWideGlyphs(const QString &S)
     QString Result(S.length()*2); // speed improvement
     int  j = 0;
     for (int i=0;i<S.length();i++) {
-        int CountOfAvgGlyphs = ceil(fontMetrics().horizontalAdvance(S[i])/(double)mCharWidth);
+        int CountOfAvgGlyphs = ceil(Compat::QFontMetrics_(fontMetrics()).horizontalAdvance(S[i])/(double)mCharWidth);
         if (j+CountOfAvgGlyphs>=Result.length())
             Result.resize(Result.length()+128);
         // insert CountOfAvgGlyphs filling chars
@@ -5972,6 +5972,11 @@ bool QSynEdit::isIdentStartChar(const QChar &ch)
         }
         return false;
     }
+}
+
+bool QSynEdit::startsWithIndentStartChar(const QString &s)
+{
+    return isIdentStartChar(s[0]);
 }
 
 void QSynEdit::setRainbowAttrs(const PTokenAttribute &attr0, const PTokenAttribute &attr1, const PTokenAttribute &attr2, const PTokenAttribute &attr3)

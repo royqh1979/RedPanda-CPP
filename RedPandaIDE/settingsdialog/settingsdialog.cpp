@@ -71,7 +71,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog)
 {
-    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+    disableWindowContextHelpButtonHint(this);
     ui->setupUi(this);
 
     QItemSelectionModel *m=ui->widgetsView->selectionModel();

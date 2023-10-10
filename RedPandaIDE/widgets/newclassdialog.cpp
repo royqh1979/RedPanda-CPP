@@ -26,7 +26,7 @@ NewClassDialog::NewClassDialog(PCppParser parser, QWidget *parent) :
     ui(new Ui::NewClassDialog),
     mModel(parser)
 {
-    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+    disableWindowContextHelpButtonHint(this);
     ui->setupUi(this);
     resize(pSettings->ui().newClassDialogWidth(),pSettings->ui().newClassDialogHeight());
     onUpdateIcons();

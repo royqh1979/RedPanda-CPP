@@ -3,7 +3,7 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++17
+CONFIG += c++14 c++17
 CONFIG += nokey
 CONFIG += staticlib
 
@@ -21,10 +21,12 @@ msvc {
 }
 
 SOURCES += qt_utils/utils.cpp \
-	qt_utils/charsetinfo.cpp
+	qt_utils/charsetinfo.cpp \
+	qt_utils/compat.cpp
 
 HEADERS += qt_utils/utils.h \
-	qt_utils/charsetinfo.h
+	qt_utils/charsetinfo.h \
+	qt_utils/compat.h
 
 TRANSLATIONS += \
     qt_utils_zh_CN.ts

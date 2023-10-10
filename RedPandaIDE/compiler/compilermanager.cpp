@@ -289,7 +289,7 @@ void CompilerManager::run(
         }
 #else
         QStringList execArgs;
-        QString sharedMemoryId = "/r"+QUuid::createUuid().toString(QUuid::StringFormat::Id128);
+        QString sharedMemoryId = "/r" + Compat::QUuid_::createUuid().toString(Compat::QUuid_::Id128);
 #ifdef Q_OS_MACOS
         sharedMemoryId = sharedMemoryId.mid(0, PSHMNAMLEN);
 #endif

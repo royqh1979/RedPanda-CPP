@@ -20,7 +20,7 @@
 #include "../systemconsts.h"
 #include <QElapsedTimer>
 #include <QProcess>
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
 #include <psapi.h>
 #endif
 

@@ -25,7 +25,7 @@ NewHeaderDialog::NewHeaderDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewHeaderDialog)
 {
-    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+    disableWindowContextHelpButtonHint(this);
     ui->setupUi(this);
     resize(pSettings->ui().newHeaderDialogWidth(),pSettings->ui().newHeaderDialogHeight());
     onUpdateIcons();

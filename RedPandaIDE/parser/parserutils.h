@@ -21,6 +21,8 @@
 #include <QSet>
 #include <QVector>
 #include <memory>
+#include <functional>
+#include "qt_utils/compat.h"
 
 using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
 
@@ -160,7 +162,7 @@ enum StatementProperty {
     spDummyStatement     =  0x0400
 };
 
-Q_DECLARE_FLAGS(StatementProperties, StatementProperty)
+using StatementProperties = Compat::QFlags_<StatementProperty>;
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(StatementProperties)
 

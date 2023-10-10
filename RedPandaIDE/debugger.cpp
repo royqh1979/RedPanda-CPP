@@ -1287,7 +1287,7 @@ void DebugReader::processResultRecord(const QByteArray &line)
                     QStringList newOutput;
                     foreach(const QString& s, disOutput) {
                         QString line = s;
-                        if (!s.isEmpty() && s.front().isDigit()) {
+                        if (!s.isEmpty() && s[0].isDigit()) {
                             QRegularExpressionMatch match = reGdbSourceLine.match(s);
 //                            qDebug()<<s;
                             if (match.hasMatch()) {
@@ -3073,7 +3073,7 @@ void DebugTarget::run()
 #endif
     QString workingDir = QFileInfo(mInferior).path();
 
-    mProcess = std::make_shared<QProcess>();
+    mProcess = std::make_shared<Compat::QProcess_>();
     auto action = finally([&]{
         mProcess.reset();
     });
@@ -3097,7 +3097,7 @@ void DebugTarget::run()
     mProcess->setWorkingDirectory(workingDir);
 
 #ifdef Q_OS_WIN
-    mProcess->setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
+    mProcess->setCreateProcessArgumentsModifier([this](Compat::QProcess_::CreateProcessArguments * args){
         if (programHasConsole(mInferior)) {
             args->flags |=  CREATE_NEW_CONSOLE;
             args->flags &= ~CREATE_NO_WINDOW;

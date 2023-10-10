@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <memory>
+#include "qt_utils/compat.h"
 
 namespace QSynedit {
 
@@ -32,7 +33,7 @@ enum SearchOption {
     ssoRegExp       = 0x0080
 };
 
-Q_DECLARE_FLAGS(SearchOptions, SearchOption)
+using SearchOptions = Compat::QFlags_<SearchOption>;
 Q_DECLARE_OPERATORS_FOR_FLAGS(SearchOptions)
 
 class BaseSearcher : public QObject

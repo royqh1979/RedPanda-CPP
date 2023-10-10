@@ -29,6 +29,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include "../utils.h"
+#include "qt_utils/compat.h"
 
 QConsole::QConsole(QWidget *parent):
     QAbstractScrollArea(parent),
@@ -105,7 +106,7 @@ int QConsole::charColumns(QChar ch, int columnsBefore) const
     }
     if (ch == ' ')
         return 1;
-    return std::ceil((int)(fontMetrics().horizontalAdvance(ch)) / (double) mColumnWidth);
+    return std::ceil((int)(Compat::QFontMetrics_(fontMetrics()).horizontalAdvance(ch)) / (double) mColumnWidth);
 }
 
 void QConsole::invalidate()
@@ -258,7 +259,7 @@ QString QConsole::selText()
 
 void QConsole::recalcCharExtent() {
     mRowHeight = fontMetrics().lineSpacing();
-    mColumnWidth = fontMetrics().horizontalAdvance("M");
+    mColumnWidth = Compat::QFontMetrics_(fontMetrics()).horizontalAdvance("M");
 }
 
 void QConsole::sizeOrFontChanged(bool)

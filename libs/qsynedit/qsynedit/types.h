@@ -21,6 +21,7 @@
 #include <QList>
 #include <QFlags>
 #include <memory>
+#include "qt_utils/compat.h"
 
 namespace QSynedit {
 
@@ -64,7 +65,7 @@ enum FontStyle {
     fsStrikeOut = 0x0008
 };
 
-Q_DECLARE_FLAGS(FontStyles,FontStyle)
+using FontStyles = Compat::QFlags_<FontStyle>;
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(FontStyles)
 

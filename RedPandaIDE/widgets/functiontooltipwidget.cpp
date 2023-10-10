@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "functiontooltipwidget.h"
+#include "qt_utils/compat.h"
 
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -137,7 +138,7 @@ void FunctionTooltipWidget::updateTip()
     if (mInfos.length()>1) {
         mTotalLabel->setText(QString("%1/%2").arg(mInfoIndex+1).arg(mInfos.length()));
     }
-    int width = mInfoLabel->fontMetrics().horizontalAdvance(text);
+    int width = Compat::QFontMetrics_(mInfoLabel->fontMetrics()).horizontalAdvance(text);
     if (width > 400) {
         mInfoLabel->setMinimumWidth(410);
     } else {

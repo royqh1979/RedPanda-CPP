@@ -37,7 +37,7 @@ SearchInFileDialog::SearchInFileDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SearchInFileDialog)
 {
-    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+    disableWindowContextHelpButtonHint(this);
     ui->setupUi(this);
     mSearchOptions&=0;
     mBasicSearchEngine= QSynedit::PSynSearchBase(new QSynedit::BasicSearcher());

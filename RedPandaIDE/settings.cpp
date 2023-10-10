@@ -3621,7 +3621,7 @@ void Settings::Environment::doLoad()
         mDefaultOpenFolder = QDir::currentPath();
     }
 
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
 # if defined (__aarch64__) || defined(_M_ARM64) || defined (_M_ARM64EC)
     // the only native MinGW toolchain (LLVM-MinGW) does not have local codepage support
     // prefer UTF-8 compatible OpenConsole.exe
@@ -3635,7 +3635,7 @@ void Settings::Environment::doLoad()
 
     // check saved terminal path
     mTerminalPath = stringValue("terminal_path", "");
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     // APP_DIR trick for windows portable app
     // on other platforms multiple instances share the same configuration and thus the trick may break terminal path
     mTerminalPath.replace("%*APP_DIR*%",pSettings->dirs().appDir());
@@ -3838,7 +3838,7 @@ void Settings::Environment::checkAndSetTerminal()
 
 QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalList() const
 {
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     QString terminalListFilename(":/config/terminal-windows.json");
 #else // UNIX
     QString terminalListFilename(":/config/terminal-unix.json");
@@ -3914,7 +3914,7 @@ void Settings::Environment::doSave()
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
     QString terminalPath = mTerminalPath;
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     // APP_DIR trick for windows portable app
     // on other platforms multiple instances share the same configuration and thus the trick may break terminal path
     if (terminalPath.startsWith(pSettings->dirs().appDir())) {
@@ -3924,7 +3924,7 @@ void Settings::Environment::doSave()
 
     saveValue("terminal_path",terminalPath);
     saveValue("terminal_arguments_pattern",mTerminalArgumentsPattern);
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     saveValue("use_custom_terminal",mUseCustomTerminal);
 #endif
     saveValue("asyle_path",mAStylePath);

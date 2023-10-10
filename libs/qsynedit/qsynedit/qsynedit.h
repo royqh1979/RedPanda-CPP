@@ -31,6 +31,7 @@
 #include "keystrokes.h"
 #include "searcher/baseseacher.h"
 #include "formatter/formatter.h"
+#include "qt_utils/utils.h"
 
 namespace QSynedit {
 
@@ -57,7 +58,7 @@ enum StatusChange {
     scModified = 0x0400
 };
 
-Q_DECLARE_FLAGS(StatusChanges, StatusChange)
+using StatusChanges = Compat::QFlags_<StatusChange>;
 Q_DECLARE_OPERATORS_FOR_FLAGS(StatusChanges)
 
 enum class StateFlag  {
@@ -70,7 +71,7 @@ enum class StateFlag  {
     sfWaitForDragging = 0x0040
 };
 
-Q_DECLARE_FLAGS(StateFlags,StateFlag)
+using StateFlags = Compat::QFlags_<StateFlag>;
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(StateFlags)
 
@@ -102,7 +103,7 @@ enum EditorOption {
   eoShowLineBreaks      =   0x01000000,
 };
 
-Q_DECLARE_FLAGS(EditorOptions, EditorOption)
+using EditorOptions = Compat::QFlags_<EditorOption>;
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(EditorOptions)
 
@@ -299,6 +300,7 @@ public:
     bool pointToLine(const QPoint& point, int& line);
     bool isIdentChar(const QChar& ch);
     bool isIdentStartChar(const QChar& ch);
+    bool startsWithIndentStartChar(const QString &s);
 
     void setRainbowAttrs(const PTokenAttribute &attr0,
                          const PTokenAttribute &attr1,

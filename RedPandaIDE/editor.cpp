@@ -1150,7 +1150,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         }
         QString lineText = document()->getLine(line-1);
         if (mParser->isIncludeLine(lineText)) {
-            if (cursor() == Qt::PointingHandCursor) {
+            if (cursor().shape() == Qt::PointingHandCursor) {
                 QSynedit::BufferCoord p;
                 if (pointToCharLine(mapFromGlobal(QCursor::pos()),p)) {
                     if (line==p.line){
@@ -1207,7 +1207,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             } else {
                 foreground = syntaxer()->identifierAttribute()->foreground();
             }
-            if (cursor() == Qt::PointingHandCursor) {
+            if (cursor().shape() == Qt::PointingHandCursor) {
                 QSynedit::BufferCoord p;
                 if (pointToCharLine(mapFromGlobal(QCursor::pos()),p)) {
                     if (line==p.line && (aChar<=p.ch && p.ch<aChar+token.length())) {
@@ -1888,7 +1888,7 @@ void Editor::onAutoBackupTimer()
     if (mBackupTime>lastModifyTime())
         return;
     QDateTime current=QDateTime::currentDateTime();
-    if (current.toSecsSinceEpoch()-lastModifyTime().toSecsSinceEpoch()<=3)
+    if (lastModifyTime().secsTo(current) <= 3)
         return;
     saveAutoBackup();
 }
@@ -2091,7 +2091,7 @@ void Editor::onTooltipTimer()
             if (!hasFocus())
                 activate();
             setCursor(Qt::PointingHandCursor);
-        } else if (cursor() == Qt::PointingHandCursor) {
+        } else if (cursor().shape() == Qt::PointingHandCursor) {
             updateMouseCursor();
         }
         if (pointToLine(pos,line)) {
@@ -2281,7 +2281,7 @@ QStringList Editor::getExpressionAtPosition(
                 if (token==">") {
                     lastSymbolType=LastSymbolType::MatchingAngleQuotation;
                     symbolMatchingLevel=0;
-                } else if (isIdentStartChar(token.front())) {
+                } else if (startsWithIndentStartChar(token)) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -2296,7 +2296,7 @@ QStringList Editor::getExpressionAtPosition(
                 } else if (token == "]") {
                     lastSymbolType=LastSymbolType::MatchingBracket;
                     symbolMatchingLevel = 0;
-                } else if (isIdentStartChar(token.front())) {
+                } else if (startsWithIndentStartChar(token)) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -2333,7 +2333,7 @@ QStringList Editor::getExpressionAtPosition(
                     lastSymbolType=LastSymbolType::AsteriskSign;
                 } else if (token == "&") {
                     lastSymbolType=LastSymbolType::AmpersandSign;
-                } else if (isIdentStartChar(token.front())) {
+                } else if (startsWithIndentStartChar(token)) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -2345,13 +2345,13 @@ QStringList Editor::getExpressionAtPosition(
                 } else if (token == "]") {
                     lastSymbolType=LastSymbolType::MatchingBracket;
                     symbolMatchingLevel = 0;
-                } else if (isIdentStartChar(token.front())) {
+                } else if (startsWithIndentStartChar(token)) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
                 break;
             case LastSymbolType::AngleQuotationMatched: //before '<>'
-                if (isIdentStartChar(token.front())) {
+                if (startsWithIndentStartChar(token)) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -2373,7 +2373,7 @@ QStringList Editor::getExpressionAtPosition(
                 } else if (token == "]") {
                     lastSymbolType=LastSymbolType::MatchingBracket;
                     symbolMatchingLevel = 0;
-                } else if (isIdentStartChar(token.front())) {
+                } else if (startsWithIndentStartChar(token)) {
                     lastSymbolType=LastSymbolType::Identifier;
                 } else
                     return result;
@@ -3611,7 +3611,7 @@ void Editor::initAutoBackup()
     if (fileInfo.isAbsolute()) {
         mBackupFile=new QFile(extractFileDir(mFilename)
                               +QDir::separator()
-                              +extractFileName(mFilename)+QString(".%1.editbackup").arg(QDateTime::currentSecsSinceEpoch()));
+                              +extractFileName(mFilename)+QString(".%1.editbackup").arg(Compat::QDateTime_::currentSecsSinceEpoch()));
         if (mBackupFile->open(QFile::Truncate|QFile::WriteOnly)) {
             saveAutoBackup();
         } else {
@@ -3621,7 +3621,7 @@ void Editor::initAutoBackup()
         mBackupFile=new QFile(
                     includeTrailingPathDelimiter(QDir::currentPath())
                     +mFilename
-                    +QString(".%1.editbackup").arg(QDateTime::currentSecsSinceEpoch()));
+                    +QString(".%1.editbackup").arg(Compat::QDateTime_::currentSecsSinceEpoch()));
         if (!mBackupFile->open(QFile::Truncate|QFile::WriteOnly)) {
             mBackupFile->setParent(nullptr);
             delete mBackupFile;
@@ -3897,7 +3897,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
             return true;
         }
     }
-    QChar ch = event->text().front();
+    QChar ch = event->text()[0];
     if (isIdentChar(ch)) {
         processCommand(QSynedit::EditCommand::Char, ch);
         if (purpose == WordPurpose::wpCompletion) {
@@ -3953,7 +3953,7 @@ bool Editor::onHeaderCompletionKeyPressed(QKeyEvent *event)
             return true;
         }
     }
-    QChar ch = event->text().front();
+    QChar ch = event->text()[0];
 
     if (isIdentChar(ch) || ch == '.'
             || ch =='_' || ch=='+') {
@@ -4167,7 +4167,7 @@ void Editor::updateFunctionTip(bool showTip)
     if (currentLine>=document()->count())
         return;
     QChar ch=lastNonSpaceChar(currentLine,currentChar);
-    if (ch!="(" && ch!=",")
+    if (ch != '(' && ch != ',')
         return;
 
     while (currentLine>=0) {

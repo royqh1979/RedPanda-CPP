@@ -869,7 +869,7 @@ void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *op
                     proxy()->drawItemText(painter, menuItem->rect.adjusted(margin, 0, -margin, 0), Qt::AlignLeft | Qt::AlignVCenter,
                                           menuItem->palette, menuItem->state & State_Enabled, menuItem->text,
                                           QPalette::Text);
-                    w = menuItem->fontMetrics.horizontalAdvance(menuItem->text) + margin;
+                    w = static_cast<const Compat::QFontMetrics_ &>(menuItem->fontMetrics).horizontalAdvance(menuItem->text) + margin;
                 }
                 painter->setPen(shadow.darker(150));
                 bool reverse = menuItem->direction == Qt::RightToLeft;

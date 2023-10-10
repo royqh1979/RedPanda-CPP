@@ -595,7 +595,7 @@ QStringList getExecutableSearchPaths()
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathList = path.split(PATH_SEPARATOR);
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     /* follow Windows `CreateProcessW` search semantics.
      * ref. https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw .
      */
@@ -627,7 +627,7 @@ QString escapeArgument(const QString &arg, [[maybe_unused]] bool isFirstArg)
 {
     auto argContainsOneOf = [&arg](auto... ch) { return (arg.contains(ch) || ...); };
 
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     // See https://stackoverflow.com/questions/31838469/how-do-i-convert-argv-to-lpcommandline-parameter-of-createprocess ,
     // and https://learn.microsoft.com/en-gb/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way .
 
@@ -738,9 +738,18 @@ QString escapeArgument(const QString &arg, [[maybe_unused]] bool isFirstArg)
 
 QString defaultShell()
 {
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     return "powershell.exe";
 #else
     return "sh";
+#endif
+}
+
+void disableWindowContextHelpButtonHint(QWidget *widget)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
+    widget->setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+#else
+    widget->windowFlags() &= ~Qt::WindowContextHelpButtonHint;
 #endif
 }

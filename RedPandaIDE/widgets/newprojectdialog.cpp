@@ -29,7 +29,7 @@ NewProjectDialog::NewProjectDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewProjectDialog)
 {
-    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+    disableWindowContextHelpButtonHint(this);
     ui->setupUi(this);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
     ui->lstTemplates->setItemAlignment(Qt::AlignCenter);

@@ -167,7 +167,7 @@ QVariant EnvironmentShortcutModel::headerData(int section, Qt::Orientation orien
 
 Qt::ItemFlags EnvironmentShortcutModel::flags(const QModelIndex &index) const
 {
-    Qt::ItemFlags flags = Qt::ItemIsEnabled;
+    Compat::QFlags_<Qt::ItemFlag> flags = Qt::ItemIsEnabled;
     if (index.isValid() && index.column()==1) {
         flags.setFlag(Qt::ItemIsEditable);
     }

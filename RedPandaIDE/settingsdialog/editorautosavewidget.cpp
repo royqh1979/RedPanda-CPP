@@ -38,7 +38,7 @@ void EditorAutoSaveWidget::onAutoSaveStrategyChanged()
         ui->lblFilename->setText(tr("Demo file name: ") + "main.cpp");
     } else if (ui->rbAppendUNIXTimestamp->isChecked()) {
         ui->lblFilename->setText(tr("Demo file name: ") +
-                                 QString("main.%1.cpp").arg(QDateTime::currentSecsSinceEpoch()));
+                                 QString("main.%1.cpp").arg(Compat::QDateTime_::currentSecsSinceEpoch()));
     } else if (ui->rbAppendFormattedTimestamp->isChecked()) {
         QDateTime time = QDateTime::currentDateTime();
         ui->lblFilename->setText(tr("Demo file name: ") +

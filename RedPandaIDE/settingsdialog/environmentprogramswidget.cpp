@@ -30,7 +30,7 @@ EnvironmentProgramsWidget::EnvironmentProgramsWidget(const QString& name, const 
 {
     ui->setupUi(this);
     ui->labelCmdPreviewResult->setFont(QFont(DEFAULT_MONO_FONT));
-#ifndef Q_OS_WINDOWS
+#ifndef Q_OS_WIN
     ui->grpUseCustomTerminal->setCheckable(false);
 #endif
 }
@@ -72,7 +72,7 @@ void EnvironmentProgramsWidget::autoDetectAndUpdateArgumentsPattern(const QStrin
 
 void EnvironmentProgramsWidget::doLoad()
 {
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     ui->grpUseCustomTerminal->setChecked(pSettings->environment().useCustomTerminal());
 #endif
     ui->txtTerminal->setText(pSettings->environment().terminalPath());
@@ -81,7 +81,7 @@ void EnvironmentProgramsWidget::doLoad()
 
 void EnvironmentProgramsWidget::doSave()
 {
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     pSettings->environment().setUseCustomTerminal(ui->grpUseCustomTerminal->isChecked());
 #endif
     pSettings->environment().setTerminalPath(ui->txtTerminal->text());

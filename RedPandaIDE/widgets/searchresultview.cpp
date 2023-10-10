@@ -298,7 +298,7 @@ void SearchResultTreeModel::onResultModelChanged()
 
 Qt::ItemFlags SearchResultTreeModel::flags(const QModelIndex &) const
 {
-    Qt::ItemFlags flags=Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    Compat::QFlags_<Qt::ItemFlag> flags=Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     if (mSelectable) {
         flags.setFlag(Qt::ItemIsUserCheckable);
     }
@@ -451,7 +451,7 @@ void SearchResultTreeViewDelegate::paint(QPainter *painter, const QStyleOptionVi
      option.text = fullText;
      QRect textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option);
 
-     QFontMetrics metrics = option.fontMetrics;
+     Compat::QFontMetrics_ metrics = QFontMetrics(option.fontMetrics);
      int x=textRect.left();
      int y=textRect.top() + metrics.ascent();
      if (item->parent==nullptr) { //is filename

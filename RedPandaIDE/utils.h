@@ -173,4 +173,6 @@ QString escapeArgument(const QString &arg, bool isFirstArg);
 
 QString defaultShell();
 
+void disableWindowContextHelpButtonHint(QWidget *widget);
+
 #endif // UTILS_H

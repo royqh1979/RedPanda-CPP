@@ -27,6 +27,7 @@
 #include "miscprocs.h"
 #include "types.h"
 #include "qt_utils/utils.h"
+#include "qt_utils/compat.h"
 
 namespace QSynedit {
 
@@ -149,8 +150,8 @@ private:
 
     //SynEdit* mEdit;
 
-    QFontMetrics mFontMetrics;
-    QFontMetrics mNonAsciiFontMetrics;
+    Compat::QFontMetrics_ mFontMetrics;
+    Compat::QFontMetrics_ mNonAsciiFontMetrics;
     int mTabWidth;
     int mCharWidth;
     //int mCount;

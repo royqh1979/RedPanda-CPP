@@ -1333,8 +1333,8 @@ PStatement CppParser::addStatement(const PStatement& parent,
     // Move '*', '&' to type rather than cmd (it's in the way for code-completion)
     QString newType = aType;
     QString newCommand = command;
-    while (!newCommand.isEmpty() && (newCommand.front() == '*' || newCommand.front() == '&')) {
-        newType += newCommand.front();
+    while (!newCommand.isEmpty() && (newCommand.startsWith('*') || newCommand.startsWith('&'))) {
+        newType += newCommand[0];
         newCommand.remove(0,1); // remove first
     }
 //    if (newCommand.startsWith("::") && parent && kind!=StatementKind::skBlock ) {
@@ -1597,8 +1597,8 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
         index++;
         if (index >= tokenCount)
             break;
-        if (mTokenizer[index]->text.front() == '{'
-                || mTokenizer[index]->text.front() == ';')
+        if (mTokenizer[index]->text.startsWith('{')
+                || mTokenizer[index]->text.startsWith(';'))
             break;
     }
 }
@@ -2029,7 +2029,7 @@ bool CppParser::checkForStructs(KeywordType keywordType)
             //    ...
             // };
             while (i < tokenCount) {
-                QChar ch = mTokenizer[i]->text.back();
+                QChar ch = *mTokenizer[i]->text.rbegin();
                 if (ch=='{' || ch == ':')
                     break;
                 switch(ch.unicode()) {
@@ -2933,7 +2933,7 @@ void CppParser::handleLambda(int index, int endIndex)
                 // unsigned short bAppReturnCode:8,reserved:6,fBusy:1,fAck:1
                 // as
                 // unsigned short bAppReturnCode,reserved,fBusy,fAck
-                if (mTokenizer[i]->text.front() == ':') {
+                if (mTokenizer[i]->text.startsWith(':')) {
                     while ( (i < bodyEnd)
                             && !(
                                 mTokenizer[i]->text==','
@@ -3029,7 +3029,7 @@ void CppParser::handleOperatorOverloading(const QString &sType,
         return;
     }
     Q_ASSERT(!op.isEmpty());
-    if (isIdentChar(op.front())) {
+    if (startsWithIdentChar(op)) {
         handleMethod(StatementKind::skFunction,
                      sType+" "+op,
                      "operator("+op+")",
@@ -3064,7 +3064,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
     //find start of the function body;
     bool foundColon=false;
     mIndex=argEnd+1;
-    while ((mIndex < tokenCount) && !isblockChar(mTokenizer[mIndex]->text.front())) {
+    while ((mIndex < tokenCount) && !startsWithBlockChar(mTokenizer[mIndex]->text)) {
         if (mTokenizer[mIndex]->text=='(') {
             mIndex=mTokenizer[mIndex]->matchIndex+1;
         }else if (mTokenizer[mIndex]->text==':') {
@@ -3075,7 +3075,7 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
     }
     if (foundColon) {
         mIndex++;
-        while ((mIndex < tokenCount) && !isblockChar(mTokenizer[mIndex]->text.front())) {
+        while ((mIndex < tokenCount) && !startsWithBlockChar(mTokenizer[mIndex]->text)) {
             if (isWordChar(mTokenizer[mIndex]->text[0])
                     && mIndex+1<mTokenizer.tokenCount()
                     && mTokenizer[mIndex+1]->text=='{') {
@@ -3344,7 +3344,7 @@ void CppParser::handleOtherTypedefs()
         if  (mTokenizer[mIndex]->text=='(') {
             break;
         }
-        if (mTokenizer[mIndex + 1]->text.front() == ','
+        if (mTokenizer[mIndex + 1]->text.startsWith(',')
                   || mTokenizer[mIndex + 1]->text == ';')
             break;
         //typedef function pointer
@@ -3389,8 +3389,8 @@ void CppParser::handleOtherTypedefs()
                 tempType="";
             }
             mIndex = mTokenizer[paramStart]->matchIndex+1;
-        } else if (mTokenizer[mIndex+1]->text.front() ==','
-                       || mTokenizer[mIndex+1]->text.front() ==';') {
+        } else if (mTokenizer[mIndex+1]->text.startsWith(',')
+                       || mTokenizer[mIndex+1]->text.startsWith(';')) {
                 newType += mTokenizer[mIndex]->text;
                 QString suffix;
                 QString args;
@@ -3696,7 +3696,7 @@ void CppParser::handleStructs(bool isTypedef)
                                 StatementProperty::spHasDefinition);
                     tempType="";
                     mIndex++; //skip , ;
-                    if (mTokenizer[mIndex]->text.front() == ';')
+                    if (mTokenizer[mIndex]->text.startsWith(';'))
                         break;
                 } else
                     tempType+= mTokenizer[mIndex]->text;
@@ -3764,7 +3764,7 @@ void CppParser::handleStructs(bool isTypedef)
                            && (mTokenizer[mIndex + 1]->text == "final")
                            && (mTokenizer[mIndex + 2]->text==","
                                || mTokenizer[mIndex + 2]->text==":"
-                               || isblockChar(mTokenizer[mIndex + 2]->text.front()))) {
+                               || startsWithBlockChar(mTokenizer[mIndex + 2]->text))) {
                     QString command = mTokenizer[mIndex]->text;
                     if (!command.isEmpty()) {
                         firstSynonym = addStatement(
@@ -3804,8 +3804,8 @@ void CppParser::handleStructs(bool isTypedef)
             i = indexOfMatchingBrace(mIndex); // step onto closing brace
 
             if ((i + 1 < tokenCount) && !(
-                        mTokenizer[i + 1]->text.front() == ';'
-                        || mTokenizer[i + 1]->text.front() ==  '}')) {
+                        mTokenizer[i + 1]->text.startsWith(';')
+                        || mTokenizer[i + 1]->text.startsWith('}'))) {
                 // When encountering names again after struct body scanning, skip it
                 QString command = "";
                 QString args = "";
@@ -3823,8 +3823,8 @@ void CppParser::handleStructs(bool isTypedef)
                             int pos = mTokenizer[i]->text.indexOf('[');
                             command += mTokenizer[i]->text.mid(0,pos) + ' ';
                             args =  mTokenizer[i]->text.mid(pos);
-                        } else if (mTokenizer[i]->text.front() == '*'
-                                   || mTokenizer[i]->text.front() == '&') { // do not add spaces after pointer operator
+                        } else if (mTokenizer[i]->text.startsWith('*')
+                                   || mTokenizer[i]->text.startsWith('&')) { // do not add spaces after pointer operator
                             command += mTokenizer[i]->text;
                         } else {
                             command += mTokenizer[i]->text + ' ';
@@ -4043,7 +4043,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
     } else if (typePrefix=="static") {
         isStatic=true;
     } else {
-        if (typePrefix.back()==':')
+        if (typePrefix.endsWith(':'))
             return;
         lastType=typePrefix.trimmed();
     }
@@ -4053,7 +4053,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
     QString tempType;
     int tokenCount = mTokenizer.tokenCount();
     while (lastType.endsWith("*") || lastType.endsWith("&")) {
-        tempType = (lastType.back()+tempType);
+        tempType = (*lastType.rbegin() + tempType);
         lastType.truncate(lastType.length()-2);
     }
 
@@ -4073,7 +4073,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                 // unsigned short bAppReturnCode,reserved,fBusy,fAck
                 if (mIndex+1<tokenCount
                         && isIdentifier(mTokenizer[mIndex+1]->text)
-                        && isIdentChar(mTokenizer[mIndex+1]->text.back())
+                        && endsWithIdentChar(mTokenizer[mIndex+1]->text)
                         && addedVar
                         && !(addedVar->properties & StatementProperty::spFunctionPointer)
                         && AutoTypes.contains(addedVar->type)) {

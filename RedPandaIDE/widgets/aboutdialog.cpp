@@ -25,7 +25,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AboutDialog)
 {
-    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+    disableWindowContextHelpButtonHint(this);
     ui->setupUi(this);
     ui->lblTitle->setText(ui->lblTitle->text() + tr("Version: ") + REDPANDA_CPP_VERSION);
 

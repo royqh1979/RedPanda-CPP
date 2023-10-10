@@ -1,6 +1,7 @@
 QT       += core gui printsupport network svg xml widgets
 
-CONFIG += c++17
+# without `c++14` old versions of qmake will explicitly set `-std=gnu++98`
+CONFIG += c++14 c++17
 CONFIG += nokey
 
 # uncomment the following line to enable vcs (git) support
@@ -88,6 +89,9 @@ LIBS += $$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD}qsynedit.lib \
         $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}redpanda_qt_utils.lib
 LIBS += advapi32.lib user32.lib
 }
+
+# `Compat::QProcess_::setCreateProcessArgumentsModifier` hooks `CreateProcessW`
+win32:equals(QT_MAJOR_VERSION, 5):lessThan(QT_MINOR_VERSION, 7): LIBS += -lMinHook
 
 SOURCES += \
     autolinkmanager.cpp \

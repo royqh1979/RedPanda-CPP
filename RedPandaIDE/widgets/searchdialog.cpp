@@ -16,7 +16,7 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui(new Ui::SearchDialog),
     mSearchOptions()
 {
-    setWindowFlag(Qt::WindowContextHelpButtonHint,false);
+    disableWindowContextHelpButtonHint(this);
     ui->setupUi(this);
     mTabBar=new QTabBar(this);
     mTabBar->setExpanding(false);

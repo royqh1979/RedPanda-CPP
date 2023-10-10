@@ -24,6 +24,7 @@
 #include "statementmodel.h"
 #include "cpptokenizer.h"
 #include "cpppreprocessor.h"
+#include "qt_utils/compat.h"
 
 class CppParser : public QObject
 {
@@ -386,7 +387,7 @@ private:
 
     QString findFunctionPointerName(int startIdx);
     bool isIdentifier(const QString& token) const {
-        return (!token.isEmpty() && isIdentChar(token.front())
+        return (!token.isEmpty() && isIdentChar(token[0])
                 && !token.contains('\"'));
     }
 
@@ -406,13 +407,13 @@ private:
     bool isIntegerLiteral(const QString& token) const {
         if (token.isEmpty())
             return false;
-        QChar ch = token.front();
+        QChar ch = token[0];
         return (ch>='0' && ch<='9' && !token.contains(".") && !token.contains("e"));
     }
     bool isFloatLiteral(const QString& token) const {
         if (token.isEmpty())
             return false;
-        QChar ch = token.front();
+        QChar ch = token[0];
         return (ch>='0' && ch<='9' && (token.contains(".") || token.contains("e")));
     }
     bool isStringLiteral(const QString& token) const {
@@ -561,6 +562,14 @@ private:
                 || ch == '_';
     }
 
+    bool startsWithIdentChar(const QString &s) const {
+        return isIdentChar(s[0]);
+    }
+
+    bool endsWithIdentChar(const QString &s) const {
+        return isIdentChar(*s.rbegin());
+    }
+
     bool isDigitChar(const QChar& ch) const {
         return (ch>='0' && ch<='9');
     }
@@ -608,6 +617,10 @@ private:
         default:
             return false;
         }
+    }
+
+    bool startsWithBlockChar(const QString &s) const {
+        return isblockChar(s[0]);
     }
 
     /* '#', ',', ';', ':', '{', '}', '!', '/', '+', '-', '<', '>' */

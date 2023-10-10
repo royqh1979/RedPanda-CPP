@@ -108,7 +108,7 @@ void ExecutableRunner::run()
     mStop = false;
     bool errorOccurred = false;
 
-    mProcess = std::make_shared<QProcess>();
+    mProcess = std::make_shared<Compat::QProcess_>();
     mProcess->setProgram(mFilename);
     mProcess->setArguments(mArguments);
     //qDebug()<<splitProcessCommand(mArguments);
@@ -129,7 +129,7 @@ void ExecutableRunner::run()
         errorOccurred= true;
     });
 #ifdef Q_OS_WIN
-    mProcess->setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
+    mProcess->setCreateProcessArgumentsModifier([this](Compat::QProcess_::CreateProcessArguments * args){
         if (mStartConsole) {
             args->flags |=  CREATE_NEW_CONSOLE;
             args->flags &= ~CREATE_NO_WINDOW;
