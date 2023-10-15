@@ -199,7 +199,7 @@ int main()
 		int totalblocks = 0;
 		for (int i = 0; i < ROWS; ++i) {
 			for (int j = 0; j < COLUMNS; ++j) {                
-				if (gameboard[i][j].getType() >= 1 and gameboard[i][j].isRevealed() == false) {
+				if (gameboard[i][j].getType() >= 1 && gameboard[i][j].isRevealed() == false) {
 					totalblocks++;
 				}
 			}
@@ -357,7 +357,7 @@ void countMinesInNeighbors(int i, int j) {
 		if (gameboard[i][j+1].getType() == MINE) {
 			count++;
 		}
-		if ((i+1) <= ROWS) {
+		if ((i+1) < ROWS) {
 			if (gameboard[i+1][j+1].getType() == MINE) {
 				count++;
 			}
