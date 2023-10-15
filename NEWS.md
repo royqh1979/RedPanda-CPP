@@ -12,6 +12,7 @@ Red Panda C++ Version 2.25
   - Change: Empty project template won't auto create main.c/main.cpp
   - enhancement: When creating project, warn user if the project folder is not empty.
   - fix: Press '>' after '-' don't show completion suggestion info.
+  - fix: Icon position not correct under hiPDI devices.
   
 Red Panda C++ Version 2.24
 

@@ -1074,8 +1074,9 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
         }
     }
     if (icon) {
-        X = 5;
-        Y += (this->textHeight() - icon->height()) / 2;
+        qreal dpr=icon->devicePixelRatioF();
+        X = 5/dpr;
+        Y += (this->textHeight() - icon->height()/dpr) / 2;
         painter.drawPixmap(X,Y,*icon);
     }
 }

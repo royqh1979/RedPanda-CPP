@@ -1298,7 +1298,10 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
         QPixmap icon = mModel->statementIcon(index);
         int x=option.rect.left();
         if (!icon.isNull()) {
-            painter->drawPixmap(x+(option.rect.height()-icon.width())/2,option.rect.top()+(option.rect.height()-icon.height())/2,icon);
+            qreal dpr=icon.devicePixelRatioF();
+            int x1=x+(option.rect.height()-icon.width()/dpr)/2;
+            int y1=option.rect.top()+(option.rect.height()-icon.height()/dpr)/2;
+            painter->drawPixmap(x1,y1,icon);
             x+=option.rect.height();
         }
         QString text = statement->command;
