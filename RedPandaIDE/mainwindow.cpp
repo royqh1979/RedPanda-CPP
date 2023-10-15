@@ -2126,7 +2126,9 @@ void MainWindow::runExecutable(
             return;
         }
     } else {
-        if (!filename.isEmpty() && compareFileModifiedTime(filename,exeName)>=0) {
+        if (!filename.isEmpty() &&
+                ( compareFileModifiedTime(filename,exeName)>=0
+                  || compareFileModifiedTime(exeName, pSettings->compilerSets().defaultIndexTimestamp())<=0 )) {
             doCompileRun(runType);
             return;
         }
@@ -2435,7 +2437,9 @@ void MainWindow::debug()
                     mCompileSuccessionTask->binDirs = binDirs;
                     compile();
                     return;
-                } else if (compareFileModifiedTime(e->filename(),filePath)>=0) {
+                } else if (
+                           compareFileModifiedTime(e->filename(),filePath)>=0
+                           || compareFileModifiedTime(filePath, pSettings->compilerSets().defaultIndexTimestamp())<=0 ) {
                     mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                     mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
                     mCompileSuccessionTask->binDirs = binDirs;

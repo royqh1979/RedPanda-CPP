@@ -202,6 +202,8 @@ void CompilerSetOptionWidget::doSave()
     if (pSettings->compilerSets().size()>0) {
         saveCurrentCompilerSet();
     }
+    //update default index timestamp
+    pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().defaultIndex());
     pSettings->compilerSets().saveSets();
     pMainWindow->updateCompilerSet();
 }

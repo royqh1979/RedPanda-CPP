@@ -147,6 +147,7 @@ QString escapeSpacesInString(const QString& str);
 bool isReadOnly(const QString& filename);
 
 int compareFileModifiedTime(const QString& filename1, const QString& filename2);
+int compareFileModifiedTime(const QString& filename1, qint64 timestamp);
 
 /* UI utils */
 void inflateRect(QRect& rect, int delta);

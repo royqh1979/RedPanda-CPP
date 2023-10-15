@@ -3158,11 +3158,13 @@ void Settings::CompilerSets::saveSets()
         saveSet(i);
     }
     if (mDefaultIndex>=(int)mList.size()) {
-        mDefaultIndex = mList.size()-1;
+        setDefaultIndex( mList.size()-1 );
     }
     mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
     mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_DEFAULT_INDEX,mDefaultIndex);
+    mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_DEFAULT_INDEX_TIMESTAMP,mDefaultIndexTimeStamp);
     mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_COUNT,(int)mList.size());
+
     mSettings->mSettings.endGroup();
 }
 
@@ -3170,7 +3172,8 @@ void Settings::CompilerSets::loadSets()
 {
     mList.clear();
     mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
-    mDefaultIndex =mSettings->mSettings.value(SETTING_COMPILTER_SETS_DEFAULT_INDEX,-1).toInt();
+    mDefaultIndex = mSettings->mSettings.value(SETTING_COMPILTER_SETS_DEFAULT_INDEX,-1).toInt();
+    mDefaultIndexTimeStamp = mSettings->mSettings.value(SETTING_COMPILTER_SETS_DEFAULT_INDEX_TIMESTAMP,0).toLongLong();
     int listSize = mSettings->mSettings.value(SETTING_COMPILTER_SETS_COUNT,0).toInt();
     mSettings->mSettings.endGroup();
     bool loadError = false;
@@ -3184,7 +3187,7 @@ void Settings::CompilerSets::loadSets()
     }
     if (loadError) {
         mList.clear();
-        mDefaultIndex = -1;
+        setDefaultIndex(-1);
     }
     PCompilerSet pCurrentSet = defaultSet();
     if (pCurrentSet) {
@@ -3241,7 +3244,7 @@ void Settings::CompilerSets::loadSets()
         pCurrentSet = defaultSet();
         if (!pCurrentSet) {
             mList.clear();
-            mDefaultIndex = -1;
+            setDefaultIndex(-1);
             saveSets();
             return;
         }
@@ -3254,6 +3257,7 @@ void Settings::CompilerSets::saveDefaultIndex()
 {
     mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
     mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_DEFAULT_INDEX,mDefaultIndex);
+    mSettings->mSettings.setValue(SETTING_COMPILTER_SETS_DEFAULT_INDEX_TIMESTAMP,mDefaultIndexTimeStamp);
     mSettings->mSettings.endGroup();
 }
 
@@ -3266,9 +3270,6 @@ void Settings::CompilerSets::deleteSet(int index)
         mSettings->mSettings.endGroup();
     }
     mList.erase(std::begin(mList)+index);
-    if (mDefaultIndex>=(int)mList.size()) {
-        mDefaultIndex = mList.size()-1;
-    }
     saveSets();
 }
 
@@ -3282,9 +3283,15 @@ int Settings::CompilerSets::defaultIndex() const
     return mDefaultIndex;
 }
 
+qint64 Settings::CompilerSets::defaultIndexTimestamp() const
+{
+    return mDefaultIndexTimeStamp;
+}
+
 void Settings::CompilerSets::setDefaultIndex(int value)
 {
     mDefaultIndex = value;
+    mDefaultIndexTimeStamp = QDateTime::currentMSecsSinceEpoch();
 }
 
 Settings::PCompilerSet Settings::CompilerSets::defaultSet()

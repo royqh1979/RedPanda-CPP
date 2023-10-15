@@ -45,6 +45,7 @@
 #define SETTING_CODE_FORMATTER "CodeFormatter"
 #define SETTING_COMPILTER_SETS "CompilerSets"
 #define SETTING_COMPILTER_SETS_DEFAULT_INDEX "defaultIndex"
+#define SETTING_COMPILTER_SETS_DEFAULT_INDEX_TIMESTAMP "defaultIndexTimestamp"
 #define SETTING_COMPILTER_SETS_COUNT "count"
 #define SETTING_COMPILTER_SET "CompilerSet_%1"
 #define SETTING_EDITOR_DEFAULT_ENCODING "default_encoding"
@@ -1547,6 +1548,7 @@ public:
         size_t size() const;
         int defaultIndex() const;
         void setDefaultIndex(int value);
+        qint64 defaultIndexTimestamp() const;
         PCompilerSet defaultSet();
         PCompilerSet getSet(int index);
 
@@ -1567,6 +1569,7 @@ public:
     private:
         CompilerSetList mList;
         int mDefaultIndex;
+        qint64 mDefaultIndexTimeStamp;
         Settings* mSettings;
         QStringList mCompilerCompatibleIndex; // index for old settings compatibility
     };

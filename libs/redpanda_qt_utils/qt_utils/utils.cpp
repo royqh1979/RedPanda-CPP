@@ -743,3 +743,14 @@ void clearQPlainTextEditFormat(QTextEdit *editor)
     cursor.setCharFormat(QTextCharFormat());
     cursor.clearSelection();
 }
+
+int compareFileModifiedTime(const QString &filename, qint64 timestamp)
+{
+    QFileInfo fileInfo1(filename);
+    qint64 time=fileInfo1.lastModified().toMSecsSinceEpoch();
+    if (time > timestamp)
+        return 1;
+    if (time < timestamp)
+        return -1;
+    return 0;
+}
