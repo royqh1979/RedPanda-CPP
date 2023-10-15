@@ -13,6 +13,7 @@ Red Panda C++ Version 2.25
   - enhancement: When creating project, warn user if the project folder is not empty.
   - fix: Press '>' after '-' don't show completion suggestion info.
   - fix: Icon position not correct under hiPDI devices.
+  - change: Add Mesa3D for windows opengl driver to the integrated mingw-gcc for windows 32 version.
   
 Red Panda C++ Version 2.24
 
