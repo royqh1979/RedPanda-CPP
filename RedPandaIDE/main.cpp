@@ -28,6 +28,7 @@
 #include <QDesktopWidget>
 #include <QDir>
 #include <QScreen>
+#include <QLockFile>
 #include "common.h"
 #include "colorscheme.h"
 #include "iconsmanager.h"
@@ -58,7 +59,9 @@ public:
     bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) override;
 };
 
-#define WM_USER_OPEN_FILE (WM_USER+1)
+#define WM_APP_OPEN_FILE (WM_APP + 6736 /* “OPEN” on dial pad */)
+static_assert(WM_APP_OPEN_FILE < 0xc000);
+
 HWND prevAppInstance = NULL;
 BOOL CALLBACK GetPreviousInstanceCallback(HWND hwnd, LPARAM param){
     BOOL result = TRUE;
@@ -144,7 +147,7 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
         }
         break;
         }
-    case WM_USER_OPEN_FILE: {
+    case WM_APP_OPEN_FILE: {
         QSharedMemory sharedMemory("RedPandaCpp/openfiles");
         if (sharedMemory.attach()) {
             QBuffer buffer;
@@ -184,7 +187,7 @@ bool sendFilesToInstance() {
             const char *from = buffer.data().data();
             memcpy(to, from, qMin(sharedMemory.size(), size));
             sharedMemory.unlock();
-            SendMessage(prevInstance,WM_USER_OPEN_FILE,0,0);
+            SendMessage(prevInstance,WM_APP_OPEN_FILE,0,0);
             return true;
         }
     }
@@ -270,7 +273,7 @@ int main(int argc, char *argv[])
 
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
-    QFile tempFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
+    QLockFile lockFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
     {
         bool firstRun;
         QString settingFilename = getSettingFilename(QString(), firstRun);
@@ -288,9 +291,8 @@ int main(int argc, char *argv[])
         if (openInSingleInstance) {
             int openCount = 0;
             while (true) {
-                if (tempFile.open(QFile::NewOnly))
+                if (lockFile.tryLock(100))
                     break;
-                QThread::msleep(100);
                 openCount++;
                 if (openCount>100)
                     break;
@@ -299,7 +301,7 @@ int main(int argc, char *argv[])
             if (app.arguments().length()>=2 && openCount<100) {
 #ifdef Q_OS_WIN
                 if (sendFilesToInstance()) {
-                    tempFile.remove();
+                    lockFile.unlock();
                     return 0;
                 }
 #endif
@@ -314,7 +316,7 @@ int main(int argc, char *argv[])
         QDir::setCurrent(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0]);
     }
     if (settingFilename.isEmpty()) {
-        tempFile.remove();
+        lockFile.unlock();
         return -1;
     }
     QString language;
@@ -433,9 +435,8 @@ int main(int argc, char *argv[])
         WindowLogoutEventFilter filter;
         app.installNativeEventFilter(&filter);
 #endif
-        if (tempFile.isOpen()) {
-            tempFile.close();
-            tempFile.remove();
+        if (lockFile.isLocked()) {
+            lockFile.unlock();
         }
 
         int retCode = app.exec();
@@ -448,7 +449,7 @@ int main(int argc, char *argv[])
         }
         return retCode;
     }  catch (BaseError e) {
-        tempFile.remove();
+        lockFile.unlock();
         QMessageBox::critical(nullptr,QApplication::tr("Error"),e.reason());
         return -1;
     }

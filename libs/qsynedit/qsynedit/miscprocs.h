@@ -26,6 +26,7 @@
 #include <QTextStream>
 #include <QVector>
 #include <initializer_list>
+#include <functional>
 //#include <QRect>
 //#include <QColor>
 

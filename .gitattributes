@@ -7,6 +7,9 @@
 /packages/debian/01-in-docker.sh eol=lf
 /packages/debian/rules eol=lf
 
+# files to be processed with Unix utils
+/packages/windows/qtbase-5.6.3-redpanda.patch eol=lf
+
 # text files to be packed
 /packages/appimage/AppRun.sh eol=lf
 /packages/debian/changelog eol=lf

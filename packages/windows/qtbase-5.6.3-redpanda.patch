@@ -1,0 +1,856 @@
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/global/qflags.h qtbase-opensource-src-5.6.3/src/corelib/global/qflags.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/global/qflags.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/global/qflags.h	2023-10-17 20:31:37.670315600 +0800
+@@ -139,6 +139,11 @@
+     Q_DECL_CONSTEXPR inline bool operator!() const Q_DECL_NOTHROW { return !i; }
+ 
+     Q_DECL_CONSTEXPR inline bool testFlag(Enum f) const Q_DECL_NOTHROW { return (i & Int(f)) == Int(f) && (Int(f) != 0 || i == Int(f) ); }
++    Q_DECL_RELAXED_CONSTEXPR inline QFlags &setFlag(Enum f, bool on = true) Q_DECL_NOTHROW
++    {
++        return on ? (*this |= f) : (*this &= ~Int(f));
++    }
++
+ private:
+ #ifdef Q_COMPILER_INITIALIZER_LISTS
+     Q_DECL_CONSTEXPR static inline Int initializer_list_helper(typename std::initializer_list<Enum>::const_iterator it,
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/global/qglobal.h qtbase-opensource-src-5.6.3/src/corelib/global/qglobal.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/global/qglobal.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/global/qglobal.h	2023-10-17 14:38:05.801809800 +0800
+@@ -67,6 +67,9 @@
+ #  define QT_NO_UNSHARABLE_CONTAINERS
+ #endif
+ 
++// Red Panda C++: workaround.
++#define QT_CONFIG(feature) QT_SUPPORTS(feature)
++
+ /* These two macros makes it possible to turn the builtin line expander into a
+  * string literal. */
+ #define QT_STRINGIFY2(x) #x
+@@ -1054,6 +1057,53 @@
+ 
+ #endif // QT_NO_TRANSLATION
+ 
++template <typename... Args>
++struct QNonConstOverload
++{
++    template <typename R, typename T>
++    Q_DECL_CONSTEXPR auto operator()(R (T::*ptr)(Args...)) const Q_DECL_NOTHROW -> decltype(ptr)
++    { return ptr; }
++
++    template <typename R, typename T>
++    static Q_DECL_CONSTEXPR auto of(R (T::*ptr)(Args...)) Q_DECL_NOTHROW -> decltype(ptr)
++    { return ptr; }
++};
++
++template <typename... Args>
++struct QConstOverload
++{
++    template <typename R, typename T>
++    Q_DECL_CONSTEXPR auto operator()(R (T::*ptr)(Args...) const) const Q_DECL_NOTHROW -> decltype(ptr)
++    { return ptr; }
++
++    template <typename R, typename T>
++    static Q_DECL_CONSTEXPR auto of(R (T::*ptr)(Args...) const) Q_DECL_NOTHROW -> decltype(ptr)
++    { return ptr; }
++};
++
++template <typename... Args>
++struct QOverload : QConstOverload<Args...>, QNonConstOverload<Args...>
++{
++    using QConstOverload<Args...>::of;
++    using QConstOverload<Args...>::operator();
++    using QNonConstOverload<Args...>::of;
++    using QNonConstOverload<Args...>::operator();
++
++    template <typename R>
++    Q_DECL_CONSTEXPR auto operator()(R (*ptr)(Args...)) const Q_DECL_NOTHROW -> decltype(ptr)
++    { return ptr; }
++
++    template <typename R>
++    static Q_DECL_CONSTEXPR auto of(R (*ptr)(Args...)) Q_DECL_NOTHROW -> decltype(ptr)
++    { return ptr; }
++};
++
++#if defined(__cpp_variable_templates) && __cpp_variable_templates >= 201304 // C++14
++template <typename... Args> Q_CONSTEXPR Q_DECL_UNUSED QOverload<Args...> qOverload = {};
++template <typename... Args> Q_CONSTEXPR Q_DECL_UNUSED QConstOverload<Args...> qConstOverload = {};
++template <typename... Args> Q_CONSTEXPR Q_DECL_UNUSED QNonConstOverload<Args...> qNonConstOverload = {};
++#endif
++
+ /*
+    When RTTI is not available, define this macro to force any uses of
+    dynamic_cast to cause a compile failure.
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/global/qsystemdetection.h qtbase-opensource-src-5.6.3/src/corelib/global/qsystemdetection.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/global/qsystemdetection.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/global/qsystemdetection.h	2023-10-17 22:26:59.822029100 +0800
+@@ -184,6 +184,7 @@
+ #endif
+ 
+ #if defined(Q_OS_WIN32) || defined(Q_OS_WIN64) || defined(Q_OS_WINCE) || defined(Q_OS_WINRT)
++#  define Q_OS_WINDOWS
+ #  define Q_OS_WIN
+ #endif
+ 
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/io/qdir.cpp qtbase-opensource-src-5.6.3/src/corelib/io/qdir.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/io/qdir.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/io/qdir.cpp	2023-10-17 14:38:05.801809800 +0800
+@@ -1812,6 +1812,13 @@
+     return QFile::exists(filePath(name));
+ }
+ 
++bool QDir::isEmpty(Filters filters) const
++{
++    const auto d = d_ptr.constData();
++    QDirIterator it(d->dirEntry.filePath(), d->nameFilters, filters);
++    return !it.hasNext();
++}
++
+ /*!
+     Returns a list of the root directories on this system.
+ 
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/io/qdir.h qtbase-opensource-src-5.6.3/src/corelib/io/qdir.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/io/qdir.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/io/qdir.h	2023-10-17 14:38:05.801809800 +0800
+@@ -138,6 +138,8 @@
+     void setSorting(SortFlags sort);
+ 
+     uint count() const;
++    bool isEmpty(Filters filters = Filters(AllEntries | NoDotAndDotDot)) const;
++
+     QString operator[](int) const;
+ 
+     static QStringList nameFiltersFromString(const QString &nameFilter);
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/io/qprocess.cpp qtbase-opensource-src-5.6.3/src/corelib/io/qprocess.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/io/qprocess.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/io/qprocess.cpp	2023-10-18 09:11:02.546767400 +0800
+@@ -1535,6 +1535,18 @@
+     d->nativeArguments = arguments;
+ }
+ 
++QProcess::CreateProcessArgumentModifier QProcess::createProcessArgumentsModifier() const
++{
++    Q_D(const QProcess);
++    return d->modifyCreateProcessArgs;
++}
++
++void QProcess::setCreateProcessArgumentsModifier(CreateProcessArgumentModifier modifier)
++{
++    Q_D(QProcess);
++    d->modifyCreateProcessArgs = modifier;
++}
++
+ #endif
+ 
+ /*!
+@@ -2124,6 +2136,20 @@
+     d->start(mode);
+ }
+ 
++bool QProcess::startDetached(qint64 *pid)
++{
++    Q_D(QProcess);
++    if (d->processState != NotRunning) {
++        qWarning("QProcess::startDetached: Process is already running");
++        return false;
++    }
++    if (d->program.isEmpty()) {
++        d->setErrorAndEmit(QProcess::FailedToStart, tr("No program defined"));
++        return false;
++    }
++    return d->startDetached(pid);
++}
++
+ /*!
+     Starts the program set by setProgram() with arguments set by setArguments().
+     The OpenMode is set to \a mode.
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/io/qprocess.h qtbase-opensource-src-5.6.3/src/corelib/io/qprocess.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/io/qprocess.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/io/qprocess.h	2023-10-18 09:09:01.053605200 +0800
+@@ -38,6 +38,8 @@
+ #include <QtCore/qstringlist.h>
+ #include <QtCore/qshareddata.h>
+ 
++#include <functional>
++
+ QT_BEGIN_NAMESPACE
+ 
+ 
+@@ -48,6 +50,8 @@
+ #else
+ QT_END_NAMESPACE
+ typedef struct _PROCESS_INFORMATION *Q_PID;
++typedef struct _SECURITY_ATTRIBUTES Q_SECURITY_ATTRIBUTES;
++typedef struct _STARTUPINFOW Q_STARTUPINFO;
+ QT_BEGIN_NAMESPACE
+ #endif
+ 
+@@ -151,6 +155,7 @@
+     void start(const QString &command, OpenMode mode = ReadWrite);
+ #endif
+     void start(OpenMode mode = ReadWrite);
++    bool startDetached(qint64 *pid = nullptr);
+     bool open(OpenMode mode = ReadWrite) Q_DECL_OVERRIDE;
+ 
+     QString program() const;
+@@ -180,6 +185,22 @@
+ #if defined(Q_OS_WIN)
+     QString nativeArguments() const;
+     void setNativeArguments(const QString &arguments);
++    struct CreateProcessArguments
++    {
++        const wchar_t *applicationName;
++        wchar_t *arguments;
++        Q_SECURITY_ATTRIBUTES *processAttributes;
++        Q_SECURITY_ATTRIBUTES *threadAttributes;
++        bool inheritHandles;
++        unsigned long flags;
++        void *environment;
++        const wchar_t *currentDirectory;
++        Q_STARTUPINFO *startupInfo;
++        Q_PID processInformation;
++    };
++    typedef std::function<void(CreateProcessArguments *)> CreateProcessArgumentModifier;
++    CreateProcessArgumentModifier createProcessArgumentsModifier() const;
++    void setCreateProcessArgumentsModifier(CreateProcessArgumentModifier modifier);
+ #endif
+ 
+     QString workingDirectory() const;
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/io/qprocess_p.h qtbase-opensource-src-5.6.3/src/corelib/io/qprocess_p.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/io/qprocess_p.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/io/qprocess_p.h	2023-10-17 14:38:05.822849000 +0800
+@@ -326,6 +326,7 @@
+     QStringList arguments;
+ #if defined(Q_OS_WIN)
+     QString nativeArguments;
++    QProcess::CreateProcessArgumentModifier modifyCreateProcessArgs;
+ #endif
+     QProcessEnvironment environment;
+ 
+@@ -355,6 +356,7 @@
+     bool waitForDeadChild();
+ #endif
+ #ifdef Q_OS_WIN
++    bool callCreateProcess(QProcess::CreateProcessArguments *cpargs);
+     bool drainOutputPipes();
+     void flushPipeWriter();
+     qint64 pipeWriterBytesToWrite() const;
+@@ -363,6 +365,8 @@
+     static bool startDetached(const QString &program, const QStringList &arguments, const QString &workingDirectory = QString(),
+                               qint64 *pid = 0);
+ 
++    bool startDetached(qint64 *pPid);
++
+     int exitCode;
+     QProcess::ExitStatus exitStatus;
+     bool crashed;
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/io/qprocess_win.cpp qtbase-opensource-src-5.6.3/src/corelib/io/qprocess_win.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/io/qprocess_win.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/io/qprocess_win.cpp	2023-10-18 09:15:27.039781400 +0800
+@@ -330,7 +330,8 @@
+     destroyPipe(channel->pipe);
+ }
+ 
+-static QString qt_create_commandline(const QString &program, const QStringList &arguments)
++static QString qt_create_commandline(const QString &program, const QStringList &arguments,
++                                     const QString &nativeArguments = QString())
+ {
+     QString args;
+     if (!program.isEmpty()) {
+@@ -359,6 +360,13 @@
+         }
+         args += QLatin1Char(' ') + tmp;
+     }
++
++    if (!nativeArguments.isEmpty()) {
++        if (!args.isEmpty())
++             args += QLatin1Char(' ');
++        args += nativeArguments;
++    }
++
+     return args;
+ }
+ 
+@@ -444,6 +452,30 @@
+     return envlist;
+ }
+ 
++bool QProcessPrivate::callCreateProcess(QProcess::CreateProcessArguments *cpargs)
++{
++    if (modifyCreateProcessArgs)
++        modifyCreateProcessArgs(cpargs);
++    bool success = CreateProcess(cpargs->applicationName, cpargs->arguments,
++                                 cpargs->processAttributes, cpargs->threadAttributes,
++                                 cpargs->inheritHandles, cpargs->flags, cpargs->environment,
++                                 cpargs->currentDirectory, cpargs->startupInfo,
++                                 cpargs->processInformation);
++    if (stdinChannel.pipe[0] != INVALID_Q_PIPE) {
++        CloseHandle(stdinChannel.pipe[0]);
++        stdinChannel.pipe[0] = INVALID_Q_PIPE;
++    }
++    if (stdoutChannel.pipe[1] != INVALID_Q_PIPE) {
++        CloseHandle(stdoutChannel.pipe[1]);
++        stdoutChannel.pipe[1] = INVALID_Q_PIPE;
++    }
++    if (stderrChannel.pipe[1] != INVALID_Q_PIPE) {
++        CloseHandle(stderrChannel.pipe[1]);
++        stderrChannel.pipe[1] = INVALID_Q_PIPE;
++    }
++    return success;
++}
++
+ void QProcessPrivate::startProcess()
+ {
+     Q_Q(QProcess);
+@@ -498,11 +530,22 @@
+                                  0, 0, 0,
+                                  stdinChannel.pipe[0], stdoutChannel.pipe[1], stderrChannel.pipe[1]
+     };
+-    success = CreateProcess(0, (wchar_t*)args.utf16(),
+-                            0, 0, TRUE, dwCreationFlags,
+-                            environment.isEmpty() ? 0 : envlist.data(),
+-                            workingDirectory.isEmpty() ? 0 : (wchar_t*)QDir::toNativeSeparators(workingDirectory).utf16(),
+-                            &startupInfo, pid);
++
++    const QString nativeWorkingDirectory = QDir::toNativeSeparators(workingDirectory);
++    QProcess::CreateProcessArguments cpargs = {
++        0, (wchar_t*)args.utf16(),
++        0, 0, TRUE, dwCreationFlags,
++        environment.isEmpty() ? 0 : envlist.data(),
++        nativeWorkingDirectory.isEmpty() ? Q_NULLPTR : (wchar_t*)nativeWorkingDirectory.utf16(),
++        &startupInfo, pid
++    };
++    if (modifyCreateProcessArgs)
++        modifyCreateProcessArgs(&cpargs);
++    success = CreateProcess(cpargs.applicationName, cpargs.arguments, cpargs.processAttributes,
++                            cpargs.threadAttributes, cpargs.inheritHandles, cpargs.flags,
++                            cpargs.environment, cpargs.currentDirectory, cpargs.startupInfo,
++                            cpargs.processInformation);
++
+     QString errorString;
+     if (!success) {
+         // Capture the error string before we do CloseHandle below
+@@ -818,6 +861,7 @@
+ // Use ShellExecuteEx() to trigger an UAC prompt when CreateProcess()fails
+ // with ERROR_ELEVATION_REQUIRED.
+ static bool startDetachedUacPrompt(const QString &programIn, const QStringList &arguments,
++                                   const QString &nativeArguments,
+                                    const QString &workingDir, qint64 *pid)
+ {
+     typedef BOOL (WINAPI *ShellExecuteExType)(SHELLEXECUTEINFOW *);
+@@ -828,11 +872,13 @@
+     if (!shellExecuteEx)
+         return false;
+ 
+-    const QString args = qt_create_commandline(QString(), arguments); // needs arguments only
++    const QString args = qt_create_commandline(QString(),                   // needs arguments only
++                                               arguments, nativeArguments);
+     SHELLEXECUTEINFOW shellExecuteExInfo;
+     memset(&shellExecuteExInfo, 0, sizeof(SHELLEXECUTEINFOW));
+     shellExecuteExInfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+-    shellExecuteExInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_UNICODE | SEE_MASK_FLAG_NO_UI;
++    shellExecuteExInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_UNICODE | SEE_MASK_FLAG_NO_UI | SEE_MASK_CLASSNAME;
++    shellExecuteExInfo.lpClass = L"exefile";
+     shellExecuteExInfo.lpVerb = L"runas";
+     const QString program = QDir::toNativeSeparators(programIn);
+     shellExecuteExInfo.lpFile = reinterpret_cast<LPCWSTR>(program.utf16());
+@@ -850,6 +896,12 @@
+     return true;
+ }
+ 
++static bool startDetachedUacPrompt(const QString &programIn, const QStringList &arguments,
++                                   const QString &workingDir, qint64 *pid)
++{
++    return startDetachedUacPrompt(programIn, arguments, QString(), workingDir, pid);
++}
++
+ bool QProcessPrivate::startDetached(const QString &program, const QStringList &arguments, const QString &workingDir, qint64 *pid)
+ {
+     static const DWORD errorElevationRequired = 740;
+@@ -880,6 +932,75 @@
+     return success;
+ }
+ 
++bool QProcessPrivate::startDetached(qint64 *pid)
++{
++    static const DWORD errorElevationRequired = 740;
++
++    if ((stdinChannel.type == Channel::Redirect && !openChannel(stdinChannel))
++            || (stdoutChannel.type == Channel::Redirect && !openChannel(stdoutChannel))
++            || (stderrChannel.type == Channel::Redirect && !openChannel(stderrChannel))) {
++        closeChannel(&stdinChannel);
++        closeChannel(&stdoutChannel);
++        closeChannel(&stderrChannel);
++        return false;
++    }
++
++    QString args = qt_create_commandline(program, arguments, nativeArguments);
++    bool success = false;
++    PROCESS_INFORMATION pinfo;
++
++    void *envPtr = nullptr;
++    QByteArray envlist;
++    if (environment.d.constData()) {
++        envlist = qt_create_environment(environment.d.constData()->hash);
++        envPtr = envlist.data();
++    }
++
++    DWORD dwCreationFlags = (GetConsoleWindow() ? 0 : CREATE_NO_WINDOW);
++    dwCreationFlags |= CREATE_UNICODE_ENVIRONMENT;
++    STARTUPINFOW startupInfo = { sizeof( STARTUPINFO ), 0, 0, 0,
++                                 (ulong)CW_USEDEFAULT, (ulong)CW_USEDEFAULT,
++                                 (ulong)CW_USEDEFAULT, (ulong)CW_USEDEFAULT,
++                                 0, 0, 0,
++                                 STARTF_USESTDHANDLES,
++                                 0, 0, 0,
++                                 stdinChannel.pipe[0], stdoutChannel.pipe[1], stderrChannel.pipe[1]
++                               };
++
++    const bool inheritHandles = stdinChannel.type == Channel::Redirect
++            || stdoutChannel.type == Channel::Redirect
++            || stderrChannel.type == Channel::Redirect;
++    QProcess::CreateProcessArguments cpargs = {
++        nullptr, reinterpret_cast<wchar_t *>(const_cast<ushort *>(args.utf16())),
++        nullptr, nullptr, inheritHandles, dwCreationFlags, envPtr,
++        workingDirectory.isEmpty()
++            ? nullptr : reinterpret_cast<const wchar_t *>(workingDirectory.utf16()),
++        &startupInfo, &pinfo
++    };
++    success = callCreateProcess(&cpargs);
++
++    if (success) {
++        CloseHandle(pinfo.hThread);
++        CloseHandle(pinfo.hProcess);
++        if (pid)
++            *pid = pinfo.dwProcessId;
++    } else if (GetLastError() == errorElevationRequired) {
++        if (envPtr)
++            qWarning("QProcess: custom environment will be ignored for detached elevated process.");
++        if (!stdinChannel.file.isEmpty() || !stdoutChannel.file.isEmpty()
++                || !stderrChannel.file.isEmpty()) {
++            qWarning("QProcess: file redirection is unsupported for detached elevated processes.");
++        }
++        success = startDetachedUacPrompt(program, arguments, nativeArguments,
++                                         workingDirectory, pid);
++    }
++
++    closeChannel(&stdinChannel);
++    closeChannel(&stdoutChannel);
++    closeChannel(&stderrChannel);
++    return success;
++}
++
+ QT_END_NAMESPACE
+ 
+ #endif // QT_NO_PROCESS
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/plugin/quuid.cpp qtbase-opensource-src-5.6.3/src/corelib/plugin/quuid.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/plugin/quuid.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/plugin/quuid.cpp	2023-10-17 14:38:05.822849000 +0800
+@@ -43,6 +43,8 @@
+ #endif
+ QT_BEGIN_NAMESPACE
+ 
++enum { MaxStringUuidLength = 38 };
++
+ template <class Char, class Integral>
+ void _q_toHex(Char *&dst, Integral value)
+ {
+@@ -91,6 +93,30 @@
+     *dst = Char('}');
+ }
+ 
++static char *_q_uuidToHex(const QUuid &uuid, char *dst, QUuid::StringFormat mode = QUuid::WithBraces)
++{
++    if ((mode & QUuid::WithoutBraces) == 0)
++        *dst++ = '{';
++    _q_toHex(dst, uuid.data1);
++    if ((mode & QUuid::Id128) != QUuid::Id128)
++        *dst++ = '-';
++    _q_toHex(dst, uuid.data2);
++    if ((mode & QUuid::Id128) != QUuid::Id128)
++        *dst++ = '-';
++    _q_toHex(dst, uuid.data3);
++    if ((mode & QUuid::Id128) != QUuid::Id128)
++        *dst++ = '-';
++    for (int i = 0; i < 2; i++)
++        _q_toHex(dst, uuid.data4[i]);
++    if ((mode & QUuid::Id128) != QUuid::Id128)
++        *dst++ = '-';
++    for (int i = 2; i < 8; i++)
++        _q_toHex(dst, uuid.data4[i]);
++    if ((mode & QUuid::WithoutBraces) == 0)
++        *dst++ = '}';
++    return dst;
++}
++
+ template <class Char>
+ bool _q_uuidFromHex(const Char *&src, uint &d1, ushort &d2, ushort &d3, uchar (&d4)[8])
+ {
+@@ -550,6 +576,13 @@
+     return result;
+ }
+ 
++QString QUuid::toString(QUuid::StringFormat mode) const
++{
++    char latin1[MaxStringUuidLength];
++    const auto end = _q_uuidToHex(*this, latin1, mode);
++    return QString::fromLatin1(latin1, end - latin1);
++}
++
+ /*!
+     Returns the binary representation of this QUuid. The byte array is
+     formatted as five hex fields separated by '-' and enclosed in
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/plugin/quuid.h qtbase-opensource-src-5.6.3/src/corelib/plugin/quuid.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/plugin/quuid.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/plugin/quuid.h	2023-10-17 14:38:05.838486200 +0800
+@@ -74,6 +74,12 @@
+         Sha1                 = 5 // 0 1 0 1
+     };
+ 
++    enum StringFormat {
++        WithBraces      = 0,
++        WithoutBraces   = 1,
++        Id128           = 3
++    };
++
+ #if defined(Q_COMPILER_UNIFORM_INIT) && !defined(Q_QDOC)
+     Q_DECL_CONSTEXPR QUuid() Q_DECL_NOTHROW : data1(0), data2(0), data3(0), data4{0,0,0,0,0,0,0,0} {}
+ 
+@@ -108,6 +114,7 @@
+     QUuid(const QString &);
+     QUuid(const char *);
+     QString toString() const;
++    QString toString(StringFormat mode) const;
+     QUuid(const QByteArray &);
+     QByteArray toByteArray() const;
+     QByteArray toRfc4122() const;
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qchar.h qtbase-opensource-src-5.6.3/src/corelib/tools/qchar.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qchar.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/tools/qchar.h	2023-10-17 14:38:05.838486200 +0800
+@@ -572,6 +572,21 @@
+ Q_DECL_CONSTEXPR inline bool operator> (QChar c1, QChar c2) { return  operator< (c2, c1); }
+ Q_DECL_CONSTEXPR inline bool operator<=(QChar c1, QChar c2) { return !operator< (c2, c1); }
+ 
++Q_DECL_CONSTEXPR inline bool operator==(QChar lhs, std::nullptr_t) Q_DECL_NOTHROW { return lhs.isNull(); }
++Q_DECL_CONSTEXPR inline bool operator< (QChar,     std::nullptr_t) Q_DECL_NOTHROW { return false; }
++Q_DECL_CONSTEXPR inline bool operator==(std::nullptr_t, QChar rhs) Q_DECL_NOTHROW { return rhs.isNull(); }
++Q_DECL_CONSTEXPR inline bool operator< (std::nullptr_t, QChar rhs) Q_DECL_NOTHROW { return !rhs.isNull(); }
++
++Q_DECL_CONSTEXPR inline bool operator!=(QChar lhs, std::nullptr_t) Q_DECL_NOTHROW { return !operator==(lhs, nullptr); }
++Q_DECL_CONSTEXPR inline bool operator>=(QChar lhs, std::nullptr_t) Q_DECL_NOTHROW { return !operator< (lhs, nullptr); }
++Q_DECL_CONSTEXPR inline bool operator> (QChar lhs, std::nullptr_t) Q_DECL_NOTHROW { return  operator< (nullptr, lhs); }
++Q_DECL_CONSTEXPR inline bool operator<=(QChar lhs, std::nullptr_t) Q_DECL_NOTHROW { return !operator< (nullptr, lhs); }
++
++Q_DECL_CONSTEXPR inline bool operator!=(std::nullptr_t, QChar rhs) Q_DECL_NOTHROW { return !operator==(nullptr, rhs); }
++Q_DECL_CONSTEXPR inline bool operator>=(std::nullptr_t, QChar rhs) Q_DECL_NOTHROW { return !operator< (nullptr, rhs); }
++Q_DECL_CONSTEXPR inline bool operator> (std::nullptr_t, QChar rhs) Q_DECL_NOTHROW { return  operator< (rhs, nullptr); }
++Q_DECL_CONSTEXPR inline bool operator<=(std::nullptr_t, QChar rhs) Q_DECL_NOTHROW { return !operator< (rhs, nullptr); }
++
+ #ifndef QT_NO_DATASTREAM
+ Q_CORE_EXPORT QDataStream &operator<<(QDataStream &, QChar);
+ Q_CORE_EXPORT QDataStream &operator>>(QDataStream &, QChar &);
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qdatetime.cpp qtbase-opensource-src-5.6.3/src/corelib/tools/qdatetime.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qdatetime.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/tools/qdatetime.cpp	2023-10-17 14:38:05.838486200 +0800
+@@ -4135,6 +4135,17 @@
+                    - julianDayFromDate(1970, 1, 1)) * Q_INT64_C(86400000);
+ }
+ 
++qint64 QDateTime::currentSecsSinceEpoch() Q_DECL_NOTHROW
++{
++    SYSTEMTIME st;
++    memset(&st, 0, sizeof(SYSTEMTIME));
++    GetSystemTime(&st);
++
++    return st.wHour * SECS_PER_HOUR + st.wMinute * SECS_PER_MIN + st.wSecond +
++            qint64(julianDayFromDate(st.wYear, st.wMonth, st.wDay)
++                   - julianDayFromDate(1970, 1, 1)) * Q_INT64_C(86400);
++}
++
+ #elif defined(Q_OS_UNIX)
+ QDate QDate::currentDate()
+ {
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qdatetime.h qtbase-opensource-src-5.6.3/src/corelib/tools/qdatetime.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qdatetime.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/tools/qdatetime.h	2023-10-17 14:38:05.838486200 +0800
+@@ -312,6 +312,7 @@
+     static QDateTime fromMSecsSinceEpoch(qint64 msecs, const QTimeZone &timeZone);
+ #endif
+     static qint64 currentMSecsSinceEpoch() Q_DECL_NOTHROW;
++    static qint64 currentSecsSinceEpoch() Q_DECL_NOTHROW;
+ 
+ #if defined(Q_OS_MAC) || defined(Q_QDOC)
+     static QDateTime fromCFDate(CFDateRef date);
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qlocale.cpp qtbase-opensource-src-5.6.3/src/corelib/tools/qlocale.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qlocale.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/tools/qlocale.cpp	2023-10-17 14:38:05.854106100 +0800
+@@ -3526,6 +3526,48 @@
+     return format.arg(str, sym);
+ }
+ 
++QString QLocale::formattedDataSize(qint64 bytes, int precision, DataSizeFormats format)
++{
++    int power, base = 1000;
++    if (!bytes) {
++        power = 0;
++    } else if (format & DataSizeBase1000) {
++        power = int(std::log10(qAbs(bytes)) / 3);
++    } else { // Compute log2(bytes) / 10:
++        power = int((63 - qCountLeadingZeroBits(quint64(qAbs(bytes)))) / 10);
++        base = 1024;
++    }
++    // Only go to doubles if we'll be using a quantifier:
++    const QString number = power
++        ? toString(bytes / std::pow(double(base), power), 'f', qMin(precision, 3 * power))
++        : toString(bytes);
++
++    // We don't support sizes in units larger than exbibytes because
++    // the number of bytes would not fit into qint64.
++    Q_ASSERT(power <= 6 && power >= 0);
++    // Red Panda C++: use hard-coded unit strings.
++    QString unit;
++    if (power > 0) {
++        if (format & DataSizeSIQuantifiers) {
++            static QString siQuantifiers[] {
++                QStringLiteral("kB"), QStringLiteral("MB"), QStringLiteral("GB"),
++                QStringLiteral("TB"), QStringLiteral("PB"), QStringLiteral("EB")
++            };
++            unit = siQuantifiers[power - 1];
++        } else {
++            static QString iecQuantifiers[] {
++                QStringLiteral("KiB"), QStringLiteral("MiB"), QStringLiteral("GiB"),
++                QStringLiteral("TiB"), QStringLiteral("PiB"), QStringLiteral("EiB")
++            };
++            unit = iecQuantifiers[power - 1];
++        }
++    } else {
++        unit = QStringLiteral("Bytes");
++    }
++
++    return number + QLatin1Char(' ') + unit;
++}
++
+ /*!
+     \since 4.8
+ 
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qlocale.h qtbase-opensource-src-5.6.3/src/corelib/tools/qlocale.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qlocale.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/tools/qlocale.h	2023-10-17 14:38:05.854106100 +0800
+@@ -854,6 +854,19 @@
+         CurrencyDisplayName
+     };
+ 
++    enum DataSizeFormat {
++        // Single-bit values, for internal use.
++        DataSizeBase1000 = 1, // use factors of 1000 instead of IEC's 1024;
++        DataSizeSIQuantifiers = 2, // use SI quantifiers instead of IEC ones.
++
++        // Flags values for use in API:
++        DataSizeIecFormat = 0, // base 1024, KiB, MiB, GiB, ...
++        DataSizeTraditionalFormat = DataSizeSIQuantifiers, // base 1024, kB, MB, GB, ...
++        DataSizeSIFormat = DataSizeBase1000 | DataSizeSIQuantifiers // base 1000, kB, MB, GB, ...
++    };
++    Q_DECLARE_FLAGS(DataSizeFormats, DataSizeFormat)
++    Q_FLAG(DataSizeFormats)
++
+     QLocale();
+     QLocale(const QString &name);
+     QLocale(Language language, Country country = AnyCountry);
+@@ -955,6 +968,8 @@
+     QString toCurrencyString(double, const QString &symbol = QString()) const;
+     inline QString toCurrencyString(float, const QString &symbol = QString()) const;
+ 
++    QString formattedDataSize(qint64 bytes, int precision = 2, DataSizeFormats format = DataSizeIecFormat);
++
+     QStringList uiLanguages() const;
+ 
+     bool operator==(const QLocale &other) const;
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qstring.h qtbase-opensource-src-5.6.3/src/corelib/tools/qstring.h
+--- qtbase-opensource-src-5.6.3.orig/src/corelib/tools/qstring.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/corelib/tools/qstring.h	2023-10-17 14:38:05.854106100 +0800
+@@ -258,6 +258,11 @@
+     const QChar operator[](uint i) const;
+     QCharRef operator[](uint i);
+ 
++    Q_REQUIRED_RESULT inline QChar front() const { return at(0); }
++    Q_REQUIRED_RESULT inline QCharRef front();
++    Q_REQUIRED_RESULT inline QChar back() const { return at(size() - 1); }
++    Q_REQUIRED_RESULT inline QCharRef back();
++
+     QString arg(qlonglong a, int fieldwidth=0, int base=10,
+                 QChar fillChar = QLatin1Char(' ')) const Q_REQUIRED_RESULT;
+     QString arg(qulonglong a, int fieldwidth=0, int base=10,
+@@ -793,6 +798,10 @@
+ 
+     Data *d;
+ 
++    friend inline bool operator==(QChar, const QString &) Q_DECL_NOTHROW;
++    friend inline bool operator< (QChar, const QString &) Q_DECL_NOTHROW;
++    friend inline bool operator> (QChar, const QString &) Q_DECL_NOTHROW;
++
+     void reallocData(uint alloc, bool grow = false);
+     void expand(int i);
+     QString multiArg(int numArgs, const QString **args) const;
+@@ -1094,6 +1103,8 @@
+ { Q_ASSERT(i >= 0); return QCharRef(*this, i); }
+ inline QCharRef QString::operator[](uint i)
+ { return QCharRef(*this, i); }
++inline QCharRef QString::front() { return operator[](0); }
++inline QCharRef QString::back() { return operator[](size() - 1); }
+ inline QString::iterator QString::begin()
+ { detach(); return reinterpret_cast<QChar*>(d->data()); }
+ inline QString::const_iterator QString::begin() const
+@@ -1573,6 +1584,25 @@
+ inline int QStringRef::compare(const QStringRef &s1, QLatin1String s2, Qt::CaseSensitivity cs)
+ { return QString::compare_helper(s1.constData(), s1.length(), s2, cs); }
+ 
++// QChar <> QString
++inline bool operator==(QChar lhs, const QString &rhs) Q_DECL_NOTHROW
++{ return rhs.size() == 1 && lhs == rhs.front(); }
++inline bool operator< (QChar lhs, const QString &rhs) Q_DECL_NOTHROW
++{ return QString::compare_helper(&lhs, 1, rhs.data(), rhs.size()) <  0; }
++inline bool operator> (QChar lhs, const QString &rhs) Q_DECL_NOTHROW
++{ return QString::compare_helper(&lhs, 1, rhs.data(), rhs.size()) >  0; }
++
++inline bool operator!=(QChar lhs, const QString &rhs) Q_DECL_NOTHROW { return !(lhs == rhs); }
++inline bool operator<=(QChar lhs, const QString &rhs) Q_DECL_NOTHROW { return !(lhs >  rhs); }
++inline bool operator>=(QChar lhs, const QString &rhs) Q_DECL_NOTHROW { return !(lhs <  rhs); }
++
++inline bool operator==(const QString &lhs, QChar rhs) Q_DECL_NOTHROW { return   rhs == lhs; }
++inline bool operator!=(const QString &lhs, QChar rhs) Q_DECL_NOTHROW { return !(rhs == lhs); }
++inline bool operator< (const QString &lhs, QChar rhs) Q_DECL_NOTHROW { return   rhs >  lhs; }
++inline bool operator> (const QString &lhs, QChar rhs) Q_DECL_NOTHROW { return   rhs <  lhs; }
++inline bool operator<=(const QString &lhs, QChar rhs) Q_DECL_NOTHROW { return !(rhs <  lhs); }
++inline bool operator>=(const QString &lhs, QChar rhs) Q_DECL_NOTHROW { return !(rhs >  lhs); }
++
+ inline int QString::localeAwareCompare(const QStringRef &s) const
+ { return localeAwareCompare_helper(constData(), length(), s.constData(), s.length()); }
+ inline int QString::localeAwareCompare(const QString& s1, const QStringRef& s2)
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/gui/kernel/qcursor.cpp qtbase-opensource-src-5.6.3/src/gui/kernel/qcursor.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/gui/kernel/qcursor.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/gui/kernel/qcursor.cpp	2023-10-17 14:38:05.869731000 +0800
+@@ -471,6 +471,27 @@
+     setShape(shape);
+ }
+ 
++bool operator==(const QCursor &lhs, const QCursor &rhs) Q_DECL_NOTHROW
++{
++    if (lhs.d == rhs.d)
++        return true; // Copy or same shape
++
++    // Check pixmaps or bitmaps cache keys. Notice that having BitmapCursor
++    // shape implies either non-null pixmap or non-null bitmap and mask
++    if (lhs.shape() == Qt::BitmapCursor && rhs.shape() == Qt::BitmapCursor
++            && lhs.hotSpot() == rhs.hotSpot()) {
++        if (!lhs.d->pixmap.isNull())
++            return lhs.d->pixmap.cacheKey() == rhs.d->pixmap.cacheKey();
++
++        if (!rhs.d->pixmap.isNull())
++            return false;
++
++        return lhs.d->bm->cacheKey() == rhs.d->bm->cacheKey()
++                && lhs.d->bmm->cacheKey() == rhs.d->bmm->cacheKey();
++    }
++
++    return false;
++}
+ 
+ /*!
+     Returns the cursor shape identifier. The return value is one of
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/gui/kernel/qcursor.h qtbase-opensource-src-5.6.3/src/gui/kernel/qcursor.h
+--- qtbase-opensource-src-5.6.3.orig/src/gui/kernel/qcursor.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/gui/kernel/qcursor.h	2023-10-17 14:38:05.869731000 +0800
+@@ -102,9 +102,13 @@
+     inline static void setPos(QScreen *screen, const QPoint &p) { setPos(screen, p.x(), p.y()); }
+ 
+ private:
++    friend Q_GUI_EXPORT bool operator==(const QCursor &lhs, const QCursor &rhs) Q_DECL_NOTHROW;
+     QCursorData *d;
+ };
+ 
++Q_GUI_EXPORT bool operator==(const QCursor &lhs, const QCursor &rhs) Q_DECL_NOTHROW;
++inline bool operator!=(const QCursor &lhs, const QCursor &rhs) Q_DECL_NOTHROW { return !(lhs == rhs); }
++
+ /*****************************************************************************
+   QCursor stream functions
+  *****************************************************************************/
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/gui/text/qfontmetrics.cpp qtbase-opensource-src-5.6.3/src/gui/text/qfontmetrics.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/gui/text/qfontmetrics.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/gui/text/qfontmetrics.cpp	2023-10-17 14:38:05.869731000 +0800
+@@ -586,6 +586,17 @@
+     return qRound(advance);
+ }
+ 
++// Rdd Panda C++: forward to `width`.
++int QFontMetrics::horizontalAdvance(const QString &text, int len) const
++{
++    return width(text, len);
++}
++
++int QFontMetrics::horizontalAdvance(QChar ch) const
++{
++    return width(ch);
++}
++
+ #if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+ /*! \obsolete
+ 
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/gui/text/qfontmetrics.h qtbase-opensource-src-5.6.3/src/gui/text/qfontmetrics.h
+--- qtbase-opensource-src-5.6.3.orig/src/gui/text/qfontmetrics.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/gui/text/qfontmetrics.h	2023-10-17 14:38:05.869731000 +0800
+@@ -86,6 +86,10 @@
+     int width(const QString &, int len, int flags) const;
+ 
+     int width(QChar) const;
++
++    int horizontalAdvance(const QString &, int len = -1) const;
++    int horizontalAdvance(QChar) const;
++
+ #if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+     QT_DEPRECATED int charWidth(const QString &str, int pos) const;
+ #endif
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/widgets/kernel/qaction.h qtbase-opensource-src-5.6.3/src/widgets/kernel/qaction.h
+--- qtbase-opensource-src-5.6.3.orig/src/widgets/kernel/qaction.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/widgets/kernel/qaction.h	2023-10-18 08:45:39.996548800 +0800
+@@ -84,9 +84,9 @@
+                     NormalPriority = 128,
+                     HighPriority = 256};
+     Q_ENUM(Priority)
+-    explicit QAction(QObject* parent);
+-    QAction(const QString &text, QObject* parent);
+-    QAction(const QIcon &icon, const QString &text, QObject* parent);
++    explicit QAction(QObject* parent = nullptr);
++    QAction(const QString &text, QObject* parent = nullptr);
++    QAction(const QIcon &icon, const QString &text, QObject* parent = nullptr);
+ 
+     ~QAction();
+ 
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/widgets/kernel/qwidget.cpp qtbase-opensource-src-5.6.3/src/widgets/kernel/qwidget.cpp
+--- qtbase-opensource-src-5.6.3.orig/src/widgets/kernel/qwidget.cpp	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/widgets/kernel/qwidget.cpp	2023-10-18 07:11:39.982967700 +0800
+@@ -10337,6 +10337,15 @@
+     d->setWindowFlags(flags);
+ }
+ 
++void QWidget::setWindowFlag(Qt::WindowType flag, bool on)
++{
++    Q_D(QWidget);
++    if (on)
++        d->setWindowFlags(data->window_flags | flag);
++    else
++        d->setWindowFlags(data->window_flags & ~flag);
++}
++
+ /*! \internal
+ 
+     Implemented in QWidgetPrivate so that QMdiSubWindowPrivate can reimplement it.
+diff --unified --recursive --text qtbase-opensource-src-5.6.3.orig/src/widgets/kernel/qwidget.h qtbase-opensource-src-5.6.3/src/widgets/kernel/qwidget.h
+--- qtbase-opensource-src-5.6.3.orig/src/widgets/kernel/qwidget.h	2017-09-06 20:13:54.000000000 +0800
++++ qtbase-opensource-src-5.6.3/src/widgets/kernel/qwidget.h	2023-10-18 07:10:13.033316200 +0800
+@@ -554,6 +554,7 @@
+ 
+     void setWindowFlags(Qt::WindowFlags type);
+     inline Qt::WindowFlags windowFlags() const;
++    void setWindowFlag(Qt::WindowType, bool on = true);
+     void overrideWindowFlags(Qt::WindowFlags type);
+ 
+     inline Qt::WindowType windowType() const;

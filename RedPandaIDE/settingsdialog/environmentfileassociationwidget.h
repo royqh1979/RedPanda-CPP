@@ -19,6 +19,7 @@
 
 #include <QAbstractListModel>
 #include <QWidget>
+#include <memory>
 #include "settingswidget.h"
 
 namespace Ui {
