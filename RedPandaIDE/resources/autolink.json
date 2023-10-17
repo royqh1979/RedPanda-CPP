@@ -28,6 +28,10 @@
         "links": "-lgraphics -luuid -lmsimg32 -lgdi32 -limm32 -lole32 -loleaut32 -lwinmm -lgdiplus"
     },
     {
+        "header": "easyx.h",
+        "links": "-leasyx"
+    },    
+    {
         "header": "fmt/core.h",
         "links": "-lfmt"
     },
