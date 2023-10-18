@@ -10,7 +10,7 @@ English Website: [https://sourceforge.net/projects/redpanda-cpp](https://sourcef
 New Features (Compared with Red Panda Dev-C++ 6):
 * Cross Platform (Windows/Linux/MacOS)
 * Problem Set (run and test program against predefined input / expected output data)
-* Competitve Companion support ( It's an chrome/firefox extension that can fetch problems from OJ websites)
+* Competitive Companion support ( It's an chrome/firefox extension that can fetch problems from OJ websites)
 * Edit/compile/run/debug GNU Assembly language programs.
 * Find symbol occurrences
 * Memory View for debugging
@@ -42,4 +42,4 @@ Code Intellisense Improvements:
 * Support MACRO with arguments
 * Support C++ lambdas
 
-And many other improvements and bug fixes. See NEWS.md for full informantion.
+And many other improvements and bug fixes. See NEWS.md for full information.
