@@ -57,8 +57,6 @@
 
 QHash<ParserLanguage,std::weak_ptr<CppParser>> Editor::mSharedParsers;
 
-int Editor::mShouldDisableSuggestionInInputMethodEvent = -1;
-
 Editor::Editor(QWidget *parent):
     Editor(parent,"untitled",ENCODING_AUTO_DETECT,nullptr,true,nullptr)
 {
@@ -1341,20 +1339,6 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
 void Editor::inputMethodEvent(QInputMethodEvent *event)
 {
     QSynedit::QSynEdit::inputMethodEvent(event);  
-#ifdef Q_OS_UNIX
-    if (mShouldDisableSuggestionInInputMethodEvent == -1) {
-        //not inited
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        //input method is ibus, disable suggestion
-        mShouldDisableSuggestionInInputMethodEvent =
-                (env.value("QT_IM_MODULE")=="ibus" )? 1 : 0;
-    }
-    if (mShouldDisableSuggestionInInputMethodEvent == 1)  {
-        if (pMainWindow->completionPopup()->isVisible())
-            pMainWindow->completionPopup()->close();
-        return;
-    }
-#endif
     QString s = event->commitString();
     if (s.isEmpty())
         return;

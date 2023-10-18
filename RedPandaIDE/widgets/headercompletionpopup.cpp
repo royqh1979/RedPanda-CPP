@@ -35,6 +35,8 @@ HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget(parent)
     layout()->addWidget(mListView);
     layout()->setMargin(0);
 
+    mListView->setFocus();
+
     mSearchLocal = false;
     mCurrentFile = "";
     mPhrase = "";
@@ -279,11 +281,6 @@ const QString &HeaderCompletionPopup::phrase() const
 void HeaderCompletionPopup::setParser(const PCppParser &newParser)
 {
     mParser = newParser;
-}
-
-void HeaderCompletionPopup::showEvent(QShowEvent *)
-{
-    mListView->setFocus();
 }
 
 void HeaderCompletionPopup::hideEvent(QHideEvent *)

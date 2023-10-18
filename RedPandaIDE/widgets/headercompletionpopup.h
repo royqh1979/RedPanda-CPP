@@ -100,7 +100,6 @@ private:
 
     // QWidget interface
 protected:
-    void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
 
     // QObject interface

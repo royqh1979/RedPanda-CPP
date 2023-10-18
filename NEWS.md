@@ -17,6 +17,7 @@ Red Panda C++ Version 2.25
   - enhancement: After compiler settings changed, run/debug current file will auto recompile.
   - ehhancement: Show selected char counts in status bar.
   - enhancement: Differentiate /* and /** when calculate auto indents.
+  - fix: crash when using ibus as the input method.
   
 Red Panda C++ Version 2.24
 
