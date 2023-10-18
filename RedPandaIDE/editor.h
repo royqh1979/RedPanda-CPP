@@ -355,6 +355,9 @@ private:
     QMap<QString,StatementKind> mIdentCache;
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
+#ifdef Q_OS_UNIX
+    static int mShouldDisableSuggestionInInputMethodEvent;
+#endif
 
     // QWidget interface
 protected:
