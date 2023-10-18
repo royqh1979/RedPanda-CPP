@@ -304,6 +304,35 @@ void CppSyntaxer::procCppStyleComment()
         mRange.state = RangeState::rsUnknown;
 }
 
+void CppSyntaxer::procDocstring()
+{
+    bool finishProcess = false;
+    mTokenId = TokenId::Comment;
+    if (mRun>=mLineSize) {
+        procNull();
+        return;
+    }
+    while (mRun<mLineSize) {
+        switch(mLine[mRun].unicode()) {
+        case ' ':
+        case '\t':
+            return;
+        case '*':
+            if (mRun+1<mLineSize && mLine[mRun+1] == '/') {
+                mRun += 2;
+                mRange.state = RangeState::rsUnknown;
+                finishProcess = true;
+            } else
+                mRun+=1;
+            break;
+        default:
+            mRun+=1;
+        }
+        if (finishProcess)
+            break;
+    }
+}
+
 void CppSyntaxer::procAnsiCStyleComment()
 {
     bool finishProcess = false;
@@ -1006,8 +1035,13 @@ void CppSyntaxer::procSlash()
                 mRange.state = RangeState::rsAnsiC;
             }
             mRun += 2;
-            if (mRun < mLineSize)
-                procAnsiCStyleComment();
+            if (mRun < mLineSize) {
+                if (mRange.state == RangeState::rsAnsiC && mLine[mRun] == '*' ) {
+                    mRange.state = RangeState::rsDocstring;
+                    procDocstring();
+                } else
+                    procAnsiCStyleComment();
+            }
             return;
         case '=':
             mRun+=2;
@@ -1463,12 +1497,18 @@ bool CppSyntaxer::isLastLineCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||
             state == RangeState::rsDirectiveComment||
+            state == RangeState::rsDocstring ||
             state == RangeState::rsCppComment);
 }
 
 bool CppSyntaxer::isLastLineStringNotFinished(int state) const
 {
     return state == RangeState::rsString;
+}
+
+bool CppSyntaxer::isDocstringNotFinished(int state) const
+{
+    return state == RangeState::rsDocstring;
 }
 
 bool CppSyntaxer::eol() const
@@ -1546,6 +1586,9 @@ void CppSyntaxer::next()
         case RangeState::rsDirectiveComment:
             //qDebug()<<"*0-0-0*";
             procAnsiCStyleComment();
+            break;
+        case RangeState::rsDocstring:
+            procDocstring();
             break;
         case RangeState::rsString:
             //qDebug()<<"*1-0-0*";

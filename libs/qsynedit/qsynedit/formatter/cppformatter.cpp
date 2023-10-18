@@ -78,7 +78,7 @@ namespace QSynedit {
                 if (trimmedLineText.startsWith('#')
                            && attr == ((CppSyntaxer *)editor->syntaxer().get())->preprocessorAttribute()) {
                     indentSpaces=0;
-                } else if (editor->syntaxer()->isLastLineCommentNotFinished(rangePreceeding.state)
+                } else if (editor->syntaxer()->isDocstringNotFinished(rangePreceeding.state)
                            ) {
                     // last line is a not finished comment,
                     if  (trimmedLineText.startsWith("*")) {

@@ -148,6 +148,7 @@ public:
     virtual bool getTokenFinished() const = 0;
     virtual bool isLastLineCommentNotFinished(int state) const = 0;
     virtual bool isLastLineStringNotFinished(int state) const = 0;
+    virtual bool isDocstringNotFinished(int state) const { return false; }
     virtual bool eol() const = 0;
     virtual SyntaxState getState() const = 0;
     virtual QString getToken() const=0;

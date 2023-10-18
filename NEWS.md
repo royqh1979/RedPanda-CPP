@@ -15,6 +15,8 @@ Red Panda C++ Version 2.25
   - fix: Icon position not correct under hiPDI devices.
   - change: Add Mesa3D for windows opengl driver to the integrated mingw-gcc for windows 32 version.
   - enhancement: After compiler settings changed, run/debug current file will auto recompile.
+  - ehhancement: Show selected char counts in status bar.
+  - enhancement: Differentiate /* and /** when calculate auto indents.
   
 Red Panda C++ Version 2.24
 

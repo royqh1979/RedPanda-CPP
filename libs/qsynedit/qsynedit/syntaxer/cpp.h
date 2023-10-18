@@ -47,6 +47,7 @@ class CppSyntaxer: public Syntaxer
     enum RangeState {
         rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment, rsString,
         rsMultiLineString, rsMultiLineDirective, rsCppComment,
+        rsDocstring,
         rsStringEscapeSeq,
         rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,rsChar,
         rsDefineIdentifier, rsDefineRemaining
@@ -91,6 +92,7 @@ public:
 private:
     void procAndSymbol();
     void procCppStyleComment();
+    void procDocstring();
     void procAnsiCStyleComment();
     void procAsciiChar();
     void procBraceClose();
@@ -178,6 +180,7 @@ public:
     bool getTokenFinished() const override;
     bool isLastLineCommentNotFinished(int state) const override;
     bool isLastLineStringNotFinished(int state) const override;
+    bool isDocstringNotFinished(int state) const override;
     bool eol() const override;
     QString getToken() const override;
     const PTokenAttribute &getTokenAttribute() const override;

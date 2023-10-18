@@ -1418,10 +1418,19 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
 {
     if (!clear && e!=nullptr) {
         int col = e->charToColumn(e->caretY(),e->caretX());
-        QString msg = tr("Line: %1 Col: %2 Lines: %3")
+        QString msg;
+        if (e->selAvail()) {
+            msg = tr("Line: %1 Col: %2 (%3 chars) Lines: %4")
+                .arg(e->caretY())
+                .arg(col)
+                .arg(e->selText().length())
+                .arg(e->document()->count());
+        } else {
+            msg = tr("Line: %1 Col: %2 Lines: %3")
                 .arg(e->caretY())
                 .arg(col)
                 .arg(e->document()->count());
+        }
         mFileInfoStatus->setText(msg);
     } else {
         mFileInfoStatus->setText("");
