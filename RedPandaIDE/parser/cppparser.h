@@ -375,6 +375,8 @@ private:
     PEvalStatement doCreateEvalType(const QString& fileName,const PStatement& typeStatement) const;
     PEvalStatement doCreateEvalType(const QString& primitiveType) const;
 
+    PEvalStatement doCreateTypedEvalVar(const QString& fileName,const QString& typeName, const PStatement& parentScope, const PStatement &baseStatement) const;
+
     PEvalStatement doCreateEvalVariable(
             const QString& fileName,
             const PStatement& varStatement,

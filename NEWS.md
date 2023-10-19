@@ -1,3 +1,6 @@
+Red Panda C++ Version 2.26
+  - enhancment: Code suggestion for embedded std::vectors.
+
 Red Panda C++ Version 2.25
 
   - fix: Symbol completion of '(' before selection may fail, if cursor is at the beginning of the selection.
