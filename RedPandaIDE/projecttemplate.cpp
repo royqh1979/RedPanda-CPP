@@ -37,6 +37,7 @@ PTemplateUnit ProjectTemplate::unit(int index)
     if (!mIni || mVersion<=0)
         return PTemplateUnit();
     QString section = QString("Unit%1").arg(index);
+    if (mIni->GetSectionSize(toByteArray(section))<0) return PTemplateUnit();
     PTemplateUnit unit = std::make_shared<TemplateUnit>();
     QString lang = pSettings->environment().language();
     if (!lang.isEmpty()) {

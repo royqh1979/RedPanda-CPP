@@ -970,6 +970,8 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
         for (int i=0;i<aTemplate->unitCount();i++) {
             // Pick file contents
             PTemplateUnit templateUnit = aTemplate->unit(i);
+            if (!templateUnit)
+                continue;
             if (!templateUnit->Source.isEmpty()) {
                 QString target = templateUnit->Source;
                 PProjectUnit unit;

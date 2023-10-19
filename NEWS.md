@@ -12,12 +12,12 @@ Red Panda C++ Version 2.25
   - Change: Empty project template won't auto create main.c/main.cpp
   - enhancement: When creating project, warn user if the project folder is not empty.
   - fix: Press '>' after '-' don't show completion suggestion info.
-  - fix: Icon position not correct under hiPDI devices.
-  - change: Add Mesa3D for windows opengl driver to the integrated mingw-gcc for windows 32 version.
+  - fix: Icon position not correct under hiDPI devices and zoom factor >= 200%.
   - enhancement: After compiler settings changed, run/debug current file will auto recompile.
   - ehhancement: Show selected char counts in status bar.
   - enhancement: Differentiate /* and /** when calculate auto indents.
   - fix: crash when using ibus as the input method.
+  - fix: Correctly handle project templates that have wrong unit counts.
   
 Red Panda C++ Version 2.24
 
