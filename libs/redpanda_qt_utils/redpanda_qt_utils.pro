@@ -3,6 +3,7 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+# without `c++14` old versions of qmake will explicitly set `-std=gnu++98`
 CONFIG += c++14 c++17
 CONFIG += nokey
 CONFIG += staticlib
