@@ -18,6 +18,8 @@ Red Panda C++ Version 2.25
   - enhancement: Differentiate /* and /** when calculate auto indents.
   - fix: crash when using ibus as the input method.
   - fix: Correctly handle project templates that have wrong unit counts.
+  - fix: Project recompiles for every run if auto increase build number is turned on.
+  - fix: Auto increase build number for project is not correctly processed.
   
 Red Panda C++ Version 2.24
 
