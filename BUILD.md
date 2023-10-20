@@ -265,23 +265,25 @@ Extra requirements for Windows host:
   ```bash
   DOCKER=docker # or podman
   SOURCE_DIR=/build/RedPanda-CPP # source directory *in container*
+  JOBS=$(nproc) # reduce it for multiple builds at same time
 
   MIRROR=mirrors.kernel.org # leave empty for default mirror
   PLATFORM=linux/amd64 # or linux/386, linux/arm64/v8, linux/arm/v7, linux/riscv64
   IMAGE=debian:12 # or Ubuntu (e.g. ubuntu:22.04)
 
-  $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -v $PWD:$SOURCE_DIR --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
+  $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -e JOBS=$JOBS -v $PWD:$SOURCE_DIR --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
   ```
 * Windows host:
   ```ps1
   $DOCKER = "docker" # or "podman"
   $SOURCE_DIR = "/build/RedPanda-CPP" # source directory *in container*
+  $JOBS = $Env:NUMBER_OF_PROCESSORS # reduce it for multiple builds at same time
 
   $MIRROR = "mirrors.kernel.org" # leave empty for default mirror
   $PLATFORM = "linux/amd64" # or "linux/386", "linux/arm64/v8", "linux/arm/v7", "linux/riscv64"
   $IMAGE = "debian:12" # or Ubuntu (e.g. "ubuntu:22.04")
 
-  & $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -v "$(Get-Location):$SOURCE_DIR" --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
+  & $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -e JOBS=$JOBS -v "$(Get-Location):$SOURCE_DIR" --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
   ```
 
 ### Manual Install
