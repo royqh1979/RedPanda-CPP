@@ -706,6 +706,15 @@ void Editor::keyPressEvent(QKeyEvent *event)
             event->accept();
         }
     });
+    if (event->modifiers() == Qt::ControlModifier
+            && event->key() == Qt::Key_Control
+            && !pMainWindow->completionPopup()->isVisible()
+            && !pMainWindow->headerCompletionPopup()->isVisible()
+            ) {
+        setMouseTracking(true);
+        handled=true;
+        return;
+    }
     if (readOnly())
         return;
 
@@ -1046,6 +1055,53 @@ void Editor::keyPressEvent(QKeyEvent *event)
         handled = handleCodeCompletion(ch);
 }
 
+void Editor::keyReleaseEvent(QKeyEvent *event)
+{
+    if (event->modifiers() == Qt::NoModifier
+            && event->key() == Qt::Key_Control) {
+        updateMouseCursor();
+        setMouseTracking(false);
+        if (mHoverModifiedLine != -1) {
+            invalidateLine(mHoverModifiedLine);
+            mHoverModifiedLine = -1;
+        }
+        return;
+    }
+    QSynedit::QSynEdit::keyReleaseEvent(event);
+}
+
+void Editor::mouseMoveEvent(QMouseEvent *event)
+{
+    if(event->modifiers() == Qt::ControlModifier) {
+        cancelHint();
+
+        QSynedit::BufferCoord p;
+        TipType reason = getTipType(event->pos(),p);
+        if (reason == TipType::Preprocessor) {
+            QString s = document()->getLine(p.line - 1);
+            if (mParser->isIncludeNextLine(s) || mParser->isIncludeLine(s)) {
+                setCursor(Qt::PointingHandCursor);
+                if (mHoverModifiedLine!=p.line) invalidateLine(mHoverModifiedLine);
+                mHoverModifiedLine=p.line;
+                invalidateLine(mHoverModifiedLine);
+            }
+        } else if (reason == TipType::Identifier) {
+            setCursor(Qt::PointingHandCursor);
+            if (mHoverModifiedLine!=p.line) invalidateLine(mHoverModifiedLine);
+            mHoverModifiedLine=p.line;
+            invalidateLine(mHoverModifiedLine);
+        } else {
+            if (mHoverModifiedLine != -1) {
+                invalidateLine(mHoverModifiedLine);
+                mHoverModifiedLine = -1;
+            }
+        }
+        return;
+    }
+
+    QSynedit::QSynEdit::mouseMoveEvent(event);
+}
+
 void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
 {
     IconsManager::PPixmap icon;
@@ -1150,18 +1206,13 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         }
         QString lineText = document()->getLine(line-1);
         if (mParser->isIncludeLine(lineText)) {
-            if (cursor() == Qt::PointingHandCursor) {
-                QSynedit::BufferCoord p;
-                if (pointToCharLine(mapFromGlobal(QCursor::pos()),p)) {
-                    if (line==p.line){
-                        int pos1=std::max(lineText.indexOf("<"),lineText.indexOf("\""));
-                        int pos2=std::max(lineText.lastIndexOf(">"),lineText.lastIndexOf("\""));
-                        pos1++;
-                        pos2++;
-                        if (pos1>0 && pos2>0 && pos1<aChar && aChar < pos2) {
-                            style.setFlag(QSynedit::FontStyle::fsUnderline);
-                        }
-                    }
+            if (line == mHoverModifiedLine) {
+                int pos1=std::max(lineText.indexOf("<"),lineText.indexOf("\""));
+                int pos2=std::max(lineText.lastIndexOf(">"),lineText.lastIndexOf("\""));
+                pos1++;
+                pos2++;
+                if (pos1>0 && pos2>0 && pos1<aChar && aChar < pos2) {
+                    style.setFlag(QSynedit::FontStyle::fsUnderline);
                 }
             }
         } else if (mParser->enabled() && attr->tokenType() == QSynedit::TokenType::Identifier) {
@@ -1207,7 +1258,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             } else {
                 foreground = syntaxer()->identifierAttribute()->foreground();
             }
-            if (cursor() == Qt::PointingHandCursor) {
+            if (line == mHoverModifiedLine) {
                 QSynedit::BufferCoord p;
                 if (pointToCharLine(mapFromGlobal(QCursor::pos()),p)) {
                     if (line==p.line && (aChar<=p.ch && p.ch<aChar+token.length())) {
@@ -1314,7 +1365,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
     // if ctrl+clicked
     if ((event->modifiers() == Qt::ControlModifier)
             && (event->button() == Qt::LeftButton)) {
-        if (!selAvail() && !mCurrentWord.isEmpty()) {
+        if (!selAvail() && mHoverModifiedLine != -1) {
             QSynedit::BufferCoord p;
             if (mParser && pointToCharLine(event->pos(),p)) {
                 QString s = document()->getLine(p.line - 1);
@@ -1895,10 +1946,8 @@ void Editor::onAutoBackupTimer()
 
 void Editor::onTooltipTimer()
 {
-    if(mHoverModifiedLine!=-1) {
-        invalidateLine(mHoverModifiedLine);
-        mHoverModifiedLine=-1;
-    }
+    if (cursor() == Qt::PointingHandCursor)
+        return;
 
     QSynedit::BufferCoord p;
     QPoint pos = mapFromGlobal(QCursor::pos());
@@ -1991,19 +2040,7 @@ void Editor::onTooltipTimer()
 
     s = s.trimmed();
     if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
-        if (mParser
-                && mParser->enabled()
-                && qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
-            if (!hasFocus())
-                activate();
-            setCursor(Qt::PointingHandCursor);
-        } else {
-            updateMouseCursor();
-        }
-        if (pointToLine(pos,line)) {
-            invalidateLine(line);
-            mHoverModifiedLine=line;
-        }
+        updateMouseCursor();
     }
     // Remove hint
     cancelHint();
@@ -2085,26 +2122,12 @@ void Editor::onTooltipTimer()
     if (!hint.isEmpty()) {
         //            QApplication* app = dynamic_cast<QApplication *>(QApplication::instance());
         //            if (app->keyboardModifiers().testFlag(Qt::ControlModifier)) {
-        if (mParser
-                && mParser->enabled()
-                && qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
-            if (!hasFocus())
-                activate();
-            setCursor(Qt::PointingHandCursor);
-        } else if (cursor() == Qt::PointingHandCursor) {
-            updateMouseCursor();
-        }
-        if (pointToLine(pos,line)) {
-            invalidateLine(line);
-            mHoverModifiedLine=line;
-        }
         if (pMainWindow->functionTip()->isVisible()) {
             pMainWindow->functionTip()->hide();
         }
         QToolTip::showText(mapToGlobal(pos),hint,this);
-    } else {
-        updateMouseCursor();
     }
+    updateMouseCursor();
 }
 
 void Editor::onEndParsing()
@@ -4024,17 +4047,12 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
 
 void Editor::cancelHint()
 {
-    if(mHoverModifiedLine!=-1) {
-        invalidateLine(mHoverModifiedLine);
-        mHoverModifiedLine=-1;
-    }
-
-
     // disable editor hint
     QToolTip::hideText();
     mCurrentWord="";
     mCurrentTipType=TipType::None;
-    updateMouseCursor();
+    if ( cursor()!=Qt::PointingHandCursor )
+        updateMouseCursor();
 }
 
 QString Editor::getFileHint(const QString &s, bool fromNext)
