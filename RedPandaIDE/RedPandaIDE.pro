@@ -9,13 +9,12 @@ CONFIG += nokey
 # uncomment the following line to enable sdcc support
 CONFIG += ENABLE_SDCC
 
-isEmpty(APP_NAME) {
-    APP_NAME = RedPandaCPP
-}
 
-isEmpty(APP_VERSION) {
-    APP_VERSION = 2.25
-}
+APP_NAME = RedPandaCPP
+
+APP_VERSION = 2.26
+
+TEST_VERSION = alpha1
 
 contains(QMAKE_HOST.arch, x86_64):{
     DEFINES += ARCH_X86_64=1
@@ -52,7 +51,11 @@ DEFINES += _WIN32_WINNT=0x0601
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += LIBEXECDIR=\\\"$${LIBEXECDIR}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
-DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
+isEmpty(TEST_VERSION) {
+    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
+} else {
+    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}-$${TEST_VERSION}\\\"
+}
 
 gcc {
     QMAKE_CXXFLAGS_RELEASE += -Werror=return-type

@@ -708,11 +708,18 @@ void Editor::keyPressEvent(QKeyEvent *event)
     });
     if (event->modifiers() == Qt::ControlModifier
             && event->key() == Qt::Key_Control
-            && !pMainWindow->completionPopup()->isVisible()
-            && !pMainWindow->headerCompletionPopup()->isVisible()
+            && !mCompletionPopup->isVisible()
+            && !mHeaderCompletionPopup->isVisible()
             ) {
         setMouseTracking(true);
         handled=true;
+        QMouseEvent mouseEvent{
+            QEvent::MouseMove,
+                    mapFromGlobal(QCursor::pos()),
+                    Qt::NoButton,
+                    Qt::NoButton,
+                    Qt::ControlModifier};
+        mouseMoveEvent( &mouseEvent );
         return;
     }
     if (readOnly())
@@ -1337,9 +1344,9 @@ bool Editor::event(QEvent *event)
     if ((event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverMove)
             && qApp->mouseButtons() == Qt::NoButton
             && pSettings->editor().enableTooltips()
-            && !pMainWindow->completionPopup()->isVisible()
+            && !mCompletionPopup->isVisible()
             && !pMainWindow->functionTip()->isVisible()
-            && !pMainWindow->headerCompletionPopup()->isVisible()) {
+            && !mHeaderCompletionPopup->isVisible()) {
         cancelHint();
         mTooltipTimer.stop();
         if (pSettings->editor().tipsDelay()>0) {
@@ -1393,7 +1400,7 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
     QString s = event->commitString();
     if (s.isEmpty())
         return;
-    if (pMainWindow->completionPopup()->isVisible()) {
+    if (mCompletionPopup->isVisible()) {
         onCompletionInputMethod(event);
         return;
     } else {
@@ -4152,7 +4159,7 @@ QString Editor::getHintForFunction(const PStatement &statement, const QString& f
 
 void Editor::updateFunctionTip(bool showTip)
 {
-    if (pMainWindow->completionPopup()->isVisible()) {
+    if (mCompletionPopup->isVisible()) {
         pMainWindow->functionTip()->hide();
         return;
     }
