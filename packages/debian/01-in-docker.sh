@@ -5,6 +5,7 @@ set -xe
 TMP_FOLDER=/build/redpanda-build
 DISTRO_ID=$(grep ^ID= /etc/os-release | cut -d= -f2- | tr -d '"')
 VERSION_ID=$(grep ^VERSION_ID= /etc/os-release | cut -d= -f2- | tr -d '"')
+[[ -z $JOBS ]] && JOBS=$(nproc)
 
 # install deps
 default_repositories=(
@@ -50,7 +51,7 @@ cp Red_Panda_CPP.pro $TMP_FOLDER
 
 # build
 cd $TMP_FOLDER
-dpkg-buildpackage -us -uc
+dpkg-buildpackage -us -uc -j$JOBS
 
 # copy back to host
 cd ..
