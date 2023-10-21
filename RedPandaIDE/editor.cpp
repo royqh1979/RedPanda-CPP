@@ -48,6 +48,7 @@
 #include <QTextDocument>
 #include <QTextCodec>
 #include <QScrollBar>
+#include <QScreen>
 #include "iconsmanager.h"
 #include "debugger.h"
 #include "editorlist.h"
@@ -3435,11 +3436,6 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
         }
     }
 
-    // Position it at the top of the next line
-    QPoint p = rowColumnToPixels(displayXY());
-    p+=QPoint(0,textHeight()+2);
-    mCompletionPopup->move(mapToGlobal(p));
-
     mCompletionPopup->setRecordUsage(pSettings->codeCompletion().recordUsage());
     mCompletionPopup->setSortByScope(pSettings->codeCompletion().sortByScope());
     mCompletionPopup->setShowKeywords(pSettings->codeCompletion().showKeywords());
@@ -3456,6 +3452,21 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     mCompletionPopup->setIgnoreCase(pSettings->codeCompletion().ignoreCase());
     mCompletionPopup->resize(pSettings->codeCompletion().width(),
                              pSettings->codeCompletion().height());
+
+    // Position it at the top of the next line
+    QPoint popupPos = mapToGlobal(rowColumnToPixels(displayXY()));
+    QSize  desktopSize = screen()->virtualSize();
+    if (desktopSize.height() - popupPos.y() < mCompletionPopup->height() && popupPos.y() > mCompletionPopup->height())
+        popupPos-=QPoint(0, mCompletionPopup->height()+2);
+    else
+        popupPos+=QPoint(0,textHeight()+2);
+
+    if (desktopSize.width() -  popupPos.x() < mCompletionPopup->width() ) {
+        popupPos.setX(std::max(0, desktopSize.width()-mCompletionPopup->width())-10);
+    }
+
+    mCompletionPopup->move(popupPos);
+
 //    fCompletionBox.CodeInsList := dmMain.CodeInserts.ItemList;
 //    fCompletionBox.SymbolUsage := dmMain.SymbolUsage;
 //    fCompletionBox.ShowCount := devCodeCompletion.MaxCount;
