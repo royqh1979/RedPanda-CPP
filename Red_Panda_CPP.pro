@@ -17,6 +17,12 @@ qsynedit.subdir = libs/qsynedit
 RedPandaIDE.depends = astyle consolepauser qsynedit
 qsynedit.depends = redpanda_qt_utils
 
+APP_NAME = RedPandaCPP
+
+APP_VERSION = 2.26
+
+TEST_VERSION = alpha1
+
 win32: {
 SUBDIRS += \
 	redpanda-win-git-askpass

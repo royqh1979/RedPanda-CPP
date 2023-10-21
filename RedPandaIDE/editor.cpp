@@ -3455,6 +3455,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 
     // Position it at the top of the next line
     QPoint popupPos = mapToGlobal(rowColumnToPixels(displayXY()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QSize  desktopSize = screen()->virtualSize();
     if (desktopSize.height() - popupPos.y() < mCompletionPopup->height() && popupPos.y() > mCompletionPopup->height())
         popupPos-=QPoint(0, mCompletionPopup->height()+2);
@@ -3464,6 +3465,9 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     if (desktopSize.width() -  popupPos.x() < mCompletionPopup->width() ) {
         popupPos.setX(std::max(0, desktopSize.width()-mCompletionPopup->width())-10);
     }
+#else
+    popupPos+=QPoint(0,textHeight()+2);
+#endif
 
     mCompletionPopup->move(popupPos);
 

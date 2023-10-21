@@ -36,6 +36,7 @@ cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686-nocompiler.ns
 rm -f lang.nsh
 rm -f config32.nsh
 rm -f config.nsh
+rm -f config-clang.nsh
 rm -f redpanda-i686-nocompiler.nsi
 
 SETUP_NAME=`ls *.Setup.exe`
@@ -68,6 +69,7 @@ cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686.nsi" .
 rm -f lang.nsh
 rm -f config32.nsh
 rm -f config.nsh
+rm -f config-clang.nsh
 rm -f redpanda-i686.nsi
 
 SETUP_NAME=`ls *.Setup.exe`

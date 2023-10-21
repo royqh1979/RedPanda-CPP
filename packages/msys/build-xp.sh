@@ -3,13 +3,14 @@
 TARGET_DIR="/r/"
 BUILD_DIR="${TEMP}/redpandacpp-build"
 PACKAGE_DIR="${TEMP}/RedPanda-CPP"
-GCC_DIR="/mingw64"
+GCC_DIR="/Qt/5.6.3/mingw81_32-redpanda"
 PATH="${GCC_DIR}/bin:${PATH}"
-QMAKE="${GCC_DIR}/qt5-static/bin/qmake"
+QMAKE="${GCC_DIR}/bin/qmake"
+QMAKE2="/mingw32/bin/qmake"
 NSIS="/d/Program Files (x86)/NSIS/bin/makensis.exe"
 SOURCE_DIR=`pwd`
-MINGW="/e/Workspaces/contributes/MinGW/MinGW64"
-MINGW_NAME="MinGW64"
+MINGW="/e/Workspaces/contributes/MinGW/MinGW32"
+MINGW_NAME="MinGW32"
 
 rm -rf  "${BUILD_DIR}"
 test -z "${BUILD_DIR}" | mkdir "${BUILD_DIR}"
@@ -20,7 +21,10 @@ echo "Building..."
 pushd .
 cd "${BUILD_DIR}"
 make distclean
-"$QMAKE" PREFIX="${PACKAGE_DIR}" X86_64=ON -o Makefile "${SOURCE_DIR}\Red_Panda_Cpp.pro" -r -spec win32-g++  
+//hack: create nsh files
+"$QMAKE2" PREFIX="${PACKAGE_DIR}" -o Makefile "${SOURCE_DIR}\Red_Panda_Cpp.pro" 
+make distclean
+"$QMAKE" PREFIX="${PACKAGE_DIR}" -o Makefile "${SOURCE_DIR}\Red_Panda_Cpp.pro" 
 make -j16
 make install
 popd
@@ -30,14 +34,13 @@ pushd .
 cd "${PACKAGE_DIR}"
 
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
-cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-nocompiler.nsi" .
+cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686-nocompiler.nsi" .
 
-"${NSIS}" redpanda-nocompiler.nsi
+"${NSIS}" redpanda-i686-nocompiler.nsi
 rm -f lang.nsh
-rm -f config.nsh
 rm -f config32.nsh
-rm -f config-clang.nsh
-rm -f redpanda-nocompiler.nsi
+rm -f config.nsh
+rm -f redpanda-i686-nocompiler.nsi
 
 SETUP_NAME=`ls *.Setup.exe`
 PORTABLE_NAME=`echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/'`
@@ -50,7 +53,7 @@ echo "Making no-compiler Portable Package..."
 7z a -mmt8 -mx9  "${PORTABLE_NAME}" "${PACKAGE_DIR}"
 popd
 
-# we need reinstall config.nsh
+# we need reinstall config32.nsh
 pushd .
 cd "${BUILD_DIR}"
 make install
@@ -60,19 +63,16 @@ echo "Making installer..."
 
 pushd .
 cd "${PACKAGE_DIR}"
-cp  -a "${MINGW}" .
-#rm -rf "${MINGW_NAME}/share/gcc-11.2.0"
-#cp  -a "${SOURCE_DIR}/tools/gdb-scripts/gcc-11.2.0" "${MINGW_NAME}/share"
+ln -s "${MINGW}" $MinGW_NAME
 
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
-cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-x64.nsi" .
+cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686.nsi" .
 
-"${NSIS}" redpanda-x64.nsi
+"${NSIS}" redpanda-i686.nsi
 rm -f lang.nsh
-rm -f config.nsh
 rm -f config32.nsh
-rm -f config-clang.nsh
-rm -f redpanda-x64.nsi
+rm -f config.nsh
+rm -f redpanda-i686.nsi
 
 SETUP_NAME=`ls *.Setup.exe`
 PORTABLE_NAME=`echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/'`
@@ -81,13 +81,11 @@ mv "$SETUP_NAME" "${TARGET_DIR}"
 popd
 
 pushd .
-
 cd "${TARGET_DIR}"
 echo "Making Portable Package..."
 7z a -mmt8 -mx9  "${PORTABLE_NAME}" "${PACKAGE_DIR}"
+popd
 
 echo "Clean up..."
 rm -rf "${PACKAGE_DIR}"
-
-popd
 
