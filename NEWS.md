@@ -2,16 +2,17 @@ Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
   - change: Use ctrl+mouseMove event to highlight jumpable symbols (instead of ctrl+tooltip).
   - enhancement: Auto adjust position of the suggestion popup window.
+  - enhancement: Windows XP support ( by cyano.CN  )
 
 Red Panda C++ Version 2.25
 
   - fix: Symbol completion of '(' before selection may fail, if cursor is at the beginning of the selection.
   - change: Symbol completion of '{' won't insert extra new lines.
   - fix: "move selection up/down" of whole lines selection are no correctly handled.
-  - enhancement: Improvement of terminal support ( from cyano.CN )
-  - enhancement: ANSI escape sequences Support in windows 10/11 ( from cyano.CN )
+  - enhancement: Improvement of terminal support ( by cyano.CN )
+  - enhancement: ANSI escape sequences Support in windows 10/11 ( by cyano.CN )
   - enhancement: Option "Enable ANSI escape sequences Support" in Settings -> Executor 
-  - change: Use freetype as the fontengine in windows ( from cyano.CN )
+  - change: Use freetype as the fontengine in windows ( by cyano.CN )
   - fix: Custom compile options is not used when retrieve macros defined by the compiler.
   - fix: Processing for #if/#elif/#else is not correct.
   - Change: Empty project template won't auto create main.c/main.cpp
@@ -21,7 +22,7 @@ Red Panda C++ Version 2.25
   - enhancement: After compiler settings changed, run/debug current file will auto recompile.
   - ehhancement: Show selected char counts in status bar.
   - enhancement: Differentiate /* and /** when calculate auto indents.
-  - fix: crash when using ibus as the input method.
+  - fix: crash when using ibus as the input method ( cyano.CN ).
   - fix: Correctly handle project templates that have wrong unit counts.
   - fix: Project recompiles for every run if auto increase build number is turned on.
   - fix: Auto increase build number for project is not correctly processed.
