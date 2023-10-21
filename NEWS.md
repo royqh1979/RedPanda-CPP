@@ -1,3 +1,8 @@
+Red Panda C++ Version 2.26
+  - enhancement: Code suggestion for embedded std::vectors.
+  - change: Use ctrl+mouseMove event to highlight jumpable symbols (instead of ctrl+tooltip).
+  - enhancement: Auto adjust position of the suggestion popup window.
+
 Red Panda C++ Version 2.25
 
   - fix: Symbol completion of '(' before selection may fail, if cursor is at the beginning of the selection.

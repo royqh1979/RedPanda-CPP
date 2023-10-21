@@ -4749,9 +4749,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeName,parentScope);
-                            result->definitionString=typeName;
-                            result->kind = EvalStatementKind::Variable;
+                            result = doCreateTypedEvalVar(fileName,typeName,parentScope, result->baseStatement);
                         } else {
                             result = PEvalStatement();
                         }
@@ -4760,9 +4758,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeName,parentScope);
-                            result->definitionString=typeName;
-                            result->kind = EvalStatementKind::Variable;
+                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                         } else {
                             result = PEvalStatement();
                         }
@@ -4784,9 +4780,7 @@ PEvalStatement CppParser::doEvalCCast(const QString &fileName,
     //                    qDebug()<<"typeName"<<typeName;
                         typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeName,parentScope);
-                            result->definitionString=typeName;
-                            result->kind = EvalStatementKind::Variable;
+                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                         } else {
                             result = PEvalStatement();
                         }
@@ -4931,9 +4925,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                             if (!typeName.isEmpty())
                                 typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                             if (typeStatement) {
-                                result = doCreateEvalType(fileName,typeName,parentScope);
-                                result->definitionString = typeName;
-                                result->kind = EvalStatementKind::Variable;
+                                result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                                 lastResult = result;
                             } else {
                                 return PEvalStatement();
@@ -4950,9 +4942,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                             if (!typeName.isEmpty())
                                 typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                             if (typeStatement) {
-                                result = doCreateEvalType(fileName,typeName,parentScope);
-                                result->definitionString = typeName;
-                                result->kind = EvalStatementKind::Variable;
+                                result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                                 lastResult = result;
                             } else {
                                 return PEvalStatement();
@@ -4984,9 +4974,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         typeStatement = doFindTypeDefinitionOf(fileName, typeName,
                                                          parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeName,parentScope);
-                            result->definitionString=typeName;
-                            result->kind = EvalStatementKind::Variable;
+                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                             lastResult = result;
                         } else {
                             return PEvalStatement();
@@ -5001,9 +4989,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                         typeStatement = doFindTypeDefinitionOf(fileName, typeName,
                                                          parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeName,parentScope);
-                            result->definitionString=typeName;
-                            result->kind = EvalStatementKind::Variable;
+                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                             lastResult = result;
                         } else {
                             return PEvalStatement();
@@ -5037,9 +5023,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
 //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeName,parentScope);
-                            result->definitionString=typeName;
-                            result->kind = EvalStatementKind::Variable;
+                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                         } else {
                             result = PEvalStatement();
                         }
@@ -5048,9 +5032,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeName,parentScope);
-                            result->definitionString=typeName;
-                            result->kind = EvalStatementKind::Variable;
+                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                         } else {
                             result = PEvalStatement();
                         }
@@ -5071,9 +5053,7 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
     //                    qDebug()<<"typeName"<<typeName;
                         typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
                         if (typeStatement) {
-                            result = doCreateEvalType(fileName,typeName,parentScope);
-                            result->definitionString=typeName;
-                            result->kind = EvalStatementKind::Variable;
+                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
                         } else {
                             return PEvalStatement();
                         }
@@ -5510,6 +5490,15 @@ PEvalStatement CppParser::doCreateEvalType(const QString &primitiveType) const
                 PStatement(),
                 PStatement(),
                 PStatement());
+}
+
+PEvalStatement CppParser::doCreateTypedEvalVar(const QString &fileName, const QString &typeName, const PStatement &parentScope, const PStatement &baseStatement) const
+{
+    PEvalStatement result = doCreateEvalType(fileName,typeName,parentScope);
+    result->definitionString=typeName;
+    result->kind = EvalStatementKind::Variable;
+    result->baseStatement = baseStatement;
+    return result;
 }
 
 PEvalStatement CppParser::doCreateEvalVariable(
