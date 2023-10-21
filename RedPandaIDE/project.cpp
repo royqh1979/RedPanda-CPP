@@ -1918,14 +1918,14 @@ PProjectModelNode Project::getParentFileSystemFolderNode(const QString &filename
 void Project::incrementBuildNumber()
 {
     mOptions.versionInfo.build++;
-    mOptions.versionInfo.fileVersion = QString("%1.%2.%3.%3")
+    mOptions.versionInfo.fileVersion = QString("%1.%2.%3.%4")
             .arg(mOptions.versionInfo.major)
             .arg(mOptions.versionInfo.minor)
             .arg(mOptions.versionInfo.release)
             .arg(mOptions.versionInfo.build);
     if (mOptions.versionInfo.syncProduct)
         mOptions.versionInfo.productVersion = mOptions.versionInfo.fileVersion;
-    setModified(true);
+    saveOptions();
 }
 
 QHash<QString, PProjectEditorLayout> Project::loadLayout()

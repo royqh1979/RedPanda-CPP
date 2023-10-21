@@ -265,23 +265,25 @@ Windows 宿主的额外要求：
   ```bash
   DOCKER=docker # 或 podman
   SOURCE_DIR=/build/RedPanda-CPP # *容器内*的源代码路径
+  JOBS=$(nproc) # 同时构建多个包时可降低并行数
 
   MIRROR=mirrors.ustc.edu.cn # 留空以使用默认的镜像站
   PLATFORM=linux/amd64 # 或 linux/386、linux/arm64/v8、linux/arm/v7、linux/riscv64
   IMAGE=debian:12 # 或 Ubuntu（如 ubuntu:22.04）
 
-  $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -v $PWD:$SOURCE_DIR --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
+  $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -e JOBS=$JOBS -v $PWD:$SOURCE_DIR --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
   ```
 * Windows 宿主：
   ```ps1
   $DOCKER = "docker" # 或 "podman"
   $SOURCE_DIR = "/build/RedPanda-CPP" # *容器内*的源代码路径
+  $JOBS = $Env:NUMBER_OF_PROCESSORS # 同时构建多个包时可降低并行数
 
   $MIRROR = "mirrors.ustc.edu.cn" # 留空以使用默认的镜像站
   $PLATFORM = "linux/amd64" # 或 "linux/386"、"linux/arm64/v8"、"linux/arm/v7"、"linux/riscv64"
   $IMAGE = "debian:12" # 或 Ubuntu（如 "ubuntu:22.04"）
 
-  & $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -v "$(Get-Location):$SOURCE_DIR" --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
+  & $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -e JOBS=$JOBS -v "$(Get-Location):$SOURCE_DIR" --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
   ```
 
 ### 手动安装
