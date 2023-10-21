@@ -214,6 +214,11 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
         } else if (isWord()) {
             countLines();
             result = getWord();
+            if (result == "__attribute__") {
+                result = "";
+                if (*mCurrent=='(')
+                    skipPair('(',')');
+            }
 //            if (result=="noexcept" || result == "throw") {
 //                result="";
 //                if (*mCurrent=='(')

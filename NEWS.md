@@ -3,6 +3,7 @@ Red Panda C++ Version 2.26
   - change: Use ctrl+mouseMove event to highlight jumpable symbols (instead of ctrl+tooltip).
   - enhancement: Auto adjust position of the suggestion popup window.
   - enhancement: Windows XP support ( by cyano.CN  )
+  - fix: __attribute__ is not correctly handled if it is after 'static'.
 
 Red Panda C++ Version 2.25
 
