@@ -326,7 +326,7 @@ QString CppPreprocessor::getNextPreprocessor()
     QString result;
     for (int i=preProcFrom;i<=preProcTo;i++) {
         if (mBuffer[i].endsWith('\\')) {
-            result+=mBuffer[i].leftRef(mBuffer[i].size()-1)+' ';
+            result+=mBuffer[i].left(mBuffer[i].size()-1)+' ';
         } else {
             result+=mBuffer[i]+' ';
         }

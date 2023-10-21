@@ -4505,7 +4505,12 @@ void MainWindow::onFilesViewCreateFile()
         fileName = QString("untitled%1").arg(count)+suffix;
     }
     QFile file(dir.filePath(fileName));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     file.open(QFile::NewOnly);
+#else
+    // workaround: try create but do not truncate
+    file.open(QFile::ReadWrite);
+#endif
     QModelIndex newIndex = mFileSystemModel.index(fileName);
     ui->treeFiles->setCurrentIndex(newIndex);
 }

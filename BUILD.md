@@ -4,6 +4,8 @@
 
 # Windows
 
+For Windows 7 or later:
+
 | Library + Toolchain \ Target | x86 | x64 | ARM64 |
 | ---------------------------- | --- | --- | ----- |
 | MSYS2 + GNU-based MinGW | ✔️ | ✔️ | ❌ |
@@ -18,6 +20,19 @@ Notes for Windows on ARM:
   - ARM64EC does not bring significant benefit, since Red Panda C++ can be built to ARM64 classic ABI.
   - However, ARM64EC will allow users to use their favorite input methods, fancy Qt styles.
 - With the [ARM32 deprecation in Windows 11 Insider Preview Build 25905](https://blogs.windows.com/windows-insider/2023/07/12/announcing-windows-11-insider-preview-build-25905/), ARM32 support will never be added.
+
+For legacy Windows (NT 5.1 – 6.0):
+
+| Library + Toolchain \ Target | x86 | x64 |
+| ---------------------------- | --- | --- |
+| Qt 5.6 from [patched source](packages/windows/qtbase-5.6.3-redpanda.patch) + MinGW | ✔️ | ✔️ |
+
+Notes for legacy Windows:
+- Supported Windows versions:
+  - Windows XP SP3 or later;
+  - Windows Server 2003 x64 Edition (a.k.a. Windows XP x64 Edition) SP2 or later.
+- Windows 7 x64 or later required as build host.
+- Here is [a script](packages/windows/build-qt5.6-mingw-static.sh) for building Qt 5.6 from source alongside official Qt installation (with Qt.io MinGW GCC 8.1.0).
 
 ## MSYS2 Qt Library with MinGW Toolchain (Recommended)
 

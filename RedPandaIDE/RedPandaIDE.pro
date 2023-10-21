@@ -1,6 +1,7 @@
 QT       += core gui printsupport network svg xml widgets
 
-CONFIG += c++17
+# without `c++14` old versions of qmake will explicitly set `-std=gnu++98`
+CONFIG += c++14 c++17
 CONFIG += nokey
 
 # uncomment the following line to enable vcs (git) support
@@ -44,9 +45,10 @@ isEmpty(LIBEXECDIR) {
     LIBEXECDIR = $${PREFIX}/libexec
 }
 
-# windows 7 is the minimum windows version
 win32: {
-DEFINES += _WIN32_WINNT=0x0601
+    DEFINES += _WIN32_WINNT=0x0501
+    LIBS += -lpsapi  # GetModuleFileNameEx, GetProcessMemoryInfo
+    LIBS += -lshlwapi  # SHDeleteKey
 }
 
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"

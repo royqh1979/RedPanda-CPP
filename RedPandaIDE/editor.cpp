@@ -1888,7 +1888,7 @@ void Editor::onAutoBackupTimer()
     if (mBackupTime>lastModifyTime())
         return;
     QDateTime current=QDateTime::currentDateTime();
-    if (current.toSecsSinceEpoch()-lastModifyTime().toSecsSinceEpoch()<=3)
+    if (lastModifyTime().secsTo(current) <= 3)
         return;
     saveAutoBackup();
 }

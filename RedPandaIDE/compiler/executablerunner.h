@@ -20,6 +20,7 @@
 #include "runner.h"
 #include <QProcess>
 #include <QSemaphore>
+#include <memory>
 
 class ExecutableRunner : public Runner
 {

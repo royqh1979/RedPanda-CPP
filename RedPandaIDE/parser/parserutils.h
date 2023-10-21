@@ -21,6 +21,7 @@
 #include <QSet>
 #include <QVector>
 #include <memory>
+#include <functional>
 
 using GetFileStreamCallBack = std::function<bool (const QString&, QStringList&)>;
 
