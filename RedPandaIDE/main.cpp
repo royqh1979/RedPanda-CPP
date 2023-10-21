@@ -295,9 +295,8 @@ int main(int argc, char *argv[])
         if (openInSingleInstance) {
             int openCount = 0;
             while (true) {
-                if (lockFile.tryLock())
+                if (lockFile.tryLock(100))
                     break;
-                QThread::msleep(100);
                 openCount++;
                 if (openCount>100)
                     break;
