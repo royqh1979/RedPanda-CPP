@@ -298,6 +298,9 @@ private:
     void onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int column, const QString& token,
         QSynedit::PTokenAttribute &attr);
     void onScrollBarValueChanged();
+    void updateHoverLink(int line);
+    void cancelHoverLink();
+
 private:
     bool mInited;
     QDateTime mBackupTime;

@@ -1066,12 +1066,9 @@ void Editor::keyReleaseEvent(QKeyEvent *event)
 {
     if (event->modifiers() == Qt::NoModifier
             && event->key() == Qt::Key_Control) {
-        updateMouseCursor();
         setMouseTracking(false);
-        if (mHoverModifiedLine != -1) {
-            invalidateLine(mHoverModifiedLine);
-            mHoverModifiedLine = -1;
-        }
+        cancelHoverLink();
+        updateMouseCursor();
         return;
     }
     QSynedit::QSynEdit::keyReleaseEvent(event);
@@ -1086,22 +1083,12 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
         TipType reason = getTipType(event->pos(),p);
         if (reason == TipType::Preprocessor) {
             QString s = document()->getLine(p.line - 1);
-            if (mParser->isIncludeNextLine(s) || mParser->isIncludeLine(s)) {
-                setCursor(Qt::PointingHandCursor);
-                if (mHoverModifiedLine!=p.line) invalidateLine(mHoverModifiedLine);
-                mHoverModifiedLine=p.line;
-                invalidateLine(mHoverModifiedLine);
-            }
+            if (mParser->isIncludeNextLine(s) || mParser->isIncludeLine(s))
+                updateHoverLink(p.line);
         } else if (reason == TipType::Identifier) {
-            setCursor(Qt::PointingHandCursor);
-            if (mHoverModifiedLine!=p.line) invalidateLine(mHoverModifiedLine);
-            mHoverModifiedLine=p.line;
-            invalidateLine(mHoverModifiedLine);
+            updateHoverLink(p.line);
         } else {
-            if (mHoverModifiedLine != -1) {
-                invalidateLine(mHoverModifiedLine);
-                mHoverModifiedLine = -1;
-            }
+            cancelHoverLink();
         }
         return;
     }
@@ -2046,9 +2033,6 @@ void Editor::onTooltipTimer()
     }
 
     s = s.trimmed();
-    if ((s == mCurrentWord) && (mCurrentTipType == reason)) {
-        updateMouseCursor();
-    }
     // Remove hint
     cancelHint();
     mCurrentWord = s;
@@ -2134,7 +2118,6 @@ void Editor::onTooltipTimer()
         }
         QToolTip::showText(mapToGlobal(pos),hint,this);
     }
-    updateMouseCursor();
 }
 
 void Editor::onEndParsing()
@@ -4058,8 +4041,6 @@ void Editor::cancelHint()
     QToolTip::hideText();
     mCurrentWord="";
     mCurrentTipType=TipType::None;
-    if ( cursor()!=Qt::PointingHandCursor )
-        updateMouseCursor();
 }
 
 QString Editor::getFileHint(const QString &s, bool fromNext)
@@ -4492,6 +4473,22 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
 void Editor::onScrollBarValueChanged()
 {
     pMainWindow->functionTip()->hide();
+}
+
+void Editor::updateHoverLink(int line)
+{
+    setCursor(Qt::PointingHandCursor);
+    if (mHoverModifiedLine!=line) invalidateLine(mHoverModifiedLine);
+    mHoverModifiedLine=line;
+    invalidateLine(mHoverModifiedLine);
+}
+
+void Editor::cancelHoverLink()
+{
+    if (mHoverModifiedLine != -1) {
+        invalidateLine(mHoverModifiedLine);
+        mHoverModifiedLine = -1;
+    }
 }
 
 PCppParser Editor::sharedParser(ParserLanguage language)
