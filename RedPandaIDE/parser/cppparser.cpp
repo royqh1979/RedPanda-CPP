@@ -2802,8 +2802,6 @@ void CppParser::handleEnum(bool isTypedef)
 void CppParser::handleForBlock()
 {
     int tokenCount = mTokenizer.tokenCount();
-
-    int startLine = mTokenizer[mIndex]->line;
     mIndex++; // skip for/catch;
     if (mIndex >= tokenCount)
         return;
@@ -4399,9 +4397,9 @@ void CppParser::internalParse(const QString &fileName)
 
     QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
-        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
-        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
+//        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+//        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
+//        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
     //qDebug()<<"preprocess"<<timer.elapsed();
     //reduce memory usage
@@ -4418,7 +4416,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+//       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -4431,8 +4429,8 @@ void CppParser::internalParse(const QString &fileName)
     }
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
