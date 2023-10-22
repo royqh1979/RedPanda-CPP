@@ -216,7 +216,7 @@ QByteArray Compiler::pipedText()
     return QByteArray();
 }
 
-bool Compiler::beforeRunExtraCommand(int idx)
+bool Compiler::beforeRunExtraCommand(int /* idx */)
 {
     return true;
 }

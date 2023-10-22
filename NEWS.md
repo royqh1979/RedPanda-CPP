@@ -4,6 +4,11 @@ Red Panda C++ Version 2.26
   - enhancement: Auto adjust position of the suggestion popup window.
   - enhancement: Windows XP support ( by cyano.CN  )
   - fix: __attribute__ is not correctly handled if it is after 'static'.
+  - enhancement: Parse files that contains C++ 20 'concept' keyword. (No code suggesion for concepts now)
+  - enhancement: Parse files that contains C++ 20 'requires' keyword.
+  - fix: Code suggestions in namespace.
+  - enhancement: Code suggestions for namespace alias.
+  - fix: Correctly handle statements like 'using xxx::operator()'.
 
 Red Panda C++ Version 2.25
 

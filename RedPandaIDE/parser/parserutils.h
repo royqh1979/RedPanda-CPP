@@ -81,6 +81,8 @@ enum class KeywordType {
     Using, //using
     DeclType, // decltype
     Operator, //operator
+    Concept, //concept
+    Requires, //requires
     None, // It's a keyword but don't process here
     NotKeyword
 };

@@ -1958,6 +1958,8 @@ bool CppParser::checkForKeyword(KeywordType& keywordType)
     case KeywordType::NotKeyword:
     case KeywordType::DeclType:
     case KeywordType::Operator:
+    case KeywordType::Requires:
+    case KeywordType::Concept:
         return false;
     default:
         return true;
@@ -2575,6 +2577,19 @@ void CppParser::handleCatchBlock()
     addSoloScopeLevel(block,startLine);
     scanMethodArgs(block,mIndex);
     mIndex=mTokenizer[mIndex]->matchIndex+1;
+}
+
+void CppParser::handleConcept()
+{
+    mIndex++; // skip 'concept';
+    // just skip it;
+    mIndex = indexOfNextSemicolonOrLeftBrace(mIndex);
+    if (mIndex<mTokenizer.tokenCount()) {
+        if (mTokenizer[mIndex]->text=='{')
+            mIndex = mTokenizer[mIndex]->matchIndex+1; // skip '}'
+        else
+            mIndex++; // skip ;
+    }
 }
 
 void CppParser::handleEnum(bool isTypedef)
@@ -3244,6 +3259,17 @@ void CppParser::handleNamespace(KeywordType skipType)
     QString aliasName;
     if ((mIndex+2<tokenCount) && (mTokenizer[mIndex]->text == '=')) {
         aliasName=mTokenizer[mIndex+1]->text;
+        mIndex+=2;
+        if (aliasName == "::" && mIndex<tokenCount) {
+            aliasName += mTokenizer[mIndex]->text;
+            mIndex++;
+        }
+        while(mIndex+1<tokenCount && mTokenizer[mIndex]->text == "::") {
+            aliasName+="::";
+            aliasName+=mTokenizer[mIndex+1]->text;
+            mIndex+=2;
+        }
+        //qDebug()<<command<<aliasName;
         //namespace alias
         addStatement(
             getCurrentScope(),
@@ -3259,7 +3285,7 @@ void CppParser::handleNamespace(KeywordType skipType)
             getScope(),
             mCurrentMemberAccessibility,
             StatementProperty::spHasDefinition);
-        mIndex+=2; //skip ;
+        mIndex++; // skip ;
         return;
     } else if (isInline) {
         //inline namespace , just skip it
@@ -3589,6 +3615,10 @@ bool CppParser::handleStatement()
         mIndex=moveToEndOfStatement(mIndex,true);
     } else if (checkForKeyword(keywordType)) { // includes template now
         handleKeyword(keywordType);
+    } else if (keywordType==KeywordType::Concept) {
+        handleConcept();
+    } else if (keywordType==KeywordType::Requires) {
+        skipRequires();
     } else if (keywordType==KeywordType::For) { // (for/catch)
         handleForBlock();
     } else if (keywordType==KeywordType::Catch) { // (for/catch)
@@ -3980,10 +4010,18 @@ void CppParser::handleUsing()
             || (mTokenizer[mIndex]->text != "namespace")) {
         QString fullName;
         QString usingName;
+        bool appendUsingName = false;
         while (mIndex<tokenCount &&
                mTokenizer[mIndex]->text!=';') {
             fullName += mTokenizer[mIndex]->text;
-            usingName = mTokenizer[mIndex]->text;
+            if (!appendUsingName) {
+                usingName = mTokenizer[mIndex]->text;
+                if (usingName == "operator") {
+                    appendUsingName=true;
+                }
+            } else {
+                usingName += mTokenizer[mIndex]->text;
+            }
             mIndex++;
         }
         if (fullName!=usingName) {
@@ -4325,6 +4363,43 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
     }
     // Skip ;
     mIndex++;
+}
+
+void CppParser::skipRequires()
+{
+    mIndex++; //skip 'requires';
+
+    int tokenCount = mTokenizer.tokenCount();
+    while (mIndex < tokenCount) { // ||
+        while (mIndex < tokenCount) { // &&
+            if (mTokenizer[mIndex]->text=='(') {
+                //skip parenthesized expression
+                mIndex = mTokenizer[mIndex]->matchIndex+1;
+            } else if (isIdentifier(mTokenizer[mIndex]->text)) {
+                // skip foo<T> or foo::boo::ttt<T>
+                while (mIndex < tokenCount) {
+                    if (!isIdentifier(mTokenizer[mIndex]->text))
+                        return;
+                    mIndex++;
+                    if (mIndex>=tokenCount)
+                        return;
+                    if (mTokenizer[mIndex]->text!="::")
+                        break;
+                    mIndex++; // skip '::';
+                }
+            }
+            if (mIndex>=tokenCount)
+                return;
+            if (mTokenizer[mIndex]->text!="&&")
+                break;
+            mIndex++; // skip '&&';
+        }
+        if (mIndex>=tokenCount)
+            return;
+        if (mTokenizer[mIndex]->text!="||")
+            break;
+        mIndex++; // skip '||';
+    }
 }
 
 void CppParser::internalParse(const QString &fileName)
@@ -5209,6 +5284,9 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 case StatementKind::skNamespace:
                     result = doCreateEvalNamespace(statement);
                     break;
+                case StatementKind::skNamespaceAlias:
+                    result = doFindAliasedNamespace(statement);
+                    break;
                 case StatementKind::skAlias: {
                     statement = doFindAliasedStatement(statement);
                     if (statement)
@@ -5419,6 +5497,29 @@ PEvalStatement CppParser::doCreateEvalNamespace(const PStatement &namespaceState
                 PStatement(),
                 namespaceStatement,
                 namespaceStatement);
+}
+
+PEvalStatement CppParser::doFindAliasedNamespace(const PStatement &namespaceAlias) const
+{
+    QStringList expList;
+    QString s = namespaceAlias->type;
+    int pos = s.indexOf("::");
+    while (pos>=0) {
+        expList.append(s.left(pos));
+        expList.append("::");
+        s = s.mid(pos+2);
+        pos = s.indexOf("::");
+    }
+    expList.append(s);
+    pos=0;
+    return doEvalExpression(
+                namespaceAlias->fileName,
+                expList,
+                pos,
+                namespaceAlias->parentScope.lock(),
+                PEvalStatement(),
+                true
+                );
 }
 
 PEvalStatement CppParser::doCreateEvalType(const QString &fileName, const QString &typeName, const PStatement& parentScope) const

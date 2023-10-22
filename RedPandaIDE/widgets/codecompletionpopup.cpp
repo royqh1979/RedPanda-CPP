@@ -664,7 +664,13 @@ void CodeCompletionPopup::getCompletionFor(
             // repeat until reach global
             while (scopeStatement) {
                 //add members of current scope that not added before
-                if (scopeStatement->kind == StatementKind::skClass) {
+                if (scopeStatement->kind == StatementKind::skNamespace) {
+                    PStatementList namespaceStatementsList =
+                            mParser->findNamespace(scopeStatement->fullName);
+                    foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
+                        addChildren(namespaceStatement, fileName, line, isLambdaReturnType);
+                    }
+                } else if (scopeStatement->kind == StatementKind::skClass) {
                     addChildren(scopeStatement, fileName, -1, isLambdaReturnType);
                 } else {
                     addChildren(scopeStatement, fileName, line, isLambdaReturnType);

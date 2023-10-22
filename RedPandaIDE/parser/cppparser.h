@@ -223,11 +223,13 @@ private:
     int evaluateConstExprTerm(int endIndex, bool &ok);
     int evaluateLiteralNumber(int endIndex, bool &ok);
 
+    bool checkForConcept(KeywordType &keywordType) { return keywordType == KeywordType::Concept; }
     bool checkForKeyword(KeywordType &keywordType);
     bool checkForNamespace(KeywordType keywordType);
     bool checkForPreprocessor();
 //    bool checkForLambda();
     bool checkForAccessibilitySpecifiers(KeywordType keywordType);
+    bool checkForRequires(KeywordType keywordType) { return keywordType == KeywordType::Requires; }
     bool checkForStructs(KeywordType keywordType);
     bool checkForTypedefEnum();
     bool checkForTypedefStruct();
@@ -371,6 +373,8 @@ private:
 
     PEvalStatement doCreateEvalNamespace(const PStatement& namespaceStatement) const;
 
+    PEvalStatement doFindAliasedNamespace(const PStatement& namespaceAlias) const;
+
     PEvalStatement doCreateEvalType(const QString& fileName,const QString& typeName, const PStatement& parentScope) const;
     PEvalStatement doCreateEvalType(const QString& fileName,const PStatement& typeStatement) const;
     PEvalStatement doCreateEvalType(const QString& primitiveType) const;
@@ -485,6 +489,7 @@ private:
     PStatement getTypeDef(const PStatement& statement,
                           const QString& fileName, const QString& aType) const;
     void handleCatchBlock();
+    void handleConcept();
     void handleEnum(bool isTypedef);
     void handleForBlock();
     void handleKeyword(KeywordType skipType);
@@ -510,6 +515,7 @@ private:
     void handleStructs(bool isTypedef = false);
     void handleUsing();
     void handleVar(const QString& typePrefix,bool isExtern,bool isStatic);
+    void skipRequires();
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(

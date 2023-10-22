@@ -135,20 +135,21 @@ void initParser()
     CppKeywords.insert("__asm",KeywordType::SkipNextParenthesis);
     // Skip to {
 
+    CppKeywords.insert("requires",KeywordType::Requires);
+    CppKeywords.insert("concept",KeywordType::Concept);
+
     // wont handle
 
     //Not supported yet
     CppKeywords.insert("atomic_cancel",KeywordType::None);
     CppKeywords.insert("atomic_commit",KeywordType::None);
     CppKeywords.insert("atomic_noexcept",KeywordType::None);
-    CppKeywords.insert("concept",KeywordType::None);
     CppKeywords.insert("consteval",KeywordType::None);
     CppKeywords.insert("constinit",KeywordType::None);
     CppKeywords.insert("co_wait",KeywordType::None);
     CppKeywords.insert("co_return",KeywordType::None);
     CppKeywords.insert("co_yield",KeywordType::None);
     CppKeywords.insert("reflexpr",KeywordType::None);
-    CppKeywords.insert("requires",KeywordType::None);
 
     // its a type
     CppKeywords.insert("auto",KeywordType::None);
