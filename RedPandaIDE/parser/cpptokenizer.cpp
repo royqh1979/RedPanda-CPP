@@ -158,30 +158,30 @@ void CppTokenizer::countLines()
     }
 }
 
-QString CppTokenizer::getForInit()
-{
-    QChar* startOffset = mCurrent;
+//QString CppTokenizer::getForInit()
+//{
+//    QChar* startOffset = mCurrent;
 
-    // Step into the init statement
-    mCurrent++;
+//    // Step into the init statement
+//    mCurrent++;
 
-    TokenType tokenType;
-    // Process until ; or end of file
-    while (true) {
-        QString s = getNextToken(&tokenType);
-        simplify(s);
-        if (!s.isEmpty())
-            addToken(s,mCurrentLine,tokenType);
-        if ( (s == "") || (s == ";") || (s==")") || (s=="("))
-            break;
-        // : is used in for-each loop
-    }
+//    TokenType tokenType;
+//    // Process until ; or end of file
+//    while (true) {
+//        QString s = getNextToken(&tokenType);
+//        simplify(s);
+//        if (!s.isEmpty())
+//            addToken(s,mCurrentLine,tokenType);
+//        if ( (s == "") || (s == ";") || (s==")") || (s=="("))
+//            break;
+//        // : is used in for-each loop
+//    }
 
-    // Skip to end of for loop
-    mCurrent = startOffset;
-    skipPair('(', ')');
-    return "";
-}
+//    // Skip to end of for loop
+//    mCurrent = startOffset;
+//    skipPair('(', ')');
+//    return "";
+//}
 
 QString CppTokenizer::getNextToken(TokenType *pTokenType)
 {
@@ -203,10 +203,10 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                 }
             }
             done = (result != "");
-        } else if (isForInit()) {
-            countLines();
-            result = getForInit();
-            done = (result != "");
+//        } else if (isForInit()) {
+//            countLines();
+//            result = getForInit();
+//            done = (result != "");
 //        } else if (isArguments()) {
 //            countLines();
 //            result = getArguments();
@@ -526,10 +526,10 @@ bool CppTokenizer::isArguments()
     return *mCurrent == '(';
 }
 
-bool CppTokenizer::isForInit()
-{
-    return (*mCurrent == '(') && (mLastToken == "for");
-}
+//bool CppTokenizer::isForInit()
+//{
+//    return (*mCurrent == '(') && (mLastToken == "for");
+//}
 
 bool CppTokenizer::isNumber()
 {

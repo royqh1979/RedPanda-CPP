@@ -1091,8 +1091,8 @@ void CppParser::resetParser()
         mStatementList.clear();
 
         mProjectFiles.clear();
-        mBlockBeginSkips.clear(); //list of for/catch block begin token index;
-        mBlockEndSkips.clear(); //list of for/catch block end token index;
+//        mBlockBeginSkips.clear(); //list of for/catch block begin token index;
+//        mBlockEndSkips.clear(); //list of for/catch block end token index;
         mInlineNamespaceEndSkips.clear(); // list for inline namespace end token index;
         mFilesToScan.clear(); // list of base files to scan
         mNamespaces.clear();  // namespace and the statements in its scope
@@ -1717,8 +1717,8 @@ void CppParser::internalClear()
     mMemberAccessibilities.clear();
     mIndex = 0;
     mCurrentMemberAccessibility = StatementAccessibility::None;
-    mBlockBeginSkips.clear();
-    mBlockEndSkips.clear();
+//    mBlockBeginSkips.clear();
+//    mBlockEndSkips.clear();
     mInlineNamespaceEndSkips.clear();
 }
 
@@ -2406,19 +2406,19 @@ QString CppParser::doFindTemplateParamOf(const QString &fileName, const QString 
     return getTemplateParam(statement,fileName, phrase,index, currentScope);
 }
 
-int CppParser::getCurrentBlockEndSkip() const
-{
-    if (mBlockEndSkips.isEmpty())
-        return mTokenizer.tokenCount()+1;
-    return mBlockEndSkips.back();
-}
+//int CppParser::getCurrentBlockEndSkip() const
+//{
+//    if (mBlockEndSkips.isEmpty())
+//        return mTokenizer.tokenCount()+1;
+//    return mBlockEndSkips.back();
+//}
 
-int CppParser::getCurrentBlockBeginSkip() const
-{
-    if (mBlockBeginSkips.isEmpty())
-        return mTokenizer.tokenCount()+1;
-    return mBlockBeginSkips.back();
-}
+//int CppParser::getCurrentBlockBeginSkip() const
+//{
+//    if (mBlockBeginSkips.isEmpty())
+//        return mTokenizer.tokenCount()+1;
+//    return mBlockBeginSkips.back();
+//}
 
 int CppParser::getCurrentInlineNamespaceEndSkip() const
 {
@@ -2541,43 +2541,43 @@ PStatement CppParser::getTypeDef(const PStatement& statement,
         return PStatement();
 }
 
-void CppParser::handleCatchBlock()
-{
-    int tokenCount = mTokenizer.tokenCount();
-    int startLine= mTokenizer[mIndex]->line;
-    mIndex++; // skip for/catch;
-    if (!((mIndex < tokenCount) && (mTokenizer[mIndex]->text.startsWith('('))))
-        return;
-    //skip params
-    int i2=mTokenizer[mIndex]->matchIndex+1;
-    if (i2>=tokenCount)
-        return;
-    if (mTokenizer[i2]->text.startsWith('{')) {
-        mBlockBeginSkips.append(i2);
-        int i = indexOfMatchingBrace(i2);
-        mBlockEndSkips.append(i);
-    } else {
-        int i=indexOfNextSemicolon(i2);
-        mBlockEndSkips.append(i);
-    }
-    // add a block
-    PStatement block = addStatement(
-                getCurrentScope(),
-                mCurrentFile,
-                "",
-                "",
-                "",
-                "",
-                "",
-                startLine,
-                StatementKind::skBlock,
-                getScope(),
-                mCurrentMemberAccessibility,
-                StatementProperty::spHasDefinition);
-    addSoloScopeLevel(block,startLine);
-    scanMethodArgs(block,mIndex);
-    mIndex=mTokenizer[mIndex]->matchIndex+1;
-}
+//void CppParser::handleCatchBlock()
+//{
+//    int tokenCount = mTokenizer.tokenCount();
+//    int startLine= mTokenizer[mIndex]->line;
+//    mIndex++; // skip for/catch;
+//    if (!((mIndex < tokenCount) && (mTokenizer[mIndex]->text.startsWith('('))))
+//        return;
+//    //skip params
+//    int i2=mTokenizer[mIndex]->matchIndex+1;
+//    if (i2>=tokenCount)
+//        return;
+//    if (mTokenizer[i2]->text.startsWith('{')) {
+//        mBlockBeginSkips.append(i2);
+//        int i = indexOfMatchingBrace(i2);
+//        mBlockEndSkips.append(i);
+//    } else {
+//        int i=indexOfNextSemicolon(i2);
+//        mBlockEndSkips.append(i);
+//    }
+//    // add a block
+//    PStatement block = addStatement(
+//                getCurrentScope(),
+//                mCurrentFile,
+//                "",
+//                "",
+//                "",
+//                "",
+//                "",
+//                startLine,
+//                StatementKind::skBlock,
+//                getScope(),
+//                mCurrentMemberAccessibility,
+//                StatementProperty::spHasDefinition);
+//    addSoloScopeLevel(block,startLine);
+//    scanMethodArgs(block,mIndex);
+//    mIndex=mTokenizer[mIndex]->matchIndex+1;
+//}
 
 void CppParser::handleConcept()
 {
@@ -2807,45 +2807,23 @@ void CppParser::handleForBlock()
     mIndex++; // skip for/catch;
     if (mIndex >= tokenCount)
         return;
-    if (mTokenizer[mIndex]->text!="(")
+    if (mTokenizer[mIndex]->text!='(')
         return;
-    int i=indexOfNextSemicolon(mIndex);
-    int i2 = i+1; //skip over ';' (tokenizer have change for(;;) to for(;)
-
-    // for(int x:vec)
-    if (i2 > mTokenizer[mIndex]->matchIndex)
-        i2 = mTokenizer[mIndex]->matchIndex+1;
-
+    int i=mTokenizer[mIndex]->matchIndex; //")"
+    int i2 = i+1;
     if (i2>=tokenCount)
         return;
-    if (mTokenizer[i2]->text.startsWith('{')) {
-        mBlockBeginSkips.append(i2);
-        i=indexOfMatchingBrace(i2);
-// tokenizer will handle unbalanced braces, no need check here
-//        if (i==i2)
-//            mBlockEndSkips.append(mTokenizer.tokenCount());
-//        else
-        mBlockEndSkips.append(i);
+    if (mTokenizer[i2]->text=='{') {
+        mTokenizer[mIndex]->text="{";
+        mTokenizer[mIndex]->matchIndex = mTokenizer[i2]->matchIndex;
+        mTokenizer[mTokenizer[mIndex]->matchIndex]->matchIndex = mIndex;
+        mTokenizer[i]->text=";";
+        mTokenizer[i2]->text=";";
     } else {
-        i=indexOfNextSemicolon(i2);
-        mBlockEndSkips.append(i);
+        mTokenizer[mIndex]->text=";";
+        mTokenizer[i]->text=";";
+        mIndex++; //skip ';'
     }
-    // add a block
-    PStatement block = addStatement(
-                getCurrentScope(),
-                mCurrentFile,
-                "",
-                "",
-                "",
-                "",
-                "",
-                startLine,
-                StatementKind::skBlock,
-                getScope(),
-                mCurrentMemberAccessibility,
-                StatementProperty::spHasDefinition);
-
-    addSoloScopeLevel(block,startLine);
 }
 
 void CppParser::handleKeyword(KeywordType skipType)
@@ -3535,8 +3513,8 @@ void CppParser::handleAccessibilitySpecifiers(KeywordType keywordType)
 bool CppParser::handleStatement()
 {
     QString funcType,funcName;
-    int idx=getCurrentBlockEndSkip();
-    int idx2=getCurrentBlockBeginSkip();
+//    int idx=getCurrentBlockEndSkip();
+//    int idx2=getCurrentBlockBeginSkip();
     int idx3=getCurrentInlineNamespaceEndSkip();
     KeywordType keywordType;
 #ifdef QT_DEBUG
@@ -3546,21 +3524,22 @@ bool CppParser::handleStatement()
 #endif
     int tokenCount = mTokenizer.tokenCount();
 
-    if (mIndex >= idx2) {
-        //skip (previous handled) block begin
-        mBlockBeginSkips.pop_back();
-        if (mIndex == idx2)
-            mIndex++;
-        else if (mIndex<tokenCount)  //error happens, but we must remove an (error) added scope
-            removeScopeLevel(mTokenizer[mIndex]->line);
-    } else if (mIndex >= idx) {
-        //skip (previous handled) block end
-        mBlockEndSkips.pop_back();
-        if (idx+1 < tokenCount)
-            removeScopeLevel(mTokenizer[idx+1]->line);
-        if (mIndex == idx)
-            mIndex++;
-    } else if (mIndex >= idx3) {
+//    if (mIndex >= idx2) {
+//        //skip (previous handled) block begin
+//        mBlockBeginSkips.pop_back();
+//        if (mIndex == idx2)
+//            mIndex++;
+//        else if (mIndex<tokenCount)  //error happens, but we must remove an (error) added scope
+//            removeScopeLevel(mTokenizer[mIndex]->line);
+//    } else if (mIndex >= idx) {
+//        //skip (previous handled) block end
+//        mBlockEndSkips.pop_back();
+//        if (idx+1 < tokenCount)
+//            removeScopeLevel(mTokenizer[idx+1]->line);
+//        if (mIndex == idx)
+//            mIndex++;
+//    } else
+    if (mIndex >= idx3) {
         //skip (previous handled) inline name space end
         mInlineNamespaceEndSkips.pop_back();
         if (mIndex == idx3)
@@ -3619,10 +3598,8 @@ bool CppParser::handleStatement()
         handleConcept();
     } else if (keywordType==KeywordType::Requires) {
         skipRequires();
-    } else if (keywordType==KeywordType::For) { // (for/catch)
+    } else if (keywordType==KeywordType::For || keywordType==KeywordType::Catch) { // (for/catch)
         handleForBlock();
-    } else if (keywordType==KeywordType::Catch) { // (for/catch)
-        handleCatchBlock();
     } else if (checkForAccessibilitySpecifiers(keywordType)) { // public /private/proteced
         handleAccessibilitySpecifiers(keywordType);
     } else if (keywordType==KeywordType::Enum) {
@@ -4388,17 +4365,17 @@ void CppParser::skipRequires()
                     mIndex++; // skip '::';
                 }
             }
-            if (mIndex>=tokenCount)
+            if (mIndex+1>=tokenCount)
                 return;
-            if (mTokenizer[mIndex]->text!="&&")
+            if (mTokenizer[mIndex]->text!="&" || mTokenizer[mIndex+1]->text!="&")
                 break;
-            mIndex++; // skip '&&';
+            mIndex+=2; // skip '&&';
         }
-        if (mIndex>=tokenCount)
+        if (mIndex+1>=tokenCount)
             return;
-        if (mTokenizer[mIndex]->text!="||")
+        if (mTokenizer[mIndex]->text!="|" || mTokenizer[mIndex+1]->text!="|")
             break;
-        mIndex++; // skip '||';
+        mIndex+=2; // skip '||';
     }
 }
 
@@ -4422,9 +4399,9 @@ void CppParser::internalParse(const QString &fileName)
 
     QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-//        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
-//        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
-//        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
+        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
+        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
     //qDebug()<<"preprocess"<<timer.elapsed();
     //reduce memory usage
@@ -4441,7 +4418,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-//       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -4454,8 +4431,8 @@ void CppParser::internalParse(const QString &fileName)
     }
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();

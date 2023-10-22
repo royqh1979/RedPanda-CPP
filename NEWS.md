@@ -9,6 +9,7 @@ Red Panda C++ Version 2.26
   - fix: Code suggestions in namespace.
   - enhancement: Code suggestions for namespace alias.
   - fix: Correctly handle statements like 'using xxx::operator()'.
+  - fix: Link in the project options dialog / precompiled header pages is not clickable.
 
 Red Panda C++ Version 2.25
 

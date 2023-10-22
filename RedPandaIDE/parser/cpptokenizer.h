@@ -75,14 +75,14 @@ private:
     void countLines();
     PToken getToken(int index);
 
-    QString getForInit();
+//    QString getForInit();
     QString getNextToken(
             TokenType *pTokenType);
     QString getNumber();
     QString getPreprocessor();
     QString getWord();
     bool isArguments();
-    bool isForInit();
+//    bool isForInit();
     bool isNumber();
     bool isPreprocessor();
     bool isWord();

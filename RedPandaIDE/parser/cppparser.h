@@ -462,8 +462,8 @@ private:
     int getBracketEnd(const QString& s, int startAt) const;
     StatementAccessibility getClassMemberAccessibility(const QString& text) const;
     StatementAccessibility getClassMemberAccessibility(KeywordType keywordType) const;
-    int getCurrentBlockBeginSkip() const;
-    int getCurrentBlockEndSkip() const;
+//    int getCurrentBlockBeginSkip() const;
+//    int getCurrentBlockEndSkip() const;
     int getCurrentInlineNamespaceEndSkip() const;
     PStatement getCurrentScope() const; // gets last item from last level
     QString getTemplateParam(const PStatement& statement, const QString& filename,
@@ -488,7 +488,7 @@ private:
                             const QString& sNoNameArgs) const;
     PStatement getTypeDef(const PStatement& statement,
                           const QString& fileName, const QString& aType) const;
-    void handleCatchBlock();
+//    void handleCatchBlock();
     void handleConcept();
     void handleEnum(bool isTypedef);
     void handleForBlock();
@@ -705,8 +705,8 @@ private:
     CppTokenizer mTokenizer;
     CppPreprocessor mPreprocessor;
     QSet<QString> mProjectFiles;
-    QVector<int> mBlockBeginSkips; //list of for/catch block begin token index;
-    QVector<int> mBlockEndSkips; //list of for/catch block end token index;
+//    QVector<int> mBlockBeginSkips; //list of for/catch block begin token index;
+//    QVector<int> mBlockEndSkips; //list of for/catch block end token index;
     QVector<int> mInlineNamespaceEndSkips; // list for inline namespace end token index;
     QSet<QString> mFilesToScan; // list of base files to scan
     int mFilesScannedCount; // count of files that have been scanned
