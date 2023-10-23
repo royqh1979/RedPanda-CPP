@@ -5496,7 +5496,8 @@ void MainWindow::on_actionNew_triggered()
         if (QMessageBox::question(this,
                                   tr("New Project File?"),
                                   tr("Do you want to add the new file to the project?"),
-                                  QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::Yes) == QMessageBox::Yes) {
             if (mProject->options().isCpp)
                 newProjectUnitFile("cpp");
             else
@@ -9864,7 +9865,8 @@ void MainWindow::on_actionNew_GAS_File_triggered()
         if (QMessageBox::question(this,
                                   tr("New Project File?"),
                                   tr("Do you want to add the new file to the project?"),
-                                  QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::Yes) == QMessageBox::Yes) {
             newProjectUnitFile("s");
             return;
         }
@@ -9931,7 +9933,8 @@ void MainWindow::on_actionNew_Text_File_triggered()
         if (QMessageBox::question(this,
                                   tr("New Project File?"),
                                   tr("Do you want to add the new file to the project?"),
-                                  QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::Yes) == QMessageBox::Yes) {
             newProjectUnitFile("txt");
             return;
         }

@@ -4452,7 +4452,7 @@ void Settings::Debugger::doLoad()
 #ifdef Q_OS_WIN
     mUseGDBServer = boolValue("use_gdb_server", false);
 #else
-    mUseGDBServer = boolValue("use_gdb_server", true);
+    mUseGDBServer = true;
 #endif
     mGDBServerPort = intValue("gdb_server_port",41234);
     mMemoryViewRows = intValue("memory_view_rows",16);

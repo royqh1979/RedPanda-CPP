@@ -53,6 +53,8 @@ void DebugGeneralWidget::doLoad()
 #ifdef Q_OS_WIN
     ui->grpUseGDBServer->setCheckable(true);
     ui->grpUseGDBServer->setChecked(pSettings->debugger().useGDBServer());
+#else
+    ui->grpUseGDBServer->setCheckable(false);
 #endif
     ui->spinGDBServerPort->setValue(pSettings->debugger().GDBServerPort());
     ui->spinMemoryViewRows->setValue(pSettings->debugger().memoryViewRows());
