@@ -10,6 +10,8 @@ Red Panda C++ Version 2.26
   - enhancement: Code suggestions for namespace alias.
   - fix: Correctly handle statements like 'using xxx::operator()'.
   - fix: Link in the project options dialog / precompiled header pages is not clickable.
+  - change: Don't change caret position when ctrl+click.
+  - fix: Should cd to working directory when debugging.
 
 Red Panda C++ Version 2.25
 
