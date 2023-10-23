@@ -335,6 +335,54 @@ Windows 宿主的额外要求：
 
 注意：makepkg 签出此存储库的 HEAD，因此构建之前务必提交所有变更。
 
+## Fedora
+
+1. 安装依赖包：
+   ```bash
+   sudo dnf install \
+     gcc gcc-c++ rpm-build rpmdevtools git \
+     glibc-static libstdc++-static libasan \
+     qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel
+
+   rpmdev-setuptree  # 仅第一次
+   ```
+2. 构建 rpm 包：
+   ```bash
+   ./packages/fedora/buildrpm.sh
+   ```
+3. 安装 rpm 包：
+   ```bash
+   sudo dnf install ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm
+   ```
+4. 运行小熊猫 C++：
+   ```bash
+   RedPandaIDE
+   ```
+
+## openSUSE
+
+1. 安装依赖包：
+   ```bash
+   sudo zypper in \
+     gcc gcc-c++ rpm-build rpmdevtools git \
+     glibc-devel-static \
+     libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
+
+   rpmdev-setuptree  # 仅第一次
+   ```
+2. 构建 rpm 包：
+   ```bash
+   ./packages/opensuse/buildrpm.sh
+   ```
+3. 安装 rpm 包：
+   ```bash
+   sudo zypper --no-gpg-checks in ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm
+   ```
+4. 运行小熊猫 C++：
+   ```bash
+   RedPandaIDE
+   ```
+
 ## Linux AppImage
 
 1. 安装依赖包：Docker 或 Podman。
