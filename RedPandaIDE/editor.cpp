@@ -1363,6 +1363,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
         if (!selAvail() && mHoverModifiedLine != -1) {
             QSynedit::BufferCoord p;
             if (mParser && pointToCharLine(event->pos(),p)) {
+                cancelHoverLink();
                 QString s = document()->getLine(p.line - 1);
                 if (mParser->isIncludeNextLine(s)) {
                     QString filename = mParser->getHeaderFileName(mFilename,s, true);
@@ -4534,6 +4535,16 @@ bool Editor::canAutoSave() const
 void Editor::setCanAutoSave(bool newCanAutoSave)
 {
     mCanAutoSave = newCanAutoSave;
+}
+
+void Editor::mousePressEvent(QMouseEvent *event)
+{
+    if ((event->modifiers() == Qt::ControlModifier)
+            && (event->button() == Qt::LeftButton)) {
+        event->accept();
+        return;
+    }
+    QSynedit::QSynEdit::mousePressEvent(event);
 }
 
 const QDateTime &Editor::hideTime() const

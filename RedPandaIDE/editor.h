@@ -401,6 +401,7 @@ public:
     void setCanAutoSave(bool newCanAutoSave);
 
 protected:
+    void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void inputMethodEvent(QInputMethodEvent *) override;
     void closeEvent(QCloseEvent *event) override;
