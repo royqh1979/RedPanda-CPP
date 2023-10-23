@@ -3043,14 +3043,14 @@ void QSynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
     // Make sure Y is visible
     int vCaretRow = displayY();
     if (ForceToMiddle) {
-        if (vCaretRow < mTopLine || vCaretRow>(mTopLine + (mLinesInWindow - 1)))
+        if (vCaretRow < mTopLine || vCaretRow>(mTopLine + (mLinesInWindow - 2)))
             setTopLine( vCaretRow - (mLinesInWindow - 1) / 2);
     } else {
         if (vCaretRow < mTopLine)
           setTopLine(vCaretRow);
-        else if (vCaretRow > mTopLine + (mLinesInWindow - 1) && mLinesInWindow > 0)
-          setTopLine(vCaretRow - (mLinesInWindow - 1));
-        else
+        else if (vCaretRow > mTopLine + (mLinesInWindow - 2) && mLinesInWindow > 2) {
+          setTopLine(vCaretRow - (mLinesInWindow - 2) );
+        } else
           setTopLine(mTopLine);
     }
 }

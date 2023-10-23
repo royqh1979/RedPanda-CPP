@@ -12,6 +12,7 @@ Red Panda C++ Version 2.26
   - fix: Link in the project options dialog / precompiled header pages is not clickable.
   - change: Don't change caret position when ctrl+click.
   - fix: Should cd to working directory when debugging.
+  - change: Ensure the line just below caret is visible while moving caret.
 
 Red Panda C++ Version 2.25
 

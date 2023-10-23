@@ -1373,6 +1373,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
                     QString filename = mParser->getHeaderFileName(mFilename,s);
                     pMainWindow->openFile(filename);
                     return;
+
                 } else if (mParser->enabled()) {
                     gotoDefinition(p);
                     return;
