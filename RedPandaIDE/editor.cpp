@@ -712,7 +712,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
             && !mCompletionPopup->isVisible()
             && !mHeaderCompletionPopup->isVisible()
             ) {
-        setMouseTracking(true);
+        //setMouseTracking(true);
         handled=true;
         QMouseEvent mouseEvent{
             QEvent::MouseMove,
@@ -1067,7 +1067,7 @@ void Editor::keyReleaseEvent(QKeyEvent *event)
 {
     if (event->modifiers() == Qt::NoModifier
             && event->key() == Qt::Key_Control) {
-        setMouseTracking(false);
+        //setMouseTracking(false);
         cancelHoverLink();
         updateMouseCursor();
         return;
@@ -1943,7 +1943,7 @@ void Editor::onAutoBackupTimer()
 
 void Editor::onTooltipTimer()
 {
-    if (cursor() == Qt::PointingHandCursor)
+    if (mHoverModifiedLine != -1)
         return;
 
     QSynedit::BufferCoord p;

@@ -13,6 +13,7 @@ Red Panda C++ Version 2.26
   - change: Don't change caret position when ctrl+click.
   - fix: Should cd to working directory when debugging.
   - change: Ensure the line just below caret is visible while moving caret.
+  - change: Set mouse cursor to hand pointing when it's on gutter.
 
 Red Panda C++ Version 2.25
 

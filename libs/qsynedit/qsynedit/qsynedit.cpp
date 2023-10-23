@@ -156,7 +156,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
 
-    //setMouseTracking(true);
+    setMouseTracking(true);
     setAcceptDrops(true);
 
     setFont(mFontDummy);
@@ -5989,7 +5989,7 @@ void QSynEdit::updateMouseCursor(){
     } else if (p.x() > mGutterWidth) {
         setCursor(Qt::IBeamCursor);
     } else {
-        setCursor(Qt::ArrowCursor);
+        setCursor(Qt::PointingHandCursor);
     }
 }
 
@@ -6139,6 +6139,7 @@ bool QSynEdit::event(QEvent *event)
 void QSynEdit::focusInEvent(QFocusEvent *)
 {
     showCaret();
+    updateMouseCursor();
 }
 
 void QSynEdit::focusOutEvent(QFocusEvent *)
