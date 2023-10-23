@@ -1,0 +1,229 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  windows_mingw64:
+    name: Windows MSYS2 MINGW64
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-qt5-static
+
+      - name: Build
+        run: |
+          mkdir build && pushd build
+          $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
+          mingw32-make -j$(nproc)
+          mingw32-make install
+          popd
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows MSYS2 MINGW64
+          path: pkg/
+
+  windows_ucrt64:
+    name: Windows MSYS2 UCRT64
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-qt5-static
+
+      - name: Build
+        run: |
+          mkdir build && pushd build
+          $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
+          mingw32-make -j$(nproc)
+          mingw32-make install
+          popd
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows MSYS2 UCRT64
+          path: pkg/
+
+  windows_mingw32:
+    name: Windows MSYS2 MINGW32
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW32
+          update: true
+          install: mingw-w64-i686-toolchain mingw-w64-i686-qt5-static
+
+      - name: Build
+        run: |
+          mkdir build && pushd build
+          $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
+          mingw32-make -j$(nproc)
+          mingw32-make install
+          popd
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows MSYS2 MINGW32
+          path: pkg/
+
+  deb_oldest_lts:
+    name: Deb on oldest LTS (Debian 10)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/amd64/debian:10
+
+      - name: Build
+        run: |
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/debian:10 /src/packages/debian/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Deb on oldest LTS (Debian 10)
+          path: dist/*.deb
+
+  deb_lastest_stable:
+    name: Deb on lastest stable (Ubuntu 23.10)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/amd64/ubuntu:23.10
+
+      - name: Build
+        run: |
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/ubuntu:23.10 /src/packages/debian/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Deb on lastest stable (Ubuntu 23.10)
+          path: dist/*.deb
+
+  deb_rolling:
+    name: Deb on rolling (Debian sid)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/amd64/debian:sid
+
+      - name: Build
+        run: |
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/debian:sid /src/packages/debian/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Deb on rolling (Debian sid)
+          path: dist/*.deb
+
+  archlinux:
+    name: Arch Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/amd64/archlinux:latest
+
+      - name: Build
+        run: |
+          cat <<EOF >$GITHUB_WORKSPACE/archlinux-in-docker.sh
+          #!/bin/bash
+          set -euxo pipefail
+
+          pacman -Syu --noconfirm --needed base-devel
+          cd /src/packages/archlinux
+          bash -c 'source PKGBUILD && pacman -S --noconfirm --needed --asdeps "\${makedepends[@]}" "\${depends[@]}"'  # heredoc: escape variable expansion
+
+          useradd -m builduser
+          chmod o+w .
+          su builduser -c 'makepkg'
+
+          mkdir -p /src/dist
+          mv *.pkg.tar.zst /src/dist/
+          EOF
+
+          chmod +x $GITHUB_WORKSPACE/archlinux-in-docker.sh
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/archlinux-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Arch Linux
+          path: dist/*.pkg.tar.zst
+
+  macos_x86_64:
+    name: macOS x86_64
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup
+        run: |
+          brew install qt@5
+
+      - name: Build
+        run: |
+          export PATH="/usr/local/opt/qt@5/bin:$PATH"
+
+          mkdir build && pushd build
+          qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
+          make -j$(nproc)
+          make install
+          popd
+
+          pushd $GITHUB_WORKSPACE/pkg/bin
+          macdeployqt RedPandaIDE.app
+          tar -cJf RedPandaIDE.tar.xz RedPandaIDE.app
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: macOS x86_64
+          path: pkg/bin/RedPandaIDE.tar.xz
