@@ -4397,8 +4397,8 @@ void CppParser::internalParse(const QString &fileName)
 
     QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
-        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
+//        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+//        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
 //        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
 #endif
     //qDebug()<<"preprocess"<<timer.elapsed();
@@ -4416,7 +4416,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+//       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -4429,8 +4429,8 @@ void CppParser::internalParse(const QString &fileName)
     }
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
@@ -4580,7 +4580,9 @@ PStatement CppParser::findMemberOfStatement(const QString& filename,
         QList<PStatement> stats = statementMap.values(s);
         PFileIncludes fileIncludes =  mPreprocessor.includesList().value(filename,PFileIncludes());
         foreach(const PStatement &s,stats) {
-            if (s->fileName == filename || s->definitionFileName==filename) {
+            if (s->line==-1) {
+                return s; // hard defines
+            } if (s->fileName == filename || s->definitionFileName==filename) {
                 return s;
             } else if (fileIncludes && (fileIncludes->includeFiles.contains(s->fileName)
                     || fileIncludes->includeFiles.contains(s->definitionFileName))) {

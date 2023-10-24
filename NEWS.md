@@ -16,6 +16,7 @@ Red Panda C++ Version 2.26
   - change: Set mouse cursor to hand pointing when it's on gutter.
   - enhancement: Basic support for parsing variadic macros(macros that use __VA_ARGS__).
   - enhancement: Better support for expanding macros with complex parameters.
+  - fix: Macros that defined by the compiler are not correctly syntax-colored and tooltiped.
 
 Red Panda C++ Version 2.25
 
