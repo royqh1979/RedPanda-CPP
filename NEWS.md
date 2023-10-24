@@ -14,6 +14,7 @@ Red Panda C++ Version 2.26
   - fix: Should cd to working directory when debugging.
   - change: Ensure the line just below caret is visible while moving caret.
   - change: Set mouse cursor to hand pointing when it's on gutter.
+  - enhancement: Basic support for parsing variadic macros.
 
 Red Panda C++ Version 2.25
 

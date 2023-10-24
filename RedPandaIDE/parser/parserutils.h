@@ -52,6 +52,7 @@ struct Define {
     bool hardCoded;// if true, don't free memory (points to hard defines)
     QStringList argList; // args list to format values
     QList<bool> argUsed;
+    int varArgIndex;
     QString formatValue; // format template to format values
 };
 

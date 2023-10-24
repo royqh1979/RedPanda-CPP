@@ -946,6 +946,7 @@ void CppPreprocessor::parseArgs(PDefine define)
         define->argList[i]=define->argList[i].trimmed();
         define->argUsed.append(false);
     }
+    define->varArgIndex=-1;
     QList<PDefineArgToken> tokens = tokenizeValue(define->value);
 
     QString formatStr = "";
@@ -954,7 +955,12 @@ void CppPreprocessor::parseArgs(PDefine define)
     foreach (const PDefineArgToken& token, tokens) {
         switch(token->type) {
         case DefineArgTokenType::Identifier:
-            index = define->argList.indexOf(token->value);
+            if (token->value == "__VA_ARGS__") {
+                index = define->argList.indexOf("...");
+                define->varArgIndex = index;
+            } else {
+                index = define->argList.indexOf(token->value);
+            }
             if (index>=0) {
                 define->argUsed[index] = true;
                 if (lastTokenType == DefineArgTokenType::Sharp) {
@@ -1469,14 +1475,21 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
         i++;
     }
     argValues.append(args.mid(lastSplit,i-lastSplit));
-    if (argValues.length() == define->argList.length()
+    if (argValues.length() >= define->argList.length()
             && argValues.length()>0) {
+        QStringList varArgs;
         for (int i=0;i<argValues.length();i++) {
-            if (define->argUsed[i]) {
+            if (define->varArgIndex != -1
+                 && i >= define->varArgIndex ) {
+                varArgs.append(argValues[i].trimmed());
+            } else if (i<define->argList.length()
+                        && define->argUsed[i]) {
                 QString argValue = argValues[i];
                 result=result.arg(argValue.trimmed());
             }
         }
+        if (!varArgs.isEmpty())
+            result=result.arg(varArgs.join(","));
     }
     result.replace("%%","%");
 
