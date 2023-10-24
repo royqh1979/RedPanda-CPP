@@ -1,0 +1,44 @@
+Name: redpanda-cpp-git
+Version: __VERSION__
+Release: 1%{?dist}
+Summary: A fast, lightweight, open source, and cross platform C++ IDE
+License: GPLv3+
+URL: https://github.com/royqh1979/RedPanda-CPP
+
+BuildRequires: gcc gcc-c++
+BuildRequires: qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel
+Requires: gcc gcc-c++
+Requires: glibc-static libstdc++-static libasan
+Requires: qt5-qtbase qt5-qtsvg
+
+%description
+A lightweight but powerful C/C++ IDE
+
+Red Panda C++ (Old name Red Panda Dev-C++ 7) is a full featured C/C++ IDE.
+It's the succesor of Red Panda Dev-C++ 6, which is developed by Delphi 7 and
+can only running under Windows.
+
+%prep
+
+%build
+mkdir -p %{name}
+cd %{name}
+qmake-qt5 \
+    PREFIX=/usr \
+    XDG_ADAPTIVE_ICON=ON \
+    "%{_sourcedir}/Red_Panda_CPP.pro"
+make %{_smp_mflags}
+
+%install
+cd %{name}
+make INSTALL_ROOT="%{buildroot}" install
+
+%files
+/usr/bin/RedPandaIDE
+/usr/libexec/RedPandaCPP/*
+/usr/share/RedPandaCPP/*
+/usr/share/doc/RedPandaCPP/*
+/usr/share/applications/redpandaide.desktop
+/usr/share/icons/hicolor/scalable/apps/redpandaide.svg
+
+%changelog

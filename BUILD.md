@@ -335,6 +335,54 @@ Enter `RedPandaIDE` to launch RedPanda C++.
 
 Note that makepkg checks out HEAD of the repo, so any change should be committed before building.
 
+## Fedora
+
+1. Install dependency:
+   ```bash
+   sudo dnf install \
+     gcc gcc-c++ rpm-build rpmdevtools git \
+     glibc-static libstdc++-static libasan \
+     qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel
+
+   rpmdev-setuptree  # first time only
+   ```
+2. Build the package:
+   ```bash
+   ./packages/fedora/buildrpm.sh
+   ```
+3. Install the package:
+   ```bash
+   sudo dnf install ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm
+   ```
+4. Run Red Panda C++:
+   ```bash
+   RedPandaIDE
+   ```
+
+## openSUSE
+
+1. Install dependency:
+   ```bash
+   sudo zypper in \
+     gcc gcc-c++ rpm-build rpmdevtools git \
+     glibc-devel-static \
+     libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
+
+   rpmdev-setuptree  # first time only
+   ```
+2. Build the package:
+   ```bash
+   ./packages/opensuse/buildrpm.sh
+   ```
+3. Install the package:
+   ```bash
+   sudo zypper --no-gpg-checks in ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm
+   ```
+4. Run Red Panda C++:
+   ```bash
+   RedPandaIDE
+   ```
+
 ## Linux AppImage
 
 1. Install dependency: Docker or Podman.
