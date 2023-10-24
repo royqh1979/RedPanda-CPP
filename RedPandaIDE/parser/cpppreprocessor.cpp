@@ -73,6 +73,7 @@ void CppPreprocessor::addDefineByParts(const QString &name, const QString &args,
     //define->argList;
     define->formatValue = value;
     define->hardCoded = hardCoded;
+    define->varArgIndex = -1;
     if (!args.isEmpty())
         parseArgs(define);
     if (hardCoded) {
@@ -946,7 +947,6 @@ void CppPreprocessor::parseArgs(PDefine define)
         define->argList[i]=define->argList[i].trimmed();
         define->argUsed.append(false);
     }
-    define->varArgIndex=-1;
     QList<PDefineArgToken> tokens = tokenizeValue(define->value);
 
     QString formatStr = "";
@@ -1448,48 +1448,73 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
 {
     // Replace function by this string
     QString result = define->formatValue;
-    if (args.startsWith('(') && args.endsWith(')')) {
-        args = args.mid(1,args.length()-2);
-    }
+//    if (args.startsWith('(') && args.endsWith(')')) {
+//        qDebug()<<define->name<<args;
+//        args = args.mid(1,args.length()-2);
+//    }
 
-    QStringList argValues;
-    int i=0;
-    bool inString = false;
-    int lastSplit=0;
-    while (i<args.length()) {
-        switch(args[i].unicode()) {
+    if (define->argList.length()==0) {
+        // do nothing
+    } else if (define->argList.length()==1) {
+        result=result.arg(args);
+    } else {
+        QStringList argValues;
+        int i=0;
+        bool inString = false;
+        bool inChar = false;
+        int lastSplit=0;
+        int level=0;
+        while (i<args.length()) {
+            switch(args[i].unicode()) {
             case '\\':
-                if (inString)
+                if (inString || inChar)
                     i++;
             break;
+            case '(':
+            case '{':
+                if (!inString && !inChar)
+                    level++;
+                break;
+            case ')':
+            case '}':
+                if (!inString && !inChar)
+                    level--;
+                break;
             case '"':
-                inString = !inString;
+                if (!inChar)
+                    inString = !inString;
             break;
+            case '\'':
+                if (!inString)
+                    inChar = !inChar;
+                break;
             case ',':
-                if (!inString) {
+                if (!inString && !inChar && level == 0) {
                     argValues.append(args.mid(lastSplit,i-lastSplit));
                     lastSplit=i+1;
                 }
             break;
+            }
+            i++;
         }
-        i++;
-    }
-    argValues.append(args.mid(lastSplit,i-lastSplit));
-    if (argValues.length() >= define->argList.length()
-            && argValues.length()>0) {
-        QStringList varArgs;
-        for (int i=0;i<argValues.length();i++) {
-            if (define->varArgIndex != -1
-                 && i >= define->varArgIndex ) {
-                varArgs.append(argValues[i].trimmed());
-            } else if (i<define->argList.length()
-                        && define->argUsed[i]) {
-                QString argValue = argValues[i];
-                result=result.arg(argValue.trimmed());
+        argValues.append(args.mid(lastSplit,i-lastSplit));
+        if (argValues.length() >= define->argList.length()
+                && argValues.length()>0) {
+            QStringList varArgs;
+            for (int i=0;i<argValues.length();i++) {
+                if (define->varArgIndex != -1
+                     && i >= define->varArgIndex ) {
+                    varArgs.append(argValues[i].trimmed());
+                } else if (i<define->argList.length()
+                            && define->argUsed[i]) {
+                    QString argValue = argValues[i];
+                    result=result.arg(argValue.trimmed());
+                }
+            }
+            if (!varArgs.isEmpty() && define->varArgIndex != -1) {
+                result=result.arg(varArgs.join(","));
             }
         }
-        if (!varArgs.isEmpty())
-            result=result.arg(varArgs.join(","));
     }
     result.replace("%%","%");
 

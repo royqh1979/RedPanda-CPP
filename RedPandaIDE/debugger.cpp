@@ -1114,7 +1114,7 @@ void DebugReader::processLogOutput(const QByteArray &line)
         int p=newLine.lastIndexOf(':');
         if (p>0) {
             newLine=newLine.left(p);
-            qDebug()<<newLine;
+            //qDebug()<<newLine;
             processConsoleOutput(newLine);
         }
     }
