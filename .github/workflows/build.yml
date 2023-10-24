@@ -197,6 +197,48 @@ jobs:
           name: Arch Linux
           path: dist/*.pkg.tar.zst
 
+  rpm_fedora:
+    name: RPM on latest Fedora
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/amd64/fedora:latest
+
+      - name: Build
+        run: |
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/fedora:latest /src/packages/fedora/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: RPM on latest Fedora
+          path: dist/*.rpm
+
+  rpm_opensuse:
+    name: RPM on openSUSE Tumbleweed
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/opensuse/tumbleweed:latest
+
+      - name: Build
+        run: |
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/opensuse/tumbleweed:latest /src/packages/opensuse/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: RPM on openSUSE Tumbleweed
+          path: dist/*.rpm
+
   macos_x86_64:
     name: macOS x86_64
     runs-on: macos-latest
