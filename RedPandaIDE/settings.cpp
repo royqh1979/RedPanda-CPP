@@ -3123,7 +3123,7 @@ void Settings::CompilerSets::findSets()
     QStringList pathList = path.split(PATH_SEPARATOR);
     QString folder;
     for (int i=pathList.count()-1;i>=0;i--) {
-        folder = pathList[i];
+        folder = QFileInfo(pathList[i]).absoluteFilePath();
         if (searched.contains(folder))
             continue;
         searched.insert(folder);
@@ -3134,11 +3134,13 @@ void Settings::CompilerSets::findSets()
 
 #ifdef Q_OS_WIN
     folder = includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW32"+QDir::separator()+"bin";
+    folder = QFileInfo(folder).absoluteFilePath();
     if (!searched.contains(folder)) {
         addSets(folder);
         searched.insert(folder);
     }
     folder = includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW64"+QDir::separator()+"bin";
+    folder = QFileInfo(folder).absoluteFilePath();
     if (!searched.contains(folder)) {
         addSets(folder);
         searched.insert(folder);

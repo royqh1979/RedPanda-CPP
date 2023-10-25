@@ -19,6 +19,7 @@ Red Panda C++ Version 2.26
   - fix: Macros that defined by the compiler are not correctly syntax-colored and tooltiped.
   - fix: Code suggestion for identifiers after '*' (eg. 3 * item->price) can't correct.
   - fix: C++ compiler atrribute '[[xxx]]' are not correctly handled.
+  - fix: If the integrated gcc compiler is add to path, auto find compilers will find in twice. (Windows)
 
 Red Panda C++ Version 2.25
 

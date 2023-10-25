@@ -2331,7 +2331,16 @@ QStringList Editor::getExpressionAtPosition(
                 }
                 break;
             case LastSymbolType::AmpersandSign: // before '&':
+            {
+                QChar ch=token.front();
+                if (isIdentChar(ch)
+                        || ch.isDigit()
+                        || ch == '.'
+                        || ch == ')' ) {
+                    result.pop_front();
+                }
                 return result;
+            }
                 break;
             case LastSymbolType::ParenthesisMatched: //before '()'
 //                if (token == ".") {
