@@ -485,15 +485,17 @@ QString CppTokenizer::getWord()
                     skipToNextToken();
                 }
             } else if (*mCurrent == '[') {
-                // Append array stuff
-                while(true) {
-                    offset = mCurrent;
-                    skipPair('[', ']');
-                    result += QString(offset,mCurrent-offset);
-                    simplifyArgs(result);
-                    skipToNextToken();
-                    if (*mCurrent!='[') //maybe multi-dimension array
-                        break;
+                if (*(mCurrent+1)!='[') {
+                    // Append array stuff
+                    while(true) {
+                        offset = mCurrent;
+                        skipPair('[', ']');
+                        result += QString(offset,mCurrent-offset);
+                        simplifyArgs(result);
+                        skipToNextToken();
+                        if (*mCurrent!='[') //maybe multi-dimension array
+                            break;
+                    }
                 }
             }
 

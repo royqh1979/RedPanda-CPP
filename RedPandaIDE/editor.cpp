@@ -2318,10 +2318,17 @@ QStringList Editor::getExpressionAtPosition(
                     return result;
                 break;
             case LastSymbolType::AsteriskSign: // before '*':
-                if (token == '*') {
-
-                } else
+                if (token == '*') {                    
+                } else {
+                    QChar ch=token.front();
+                    if (isIdentChar(ch)
+                            || ch.isDigit()
+                            || ch == '.'
+                            || ch == ')' ) {
+                        result.pop_front();
+                    }
                     return result;
+                }
                 break;
             case LastSymbolType::AmpersandSign: // before '&':
                 return result;

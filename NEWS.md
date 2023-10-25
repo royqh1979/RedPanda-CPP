@@ -17,6 +17,8 @@ Red Panda C++ Version 2.26
   - enhancement: Basic support for parsing variadic macros(macros that use __VA_ARGS__).
   - enhancement: Better support for expanding macros with complex parameters.
   - fix: Macros that defined by the compiler are not correctly syntax-colored and tooltiped.
+  - fix: Code suggestion for identifiers after '*' (eg. 3 * item->price) can't correct.
+  - fix: C++ compiler atrribute '[[xxx]]' are not correctly handled.
 
 Red Panda C++ Version 2.25
 
