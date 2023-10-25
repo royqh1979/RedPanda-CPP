@@ -1359,7 +1359,7 @@ QString CppPreprocessor::expandDefines(QString line)
                 if ((tail < line.length()) && (line[tail]=='(')) {
                     //braced argument (next word)
                     defineStart = tail+1;
-                    if (!skipBraces(line, tail)) {
+                    if (!skipParenthesis(line, tail)) {
                         line = ""; // broken line
                         break;
                     }
@@ -1400,10 +1400,13 @@ QString CppPreprocessor::expandDefines(QString line)
                     // It is a function. Expand arguments
                     if ((tail < line.length()) && (line[tail] == '(')) {
                         head=tail;
-                        if (skipBraces(line, tail)) {
-//                            qDebug()<<"3 "<<line<<head<<tail;
-                            QString args = line.mid(head,tail-head+1);
-                            insertValue = expandFunction(define,args);
+                        if (skipParenthesis(line, tail)) {
+                            if (name == "__has_builtin") {
+                                insertValue = "0";
+                            } else {
+                                QString args = line.mid(head+1,tail-head-1);
+                                insertValue = expandFunction(define,args);
+                            }
                             nameEnd = tail+1;
                         } else {
                             line = "";// broken line
@@ -1428,7 +1431,7 @@ QString CppPreprocessor::expandDefines(QString line)
     return line;
 }
 
-bool CppPreprocessor::skipBraces(const QString &line, int &index, int step)
+bool CppPreprocessor::skipParenthesis(const QString &line, int &index, int step)
 {
     int level = 0;
     while ((index >= 0) && (index < line.length())) { // Find the corresponding opening brace
@@ -1456,7 +1459,8 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
     if (define->argList.length()==0) {
         // do nothing
     } else if (define->argList.length()==1) {
-        result=result.arg(args);
+        if (define->argUsed[0])
+            result=result.arg(args);
     } else {
         QStringList argValues;
         int i=0;
@@ -1498,6 +1502,19 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
             i++;
         }
         argValues.append(args.mid(lastSplit,i-lastSplit));
+#ifdef QT_DEBUG
+        if (
+                (define->varArgIndex==-1 && argValues.length() != define->argList.length())
+                || (define->varArgIndex!=-1 && argValues.length() < define->argList.length()-1)
+                ) {
+            qDebug()<<"*** Expand Macro error ***";
+            qDebug()<<this->mFileName<<":"<<this->mIndex;
+            qDebug()<<"Macro: "<<define->name<<define->argList;
+            qDebug()<<"Actual param: "<<args;
+            qDebug()<<"Params splitted: "<<argValues;
+            qDebug()<<"**********";
+        }
+#endif
         if (argValues.length() >= define->argList.length()
                 && argValues.length()>0) {
             QStringList varArgs;

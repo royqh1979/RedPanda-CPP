@@ -220,7 +220,7 @@ static  bool isNumberChar(const QChar& ch);
 
     bool evaluateIf(const QString& line);
     QString expandDefines(QString line);
-    bool skipBraces(const QString&line, int& index, int step = 1);
+    bool skipParenthesis(const QString&line, int& index, int step = 1);
     QString expandFunction(PDefine define,QString args);
     bool skipSpaces(const QString &expr, int& pos);
     bool evalNumber(const QString &expr, int& result, int& pos);
