@@ -29,7 +29,7 @@ Editing Improvements:
 * Enhanced code completion
 * Better code folding support
 
-Debuging Improvements:
+Debugging Improvements:
 * Use gdb/mi interface
 * Enhanced watch
 * gdbserver mode
