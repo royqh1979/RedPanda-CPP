@@ -8,6 +8,7 @@ Recommended development environments:
 2. Qt Creator.
    * (Almost) zero configuration.
    * Built-in UI designer.
+   * Debugger integration with Qt.
 
 To setup development environment in Visual Studio Code:
 1. Install [clangd](https://clangd.llvm.org/) and [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd).

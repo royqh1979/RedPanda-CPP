@@ -8,6 +8,7 @@
 2. Qt Creator。
    * （几乎）无需配置。
    * 内建 UI 设计器。
+   * 调试器的 Qt 集成。
 
 设置 Visual Studio Code 开发环境的步骤：
 1. 安装 [clangd](https://clangd.llvm.org/) 和 [clangd 扩展](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)。
