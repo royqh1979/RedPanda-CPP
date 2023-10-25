@@ -1,6 +1,70 @@
-# Dependancy
- 
- Red Panda C++ need Qt 5 (>=5.12) to build.
+# General Development Notes
+
+Red Panda C++ need Qt 5 (≥ 5.12) to build.
+
+Recommended development environments:
+1. Visual Studio Code.
+   * Better performance.
+2. Qt Creator.
+   * (Almost) zero configuration.
+   * Built-in UI designer.
+   * Debugger integration with Qt.
+
+To setup development environment in Visual Studio Code:
+1. Install [clangd](https://clangd.llvm.org/) and [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd).
+2. Install [Bear](https://github.com/rizsotto/Bear).
+3. Install [CodeLLDB extension](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb).
+4. Generate compilation database:
+   ```bash
+   mkdir -p /path/to/build && cd /path/to/build
+   qmake CONFIG+=debug PREFIX=/path/to/pkg /path/to/src
+   bear -- make -j$(nproc)
+   ```
+5. Add `--compile-commands-dir=/path/to/build` to workspace-wide “Clangd: Arguments” or edit `.vscode/settings.json`:
+   ```json
+   {
+     "clangd.arguments": [
+       "--compile-commands-dir=/path/to/build"
+     ]
+   }
+   ```
+6. Set up build task in `.vscode/tasks.json`:
+   ```json
+   {
+     "version": "2.0.0",
+     "tasks": [
+       {
+         "label": "build",
+         "type": "shell",
+         "command": "cd /path/to/build && make -j$(nproc) && make install",
+         "group": {
+           "kind": "build",
+           "isDefault": true
+         }
+       }
+     ]
+   }
+   ```
+   and debug task in `.vscode/launch.json`:
+   ```json
+   {
+     "version": "0.2.0",
+     "configurations": [
+       {
+         "name": "build",
+         "type": "lldb",
+         "request": "launch",
+         "program": "/path/to/pkg/bin/RedPandaIDE",
+         "args": [],
+         "cwd": "/path/to/build",
+         "env": {
+           "QT_ASSUME_STDERR_HAS_CONSOLE": "1"
+         },
+         "preLaunchTask": "build"
+       }
+     ]
+   }
+   ```
 
 # Windows
 
@@ -53,7 +117,7 @@ Prerequisites:
    pacman -S $MINGW_PACKAGE_PREFIX-toolchain $MINGW_PACKAGE_PREFIX-qt5-static
    ```
 
-For build only:
+To build:
 
 1. In selected environment, set related variables:
    ```bash
@@ -73,11 +137,6 @@ For build only:
    mingw32-make install
    ```
 
-For development:
-
-1. Install Qt Creator (either MSYS2 edition from package `$MINGW_PACKAGE_PREFIX-qt-creator` or standalone edition from [Qt.io downloads site](https://download.qt.io/official_releases/qtcreator/)).
-2. Open `Red_Panda_CPP.pro` with Qt Creator.
-
 ## Qt.io Qt Library with MinGW Toolchain or MSVC Toolchain
 
 Prerequisites:
@@ -90,7 +149,7 @@ Prerequisites:
 2. For MSVC toolchain, install Visual Studio 2019 or later, or Visual Studio Build Tools 2019 or later, with _Desktop Development with C++_ workload.
    - In _Installation Details_ panel, under the _Desktop Development with C++_ workload, select at least one _MSVC x86/x64 build tools_ and one _Windows SDK_.
 
-For build only:
+To build:
 
 1. Launch Qt environment from Start Menu.
 2. In Qt environment, set related variables:
@@ -134,10 +193,6 @@ For build only:
    )
    windeployqt "%INSTALL_DIR%\RedPandaIDE.exe"
    ```
-
-For development:
-
-1. Open `Red_Panda_CPP.pro` with Qt Creator.
 
 ## Advanced Option: vcpkg Qt Static Library with MSVC Toolchain
 
@@ -220,9 +275,8 @@ General steps:
 - Install recent version of GCC (≥ 7) or Clang (≥ 6) that supports C++17.
 - Install Qt 5 (≥ 5.12) Base, SVG and Tools modules, including both libraries and development files.
 - Optionally install fcitx5-qt for building with static Qt library.
-- Optionally install Qt Creator for development.
 
-For build only:
+To build:
 
 1. Configure:
    ```bash
@@ -236,10 +290,6 @@ For build only:
    ```bash
    sudo make install
    ```
-
-For development:
-
-1. Open `Red_Panda_CPP.pro` with Qt Creator
 
 qmake variables:
 - `PREFIX`: default to `/usr/local`. It should be set to `/usr` or `/opt/redpanda-cpp` when packaging.

@@ -1,6 +1,70 @@
-﻿# 依赖
- 
- 小熊猫C++需要Qt 5(>=5.12)
+﻿# 通用开发说明
+
+小熊猫 C++ 需要 Qt 5（≥ 5.12）。
+
+推荐开发环境：
+1. Visual Studio Code。
+   * 性能更好。
+2. Qt Creator。
+   * （几乎）无需配置。
+   * 内建 UI 设计器。
+   * 调试器的 Qt 集成。
+
+设置 Visual Studio Code 开发环境的步骤：
+1. 安装 [clangd](https://clangd.llvm.org/) 和 [clangd 扩展](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)。
+2. 安装 [Bear](https://github.com/rizsotto/Bear)。
+3. 安装 [CodeLLDB extension](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)。
+4. 生成编译数据库：
+   ```bash
+   mkdir -p /path/to/build && cd /path/to/build
+   qmake CONFIG+=debug PREFIX=/path/to/pkg /path/to/src
+   bear -- make -j$(nproc)
+   ```
+5. 在本工作区 “Clangd: Arguments” 中添加 `--compile-commands-dir=/path/to/build` 或直接修改 `.vscode/settings.json`：
+   ```json
+   {
+     "clangd.arguments": [
+       "--compile-commands-dir=/path/to/build"
+     ]
+   }
+   ```
+6. 在 `.vscode/tasks.json` 中配置构建任务：
+   ```json
+   {
+     "version": "2.0.0",
+     "tasks": [
+       {
+         "label": "build",
+         "type": "shell",
+         "command": "cd /path/to/build && make -j$(nproc) && make install",
+         "group": {
+           "kind": "build",
+           "isDefault": true
+         }
+       }
+     ]
+   }
+   ```
+   并在 `.vscode/launch.json` 中配置调试任务：
+   ```json
+   {
+     "version": "0.2.0",
+     "configurations": [
+       {
+         "name": "build",
+         "type": "lldb",
+         "request": "launch",
+         "program": "/path/to/pkg/bin/RedPandaIDE",
+         "args": [],
+         "cwd": "/path/to/build",
+         "env": {
+           "QT_ASSUME_STDERR_HAS_CONSOLE": "1"
+         },
+         "preLaunchTask": "build"
+       }
+     ]
+   }
+   ```
 
 # Windows
 
@@ -53,7 +117,7 @@
    pacman -S $MINGW_PACKAGE_PREFIX-toolchain $MINGW_PACKAGE_PREFIX-qt5-static
    ```
 
-仅构建：
+构建：
 
 1. 在选定的环境中，设置相关变量：
    ```bash
@@ -73,11 +137,6 @@
    mingw32-make install
    ```
 
-开发：
-
-1. 安装 Qt Creator（MSYS2 `$MINGW_PACKAGE_PREFIX-qt-creator` 包或 [Qt.io 下载站点](https://download.qt.io/official_releases/qtcreator/)及[镜像站](http://mirrors.sjtug.sjtu.edu.cn/qt/official_releases/qtcreator/)的独立安装包均可）。
-2. 用 Qt Creator 打开 `Red_Panda_CPP.pro` 文件。
-
 ## Qt.io 的 Qt 库 + MinGW 工具链或 MSVC 工具链
 
 前置条件：
@@ -90,7 +149,7 @@
 2. 对于 MSVC 工具链，安装 Visual Studio 2019 或更高版本，或 “Visual Studio 构建工具 2019” 或更高版本，附带 “使用 C++ 的桌面开发” 工作负载。
    - 在 “安装详细信息” 面板，“使用 C++ 的桌面开发” 之下，至少选择一个 “MSVC x86/x64 生成工具” 和一个 Windows SDK。
 
-仅构建：
+构建：
 
 1. 从开始菜单中打开 Qt 环境。
 2. 在 Qt 环境中，设置相关变量：
@@ -134,10 +193,6 @@
    )
    windeployqt "%INSTALL_DIR%\RedPandaIDE.exe"
    ```
-
-开发：
-
-1. 用 Qt Creator 打开 `Red_Panda_CPP.pro` 文件。
 
 ## 高级选项：vcpkg 的 Qt 静态库 + MSVC 工具链
 
@@ -220,9 +275,8 @@
 - 安装支持 C++17 的 GCC（≥ 7）或 Clang（≥ 6）。
 - 安装 Qt 5（≥ 5.12）Base、SVG、Tools 模块，包括库和开发文件。
 - 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt。
-- 根据需要，安装 Qt Creator 用于开发。
 
-仅构建：
+构建：
 
 1. 配置：
    ```bash
@@ -236,10 +290,6 @@
    ```bash
    sudo make install
    ```
-
-开发：
-
-1. 使用 Qt Creator 打开 `Red_Panda_CPP.pro` 文件。
 
 qmake 变量:
 - `PREFIX`：默认值是 `/usr/local`。打包时应该定义为 `/usr` 或 `/opt/redpanda-cpp`。
