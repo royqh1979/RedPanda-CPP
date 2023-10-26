@@ -5003,6 +5003,13 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
                     }
 
                 }
+//                qDebug()<<"baseType:"<<result->baseType;
+//                if (result->baseStatement)
+//                    qDebug()<<"baseStatement"<<result->baseStatement->fullName;
+//                if (result->typeStatement)
+//                    qDebug()<<"typeStatement"<<result->typeStatement->fullName;
+//                if (result->effectiveTypeStatement)
+//                    qDebug()<<"typeStatement"<<result->effectiveTypeStatement->fullName;
                 result->kind = EvalStatementKind::Variable;
             } else
                 result = PEvalStatement();
@@ -5280,8 +5287,20 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 case StatementKind::skTypedef:
                     result = doCreateEvalType(fileName,statement);
                     break;
-                case StatementKind::skFunction:
+                case StatementKind::skFunction: {
+                    if (statement->type=="auto") {
+                        PStatement scopeStatement = statement->parentScope.lock();
+                        if (scopeStatement) {
+                            StatementMap children = mStatementList.childrenStatements(scopeStatement);
+                            QList<PStatement> lstFuncs = children.values(statement->command);
+                            for (const PStatement& func:lstFuncs) {
+                                if (func->type!="auto")
+                                    statement=func;
+                            }
+                        }
+                    }
                     result = doCreateEvalFunction(fileName,statement);
+                }
                     break;
                 case StatementKind::skPreprocessor:
                     // qDebug()<<"before"<<phraseExpression;
