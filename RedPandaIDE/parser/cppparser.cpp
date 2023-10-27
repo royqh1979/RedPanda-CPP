@@ -29,6 +29,15 @@
 
 static QAtomicInt cppParserCount(0);
 
+static QString calcFullname(const QString& parentName, const QString& name) {
+    QString s;
+    s.reserve(parentName.size()+2+name.size());
+    s+= parentName;
+    s+= "::";
+    s+= name;
+    return s;
+}
+
 CppParser::CppParser(QObject *parent) : QObject(parent),
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mMutex()
@@ -1404,8 +1413,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
     result->noNameArgs.squeeze();
     result->value.squeeze();
     result->type.squeeze();
-    //result->fullName.squeeze();
-    //result->command.squeeze();
     mStatementList.add(result);
     if (result->kind == StatementKind::skNamespace) {
         PStatementList namespaceList = mNamespaces.value(result->fullName,PStatementList());
@@ -2487,9 +2494,7 @@ QString CppParser::getFullStatementName(const QString &command, const PStatement
     while (scopeStatement && !isNamedScope(scopeStatement->kind))
         scopeStatement = scopeStatement->parentScope.lock();
     if (scopeStatement) {
-        QString s = scopeStatement->fullName + "::" + command;
-        s.squeeze();
-        return s;
+        return calcFullname(scopeStatement->fullName, command);
     } else
         return command;
 }
@@ -4041,7 +4046,8 @@ void CppParser::handleUsing()
     }
 
     if (scopeStatement) {
-        QString fullName = scopeStatement->fullName + "::" + usingName;
+        QString fullName = calcFullname(scopeStatement->fullName, usingName);
+
         if (!mNamespaces.contains(fullName)) {
             fullName = usingName;
         }
