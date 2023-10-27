@@ -50,7 +50,6 @@ struct Define {
     QString value;
     QString filename;
     bool hardCoded;// if true, don't free memory (points to hard defines)
-    QStringList argList; // args list to format values
     QList<bool> argUsed;
     int varArgIndex;
     QString formatValue; // format template to format values
@@ -145,8 +144,8 @@ enum class EvalStatementKind {
 };
 
 struct StatementMatchPosition{
-    int start;
-    int end;
+    uint16_t start;
+    uint16_t end;
 };
 
 enum StatementProperty {
@@ -201,10 +200,10 @@ struct Statement {
 
     // fields for code completion
     int usageCount; //Usage Count
-    int matchPosTotal; // total of matched positions
-    int matchPosSpan; // distance between the first match pos and the last match pos;
-    int firstMatchLength; // length of first match;
-    int caseMatched; // if match with case
+    uint16_t matchPosTotal; // total of matched positions
+    uint16_t matchPosSpan; // distance between the first match pos and the last match pos;
+    uint16_t firstMatchLength; // length of first match;
+    uint16_t caseMatched; // if match with case
     QList<PStatementMathPosition> matchPositions;
 
     // definiton line/filename is valid
