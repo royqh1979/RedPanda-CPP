@@ -296,7 +296,8 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
             && (fileName == statement->fileName))
         return;
     mAddedStatements.insert(statement->command);
-    mFullCompletionStatementList.append(statement);
+    if (statement->kind == StatementKind::skUserCodeSnippet || !statement->fullName.contains("<"))
+        mFullCompletionStatementList.append(statement);
 }
 
 static bool nameComparator(PStatement statement1,PStatement statement2) {
