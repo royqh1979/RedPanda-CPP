@@ -36,6 +36,7 @@ public:
     const StatementMap& childrenStatements(const PStatement& statement = PStatement()) const;
     const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const;
     void clear();
+    int count() const { return mCount; }
 #ifdef QT_DEBUG
     void dump(const QString& logFile);
     void dumpAll(const QString& logFile);

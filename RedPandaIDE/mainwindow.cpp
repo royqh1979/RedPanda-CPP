@@ -1420,7 +1420,7 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
         int col = e->charToColumn(e->caretY(),e->caretX());
         QString msg;
         if (e->selAvail()) {
-            msg = tr("Line: %1 Col: %2 (%3 chars) Lines: %4")
+            msg = tr("Line: %1 Col: %2 Sel:%3 Lines: %4")
                 .arg(e->caretY())
                 .arg(col)
                 .arg(e->selText().length())

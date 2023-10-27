@@ -5109,7 +5109,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Line: %1 Col: %2 (%3 chars) Lines: %4</source>
+        <source>Line: %1 Col: %2 Sel:%3 Lines: %4</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
