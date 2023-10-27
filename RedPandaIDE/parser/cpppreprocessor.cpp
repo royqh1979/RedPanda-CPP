@@ -131,6 +131,9 @@ void CppPreprocessor::getDefineParts(const QString &input, QString &name, QStrin
         args = "";
     }
     value = removeGCCAttributes(s.mid(i+1).trimmed());
+    name.squeeze();
+    value.squeeze();
+    args.squeeze();
 }
 
 void CppPreprocessor::addHardDefineByLine(const QString &line)
@@ -942,9 +945,9 @@ void CppPreprocessor::parseArgs(PDefine define)
 
     if(args=="")
         return ;
-    define->argList = args.split(',');
-    for (int i=0;i<define->argList.size();i++) {
-        define->argList[i]=define->argList[i].trimmed();
+    QStringList argList = args.split(',');
+    for (int i=0;i<argList.size();i++) {
+        argList[i]=argList[i].trimmed();
         define->argUsed.append(false);
     }
     QList<PDefineArgToken> tokens = tokenizeValue(define->value);
@@ -956,10 +959,10 @@ void CppPreprocessor::parseArgs(PDefine define)
         switch(token->type) {
         case DefineArgTokenType::Identifier:
             if (token->value == "__VA_ARGS__") {
-                index = define->argList.indexOf("...");
+                index = argList.indexOf("...");
                 define->varArgIndex = index;
             } else {
-                index = define->argList.indexOf(token->value);
+                index = argList.indexOf(token->value);
             }
             if (index>=0) {
                 define->argUsed[index] = true;
@@ -986,6 +989,7 @@ void CppPreprocessor::parseArgs(PDefine define)
         lastTokenType = token->type;
     }
     define->formatValue = formatStr;
+    define->formatValue.squeeze();
 }
 
 QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
@@ -1456,9 +1460,9 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
 //        args = args.mid(1,args.length()-2);
 //    }
 
-    if (define->argList.length()==0) {
+    if (define->argUsed.length()==0) {
         // do nothing
-    } else if (define->argList.length()==1) {
+    } else if (define->argUsed.length()==1) {
         if (define->argUsed[0])
             result=result.arg(args);
     } else {
@@ -1504,25 +1508,25 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
         argValues.append(args.mid(lastSplit,i-lastSplit));
 #ifdef QT_DEBUG
         if (
-                (define->varArgIndex==-1 && argValues.length() != define->argList.length())
-                || (define->varArgIndex!=-1 && argValues.length() < define->argList.length()-1)
+                (define->varArgIndex==-1 && argValues.length() != define->argUsed.length())
+                || (define->varArgIndex!=-1 && argValues.length() < define->argUsed.length()-1)
                 ) {
             qDebug()<<"*** Expand Macro error ***";
             qDebug()<<this->mFileName<<":"<<this->mIndex;
-            qDebug()<<"Macro: "<<define->name<<define->argList;
+            qDebug()<<"Macro: "<<define->name<<define->args;
             qDebug()<<"Actual param: "<<args;
             qDebug()<<"Params splitted: "<<argValues;
             qDebug()<<"**********";
         }
 #endif
-        if (argValues.length() >= define->argList.length()
+        if (argValues.length() >= define->argUsed.length()
                 && argValues.length()>0) {
             QStringList varArgs;
             for (int i=0;i<argValues.length();i++) {
                 if (define->varArgIndex != -1
                      && i >= define->varArgIndex ) {
                     varArgs.append(argValues[i].trimmed());
-                } else if (i<define->argList.length()
+                } else if (i<define->argUsed.length()
                             && define->argUsed[i]) {
                     QString argValue = argValues[i];
                     result=result.arg(argValue.trimmed());

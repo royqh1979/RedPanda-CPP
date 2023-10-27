@@ -1337,6 +1337,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
         newType += newCommand.front();
         newCommand.remove(0,1); // remove first
     }
+    newCommand.squeeze();
 //    if (newCommand.startsWith("::") && parent && kind!=StatementKind::skBlock ) {
 //        qDebug()<<command<<fileName<<line<<kind<<parent->fullName;
 //    }
@@ -1398,6 +1399,13 @@ PStatement CppParser::addStatement(const PStatement& parent,
     else
         result->fullName =  getFullStatementName(newCommand, parent);
     result->usageCount = -1;
+
+    result->args.squeeze();
+    result->noNameArgs.squeeze();
+    result->value.squeeze();
+    result->type.squeeze();
+    //result->fullName.squeeze();
+    //result->command.squeeze();
     mStatementList.add(result);
     if (result->kind == StatementKind::skNamespace) {
         PStatementList namespaceList = mNamespaces.value(result->fullName,PStatementList());
@@ -1417,6 +1425,8 @@ PStatement CppParser::addStatement(const PStatement& parent,
 //    if (result->command=="sync_with_stdio") {
 //        qDebug()<<result->fullName<<result->isStatic()<<(int)result->accessibility;
 //    }
+
+
     return result;
 }
 
@@ -2476,9 +2486,11 @@ QString CppParser::getFullStatementName(const QString &command, const PStatement
     PStatement scopeStatement=parent;
     while (scopeStatement && !isNamedScope(scopeStatement->kind))
         scopeStatement = scopeStatement->parentScope.lock();
-    if (scopeStatement)
-        return scopeStatement->fullName + "::" + command;
-    else
+    if (scopeStatement) {
+        QString s = scopeStatement->fullName + "::" + command;
+        s.squeeze();
+        return s;
+    } else
         return command;
 }
 
