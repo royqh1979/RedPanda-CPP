@@ -778,8 +778,17 @@ void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, 
     }
 }
 
-void CppPreprocessor::openInclude(const QString &fileName)
+void CppPreprocessor::openInclude(QString fileName)
 {
+    fileName.squeeze();
+
+    PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
+    if (fileIncludes) {
+        fileName = fileIncludes->baseFile;
+    } else {
+        fileName.squeeze();
+    }
+
     if (mIncludes.size()>0) {
         PParsedFile topFile = mIncludes.front();
         if (topFile->fileIncludes->includeFiles.contains(fileName)) {
@@ -826,7 +835,6 @@ void CppPreprocessor::openInclude(const QString &fileName)
         mCurrentIncludes->baseFile = fileName;
         mIncludesList.insert(fileName,mCurrentIncludes);
     }
-
     parsedFile->fileIncludes = mCurrentIncludes;
 
     // Don't parse stuff we have already parsed

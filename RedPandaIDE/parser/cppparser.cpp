@@ -3454,6 +3454,12 @@ void CppParser::handlePreprocessor()
         if (delimPos>=0) {
 //            qDebug()<<mCurrentScope.size()<<mCurrentFile<<mTokenizer[mIndex]->line<<s.mid(0,delimPos).trimmed();
             mCurrentFile = s.mid(0,delimPos).trimmed();
+            PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
+            if (fileIncludes) {
+                mCurrentFile = fileIncludes->baseFile;
+            } else {
+                mCurrentFile.squeeze();
+            }
             mIsSystemHeader = isSystemHeaderFile(mCurrentFile) || isProjectHeaderFile(mCurrentFile);
             mIsProjectFile = mProjectFiles.contains(mCurrentFile);
             mIsHeader = isHFile(mCurrentFile);

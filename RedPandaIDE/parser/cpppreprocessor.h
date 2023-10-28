@@ -134,7 +134,7 @@ private:
     PParsedFile getInclude(int index) const {
         return mIncludes[index];
     }
-    void openInclude(const QString& fileName);
+    void openInclude(QString fileName);
     void closeInclude();
 
     // branch stuff
