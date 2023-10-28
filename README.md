@@ -1,4 +1,21 @@
 # RedPanda C++ 
+<div align="center">
+      <img src="https://forthebadge.com/images/badges/built-with-love.svg" />
+      <img src="https://forthebadge.com/images/badges/uses-brains.svg" />
+      <img src="https://forthebadge.com/images/badges/powered-by-responsibility.svg" />
+      <br>
+      <img src="https://img.shields.io/github/repo-size/royqh1979/RedPanda-CPP?style=for-the-badge" />
+      <img src="https://img.shields.io/github/issues/royqh1979/RedPanda-CPP?style=for-the-badge" />
+      <img src="https://img.shields.io/github/issues-raw/royqh1979/RedPanda-CPP?style=for-the-badge" />
+      <img src="https://img.shields.io/github/forks/royqh1979/RedPanda-CPP?style=for-the-badge" />
+      <img src="https://img.shields.io/github/issues-pr-closed/royqh1979/RedPanda-CPP?style=for-the-badge" />
+      <br>
+      <img src="https://img.shields.io/github/stars/royqh1979/RedPanda-CPP?style=for-the-badge" />
+      <img src="https://img.shields.io/github/contributors/royqh1979/RedPanda-CPP?style=for-the-badge" />
+      <img src="https://img.shields.io/github/issues-pr-closed/royqh1979/RedPanda-CPP?style=for-the-badge" />
+      <img src="https://img.shields.io/github/last-commit/royqh1979/RedPanda-CPP?style=for-the-badge" />
+ </div>
+ 
 Red Panda C++ (Old name: Red Panda Dev-C++ 7) is an fast ,lightweight, open source, and cross platform C/C++/GNU Assembly IDE.
 
 Simplified Chinese Website: [http://royqh.net/redpandacpp](http://royqh.net/redpandacpp)
