@@ -22,6 +22,8 @@ Red Panda C++ Version 2.26
   - fix: If the integrated gcc compiler is add to path, auto find compilers will find in twice. (Windows)
   - enhancement: When induce type info for return value, try to select the overloaded one that doesn't have an "auto" type.
   - enhancement: Hide symbols that contains "<>" in code suggestions.
+  - enhancement: Slightly reduce memory usage.
+  - change: In Options -> Language -> Generate Assembly, option "Don't generate SEH directives" default to True.
 
 Red Panda C++ Version 2.25
 

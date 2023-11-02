@@ -6381,7 +6381,7 @@ void Settings::Languages::doSave()
 void Settings::Languages::doLoad()
 {
     mNoDebugDirectivesWhenGenerateASM = boolValue("no_debug_directives_when_generate_asm",true);
-    mNoSEHDirectivesWhenGenerateASM = boolValue("no_seh_directives_when_generate_asm",false);
+    mNoSEHDirectivesWhenGenerateASM = boolValue("no_seh_directives_when_generate_asm",true);
     mX86DialectOfASMGenerated = (X86ASMDialect)intValue("x86_dialect_of_asm_generated",(int)X86ASMDialect::ATT);
 
 
