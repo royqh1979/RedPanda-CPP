@@ -4694,7 +4694,7 @@ void Settings::CodeCompletion::doLoad()
     mShowCodeIns = boolValue("show_code_ins",true);
     mMinCharRequired = intValue("min_char_required",1);
     mHideSymbolsStartsWithTwoUnderLine = boolValue("hide_symbols_start_with_two_underline", true);
-    mHideSymbolsStartsWithUnderLine = boolValue("hide_symbols_start_with_underline", false);
+    mHideSymbolsStartsWithUnderLine = boolValue("hide_symbols_start_with_underline", true);
 
     bool shouldShare= true;
 //    bool doClear = false;

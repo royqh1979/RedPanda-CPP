@@ -24,6 +24,7 @@ Red Panda C++ Version 2.26
   - enhancement: Hide symbols that contains "<>" in code suggestions.
   - enhancement: Slightly reduce memory usage.
   - change: In Options -> Language -> Generate Assembly, option "Don't generate SEH directives" default to True.
+  - change: In Options —> Editor -> Code Suggestion, option "Hide symbols starting with underscore" default to True.
 
 Red Panda C++ Version 2.25
 
