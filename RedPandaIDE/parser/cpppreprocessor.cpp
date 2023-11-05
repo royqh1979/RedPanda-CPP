@@ -857,9 +857,11 @@ void CppPreprocessor::openInclude(QString fileName)
         //add defines of already parsed including headers;
         addDefinesInFile(fileName);
         PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
-        for (PParsedFile& file:mIncludes) {
-            foreach (const QString& incFile,fileIncludes->includeFiles.keys()) {
-                file->fileIncludes->includeFiles.insert(incFile,false);
+        if (fileIncludes) {
+            for (PParsedFile& file:mIncludes) {
+                foreach (const QString& incFile,fileIncludes->includeFiles.keys()) {
+                    file->fileIncludes->includeFiles.insert(incFile,false);
+                }
             }
         }
     }
@@ -942,8 +944,10 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
     }
 
     PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
-    foreach (const QString& file, fileIncludes->includeFiles.keys()) {
-        addDefinesInFile(file);
+    if (fileIncludes) {
+        foreach (const QString& file, fileIncludes->includeFiles.keys()) {
+            addDefinesInFile(file);
+        }
     }
 }
 
@@ -2021,29 +2025,4 @@ const QList<QString> &CppPreprocessor::includePathList() const
 const DefineMap &CppPreprocessor::hardDefines() const
 {
     return mHardDefines;
-}
-
-const QSet<QString> &CppPreprocessor::projectIncludePaths()
-{
-    return mProjectIncludePaths;
-}
-
-const QSet<QString> &CppPreprocessor::includePaths()
-{
-    return mIncludePaths;
-}
-
-QSet<QString> &CppPreprocessor::scannedFiles()
-{
-    return mScannedFiles;
-}
-
-QHash<QString, PFileIncludes> &CppPreprocessor::includesList()
-{
-    return mIncludesList;
-}
-
-const QHash<QString, PFileIncludes> &CppPreprocessor::includesList() const
-{
-    return mIncludesList;
 }

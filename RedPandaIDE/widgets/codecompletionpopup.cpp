@@ -98,15 +98,15 @@ void CodeCompletionPopup::prepareSearch(
         getCompletionListForComplexKeyword(preWord);
         break;
     case CodeCompletionType::Types:
-        mIncludedFiles = mParser->getFileIncludes(filename);
+        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForTypes(preWord,filename,line);
         break;
     case CodeCompletionType::FunctionWithoutDefinition:
-        mIncludedFiles = mParser->getFileIncludes(filename);
+        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionForFunctionWithoutDefinition(preWord, ownerExpression,memberOperator,memberExpression, filename,line);
         break;
     case CodeCompletionType::Namespaces:
-        mIncludedFiles = mParser->getFileIncludes(filename);
+        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForNamespaces(preWord,filename,line);
         break;
     case CodeCompletionType::KeywordsOnly:
@@ -114,7 +114,7 @@ void CodeCompletionPopup::prepareSearch(
         getKeywordCompletionFor(customKeywords);
         break;
     default:
-        mIncludedFiles = mParser->getFileIncludes(filename);
+        mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
     }
     setCursor(oldCursor);

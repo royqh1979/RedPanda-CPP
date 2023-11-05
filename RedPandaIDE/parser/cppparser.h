@@ -98,7 +98,7 @@ public:
     bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
     QStringList getClassesList();
     QStringList getFileDirectIncludes(const QString& filename);
-    QSet<QString> getFileIncludes(const QString& filename);
+    QSet<QString> getIncludedFiles(const QString& filename);
     QSet<QString> getFileUsings(const QString& filename);
 
     QString getHeaderFileName(const QString& relativeTo, const QString& headerName, bool fromNext=false);// both
@@ -116,7 +116,7 @@ public:
     bool parsing() const;
     void resetParser();
     void unFreeze(); // UnFree/UnLock (reparse while searching)
-    QSet<QString> scannedFiles();
+    bool fileScanned(const QString& fileName);
 
     bool isFileParsed(const QString& filename);
 

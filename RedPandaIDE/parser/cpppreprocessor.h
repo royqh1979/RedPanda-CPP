@@ -84,15 +84,29 @@ public:
         return mResult;
     };
 
-    QHash<QString, PFileIncludes> &includesList();
+    PFileIncludes findFileIncludes(const QString& fileName) const {
+        return mIncludesList.value(fileName);
+    }
 
-    const QHash<QString, PFileIncludes> &includesList() const;
+    void removeFileIncludes(const QString& fileName) {
+        mIncludesList.remove(fileName);
+    }
 
-    QSet<QString> &scannedFiles();
+    bool fileScanned(const QString& fileName) const {
+        return mScannedFiles.contains(fileName);
+    }
 
-    const QSet<QString> &includePaths();
+    const QSet<QString>& includePaths() const {
+        return mIncludePaths;
+    }
 
-    const QSet<QString> &projectIncludePaths();
+    const QSet<QString>& scannedFiles() const {
+        return mScannedFiles;
+    }
+
+    const QSet<QString> &projectIncludePaths() {
+        return mProjectIncludePaths;
+    }
 
     const DefineMap &hardDefines() const;
 

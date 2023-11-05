@@ -187,7 +187,7 @@ PStatement CppParser::findScopeStatement(const QString &filename, int line)
 
 PStatement CppParser::doFindScopeStatement(const QString &filename, int line) const
 {
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename);
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(filename);
     if (!fileIncludes)
         return PStatement();
 
@@ -197,9 +197,9 @@ PStatement CppParser::doFindScopeStatement(const QString &filename, int line) co
 PFileIncludes CppParser::findFileIncludes(const QString &filename, bool deleteIt)
 {
     QMutexLocker locker(&mMutex);
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(filename);
     if (deleteIt && fileIncludes)
-        mPreprocessor.includesList().remove(filename);
+        mPreprocessor.removeFileIncludes(filename);
     return fileIncludes;
 }
 QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QString &phrase, const PStatement& currentScope)
@@ -221,7 +221,7 @@ QString CppParser::findTemplateParamOf(const QString &fileName, const QString &p
 PStatement CppParser::findFunctionAt(const QString &fileName, int line)
 {
     QMutexLocker locker(&mMutex);
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(fileName);
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(fileName);
     if (!fileIncludes)
         return PStatement();
     for (PStatement& statement : fileIncludes->statements) {
@@ -775,7 +775,7 @@ QStringList CppParser::getFileDirectIncludes(const QString &filename)
         return QStringList();
     if (filename.isEmpty())
         return QStringList();
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(filename);
 
     if (fileIncludes) {
         return fileIncludes->directIncludes;
@@ -784,7 +784,7 @@ QStringList CppParser::getFileDirectIncludes(const QString &filename)
 
 }
 
-QSet<QString> CppParser::getFileIncludes(const QString &filename)
+QSet<QString> CppParser::getIncludedFiles(const QString &filename)
 {
     QMutexLocker locker(&mMutex);
     QSet<QString> list;
@@ -793,7 +793,7 @@ QSet<QString> CppParser::getFileIncludes(const QString &filename)
     if (filename.isEmpty())
         return list;
     list.insert(filename);
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(filename,PFileIncludes());
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(filename);
 
     if (fileIncludes) {
         foreach (const QString& file, fileIncludes->includeFiles.keys()) {
@@ -816,13 +816,13 @@ QSet<QString> CppParser::internalGetFileUsings(const QString &filename) const
         return result;
 //    if (mParsing)
 //        return result;
-    PFileIncludes fileIncludes= mPreprocessor.includesList().value(filename,PFileIncludes());
+    PFileIncludes fileIncludes= mPreprocessor.findFileIncludes(filename);
     if (fileIncludes) {
         foreach (const QString& usingName, fileIncludes->usings) {
             result.insert(usingName);
         }
         foreach (const QString& subFile,fileIncludes->includeFiles.keys()){
-            PFileIncludes subIncludes = mPreprocessor.includesList().value(subFile,PFileIncludes());
+            PFileIncludes subIncludes = mPreprocessor.findFileIncludes(subFile);
             if (subIncludes) {
                 foreach (const QString& usingName, subIncludes->usings) {
                     result.insert(usingName);
@@ -872,7 +872,7 @@ bool CppParser::isLineVisible(const QString &fileName, int line)
     if (mParsing) {
         return true;
     }
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(fileName);
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(fileName);
     if (!fileIncludes)
         return true;
     return fileIncludes->isLineVisible(line);
@@ -952,7 +952,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
                 emit onEndParsing(mFilesScannedCount,0);
         });
         QString fName = fileName;
-        if (onlyIfNotParsed && mPreprocessor.scannedFiles().contains(fName))
+        if (onlyIfNotParsed && mPreprocessor.fileScanned(fName))
             return;
 
         if (inProject) {
@@ -966,7 +966,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
             foreach (const QString& file,files) {
                 mFilesScannedCount++;
                 emit onProgress(file,mFilesToScanCount,mFilesScannedCount);
-                if (!mPreprocessor.scannedFiles().contains(file)) {
+                if (!mPreprocessor.fileScanned(file)) {
                     internalParse(file);
                 }
             }
@@ -1022,7 +1022,7 @@ void CppParser::parseFileList(bool updateView)
         foreach (const QString& file, files) {
             mFilesScannedCount++;
             emit onProgress(mCurrentFile,mFilesToScanCount,mFilesScannedCount);
-            if (!mPreprocessor.scannedFiles().contains(file)) {
+            if (!mPreprocessor.fileScanned(file)) {
                 internalParse(file);
             }
         }
@@ -1119,14 +1119,17 @@ void CppParser::unFreeze()
     mLockCount--;
 }
 
-QSet<QString> CppParser::scannedFiles()
+bool CppParser::fileScanned(const QString &fileName)
 {
-    return mPreprocessor.scannedFiles();
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return false;
+    return mPreprocessor.fileScanned(fileName);
 }
 
 bool CppParser::isFileParsed(const QString &filename)
 {
-    return mPreprocessor.scannedFiles().contains(filename);
+    return mPreprocessor.fileScanned(filename);
 }
 
 QString CppParser::getScopePrefix(const PStatement& statement) const{
@@ -1280,7 +1283,7 @@ void CppParser::addProjectFile(const QString &fileName, bool needScan)
         mProjectFiles.insert(fileName);
 
     // Only parse given file
-    if (needScan && !mPreprocessor.scannedFiles().contains(fileName)) {
+    if (needScan && !mPreprocessor.fileScanned(fileName)) {
         mFilesToScan.insert(fileName);
     }
 }
@@ -1362,7 +1365,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
             if (oldStatement  && !oldStatement->hasDefinition()) {
                 oldStatement->setHasDefinition(true);
                 if (oldStatement->fileName!=fileName) {
-                    PFileIncludes fileIncludes=mPreprocessor.includesList().value(fileName);
+                    PFileIncludes fileIncludes=mPreprocessor.findFileIncludes(fileName);
                     if (fileIncludes) {
                         fileIncludes->statements.insert(oldStatement->fullName,
                                                          oldStatement);
@@ -1424,7 +1427,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
     }
 
     if (result->kind!= StatementKind::skBlock) {
-        PFileIncludes fileIncludes = mPreprocessor.includesList().value(fileName);
+        PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(fileName);
         if (fileIncludes) {
             fileIncludes->statements.insert(result->fullName,result);
         }
@@ -1663,7 +1666,7 @@ void CppParser::addSoloScopeLevel(PStatement& statement, int line, bool shouldRe
 
     mCurrentScope.append(statement);
 
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(mCurrentFile);
 
     if (fileIncludes) {
         fileIncludes->scopes.addScope(line,statement);
@@ -1695,17 +1698,17 @@ void CppParser::removeScopeLevel(int line)
 //        qDebug()<<"--remove scope"<<mCurrentFile<<line<<mCurrentClassScope.count();
 #endif
     PStatement currentScope = getCurrentScope();
-    PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(mCurrentFile);
     if (currentScope) {
         if (currentScope->kind == StatementKind::skBlock) {
             if (currentScope->children.isEmpty()) {
                 // remove no children block
-                if (fileIncludes) {
+                if (fileIncludes)
                     fileIncludes->scopes.removeLastScope();
-                }
                 mStatementList.deleteStatement(currentScope);
             } else {
-                fileIncludes->statements.insert(currentScope->fullName,currentScope);
+                if (fileIncludes)
+                    fileIncludes->statements.insert(currentScope->fullName,currentScope);
             }
         } else if (currentScope->kind == StatementKind::skClass) {
             mIndex=indexOfNextSemicolon(mIndex);
@@ -1742,13 +1745,11 @@ void CppParser::internalClear()
 QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
 {
     QStringList result;
-    QSet<QString> saveScannedFiles;
-
-    saveScannedFiles=mPreprocessor.scannedFiles();
+    QSet<QString> saveScannedFiles{mPreprocessor.scannedFiles()};
 
     //rebuild file include relations
     foreach(const QString& file, files) {
-        if (mPreprocessor.scannedFiles().contains(file))
+        if (mPreprocessor.fileScanned(file))
             continue;
         //already removed in interalInvalidateFiles
         //mPreprocessor.removeScannedFile(file);
@@ -1762,12 +1763,14 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
     while (!fileSet.isEmpty()) {
         bool found=false;
         foreach (const QString& file,fileSet) {
-            PFileIncludes fileIncludes = mPreprocessor.includesList().value(file);
+            PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(file);
             bool hasInclude=false;
-            foreach(const QString& inc,fileIncludes->includeFiles.keys()) {
-                if (fileSet.contains(inc)) {
-                    hasInclude=true;
-                    break;
+            if (fileIncludes) {
+                foreach(const QString& inc,fileIncludes->includeFiles.keys()) {
+                    if (fileSet.contains(inc)) {
+                        hasInclude=true;
+                        break;
+                    }
                 }
             }
             if (!hasInclude) {
@@ -1784,7 +1787,7 @@ QStringList CppParser::sortFilesByIncludeRelations(const QSet<QString> &files)
             }
         }
     }
-    QSet<QString> newScannedFiles = mPreprocessor.scannedFiles();
+    QSet<QString> newScannedFiles{mPreprocessor.scannedFiles()};
     foreach(const QString& file, newScannedFiles) {
         if (!saveScannedFiles.contains(file))
             mPreprocessor.removeScannedFile(file);
@@ -3454,7 +3457,7 @@ void CppParser::handlePreprocessor()
         if (delimPos>=0) {
 //            qDebug()<<mCurrentScope.size()<<mCurrentFile<<mTokenizer[mIndex]->line<<s.mid(0,delimPos).trimmed();
             mCurrentFile = s.mid(0,delimPos).trimmed();
-            PFileIncludes fileIncludes = mPreprocessor.includesList().value(mCurrentFile);
+            PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(mCurrentFile);
             if (fileIncludes) {
                 mCurrentFile = fileIncludes->baseFile;
             } else {
@@ -4061,7 +4064,7 @@ void CppParser::handleUsing()
             scopeStatement->usingList.insert(fullName);
         }
     } else {
-        PFileIncludes fileInfo = mPreprocessor.includesList().value(mCurrentFile);
+        PFileIncludes fileInfo = mPreprocessor.findFileIncludes(mCurrentFile);
         if (!fileInfo)
             return;
         if (mNamespaces.contains(usingName)) {
@@ -4538,7 +4541,7 @@ PStatement CppParser::findMacro(const QString &phrase, const QString &fileName) 
     if (statementMap.isEmpty())
         return PStatement();
     StatementList statements = statementMap.values(phrase);
-    PFileIncludes includes = mPreprocessor.includesList().value(fileName,PFileIncludes());
+    PFileIncludes includes = mPreprocessor.findFileIncludes(fileName);
     foreach (const PStatement& s, statements) {
         if (s->kind == StatementKind::skPreprocessor) {
             if (includes && !includes->includeFiles.contains(s->fileName)
@@ -4602,7 +4605,7 @@ PStatement CppParser::findMemberOfStatement(const QString& filename,
         return statementMap.value(s,PStatement());
     } else {
         QList<PStatement> stats = statementMap.values(s);
-        PFileIncludes fileIncludes =  mPreprocessor.includesList().value(filename,PFileIncludes());
+        PFileIncludes fileIncludes =  mPreprocessor.findFileIncludes(filename);
         foreach(const PStatement &s,stats) {
             if (s->line==-1) {
                 return s; // hard defines
@@ -5952,7 +5955,7 @@ QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
     QSet<QString> result;
     result.insert(fileName);
     foreach (const QString& file, mProjectFiles) {
-        PFileIncludes fileIncludes = mPreprocessor.includesList().value(file,PFileIncludes());
+        PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(file);
         if (fileIncludes && fileIncludes->includeFiles.contains(fileName)) {
             result.insert(file);
         }

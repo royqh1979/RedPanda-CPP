@@ -235,8 +235,8 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
         writeln(file);
         QString objStr=genMakePath2(shortFileName);
         // if we have scanned it, use scanned info
-        if (parser && parser->scannedFiles().contains(unit->fileName())) {
-            QSet<QString> fileIncludes = parser->getFileIncludes(unit->fileName());
+        if (parser && parser->fileScanned(unit->fileName())) {
+            QSet<QString> fileIncludes = parser->getIncludedFiles(unit->fileName());
             foreach(const PProjectUnit &unit2, projectUnits) {
                 if (unit2==unit)
                     continue;
