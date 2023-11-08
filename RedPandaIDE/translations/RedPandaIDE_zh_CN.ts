@@ -4967,7 +4967,7 @@ Are you really want to continue?</oldsource>
         <location filename="../mainwindow.cpp" line="2735"/>
         <source>Remove Problem Case</source>
         <oldsource>Remove Problem Set</oldsource>
-        <translation>删除试题集</translation>
+        <translation type="unfinished">删除试题案例</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1645"/>

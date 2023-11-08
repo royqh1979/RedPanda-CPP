@@ -27,6 +27,7 @@ Red Panda C++ Version 2.26
   - change: In Options —> Editor -> Code Suggestion, option "Hide symbols starting with underscore" default to True.
   - fix: Crash if include a non-exist header file in the source.
   - fix: Line numbers for problem case input/output/expected texteditors are not vertically centered.
+  - enhancement: E-ink color scheme.
 
 Red Panda C++ Version 2.25
 
