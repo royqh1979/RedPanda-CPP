@@ -3,6 +3,7 @@
 ##################################
 
 # script run in docker
+/packages/alpine/* eol=lf
 /packages/appimage/01-in-docker.sh eol=lf
 /packages/archlinux/* eol=lf
 /packages/debian/01-in-docker.sh eol=lf
