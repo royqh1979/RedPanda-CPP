@@ -172,24 +172,7 @@ jobs:
 
       - name: Build
         run: |
-          cat <<EOF >$GITHUB_WORKSPACE/archlinux-in-docker.sh
-          #!/bin/bash
-          set -euxo pipefail
-
-          pacman -Syu --noconfirm --needed base-devel
-          cd /src/packages/archlinux
-          bash -c 'source PKGBUILD && pacman -S --noconfirm --needed --asdeps "\${makedepends[@]}" "\${depends[@]}"'  # heredoc: escape variable expansion
-
-          useradd -m builduser
-          chmod o+w .
-          su builduser -c 'makepkg'
-
-          mkdir -p /src/dist
-          mv *.pkg.tar.zst /src/dist/
-          EOF
-
-          chmod +x $GITHUB_WORKSPACE/archlinux-in-docker.sh
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/archlinux-in-docker.sh
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/packages/archlinux/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
