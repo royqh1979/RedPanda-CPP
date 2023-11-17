@@ -377,61 +377,24 @@ Extra requirements for Windows host:
    RedPandaIDE
    ```
 
-## Arch Linux
+## Alpine Linux, Arch Linux, Fedora, openSUSE
 
-A reference PKGBUILD is available at `packages/archlinux`. Build RedPanda C++ with [makepkg](https://wiki.archlinux.org/title/Makepkg) and then install.
-
-Enter `RedPandaIDE` to launch RedPanda C++.
-
-Note that makepkg checks out HEAD of the repo, so any change should be committed before building.
-
-## Fedora
-
-1. Install dependency:
-   ```bash
-   sudo dnf install \
-     gcc gcc-c++ rpm-build rpmdevtools git \
-     glibc-static libstdc++-static libasan \
-     qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel
-
-   rpmdev-setuptree  # first time only
-   ```
-2. Build the package:
-   ```bash
-   ./packages/fedora/buildrpm.sh
-   ```
+1. Setup build environment (documentation for [Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers), [Arch](https://wiki.archlinux.org/title/Makepkg), [RPM](https://rpm-packaging-guide.github.io/#prerequisites)).
+2. Call build script:
+   - Alpine Linux: `./packages/alpine/buildapk.sh`
+   - Arch Linux: `./packages/archlinux/buildpkg.sh`
+   - Fedora: `./packages/fedora/buildrpm.sh`
+   - openSUSE: `./packages/opensuse/buildrpm.sh`
 3. Install the package:
-   ```bash
-   sudo dnf install ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm
-   ```
+   - Alpine Linux: `~/packages/unsupported/$(uname -m)/redpanda-cpp-git-*.apk`
+   - Arch Linux: `/tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst`
+   - Fedora, openSUSE: `~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm`
 4. Run Red Panda C++:
    ```bash
    RedPandaIDE
    ```
 
-## openSUSE
-
-1. Install dependency:
-   ```bash
-   sudo zypper in \
-     gcc gcc-c++ rpm-build rpmdevtools git \
-     glibc-devel-static \
-     libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
-
-   rpmdev-setuptree  # first time only
-   ```
-2. Build the package:
-   ```bash
-   ./packages/opensuse/buildrpm.sh
-   ```
-3. Install the package:
-   ```bash
-   sudo zypper --no-gpg-checks in ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm
-   ```
-4. Run Red Panda C++:
-   ```bash
-   RedPandaIDE
-   ```
+Note that these build scripts check out HEAD of the repo, so any changes should be committed before building.
 
 ## Linux AppImage
 
