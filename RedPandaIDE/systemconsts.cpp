@@ -86,6 +86,7 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     mDefaultFileNameFilters.append("*.md");
     mDefaultFileNameFilters.append("*.dev");
     mDefaultFileNameFilters.append("*.s");
+    mDefaultFileNameFilters.append("*.ini");
     mDefaultFileNameFilters.append("*.S");
 }
 
