@@ -2,10 +2,7 @@
 
 set -xeuo pipefail
 
-dnf install -y \
-     gcc gcc-c++ rpm-build rpmdevtools git \
-     glibc-static libstdc++-static libasan \
-     qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel
+dnf install -y dnf-plugins-core git rpm-build rpmdevtools
 rpmdev-setuptree
 
 cd $SOURCE_DIR

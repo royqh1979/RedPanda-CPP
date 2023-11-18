@@ -8,6 +8,8 @@
 /packages/archlinux/* eol=lf
 /packages/debian/01-in-docker.sh eol=lf
 /packages/debian/rules eol=lf
+/packages/fedora/* eol=lf
+/packages/opensuse/* eol=lf
 
 # files to be processed with Unix utils
 /packages/windows/qtbase-5.6.3-redpanda.patch eol=lf
