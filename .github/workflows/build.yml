@@ -222,6 +222,27 @@ jobs:
           name: RPM on openSUSE Tumbleweed
           path: dist/*.rpm
 
+  musl:
+    name: musl-based Linux (latest Alpine)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/amd64/alpine:latest
+
+      - name: Build
+        run: |
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/alpine:latest /src/packages/alpine/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: musl-based Linux (latest Alpine)
+          path: dist/*.apk
+
   macos_x86_64:
     name: macOS x86_64
     runs-on: macos-latest
