@@ -172,24 +172,7 @@ jobs:
 
       - name: Build
         run: |
-          cat <<EOF >$GITHUB_WORKSPACE/archlinux-in-docker.sh
-          #!/bin/bash
-          set -euxo pipefail
-
-          pacman -Syu --noconfirm --needed base-devel
-          cd /src/packages/archlinux
-          bash -c 'source PKGBUILD && pacman -S --noconfirm --needed --asdeps "\${makedepends[@]}" "\${depends[@]}"'  # heredoc: escape variable expansion
-
-          useradd -m builduser
-          chmod o+w .
-          su builduser -c 'makepkg'
-
-          mkdir -p /src/dist
-          mv *.pkg.tar.zst /src/dist/
-          EOF
-
-          chmod +x $GITHUB_WORKSPACE/archlinux-in-docker.sh
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/archlinux-in-docker.sh
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/packages/archlinux/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -238,6 +221,27 @@ jobs:
         with:
           name: RPM on openSUSE Tumbleweed
           path: dist/*.rpm
+
+  musl:
+    name: musl-based Linux (latest Alpine)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/amd64/alpine:latest
+
+      - name: Build
+        run: |
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/alpine:latest /src/packages/alpine/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: musl-based Linux (latest Alpine)
+          path: dist/*.apk
 
   macos_x86_64:
     name: macOS x86_64
