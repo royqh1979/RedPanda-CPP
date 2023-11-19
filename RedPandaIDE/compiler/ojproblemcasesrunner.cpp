@@ -107,7 +107,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         if (fileExists(problemCase->inputFileName))
             process.write(readFileToByteArray(problemCase->inputFileName));
         else
-            process.write(problemCase->input.toUtf8());
+            process.write(problemCase->input.toLocal8Bit());
         process.waitForFinished(0);
     }
 

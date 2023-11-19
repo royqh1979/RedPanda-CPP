@@ -28,6 +28,7 @@ Red Panda C++ Version 2.26
   - fix: Crash if include a non-exist header file in the source.
   - fix: Line numbers for problem case input/output/expected texteditors are not vertically centered.
   - enhancement: E-ink color scheme.
+  - fix: Use the system default encoding for input when running problem cases.
 
 Red Panda C++ Version 2.25
 
