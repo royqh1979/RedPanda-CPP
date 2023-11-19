@@ -1,35 +1,20 @@
 _pkgname=RedPanda-CPP
 pkgname=${_pkgname,,}-git
-pkgver=2.23.r14.gd1214e3d
+pkgver=__VERSION__
 pkgrel=1
 pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (development version)'
 arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64' 'riscv64')
 url="https://github.com/royqh1979/$_pkgname"
 license=('GPL3')
 depends=(qt5-base qt5-svg gcc gdb)
-makedepends=(git qt5-tools)
+makedepends=(qt5-tools)
 optdepends=(
     'clang: C/C++ compiler (alternative)'
-    'git: git integration'
-    'alacritty: run in terminal'
-    'kitty: run in terminal'
-    'tilix: run in terminal'
-    'cool-retro-term: run in terminal'
-    'konsole: run in terminal'
-    'deepin-terminal: run in terminal'
-    'qterminal: run in terminal'
-    'lxterminal: run in terminal'
 )
 conflicts=("${_pkgname,,}")
 provides=("${_pkgname,,}")
-source=("$_pkgname::git+file://${PWD%packages/archlinux}")
+source=("$_pkgname.tar.gz")
 sha256sums=('SKIP')
-
-pkgver() {
-    cd "$srcdir/$_pkgname"
-    # there may be no tag in forked repo, use `--always` to get commit hash as fallback for ci builds
-    git describe --long --tags --always | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
-}
 
 build() {
     mkdir redpanda-build

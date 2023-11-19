@@ -50,6 +50,7 @@
 	#include <dirent.h>
 	#include <sys/stat.h>
 	#include <unistd.h>
+	#include <limits.h>
 	#ifdef __VMS
 		#include <unixlib.h>
 		#include <rms.h>

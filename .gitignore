@@ -2,7 +2,5 @@
 /.vscode
 /dist
 /packages/appimage/*/*.AppImage
-/packages/archlinux/*
-!/packages/archlinux/PKGBUILD
 *.bak
 *.pro.user

@@ -5,10 +5,7 @@ set -xeuo pipefail
 DISTRO_ID=$(grep ^ID= /etc/os-release | cut -d= -f2- | tr -d '"')
 VERSION_ID=$(grep ^VERSION_ID= /etc/os-release | cut -d= -f2- | tr -d '"')
 
-zypper in -y \
-     gcc gcc-c++ rpm-build rpmdevtools git \
-     glibc-devel-static \
-     libqt5-qtbase-devel libqt5-qtsvg-devel libqt5-qttools-devel
+zypper in -y git rpm-build rpmdevtools sudo
 rpmdev-setuptree
 
 cd $SOURCE_DIR

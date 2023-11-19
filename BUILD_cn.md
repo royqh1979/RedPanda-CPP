@@ -377,61 +377,24 @@ Windows 宿主的额外要求：
    RedPandaIDE
    ```
 
-## Arch Linux 及衍生版本
+## Alpine Linux, Arch Linux, Fedora, openSUSE
 
-`packages/archlinux` 目录下提供了一个参考 PKGBUILD，使用 [makepkg](https://wiki.archlinuxcn.org/wiki/Makepkg) 构建小熊猫 C++ 并安装。
-
-小熊猫 C++ 可以通过 `RedPandaIDE` 命令启动。
-
-注意：makepkg 签出此存储库的 HEAD，因此构建之前务必提交所有变更。
-
-## Fedora
-
-1. 安装依赖包：
-   ```bash
-   sudo dnf install \
-     gcc gcc-c++ rpm-build rpmdevtools git \
-     glibc-static libstdc++-static libasan \
-     qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel
-
-   rpmdev-setuptree  # 仅第一次
-   ```
-2. 构建 rpm 包：
-   ```bash
-   ./packages/fedora/buildrpm.sh
-   ```
-3. 安装 rpm 包：
-   ```bash
-   sudo dnf install ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm
-   ```
+1. 准备构建环境（[Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers)、[Arch](https://wiki.archlinux.org/title/Makepkg)、[RPM](https://rpm-packaging-guide.github.io/#prerequisites) 文档）。
+2. 调用构建脚本：
+   - Alpine Linux：`./packages/alpine/buildapk.sh`
+   - Arch Linux：`./packages/archlinux/buildpkg.sh`
+   - Fedora：`./packages/fedora/buildrpm.sh`
+   - openSUSE：`./packages/opensuse/buildrpm.sh`
+3. 安装软件包：
+   - Alpine Linux：`~/packages/unsupported/$(uname -m)/redpanda-cpp-git-*.apk`
+   - Arch Linux：`/tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst`
+   - Fedora、openSUSE：`~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm`
 4. 运行小熊猫 C++：
    ```bash
    RedPandaIDE
    ```
 
-## openSUSE
-
-1. 安装依赖包：
-   ```bash
-   sudo zypper in \
-     gcc gcc-c++ rpm-build rpmdevtools git \
-     glibc-devel-static \
-     libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
-
-   rpmdev-setuptree  # 仅第一次
-   ```
-2. 构建 rpm 包：
-   ```bash
-   ./packages/opensuse/buildrpm.sh
-   ```
-3. 安装 rpm 包：
-   ```bash
-   sudo zypper --no-gpg-checks in ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm
-   ```
-4. 运行小熊猫 C++：
-   ```bash
-   RedPandaIDE
-   ```
+注意：这些构建脚本签出此存储库的 HEAD，因此构建之前务必提交所有变更。
 
 ## Linux AppImage
 
