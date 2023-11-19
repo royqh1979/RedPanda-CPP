@@ -6239,7 +6239,7 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
     int X=event->pos().x();
     /* int Y=event->pos().y(); */
 
-    if (!mMouseMoved && (X <= mGutterWidth )) {
+    if (!mMouseMoved && (X < mGutterWidth )) {
         processGutterClick(event);
     }
 
