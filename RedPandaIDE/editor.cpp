@@ -1360,7 +1360,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
     // if ctrl+clicked
     if ((event->modifiers() == Qt::ControlModifier)
             && (event->button() == Qt::LeftButton)) {
-        if (!selAvail() && mHoverModifiedLine != -1) {
+        if (!selAvail() ) {
             QSynedit::BufferCoord p;
             if (mParser && pointToCharLine(event->pos(),p)) {
                 cancelHoverLink();
@@ -2766,7 +2766,7 @@ bool Editor::handleBraceCompletion()
     QString s = lineText().trimmed();
     int i= caretY()-2;
     while ((s.isEmpty()) && (i>=0)) {
-        s=document()->getLine(i);
+        s=document()->getLine(i).trimmed();
         i--;
     }
     QString text=selText();
@@ -2781,13 +2781,13 @@ bool Editor::handleBraceCompletion()
 
     processCommand(QSynedit::EditCommand::Char,'}');
     if (
-        ( (s.startsWith("struct")
+        ( ( (s.startsWith("struct") && !s.endsWith(")"))
           || s.startsWith("class")
-          || s.startsWith("union")
+          || (s.startsWith("union") && !s.endsWith(")"))
           || s.startsWith("typedef")
           || s.startsWith("public")
           || s.startsWith("private")
-          || s.startsWith("enum") )
+          || (s.startsWith("enum") && !s.endsWith(")")) )
           && !s.contains(';')
         ) || s.endsWith('=')) {
         processCommand(QSynedit::EditCommand::Char,';');
