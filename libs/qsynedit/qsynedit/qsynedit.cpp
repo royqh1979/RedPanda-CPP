@@ -6239,7 +6239,7 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
     int X=event->pos().x();
     /* int Y=event->pos().y(); */
 
-    if (!mMouseMoved && (X < mGutterWidth + 2)) {
+    if (!mMouseMoved && (X <= mGutterWidth )) {
         processGutterClick(event);
     }
 
@@ -6295,7 +6295,7 @@ void QSynEdit::mouseDoubleClickEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseDoubleClickEvent(event);
     QPoint ptMouse = event->pos();
-    if (ptMouse.x() >= mGutterWidth + 2) {
+    if (ptMouse.x() >= mGutterWidth) {
         if (mOptions.testFlag(EditorOption::eoSelectWordByDblClick))
             setSelWord();
         mStateFlags.setFlag(StateFlag::sfDblClicked);

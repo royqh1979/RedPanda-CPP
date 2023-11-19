@@ -57,6 +57,8 @@ pushd .
 cd "${PACKAGE_DIR}"
 ln -s "${MINGW}" $MinGW_NAME
 
+cp "${SOURCE_DIR}/platform/windows/qt.conf" .
+
 cp "${SOURCE_DIR}/windows/installer-scripts/lang.nsh" .
 cp "${SOURCE_DIR}/windows/installer-scripts/redpanda-clang.nsi" .
 

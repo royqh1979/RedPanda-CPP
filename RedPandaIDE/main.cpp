@@ -250,11 +250,11 @@ void setTheme(const QString& theme) {
 
 int main(int argc, char *argv[])
 {
-#ifdef Q_OS_WINDOWS
-    // Make title bar and palette follow system-wide dark mode setting on recent Windows releases.
-    // Use freetype as the fontengine
-    qputenv("QT_QPA_PLATFORM", "windows:darkmode=2:fontengine=freetype");
-#endif
+//#ifdef Q_OS_WINDOWS
+//    // Make title bar and palette follow system-wide dark mode setting on recent Windows releases.
+//    // Use freetype as the fontengine
+//    qputenv("QT_QPA_PLATFORM", "windows:darkmode=2:fontengine=freetype");
+//#endif
 
 #ifdef Q_OS_MACOS
     // in macOS GUI apps, `/usr/local/bin` is not in PATH by default

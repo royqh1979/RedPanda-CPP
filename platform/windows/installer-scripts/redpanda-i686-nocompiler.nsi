@@ -93,6 +93,7 @@ Section "$(SectionMainName)" SectionMain
   File "LICENSE"
   File "NEWS.md"
   File "README.md"
+  File "qt.conf"
   
   ; Write required paths
   SetOutPath $INSTDIR\Templates
@@ -456,6 +457,7 @@ Section "Uninstall"
   Delete "$INSTDIR\astyle.exe"
   Delete "$INSTDIR\LICENSE"
   Delete "$INSTDIR\README.md"
+  Delete "$INSTDIR\qt.conf"  
 
   RMDir /r "$INSTDIR\Lang"
   RMDir /r "$INSTDIR\Templates"

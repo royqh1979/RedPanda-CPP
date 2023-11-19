@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TARGET_DIR="/r/"
+TARGET_DIR="/z/"
 BUILD_DIR="${TEMP}/redpandacpp-build"
 PACKAGE_DIR="${TEMP}/RedPanda-CPP"
 GCC_DIR="/mingw64"
@@ -28,6 +28,8 @@ popd
 echo "Making no-compiler installer ..."
 pushd .
 cd "${PACKAGE_DIR}"
+
+cp "${SOURCE_DIR}/platform/windows/qt.conf" .
 
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-nocompiler.nsi" .

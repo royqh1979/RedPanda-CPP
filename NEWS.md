@@ -29,6 +29,7 @@ Red Panda C++ Version 2.26
   - fix: Line numbers for problem case input/output/expected texteditors are not vertically centered.
   - enhancement: E-ink color scheme.
   - fix: Use the system default encoding for input when running problem cases.
+  - change: Use qt.conf to set the font engine. User can use the windows default font engine by remove this file.
 
 Red Panda C++ Version 2.25
 

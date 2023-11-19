@@ -29,6 +29,8 @@ echo "Making no-compiler installer ..."
 pushd .
 cd "${PACKAGE_DIR}"
 
+cp "${SOURCE_DIR}/platform/windows/qt.conf" .
+
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686-nocompiler.nsi" .
 
