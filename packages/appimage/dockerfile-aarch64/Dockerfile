@@ -15,9 +15,7 @@ RUN yum-config-manager --enable ol7_optional_latest && \
         # Qt build tools
         file which \
         # Qt libs
-        at-spi2-core-devel dbus-devel fontconfig-devel freetype-devel glib2-devel libXrender-devel libxcb-devel libxkbcommon-devel libxkbcommon-x11-devel mesa-libGL-devel xcb-util-devel \
-        # fcitx5-qt build tools
-        cmake3 extra-cmake-modules && \
+        at-spi2-core-devel dbus-devel fontconfig-devel freetype-devel glib2-devel libXrender-devel libxcb-devel libxkbcommon-devel libxkbcommon-x11-devel mesa-libGL-devel wayland-devel xcb-util-devel && \
     yum clean all
 
 ARG DEVTOOLSET_ROOTPATH=/opt/rh/devtoolset-7/root
@@ -49,8 +47,7 @@ RUN mkdir -p /build/squashfs-tools && \
 # Qt 5
 RUN mkdir -p /build/qt5 && \
     cd /build/qt5 && \
-    curl -O "https://download.qt.io/archive/qt/${QT_MAJOR_MINOR}/${QT_VERSION}/submodules/qt{base,svg,tools}-everywhere-src-${QT_VERSION}.tar.xz" && \
-    curl -L -o fcitx5-qt-${FCITX5_QT_VERSION}.tar.gz "https://github.com/fcitx/fcitx5-qt/archive/refs/tags/${FCITX5_QT_VERSION}.tar.gz" && \
+    curl -O "https://download.qt.io/archive/qt/${QT_MAJOR_MINOR}/${QT_VERSION}/submodules/qt{base,svg,tools,wayland}-everywhere-src-${QT_VERSION}.tar.xz" && \
     tar xf qtbase-everywhere-src-${QT_VERSION}.tar.xz && \
     cd qtbase-everywhere-src-${QT_VERSION} && \
     ./configure \
@@ -75,8 +72,23 @@ RUN mkdir -p /build/qt5 && \
     qmake . && \
     make -j$(nproc) && \
     make install && \
-    # fcitx5 package
+    # wayland package
     cd /build/qt5 && \
+    tar xf qtwayland-everywhere-src-${QT_VERSION}.tar.xz && \
+    cd qtwayland-everywhere-src-${QT_VERSION} && \
+    qmake . && \
+    make -j$(nproc) && \
+    make install && \
+    # cleanup
+    cd / && \
+    rm -r /build/qt5
+
+# fcitx5-qt
+RUN yum install -y \
+        cmake3 extra-cmake-modules && \
+    mkdir -p /build/qt5 && \
+    cd /build/qt5 && \
+    curl -L -o fcitx5-qt-${FCITX5_QT_VERSION}.tar.gz "https://github.com/fcitx/fcitx5-qt/archive/refs/tags/${FCITX5_QT_VERSION}.tar.gz" && \
     tar xf fcitx5-qt-${FCITX5_QT_VERSION}.tar.gz && \
     cd fcitx5-qt-${FCITX5_QT_VERSION} && \
     cmake3 . -Bbuild -DCMAKE_MODULE_PATH=/usr/local/lib/cmake -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_BUILD_TYPE=Release -DENABLE_QT4=Off -DENABLE_QT5=On -DENABLE_QT6=Off -DBUILD_ONLY_PLUGIN=On -DBUILD_STATIC_PLUGIN=On && \
@@ -84,5 +96,8 @@ RUN mkdir -p /build/qt5 && \
     # cmake 3.14 is too old to `--install`
     cmake3 --build build -- install && \
     # cleanup
+    yum autoremove -y \
+        cmake3 extra-cmake-modules && \
+    yum clean all && \
     cd / && \
     rm -r /build/qt5

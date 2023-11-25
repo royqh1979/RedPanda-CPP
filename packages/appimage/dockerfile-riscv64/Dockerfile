@@ -12,9 +12,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         # Qt build tools
         file \
         # Qt libs
-        libatspi2.0-dev libdbus-1-dev libfontconfig1-dev libfreetype6-dev libgl1-mesa-dev libxkbcommon-x11-dev \
-        # fcitx-qt5 build tools
-        cmake extra-cmake-modules \
+        libatspi2.0-dev libdbus-1-dev libfontconfig1-dev libfreetype6-dev libgl1-mesa-dev libwayland-dev libxkbcommon-x11-dev \
         # appimage tools
         squashfs-tools && \
     apt clean && \
@@ -32,8 +30,7 @@ RUN curl -L -o /opt/appimage-runtime 'https://github.com/cyano-linux/appimage-ri
 # Qt 5
 RUN mkdir -p /build/qt5 && \
     cd /build/qt5 && \
-    curl -O "https://download.qt.io/archive/qt/${QT_MAJOR_MINOR}/${QT_VERSION}/submodules/qt{base,svg,tools}-everywhere-src-${QT_VERSION}.tar.xz" && \
-    curl -L -o fcitx5-qt-${FCITX5_QT_VERSION}.tar.gz "https://github.com/fcitx/fcitx5-qt/archive/refs/tags/${FCITX5_QT_VERSION}.tar.gz" && \
+    curl -O "https://download.qt.io/archive/qt/${QT_MAJOR_MINOR}/${QT_VERSION}/submodules/qt{base,svg,tools,wayland}-everywhere-src-${QT_VERSION}.tar.xz" && \
     tar xf qtbase-everywhere-src-${QT_VERSION}.tar.xz && \
     cd qtbase-everywhere-src-${QT_VERSION} && \
     ./configure \
@@ -58,13 +55,33 @@ RUN mkdir -p /build/qt5 && \
     qmake . && \
     make -j$(nproc) && \
     make install && \
-    # fcitx5 package
+    # wayland package
     cd /build/qt5 && \
+    tar xf qtwayland-everywhere-src-${QT_VERSION}.tar.xz && \
+    cd qtwayland-everywhere-src-${QT_VERSION} && \
+    qmake . && \
+    make -j$(nproc) && \
+    make install && \
+    # cleanup
+    cd / && \
+    rm -r /build/qt5
+
+# fcitx5-qt
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt update && \
+    apt install --no-install-recommends -y \
+        cmake extra-cmake-modules && \
+    mkdir -p /build/qt5 && \
+    cd /build/qt5 && \
+    curl -L -o fcitx5-qt-${FCITX5_QT_VERSION}.tar.gz "https://github.com/fcitx/fcitx5-qt/archive/refs/tags/${FCITX5_QT_VERSION}.tar.gz" && \
     tar xf fcitx5-qt-${FCITX5_QT_VERSION}.tar.gz && \
     cd fcitx5-qt-${FCITX5_QT_VERSION} && \
     cmake . -Bbuild -DCMAKE_MODULE_PATH=/usr/local/lib/cmake -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_BUILD_TYPE=Release -DENABLE_QT4=Off -DENABLE_QT5=On -DENABLE_QT6=Off -DBUILD_ONLY_PLUGIN=On -DBUILD_STATIC_PLUGIN=On && \
     cmake --build build --parallel && \
     cmake --install build && \
     # cleanup
+    apt autoremove --purge -y \
+        cmake extra-cmake-modules && \
+    rm -rf /var/lib/apt/lists/* && \
     cd / && \
     rm -r /build/qt5
