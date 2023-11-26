@@ -319,57 +319,58 @@ private:
      * @return
      */
     PEvalStatement doEvalExpression(const QString& fileName,
-                               QStringList& phraseExpression,
+                               QStringList phraseExpression,
                                int &pos,
                                const PStatement& scope,
                                const PEvalStatement& previousResult,
-                               bool freeScoped) const;
+                               bool freeScoped,
+                               bool expandMacros) const;
 
     PEvalStatement doEvalPointerArithmetic(
             const QString& fileName,
-            QStringList& phraseExpression,
+            const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped) const;
     PEvalStatement doEvalPointerToMembers(
             const QString& fileName,
-            QStringList& phraseExpression,
+            const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped) const;
     PEvalStatement doEvalCCast(
             const QString& fileName,
-            QStringList& phraseExpression,
+            const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped) const;
     PEvalStatement doEvalMemberAccess(
             const QString& fileName,
-            QStringList& phraseExpression,
+            const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped) const;
     PEvalStatement doEvalScopeResolution(
             const QString& fileName,
-            QStringList& phraseExpression,
+            const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped) const;
     PEvalStatement doEvalTerm(
             const QString& fileName,
-            QStringList& phraseExpression,
+            const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped) const;
 
-    bool expandMacro(QStringList& phraseExpression,int &pos,
-                     const PStatement& macro) const;
+    bool expandMacro(QStringList& phraseExpression,int pos,
+                    PStatement macro, QList< QSet<QString> > &usedMacros) const;
 
     PEvalStatement doCreateEvalNamespace(const PStatement& namespaceStatement) const;
 

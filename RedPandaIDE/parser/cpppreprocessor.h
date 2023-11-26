@@ -135,10 +135,10 @@ private:
     void handleInclude(const QString& line, bool fromNext=false);
     void handlePreprocessor(const QString& value);
     void handleUndefine(const QString& line);
-    QString expandMacros(const QString& line, int depth);
+    QString expandMacros(const QString& line, QSet<QString> usedMacros);
     QString expandMacros();
-    void expandMacro(const QString& line, QString& newLine, QString& word, int& i, int depth);
-    void expandMacro(QString& newLine, QString& word, int& i, int depth);
+    void expandMacro(const QString& line, QString& newLine, QString& word, int& i, QSet<QString> usedMacros);
+    void expandMacro(QString& newLine, QString& word, int& i, QSet<QString> usedMacros);
     QString removeGCCAttributes(const QString& line);
     void removeGCCAttribute(const QString&line, QString& newLine, int &i, const QString& word);
     PDefine getDefine(const QString& name) const{

@@ -515,11 +515,8 @@ void CppPreprocessor::handleUndefine(const QString &line)
     }
 }
 
-QString CppPreprocessor::expandMacros(const QString &line, int depth)
+QString CppPreprocessor::expandMacros(const QString &line, QSet<QString> usedMacros)
 {
-    //prevent infinit recursion
-    if (depth > MAX_DEFINE_EXPAND_DEPTH)
-        return line;
     QString word;
     QString newLine;
     int lenLine = line.length();
@@ -530,7 +527,7 @@ QString CppPreprocessor::expandMacros(const QString &line, int depth)
             word += ch;
         } else {
             if (!word.isEmpty()) {
-                expandMacro(line,newLine,word,i,depth);
+                expandMacro(line,newLine,word,i,usedMacros);
             }
             word = "";
             if (i< lenLine) {
@@ -540,7 +537,7 @@ QString CppPreprocessor::expandMacros(const QString &line, int depth)
         i++;
     }
     if (!word.isEmpty()) {
-        expandMacro(line,newLine,word,i,depth);
+        expandMacro(line,newLine,word,i, usedMacros);
     }
     return newLine;
 }
@@ -551,6 +548,7 @@ QString CppPreprocessor::expandMacros()
     QString word;
     QString newLine;
     QString line = mBuffer[mIndex];
+    QSet<QString> usedMacros;
     int i=0;
     while (mIndex < mBuffer.size() && i<line.length()) {
         QChar ch=line[i];
@@ -558,7 +556,7 @@ QString CppPreprocessor::expandMacros()
             word += ch;
         } else {
             if (!word.isEmpty()) {
-                expandMacro(newLine,word,i,1);
+                expandMacro(newLine,word,i,usedMacros);
                 if (mIndex>=mBuffer.length())
                     return newLine;
                 line = mBuffer[mIndex];
@@ -571,75 +569,79 @@ QString CppPreprocessor::expandMacros()
         i++;
     }
     if (!word.isEmpty()) {
-        expandMacro(newLine,word,i,1);
+        expandMacro(newLine,word,i,usedMacros);
     }
     return newLine;
 }
 
-void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString &word, int &i, int depth)
+void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString &word, int &i, QSet<QString> usedMacros)
 {
+    if (usedMacros.contains(word))
+        return;
     int lenLine = line.length();
-        PDefine define = getDefine(word);
-        if (define && define->args=="" ) {
-            if (define->value != word )
-              newLine += expandMacros(define->value,depth+1);
-            else
-              newLine += word;
-
-        } else if (define && (define->args!="")) {
-            while ((i<lenLine) && (line[i] == ' ' || line[i]=='\t'))
-                i++;
-            int argStart=-1;
-            int argEnd=-1;
-            if ((i<lenLine) && (line[i]=='(')) {
-                argStart =i+1;
-                int level=0;
-                bool inString=false;
-                while (i<lenLine) {
-                    switch(line[i].unicode()) {
-                    case '\\':
-                        if (inString)
-                            i++;
-                    break;
-                    case '"':
-                        inString = !inString;
-                    break;
-                    case '(':
-                        if (!inString)
-                            level++;
-                    break;
-                    case ')':
-                        if (!inString)
-                            level--;
-                    }
-                    i++;
-                    if (level==0)
-                        break;
-                }
-                if (level==0) {
-                    argEnd = i-2;
-                    QString args = line.mid(argStart,argEnd-argStart+1).trimmed();
-                    QString formattedValue = expandFunction(define,args);
-                    newLine += expandMacros(formattedValue,depth+1);
-                }
-            }
-        } else {
+    PDefine define = getDefine(word);
+    if (define && define->args=="" ) {
+        usedMacros.insert(word);
+        if (define->value != word ) {
+            newLine += expandMacros(define->value,usedMacros);
+        } else
             newLine += word;
+    } else if (define && (define->args!="")) {
+        while ((i<lenLine) && (line[i] == ' ' || line[i]=='\t'))
+            i++;
+        int argStart=-1;
+        int argEnd=-1;
+        if ((i<lenLine) && (line[i]=='(')) {
+            argStart =i+1;
+            int level=0;
+            bool inString=false;
+            while (i<lenLine) {
+                switch(line[i].unicode()) {
+                case '\\':
+                    if (inString)
+                        i++;
+                break;
+                case '"':
+                    inString = !inString;
+                break;
+                case '(':
+                    if (!inString)
+                        level++;
+                break;
+                case ')':
+                    if (!inString)
+                        level--;
+                }
+                i++;
+                if (level==0)
+                    break;
+            }
+            if (level==0) {
+                argEnd = i-2;
+                QString args = line.mid(argStart,argEnd-argStart+1).trimmed();
+                QString formattedValue = expandFunction(define,args);
+                usedMacros.insert(word);
+                newLine += expandMacros(formattedValue,usedMacros);
+            }
         }
-        //    }
+    } else {
+        newLine += word;
+    }
+    //    }
 }
 
-void CppPreprocessor::expandMacro(QString &newLine, QString &word, int &i, int depth)
+void CppPreprocessor::expandMacro(QString &newLine, QString &word, int &i, QSet<QString> usedMacros)
 {
+    if (usedMacros.contains(word))
+        return;
     QString line = mBuffer[mIndex];
     PDefine define = getDefine(word);
-//    if (define && define->name == "DEFHOOKPODX")
-//        qDebug()<<define->args<<define->argList<<define->formatValue;
     if (define && define->args=="" ) {
+        usedMacros.insert(word);
         if (define->value != word )
-          newLine += expandMacros(define->value,depth+1);
+            newLine += expandMacros(define->value,usedMacros);
         else
-          newLine += word;
+            newLine += word;
     } else if (define && (define->args!="")) {
         int origI=i;
         int origIndex=mIndex;
@@ -709,13 +711,10 @@ void CppPreprocessor::expandMacro(QString &newLine, QString &word, int &i, int d
                         args += mBuffer[i];
                     }
                     args += mBuffer[argLineEnd].left(argEnd);
-//                    if (define && define->name == "DEFHOOK")
-//                        qDebug()<<args;
                 }
                 QString formattedValue = expandFunction(define,args);
-//                if (define && define->name == "DEFHOOKPODX")
-//                    qDebug()<<formattedValue;
-                newLine += expandMacros(formattedValue,depth+1);
+                usedMacros.insert(word);
+                newLine += expandMacros(formattedValue,usedMacros);
             }
         } else {
             newLine+=word;

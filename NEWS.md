@@ -32,6 +32,7 @@ Red Panda C++ Version 2.26
   - change: Use qt.conf to use freetype font engine. User can use the windows default font engine by remove this file.
   - fix: Click on the line begin may toggle breakpoint.
   - change: Don't auto add; when completing '{' for lines starting with 'struct/union/enum' and ending with ')'
+  - Enhancement: Better support for macros.
 
 Red Panda C++ Version 2.25
 
