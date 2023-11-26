@@ -21,7 +21,7 @@ APP_NAME = RedPandaCPP
 
 APP_VERSION = 2.26
 
-TEST_VERSION = alpha5
+TEST_VERSION = alpha7
 
 win32: {
 SUBDIRS += \
