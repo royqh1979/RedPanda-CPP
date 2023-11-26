@@ -4113,8 +4113,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                 // as
                 // unsigned short bAppReturnCode,reserved,fBusy,fAck
                 if (mIndex+1<tokenCount
-                        && isIdentifier(mTokenizer[mIndex+1]->text)
-                        && isIdentChar(mTokenizer[mIndex+1]->text.back())
+                        && isIdentChar(mTokenizer[mIndex+1]->text.front())
+                        && (isIdentChar(mTokenizer[mIndex+1]->text.back()) || isDigitChar(mTokenizer[mIndex+1]->text.back()))
                         && addedVar
                         && !(addedVar->properties & StatementProperty::spFunctionPointer)
                         && AutoTypes.contains(addedVar->type)) {
@@ -5875,6 +5875,7 @@ PStatement CppParser::doParseEvalTypeInfo(
                 } else if (token == ">") {
                     templateLevel--;
                 }
+                baseType += token;
             }
             syntaxer.next();
         }
