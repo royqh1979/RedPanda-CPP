@@ -15,12 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "api.h"
-#include "qjsonvalue.h"
 
 #include <QtCore>
 #include <QApplication>
 #include <QPalette>
 #include <QStyleFactory>
+#include <QJsonValue>
 
 #ifdef Q_OS_WINDOWS
 # include <windows.h>

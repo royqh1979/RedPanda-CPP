@@ -1,5 +1,6 @@
 /.vs
 /.vscode
+/assets
 /dist
 /packages/appimage/*/*.AppImage
 *.bak
