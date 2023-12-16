@@ -34,6 +34,7 @@ Red Panda C++ Version 2.26
   - change: Don't auto add; when completing '{' for lines starting with 'struct/union/enum' and ending with ')'
   - Enhancement: Better support for macros.
   - Enhancement: Better type induction for auto in foreach loop of maps.
+  - Enhancement: Better contrast for scroller slider in dark theme.
 
 Red Panda C++ Version 2.25
 
