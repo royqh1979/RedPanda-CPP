@@ -53,9 +53,11 @@ void ProjectGeneralWidget::doLoad()
     std::shared_ptr<Project> project = pMainWindow->project();
     if (!project)
         return;
-
-    bool isMicroControllerProject=(project->options().type==ProjectType::MicroController);
-
+#ifdef ENABLE_SDCC
+    bool isMicroControllerProject = (project->options().type==ProjectType::MicroController);
+#else
+    bool isMicroControllerProject = false;
+#endif
     ui->grpType->setVisible(!isMicroControllerProject);
     ui->grpIcon->setVisible(!isMicroControllerProject);
     ui->lblEncoding->setVisible(!isMicroControllerProject);

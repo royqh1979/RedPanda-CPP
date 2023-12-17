@@ -130,6 +130,7 @@ QString Project::executable() const
         exeFileName = mOptions.overridenOutput;
     } else {
         switch(mOptions.type) {
+#ifdef ENABLE_SDCC
         case ProjectType::MicroController: {
             Settings::PCompilerSet pSet=pSettings->compilerSets().getSet(mOptions.compilerSet);
             if (pSet)
@@ -138,6 +139,7 @@ QString Project::executable() const
                 exeFileName = changeFileExt(extractFileName(mFilename),SDCC_HEX_SUFFIX);
             }
             break;
+#endif
         case ProjectType::StaticLib:
             exeFileName = changeFileExt(extractFileName(mFilename),STATIC_LIB_EXT);
             if (!exeFileName.startsWith("lib"))

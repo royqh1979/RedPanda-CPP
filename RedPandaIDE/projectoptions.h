@@ -36,7 +36,7 @@ enum class ProjectType {
     Console=1,
     StaticLib=2,
     DynamicLib=3,
-    MicroController=4
+    MicroController=4,
 };
 
 struct ProjectVersionInfo{

@@ -84,11 +84,13 @@ bool FileCompiler::prepareForCompile()
         case Settings::CompilerSet::CompilationStage::GenerateExecutable:
             mOutputFile = changeFileExt(mFilename,compilerSet()->executableSuffix());
         }
+#ifdef ENABLE_SDCC
         if (compilerSet()->compilerType()==CompilerType::SDCC) {
             if (compilerSet()->executableSuffix()==SDCC_IHX_SUFFIX) {
 
             }
         }
+#endif
         mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
 
 #if defined(ARCH_X86_64) || defined(ARCH_X86)

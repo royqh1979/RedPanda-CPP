@@ -502,9 +502,11 @@ void CompilerManager::onSyntaxCheckIssue(PCompileIssue issue)
 
 ProjectCompiler *CompilerManager::createProjectCompiler(std::shared_ptr<Project> project)
 {
+#ifdef ENABLE_SDCC
     if (project->options().type==ProjectType::MicroController)
         return new SDCCProjectCompiler(project);
     else
+#endif
         return new ProjectCompiler(project);
 }
 
