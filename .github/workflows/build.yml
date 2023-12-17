@@ -124,6 +124,7 @@ jobs:
           & $JOM "-j${Env:NUMBER_OF_PROCESSORS}"
           & $JOM install
           windeployqt ${Env:GITHUB_WORKSPACE}/pkg/RedPandaIDE.exe
+          rm ${Env:GITHUB_WORKSPACE}/pkg/vc_redist.x64.exe
           popd
 
       - name: Upload
