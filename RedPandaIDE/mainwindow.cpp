@@ -32,8 +32,6 @@
 #include "shortcutmanager.h"
 #include "colorscheme.h"
 #include "thememanager.h"
-#include "addon/executor.h"
-#include "addon/runtime.h"
 #include "widgets/darkfusionstyle.h"
 #include "widgets/lightfusionstyle.h"
 #include "problems/problemcasevalidator.h"
@@ -42,6 +40,10 @@
 #include "iconsmanager.h"
 #include "widgets/newclassdialog.h"
 #include "widgets/newheaderdialog.h"
+#ifdef ENABLE_LUA_ADDON
+#include "addon/executor.h"
+#include "addon/runtime.h"
+#endif
 #ifdef ENABLE_VCS
 #include "vcs/gitmanager.h"
 #include "vcs/gitrepository.h"
@@ -920,11 +922,14 @@ void MainWindow::applySettings()
         QMessageBox::critical(this,
                               tr("Load Theme Error"),
                               e.reason());
-    } catch (AddOn::LuaError e) {
+    }
+#ifdef ENABLE_LUA_ADDON
+    catch (AddOn::LuaError e) {
         QMessageBox::critical(this,
                               tr("Load Theme Error"),
                               e.reason());
     }
+#endif
 
     updateEditorColorSchemes();
 

@@ -220,10 +220,6 @@
         <source>Auto (follow system style and color)</source>
         <translation>自動（跟隨系統樣式和顏色）</translation>
     </message>
-    <message>
-        <source>Random Light</source>
-        <translation>隨機淺色</translation>
-    </message>
 </context>
 <context>
     <name>CodeSnippetsManager</name>

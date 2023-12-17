@@ -73,13 +73,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="rbRandomLight">
-        <property name="text">
-         <string>Random Light</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>

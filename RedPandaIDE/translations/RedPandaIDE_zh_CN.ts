@@ -415,11 +415,6 @@ p, li { white-space: pre-wrap; }
         <translation>自动（跟随系统样式和颜色）</translation>
     </message>
     <message>
-        <location filename="../widgets/choosethemedialog.ui" line="79"/>
-        <source>Random Light</source>
-        <translation>随机浅色</translation>
-    </message>
-    <message>
         <location filename="../widgets/choosethemedialog.ui" line="85"/>
         <source>Default Language:</source>
         <translation>默认语言：</translation>

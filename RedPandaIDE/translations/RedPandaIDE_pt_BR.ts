@@ -311,10 +311,6 @@
         <source>Auto (follow system style and color)</source>
         <translation>Auto (seguir estilo e cor do sistema)</translation>
     </message>
-    <message>
-        <source>Random Light</source>
-        <translation>Clara aleatória</translation>
-    </message>
 </context>
 <context>
     <name>CodeSnippetsManager</name>

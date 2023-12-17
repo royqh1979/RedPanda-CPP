@@ -39,8 +39,6 @@ ChooseThemeDialog::Theme ChooseThemeDialog::theme()
         return Theme::Dark;
     if (ui->rbLight->isChecked())
         return Theme::Light;
-    if (ui->rbRandomLight->isChecked())
-        return Theme::RandomLight;
     return Theme::Unknown;
 }
 

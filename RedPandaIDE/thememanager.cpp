@@ -27,8 +27,11 @@
 #include "utils.h"
 #include "settings.h"
 #include "systemconsts.h"
+
+#ifdef ENABLE_LUA_ADDON
 #include "addon/executor.h"
 #include "addon/runtime.h"
+#endif
 
 ThemeManager::ThemeManager(QObject *parent) : QObject(parent),
     mUseCustomTheme(false)
@@ -46,7 +49,11 @@ PAppTheme ThemeManager::theme(const QString &themeName)
         appTheme->load(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
     } else {
         QString themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+#ifdef ENABLE_LUA_ADDON
         appTheme->load(QString("%1/%2.lua").arg(themeDir, themeName), AppTheme::ThemeType::Lua);
+#else
+        appTheme->load(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
+#endif
     }
     return appTheme;
 }
@@ -84,8 +91,13 @@ QList<PAppTheme> ThemeManager::getThemes()
         themeType = AppTheme::ThemeType::JSON;
     } else {
         themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+#ifdef ENABLE_LUA_ADDON
         themeExtension = "lua";
         themeType = AppTheme::ThemeType::Lua;
+#else
+        themeExtension = "json";
+        themeType = AppTheme::ThemeType::JSON;
+#endif
     }
     QDirIterator it(themeDir);
     while (it.hasNext()) {
@@ -98,9 +110,12 @@ QList<PAppTheme> ThemeManager::getThemes()
                 result.append(appTheme);
             } catch(FileError e) {
                 //just skip it
-            } catch(AddOn::LuaError e) {
+            }
+#ifdef ENABLE_LUA_ADDON
+            catch(AddOn::LuaError e) {
                 qDebug() << e.reason();
             }
+#endif
         }
     }
     return result;
@@ -207,10 +222,15 @@ void AppTheme::load(const QString &filename, ThemeType type)
             obj = doc.object();
 
             // In Lua-based theme, the "style" key has replaced "isDark" and "useQtFusionStyle" keys.
-            // The following part handles old "isDark" key. "useQtFusionStyle" existed so shortly, here we ignore it.
+            // The following part handles old "isDark" and "useQtFusionStyle" keys.
             if (!obj.contains("style")) {
-                bool isDark = obj["isDark"].toBool(false);
-                obj["style"] = isDark ? "RedPandaDarkFusion" : "RedPandaLightFusion";
+                bool useQtFusionStyle = obj["useQtFusionStyle"].toBool(true);
+                if (useQtFusionStyle) {
+                    bool isDark = obj["isDark"].toBool(false);
+                    obj["style"] = isDark ? "RedPandaDarkFusion" : "RedPandaLightFusion";
+                } else {
+                    obj["style"] = AppTheme::initialStyle();
+                }
             }
 
             // In Lua-based theme, the script handles name localization.
@@ -221,10 +241,12 @@ void AppTheme::load(const QString &filename, ThemeType type)
 
             break;
         }
+#ifdef ENABLE_LUA_ADDON
         case ThemeType::Lua: {
             obj = AddOn::ThemeExecutor{}(content, filename);
             break;
         }
+#endif
         }
 
         QFileInfo fileInfo(filename);

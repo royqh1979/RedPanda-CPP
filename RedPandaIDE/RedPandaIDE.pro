@@ -10,6 +10,8 @@ CONFIG += nokey
 # uncomment the following line to enable sdcc support
 CONFIG += ENABLE_SDCC
 
+# uncomment the following line to enable Lua-based add-on support
+CONFIG += ENABLE_LUA_ADDON
 
 APP_NAME = RedPandaCPP
 
@@ -97,9 +99,6 @@ LIBS += advapi32.lib user32.lib
 }
 
 SOURCES += \
-    addon/api.cpp \
-    addon/executor.cpp \
-    addon/runtime.cpp \
     autolinkmanager.cpp \
     caretlist.cpp \
     codesnippetsmanager.cpp \
@@ -418,6 +417,20 @@ ENABLE_SDCC {
 
 }
 
+ENABLE_LUA_ADDON {
+    DEFINES += ENABLE_LUA_ADDON
+
+    SOURCES += \
+        addon/api.cpp \
+        addon/executor.cpp \
+        addon/runtime.cpp
+
+    HEADERS += \
+        addon/api.h \
+        addon/executor.h \
+        addon/runtime.h
+}
+
 ENABLE_VCS {
 
     DEFINES += ENABLE_VCS
@@ -566,7 +579,11 @@ qmake_qm_files.prefix = $$QM_FILES_RESOURCE_PREFIX
 iconsets_files.files += $$files(resources/iconsets/*.svg, true)
 iconsets_files.files += $$files(resources/iconsets/*.json, true)
 
-theme_files.files += $$files(themes/*.lua, false)
+ENABLE_LUA_ADDON {
+    theme_files.files += $$files(themes/*.lua, false)
+} else {
+    theme_files.files += $$files(themes/*.json, false)
+}
 theme_files.files += $$files(themes/*.png, false)
 
 colorscheme_files.files += $$files(colorschemes/*.scheme, false)

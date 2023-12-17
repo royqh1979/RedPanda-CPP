@@ -377,9 +377,6 @@ int main(int argc, char *argv[])
             case ChooseThemeDialog::Theme::Light:
                 setTheme("default");
                 break;
-            case ChooseThemeDialog::Theme::RandomLight:
-                setTheme("random_light");
-                break;
             default:
                 setTheme("default");
             }
