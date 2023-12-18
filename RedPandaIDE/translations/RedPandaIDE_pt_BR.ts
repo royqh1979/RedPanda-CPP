@@ -56,8 +56,24 @@
         <translation>Website: &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</translation>
     </message>
     <message>
-        <source>Microsoft Visual C++</source>
-        <translation type="unfinished"></translation>
+        <source>Next Generation Microsoft Visual C++</source>
+        <translation>Microsoft Visual C++ de Próxima Geração</translation>
+    </message>
+    <message>
+        <source>Microsoft Visual C++ 2022</source>
+        <translation>Microsoft Visual C++ 2022</translation>
+    </message>
+    <message>
+        <source>Microsoft Visual C++ 2019</source>
+        <translation>Microsoft Visual C++ 2019</translation>
+    </message>
+    <message>
+        <source>Microsoft Visual C++ 2017</source>
+        <translation>Microsoft Visual C++ 2017</translation>
+    </message>
+    <message>
+        <source>Legacy Microsoft Visual C++</source>
+        <translation>Windows Media Player Legado</translation>
     </message>
 </context>
 <context>

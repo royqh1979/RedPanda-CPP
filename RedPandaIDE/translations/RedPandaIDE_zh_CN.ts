@@ -125,9 +125,24 @@ p, li { white-space: pre-wrap; }
         <translation>版本：</translation>
     </message>
     <message>
-        <location filename="../widgets/aboutdialog.cpp" line="41"/>
-        <source>Microsoft Visual C++</source>
-        <translation>Microsoft Visual C++</translation>
+        <source>Next Generation Microsoft Visual C++</source>
+        <translation>下一代 Microsoft Visual C++</translation>
+    </message>
+    <message>
+        <source>Microsoft Visual C++ 2022</source>
+        <translation>Microsoft Visual C++ 2022</translation>
+    </message>
+    <message>
+        <source>Microsoft Visual C++ 2019</source>
+        <translation>Microsoft Visual C++ 2019</translation>
+    </message>
+    <message>
+        <source>Microsoft Visual C++ 2017</source>
+        <translation>Microsoft Visual C++ 2017</translation>
+    </message>
+    <message>
+        <source>Legacy Microsoft Visual C++</source>
+        <translation>旧版 Microsoft Visual C++</translation>
     </message>
     <message>
         <location filename="../widgets/aboutdialog.cpp" line="45"/>
