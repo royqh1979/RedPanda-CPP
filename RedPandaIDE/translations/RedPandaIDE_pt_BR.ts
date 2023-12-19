@@ -73,7 +73,7 @@
     </message>
     <message>
         <source>Legacy Microsoft Visual C++</source>
-        <translation>Windows Media Player Legado</translation>
+        <translation>Microsoft Visual C++ Legado</translation>
     </message>
 </context>
 <context>
