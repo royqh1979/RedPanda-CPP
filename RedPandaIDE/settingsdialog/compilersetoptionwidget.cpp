@@ -95,6 +95,7 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->txtCustomLinkParams->setEnabled(pSet->useCustomLinkParams());
     ui->chkAutoAddCharset->setChecked(pSet->autoAddCharsetParams());
     ui->chkStaticLink->setChecked(pSet->staticLink());
+    ui->chkPersistInAutoFind->setChecked(pSet->persistInAutoFind());
     //rest tabs in the options widget
 
     ui->optionTabs->resetUI(pSet,pSet->compileOptions());
@@ -240,6 +241,7 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     pSet->setCustomLinkParams(ui->txtCustomLinkParams->toPlainText().trimmed());
     pSet->setAutoAddCharsetParams(ui->chkAutoAddCharset->isChecked());
     pSet->setStaticLink(ui->chkStaticLink->isChecked());
+    pSet->setPersistInAutoFind(ui->chkPersistInAutoFind->isChecked());
 
     pSet->setCCompiler(ui->txtCCompiler->text().trimmed());
     pSet->setCppCompiler(ui->txtCppCompiler->text().trimmed());
@@ -296,13 +298,13 @@ QString CompilerSetOptionWidget::getBinDir()
 void CompilerSetOptionWidget::on_btnFindCompilers_clicked()
 {
 #ifdef Q_OS_WIN
-        QString msg = tr("Red Panda C++ will clear current compiler list and search"
-                      " for compilers in the following locations:<br /> '%1'<br /> '%2'<br />Are you really want to continue?")
+        QString msg = tr("Red Panda C++ will clear previously found compiler list and search"
+                      " for compilers in the following locations:<br /> '%1'<br /> '%2'<br />Do you really want to continue?")
                                  .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW32")
                                  .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW64");
 #else
-        QString msg = tr("Red Panda C++ will clear current compiler list and search"
-                      " for compilers in the the PATH. <br />Are you really want to continue?");
+        QString msg = tr("Red Panda C++ will clear previously found compiler list and search"
+                      " for compilers in the the PATH. <br />Do you really want to continue?");
 #endif
     if (QMessageBox::warning(this,tr("Confirm"),msg,
                                  QMessageBox::Ok | QMessageBox::Cancel) != QMessageBox::Ok )
@@ -315,14 +317,12 @@ void CompilerSetOptionWidget::on_btnFindCompilers_clicked()
                 pMainWindow);
 
     progressDlg.setWindowModality(Qt::WindowModal);
-    progressDlg.setMaximum(3);
+    progressDlg.setMaximum(2);
     progressDlg.setLabelText(tr("Searching..."));
-    pSettings->compilerSets().clearSets();
-    progressDlg.setValue(1);
     pSettings->compilerSets().findSets();
-    progressDlg.setValue(2);
+    progressDlg.setValue(1);
     doLoad();
-    progressDlg.setValue(3);
+    progressDlg.setValue(2);
     setSettingsChanged();
     if (pSettings->compilerSets().size()==0) {
         QMessageBox::warning(this,tr("Failed"),tr("Can't find any compiler."));
@@ -332,9 +332,10 @@ void CompilerSetOptionWidget::on_btnFindCompilers_clicked()
 void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_clicked()
 {
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("Name"));
-    pSettings->compilerSets().addSet();
+    Settings::PCompilerSet set = pSettings->compilerSets().addSet();
     pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().size()-1);
-    pSettings->compilerSets().defaultSet()->setName(name);
+    set->setName(name);
+    set->setPersistInAutoFind(true);
     doLoad();
 }
 

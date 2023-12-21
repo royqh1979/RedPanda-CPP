@@ -1015,12 +1015,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="299"/>
-        <source>Red Panda C++ will clear current compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Are you really want to continue?</source>
-        <oldsource>Red Panda C++ will clear current compiler list and search for compilers in the following locations:
- &apos;%1&apos;
-&apos;%2&apos;
-Are you really want to continue?</oldsource>
-        <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在下列文件夹中搜索编译器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你确定要继续吗？</translation>
+        <source>Red Panda C++ will clear previously found compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Do you really want to continue?</source>
+        <translation>小熊猫C++ 将会清除以前搜索到的编译器配置列表，然后在下列文件夹中搜索编译器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="68"/>
@@ -1034,8 +1030,8 @@ Are you really want to continue?</oldsource>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="304"/>
-        <source>Red Panda C++ will clear current compiler list and search for compilers in the the PATH. &lt;br /&gt;Are you really want to continue?</source>
-        <translation>小熊猫C++ 将会清除现有的编译器配置列表，然后在PATH路径中搜索gcc编译器.&lt;br /&gt;你确定要继续吗？</translation>
+        <source>Red Panda C++ will clear previously found compiler list and search for compilers in the the PATH. &lt;br /&gt;Do you really want to continue?</source>
+        <translation>小熊猫C++ 将会清除以前搜索到的编译器配置列表，然后在PATH路径中搜索gcc编译器.&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="311"/>
@@ -1132,6 +1128,10 @@ Are you really want to continue?</oldsource>
     <message>
         <source>Locate nasm</source>
         <translation type="vanished">定位nasm程序</translation>
+    </message>
+    <message>
+        <source>Survive auto-finds</source>
+        <translation>自动搜索时保留此项</translation>
     </message>
 </context>
 <context>
