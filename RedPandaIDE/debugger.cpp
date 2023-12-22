@@ -136,9 +136,9 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
     mWatchModel->resetAllVarInfos();
     if (pSettings->debugger().useGDBServer()) {
         //deleted when thread finished
-        QString params;
+        QStringList params;
         if (pSettings->executor().useParams())
-            params = pSettings->executor().params();
+            params = splitProcessCommand(pSettings->executor().params());
         mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort(),params);
         if (pSettings->executor().redirectInput())
             mTarget->setInputFile(pSettings->executor().inputFilename());
@@ -1850,7 +1850,7 @@ void DebugReader::run()
     mErrorOccured = false;
     QString cmd = mDebuggerPath;
 //    QString arguments = "--annotate=2";
-    QString arguments = "--interpret=mi --silent";
+    QStringList arguments{"--interpret=mi", "--silent"};
     QString workingDir = QFileInfo(mDebuggerPath).path();
 
     mProcess = std::make_shared<QProcess>();
@@ -1858,7 +1858,7 @@ void DebugReader::run()
         mProcess.reset();
     });
     mProcess->setProgram(cmd);
-    mProcess->setArguments(splitProcessCommand(arguments));
+    mProcess->setArguments(arguments);
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -3012,7 +3012,7 @@ DebugTarget::DebugTarget(
         const QString &inferior,
         const QString &GDBServer,
         int port,
-        const QString& arguments,
+        const QStringList& arguments,
         QObject *parent):
     QThread(parent),
     mInferior(inferior),
@@ -3062,14 +3062,31 @@ void DebugTarget::run()
     mErrorOccured = false;
 
     //find first available port
+    QStringList execArgs = QStringList{
+        mGDBServer,
+        QString("localhost:%1").arg(mPort),
+        mInferior,
+    } + mArguments;
     QString cmd;
-    QString arguments;
+    QStringList arguments;
+    std::unique_ptr<QTemporaryFile> fileOwner;
 #ifdef Q_OS_WIN
-    cmd= mGDBServer;
-    arguments = QString(" localhost:%1 \"%2\" %3").arg(mPort).arg(mInferior,mArguments);
+    if (pSettings->environment().useCustomTerminal()) {
+        std::tie(cmd, arguments, fileOwner) = wrapCommandForTerminalEmulator(
+            pSettings->environment().terminalPath(),
+            pSettings->environment().terminalArgumentsPattern(),
+            execArgs
+        );
+    } else {
+        cmd = execArgs[0];
+        arguments = execArgs.mid(1);
+    }
 #else
-    cmd= pSettings->environment().terminalPath();
-    arguments = QString(" -e \"%1\" localhost:%2 \"%3\"").arg(mGDBServer).arg(mPort).arg(mInferior);
+    std::tie(cmd, arguments, fileOwner) = wrapCommandForTerminalEmulator(
+        pSettings->environment().terminalPath(),
+        pSettings->environment().terminalArgumentsPattern(),
+        execArgs
+    );
 #endif
     QString workingDir = QFileInfo(mInferior).path();
 
@@ -3078,7 +3095,7 @@ void DebugTarget::run()
         mProcess.reset();
     });
     mProcess->setProgram(cmd);
-    mProcess->setArguments(splitProcessCommand(arguments));
+    mProcess->setArguments(arguments);
     mProcess->setProcessChannelMode(QProcess::MergedChannels);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");

@@ -39,6 +39,16 @@
                 "argsPattern": "$term -e $argv"
             },
             {
+                "name": "ConEmu",
+                "path": "ConEmu.exe",
+                "argsPattern": "$term -run $argv"
+            },
+            {
+                "name": "ConEmu",
+                "path": "ConEmu64.exe",
+                "argsPattern": "$term -run $argv"
+            },
+            {
                 "name": "Konsole",
                 "path": "konsole.exe",
                 "argsPattern": "$term -e $argv"

@@ -81,7 +81,7 @@
             {
                 "name": "GNOME Terminal",
                 "path": "gnome-terminal",
-                "argsPattern": "$term -- $argv"
+                "argsPattern": "$term --wait -- $argv"
             },
             {
                 "name": "GNOME Terminator",
