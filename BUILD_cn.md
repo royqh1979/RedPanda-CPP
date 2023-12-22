@@ -80,9 +80,8 @@
 
 关于 ARM 上的 Windows 的注记：
 - 小熊猫 C++ 只能在 Windows 11 ARM64 上构建 ARM64 版，成品应该能在 Windows 10 ARM64 上运行（但没有测试过）。
-- 暂不支持以 x64 互操作性著称的 ARM64EC（“仿真兼容”）ABI。
-  - 既然小熊猫 C++ 已经可以构建到 ARM64 经典 ABI，ARM64EC 就不能带来明显的好处。
-  - 但是 ARM64EC 可以支持用户习惯的输入法和喜欢的 Qt 样式。
+  - 不支持 ARM64EC（“仿真兼容”）主机，即不能用 ARM64EC 工具链构建小熊猫 C++。
+  - （理论上）支持 ARM64EC 目标，也就是说，如果上游工具链支持 ARM64EC，那么小熊猫 C++ 可以构建 ARM64EC 程序和库。
 - 随着 [Windows 11 Insider Preview Build 25905 弃用 ARM32](https://blogs.windows.com/windows-insider/2023/07/12/announcing-windows-11-insider-preview-build-25905/)，小熊猫 C++ 今后也不会添加 ARM32 支持了。
 
 适用于旧版 Windows（NT 5.1 – 6.0）：

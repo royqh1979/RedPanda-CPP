@@ -80,9 +80,8 @@ For Windows 7 or later:
 
 Notes for Windows on ARM:
 - Red Panda C++ can be built for ARM64 ABI only on Windows 11 ARM64, while it is supposed (but not tested) to run on Windows 10 ARM64.
-- The ARM64EC (“emulation compatible”) ABI, which highlights interoperability with x64, is currently not supported.
-  - ARM64EC does not bring significant benefit, since Red Panda C++ can be built to ARM64 classic ABI.
-  - However, ARM64EC will allow users to use their favorite input methods, fancy Qt styles.
+  - ARM64EC (“emulation compatible”) host is not supported, i.e., Red Panda C++ cannot be built with ARM64EC toolchain.
+  - ARM64EC target is (theoretically) supported, i.e. Red Panda C++ will build ARM64EC binaries if upstream toolchain supports ARM64EC.
 - With the [ARM32 deprecation in Windows 11 Insider Preview Build 25905](https://blogs.windows.com/windows-insider/2023/07/12/announcing-windows-11-insider-preview-build-25905/), ARM32 support will never be added.
 
 For legacy Windows (NT 5.1 – 6.0):
