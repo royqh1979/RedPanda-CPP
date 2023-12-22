@@ -23,9 +23,15 @@
 #include <QJsonObject>
 #include <QMetaEnum>
 #include <QMetaObject>
+#include <QStyle>
 #include "utils.h"
 #include "settings.h"
 #include "systemconsts.h"
+
+#ifdef ENABLE_LUA_ADDON
+#include "addon/executor.h"
+#include "addon/runtime.h"
+#endif
 
 ThemeManager::ThemeManager(QObject *parent) : QObject(parent),
     mUseCustomTheme(false)
@@ -38,12 +44,17 @@ PAppTheme ThemeManager::theme(const QString &themeName)
     if (mUseCustomTheme)
         prepareCustomeTheme();
     PAppTheme appTheme = std::make_shared<AppTheme>();
-    QString themeDir;
-    if (mUseCustomTheme)
-        themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-    else
-        themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
-    appTheme->load(QString("%1/%2.json").arg(themeDir, themeName));
+    if (mUseCustomTheme) {
+        QString themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+        appTheme->load(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
+    } else {
+        QString themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+#ifdef ENABLE_LUA_ADDON
+        appTheme->load(QString("%1/%2.lua").arg(themeDir, themeName), AppTheme::ThemeType::Lua);
+#else
+        appTheme->load(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
+#endif
+    }
     return appTheme;
 }
 
@@ -72,22 +83,39 @@ QList<PAppTheme> ThemeManager::getThemes()
 
     QList<PAppTheme> result;
     QString themeDir;
-    if (mUseCustomTheme)
+    QString themeExtension;
+    AppTheme::ThemeType themeType;
+    if (mUseCustomTheme) {
         themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-    else
+        themeExtension = "json";
+        themeType = AppTheme::ThemeType::JSON;
+    } else {
         themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+#ifdef ENABLE_LUA_ADDON
+        themeExtension = "lua";
+        themeType = AppTheme::ThemeType::Lua;
+#else
+        themeExtension = "json";
+        themeType = AppTheme::ThemeType::JSON;
+#endif
+    }
     QDirIterator it(themeDir);
     while (it.hasNext()) {
         it.next();
         QFileInfo fileInfo = it.fileInfo();
-        if (fileInfo.suffix().compare("json", PATH_SENSITIVITY)==0) {
+        if (fileInfo.suffix().compare(themeExtension, PATH_SENSITIVITY)==0) {
             try {
                 PAppTheme appTheme = std::make_shared<AppTheme>();
-                appTheme->load(fileInfo.absoluteFilePath());
+                appTheme->load(fileInfo.absoluteFilePath(), themeType);
                 result.append(appTheme);
             } catch(FileError e) {
                 //just skip it
             }
+#ifdef ENABLE_LUA_ADDON
+            catch(AddOn::LuaError e) {
+                qDebug() << e.reason();
+            }
+#endif
         }
     }
     return result;
@@ -170,7 +198,7 @@ QPalette AppTheme::palette() const
     return pal;
 }
 
-void AppTheme::load(const QString &filename)
+void AppTheme::load(const QString &filename, ThemeType type)
 {
     QFile file(filename);
     if (!file.exists()) {
@@ -179,23 +207,52 @@ void AppTheme::load(const QString &filename)
     }
     if (file.open(QFile::ReadOnly)) {
         QByteArray content = file.readAll();
-        QJsonParseError error;
-        QJsonDocument doc(QJsonDocument::fromJson(content,&error));
-        if (error.error  != QJsonParseError::NoError) {
-            throw FileError(tr("Error in json file '%1':%2 : %3")
-                            .arg(filename)
-                            .arg(error.offset)
-                            .arg(error.errorString()));
+        QJsonObject obj;
+
+        switch (type) {
+        case ThemeType::JSON: {
+            QJsonParseError error;
+            QJsonDocument doc(QJsonDocument::fromJson(content, &error));
+            if (error.error  != QJsonParseError::NoError) {
+                throw FileError(tr("Error in json file '%1':%2 : %3")
+                                    .arg(filename)
+                                    .arg(error.offset)
+                                    .arg(error.errorString()));
+            }
+            obj = doc.object();
+
+            // In Lua-based theme, the "style" key has replaced "isDark" and "useQtFusionStyle" keys.
+            // The following part handles old "isDark" and "useQtFusionStyle" keys.
+            if (!obj.contains("style")) {
+                bool useQtFusionStyle = obj["useQtFusionStyle"].toBool(true);
+                if (useQtFusionStyle) {
+                    bool isDark = obj["isDark"].toBool(false);
+                    obj["style"] = isDark ? "RedPandaDarkFusion" : "RedPandaLightFusion";
+                } else {
+                    obj["style"] = AppTheme::initialStyle();
+                }
+            }
+
+            // In Lua-based theme, the script handles name localization.
+            // The following part handles old "name_xx_XX" keys.
+            QString localeName = obj["name_"+pSettings->environment().language()].toString();
+            if (!localeName.isEmpty())
+                obj["name"] = localeName;
+
+            break;
         }
-        QJsonObject obj=doc.object();
+#ifdef ENABLE_LUA_ADDON
+        case ThemeType::Lua: {
+            obj = AddOn::ThemeExecutor{}(content, filename);
+            break;
+        }
+#endif
+        }
+
         QFileInfo fileInfo(filename);
         mName = fileInfo.baseName();
         mDisplayName = obj["name"].toString();
-        QString localeName = obj["name_"+pSettings->environment().language()].toString();
-        if (!localeName.isEmpty())
-            mDisplayName = localeName;
-        mUseQtFusionStyle = obj["useQtFusionStyle"].toBool(true);
-        mIsDark = obj["isDark"].toBool(false);
+        mStyle = obj["style"].toString();
         mDefaultColorScheme = obj["default scheme"].toString();
         mDefaultIconSet = obj["default iconset"].toString();
         QJsonObject colors = obj["palette"].toObject();
@@ -213,6 +270,12 @@ void AppTheme::load(const QString &filename)
         throw FileError(tr("Can't open the theme file '%1' for read.")
                         .arg(filename));
     }
+}
+
+bool AppTheme::isSystemInDarkMode() {
+    // https://www.qt.io/blog/dark-mode-on-windows-11-with-qt-6.5
+    // compare the window color with the text color to determine whether the palette is dark or light
+    return initialPalette().color(QPalette::WindowText).lightness() > initialPalette().color(QPalette::Window).lightness();
 }
 
 // If you copy QPalette, default values stay at default, even if that default is different
@@ -237,6 +300,12 @@ QPalette AppTheme::initialPalette()
 {
     static QPalette palette = copyPalette(QApplication::palette());
     return palette;
+}
+
+QString AppTheme::initialStyle()
+{
+    static QString style = QApplication::style()->objectName();
+    return style;
 }
 
 const QString &AppTheme::defaultIconSet() const
@@ -269,12 +338,7 @@ void AppTheme::setDefaultColorScheme(const QString &newDefaultColorScheme)
     mDefaultColorScheme = newDefaultColorScheme;
 }
 
-bool AppTheme::useQtFusionStyle() const
+const QString &AppTheme::style() const
 {
-    return mUseQtFusionStyle;
-}
-
-bool AppTheme::isDark() const
-{
-    return mIsDark;
+    return mStyle;
 }

@@ -1,6 +1,8 @@
 {
     "name":"Light",
+    "name_pt_BR": "Clara",
     "name_zh_CN": "浅色主题",
+    "name_zh_TW": "淺色主題",
     "useQtFusionStyle": true,
     "isDark": false,
     "default scheme": "Intellij Classic",

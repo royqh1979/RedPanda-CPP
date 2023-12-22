@@ -1,6 +1,8 @@
 {
     "name":"Auto (follow system style and color)",
+    "name_pt_BR": "Auto (seguir estilo e cor do sistema)",
     "name_zh_CN":"自动（跟随系统样式和颜色）",
+    "name_zh_TW":"自動（跟隨系統樣式和顏色）",
     "useQtFusionStyle": false,
     "isDark": false,
     "default scheme": "Adaptive",

@@ -309,7 +309,7 @@
     </message>
     <message>
         <source>Auto (follow system style and color)</source>
-        <translation type="unfinished"></translation>
+        <translation>Auto (seguir estilo e cor do sistema)</translation>
     </message>
 </context>
 <context>

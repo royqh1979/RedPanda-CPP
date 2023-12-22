@@ -366,10 +366,6 @@ int main(int argc, char *argv[])
         if (firstRun) {
             //set theme
             ChooseThemeDialog themeDialog;
-#ifdef Q_OS_WINDOWS
-            // Qt's default style on Windows is not good.
-            themeDialog.hideAutoFollowSystemTheme();
-#endif
             themeDialog.exec();
             switch (themeDialog.theme()) {
             case ChooseThemeDialog::Theme::AutoFollowSystem:

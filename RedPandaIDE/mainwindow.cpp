@@ -40,6 +40,10 @@
 #include "iconsmanager.h"
 #include "widgets/newclassdialog.h"
 #include "widgets/newheaderdialog.h"
+#ifdef ENABLE_LUA_ADDON
+#include "addon/executor.h"
+#include "addon/runtime.h"
+#endif
 #ifdef ENABLE_VCS
 #include "vcs/gitmanager.h"
 #include "vcs/gitrepository.h"
@@ -902,15 +906,13 @@ void MainWindow::applySettings()
     themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
     try {
         PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
-        if (appTheme->useQtFusionStyle()) {
-            if (appTheme->isDark())
-                QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
-            else
-                QApplication::setStyle(new LightFusionStyle());//app takes the onwership
-        } else {
-            QString systemStyle = QStyleFactory::keys()[0]; // Breeze for KDE, etc.
-            QApplication::setStyle(systemStyle);
-        }
+        const QString& style = appTheme->style();
+        if (style == "RedPandaDarkFusion")
+            QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
+        else if (style == "RedPandaLightFusion")
+            QApplication::setStyle(new LightFusionStyle());//app takes the onwership
+        else
+            QApplication::setStyle(style);
         qApp->setPalette(appTheme->palette());
         //fix for qstatusbar bug
         mFileEncodingStatus->setPalette(appTheme->palette());
@@ -921,6 +923,13 @@ void MainWindow::applySettings()
                               tr("Load Theme Error"),
                               e.reason());
     }
+#ifdef ENABLE_LUA_ADDON
+    catch (AddOn::LuaError e) {
+        QMessageBox::critical(this,
+                              tr("Load Theme Error"),
+                              e.reason());
+    }
+#endif
 
     updateEditorColorSchemes();
 

@@ -51,8 +51,3 @@ void ChooseThemeDialog::on_btnOk_clicked()
 {
     accept();
 }
-
-void ChooseThemeDialog::hideAutoFollowSystemTheme()
-{
-    ui->rbAuto->hide();
-}

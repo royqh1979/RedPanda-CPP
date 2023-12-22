@@ -43,7 +43,6 @@ public:
     ~ChooseThemeDialog();
     Theme theme();
     Language language();
-    void hideAutoFollowSystemTheme();
 
 private slots:
     void on_btnOk_clicked();
