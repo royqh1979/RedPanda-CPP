@@ -96,6 +96,80 @@ jobs:
           name: Windows MSYS2 MINGW32
           path: pkg/
 
+  windows_msvc_x64:
+    name: Windows MSVC x64
+    runs-on: windows-2019
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          archives: qtbase qtsvg qttools
+          tools: tools_qtcreator,qt.tools.qtcreator
+
+      - name: Build
+        run: |
+          $JOM = "${Env:RUNNER_WORKSPACE}/Qt/Tools/QtCreator/bin/jom/jom.exe"
+          $VS_INSTALL_PATH = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
+          Import-Module "$VS_INSTALL_PATH\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -VsInstallPath "$VS_INSTALL_PATH" -SkipAutomaticLocation -DevCmdArguments -arch=amd64
+          mkdir build && pushd build
+          qmake PREFIX=${Env:GITHUB_WORKSPACE}/pkg ${Env:GITHUB_WORKSPACE}/Red_Panda_CPP.pro
+          & $JOM "-j${Env:NUMBER_OF_PROCESSORS}"
+          & $JOM install
+          windeployqt ${Env:GITHUB_WORKSPACE}/pkg/RedPandaIDE.exe
+          rm ${Env:GITHUB_WORKSPACE}/pkg/vc_redist.x64.exe
+          popd
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows MSVC x64
+          path: pkg/
+
+  windows_msvc_arm64ec:
+    name: Windows MSVC ARM64EC
+    runs-on: windows-2019
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          archives: qtbase qtsvg qttools
+          tools: tools_qtcreator,qt.tools.qtcreator
+
+      - name: Build
+        run: |
+          $JOM = "${Env:RUNNER_WORKSPACE}/Qt/Tools/QtCreator/bin/jom/jom.exe"
+          $VS_INSTALL_PATH = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
+          Import-Module "$VS_INSTALL_PATH\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -VsInstallPath "$VS_INSTALL_PATH" -SkipAutomaticLocation -DevCmdArguments "-arch=arm64 -host_arch=amd64"
+          mkdir build && pushd build
+          qmake QMAKE_CXXFLAGS="/arm64EC" QMAKE_LFLAGS="/MACHINE:ARM64EC" QMAKE_LIBFLAGS="/MACHINE:ARM64X" PREFIX=${Env:GITHUB_WORKSPACE}/pkg ${Env:GITHUB_WORKSPACE}/Red_Panda_CPP.pro
+          & $JOM "-j${Env:NUMBER_OF_PROCESSORS}"
+          & $JOM install
+          windeployqt ${Env:GITHUB_WORKSPACE}/pkg/RedPandaIDE.exe
+          rm ${Env:GITHUB_WORKSPACE}/pkg/vc_redist.x64.exe
+          popd
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows MSVC ARM64EC (do not use)
+          path: pkg/
+
   deb_oldest_lts:
     name: Deb on oldest LTS (Debian 10)
     runs-on: ubuntu-latest
