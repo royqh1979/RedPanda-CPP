@@ -33,6 +33,10 @@
 #ifdef Q_OS_LINUX
 #include <sys/sysinfo.h>
 #endif
+#ifdef ENABLE_LUA_ADDON
+# include "addon/executor.h"
+# include "addon/runtime.h"
+#endif
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -1765,6 +1769,126 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
 
 }
 
+Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
+    mFullLoaded{true},
+    mCCompiler{set["cCompiler"].toString()},
+    mCppCompiler{set["cxxCompiler"].toString()},
+    mMake{set["make"].toString()},
+    mDebugger{set["debugger"].toString()},
+    mResourceCompiler{set["resourceCompiler"].toString()},
+    mDebugServer{set["debugServer"].toString()},
+
+    mBinDirs{},               // handle later
+    mCIncludeDirs{},          // handle later
+    mCppIncludeDirs{},        // handle later
+    mLibDirs{},               // handle later
+    mDefaultLibDirs{},        // handle later
+    mDefaultCIncludeDirs{},   // handle later
+    mDefaultCppIncludeDirs{}, // handle later
+
+    mDumpMachine{set["dumpMachine"].toString()},
+    mVersion{set["version"].toString()},
+    mType{set["type"].toString()},
+    mName{set["name"].toString()},
+    mTarget{set["target"].toString()},
+    mCompilerType{}, // handle later
+
+    mUseCustomCompileParams{!set["customCompileParams"].toArray().isEmpty()},
+    mUseCustomLinkParams{!set["customLinkParams"].toArray().isEmpty()},
+    mCustomCompileParams{}, // handle later
+    mCustomLinkParams{},    // handle later
+    mAutoAddCharsetParams{!set["execCharset"].toString().isEmpty()},
+    mExecCharset{}, // handle later
+    mStaticLink{set["staticLink"].toBool()},
+
+    mPreprocessingSuffix{set["preprocessingSuffix"].toString()},
+    mCompilationProperSuffix{set["compilationProperSuffix"].toString()},
+    mAssemblingSuffix{set["assemblingSuffix"].toString()},
+    mExecutableSuffix{set["executableSuffix"].toString()},
+    mCompilationStage{CompilationStage(set["compilationStage"].toInt())},
+    mCompileOptions{} // handle later
+{
+    for (const QJsonValue &dir : set["binDirs"].toArray())
+        mBinDirs.append(dir.toString());
+    for (const QJsonValue &dir : set["cIncludeDirs"].toArray())
+        mCIncludeDirs.append(dir.toString());
+    for (const QJsonValue &dir : set["cxxIncludeDirs"].toArray())
+        mCppIncludeDirs.append(dir.toString());
+    for (const QJsonValue &dir : set["libDirs"].toArray())
+        mLibDirs.append(dir.toString());
+    for (const QJsonValue &dir : set["defaultLibDirs"].toArray())
+        mDefaultLibDirs.append(dir.toString());
+    for (const QJsonValue &dir : set["defaultCIncludeDirs"].toArray())
+        mDefaultCIncludeDirs.append(dir.toString());
+    for (const QJsonValue &dir : set["defaultCxxIncludeDirs"].toArray())
+        mDefaultCppIncludeDirs.append(dir.toString());
+
+    QString compilerType = set["compilerType"].toString();
+    if (compilerType == "GCC") {
+        mCompilerType = CompilerType::GCC;
+    } else if (compilerType == "GCC_UTF8") {
+        mCompilerType = CompilerType::GCC_UTF8;
+    } else if (compilerType == "Clang") {
+        mCompilerType = CompilerType::Clang;
+    }
+#if ENABLE_SDCC
+    else if (compilerType == "SDCC") {
+        mCompilerType = CompilerType::SDCC;
+    }
+#endif
+    else {
+        mCompilerType = CompilerType::Unknown;
+        mFullLoaded = false;
+    }
+
+    QStringList escapedCompileParams;
+    for (const QJsonValue &param : set["customCompileParams"].toArray())
+        escapedCompileParams.append(escapeArgument(param.toString(), false));
+    mCustomCompileParams = escapedCompileParams.join(' ');
+    QStringList escapedLinkParams;
+    for (const QJsonValue &param : set["customLinkParams"].toArray())
+        escapedLinkParams.append(escapeArgument(param.toString(), false));
+    mCustomLinkParams = escapedLinkParams.join(' ');
+
+    if (!mAutoAddCharsetParams)
+        mExecCharset = "UTF-8";
+    else
+        mExecCharset = set["execCharset"].toString();
+
+    const static QMap<QString, QString> optionMap = {
+                                                     {CC_CMD_OPT_OPTIMIZE, "ccCmdOptOptimize"},
+                                                     {CC_CMD_OPT_STD, "ccCmdOptStd"},
+                                                     {C_CMD_OPT_STD, "cCmdOptStd"},
+                                                     {CC_CMD_OPT_INSTRUCTION, "ccCmdOptInstruction"},
+
+                                                     {CC_CMD_OPT_POINTER_SIZE, "ccCmdOptPointerSize"},
+
+                                                     {CC_CMD_OPT_DEBUG_INFO, "ccCmdOptDebugInfo"},
+                                                     {CC_CMD_OPT_PROFILE_INFO, "ccCmdOptProfileInfo"},
+                                                     {CC_CMD_OPT_SYNTAX_ONLY, "ccCmdOptSyntaxOnly"},
+
+                                                     {CC_CMD_OPT_INHIBIT_ALL_WARNING, "ccCmdOptInhibitAllWarning"},
+                                                     {CC_CMD_OPT_WARNING_ALL, "ccCmdOptWarningAll"},
+                                                     {CC_CMD_OPT_WARNING_EXTRA, "ccCmdOptWarningExtra"},
+                                                     {CC_CMD_OPT_CHECK_ISO_CONFORMANCE, "ccCmdOptCheckIsoConformance"},
+                                                     {CC_CMD_OPT_WARNING_AS_ERROR, "ccCmdOptWarningAsError"},
+                                                     {CC_CMD_OPT_ABORT_ON_ERROR, "ccCmdOptAbortOnError"},
+                                                     {CC_CMD_OPT_STACK_PROTECTOR, "ccCmdOptStackProtector"},
+                                                     {CC_CMD_OPT_ADDRESS_SANITIZER, "ccCmdOptAddressSanitizer"},
+
+                                                     {CC_CMD_OPT_USE_PIPE, "ccCmdOptUsePipe"},
+                                                     {LINK_CMD_OPT_NO_LINK_STDLIB, "linkCmdOptNoLinkStdlib"},
+                                                     {LINK_CMD_OPT_NO_CONSOLE, "linkCmdOptNoConsole"},
+                                                     {LINK_CMD_OPT_STRIP_EXE, "linkCmdOptStripExe"},
+                                                     };
+    for (const QString &key : optionMap.keys()) {
+        const QString &jsonKey = optionMap[key];
+        QString value = set[jsonKey].toString();
+        if (!value.isEmpty())
+            setCompileOption(key, value);
+    }
+}
+
 void Settings::CompilerSet::resetCompileOptionts()
 {
       mCompileOptions.clear();
@@ -2982,6 +3106,13 @@ Settings::PCompilerSet Settings::CompilerSets::addSet(const PCompilerSet &pSet)
     return p;
 }
 
+Settings::PCompilerSet Settings::CompilerSets::addSet(const QJsonObject &set)
+{
+    PCompilerSet p = std::make_shared<CompilerSet>(set);
+    mList.push_back(p);
+    return p;
+}
+
 static void set64_32Options(Settings::PCompilerSet pSet) {
     pSet->setCompileOption(CC_CMD_OPT_POINTER_SIZE,"32");
 }
@@ -3116,42 +3247,74 @@ void Settings::CompilerSets::clearSets()
 void Settings::CompilerSets::findSets()
 {
     clearSets();
+    // canonical paths that has been searched.
+    // use canonical paths here to resolve symbolic links.
     QSet<QString> searched;
+
+#ifdef ENABLE_LUA_ADDON
+    QJsonObject compilerHint;
+    if (
+        QFile scriptFile(pSettings->dirs().appLibexecDir() + "/compiler_hint.lua");
+        scriptFile.exists() && scriptFile.open(QFile::ReadOnly)
+    ) {
+        QByteArray script = scriptFile.readAll();
+        try {
+            compilerHint = AddOn::CompilerHintExecutor{}(script);
+        } catch (const AddOn::LuaError &e) {
+            qDebug() << "Error in compiler_hint.lua:" << e.reason();
+        }
+        if (!compilerHint.empty()) {
+            QJsonArray compilerList = compilerHint["compilerList"].toArray();
+            for (const QJsonValue &value : compilerList) {
+                addSet(value.toObject());
+            }
+            QJsonArray noSearch = compilerHint["noSearch"].toArray();
+            QString canonicalPath;
+            for (const QJsonValue &value : noSearch) {
+                canonicalPath = QDir(value.toString()).canonicalPath();
+                if (!canonicalPath.isEmpty())
+                    searched.insert(canonicalPath);
+            }
+        }
+    }
+#endif
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathList = path.split(PATH_SEPARATOR);
-    QString folder;
+#ifdef Q_OS_WIN
+    pathList = QStringList{
+        mSettings->dirs().appDir() + "/Clang64/bin",
+        mSettings->dirs().appDir() + "/MinGW64/bin",
+        mSettings->dirs().appDir() + "/MinGW32/bin",
+    } + pathList;
+#endif
+    QString folder, canonicalFolder;
     for (int i=pathList.count()-1;i>=0;i--) {
-        folder = QFileInfo(pathList[i]).absoluteFilePath();
-        if (searched.contains(folder))
+        folder = QDir(pathList[i]).absolutePath();
+        canonicalFolder = QDir(pathList[i]).canonicalPath();
+        if (canonicalFolder.isEmpty())
             continue;
-        searched.insert(folder);
-        if (folder!="/bin") { // /bin/gcc is symbolic link to /usr/bin/gcc
-            addSets(folder);
-        }
+        if (searched.contains(canonicalFolder))
+            continue;
+        searched.insert(canonicalFolder);
+        // but use absolute path to search so compiler set can survive system upgrades.
+        // during search:
+        //   /opt/gcc-13 -> /opt/gcc-13.1.0
+        // after upgrade:
+        //   /opt/gcc-13 -> /opt/gcc-13.2.0
+        addSets(folder);
     }
 
-#ifdef Q_OS_WIN
-    folder = includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW32"+QDir::separator()+"bin";
-    folder = QFileInfo(folder).absoluteFilePath();
-    if (!searched.contains(folder)) {
-        addSets(folder);
-        searched.insert(folder);
-    }
-    folder = includeTrailingPathDelimiter(mSettings->dirs().appDir())+"MinGW64"+QDir::separator()+"bin";
-    folder = QFileInfo(folder).absoluteFilePath();
-    if (!searched.contains(folder)) {
-        addSets(folder);
-        searched.insert(folder);
-    }
-    folder = includeTrailingPathDelimiter(mSettings->dirs().appDir())+"Clang64"+QDir::separator()+"bin";
-    if (!searched.contains(folder)) {
-        addSets(folder);
-        searched.insert(folder);
+#ifdef ENABLE_LUA_ADDON
+    if (
+        // note that array index starts from 1 in Lua
+        int preferCompilerInLua = compilerHint["preferCompiler"].toInt();
+        preferCompilerInLua >= 1 && preferCompilerInLua <= (int)mList.size()
+    ) {
+        mDefaultIndex = preferCompilerInLua - 1;
     }
 #endif
-
 }
 
 void Settings::CompilerSets::saveSets()
