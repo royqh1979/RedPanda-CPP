@@ -10,6 +10,7 @@ VERSION=$(git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g') 
 sed "s/__VERSION__/$VERSION/g" packages/archlinux/PKGBUILD.in >"$TMP_FOLDER/PKGBUILD"
 
 git archive --prefix="RedPanda-CPP/" -o "$TMP_FOLDER/RedPanda-CPP.tar.gz" HEAD
+cp packages/archlinux/compiler_hint.lua "$TMP_FOLDER/"
 
 cd "$TMP_FOLDER"
 makepkg -s --noconfirm
