@@ -70,12 +70,32 @@ QString RaiiLuaState::fetchString(int index)
 
 QJsonValue RaiiLuaState::fetch(int index)
 {
-    return fetchValueImpl(index, 0);
+    return fetchValueImpl(mLua, index, 0);
+}
+
+bool RaiiLuaState::fetchBoolean(lua_State *L, int index)
+{
+    return lua_toboolean(L, index);
+}
+
+long long RaiiLuaState::fetchInteger(lua_State *L, int index)
+{
+    return lua_tointeger(L, index);
+}
+
+double RaiiLuaState::fetchNumber(lua_State *L, int index)
+{
+    return lua_tonumber(L, index);
 }
 
 QString RaiiLuaState::fetchString(lua_State *L, int index)
 {
     return lua_tostring(L, index);
+}
+
+QJsonValue RaiiLuaState::fetch(lua_State *L, int index)
+{
+    return fetchValueImpl(L, index, 0);
 }
 
 bool RaiiLuaState::popBoolean()
@@ -99,6 +119,13 @@ QJsonValue RaiiLuaState::pop()
     return value;
 }
 
+QJsonValue RaiiLuaState::pop(lua_State *L)
+{
+    QJsonValue value = fetch(L, -1);
+    lua_pop(L, 1);
+    return value;
+}
+
 void RaiiLuaState::push(decltype(nullptr))
 {
     lua_pushnil(mLua);
@@ -114,6 +141,16 @@ void RaiiLuaState::push(const QMap<QString, lua_CFunction> &value)
     }
 }
 
+void RaiiLuaState::push(lua_State *L, decltype(nullptr))
+{
+    lua_pushnil(L);
+}
+
+void RaiiLuaState::push(lua_State *L, bool value)
+{
+    lua_pushboolean(L, value);
+}
+
 void RaiiLuaState::push(lua_State *L, const QString &value)
 {
     lua_pushstring(L, value.toUtf8().constData());
@@ -127,6 +164,16 @@ void RaiiLuaState::push(lua_State *L, const QStringList &value)
         lua_pushstring(L, value[i].toUtf8().constData());
         lua_settable(L, -3);
     }
+}
+
+int RaiiLuaState::getTop()
+{
+    return lua_gettop(mLua);
+}
+
+int RaiiLuaState::getTop(lua_State *L)
+{
+    return lua_gettop(L);
 }
 
 int RaiiLuaState::loadBuffer(const QByteArray &buff, const QString &name)
@@ -166,15 +213,15 @@ LuaExtraState &RaiiLuaState::extraState(lua_State *lua) {
     return mExtraState[lua];
 }
 
-QJsonValue RaiiLuaState::fetchTableImpl(int index, int depth)
+QJsonValue RaiiLuaState::fetchTableImpl(lua_State *L, int index, int depth)
 {
     if (depth == 1)
         // check stack size at first recursion to avoid multiple reallocations
-        lua_checkstack(mLua, LUA_STACK_SIZE);
+        lua_checkstack(L, LUA_STACK_SIZE);
     if (depth > TABLE_MAX_DEPTH)
         throw LuaError("Lua runtime error: table nested too deeply");
 
-    push(nullptr); // make sure lua_next starts at beginning
+    push(L, nullptr); // make sure lua_next starts at beginning
     int newIndex = index < 0 ? index - 1 : index; // after push negative index changes
 
     QJsonObject hashPart;
@@ -182,15 +229,15 @@ QJsonValue RaiiLuaState::fetchTableImpl(int index, int depth)
 
     // here we take the fact that Lua iterates array part first
     bool processingArrayPart = true;
-    while (lua_next(mLua, newIndex)) {
-        QJsonValue v = pop();
-        if (processingArrayPart && lua_isinteger(mLua, -1) && fetchInteger(-1) == arrayPart.size() + 1)
+    while (lua_next(L, newIndex)) {
+        QJsonValue v = pop(L);
+        if (processingArrayPart && lua_isinteger(L, -1) && fetchInteger(L, -1) == arrayPart.size() + 1)
             // we are still in array part
             arrayPart.push_back(v);
         else {
             // we have stepped in hash part
             processingArrayPart = false;
-            QString k = fetchString(-1);
+            QString k = fetchString(L, -1);
             hashPart[k] = v;
         }
     }
@@ -212,22 +259,24 @@ QJsonValue RaiiLuaState::fetchTableImpl(int index, int depth)
             return {};
 }
 
-QJsonValue RaiiLuaState::fetchValueImpl(int index, int depth)
+QJsonValue RaiiLuaState::fetchValueImpl(lua_State *L, int index, int depth)
 {
-    if (lua_isnil(mLua, index))
+    if (lua_isnil(L, index))
         return {};
-    else if (lua_isboolean(mLua, index))
-        return fetchBoolean(index);
-    else if (lua_isinteger(mLua, index))
-        return fetchInteger(index);
-    else if (lua_isnumber(mLua, index))
-        return fetchNumber(index);
-    else if (lua_isstring(mLua, index))
-        return fetchString(index);
-    else if (lua_istable(mLua, index))
-        return fetchTableImpl(index, depth + 1);
+    else if (lua_isboolean(L, index))
+        return fetchBoolean(L, index);
+    else if (lua_isinteger(L, index))
+        return fetchInteger(L, index);
+    // lua_isnumber treats strings that can be converted to numbers as numbers
+    // use lua_type to detect numbers
+    else if (lua_type(L, index) == LUA_TNUMBER)
+        return fetchNumber(L, index);
+    else if (lua_isstring(L, index))
+        return fetchString(L, index);
+    else if (lua_istable(L, index))
+        return fetchTableImpl(L, index, depth + 1);
     else
-        throw LuaError(QString("Lua type error: unknown type %1.").arg(lua_typename(mLua, index)));
+        throw LuaError(QString("Lua type error: unknown type %1.").arg(lua_typename(L, index)));
 }
 
 QHash<lua_State *, LuaExtraState> RaiiLuaState::mExtraState;

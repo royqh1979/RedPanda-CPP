@@ -43,6 +43,12 @@ public:
     QJsonObject operator()(const QByteArray &script, const QString &name);
 };
 
+class CompilerHintExecutor : private SimpleExecutor {
+public:
+    CompilerHintExecutor();
+    QJsonObject operator()(const QByteArray &script);
+};
+
 }
 
 #endif // ADDON_EXECUTOR_H
