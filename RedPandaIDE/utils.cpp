@@ -393,21 +393,19 @@ bool isGreenEdition()
 {
 #ifdef Q_OS_WIN
     if (!gIsGreenEditionInited) {
-        QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
-        QString value;
-        if (!readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", value)) {
-            keyString = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++";
-            if (!readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", value)) {
-                value="";
-            }
-        }
-        if (!value.isEmpty()) {
-            QString regPath = extractFileDir(value);
-
-            QString appPath = QApplication::instance()->applicationDirPath();
-            gIsGreenEdition = excludeTrailingPathDelimiter(regPath).compare(excludeTrailingPathDelimiter(appPath),
-                                                                            Qt::CaseInsensitive)!=0;
-        }
+        QString appPath = QApplication::instance()->applicationDirPath();
+        appPath = excludeTrailingPathDelimiter(appPath);
+        QString keyString = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++)";
+        QString systemInstallPath;
+        readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", systemInstallPath);
+        if (!systemInstallPath.isEmpty())
+            systemInstallPath = excludeTrailingPathDelimiter(extractFileDir(systemInstallPath));
+        QString userInstallPath;
+        readRegistry(HKEY_CURRENT_USER, keyString, "UninstallString", userInstallPath);
+        if (!userInstallPath.isEmpty())
+            userInstallPath = excludeTrailingPathDelimiter(extractFileDir(userInstallPath));
+        gIsGreenEdition = appPath.compare(systemInstallPath, Qt::CaseInsensitive) != 0 &&
+                appPath.compare(userInstallPath, Qt::CaseInsensitive) != 0;
         gIsGreenEditionInited = true;
     }
     return gIsGreenEdition;
