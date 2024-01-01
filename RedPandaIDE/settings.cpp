@@ -3787,11 +3787,10 @@ void Settings::Environment::doLoad()
     }
 
 #ifdef Q_OS_WINDOWS
-# if defined (__aarch64__) || defined(_M_ARM64)
-    // the only native MinGW toolchain (LLVM-MinGW) does not have local codepage support
+# ifdef WINDOWS_PREFER_OPENCONSOLE
     // prefer UTF-8 compatible OpenConsole.exe
     mUseCustomTerminal = boolValue("use_custom_terminal", true);
-# else // x86 or x64
+# else
     mUseCustomTerminal = boolValue("use_custom_terminal", false);
 # endif
 #else // UNIX

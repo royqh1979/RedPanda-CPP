@@ -78,6 +78,12 @@
 | Qt.io + MSVC | ✔️ | ✔️ | ❌ |
 | vcpkg + MSVC | ✔️ | ✔️ | ❌ |
 
+qmake 变量：
+- `PREFIX`：`$MAKE install` 的安装路径。
+- `WINDOWS_PREFER_OPENCONSOLE=ON`（make 阶段）：首选兼容 UTF-8 的 `OpenConsole.exe`。
+  - `OpenConsole.exe` 是 Windows 终端的组件，在 1.18 版本加入了 UTF-8 输出支持。
+  - `OpenConsole.exe` 需要 Windows 10 1809 加入的 ConPTY 接口。
+
 关于 ARM 上的 Windows 的注记：
 - 小熊猫 C++ 只能在 Windows 11 ARM64 上构建 ARM64 版，成品应该能在 Windows 10 ARM64 上运行（但没有测试过）。
   - 不支持 ARM64EC（“仿真兼容”）主机，即不能用 ARM64EC 工具链构建小熊猫 C++。
