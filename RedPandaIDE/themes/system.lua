@@ -79,17 +79,17 @@ function getPalette()
 end
 
 local nameMap = {
-    en_US = "Auto (follow system style and color)",
-    pt_BR = "Auto (seguir estilo e cor do sistema)",
-    zh_CN = "自动（跟随系统样式和颜色）",
-    zh_TW = "自動（跟隨系統樣式和顏色）"
+    en_US = "System Style and Color",
+    pt_BR = "Estilo e Cor do Sistema",
+    zh_CN = "跟随系统样式和颜色",
+    zh_TW = "跟隨系統樣式和顏色"
 }
 
 local nameMapNoStyle = {
-    en_US = "Auto (follow system color)",
-    pt_BR = "Auto (seguir cor do sistema)",
-    zh_CN = "自动（跟随系统颜色）",
-    zh_TW = "自動（跟隨系統顏色）"
+    en_US = "System Color",
+    pt_BR = "Cor do Sistema",
+    zh_CN = "跟随系统颜色",
+    zh_TW = "跟隨系統顏色"
 }
 
 local lang = C_Desktop.language()
