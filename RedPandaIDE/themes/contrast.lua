@@ -1,8 +1,8 @@
 local nameMap = {
     en_US = "Contrast",
     pt_BR = "Contraste",
-    zh_CN = "高对比度",
-    zh_TW = "高對比度"
+    zh_CN = "高对比度主题",
+    zh_TW = "高對比度主題"
 }
 
 local lang = C_Desktop.language()
@@ -15,8 +15,8 @@ return {
     ["palette"] = {
         PaletteWindow = "#000000",
         PaletteWindowText = "#FFFFFF",
-        PaletteBase = "#0A0A0A",
-        PaletteAlternateBase = "#0F0F0F",
+        PaletteBase = "#141414",
+        PaletteAlternateBase = "#191919",
         PaletteButton = "#141414",
         PaletteButtonDisabled = "#141414",
         PaletteBrightText = "#ff0000",
@@ -30,11 +30,11 @@ return {
         PaletteToolTipText = "#e7e7e7",
         PaletteLink = "#007af4",
         PaletteLinkVisited = "#a57aff",
-        PaletteWindowDisabled = "#9DA9B5",
+        PaletteWindowDisabled = "#0A0A0A",
         PaletteWindowTextDisabled = "#9DA9B5",
         PaletteHighlightDisabled = "#9DA9B5",
         PaletteHighlightedTextDisabled = "#9DA9B5",
-        PaletteBaseDisabled = "#0A0A0A",
+        PaletteBaseDisabled = "#000000",
         PaletteTextDisabled = "#9DA9B5",
         PaletteMid = "#FFFFFF",
         PaletteLight = "#505050",
