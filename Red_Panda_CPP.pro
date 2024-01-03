@@ -89,6 +89,7 @@ win32: {
         resources.files += platform/windows/installer-scripts/config.nsh
         resources.files += platform/windows/installer-scripts/config32.nsh
         resources.files += platform/windows/installer-scripts/config-clang.nsh
+        resources.files += platform/windows/qt.conf
         resources.files += README.md
         resources.files += NEWS.md
         resources.files += LICENSE
