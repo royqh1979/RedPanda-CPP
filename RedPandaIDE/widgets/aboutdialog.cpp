@@ -31,25 +31,29 @@ AboutDialog::AboutDialog(QWidget *parent) :
 
 #if defined(__clang__) // Clang always pretends to be GCC/MSVC. Check it first.
 # if defined(_MSC_VER)
-    QString templ = "Clang %1.%2.%3 MSVC ABI";
+    QString templ = "Clang %1.%2.%3 %4 MSVC ABI";
 # elif defined(__apple_build_version__)
-    QString templ = "Apple Clang %1.%2.%3";
+    QString templ = "Apple Clang %1.%2.%3 %4";
 # else
-    QString templ = "Clang %1.%2.%3";
+    QString templ = "Clang %1.%2.%3 %4";
 # endif
     ui->lblQt->setText(ui->lblQt->text()
                        .arg(qVersion())
                        .arg(templ
                             .arg(__clang_major__)
                             .arg(__clang_minor__)
-                            .arg(__clang_patchlevel__)));
+                            .arg(__clang_patchlevel__)
+                            .arg(appArch()))
+                       .arg(osArch()));
 #elif defined(__GNUC__)
     ui->lblQt->setText(ui->lblQt->text()
             .arg(qVersion())
-            .arg(QString("GCC %1.%2.%3")
+            .arg(QString("GCC %1.%2.%3 %4")
                  .arg(__GNUC__)
                  .arg(__GNUC_MINOR__)
-                 .arg(__GNUC_PATCHLEVEL__)));
+                 .arg(__GNUC_PATCHLEVEL__)
+                 .arg(appArch()))
+            .arg(osArch()));
 #elif defined(_MSC_VER)
 # if (_MSC_VER >= 1940)
     QString name = tr("Next Generation Microsoft Visual C++");
@@ -64,11 +68,13 @@ AboutDialog::AboutDialog(QWidget *parent) :
 # endif
     ui->lblQt->setText(ui->lblQt->text()
             .arg(qVersion())
-            .arg(name));
+            .arg(name + " " + appArch())
+            .arg(osArch()));
 #else
     ui->lblQt->setText(ui->lblQt->text()
             .arg(qVersion())
-            .arg(tr("Non-GCC Compiler")));
+            .arg(tr("Non-GCC Compiler"))
+            .arg(osArch()));
 #endif
     ui->lblCompileTime->setText(ui->lblCompileTime->text()
                                 .arg(__DATE__, __TIME__));

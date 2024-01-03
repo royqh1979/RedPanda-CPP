@@ -32,7 +32,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Based on Qt %1 (%2)</string>
+      <string>Based on Qt %1 (%2) running on %3</string>
      </property>
     </widget>
    </item>

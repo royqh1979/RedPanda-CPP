@@ -62,8 +62,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../widgets/aboutdialog.ui" line="35"/>
-        <source>Based on Qt %1 (%2)</source>
-        <translation>基于Qt %1 (%2)</translation>
+        <source>Based on Qt %1 (%2) running on %3</source>
+        <translation>基于 Qt %1 (%2) 运行于 %3</translation>
     </message>
     <message>
         <location filename="../widgets/aboutdialog.ui" line="47"/>
