@@ -12,8 +12,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Based on Qt %1 (%2)</source>
-        <translation type="unfinished"></translation>
+        <source>Based on Qt %1 (%2) running on %3</source>
+        <translation>基於 Qt %1 (%2) 執行於 %3</translation>
     </message>
     <message>
         <source>Build time: %1 %2</source>
