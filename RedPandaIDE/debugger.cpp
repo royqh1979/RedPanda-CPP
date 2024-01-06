@@ -3062,11 +3062,20 @@ void DebugTarget::run()
     mErrorOccured = false;
 
     //find first available port
-    QStringList execArgs = QStringList{
-        mGDBServer,
-        QString("localhost:%1").arg(mPort),
-        mInferior,
-    } + mArguments;
+    QStringList execArgs;
+    if (mGDBServer.endsWith(LLDB_SERVER_PROGRAM))
+        execArgs = QStringList{
+            mGDBServer,
+            "gdbserver",
+            QString("localhost:%1").arg(mPort),
+            mInferior,
+        } + mArguments;
+    else
+        execArgs = QStringList{
+            mGDBServer,
+            QString("localhost:%1").arg(mPort),
+            mInferior,
+        } + mArguments;
     QString cmd;
     QStringList arguments;
     std::unique_ptr<QTemporaryFile> fileOwner;
