@@ -90,6 +90,8 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         setDebuggerType(DebuggerType::LLDB_MI);
     else
         setDebuggerType(DebuggerType::GDB);
+    // force to lldb-server if using lldb-mi, which creates new console but does not bind inferior’s stdio to the new console on Windows.
+    setUseDebugServer(pSettings->debugger().useGDBServer() || debuggerType() == DebuggerType::LLDB_MI);
     mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
     //QFile debuggerProgram(debuggerPath);
@@ -112,7 +114,7 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
                               +tr("Please check the \"program\" page of compiler settings."));
         return false;
     }
-    if (pSettings->debugger().useGDBServer()) {
+    if (useDebugServer()) {
         if (!isTextAllAscii(compilerSet->debugServer())) {
             mExecuting = false;
             QMessageBox::critical(pMainWindow,
@@ -134,7 +136,7 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
     }
     mMemoryModel->reset();
     mWatchModel->resetAllVarInfos();
-    if (pSettings->debugger().useGDBServer()) {
+    if (useDebugServer()) {
         //deleted when thread finished
         QStringList params;
         if (pSettings->executor().useParams())
@@ -559,6 +561,16 @@ void Debugger::fetchVarChildren(const QString &varName)
     if (mExecuting) {
         sendCommand("-var-list-children",varName);
     }
+}
+
+bool Debugger::useDebugServer() const
+{
+    return mUseDebugServer;
+}
+
+void Debugger::setUseDebugServer(bool newUseDebugServer)
+{
+    mUseDebugServer = newUseDebugServer;
 }
 
 bool Debugger::debugInfosUsingUTF8() const
@@ -1391,7 +1403,7 @@ void DebugReader::runNextCmd()
             emit cmdFinished();
     }
     if (mCmdQueue.isEmpty()) {
-        if (pSettings->debugger().useGDBServer() && mInferiorRunning && !mAsyncUpdated) {
+        if (mDebugger->useDebugServer() && mInferiorRunning && !mAsyncUpdated) {
             mAsyncUpdated = true;
             QTimer::singleShot(50,this,&DebugReader::asyncUpdate);
         }

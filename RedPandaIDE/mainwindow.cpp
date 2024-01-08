@@ -985,7 +985,6 @@ void MainWindow::applySettings()
                         && pSettings->executor().enableProblemSet());
 
     ui->cbProblemCaseValidateType->setCurrentIndex((int)(pSettings->executor().problemCaseValidateType()));
-    ui->actionInterrupt->setVisible(pSettings->debugger().useGDBServer());
     //icon sets for editors
     updateEditorSettings();
     updateDebuggerSettings();
@@ -2506,7 +2505,7 @@ void MainWindow::debug()
     mDebugger->sendCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
     mDebugger->sendCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
     mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(filePath))); // restore working directory
-    if (pSettings->debugger().useGDBServer()) {
+    if (mDebugger->useDebugServer()) {
         mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
         if (!debugInferiorhasBreakpoint() || !debugEnabled) {
             mDebugger->sendCommand("-break-insert","-t main");
@@ -5165,8 +5164,7 @@ void MainWindow::disableDebugActions()
 
 void MainWindow::enableDebugActions()
 {
-    if (pSettings->debugger().useGDBServer())
-        ui->actionInterrupt->setEnabled(mDebugger->inferiorRunning());
+    ui->actionInterrupt->setEnabled(mDebugger->useDebugServer() && mDebugger->inferiorRunning());
     ui->actionStep_Into->setEnabled(!mDebugger->inferiorRunning());
     ui->actionStep_Over->setEnabled(!mDebugger->inferiorRunning());
     ui->actionStep_Out->setEnabled(!mDebugger->inferiorRunning());

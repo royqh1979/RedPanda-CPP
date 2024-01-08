@@ -375,6 +375,9 @@ public:
     bool debugInfosUsingUTF8() const;
     void setDebugInfosUsingUTF8(bool newDebugInfosUsingUTF8);
 
+    bool useDebugServer() const;
+    void setUseDebugServer(bool newUseDebugServer);
+
 signals:
     void evalValueReady(const QString& s);
     void memoryExamineReady(const QStringList& s);
@@ -418,6 +421,7 @@ private:
     DebugTarget *mTarget;
     bool mForceUTF8;
     bool mDebugInfosUsingUTF8;
+    bool mUseDebugServer;
     DebuggerType mDebuggerType;
     int mLeftPageIndexBackup;
     qint64 mLastLoadtime;
