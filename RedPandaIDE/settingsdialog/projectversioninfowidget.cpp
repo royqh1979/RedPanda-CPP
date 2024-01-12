@@ -17,6 +17,7 @@
 #include "projectversioninfowidget.h"
 #include "ui_projectversioninfowidget.h"
 #include <windows.h>
+#include <iterator>
 #include "../mainwindow.h"
 #include "../project.h"
 
@@ -24,15 +25,15 @@ static QStringList languageNames;
 static QList<int> languageIDs;
 
 static BOOL CALLBACK localeEnumProc(
-  _In_ LPTSTR lpLocaleString
+  _In_ wchar_t *lpLocaleString
         ) {
 
     QString s = QString::fromWCharArray(lpLocaleString);
     bool ok;
     int aid = s.mid(4,4).toInt(&ok,16);
     if (ok) {
-        TCHAR buffer [1024];
-        GetLocaleInfo(aid, LOCALE_SLANGUAGE,buffer,sizeof(buffer)/2);
+        wchar_t buffer [1024];
+        GetLocaleInfoW(aid, LOCALE_SLANGUAGE, buffer, sizeof(buffer) / sizeof(wchar_t));
         languageNames.append(QString::fromWCharArray(buffer));
         languageIDs.append(aid);
     }
@@ -45,7 +46,7 @@ ProjectVersionInfoWidget::ProjectVersionInfoWidget(const QString &name, const QS
 {
     ui->setupUi(this);
     if (languageNames.isEmpty()) {
-        EnumSystemLocales(localeEnumProc, LCID_SUPPORTED);
+        EnumSystemLocalesW(localeEnumProc, LCID_SUPPORTED);
     }
     ui->cbLanguage->addItems(languageNames);
 }

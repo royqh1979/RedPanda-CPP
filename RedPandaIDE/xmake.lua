@@ -1,0 +1,237 @@
+set_languages("cxx17")
+
+target("RedPandaIDE")
+    add_rules("qt.widgetapp", "qt.ts")
+
+    add_deps("redpanda_qt_utils", "qsynedit")
+    add_frameworks("QtNetwork", "QtPrintSupport", "QtSvg")
+    add_includedirs(".")
+
+    -- defines
+
+    add_options("app-name", "prefix", "libexecdir")
+    add_options("lua-addon", "sdcc", "vcs")
+
+    if TEST_VERSION ~= nil then
+        add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '-' .. TEST_VERSION .. '"')
+    else
+        add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '"')
+    end
+
+    if is_arch("x86_64") then
+        add_defines("ARCH_X86_64=1")
+    elseif is_arch("i[3456]86") then
+        add_defines("ARCH_X86=1")
+    end
+
+    -- files
+
+    add_files(
+        "autolinkmanager.cpp",
+        "colorscheme.cpp",
+        "customfileiconprovider.cpp",
+        "gdbmiresultparser.cpp",
+        "main.cpp",
+        "projectoptions.cpp",
+        "settings.cpp",
+        "syntaxermanager.cpp",
+        "systemconsts.cpp",
+        "utils.cpp",
+        "visithistorymanager.cpp",
+        -- compiler
+        "compiler/compilerinfo.cpp",
+        -- parser
+        "parser/cpppreprocessor.cpp",
+        "parser/cpptokenizer.cpp",
+        "parser/parserutils.cpp",
+        -- problems
+        "problems/freeprojectsetformat.cpp",
+        "problems/ojproblemset.cpp",
+        "problems/problemcasevalidator.cpp")
+
+    add_moc_classes(
+        "caretlist",
+        "codesnippetsmanager",
+        "cpprefacter",
+        "debugger",
+        "editor",
+        "editorlist",
+        "iconsmanager",
+        "project",
+        "projecttemplate",
+        "shortcutmanager",
+        "symbolusagemanager",
+        "thememanager",
+        "todoparser",
+        "toolsmanager",
+        -- compiler
+        "compiler/compiler",
+        "compiler/compilermanager",
+        "compiler/executablerunner",
+        "compiler/filecompiler",
+        "compiler/ojproblemcasesrunner",
+        "compiler/projectcompiler",
+        "compiler/runner",
+        "compiler/stdincompiler",
+        -- parser
+        "parser/cppparser",
+        "parser/statementmodel",
+        -- settings dialog
+        "settingsdialog/settingswidget",
+        -- widgets
+        "widgets/bookmarkmodel",
+        "widgets/classbrowser",
+        "widgets/classbrowser",
+        "widgets/codecompletionlistview",
+        "widgets/codecompletionpopup",
+        "widgets/coloredit",
+        "widgets/compileargumentswidget",
+        "widgets/consolewidget",
+        "widgets/customdisablediconengine",
+        "widgets/customfilesystemmodel",
+        "widgets/darkfusionstyle",
+        "widgets/editorstabwidget",
+        "widgets/functiontooltipwidget",
+        "widgets/headercompletionpopup",
+        "widgets/issuestable",
+        "widgets/labelwithmenu",
+        "widgets/lightfusionstyle",
+        "widgets/linenumbertexteditor",
+        "widgets/macroinfomodel",
+        "widgets/ojproblemsetmodel",
+        "widgets/qconsole",
+        "widgets/qpatchedcombobox",
+        "widgets/searchresultview",
+        "widgets/shortcutinputedit",
+        "widgets/shrinkabletabwidget")
+
+    add_ui_classes(
+        "mainwindow",
+        -- settings dialog
+        "settingsdialog/compilerautolinkwidget",
+        "settingsdialog/compilersetdirectorieswidget",
+        "settingsdialog/compilersetoptionwidget",
+        "settingsdialog/debuggeneralwidget",
+        "settingsdialog/editorautosavewidget",
+        "settingsdialog/editorclipboardwidget",
+        "settingsdialog/editorcodecompletionwidget",
+        "settingsdialog/editorcolorschemewidget",
+        "settingsdialog/editorcustomctypekeywords",
+        "settingsdialog/editorfontwidget",
+        "settingsdialog/editorgeneralwidget",
+        "settingsdialog/editormiscwidget",
+        "settingsdialog/editorsnippetwidget",
+        "settingsdialog/editorsymbolcompletionwidget",
+        "settingsdialog/editorsyntaxcheckwidget",
+        "settingsdialog/editortooltipswidget",
+        "settingsdialog/environmentappearancewidget",
+        "settingsdialog/environmentfolderswidget",
+        "settingsdialog/environmentperformancewidget",
+        "settingsdialog/environmentprogramswidget",
+        "settingsdialog/environmentshortcutwidget",
+        "settingsdialog/executorgeneralwidget",
+        "settingsdialog/executorproblemsetwidget",
+        "settingsdialog/formattergeneralwidget",
+        "settingsdialog/languageasmgenerationwidget",
+        "settingsdialog/projectcompileparamaterswidget",
+        "settingsdialog/projectcompilerwidget",
+        "settingsdialog/projectdirectorieswidget",
+        "settingsdialog/projectdllhostwidget",
+        "settingsdialog/projectfileswidget",
+        "settingsdialog/projectgeneralwidget",
+        "settingsdialog/projectmakefilewidget",
+        "settingsdialog/projectoutputwidget",
+        "settingsdialog/projectprecompilewidget",
+        "settingsdialog/settingsdialog",
+        "settingsdialog/toolsgeneralwidget",
+        -- widgets
+        "widgets/aboutdialog",
+        "widgets/choosethemedialog",
+        "widgets/cpudialog",
+        "widgets/custommakefileinfodialog",
+        "widgets/filepropertiesdialog",
+        "widgets/infomessagebox",
+        "widgets/newclassdialog",
+        "widgets/newheaderdialog",
+        "widgets/newprojectdialog",
+        "widgets/newprojectunitdialog",
+        "widgets/newtemplatedialog",
+        "widgets/ojproblempropertywidget",
+        "widgets/projectalreadyopendialog",
+        "widgets/searchdialog",
+        "widgets/searchinfiledialog",
+        "widgets/signalmessagedialog")
+
+    add_files("*.qrc", "translations/*.ts")
+
+    add_files(
+        "resources/iconsets/**.svg", "resources/iconsets/**.json",
+        "themes/*.png",
+        "colorschemes/*.scheme",
+        {rule = "RedPandaIDE.auto_qrc"})
+
+    if is_os("windows") then
+        add_ui_classes(
+            "settingsdialog/environmentfileassociationwidget",
+            "settingsdialog/projectversioninfowidget")
+    else
+        add_ui_classes(
+            "settingsdialog/formatterpathwidget")
+    end
+
+    if has_config("lua-addon") then
+        add_deps("lua")
+        add_files(
+            "addon/api.cpp",
+            "addon/executor.cpp",
+            "addon/runtime.cpp")
+        add_files(
+            "themes/*.lua",
+            {rule = "RedPandaIDE.auto_qrc"})
+        add_links("lua")
+    else
+        add_files(
+            "themes/*.json",
+            {rule = "RedPandaIDE.auto_qrc"})
+    end
+
+    if has_config("sdcc") then
+        add_moc_classes(
+            "compiler/sdccfilecompiler",
+            "compiler/sdccprojectcompiler")
+    end
+
+    if has_config("vcs") then
+        add_moc_classes(
+            "vcs/gitmanager",
+            "vcs/gitrepository",
+            "vcs/gitutils")
+        add_ui_classes(
+            "settingsdialog/toolsgitwidget",
+            "vcs/gitbranchdialog",
+            "vcs/gitfetchdialog",
+            "vcs/gitlogdialog",
+            "vcs/gitmergedialog",
+            "vcs/gitpulldialog",
+            "vcs/gitpushdialog",
+            "vcs/gitremotedialog",
+            "vcs/gitresetdialog",
+            "vcs/gituserconfigdialog")
+    end
+
+    -- libs
+
+    if is_plat("windows") then
+        add_links("redpanda_qt_utils", "qsynedit")  -- xmake 2.8.6 workaround
+    else
+        add_linkgroups("redpanda_qt_utils", "qsynedit", {whole = true})
+    end
+    if is_os("windows") then
+        add_links("psapi", "shlwapi")
+    end
+
+    -- install
+
+    if is_xdg() then
+        on_install(install_bin)
+    end

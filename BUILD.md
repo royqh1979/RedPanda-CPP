@@ -11,60 +11,16 @@ Recommended development environments:
    * Debugger integration with Qt.
 
 To setup development environment in Visual Studio Code:
-1. Install [clangd](https://clangd.llvm.org/) and [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd).
-2. Install [Bear](https://github.com/rizsotto/Bear).
-3. Install [CodeLLDB extension](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb).
-4. Generate compilation database:
-   ```bash
-   mkdir -p /path/to/build && cd /path/to/build
-   qmake CONFIG+=debug PREFIX=/path/to/pkg /path/to/src
-   bear -- make -j$(nproc)
-   ```
-5. Add `--compile-commands-dir=/path/to/build` to workspace-wide “Clangd: Arguments” or edit `.vscode/settings.json`:
-   ```json
-   {
-     "clangd.arguments": [
-       "--compile-commands-dir=/path/to/build"
-     ]
-   }
-   ```
-6. Set up build task in `.vscode/tasks.json`:
-   ```json
-   {
-     "version": "2.0.0",
-     "tasks": [
-       {
-         "label": "build",
-         "type": "shell",
-         "command": "cd /path/to/build && make -j$(nproc) && make install",
-         "group": {
-           "kind": "build",
-           "isDefault": true
-         }
-       }
-     ]
-   }
-   ```
-   and debug task in `.vscode/launch.json`:
-   ```json
-   {
-     "version": "0.2.0",
-     "configurations": [
-       {
-         "name": "build",
-         "type": "lldb",
-         "request": "launch",
-         "program": "/path/to/pkg/bin/RedPandaIDE",
-         "args": [],
-         "cwd": "/path/to/build",
-         "env": {
-           "QT_ASSUME_STDERR_HAS_CONSOLE": "1"
-         },
-         "preLaunchTask": "build"
-       }
-     ]
-   }
-   ```
+1. Install [xmake](https://xmake.io/) and [XMake extension](https://marketplace.visualstudio.com/items?itemName=tboox.xmake-vscode).
+2. Install [C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) for language and debugging support.
+3. Optionally install [clangd](https://clangd.llvm.org/) and [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) for better analysis.
+4. Config workspace:
+   - Compile commands: `.vscode/compile_commands.json` (“C/C++: Edit Configurations (UI)” from the Command Palette);
+   - “Clangd: Arguments”: `--compile-commands-dir=.vscode`;
+   - “Xmake: Additional Config Arguments”: `--qt=/usr` for example.
+5. Run “XMake: UpdateIntellisense” (Command Palette) to generate compilation database.
+
+\* Note: xmake was introduced for compilation database generation and feature matrix test. It is not fully functional yet.
 
 # Windows
 
@@ -281,13 +237,13 @@ General steps:
 - Install Qt 5 (≥ 5.12) Base, SVG and Tools modules, including both libraries and development files.
 - Optionally install fcitx5-qt for building with static Qt library.
 
-To build:
+qmake-based build steps:
 
 1. Configure:
    ```bash
    qmake PREFIX=/usr/local /path/to/src/Red_Panda_CPP.pro
    ```
-2. Make:
+2. Build:
    ```bash
    make -j$(nproc)
    ```
@@ -301,6 +257,23 @@ qmake variables:
 - `LIBEXECDIR`: directory for auxiliary executables, default to `$PREFIX/libexec`. Arch Linux uses `/usr/lib`.
 - `XDG_ADAPTIVE_ICON=ON`: install the icon file following [freedesktop.org Icon Theme Specification](https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html) for adaptiveness to themes and sizes. Required by AppImage; recommended for Linux packaging if `PREFIX` set to `/usr`.
 - `LINUX_STATIC_IME_PLUGIN=ON` (make phase): link to static ime plugin. Recommended for building with static version of Qt; **DO NOT** set for dynamic version of Qt.
+
+xmake-based build steps:
+
+1. Configure:
+   ```bash
+   xmake f -p linux -a x86_64 -m release --qt=/usr --prefix=/usr/local
+   ```
+2. Build:
+   ```bash
+   xmake
+   ```
+3. Install:
+   ```bash
+   sudo xmake install --root -o /  # `-o ...` imitates `DESTDIR=...` in `make install`
+   ```
+
+Hint: `xmake f --help` for more options.
 
 ## Debian and Its Derivatives
 

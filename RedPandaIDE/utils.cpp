@@ -205,7 +205,7 @@ bool programHasConsole(const QString & filename)
 {
 #ifdef Q_OS_WIN
     bool result = false;
-    HANDLE handle = CreateFile(filename.toStdWString().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    HANDLE handle = CreateFileW(filename.toStdWString().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     if (handle != INVALID_HANDLE_VALUE) {
         IMAGE_DOS_HEADER dos_header;
         DWORD signature;

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "qt_utils/utils.h"
+#include "utils.h"
 #include <QApplication>
 #include <QByteArray>
 #include <QDir>

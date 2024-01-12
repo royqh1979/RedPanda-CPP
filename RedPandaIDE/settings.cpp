@@ -248,7 +248,7 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
     case DataType::None:
         return dataDir;
     case DataType::ColorScheme:
-        return ":/colorschemes/colorschemes";
+        return ":/colorschemes";
     case DataType::IconSet:
         return ":/resources/iconsets";
     case DataType::Theme:
