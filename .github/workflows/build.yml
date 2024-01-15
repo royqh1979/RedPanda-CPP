@@ -96,6 +96,58 @@ jobs:
           name: Windows MSYS2 MINGW32
           path: pkg/
 
+  windows_legacy:
+    name: Windows NT 5.1–6.0 MinGW
+    strategy:
+      matrix:
+        arch: [32, 64]
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash
+    env:
+      _MINGW_TOOLCHAIN: /c/Qt/Tools/mingw810_${{ matrix.arch }}
+      _QT_INSTALL_PREFIX: /c/Qt/5.6.4/mingw81_${{ matrix.arch }}-redpanda
+      _REDPANDA_QT_BUILD: "20240115.0"
+      _REDPANDA_QT_ARCHIVE: qt5.6.4-mingw81_${{ matrix.arch }}-redpanda.7z
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup toolchain
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          host: windows
+          target: desktop
+          arch: win${{ matrix.arch }}_mingw81
+          archives: qtbase
+          tools: tools_mingw,qt.tools.win${{ matrix.arch }}_mingw810
+          dir: C:/
+
+      - name: Setup Qt
+        run: |
+          curl -LO https://github.com/redpanda-cpp/qtbase-5.6/releases/download/$_REDPANDA_QT_BUILD/$_REDPANDA_QT_ARCHIVE
+          7z x $_REDPANDA_QT_ARCHIVE -oC:/Qt
+
+      - name: Build
+        run: |
+          export PATH="$_QT_INSTALL_PREFIX/bin:$_MINGW_TOOLCHAIN/bin:$PATH"
+
+          mkdir build && pushd build
+          {
+            qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
+            mingw32-make -j$(nproc)
+            mingw32-make install
+          }
+          popd
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows NT 5.1–6.0 MinGW - arch=${{ matrix.arch }}
+          path: pkg/
+
   windows_msvc_x64:
     name: Windows MSVC x64
     runs-on: windows-2019
