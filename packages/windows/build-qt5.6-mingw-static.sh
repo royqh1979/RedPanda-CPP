@@ -8,7 +8,7 @@ set -euo pipefail
 _ARCH=""
 _CLEAN=0
 _DEBUG=0
-_OFFICAL_QT_DIR="/c/Qt"
+_OFFICIAL_QT_DIR="/c/Qt"
 while [[ $# -gt 0 ]] ; do
     case "$1" in
         --arch)
@@ -38,8 +38,8 @@ done
 
 case "$_ARCH" in
     32|64)
-        _MINGW_TOOLCHAIN="$_OFFICAL_QT_DIR/Tools/mingw810_$_ARCH"
-        _QT_INSTALL_PREFIX="$_OFFICAL_QT_DIR/5.6.4/mingw81_$_ARCH-redpanda"
+        _MINGW_TOOLCHAIN="$_OFFICIAL_QT_DIR/Tools/mingw810_$_ARCH"
+        _QT_INSTALL_PREFIX="$_OFFICIAL_QT_DIR/5.6.4/mingw81_$_ARCH-redpanda"
         ;;
     *)
         echo "Please specify --arch 32 or --arch 64"
