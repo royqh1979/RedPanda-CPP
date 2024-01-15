@@ -172,8 +172,22 @@ jobs:
           name: Windows MSVC ARM64EC (do not use)
           path: pkg/
 
-  deb_oldest_lts:
-    name: Deb on oldest LTS (Debian 10)
+  deb:
+    name: Deb
+    strategy:
+      matrix:
+        image:
+          - "debian:10"    # oldest LTS
+          - "ubuntu:23.10" # latest stable
+          - "debian:sid"   # rolling
+        include:
+          - image: debian:10
+            displayImage: debian-10
+          - image: ubuntu:23.10
+            displayImage: ubuntu-23.10
+          - image: debian:sid
+            displayImage: debian-sid
+
     runs-on: ubuntu-latest
 
     steps:
@@ -181,58 +195,16 @@ jobs:
 
       - name: Fetch container image
         run: |
-          podman pull --platform linux/amd64 docker.io/amd64/debian:10
+          podman pull --platform linux/amd64 docker.io/amd64/${{ matrix.image }}
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/debian:10 /src/packages/debian/01-in-docker.sh
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 ${{ matrix.image }} /src/packages/debian/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Deb on oldest LTS (Debian 10)
-          path: dist/*.deb
-
-  deb_lastest_stable:
-    name: Deb on lastest stable (Ubuntu 23.10)
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/amd64/ubuntu:23.10
-
-      - name: Build
-        run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/ubuntu:23.10 /src/packages/debian/01-in-docker.sh
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: Deb on lastest stable (Ubuntu 23.10)
-          path: dist/*.deb
-
-  deb_rolling:
-    name: Deb on rolling (Debian sid)
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/amd64/debian:sid
-
-      - name: Build
-        run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/debian:sid /src/packages/debian/01-in-docker.sh
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: Deb on rolling (Debian sid)
+          name: Deb - image=${{ matrix.displayImage }}
           path: dist/*.deb
 
   archlinux:
