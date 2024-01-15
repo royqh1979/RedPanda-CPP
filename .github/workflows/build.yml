@@ -3,8 +3,20 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  windows_mingw64:
-    name: Windows MSYS2 MINGW64
+  windows:
+    name: Windows MSYS2
+    strategy:
+      matrix:
+        msystem: [MINGW32, MINGW64, UCRT64, CLANG64]
+        include:
+          - msystem: MINGW32
+            packagePrefix: mingw-w64-i686
+          - msystem: MINGW64
+            packagePrefix: mingw-w64-x86_64
+          - msystem: UCRT64
+            packagePrefix: mingw-w64-ucrt-x86_64
+          - msystem: CLANG64
+            packagePrefix: mingw-w64-clang-x86_64
     runs-on: windows-latest
     defaults:
       run:
@@ -16,9 +28,9 @@ jobs:
       - name: Setup
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
+          msystem: ${{ matrix.msystem }}
           update: true
-          install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-qt5-static
+          install: ${{ matrix.packagePrefix }}-toolchain ${{ matrix.packagePrefix }}-qt5-static
 
       - name: Build
         run: |
@@ -31,69 +43,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Windows MSYS2 MINGW64
-          path: pkg/
-
-  windows_ucrt64:
-    name: Windows MSYS2 UCRT64
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-          install: mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-qt5-static
-
-      - name: Build
-        run: |
-          mkdir build && pushd build
-          $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
-          mingw32-make -j$(nproc)
-          mingw32-make install
-          popd
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: Windows MSYS2 UCRT64
-          path: pkg/
-
-  windows_mingw32:
-    name: Windows MSYS2 MINGW32
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW32
-          update: true
-          install: mingw-w64-i686-toolchain mingw-w64-i686-qt5-static
-
-      - name: Build
-        run: |
-          mkdir build && pushd build
-          $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
-          mingw32-make -j$(nproc)
-          mingw32-make install
-          popd
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: Windows MSYS2 MINGW32
+          name: Windows MSYS2 - msystem=${{ matrix.msystem }}
           path: pkg/
 
   windows_legacy:
