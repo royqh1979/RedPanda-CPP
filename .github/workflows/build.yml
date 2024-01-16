@@ -58,7 +58,7 @@ jobs:
     env:
       _MINGW_TOOLCHAIN: /c/Qt/Tools/mingw810_${{ matrix.arch }}
       _QT_INSTALL_PREFIX: /c/Qt/5.6.4/mingw81_${{ matrix.arch }}-redpanda
-      _REDPANDA_QT_BUILD: "20240115.0"
+      _REDPANDA_QT_BUILD: "20240116.0"
       _REDPANDA_QT_ARCHIVE: qt5.6.4-mingw81_${{ matrix.arch }}-redpanda.7z
 
     steps:
