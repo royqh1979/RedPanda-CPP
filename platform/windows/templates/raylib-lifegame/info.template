@@ -1,0 +1,20 @@
+[Template]
+ver=2
+Name=snake
+Name[zh_CN]=生命游戏
+Icon=raylib-lifegame.ico
+Description=snake game using raylib ( https://raylib.com )
+Description[zh_CN]=基于raylib的生命游戏( https://raylib.com )
+Category=Game
+Category[zh_CN]=游戏
+
+[Unit0]
+CName=main.cpp
+C=raylib_lifegame_cpp.txt
+
+[Project]
+UnitCount=1
+Type=1
+IsCpp=0
+linker=-lraylib -lopengl32 -lgdi32 -lwinmm
+ExecEncoding=UTF-8
