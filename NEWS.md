@@ -36,6 +36,12 @@ Red Panda C++ Version 2.26
   - Enhancement: Better type induction for auto in foreach loop of maps.
   - Enhancement: Better contrast for scroller slider in dark theme.
   - Enhancement: Using lua script in themes.
+  - Enhancement: Add compiler hint add-on interface for packager.
+  - Enhancement: Loose some limit about platform/architecture (such as ASan).
+  - Enhancement: add support for Windows user-wide installation.
+  - Enhancement: add qmake variable to control preference of UTF-8 compatible OpenConsole.exe on Windows.
+  - Enhancement: add Windows arm64 package.
+  - Fix: Force to use debug server when debugging with lldb-mi to fix input/output on Windows.
 
 Red Panda C++ Version 2.25
 

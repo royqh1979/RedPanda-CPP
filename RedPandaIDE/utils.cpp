@@ -17,6 +17,12 @@
 #include <windows.h>
 #endif
 
+#ifdef Q_OS_WIN
+using pIsWow64Process2_t = BOOL (WINAPI *)(
+    HANDLE hProcess, USHORT *pProcessMachine, USHORT *pNativeMachine
+);
+#endif
+
 QStringList splitProcessCommand(const QString &cmd)
 {
     QStringList result;
@@ -387,21 +393,19 @@ bool isGreenEdition()
 {
 #ifdef Q_OS_WIN
     if (!gIsGreenEditionInited) {
-        QString keyString = QString("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++");
-        QString value;
-        if (!readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", value)) {
-            keyString = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\RedPanda-C++";
-            if (!readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", value)) {
-                value="";
-            }
-        }
-        if (!value.isEmpty()) {
-            QString regPath = extractFileDir(value);
-
-            QString appPath = QApplication::instance()->applicationDirPath();
-            gIsGreenEdition = excludeTrailingPathDelimiter(regPath).compare(excludeTrailingPathDelimiter(appPath),
-                                                                            Qt::CaseInsensitive)!=0;
-        }
+        QString appPath = QApplication::instance()->applicationDirPath();
+        appPath = excludeTrailingPathDelimiter(appPath);
+        QString keyString = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++)";
+        QString systemInstallPath;
+        readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", systemInstallPath);
+        if (!systemInstallPath.isEmpty())
+            systemInstallPath = excludeTrailingPathDelimiter(extractFileDir(systemInstallPath));
+        QString userInstallPath;
+        readRegistry(HKEY_CURRENT_USER, keyString, "UninstallString", userInstallPath);
+        if (!userInstallPath.isEmpty())
+            userInstallPath = excludeTrailingPathDelimiter(extractFileDir(userInstallPath));
+        gIsGreenEdition = appPath.compare(systemInstallPath, Qt::CaseInsensitive) != 0 &&
+                appPath.compare(userInstallPath, Qt::CaseInsensitive) != 0;
         gIsGreenEditionInited = true;
     }
     return gIsGreenEdition;
@@ -745,5 +749,39 @@ QString defaultShell()
     return "powershell.exe";
 #else
     return "sh";
+#endif
+}
+
+QString appArch()
+{
+#ifdef _M_ARM64EC
+    return "arm64ec";
+#else
+    return QSysInfo::buildCpuArchitecture();
+#endif
+}
+
+QString osArch()
+{
+#ifdef Q_OS_WINDOWS
+    pIsWow64Process2_t pIsWow64Process2 =
+        reinterpret_cast<pIsWow64Process2_t>(GetProcAddress(GetModuleHandleW(L"kernel32"), "IsWow64Process2"));
+    if (pIsWow64Process2) {
+        // IsWow64Process2 returns real native architecture under xtajit, while GetNativeSystemInfo does not.
+        USHORT processMachineResult, nativeMachineResult;
+        if (pIsWow64Process2(GetCurrentProcess(), &processMachineResult, &nativeMachineResult))
+            switch (nativeMachineResult) {
+            case IMAGE_FILE_MACHINE_I386:
+                return "i386";
+            case IMAGE_FILE_MACHINE_AMD64:
+                return "x86_64";
+            case IMAGE_FILE_MACHINE_ARM64:
+                return "arm64";
+            }
+        return QSysInfo::currentCpuArchitecture();
+    } else
+        return QSysInfo::currentCpuArchitecture();
+#else
+    return QSysInfo::currentCpuArchitecture();
 #endif
 }

@@ -78,6 +78,12 @@ For Windows 7 or later:
 | Qt.io + MSVC | ✔️ | ✔️ | ❌ |
 | vcpkg + MSVC | ✔️ | ✔️ | ❌ |
 
+qmake variables:
+- `PREFIX`: where `$MAKE install` installs files to.
+- `WINDOWS_PREFER_OPENCONSOLE=ON` (make phase): prefer UTF-8 compatible `OpenConsole.exe`.
+  - `OpenConsole.exe` is a part of Windows Terminal. UTF-8 input support was added in version 1.18.
+  - `OpenConsole.exe` requires ConPTY, which was introduced in Windows 10 1809.
+
 Notes for Windows on ARM:
 - Red Panda C++ can be built for ARM64 ABI only on Windows 11 ARM64, while it is supposed (but not tested) to run on Windows 10 ARM64.
   - ARM64EC (“emulation compatible”) host is not supported, i.e., Red Panda C++ cannot be built with ARM64EC toolchain.

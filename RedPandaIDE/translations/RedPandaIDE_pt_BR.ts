@@ -12,8 +12,8 @@
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:xx-large; font-weight:600;&quot;&gt;Red Panda C++&lt;/span&gt;&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <source>Based on Qt %1 (%2)</source>
-        <translation>Com base em Qt %1 (%2)</translation>
+        <source>Based on Qt %1 (%2) rodando em %3</source>
+        <translation>Com base em Qt %1 (%2) executado em %3</translation>
     </message>
     <message>
         <source>Build time: %1 %2</source>

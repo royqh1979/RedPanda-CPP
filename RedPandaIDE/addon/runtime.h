@@ -64,7 +64,11 @@ public:
     QJsonObject fetchObject(int index);
     QJsonValue fetch(int index);
 
+    static bool fetchBoolean(lua_State *L, int index);
+    static long long fetchInteger(lua_State *L, int index);
+    static double fetchNumber(lua_State *L, int index);
     static QString fetchString(lua_State *L, int index);
+    static QJsonValue fetch(lua_State *L, int index);
 
     bool popBoolean();
     long long popInteger();
@@ -74,11 +78,18 @@ public:
     QJsonObject popObject();
     QJsonValue pop();
 
+    static QJsonValue pop(lua_State *L);
+
     void push(decltype(nullptr));
     void push(const QMap<QString, lua_CFunction> &value);
 
+    static void push(lua_State *L, decltype(nullptr));
+    static void push(lua_State *L, bool value);
     static void push(lua_State *L, const QString &value);
     static void push(lua_State *L, const QStringList &value);
+
+    int getTop();
+    static int getTop(lua_State *L);
 
     int loadBuffer(const QByteArray &buff, const QString &name);
     void openLibs();
@@ -91,8 +102,8 @@ public:
     static LuaExtraState &extraState(lua_State *lua);
 
 private:
-    QJsonValue fetchTableImpl(int index, int depth);
-    QJsonValue fetchValueImpl(int index, int depth);
+    static QJsonValue fetchTableImpl(lua_State *L, int index, int depth);
+    static QJsonValue fetchValueImpl(lua_State *L, int index, int depth);
 
 private:
     lua_State *mLua;

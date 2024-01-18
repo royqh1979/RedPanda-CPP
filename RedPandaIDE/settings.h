@@ -1357,6 +1357,7 @@ public:
         explicit CompilerSet();
         explicit CompilerSet(const QString& compilerFolder, const QString& c_prog);
         explicit CompilerSet(const CompilerSet& set);
+        explicit CompilerSet(const QJsonObject& set);
 
         CompilerSet& operator= (const CompilerSet& ) = delete;
         CompilerSet& operator= (const CompilerSet&& ) = delete;
@@ -1562,6 +1563,7 @@ public:
     private:
         PCompilerSet addSet(const QString& folder, const QString& c_prog);
         PCompilerSet addSet(const PCompilerSet &pSet);
+        PCompilerSet addSet(const QJsonObject &set);
         bool addSets(const QString& folder, const QString& c_prog);
         void savePath(const QString& name, const QString& path);
         void savePathList(const QString& name, const QStringList& pathList);

@@ -173,4 +173,7 @@ QString escapeArgument(const QString &arg, bool isFirstArg);
 
 QString defaultShell();
 
+QString appArch();
+QString osArch();
+
 #endif // UTILS_H
