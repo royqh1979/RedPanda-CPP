@@ -1,6 +1,6 @@
 local nameMap = {
-    en_US = "Inky dark",
-    pt_BR = "Escuro como tinta",
+    en_US = "MoLo",
+    pt_BR = "Molo",
     zh_CN = "墨落",
     zh_TW = "墨落"
 }
@@ -10,7 +10,7 @@ local lang = C_Desktop.language()
 return {
     ["name"] = nameMap[lang] or nameMap.en_US,
     ["style"] = "RedPandaDarkFusion",
-    ["default scheme"] = "Inky Code",
+    ["default scheme"] = "MoLo CodeBlack",
     ["default iconset"] = "newlook",
     ["palette"] = {
         PaletteWindow = "#000000",
