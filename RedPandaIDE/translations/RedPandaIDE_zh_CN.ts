@@ -426,8 +426,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../widgets/choosethemedialog.ui" line="72"/>
-        <source>Auto (follow system style and color)</source>
-        <translation>自动（跟随系统样式和颜色）</translation>
+        <source>System Style and Color</source>
+        <translation>跟随系统样式和颜色</translation>
     </message>
     <message>
         <location filename="../widgets/choosethemedialog.ui" line="85"/>

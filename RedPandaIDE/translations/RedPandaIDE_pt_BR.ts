@@ -324,8 +324,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auto (follow system style and color)</source>
-        <translation>Auto (seguir estilo e cor do sistema)</translation>
+        <source>System Style and Color</source>
+        <translation>Estilo e Cor do Sistema</translation>
     </message>
 </context>
 <context>

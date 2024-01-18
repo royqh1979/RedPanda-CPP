@@ -1,8 +1,8 @@
 local nameMap = {
     en_US = "Light",
     pt_BR = "Clara",
-    zh_CN = "浅色",
-    zh_TW = "淺色"
+    zh_CN = "浅色主题",
+    zh_TW = "淺色主題"
 }
 
 local lang = C_Desktop.language()
