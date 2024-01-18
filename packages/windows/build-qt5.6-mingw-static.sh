@@ -1,113 +1,127 @@
 # for Git Bash
 
-set -xe
+# Usage:
+#   ./build-qt5.6-mingw-static.sh --arch <32|64> [--debug] [--official-qt-dir <path>]
 
-QT_CONFIGURE_DEBUG_OR_RELEASE="-release"
-OFFICIAL_QT_DIRECTORY="/c/Qt"
-QT_INSTALL_PREFIX="/c/Qt/5.6.3"
+set -euo pipefail
 
-qt-module-directory() {
-    moduleName="$1"
-    echo "qt$moduleName-opensource-src-5.6.3"
+_ARCH=""
+_CLEAN=0
+_DEBUG=0
+_OFFICIAL_QT_DIR="/c/Qt"
+while [[ $# -gt 0 ]] ; do
+    case "$1" in
+        --arch)
+            _ARCH="$2"
+            shift
+            shift
+            ;;
+        --clean)
+            _CLEAN=1
+            shift
+            ;;
+        --debug)
+            _DEBUG=1
+            shift
+            ;;
+        --official-qt-dir)
+            _OFFICIAL_QT_DIR="$2"
+            shift
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+case "$_ARCH" in
+    32|64)
+        _MINGW_TOOLCHAIN="$_OFFICIAL_QT_DIR/Tools/mingw810_$_ARCH"
+        _QT_INSTALL_PREFIX="$_OFFICIAL_QT_DIR/5.6.4/mingw81_$_ARCH-redpanda"
+        ;;
+    *)
+        echo "Please specify --arch 32 or --arch 64"
+        exit 1
+        ;;
+esac
+
+if [[ $_DEBUG -eq 1 ]] ; then
+    _QT_CONFIGURE_DEBUG_OR_RELEASE=-debug-and-release
+else
+    _QT_CONFIGURE_DEBUG_OR_RELEASE=-release
+fi
+
+clean() {
+    rm -rf build-qt{base,svg,tools}-"$_ARCH" || true
+    rm -rf "$_QT_INSTALL_PREFIX" || true
 }
 
-prepare-qt-base-source() {
-    moduleDirectory="$(qt-module-directory base)"
-    fileName="$moduleDirectory.tar.xz"
-
-    if ! [[ -d "$moduleDirectory" ]] ; then
-        patchFileName="qtbase-5.6.3-redpanda.patch"
-        if ! [[ -f "$patchFileName" ]] ; then
-            echo -n "Patch file not found. Please copy it to this directory and press enter to continue..."
-            read -r
-        fi
-        if ! [[ -f "$fileName" ]] ; then
-            downloadUrl="https://download.qt.io/new_archive/qt/5.6/5.6.3/submodules/$fileName"
-            curl -L -o "$fileName" "$downloadUrl"
-        fi
-        tar xf "$fileName"
-        tar xf "$fileName" "$moduleDirectory/configure.exe"  # workaround for MSYS2 tar bug: https://github.com/msys2/MSYS2-packages/issues/4103
-        pushd "$moduleDirectory"
-        patch --forward --strip=1 --input="../$patchFileName"
-        popd
+check-toolchain() {
+    if ! [[ -x "$_MINGW_TOOLCHAIN/bin/g++.exe" ]] ; then
+        echo "Please install MinGW 8.1 from Qt Maintenance Tool or download from https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/tools_mingw/ or https://mirrors.ustc.edu.cn/qtproject/online/qtsdkrepository/windows_x86/desktop/tools_mingw/ and extract to $_OFFICAL_QT_DIR."
+        exit 1
     fi
 }
 
-prepare-qt-module-source() {
-    moduleName="$1"
-    moduleDirectory="$(qt-module-directory $moduleName)"
-    fileName="$moduleDirectory.tar.xz"
-
-    if ! [[ -d "$moduleDirectory" ]] ; then
-        if ! [[ -f "$fileName" ]] ; then
-            downloadUrl="https://download.qt.io/new_archive/qt/5.6/5.6.3/submodules/$fileName"
-            curl -L -o "$fileName" "$downloadUrl"
-        fi
-        tar xf "$fileName"
-    fi
-}
-
-prepare-qt-sources() {
-    prepare-qt-base-source
-    prepare-qt-module-source svg
-    prepare-qt-module-source tools
+check-qt-sources() {
+    while ! [[ -d qtbase ]] ; do
+        echo "Please clone or link qtbase into this directory. e.g."
+        echo "    git clone https://github.com/redpanda-cpp/qtbase-5.6.git --branch=5.6-redpanda --depth=1 qtbase"
+        echo "    MSYS=winsymlinks:nativestrict ln -s /path/to/qtbase-5.6 qtbase"
+        echo "Press enter to continue..."
+        read
+    done
+    while ! [[ -d qtsvg ]] ; do
+        echo "Please clone or link qtsvg into this directory. e.g."
+        echo "    git clone https://github.com/qt/qtsvg.git --branch=5.6 --depth=1"
+        echo "Press enter to continue..."
+        read
+    done
+    while ! [[ -d qttools ]] ; do
+        echo "Please clone or link qttools into this directory. e.g."
+        echo "    git clone https://github.com/qt/qttools.git --branch=5.6 --depth=1"
+        echo "Press enter to continue..."
+        read
+    done
 }
 
 build-qt-base() {
-    configuration="$1"
-
-    buildDir="build-qtbase-$configuration"
-    mkdir -p "$buildDir"
-    pushd "$buildDir"
-
-    prefix="$QT_INSTALL_PREFIX/$configuration"
-    "../$(qt-module-directory base)/configure.bat" \
-        -prefix $prefix $QT_CONFIGURE_DEBUG_OR_RELEASE \
-        -opensource -confirm-license \
-        -no-use-gold-linker -static -static-runtime -platform win32-g++ -target xp \
-        -opengl desktop -no-angle -iconv -gnu-iconv -no-icu -qt-zlib -qt-pcre -qt-libpng -qt-libjpeg -qt-freetype -no-fontconfig -qt-harfbuzz -no-ssl -no-openssl \
-        -nomake examples -nomake tests -nomake tools
-    mingw32-make "-j$(nproc)"
-    mingw32-make install
-    export PATH="$prefix/bin:$PATH"
-
+    local build_dir="build-qtbase-$_ARCH"
+    mkdir -p "$build_dir"
+    pushd "$build_dir"
+    {
+        "../qtbase/configure.bat" \
+            -prefix "$_QT_INSTALL_PREFIX" "$_QT_CONFIGURE_DEBUG_OR_RELEASE" \
+            -opensource -confirm-license \
+            -no-use-gold-linker -static -static-runtime -platform win32-g++ -target xp \
+            -opengl desktop -no-angle -iconv -gnu-iconv -no-icu -qt-zlib -qt-pcre -qt-libpng -qt-libjpeg -qt-freetype -no-fontconfig -qt-harfbuzz -no-ssl -no-openssl \
+            -nomake examples -nomake tests -nomake tools
+        mingw32-make "-j$(nproc)"
+        mingw32-make install
+    }
     popd
 }
 
 build-qt-module() {
-    configuration="$1"
-    moduleName="$2"
-
-    buildDir="build-qt$moduleName-$configuration"
-    mkdir -p $buildDir
-    pushd $buildDir
-
-    qmake "../$(qt-module-directory $moduleName)"
-    mingw32-make "-j$(nproc)"
-    mingw32-make install
-
+    local module_name="$1"
+    local build_dir="build-qt$module_name-$_ARCH"
+    mkdir -p "$build_dir"
+    pushd "$build_dir"
+    {
+        qmake "../qt$module_name"
+        mingw32-make "-j$(nproc)"
+        mingw32-make install
+    }
     popd
 }
 
-build-qt() {
-    configuration="$1"
+export PATH="$_QT_INSTALL_PREFIX/bin:$_MINGW_TOOLCHAIN/bin:$PATH"
 
-    build-qt-base $configuration
-    build-qt-module $configuration svg
-    build-qt-module $configuration tools
-}
-
-main() {
-    basePath="$PATH"
-    prepare-qt-sources
-
-    ## 32-bit
-    export PATH="$OFFICIAL_QT_DIRECTORY/Tools/mingw810_32/bin:$basePath"
-    build-qt mingw81_32-redpanda
-
-    ## 64-bit
-    export PATH="$OFFICIAL_QT_DIRECTORY/Tools/mingw810_64/bin:$basePath"
-    build-qt mingw81_64-redpanda
-}
-
-main
+[[ $_CLEAN -eq 1 ]] && clean
+check-toolchain
+check-qt-sources
+build-qt-base
+build-qt-module svg
+build-qt-module tools

@@ -1468,6 +1468,9 @@ public:
         bool forceUTF8() const;
         bool isCompilerInfoUsingUTF8() const;
 
+        bool persistInAutoFind() const;
+        void setPersistInAutoFind(bool newPersistInAutoFind);
+
     private:
         void setGCCProperties(const QString& binDir, const QString& c_prog);
         void setDirectories(const QString& binDir);
@@ -1518,6 +1521,7 @@ public:
         bool mAutoAddCharsetParams;
         QString mExecCharset;
         bool mStaticLink;
+        bool mPersistInAutoFind;
 
         QString mPreprocessingSuffix;
         QString mCompilationProperSuffix;
@@ -1538,7 +1542,7 @@ public:
         explicit CompilerSets(Settings* settings);
         PCompilerSet addSet();
         bool addSets(const QString& folder);
-        void clearSets();
+        CompilerSetList clearSets();
         void findSets();
         void saveSets();
         void loadSets();

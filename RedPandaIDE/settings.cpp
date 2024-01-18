@@ -1675,6 +1675,7 @@ Settings::CompilerSet::CompilerSet():
     mAutoAddCharsetParams{false},
     mExecCharset{ENCODING_SYSTEM_DEFAULT},
     mStaticLink{false},
+    mPersistInAutoFind{false},
     mPreprocessingSuffix{DEFAULT_PREPROCESSING_SUFFIX},
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
@@ -1689,6 +1690,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mAutoAddCharsetParams{true},
     mExecCharset{ENCODING_SYSTEM_DEFAULT},
     mStaticLink{true},
+    mPersistInAutoFind{false},
     mPreprocessingSuffix{DEFAULT_PREPROCESSING_SUFFIX},
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
@@ -1754,6 +1756,7 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mAutoAddCharsetParams{set.mAutoAddCharsetParams},
     mExecCharset{set.mExecCharset},
     mStaticLink{set.mStaticLink},
+    mPersistInAutoFind{set.mPersistInAutoFind},
 
     mPreprocessingSuffix{set.mPreprocessingSuffix},
     mCompilationProperSuffix{set.mCompilationProperSuffix},
@@ -2779,6 +2782,16 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
+bool Settings::CompilerSet::persistInAutoFind() const
+{
+    return mPersistInAutoFind;
+}
+
+void Settings::CompilerSet::setPersistInAutoFind(bool newPersistInAutoFind)
+{
+    mPersistInAutoFind = newPersistInAutoFind;
+}
+
 Settings::CompilerSet::CompilationStage Settings::CompilerSet::compilationStage() const
 {
     return mCompilationStage;
@@ -3102,20 +3115,24 @@ bool Settings::CompilerSets::addSets(const QString &folder)
     return found;
 }
 
-void Settings::CompilerSets::clearSets()
+Settings::CompilerSetList Settings::CompilerSets::clearSets()
 {
+    CompilerSetList persisted;
     for (size_t i=0;i<mList.size();i++) {
         mSettings->mSettings.beginGroup(QString(SETTING_COMPILTER_SET).arg(i));
         mSettings->mSettings.remove("");
         mSettings->mSettings.endGroup();
+        if (mList[i]->persistInAutoFind())
+            persisted.push_back(std::move(mList[i]));
     }
     mList.clear();
     mDefaultIndex = -1;
+    return persisted;
 }
 
 void Settings::CompilerSets::findSets()
 {
-    clearSets();
+    CompilerSetList persisted = clearSets();
     QSet<QString> searched;
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -3152,6 +3169,8 @@ void Settings::CompilerSets::findSets()
     }
 #endif
 
+    for (PCompilerSet &set: persisted)
+        addSet(set);
 }
 
 void Settings::CompilerSets::saveSets()
@@ -3241,7 +3260,6 @@ void Settings::CompilerSets::loadSets()
                                  QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
             return;
         }
-        clearSets();
         findSets();
         pCurrentSet = defaultSet();
         if (!pCurrentSet) {
@@ -3370,6 +3388,7 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("AddCharset", pSet->autoAddCharsetParams());
     mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
     mSettings->mSettings.setValue("ExecCharset", pSet->execCharset());
+    mSettings->mSettings.setValue("PersistInAutoFind", pSet->persistInAutoFind());
 
     mSettings->mSettings.setValue("preprocessingSuffix", pSet->preprocessingSuffix());
     mSettings->mSettings.setValue("compilationProperSuffix", pSet->compilationProperSuffix());
@@ -3457,6 +3476,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setCustomLinkParams(mSettings->mSettings.value("customLinkParams").toString());
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset", true).toBool());
     pSet->setStaticLink(mSettings->mSettings.value("StaticLink", false).toBool());
+    pSet->setPersistInAutoFind(mSettings->mSettings.value("PersistInAutoFind", false).toBool());
 
     pSet->setExecCharset(mSettings->mSettings.value("ExecCharset", ENCODING_SYSTEM_DEFAULT).toString());
     if (pSet->execCharset().isEmpty()) {

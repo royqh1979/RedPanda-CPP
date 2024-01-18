@@ -166,6 +166,13 @@
        <item>
         <widget class="QPlainTextEdit" name="txtCustomLinkParams"/>
        </item>
+       <item>
+        <widget class="QCheckBox" name="chkPersistInAutoFind">
+         <property name="text">
+          <string>Survive auto-finds</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tabSettings">
@@ -492,6 +499,6 @@
  </customwidgets>
  <resources>
   <include location="../icons.qrc"/>
- </resources>
+</resources>
  <connections/>
 </ui>
