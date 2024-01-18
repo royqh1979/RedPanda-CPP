@@ -1,11 +1,11 @@
 {
-    "name":"Inky dark",
-    "name_pt_BR": "Escuro como tinta",
+    "name":"MoLo",
+    "name_pt_BR": "Molo",
     "name_zh_CN": "墨落主题",
     "name_zh_TW": "墨落主題",
     "useQtFusionStyle": true,
     "isDark": true,
-    "default scheme": "Inky Code",
+    "default scheme": "MoLo CodeBlack",
     "default iconset": "newlook",
     "palette": {
         "PaletteWindow":"#000000",
