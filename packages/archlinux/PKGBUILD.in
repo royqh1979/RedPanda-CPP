@@ -30,6 +30,10 @@ sha256sums=(
     'SKIP'
 )
 
+prepare() {
+    sed -i '/CONFIG += ENABLE_LUA_ADDON/ { s/^#\s*// }' RedPanda-CPP/RedPandaIDE/RedPandaIDE.pro
+}
+
 build() {
     local _utf8dir="$srcdir/$_pkgname/platform/windows/utf8"
     if [[ "$CARCH" == 'x86_64' ]]; then
