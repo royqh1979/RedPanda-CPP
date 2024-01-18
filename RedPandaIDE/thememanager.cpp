@@ -44,17 +44,17 @@ PAppTheme ThemeManager::theme(const QString &themeName)
     if (mUseCustomTheme)
         prepareCustomeTheme();
     PAppTheme appTheme = std::make_shared<AppTheme>();
+    QString themeDir;
     if (mUseCustomTheme) {
-        QString themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-        appTheme->load(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
+        themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
     } else {
-        QString themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
-#ifdef ENABLE_LUA_ADDON
-        appTheme->load(QString("%1/%2.lua").arg(themeDir, themeName), AppTheme::ThemeType::Lua);
-#else
-        appTheme->load(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
-#endif
+        themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
     }
+#ifdef ENABLE_LUA_ADDON
+    appTheme->load(QString("%1/%2.lua").arg(themeDir, themeName), AppTheme::ThemeType::Lua);
+#else
+    appTheme->load(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
+#endif
     return appTheme;
 }
 

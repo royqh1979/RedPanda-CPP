@@ -35,6 +35,7 @@ Red Panda C++ Version 2.26
   - Enhancement: Better support for macros.
   - Enhancement: Better type induction for auto in foreach loop of maps.
   - Enhancement: Better contrast for scroller slider in dark theme.
+  - Enhancement: Using lua script in themes.
 
 Red Panda C++ Version 2.25
 

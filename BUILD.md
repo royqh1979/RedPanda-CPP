@@ -94,7 +94,7 @@ For legacy Windows (NT 5.1 – 6.0):
 
 | Library + Toolchain \ Target | x86 | x64 |
 | ---------------------------- | --- | --- |
-| Qt 5.6 from [patched source](packages/windows/qtbase-5.6.3-redpanda.patch) + MinGW | ✔️ | ✔️ |
+| Qt 5.6 from [patched source](https://github.com/redpanda-cpp/qtbase-5.6) + MinGW | ✔️ | ✔️ |
 
 Notes for legacy Windows:
 - Supported Windows versions:

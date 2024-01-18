@@ -94,7 +94,7 @@ qmake 变量：
 
 | 库 + 工具链 \ 目标 | x86 | x64 |
 | ------------------ | --- | --- |
-| 从[打过补丁的源代码](packages/windows/qtbase-5.6.3-redpanda.patch)构建的 Qt 5.6 + MinGW | ✔️ | ✔️ |
+| 从[打过补丁的源代码](https://github.com/redpanda-cpp/qtbase-5.6)构建的 Qt 5.6 + MinGW | ✔️ | ✔️ |
 
 关于旧版 Windows 的注记：
 - 支持的 Windows 版本：
