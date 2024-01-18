@@ -233,8 +233,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auto (follow system style and color)</source>
-        <translation>自動（跟隨系統樣式和顏色）</translation>
+        <source>System Theme</source>
+        <translation>跟隨系統樣式和顏色</translation>
     </message>
 </context>
 <context>

@@ -69,7 +69,7 @@
       <item row="0" column="0">
        <widget class="QRadioButton" name="rbAuto">
         <property name="text">
-         <string>Auto (follow system style and color)</string>
+         <string>System Theme</string>
         </property>
        </widget>
       </item>
