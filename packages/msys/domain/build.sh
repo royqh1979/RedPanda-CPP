@@ -216,8 +216,9 @@ function build() {
 
 function package() {
   pushd "$_PKGDIR"
-  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" main.nsi
-  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" -DUSER_MODE main.nsi
+  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" main.nsi &
+  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" -DUSER_MODE main.nsi &
+  wait
   if [[ _7Z_REPACK -eq 1 ]]; then
     7z x "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH-user.exe" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
     7z a -t7z -mx=9 -ms=on -mqs=on -mf=BCJ2 -m0="LZMA2:d=128m:fb=273:c=2g" "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.7z" "RedPanda-CPP"
