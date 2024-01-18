@@ -157,7 +157,7 @@ jobs:
           Import-Module "$VS_INSTALL_PATH\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
           Enter-VsDevShell -VsInstallPath "$VS_INSTALL_PATH" -SkipAutomaticLocation -DevCmdArguments "-arch=arm64 -host_arch=amd64"
           mkdir build && pushd build
-          qmake QMAKE_CXXFLAGS="/arm64EC" QMAKE_LFLAGS="/MACHINE:ARM64EC" QMAKE_LIBFLAGS="/MACHINE:ARM64X" PREFIX=${Env:GITHUB_WORKSPACE}/pkg ${Env:GITHUB_WORKSPACE}/Red_Panda_CPP.pro
+          qmake QMAKE_CFLAGS="/arm64EC" QMAKE_CXXFLAGS="/arm64EC" QMAKE_LFLAGS="/MACHINE:ARM64EC" QMAKE_LIBFLAGS="/MACHINE:ARM64X" PREFIX=${Env:GITHUB_WORKSPACE}/pkg ${Env:GITHUB_WORKSPACE}/Red_Panda_CPP.pro
           & $JOM "-j${Env:NUMBER_OF_PROCESSORS}"
           & $JOM install
           windeployqt ${Env:GITHUB_WORKSPACE}/pkg/RedPandaIDE.exe
