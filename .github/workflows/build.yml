@@ -3,8 +3,20 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  windows_mingw64:
-    name: Windows MSYS2 MINGW64
+  windows:
+    name: Windows MSYS2
+    strategy:
+      matrix:
+        msystem: [MINGW32, MINGW64, UCRT64, CLANG64]
+        include:
+          - msystem: MINGW32
+            packagePrefix: mingw-w64-i686
+          - msystem: MINGW64
+            packagePrefix: mingw-w64-x86_64
+          - msystem: UCRT64
+            packagePrefix: mingw-w64-ucrt-x86_64
+          - msystem: CLANG64
+            packagePrefix: mingw-w64-clang-x86_64
     runs-on: windows-latest
     defaults:
       run:
@@ -16,9 +28,9 @@ jobs:
       - name: Setup
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
+          msystem: ${{ matrix.msystem }}
           update: true
-          install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-qt5-static
+          install: ${{ matrix.packagePrefix }}-toolchain ${{ matrix.packagePrefix }}-qt5-static
 
       - name: Build
         run: |
@@ -31,69 +43,59 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Windows MSYS2 MINGW64
+          name: Windows MSYS2 - msystem=${{ matrix.msystem }}
           path: pkg/
 
-  windows_ucrt64:
-    name: Windows MSYS2 UCRT64
-    runs-on: windows-latest
+  windows_legacy:
+    name: Windows NT 5.1–6.0 MinGW
+    strategy:
+      matrix:
+        arch: [32, 64]
+    runs-on: windows-2019
     defaults:
       run:
-        shell: msys2 {0}
+        shell: bash
+    env:
+      _MINGW_TOOLCHAIN: /c/Qt/Tools/mingw810_${{ matrix.arch }}
+      _QT_INSTALL_PREFIX: /c/Qt/5.6.4/mingw81_${{ matrix.arch }}-redpanda
+      _REDPANDA_QT_BUILD: "20240116.0"
+      _REDPANDA_QT_ARCHIVE: qt5.6.4-mingw81_${{ matrix.arch }}-redpanda.7z
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup
-        uses: msys2/setup-msys2@v2
+      - name: Setup toolchain
+        uses: jurplel/install-qt-action@v3
         with:
-          msystem: UCRT64
-          update: true
-          install: mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-qt5-static
+          version: '5.15.2'
+          host: windows
+          target: desktop
+          arch: win${{ matrix.arch }}_mingw81
+          archives: qtbase
+          tools: tools_mingw,qt.tools.win${{ matrix.arch }}_mingw810
+          dir: C:/
+
+      - name: Setup Qt
+        run: |
+          curl -LO https://github.com/redpanda-cpp/qtbase-5.6/releases/download/$_REDPANDA_QT_BUILD/$_REDPANDA_QT_ARCHIVE
+          7z x $_REDPANDA_QT_ARCHIVE -oC:/Qt
 
       - name: Build
         run: |
+          export PATH="$_QT_INSTALL_PREFIX/bin:$_MINGW_TOOLCHAIN/bin:$PATH"
+
           mkdir build && pushd build
-          $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
-          mingw32-make -j$(nproc)
-          mingw32-make install
+          {
+            qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
+            mingw32-make -j$(nproc)
+            mingw32-make install
+          }
           popd
 
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Windows MSYS2 UCRT64
-          path: pkg/
-
-  windows_mingw32:
-    name: Windows MSYS2 MINGW32
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW32
-          update: true
-          install: mingw-w64-i686-toolchain mingw-w64-i686-qt5-static
-
-      - name: Build
-        run: |
-          mkdir build && pushd build
-          $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
-          mingw32-make -j$(nproc)
-          mingw32-make install
-          popd
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: Windows MSYS2 MINGW32
+          name: Windows NT 5.1–6.0 MinGW - arch=${{ matrix.arch }}
           path: pkg/
 
   windows_msvc_x64:
@@ -170,8 +172,22 @@ jobs:
           name: Windows MSVC ARM64EC (do not use)
           path: pkg/
 
-  deb_oldest_lts:
-    name: Deb on oldest LTS (Debian 10)
+  deb:
+    name: Deb
+    strategy:
+      matrix:
+        image:
+          - "debian:10"    # oldest LTS
+          - "ubuntu:23.10" # latest stable
+          - "debian:sid"   # rolling
+        include:
+          - image: debian:10
+            displayImage: debian-10
+          - image: ubuntu:23.10
+            displayImage: ubuntu-23.10
+          - image: debian:sid
+            displayImage: debian-sid
+
     runs-on: ubuntu-latest
 
     steps:
@@ -179,58 +195,16 @@ jobs:
 
       - name: Fetch container image
         run: |
-          podman pull --platform linux/amd64 docker.io/amd64/debian:10
+          podman pull --platform linux/amd64 docker.io/amd64/${{ matrix.image }}
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/debian:10 /src/packages/debian/01-in-docker.sh
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 ${{ matrix.image }} /src/packages/debian/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Deb on oldest LTS (Debian 10)
-          path: dist/*.deb
-
-  deb_lastest_stable:
-    name: Deb on lastest stable (Ubuntu 23.10)
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/amd64/ubuntu:23.10
-
-      - name: Build
-        run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/ubuntu:23.10 /src/packages/debian/01-in-docker.sh
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: Deb on lastest stable (Ubuntu 23.10)
-          path: dist/*.deb
-
-  deb_rolling:
-    name: Deb on rolling (Debian sid)
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/amd64/debian:sid
-
-      - name: Build
-        run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/debian:sid /src/packages/debian/01-in-docker.sh
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: Deb on rolling (Debian sid)
+          name: Deb - image=${{ matrix.displayImage }}
           path: dist/*.deb
 
   archlinux:
