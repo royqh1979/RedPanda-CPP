@@ -16,17 +16,15 @@
  */
 #ifndef THEMEMANAGER_H
 #define THEMEMANAGER_H
-#include <QObject>
 #include <QPalette>
 #include <QHash>
 #include <QColor>
 #include <memory>
+#include <QObject>
 
-class AppTheme:public QObject {
+class AppTheme : public QObject{
     Q_OBJECT
 public:
-    explicit AppTheme(QObject* parent = nullptr);
-
     enum ColorRole {
         /* Color for QPalette */
 
@@ -80,10 +78,10 @@ public:
         Lua,
     };
 
+    AppTheme(const QString& filename, ThemeType type, QObject* parent=nullptr);
+
     QColor color(ColorRole role) const;
     QPalette palette() const;
-
-    void load(const QString& filename, ThemeType type);
 
     const QString &style() const;
 
@@ -100,6 +98,8 @@ public:
     static bool isSystemInDarkMode();
     static QString initialStyle();
 
+    const QString& filename() const;
+
 private:
     static QPalette initialPalette();
 private:
@@ -109,6 +109,7 @@ private:
     QString mStyle;
     QString mDefaultColorScheme;
     QString mDefaultIconSet;
+    QString mFilename;
 };
 
 using PAppTheme = std::shared_ptr<AppTheme>;

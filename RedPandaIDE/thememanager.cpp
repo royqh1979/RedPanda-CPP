@@ -43,7 +43,6 @@ PAppTheme ThemeManager::theme(const QString &themeName)
 {
     if (mUseCustomTheme)
         prepareCustomeTheme();
-    PAppTheme appTheme = std::make_shared<AppTheme>();
     QString themeDir;
     if (mUseCustomTheme) {
         themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
@@ -51,9 +50,9 @@ PAppTheme ThemeManager::theme(const QString &themeName)
         themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
     }
 #ifdef ENABLE_LUA_ADDON
-    appTheme->load(QString("%1/%2.lua").arg(themeDir, themeName), AppTheme::ThemeType::Lua);
+    PAppTheme appTheme = std::make_shared<AppTheme>(QString("%1/%2.lua").arg(themeDir, themeName), AppTheme::ThemeType::Lua);
 #else
-    appTheme->load(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
+    PAppTheme appTheme = std::make_shared<AppTheme>(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
 #endif
     return appTheme;
 }
@@ -105,8 +104,7 @@ QList<PAppTheme> ThemeManager::getThemes()
         QFileInfo fileInfo = it.fileInfo();
         if (fileInfo.suffix().compare(themeExtension, PATH_SENSITIVITY)==0) {
             try {
-                PAppTheme appTheme = std::make_shared<AppTheme>();
-                appTheme->load(fileInfo.absoluteFilePath(), themeType);
+                PAppTheme appTheme = std::make_shared<AppTheme>(fileInfo.absoluteFilePath(), themeType);
                 result.append(appTheme);
             } catch(FileError e) {
                 //just skip it
@@ -118,13 +116,12 @@ QList<PAppTheme> ThemeManager::getThemes()
 #endif
         }
     }
+    std::sort(result.begin(),result.end(),[](const PAppTheme &theme1, const PAppTheme &theme2){
+        return QFileInfo(theme1->filename()).baseName() <  QFileInfo(theme2->filename()).baseName();
+    });
     return result;
 }
 
-AppTheme::AppTheme(QObject *parent):QObject(parent)
-{
-
-}
 
 QColor AppTheme::color(ColorRole role) const
 {
@@ -198,8 +195,9 @@ QPalette AppTheme::palette() const
     return pal;
 }
 
-void AppTheme::load(const QString &filename, ThemeType type)
+AppTheme::AppTheme(const QString &filename, ThemeType type, QObject *parent):QObject(parent)
 {
+    mFilename = filename;
     QFile file(filename);
     if (!file.exists()) {
         throw FileError(tr("Theme file '%1' doesn't exist!")
@@ -306,6 +304,11 @@ QString AppTheme::initialStyle()
 {
     static QString style = QApplication::style()->objectName();
     return style;
+}
+
+const QString &AppTheme::filename() const
+{
+    return mFilename;
 }
 
 const QString &AppTheme::defaultIconSet() const
