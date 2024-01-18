@@ -1803,6 +1803,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mAutoAddCharsetParams{!set["execCharset"].toString().isEmpty()},
     mExecCharset{}, // handle later
     mStaticLink{set["staticLink"].toBool()},
+    mPersistInAutoFind{false},
 
     mPreprocessingSuffix{set["preprocessingSuffix"].toString()},
     mCompilationProperSuffix{set["compilationProperSuffix"].toString()},
