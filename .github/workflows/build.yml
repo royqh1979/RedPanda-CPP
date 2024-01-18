@@ -299,13 +299,17 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup
-        run: |
-          brew install qt@5
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          host: mac
+          target: desktop
+          arch: clang_64
+          archives: qtbase qtsvg qttools
+          tools: tools_qtcreator,qt.tools.qtcreator
 
       - name: Build
         run: |
-          export PATH="/usr/local/opt/qt@5/bin:$PATH"
-
           mkdir build && pushd build
           qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
           make -j$(nproc)
