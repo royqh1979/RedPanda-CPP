@@ -187,6 +187,15 @@ function prepare-openconsole() {
   fi
 }
 
+function prepare-src() {
+  cp "$_SRCDIR"/RedPandaIDE/RedPandaIDE.pro{,.bak}
+  sed -i '/CONFIG += ENABLE_LUA_ADDON/ { s/^#\s*// }' "$_SRCDIR"/RedPandaIDE/RedPandaIDE.pro
+}
+
+function restore-src() {
+  mv "$_SRCDIR"/RedPandaIDE/RedPandaIDE.pro{.bak,}
+}
+
 function build() {
   pushd "$_BUILDDIR"
   "$_QMAKE" PREFIX="$_PKGDIR" "$_SRCDIR"
@@ -230,6 +239,8 @@ download-assets
 [[ $_NATIVE_ARCH == x86_64 ]] && prepare-mingw 64
 prepare-llvm-mingw
 prepare-openconsole
+prepare-src
+trap restore-src EXIT INT TERM
 build
 package
 dist
