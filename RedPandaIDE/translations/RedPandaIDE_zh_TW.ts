@@ -589,11 +589,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Red Panda C++ will clear current compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Are you really want to continue?</source>
+        <source>Red Panda C++ will clear previously found compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Do you really want to continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Red Panda C++ will clear current compiler list and search for compilers in the the PATH. &lt;br /&gt;Are you really want to continue?</source>
+        <source>Red Panda C++ will clear previously found compiler list and search for compilers in the the PATH. &lt;br /&gt;Do you really want to continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -698,6 +698,10 @@
     </message>
     <message>
         <source>Binary suffix</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Survive auto-finds</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
