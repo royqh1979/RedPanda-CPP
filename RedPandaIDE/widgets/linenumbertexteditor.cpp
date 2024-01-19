@@ -205,6 +205,5 @@ void LineNumberTextEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
         top = bottom;
         bottom = top + qRound(blockBoundingRect(block).height());
         ++blockNumber;
-        qDebug()<<blockNumber<<qRound(blockBoundingRect(block).height());
     }
 }
