@@ -23,9 +23,9 @@ ChooseThemeDialog::ChooseThemeDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 #ifdef ENABLE_LUA_ADDON
-    ui->rbAuto->setChecked(true);
+    ui->rbAuto->setVisible(true);
 #else
-    ui->rbAuto->setChecked(false);
+    ui->rbAuto->setVisible(false);
 #endif
     ui->rbDark->setChecked(true);
     ui->rbCpp->setChecked(true);
