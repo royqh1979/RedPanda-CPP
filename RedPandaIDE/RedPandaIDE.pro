@@ -17,7 +17,7 @@ APP_NAME = RedPandaCPP
 
 APP_VERSION = 2.26
 
-TEST_VERSION = alpha8
+TEST_VERSION = beta1
 contains(QMAKE_HOST.arch, x86_64):{
     DEFINES += ARCH_X86_64=1
 } else: {

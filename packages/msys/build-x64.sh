@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TARGET_DIR="/z/"
+TARGET_DIR="/r/"
 BUILD_DIR="${TEMP}/redpandacpp-build"
 PACKAGE_DIR="${TEMP}/RedPanda-CPP"
 GCC_DIR="/mingw64"
