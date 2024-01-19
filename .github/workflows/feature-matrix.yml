@@ -1,0 +1,78 @@
+name: Feature matrix
+
+on: [push, pull_request]
+
+jobs:
+  ubuntu_2204:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        lua_addon: ["y", "n"]
+        sdcc: ["y", "n"]
+        vcs: ["y", "n"]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: '2.8.6'
+
+      - name: Setup Qt
+        uses: ConorMacBride/install-package@v1
+        with:
+          apt: libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
+
+      - name: Build
+        run: |
+          name="redpanda-cpp-${{ matrix.lua_addon }}-${{ matrix.sdcc }}-${{ matrix.vcs }}"
+          xmake f --qt=/usr --prefix=/ --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }} --vcs=${{ matrix.vcs }}
+          xmake b
+          xmake i -o "pkg/$name"
+          tar -cf "pkg/$name.tar" -C pkg "$name"
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Ubuntu 22.04 - lua-addon=${{ matrix.lua_addon }}, sdcc=${{ matrix.sdcc }}, vcs=${{ matrix.vcs }}
+          path: pkg/*.tar
+
+  windows_msvc_x64:
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        lua_addon: ["y", "n"]
+        sdcc: ["y", "n"]
+        vcs: ["y", "n"]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: '2.8.6'
+
+      - name: Setup Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          archives: qtbase qtsvg qttools
+
+      - name: Build
+        run: |
+          $install_dir = "pkg/redpanda-cpp-${{ matrix.lua_addon }}-${{ matrix.sdcc }}-${{ matrix.vcs }}"
+          xmake f -p windows -a x64 --qt="${env:QT_ROOT_DIR}" --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }} --vcs=${{ matrix.vcs }}
+          xmake b
+          xmake i -o $install_dir
+          mv $install_dir/bin/* $install_dir/
+          rmdir $install_dir/bin
+          rm $install_dir/vc_redist.x64.exe
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows MSVC x64 - lua-addon=${{ matrix.lua_addon }}, sdcc=${{ matrix.sdcc }}, vcs=${{ matrix.vcs }}
+          path: pkg/*

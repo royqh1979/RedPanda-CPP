@@ -593,7 +593,6 @@ ENABLE_LUA_ADDON {
 theme_files.files += $$files(themes/*.png, false)
 
 colorscheme_files.files += $$files(colorschemes/*.scheme, false)
-colorscheme_files.prefix = /colorschemes
 
 RESOURCES += qmake_qm_files
 RESOURCES += iconsets_files

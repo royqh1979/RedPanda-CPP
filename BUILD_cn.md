@@ -11,60 +11,16 @@
    * 调试器的 Qt 集成。
 
 设置 Visual Studio Code 开发环境的步骤：
-1. 安装 [clangd](https://clangd.llvm.org/) 和 [clangd 扩展](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)。
-2. 安装 [Bear](https://github.com/rizsotto/Bear)。
-3. 安装 [CodeLLDB extension](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)。
-4. 生成编译数据库：
-   ```bash
-   mkdir -p /path/to/build && cd /path/to/build
-   qmake CONFIG+=debug PREFIX=/path/to/pkg /path/to/src
-   bear -- make -j$(nproc)
-   ```
-5. 在本工作区 “Clangd: Arguments” 中添加 `--compile-commands-dir=/path/to/build` 或直接修改 `.vscode/settings.json`：
-   ```json
-   {
-     "clangd.arguments": [
-       "--compile-commands-dir=/path/to/build"
-     ]
-   }
-   ```
-6. 在 `.vscode/tasks.json` 中配置构建任务：
-   ```json
-   {
-     "version": "2.0.0",
-     "tasks": [
-       {
-         "label": "build",
-         "type": "shell",
-         "command": "cd /path/to/build && make -j$(nproc) && make install",
-         "group": {
-           "kind": "build",
-           "isDefault": true
-         }
-       }
-     ]
-   }
-   ```
-   并在 `.vscode/launch.json` 中配置调试任务：
-   ```json
-   {
-     "version": "0.2.0",
-     "configurations": [
-       {
-         "name": "build",
-         "type": "lldb",
-         "request": "launch",
-         "program": "/path/to/pkg/bin/RedPandaIDE",
-         "args": [],
-         "cwd": "/path/to/build",
-         "env": {
-           "QT_ASSUME_STDERR_HAS_CONSOLE": "1"
-         },
-         "preLaunchTask": "build"
-       }
-     ]
-   }
-   ```
+1. 安装 [xmake](https://xmake.io/) 和 [XMake 扩展](https://marketplace.visualstudio.com/items?itemName=tboox.xmake-vscode)。
+2. 安装 [C/C++ 扩展](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) 以支持语言和调试功能。
+3. 根据需要安装 [clangd](https://clangd.llvm.org/) 和 [clangd 扩展](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)以获得更好的代码分析能力。
+4. 配置工作区：
+   - 编译命令：`.vscode/compile_commands.json`（命令面板中的 “C/C++: 编辑配置(UI)”）；
+   - “Clangd: Arguments”：`--compile-commands-dir=.vscode`；
+   - “Xmake: Additional Config Arguments”：如 `--qt=/usr`。
+5. 在命令面板中执行 “XMake: UpdateIntellisense” 以生成编译数据库。
+
+\* 提示：xmake 的引入是为了支持编译数据库的生成和功能测试矩阵，目前并不完备。
 
 # Windows
 
@@ -281,7 +237,7 @@ qmake 变量：
 - 安装 Qt 5（≥ 5.12）Base、SVG、Tools 模块，包括库和开发文件。
 - 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt。
 
-构建：
+基于 qmake 构建：
 
 1. 配置：
    ```bash
@@ -301,6 +257,23 @@ qmake 变量:
 - `LIBEXECDIR`：辅助程序的路径，默认值是 `$PREFIX/libexec`。Arch Linux 使用 `/usr/lib`。
 - `XDG_ADAPTIVE_ICON=ON`：遵循 [freedesktop.org 图标主题规范](https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html)安装图标，以适应不同的主题和尺寸。AppImage 需要启用此项；Linux 打包 `PREFIX=/usr` 时推荐启用此项。
 - `LINUX_STATIC_IME_PLUGIN=ON`（make 阶段）：静态链接输入法插件。推荐在使用静态版本的 Qt 编译时启用；**不要**在使用动态版本的 Qt 编译时启用。
+
+基于 xmake 构建：
+
+1. 配置：
+   ```bash
+   xmake f -p linux -a x86_64 -m release --qt=/usr --prefix=/usr/local
+   ```
+2. 构建：
+   ```bash
+   xmake
+   ```
+3. 安装：
+   ```bash
+   sudo xmake install --root -o /  # -o ... 模拟了 make install 的 DESTDIR=...
+   ```
+
+提示：`xmake f --help` 可以查看更多选项。
 
 ## Debian 及其衍生版本
 

@@ -3,5 +3,7 @@
 /assets
 /dist
 /packages/appimage/*/*.AppImage
+.xmake/
+build/
 *.bak
 *.pro.user
