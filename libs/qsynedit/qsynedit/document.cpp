@@ -793,16 +793,36 @@ int Document::stringColumns(const QString &line, int colsBefore) const
 {
     int columns = std::max(0,colsBefore);
     int charCols;
+    QString token;
     for (int i=0;i<line.length();i++) {
         QChar ch = line[i];
-        if (ch == '\t') {
-            charCols = mTabWidth - columns % mTabWidth;
+        if (ch.unicode()<0xFF) {
+            if (!token.isEmpty()) {
+                columns += tokenColumns(token);
+                token="";
+            }
+            if (ch == '\t') {
+                charCols = mTabWidth - columns % mTabWidth;
+            } else if (ch.unicode()<=32) {
+                charCols +=1;
+            } else {
+                width = mFontMetrics.horizontalAdvance(ch);
+                charCols += std::ceil(width / (double)mCharWidth);
+            }
+            columns+=charCols;
         } else {
-            charCols = charColumns(ch);
+            token+=ch;
         }
-        columns+=charCols;
+    }
+    if (!token.isEmpty()) {
+        columns += tokenColumns(token);
     }
     return columns-colsBefore;
+}
+
+int Document::tokenColumns(const QString &token) const
+{
+
 }
 
 int Document::charColumns(QChar ch) const
