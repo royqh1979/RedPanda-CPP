@@ -198,13 +198,13 @@ void LineNumberTextEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
             else
                 painter.setPen(mLineNumberAreaForeground);
             int y=top+std::max(0,bottom-top-fontMetrics().lineSpacing());
-            painter.drawText(5, y, lineNumberArea->width()-10, fontMetrics().height(),
+            painter.drawText(5, top, lineNumberArea->width()-10, fontMetrics().height(),
                              Qt::AlignRight, number);
         }
-
         block = block.next();
         top = bottom;
         bottom = top + qRound(blockBoundingRect(block).height());
         ++blockNumber;
+        qDebug()<<blockNumber<<qRound(blockBoundingRect(block).height());
     }
 }
