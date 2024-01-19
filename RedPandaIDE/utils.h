@@ -176,4 +176,8 @@ QString defaultShell();
 QString appArch();
 QString osArch();
 
+#ifdef _MSC_VER
+#define __builtin_unreachable() (__assume(0))
+#endif
+
 #endif // UTILS_H

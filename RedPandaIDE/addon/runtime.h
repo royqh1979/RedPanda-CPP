@@ -68,6 +68,7 @@ public:
     static long long fetchInteger(lua_State *L, int index);
     static double fetchNumber(lua_State *L, int index);
     static QString fetchString(lua_State *L, int index);
+    static QJsonObject fetchObject(lua_State *L, int index);
     static QJsonValue fetch(lua_State *L, int index);
 
     bool popBoolean();
@@ -94,6 +95,7 @@ public:
     int loadBuffer(const QByteArray &buff, const QString &name);
     void openLibs();
     int pCall(int nargs, int nresults, int msgh);
+    int getGlobal(const QString &name);
     void setGlobal(const QString &name);
     void setHook(lua_Hook f, int mask, int count);
 

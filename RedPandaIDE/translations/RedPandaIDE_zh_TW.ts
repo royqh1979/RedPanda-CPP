@@ -6622,6 +6622,10 @@
         <source>Failed to detect terminal arguments pattern for “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Error executing platform compiler hint add-on</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>
