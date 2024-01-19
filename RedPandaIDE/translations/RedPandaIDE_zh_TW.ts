@@ -19,7 +19,7 @@
         <source>Build time: %1 %2</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
+<message>
         <source>Copyright(C) 2021-2022 瞿华(royqh1979@gmail.com)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -71,7 +71,7 @@
         <source>Legacy Microsoft Visual C++</source>
         <translation>舊版 Microsoft Visual C++</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>AppTheme</name>
     <message>
@@ -6620,6 +6620,10 @@
     </message>
     <message>
         <source>Failed to detect terminal arguments pattern for “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error executing platform compiler hint add-on</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

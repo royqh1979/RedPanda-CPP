@@ -75,7 +75,7 @@
         <source>Legacy Microsoft Visual C++</source>
         <translation>Microsoft Visual C++ Legado</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>AppTheme</name>
     <message>
@@ -7108,6 +7108,10 @@
     </message>
     <message>
         <source>Failed to detect terminal arguments pattern for “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error executing platform compiler hint add-on</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

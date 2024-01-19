@@ -68,6 +68,11 @@ QString RaiiLuaState::fetchString(int index)
     return lua_tostring(mLua, index);
 }
 
+QJsonObject RaiiLuaState::fetchObject(int index)
+{
+    return fetchTableImpl(mLua, index, 0).toObject();
+}
+
 QJsonValue RaiiLuaState::fetch(int index)
 {
     return fetchValueImpl(mLua, index, 0);
@@ -93,6 +98,11 @@ QString RaiiLuaState::fetchString(lua_State *L, int index)
     return lua_tostring(L, index);
 }
 
+QJsonObject RaiiLuaState::fetchObject(lua_State *L, int index)
+{
+    return fetchTableImpl(L, index, 0).toObject();
+}
+
 QJsonValue RaiiLuaState::fetch(lua_State *L, int index)
 {
     return fetchValueImpl(L, index, 0);
@@ -108,6 +118,13 @@ bool RaiiLuaState::popBoolean()
 QString RaiiLuaState::popString()
 {
     QString value = fetchString(-1);
+    lua_pop(mLua, 1);
+    return value;
+}
+
+QJsonObject RaiiLuaState::popObject()
+{
+    QJsonObject value = fetchObject(-1);
     lua_pop(mLua, 1);
     return value;
 }
@@ -189,6 +206,11 @@ void RaiiLuaState::openLibs()
 int RaiiLuaState::pCall(int nargs, int nresults, int msgh)
 {
     return lua_pcall(mLua, nargs, nresults, msgh);
+}
+
+int RaiiLuaState::getGlobal(const QString &name)
+{
+    return lua_getglobal(mLua, name.toUtf8().constData());
 }
 
 void RaiiLuaState::setGlobal(const QString &name)

@@ -51,10 +51,15 @@ using pIsWow64Process2_t = BOOL (WINAPI *)(
 );
 #endif
 
-// C_Debug.debug(string) -> ()
+// C_Debug.debug(string, ...) -> ()
 extern "C" int luaApi_Debug_debug(lua_State *L) noexcept {
-    QString info = AddOn::RaiiLuaState::fetchString(L, 1);
-    qDebug() << info;
+    QString s = AddOn::RaiiLuaState::fetchString(L, 1);
+    int nArgs = lua_gettop(L);
+    for (int i = 2; i <= nArgs; ++i) {
+        QJsonValue arg = AddOn::RaiiLuaState::fetch(L, i);
+        s = s.arg(arg.toVariant().toString());
+    }
+    qDebug() << s;
     return 0;
 }
 
@@ -262,9 +267,7 @@ extern "C" int luaApi_System_supportedAppArchList(lua_State *L) noexcept {
         }
     }
 
-    // workaround for Debian 10 Qt 5.11, better to be
-    //   QStringList result{arches.begin(), arches.end()};
-    QStringList result = arches.toList();
+    QStringList result = arches.values();
     AddOn::RaiiLuaState::push(L, result);
     return 1;
 #endif
@@ -298,7 +301,7 @@ extern "C" int luaApi_Util_format(lua_State *L) noexcept
     int nArgs = lua_gettop(L);
     for (int i = 2; i <= nArgs; ++i) {
         QJsonValue arg = AddOn::RaiiLuaState::fetch(L, i);
-        s = s.arg(arg.toString());
+        s = s.arg(arg.toVariant().toString());
     }
     AddOn::RaiiLuaState::push(L, s);
     return 1;
