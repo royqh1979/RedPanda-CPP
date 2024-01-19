@@ -85,10 +85,10 @@ int Document::lineColumns(int index)
 {
     QMutexLocker locker(&mMutex);
     if (index>=0 && index < mLines.size()) {
-        if (mLines[index]->columns == -1) {
+        if (mLines[index]->columns() == -1) {
             return calculateLineColumns(index);
         } else
-            return mLines[index]->columns;
+            return mLines[index]->columns();
     } else
         return 0;
 }
@@ -789,6 +789,31 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     }
 }
 
+int Document::gryphsColumns(const QStringList &gryphs, int colsBefore) const
+{
+    int columns = std::max(0,colsBefore);
+    for (int i=0;i<gryphs.length();i++) {
+        QString glyph = gryphs[i];
+        int glyphCols;
+        if (glyph.length()==1 && glyph[0].unicode()<0xFF) {
+            QChar ch = glyph[0];
+            if (ch == '\t') {
+                glyphCols = mTabWidth - columns % mTabWidth;
+            } else if (ch.unicode()<=32) { //invisible char
+                glyphCols +=1;
+            } else {
+                width = mFontMetrics.horizontalAdvance(ch);
+                glyphCols += std::ceil(width / (double)mCharWidth);
+            }
+        } else {
+            width = mNonAsciiFontMetrics.horizontalAdvance(glyph);
+            glyphCols += std::ceil(width / (double)mCharWidth);
+        }
+        columns+=glyphCols;
+    }
+    return columns-colsBefore;
+}
+
 int Document::stringColumns(const QString &line, int colsBefore) const
 {
     int columns = std::max(0,colsBefore);
@@ -805,14 +830,12 @@ int Document::stringColumns(const QString &line, int colsBefore) const
                 charCols = mTabWidth - columns % mTabWidth;
             } else if (ch.unicode()<=32) {
                 charCols +=1;
-            } else {
-                width = mFontMetrics.horizontalAdvance(ch);
-                charCols += std::ceil(width / (double)mCharWidth);
             }
-            columns+=charCols;
         } else {
-            token+=ch;
+            width = mNonAsciiFontMetrics.horizontalAdvance(ch);
+                charCols += std::ceil(width / (double)mCharWidth);
         }
+        columns+=charCols;
     }
     if (!token.isEmpty()) {
         columns += tokenColumns(token);
@@ -822,7 +845,9 @@ int Document::stringColumns(const QString &line, int colsBefore) const
 
 int Document::tokenColumns(const QString &token) const
 {
-
+    int width = mNonAsciiFontMetrics.horizontalAdvance(token);
+    //return std::ceil((int)(fontMetrics().horizontalAdvance(ch) * dpiFactor()) / (double)mCharWidth);
+    return std::ceil(width / (double)mCharWidth);
 }
 
 int Document::charColumns(QChar ch) const
@@ -916,10 +941,62 @@ void Document::invalidAllLineColumns()
 }
 
 DocumentLine::DocumentLine():
-    lineText(),
-    syntaxState(),
-    columns(-1)
+    mSyntaxState{},
+    mColumns{-1}
 {
+}
+
+const QStringList &DocumentLine::glyphs() const
+{
+    return mGlyphs;
+}
+
+int DocumentLine::length() const
+{
+    return mGlyphs.length();
+}
+
+const QString& DocumentLine::lineText() const
+{
+    return mLineText;
+}
+
+void DocumentLine::setLineText(const QString &newLineText)
+{
+    mLineText = newLineText;
+    //parse mGlyphs
+    int i=0;
+    while (i<mLineText.length()) {
+        if (mLineText[i].isHighSurrogate() && i+1<mLineText.length() && mLineText[i].isLowSurrogate()) {
+            //character that larger than 0xffff
+            mGryphs.append(mLineText.mid(i,2));
+            i++;
+        } else if (mLineText[i].combiningClass()!=0 && !mGryphs.isEmpty()
+                   && mGryphs.last().length()>0) {
+            //Combining character
+            QString gryph=mGryphs.last();
+            gryph.append(mLineText[i]);
+            mGryphs[mGryphs.length()-1]=gryph;
+        } else {
+            mGryphs.append(mLineText[i]);
+        }
+        i++;
+    }
+}
+
+int DocumentLine::columns() const
+{
+    return mColumns;
+}
+
+const SyntaxState& DocumentLine::syntaxState() const
+{
+    return mSyntaxState;
+}
+
+void DocumentLine::setSyntaxState(const SyntaxState &newSyntaxState)
+{
+    mSyntaxState = newSyntaxState;
 }
 
 

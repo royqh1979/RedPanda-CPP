@@ -30,14 +30,28 @@
 
 namespace QSynedit {
 
-struct DocumentLine {
-  QString lineText;
-  SyntaxState syntaxState;
-  int columns;  //
+class DocumentLine {
 public:
-  explicit DocumentLine();
-  DocumentLine(const DocumentLine&)=delete;
-  DocumentLine& operator=(const DocumentLine&)=delete;
+    explicit DocumentLine();
+    DocumentLine(const DocumentLine&)=delete;
+    DocumentLine& operator=(const DocumentLine&)=delete;
+
+    const QStringList& glyphs() const;
+    int length() const;
+
+    const QString& lineText() const;
+    void setLineText(const QString &newLineText);
+
+    int columns() const;
+
+    const SyntaxState& syntaxState() const;
+    void setSyntaxState(const SyntaxState &newSyntaxState);
+
+private:
+  QString mLineText;
+  QStringList mGlyphs;
+  SyntaxState mSyntaxState;
+  int mColumns;
 };
 
 typedef std::shared_ptr<DocumentLine> PDocumentLine;
@@ -100,7 +114,9 @@ public:
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
-    int stringColumns(const QString& line, int colsBefore) const;
+    //int stringColumns(const QString &line, int colsBefore) const;
+    int gryphsColumns(const QStringList& gryphs, int colsBefore) const;
+    int tokenColumns(const QString &token) const;
     int charColumns(QChar ch) const;
 
     bool getAppendNewLineAtEOF();
