@@ -4845,8 +4845,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
         vDstLineChar = displayToBufferPos(ptDst);
 
     if (mActiveSelectionMode==SelectionMode::Column) {
-        QString s=mDocument->getLine(vDstLineChar.line-1);
-        int cols=stringColumns(s,0);
+        int cols=mDocument->lineColumns(vDstLineChar.line-1);
         if (cols+1<ptO.Column)
             return;
     }
@@ -5534,7 +5533,7 @@ int QSynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, i
             }
         } else {
             tempString = mDocument->getLine(line - 1);
-            len = stringColumns(tempString,0);
+            len = mDocument->lineColumns(line-1);
             if (len < insertCol) {
                 insertPos = tempString.length()+1;
                 tempString = tempString + QString(insertCol - len - 1,' ') + str;

@@ -30,6 +30,8 @@
 
 namespace QSynedit {
 
+QList<int> calcGlyphPositions(const QString &text);
+
 class Document;
 
 class DocumentLine {
@@ -46,10 +48,11 @@ public:
 
     int columns() const { return mColumns; }
 
-    const SyntaxState& syntaxState() const;
-    void setSyntaxState(const SyntaxState &newSyntaxState);
+    const SyntaxState& syntaxState() const { return mSyntaxState; }
+    void setSyntaxState(const SyntaxState &newSyntaxState) { mSyntaxState = newSyntaxState; }
 private:
     void setLineText(const QString &newLineText);
+    void setColumns(int cols) { mColumns = cols; }
     void invalidateColumns() { mColumns = -1; }
 private:
     QString mLineText;
@@ -93,7 +96,7 @@ public:
     void setSyntaxState(int index, const SyntaxState& range);
     QString getLine(int index);
     int getLineGlyphsCount(int index);
-    const QList<int>& getGlyphPositions(int index);
+    QList<int> getGlyphPositions(int index);
     int count();
     QString text();
     void setText(const QString& text);
@@ -119,10 +122,8 @@ public:
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
-    //int stringColumns(const QString &line, int colsBefore) const;
-    int gryphsColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore) const;
-    int tokenColumns(const QString &token) const;
-    int charColumns(QChar ch) const;
+    int stringColumns(const QString &line, int colsBefore) const;
+    int glyphsColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore) const;
 
     bool getAppendNewLineAtEOF();
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
