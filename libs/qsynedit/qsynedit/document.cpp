@@ -123,7 +123,7 @@ int Document::blockEnded(int index)
         return 0;
 }
 
-int Document::lengthOfLongestLine() {
+int Document::longestLineColumns() {
     QMutexLocker locker(&mMutex);
     if (mIndexOfLongestLine < 0) {
         int MaxLen = -1;
@@ -139,7 +139,7 @@ int Document::lengthOfLongestLine() {
         }
     }
     if (mIndexOfLongestLine >= 0)
-        return mLines[mIndexOfLongestLine]->columns;
+        return mLines[mIndexOfLongestLine]->columns();
     else
         return 0;
 }
@@ -211,13 +211,31 @@ void Document::setSyntaxState(int Index, const SyntaxState& range)
     //endUpdate();
 }
 
-QString Document::getLine(int Index)
+QString Document::getLine(int index)
 {
     QMutexLocker locker(&mMutex);
-    if (Index<0 || Index>=mLines.count()) {
+    if (index<0 || index>=mLines.count()) {
         return QString();
     }
-    return mLines[Index]->lineText;
+    return mLines[index]->lineText();
+}
+
+int Document::getLineGlyphsCount(int index)
+{
+    QMutexLocker locker(&mMutex);
+    if (index<0 || index>=mLines.count()) {
+        return 0;
+    }
+    return mLines[index]->glyphsCount();
+}
+
+const QList<int> &Document::getGlyphPositions(int index)
+{
+    QMutexLocker locker(&mMutex);
+    if (index<0 || index>=mLines.count()) {
+        return QList<int>{};
+    }
+    return mLines[index]->glyphPositions();
 }
 
 int Document::count()
@@ -578,7 +596,7 @@ void Document::setTabWidth(int newTabWidth)
 {
     if (mTabWidth!=newTabWidth) {
         mTabWidth = newTabWidth;
-        resetColumns();
+        invalidateAllLineColumns();
     }
 }
 
@@ -789,10 +807,10 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     }
 }
 
-int Document::gryphsColumns(const QStringList &gryphs, int colsBefore) const
+int Document::gryphsColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore) const
 {
     int columns = std::max(0,colsBefore);
-    for (int i=0;i<gryphs.length();i++) {
+    for (int i=0;i<glyphPositions.length()-1;i++) {
         QString glyph = gryphs[i];
         int glyphCols;
         if (glyph.length()==1 && glyph[0].unicode()<0xFF) {
@@ -920,23 +938,12 @@ bool Document::empty()
     return mLines.count()==0;
 }
 
-void Document::resetColumns()
-{
-    QMutexLocker locker(&mMutex);
-    mIndexOfLongestLine = -1;
-    if (mLines.count() > 0 ) {
-        for (int i=0;i<mLines.size();i++) {
-            mLines[i]->columns = -1;
-        }
-    }
-}
-
-void Document::invalidAllLineColumns()
+void Document::invalidateAllLineColumns()
 {
     QMutexLocker locker(&mMutex);
     mIndexOfLongestLine = -1;
     for (PDocumentLine& line:mLines) {
-        line->columns = -1;
+        line->invalidateColumns();
     }
 }
 
@@ -946,47 +953,38 @@ DocumentLine::DocumentLine():
 {
 }
 
-const QStringList &DocumentLine::glyphs() const
+QStringRef DocumentLine::getGlyph(int i) const
 {
-    return mGlyphs;
-}
-
-int DocumentLine::length() const
-{
-    return mGlyphs.length();
-}
-
-const QString& DocumentLine::lineText() const
-{
-    return mLineText;
+    Q_ASSERT(i>=0 && i<mGlyphPositions.length());
+    int start = mGlyphPositions[i];
+    int end;
+    if (i+1<mGlyphPositions.length()) {
+        end = mGlyphPositions[i+1] - 1;
+    } else {
+        end = mLineText.length()-1;
+    }
+    return mLineText.midRef(start,end-start+1);
 }
 
 void DocumentLine::setLineText(const QString &newLineText)
 {
     mLineText = newLineText;
+    mColumns=-1;
     //parse mGlyphs
     int i=0;
     while (i<mLineText.length()) {
-        if (mLineText[i].isHighSurrogate() && i+1<mLineText.length() && mLineText[i].isLowSurrogate()) {
+        QChar ch = mLineText[i];
+        if (ch.isHighSurrogate() && i+1<mLineText.length() && QChar::isLowSurrogate(mLineText[i+1].unicode())) {
             //character that larger than 0xffff
-            mGryphs.append(mLineText.mid(i,2));
+            mGlyphPositions.append(i);
             i++;
-        } else if (mLineText[i].combiningClass()!=0 && !mGryphs.isEmpty()
-                   && mGryphs.last().length()>0) {
-            //Combining character
-            QString gryph=mGryphs.last();
-            gryph.append(mLineText[i]);
-            mGryphs[mGryphs.length()-1]=gryph;
+        } else if (ch.combiningClass()!=0 && !mGlyphPositions.isEmpty()) {
+            //a Combining character
         } else {
-            mGryphs.append(mLineText[i]);
+            mGlyphPositions.append(i);
         }
         i++;
     }
-}
-
-int DocumentLine::columns() const
-{
-    return mColumns;
 }
 
 const SyntaxState& DocumentLine::syntaxState() const

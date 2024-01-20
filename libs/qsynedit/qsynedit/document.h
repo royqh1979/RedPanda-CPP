@@ -30,28 +30,33 @@
 
 namespace QSynedit {
 
+class Document;
+
 class DocumentLine {
 public:
     explicit DocumentLine();
     DocumentLine(const DocumentLine&)=delete;
     DocumentLine& operator=(const DocumentLine&)=delete;
 
-    const QStringList& glyphs() const;
-    int length() const;
+    int glyphsCount() const { return mGlyphPositions.length(); }
+    const QList<int>& glyphPositions() const { return mGlyphPositions; }
+    QStringRef getGlyph(int i) const;
 
-    const QString& lineText() const;
-    void setLineText(const QString &newLineText);
+    const QString& lineText() const { return mLineText; }
 
-    int columns() const;
+    int columns() const { return mColumns; }
 
     const SyntaxState& syntaxState() const;
     void setSyntaxState(const SyntaxState &newSyntaxState);
-
 private:
-  QString mLineText;
-  QStringList mGlyphs;
-  SyntaxState mSyntaxState;
-  int mColumns;
+    void setLineText(const QString &newLineText);
+    void invalidateColumns() { mColumns = -1; }
+private:
+    QString mLineText;
+    QList<int> mGlyphPositions;
+    SyntaxState mSyntaxState;
+    int mColumns;
+    friend class Document;
 };
 
 typedef std::shared_ptr<DocumentLine> PDocumentLine;
@@ -59,8 +64,6 @@ typedef std::shared_ptr<DocumentLine> PDocumentLine;
 typedef QVector<PDocumentLine> DocumentLines;
 
 typedef std::shared_ptr<DocumentLines> PDocumentLines;
-
-class Document;
 
 typedef std::shared_ptr<Document> PDocument;
 
@@ -84,11 +87,13 @@ public:
     int blockLevel(int index);
     int blockStarted(int index);
     int blockEnded(int index);
-    int lengthOfLongestLine();
+    int longestLineColumns();
     QString lineBreak() const;
     SyntaxState getSyntaxState(int index);
     void setSyntaxState(int index, const SyntaxState& range);
     QString getLine(int index);
+    int getLineGlyphsCount(int index);
+    const QList<int>& getGlyphPositions(int index);
     int count();
     QString text();
     void setText(const QString& text);
@@ -115,7 +120,7 @@ public:
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
     //int stringColumns(const QString &line, int colsBefore) const;
-    int gryphsColumns(const QStringList& gryphs, int colsBefore) const;
+    int gryphsColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore) const;
     int tokenColumns(const QString &token) const;
     int charColumns(QChar ch) const;
 
@@ -127,7 +132,6 @@ public:
 
     bool empty();
 
-    void resetColumns();
     int tabWidth() const {
         return mTabWidth;
     }
@@ -137,7 +141,7 @@ public:
     void setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont);
 
 public slots:
-    void invalidAllLineColumns();
+    void invalidateAllLineColumns();
 
 signals:
     void changed();

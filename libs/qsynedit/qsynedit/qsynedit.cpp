@@ -327,7 +327,7 @@ bool QSynEdit::canRedo() const
 
 int QSynEdit::maxScrollWidth() const
 {
-    int maxLen = mDocument->lengthOfLongestLine();
+    int maxLen = mDocument->longestLineColumns();
     if (syntaxer())
         maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
     if (mOptions.testFlag(eoScrollPastEol))
@@ -6780,7 +6780,7 @@ void QSynEdit::setBlockEnd(BufferCoord value)
       else
           value.ch = 1;
     } else {
-        int maxLen = mDocument->lengthOfLongestLine();
+        int maxLen = mDocument->longestLineColumns();
         if (syntaxer())
             maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
@@ -6887,7 +6887,7 @@ void QSynEdit::setBlockBegin(BufferCoord value)
         else
             value.ch = 1;
     } else {
-        int maxLen = mDocument->lengthOfLongestLine();
+        int maxLen = mDocument->longestLineColumns();
         if (syntaxer())
             maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
