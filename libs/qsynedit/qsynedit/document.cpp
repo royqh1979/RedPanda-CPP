@@ -93,6 +93,22 @@ int Document::lineColumns(int index)
         return 0;
 }
 
+int Document::lineColumns(int index, const QString &newText)
+{
+    QMutexLocker locker(&mMutex);
+    if (index<0 || index >= mLines.size())
+        return 0;
+    QString lineText = mLines[index];
+    if (lineText==newText) {
+        if (mLines[index]->columns() == -1) {
+            return calculateLineColumns(index);
+        } else
+            return mLines[index]->columns();
+    } else {
+        return stringColumns(newText,0);
+    }
+}
+
 int Document::blockLevel(int index)
 {
     QMutexLocker locker(&mMutex);
@@ -479,8 +495,10 @@ void Document::setUpdateState(bool Updating)
 int Document::calculateLineColumns(int Index)
 {
     PDocumentLine line = mLines[Index];
-
-    line->setColumns( glyphsColumns(line->lineText(), line->glyphPositions(), 0));
+    QList<int> glyphColumns;
+    int columns;
+    glyphColumns = calcGlyphColumns(line->lineText(), line->glyphPositions(), 0, columns);
+    line->setColumns(columns, glyphColumns);
     return line->columns();
 }
 
@@ -836,32 +854,64 @@ int Document::stringColumns(const QString &line, int colsBefore) const
 
 int Document::glyphsColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore) const
 {
-    int columns = std::max(0,colsBefore);
-    int start,end;
-    for (int i=0;i<glyphPositions.length();i++) {
-        start = glyphPositions[i];
-        if (i+1<glyphPositions.length()) {
-            end = glyphPositions[i+1];
-        } else {
-            end = lineText.length();
-        }
-        QString glyph = lineText.mid(start,end-start);
-        int glyphCols;
-        if (glyph.length()==1 && glyph[0].unicode()<0xFF) {
-            QChar ch = glyph[0];
-            if (ch == '\t') {
-                glyphCols = mTabWidth - columns % mTabWidth;
-            } else {
-                int width = mFontMetrics.horizontalAdvance(ch);
-                glyphCols = std::max(1.0, std::ceil(width / (double)mCharWidth));
-            }
-        } else {
-            int width = mNonAsciiFontMetrics.horizontalAdvance(glyph);
-            glyphCols = std::max(1.0, std::ceil(width / (double)mCharWidth));
-        }
-        columns+=glyphCols;
+    int columns;
+    calcGlyphColumns(lineText,glyphPositions,colsBefore, columns);
+    return columns - colsBefore;
+}
+
+int Document::glyphsColumns(int line, const QString &newText, int colsBefore)
+{
+    QMutexLocker locker(&mMutex);
+    if (index>=0 && index < mLines.size()) {
+        return 0;
     }
-    return columns-colsBefore;
+    QString lineText = mLines[line]->lineText();
+    if (lineText == newText) {
+        QList<int> glyphPositions = mLines[line]->lineText();
+        return glyphsColumns(lineText, glyphPositions, colsBefore);
+    } else {
+        return stringColumns(newText, colsBefore);
+    }
+}
+
+int Document::glyphsColumns(int line, int colsBefore)
+{
+    QMutexLocker locker(&mMutex);
+    if (index>=0 && index < mLines.size()) {
+        return 0;
+    }
+    QString lineText = mLines[line]->lineText();
+    QList<int> glyphPositions = mLines[line]->lineText();
+    return glyphsColumns(lineText, glyphPositions, colsBefore);
+}
+
+int Document::charToColumn(const QString &lineText, int charPos) const
+{
+    QList<int> glyphPositions = calcGlyphPositions(lineText);
+    return charToColumn(lineText, glyphPositions, charPos);
+}
+
+int Document::charToColumn(const QString &lineText, const QList<int> &glyphPositions, int charPos) const
+{
+    Q_ASSERT(charPos<lineText.length() && charPos>=0);
+    int glyphIdx;
+    for (glyphIdx=0;glyphIdx<glyphPositions.length();glyphIdx++) {
+        if (charPos<glyphPositions[glyphIdx])
+            break;
+    }
+    int cols=0;
+    return glyphsColumns(lineText, glyphPositions.mid(0,glyphIdx-1),0);
+}
+
+int Document::columnToChar(const QString &lineText, int column) const
+{
+    QList<int> glyphPositions = calcGlyphPositions(lineText);
+    return columnToChar(lineText, glyphPositions, charPos);
+}
+
+int Document::columnToChar(const QString &lineText, const QList<int> &glyphPositions, int column) const
+{
+
 }
 
 void Document::putTextStr(const QString &text)
@@ -901,6 +951,38 @@ void Document::internalClear()
         emit deleted(0,oldCount);
         endUpdate();
     }
+}
+
+QList<int> Document::calcGlyphColumns(const QString &lineText, const QList<int> &glyphPositions, int colsBefore, int &totalColumns)
+{
+    int totalColumns = std::max(0,colsBefore);
+    int start,end;
+    QList<int> glyphColumns;
+    for (int i=0;i<glyphPositions.length();i++) {
+        start = glyphPositions[i];
+        if (i+1<glyphPositions.length()) {
+            end = glyphPositions[i+1];
+        } else {
+            end = lineText.length();
+        }
+        QString glyph = lineText.mid(start,end-start);
+        int glyphCols;
+        if (glyph.length()==1 && glyph[0].unicode()<0xFF) {
+            QChar ch = glyph[0];
+            if (ch == '\t') {
+                glyphCols = mTabWidth - columns % mTabWidth;
+            } else {
+                int width = mFontMetrics.horizontalAdvance(ch);
+                glyphCols = std::max(1.0, std::ceil(width / (double)mCharWidth));
+            }
+        } else {
+            int width = mNonAsciiFontMetrics.horizontalAdvance(glyph);
+            glyphCols = std::max(1.0, std::ceil(width / (double)mCharWidth));
+        }
+        glyphColumns.append(columns);
+        totalColumns+=glyphCols;
+    }
+    return glyphColumns;
 }
 
 NewlineType Document::getNewlineType()

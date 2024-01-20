@@ -899,9 +899,9 @@ void QSynEditPainter::paintLines()
         if (!edit->mSyntaxer || !edit->mSyntaxer->enabled()) {
               sToken = sLine;
               if (bCurrentLine) {
-                  nTokenColumnLen = edit->stringColumns(sLine,0);
+                  nTokenColumnLen = edit->lineColumns(vLine-1, sLine,0);
               } else {
-                  nTokenColumnLen = edit->mDocument->lineColumns(vLine-1);
+                  nTokenColumnLen = edit->lineColumns(vLine-1);
               }
               if (edit->mOptions.testFlag(eoShowLineBreaks) && (!bLineSelected) && (!bSpecialLine) && (nTokenColumnLen < vLastChar)) {
                   sToken = sToken + LineBreakGlyph;

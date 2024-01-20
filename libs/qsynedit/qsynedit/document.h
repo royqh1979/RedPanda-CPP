@@ -52,11 +52,12 @@ public:
     void setSyntaxState(const SyntaxState &newSyntaxState) { mSyntaxState = newSyntaxState; }
 private:
     void setLineText(const QString &newLineText);
-    void setColumns(int cols) { mColumns = cols; }
-    void invalidateColumns() { mColumns = -1; }
+    void setColumns(int cols, QList<int> glyphCols) { mColumns = cols; mGlyphColumns = glyphCols; }
+    void invalidateColumns() { mColumns = -1; mGlyphColumns.clear(); }
 private:
     QString mLineText;
     QList<int> mGlyphPositions;
+    QList<int> mGlyphColumns;
     SyntaxState mSyntaxState;
     int mColumns;
     friend class Document;
@@ -87,6 +88,7 @@ public:
     int bracketLevel(int index);
     int braceLevel(int index);
     int lineColumns(int index);
+    int lineColumns(int index, const QString &newText);
     int blockLevel(int index);
     int blockStarted(int index);
     int blockEnded(int index);
@@ -122,8 +124,13 @@ public:
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
-    int stringColumns(const QString &line, int colsBefore) const;
-    int glyphsColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore) const;
+    int stringColumns(const QString &lineText, int colsBefore) const;
+
+    int charToColumn(const QString& lineText, int charPos) const;
+    int charToColumn(const QString& lineText, const QList<int> &glyphPositions, int charPos) const;
+    int columnToChar(const QString& lineText, int column) const;
+    int columnToChar(const QString& lineText, const QList<int> &glyphPositions, int column) const;
+
 
     bool getAppendNewLineAtEOF();
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
@@ -159,6 +166,8 @@ protected:
     void putTextStr(const QString& text);
     void internalClear();
 private:
+    QList<int> calcGlyphColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore, int &totalColumns);
+    int glyphsColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore) const;
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);

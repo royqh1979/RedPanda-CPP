@@ -329,7 +329,7 @@ int QSynEdit::maxScrollWidth() const
 {
     int maxLen = mDocument->longestLineColumns();
     if (syntaxer())
-        maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
+        maxLen += stringColumns(syntaxer()->foldString(""),maxLen);
     if (mOptions.testFlag(eoScrollPastEol))
         return std::max(maxLen ,1);
     else
@@ -841,22 +841,20 @@ int QSynEdit::charToColumn(int aLine, int aChar) const
 {
     if (aLine>=1 && aLine <= mDocument->count()) {
         QString s = getDisplayStringAtLine(aLine);
-        return charToColumn(s,aChar);
+        QString s2 = mDocument->getLine(line-1);
+        if (s!=s2)
+            return mDocument->charToColumn(s, aChar);
+        else {
+            QList<int> glyphPositions = mDocument->getGlyphPositions(line-1);
+            return mDocument->charToColumn(s, glyphPositions, aChar);
+        }
     }
     return aChar;
 }
 
 int QSynEdit::charToColumn(const QString &s, int aChar) const
 {
-    int x = 0;
-    int len = std::min(aChar-1,s.length());
-    for (int i=0;i<len;i++) {
-        if (s[i] == '\t')
-            x+=tabWidth() - (x % tabWidth());
-        else
-            x+=charColumns(s[i]);
-    }
-    return x+1;
+    return mDocument->charToColumn(s, aChar);
 }
 
 int QSynEdit::columnToChar(int aLine, int aColumn) const
@@ -6781,7 +6779,7 @@ void QSynEdit::setBlockEnd(BufferCoord value)
     } else {
         int maxLen = mDocument->longestLineColumns();
         if (syntaxer())
-            maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
+            maxLen += stringColumns(syntaxer()->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }
     if (value.ch != mBlockEnd.ch || value.line != mBlockEnd.line) {
@@ -6888,7 +6886,7 @@ void QSynEdit::setBlockBegin(BufferCoord value)
     } else {
         int maxLen = mDocument->longestLineColumns();
         if (syntaxer())
-            maxLen = maxLen+stringColumns(syntaxer()->foldString(""),maxLen);
+            maxLen += stringColumns(syntaxer()->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }
     if (selAvail()) {
