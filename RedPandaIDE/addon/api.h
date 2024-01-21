@@ -20,6 +20,7 @@
 struct lua_State;
 
 extern "C" int luaApi_Debug_debug(lua_State *L) noexcept;
+extern "C" int luaApi_Debug_messageBox(lua_State *L) noexcept;
 
 extern "C" int luaApi_Desktop_desktopEnvironment(lua_State *L) noexcept;
 extern "C" int luaApi_Desktop_language(lua_State *L) noexcept;

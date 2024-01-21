@@ -27,13 +27,17 @@ namespace AddOn {
 // simple, stateless Lua executor
 class SimpleExecutor {
 protected:
-    SimpleExecutor(const QList<QString> &apis): mApis(apis) {}
+    SimpleExecutor(const QString &kind, int major, int minor, const QList<QString> &apis);
 
-    // run a Lua script and fetch its return value as type R
+    bool apiVersionCheck(const QJsonObject &addonApi);
+
     QJsonValue runScript(const QByteArray &script, const QString &name,
                          std::chrono::microseconds timeLimit);
 
 private:
+    QString mKind;
+    int mMajor;
+    int mMinor;
     QStringList mApis;
 };
 

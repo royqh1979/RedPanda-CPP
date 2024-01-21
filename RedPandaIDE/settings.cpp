@@ -3279,7 +3279,9 @@ void Settings::CompilerSets::findSets()
         try {
             compilerHint = AddOn::CompilerHintExecutor{}(script);
         } catch (const AddOn::LuaError &e) {
-            qDebug() << "Error in compiler_hint.lua:" << e.reason();
+            QMessageBox::critical(nullptr,
+                                  QObject::tr("Error executing platform compiler hint add-on"),
+                                  e.reason());
         }
         if (!compilerHint.empty()) {
             QJsonArray compilerList = compilerHint["compilerList"].toArray();
