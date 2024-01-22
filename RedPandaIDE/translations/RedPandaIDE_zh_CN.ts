@@ -9679,6 +9679,10 @@ p, li { white-space: pre-wrap; }
         <source>Failed to detect terminal arguments pattern for “%1”.</source>
         <translation>无法检测适用于 “%1” 的终端参数模式。</translation>
     </message>
+    <message>
+        <source>Error executing platform compiler hint add-on</source>
+        <translation>执行平台编译器提示附加组件错误</translation>
+    </message>
 </context>
 <context>
     <name>RegisterModel</name>

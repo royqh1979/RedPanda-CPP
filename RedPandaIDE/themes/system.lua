@@ -1,26 +1,49 @@
-local desktopEnvironment = C_Desktop.desktopEnvironment()
-local useSystemStyle = desktopEnvironment == "xdg" or desktopEnvironment == "macos"
-
-local systemAppMode = C_Desktop.systemAppMode()
-local isDarkMode = systemAppMode == "dark"
-
-function getStyle()
-    if useSystemStyle then
-        return C_Desktop.systemStyle()
-    else
-        if isDarkMode then
-            return "RedPandaDarkFusion"
-        else
-            return "RedPandaLightFusion"
-        end
-    end
+function apiVersion()
+   return {
+      kind = "theme",
+      major = 0,
+      minor = 1,
+   }
 end
 
-function getPalette()
-    if useSystemStyle then
-        return {}
-    elseif isDarkMode then
-        return { -- palette from `dark.lua`
+local nameMap = {
+   en_US = "System Style and Color",
+   pt_BR = "Estilo e Cor do Sistema",
+   zh_CN = "跟随系统样式和颜色",
+   zh_TW = "跟隨系統樣式和顏色",
+}
+
+local nameMapNoStyle = {
+   en_US = "System Color",
+   pt_BR = "Cor do Sistema",
+   zh_CN = "跟随系统颜色",
+   zh_TW = "跟隨系統顏色",
+}
+
+function main()
+   local desktopEnvironment = C_Desktop.desktopEnvironment()
+   local useSystemStyle = desktopEnvironment == "xdg" or desktopEnvironment == "macos"
+
+   local systemAppMode = C_Desktop.systemAppMode()
+   local isDarkMode = systemAppMode == "dark"
+
+   local function getStyle()
+      if useSystemStyle then
+         return C_Desktop.systemStyle()
+      else
+         if isDarkMode then
+            return "RedPandaDarkFusion"
+         else
+            return "RedPandaLightFusion"
+         end
+      end
+   end
+
+   local function getPalette()
+      if useSystemStyle then
+         return {}
+      elseif isDarkMode then
+         return {
             PaletteWindow = "#19232D",
             PaletteWindowText = "#E0E1E3",
             PaletteBase = "#1E1E1E",
@@ -46,10 +69,10 @@ function getPalette()
             PaletteTextDisabled = "#9DA9B5",
             PaletteMid = "#707070",
             PaletteLight = "#505050",
-            PaletteMidLight = "#00ff00"
-        }
-    else
-        return { -- palette from `default.lua`
+            PaletteMidlight = "#00ff00",
+         }
+      else
+         return {
             PaletteWindow = "#efefef",
             PaletteWindowText = "#000000",
             PaletteBase = "#ffffff",
@@ -63,7 +86,7 @@ function getPalette()
             PaletteLink = "#0000ff",
             PaletteLinkVisited = "#ff00ff",
             PaletteLight = "#ffffff",
-            PaletteMidLight = "#cacaca",
+            PaletteMidlight = "#cacaca",
             PaletteDark = "#9f9f9f",
             PaletteMid = "#b8b8b8",
             PaletteWindowDisabled = "#efefef",
@@ -73,31 +96,18 @@ function getPalette()
             PaletteButtonDisabled = "#efefef",
             PaletteButtonTextDisabled = "#bebebe",
             PaletteHighlight = "#dddddd",
-            PaletteHighlightedText = "#000000"
-        }
-    end
+            PaletteHighlightedText = "#000000",
+         }
+      end
+   end
+
+   local lang = C_Desktop.language()
+
+   return {
+      ["name"] = useSystemStyle and (nameMap[lang] or nameMap.en_US) or (nameMapNoStyle[lang] or nameMapNoStyle.en_US),
+      ["style"] = getStyle(),
+      ["default scheme"] = "Adaptive",
+      ["default iconset"] = "newlook",
+      ["palette"] = getPalette(),
+   }
 end
-
-local nameMap = {
-    en_US = "System Style and Color",
-    pt_BR = "Estilo e Cor do Sistema",
-    zh_CN = "跟随系统样式和颜色",
-    zh_TW = "跟隨系統樣式和顏色"
-}
-
-local nameMapNoStyle = {
-    en_US = "System Color",
-    pt_BR = "Cor do Sistema",
-    zh_CN = "跟随系统颜色",
-    zh_TW = "跟隨系統顏色"
-}
-
-local lang = C_Desktop.language()
-
-return {
-    ["name"] = useSystemStyle and (nameMap[lang] or nameMap.en_US) or (nameMapNoStyle[lang] or nameMapNoStyle.en_US),
-    ["style"] = getStyle(),
-    ["default scheme"] = "Adaptive",
-    ["default iconset"] = "newlook",
-    ["palette"] = getPalette()
-}
