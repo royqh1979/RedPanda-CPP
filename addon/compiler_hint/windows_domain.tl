@@ -9,7 +9,6 @@ end
 local gnuArchMap: {string:string} = {
     i386 = "i686",
     x86_64 = "x86_64",
-    arm = "armv7",
     arm64 = "aarch64",
 }
 
@@ -172,15 +171,12 @@ global function main(): CompilerHint
 
     local function checkAndAddMingw(arch: string)
         local binDir: string
-        local libDir: string
         local excludeBinDir: string
         if arch == "i386" then
             binDir = libexecDir .. "/mingw32/bin" -- must match case because Windows filesystem can be case sensitive
-            libDir = libexecDir .. "/mingw32/i686-w64-mingw32/lib"
             excludeBinDir = libexecDir .. "/MinGW32/bin" -- workaround for path check
         elseif arch == "x86_64" then
             binDir = libexecDir .. "/mingw64/bin"
-            libDir = libexecDir .. "/mingw64/x86_64-w64-mingw32/lib"
             excludeBinDir = libexecDir .. "/MinGW64/bin"
         else
             return
@@ -199,10 +195,6 @@ global function main(): CompilerHint
             resourceCompiler = binDir .. "/windres.exe",
             binDirs = {binDir},
         }
-        local extraObjects = {
-            utf8init = libDir .. "/utf8init.o",
-            utf8manifest = libDir .. "/utf8manifest.o",
-        }
 
         local release, debug_, debugWithAsan = generateConfig(
             function (arch_: string, profile: string): string
@@ -211,7 +203,7 @@ global function main(): CompilerHint
             programs,
             {
                 arch = arch,
-                customLinkParams = {extraObjects.utf8init, extraObjects.utf8manifest},
+                customLinkParams = {"-Wl,utf8init.o", "-Wl,utf8manifest.o"},
             }
         )
         table.insert(compilerList, release)
@@ -243,9 +235,9 @@ global function main(): CompilerHint
 
         local binDir = libexecDir .. "/llvm-mingw/bin"
         local appTriplet = gnuArchMap[appArch] .. "-w64-mingw32"
+        local appDllDir = libexecDir .. "/llvm-mingw/" .. appTriplet .. "/bin"
         do
             -- appArch is always debuggable
-            local libDir = libexecDir .. "/llvm-mingw/" .. appTriplet .. "/lib"
             local programs: Programs = {
                 cCompiler = binDir .. "/" .. appTriplet .. "-clang.exe",
                 cxxCompiler = binDir .. "/" .. appTriplet .. "-clang++.exe",
@@ -253,11 +245,7 @@ global function main(): CompilerHint
                 debugger = binDir .. "/lldb-mi.exe",
                 debugServer = binDir .. "/lldb-server.exe",
                 resourceCompiler = binDir .. "/" .. appTriplet .. "-windres.exe",
-                binDirs = {binDir},
-            }
-            local extraObjects = {
-                utf8init = libDir .. "/utf8init.o",
-                utf8manifest = libDir .. "/utf8manifest.o",
+                binDirs = {binDir, appDllDir},
             }
             local release, debug_, debugWithAsan = generateConfig(
                 function (arch_: string, profile: string): string
@@ -266,7 +254,7 @@ global function main(): CompilerHint
                 programs,
                 {
                     arch = appArch,
-                    customLinkParams = {extraObjects.utf8init, extraObjects.utf8manifest},
+                    customLinkParams = {"-Wl,utf8init.o", "-Wl,utf8manifest.o"},
                     isClang = true,
                 }
             )
@@ -285,9 +273,10 @@ global function main(): CompilerHint
         end
 
         for _, foreignArch in ipairs(supportedAppArches) do
-            if foreignArch ~= appArch then
-                local foreignTriplet = gnuArchMap[foreignArch] .. "-w64-mingw32"
-                local libDir = libexecDir .. "/llvm-mingw/" .. foreignTriplet .. "/lib"
+            local gnuArch = gnuArchMap[foreignArch]
+            if foreignArch ~= appArch and gnuArch ~= nil then
+                local foreignTriplet = gnuArch .. "-w64-mingw32"
+                local foreignDllDir = libexecDir .. "/llvm-mingw/" .. foreignTriplet .. "/bin"
                 local programs: Programs = {
                     cCompiler = binDir .. "/" .. foreignTriplet .. "-clang.exe",
                     cxxCompiler = binDir .. "/" .. foreignTriplet .. "-clang++.exe",
@@ -295,11 +284,7 @@ global function main(): CompilerHint
                     debugger = binDir .. "/lldb-mi.exe",
                     debugServer = binDir .. "/lldb-server.exe",
                     resourceCompiler = binDir .. "/" .. foreignTriplet .. "-windres.exe",
-                    binDirs = {binDir},
-                }
-                local extraObjects = {
-                    utf8init = libDir .. "/utf8init.o",
-                    utf8manifest = libDir .. "/utf8manifest.o",
+                    binDirs = {binDir, foreignDllDir},
                 }
                 local release, _, _ = generateConfig(
                     function (arch_: string, profile: string): string
@@ -308,7 +293,7 @@ global function main(): CompilerHint
                     programs,
                     {
                         arch = foreignArch,
-                        customLinkParams = {extraObjects.utf8init, extraObjects.utf8manifest},
+                        customLinkParams = {"-Wl,utf8init.o", "-Wl,utf8manifest.o"},
                         isClang = true,
                     }
                 )
@@ -337,10 +322,6 @@ global function main(): CompilerHint
                 binDirs = {llvmOrgBinDir},
                 libDirs = {libDir},
             }
-            local extraObjects = {
-                utf8init = libDir .. "/utf8init.o",
-                utf8manifest = libDir .. "/utf8manifest.o",
-            }
             local release, debug_, _ = generateConfig(
                 function (arch: string, profile: string): string
                     return nameGeneratorClang(lang, arch, profile, false)
@@ -356,7 +337,7 @@ global function main(): CompilerHint
                     },
                     customLinkParams = {
                         "-target", msvcTriplet,
-                        extraObjects.utf8init, extraObjects.utf8manifest,
+                        "-Wl,utf8init.o", "-Wl,utf8manifest.o",
                     },
                     isClang = true,
                 }
@@ -366,8 +347,9 @@ global function main(): CompilerHint
         end
 
         for _, foreignArch in ipairs(supportedAppArches) do
-            if foreignArch ~= appArch then
-                local foreignTriplet = gnuArchMap[foreignArch] .. "-w64-mingw32"
+            local gnuArch = gnuArchMap[foreignArch]
+            if foreignArch ~= appArch and gnuArch ~= nil then
+                local foreignTriplet = gnuArch .. "-w64-mingw32"
                 local msvcTriplet = gnuArchMap[foreignArch] .. "-pc-windows-msvc"
                 local libDir = libexecDir .. "/llvm-mingw/" .. msvcTriplet .. "/lib"
                 local programs: Programs = {
@@ -379,10 +361,6 @@ global function main(): CompilerHint
                     resourceCompiler = binDir .. "/" .. foreignTriplet .. "-windres.exe",
                     binDirs = {llvmOrgBinDir},
                     libDirs = {libDir},
-                }
-                local extraObjects = {
-                    utf8init = libDir .. "/utf8init.o",
-                    utf8manifest = libDir .. "/utf8manifest.o",
                 }
                 local release, _, _ = generateConfig(
                     function (arch: string, profile: string): string
@@ -399,7 +377,7 @@ global function main(): CompilerHint
                         },
                         customLinkParams = {
                             "-target", msvcTriplet,
-                            extraObjects.utf8init, extraObjects.utf8manifest,
+                            "-Wl,utf8init.o", "-Wl,utf8manifest.o",
                         },
                         isClang = true,
                     }
