@@ -32,7 +32,7 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 apt update
 apt install -y --no-install-recommends \
-  build-essential debhelper \
+  build-essential debhelper g++-mingw-w64 \
   libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
 
 # prepare source
@@ -51,6 +51,7 @@ cp Red_Panda_CPP.pro $TMP_FOLDER
 
 # build
 cd $TMP_FOLDER
+sed -i '/CONFIG += ENABLE_LUA_ADDON/ { s/^#\s*// }' RedPandaIDE/RedPandaIDE.pro
 dpkg-buildpackage -us -uc -j$JOBS
 
 # copy back to host
