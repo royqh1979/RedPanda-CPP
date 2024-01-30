@@ -27,3 +27,7 @@
 /platform/linux/templates/*/*.template eol=lf
 /platform/linux/templates/*/*.fs eol=lf
 /platform/linux/templates/*/*.vs eol=lf
+
+# generated files
+compiler_hint.lua eol=lf
+/RedPandaIDE/themes/*.lua eol=lf
