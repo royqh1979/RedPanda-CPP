@@ -187,11 +187,9 @@ function build() {
 
 function package() {
   pushd "$_PKGDIR"
-  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" main.nsi &
-  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" -DUSER_MODE main.nsi &
-  wait
+  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" main.nsi
   if [[ _7Z_REPACK -eq 1 ]]; then
-    7z x "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH-user.exe" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
+    7z x "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.exe" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
     7z a -t7z -mx=9 -ms=on -mqs=on -mf=BCJ2 -m0="LZMA2:d=128m:fb=273:c=2g" "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.7z" "RedPanda-CPP"
     rm -rf "RedPanda-CPP"
   fi
@@ -199,8 +197,7 @@ function package() {
 }
 
 function dist() {
-  cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH-system.exe" "$_DISTDIR"
-  cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH-user.exe" "$_DISTDIR"
+  cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.exe" "$_DISTDIR"
   [[ _7Z_REPACK -eq 1 ]] && cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.7z" "$_DISTDIR"
 }
 
