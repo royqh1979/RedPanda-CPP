@@ -146,6 +146,7 @@ function prepare-mingw() {
     {
       gcc -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o "$mingw_lib_dir/utf8init.o" "$_SRCDIR/platform/windows/utf8/utf8init.cpp"
       windres -O coff -o "$mingw_lib_dir/utf8manifest.o" "$_SRCDIR/platform/windows/utf8/utf8manifest.rc"
+      ar rcs "$mingw_lib_dir/libutf8.a" "$mingw_lib_dir/utf8init.o" "$mingw_lib_dir/utf8manifest.o"
     }
     export PATH="$old_path"
   fi

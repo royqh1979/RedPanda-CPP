@@ -171,12 +171,15 @@ function main()
 
    local function checkAndAddMingw(arch)
       local binDir
+      local libDir
       local excludeBinDir
       if arch == "i386" then
          binDir = libexecDir .. "/mingw32/bin"
+         libDir = libexecDir .. "/mingw32/i686-w64-mingw32/lib"
          excludeBinDir = libexecDir .. "/MinGW32/bin"
       elseif arch == "x86_64" then
          binDir = libexecDir .. "/mingw64/bin"
+         libDir = libexecDir .. "/mingw64/x86_64-w64-mingw32/lib"
          excludeBinDir = libexecDir .. "/MinGW64/bin"
       else
          return
@@ -196,34 +199,41 @@ function main()
          binDirs = { binDir },
       }
 
-      local release, debug_, debugWithAsan = generateConfig(
-      function(arch_, profile)
-         return nameGeneratorMingwGcc(lang, arch_, profile, true)
-      end,
-      programs,
-      {
-         arch = arch,
-         customLinkParams = { "-Wl,utf8init.o", "-Wl,utf8manifest.o" },
-      })
+      if C_FileSystem.exists(libDir .. "/libutf8.a") then
+         local release, debug_, _ = generateConfig(
+         function(arch_, profile)
+            return nameGeneratorMingwGcc(lang, arch_, profile, true)
+         end,
+         programs,
+         {
+            arch = arch,
+            customLinkParams = { "-Wl,--whole-archive", "-lutf8", "-Wl,--no-whole-archive" },
+         })
 
-      table.insert(compilerList, release)
-      table.insert(compilerList, debug_)
-      if preferCompiler == 0 then
-         preferCompiler = 2
+         table.insert(compilerList, release)
+         table.insert(compilerList, debug_)
+         if preferCompiler == 0 then
+            preferCompiler = 2
+         end
       end
 
-      release, debug_, debugWithAsan = generateConfig(
-      function(arch_, profile)
-         return nameGeneratorMingwGcc(lang, arch_, profile, false)
-      end,
-      programs,
-      {
-         arch = arch,
-         isAnsi = true,
-      })
+      do
+         local release, debug_, _ = generateConfig(
+         function(arch_, profile)
+            return nameGeneratorMingwGcc(lang, arch_, profile, false)
+         end,
+         programs,
+         {
+            arch = arch,
+            isAnsi = true,
+         })
 
-      table.insert(compilerList, release)
-      table.insert(compilerList, debug_)
+         table.insert(compilerList, release)
+         table.insert(compilerList, debug_)
+         if preferCompiler == 0 then
+            preferCompiler = 2
+         end
+      end
 
       table.insert(noSearch, excludeBinDir)
    end
@@ -390,9 +400,12 @@ function main()
 
    if appArch == "x86_64" then
       checkAndAddMingw("x86_64")
+      checkAndAddMingw("i386")
       checkAndAddClang()
    elseif appArch == "arm64" then
       checkAndAddClang()
+      checkAndAddMingw("x86_64")
+      checkAndAddMingw("i386")
    else
       checkAndAddMingw("i386")
       checkAndAddClang()
