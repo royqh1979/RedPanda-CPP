@@ -27,3 +27,4 @@ function gen-compiler-hint() {
 
 gen-compiler-hint addon/compiler_hint/windows_domain.tl packages/msys/domain/compiler_hint.lua
 gen-compiler-hint addon/compiler_hint/archlinux.tl packages/archlinux/compiler_hint.lua
+gen-compiler-hint addon/compiler_hint/debian.tl packages/debian/compiler_hint.lua
