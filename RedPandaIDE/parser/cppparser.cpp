@@ -5875,7 +5875,7 @@ PStatement CppParser::doParseEvalTypeInfo(
                 } else if (token == ">") {
                     templateLevel--;
                 }
-                baseType += token;
+                templateParams += token;
             }
             syntaxer.next();
         }
