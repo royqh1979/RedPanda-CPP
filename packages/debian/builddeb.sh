@@ -18,4 +18,5 @@ cp -r platform $TMP_FOLDER
 cp Red_Panda_CPP.pro $TMP_FOLDER
 
 cd $TMP_FOLDER
+sed -i '/CONFIG += ENABLE_LUA_ADDON/ { s/^#\s*// }' RedPandaIDE/RedPandaIDE.pro
 dpkg-buildpackage -us -uc
