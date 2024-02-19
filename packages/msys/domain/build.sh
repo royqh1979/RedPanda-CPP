@@ -26,7 +26,7 @@ set -euxo pipefail
 
 GCC_VERSION="13.2.0"
 MINGW_VERSION="rt_v11-rev1"
-LLVM_MINGW_TAG="20231128"
+REDPANDA_LLVM_VERSION="17-r0"
 WINDOWS_TERMINAL_VERSION="1.18.3181.0"
 
 _QMAKE="$MINGW_PREFIX/qt5-static/bin/qmake"
@@ -43,10 +43,9 @@ _MINGW64_ARCHIVE="x86_64-$GCC_VERSION-release-posix-seh-ucrt-$MINGW_VERSION.7z"
 _MINGW64_URL="https://github.com/niXman/mingw-builds-binaries/releases/download/$GCC_VERSION-$MINGW_VERSION/$_MINGW64_ARCHIVE"
 
 _LLVM_DIR="llvm-mingw"
-_LLVM_ARCHES=("x86_64" "i686" "aarch64" "armv7")
-_LLVM_ORIGINAL_DIR="llvm-mingw-$LLVM_MINGW_TAG-ucrt-$_NATIVE_ARCH"
-_LLVM_ARCHIVE="$_LLVM_ORIGINAL_DIR.zip"
-_LLVM_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/$LLVM_MINGW_TAG/$_LLVM_ARCHIVE"
+_LLVM_ARCHES=("x86_64" "i686" "aarch64")
+_LLVM_ARCHIVE="$_LLVM_DIR-$REDPANDA_LLVM_VERSION-$_NATIVE_ARCH.7z"
+_LLVM_URL="https://github.com/redpanda-cpp/toolchain-win32-llvm/releases/download/$REDPANDA_LLVM_VERSION/$_LLVM_ARCHIVE"
 
 _WINDOWS_TERMINAL_DIR="terminal-${WINDOWS_TERMINAL_VERSION}"
 _WINDOWS_TERMINAL_ARCHIVE="Microsoft.WindowsTerminal_${WINDOWS_TERMINAL_VERSION}_$_DISPLAY_ARCH.zip"
@@ -103,7 +102,7 @@ function check-deps() {
     $MINGW_PACKAGE_PREFIX-{$compiler,make,qt5-static}
     mingw-w64-i686-nsis
   )
-  [[ _7Z_REPACK -eq 1 ]] || deps+=("$MINGW_PACKAGE_PREFIX-7zip")
+  [[ _7Z_REPACK -eq 1 ]] && deps+=("$MINGW_PACKAGE_PREFIX-7zip")
   for dep in "${deps[@]}"; do
     pacman -Q "$dep" >/dev/null 2>&1 || (
       echo "Missing dependency: $dep"
@@ -113,7 +112,10 @@ function check-deps() {
 }
 
 function prepare-dirs() {
-  [[ $_CLEAN -eq 1 ]] && rm -rf "$_BUILDDIR" "$_PKGDIR" || true
+  if [[ $_CLEAN -eq 1 ]]; then
+    [[ -d "$_BUILDDIR" ]] && rm -rf "$_BUILDDIR"
+    [[ -d "$_PKGDIR" ]] && rm -rf "$_PKGDIR"
+  fi
   mkdir -p "$_ASSETSDIR" "$_BUILDDIR" "$_PKGDIR" "$_DISTDIR"
 }
 
@@ -144,37 +146,7 @@ function prepare-mingw() {
     {
       gcc -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o "$mingw_lib_dir/utf8init.o" "$_SRCDIR/platform/windows/utf8/utf8init.cpp"
       windres -O coff -o "$mingw_lib_dir/utf8manifest.o" "$_SRCDIR/platform/windows/utf8/utf8manifest.rc"
-    }
-    export PATH="$old_path"
-  fi
-}
-
-function prepare-llvm-mingw() {
-  local llvm_dir="$_BUILDDIR/$_LLVM_DIR"
-  if [[ ! -d "$llvm_dir" ]]; then
-    bsdtar -C "$_BUILDDIR" -xf "$_ASSETSDIR/$_LLVM_ARCHIVE"
-    mv "$_BUILDDIR/$_LLVM_ORIGINAL_DIR" "$llvm_dir"
-    local old_path="$PATH"
-    export PATH="$llvm_dir/bin:$PATH"
-    for arch in "${_LLVM_ARCHES[@]}"; do
-      local triplet="$arch-w64-mingw32"
-      local lib_dir="$llvm_dir/$triplet/lib"
-      $triplet-clang -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o "$lib_dir/utf8init.o" "$_SRCDIR/platform/windows/utf8/utf8init.cpp"
-      $triplet-windres -O coff -o "$lib_dir/utf8manifest.o" "$_SRCDIR/platform/windows/utf8/utf8manifest.rc"
-
-      local msvc_triplet="$arch-pc-windows-msvc"
-      local lib_dir="$llvm_dir/$msvc_triplet/lib"
-      mkdir -p "$lib_dir"
-      $triplet-clang -target $msvc_triplet -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o "$lib_dir/utf8init.o" "$_SRCDIR/platform/windows/utf8/utf8init.cpp"
-      $triplet-windres -O coff -o "$lib_dir/utf8manifest.o" "$_SRCDIR/platform/windows/utf8/utf8manifest.rc"
-    done
-    {
-      local triplet="x86_64-w64-mingw32"
-      local msvc_triplet="arm64ec-pc-windows-msvc"
-      local lib_dir="$llvm_dir/$msvc_triplet/lib"
-      mkdir -p "$lib_dir"
-      $triplet-clang -target $msvc_triplet -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o "$lib_dir/utf8init.o" "$_SRCDIR/platform/windows/utf8/utf8init.cpp"
-      $triplet-windres -O coff -o "$lib_dir/utf8manifest.o" "$_SRCDIR/platform/windows/utf8/utf8manifest.rc"
+      ar rcs "$mingw_lib_dir/libutf8.a" "$mingw_lib_dir/utf8init.o" "$mingw_lib_dir/utf8manifest.o"
     }
     export PATH="$old_path"
   fi
@@ -210,17 +182,15 @@ function build() {
   if [[ $_NATIVE_ARCH == x86_64 ]]; then
     [[ -d "$_PKGDIR/mingw64" ]] || cp -r "mingw64" "$_PKGDIR"
   fi
-  [[ -d "$_PKGDIR/llvm-mingw" ]] || cp -r "llvm-mingw" "$_PKGDIR"
+  [[ -d "$_PKGDIR/llvm-mingw" ]] || bsdtar -C "$_PKGDIR" -xf "$_ASSETSDIR/$_LLVM_ARCHIVE"
   popd
 }
 
 function package() {
   pushd "$_PKGDIR"
-  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" main.nsi &
-  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" -DUSER_MODE main.nsi &
-  wait
+  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" main.nsi
   if [[ _7Z_REPACK -eq 1 ]]; then
-    7z x "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH-user.exe" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
+    7z x "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.exe" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
     7z a -t7z -mx=9 -ms=on -mqs=on -mf=BCJ2 -m0="LZMA2:d=128m:fb=273:c=2g" "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.7z" "RedPanda-CPP"
     rm -rf "RedPanda-CPP"
   fi
@@ -228,8 +198,7 @@ function package() {
 }
 
 function dist() {
-  cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH-system.exe" "$_DISTDIR"
-  cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH-user.exe" "$_DISTDIR"
+  cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.exe" "$_DISTDIR"
   [[ _7Z_REPACK -eq 1 ]] && cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.7z" "$_DISTDIR"
 }
 
@@ -238,7 +207,6 @@ prepare-dirs
 download-assets
 [[ $_NATIVE_ARCH == i686 ]] && prepare-mingw 32
 [[ $_NATIVE_ARCH == x86_64 ]] && prepare-mingw 64
-prepare-llvm-mingw
 prepare-openconsole
 prepare-src
 trap restore-src EXIT INT TERM

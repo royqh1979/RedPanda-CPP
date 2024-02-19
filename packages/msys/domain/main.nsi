@@ -7,16 +7,24 @@ SetCompressorDictSize 128
 SetDatablockOptimize on
 Unicode True
 
-!ifdef USER_MODE
-  !define MODE "user"
-!else
-  !define MODE "system"
+!define FINALNAME "redpanda-cpp-${VERSION}-${ARCH}.exe"
+!define DISPLAY_NAME "Red Panda C++ ${VERSION} (${ARCH})"
+
+!define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
+!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "${UNINSTKEY}"
+!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_VALUENAME "CurrentUser"
+!define MULTIUSER_INSTALLMODE_INSTDIR "RedPanda-CPP"
+!define MULTIUSER_EXECUTIONLEVEL Highest
+!define MULTIUSER_MUI
+!define MULTIUSER_INSTALLMODE_COMMANDLINE
+
+!if "${ARCH}" != "x86"
+  !define MULTIUSER_USE_PROGRAMFILES64
 !endif
-!define FINALNAME "redpanda-cpp-${VERSION}-${ARCH}-${MODE}.exe"
-!define DISPLAY_NAME "Red Panda C++ ${VERSION} (${ARCH} ${MODE})"
 
 !include "x64.nsh"
 !include "WinVer.nsh"
+!include "MultiUser.nsh"
 !include "MUI2.nsh"
 !include "lang.nsh"
 
@@ -31,18 +39,6 @@ Caption "${DISPLAY_NAME}"
 
 LicenseData "LICENSE"
 
-!ifdef USER_MODE
-  RequestExecutionLevel user
-  InstallDir "$LOCALAPPDATA\RedPanda-CPP"
-!else
-  RequestExecutionLevel admin
-  !if "${ARCH}" == "x86"
-  InstallDir "$PROGRAMFILES\RedPanda-CPP"
-  !else
-  InstallDir "$PROGRAMFILES64\RedPanda-CPP"
-  !endif
-!endif
-
 ####################################################################
 # Interface Settings
 
@@ -56,15 +52,6 @@ ManifestDPIAware true
 InstType "Full" ;1
 InstType "Minimal" ;2
 
-## Remember the installer language
-!ifdef USER_MODE
-  !define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
-!else
-  !define MUI_LANGDLL_REGISTRY_ROOT "HKLM"
-!endif
-!define MUI_LANGDLL_REGISTRY_KEY "Software\RedPanda-C++"
-!define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
-
 ####################################################################
 # Pages
 
@@ -77,6 +64,7 @@ InstType "Minimal" ;2
 !define MUI_COMPONENTSPAGE_SMALLDESC
 
 !insertmacro MUI_PAGE_LICENSE "LICENSE"
+!insertmacro MULTIUSER_PAGE_INSTALLMODE
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -90,6 +78,16 @@ InstType "Minimal" ;2
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "SimpChinese"
 
+Section "" SecUninstallPrevious
+  SetRegView 32
+  Call UninstallExisting
+  SetRegView 64
+  Call UninstallExisting
+!if "${ARCH}" == "x86"
+  SetRegView 32
+!endif
+SectionEnd
+
 ####################################################################
 # Files, by option section
 
@@ -100,21 +98,13 @@ Section "$(SectionMainName)" SectionMain
 
   ; Allways create an uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
-!ifdef USER_MODE
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Red Panda C++"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString" "$INSTDIR\uninstall.exe"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "Publisher" "Roy Qu (royqh1979@gmail.com)"
-!else
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Red Panda C++"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString" "$INSTDIR\uninstall.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "Publisher" "Roy Qu (royqh1979@gmail.com)"
-!endif
+  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayName" "Red Panda C++"
+  WriteRegStr ShCtx "${UNINSTKEY}" "InstallLocation" "$INSTDIR"
+  WriteRegStr ShCtx "${UNINSTKEY}" "UninstallString" "$INSTDIR\uninstall.exe"
+  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayVersion" "${VERSION}"
+  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
+  WriteRegStr ShCtx "${UNINSTKEY}" "Publisher" "Roy Qu (royqh1979@gmail.com)"
+  WriteRegStr ShCtx "${UNINSTKEY}" $MultiUser.InstallMode 1
 
   ; Write required files
   File "RedPandaIDE.exe"
@@ -167,80 +157,80 @@ SectionGroup "$(SectionAssocsName)" SectionAssocs
     SectionIn 1
 
     StrCpy $0 $INSTDIR\RedPandaIDE.exe
-    WriteRegStr HKCR ".dev" "" "DevCpp.dev"
-    WriteRegStr HKCR "DevCpp.dev" "" "Dev-C++ Project File"
-    WriteRegStr HKCR "DevCpp.dev\DefaultIcon" "" '$0,3'
-    WriteRegStr HKCR "DevCpp.dev\Shell\Open\Command" "" '$0 "%1"'
+    WriteRegStr ShCtx "Software\Classes\.dev" "" "DevCpp.dev"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.dev" "" "Dev-C++ Project File"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.dev\DefaultIcon" "" '$0,3'
+    WriteRegStr ShCtx "Software\Classes\DevCpp.dev\Shell\Open\Command" "" '$0 "%1"'
   SectionEnd
 
   Section "$(SectionAssocExtNameBegin) .c $(SectionAssocExtNameEnd)"
     SectionIn 1
 
     StrCpy $0 $INSTDIR\RedPandaIDE.exe
-    WriteRegStr HKCR ".c" "" "DevCpp.c"
-    WriteRegStr HKCR "DevCpp.c" "" "C Source File"
-    WriteRegStr HKCR "DevCpp.c\DefaultIcon" "" '$0,4'
-    WriteRegStr HKCR "DevCpp.c\Shell\Open\Command" "" '$0 "%1"'
+    WriteRegStr ShCtx "Software\Classes\.c" "" "DevCpp.c"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.c" "" "C Source File"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.c\DefaultIcon" "" '$0,4'
+    WriteRegStr ShCtx "Software\Classes\DevCpp.c\Shell\Open\Command" "" '$0 "%1"'
   SectionEnd
 
   Section "$(SectionAssocExtNameBegin) .cpp $(SectionAssocExtNameEnd)"
     SectionIn 1
 
     StrCpy $0 $INSTDIR\RedPandaIDE.exe
-    WriteRegStr HKCR ".cpp" "" "DevCpp.cpp"
-    WriteRegStr HKCR "DevCpp.cpp" "" "C++ Source File"
-    WriteRegStr HKCR "DevCpp.cpp\DefaultIcon" "" '$0,5'
-    WriteRegStr HKCR "DevCpp.cpp\Shell\Open\Command" "" '$0 "%1"'
+    WriteRegStr ShCtx "Software\Classes\.cpp" "" "DevCpp.cpp"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cpp" "" "C++ Source File"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cpp\DefaultIcon" "" '$0,5'
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cpp\Shell\Open\Command" "" '$0 "%1"'
   SectionEnd
 
   Section "$(SectionAssocExtNameBegin) .cxx $(SectionAssocExtNameEnd)"
     SectionIn 1
 
     StrCpy $0 $INSTDIR\RedPandaIDE.exe
-    WriteRegStr HKCR ".cxx" "" "DevCpp.cxx"
-    WriteRegStr HKCR "DevCpp.cxx" "" "C++ Source File"
-    WriteRegStr HKCR "DevCpp.cxx\DefaultIcon" "" '$0,5'
-    WriteRegStr HKCR "DevCpp.cxx\Shell\Open\Command" "" '$0 "%1"'
+    WriteRegStr ShCtx "Software\Classes\.cxx" "" "DevCpp.cxx"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cxx" "" "C++ Source File"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cxx\DefaultIcon" "" '$0,5'
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cxx\Shell\Open\Command" "" '$0 "%1"'
   SectionEnd
 
   Section "$(SectionAssocExtNameBegin) .cc $(SectionAssocExtNameEnd)"
     SectionIn 1
 
     StrCpy $0 $INSTDIR\RedPandaIDE.exe
-    WriteRegStr HKCR ".cc" "" "DevCpp.cc"
-    WriteRegStr HKCR "DevCpp.cc" "" "C++ Source File"
-    WriteRegStr HKCR "DevCpp.cc\DefaultIcon" "" '$0,5'
-    WriteRegStr HKCR "DevCpp.cc\Shell\Open\Command" "" '$0 "%1"'
+    WriteRegStr ShCtx "Software\Classes\.cc" "" "DevCpp.cc"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cc" "" "C++ Source File"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cc\DefaultIcon" "" '$0,5'
+    WriteRegStr ShCtx "Software\Classes\DevCpp.cc\Shell\Open\Command" "" '$0 "%1"'
   SectionEnd
 
   Section "$(SectionAssocExtNameBegin) .hxx $(SectionAssocExtNameEnd)"
     SectionIn 1
 
     StrCpy $0 $INSTDIR\RedPandaIDE.exe
-    WriteRegStr HKCR ".hxx" "" "DevCpp.hxx"
-    WriteRegStr HKCR "DevCpp.hxx" "" "C++ Header File"
-    WriteRegStr HKCR "DevCpp.hxx\DefaultIcon" "" '$0,7'
-    WriteRegStr HKCR "DevCpp.hxx\Shell\Open\Command" "" '$0 "%1"'
+    WriteRegStr ShCtx "Software\Classes\.hxx" "" "DevCpp.hxx"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.hxx" "" "C++ Header File"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.hxx\DefaultIcon" "" '$0,7'
+    WriteRegStr ShCtx "Software\Classes\DevCpp.hxx\Shell\Open\Command" "" '$0 "%1"'
   SectionEnd
 
   Section "$(SectionAssocExtNameBegin) .h $(SectionAssocExtNameEnd)"
     SectionIn 1
 
     StrCpy $0 $INSTDIR\RedPandaIDE.exe
-    WriteRegStr HKCR ".h" "" "DevCpp.h"
-    WriteRegStr HKCR "DevCpp.h" "" "C Header File"
-    WriteRegStr HKCR "DevCpp.h\DefaultIcon" "" '$0,6'
-    WriteRegStr HKCR "DevCpp.h\Shell\Open\Command" "" '$0 "%1"'
+    WriteRegStr ShCtx "Software\Classes\.h" "" "DevCpp.h"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.h" "" "C Header File"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.h\DefaultIcon" "" '$0,6'
+    WriteRegStr ShCtx "Software\Classes\DevCpp.h\Shell\Open\Command" "" '$0 "%1"'
   SectionEnd
 
   Section "$(SectionAssocExtNameBegin) .hpp $(SectionAssocExtNameEnd)"
     SectionIn 1
 
     StrCpy $0 $INSTDIR\RedPandaIDE.exe
-    WriteRegStr HKCR ".hpp" "" "DevCpp.hpp"
-    WriteRegStr HKCR "DevCpp.hpp" "" "C++ Header File"
-    WriteRegStr HKCR "DevCpp.hpp\DefaultIcon" "" '$0,7'
-    WriteRegStr HKCR "DevCpp.hpp\Shell\Open\Command" "" '$0 "%1"'
+    WriteRegStr ShCtx "Software\Classes\.hpp" "" "DevCpp.hpp"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.hpp" "" "C++ Header File"
+    WriteRegStr ShCtx "Software\Classes\DevCpp.hpp\DefaultIcon" "" '$0,7'
+    WriteRegStr ShCtx "Software\Classes\DevCpp.hpp\Shell\Open\Command" "" '$0 "%1"'
   SectionEnd
 SectionGroupEnd
 
@@ -264,11 +254,9 @@ SectionGroup "$(SectionShortcutsName)" SectionShortcuts
   SectionEnd
 SectionGroupEnd
 
-!ifdef USER_MODE
 Section "$(SectionConfigName)" SectionConfig
   RMDir /r "$APPDATA\RedPandaIDE"
 SectionEnd
-!endif
 
 ####################################################################
 
@@ -284,23 +272,17 @@ SectionEnd
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionLlvm}        "$(MessageSectionLlvm)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
-!ifdef USER_MODE
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionConfig}      "$(MessageSectionConfig)"
-!endif
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ####################################################################
 # Functions, utilities
 
 Function .onInit
+  !insertmacro MULTIUSER_INIT
   !insertmacro MUI_LANGDLL_DISPLAY
 !if "${ARCH}" != "x86"
   SetRegView 64
-!endif
-!ifdef USER_MODE
-  SetShellVarContext current
-!else
-  SetShellVarContext all
 !endif
   ${IfNot} ${AtLeastBuild} 17763 ; OpenConsole.exe requires Windows 10 v1809 ConPTY
 !if "${ARCH}" == "x86"
@@ -343,14 +325,6 @@ Function myGuiInit
     Abort
   ${EndIf}
 !endif
-
-  SetRegView 32
-  Call UninstallExisting
-  SetRegView 64
-  Call UninstallExisting
-!if "${ARCH}" == "x86"
-  SetRegView 32
-!endif
 FunctionEnd
 
 Function .onSelChange
@@ -363,32 +337,21 @@ Function .onSelChange
 FunctionEnd
 
 Function un.onInit
+  !insertmacro MULTIUSER_UNINIT
   !insertmacro MUI_UNGETLANGUAGE
 !if "${ARCH}" != "x86"
   SetRegView 64
 !endif
-!ifdef USER_MODE
-  SetShellVarContext current
-!else
-  SetShellVarContext all
-!endif
 FunctionEnd
 
 Function UninstallExisting
-!ifdef USER_MODE
-  ReadRegStr $R0 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString"
-!else
-  ReadRegStr $R0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString"
-!endif
+  ReadRegStr $R0 ShCtx "${UNINSTKEY}" "UninstallString"
   ${If} $R0 != ""
     GetFullPathName $R1 "$R0\.." ; remove \uninstall.exe
-    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
-      "$(MessageUninstallExisting)" \
-      IDOK uninst
-    Abort
-    uninst:
-      ClearErrors
-      ExecWait '"$R0" /S _?=$R1'
+    DetailPrint "$(MessageUninstallingExisting)"
+    ExecWait '"$R0" /S _?=$R1'
+    Delete $R0
+    RMDir $R1
   ${EndIf}
 FunctionEnd
 
@@ -412,14 +375,14 @@ Section "Uninstall"
   Delete "$QUICKLAUNCH\$(MessageAppName).lnk"
   Delete "$DESKTOP\$(MessageAppName).lnk"
 
-  DeleteRegKey HKCR "DevCpp.dev"
-  DeleteRegKey HKCR "DevCpp.c"
-  DeleteRegKey HKCR "DevCpp.cpp"
-  DeleteRegKey HKCR "DevCpp.cxx"
-  DeleteRegKey HKCR "DevCpp.cc"
-  DeleteRegKey HKCR "DevCpp.h"
-  DeleteRegKey HKCR "DevCpp.hpp"
-  DeleteRegKey HKCR "DevCpp.hxx"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.dev"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.c"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.cpp"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.cxx"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.cc"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.h"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.hpp"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.hxx"
 
   Delete "$INSTDIR\NEWS.md"
   Delete "$INSTDIR\RedPandaIDE.exe"
@@ -440,17 +403,9 @@ Section "Uninstall"
   RMDir "$INSTDIR"
 
   ; Remove registry keys
-!ifdef USER_MODE
-  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
-  DeleteRegKey HKCU "Software\RedPanda-C++"
-!else
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
-  DeleteRegKey HKLM "Software\RedPanda-C++"
-!endif
+  DeleteRegKey ShCtx "${UNINSTKEY}"
 
-!ifdef USER_MODE
   MessageBox MB_YESNO "$(MessageRemoveConfig)" /SD IDNO IDNO SkipRemoveConfig
   RMDir /r "$APPDATA\RedPandaIDE"
 SkipRemoveConfig:
-!endif
 SectionEnd
