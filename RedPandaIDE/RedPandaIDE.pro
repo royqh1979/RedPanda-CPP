@@ -17,7 +17,9 @@ APP_NAME = RedPandaCPP
 
 APP_VERSION = 2.26
 
-TEST_VERSION = beta2
+# TEST_VERSION = beta2
+TEST_VERSION = $$system(git rev-list HEAD --count)
+
 contains(QMAKE_HOST.arch, x86_64):{
     DEFINES += ARCH_X86_64=1
 } else: {
@@ -57,7 +59,7 @@ DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
 isEmpty(TEST_VERSION) {
     DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
 } else {
-    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}-$${TEST_VERSION}\\\"
+    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}.$${TEST_VERSION}\\\"
 }
 win32 {
     _WINDOWS_PREFER_OPENCONSOLE = $$(WINDOWS_PREFER_OPENCONSOLE)
