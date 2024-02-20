@@ -179,7 +179,7 @@ void CompilerInfo::prepareCompilerOptions()
     addOption(CC_CMD_OPT_STACK_PROTECTOR , QObject::tr("Check for stack smashing attacks (-fstack-protector)"), groupName, false, false, true, "-fstack-protector", CompilerOptionType::Choice, sl);
     sl.clear();
     sl.append(QPair<QString,QString>("Address","address"));
-    sl.append(QPair<QString,QString>("Hardware-assisted address (arm64 only)","hwaddress"));
+    sl.append(QPair<QString,QString>("Hwaddress","hwaddress"));
     sl.append(QPair<QString,QString>("Thread","thread"));
     sl.append(QPair<QString,QString>("Leak","leak"));
     sl.append(QPair<QString,QString>("Undefined","undefined"));
