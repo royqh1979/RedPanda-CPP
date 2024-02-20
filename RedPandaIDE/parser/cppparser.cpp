@@ -2340,6 +2340,10 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                 mIndex++;
             } else {
                 QString s = mTokenizer[mIndex]->text;
+                if (!isWordChar(s.front())) {
+                    mIndex = indexOfNextPeriodOrSemicolon(mIndex);
+                    return;
+                }
                 if (sName.endsWith("::")) {
                     sName+=s;
                 } else {
@@ -4444,7 +4448,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-//       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -6305,6 +6309,7 @@ int CppParser::indexOfNextPeriodOrSemicolon(int index, int endIndex)
         case ';':
         case ',':
         case '}':
+        case ')':
             return index;
         case '(':
             index = mTokenizer[index]->matchIndex+1;
