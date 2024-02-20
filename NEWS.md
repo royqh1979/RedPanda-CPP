@@ -47,6 +47,7 @@ Red Panda C++ Version 2.26
   - Enhancement: Don't auto-indent in raw string.
   - Fix: Function list is not correctly retrived for full-scoped functions.
   - Enhancement: Improved Raw string support
+  - Enhancement: New option for compiler set "Don't localize gcc output messages"
 
 Red Panda C++ Version 2.25
 

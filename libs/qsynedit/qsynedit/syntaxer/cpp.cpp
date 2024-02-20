@@ -985,9 +985,6 @@ void CppSyntaxer::procRawString()
             }
             break;
         case ')':
-            qDebug()<<mRawStringInitialDCharSeq;
-            qDebug()<<mLine.mid(mRun+1,mRawStringInitialDCharSeq.length());
-            qDebug()<<(mLine.mid(mRun+1,mRawStringInitialDCharSeq.length()) == mRawStringInitialDCharSeq);
             if (mRange.state == RangeState::rsRawStringNotEscaping
                     && mLine.mid(mRun+1,mRawStringInitialDCharSeq.length()) == mRawStringInitialDCharSeq) {
                 mRun = mRun+1+mRawStringInitialDCharSeq.length();

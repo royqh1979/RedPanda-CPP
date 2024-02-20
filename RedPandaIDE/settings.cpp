@@ -1680,6 +1680,7 @@ Settings::CompilerSet::CompilerSet():
     mExecCharset{ENCODING_SYSTEM_DEFAULT},
     mStaticLink{false},
     mPersistInAutoFind{false},
+    mForceEnglishOutput{false},
     mPreprocessingSuffix{DEFAULT_PREPROCESSING_SUFFIX},
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
@@ -1695,6 +1696,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mExecCharset{ENCODING_SYSTEM_DEFAULT},
     mStaticLink{true},
     mPersistInAutoFind{false},
+    mForceEnglishOutput{false},
     mPreprocessingSuffix{DEFAULT_PREPROCESSING_SUFFIX},
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
@@ -1753,6 +1755,7 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mTarget{set.mTarget},
     mCompilerType{set.mCompilerType},
 
+
     mUseCustomCompileParams{set.mUseCustomCompileParams},
     mUseCustomLinkParams{set.mUseCustomLinkParams},
     mCustomCompileParams{set.mCustomCompileParams},
@@ -1761,6 +1764,7 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mExecCharset{set.mExecCharset},
     mStaticLink{set.mStaticLink},
     mPersistInAutoFind{set.mPersistInAutoFind},
+    mForceEnglishOutput{set.mForceEnglishOutput},
 
     mPreprocessingSuffix{set.mPreprocessingSuffix},
     mCompilationProperSuffix{set.mCompilationProperSuffix},
@@ -1804,6 +1808,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mExecCharset{}, // handle later
     mStaticLink{set["staticLink"].toBool()},
     mPersistInAutoFind{false},
+    mForceEnglishOutput{false},
 
     mPreprocessingSuffix{set["preprocessingSuffix"].toString()},
     mCompilationProperSuffix{set["compilationProperSuffix"].toString()},
@@ -2907,6 +2912,16 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     return result.trimmed();
 }
 
+bool Settings::CompilerSet::forceEnglishOutput() const
+{
+    return mForceEnglishOutput;
+}
+
+void Settings::CompilerSet::setForceEnglishOutput(bool newForceEnglishOutput)
+{
+    mForceEnglishOutput = newForceEnglishOutput;
+}
+
 bool Settings::CompilerSet::persistInAutoFind() const
 {
     return mPersistInAutoFind;
@@ -3556,6 +3571,7 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("StaticLink", pSet->staticLink());
     mSettings->mSettings.setValue("ExecCharset", pSet->execCharset());
     mSettings->mSettings.setValue("PersistInAutoFind", pSet->persistInAutoFind());
+    mSettings->mSettings.setValue("forceEnglishOutput", pSet->forceEnglishOutput());
 
     mSettings->mSettings.setValue("preprocessingSuffix", pSet->preprocessingSuffix());
     mSettings->mSettings.setValue("compilationProperSuffix", pSet->compilationProperSuffix());
@@ -3644,6 +3660,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset", true).toBool());
     pSet->setStaticLink(mSettings->mSettings.value("StaticLink", false).toBool());
     pSet->setPersistInAutoFind(mSettings->mSettings.value("PersistInAutoFind", false).toBool());
+    pSet->setForceEnglishOutput(mSettings->mSettings.value("forceEnglishOutput", false).toBool());
 
     pSet->setExecCharset(mSettings->mSettings.value("ExecCharset", ENCODING_SYSTEM_DEFAULT).toString());
     if (pSet->execCharset().isEmpty()) {

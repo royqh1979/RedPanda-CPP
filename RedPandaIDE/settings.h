@@ -1472,6 +1472,9 @@ public:
         bool persistInAutoFind() const;
         void setPersistInAutoFind(bool newPersistInAutoFind);
 
+        bool forceEnglishOutput() const;
+        void setForceEnglishOutput(bool newForceEnglishOutput);
+
     private:
         void setGCCProperties(const QString& binDir, const QString& c_prog);
         void setDirectories(const QString& binDir);
@@ -1523,6 +1526,7 @@ public:
         QString mExecCharset;
         bool mStaticLink;
         bool mPersistInAutoFind;
+        bool mForceEnglishOutput;
 
         QString mPreprocessingSuffix;
         QString mCompilationProperSuffix;
