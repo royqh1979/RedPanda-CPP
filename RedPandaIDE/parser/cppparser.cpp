@@ -435,7 +435,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
                 }
             }
             if (!isSTLContainerFunctions)
-                typeStatement = doFindTypeDefinitionOf(fileName,statement->type, parentScopeType);
+                typeStatement = doFindTypeDefinitionOf(fileName,statement->type, statement->parentScope.lock());
 
             //it's stl smart pointer
             if ((typeStatement)

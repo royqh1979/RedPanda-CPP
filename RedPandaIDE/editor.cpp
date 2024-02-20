@@ -4358,7 +4358,7 @@ void Editor::updateFunctionTip(bool showTip)
         QList<PStatement> statements=mParser->getListOfFunctions(mFilename,
                                                                   s,
                                                                   functionNamePos.line);
-
+//      qDebug()<<"finding function list:"<<s<<" - "<<statements.length();
         foreach (const PStatement statement, statements) {
             pMainWindow->functionTip()->addTip(
                         statement->command,
