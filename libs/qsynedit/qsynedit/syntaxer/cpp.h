@@ -50,7 +50,7 @@ class CppSyntaxer: public Syntaxer
         rsDocstring,
         rsStringEscapeSeq,
         rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,rsChar,
-        rsDefineIdentifier, rsDefineRemaining
+        rsDefineIdentifier, rsDefineRemaining,
     };
 
 public:

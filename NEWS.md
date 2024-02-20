@@ -42,6 +42,7 @@ Red Panda C++ Version 2.26
   - Enhancement: add qmake variable to control preference of UTF-8 compatible OpenConsole.exe on Windows.
   - Enhancement: add Windows arm64 package.
   - Fix: Force to use debug server when debugging with lldb-mi to fix input/output on Windows.
+  - Fix: Can't goto definition/declaration into files that not saved.
 
 Red Panda C++ Version 2.25
 

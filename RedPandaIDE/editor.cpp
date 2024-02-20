@@ -1373,7 +1373,6 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
                     QString filename = mParser->getHeaderFileName(mFilename,s);
                     pMainWindow->openFile(filename);
                     return;
-
                 } else if (mParser->enabled()) {
                     gotoDefinition(p);
                     return;
@@ -4674,7 +4673,9 @@ void Editor::gotoDefinition(const QSynedit::BufferCoord &pos)
         filename = statement->definitionFileName;
         line = statement->definitionLine;
     }
-    Editor *e = pMainWindow->openFile(filename);
+    Editor *e = pMainWindow->editorList()->getOpenedEditorByFilename(filename);
+    if (!e)
+        e = pMainWindow->openFile(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);
     }
