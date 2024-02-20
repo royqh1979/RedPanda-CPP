@@ -963,8 +963,13 @@ void CppSyntaxer::procQuestion()
 void CppSyntaxer::procRawString()
 {
     mTokenId = TokenId::RawString;
+    if (mRange.state == RangeState::rsRawString)
+        mRawStringInitialDCharSeq="";
     while (mRun<mLineSize) {
-        if (mRange.state!=RangeState::rsRawStringNotEscaping && (mLine[mRun]=='"')) {
+        if (mRange.state!=RangeState::rsRawStringNotEscaping &&
+                (mLine[mRun]=='"'
+                 || mLine[mRun].isSpace()
+                 || mLine[mRun].unicode()>127)) {
             mRange.state = RangeState::rsUnknown;
             mRun+=1;
             return;
@@ -974,14 +979,25 @@ void CppSyntaxer::procRawString()
         case '\t':
             return;
         case '(':
-            if (mRange.state==RangeState::rsRawString)
+            if (mRange.state==RangeState::rsRawString) {
                 mRange.state = RangeState::rsRawStringNotEscaping;
+                mRawStringInitialDCharSeq += "\"";
+            }
             break;
         case ')':
-            if (mRange.state == RangeState::rsRawStringNotEscaping)
-                mRange.state = RangeState::rsRawStringEnd;
+            qDebug()<<mRawStringInitialDCharSeq;
+            qDebug()<<mLine.mid(mRun+1,mRawStringInitialDCharSeq.length());
+            qDebug()<<(mLine.mid(mRun+1,mRawStringInitialDCharSeq.length()) == mRawStringInitialDCharSeq);
+            if (mRange.state == RangeState::rsRawStringNotEscaping
+                    && mLine.mid(mRun+1,mRawStringInitialDCharSeq.length()) == mRawStringInitialDCharSeq) {
+                mRun = mRun+1+mRawStringInitialDCharSeq.length();
+                mRange.state = RangeState::rsUnknown;
+                return;
+            }
             break;
         }
+        if (mRange.state == RangeState::rsRawString)
+            mRawStringInitialDCharSeq += mLine[mRun];
         mRun+=1;
     }
     if (mRun>=mLineSize && mRange.state != RangeState::rsRawStringNotEscaping)

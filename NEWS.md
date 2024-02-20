@@ -46,6 +46,7 @@ Red Panda C++ Version 2.26
   - Fix: Expression that starts with full scoped variables might be treated as var definition.
   - Enhancement: Don't auto-indent in raw string.
   - Fix: Function list is not correctly retrived for full-scoped functions.
+  - Enhancement: Improved Raw string support
 
 Red Panda C++ Version 2.25
 

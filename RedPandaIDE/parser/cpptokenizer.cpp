@@ -748,15 +748,37 @@ void CppTokenizer::skipRawString()
 {
     mCurrent++; //skip R
     bool noEscape = false;
+    bool findDCharSeq = true;
+    QString dCharSeq;
     while(true) {
         mCurrent++;
         switch(mCurrent->unicode()) {
         case '(':
-            noEscape = true;
+            if (findDCharSeq) {
+                noEscape = true;
+                findDCharSeq = false;
+            }
             break;
         case ')':
-            noEscape = false;
+            if (noEscape) {
+                bool ok=true;
+                QChar* pChar=mCurrent+1;
+                for (int i=0;i<dCharSeq.length();i++) {
+                    if (*pChar!=dCharSeq[i]) {
+                        ok=false;
+                        break;
+                    }
+                    pChar++;
+                }
+                if (ok && *pChar=='\"') {
+                    noEscape = false;
+                    mCurrent = pChar;
+                }
+            }
             break;
+        }
+        if (findDCharSeq) {
+            dCharSeq+=*mCurrent;
         }
         if (*mCurrent == 0)
             break;

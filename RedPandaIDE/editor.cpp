@@ -4351,7 +4351,6 @@ void Editor::updateFunctionTip(bool showTip)
     // Don't bother scanning the database when there's no identifier to scan for
 
     // Only do the cumbersome list filling when showing a new tooltip...
-
     if (s != pMainWindow->functionTip()->functionFullName()
             && !mParser->parsing()) {
         pMainWindow->functionTip()->clearTips();
