@@ -66,20 +66,20 @@ bool FileCompiler::prepareForCompile()
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
     log("");
     FileType fileType = getFileType(mFilename);
-    mArguments = QString(" \"%1\"").arg(mFilename);
+    mArguments = QStringList{mFilename};
     if (!mOnlyCheckSyntax) {
         switch(compilerSet()->compilationStage()) {
         case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->preprocessingSuffix());
-            mArguments+=" -E";
+            mArguments << "-E";
             break;
         case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->compilationProperSuffix());
-            mArguments+=" -S -fverbose-asm";
+            mArguments += {"-S", "-fverbose-asm"};
             break;
         case Settings::CompilerSet::CompilationStage::AssemblingOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->assemblingSuffix());
-            mArguments+=" -c";
+            mArguments << "-c";
             break;
         case Settings::CompilerSet::CompilationStage::GenerateExecutable:
             mOutputFile = changeFileExt(mFilename,compilerSet()->executableSuffix());
@@ -91,14 +91,14 @@ bool FileCompiler::prepareForCompile()
             }
         }
 #endif
-        mArguments+=QString(" -o \"%1\"").arg(mOutputFile);
+        mArguments += {"-o", mOutputFile};
 
 #if defined(ARCH_X86_64) || defined(ARCH_X86)
         if (mCompileType == CppCompileType::GenerateAssemblyOnly) {
             if (pSettings->languages().noSEHDirectivesWhenGenerateASM())
-                mArguments+=" -fno-asynchronous-unwind-tables";
+                mArguments << "-fno-asynchronous-unwind-tables";
             if (pSettings->languages().x86DialectOfASMGenerated()==Settings::Languages::X86ASMDialect::Intel)
-                mArguments+=" -masm=intel";
+                mArguments << "-masm=intel";
         }
 #endif
         //remove the old file if it exists
@@ -171,7 +171,7 @@ bool FileCompiler::prepareForCompile()
                 break;
         }
         if (hasStart) {
-            mArguments+=" -nostartfiles";
+            mArguments << "-nostartfiles";
         }
     }
 
@@ -185,7 +185,8 @@ bool FileCompiler::prepareForCompile()
     log(tr("Processing %1 source file:").arg(strFileType));
     log("------------------");
     log(tr("%1 Compiler: %2").arg(strFileType).arg(mCompiler));
-    log(tr("Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
+    QString command = dumpCommandForLog(mCompiler, mArguments);
+    log(tr("Command: %1").arg(command));
     mDirectory = extractFileDir(mFilename);
     return true;
 }

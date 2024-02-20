@@ -4,6 +4,10 @@
 #include <QDateTime>
 #include <QApplication>
 #include <QDesktopServices>
+#include <QChar>
+#include <QRegularExpression>
+#include <QSysInfo>
+#include <QVersionNumber>
 #include "editor.h"
 #include "editorlist.h"
 #include "settings.h"
@@ -22,72 +26,6 @@ using pIsWow64Process2_t = BOOL (WINAPI *)(
     HANDLE hProcess, USHORT *pProcessMachine, USHORT *pNativeMachine
 );
 #endif
-
-QStringList splitProcessCommand(const QString &cmd)
-{
-    QStringList result;
-    SplitProcessCommandQuoteType quoteType = SplitProcessCommandQuoteType::None;
-    int i=0;
-    QString current;
-    while (i<cmd.length()) {
-        switch (cmd[i].unicode()) {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-            if (quoteType == SplitProcessCommandQuoteType::None) {
-                if (!current.isEmpty()) {
-                    result.append(current);
-                }
-                current = "";
-            } else {
-                current += cmd[i];
-            }
-            i++;
-            break;
-        case '\"':
-            switch(quoteType) {
-            case SplitProcessCommandQuoteType::None:
-                quoteType = SplitProcessCommandQuoteType::Double;
-                break;
-            case SplitProcessCommandQuoteType::Double:
-                quoteType = SplitProcessCommandQuoteType::None;
-                break;
-            default:
-                current+=cmd[i];
-            }
-            i++;
-            break;
-        case '\'':
-            switch(quoteType) {
-            case SplitProcessCommandQuoteType::None:
-                quoteType = SplitProcessCommandQuoteType::Single;
-                break;
-            case SplitProcessCommandQuoteType::Single:
-                quoteType = SplitProcessCommandQuoteType::None;
-                break;
-            default:
-                current+=cmd[i];
-            }
-            i++;
-            break;
-        case '\\':
-            current += cmd[i];
-            i++;
-            if  (i<cmd.length()) {
-                current += cmd[i];
-                i++;
-            }
-            break;
-        default:
-            current += cmd[i];
-            i++;
-        }
-    }
-    if (!current.isEmpty())
-        result.append(current);
-    return result;
-}
 
 FileType getFileType(const QString &filename)
 {
@@ -176,31 +114,6 @@ FileType getFileType(const QString &filename)
     return FileType::Other;
 }
 
-QString genMakePath(const QString &fileName, bool escapeSpaces, bool encloseInQuotes)
-{
-    QString result = fileName;
-
-    // Convert backslashes to slashes
-    result.replace('\\','/');
-    if (escapeSpaces) {
-        result.replace(' ',"\\ ");
-    }
-    if (encloseInQuotes)
-        if (result.contains(' '))
-            result = '"'+result+'"';
-    return result;
-}
-
-QString genMakePath1(const QString &fileName)
-{
-    return genMakePath(fileName, false, true);
-}
-
-QString genMakePath2(const QString &fileName)
-{
-    return genMakePath(fileName, true, false);
-}
-
 bool programHasConsole(const QString & filename)
 {
 #ifdef Q_OS_WIN
@@ -230,35 +143,49 @@ bool programHasConsole(const QString & filename)
 
 QString parseMacros(const QString &s)
 {
+    return parseMacros(s, devCppMacroVariables());
+}
+
+QString parseMacros(const QString &s, const QMap<QString, QString> &macros)
+{
     QString result = s;
+    for (auto it = macros.begin(); it != macros.end(); ++it) {
+        QString key = it.key();
+        QString value = it.value();
+        result.replace('<' + key + '>', value);
+    }
+    return result;
+}
+
+QMap<QString, QString> devCppMacroVariables()
+{
     Editor *e = pMainWindow->editorList()->getEditor();
 
-    result.replace("<DEFAULT>", localizePath(QDir::currentPath()));
-    result.replace("<DEVCPP>", localizePath(pSettings->dirs().executable()));
-    result.replace("<DEVCPPVERSION>", REDPANDA_CPP_VERSION);
-    result.replace("<EXECPATH>", localizePath(pSettings->dirs().appDir()));
-    QDate today = QDate::currentDate();
-    QDateTime now = QDateTime::currentDateTime();
-
-    result.replace("<DATE>", today.toString("yyyy-MM-dd"));
-    result.replace("<DATETIME>", now.toString("yyyy-MM-dd hh:mm:ss"));
+    QMap<QString, QString> result = {
+        {"DEFAULT", localizePath(QDir::currentPath())},
+        {"DEVCPP", localizePath(pSettings->dirs().executable())},
+        {"DEVCPPVERSION", REDPANDA_CPP_VERSION},
+        {"EXECPATH", localizePath(pSettings->dirs().appDir())},
+        {"DATE", QDate::currentDate().toString("yyyy-MM-dd")},
+        {"DATETIME", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")}
+    };
 
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
     if (compilerSet) {
         // Only provide the first cpp include dir
-        if (compilerSet->defaultCppIncludeDirs().count()>0)
-            result.replace("<INCLUDE>", localizePath(compilerSet->defaultCppIncludeDirs().front()));
+        if (compilerSet->defaultCppIncludeDirs().count() > 0)
+            result["INCLUDE"] = localizePath(compilerSet->defaultCppIncludeDirs().front());
         else
-            result.replace("<INCLUDE>","");
+            result["INCLUDE"] = "";
 
         // Only provide the first lib dir
-        if (compilerSet->defaultLibDirs().count()>0)
-            result.replace("<LIB>", localizePath(compilerSet->defaultLibDirs().front()));
+        if (compilerSet->defaultLibDirs().count() > 0)
+            result["LIB"] = localizePath(compilerSet->defaultLibDirs().front());
         else
-            result.replace("<LIB>","");
+            result["LIB"] = "";
     }
 
-    if (e!=nullptr && !e->inProject()) { // Non-project editor macros
+    if (e != nullptr && !e->inProject()) { // Non-project editor macros
         QString exeSuffix;
         Settings::PCompilerSet compilerSet = pSettings->compilerSets().defaultSet();
         if (compilerSet) {
@@ -266,40 +193,41 @@ QString parseMacros(const QString &s)
         } else {
             exeSuffix = DEFAULT_EXECUTABLE_SUFFIX;
         }
-        result.replace("<EXENAME>", extractFileName(changeFileExt(e->filename(), exeSuffix)));
-        result.replace("<EXEFILE>", localizePath(changeFileExt(e->filename(), exeSuffix)));
-        result.replace("<PROJECTNAME>", extractFileName(e->filename()));
-        result.replace("<PROJECTFILE>", localizePath(e->filename()));
-        result.replace("<PROJECTFILENAME>", extractFileName(e->filename()));
-        result.replace("<PROJECTPATH>", localizePath(extractFileDir(e->filename())));
+        result["EXENAME"] = extractFileName(changeFileExt(e->filename(), exeSuffix));
+        result["EXEFILE"] = localizePath(changeFileExt(e->filename(), exeSuffix));
+        result["PROJECTNAME"] = extractFileName(e->filename());
+        result["PROJECTFILE"] = localizePath(e->filename());
+        result["PROJECTFILENAME"] = extractFileName(e->filename());
+        result["PROJECTPATH"] = localizePath(extractFileDir(e->filename()));
     } else if (pMainWindow->project()) {
-        result.replace("<EXENAME>", extractFileName(pMainWindow->project()->executable()));
-        result.replace("<EXEFILE>", localizePath(pMainWindow->project()->executable()));
-        result.replace("<PROJECTNAME>", pMainWindow->project()->name());
-        result.replace("<PROJECTFILE>", localizePath(pMainWindow->project()->filename()));
-        result.replace("<PROJECTFILENAME>", extractFileName(pMainWindow->project()->filename()));
-        result.replace("<PROJECTPATH>", localizePath(pMainWindow->project()->directory()));
+        result["EXENAME"] = extractFileName(pMainWindow->project()->executable());
+        result["EXEFILE"] = localizePath(pMainWindow->project()->executable());
+        result["PROJECTNAME"] = pMainWindow->project()->name();
+        result["PROJECTFILE"] = localizePath(pMainWindow->project()->filename());
+        result["PROJECTFILENAME"] = extractFileName(pMainWindow->project()->filename());
+        result["PROJECTPATH"] = localizePath(pMainWindow->project()->directory());
     } else {
-        result.replace("<EXENAME>", "");
-        result.replace("<EXEFILE>", "");
-        result.replace("<PROJECTNAME>", "");
-        result.replace("<PROJECTFILE>", "");
-        result.replace("<PROJECTFILENAME>", "");
-        result.replace("<PROJECTPATH>", "");
+        result["EXENAME"] = "";
+        result["EXEFILE"] = "";
+        result["PROJECTNAME"] = "";
+        result["PROJECTFILE"] = "";
+        result["PROJECTFILENAME"] = "";
+        result["PROJECTPATH"] = "";
     }
 
     // Editor macros
-    if (e!=nullptr) {
-        result.replace("<SOURCENAME>", extractFileName(e->filename()));
-        result.replace("<SOURCEFILE>", localizePath(e->filename()));
-        result.replace("<SOURCEPATH>", localizePath(extractFileDir(e->filename())));
-        result.replace("<WORDXY>", e->wordAtCursor());
+    if (e != nullptr) {
+        result["SOURCENAME"] = extractFileName(e->filename());
+        result["SOURCEFILE"] = localizePath(e->filename());
+        result["SOURCEPATH"] = localizePath(extractFileDir(e->filename()));
+        result["WORDXY"] = e->wordAtCursor();
     } else {
-        result.replace("<SOURCENAME>", "");
-        result.replace("<SOURCEFILE>", "");
-        result.replace("<SOURCEPATH>", "");
-        result.replace("<WORDXY>", "");
+        result["SOURCENAME"] = "";
+        result["SOURCEFILE"] = "";
+        result["SOURCEPATH"] = "";
+        result["WORDXY"] = "";
     }
+
     return result;
 }
 
@@ -447,11 +375,11 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
     return result;
 }
 
-void executeFile(const QString &fileName, const QString &params, const QString &workingDir, const QString &tempFile)
+void executeFile(const QString &fileName, const QStringList &params, const QString &workingDir, const QString &tempFile)
 {
     ExecutableRunner* runner=new ExecutableRunner(
                 fileName,
-                splitProcessCommand(params),
+                params,
                 workingDir);
     runner->connect(runner, &QThread::finished,
                     [runner,tempFile](){
@@ -630,125 +558,466 @@ QStringList getExecutableSearchPaths()
 #endif
 }
 
-QString escapeArgument(const QString &arg, [[maybe_unused]] bool isFirstArg)
+namespace ParseArgumentsDetail
 {
-    auto argContainsOneOf = [&arg](auto... ch) { return (arg.contains(ch) || ...); };
 
-#ifdef Q_OS_WINDOWS
-    // See https://stackoverflow.com/questions/31838469/how-do-i-convert-argv-to-lpcommandline-parameter-of-createprocess ,
-    // and https://learn.microsoft.com/en-gb/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way .
-
-    // TODO: investigate whether we need escaping for cmd.
-
-    if (!arg.isEmpty() && !argContainsOneOf(' ', '\t', '\n', '\v', '"'))
-        return arg;
-
-    QString result = "\"";
-    for (auto it = arg.begin(); ; ++it) {
-        int nBackslash = 0;
-        while (it != arg.end() && *it == '\\') {
-            ++it;
-            ++nBackslash;
-        }
-        if (it == arg.end()) {
-            // Escape all backslashes, but let the terminating double quotation mark we add below be interpreted as a metacharacter.
-            result.append(QString('\\').repeated(nBackslash * 2));
-            break;
-        } else if (*it == '"') {
-            // Escape all backslashes and the following double quotation mark.
-            result.append(QString('\\').repeated(nBackslash * 2 + 1));
-            result.push_back(*it);
-        } else {
-            // Backslashes aren't special here.
-            result.append(QString('\\').repeated(nBackslash));
-            result.push_back(*it);
-        }
+/*Before:
+    'blahblah'
+     ^pos
+  After:
+    'blahblah'
+              ^pos */
+QString singleQuoted(const QString &command, int &pos)
+{
+    QString result;
+    while (pos < command.length() && command[pos] != '\'') {
+        result.push_back(command[pos]);
+        ++pos;
     }
-    result.push_back('"');
+    if (pos < command.length())
+        ++pos; // eat closing quote
     return result;
-#else
-    /* be speculative, but keep readability.
-     * ref. https://pubs.opengroup.org/onlinepubs/9699919799.2018edition/utilities/V3_chap02.html
-     */
-    if (arg.isEmpty())
-        return R"("")";
-
-    /* POSIX say the following reserved words (may) have special meaning:
-     *   !, {, }, case, do, done, elif, else, esac, fi, for, if, in, then, until, while,
-     *   [[, ]], function, select,
-     * only if used as the _first word_ of a command (or somewhere we dot not care).
-     */
-    const static QSet<QString> reservedWord{
-        "!", "{", "}", "case", "do", "done", "elif", "else", "esac", "fi", "for", "if", "in", "then", "until", "while",
-        "[[", "]]", "function", "select",
-    };
-    if (isFirstArg && reservedWord.contains(arg))
-        return QString(R"("%1")").arg(arg);
-
-    /* POSIX say “shall quote”:
-     *   '|', '&', ';', '<', '>', '(', ')', '$', '`', '\\', '"', '\'', ' ', '\t', '\n';
-     * and “may need to be quoted”:
-     *   '*', '?', '[', '#', '~', '=', '%'.
-     * among which “may need to be quoted” there are 4 kinds:
-     *   - wildcards '*', '?', '[' are “danger anywhere” (handle it as if “shall quote”);
-     *   - comment '#', home '~', is “danger at first char in any word”;
-     *   - (environment) variable '=' is “danger at any char in first word”;
-     *   - foreground '%' is “danger at first char in first word”.
-     * although not mentioned by POSIX, bash’s brace expansion '{', '}' are also “danger anywhere”.
-     */
-    bool isDoubleQuotingDanger = argContainsOneOf('$', '`', '\\', '"');
-    bool isSingleQuotingDanger = arg.contains('\'');
-    bool isDangerAnyChar = isDoubleQuotingDanger || isSingleQuotingDanger || argContainsOneOf(
-        '|', '&', ';', '<', '>', '(', ')', ' ', '\t', '\n',
-        '*', '?', '[',
-        '{', '}'
-    );
-    bool isDangerFirstChar = (arg[0] == '#') || (arg[0] == '~');
-    if (isFirstArg) {
-        isDangerAnyChar = isDangerAnyChar || arg.contains('=');
-        isDangerFirstChar = isDangerFirstChar || (arg[0] == '%');
-    }
-
-    // a “safe” string
-    if (!isDangerAnyChar && !isDangerFirstChar)
-        return arg;
-
-    // prefer more-common double quoting
-    if (!isDoubleQuotingDanger)
-        return QString(R"("%1")").arg(arg);
-
-    // and then check the opportunity of single quoting
-    if (!isSingleQuotingDanger)
-        return QString("'%1'").arg(arg);
-
-    // escaping is necessary
-    // use double quoting since it’s less tricky
-    QString result = "\"";
-    for (auto ch : arg) {
-        if (ch == '$' || ch == '`' || ch == '\\' || ch == '"')
-            result.push_back('\\');
-        result.push_back(ch);
-    }
-    result.push_back('"');
-    return result;
-
-    /* single quoting, which is roughly raw string, is possible and quite simple in programming:
-     *   1. replace each single quote with `'\''`, which contains
-     *      - a single quote to close quoting,
-     *      - an escaped single quote representing the single quote itself, and
-     *      - a single quote to open quoting again;
-     *   2. enclose the string with a pair of single quotes.
-     * e.g. `o'clock` => `'o'\''clock'`, really tricky and hard to read.
-     */
-#endif
 }
 
-QString defaultShell()
+// read up to 3 octal digits
+QString readOctal(const QString &command, int &pos)
+{
+    QString result;
+    for (int i = 0; i < 3; ++i) {
+        if (pos < command.length() && command[pos] >= '0' && command[pos] <= '7') {
+            result.push_back(command[pos]);
+            ++pos;
+        } else
+            break;
+    }
+    return result;
+}
+
+// read up to maxDigits hex digits
+QString readHex(const QString &command, int &pos, int maxDigits)
+{
+    QString result;
+    for (int i = 0; i < maxDigits; ++i) {
+        if (pos < command.length() && (command[pos].isDigit() || (command[pos].toLower() >= 'a' && command[pos].toLower() <= 'f'))) {
+            result.push_back(command[pos]);
+            ++pos;
+        } else
+            break;
+    }
+    return result;
+}
+
+/*Case 1: braced variable name (ingore POSIX operators, no nested braces)
+    Before:
+      ${VARNAME.abc$}
+       ^pos
+    After:
+      ${VARNAME.abc$}
+                     ^pos
+    Returns: value of `VARNAME.abc$`, "" if not found
+  Case 2: command or arithmetic (no expansion, nested parentheses ok)
+    Before:
+      $(echo 1)
+       ^pos
+      $((1+1))
+       ^pos
+    After:
+      $(echo 1)
+               ^pos
+      $((1+1))
+              ^pos
+    Returns: as is
+  Case 3: ANSI-C quoting
+    Before:
+      $'blah\nblah\'blah'
+       ^pos
+    After:
+      $'blah\nblah\'blah'
+                         ^pos
+    Returns: unescaped string
+  Case 4: normal variable name
+    Before:
+      $VAR_NAME-x
+       ^pos
+    After:
+      $VAR_NAME-x
+               ^pos
+    Returns: value of `VAR_NAME`, "" if not found
+  Case 5: all other invalid cases (though they may be valid in shell)
+    Before:
+      $123
+       ^pos
+    After:
+      $123
+       ^pos
+    Returns: as is */
+QString variableExpansion(const QString &command, int &pos, const QMap<QString, QString> &variables, bool ansiCQuotingPermitted)
+{
+    if (pos >= command.length())
+        return "$";
+    if (command[pos] == '{') {
+        // case 1, read to closing brace
+        QString varName;
+        QString result;
+        ++pos; // eat opening brace
+        while (pos < command.length() && command[pos] != '}') {
+            varName.push_back(command[pos]);
+            ++pos;
+        }
+        if (pos < command.length()) {
+            ++pos; // eat closing brace
+            if (variables.contains(varName))
+                return variables[varName];
+            else
+                return {};
+        } else {
+            // unterminated
+            return {};
+        }
+    } else if (command[pos] == '(') {
+        // case 2, read to matching closing paren
+        QString result = "$(";
+        ++pos; // eat opening paren
+        int level = 1;
+        while (pos < command.length() && level > 0) {
+            if (command[pos] == '(')
+                ++level;
+            else if (command[pos] == ')')
+                --level;
+            result.push_back(command[pos]);
+            ++pos;
+        }
+        return result;
+    } else if (ansiCQuotingPermitted && command[pos] == '\'') {
+        // case 3, parse ANSI-C quoting
+        QByteArray unescaped;
+        ++pos; // eat opening quote
+        while (pos < command.length()) {
+            if (command[pos] == '\\') {
+                ++pos;
+                if (pos < command.length()) {
+                    switch (command[pos].unicode()) {
+                    case 'a':
+                        ++pos;
+                        unescaped.push_back('\a');
+                        break;
+                    case 'b':
+                        ++pos;
+                        unescaped.push_back('\b');
+                        break;
+                    case 'e':
+                    case 'E':
+                        ++pos;
+                        unescaped.push_back('\x1B');
+                        break;
+                    case 'f':
+                        ++pos;
+                        unescaped.push_back('\f');
+                        break;
+                    case 'n':
+                        ++pos;
+                        unescaped.push_back('\n');
+                        break;
+                    case 'r':
+                        ++pos;
+                        unescaped.push_back('\r');
+                        break;
+                    case 't':
+                        ++pos;
+                        unescaped.push_back('\t');
+                        break;
+                    case 'v':
+                        ++pos;
+                        unescaped.push_back('\v');
+                        break;
+                    case '\\':
+                        ++pos;
+                        unescaped.push_back('\\');
+                        break;
+                    case '\'':
+                        ++pos;
+                        unescaped.push_back('\'');
+                        break;
+                    case '"':
+                        ++pos;
+                        unescaped.push_back('"');
+                        break;
+                    case '?':
+                        ++pos;
+                        unescaped.push_back('?');
+                        break;
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7': {
+                        QString digits = readOctal(command, pos);
+                        int octal = digits.toUInt(nullptr, 8);
+                        unescaped.push_back(octal);
+                        break;
+                    }
+                    case 'x': {
+                        ++pos; // eat 'x'
+                        QString digits = readHex(command, pos, 2);
+                        if (digits.isEmpty()) {
+                            // normal character
+                            unescaped.append("\\x");
+                        } else {
+                            int hex = digits.toUInt(nullptr, 16);
+                            unescaped.push_back(hex);
+                        }
+                        break;
+                    }
+                    case 'u': {
+                        ++pos; // eat 'u'
+                        QString digits = readHex(command, pos, 4);
+                        if (digits.isEmpty()) {
+                            // normal character
+                            unescaped.append("\\u");
+                        } else {
+                            int hex = digits.toUInt(nullptr, 16);
+                            QByteArray encoded = QString(hex).toUtf8();
+                            unescaped.append(encoded);
+                        }
+                        break;
+                    }
+                    case 'U': {
+                        ++pos; // eat 'U'
+                        QString digits = readHex(command, pos, 8);
+                        if (digits.isEmpty()) {
+                            // normal character
+                            unescaped.append("\\U");
+                        } else {
+                            int hex = digits.toUInt(nullptr, 16);
+                            QByteArray encoded = QString(hex).toUtf8();
+                            unescaped.append(encoded);
+                        }
+                        break;
+                    }
+                    default:
+                        // normal character
+                        unescaped.push_back('\\');
+                        break;
+                    }
+                }
+            } else if (command[pos] == '\'') {
+                ++pos; // eat closing quote
+                return unescaped;
+            } else {
+                QChar c = command[pos];
+                QByteArray encoded = QString(c).toUtf8();
+                unescaped.append(encoded);
+                ++pos;
+            }
+        }
+        // unterminated
+        return unescaped;
+    } else if (command[pos].isLetter() || command[pos] == '_') {
+        // case 4, read variable name
+        QString varName;
+        while (pos < command.length() && (command[pos].isLetterOrNumber() || command[pos] == '_')) {
+            varName.push_back(command[pos]);
+            ++pos;
+        }
+        if (variables.contains(varName))
+            return variables[varName];
+        else
+            return {};
+    } else {
+        // case 5, return as is
+        return "$";
+    }
+}
+
+/*Before:
+    <VARNAME.abc$>
+     ^pos
+  After:
+    <VARNAME.abc$>
+                  ^pos */
+QString devCppExpansion(const QString &command, int &pos, const QMap<QString, QString> &variables)
+{
+    QString varName;
+    QString result;
+    while (pos < command.length() && command[pos] != '>') {
+        varName.push_back(command[pos]);
+        ++pos;
+    }
+    if (pos < command.length()) {
+        ++pos; // eat closing bracket
+        if (variables.contains(varName))
+            return variables[varName];
+        else
+            // not a variable
+            return '<' + varName + '>';
+    } else {
+        // unterminated, treat it as a normal string
+        return '<' + varName;
+    }
+}
+
+/*Before:
+    "blah\"blah"
+     ^pos
+  After:
+    "blah\"blah"
+                ^pos */
+QString doubleQuoted(const QString &command, int &pos, const QMap<QString, QString> &variables, bool enableDevCppVariableExpansion)
+{
+    QString result;
+    while (pos < command.length()) {
+        switch (command[pos].unicode()) {
+        case '$':
+            ++pos; // eat '$'
+            result += variableExpansion(command, pos, variables, false);
+            break;
+        case '\\':
+            ++pos; // eat backslash
+            if (pos < command.length()) {
+                switch (command[pos].unicode()) {
+                case '$':
+                case '`':
+                case '"':
+                case '\\':
+                    result.push_back(command[pos]);
+                    ++pos;
+                    break;
+                case '\n':
+                    ++pos; // eat newline
+                    break;
+                default:
+                    // normal character
+                    result.push_back('\\');
+                }
+            } else {
+                // unterminated
+                result.push_back('\\');
+            }
+            break;
+        case '"':
+            ++pos; // eat closing quote
+            return result;
+        case '<':
+            if (enableDevCppVariableExpansion) {
+                ++pos; // eat '<'
+                result += devCppExpansion(command, pos, variables);
+                break;
+            }
+            [[fallthrough]];
+        case '`': // not supported
+        default:
+            result.push_back(command[pos]);
+            ++pos;
+        }
+    }
+    // unterminated
+    return result;
+}
+
+} // namespace ParseArgumentsDetail
+
+QStringList parseArguments(const QString &command, const QMap<QString, QString> &variables, bool enableDevCppVariableExpansion)
+{
+    using namespace ParseArgumentsDetail;
+
+    QStringList result;
+    QString current;
+    bool currentPolluted = false;
+
+    int pos = 0;
+    while (pos < command.length()) {
+        switch (command[pos].unicode()) {
+        case ' ':
+        case '\t':
+        case '\n':
+            if (currentPolluted) {
+                result.push_back(current);
+                current.clear();
+                currentPolluted = false;
+            }
+            ++pos;
+            break;
+        case '#':
+            if (currentPolluted) {
+                // normal character
+                current.push_back(command[pos]);
+                ++pos;
+            } else {
+                // comment, eat to newline
+                while (pos < command.length() && command[pos] != '\n')
+                    ++pos;
+            }
+            break;
+        case '\'':
+            ++pos; // eat opening quote
+            current += singleQuoted(command, pos);
+            currentPolluted = true;
+            break;
+        case '"':
+            ++pos; // eat opening quote
+            current += doubleQuoted(command, pos, variables, enableDevCppVariableExpansion);
+            currentPolluted = true;
+            break;
+        case '$':
+            ++pos; // eat '$'
+            current += variableExpansion(command, pos, variables, true);
+            currentPolluted = true;
+            break;
+        case '\\':
+            ++pos; // eat backslash
+            if (pos < command.length()) {
+                if (command[pos] != '\n')
+                    ++pos; // eat newline
+                else {
+                    // normal character
+                    current.push_back(command[pos]);
+                }
+                ++pos;
+                currentPolluted = true;
+            } else {
+                // unterminated
+                current.push_back('\\');
+            }
+            break;
+        case '<':
+            if (enableDevCppVariableExpansion) {
+                ++pos; // eat '<'
+                current += devCppExpansion(command, pos, variables);
+                currentPolluted = true;
+                break;
+            }
+            [[fallthrough]];
+        default:
+            current.push_back(command[pos]);
+            ++pos;
+            currentPolluted = true;
+        }
+    }
+
+    if (currentPolluted)
+        result.push_back(current);
+
+    return result;
+}
+
+QStringList parseArgumentsWithoutVariables(const QString &command)
+{
+    return parseArguments(command, {}, false);
+}
+
+QStringList platformCommandForTerminalArgsPreview()
 {
 #ifdef Q_OS_WINDOWS
-    return "powershell.exe";
+    QVersionNumber currentVersion = QVersionNumber::fromString(QSysInfo::kernelVersion());
+    if (currentVersion >= QVersionNumber(6, 1))
+        return {"powershell.exe", "-c", "echo hello; sleep 3"};
+    else
+        return {"cmd.exe", "/c", "echo hello & ping 127.0.0.1"};
 #else
-    return "sh";
+    return {"sh", "-c", "echo hello; sleep 3"};
 #endif
 }
 

@@ -267,7 +267,7 @@ void CompilerManager::run(
                 QString::number(consoleFlag),
                 sharedMemoryId,
                 localizePath(filename)
-            } + splitProcessCommand(arguments);
+            } + parseArgumentsWithoutVariables(arguments);
             if (pSettings->environment().useCustomTerminal()) {
                 auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
                     pSettings->environment().terminalPath(),
@@ -285,7 +285,7 @@ void CompilerManager::run(
             }
         } else {
             //delete when thread finished
-            execRunner = new ExecutableRunner(filename,splitProcessCommand(arguments),workDir);
+            execRunner = new ExecutableRunner(filename, parseArgumentsWithoutVariables(arguments), workDir);
         }
 #else
         QStringList execArgs;
@@ -310,19 +310,19 @@ void CompilerManager::run(
                     sharedMemoryId,
                     redirectInputFilename,
                     localizePath(filename),
-                } + splitProcessCommand(arguments);
+                } + parseArgumentsWithoutVariables(arguments);
             } else {
                 execArgs = QStringList{
                     consolePauserPath,
                     QString::number(consoleFlag),
                     sharedMemoryId,
                     localizePath(filename),
-                } + splitProcessCommand(arguments);
+                } + parseArgumentsWithoutVariables(arguments);
             }
         } else {
             execArgs = QStringList{
                 localizePath(filename),
-            } + splitProcessCommand(arguments);
+            } + parseArgumentsWithoutVariables(arguments);
         }
         auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
             pSettings->environment().terminalPath(),
@@ -336,7 +336,7 @@ void CompilerManager::run(
         execRunner->setStartConsole(true);
     } else {
         //delete when thread finished
-        execRunner = new ExecutableRunner(filename,splitProcessCommand(arguments),workDir);
+        execRunner = new ExecutableRunner(filename, parseArgumentsWithoutVariables(arguments), workDir);
     }
     if (redirectInput) {
         execRunner->setRedirectInput(true);
@@ -380,7 +380,7 @@ void CompilerManager::doRunProblem(const QString &filename, const QString &argum
     if (mRunner!=nullptr) {
         return;
     }
-    OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename,splitProcessCommand(arguments),workDir,problemCases);
+    OJProblemCasesRunner * execRunner = new OJProblemCasesRunner(filename, parseArgumentsWithoutVariables(arguments), workDir, problemCases);
     mRunner = execRunner;
     if (pSettings->executor().enableCaseLimit()) {
         execRunner->setExecTimeout(pSettings->executor().caseTimeout());

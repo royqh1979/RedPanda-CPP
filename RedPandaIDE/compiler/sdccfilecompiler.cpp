@@ -43,7 +43,7 @@ bool SDCCFileCompiler::prepareForCompile()
         mArguments += getCCompileArguments(false);
         mArguments += getCIncludeArguments();
         mArguments += getProjectIncludeArguments();
-        mArguments = QString("--syntax-only \"%1\"").arg(mFilename);
+        mArguments += {"--syntax-only", mFilename};
         mDirectory = extractFileDir(mFilename);
         return true;
     }
@@ -73,16 +73,15 @@ bool SDCCFileCompiler::prepareForCompile()
     mNoStartup = (val==COMPILER_OPTION_ON);
     if (mNoStartup) {
         mRelFilename = changeFileExt(mFilename,SDCC_REL_SUFFIX);
-        mArguments += QString(" -c \"%1\"").arg(mFilename);
-        mExtraCompilersList.append(mCompiler);
-        QString args = getLibraryArguments(FileType::CSource);
-        args += QString(" -o \"%1\" \"%2\" ").arg(mIhxFilename, mRelFilename);
-        mExtraArgumentsList.append(args);
-        mExtraOutputFilesList.append("");
+        mArguments += {"-c", mFilename};
+        mExtraCompilersList << mCompiler;
+        QStringList args = getLibraryArguments(FileType::CSource);
+        args += {"-o", mIhxFilename, mRelFilename};
+        mExtraArgumentsList << args;
+        mExtraOutputFilesList << "";
     } else {
         mArguments += getLibraryArguments(FileType::CSource);
-        mArguments += QString(" \"%1\"").arg(mFilename);
-        mArguments+=QString(" -o \"%1\"").arg(mIhxFilename);
+        mArguments += {mFilename, "-o", mIhxFilename};
     }
 
     if (compilerSet()->executableSuffix() == SDCC_HEX_SUFFIX) {
@@ -92,28 +91,26 @@ bool SDCCFileCompiler::prepareForCompile()
             return false;
         }
         mExtraCompilersList.append(packihx);
-        QString args;
-        args = QString(" \"%1\"").arg(mIhxFilename);
-        mExtraArgumentsList.append(args);
-        mExtraOutputFilesList.append(mOutputFile);
+        QStringList args{mIhxFilename};
+        mExtraArgumentsList << args;
+        mExtraOutputFilesList << mOutputFile;
     } else if (compilerSet()->executableSuffix() == SDCC_BIN_SUFFIX) {
         QString makebin = compilerSet()->findProgramInBinDirs(MAKEBIN_PROGRAM);
         if (makebin.isEmpty()) {
             error(tr("Can't find \"%1\".\n").arg(PACKIHX_PROGRAM));
             return false;
         }
-        mExtraCompilersList.push_back(makebin);
-        QString args;
-        args = QString(" \"%1\"").arg(mIhxFilename);
-        args+=QString(" \"%1\"").arg(mOutputFile);
-        mExtraArgumentsList.push_back(args);
-        mExtraOutputFilesList.append("");
+        mExtraCompilersList << makebin;
+        QStringList args{mIhxFilename, mOutputFile};
+        mExtraArgumentsList << args;
+        mExtraOutputFilesList << "";
     }
 
     log(tr("Processing %1 source file:").arg(strFileType));
     log("------------------");
     log(tr("- %1 Compiler: %2").arg(strFileType).arg(mCompiler));
-    log(tr("- Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
+    QString command = dumpCommandForLog(mCompiler, mArguments);
+    log(tr("- Command: %1").arg(command));
     mDirectory = extractFileDir(mFilename);
     mStartCompileTime = QDateTime::currentDateTime();
     return true;

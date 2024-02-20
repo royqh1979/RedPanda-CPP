@@ -4,6 +4,9 @@ Red Panda C++ Version 2.27
   - enhancement: Limit the minimum font size in options dialog to 5. (by XY0797@github.com)
   - enhancement: After a new file is created in filesystem panel, auto select and rename it. (by XY0797@github.com)
   - enhancement: Select file basename when rename in the filesystem panel. (by XY0797@github.com)
+  - enhancement: Migrate external calls from command string to argv array to improve safety and security.
+  - enhancement: Support POSIX shell-like escaping in user inputs for compiler arguments.
+  - fix: (Hopefully) properly escape filenames and arguments in makefile generation.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

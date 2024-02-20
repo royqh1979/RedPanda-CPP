@@ -20,6 +20,7 @@
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
 #include "../compiler/executablerunner.h"
+#include "escape.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -43,18 +44,16 @@ EnvironmentProgramsWidget::~EnvironmentProgramsWidget()
 auto EnvironmentProgramsWidget::resolveExecArguments(const QString &terminalPath, const QString &argsPattern)
     -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
 {
-    QString shell = defaultShell();
-    QStringList payloadArgs{shell, "-c", "echo hello; sleep 3"};
-    return wrapCommandForTerminalEmulator(terminalPath, argsPattern, payloadArgs);
+    return wrapCommandForTerminalEmulator(terminalPath, argsPattern, platformCommandForTerminalArgsPreview());
 }
 
 void EnvironmentProgramsWidget::updateCommandPreview(const QString &terminalPath, const QString &argsPattern)
 {
     auto [filename, arguments, fileOwner] = resolveExecArguments(terminalPath, argsPattern);
     for (auto &arg : arguments)
-        arg = escapeArgument(arg, false);
+        arg = escapeArgument(arg, false, platformShellEscapeArgumentRule());
 
-    ui->labelCmdPreviewResult->setPlainText(escapeArgument(filename, true) + " " + arguments.join(' '));
+    ui->labelCmdPreviewResult->setPlainText(escapeArgument(filename, true, platformShellEscapeArgumentRule()) + " " + arguments.join(' '));
 }
 
 void EnvironmentProgramsWidget::autoDetectAndUpdateArgumentsPattern(const QString &terminalPath)

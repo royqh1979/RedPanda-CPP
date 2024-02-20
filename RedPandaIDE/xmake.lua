@@ -30,6 +30,7 @@ target("RedPandaIDE")
         "autolinkmanager.cpp",
         "colorscheme.cpp",
         "customfileiconprovider.cpp",
+        "escape.cpp",
         "gdbmiresultparser.cpp",
         "main.cpp",
         "projectoptions.cpp",
@@ -236,3 +237,12 @@ target("RedPandaIDE")
     if is_xdg() then
         on_install(install_bin)
     end
+
+target("test-escape")
+    set_kind("binary")
+    add_rules("qt.console")
+
+    set_default(false)
+    add_tests("test-escape")
+
+    add_files("escape.cpp", "test-escape.cpp")

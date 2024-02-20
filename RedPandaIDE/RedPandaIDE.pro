@@ -177,6 +177,7 @@ SOURCES += \
     debugger.cpp \
     editor.cpp \
     editorlist.cpp \
+    escape.cpp \
     iconsmanager.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -305,6 +306,7 @@ HEADERS += \
     debugger.h \
     editor.h \
     editorlist.h \
+    escape.h \
     iconsmanager.h \
     mainwindow.h \
     settingsdialog/compilersetdirectorieswidget.h \

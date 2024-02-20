@@ -19,6 +19,8 @@
 #include "../mainwindow.h"
 #include "../settings.h"
 #include "../iconsmanager.h"
+#include "utils.h"
+#include "escape.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -132,9 +134,11 @@ void ToolsGeneralWidget::onEdited()
 
 void ToolsGeneralWidget::updateDemo()
 {
-    ui->txtDemo->setText(
-                parseMacros(ui->txtProgram->text())+ " " +
-                parseMacros(ui->txtParameters->text()));
+    QMap<QString,QString> macros = devCppMacroVariables();
+    ui->txtDemo->setText(dumpCommandForPlatformShell(
+                parseMacros(ui->txtProgram->text(), macros),
+                parseArguments(ui->txtParameters->text(), macros, true)
+    ));
 }
 
 ToolsModel::ToolsModel(QObject *parent):QAbstractListModel(parent)

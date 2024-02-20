@@ -46,7 +46,7 @@ bool StdinCompiler::prepareForCompile()
     }
     switch(fileType) {
     case FileType::CSource:
-        mArguments += " -x c - ";
+        mArguments += {"-x", "c", "-"};
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
         mArguments += getProjectIncludeArguments();
@@ -54,7 +54,7 @@ bool StdinCompiler::prepareForCompile()
         mCompiler = compilerSet()->CCompiler();
         break;
     case FileType::GAS:
-        mArguments += " -x assembler - ";
+        mArguments += {"-x", "assembler", "-"};
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
         mArguments += getProjectIncludeArguments();
@@ -64,7 +64,7 @@ bool StdinCompiler::prepareForCompile()
     case FileType::CppSource:
     case FileType::CppHeader:
     case FileType::CHeader:
-        mArguments += " -x c++ - ";
+        mArguments += {"-x", "c++", "-"};
         mArguments += getCppCompileArguments(mOnlyCheckSyntax);
         mArguments += getCppIncludeArguments();
         mArguments += getProjectIncludeArguments();
@@ -87,7 +87,8 @@ bool StdinCompiler::prepareForCompile()
     log(tr("Processing %1 source file:").arg(strFileType));
     log("------------------");
     log(tr("%1 Compiler: %2").arg(strFileType).arg(mCompiler));
-    log(tr("Command: %1 %2").arg(extractFileName(mCompiler)).arg(mArguments));
+    QString command = dumpCommandForLog(mCompiler, mArguments);
+    log(tr("Command: %1").arg(command));
     mDirectory = extractFileDir(mFilename);
     return true;
 }
