@@ -23,6 +23,7 @@ namespace QSynedit {
 
 class CppSyntaxer: public Syntaxer
 {
+public:
     enum class TokenId {
         Comment,
         Directive,
@@ -53,7 +54,6 @@ class CppSyntaxer: public Syntaxer
         rsDefineIdentifier, rsDefineRemaining,
     };
 
-public:
     explicit CppSyntaxer();
     CppSyntaxer(const CppSyntaxer&)=delete;
     CppSyntaxer operator=(const CppSyntaxer&)=delete;

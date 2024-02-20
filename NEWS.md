@@ -44,6 +44,7 @@ Red Panda C++ Version 2.26
   - Fix: Force to use debug server when debugging with lldb-mi to fix input/output on Windows.
   - Fix: Can't goto definition/declaration into files that not saved.
   - Fix: Expression that starts with full scoped variables might be treated as var definition.
+  - Enhancement: Don't auto-indent in raw string.
 
 Red Panda C++ Version 2.25
 
