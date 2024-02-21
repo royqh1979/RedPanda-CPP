@@ -1,6 +1,6 @@
 /* by XY0797 2024.2.21 */
 
-#include "FileNameDelegate.h"
+#include "filenamedelegate.h"
 #include <QLineEdit>
 #include <QFileInfo>
 
