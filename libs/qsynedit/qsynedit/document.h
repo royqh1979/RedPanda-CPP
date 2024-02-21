@@ -34,32 +34,120 @@ QList<int> calcGlyphPositions(const QString &text);
 
 class Document;
 
+/**
+ * @brief The DocumentLine class
+ *
+ * Store one line of the document.
+ * The linebreak is not included.
+ *
+ * When the line is displayed on the screen, each mark is called a glyph.
+ * In unicode, a glyph may be represented by more than one code points (chars).
+ * DocumentLine provides utility methods to retrieve the chars corresponding to one glyph,
+ * and other functions.
+ *
+ * Most of the member methods are not thread safe. So they are declared as private
+ * to prevent ill-usage. It shoulde only be used by the document internally.
+ */
 class DocumentLine {
 public:
     explicit DocumentLine();
     DocumentLine(const DocumentLine&)=delete;
     DocumentLine& operator=(const DocumentLine&)=delete;
 
-    int glyphsCount() const { return mGlyphPositions.length(); }
-    const QList<int>& glyphPositions() const { return mGlyphPositions; }
+private:
+    /**
+     * @brief get total count of the glyphs in the line text
+     *
+     * The char count of the line text may not be the same as the glyphs count
+     *
+     * @return the glyphs count
+     */
+    int glyphsCount() const {
+        return mGlyphPositions.length();
+    }
+
+    /**
+     * @brief get list of start index of the glyphs in the line text
+     * @return start positions of the glyph.
+     */
+    const QList<int>& glyphPositions() const {
+        return mGlyphPositions;
+    }
+
+    /**
+     * @brief get list of start column of the glyphs in the line text
+     * @return start positions of the glyph.
+     */
+    const QList<int>& glyphColumns() const {
+        return mGlyphColumns;
+    }
+    /**
+     * @brief get the chars representing the specified glyph.
+     * @param i index of the glyph of the line (starting from 0)
+     * @return the chars representing the specified glyph
+     */
     QStringRef getGlyph(int i) const;
 
+    /**
+     * @brief get the line text
+     * @return the line text
+     */
     const QString& lineText() const { return mLineText; }
 
+    /**
+     * @brief get the width (in columns) of the line text
+     * @return the width (in columns)
+     */
     int columns() const { return mColumns; }
 
+    /**
+     * @brief get the state of the syntax highlighter after this line is parsed
+     * @return
+     */
     const SyntaxState& syntaxState() const { return mSyntaxState; }
+    /**
+     * @brief set the state of the syntax highlighter after this line is parsed
+     * @param newSyntaxState
+     */
     void setSyntaxState(const SyntaxState &newSyntaxState) { mSyntaxState = newSyntaxState; }
-private:
+
     void setLineText(const QString &newLineText);
     void setColumns(int cols, QList<int> glyphCols) { mColumns = cols; mGlyphColumns = glyphCols; }
     void invalidateColumns() { mColumns = -1; mGlyphColumns.clear(); }
 private:
-    QString mLineText;
+    QString mLineText; /* the unicode code points of the text */
+    /**
+     * @brief Start positions of glyphs in mLineText
+     *
+     * A glyph may be defined by more than one code points.
+     * Each lement of mGlyphPositions (position) is the start index
+     *  of the code points in the mLineText.
+     */
     QList<int> mGlyphPositions;
+    /**
+     * @brief start columns of the glyphs
+     *
+     * A glyph may occupy more than one columns in the screen.
+     * Each elements of mGlyphColumns is the columns occupied by the glyph.
+     * The width of a glyph is affected by the font used to display,
+     * so it must be recalculated each time the font is changed.
+     */
     QList<int> mGlyphColumns;
+    /**
+     * @brief state of the syntax highlighter after this line is parsed
+     *
+     * QSynedit use this state to speed up syntax highlight parsing.
+     * Which is also used in auto-indent calculating and other functions.
+     */
     SyntaxState mSyntaxState;
+    /**
+     * @brief total width (in columns) of the line text
+     *
+     * The width of glyphs is affected by the font used to display,
+     * so it must be recalculated each time the font is changed.
+     */
     int mColumns;
+
     friend class Document;
 };
 
@@ -76,6 +164,12 @@ public:
     explicit BinaryFileError (const QString& reason);
 };
 
+/**
+ * @brief The Document class
+ *
+ * Represents a document, which contains many lines.
+ *
+ */
 class Document : public QObject
 {  
     Q_OBJECT
@@ -84,25 +178,197 @@ public:
     Document(const Document&)=delete;
     Document& operator=(const Document&)=delete;
 
-    int parenthesisLevel(int index);
-    int bracketLevel(int index);
-    int braceLevel(int index);
-    int lineColumns(int index);
-    int lineColumns(int index, const QString &newText);
-    int blockLevel(int index);
-    int blockStarted(int index);
-    int blockEnded(int index);
+    /**
+     * @brief get nesting level of parenthesis at the end of the specified line
+     *
+     * It's thread safe.
+     *
+     * @param line line index (starts from 0)
+     * @return
+     */
+    int parenthesisLevel(int line);
+
+    /**
+     * @brief get nesting level of brackets at the end of the specified line
+     *
+     * It's thread safe
+     *
+     * @param line line index (starts from 0)
+     * @return
+     */
+    int bracketLevel(int line);
+
+    /**
+     * @brief get nesting level of braces at the end of the specified line
+     *
+     * It's thread safe
+     *
+     * @param line line index (starts from 0)
+     * @return
+     */
+    int braceLevel(int line);
+
+    /**
+     * @brief get width (in columns) of the specified line
+     *
+     * It's thread safe
+     *
+     * @param line line index (starts frome 0)
+     * @return
+     */
+    int lineColumns(int line);
+
+    /**
+     * @brief get width (in columns) of the specified text / line
+     *
+     * It's thread safe.
+     * If the new text is the same as the line text, it just
+     * returns the line width pre-calculated.
+     * If the new text is not the same as the line text, it
+     * calculates the width of the new text and return.
+     *
+     * @param line line index (starts frome 0)
+     * @param newText the new text
+     * @return
+     */
+    int lineColumns(int line, const QString &newText);
+
+    /**
+     * @brief get block (indent) level of the specified line
+     *
+     * It's thread safe.
+     *
+     * @param line line index (starts frome 0)
+     * @return
+     */
+    int blockLevel(int line);
+
+    /**
+     * @brief get count of new blocks (indent) started on the specified line
+     * @param line line index (starts frome 0)
+     * @return
+     */
+    int blockStarted(int line);
+
+    /**
+     * @brief get count of blocks (indent) ended on the specified line
+     * @param line line index (starts frome 0)
+     * @return
+     */
+    int blockEnded(int line);
+
+    /**
+     * @brief get index of the longest line (has the max width)
+     *
+     * It's thread safe.
+     *
+     * @return
+     */
     int longestLineColumns();
+
+    /**
+     * @brief get line break of the current document
+     *
+     * @return
+     */
     QString lineBreak() const;
-    SyntaxState getSyntaxState(int index);
-    void setSyntaxState(int index, const SyntaxState& range);
-    QString getLine(int index);
-    int getLineGlyphsCount(int index);
+
+    /**
+     * @brief get state of the syntax highlighter after parsing the specified line.
+     *
+     * It's thread safe.
+     *
+     * @param line line index (starts frome 0)
+     * @return
+     */
+    SyntaxState getSyntaxState(int line);
+
+    /**
+     * @brief set state of the syntax highlighter after parsing the specified line.
+     *
+     * It's thread safe.
+     *
+     * @param line line index (starts frome 0)
+     * @param state the new state
+     */
+    void setSyntaxState(int line, const SyntaxState& state);
+
+    /**
+     * @brief get line text of the specified line.
+     *
+     * It's thread safe.
+     *
+     * @param line line index (starts frome 0)
+     * @return
+     */
+    QString getLine(int line);
+
+    /**
+     * @brief get count of the glyphs on the specified line.
+     *
+     * It's thread safe.
+     *
+     * @param line line index (starts frome 0)
+     * @return
+     */
+    int getLineGlyphsCount(int line);
+
+    /**
+     * @brief get position list of the glyphs on the specified line.
+     *
+     * It's thread safe.
+     * Each element of the list is the index of the starting char in the line text.
+     *
+     * @param line line index (starts frome 0)
+     * @return
+     */
     QList<int> getGlyphPositions(int index);
+
+    /**
+     * @brief get count of lines in the document
+     *
+     * It's thread safe.
+     *
+     * @return
+     */
     int count();
+
+    /**
+     * @brief get all the text in the document.
+     *
+     * Lines are concatenated by line breaks (by lineBreak()).
+     * It's thread safe.
+     *
+     * @return
+     */
     QString text();
+
+    /**
+     * @brief set the text of the document
+     *
+     * It's thread safe.
+     *
+     * @param text
+     */
     void setText(const QString& text);
+
+
+    /**
+     * @brief set the text of the document
+     *
+     * It's thread safe.
+     *
+     * @param text
+     */
     void setContents(const QStringList& text);
+
+    /**
+     * @brief get all the lines in the document.
+     *
+     * It's thread safe.
+     *
+     * @return
+     */
     QStringList contents();
 
     void putLine(int index, const QString& s, bool notify=true);
@@ -124,12 +390,24 @@ public:
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
-    int stringColumns(const QString &lineText, int colsBefore) const;
+    int stringColumns(const QString &str, int colsBefore) const;
 
-    int charToColumn(const QString& lineText, int charPos) const;
-    int charToColumn(const QString& lineText, const QList<int> &glyphPositions, int charPos) const;
-    int columnToChar(const QString& lineText, int column) const;
-    int columnToChar(const QString& lineText, const QList<int> &glyphPositions, int column) const;
+    int charToColumn(int line, int charPos);
+    int columnToChar(int line, int column);
+    int charToColumn(int line, const QString newStr, int charPos);
+    int columnToChar(int line, const QString newStr, int column);
+    int glyphStart(int line, int glyphIdx);
+    int glyphEnd(int line, int glyphIdx);
+    int glyphColumns(int line, int glyphIdx);
+    int charToGlyphIndex(int line, int charPos);
+    int columnToGlyphIndex(int line, int column);
+
+
+
+    int charToColumn(const QString& str, int charPos);
+    int charToColumn(const QString& lineText, const QList<int> &glyphPositions, int charPos);
+    int columnToChar(const QString& lineText, int column);
+    int columnToChar(const QString& lineText, const QList<int> &glyphPositions, int column);
 
 
     bool getAppendNewLineAtEOF();
@@ -155,19 +433,18 @@ signals:
     void changed();
     void changing();
     void cleared();
-    void deleted(int index, int count);
-    void inserted(int index, int count);
-    void putted(int index, int count);
+    void deleted(int startLine, int count);
+    void inserted(int startLine, int count);
+    void putted(int startLine, int count);
 protected:
     QString getTextStr() const;
     void setUpdateState(bool Updating);
-    void insertItem(int Index, const QString& s);
+    void insertItem(int line, const QString& s);
     void addItem(const QString& s);
     void putTextStr(const QString& text);
     void internalClear();
 private:
-    QList<int> calcGlyphColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore, int &totalColumns);
-    int glyphsColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore) const;
+    QList<int> calcGlyphColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore, int &totalColumns) const;
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
