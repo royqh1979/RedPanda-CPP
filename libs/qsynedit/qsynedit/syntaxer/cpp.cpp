@@ -970,7 +970,8 @@ void CppSyntaxer::procRawString()
         if (mRange.state!=RangeState::rsRawStringNotEscaping &&
                 (mLine[mRun]=='"'
                  || mLine[mRun].isSpace()
-                 || mLine[mRun].unicode()>127)) {
+                 || mLine[mRun].unicode()>127
+                 || mLine[mRun].unicode()<=32)) {
             mRange.state = RangeState::rsUnknown;
             mRun+=1;
             return;
