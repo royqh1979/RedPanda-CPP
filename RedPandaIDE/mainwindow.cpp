@@ -103,6 +103,10 @@
 #include <windows.h>
 #endif
 
+static const char *Translation[] =
+{
+  QT_TRANSLATE_NOOP("QFileSystemModel", "<b>The name \"%1\" cannot be used.</b><p>Try using another name, with fewer characters or no punctuation marks.")
+};
 
 static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
     for (int i=0;i<tabWidget->count();i++) {
