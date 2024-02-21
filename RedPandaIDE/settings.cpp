@@ -4109,6 +4109,10 @@ void Settings::Environment::doSave()
     //Appearance
     saveValue("theme", mTheme);
     saveValue("interface_font", mInterfaceFont);
+    if (mInterfaceFontSize < 5){
+        // Prevent users from being unable to undo settings due to interface visibility issues after making incorrect adjustments.
+        mInterfaceFontSize = 5;
+    }
     saveValue("interface_font_size", mInterfaceFontSize);
     saveValue("icon_zoom_factor",mIconZoomFactor);
     saveValue("language", mLanguage);
