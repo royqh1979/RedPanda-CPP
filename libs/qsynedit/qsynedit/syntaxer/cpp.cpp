@@ -963,8 +963,15 @@ void CppSyntaxer::procQuestion()
 void CppSyntaxer::procRawString()
 {
     mTokenId = TokenId::RawString;
+    QString rawStringInitialDCharSeq;
+    if (mRange.state == RangeState::rsRawString)
+        mRange.extraData = std::make_shared<QVariant>("");
     while (mRun<mLineSize) {
-        if (mRange.state!=RangeState::rsRawStringNotEscaping && (mLine[mRun]=='"')) {
+        if (mRange.state!=RangeState::rsRawStringNotEscaping &&
+                (mLine[mRun]=='"'
+                 || mLine[mRun].isSpace()
+                 || mLine[mRun].unicode()>127
+                 || mLine[mRun].unicode()<=32)) {
             mRange.state = RangeState::rsUnknown;
             mRun+=1;
             return;
@@ -974,14 +981,26 @@ void CppSyntaxer::procRawString()
         case '\t':
             return;
         case '(':
-            if (mRange.state==RangeState::rsRawString)
+            if (mRange.state==RangeState::rsRawString) {
                 mRange.state = RangeState::rsRawStringNotEscaping;
+                rawStringInitialDCharSeq += "\"";
+                mRange.extraData = std::make_shared<QVariant>(rawStringInitialDCharSeq);
+            }
             break;
         case ')':
-            if (mRange.state == RangeState::rsRawStringNotEscaping)
-                mRange.state = RangeState::rsRawStringEnd;
+            if (mRange.state == RangeState::rsRawStringNotEscaping) {
+                rawStringInitialDCharSeq = mRange.extraData->toString();
+                if ( mLine.mid(mRun+1,rawStringInitialDCharSeq.length()) == rawStringInitialDCharSeq) {
+                    mRun = mRun+1+rawStringInitialDCharSeq.length();
+                    mRange.state = RangeState::rsUnknown;
+                    mRange.extraData = nullptr;
+                    return;
+                }
+            }
             break;
         }
+        if (mRange.state == RangeState::rsRawString)
+            rawStringInitialDCharSeq += mLine[mRun];
         mRun+=1;
     }
     if (mRun>=mLineSize && mRange.state != RangeState::rsRawStringNotEscaping)

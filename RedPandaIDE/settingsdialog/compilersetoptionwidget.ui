@@ -85,7 +85,7 @@
    <item>
     <widget class="QTabWidget" name="settingTabs">
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="movable">
       <bool>false</bool>
@@ -147,6 +147,20 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="chkForceEnglishOutput">
+         <property name="text">
+          <string>Don't localize compiler output messages</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chkPersistInAutoFind">
+         <property name="text">
+          <string>Survive auto-finds</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="chkUseCustomCompilerParams">
          <property name="text">
           <string>Add the following arguments when calling the compiler</string>
@@ -165,13 +179,6 @@
        </item>
        <item>
         <widget class="QPlainTextEdit" name="txtCustomLinkParams"/>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="chkPersistInAutoFind">
-         <property name="text">
-          <string>Survive auto-finds</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>
@@ -497,8 +504,6 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../icons.qrc"/>
-</resources>
+ <resources/>
  <connections/>
 </ui>

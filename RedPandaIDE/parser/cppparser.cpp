@@ -435,7 +435,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
                 }
             }
             if (!isSTLContainerFunctions)
-                typeStatement = doFindTypeDefinitionOf(fileName,statement->type, parentScopeType);
+                typeStatement = doFindTypeDefinitionOf(fileName,statement->type, statement->parentScope.lock());
 
             //it's stl smart pointer
             if ((typeStatement)
@@ -2340,6 +2340,10 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
                 mIndex++;
             } else {
                 QString s = mTokenizer[mIndex]->text;
+                if (!isWordChar(s.front())) {
+                    mIndex = indexOfNextPeriodOrSemicolon(mIndex);
+                    return;
+                }
                 if (sName.endsWith("::")) {
                     sName+=s;
                 } else {
@@ -5875,7 +5879,7 @@ PStatement CppParser::doParseEvalTypeInfo(
                 } else if (token == ">") {
                     templateLevel--;
                 }
-                baseType += token;
+                templateParams += token;
             }
             syntaxer.next();
         }
@@ -6305,6 +6309,7 @@ int CppParser::indexOfNextPeriodOrSemicolon(int index, int endIndex)
         case ';':
         case ',':
         case '}':
+        case ')':
             return index;
         case '(':
             index = mTokenizer[index]->matchIndex+1;

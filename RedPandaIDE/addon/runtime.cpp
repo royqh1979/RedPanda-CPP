@@ -68,6 +68,11 @@ QString RaiiLuaState::fetchString(int index)
     return lua_tostring(mLua, index);
 }
 
+QJsonObject RaiiLuaState::fetchObject(int index)
+{
+    return fetchTableImpl(mLua, index, 0).toObject();
+}
+
 QJsonValue RaiiLuaState::fetch(int index)
 {
     return fetchValueImpl(mLua, index, 0);
@@ -93,6 +98,11 @@ QString RaiiLuaState::fetchString(lua_State *L, int index)
     return lua_tostring(L, index);
 }
 
+QJsonObject RaiiLuaState::fetchObject(lua_State *L, int index)
+{
+    return fetchTableImpl(L, index, 0).toObject();
+}
+
 QJsonValue RaiiLuaState::fetch(lua_State *L, int index)
 {
     return fetchValueImpl(L, index, 0);
@@ -108,6 +118,13 @@ bool RaiiLuaState::popBoolean()
 QString RaiiLuaState::popString()
 {
     QString value = fetchString(-1);
+    lua_pop(mLua, 1);
+    return value;
+}
+
+QJsonObject RaiiLuaState::popObject()
+{
+    QJsonObject value = fetchObject(-1);
     lua_pop(mLua, 1);
     return value;
 }
@@ -191,6 +208,11 @@ int RaiiLuaState::pCall(int nargs, int nresults, int msgh)
     return lua_pcall(mLua, nargs, nresults, msgh);
 }
 
+int RaiiLuaState::getGlobal(const QString &name)
+{
+    return lua_getglobal(mLua, name.toUtf8().constData());
+}
+
 void RaiiLuaState::setGlobal(const QString &name)
 {
     return lua_setglobal(mLua, name.toUtf8().constData());
@@ -230,7 +252,16 @@ QJsonValue RaiiLuaState::fetchTableImpl(lua_State *L, int index, int depth)
     // here we take the fact that Lua iterates array part first
     bool processingArrayPart = true;
     while (lua_next(L, newIndex)) {
-        QJsonValue v = pop(L);
+        QJsonValue v;
+        try {
+            v = fetchValueImpl(L, -1, depth);
+        } catch (const LuaError &e) {
+            QString key = fetchString(L, -2);
+            QString reason = e.reason() + QString(" (at table key '%1')").arg(key);
+            lua_pop(L, 2);
+            throw LuaError(reason);
+        }
+        lua_pop(L, 1);
         if (processingArrayPart && lua_isinteger(L, -1) && fetchInteger(L, -1) == arrayPart.size() + 1)
             // we are still in array part
             arrayPart.push_back(v);
@@ -275,8 +306,11 @@ QJsonValue RaiiLuaState::fetchValueImpl(lua_State *L, int index, int depth)
         return fetchString(L, index);
     else if (lua_istable(L, index))
         return fetchTableImpl(L, index, depth + 1);
-    else
-        throw LuaError(QString("Lua type error: unknown type %1.").arg(lua_typename(L, index)));
+    else {
+        int type = lua_type(L, index);
+        const char *name = lua_typename(L, type);
+        throw LuaError(QString("Lua type error: unknown type %1.").arg(name));
+    }
 }
 
 QHash<lua_State *, LuaExtraState> RaiiLuaState::mExtraState;

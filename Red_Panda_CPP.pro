@@ -23,8 +23,6 @@ APP_NAME = RedPandaCPP
 
 APP_VERSION = 2.26
 
-TEST_VERSION = beta1
-
 win32: {
 SUBDIRS += \
 	redpanda-win-git-askpass

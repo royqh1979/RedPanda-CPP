@@ -21,6 +21,7 @@
 #include <QPalette>
 #include <QStyleFactory>
 #include <QJsonValue>
+#include <QMessageBox>
 
 #ifdef Q_OS_WINDOWS
 # include <windows.h>
@@ -51,11 +52,126 @@ using pIsWow64Process2_t = BOOL (WINAPI *)(
 );
 #endif
 
-// C_Debug.debug(string) -> ()
+static QString luaDump(const QJsonValue &value) {
+    if (value.isNull())
+        return "nil";
+    if (value.isBool())
+        return value.toBool() ? "true" : "false";
+    if (value.isDouble())
+        return QString::number(value.toDouble());
+    if (value.isString()) {
+        QString s = value.toString();
+        s.replace('\\', "\\\\");
+        s.replace('"', "\\\"");
+        s.replace('\n', "\\n");
+        s.replace('\r', "\\r");
+        s.replace('\t', "\\t");
+        return '"' + s + '"';
+    }
+    if (value.isArray()) {
+        QString s = "{";
+        for (const QJsonValue &v : value.toArray())
+            s += luaDump(v) + ',';
+        s += '}';
+        return s;
+    }
+    if (value.isObject()) {
+        QJsonObject o = value.toObject();
+        QString s = "{";
+        for (const QString &k : o.keys())
+            s += '[' + luaDump(k) + "]=" + luaDump(o[k]) + ',';
+        s += '}';
+        return s;
+    }
+    return "nil";
+}
+
+static QString stringify(const QJsonValue &value) {
+    if (value.isString())
+        return value.toString();
+    if (value.isNull())
+        return "[nil]";
+    if (value.isBool())
+        return value.toBool() ? "[true]" : "[false]";
+    if (value.isDouble())
+        return QString("[number %1]").arg(value.toDouble());
+    if (value.isArray() || value.isObject())
+        return QString("[table %1]").arg(luaDump(value));
+    return "[unknown]";
+}
+
+/* https://stackoverflow.com/questions/15687223/explicit-call-to-destructor-before-longjmp-croak
+ *
+ * C++11 18.10/4: A setjmp/longjmp call pair has undefined behavior if
+ * replacing the setjmp and longjmp by catch and throw would invoke any
+ * non-trivial destructors for any automatic objects.
+ *
+ * Use impl function so the API boundary contains only POD types.
+ */
+void luaApiImpl_Debug_debug(lua_State *L) {
+    QString s = AddOn::RaiiLuaState::fetchString(L, 1);
+    int nArgs = lua_gettop(L);
+    for (int i = 2; i <= nArgs; ++i) {
+        QJsonValue arg;
+        try {
+            arg = AddOn::RaiiLuaState::fetch(L, i);
+        } catch (const AddOn::LuaError &e) {
+            QString reason = e.reason() + QString(" ('C_Debug.debug' argument #%1)").arg(i);
+            throw AddOn::LuaError(reason);
+        }
+        s = s.arg(stringify(arg));
+    }
+    qDebug().noquote() << s;
+}
+
+// C_Debug.debug(string, ...) -> ()
 extern "C" int luaApi_Debug_debug(lua_State *L) noexcept {
-    QString info = AddOn::RaiiLuaState::fetchString(L, 1);
-    qDebug() << info;
-    return 0;
+    bool error = false;
+    try {
+        luaApiImpl_Debug_debug(L);
+    } catch (const AddOn::LuaError &e) {
+        error = true;
+        AddOn::RaiiLuaState::push(L, e.reason());
+    }
+    if (error) {
+        lua_error(L); // longjmp, never returns
+        __builtin_unreachable();
+    } else {
+        return 0;
+    }
+}
+
+void luaApiImpl_Debug_messageBox(lua_State *L) {
+    QString s = AddOn::RaiiLuaState::fetchString(L, 1);
+    int nArgs = lua_gettop(L);
+    for (int i = 2; i <= nArgs; ++i) {
+        QJsonValue arg;
+        try {
+            arg = AddOn::RaiiLuaState::fetch(L, i);
+        } catch (const AddOn::LuaError &e) {
+            QString reason = e.reason() + QString(" ('C_Debug.messageBox' argument #%1)").arg(i);
+            throw AddOn::LuaError(reason);
+        }
+        s = s.arg(stringify(arg));
+    }
+    QMessageBox::information(nullptr, "Debug", s);
+}
+
+// C_Debug.messageBox(string, ...) -> ()
+extern "C" int luaApi_Debug_messageBox(lua_State *L) noexcept {
+    bool error = false;
+    try {
+        luaApiImpl_Debug_messageBox(L);
+    } catch (const AddOn::LuaError &e) {
+        error = true;
+        AddOn::RaiiLuaState::push(L, e.reason());
+    }
+    if (error) {
+        lua_error(L); // longjmp, never returns
+        __builtin_unreachable();
+    } else {
+        return 0;
+    }
 }
 
 // C_Desktop.desktopEnvironment() -> string
@@ -262,9 +378,7 @@ extern "C" int luaApi_System_supportedAppArchList(lua_State *L) noexcept {
         }
     }
 
-    // workaround for Debian 10 Qt 5.11, better to be
-    //   QStringList result{arches.begin(), arches.end()};
-    QStringList result = arches.toList();
+    QStringList result = arches.values();
     AddOn::RaiiLuaState::push(L, result);
     return 1;
 #endif
@@ -291,15 +405,37 @@ extern "C" int luaApi_System_readRegistry(lua_State *L) noexcept
 }
 #endif
 
-// C_Util.format(string, ...) -> string
-extern "C" int luaApi_Util_format(lua_State *L) noexcept
+void luaApiImpl_Util_format(lua_State *L)
 {
     QString s = AddOn::RaiiLuaState::fetchString(L, 1);
     int nArgs = lua_gettop(L);
     for (int i = 2; i <= nArgs; ++i) {
-        QJsonValue arg = AddOn::RaiiLuaState::fetch(L, i);
-        s = s.arg(arg.toString());
+        QJsonValue arg;
+        try {
+            arg = AddOn::RaiiLuaState::fetch(L, i);
+        } catch (const AddOn::LuaError &e) {
+            QString reason = e.reason() + QString(" ('C_Util.format' argument #%1)").arg(i);
+            throw AddOn::LuaError(reason);
+        }
+        s = s.arg(stringify(arg));
     }
     AddOn::RaiiLuaState::push(L, s);
-    return 1;
+}
+
+// C_Util.format(string, ...) -> string
+extern "C" int luaApi_Util_format(lua_State *L) noexcept
+{
+    bool error = false;
+    try {
+        luaApiImpl_Util_format(L);
+    } catch (const AddOn::LuaError &e) {
+        error = true;
+        AddOn::RaiiLuaState::push(L, e.reason());
+    }
+    if (error) {
+        lua_error(L); // longjmp, never returns
+        __builtin_unreachable();
+    } else {
+        return 1;
+    }
 }

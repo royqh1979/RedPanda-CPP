@@ -40,6 +40,8 @@ namespace QSynedit {
             if (editor->syntaxer()->language() != ProgrammingLanguage::CPP)
                 return indentSpaces;
             SyntaxState rangePreceeding = editor->document()->getSyntaxState(startLine-1);
+            if (rangePreceeding.state == CppSyntaxer::RangeState::rsRawStringNotEscaping)
+                return 0;
             if (addIndent) {
     //            QString trimmedS = s.trimmed();
                 QString trimmedLineText = lineText.trimmed();

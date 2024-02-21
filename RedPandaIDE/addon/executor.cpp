@@ -26,7 +26,8 @@ namespace AddOn {
 static QMap<QString, QMap<QString, lua_CFunction>> apiGroups{
     {"C_Debug",
      {
-         {"debug", &luaApi_Debug_debug}, // (string) -> ()
+         {"debug", &luaApi_Debug_debug}, // (string, ...) -> ()
+         {"messageBox", &luaApi_Debug_messageBox}, // (string, ...) -> ()
      }},
     {"C_Desktop",
      {
@@ -80,7 +81,11 @@ extern "C" void luaHook_timeoutKiller(lua_State *L, lua_Debug *ar [[maybe_unused
     }
 };
 
-ThemeExecutor::ThemeExecutor() : SimpleExecutor({"C_Debug", "C_Desktop"}) {}
+ThemeExecutor::ThemeExecutor() : SimpleExecutor(
+    "theme", 0, 1,
+    {"C_Debug", "C_Desktop", "C_Util"})
+{
+}
 
 QJsonObject ThemeExecutor::operator()(const QByteArray &script,
                                       const QString &name) {
@@ -92,28 +97,74 @@ QJsonObject ThemeExecutor::operator()(const QByteArray &script,
         throw LuaError("Theme script must return an object.");
 }
 
+SimpleExecutor::SimpleExecutor(const QString &kind, int major, int minor, const QList<QString> &apis)
+    : mKind(kind), mMajor(major), mMinor(minor), mApis(apis)
+{
+}
+
+bool SimpleExecutor::apiVersionCheck(const QJsonObject &addonApi) {
+    const QString &addonKind = addonApi["kind"].toString();
+    if (addonKind != mKind)
+        return false;
+    if (!addonApi.contains("major") || !addonApi.contains("minor"))
+        return false;
+    int addonMajor = addonApi["major"].toInt();
+    int addonMinor = addonApi["minor"].toInt();
+    if (mMajor == 0)
+        return addonMajor == mMajor && addonMinor == mMinor;
+    else
+        return addonMajor == mMajor && addonMinor <= mMinor;
+}
+
 QJsonValue SimpleExecutor::runScript(const QByteArray &script,
                                      const QString &name,
                                      std::chrono::microseconds timeLimit) {
     RaiiLuaState L(name, timeLimit);
-    L.openLibs();
-    for (auto &api : mApis)
-        registerApiGroup(L, api);
-
     int retLoad = L.loadBuffer(script, name);
     if (retLoad != 0)
-        throw LuaError(QString("Lua script load error: %1.").arg(L.popString()));
+        throw LuaError(QString("Lua load error: %1.").arg(L.popString()));
     L.setHook(&luaHook_timeoutKiller, LUA_MASKCOUNT, 1'000'000); // ~5ms on early 2020s desktop CPUs
     L.setTimeStart();
-    int callResult = L.pCall(0, 1, 0);
+    int callResult = L.pCall(0, 0, 0);
     if (callResult != 0) {
         throw LuaError(QString("Lua error: %1.").arg(L.popString()));
     }
 
+    // call `apiVersion()` to check compatibility
+    int type = L.getGlobal("apiVersion");
+    if (type != LUA_TFUNCTION) {
+        throw LuaError("Add-on interface error: `apiVersion` is not a function.");
+    }
+    callResult = L.pCall(0, 1, 0);
+    if (callResult != 0) {
+        throw LuaError(QString("Lua error: %1.").arg(L.popString()));
+    }
+    QJsonObject addonApi = L.popObject();
+    if (!apiVersionCheck(addonApi)) {
+        throw LuaError(QString("Add-on interface error: API version incompatible with %1:%2.%3.")
+            .arg(mKind).arg(mMajor).arg(mMinor));
+    }
+
+    // inject APIs and call `main()`
+    L.openLibs();
+    for (auto &api : mApis)
+        registerApiGroup(L, api);
+    type = L.getGlobal("main");
+    if (type != LUA_TFUNCTION) {
+        throw LuaError("Add-on interface error: `main` is not a function.");
+    }
+    callResult = L.pCall(0, 1, 0);
+    if (callResult != 0) {
+        throw LuaError(QString("Lua error: %1.").arg(L.popString()));
+    }
     return L.fetch(1);
 }
 
-CompilerHintExecutor::CompilerHintExecutor() : SimpleExecutor({"C_Debug", "C_Desktop", "C_FileSystem", "C_System", "C_Util"}) {}
+CompilerHintExecutor::CompilerHintExecutor() : SimpleExecutor(
+    "compiler_hint", 0, 1,
+    {"C_Debug", "C_Desktop", "C_FileSystem", "C_System", "C_Util"})
+{
+}
 
 QJsonObject CompilerHintExecutor::operator()(const QByteArray &script) {
     using namespace std::chrono_literals;

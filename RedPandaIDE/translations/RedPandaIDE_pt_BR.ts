@@ -13,7 +13,7 @@
     </message>
     <message>
         <source>Based on Qt %1 (%2) rodando em %3</source>
-        <translation>Com base em Qt %1 (%2) executado em %3</translation>
+        <translation type="vanished">Com base em Qt %1 (%2) executado em %3</translation>
     </message>
     <message>
         <source>Build time: %1 %2</source>
@@ -21,7 +21,7 @@
     </message>
     <message>
         <source>Copyright(C) 2021-2022 瞿华(royqh1979@gmail.com)</source>
-        <translation>Copyright(C) 2021-2022 瞿华(royqh1979@gmail.com)</translation>
+        <translation type="vanished">Copyright(C) 2021-2022 瞿华(royqh1979@gmail.com)</translation>
     </message>
     <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Homepage: &lt;a href=&quot;Homepage: https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
@@ -74,6 +74,14 @@
     <message>
         <source>Legacy Microsoft Visual C++</source>
         <translation>Microsoft Visual C++ Legado</translation>
+    </message>
+    <message>
+        <source>Based on Qt %1 (%2) running on %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
+        <translation type="unfinished">Copyright(C) 2021-2022 瞿华(royqh1979@gmail.com) {2021-2024 ?} {1979@?}</translation>
     </message>
 </context>
 <context>
@@ -813,6 +821,10 @@
     </message>
     <message>
         <source>Survive auto-finds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t localize compiler output messages</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7108,6 +7120,10 @@
     </message>
     <message>
         <source>Failed to detect terminal arguments pattern for “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error executing platform compiler hint add-on</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

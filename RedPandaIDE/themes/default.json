@@ -21,7 +21,7 @@
         "PaletteLink":"#0000ff",
         "PaletteLinkVisited":"#ff00ff",
         "PaletteLight": "#ffffff",
-        "PaletteMidLight": "#cacaca",
+        "PaletteMidlight": "#cacaca",
         "PaletteDark":"#9f9f9f",
         "PaletteMid": "#b8b8b8",
         "PaletteWindowDisabled":"#efefef",

@@ -104,6 +104,7 @@ protected:
     std::shared_ptr<Project> mProject;
     bool mSetLANG;
     PCppParser mParserForFile;
+    bool mForceEnglishOutput;
 
 private:
     bool mStop;

@@ -31,23 +31,11 @@ local nameMap = {
       zh_CN = "Multilib Clang",
       zh_TW = "Multilib Clang",
    },
-   crossGcc = {
-      en_US = "Cross GCC",
-      pt_BR = "GCC cruzado",
-      zh_CN = "交叉编译 GCC",
-      zh_TW = "交叉編譯 GCC",
-   },
    mingwGcc = {
       en_US = "MinGW GCC",
       pt_BR = "GCC MinGW",
       zh_CN = "MinGW GCC",
       zh_TW = "MinGW GCC",
-   },
-   mingwClang = {
-      en_US = "MinGW Clang",
-      pt_BR = "Clang MinGW",
-      zh_CN = "MinGW Clang",
-      zh_TW = "MinGW Clang",
    },
    release = {
       en_US = ", release",
@@ -172,7 +160,7 @@ function main()
    end
 
 
-   if arch == "x86_64" and C_FileSystem.isExecutable("/usr/lib32/libstdc++.so") then
+   if arch == "x86_64" and C_FileSystem.exists("/usr/lib32/libc.a") then
       do
          local release, debug_, debugWithAsan = generateConfig(
          nameMap.multilibGcc[lang] or nameMap.multilibGcc.en_US, lang,
@@ -194,20 +182,6 @@ function main()
          table.insert(compilerList, debug_)
          table.insert(compilerList, debugWithAsan)
       end
-   end
-
-
-   if (
-      arch == "x86_64" and
-      C_FileSystem.exists("/proc/sys/fs/binfmt_misc/qemu-aarch64") and
-      C_FileSystem.isExecutable("/usr/bin/aarch64-linux-gnu-gcc")) then
-
-      local release, _, _ = generateConfig(
-      (nameMap.crossGcc[lang] or nameMap.crossGcc.en_US) .. " aarch64", lang,
-      "/usr/bin/aarch64-linux-gnu-gcc", "/usr/bin/aarch64-linux-gnu-g++",
-      {})
-
-      table.insert(compilerList, release)
    end
 
 
@@ -235,26 +209,6 @@ function main()
 
             table.insert(compilerList, release)
          end
-
-
-         if C_FileSystem.isExecutable("/usr/bin/clang") then
-            local release, _, _ = generateConfig(
-            (nameMap.mingwClang[lang] or nameMap.mingwClang.en_US) .. " x86_64", lang,
-            "/usr/bin/clang", "/usr/bin/clang++",
-            {
-               isClang = true,
-               isMingw = true,
-               triplet = "x86_64-w64-mingw32",
-               customCompileParams = { "-target", "x86_64-w64-mingw32" },
-               customLinkParams = {
-                  "-target", "x86_64-w64-mingw32",
-                  extraObjects.utf8init, extraObjects.utf8manifest,
-                  "-lstdc++", "-lwinpthread",
-               },
-            })
-
-            table.insert(compilerList, release)
-         end
       end
 
       if C_FileSystem.isExecutable("/usr/bin/i686-w64-mingw32-gcc") then
@@ -275,26 +229,6 @@ function main()
 
             table.insert(compilerList, release)
          end
-
-
-         if C_FileSystem.isExecutable("/usr/bin/clang") then
-            local release, _, _ = generateConfig(
-            (nameMap.mingwClang[lang] or nameMap.mingwClang.en_US) .. " i686", lang,
-            "/usr/bin/clang", "/usr/bin/clang++",
-            {
-               isClang = true,
-               isMingw = true,
-               triplet = "i686-w64-mingw32",
-               customCompileParams = { "-target", "i686-w64-mingw32" },
-               customLinkParams = {
-                  "-target", "i686-w64-mingw32",
-                  extraObjects.utf8init, extraObjects.utf8manifest,
-                  "-lstdc++", "-lwinpthread",
-               },
-            })
-
-            table.insert(compilerList, release)
-         end
       end
    end
 
@@ -302,8 +236,7 @@ function main()
       compilerList = compilerList,
       noSearch = {
          "/usr/bin",
-         "/opt/cuda/bin",
-         "/usr/lib/ccache/bin",
+         "/usr/lib/ccache",
       },
       preferCompiler = 3,
    }

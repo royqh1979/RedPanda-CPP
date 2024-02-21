@@ -20,10 +20,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copyright(C) 2021-2022 瞿华(royqh1979@gmail.com)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Homepage: &lt;a href=&quot;Homepage: https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -70,6 +66,10 @@
     <message>
         <source>Legacy Microsoft Visual C++</source>
         <translation>舊版 Microsoft Visual C++</translation>
+    </message>
+    <message>
+        <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -702,6 +702,10 @@
     </message>
     <message>
         <source>Survive auto-finds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t localize compiler output messages</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6620,6 +6624,10 @@
     </message>
     <message>
         <source>Failed to detect terminal arguments pattern for “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error executing platform compiler hint add-on</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
