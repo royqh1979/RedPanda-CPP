@@ -4521,8 +4521,12 @@ void MainWindow::onFilesViewCreateFile()
     // workaround: try create but do not truncate
     file.open(QFile::ReadWrite);
 #endif
-    QModelIndex newIndex = mFileSystemModel.index(fileName);
+    file.close();
+    // Refresh, otherwise it cannot be selected
+    mFileSystemModel.setRootPath(mFileSystemModel.rootPath());
+    QModelIndex newIndex = mFileSystemModel.index(dir.filePath(fileName));
     ui->treeFiles->setCurrentIndex(newIndex);
+    ui->treeFiles->edit(newIndex);
 }
 
 
