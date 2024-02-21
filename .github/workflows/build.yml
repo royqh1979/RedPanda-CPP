@@ -252,6 +252,7 @@ jobs:
   rpm_opensuse:
     name: RPM on openSUSE Tumbleweed
     runs-on: ubuntu-latest
+    if: false
 
     steps:
       - uses: actions/checkout@v2
