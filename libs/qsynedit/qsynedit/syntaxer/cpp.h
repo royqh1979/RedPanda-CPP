@@ -159,8 +159,6 @@ private:
     int mLeftBraces;
     int mRightBraces;
 
-    QString mRawStringInitialDCharSeq;
-
     QSet<QString> mCustomTypeKeywords;
 
     PTokenAttribute mPreprocessorAttribute;
