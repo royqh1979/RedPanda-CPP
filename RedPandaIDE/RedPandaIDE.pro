@@ -176,6 +176,7 @@ SOURCES += \
     widgets/cpudialog.cpp \
     debugger.cpp \
     editor.cpp \
+    filenamedelegate.cpp \
     editorlist.cpp \
     iconsmanager.cpp \
     main.cpp \
@@ -303,6 +304,7 @@ HEADERS += \
     widgets/cpudialog.h \
     debugger.h \
     editor.h \
+    filenamedelegate.h \
     editorlist.h \
     iconsmanager.h \
     mainwindow.h \

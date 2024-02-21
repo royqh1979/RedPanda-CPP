@@ -18,6 +18,7 @@
 #include "ui_mainwindow.h"
 #include "editorlist.h"
 #include "editor.h"
+#include "filenamedelegate.h"
 #include "systemconsts.h"
 #include "settings.h"
 #include "qsynedit/constants.h"
@@ -396,6 +397,8 @@ MainWindow::MainWindow(QWidget *parent)
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
     }
+    FileNameDelegate *fileNameDelegate = new FileNameDelegate(this);
+    ui->treeFiles->setItemDelegate(fileNameDelegate);
     connect(ui->cbFilesPath->lineEdit(),&QLineEdit::returnPressed,
             this,&MainWindow::onFilesViewPathChanged);
     connect(ui->cbFilesPath, QOverload<int>::of(&QComboBox::currentIndexChanged),

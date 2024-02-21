@@ -55,6 +55,7 @@ target("RedPandaIDE")
         "cpprefacter",
         "debugger",
         "editor",
+        "filenamedelegate",
         "editorlist",
         "iconsmanager",
         "project",
