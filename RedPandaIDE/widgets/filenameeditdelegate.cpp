@@ -1,14 +1,14 @@
 /* by XY0797 2024.2.21 */
 
-#include "filenamedelegate.h"
+#include "filenameeditdelegate.h"
 #include <QLineEdit>
-#include <QFileInfo>
+#include <qapplication.h>
 
 // Custom edit box control. This is necessary because the default behavior of a QLineEdit when it gains focus is to select all its text, and if a selection is set before gaining focus, it will be overridden by the select-all action upon focusing.
-class MyLineEdit : public QLineEdit
+class FilenameLineEdit : public QLineEdit
 {
 public:
-    explicit MyLineEdit(QWidget *parent = nullptr) : QLineEdit(parent) {}
+    explicit FilenameLineEdit(QWidget *parent = nullptr) : QLineEdit(parent) {}
 
     // Add a custom method to set the selection on focus gain.
     void setFocusSelectState(int index, int length)
@@ -49,19 +49,21 @@ int findDotPosition(const QString &fileName)
 
 // Below follows the implementation of the delegate class.
 
-FileNameDelegate::FileNameDelegate(QObject *parent) : QStyledItemDelegate(parent) {}
+FilenameEditDelegate::FilenameEditDelegate(QObject *parent) : QStyledItemDelegate(parent) {}
 
 // Use our custom component when creating the editor.
-QWidget *FileNameDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+QWidget *FilenameEditDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    MyLineEdit *editor = new MyLineEdit(parent);
+    FilenameLineEdit *editor = new FilenameLineEdit(parent);
     return editor;
 }
 
 // Set the content, and if the item is a file, set the selection on focus gain to exclude the file extension.
-void FileNameDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+void FilenameEditDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
-    MyLineEdit *lineEdit = (MyLineEdit *)editor;
+    FilenameLineEdit *lineEdit = (FilenameLineEdit *)editor;
+    if (!lineEdit) { return; }
+
     QString fileName = index.data().toString();
     lineEdit->setText(fileName);
     // Determine whether the currently edited item is a directory or a file; if it's a directory, there's no need to set a selection.
@@ -72,23 +74,27 @@ void FileNameDelegate::setEditorData(QWidget *editor, const QModelIndex &index) 
 }
 
 // Return the edited data back to the QTreeView.
-void FileNameDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+void FilenameEditDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
-    MyLineEdit *lineEdit = (MyLineEdit *)editor;
+    FilenameLineEdit *lineEdit = (FilenameLineEdit *)editor;
+    if (!lineEdit) { return; }
+
     model->setData(index, lineEdit->text());
 }
 
-// Recalculate the rectangle's left side and width to avoid overlapping with the icon display.
-QRect adjustForIcon(const QRect &originalRect)
-{
-    // Adjust the position to accommodate the icon display.
-    int theiconWidth = 20;
-    return QRect(originalRect.x() + theiconWidth, originalRect.y(), originalRect.width() - theiconWidth, originalRect.height());
-}
-
 // Override the method for updating the editor's position.
-void FileNameDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void FilenameEditDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    MyLineEdit *lineEdit = (MyLineEdit *)editor;
-    lineEdit->setGeometry(adjustForIcon(option.rect));
+    FilenameLineEdit *lineEdit = (FilenameLineEdit *)editor;
+    if (!lineEdit) { return; }
+
+    const QWidget *widget = option.widget;
+    QStyleOptionViewItem opt = option;
+    initStyleOption(&opt, index);
+    opt.showDecorationSelected = true;
+
+    QStyle *style = widget ? widget->style() : QApplication::style();
+    QRect geom = style->subElementRect(QStyle::SE_ItemViewItemText, &opt, widget);
+
+    lineEdit->setGeometry(geom);
 }
