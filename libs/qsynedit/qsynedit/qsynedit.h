@@ -176,8 +176,10 @@ public:
     int leftSpaces(const QString& line) const;
     QString GetLeftSpacing(int charCount,bool wantTabs) const;
     int charToColumn(int aLine, int aChar) const;
-    int charToColumn(const QString& s, int aChar) const;
+    int charToColumn(int aLine, const QString& s, int aChar) const;
+    //int charToColumn(const QString& s, int aChar) const;
     int columnToChar(int aLine, int aColumn) const;
+    int columnToChar(int aLine, const QString& s, int aColumn) const;
     int stringColumns(const QString& line, int colsBefore) const;
     int getLineIndent(const QString& line) const;
     int rowToLine(int aRow) const;
@@ -201,7 +203,6 @@ public:
     QChar charAt(const BufferCoord& pos);
     QChar nextNonSpaceChar(int line, int ch);
     QChar lastNonSpaceChar(int line, int ch);
-    int charColumns(QChar ch) const;
 
     bool isPointInSelection(const BufferCoord& Value) const;
     BufferCoord nextWordPos();
@@ -526,7 +527,7 @@ private:
     void initializeCaret();
     PCodeFoldingRange foldStartAtLine(int Line) const;
     bool foldCollapsedBetween(int startLine, int endLine) const;
-    QString substringByColumns(const QString& s, int startColumn, int& colLen);
+    //QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PCodeFoldingRange foldAroundLine(int line);
     PCodeFoldingRange foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
     PCodeFoldingRange checkFoldRange(PCodeFoldingRanges foldRangesToCheck,int line, bool wantCollapsed, bool AcceptFromLine, bool AcceptToLine);

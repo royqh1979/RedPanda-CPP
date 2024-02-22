@@ -22,6 +22,28 @@
 
 namespace QSynedit {
 
+QSet<QString> QSynEditPainter::operatorGlyphs {
+    "-",
+    "+",
+    "*",
+    "/",
+    "\\",
+    "~",
+    "!",
+    "@",
+    "#",
+    "$",
+    "%",
+    "^",
+    "&",
+    "|",
+    "=",
+    "<",
+    ">",
+    "?",
+    ":",};
+
+
 QSynEditPainter::QSynEditPainter(QSynEdit *edit, QPainter *painter, int FirstRow, int LastRow, int FirstCol, int LastCol)
 {
     this->edit = edit;
@@ -30,6 +52,27 @@ QSynEditPainter::QSynEditPainter(QSynEdit *edit, QPainter *painter, int FirstRow
     this->aLastRow = LastRow;
     this->FirstCol = FirstCol;
     this->LastCol = LastCol;
+    // if (operatorGlyphs.isEmpty()) {
+    //     operatorGlyphs.insert("+");
+    //     operatorGlyphs.insert("-");
+    //     operatorGlyphs.insert("*");
+    //     operatorGlyphs.insert("/");
+    //     operatorGlyphs.insert("\\");
+    //     operatorGlyphs.insert("~");
+    //     operatorGlyphs.insert("!");
+    //     operatorGlyphs.insert("@");
+    //     operatorGlyphs.insert("#");
+    //     operatorGlyphs.insert("$");
+    //     operatorGlyphs.insert("%");
+    //     operatorGlyphs.insert("^");
+    //     operatorGlyphs.insert("&");
+    //     operatorGlyphs.insert("|");
+    //     operatorGlyphs.insert("=");
+    //     operatorGlyphs.insert("<");
+    //     operatorGlyphs.insert(">");
+    //     operatorGlyphs.insert("?");
+    //     operatorGlyphs.insert(":");
+    // }
 }
 
 void QSynEditPainter::paintTextLines(const QRect& clip)
@@ -295,14 +338,14 @@ void QSynEditPainter::computeSelectionInfo()
                 QString sLine = edit->lineText().left(edit->mCaretX-1)
                         + edit->mInputPreeditString
                         + edit->lineText().mid(edit->mCaretX-1);
-                vSelStart.Column = edit->charToColumn(sLine,vStart.ch);
+                vSelStart.Column = edit->charToColumn(edit->mCaretY-1, sLine,vStart.ch);
             }
             if (edit->mInputPreeditString.length()
                     && vEnd.line == edit->mCaretY) {
                 QString sLine = edit->lineText().left(edit->mCaretX-1)
                         + edit->mInputPreeditString
                         + edit->lineText().mid(edit->mCaretX-1);
-                vSelEnd.Column = edit->charToColumn(sLine,vEnd.ch);
+                vSelEnd.Column = edit->charToColumn(edit->mCaretY-1, sLine,vEnd.ch);
             }
             // In the column selection mode sort the begin and end of the selection,
             // this makes the painting code simpler.
@@ -355,14 +398,12 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
         } else {
             int tokenColLen=0;
             startPaint = false;
-            for (int i=0;i<token.length();i++) {
-                int charCols=0;
-                QString textToPaint = token[i];
-                if (token[i] == '\t') {
-                    charCols = edit->tabWidth() - ((columnsBefore+tokenColLen) % edit->tabWidth());
-                } else {
-                    charCols = edit->charColumns(token[i]);
-                }
+            QList<int> glyphPositions = calcGlyphPositions(token);
+            for (int i=0; i< glyphPositions.length();i++) {
+                int glyphStart = glyphPositions[i];
+                int glyphLen =(i+1<glyphPositions.length())?glyphPositions[i+1]:token.length();
+                QString glyph = token.mid(glyphStart,glyphLen);
+                int charCols = edit->document()->glyphColumns(glyph, columnsBefore+tokenColLen);
                 if (tokenColLen+charCols>=first) {
                     if (!startPaint && (tokenColLen+1!=first)) {
                         nX-= (first - tokenColLen - 1) * edit->mCharWidth;
@@ -376,14 +417,17 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
                     bool  drawed = false;
                     if (painter->fontInfo().fixedPitch()
                              && edit->mOptions.testFlag(eoLigatureSupport)
-                             && !token[i].isSpace()
-                             && (token[i].unicode()<=0xFF)) {
+                             && operatorGlyphs.contains(glyph)) {
+                        QString textToPaint = glyph;
                         while(i+1<token.length()) {
-                            if (token[i+1].unicode()>0xFF || token[i+1].isSpace())
+                            int glyphStart = glyphPositions[i+1];
+                            int glyphLen =(i+2<glyphPositions.length())?glyphPositions[i+2]:token.length();
+                            QString glyph2 = token.mid(glyphStart,glyphLen);
+                            if (!operatorGlyphs.contains(glyph))
                                 break;
                             i+=1;
-                            charCols +=  edit->charColumns(token[i]);
-                            textToPaint+=token[i];
+                            charCols += edit->document()->glyphColumns(glyph2,0);
+                            textToPaint+=glyph2;
                         }
                         painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , textToPaint);
                         drawed = true;
@@ -899,13 +943,13 @@ void QSynEditPainter::paintLines()
         if (!edit->mSyntaxer || !edit->mSyntaxer->enabled()) {
               sToken = sLine;
               if (bCurrentLine) {
-                  nTokenColumnLen = edit->lineColumns(vLine-1, sLine,0);
+                  nTokenColumnLen = edit->document()->lineColumns(vLine-1, sLine);
               } else {
-                  nTokenColumnLen = edit->lineColumns(vLine-1);
+                  nTokenColumnLen = edit->document()->lineColumns(vLine-1);
               }
               if (edit->mOptions.testFlag(eoShowLineBreaks) && (!bLineSelected) && (!bSpecialLine) && (nTokenColumnLen < vLastChar)) {
                   sToken = sToken + LineBreakGlyph;
-                  nTokenColumnLen += edit->charColumns(LineBreakGlyph);
+                  nTokenColumnLen += edit->document()->glyphColumns(LineBreakGlyph,0);
               }
               if (bComplexLine) {
                   setDrawingColors(true);
@@ -928,8 +972,8 @@ void QSynEditPainter::paintLines()
                   PEditingArea area = std::make_shared<EditingArea>();
                   int col = edit->charToColumn(edit->mCaretY,edit->mCaretX);
                   int ch = edit->columnToChar(vLine,col);
-                  area->beginX = edit->charToColumn(sLine,ch);
-                  area->endX = edit->charToColumn(sLine,ch + edit->mInputPreeditString.length());
+                  area->beginX = edit->charToColumn(vLine-1, sLine,ch);
+                  area->endX = edit->charToColumn(vLine-1, sLine,ch + edit->mInputPreeditString.length());
                   area->type = EditingAreaType::eatUnderLine;
                   area->color = colFG;
                   areaList.append(area);
@@ -1061,7 +1105,7 @@ void QSynEditPainter::paintLines()
                         && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
                     addHighlightToken(LineBreakGlyph,
                       edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
-                      edit->charColumns(LineBreakGlyph),vLine, edit->mSyntaxer->whitespaceAttribute(),false);
+                      edit->mDocument->glyphColumns(LineBreakGlyph,0),vLine, edit->mSyntaxer->whitespaceAttribute(),false);
                 }
             }
             // Draw anything that's left in the TokenAccu record. Fill to the end
@@ -1078,15 +1122,15 @@ void QSynEditPainter::paintLines()
                         area->endX+=edit->mInputPreeditString.length();
                     }
                 }
-                area->beginX = edit->charToColumn(sLine, area->beginX);
-                area->endX = edit->charToColumn(sLine,area->endX);
+                area->beginX = edit->charToColumn(vLine-1, sLine, area->beginX);
+                area->endX = edit->charToColumn(vLine-1,sLine,area->endX);
             }
             if (bCurrentLine && edit->mInputPreeditString.length()>0) {
                 PEditingArea area = std::make_shared<EditingArea>();
                 int col = edit->charToColumn(edit->mCaretY,edit->mCaretX);
                 int ch = edit->columnToChar(vLine,col);
-                area->beginX = edit->charToColumn(sLine,ch);
-                area->endX = edit->charToColumn(sLine,ch + edit->mInputPreeditString.length());
+                area->beginX = edit->charToColumn(vLine-1,sLine,ch);
+                area->endX = edit->charToColumn(vLine-1,sLine,ch + edit->mInputPreeditString.length());
                 area->type = EditingAreaType::eatUnderLine;
                 if (preeditAttr) {
                     area->color = preeditAttr->foreground();

@@ -78,14 +78,14 @@ private:
      * @brief get list of start column of the glyphs in the line text
      * @return start positions of the glyph.
      */
-    const QList<int>& glyphColumns() const {
+    const QList<int>& glyphColumnsList() const {
         return mGlyphColumns;
     }
 
     /**
      * @brief get start index of the chars representing the specified glyph.
-     * @param i index of the glyph of the line (starting from 0)
-     * @return
+     * @param i index of the glyph in the line (starting from 0)
+     * @return char index in the line text (start from 0)
      */
     int glyphStart(int i) const {
         Q_ASSERT(i>=0 && i<mGlyphPositions.length());
@@ -93,36 +93,38 @@ private:
     }
 
     /**
-     * @brief get end index of the chars representing the specified glyph.
-     * @param i index of the glyph of the line (starting from 0)
+     * @brief get count of the chars representing the specified glyph.
+     * @param i index of the glyph in the line (starting from 0)
      * @return
      */
-    int glyphEnd(int i) const;
+    int glyphLength(int i) const;
 
     /**
      * @brief get the chars representing the specified glyph.
-     * @param i index of the glyph of the line (starting from 0)
+     * @param i index of the glyph in the line (starting from 0)
      * @return the chars representing the specified glyph
      */
-    QString getGlyph(int i) const;
+    QString glyph(int i) const {
+        return mLineText.mid(glyphStart(i),glyphLength(i));
+    }
 
     /**
      * @brief get start column of the specified glyph.
-     * @param i index of the glyph of the line (starting from 0)
-     * @return
+     * @param i index of the glyph in the line (starting from 0)
+     * @return the column in the displayed line (start from 1)
      */
-    int getGlyphStartColumn(int i) const {
+    int glyphStartColumn(int i) const {
         Q_ASSERT(mColumns>=0);
         Q_ASSERT(i>=0 && i<mGlyphColumns.length());
         return mGlyphColumns[i];
     }
 
     /**
-     * @brief get end column of the specified glyph.
+     * @brief get width （in columns) of the specified glyph.
      * @param i index of the glyph of the line (starting from 0)
      * @return
      */
-    int getGlyphEndColumn(int i) const;
+    int glyphColumns(int i) const;
 
     /**
      * @brief get the line text
@@ -427,6 +429,8 @@ public:
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
 
+    QString glyph(int line, int glyphIdx);
+    QString glyphAt(int line, int charPos);
     /**
      * @brief calculate display width (in columns) of a string
      *
@@ -437,25 +441,81 @@ public:
      * @return width of the string, don't including colsBefore
      */
     int stringColumns(const QString &str, int colsBefore) const;
+
+    /**
+     * @brief get start index of the chars representing the specified glyph in the specified line.
+     *
+     * It's thread safe.
+     *
+     * @param line index of the line in the document (starting from 0)
+     * @param glyphIdx index of the glyph in the line (starting from 0)
+     * @return char index in the line text (start from 0)
+     */
     int glyphStart(int line, int glyphIdx);
-    int glyphEnd(int line, int glyphIdx);
+
+    /**
+     * @brief get count of the chars representing the specified glyph in the specified line.
+     *
+     * It's thread safe.
+     *
+     * @param line index of the line in the document (starting from 0)
+     * @param glyphIdx index of the glyph in the line (starting from 0)
+     * @return
+     */
+    int glyphLength(int line, int glyphIdx);
+
+    /**
+     * @brief get start column of the specified glyph in the specified line.
+     *
+     * It's thread safe.
+     *
+     * @param line index of the line in the document (starting from 0)
+     * @param glyphIdx index of the glyph in the line (starting from 0)
+     * @return the column (starting from 1)
+     */
     int glyphStartColumn(int line, int glyphIdx);
-    int glyphEndColumn(int line, int glyphIdx);
+
+    /**
+     * @brief get width (in columns) of the specified glyph in the specified line.
+     *
+     * It's thread safe.
+     *
+     * @param line index of the line in the document (starting from 0)
+     * @param glyphIdx index of the glyph in the line (starting from 0)
+     * @return
+     */
+    int glyphColumns(int line, int glyphIdx);
+
+    int glyphColumns(const QString &s, int colsBefore) const;
+
+    /**
+     * @brief get index of the glyph represented by the specified char
+     *
+     * It's thread safe.
+     *
+     * @param line index of the line (starting from 0)
+     * @param charIdx position of the char in the line text (starting from 0)
+     * @return glyph index in the line (starting from 0)
+     */
     int charToGlyphIndex(int line, int charPos);
+    int charToGlyphIndex(QList<int> glyphPositions, int charPos) const;
+
+    /**
+     * @brief get index of the glyph displayed on the specified column
+     *
+     * It's thread safe.
+     *
+     * @param line index of the line (starting from 0)
+     * @param column the column (starting from 1)
+     * @return glyph index in the line (starting from 0)
+     */
+    int columnToGlyphIndex(int line, int column);
+    int columnToGlyphIndex(QList<int> glyphColumnsList, int column) const;
 
     int charToColumn(int line, int charPos);
     int columnToChar(int line, int column);
     int charToColumn(int line, const QString newStr, int charPos);
     int columnToChar(int line, const QString newStr, int column);
-    int columnToGlyphIndex(int line, int column);
-
-
-
-    int charToColumn(const QString& str, int charPos);
-    int charToColumn(const QString& lineText, const QList<int> &glyphPositions, int charPos);
-    int columnToChar(const QString& lineText, int column);
-    int columnToChar(const QString& lineText, const QList<int> &glyphPositions, int column);
-
 
     bool getAppendNewLineAtEOF();
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
@@ -492,6 +552,7 @@ protected:
     void internalClear();
 private:
     QList<int> calcGlyphColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore, int &totalColumns) const;
+    QList<int> calcGlyphColumns(const QString& lineText) const;
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);

@@ -88,6 +88,8 @@ private:
     QRect AClip;
     int aFirstRow, aLastRow, FirstCol, LastCol;
     SynTokenAccu mTokenAccu;
+
+    static QSet<QString> operatorGlyphs;
 };
 
 }

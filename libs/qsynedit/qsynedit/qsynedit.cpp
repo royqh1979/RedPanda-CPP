@@ -841,40 +841,38 @@ int QSynEdit::charToColumn(int aLine, int aChar) const
 {
     if (aLine>=1 && aLine <= mDocument->count()) {
         QString s = getDisplayStringAtLine(aLine);
-        QString s2 = mDocument->getLine(line-1);
-        if (s!=s2)
-            return mDocument->charToColumn(s, aChar);
-        else {
-            QList<int> glyphPositions = mDocument->getGlyphPositions(line-1);
-            return mDocument->charToColumn(s, glyphPositions, aChar);
-        }
+        return mDocument->charToColumn(aLine-1, s, aChar-1);
     }
     return aChar;
 }
 
-int QSynEdit::charToColumn(const QString &s, int aChar) const
+int QSynEdit::charToColumn(int aLine, const QString &s, int aChar) const
 {
-    return mDocument->charToColumn(s, aChar);
+    if (aLine>=1 && aLine <= mDocument->count()) {
+        return mDocument->charToColumn(aLine-1, s, aChar-1);
+    }
+    return aChar;
 }
+
+// int QSynEdit::charToColumn(const QString &s, int aChar) const
+// {
+//     return mDocument->charToColumn(s, aChar);
+// }
 
 int QSynEdit::columnToChar(int aLine, int aColumn) const
 {
     //Q_ASSERT( (aLine <= mDocument->count()) && (aLine >= 1));
     if (aLine <= mDocument->count()) {
         QString s = getDisplayStringAtLine(aLine);
-        int x = 0;
-        int len = s.length();
-        int i;
-        for (i=0;i<len;i++) {
-            if (s[i] == '\t')
-                x+=tabWidth() - (x % tabWidth());
-            else
-                x+=charColumns(s[i]);
-            if (x>=aColumn) {
-                break;
-            }
-        }
-        return i+1;
+        return mDocument->columnToChar(aLine,s,aColumn)+1;
+    }
+    return aColumn;
+}
+
+int QSynEdit::columnToChar(int aLine, const QString &s, int aColumn) const
+{
+    if (aLine <= mDocument->count()) {
+        return mDocument->columnToChar(aLine,s,aColumn)+1;
     }
     return aColumn;
 }
@@ -1307,11 +1305,6 @@ BufferCoord QSynEdit::getPreviousLeftBrace(int x, int y)
             PosX = Line.length();
         }
     }
-}
-
-int QSynEdit::charColumns(QChar ch) const
-{
-    return mDocument->charColumns(ch);
 }
 
 void QSynEdit::showCaret()
@@ -2486,7 +2479,7 @@ QRect QSynEdit::calculateCaretRect() const
         QString sLine = lineText().left(mCaretX-1)
                 + mInputPreeditString
                 + lineText().mid(mCaretX-1);
-        coord.Column = charToColumn(sLine,mCaretX+mInputPreeditString.length());
+        coord.Column = charToColumn(mCaretY-1, sLine,mCaretX+mInputPreeditString.length());
     }
     int rows=1;
     if (mActiveSelectionMode == SelectionMode::Column) {
@@ -2498,7 +2491,9 @@ QRect QSynEdit::calculateCaretRect() const
     QPoint caretPos = rowColumnToPixels(coord);
     int caretWidth=mCharWidth;
     if (mCaretY <= mDocument->count() && mCaretX <= mDocument->getLine(mCaretY-1).length()) {
-        caretWidth = charColumns(getDisplayStringAtLine(mCaretY)[mCaretX-1])*mCharWidth;
+        QString glyph = mDocument->glyphAt(mCaretY-1, mCaretX-1);
+        int colsBefore = mDocument->charToColumn(mCaretY-1, mCaretX-1)-1;
+        caretWidth = mDocument->glyphColumns(glyph,colsBefore)*mCharWidth;
     }
     if (mActiveSelectionMode == SelectionMode::Column) {
         return QRect(caretPos.x(),caretPos.y(),caretWidth,
@@ -2515,7 +2510,9 @@ QRect QSynEdit::calculateInputCaretRect() const
     QPoint caretPos = rowColumnToPixels(coord);
     int caretWidth=mCharWidth;
     if (mCaretY <= mDocument->count() && mCaretX <= mDocument->getLine(mCaretY-1).length()) {
-        caretWidth = charColumns(mDocument->getLine(mCaretY-1)[mCaretX-1])*mCharWidth;
+        QString glyph = mDocument->glyphAt(mCaretY-1, mCaretX-1);
+        int colsBefore = mDocument->charToColumn(mCaretY-1, mCaretX-1)-1;
+        caretWidth = mDocument->glyphColumns(glyph,colsBefore)*mCharWidth;
     }
     return QRect(caretPos.x(),caretPos.y(),caretWidth,
                  mTextHeight);
@@ -3595,49 +3592,51 @@ bool QSynEdit::foldCollapsedBetween(int startLine, int endLine) const
     return false;
 }
 
-QString QSynEdit::substringByColumns(const QString &s, int startColumn, int &colLen)
-{
+// QString QSynEdit::substringByColumns(const QString &s, int startColumn, int &colLen)
+// {
 
-    int len = s.length();
-    int columns = 0;
-    int i = 0;
-    int oldColumns=0;
-    while (columns < startColumn) {
-        oldColumns = columns;
-        if (i>=len)
-            break;
-        if (s[i] == '\t')
-            columns += tabWidth() - (columns % tabWidth());
-        else
-            columns += charColumns(s[i]);
-        i++;
-    }
-    QString result;
-    if (i>=len) {
-        colLen = 0;
-        return result;
-    }
-    if (colLen>result.capacity()) {
-        result.resize(colLen);
-    }
-    int j=0;
-    if (i>0) {
-        result[0]=s[i-1];
-        j++;
-    }
-    while (i<len && columns<startColumn+colLen) {
-        result[j]=s[i];
-        if (i < len && s[i] == '\t')
-            columns += tabWidth() - (columns % tabWidth());
-        else
-            columns += charColumns(s[i]);
-        i++;
-        j++;
-    }
-    result.resize(j);
-    colLen = columns-oldColumns;
-    return result;
-}
+//     int len = s.length();
+//     int columns = 0;
+//     int i = 0;
+//     int oldColumns=0;
+//     QList<int> glyphPositions = calcGlyphPositions(s);
+//     QList<int> glyphColumnList = mDocument;
+//     while (columns < startColumn) {
+//         oldColumns = columns;
+//         if (i>=len)
+//             break;
+//         if (s[i] == '\t')
+//             columns += tabWidth() - (columns % tabWidth());
+//         else
+//             columns += charColumns(s[i]);
+//         i++;
+//     }
+//     QString result;
+//     if (i>=len) {
+//         colLen = 0;
+//         return result;
+//     }
+//     if (colLen>result.capacity()) {
+//         result.resize(colLen);
+//     }
+//     int j=0;
+//     if (i>0) {
+//         result[0]=s[i-1];
+//         j++;
+//     }
+//     while (i<len && columns<startColumn+colLen) {
+//         result[j]=s[i];
+//         if (i < len && s[i] == '\t')
+//             columns += tabWidth() - (columns % tabWidth());
+//         else
+//             columns += charColumns(s[i]);
+//         i++;
+//         j++;
+//     }
+//     result.resize(j);
+//     colLen = columns-oldColumns;
+//     return result;
+// }
 
 PCodeFoldingRange QSynEdit::foldAroundLine(int line)
 {
