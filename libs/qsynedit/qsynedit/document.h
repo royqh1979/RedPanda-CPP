@@ -81,12 +81,48 @@ private:
     const QList<int>& glyphColumns() const {
         return mGlyphColumns;
     }
+
+    /**
+     * @brief get start index of the chars representing the specified glyph.
+     * @param i index of the glyph of the line (starting from 0)
+     * @return
+     */
+    int glyphStart(int i) const {
+        Q_ASSERT(i>=0 && i<mGlyphPositions.length());
+        return mGlyphPositions[i];
+    }
+
+    /**
+     * @brief get end index of the chars representing the specified glyph.
+     * @param i index of the glyph of the line (starting from 0)
+     * @return
+     */
+    int glyphEnd(int i) const;
+
     /**
      * @brief get the chars representing the specified glyph.
      * @param i index of the glyph of the line (starting from 0)
      * @return the chars representing the specified glyph
      */
-    QStringRef getGlyph(int i) const;
+    QString getGlyph(int i) const;
+
+    /**
+     * @brief get start column of the specified glyph.
+     * @param i index of the glyph of the line (starting from 0)
+     * @return
+     */
+    int getGlyphStartColumn(int i) const {
+        Q_ASSERT(mColumns>=0);
+        Q_ASSERT(i>=0 && i<mGlyphColumns.length());
+        return mGlyphColumns[i];
+    }
+
+    /**
+     * @brief get end column of the specified glyph.
+     * @param i index of the glyph of the line (starting from 0)
+     * @return
+     */
+    int getGlyphEndColumn(int i) const;
 
     /**
      * @brief get the line text
@@ -390,16 +426,27 @@ public:
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
+
+    /**
+     * @brief calculate display width (in columns) of a string
+     *
+     * The string may contains tab char, whose width depends on the tab size and it's position
+     *
+     * @param str the string to be displayed
+     * @param colsBefore columns before the string
+     * @return width of the string, don't including colsBefore
+     */
     int stringColumns(const QString &str, int colsBefore) const;
+    int glyphStart(int line, int glyphIdx);
+    int glyphEnd(int line, int glyphIdx);
+    int glyphStartColumn(int line, int glyphIdx);
+    int glyphEndColumn(int line, int glyphIdx);
+    int charToGlyphIndex(int line, int charPos);
 
     int charToColumn(int line, int charPos);
     int columnToChar(int line, int column);
     int charToColumn(int line, const QString newStr, int charPos);
     int columnToChar(int line, const QString newStr, int column);
-    int glyphStart(int line, int glyphIdx);
-    int glyphEnd(int line, int glyphIdx);
-    int glyphColumns(int line, int glyphIdx);
-    int charToGlyphIndex(int line, int charPos);
     int columnToGlyphIndex(int line, int column);
 
 

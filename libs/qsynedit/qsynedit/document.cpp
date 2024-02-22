@@ -833,7 +833,8 @@ QList<int> calcGlyphPositions(const QString &text)
         if (ch.isHighSurrogate() && i+1<text.length() && QChar::isLowSurrogate(text[i+1].unicode())) {
             //character that larger than 0xffff
             glyphPositions.append(i);
-            i++;
+            i+=2;
+            continue;
         } else if (ch.combiningClass()!=0 && !glyphPositions.isEmpty()) {
             //a Combining character
         } else {
@@ -849,11 +850,19 @@ int Document::stringColumns(const QString &str, int colsBefore) const
     QList<int> glyphPositions = calcGlyphPositions(str);
     int totalColumns;
     calcGlyphColumns(str,glyphPositions,colsBefore, totalColumns);
-    return totalColumns;
+    return totalColumns - colsBefore;
+}
+
+int Document::charToColumn(int line, int charPos)
+{
+    QMutexLocker locker(&mMutex);
+    QList<int> glyphPositions = mLines[line]->glyphPositions();
+
 }
 
 int Document::charToColumn(const QString &lineText, int charPos) const
 {
+    QMutexLocker locker(&mMutex);
     QList<int> glyphPositions = calcGlyphPositions(lineText);
     return charToColumn(lineText, glyphPositions, charPos);
 }
@@ -984,19 +993,33 @@ DocumentLine::DocumentLine():
 {
 }
 
-QStringRef DocumentLine::getGlyph(int i) const
+int DocumentLine::glyphEnd(int i) const
 {
-    Q_ASSERT(i>=0 && i<mGlyphPositions.length());
-    int start = mGlyphPositions[i];
-    int end;
-    if (i+1<mGlyphPositions.length()) {
-        end = mGlyphPositions[i+1];
-    } else {
-        end = mLineText.length();
-    }
-    return mLineText.midRef(start,end-start);
+   Q_ASSERT(i>=0 && i<mGlyphPositions.length());
+   if (i+1<mGlyphPositions.length()) {
+       end = mGlyphPositions[i+1];
+   } else {
+       end = mLineText.length();
+   }
 }
 
+QString DocumentLine::getGlyph(int i) const
+{
+    int start = glyphStart(i);
+    int end = glyphEnd(i);
+    return mLineText.mid(start,end-start);
+}
+
+int DocumentLine::getGlyphEndColumn(int i) const
+{
+    Q_ASSERT(mColumns>=0);
+    Q_ASSERT(i>=0 && i<mGlyphColumns.length());
+    if (i+1<mGlyphColumns.length()) {
+        end = mGlyphColumns[i+1];
+    } else {
+        end = mColumns;
+    }
+}
 
 void DocumentLine::setLineText(const QString &newLineText)
 {
