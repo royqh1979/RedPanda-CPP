@@ -435,6 +435,9 @@ public:
 
     QString glyph(int line, int glyphIdx);
     QString glyphAt(int line, int charPos);
+
+    int charToGlyphStartChar(int line, int charPos);
+    //int columnToGlyphStartColumn(int line, int charPos);
     /**
      * @brief calculate display width (in columns) of a string
      *

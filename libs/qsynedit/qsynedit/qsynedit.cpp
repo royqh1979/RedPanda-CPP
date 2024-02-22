@@ -726,11 +726,9 @@ DisplayCoord QSynEdit::pixelsToNearestRowColumn(int aX, int aY) const
 
 DisplayCoord QSynEdit::pixelsToRowColumn(int aX, int aY) const
 {
-    return {
-        std::max(1, (int)(mLeftChar + (aX - mGutterWidth - 2.0) / mCharWidth)),
-        std::max(1, mTopLine + (aY / mTextHeight))
-    };
-
+    int line = std::max(1, mTopLine + (aY / mTextHeight));
+    int col = std::max(1, (int)(mLeftChar + (aX - mGutterWidth - 2.0) / mCharWidth));
+    return DisplayCoord{col, line};
 }
 
 QPoint QSynEdit::rowColumnToPixels(const DisplayCoord &coord) const
@@ -864,7 +862,7 @@ int QSynEdit::columnToChar(int aLine, int aColumn) const
     //Q_ASSERT( (aLine <= mDocument->count()) && (aLine >= 1));
     if (aLine <= mDocument->count()) {
         QString s = getDisplayStringAtLine(aLine);
-        return mDocument->columnToChar(aLine,s,aColumn)+1;
+        return mDocument->columnToChar(aLine-1,s,aColumn)+1;
     }
     return aColumn;
 }
@@ -872,7 +870,7 @@ int QSynEdit::columnToChar(int aLine, int aColumn) const
 int QSynEdit::columnToChar(int aLine, const QString &s, int aColumn) const
 {
     if (aLine <= mDocument->count()) {
-        return mDocument->columnToChar(aLine,s,aColumn)+1;
+        return mDocument->columnToChar(aLine-1,s,aColumn)+1;
     }
     return aColumn;
 }

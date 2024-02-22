@@ -837,6 +837,22 @@ QString Document::glyphAt(int line, int charPos)
     return mLines[line]->glyph(glyphIdx);
 }
 
+int Document::charToGlyphStartChar(int line, int charPos)
+{
+    QMutexLocker locker(&mMutex);
+    QList<int> glyphPositions = mLines[line]->glyphPositions();
+    int glyphIdx = charToGlyphIndex(glyphPositions, charPos);
+    return mLines[line]->glyphStart(glyphIdx);
+}
+
+// int Document::columnToGlyphStartColumn(int line, int charPos)
+// {
+//     QMutexLocker locker(&mMutex);
+//     QList<int> glyphColumnsList = mLines[line]->glyphColumnsList();
+//     int glyphIdx = columnToGlyphIndex(glyphColumnsList, charPos);
+//     return mLines[line]->glyphStartColumn(glyphIdx);
+// }
+
 QList<int> calcGlyphPositions(const QString &text)
 {
     QList<int> glyphPositions;
@@ -847,10 +863,15 @@ QList<int> calcGlyphPositions(const QString &text)
         QChar ch = text[i];
         if (ch.isHighSurrogate() && i+1<text.length() && QChar::isLowSurrogate(text[i+1].unicode())) {
             //character that larger than 0xffff
-            int ucs4 = QChar::surrogateToUcs4(ch, text[i+1]);
-            if (QChar::combiningClass(ucs4)==0 || glyphPositions.isEmpty()) {
+            uint ucs4 = QChar::surrogateToUcs4(ch, text[i+1]);
+            if (QChar::combiningClass(ucs4)!=0 && !glyphPositions.isEmpty()) {
+                //a Combining character
+            } else if (ucs4>=0xE0100 && ucs4 <= 0xE01EF) {
+                //variation selector
+            } else {
                 if (!consecutive)
                     glyphPositions.append(i);
+                consecutive = false;
             }
             i+=2;
             continue;
@@ -858,13 +879,17 @@ QList<int> calcGlyphPositions(const QString &text)
             consecutive = true;
         } else if (ch.combiningClass()!=0 && !glyphPositions.isEmpty()) {
             //a Combining character
+        } else if (ch.unicode()>=0xFE00 && ch.unicode()<=0xFE0F) {
+            //variation selector
         } else {
+            //qDebug("%x %d", ch.unicode(), ch.combiningClass());
             if (!consecutive)
                 glyphPositions.append(i);
             consecutive = false;
         }
         i++;
     }
+    //qDebug()<<text<<glyphPositions;
     return glyphPositions;
 }
 
@@ -910,13 +935,17 @@ int Document::glyphColumns(const QString &glyph, int colsBefore) const
         } else {
             int width = mFontMetrics.horizontalAdvance(ch);
             glyphCols = std::max(1.0, std::ceil(width / (double)mCharWidth));
+            //qDebug()<<glyph<<glyphCols<<width<<mCharWidth;
         }
     } else {
         int width = mNonAsciiFontMetrics.horizontalAdvance(glyph);
         glyphCols = std::max(1.0, std::ceil(width / (double)mCharWidth));
+        int modular = width % mCharWidth;
+        if (modular >0 && (modular <= (mCharWidth/5)) )
+            glyphCols--;
+        //qDebug()<<glyph<<glyphCols<<width<<mCharWidth;
     }
     return glyphCols;
-
 }
 
 int Document::charToGlyphIndex(int line, int charIdx)

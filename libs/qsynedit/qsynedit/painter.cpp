@@ -399,12 +399,13 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
             int tokenColLen=0;
             startPaint = false;
             QList<int> glyphPositions = calcGlyphPositions(token);
+            qDebug()<<"painting:"<<token;
             for (int i=0; i< glyphPositions.length();i++) {
                 int glyphStart = glyphPositions[i];
                 int glyphEnd =(i+1<glyphPositions.length())?glyphPositions[i+1]:token.length();
                 QString glyph = token.mid(glyphStart,glyphEnd-glyphStart);
                 int charCols = edit->document()->glyphColumns(glyph, columnsBefore+tokenColLen);
-                //qDebug()<<glyph<<charCols;
+                qDebug()<<glyph<<charCols;
                 if (tokenColLen+charCols>=first) {
                     if (!startPaint && (tokenColLen+1!=first)) {
                         nX-= (first - tokenColLen - 1) * edit->mCharWidth;
