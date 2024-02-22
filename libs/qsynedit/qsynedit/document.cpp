@@ -842,17 +842,26 @@ QList<int> calcGlyphPositions(const QString &text)
     QList<int> glyphPositions;
     //parse mGlyphs
     int i=0;
+    bool consecutive = false;
     while (i<text.length()) {
         QChar ch = text[i];
         if (ch.isHighSurrogate() && i+1<text.length() && QChar::isLowSurrogate(text[i+1].unicode())) {
             //character that larger than 0xffff
-            glyphPositions.append(i);
+            int ucs4 = QChar::surrogateToUcs4(ch, text[i+1]);
+            if (QChar::combiningClass(ucs4)==0 || glyphPositions.isEmpty()) {
+                if (!consecutive)
+                    glyphPositions.append(i);
+            }
             i+=2;
             continue;
+        } else if (ch.unicode() == 0x200D) {
+            consecutive = true;
         } else if (ch.combiningClass()!=0 && !glyphPositions.isEmpty()) {
             //a Combining character
         } else {
-            glyphPositions.append(i);
+            if (!consecutive)
+                glyphPositions.append(i);
+            consecutive = false;
         }
         i++;
     }

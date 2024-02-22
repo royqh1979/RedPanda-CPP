@@ -401,9 +401,10 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
             QList<int> glyphPositions = calcGlyphPositions(token);
             for (int i=0; i< glyphPositions.length();i++) {
                 int glyphStart = glyphPositions[i];
-                int glyphLen =(i+1<glyphPositions.length())?glyphPositions[i+1]:token.length();
-                QString glyph = token.mid(glyphStart,glyphLen);
+                int glyphEnd =(i+1<glyphPositions.length())?glyphPositions[i+1]:token.length();
+                QString glyph = token.mid(glyphStart,glyphEnd-glyphStart);
                 int charCols = edit->document()->glyphColumns(glyph, columnsBefore+tokenColLen);
+                //qDebug()<<glyph<<charCols;
                 if (tokenColLen+charCols>=first) {
                     if (!startPaint && (tokenColLen+1!=first)) {
                         nX-= (first - tokenColLen - 1) * edit->mCharWidth;
@@ -414,15 +415,15 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
                     break;
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
                 if (startPaint) {
-                    bool  drawed = false;
+                    bool drawed = false;
                     if (painter->fontInfo().fixedPitch()
                              && edit->mOptions.testFlag(eoLigatureSupport)
                              && operatorGlyphs.contains(glyph)) {
                         QString textToPaint = glyph;
                         while(i+1<token.length()) {
                             int glyphStart = glyphPositions[i+1];
-                            int glyphLen =(i+2<glyphPositions.length())?glyphPositions[i+2]:token.length();
-                            QString glyph2 = token.mid(glyphStart,glyphLen);
+                            int glyphEnd =(i+2<glyphPositions.length())?glyphPositions[i+2]:token.length();
+                            QString glyph2 = token.mid(glyphStart,glyphEnd-glyphStart);
                             if (!operatorGlyphs.contains(glyph))
                                 break;
                             i+=1;
@@ -433,11 +434,11 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
                         drawed = true;
                     }
                     if (!drawed) {
-                        if (token[i].unicode()<=0xFF) {
-                            QChar ch;
+                        if (glyph.length()==1 && glyph.front().unicode()<=0xFF) {
+                            QString ch;
                             int padding=0;
                             if (showGlyphs) {
-                                switch(token[i].unicode()) {
+                                switch(glyph.front().unicode()) {
                                 case '\t':
                                     ch=TabGlyph;
                                     padding=(charCols-1)/2*edit->mCharWidth;
@@ -446,15 +447,15 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
                                     ch=SpaceGlyph;
                                     break;
                                 default:
-                                    ch=token[i];
+                                    ch=glyph;
                                 }
                             } else {
-                                ch=token[i];
+                                ch=glyph;
                             }
                             painter->drawText(nX+padding,rcToken.bottom()-painter->fontMetrics().descent() , ch);
                         } else {
                             painter->setFont(fontForNonAscii);
-                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , token[i]);
+                            painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , glyph);
                             painter->setFont(font);
                         }
                         drawed = true;

@@ -88,7 +88,9 @@ private:
      * @return char index in the line text (start from 0)
      */
     int glyphStart(int i) const {
-        Q_ASSERT(i>=0 && i<mGlyphPositions.length());
+        Q_ASSERT(i>=0);
+        if (i>=mGlyphPositions.length())
+            return mLineText.length();
         return mGlyphPositions[i];
     }
 
@@ -115,7 +117,9 @@ private:
      */
     int glyphStartColumn(int i) const {
         Q_ASSERT(mColumns>=0);
-        Q_ASSERT(i>=0 && i<mGlyphColumns.length());
+        Q_ASSERT(i>=0);
+        if (i>mGlyphColumns.length())
+            return mColumns+1;
         return mGlyphColumns[i];
     }
 
