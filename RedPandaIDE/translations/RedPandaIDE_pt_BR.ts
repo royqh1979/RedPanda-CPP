@@ -6477,6 +6477,13 @@
     </message>
 </context>
 <context>
+    <name>QFileSystemModel</name>
+    <message>
+        <source>&lt;b&gt;The name &quot;%1&quot; cannot be used.&lt;/b&gt;&lt;p&gt;Try using another name, with fewer characters or no punctuation marks.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
