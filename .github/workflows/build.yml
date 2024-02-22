@@ -172,21 +172,17 @@ jobs:
           name: Windows MSVC ARM64EC (do not use)
           path: pkg/
 
-  deb:
-    name: Deb
+  debian:
+    name: Debian
     strategy:
       matrix:
-        image:
-          - "debian:10"    # oldest LTS
-          - "ubuntu:23.10" # latest stable
-          - "debian:sid"   # rolling
+        arch: [amd64, i386]
+        version: ["10", "11", "12", sid]
         include:
-          - image: debian:10
-            displayImage: debian-10
-          - image: ubuntu:23.10
-            displayImage: ubuntu-23.10
-          - image: debian:sid
-            displayImage: debian-sid
+          - arch: amd64
+            platform: linux/amd64
+          - arch: i386
+            platform: linux/386
 
     runs-on: ubuntu-latest
 
@@ -195,16 +191,41 @@ jobs:
 
       - name: Fetch container image
         run: |
-          podman pull --platform linux/amd64 docker.io/amd64/${{ matrix.image }}
+          podman pull --platform ${{ matrix.platform }} docker.io/${{ matrix.arch }}/debian:${{ matrix.version }}
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 ${{ matrix.image }} /src/packages/debian/01-in-docker.sh
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 debian:${{ matrix.version }} /src/packages/debian/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Deb - image=${{ matrix.displayImage }}
+          name: Debian ${{ matrix.version }} ${{ matrix.arch }}
+          path: dist/*.deb
+
+  ubuntu:
+    name: Ubuntu
+    strategy:
+      matrix:
+        version: ["20.04", "22.04", "23.10", "devel"]
+    
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 docker.io/amd64/ubuntu:${{ matrix.version }}
+
+      - name: Build
+        run: |
+          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 ubuntu:${{ matrix.version }} /src/packages/debian/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Ubuntu ${{ matrix.version }} amd64
           path: dist/*.deb
 
   archlinux:

@@ -21,7 +21,7 @@ qsynedit.depends = redpanda_qt_utils
 
 APP_NAME = RedPandaCPP
 
-APP_VERSION = 2.26
+APP_VERSION = 2.27
 
 win32: {
 SUBDIRS += \

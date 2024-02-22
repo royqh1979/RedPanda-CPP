@@ -104,6 +104,10 @@
 #include <windows.h>
 #endif
 
+static const char *Translation[] =
+{
+  QT_TRANSLATE_NOOP("QFileSystemModel", "<b>The name \"%1\" cannot be used.</b><p>Try using another name, with fewer characters or no punctuation marks.")
+};
 
 static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
     for (int i=0;i<tabWidget->count();i++) {
@@ -4436,15 +4440,17 @@ void MainWindow::onShowInsertCodeSnippetMenu()
 void MainWindow::onFilesViewCreateFolderFolderLoaded(const QString& path)
 {
 
-    if (mFilesViewNewCreatedFolder.isEmpty())
+    if (mFilesViewNewCreatedFolder.isEmpty() && mFilesViewNewCreatedFile.isEmpty())
         return;
 
-    if (path!=extractFilePath(mFilesViewNewCreatedFolder))
+    if (path!=extractFilePath(mFilesViewNewCreatedFolder) && path!=extractFilePath(mFilesViewNewCreatedFile))
         return;
 
     disconnect(&mFileSystemModel,&QFileSystemModel::directoryLoaded,
             this,&MainWindow::onFilesViewCreateFolderFolderLoaded);
-    QModelIndex newIndex = mFileSystemModel.index(mFilesViewNewCreatedFolder);
+
+    QModelIndex newIndex = mFileSystemModel.index(mFilesViewNewCreatedFolder.isEmpty() ? mFilesViewNewCreatedFile : mFilesViewNewCreatedFolder);
+
     if (newIndex.isValid()) {
         ui->treeFiles->setCurrentIndex(newIndex);
         ui->treeFiles->edit(newIndex);
@@ -4502,7 +4508,6 @@ void MainWindow::onFilesViewCreateFile()
             dir = QDir(mFileSystemModel.fileInfo(index).absoluteFilePath());
         else
             dir = mFileSystemModel.fileInfo(index).absoluteDir();
-        ui->treeFiles->expand(index);
     } else {
         dir = mFileSystemModel.rootDirectory();
     }
@@ -4525,11 +4530,11 @@ void MainWindow::onFilesViewCreateFile()
     file.open(QFile::ReadWrite);
 #endif
     file.close();
-    // Refresh, otherwise it cannot be selected
-    mFileSystemModel.setRootPath(mFileSystemModel.rootPath());
     QModelIndex newIndex = mFileSystemModel.index(dir.filePath(fileName));
-    ui->treeFiles->setCurrentIndex(newIndex);
-    ui->treeFiles->edit(newIndex);
+    connect(&mFileSystemModel,&QFileSystemModel::directoryLoaded,
+            this,&MainWindow::onFilesViewCreateFolderFolderLoaded);
+    ui->treeFiles->expand(index);
+    mFilesViewNewCreatedFile=mFileSystemModel.filePath(newIndex);
 }
 
 

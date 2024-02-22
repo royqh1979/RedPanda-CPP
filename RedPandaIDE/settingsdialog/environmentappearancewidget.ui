@@ -95,7 +95,11 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QSpinBox" name="spinFontSize"/>
+       <widget class="QSpinBox" name="spinFontSize">
+        <property name="minimum">
+         <number>5</number>
+        </property>
+       </widget>
       </item>
       <item>
        <spacer name="horizontalSpacer_3">

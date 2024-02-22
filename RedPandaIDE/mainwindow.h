@@ -906,6 +906,7 @@ private:
 
     QString mClassBrowserCurrentStatement;
     QString mFilesViewNewCreatedFolder;
+    QString mFilesViewNewCreatedFile;
 
     bool mCheckSyntaxInBack;
     bool mShouldRemoveAllSettings;
