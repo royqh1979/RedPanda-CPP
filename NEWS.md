@@ -3,6 +3,7 @@ Red Panda C++ Version 2.27
   - enhancement: New chinese translation for invalid filename messagebox. (by XY0797@github.com)
   - enhancement: Limit the minimum font size in options dialog to 5. (by XY0797@github.com)
   - enhancement: After a new file is created in filesystem panel, auto select and rename it. (by XY0797@github.com)
+  - enhancement: Select file basename when rename in the filesystem panel. (by XY0797@github.com)
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
