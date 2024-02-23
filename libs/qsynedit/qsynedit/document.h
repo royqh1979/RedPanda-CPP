@@ -30,7 +30,7 @@
 
 namespace QSynedit {
 
-QList<int> calcGlyphPositions(const QString &text);
+QList<int> calcGlyphStartCharList(const QString &text);
 
 class Document;
 
@@ -63,23 +63,24 @@ private:
      * @return the glyphs count
      */
     int glyphsCount() const {
-        return mGlyphPositions.length();
+        return mGlyphStartCharList.length();
     }
 
     /**
      * @brief get list of start index of the glyphs in the line text
-     * @return start positions of the glyph.
+     * @return start indice of the glyph.
      */
-    const QList<int>& glyphPositions() const {
-        return mGlyphPositions;
+    const QList<int>& glyphStartCharList() const {
+        return mGlyphStartCharList;
     }
 
     /**
-     * @brief get list of start column of the glyphs in the line text
-     * @return start positions of the glyph.
+     * @brief get list of start position of the glyphs in the line text
+     * @return start positions of the glyph (in pixel)
      */
-    const QList<int>& glyphColumnsList() const {
-        return mGlyphColumns;
+    const QList<int>& glyphPositionList() const {
+        Q_ASSERT(mWidth>=0);
+        return mGlyphPositionList;
     }
 
     /**
@@ -87,11 +88,11 @@ private:
      * @param i index of the glyph in the line (starting from 0)
      * @return char index in the line text (start from 0)
      */
-    int glyphStart(int i) const {
+    int glyphStartChar(int i) const {
         Q_ASSERT(i>=0);
-        if (i>=mGlyphPositions.length())
+        if (i>=mGlyphStartCharList.length())
             return mLineText.length();
-        return mGlyphPositions[i];
+        return mGlyphStartCharList[i];
     }
 
     /**
@@ -107,28 +108,28 @@ private:
      * @return the chars representing the specified glyph
      */
     QString glyph(int i) const {
-        return mLineText.mid(glyphStart(i),glyphLength(i));
+        return mLineText.mid(glyphStartChar(i),glyphLength(i));
     }
 
     /**
-     * @brief get start column of the specified glyph.
+     * @brief get start position of the specified glyph.
      * @param i index of the glyph in the line (starting from 0)
-     * @return the column in the displayed line (start from 1)
+     * @return start position in the line (pixel)
      */
-    int glyphStartColumn(int i) const {
-        Q_ASSERT(mColumns>=0);
+    int glyphStartPosition(int i) const {
+        Q_ASSERT(mWidth>=0);
         Q_ASSERT(i>=0);
-        if (i>mGlyphColumns.length())
-            return mColumns+1;
-        return mGlyphColumns[i];
+        if (i>mGlyphPositionList.length())
+            return mWidth+1;
+        return mGlyphPositionList[i];
     }
 
     /**
-     * @brief get width （in columns) of the specified glyph.
+     * @brief get width （pixels) of the specified glyph.
      * @param i index of the glyph of the line (starting from 0)
      * @return
      */
-    int glyphColumns(int i) const;
+    int glyphWidth(int i) const;
 
     /**
      * @brief get the line text
@@ -137,10 +138,10 @@ private:
     const QString& lineText() const { return mLineText; }
 
     /**
-     * @brief get the width (in columns) of the line text
-     * @return the width (in columns)
+     * @brief get the width (pixel) of the line text
+     * @return the width (in width)
      */
-    int columns() const { return mColumns; }
+    int width() const { return mWidth; }
 
     /**
      * @brief get the state of the syntax highlighter after this line is parsed
@@ -154,27 +155,27 @@ private:
     void setSyntaxState(const SyntaxState &newSyntaxState) { mSyntaxState = newSyntaxState; }
 
     void setLineText(const QString &newLineText);
-    void setColumns(int cols, QList<int> glyphCols) { mColumns = cols; mGlyphColumns = glyphCols; }
-    void invalidateColumns() { mColumns = -1; mGlyphColumns.clear(); }
+    void setWidth(int width, QList<int> glyphPositionList) { mWidth = width; mGlyphPositionList = glyphPositionList; }
+    void invalidateWidth() { mWidth = -1; mGlyphPositionList.clear(); }
 private:
     QString mLineText; /* the unicode code points of the text */
     /**
      * @brief Start positions of glyphs in mLineText
      *
      * A glyph may be defined by more than one code points.
-     * Each lement of mGlyphPositions (position) is the start index
+     * Each lement of mGlyphStartCharList (position) is the start index
      *  of the code points in the mLineText.
      */
-    QList<int> mGlyphPositions;
+    QList<int> mGlyphStartCharList;
     /**
      * @brief start columns of the glyphs
      *
      * A glyph may occupy more than one columns in the screen.
-     * Each elements of mGlyphColumns is the columns occupied by the glyph.
+     * Each elements of mGlyphPositionList is the columns occupied by the glyph.
      * The width of a glyph is affected by the font used to display,
      * so it must be recalculated each time the font is changed.
      */
-    QList<int> mGlyphColumns;
+    QList<int> mGlyphPositionList;
     /**
      * @brief state of the syntax highlighter after this line is parsed
      *
@@ -183,12 +184,12 @@ private:
      */
     SyntaxState mSyntaxState;
     /**
-     * @brief total width (in columns) of the line text
+     * @brief total width (pixel) of the line text
      *
      * The width of glyphs is affected by the font used to display,
      * so it must be recalculated each time the font is changed.
      */
-    int mColumns;
+    int mWidth;
 
     friend class Document;
 };
@@ -251,17 +252,17 @@ public:
     int braceLevel(int line);
 
     /**
-     * @brief get width (in columns) of the specified line
+     * @brief get width of the specified line
      *
      * It's thread safe
      *
      * @param line line index (starts frome 0)
      * @return
      */
-    int lineColumns(int line);
+    int lineWidth(int line);
 
     /**
-     * @brief get width (in columns) of the specified text / line
+     * @brief get width of the specified text / line
      *
      * It's thread safe.
      * If the new text is the same as the line text, it just
@@ -273,7 +274,7 @@ public:
      * @param newText the new text
      * @return
      */
-    int lineColumns(int line, const QString &newText);
+    int lineWidth(int line, const QString &newText);
 
     /**
      * @brief get block (indent) level of the specified line
@@ -306,7 +307,7 @@ public:
      *
      * @return
      */
-    int longestLineColumns();
+    int longestLineWidth();
 
     /**
      * @brief get line break of the current document
@@ -355,16 +356,16 @@ public:
      */
     int getLineGlyphsCount(int line);
 
-    /**
-     * @brief get position list of the glyphs on the specified line.
-     *
-     * It's thread safe.
-     * Each element of the list is the index of the starting char in the line text.
-     *
-     * @param line line index (starts frome 0)
-     * @return
-     */
-    QList<int> getGlyphPositions(int index);
+    // /**
+    //  * @brief get position list of the glyphs on the specified line.
+    //  *
+    //  * It's thread safe.
+    //  * Each element of the list is the index of the starting char in the line text.
+    //  *
+    //  * @param line line index (starts frome 0)
+    //  * @return
+    //  */
+    // QList<int> getGlyphPositions(int index);
 
     /**
      * @brief get count of lines in the document
@@ -439,15 +440,15 @@ public:
     int charToGlyphStartChar(int line, int charPos);
     //int columnToGlyphStartColumn(int line, int charPos);
     /**
-     * @brief calculate display width (in columns) of a string
+     * @brief calculate display width of a string
      *
-     * The string may contains tab char, whose width depends on the tab size and it's position
+     * The string may contains the tab char, whose width depends on the tab size and it's position
      *
      * @param str the string to be displayed
-     * @param colsBefore columns before the string
+     * @param left start x pos of the string
      * @return width of the string, don't including colsBefore
      */
-    int stringColumns(const QString &str, int colsBefore) const;
+    int stringWidth(const QString &str, int left) const;
 
     /**
      * @brief get start index of the chars representing the specified glyph in the specified line.
@@ -458,7 +459,7 @@ public:
      * @param glyphIdx index of the glyph in the line (starting from 0)
      * @return char index in the line text (start from 0)
      */
-    int glyphStart(int line, int glyphIdx);
+    int glyphStartChar(int line, int glyphIdx);
 
     /**
      * @brief get count of the chars representing the specified glyph in the specified line.
@@ -480,7 +481,7 @@ public:
      * @param glyphIdx index of the glyph in the line (starting from 0)
      * @return the column (starting from 1)
      */
-    int glyphStartColumn(int line, int glyphIdx);
+    int glyphStartPostion(int line, int glyphIdx);
 
     /**
      * @brief get width (in columns) of the specified glyph in the specified line.
@@ -491,9 +492,9 @@ public:
      * @param glyphIdx index of the glyph in the line (starting from 0)
      * @return
      */
-    int glyphColumns(int line, int glyphIdx);
+    int glyphWidth(int line, int glyphIdx);
 
-    int glyphColumns(const QString &s, int colsBefore) const;
+    int glyphWidth(const QString &glyph, int left) const;
 
     /**
      * @brief get index of the glyph represented by the specified char
@@ -505,7 +506,7 @@ public:
      * @return glyph index in the line (starting from 0)
      */
     int charToGlyphIndex(int line, int charPos);
-    int charToGlyphIndex(QList<int> glyphPositions, int charPos) const;
+    int charToGlyphIndex(QList<int> glyphStartCharList, int charPos) const;
 
     /**
      * @brief get index of the glyph displayed on the specified column
@@ -516,13 +517,13 @@ public:
      * @param column the column (starting from 1)
      * @return glyph index in the line (starting from 0)
      */
-    int columnToGlyphIndex(int line, int column);
-    int columnToGlyphIndex(QList<int> glyphColumnsList, int column) const;
+    int xposToGlyphIndex(int line, int xpos);
+    int xposToGlyphIndex(QList<int> glyphColumnsList, int xpos) const;
 
-    int charToColumn(int line, int charPos);
-    int columnToChar(int line, int column);
-    int charToColumn(int line, const QString newStr, int charPos);
-    int columnToChar(int line, const QString newStr, int column);
+    int charToGlyphStartPosition(int line, int charPos);
+    int xposToGlyphStartChar(int line, int xpos);
+    int charToGlyphStartPosition(int line, const QString newStr, int charPos);
+    int xposToGlyphStartChar(int line, const QString newStr, int xpos);
 
     bool getAppendNewLineAtEOF();
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
@@ -532,16 +533,21 @@ public:
 
     bool empty();
 
-    int tabWidth() const {
-        return mTabWidth;
+    int tabSize() const {
+        return mTabSize;
     }
-    void setTabWidth(int newTabWidth);
+
+    int tabWidth() const {
+        return mTabSize * mCharWidth;
+    }
+
+    void setTabSize(int newTabSize);
 
     const QFontMetrics &fontMetrics() const;
     void setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont);
 
 public slots:
-    void invalidateAllLineColumns();
+    void invalidateAllLineWidth();
 
 signals:
     void changed();
@@ -558,8 +564,9 @@ protected:
     void putTextStr(const QString& text);
     void internalClear();
 private:
-    QList<int> calcGlyphColumns(const QString& lineText, const QList<int> &glyphPositions, int colsBefore, int &totalColumns) const;
-    QList<int> calcGlyphColumns(const QString& lineText) const;
+    int calculateLineWidth(int line);
+    QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList, int left, int &right) const;
+    QList<int> calcGlyphPositionList(const QString& lineText) const;
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
@@ -573,7 +580,7 @@ private:
 
     QFontMetrics mFontMetrics;
     QFontMetrics mNonAsciiFontMetrics;
-    int mTabWidth;
+    int mTabSize;
     int mCharWidth;
     //int mCount;
     //int mCapacity;
@@ -586,8 +593,6 @@ private:
 #else
     QMutex mMutex;
 #endif
-
-    int calculateLineColumns(int Index);
 };
 
 enum class ChangeReason {

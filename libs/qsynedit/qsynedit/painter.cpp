@@ -338,19 +338,19 @@ void QSynEditPainter::computeSelectionInfo()
                 QString sLine = edit->lineText().left(edit->mCaretX-1)
                         + edit->mInputPreeditString
                         + edit->lineText().mid(edit->mCaretX-1);
-                vSelStart.Column = edit->charToColumn(edit->mCaretY-1, sLine,vStart.ch);
+                vSelStart.x = edit->charToGlyphLeft(edit->mCaretY, sLine,vStart.ch);
             }
             if (edit->mInputPreeditString.length()
                     && vEnd.line == edit->mCaretY) {
                 QString sLine = edit->lineText().left(edit->mCaretX-1)
                         + edit->mInputPreeditString
                         + edit->lineText().mid(edit->mCaretX-1);
-                vSelEnd.Column = edit->charToColumn(edit->mCaretY-1, sLine,vEnd.ch);
+                vSelEnd.x = edit->charToGlyphLeft(edit->mCaretY, sLine,vEnd.ch);
             }
             // In the column selection mode sort the begin and end of the selection,
             // this makes the painting code simpler.
-            if (edit->mActiveSelectionMode == SelectionMode::Column && vSelStart.Column > vSelEnd.Column)
-                std::swap(vSelStart.Column, vSelEnd.Column);
+            if (edit->mActiveSelectionMode == SelectionMode::Column && vSelStart.x > vSelEnd.x)
+                std::swap(vSelStart.x, vSelEnd.x);
         }
     }
 }
@@ -396,17 +396,17 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
         painter->fillRect(rcTokenBack,painter->brush());
         if (first > tokenCols) {
         } else {
-            int tokenColLen=0;
+            int tokenWidth=0;
             startPaint = false;
-            QList<int> glyphPositions = calcGlyphPositions(token);
-            qDebug()<<"painting:"<<token;
-            for (int i=0; i< glyphPositions.length();i++) {
-                int glyphStart = glyphPositions[i];
-                int glyphEnd =(i+1<glyphPositions.length())?glyphPositions[i+1]:token.length();
+            QList<int> glyphStartCharList = calcGlyphStartCharList(token);
+//            qDebug()<<"painting:"<<token;
+            for (int i=0; i< glyphStartCharList.length();i++) {
+                int glyphStart = glyphStartCharList[i];
+                int glyphEnd =(i+1<glyphStartCharList.length())?glyphStartCharList[i+1]:token.length();
                 QString glyph = token.mid(glyphStart,glyphEnd-glyphStart);
-                int charCols = edit->document()->glyphColumns(glyph, columnsBefore+tokenColLen);
-                qDebug()<<glyph<<charCols;
-                if (tokenColLen+charCols>=first) {
+                int glyghWidth = edit->document()->glyphWidth(glyph, columnsBefore+tokenColLen);
+//                qDebug()<<glyph<<charCols;
+                if (tokenWidth+charCols>=first) {
                     if (!startPaint && (tokenColLen+1!=first)) {
                         nX-= (first - tokenColLen - 1) * edit->mCharWidth;
                     }
@@ -422,13 +422,13 @@ void QSynEditPainter::paintToken(const QString &token, int tokenCols, int column
                              && operatorGlyphs.contains(glyph)) {
                         QString textToPaint = glyph;
                         while(i+1<token.length()) {
-                            int glyphStart = glyphPositions[i+1];
-                            int glyphEnd =(i+2<glyphPositions.length())?glyphPositions[i+2]:token.length();
+                            int glyphStart = glyphStartCharList[i+1];
+                            int glyphEnd =(i+2<glyphStartCharList.length())?glyphStartCharList[i+2]:token.length();
                             QString glyph2 = token.mid(glyphStart,glyphEnd-glyphStart);
                             if (!operatorGlyphs.contains(glyph))
                                 break;
                             i+=1;
-                            charCols += edit->document()->glyphColumns(glyph2,0);
+                            charCols += edit->document()->glyphWidth(glyph2,0);
                             textToPaint+=glyph2;
                         }
                         painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent() , textToPaint);
@@ -739,8 +739,8 @@ void QSynEditPainter::paintFoldAttributes()
             lineIndent = edit->getLineIndent(edit->mDocument->getLine(lastNonBlank));
             int braceLevel = edit->mDocument->getSyntaxState(lastNonBlank).braceLevel;
             int indentLevel = braceLevel ;
-            if (edit->tabWidth()>0)
-                indentLevel = lineIndent / edit->tabWidth();
+            if (edit->tabSize()>0)
+                indentLevel = lineIndent / edit->tabSize();
             // Step horizontal coord
             //TabSteps = edit->mTabWidth;
             tabSteps = 0;
@@ -748,7 +748,7 @@ void QSynEditPainter::paintFoldAttributes()
 
             while (tabSteps < lineIndent) {
                 X = tabSteps * edit->mCharWidth + edit->textOffset() - 2;
-                tabSteps+=edit->tabWidth();
+                tabSteps+=edit->tabSize();
                 indentLevel++ ;
                 if (edit->mSyntaxer) {
                     if (edit->mCodeFolding.indentGuides) {
@@ -901,14 +901,14 @@ void QSynEditPainter::paintLines()
         nLineSelStart = 0;
         nLineSelEnd = 0;
         // Does the selection intersect the visible area?
-        if (bAnySelection && (cRow >= vSelStart.Row) && (cRow <= vSelEnd.Row)) {
+        if (bAnySelection && (cRow >= vSelStart.row) && (cRow <= vSelEnd.row)) {
             // Default to a fully selected line. This is correct for the smLine
             // selection mode and a good start for the smNormal mode.
             nLineSelStart = FirstCol;
             nLineSelEnd = LastCol + 1;
             if ((edit->mActiveSelectionMode == SelectionMode::Column) ||
-                ((edit->mActiveSelectionMode == SelectionMode::Normal) && (cRow == vSelStart.Row)) ) {
-                int ch = edit->columnToChar(vLine,vSelStart.Column);
+                    ((edit->mActiveSelectionMode == SelectionMode::Normal) && (cRow == vSelStart.row)) ) {
+                int ch = edit->columnToChar(vLine,vSelStart.x);
                 ch = edit->charToColumn(vLine,ch);
                 if (ch > LastCol) {
                     nLineSelStart = 0;
@@ -919,10 +919,10 @@ void QSynEditPainter::paintLines()
                 }
             }
             if ( (edit->mActiveSelectionMode == SelectionMode::Column) ||
-                ((edit->mActiveSelectionMode == SelectionMode::Normal) && (cRow == vSelEnd.Row)) ) {
-                int ch = edit->columnToChar(vLine,vSelEnd.Column);
+                 ((edit->mActiveSelectionMode == SelectionMode::Normal) && (cRow == vSelEnd.row)) ) {
+                int ch = edit->columnToChar(vLine,vSelEnd.x);
                 int col = edit->charToColumn(vLine,ch);
-                if (col<vSelEnd.Column)
+                if (col<vSelEnd.x)
                     col = edit->charToColumn(vLine,ch+1);
                 if (col < FirstCol) {
                     nLineSelStart = 0;
@@ -1094,7 +1094,7 @@ void QSynEditPainter::paintLines()
             foldRange = edit->foldStartAtLine(vLine);
             if ((foldRange) && foldRange->collapsed) {
                 sFold = edit->syntaxer()->foldString(sLine);
-                nFold = edit->stringColumns(sFold,edit->mDocument->lineColumns(vLine-1));
+                nFold = edit->stringColumns(sFold,edit->mDocument->lineWidth(vLine-1));
                 attr = edit->mSyntaxer->symbolAttribute();
                 getBraceColorAttr(edit->mSyntaxer->getState().braceLevel,attr);
                 addHighlightToken(sFold,edit->mDocument->lineColumns(vLine-1) - (vFirstChar - FirstCol)
@@ -1106,7 +1106,7 @@ void QSynEditPainter::paintLines()
                         && (!bSpecialLine)
                         && (edit->mDocument->lineColumns(vLine-1) < vLastChar)) {
                     addHighlightToken(LineBreakGlyph,
-                      edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
+                                      edit->mDocument->lineColumns(vLine-1)  - (vFirstChar - FirstCol),
                       edit->mDocument->glyphColumns(LineBreakGlyph,0),vLine, edit->mSyntaxer->whitespaceAttribute(),false);
                 }
             }

@@ -1567,7 +1567,7 @@ void Editor::copyAsHTML()
     if (!selAvail()) {
         doSelectLine();
     }
-    QSynedit::HTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
@@ -3310,7 +3310,7 @@ void Editor::print()
         return;
     }
 
-    QSynedit::QtSupportedHtmlExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::QtSupportedHtmlExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
@@ -3346,7 +3346,7 @@ void Editor::print()
 
 void Editor::exportAsRTF(const QString &rtfFilename)
 {
-    QSynedit::RTFExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::RTFExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(rtfFilename));
     exporter.setUseBackground(pSettings->editor().copyRTFUseBackground());
     exporter.setFont(font());
@@ -3370,7 +3370,7 @@ void Editor::exportAsRTF(const QString &rtfFilename)
 
 void Editor::exportAsHTML(const QString &htmlFilename)
 {
-    QSynedit::HTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(htmlFilename));
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     exporter.setFont(font());
@@ -5267,7 +5267,7 @@ void Editor::applySettings()
                     && syntaxer() && syntaxer()->supportBraceLevel());
     setOptions(options);
 
-    setTabWidth(pSettings->editor().tabWidth());
+    setTabSize(pSettings->editor().tabWidth());
     setInsertCaret(pSettings->editor().caretForInsert());
     setOverwriteCaret(pSettings->editor().caretForOverwrite());
     setCaretUseTextColor(pSettings->editor().caretUseTextColor());

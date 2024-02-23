@@ -175,12 +175,12 @@ public:
 
     int leftSpaces(const QString& line) const;
     QString GetLeftSpacing(int charCount,bool wantTabs) const;
-    int charToColumn(int aLine, int aChar) const;
-    int charToColumn(int aLine, const QString& s, int aChar) const;
+    int charToGlyphLeft(int line, int charPos) const;
+    int charToGlyphLeft(int line, const QString& s, int charPos) const;
     //int charToColumn(const QString& s, int aChar) const;
-    int columnToChar(int aLine, int aColumn) const;
-    int columnToChar(int aLine, const QString& s, int aColumn) const;
-    int stringColumns(const QString& line, int colsBefore) const;
+    int xposToGlyphStartChar(int line, int xpos) const;
+    int xposToGlyphStartChar(int line, const QString& s, int xpos) const;
+    int stringWidth(const QString& line, int left) const;
     int getLineIndent(const QString& line) const;
     int rowToLine(int aRow) const;
     int lineToRow(int aLine) const;
@@ -317,7 +317,7 @@ public:
     int linesInWindow() const;
 
     int leftChar() const;
-    void setLeftChar(int Value);
+    void setLeftChar(int value);
 
     BufferCoord blockBegin() const;
     BufferCoord blockEnd() const;
@@ -368,8 +368,9 @@ public:
     EditorOptions getOptions() const;
     void setOptions(const EditorOptions &Value);
 
-    int tabWidth() const {    return mDocument->tabWidth(); }
-    void setTabWidth(int tabWidth);
+    int tabSize() const { return mDocument->tabSize(); }
+    void setTabSize(int tabSize);
+    int tabWidth() const { return mDocument->tabWidth(); }
 
     QColor caretColor() const;
     void setCaretColor(const QColor &caretColor);
