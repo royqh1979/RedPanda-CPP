@@ -1186,7 +1186,7 @@ int DocumentLine::glyphWidth(int i) const
     } else {
         end = mWidth+1;
     }
-    return start - end;
+    return end-start;
 }
 
 void DocumentLine::setLineText(const QString &newLineText)

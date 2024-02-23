@@ -1434,18 +1434,17 @@ QMenuBar *MainWindow::menuBar() const
 void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
 {
     if (!clear && e!=nullptr) {
-        int col = e->charToColumn(e->caretY(),e->caretX());
         QString msg;
         if (e->selAvail()) {
-            msg = tr("Line: %1 Col: %2 Sel:%3 Lines: %4")
+            msg = tr("Line: %1 Char: %2 Sel:%3 Lines: %4")
                 .arg(e->caretY())
-                .arg(col)
+                .arg(e->caretX())
                 .arg(e->selText().length())
                 .arg(e->document()->count());
         } else {
-            msg = tr("Line: %1 Col: %2 Lines: %3")
+            msg = tr("Line: %1 Char: %2 Lines: %3")
                 .arg(e->caretY())
-                .arg(col)
+                .arg(e->caretX())
                 .arg(e->document()->count());
         }
         mFileInfoStatus->setText(msg);
@@ -3233,7 +3232,7 @@ bool MainWindow::saveLastOpens()
       fileObj["caretX"] = editor->caretX();
       fileObj["caretY"] = editor->caretY();
       fileObj["topLine"] = editor->topLine();
-      fileObj["leftChar"] = editor->leftChar();
+      fileObj["left"] = editor->leftPos();
       filesArray.append(fileObj);
     }
     rootObj["files"]=filesArray;
@@ -3337,8 +3336,8 @@ void MainWindow::loadLastOpens()
         editor->setTopLine(
                     fileObj["topLine"].toInt(1)
                     );
-        editor->setLeftChar(
-                    fileObj["leftChar"].toInt(1)
+        editor->setLeftPos(
+                    fileObj["left"].toInt(1)
                     );
         if (fileObj["focused"].toBool(false))
             focusedEditor = editor;

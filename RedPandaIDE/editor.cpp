@@ -3469,7 +3469,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                              pSettings->codeCompletion().height());
 
     // Position it at the top of the next line
-    QPoint popupPos = mapToGlobal(rowColumnToPixels(displayXY()));
+    QPoint popupPos = mapToGlobal(displayCoordToPixels(displayXY()));
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QSize  desktopSize = screen()->virtualSize();
     if (desktopSize.height() - popupPos.y() < mCompletionPopup->height() && popupPos.y() > mCompletionPopup->height())
@@ -3599,7 +3599,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
         return;
 
     // Position it at the top of the next line
-    QPoint p = rowColumnToPixels(displayXY());
+    QPoint p = displayCoordToPixels(displayXY());
     p.setY(p.y() + textHeight() + 2);
     mHeaderCompletionPopup->move(mapToGlobal(p));
 
@@ -4372,7 +4372,7 @@ void Editor::updateFunctionTip(bool showTip)
         return;
     }
     // Position it at the top of the next line
-    QPoint p = rowColumnToPixels(displayXY());
+    QPoint p = displayCoordToPixels(displayXY());
     p+=QPoint(0,textHeight()+2);
     pMainWindow->functionTip()->move(mapToGlobal(p));
 

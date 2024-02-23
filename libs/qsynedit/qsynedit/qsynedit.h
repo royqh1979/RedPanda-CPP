@@ -47,7 +47,7 @@ enum StatusChange {
     scAll = 0x0001,
     scCaretX = 0x0002,
     scCaretY = 0x0004,
-    scLeftChar = 0x0008,
+    scLeftPos = 0x0008,
     scTopLine = 0x0010,
     scInsertMode = 0x0020,
     scModifyChanged = 0x0040,
@@ -161,9 +161,14 @@ public:
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
     void invalidateGutterLines(int FirstLine, int LastLine);
-    DisplayCoord pixelsToNearestRowColumn(int aX, int aY) const;
-    DisplayCoord pixelsToRowColumn(int aX, int aY) const;
-    QPoint rowColumnToPixels(const DisplayCoord& coord) const;
+
+    int yposToRow(int y) const {
+        return std::max(1, mTopLine + (y / mTextHeight));
+    }
+
+    DisplayCoord pixelsToNearestGlyphPos(int aX, int aY) const;
+    DisplayCoord pixelsToGlyphPos(int aX, int aY) const;
+    QPoint displayCoordToPixels(const DisplayCoord& coord) const;
     DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
     BufferCoord displayToBufferPos(const DisplayCoord& p) const;
 
@@ -180,16 +185,18 @@ public:
     //int charToColumn(const QString& s, int aChar) const;
     int xposToGlyphStartChar(int line, int xpos) const;
     int xposToGlyphStartChar(int line, const QString& s, int xpos) const;
+    int xposToGlyphLeft(int line, int xpos) const;
+    //int xposToGlyphRight(int line, int xpos) const;
     int stringWidth(const QString& line, int left) const;
     int getLineIndent(const QString& line) const;
     int rowToLine(int aRow) const;
     int lineToRow(int aLine) const;
-    int foldRowToLine(int Row) const;
-    int foldLineToRow(int Line) const;
+    int foldRowToLine(int row) const;
+    int foldLineToRow(int line) const;
     void setDefaultKeystrokes();
     void setExtraKeystrokes();
-    void invalidateLine(int Line);
-    void invalidateLines(int FirstLine, int LastLine);
+    void invalidateLine(int line);
+    void invalidateLines(int firstLine, int lastLine);
     void invalidateSelection();
     void invalidateRect(const QRect& rect);
     void invalidate();
@@ -316,8 +323,8 @@ public:
 
     int linesInWindow() const;
 
-    int leftChar() const;
-    void setLeftChar(int value);
+    int leftPos() const;
+    void setLeftPos(int value);
 
     BufferCoord blockBegin() const;
     BufferCoord blockEnd() const;
@@ -331,9 +338,13 @@ public:
     SelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SelectionMode &Value);
 
-    int charsInWindow() const;
+    int charWidth() const {
+        return mCharWidth;
+    }
 
-    int charWidth() const;
+    int viewWidth() const{
+        return clientWidth() - mGutterWidth - 2;
+    }
 
     void setUndoLimit(int size);
     void setUndoMemoryUsage(int size);
@@ -354,6 +365,9 @@ public:
 
     QString displayLineText();
     QString lineText() const;
+    QString lineText(int line) const {
+        return mDocument->getLine(line-1);
+    }
     void setLineText(const QString s);
 
     const PDocument& document() const;
@@ -486,11 +500,11 @@ private:
 
     void incPaintLock();
     void decPaintLock();
-    int clientWidth();
-    int clientHeight();
-    int clientTop();
-    int clientLeft();
-    QRect clientRect();
+    int clientWidth() const;
+    int clientHeight() const;
+    int clientTop() const;
+    int clientLeft() const;
+    QRect clientRect() const;
     void synFontChanged();
 
     void doSetSelText(const QString& value);
@@ -656,7 +670,6 @@ private:
     int mCaretX;
     int mLastCaretColumn;
     int mCaretY;
-    int mCharsInWindow;
     int mCharWidth;
     QFont mFontDummy;
     QFont mFontForNonAscii;
@@ -667,7 +680,7 @@ private:
     bool mPainting;
     PDocument mDocument;
     int mLinesInWindow;
-    int mLeftChar;
+    int mLeftPos;
     int mPaintLock; // lock counter for internal calculations
     bool mReadOnly;
     int mRightEdge;
