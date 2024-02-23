@@ -124,9 +124,9 @@ enum class TransientType {
 using SynPaintTransientProc = std::function<void(const QPaintDevice& paintDevice,
         SynTransientType transientType)>;
         */
-using ProcessCommandProc = std::function<void(EditCommand& command, QChar& AChar, void* data)>;
-using MouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
-using PaintProc = std::function<void(const QPaintDevice& paintDevice )>;
+// using ProcessCommandProc = std::function<void(EditCommand& command, QChar& AChar, void* data)>;
+// using MouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
+// using PaintProc = std::function<void(const QPaintDevice& paintDevice )>;
 using SearchMathedProc = std::function<SearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
 using SearchConfirmAroundProc = std::function<bool ()>;
@@ -737,12 +737,12 @@ private:
     int mPainterLock; // lock counter to prevent repaint while painting
     bool mUndoing;
     // event handlers
-    ProcessCommandProc mOnCommandProcessed;
-    MouseCursorProc mOnMouseCursor;
-    PaintProc mOnPaint;
+    // ProcessCommandProc mOnCommandProcessed;
+    // MouseCursorProc mOnMouseCursor;
+    // PaintProc mOnPaint;
 //    SynPreparePaintHighlightTokenProc mOnPaintHighlightToken;
-    ProcessCommandProc mOnProcessingCommand;
-    ProcessCommandProc mOnProcessingUserCommand;
+    // ProcessCommandProc mOnProcessingCommand;
+    // ProcessCommandProc mOnProcessingUserCommand;
 
 //    SynSpecialLineColorsProc mOnSpecialLineColors;
 //    SynEditingAreasProc mOnEditingAreas;

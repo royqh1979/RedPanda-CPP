@@ -361,8 +361,9 @@ void QSynEditPainter::paintToken(
     bool startPaint;
     int nX;
 
+//    qDebug()<<"Paint token"<<token<<tokenWidth<<tokenLeft<<first<<last<<rcToken;
+
     if (last >= first && rcToken.right() > rcToken.left()) {
-//        qDebug()<<"Paint Token"<<Token<<ColumnsBefore<<TokenCols<<First<<Last;
         nX = fixXValue(first);
         first -= tokenLeft;
         last -= tokenLeft;
@@ -429,6 +430,7 @@ void QSynEditPainter::paintToken(
                                 ch=glyph;
                             }
                             mPainter->drawText(nX+padding,rcToken.bottom()-mPainter->fontMetrics().descent() , ch);
+                            //qDebug()<<"Drawing"<<glyph<<nX<<glyphWidth;
                         } else {
                             mPainter->setFont(fontForNonAscii);
                             mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , glyph);
@@ -443,7 +445,7 @@ void QSynEditPainter::paintToken(
             }
         }
 
-        rcToken.setLeft(rcToken.right());
+        rcToken.setLeft(rcToken.right()+1);
     }
 }
 
@@ -1038,23 +1040,6 @@ void QSynEditPainter::paintLines()
                 // Let the highlighter scan the next token.
                 mEdit->mSyntaxer->next();
             }
-//            // Don't assume HL.GetTokenPos is valid after HL.GetEOL == True.
-//            //nTokenColumnsBefore += edit->stringColumns(sToken,nTokenColumnsBefore);
-//            if (edit->mSyntaxer->eol() && (nTokenColumnsBefore < vLastChar)) {
-//                int lineColumns = edit->mDocument->lineColumns(vLine-1);
-//                // Draw text that couldn't be parsed by the highlighter, if any.
-//                if (nTokenColumnsBefore < lineColumns) {
-//                    if (nTokenColumnsBefore + 1 < vFirstChar)
-//                        nTokenColumnsBefore = vFirstChar - 1;
-//                    nTokenColumnLen = std::min(lineColumns, vLastChar) - (nTokenColumnsBefore + 1);
-//                    if (nTokenColumnLen > 0) {
-//                        sToken = edit->substringByColumns(sLine,nTokenColumnsBefore+1,nTokenColumnLen);
-//                        addHighlightToken(sToken, nTokenColumnsBefore - (vFirstChar - FirstCol),
-//                            nTokenColumnLen, vLine, PTokenAttribute(),false);
-//                    }
-//                }
-//            }
-
             // Paint folding
             foldRange = mEdit->foldStartAtLine(vLine);
             if ((foldRange) && foldRange->collapsed) {

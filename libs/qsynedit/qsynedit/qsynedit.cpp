@@ -722,10 +722,14 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int aX, int aY) const
     int xpos = std::max(0, leftPos() + aX - mGutterWidth - 2);
     int row = yposToRow(aY);
     int line = rowToLine(row);
-    if (line<1 || line > mDocument->count() )
-        return DisplayCoord{-1,-1};
-    if (xpos<0 || xpos>mDocument->lineWidth(line-1))
-        return DisplayCoord{-1,-1};
+    if (line<1)
+        line = 1;
+    if (line>mDocument->count())
+        line = mDocument->count();
+    if (xpos<0)
+        xpos=0;
+    if (xpos>mDocument->lineWidth(line-1))
+        xpos=mDocument->lineWidth(line-1)+1;
     int glyphIndex = mDocument->xposToGlyphIndex(line-1, xpos);
     xpos = mDocument->glyphStartPostion(line-1, glyphIndex);
     return DisplayCoord{xpos, row};

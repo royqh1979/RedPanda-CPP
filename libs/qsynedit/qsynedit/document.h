@@ -34,6 +34,7 @@ QList<int> calcGlyphStartCharList(const QString &text);
 
 class Document;
 
+using SearchConfirmAroundProc = std::function<bool ()>;
 /**
  * @brief The DocumentLine class
  *
@@ -50,7 +51,9 @@ class Document;
  */
 class DocumentLine {
 public:
-    explicit DocumentLine();
+    using UpdateWidthFunc = std::function<QList<int>(const QString&, const QList<int> &, int &)>;
+
+    explicit DocumentLine(UpdateWidthFunc updateWidthFunc);
     DocumentLine(const DocumentLine&)=delete;
     DocumentLine& operator=(const DocumentLine&)=delete;
 
@@ -78,22 +81,14 @@ private:
      * @brief get list of start position of the glyphs in the line text
      * @return start positions of the glyph (in pixel)
      */
-    const QList<int>& glyphPositionList() const {
-        Q_ASSERT(mWidth>=0);
-        return mGlyphPositionList;
-    }
+    const QList<int>& glyphPositionList();
 
     /**
      * @brief get start index of the chars representing the specified glyph.
      * @param i index of the glyph in the line (starting from 0)
      * @return char index in the line text (start from 0)
      */
-    int glyphStartChar(int i) const {
-        Q_ASSERT(i>=0);
-        if (i>=mGlyphStartCharList.length())
-            return mLineText.length();
-        return mGlyphStartCharList[i];
-    }
+    int glyphStartChar(int i) const;
 
     /**
      * @brief get count of the chars representing the specified glyph.
@@ -107,29 +102,21 @@ private:
      * @param i index of the glyph in the line (starting from 0)
      * @return the chars representing the specified glyph
      */
-    QString glyph(int i) const {
-        return mLineText.mid(glyphStartChar(i),glyphLength(i));
-    }
+    QString glyph(int i) const;
 
     /**
      * @brief get start position of the specified glyph.
      * @param i index of the glyph in the line (starting from 0)
      * @return start position in the line (pixel)
      */
-    int glyphStartPosition(int i) const {
-        Q_ASSERT(mWidth>=0);
-        Q_ASSERT(i>=0);
-        if (i>mGlyphPositionList.length())
-            return mWidth+1;
-        return mGlyphPositionList[i];
-    }
+    int glyphStartPosition(int i);
 
     /**
      * @brief get width （pixels) of the specified glyph.
      * @param i index of the glyph of the line (starting from 0)
      * @return
      */
-    int glyphWidth(int i) const;
+    int glyphWidth(int i);
 
     /**
      * @brief get the line text
@@ -141,7 +128,7 @@ private:
      * @brief get the width (pixel) of the line text
      * @return the width (in width)
      */
-    int width() const { return mWidth; }
+    int width();
 
     /**
      * @brief get the state of the syntax highlighter after this line is parsed
@@ -155,7 +142,7 @@ private:
     void setSyntaxState(const SyntaxState &newSyntaxState) { mSyntaxState = newSyntaxState; }
 
     void setLineText(const QString &newLineText);
-    void setWidth(int width, QList<int> glyphPositionList) { mWidth = width; mGlyphPositionList = glyphPositionList; }
+    void updateWidth();
     void invalidateWidth() { mWidth = -1; mGlyphPositionList.clear(); }
 private:
     QString mLineText; /* the unicode code points of the text */
@@ -190,6 +177,8 @@ private:
      * so it must be recalculated each time the font is changed.
      */
     int mWidth;
+
+    UpdateWidthFunc mUpdateWidthFunc;
 
     friend class Document;
 };
@@ -506,7 +495,6 @@ public:
      * @return glyph index in the line (starting from 0)
      */
     int charToGlyphIndex(int line, int charPos);
-    int charToGlyphIndex(QList<int> glyphStartCharList, int charPos) const;
 
     /**
      * @brief get index of the glyph displayed on the specified column
@@ -518,7 +506,6 @@ public:
      * @return glyph index in the line (starting from 0)
      */
     int xposToGlyphIndex(int line, int xpos);
-    int xposToGlyphIndex(QList<int> glyphColumnsList, int xpos) const;
 
     int charToGlyphStartPosition(int line, int charPos);
     int xposToGlyphStartChar(int line, int xpos);
@@ -564,9 +551,11 @@ protected:
     void putTextStr(const QString& text);
     void internalClear();
 private:
-    int calculateLineWidth(int line);
+    int xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const;
+    int charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charPos) const;
+    QList<int> calcLineWidth(const QString& lineText, const QList<int> &glyphStartCharList, int &width);
     QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList, int left, int &right) const;
-    QList<int> calcGlyphPositionList(const QString& lineText) const;
+    QList<int> calcGlyphPositionList(const QString& lineText, int &width) const;
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
@@ -575,6 +564,8 @@ private:
 
 private:
     DocumentLines mLines;
+
+    DocumentLine::UpdateWidthFunc mUpdateDocumentLineWidthFunc;
 
     //SynEdit* mEdit;
 
