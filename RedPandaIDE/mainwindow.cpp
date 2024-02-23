@@ -24,6 +24,7 @@
 #include "debugger.h"
 #include "widgets/cpudialog.h"
 #include "widgets/filepropertiesdialog.h"
+#include "widgets/filenameeditdelegate.h"
 #include "project.h"
 #include "projecttemplate.h"
 #include "widgets/newprojectdialog.h"
@@ -400,6 +401,8 @@ MainWindow::MainWindow(QWidget *parent)
     for (int i=1;i<mFileSystemModel.columnCount();i++) {
         ui->treeFiles->hideColumn(i);
     }
+    FilenameEditDelegate *filenameEditDelegate = new FilenameEditDelegate(ui->treeFiles);
+    ui->treeFiles->setItemDelegate(filenameEditDelegate);
     connect(ui->cbFilesPath->lineEdit(),&QLineEdit::returnPressed,
             this,&MainWindow::onFilesViewPathChanged);
     connect(ui->cbFilesPath, QOverload<int>::of(&QComboBox::currentIndexChanged),

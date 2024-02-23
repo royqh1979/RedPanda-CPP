@@ -91,6 +91,7 @@ target("RedPandaIDE")
         "widgets/customfilesystemmodel",
         "widgets/darkfusionstyle",
         "widgets/editorstabwidget",
+        "widgets/filenameeditdelegate",
         "widgets/functiontooltipwidget",
         "widgets/headercompletionpopup",
         "widgets/issuestable",
