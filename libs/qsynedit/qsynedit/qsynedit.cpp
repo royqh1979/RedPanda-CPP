@@ -673,12 +673,12 @@ void QSynEdit::invalidateGutterLine(int aLine)
     invalidateGutterLines(aLine, aLine);
 }
 
-void QSynEdit::invalidateGutterLines(int FirstLine, int LastLine)
+void QSynEdit::invalidateGutterLines(int firstLine, int lastLine)
 {
     QRect rcInval;
     if (!isVisible())
         return;
-    if (FirstLine == -1 && LastLine == -1) {
+    if (firstLine == -1 && lastLine == -1) {
         rcInval = QRect(0, 0, mGutterWidth, clientHeight());
         if (mStateFlags.testFlag(StateFlag::sfLinesChanging))
             mInvalidateRect = mInvalidateRect.united(rcInval);
@@ -686,21 +686,21 @@ void QSynEdit::invalidateGutterLines(int FirstLine, int LastLine)
             invalidateRect(rcInval);
     } else {
         // find the visible lines first
-        if (LastLine < FirstLine)
-            std::swap(LastLine, FirstLine);
+        if (lastLine < firstLine)
+            std::swap(lastLine, firstLine);
         if (mUseCodeFolding) {
-            FirstLine = lineToRow(FirstLine);
-            if (LastLine <= mDocument->count())
-              LastLine = lineToRow(LastLine);
+            firstLine = lineToRow(firstLine);
+            if (lastLine <= mDocument->count())
+              lastLine = lineToRow(lastLine);
             else
-              LastLine = INT_MAX;
+              lastLine = INT_MAX;
         }
-        FirstLine = std::max(FirstLine, mTopLine);
-        LastLine = std::min(LastLine, mTopLine + mLinesInWindow);
+        firstLine = std::max(firstLine, mTopLine);
+        lastLine = std::min(lastLine, mTopLine + mLinesInWindow);
         // any line visible?
-        if (LastLine >= FirstLine) {
-            rcInval = {0, mTextHeight * (FirstLine - mTopLine),
-                       mGutterWidth, mTextHeight * (LastLine - mTopLine + 1)};
+        if (lastLine >= firstLine) {
+            rcInval = {0, mTextHeight * (firstLine - mTopLine),
+                       mGutterWidth, mTextHeight * (lastLine - firstLine + 1)};
             if (mStateFlags.testFlag(StateFlag::sfLinesChanging)) {
                 mInvalidateRect =  mInvalidateRect.united(rcInval);
             } else {
@@ -1015,6 +1015,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
 
     if (!isVisible())
         return;
+    //qDebug()<<"invalidate lines:"<<firstLine<<lastLine;
     if (firstLine == -1 && lastLine == -1) {
         QRect rcInval = clientRect();
         rcInval.setLeft(rcInval.left()+mGutterWidth);
@@ -1051,7 +1052,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
             QRect rcInval = {
                 clientLeft()+mGutterWidth,
                 mTextHeight * (firstLine - mTopLine),
-                clientWidth(), mTextHeight * (lastLine - mTopLine + 1)
+                clientWidth(), mTextHeight * (lastLine - firstLine + 1)
             };
             if (mStateFlags.testFlag(StateFlag::sfLinesChanging))
                 mInvalidateRect = mInvalidateRect.united(rcInval);
@@ -1072,6 +1073,8 @@ void QSynEdit::invalidateRect(const QRect &rect)
 {
     if (mPainterLock>0)
         return;
+    // if (rect.height()>mTextHeight)
+    //     qDebug()<<"invalidate rect"<<rect;
     viewport()->update(rect);
 }
 
@@ -1079,6 +1082,7 @@ void QSynEdit::invalidate()
 {
     if (mPainterLock>0)
         return;
+    // qDebug()<<"invalidate";
     viewport()->update();
 }
 
@@ -2518,7 +2522,7 @@ QRect QSynEdit::calculateCaretRect() const
         QString sLine = lineText().left(mCaretX-1)
                 + mInputPreeditString
                 + lineText().mid(mCaretX-1);
-        coord.x = charToGlyphLeft(mCaretY, sLine,mCaretX+mInputPreeditString.length());
+        coord.x = charToGlyphLeft(mCaretY, sLine, mCaretX+mInputPreeditString.length());
     }
     int rows=1;
     if (mActiveSelectionMode == SelectionMode::Column) {
@@ -4813,15 +4817,12 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
             int row = lineToRow(ptDst.line);
             row++;
             int line = rowToLine(row);
-    //        qDebug()<<line<<ptDst.Line;
             if (line!=ptDst.line && line<=mDocument->count()) {
                 ptDst.line = line;
                 ptDst.ch = 1;
             }
         } else {
-            // qDebug()<<"Move caret horizontal"<<ptDst.line<<ptDst.ch<<glyphIndex<<deltaX;
             ptDst.ch = std::max(1, mDocument->glyphStartChar(ptDst.line-1, glyphIndex + deltaX)+1);
-            qDebug()<<ptDst.ch;
             // don't go past last char when ScrollPastEol option not set
             if ((deltaX > 0) && bChangeY)
               ptDst.ch = std::min(ptDst.ch, nLineLen + 1);
@@ -6062,7 +6063,7 @@ void QSynEdit::paintEvent(QPaintEvent *event)
     if (rcCaret == rcClip) {
         // only update caret
         // calculate the needed invalid area for caret
-        //qDebug()<<"update caret"<<rcCaret;
+        // qDebug()<<"update caret"<<rcCaret;
         QRectF cacheRC;
         qreal dpr = mContentImage->devicePixelRatioF();
         cacheRC.setLeft(rcClip.left()*dpr);
@@ -6071,6 +6072,7 @@ void QSynEdit::paintEvent(QPaintEvent *event)
         cacheRC.setHeight(rcClip.height()*dpr);
         painter.drawImage(rcCaret,*mContentImage,cacheRC);
     } else {
+        //qDebug()<<"paint event:"<<rcClip;
         QRect rcDraw;
         int nL1, nL2, nX1, nX2;
         // Compute the invalid area in lines / columns.

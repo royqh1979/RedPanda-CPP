@@ -526,7 +526,7 @@ public:
     }
 
     int tabWidth() const {
-        return mTabSize * mCharWidth;
+        return mTabSize * mSpaceWidth;
     }
 
     void setTabSize(int newTabSize);
@@ -574,6 +574,7 @@ private:
     QFontMetrics mNonAsciiFontMetrics;
     int mTabSize;
     int mCharWidth;
+    int mSpaceWidth;
     //int mCount;
     //int mCapacity;
     NewlineType mNewlineType;

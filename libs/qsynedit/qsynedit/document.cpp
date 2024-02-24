@@ -46,6 +46,7 @@ Document::Document(const QFont& font, const QFont& nonAsciiFont, QObject *parent
     mIndexOfLongestLine = -1;
     mUpdateCount = 0;
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
+    mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
     mUpdateDocumentLineWidthFunc = std::bind(&Document::calcLineWidth,
         this,
         std::placeholders::_1,
@@ -594,6 +595,7 @@ void Document::setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont
 {
     mFontMetrics = QFontMetrics(newFont);
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
+    mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
     mNonAsciiFontMetrics = QFontMetrics(newNonAsciiFont);
     invalidateAllLineWidth();
 }
@@ -1020,7 +1022,10 @@ int Document::charToGlyphStartPosition(int line, const QString newStr, int charP
     else
         glyphStartCharList = calcGlyphStartCharList(newStr);
     int glyphIdx = charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charPos);
-    return mLines[line]->glyphStartPosition(glyphIdx);
+    if (glyphIdx<glyphStartCharList.length())
+        return glyphStartCharList[glyphIdx];
+    else
+        return newStr.length();
 }
 
 int Document::xposToGlyphStartChar(int line, const QString newStr, int xpos)

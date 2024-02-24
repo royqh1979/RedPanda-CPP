@@ -51,7 +51,8 @@ QSynEditPainter::QSynEditPainter(QSynEdit *edit, QPainter *painter, int firstRow
     mFirstRow{firstRow},
     mLastRow{lastRow},
     mLeft{left},
-    mRight{right}
+    mRight{right},
+    mLastGlyphAscii{false}
 {
 }
 
@@ -131,7 +132,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
         if (mEdit->mGutter.useFontStyle()) {
             mPainter->setFont(mEdit->mGutter.font());
         } else {
-            QFont newFont = mPainter->font();
+            QFont newFont = mEdit->font();
             newFont.setBold(false);
             newFont.setItalic(false);
             newFont.setStrikeOut(false);
@@ -368,7 +369,6 @@ void QSynEditPainter::paintToken(
         first -= tokenLeft;
         last -= tokenLeft;
         QRect rcTokenBack = rcToken;
-        rcTokenBack.setWidth(rcTokenBack.width()-1);
         mPainter->fillRect(rcTokenBack,mPainter->brush());
         if (first > tokenWidth) {
         } else {
@@ -407,7 +407,10 @@ void QSynEditPainter::paintToken(
                             glyphWidth += mEdit->document()->glyphWidth(glyph2,0);
                             textToPaint+=glyph2;
                         }
+                        if (!mLastGlyphAscii)
+                            mPainter->setFont(font);
                         mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
+                        mLastGlyphAscii = true;
                         drawed = true;
                     }
                     if (!drawed) {
@@ -429,12 +432,18 @@ void QSynEditPainter::paintToken(
                             } else {
                                 ch=glyph;
                             }
-                            mPainter->drawText(nX+padding,rcToken.bottom()-mPainter->fontMetrics().descent() , ch);
+                            if (ch!=" " && ch!="\t") {
+                                if (!mLastGlyphAscii)
+                                    mPainter->setFont(font);
+                                mPainter->drawText(nX+padding,rcToken.bottom()-mPainter->fontMetrics().descent() , ch);
+                                mLastGlyphAscii = true;
+                            }
                             //qDebug()<<"Drawing"<<glyph<<nX<<glyphWidth;
                         } else {
-                            mPainter->setFont(fontForNonAscii);
+                            if (mLastGlyphAscii)
+                                mPainter->setFont(fontForNonAscii);
                             mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , glyph);
-                            mPainter->setFont(font);
+                            mLastGlyphAscii = false;
                         }
                         drawed = true;
                     }
@@ -541,6 +550,7 @@ void QSynEditPainter::paintHighlightToken(bool bFillToEOL)
         font.setStrikeOut(mTokenAccu.style & FontStyle::fsStrikeOut);
         font.setUnderline(mTokenAccu.style & FontStyle::fsUnderline);
         mPainter->setFont(font);
+        mLastGlyphAscii=true;
         QFont nonAsciiFont = mEdit->fontForNonAscii();
         nonAsciiFont.setBold(mTokenAccu.style & FontStyle::fsBold);
         nonAsciiFont.setItalic(mTokenAccu.style & FontStyle::fsItalic);
@@ -824,6 +834,8 @@ void QSynEditPainter::paintLines()
     PTokenAttribute preeditAttr;
     int nFold;
     QString sFold;
+
+    mLastGlyphAscii = false;
 
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
     // inside the loop. Get only the starting point for this.
