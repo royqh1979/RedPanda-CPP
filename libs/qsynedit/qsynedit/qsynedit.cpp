@@ -726,12 +726,18 @@ DisplayCoord QSynEdit::pixelsToNearestGlyphPos(int aX, int aY) const
         line = 1;
     if (line>mDocument->count())
         line = mDocument->count();
-    if (xpos<0)
+    if (xpos<0) {
         xpos=0;
-    if (xpos>mDocument->lineWidth(line-1))
+    } else if (xpos>mDocument->lineWidth(line-1)) {
         xpos=mDocument->lineWidth(line-1)+1;
-    int glyphIndex = mDocument->xposToGlyphIndex(line-1, xpos);
-    xpos = mDocument->glyphStartPostion(line-1, glyphIndex);
+    } else {
+        int glyphIndex = mDocument->xposToGlyphIndex(line-1, xpos);
+        int nextGlyphPos = mDocument->glyphStartPostion(line-1, glyphIndex+1);
+        if (nextGlyphPos - xpos < mCharWidth / 2)
+            xpos = nextGlyphPos;
+        else
+            xpos = mDocument->glyphStartPostion(line-1, glyphIndex);
+    }
     return DisplayCoord{xpos, row};
 }
 
@@ -1873,11 +1879,11 @@ void QSynEdit::doDeleteLastChar()
         return;
     }
     bool shouldAddGroupBreak=false;
-    QString Temp = lineText();
-    int Len = Temp.length();
+    QString tempStr = lineText();
+    int tempStrLen = tempStr.length();
     BufferCoord Caret = caretXY();
     QStringList helper;
-    if (mCaretX > Len + 1) {
+    if (mCaretX > tempStrLen + 1) {
         // only move caret one column
         return;
     } else if (mCaretX == 1) {
@@ -1887,7 +1893,7 @@ void QSynEdit::doDeleteLastChar()
             internalSetCaretX(mDocument->getLine(mCaretY - 1).length() + 1);
             mDocument->deleteAt(mCaretY);
             doLinesDeleted(mCaretY+1, 1);
-            setLineText(lineText() + Temp);
+            setLineText(lineText() + tempStr);
             helper.append("");
             helper.append("");
             shouldAddGroupBreak=true;
@@ -1896,7 +1902,7 @@ void QSynEdit::doDeleteLastChar()
         // delete text before the caret
         // int startChar = charTo
         // int caretXPos = charToGlyph(mCaretY,mCaretX);
-        int SpaceCount1 = leftSpaces(Temp);
+        int SpaceCount1 = leftSpaces(tempStr);
         int SpaceCount2 = 0;
         int newCaretX;
 
@@ -1907,19 +1913,23 @@ void QSynEdit::doDeleteLastChar()
                     BackCounter = tabSize();
                 SpaceCount2 = std::max(0,SpaceCount1 - tabSize());
                 newCaretX = xposToGlyphStartChar(mCaretY,SpaceCount2+1);
-                helper.append(Temp.mid(newCaretX - 1, mCaretX - newCaretX));
-                Temp.remove(newCaretX-1,mCaretX - newCaretX);
-            properSetLine(mCaretY - 1, Temp);
+                helper.append(tempStr.mid(newCaretX - 1, mCaretX - newCaretX));
+                tempStr.remove(newCaretX-1,mCaretX - newCaretX);
+            properSetLine(mCaretY - 1, tempStr);
             internalSetCaretX(newCaretX);
         } else {
             // delete char
-            internalSetCaretX(mCaretX - 1);
-            QChar ch=Temp[mCaretX-1];
-            if (ch==' ' || ch=='\t')
+            int glyphIndex = mDocument->charToGlyphIndex(mCaretY-1,mCaretX-1);
+            Q_ASSERT(glyphIndex>0);
+            int oldCaretX = mCaretX;
+            int newCaretX = mDocument->glyphStartChar(mCaretY-1, glyphIndex-1)+1;
+            QString s = tempStr.mid(newCaretX-1, oldCaretX-newCaretX);
+            internalSetCaretX(newCaretX);
+            if (s==' ' || s=='\t')
                 shouldAddGroupBreak=true;
-            helper.append(QString(ch));
-            Temp.remove(mCaretX-1,1);
-            properSetLine(mCaretY - 1, Temp);
+            helper.append(s);
+            tempStr.remove(newCaretX-1, oldCaretX-newCaretX);
+            properSetLine(mCaretY - 1, tempStr);
         }
     }
     if ((Caret.ch != mCaretX) || (Caret.line != mCaretY)) {
@@ -1933,7 +1943,7 @@ void QSynEdit::doDeleteLastChar()
 void QSynEdit::doDeleteCurrentChar()
 {
     QStringList helper;
-    BufferCoord Caret;
+    BufferCoord newCaret;
     if (mReadOnly) {
         return;
     }
@@ -1959,27 +1969,29 @@ void QSynEdit::doDeleteCurrentChar()
         // Call UpdateLastCaretX. Even though the caret doesn't move, the
         // current caret position should "stick" whenever text is modified.
         updateLastCaretX();
-        QString Temp = lineText();
-        int Len = Temp.length();
-        if (mCaretX>Len+1) {
+        QString tempStr = lineText();
+        int tempStrLen = tempStr.length();
+        if (mCaretX>tempStrLen+1) {
             return;
-        } else if (mCaretX <= Len) {
-            QChar ch = Temp[mCaretX-1];
-            if (ch==' ' || ch=='\t')
+        } else if (mCaretX <= tempStrLen) {
+            int glyphIndex = mDocument->charToGlyphIndex(mCaretY-1,mCaretX-1);
+            int glyphLen = mDocument->glyphLength(mCaretY-1,glyphIndex);
+            QString s = tempStr.mid(mCaretX-1,glyphLen);
+            if (s==' ' || s=='\t')
                 shouldAddGroupBreak=true;
             // delete char
-            helper.append(QString(ch));
-            Caret.ch = mCaretX + 1;
-            Caret.line = mCaretY;
-            Temp.remove(mCaretX-1, 1);
-            properSetLine(mCaretY - 1, Temp);
+            helper.append(s);
+            newCaret.ch = mCaretX + glyphLen;
+            newCaret.line = mCaretY;
+            tempStr.remove(mCaretX-1, glyphLen);
+            properSetLine(mCaretY - 1, tempStr);
         } else {
             // join line with the line after
             if (mCaretY < mDocument->count()) {
                 shouldAddGroupBreak=true;
-                properSetLine(mCaretY - 1, Temp + mDocument->getLine(mCaretY));
-                Caret.ch = 1;
-                Caret.line = mCaretY + 1;
+                properSetLine(mCaretY - 1, tempStr + mDocument->getLine(mCaretY));
+                newCaret.ch = 1;
+                newCaret.line = mCaretY + 1;
                 helper.append("");
                 helper.append("");
                 mDocument->deleteAt(mCaretY);
@@ -1989,8 +2001,8 @@ void QSynEdit::doDeleteCurrentChar()
                     doLinesDeleted(mCaretY + 1, 1);
             }
         }
-        if ((Caret.ch != mCaretX) || (Caret.line != mCaretY)) {
-            mUndoList->addChange(ChangeReason::Delete, caretXY(), Caret,
+        if ((newCaret.ch != mCaretX) || (newCaret.line != mCaretY)) {
+            mUndoList->addChange(ChangeReason::Delete, caretXY(), newCaret,
                   helper, mActiveSelectionMode);
             if (shouldAddGroupBreak)
                 mUndoList->addGroupBreak();
@@ -4760,8 +4772,7 @@ void QSynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
 
 void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 {
-    BufferCoord ptO = caretXY();
-    BufferCoord ptDst = ptO;
+    BufferCoord ptDst = caretXY();
     QString s = displayLineText();
     int nLineLen = s.length();
     if (!isSelection && selAvail() && (deltaX!=0)) {
@@ -4781,7 +4792,8 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
         // only moving or selecting one char can change the line
         //bool bChangeY = !mOptions.testFlag(SynEditorOption::eoScrollPastEol);
         bool bChangeY=true;
-        if (bChangeY && (deltaX == -1) && (ptO.ch == 1) && (ptO.line > 1)) {
+        int glyphIndex = mDocument->charToGlyphIndex(ptDst.line-1,ptDst.ch-1);
+        if (bChangeY && (deltaX == -1) && (glyphIndex==0) && (ptDst.line > 1)) {
             // end of previous line
             if (mActiveSelectionMode==SelectionMode::Column) {
                 return;
@@ -4793,7 +4805,7 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
                 ptDst.line = line;
                 ptDst.ch = getDisplayStringAtLine(ptDst.line).length() + 1;
             }
-        } else if (bChangeY && (deltaX == 1) && (ptO.ch > nLineLen) && (ptO.line < mDocument->count())) {
+        } else if (bChangeY && (deltaX == 1) && (glyphIndex >= mDocument->glyphCount(ptDst.line-1)) && (ptDst.line < mDocument->count())) {
             // start of next line
             if (mActiveSelectionMode==SelectionMode::Column) {
                 return;
@@ -4807,7 +4819,9 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
                 ptDst.ch = 1;
             }
         } else {
-            ptDst.ch = std::max(1, ptDst.ch + deltaX);
+            // qDebug()<<"Move caret horizontal"<<ptDst.line<<ptDst.ch<<glyphIndex<<deltaX;
+            ptDst.ch = std::max(1, mDocument->glyphStartChar(ptDst.line-1, glyphIndex + deltaX)+1);
+            qDebug()<<ptDst.ch;
             // don't go past last char when ScrollPastEol option not set
             if ((deltaX > 0) && bChangeY)
               ptDst.ch = std::min(ptDst.ch, nLineLen + 1);

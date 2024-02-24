@@ -382,7 +382,7 @@ void QSynEditPainter::paintToken(
                 QString glyph = token.mid(glyphStart,glyphEnd-glyphStart);
                 int glyphWidth = mEdit->document()->glyphWidth(glyph, tokenLeft+tokenWidth);
 //                qDebug()<<glyph<<charCols;
-                if (tokenWidth+glyphWidth>=first) {
+                if (tokenWidth+glyphWidth>first) {
                     if (!startPaint ) {
                         nX-= (first - tokenWidth - 1) ;
                         startPaint = true;
@@ -566,7 +566,7 @@ void QSynEditPainter::paintHighlightToken(bool bFillToEOL)
             if (bU2) {
                 setDrawingColors(false);
                 rcToken.setRight(fixXValue(nC2));
-                paintToken(mTokenAccu.s, mTokenAccu.width, mTokenAccu.left,mLineSelEnd, nC2,false,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
+                paintToken(mTokenAccu.s, mTokenAccu.width, mTokenAccu.left, mLineSelEnd, nC2,false,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
             }
         } else {
             setDrawingColors(bSel);

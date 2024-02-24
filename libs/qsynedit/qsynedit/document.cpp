@@ -893,6 +893,14 @@ int Document::stringWidth(const QString &str, int left) const
     return right - left;
 }
 
+int Document::glyphCount(int line)
+{
+    QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
+    return mLines[line]->glyphsCount();
+}
+
 int Document::glyphStartChar(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
@@ -1234,7 +1242,7 @@ void DocumentLine::updateWidth()
 {
     Q_ASSERT(mUpdateWidthFunc!=nullptr);
     mGlyphPositionList = mUpdateWidthFunc(mLineText, mGlyphStartCharList, mWidth);
-    qDebug()<<mLineText<<mWidth<<mGlyphPositionList;
+//    qDebug()<<"Update Width"<<mLineText<<mWidth<<mGlyphPositionList;
 }
 
 const QList<int> &DocumentLine::glyphPositionList()

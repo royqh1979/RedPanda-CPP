@@ -439,6 +439,7 @@ public:
      */
     int stringWidth(const QString &str, int left) const;
 
+    int glyphCount(int line);
     /**
      * @brief get start index of the chars representing the specified glyph in the specified line.
      *
