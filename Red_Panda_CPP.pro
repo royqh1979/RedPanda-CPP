@@ -37,7 +37,7 @@ SUBDIRS += \
     RedPandaIDE.depends += redpanda-git-askpass
 }
 
-linux: {
+unix:!macos: {
     isEmpty(PREFIX) {
         PREFIX = /usr/local
     }
@@ -72,6 +72,10 @@ linux: {
     desktop.path = $${PREFIX}/share/applications
     desktop.files += platform/linux/redpandaide.desktop
     INSTALLS += desktop
+
+    mime.path = $${PREFIX}/share/mime/packages
+    mime.files = platform/linux/redpandaide.xml
+    INSTALLS += mime
 }
 
 win32: {
