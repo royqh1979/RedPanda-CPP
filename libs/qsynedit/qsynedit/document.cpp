@@ -1016,16 +1016,18 @@ int Document::xposToGlyphStartChar(int line, int xpos)
 int Document::charToGlyphStartPosition(int line, const QString newStr, int charPos)
 {
     QMutexLocker locker(&mMutex);
-    QList<int> glyphStartCharList;
-    if (mLines[line]->lineText() == newStr)
-        glyphStartCharList = mLines[line]->glyphStartCharList();
-    else
-        glyphStartCharList = calcGlyphStartCharList(newStr);
-    int glyphIdx = charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charPos);
-    if (glyphIdx<glyphStartCharList.length())
-        return glyphStartCharList[glyphIdx];
-    else
-        return newStr.length();
+    if (mLines[line]->lineText() == newStr) {
+        return charToGlyphStartPosition(line,charPos);
+    } else {
+        QList<int> glyphStartCharList = calcGlyphStartCharList(newStr);
+        int glyphIdx = charToGlyphIndex(newStr, glyphStartCharList, charPos);
+        int width;
+        QList<int> glyphStartPositionList = calcGlyphPositionList(newStr, width);
+        if (glyphIdx<glyphStartCharList.length())
+            return glyphStartPositionList[glyphIdx];
+        else
+            return width;
+    }
 }
 
 int Document::xposToGlyphStartChar(int line, const QString newStr, int xpos)
@@ -1217,7 +1219,7 @@ int DocumentLine::glyphWidth(int i)
 {
     if (i<0 || i>=mGlyphPositionList.length())
         return 0;
-    if(mWidth<0)
+    if( mWidth <0)
         updateWidth();
     int start = glyphStartPosition(i);
     int end;

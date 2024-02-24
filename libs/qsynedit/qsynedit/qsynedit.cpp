@@ -1885,7 +1885,7 @@ void QSynEdit::doDeleteLastChar()
     bool shouldAddGroupBreak=false;
     QString tempStr = lineText();
     int tempStrLen = tempStr.length();
-    BufferCoord Caret = caretXY();
+    BufferCoord caretBackup = caretXY();
     QStringList helper;
     if (mCaretX > tempStrLen + 1) {
         // only move caret one column
@@ -1903,41 +1903,22 @@ void QSynEdit::doDeleteLastChar()
             shouldAddGroupBreak=true;
         }
     } else {
-        // delete text before the caret
-        // int startChar = charTo
-        // int caretXPos = charToGlyph(mCaretY,mCaretX);
-        int SpaceCount1 = leftSpaces(tempStr);
-        int SpaceCount2 = 0;
-        int newCaretX;
-
-        if (SpaceCount1 == mCaretX - 1) {
-                //how much till the next tab column
-            int BackCounter = (mCaretX - 1) % tabSize();
-                if (BackCounter == 0)
-                    BackCounter = tabSize();
-                SpaceCount2 = std::max(0,SpaceCount1 - tabSize());
-                newCaretX = xposToGlyphStartChar(mCaretY,SpaceCount2+1);
-                helper.append(tempStr.mid(newCaretX - 1, mCaretX - newCaretX));
-                tempStr.remove(newCaretX-1,mCaretX - newCaretX);
-            properSetLine(mCaretY - 1, tempStr);
-            internalSetCaretX(newCaretX);
-        } else {
-            // delete char
-            int glyphIndex = mDocument->charToGlyphIndex(mCaretY-1,mCaretX-1);
-            Q_ASSERT(glyphIndex>0);
-            int oldCaretX = mCaretX;
-            int newCaretX = mDocument->glyphStartChar(mCaretY-1, glyphIndex-1)+1;
-            QString s = tempStr.mid(newCaretX-1, oldCaretX-newCaretX);
-            internalSetCaretX(newCaretX);
-            if (s==' ' || s=='\t')
-                shouldAddGroupBreak=true;
-            helper.append(s);
-            tempStr.remove(newCaretX-1, oldCaretX-newCaretX);
-            properSetLine(mCaretY - 1, tempStr);
-        }
+        // delete char
+        int glyphIndex = mDocument->charToGlyphIndex(mCaretY-1,mCaretX-1);
+        Q_ASSERT(glyphIndex>0);
+        int oldCaretX = mCaretX;
+        int newCaretX = mDocument->glyphStartChar(mCaretY-1, glyphIndex-1)+1;
+        qDebug()<<"delete last char:"<<oldCaretX<<newCaretX<<glyphIndex<<mCaretY;
+        QString s = tempStr.mid(newCaretX-1, oldCaretX-newCaretX);
+        internalSetCaretX(newCaretX);
+        if (s==' ' || s=='\t')
+            shouldAddGroupBreak=true;
+        helper.append(s);
+        tempStr.remove(newCaretX-1, oldCaretX-newCaretX);
+        properSetLine(mCaretY - 1, tempStr);
     }
-    if ((Caret.ch != mCaretX) || (Caret.line != mCaretY)) {
-        mUndoList->addChange(ChangeReason::Delete, caretXY(), Caret, helper,
+    if ((caretBackup.ch != mCaretX) || (caretBackup.line != mCaretY)) {
+        mUndoList->addChange(ChangeReason::Delete, caretXY(), caretBackup, helper,
                         mActiveSelectionMode);
         if (shouldAddGroupBreak)
             mUndoList->addGroupBreak();
