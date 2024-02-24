@@ -10,7 +10,7 @@ RUNTIME_SIZE=$(wc -c <$RUNTIME_FILE)
 # build RedPanda C++
 mkdir -p /build/redpanda-build
 cd /build/redpanda-build
-qmake PREFIX='/usr' XDG_ADAPTIVE_ICON=ON /build/RedPanda-CPP/Red_Panda_CPP.pro
+qmake PREFIX='/usr' /build/RedPanda-CPP/Red_Panda_CPP.pro
 make LINUX_STATIC_IME_PLUGIN=ON -j$(nproc)
 
 # install RedPanda C++ to AppDir

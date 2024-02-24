@@ -233,7 +233,6 @@ target("resources")
             pattern = "$${(.-)}",
             variables = {
                 PREFIX = get_config("prefix"),
-                REDPANDA_ICON_PATH = "redpandaide",
             },
         })
         add_installfiles("$(buildir)/redpandaide.desktop", {prefixdir = "$(prefix)/share/applications"})

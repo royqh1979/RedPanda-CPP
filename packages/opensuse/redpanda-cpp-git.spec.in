@@ -27,7 +27,6 @@ mkdir -p %{name}
 cd %{name}
 qmake-qt5 \
     PREFIX=/usr \
-    XDG_ADAPTIVE_ICON=ON \
     "%{_builddir}/RedPanda-CPP/Red_Panda_CPP.pro"
 make %{_smp_mflags}
 
