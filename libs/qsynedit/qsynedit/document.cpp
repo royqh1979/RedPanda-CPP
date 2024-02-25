@@ -1700,6 +1700,7 @@ int searchForSegmentIdx(const QList<int> segList, int minVal, int maxVal, int va
     }
     //Not found, should not happen
     Q_ASSERT(false);
+    return -1;
 }
 
 }
