@@ -389,13 +389,13 @@ void QSynEditPainter::paintToken(
                 int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i);
                 QString glyph = lineText.mid(glyphStart,glyphLen);
                 int glyphWidth = calcSegmentInterval(glyphStartPositionList, tokenRight, i);
-                // qDebug()<<"painting:"<<glyph<<glyphWidth<<tokenWidth+glyphWidth<<first<<last;
                 if (tokenWidth+glyphWidth>first) {
                     if (!startPaint ) {
                         nX-= (first - tokenWidth - 1) ;
                         startPaint = true;
                     }
                 }
+                // qDebug()<<"painting:"<<glyph<<glyphWidth<<nX<<tokenWidth+glyphWidth<<first<<last;
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
                 if (startPaint) {
                     bool drawed = false;
@@ -422,16 +422,16 @@ void QSynEditPainter::paintToken(
                                 // if (!OperatorGlyphs.contains(glyph))
                                 //     break;
                                 if (isAscii) {
-                                    if ( glyph.length()!=1
-                                            || glyph.front().unicode()<=32
-                                            || glyph.front().unicode()>=128)
+                                    if ( glyph2.length()!=1
+                                            || glyph2.front().unicode()<=32
+                                            || glyph2.front().unicode()>=128)
                                         break;
                                 } else {
-                                    if ( glyph.length()<1
+                                    if ( glyph2.length()<1
                                          ||
-                                         (glyph.length()==1
-                                          && glyph.front().unicode()>32
-                                          && glyph.front().unicode()<128))
+                                         (glyph2.length()==1
+                                          && glyph2.front().unicode()>32
+                                          && glyph2.front().unicode()<128))
                                         break;
                                 }
                                 i+=1;
@@ -441,7 +441,11 @@ void QSynEditPainter::paintToken(
                                     break;
                             }
                             if (!fontInited || lastGlyphAscii!=isAscii) {
-                                mPainter->setFont(font);
+                                if (isAscii) {
+                                    mPainter->setFont(font);
+                                } else {
+                                    mPainter->setFont(fontForNonAscii);
+                                }
                                 lastGlyphAscii = isAscii;
                                 fontInited = true;
                             }
@@ -692,7 +696,6 @@ void QSynEditPainter::addHighlightToken(
         QList<int> &glyphStartPositionList,
         int &tokenWidth)
 {
-    bool bCanAppend;
     QColor foreground, background;
     FontStyles style;
 
@@ -720,11 +723,14 @@ void QSynEditPainter::addHighlightToken(
         token,attri,style,foreground,background);
 
     // Do we have to paint the old chars first, or can we just append?
-    bCanAppend = false;
+    bool bCanAppend = false;
+    bool bInitFont = (mTokenAccu.width==0);
     if (mTokenAccu.width > 0 ) {
         if (showGlyphs == mTokenAccu.showSpecialGlyphs) {
             // font style must be the same or token is only spaces
-            if (mTokenAccu.style == style) {
+            if (mTokenAccu.style != style) {
+                bInitFont = true;
+            } else {
                 if (
                   // background color must be the same and
                     (mTokenAccu.background == background) &&
@@ -738,7 +744,8 @@ void QSynEditPainter::addHighlightToken(
         if (!bCanAppend)
             paintHighlightToken(lineText, glyphStartCharList, glyphStartPositionList, false);
     }
-    if (!bCanAppend) {
+    if (bInitFont) {
+        mTokenAccu.style = style;
         mTokenAccu.font = mEdit->font();
         mTokenAccu.font.setBold(style & FontStyle::fsBold);
         mTokenAccu.font.setItalic(style & FontStyle::fsItalic);
@@ -779,7 +786,6 @@ void QSynEditPainter::addHighlightToken(
             mTokenAccu.endGlyph = endGlyph;
             mTokenAccu.foreground = foreground;
             mTokenAccu.background = background;
-            mTokenAccu.style = style;
             mTokenAccu.showSpecialGlyphs = showGlyphs;
         }
     }
@@ -933,6 +939,7 @@ void QSynEditPainter::paintLines()
     rcLine.setBottom((mFirstRow - mEdit->mTopLine) * mEdit->mTextHeight);
     mTokenAccu.width = 0;
     mTokenAccu.left = 0;
+    mTokenAccu.style = FontStyle::fsNone;
     // Now loop through all the lines. The indices are valid for Lines.
     BufferCoord selectionBegin = mEdit->blockBegin();
     BufferCoord selectionEnd= mEdit->blockEnd();
@@ -1224,14 +1231,20 @@ void QSynEditPainter::paintLines()
                         area->endX += mEdit->mInputPreeditString.length();
                     }
                 }
-                area->beginX = mEdit->charToGlyphLeft(vLine, sLine, area->beginX);
-                area->endX = mEdit->charToGlyphLeft(vLine,sLine,area->endX);
+                int glyphIdx;
+                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->beginX);
+                area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->endX);
+                area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
             }
             //input method
             if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
                 PEditingArea area = std::make_shared<EditingArea>();
-                area->beginX = mEdit->charToGlyphLeft(vLine,sLine, mEdit->mCaretX);
-                area->endX = mEdit->charToGlyphLeft(vLine,sLine,mEdit->mCaretX + mEdit->mInputPreeditString.length());
+                int glyphIdx;
+                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX-1);
+                area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length()-1);
+                area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
                 area->type = EditingAreaType::eatUnderLine;
                 if (preeditAttr) {
                     area->color = preeditAttr->foreground();

@@ -1706,7 +1706,7 @@ BinaryFileError::BinaryFileError(const QString& reason):
 
 }
 
-int searchForSegmentIdx(const QList<int> segList, int minVal, int maxVal, int value)
+int searchForSegmentIdx(const QList<int> &segList, int minVal, int maxVal, int value)
 {
     if (value<minVal)
         return 0;
@@ -1787,13 +1787,22 @@ void expandGlyphStartCharList(const QString &strAdded, int oldStrLen, QList<int>
     }
 }
 
-int calcSegmentInterval(const QList<int> segList, int maxVal, int idx)
+int calcSegmentInterval(const QList<int> &segList, int maxVal, int idx)
 {
     if (idx<0 || idx>=segList.length())
         return 0;
     if (idx == segList.length()-1)
         return maxVal - segList[idx];
     return segList[idx+1]-segList[idx];
+}
+
+int segmentIntervalStart(const QList<int> &segList, int minVal, int maxVal, int idx)
+{
+    if (idx<0)
+        return minVal;
+    if (idx>=segList.length())
+        return maxVal;
+    return segList[idx];
 }
 
 }

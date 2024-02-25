@@ -1820,7 +1820,6 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                     invalidateLine(mHighlightCharPos2.line);
                 }
             }
-
         }
     }
 
@@ -1842,6 +1841,8 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             } else {
                 mCurrentHighlightedWord = "";
             }
+        } else {
+            mCurrentHighlightedWord = "";
         }
 
         if (mOldHighlightedWord != mCurrentHighlightedWord) {
