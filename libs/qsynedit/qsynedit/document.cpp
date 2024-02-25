@@ -957,16 +957,17 @@ int Document::charToGlyphIndex(int line, int charIdx)
 int Document::charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charIdx) const
 {
     Q_ASSERT(charIdx>=0);
-    if (charIdx>=str.length())
-        return glyphStartCharList.length();
-    for (int i=0;i<glyphStartCharList.length();i++) {
-        if (glyphStartCharList[i]>charIdx) {
-            Q_ASSERT(i-1>=0);
-            return i-1;
-        }
-    }
-    Q_ASSERT(glyphStartCharList.length()-1>=0);
-    return glyphStartCharList.length()-1;
+    return searchForSegmentIdx(glyphStartCharList, 0, str.length(), charIdx);
+    // if (charIdx>=str.length())
+    //     return glyphStartCharList.length();
+    // for (int i=0;i<glyphStartCharList.length();i++) {
+    //     if (glyphStartCharList[i]>charIdx) {
+    //         Q_ASSERT(i-1>=0);
+    //         return i-1;
+    //     }
+    // }
+    // Q_ASSERT(glyphStartCharList.length()-1>=0);
+    // return glyphStartCharList.length()-1;
 }
 
 QList<int> Document::calcLineWidth(const QString &lineText, const QList<int> &glyphStartCharList, int &width)
@@ -985,14 +986,15 @@ int Document::xposToGlyphIndex(int line, int xpos)
 
 int Document::xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const
 {
-    if (xpos>=strWidth)
-        return glyphPositionList.length();
-    for (int i=0;i<glyphPositionList.length();i++) {
-        if (glyphPositionList[i]>xpos) {
-            return i-1;
-        }
-    }
-    return glyphPositionList.length()-1;
+    return searchForSegmentIdx(glyphPositionList,0,strWidth,xpos);
+    // if (xpos>=strWidth)
+    //     return glyphPositionList.length();
+    // for (int i=0;i<glyphPositionList.length();i++) {
+    //     if (glyphPositionList[i]>xpos) {
+    //         return i-1;
+    //     }
+    // }
+    // return glyphPositionList.length()-1;
 }
 
 int Document::charToGlyphStartPosition(int line, int charPos)
@@ -1671,6 +1673,33 @@ BinaryFileError::BinaryFileError(const QString& reason):
     FileError(reason)
 {
 
+}
+
+int searchForSegmentIdx(const QList<int> segList, int minVal, int maxVal, int value)
+{
+    if (value<minVal)
+        return 0;
+    if (value>=maxVal)
+        return segList.length();
+    int start = 0;
+    int end = segList.length()-1;
+    while ( start<=end ) {
+        int mid = (start+end) / 2;
+        if (segList[mid]==value) {
+            //skip zero length segs
+            while(mid+1<segList.length() && segList[mid+1]==value)
+                mid++;
+            return mid;
+        } else if (segList[mid]>value) {
+            end = mid-1;
+        } else if (mid+1>=segList.length() || segList[mid+1]>value ) {
+            return mid;
+        } else {
+            start = mid+1;
+        }
+    }
+    //Not found, should not happen
+    Q_ASSERT(false);
 }
 
 }

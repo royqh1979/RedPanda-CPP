@@ -30,6 +30,8 @@
 
 namespace QSynedit {
 
+int searchForSegmentIdx(const QList<int> segList, int minVal, int maxVal, int value);
+
 QList<int> calcGlyphStartCharList(const QString &text);
 
 class Document;

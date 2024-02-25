@@ -51,8 +51,7 @@ QSynEditPainter::QSynEditPainter(QSynEdit *edit, QPainter *painter, int firstRow
     mFirstRow{firstRow},
     mLastRow{lastRow},
     mLeft{left},
-    mRight{right},
-    mLastGlyphAscii{false}
+    mRight{right}
 {
 }
 
@@ -361,6 +360,8 @@ void QSynEditPainter::paintToken(
 {
     bool startPaint;
     int nX;
+    bool lastGlyphAscii = false;
+    bool fontInited = false;
 
 //    qDebug()<<"Paint token"<<token<<tokenWidth<<tokenLeft<<first<<last<<rcToken;
 
@@ -388,33 +389,61 @@ void QSynEditPainter::paintToken(
                         startPaint = true;
                     }
                 }
-                if (tokenWidth+glyphWidth > last)
-                    break;
                 //painter->drawText(nX,rcToken.bottom()-painter->fontMetrics().descent()*edit->dpiFactor() , Token[i]);
                 if (startPaint) {
                     bool drawed = false;
-                    if (mPainter->fontInfo().fixedPitch()
-                            && mEdit->mOptions.testFlag(eoLigatureSupport)
-                            && OperatorGlyphs.contains(glyph)) {
-                        QString textToPaint = glyph;
-                        while(i+1<token.length()) {
-                            int glyphStart = glyphStartCharList[i+1];
-                            int glyphEnd =(i+2<glyphStartCharList.length())?glyphStartCharList[i+2]:token.length();
-                            QString glyph2 = token.mid(glyphStart,glyphEnd-glyphStart);
-                            if (!OperatorGlyphs.contains(glyph))
-                                break;
-                            i+=1;
-                            glyphWidth += mEdit->document()->glyphWidth(glyph2,0);
-                            textToPaint+=glyph2;
+                    if (mEdit->mOptions.testFlag(eoLigatureSupport))  {
+                        bool tryLigature = false;
+                        bool isAscii = false;
+                        if (glyph.length()==0) {
+                        } else if (glyph.length()==1 && glyph.front().unicode()<=32){
+                        } else if (glyph.length()==1
+                            && glyph.front().unicode()>32
+                            && glyph.front().unicode()<128) {
+                            tryLigature = true;
+                            isAscii = true;
+                        } else {
+                            tryLigature = true;
+                            isAscii = false;
                         }
-                        if (!mLastGlyphAscii)
-                            mPainter->setFont(font);
-                        mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
-                        mLastGlyphAscii = true;
-                        drawed = true;
+                        if (tryLigature) {
+                            QString textToPaint = glyph;
+                            while(i+1<glyphStartCharList.length()) {
+                                int glyphStart = glyphStartCharList[i+1];
+                                int glyphEnd =(i+2<glyphStartCharList.length())?glyphStartCharList[i+2]:token.length();
+                                QString glyph2 = token.mid(glyphStart,glyphEnd-glyphStart);
+                                // if (!OperatorGlyphs.contains(glyph))
+                                //     break;
+                                if (isAscii) {
+                                    if ( glyph.length()!=1
+                                            || glyph.front().unicode()<=32
+                                            || glyph.front().unicode()>=128)
+                                        break;
+                                } else {
+                                    if ( glyph.length()<1
+                                         ||
+                                         (glyph.length()==1
+                                          && glyph.front().unicode()>32
+                                          && glyph.front().unicode()<128))
+                                        break;
+                                }
+                                i+=1;
+                                glyphWidth += mEdit->document()->glyphWidth(glyph2,0);
+                                textToPaint+=glyph2;
+                                if (tokenWidth + glyphWidth > last )
+                                    break;
+                            }
+                            if (!fontInited || lastGlyphAscii!=isAscii) {
+                                mPainter->setFont(font);
+                                lastGlyphAscii = isAscii;
+                                fontInited = true;
+                            }
+                            mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
+                            drawed = true;
+                        }
                     }
                     if (!drawed) {
-                        if (glyph.length()==1 && glyph.front().unicode()<=0xFF) {
+                        if (glyph.length()==1 && glyph.front().unicode()<128) {
                             QString ch;
                             int padding=0;
                             if (showGlyphs) {
@@ -433,24 +462,29 @@ void QSynEditPainter::paintToken(
                                 ch=glyph;
                             }
                             if (ch!=" " && ch!="\t") {
-                                if (!mLastGlyphAscii)
+                                if (!fontInited || !lastGlyphAscii) {
                                     mPainter->setFont(font);
+                                    fontInited = true;
+                                    lastGlyphAscii = true;
+                                }
                                 mPainter->drawText(nX+padding,rcToken.bottom()-mPainter->fontMetrics().descent() , ch);
-                                mLastGlyphAscii = true;
                             }
                             //qDebug()<<"Drawing"<<glyph<<nX<<glyphWidth;
                         } else {
-                            if (mLastGlyphAscii)
+                            if (!fontInited || lastGlyphAscii) {
                                 mPainter->setFont(fontForNonAscii);
+                                fontInited = true;
+                                lastGlyphAscii = false;
+                            }
                             mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , glyph);
-                            mLastGlyphAscii = false;
                         }
                         drawed = true;
                     }
                     nX += glyphWidth;
                 }
-
                 tokenWidth += glyphWidth;
+                if (tokenWidth > last)
+                    break;
             }
         }
 
@@ -549,8 +583,6 @@ void QSynEditPainter::paintHighlightToken(bool bFillToEOL)
         font.setItalic(mTokenAccu.style & FontStyle::fsItalic);
         font.setStrikeOut(mTokenAccu.style & FontStyle::fsStrikeOut);
         font.setUnderline(mTokenAccu.style & FontStyle::fsUnderline);
-        mPainter->setFont(font);
-        mLastGlyphAscii=true;
         QFont nonAsciiFont = mEdit->fontForNonAscii();
         nonAsciiFont.setBold(mTokenAccu.style & FontStyle::fsBold);
         nonAsciiFont.setItalic(mTokenAccu.style & FontStyle::fsItalic);
@@ -834,8 +866,6 @@ void QSynEditPainter::paintLines()
     PTokenAttribute preeditAttr;
     int nFold;
     QString sFold;
-
-    mLastGlyphAscii = false;
 
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
     // inside the loop. Get only the starting point for this.

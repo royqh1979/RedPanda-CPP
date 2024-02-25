@@ -91,8 +91,6 @@ private:
     int mFirstRow, mLastRow, mLeft, mRight;
     SynTokenAccu mTokenAccu;
 
-    bool mLastGlyphAscii;
-
     static QSet<QString> OperatorGlyphs;
 };
 

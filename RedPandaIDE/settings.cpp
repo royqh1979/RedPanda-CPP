@@ -1493,7 +1493,7 @@ void Settings::Editor::doLoad()
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.0);
-    mEnableLigaturesSupport = boolValue("enable_ligatures_support", false);
+    mEnableLigaturesSupport = boolValue("enable_ligatures_support", true);
 
     mShowLeadingSpaces = boolValue("show_leading_spaces", false);
     mShowTrailingSpaces = boolValue("show_trailing_spaces", false);
