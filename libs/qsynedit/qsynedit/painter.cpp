@@ -369,7 +369,7 @@ void QSynEditPainter::paintToken(
     bool fontInited = false;
     int tokenRight = tokenWidth+tokenLeft;
 
-    //qDebug()<<"Paint token"<<lineText<<tokenWidth<<tokenLeft<<first<<last<<rcToken;
+    // qDebug()<<"Paint token"<<lineText<<tokenWidth<<tokenLeft<<first<<last<<rcToken;
     // qDebug()<<glyphStartCharList;
     // qDebug()<<glyphStartPositionList;
     // qDebug()<<startGlyph<<endGlyph;
@@ -389,7 +389,7 @@ void QSynEditPainter::paintToken(
                 int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i);
                 QString glyph = lineText.mid(glyphStart,glyphLen);
                 int glyphWidth = calcSegmentInterval(glyphStartPositionList, tokenRight, i);
-//                qDebug()<<"painting:"<<glyph<<glyphWidth<<tokenWidth+glyphWidth<<first<<last;
+                // qDebug()<<"painting:"<<glyph<<glyphWidth<<tokenWidth+glyphWidth<<first<<last;
                 if (tokenWidth+glyphWidth>first) {
                     if (!startPaint ) {
                         nX-= (first - tokenWidth - 1) ;
@@ -435,7 +435,7 @@ void QSynEditPainter::paintToken(
                                         break;
                                 }
                                 i+=1;
-                                glyphWidth += calcSegmentInterval(glyphStartPositionList, tokenLeft+tokenWidth, i);
+                                glyphWidth += calcSegmentInterval(glyphStartPositionList, tokenRight, i);
                                 textToPaint+=glyph2;
                                 if (tokenWidth + glyphWidth > last )
                                     break;

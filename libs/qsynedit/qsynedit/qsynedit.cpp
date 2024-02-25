@@ -1908,7 +1908,7 @@ void QSynEdit::doDeleteLastChar()
         Q_ASSERT(glyphIndex>0);
         int oldCaretX = mCaretX;
         int newCaretX = mDocument->glyphStartChar(mCaretY-1, glyphIndex-1)+1;
-        qDebug()<<"delete last char:"<<oldCaretX<<newCaretX<<glyphIndex<<mCaretY;
+        //qDebug()<<"delete last char:"<<oldCaretX<<newCaretX<<glyphIndex<<mCaretY;
         QString s = tempStr.mid(newCaretX-1, oldCaretX-newCaretX);
         internalSetCaretX(newCaretX);
         if (s==' ' || s=='\t')
@@ -6096,6 +6096,8 @@ void QSynEdit::paintEvent(QPaintEvent *event)
         cacheRC.setWidth(rcClip.width()*dpr);
         cacheRC.setHeight(rcClip.height()*dpr);
         painter.drawImage(rcClip,*mContentImage,cacheRC);
+        //glyph positions may be updated while painting, so we need to recalc here.
+        rcCaret = calculateCaretRect();
     }
     paintCaret(painter, rcCaret);
 }

@@ -1756,6 +1756,8 @@ int Document::updateGlyphStartPositionList(
         glyphStartPositionList[i] = right;
         right += gWidth;
     }
+    if (endGlyph<glyphStartPositionList.length())
+        glyphStartPositionList[endGlyph] = right;
     return right-left;
 }
 
