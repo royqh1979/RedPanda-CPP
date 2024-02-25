@@ -4611,7 +4611,7 @@ QStringList QSynEdit::getContent(BufferCoord startPos, BufferCoord endPos, Selec
     switch(mode) {
     case SelectionMode::Normal:{
         int chFrom = startPos.ch;
-        int chTo = startPos.ch;
+        int chTo = endPos.ch;
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(lastLine);
         if ((foldRange) && foldRange->collapsed && chTo>s.length()) {
