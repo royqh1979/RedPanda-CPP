@@ -31,8 +31,9 @@
 namespace QSynedit {
 
 int searchForSegmentIdx(const QList<int> segList, int minVal, int maxVal, int value);
-
+int calcSegmentInterval(const QList<int> segList, int maxVal, int idx);
 QList<int> calcGlyphStartCharList(const QString &text);
+void expandGlyphStartCharList(const QString& strAdded, int oldStrLen, QList<int> glyphStartCharList);
 
 class Document;
 
@@ -83,7 +84,7 @@ private:
      * @brief get list of start position of the glyphs in the line text
      * @return start positions of the glyph (in pixel)
      */
-    const QList<int>& glyphPositionList();
+    const QList<int>& glyphStartPositionList();
 
     /**
      * @brief get start index of the chars representing the specified glyph.
@@ -145,7 +146,7 @@ private:
 
     void setLineText(const QString &newLineText);
     void updateWidth();
-    void invalidateWidth() { mWidth = -1; mGlyphPositionList.clear(); }
+    void invalidateWidth() { mWidth = -1; mGlyphStartPositionList.clear(); }
 private:
     QString mLineText; /* the unicode code points of the text */
     /**
@@ -160,11 +161,11 @@ private:
      * @brief start columns of the glyphs
      *
      * A glyph may occupy more than one columns in the screen.
-     * Each elements of mGlyphPositionList is the columns occupied by the glyph.
+     * Each elements of mGlyphStartPositionList is the columns occupied by the glyph.
      * The width of a glyph is affected by the font used to display,
      * so it must be recalculated each time the font is changed.
      */
-    QList<int> mGlyphPositionList;
+    QList<int> mGlyphStartPositionList;
     /**
      * @brief state of the syntax highlighter after this line is parsed
      *
@@ -441,6 +442,8 @@ public:
      */
     int stringWidth(const QString &str, int left) const;
 
+    int stringWidth(const QString &str, int left, const QFontMetrics &asciFontMetrics, const QFontMetrics &nonAsciiFontMetrics);
+
     int glyphCount(int line);
     /**
      * @brief get start index of the chars representing the specified glyph in the specified line.
@@ -515,6 +518,14 @@ public:
     int charToGlyphStartPosition(int line, const QString newStr, int charPos);
     int xposToGlyphStartChar(int line, const QString newStr, int xpos);
 
+    int updateGlyphStartPositionList(
+            const QString& lineText,
+            const QList<int> &glyphStartCharList,
+            int startChar, int endChar,
+            const QFontMetrics &fontMetrics, const QFontMetrics &nonAsciiFontMetrics,
+            QList<int> &glyphStartPositionList,
+            int left, int &right, int &startGlyph, int &endGlyph) const;
+
     bool getAppendNewLineAtEOF();
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
 
@@ -554,11 +565,22 @@ protected:
     void putTextStr(const QString& text);
     void internalClear();
 private:
+    void setLineWidth(int line, const QString& lineText, int newWidth, const QList<int> glyphStartPositionList);
+
+    int glyphWidth(const QString& glyph, int left,
+                   const QFontMetrics &fontMetrics, const QFontMetrics &nonAsciiFontMetrics) const;
+
     int xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const;
     int charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charPos) const;
     QList<int> calcLineWidth(const QString& lineText, const QList<int> &glyphStartCharList, int &width);
+    QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList,
+                                     const QFontMetrics &fontMetrics,
+                                     const QFontMetrics &nonAsciiFontMetrics,
+                                     int left, int &right) const;
     QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList, int left, int &right) const;
     QList<int> calcGlyphPositionList(const QString& lineText, int &width) const;
+    QList<int> getGlyphStartCharList(int line, const QString &lineText);
+    QList<int> getGlyphStartPositionList(int line, const QString &lineText, int &lineWidth);
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
@@ -588,6 +610,8 @@ private:
 #else
     QMutex mMutex;
 #endif
+
+    friend class QSynEditPainter;
 };
 
 enum class ChangeReason {

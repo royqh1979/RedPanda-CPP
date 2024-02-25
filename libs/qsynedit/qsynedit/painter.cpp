@@ -354,7 +354,12 @@ int QSynEditPainter::fixXValue(int xpos)
 }
 
 void QSynEditPainter::paintToken(
-        const QString &token, int tokenWidth, int tokenLeft,
+        const QString& lineText,
+        const QList<int> &glyphStartCharList,
+        const QList<int> &glyphStartPositionList,
+        int startGlyph,
+        int endGlyph,
+        int tokenWidth, int tokenLeft,
         int first, int last, bool /*isSelection*/, const QFont& font,
         const QFont& fontForNonAscii, bool showGlyphs)
 {
@@ -362,8 +367,12 @@ void QSynEditPainter::paintToken(
     int nX;
     bool lastGlyphAscii = false;
     bool fontInited = false;
+    int tokenRight = tokenWidth+tokenLeft;
 
-//    qDebug()<<"Paint token"<<token<<tokenWidth<<tokenLeft<<first<<last<<rcToken;
+    //qDebug()<<"Paint token"<<lineText<<tokenWidth<<tokenLeft<<first<<last<<rcToken;
+    // qDebug()<<glyphStartCharList;
+    // qDebug()<<glyphStartPositionList;
+    // qDebug()<<startGlyph<<endGlyph;
 
     if (last >= first && rcToken.right() > rcToken.left()) {
         nX = fixXValue(first);
@@ -375,14 +384,12 @@ void QSynEditPainter::paintToken(
         } else {
             int tokenWidth=0;
             startPaint = false;
-            QList<int> glyphStartCharList = calcGlyphStartCharList(token);
-//            qDebug()<<"painting:"<<token;
-            for (int i=0; i< glyphStartCharList.length();i++) {
+            for (int i=startGlyph; i<endGlyph;i++) {
                 int glyphStart = glyphStartCharList[i];
-                int glyphEnd =(i+1<glyphStartCharList.length())?glyphStartCharList[i+1]:token.length();
-                QString glyph = token.mid(glyphStart,glyphEnd-glyphStart);
-                int glyphWidth = mEdit->document()->glyphWidth(glyph, tokenLeft+tokenWidth);
-//                qDebug()<<glyph<<charCols;
+                int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i);
+                QString glyph = lineText.mid(glyphStart,glyphLen);
+                int glyphWidth = calcSegmentInterval(glyphStartPositionList, tokenRight, i);
+//                qDebug()<<"painting:"<<glyph<<glyphWidth<<tokenWidth+glyphWidth<<first<<last;
                 if (tokenWidth+glyphWidth>first) {
                     if (!startPaint ) {
                         nX-= (first - tokenWidth - 1) ;
@@ -410,8 +417,8 @@ void QSynEditPainter::paintToken(
                             QString textToPaint = glyph;
                             while(i+1<glyphStartCharList.length()) {
                                 int glyphStart = glyphStartCharList[i+1];
-                                int glyphEnd =(i+2<glyphStartCharList.length())?glyphStartCharList[i+2]:token.length();
-                                QString glyph2 = token.mid(glyphStart,glyphEnd-glyphStart);
+                                int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i+1);
+                                QString glyph2 = lineText.mid(glyphStart,glyphLen);
                                 // if (!OperatorGlyphs.contains(glyph))
                                 //     break;
                                 if (isAscii) {
@@ -428,7 +435,7 @@ void QSynEditPainter::paintToken(
                                         break;
                                 }
                                 i+=1;
-                                glyphWidth += mEdit->document()->glyphWidth(glyph2,0);
+                                glyphWidth += calcSegmentInterval(glyphStartPositionList, tokenLeft+tokenWidth, i);
                                 textToPaint+=glyph2;
                                 if (tokenWidth + glyphWidth > last )
                                     break;
@@ -544,7 +551,10 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
     }
 }
 
-void QSynEditPainter::paintHighlightToken(bool bFillToEOL)
+void QSynEditPainter::paintHighlightToken(const QString& lineText,
+                                          const QList<int> &glyphStartCharList,
+                                          const QList<int> &glyphStartPositionsList,
+                                          bool bFillToEOL)
 {
     bool isComplexToken;
     int nC1, nC2, nC1Sel, nC2Sel;
@@ -578,16 +588,7 @@ void QSynEditPainter::paintHighlightToken(bool bFillToEOL)
 
         //        if (bSpecialLine && mEdit->mOptions.testFlag(eoSpecialLineDefaultFg))
 //            colFG = TokenAccu.FG;
-        QFont font = mEdit->font();
-        font.setBold(mTokenAccu.style & FontStyle::fsBold);
-        font.setItalic(mTokenAccu.style & FontStyle::fsItalic);
-        font.setStrikeOut(mTokenAccu.style & FontStyle::fsStrikeOut);
-        font.setUnderline(mTokenAccu.style & FontStyle::fsUnderline);
-        QFont nonAsciiFont = mEdit->fontForNonAscii();
-        nonAsciiFont.setBold(mTokenAccu.style & FontStyle::fsBold);
-        nonAsciiFont.setItalic(mTokenAccu.style & FontStyle::fsItalic);
-        nonAsciiFont.setStrikeOut(mTokenAccu.style & FontStyle::fsStrikeOut);
-        nonAsciiFont.setUnderline(mTokenAccu.style & FontStyle::fsUnderline);
+
 
         // Paint the chars
         if (isComplexToken) {
@@ -596,24 +597,47 @@ void QSynEditPainter::paintHighlightToken(bool bFillToEOL)
                 setDrawingColors(false);
                 rcToken.setRight(fixXValue(mLineSelStart));
                 paintToken(
-                            mTokenAccu.s,mTokenAccu.width,mTokenAccu.left,nC1,mLineSelStart,false,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
+                            lineText,
+                            glyphStartCharList,
+                            glyphStartPositionsList,
+                            mTokenAccu.startGlyph,
+                            mTokenAccu.endGlyph,
+                            mTokenAccu.width,mTokenAccu.left,nC1,mLineSelStart,false,mTokenAccu.font,mTokenAccu.nonAsciiFont, mTokenAccu.showSpecialGlyphs);
             }
             // selected part of the token
             setDrawingColors(true);
             nC1Sel = std::max(mLineSelStart, nC1);
             nC2Sel = std::min(mLineSelEnd, nC2);
             rcToken.setRight(fixXValue(nC2Sel));
-            paintToken(mTokenAccu.s, mTokenAccu.width, mTokenAccu.left, nC1Sel, nC2Sel,true,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
+            paintToken(
+                        lineText,
+                        glyphStartCharList,
+                        glyphStartPositionsList,
+                        mTokenAccu.startGlyph,
+                        mTokenAccu.endGlyph,
+                        mTokenAccu.width, mTokenAccu.left, nC1Sel, nC2Sel,true,mTokenAccu.font,mTokenAccu.nonAsciiFont, mTokenAccu.showSpecialGlyphs);
             // second unselected part of the token
             if (bU2) {
                 setDrawingColors(false);
                 rcToken.setRight(fixXValue(nC2));
-                paintToken(mTokenAccu.s, mTokenAccu.width, mTokenAccu.left, mLineSelEnd, nC2,false,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
+                paintToken(
+                            lineText,
+                            glyphStartCharList,
+                            glyphStartPositionsList,
+                            mTokenAccu.startGlyph,
+                            mTokenAccu.endGlyph,
+                            mTokenAccu.width, mTokenAccu.left, mLineSelEnd, nC2,false,mTokenAccu.font,mTokenAccu.nonAsciiFont, mTokenAccu.showSpecialGlyphs);
             }
         } else {
             setDrawingColors(bSel);
             rcToken.setRight(fixXValue(nC2));
-            paintToken(mTokenAccu.s, mTokenAccu.width, mTokenAccu.left, nC1, nC2,bSel,font,nonAsciiFont, mTokenAccu.showSpecialGlyphs);
+            paintToken(
+                        lineText,
+                        glyphStartCharList,
+                        glyphStartPositionsList,
+                        mTokenAccu.startGlyph,
+                        mTokenAccu.endGlyph,
+                        mTokenAccu.width, mTokenAccu.left, nC1, nC2,bSel,mTokenAccu.font,mTokenAccu.nonAsciiFont, mTokenAccu.showSpecialGlyphs);
         }
     }
 
@@ -658,9 +682,15 @@ void QSynEditPainter::paintHighlightToken(bool bFillToEOL)
 // Store the token chars with the attributes in the TokenAccu
 // record. This will paint any chars already stored if there is
 // a (visible) change in the attributes.
-void QSynEditPainter::addHighlightToken(const QString &token, int tokenLeft,
-                                        int tokenWidth, int line, PTokenAttribute attri,
-                                        bool showGlyphs)
+void QSynEditPainter::addHighlightToken(
+        const QString& lineText,
+        const QString& token, int tokenLeft,
+        int line, PTokenAttribute attri, bool showGlyphs,
+        const QList<int> glyphStartCharList,
+        int tokenStartChar,
+        int tokenEndChar,
+        QList<int> &glyphStartPositionList,
+        int &tokenWidth)
 {
     bool bCanAppend;
     QColor foreground, background;
@@ -706,20 +736,52 @@ void QSynEditPainter::addHighlightToken(const QString &token, int tokenLeft,
         }
         // If we can't append it, then we have to paint the old token chars first.
         if (!bCanAppend)
-            paintHighlightToken(false);
+            paintHighlightToken(lineText, glyphStartCharList, glyphStartPositionList, false);
     }
-    // Don't use AppendStr because it's more expensive.
-    if (bCanAppend) {
-        mTokenAccu.s.append(token);
-        mTokenAccu.width+=tokenWidth;
-    } else {
-        mTokenAccu.width = tokenWidth;
-        mTokenAccu.s = token;
-        mTokenAccu.left = tokenLeft;
-        mTokenAccu.foreground = foreground;
-        mTokenAccu.background = background;
-        mTokenAccu.style = style;
-        mTokenAccu.showSpecialGlyphs = showGlyphs;
+    if (!bCanAppend) {
+        mTokenAccu.font = mEdit->font();
+        mTokenAccu.font.setBold(style & FontStyle::fsBold);
+        mTokenAccu.font.setItalic(style & FontStyle::fsItalic);
+        mTokenAccu.font.setStrikeOut(style & FontStyle::fsStrikeOut);
+        mTokenAccu.font.setUnderline(style & FontStyle::fsUnderline);
+        mTokenAccu.nonAsciiFont = mEdit->fontForNonAscii();
+        mTokenAccu.nonAsciiFont.setBold(style & FontStyle::fsBold);
+        mTokenAccu.nonAsciiFont.setItalic(style & FontStyle::fsItalic);
+        mTokenAccu.nonAsciiFont.setStrikeOut(style & FontStyle::fsStrikeOut);
+        mTokenAccu.nonAsciiFont.setUnderline(style & FontStyle::fsUnderline);
+    }
+    //calculate width of the token ( and update it's glyph start positions )
+    int tokenRight;
+    int startGlyph, endGlyph;
+    tokenWidth = mEdit->mDocument->updateGlyphStartPositionList(
+                lineText,
+                glyphStartCharList,
+                tokenStartChar,
+                tokenEndChar,
+                QFontMetrics(mTokenAccu.font),
+                QFontMetrics(mTokenAccu.nonAsciiFont),
+                glyphStartPositionList,
+                tokenLeft,
+                tokenRight,
+                startGlyph,
+                endGlyph);
+
+    // Only accumulate tokens if it's visible.
+    if (tokenLeft < mRight) {
+        if (bCanAppend) {
+            mTokenAccu.width += tokenWidth;
+            Q_ASSERT(startGlyph == mTokenAccu.endGlyph);
+            mTokenAccu.endGlyph = endGlyph;
+        } else {
+            mTokenAccu.width = tokenWidth;
+            mTokenAccu.left = tokenLeft;
+            mTokenAccu.startGlyph = startGlyph;
+            mTokenAccu.endGlyph = endGlyph;
+            mTokenAccu.foreground = foreground;
+            mTokenAccu.background = background;
+            mTokenAccu.style = style;
+            mTokenAccu.showSpecialGlyphs = showGlyphs;
+        }
     }
 }
 
@@ -864,8 +926,6 @@ void QSynEditPainter::paintLines()
     EditingAreaList  areaList;
     PCodeFoldingRange foldRange;
     PTokenAttribute preeditAttr;
-    int nFold;
-    QString sFold;
 
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
     // inside the loop. Get only the starting point for this.
@@ -950,32 +1010,60 @@ void QSynEditPainter::paintLines()
 
         mIsLineSelected = (!mIsComplexLine) && (mLineSelStart > 0);
         rcToken = rcLine;
+
+        int lineWidth;
+        QList<int> glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine-1,sLine);
+        QList<int> glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(vLine-1,sLine, lineWidth);
+
         if (!mEdit->mSyntaxer || !mEdit->mSyntaxer->enabled()) {
               sToken = sLine;
-              if (mIsCurrentLine) {
-                  tokenWidth = mEdit->document()->lineWidth(vLine-1, sLine);
-              } else {
-                  tokenWidth = mEdit->document()->lineWidth(vLine-1);
-              }
+              tokenWidth = lineWidth;
               if (mEdit->mOptions.testFlag(eoShowLineBreaks) && (!mIsLineSelected) && (!mIsSpecialLine) && (tokenWidth <= mLeft)) {
-                  sToken = sToken + LineBreakGlyph;
-                  tokenWidth += mEdit->document()->glyphWidth(LineBreakGlyph,0);
+                  expandGlyphStartCharList(LineBreakGlyph, sLine.length(), glyphStartCharList);
+                  int width = mEdit->document()->glyphWidth(LineBreakGlyph,0);
+                  glyphStartPositionsList.append(tokenWidth);
+                  sLine+=LineBreakGlyph;
+                  tokenWidth += width;
               }
               if (mIsComplexLine) {
                   setDrawingColors(true);
                   rcToken.setLeft(std::max(rcLine.left(), fixXValue(mLineSelStart)));
                   rcToken.setRight(std::min(rcLine.right(), fixXValue(mLineSelEnd)));
-                  paintToken(sToken, tokenWidth, 0, mLineSelStart, mLineSelEnd,false,mEdit->font(),mEdit->fontForNonAscii(),false);
+                  paintToken(
+                              sLine,
+                              glyphStartCharList,
+                              glyphStartPositionsList,
+                              0,
+                              glyphStartCharList.length(),
+                              tokenWidth, 0, mLineSelStart, mLineSelEnd,false,mEdit->font(),mEdit->fontForNonAscii(),false);
                   setDrawingColors(false);
                   rcToken.setLeft(std::max(rcLine.left(), fixXValue(mLeft)));
                   rcToken.setRight(std::min(rcLine.right(), fixXValue(mLineSelStart)));
-                  paintToken(sToken, tokenWidth, 0, mLeft, mLineSelStart,false,mEdit->font(),mEdit->fontForNonAscii(),false);
+                  paintToken(
+                              sLine,
+                              glyphStartCharList,
+                              glyphStartPositionsList,
+                              0,
+                              glyphStartCharList.length(),
+                              tokenWidth, 0, mLeft, mLineSelStart,false,mEdit->font(),mEdit->fontForNonAscii(),false);
                   rcToken.setLeft(std::max(rcLine.left(), fixXValue(mLineSelEnd)));
                   rcToken.setRight(std::min(rcLine.right(), fixXValue(mRight)));
-                  paintToken(sToken, tokenWidth, 0, mLineSelEnd, mRight,true, mEdit->font(), mEdit->fontForNonAscii(),false);
+                  paintToken(
+                              sLine,
+                              glyphStartCharList,
+                              glyphStartPositionsList,
+                              0,
+                              glyphStartCharList.length(),
+                              tokenWidth, 0, mLineSelEnd, mRight,true, mEdit->font(), mEdit->fontForNonAscii(),false);
               } else {
                   setDrawingColors(mIsLineSelected);
-                  paintToken(sToken, tokenWidth, 0, mLeft, mRight, mIsLineSelected,mEdit->font(),mEdit->fontForNonAscii(),false);
+                  paintToken(
+                              sLine,
+                              glyphStartCharList,
+                              glyphStartPositionsList,
+                              0,
+                              glyphStartCharList.length(),
+                              tokenWidth, 0, mLeft, mRight, mIsLineSelected,mEdit->font(),mEdit->fontForNonAscii(),false);
               }
               //Paint editingAreaBorders
               if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
@@ -1007,105 +1095,124 @@ void QSynEditPainter::paintLines()
             // Test first whether anything of this token is visible.
             while (!mEdit->mSyntaxer->eol()) {
                 sToken = mEdit->mSyntaxer->getToken();
-                // Work-around buggy highlighters which return empty tokens.
                 if (sToken.isEmpty())  {
-                    mEdit->mSyntaxer->next();
-                    if (mEdit->mSyntaxer->eol())
-                        break;
-                    sToken = mEdit->mSyntaxer->getToken();
-                    // Maybe should also test whether GetTokenPos changed...
-                    if (sToken.isEmpty()) {
-                        //qDebug()<<QSynEdit::tr("The highlighter seems to be in an infinite loop");
-                        throw BaseError(QSynEdit::tr("The syntaxer seems to be in an infinite loop"));
-                    }
+                    continue;
+                    // mEdit->mSyntaxer->next();
+                    // if (mEdit->mSyntaxer->eol())
+                    //     break;
+                    // sToken = mEdit->mSyntaxer->getToken();
+                    // // Maybe should also test whether GetTokenPos changed...
+                    // if (sToken.isEmpty()) {
+                    //     //qDebug()<<QSynEdit::tr("The highlighter seems to be in an infinite loop");
+                    //     throw BaseError(QSynEdit::tr("The syntaxer seems to be in an infinite loop"));
+                    // }
                 }
-                //nTokenColumnsBefore = edit->charToColumn(sLine,edit->mHighlighter->getTokenPos()+1)-1;
-                tokenWidth = mEdit->stringWidth(sToken, tokenLeft);
-                if ( tokenLeft + tokenWidth >= mLeft) {
-                    if (tokenLeft + tokenWidth >= mRight) {
-                        if (tokenLeft >= mRight)
-                            break; //*** BREAK ***
-                        tokenWidth = mRight - tokenLeft;
-                    }
-                    // It's at least partially visible. Get the token attributes now.
-                    attr = mEdit->mSyntaxer->getTokenAttribute();
+                int tokenStartChar = mEdit->mSyntaxer->getTokenPos();
+                int tokenEndChar = tokenStartChar + sToken.length();
 
-                    //rainbow parenthesis
-                    if (sToken == "["
-                            || sToken == "("
-                            || sToken == "{"
-                            ) {
-                        SyntaxState rangeState = mEdit->mSyntaxer->getState();
-                        getBraceColorAttr(rangeState.bracketLevel
-                                          +rangeState.braceLevel
-                                          +rangeState.parenthesisLevel
-                                          ,attr);
-                    } else if (sToken == "]"
-                               || sToken == ")"
-                               || sToken == "}"
-                               ){
-                        SyntaxState rangeState = mEdit->mSyntaxer->getState();
-                        getBraceColorAttr(rangeState.bracketLevel
-                                          +rangeState.braceLevel
-                                          +rangeState.parenthesisLevel+1,
-                                          attr);
-                    }
-                    //input method
-                    if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
-                        int startPos = mEdit->mSyntaxer->getTokenPos()+1;
-                        int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
-                        //qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
-                        if (!(endPos < mEdit->mCaretX
-                                || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
-                            if (!preeditAttr) {
-                                preeditAttr = attr;
-                            } else {
-                                attr = preeditAttr;
-                            }
-                        }
-                    }
-                    bool showGlyph=false;
-                    if (attr && attr->tokenType() == TokenType::Space) {
-                        int pos = mEdit->mSyntaxer->getTokenPos();
-                        if (pos==0) {
-                            showGlyph = mEdit->mOptions.testFlag(eoShowLeadingSpaces);
-                        } else if (pos+sToken.length()==sLine.length()) {
-                            showGlyph = mEdit->mOptions.testFlag(eoShowTrailingSpaces);
-                        } else {
-                            showGlyph = mEdit->mOptions.testFlag(eoShowInnerSpaces);
-                        }
-                    }
-                    addHighlightToken(sToken, tokenLeft,
-                      tokenWidth, vLine,attr, showGlyph);
+                // It's at least partially visible. Get the token attributes now.
+                attr = mEdit->mSyntaxer->getTokenAttribute();
+
+                //rainbow parenthesis
+                if (sToken == "["
+                        || sToken == "("
+                        || sToken == "{"
+                        ) {
+                    SyntaxState rangeState = mEdit->mSyntaxer->getState();
+                    getBraceColorAttr(rangeState.bracketLevel
+                                      +rangeState.braceLevel
+                                      +rangeState.parenthesisLevel
+                                      ,attr);
+                } else if (sToken == "]"
+                           || sToken == ")"
+                           || sToken == "}"
+                           ){
+                    SyntaxState rangeState = mEdit->mSyntaxer->getState();
+                    getBraceColorAttr(rangeState.bracketLevel
+                                      +rangeState.braceLevel
+                                      +rangeState.parenthesisLevel+1,
+                                      attr);
                 }
+                //input method
+                if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
+                    int startPos = mEdit->mSyntaxer->getTokenPos()+1;
+                    int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
+                    //qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
+                    if (!(endPos < mEdit->mCaretX
+                            || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
+                        if (!preeditAttr) {
+                            preeditAttr = attr;
+                        } else {
+                            attr = preeditAttr;
+                        }
+                    }
+                }
+                bool showGlyph=false;
+                if (attr && attr->tokenType() == TokenType::Space) {
+                    int pos = mEdit->mSyntaxer->getTokenPos();
+                    if (pos==0) {
+                        showGlyph = mEdit->mOptions.testFlag(eoShowLeadingSpaces);
+                    } else if (pos+sToken.length()==sLine.length()) {
+                        showGlyph = mEdit->mOptions.testFlag(eoShowTrailingSpaces);
+                    } else {
+                        showGlyph = mEdit->mOptions.testFlag(eoShowInnerSpaces);
+                    }
+                }
+                addHighlightToken(
+                            sLine,
+                            sToken,
+                            tokenLeft,
+                            vLine, attr,showGlyph,
+                            glyphStartCharList,
+                            tokenStartChar,
+                            tokenEndChar,
+                            glyphStartPositionsList,
+                            tokenWidth);
                 tokenLeft+=tokenWidth;
                 // Let the highlighter scan the next token.
                 mEdit->mSyntaxer->next();
             }
-            // Paint folding
-            foldRange = mEdit->foldStartAtLine(vLine);
-            if ((foldRange) && foldRange->collapsed) {
-                sFold = mEdit->syntaxer()->foldString(sLine);
-                nFold = mEdit->stringWidth(sFold,mEdit->mDocument->lineWidth(vLine-1));
-                attr = mEdit->mSyntaxer->symbolAttribute();
-                getBraceColorAttr(mEdit->mSyntaxer->getState().braceLevel,attr);
-                addHighlightToken(
-                            sFold, mEdit->mDocument->lineWidth(vLine-1)
-                            , nFold, vLine, attr,false);
-            } else  {
-                // Draw LineBreak glyph.
-                if (mEdit->mOptions.testFlag(eoShowLineBreaks)
-                        && (!mIsLineSelected)
-                        && (!mIsSpecialLine)
-                        && (mEdit->mDocument->lineWidth(vLine-1) < mRight)) {
-                    addHighlightToken(LineBreakGlyph,
-                                      mEdit->mDocument->lineWidth(vLine-1),
-                                      mEdit->mDocument->glyphWidth(LineBreakGlyph,0),vLine, mEdit->mSyntaxer->whitespaceAttribute(),false);
+            mEdit->mDocument->setLineWidth(vLine-1, sLine, tokenLeft, glyphStartPositionsList);
+            if (tokenLeft<mRight) {
+                QString addOnStr;
+
+                // Paint folding
+                foldRange = mEdit->foldStartAtLine(vLine);
+                if ((foldRange) && foldRange->collapsed) {
+                    addOnStr = mEdit->syntaxer()->foldString(sLine);
+                } else {
+                    // Draw LineBreak glyph.
+                    if (mEdit->mOptions.testFlag(eoShowLineBreaks)
+                            && (!mIsLineSelected)
+                            && (!mIsSpecialLine)
+                            && (mEdit->mDocument->lineWidth(vLine-1) < mRight)) {
+                        addOnStr = LineBreakGlyph;
+                    }
+                }
+                if (!addOnStr.isEmpty()) {
+                    expandGlyphStartCharList(addOnStr, sLine.length(), glyphStartCharList);
+                    for (int i=0;i<glyphStartCharList.length()-glyphStartPositionsList.length();i++) {
+                        glyphStartPositionsList.append(tokenLeft);
+                    }
+                    attr = mEdit->mSyntaxer->symbolAttribute();
+                    getBraceColorAttr(mEdit->mSyntaxer->getState().braceLevel,attr);
+                    int oldLen = sLine.length();
+                    sLine += addOnStr;
+                    addHighlightToken(
+                                sLine,
+                                addOnStr,
+                                tokenLeft,
+                                vLine, attr, false,
+                                glyphStartCharList,
+                                oldLen,
+                                sLine.length(),
+                                glyphStartPositionsList,
+                                tokenWidth);
                 }
             }
             // Draw anything that's left in the TokenAccu record. Fill to the end
             // of the invalid area with the correct colors.
-            paintHighlightToken(true);
+            paintHighlightToken(sLine, glyphStartCharList, glyphStartPositionsList, true);
 
             //Paint editingAreaBorders
             foreach (const PEditingArea& area, areaList) {

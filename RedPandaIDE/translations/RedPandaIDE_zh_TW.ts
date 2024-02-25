@@ -4869,10 +4869,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Line: %1 Col: %2 Lines: %3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Newline</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5133,7 +5129,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Line: %1 Col: %2 Sel:%3 Lines: %4</source>
+        <source>Line: %1 Char: %2 Sel:%3 Lines: %4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Line: %1 Char: %2 Lines: %3</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

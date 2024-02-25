@@ -4288,29 +4288,29 @@
 <context>
     <name>QSynedit::Document</name>
     <message>
-        <location filename="qsynedit/document.cpp" line="590"/>
+        <location filename="qsynedit/document.cpp" line="616"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>无法读取文件&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="630"/>
-        <location filename="qsynedit/document.cpp" line="753"/>
+        <location filename="qsynedit/document.cpp" line="656"/>
+        <location filename="qsynedit/document.cpp" line="779"/>
         <source>Can&apos;t load codec &apos;%1&apos;!</source>
         <translation>无法加载字符编码&quot;%1&quot;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="649"/>
+        <location filename="qsynedit/document.cpp" line="675"/>
         <source>&apos;%1&apos; is a binaray File!</source>
         <oldsource>This is a binaray File!</oldsource>
         <translation>&apos;%1&apos;是二进制文件！</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="756"/>
+        <location filename="qsynedit/document.cpp" line="782"/>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
         <translation>无法保存文件&quot;%1&quot;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="779"/>
+        <location filename="qsynedit/document.cpp" line="805"/>
         <source>Data not correctly writed to file &apos;%1&apos;.</source>
         <translation>数据未能正确写入文件&quot;%1&quot;。</translation>
     </message>
@@ -4318,7 +4318,7 @@
 <context>
     <name>QSynedit::QSynEdit</name>
     <message>
-        <location filename="qsynedit/painter.cpp" line="967"/>
+        <location filename="qsynedit/painter.cpp" line="1019"/>
         <source>The syntaxer seems to be in an infinite loop</source>
         <oldsource>The highlighter seems to be in an infinite loop</oldsource>
         <translation>代码分析器似乎死循环了。</translation>

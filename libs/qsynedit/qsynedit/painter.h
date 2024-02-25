@@ -31,10 +31,14 @@ class QSynEditPainter
     struct SynTokenAccu {
         int width;
         int left;
-        QString s;
+        int startGlyph;
+        int endGlyph;
+//        QString s;
         QColor foreground;
         QColor background;
         FontStyles style;
+        QFont font;
+        QFont nonAsciiFont;
         bool showSpecialGlyphs;
     };
 
@@ -54,13 +58,29 @@ private:
     void computeSelectionInfo();
     void setDrawingColors(bool selected);
     int fixXValue(int xpos);
-    void paintToken(const QString& token, int tokenWidth, int tokenLeft,
-                    int first, int last, bool isSelection, const QFont& font,
-                    const QFont& fontForNonAscii, bool showGlyphs);
+    void paintToken(
+            const QString& lineText,
+            const QList<int> &glyphStartCharList,
+            const QList<int> &glyphStartPositionList,
+            int startGlyph,
+            int endGlyph,
+            int tokenWidth, int tokenLeft,
+            int first, int last, bool isSelection, const QFont& font,
+            const QFont& fontForNonAscii, bool showGlyphs);
     void paintEditAreas(const EditingAreaList& areaList);
-    void paintHighlightToken(bool bFillToEOL);
-    void addHighlightToken(const QString& token, int tokenLeft, int tokenWidth,
-                           int line, PTokenAttribute p_Attri, bool showGlyphs);
+    void paintHighlightToken(const QString& lineText,
+                             const QList<int> &glyphStartCharList,
+                             const QList<int> &glyphStartPositionsList, bool bFillToEOL);
+    void addHighlightToken(
+            const QString& lineText,
+            const QString& token, int tokenLeft,
+            int line, PTokenAttribute p_Attri, bool showGlyphs,
+            const QList<int> glyphStartCharList,
+            int tokenStartChar,
+            int tokenEndChar,
+            QList<int> &glyphStartPositionList,
+            int &tokenWidth
+            );
 
     void paintFoldAttributes();
     void getBraceColorAttr(int level, PTokenAttribute &attr);
