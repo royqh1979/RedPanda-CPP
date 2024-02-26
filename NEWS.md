@@ -9,6 +9,7 @@ Red Panda C++ Version 2.27
   - enhancement: Support unicode ZWJ and ZWNJ.
   - enhancement: Support unicode combining characters.
   - enhancement: Don't force fixed-width when using non fixed-width fonts.
+  - change: Replace non-ascii font with fallback font.
   - enhancement: Migrate external calls from command string to argv array to improve safety and security.
   - enhancement: Support POSIX shell-like escaping in user inputs for compiler arguments.
   - fix: (Hopefully) properly escape filenames and arguments in makefile generation.

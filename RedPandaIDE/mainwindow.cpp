@@ -1437,16 +1437,18 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
     if (!clear && e!=nullptr) {
         QString msg;
         if (e->selAvail()) {
-            msg = tr("Line: %1 Char: %2 Sel:%3 Lines: %4")
-                .arg(e->caretY())
-                .arg(e->caretX())
-                .arg(e->selText().length())
-                .arg(e->document()->count());
+            msg = tr("Line: %1/%2 Char: %3/%4 Sel:%5")
+                    .arg(e->caretY())
+                    .arg(e->document()->count())
+                    .arg(e->caretX())
+                    .arg(e->lineText().length())
+                    .arg(e->selText().length());
         } else {
-            msg = tr("Line: %1 Char: %2 Lines: %3")
-                .arg(e->caretY())
-                .arg(e->caretX())
-                .arg(e->document()->count());
+            msg = tr("Line: %1/%2 Char: %3/%4")
+                    .arg(e->caretY())
+                    .arg(e->document()->count())
+                    .arg(e->caretX())
+                    .arg(e->lineText().length());
         }
         mFileInfoStatus->setText(msg);
     } else {

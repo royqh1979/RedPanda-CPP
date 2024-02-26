@@ -443,7 +443,7 @@ public:
      */
     int stringWidth(const QString &str, int left) const;
 
-    int stringWidth(const QString &str, int left, const QFontMetrics &asciFontMetrics, const QFontMetrics &nonAsciiFontMetrics);
+    int stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics);
 
     int glyphCount(int line);
     /**
@@ -523,7 +523,7 @@ public:
             const QString& lineText,
             const QList<int> &glyphStartCharList,
             int startChar, int endChar,
-            const QFontMetrics &fontMetrics, const QFontMetrics &nonAsciiFontMetrics,
+            const QFontMetrics &fontMetrics,
             QList<int> &glyphStartPositionList,
             int left, int &right, int &startGlyph, int &endGlyph) const;
 
@@ -546,7 +546,7 @@ public:
     void setTabSize(int newTabSize);
 
     const QFontMetrics &fontMetrics() const;
-    void setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont);
+    void setFont(const QFont &newFont);
 
 public slots:
     void invalidateAllLineWidth();
@@ -569,14 +569,13 @@ private:
     void setLineWidth(int line, const QString& lineText, int newWidth, const QList<int> glyphStartPositionList);
 
     int glyphWidth(const QString& glyph, int left,
-                   const QFontMetrics &fontMetrics, const QFontMetrics &nonAsciiFontMetrics) const;
+                   const QFontMetrics &fontMetrics) const;
 
     int xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const;
     int charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charPos) const;
     QList<int> calcLineWidth(const QString& lineText, const QList<int> &glyphStartCharList, int &width);
     QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList,
                                      const QFontMetrics &fontMetrics,
-                                     const QFontMetrics &nonAsciiFontMetrics,
                                      int left, int &right) const;
     QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList, int left, int &right) const;
     QList<int> calcGlyphPositionList(const QString& lineText, int &width) const;
@@ -596,7 +595,6 @@ private:
     //SynEdit* mEdit;
 
     QFontMetrics mFontMetrics;
-    QFontMetrics mNonAsciiFontMetrics;
     int mTabSize;
     int mCharWidth;
     int mSpaceWidth;

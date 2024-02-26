@@ -142,14 +142,18 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
 
 void CPUDialog::resetEditorFont(float dpi)
 {
-    QFont f=QFont(pSettings->editor().fontName());
+
+    QFont f=QFont();
+    f.setFamilies(
+                QStringList{
+                    pSettings->editor().fontName(),
+                    pSettings->editor().fallbackFontName(),
+                    pSettings->editor().fallbackFontName2(),
+                    pSettings->editor().fallbackFontName3(),
+                });
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize(),dpi));
     f.setStyleStrategy(QFont::PreferAntialias);
     ui->txtCode->setFont(f);
-    QFont f2=QFont(pSettings->editor().nonAsciiFontName());
-    f2.setPixelSize(pointToPixel(pSettings->editor().fontSize(),dpi));
-    f2.setStyleStrategy(QFont::PreferAntialias);
-    ui->txtCode->setFontForNonAscii(f2);
 }
 
 void CPUDialog::sendSyntaxCommand()

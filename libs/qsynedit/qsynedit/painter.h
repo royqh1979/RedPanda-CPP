@@ -38,7 +38,6 @@ class QSynEditPainter
         QColor background;
         FontStyles style;
         QFont font;
-        QFont nonAsciiFont;
         bool showSpecialGlyphs;
     };
 
@@ -65,7 +64,7 @@ private:
             int startGlyph,
             int endGlyph,
             int tokenWidth, int tokenLeft,
-            int first, int last, bool isSelection, const QFont& font,
+            int first, int last,
             const QFont& fontForNonAscii, bool showGlyphs);
     void paintEditAreas(const EditingAreaList& areaList);
     void paintHighlightToken(const QString& lineText,

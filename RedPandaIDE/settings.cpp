@@ -668,15 +668,37 @@ void Settings::Editor::setEnableLigaturesSupport(bool newEnableLigaturesSupport)
     mEnableLigaturesSupport = newEnableLigaturesSupport;
 }
 
-const QString &Settings::Editor::nonAsciiFontName() const
+const QString &Settings::Editor::fallbackFontName() const
 {
-    return mNonAsciiFontName;
+    return mFallbackFontName;
 }
 
-void Settings::Editor::setNonAsciiFontName(const QString &newNonAsciiFontName)
+void Settings::Editor::setFallbackFontName(const QString &newFontName)
 {
-    mNonAsciiFontName = newNonAsciiFontName;
+    mFallbackFontName = newFontName;
 }
+
+const QString &Settings::Editor::fallbackFontName2() const
+{
+    return mFallbackFontName2;
+}
+
+void Settings::Editor::setFallbackFontName2(const QString &newFontName)
+{
+    mFallbackFontName2 = newFontName;
+}
+
+const QString &Settings::Editor::fallbackFontName3() const
+{
+    return mFallbackFontName3;
+}
+
+void Settings::Editor::setFallbackFontName3(const QString &newFontName)
+{
+    mFallbackFontName3 = newFontName;
+}
+
+
 
 int Settings::Editor::mouseSelectionScrollSpeed() const
 {
@@ -1349,7 +1371,9 @@ void Settings::Editor::doSave()
     //Font
     //font
     saveValue("font_name", mFontName);
-    saveValue("non_ascii_font_name", mNonAsciiFontName);
+    saveValue("fallback_font_name", mFallbackFontName);
+    saveValue("fallback_font_name2", mFallbackFontName2);
+    saveValue("fallback_font_name3", mFallbackFontName3);
     saveValue("font_size", mFontSize);
     saveValue("font_only_monospaced", mFontOnlyMonospaced);
     saveValue("line_spacing",mLineSpacing);
@@ -1492,7 +1516,9 @@ void Settings::Editor::doLoad()
         defaultCjkFontName = CJK_MONO_FONT_K;
     else if (defaultLocaleName == "zh_CN")
         defaultCjkFontName = CJK_MONO_FONT_SC;
-    mNonAsciiFontName = stringValue("non_ascii_font_name",defaultCjkFontName);
+    mFallbackFontName = stringValue("fallback_font_name",defaultCjkFontName);
+    mFallbackFontName2 = stringValue("fallback_font_name2",DEFAULT_MONO_FONT);
+    mFallbackFontName3 = stringValue("fallback_font_name3",DEFAULT_MONO_FONT);
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.1);

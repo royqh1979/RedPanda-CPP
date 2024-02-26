@@ -160,7 +160,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     setAcceptDrops(true);
 
     setFont(mFontDummy);
-    setFontForNonAscii(mFontDummy);
 }
 
 int QSynEdit::displayLineCount() const
@@ -3871,19 +3870,6 @@ void QSynEdit::setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed)
     mMouseSelectionScrollSpeed = newMouseSelectionScrollSpeed;
 }
 
-const QFont &QSynEdit::fontForNonAscii() const
-{
-    return mFontForNonAscii;
-}
-
-void QSynEdit::setFontForNonAscii(const QFont &newFontForNonAscii)
-{
-    mFontForNonAscii = newFontForNonAscii;
-    mFontForNonAscii.setStyleStrategy(QFont::PreferAntialias);
-    if (mDocument)
-        mDocument->setFontMetrics(font(),mFontForNonAscii);
-}
-
 const QColor &QSynEdit::backgroundColor() const
 {
     return mBackgroundColor;
@@ -6145,13 +6131,14 @@ bool QSynEdit::event(QEvent *event)
         }
     }
         break;
-    case QEvent::FontChange:
-        synFontChanged();
-        if (mDocument)
-            mDocument->setFontMetrics(font(),mFontForNonAscii);
-        break;
     case QEvent::MouseMove: {
         updateMouseCursor();
+        break;
+    }
+    case QEvent::FontChange: {
+        if (mDocument)
+            mDocument->setFont(font());
+        synFontChanged();
         break;
     }
     default:

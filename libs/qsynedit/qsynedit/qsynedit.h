@@ -454,7 +454,6 @@ public:
     void setBackgroundColor(const QColor &newBackgroundColor);
 
     bool isEmpty();
-
 signals:
     void linesDeleted(int FirstLine, int Count);
     void linesInserted(int FirstLine, int Count);
@@ -481,7 +480,6 @@ signals:
 
     void fontChanged();
     void tabSizeChanged();
-
 protected:
     virtual bool onGetSpecialLineColors(int Line,
          QColor& foreground, QColor& backgroundColor) ;
@@ -807,10 +805,6 @@ protected:
     // QWidget interface
     public:
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
-
-    // QWidget interface
-    const QFont &fontForNonAscii() const;
-    void setFontForNonAscii(const QFont &newFontForNonAscii);
 
     int mouseSelectionScrollSpeed() const;
     void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);

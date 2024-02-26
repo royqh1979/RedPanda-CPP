@@ -1319,10 +1319,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Font for non-ascii Text:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Gutter</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1388,6 +1384,22 @@
     </message>
     <message>
         <source>Line break</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fallback Font:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>*Needs restart</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fallback Font 2:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fallback Font 3:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5129,11 +5141,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Line: %1 Char: %2 Sel:%3 Lines: %4</source>
+        <source>Line: %1/%2 Char: %3/%4 Sel:%5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Line: %1 Char: %2 Lines: %3</source>
+        <source>Line: %1/%2 Char: %3/%4</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
