@@ -1255,10 +1255,10 @@ void QSynEditPainter::paintLines()
                 }
                 areaList.append(area);
 
-                mEdit->mGlyphPostionListCache.str = sLine;
-                mEdit->mGlyphPostionListCache.glyphCharList = glyphStartCharList;
-                mEdit->mGlyphPostionListCache.glyphPositionList = glyphStartPositionsList;
-                mEdit->mGlyphPostionListCache.strWidth = tokenLeft;
+                mEdit->mGlyphPostionCacheForInputMethod.str = sLine;
+                mEdit->mGlyphPostionCacheForInputMethod.glyphCharList = glyphStartCharList;
+                mEdit->mGlyphPostionCacheForInputMethod.glyphPositionList = glyphStartPositionsList;
+                mEdit->mGlyphPostionCacheForInputMethod.strWidth = tokenLeft;
             }
             paintEditAreas(areaList);
         }

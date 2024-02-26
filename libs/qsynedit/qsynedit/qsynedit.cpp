@@ -2503,9 +2503,9 @@ QRect QSynEdit::calculateCaretRect() const
         QString sLine = lineText().left(mCaretX-1)
                 + mInputPreeditString
                 + lineText().mid(mCaretX-1);
-        if (sLine == mGlyphPostionListCache.str)  {
-            int glyphIdx = searchForSegmentIdx(mGlyphPostionListCache.glyphCharList,0,sLine.length(),mCaretX+mInputPreeditString.length()-1);
-            coord.x = segmentIntervalStart(mGlyphPostionListCache.glyphPositionList,0,mGlyphPostionListCache.strWidth, glyphIdx);
+        if (sLine == mGlyphPostionCacheForInputMethod.str)  {
+            int glyphIdx = searchForSegmentIdx(mGlyphPostionCacheForInputMethod.glyphCharList,0,sLine.length(),mCaretX+mInputPreeditString.length()-1);
+            coord.x = segmentIntervalStart(mGlyphPostionCacheForInputMethod.glyphPositionList,0,mGlyphPostionCacheForInputMethod.strWidth, glyphIdx);
         } else
             coord.x = charToGlyphLeft(mCaretY, sLine, mCaretX+mInputPreeditString.length());
     }

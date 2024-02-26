@@ -779,7 +779,7 @@ private:
     int mWheelAccumulatedDeltaY;
 
     PFormatter mFormatter;
-    GlyphPostionsListCache mGlyphPostionListCache;
+    GlyphPostionsListCache mGlyphPostionCacheForInputMethod;
 
 friend class QSynEditPainter;
 
