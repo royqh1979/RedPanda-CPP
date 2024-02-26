@@ -867,7 +867,8 @@ QList<int> calcGlyphStartCharList(const QString &text)
             }
             i+=2;
             continue;
-        } else if (ch.unicode() == 0x200D) {
+        } else if (ch.unicode() == 0x200D || ch.unicode() == 0x200C ) {
+            //ZWJ && ZWNJ
             consecutive = true;
         } else if (ch.combiningClass()!=0 && !glyphStartCharList.isEmpty()) {
             //a Combining character
