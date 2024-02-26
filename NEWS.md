@@ -4,6 +4,11 @@ Red Panda C++ Version 2.27
   - enhancement: Limit the minimum font size in options dialog to 5. (by XY0797@github.com)
   - enhancement: After a new file is created in filesystem panel, auto select and rename it. (by XY0797@github.com)
   - enhancement: Select file basename when rename in the filesystem panel. (by XY0797@github.com)
+  - change: Don't use "Microsoft Yahei" as the default non-ascii font in non-chinese environment.
+  - enhancement: Support unicode characters > 0xFFFF
+  - enhancement: Support unicode ZWJ and ZWNJ.
+  - enhancement: Support unicode combining characters.
+  - enhancement: Don't force fixed-width when using non fixed-width fonts.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
