@@ -1653,7 +1653,7 @@ p, li { white-space: pre-wrap; }
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="5477"/>
+        <location filename="../editor.cpp" line="5479"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
