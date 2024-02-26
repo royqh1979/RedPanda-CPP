@@ -132,6 +132,14 @@ using SearchMathedProc = std::function<SearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
 using SearchConfirmAroundProc = std::function<bool ()>;
 
+struct GlyphPostionsListCache {
+    QString str;
+    QList<int> glyphCharList;
+    QList<int> glyphPositionList;
+    int strWidth;
+};
+
+
 class QSynEdit;
 using PSynEdit = std::shared_ptr<QSynEdit>;
 
@@ -142,6 +150,7 @@ public:
     explicit QSynEdit(QWidget* parent=nullptr);
     QSynEdit(const QSynEdit&)=delete;
     QSynEdit& operator=(const QSynEdit&)=delete;
+
     /**
      * Returns how many rows are there in the editor
      * @return
@@ -770,6 +779,7 @@ private:
     int mWheelAccumulatedDeltaY;
 
     PFormatter mFormatter;
+    GlyphPostionsListCache mGlyphPostionListCache;
 
 friend class QSynEditPainter;
 

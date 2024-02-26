@@ -1216,6 +1216,7 @@ void QSynEditPainter::paintLines()
                                 sLine.length(),
                                 glyphStartPositionsList,
                                 tokenWidth);
+                    tokenLeft += tokenWidth;
                 }
             }
             // Draw anything that's left in the TokenAccu record. Fill to the end
@@ -1253,6 +1254,11 @@ void QSynEditPainter::paintLines()
                     area->color = colFG;
                 }
                 areaList.append(area);
+
+                mEdit->mGlyphPostionListCache.str = sLine;
+                mEdit->mGlyphPostionListCache.glyphCharList = glyphStartCharList;
+                mEdit->mGlyphPostionListCache.glyphPositionList = glyphStartPositionsList;
+                mEdit->mGlyphPostionListCache.strWidth = tokenLeft;
             }
             paintEditAreas(areaList);
         }

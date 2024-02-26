@@ -2503,7 +2503,11 @@ QRect QSynEdit::calculateCaretRect() const
         QString sLine = lineText().left(mCaretX-1)
                 + mInputPreeditString
                 + lineText().mid(mCaretX-1);
-        coord.x = charToGlyphLeft(mCaretY, sLine, mCaretX+mInputPreeditString.length());
+        if (sLine == mGlyphPostionListCache.str)  {
+            int glyphIdx = searchForSegmentIdx(mGlyphPostionListCache.glyphCharList,0,sLine.length(),mCaretX+mInputPreeditString.length()-1);
+            coord.x = segmentIntervalStart(mGlyphPostionListCache.glyphPositionList,0,mGlyphPostionListCache.strWidth, glyphIdx);
+        } else
+            coord.x = charToGlyphLeft(mCaretY, sLine, mCaretX+mInputPreeditString.length());
     }
     int rows=1;
     if (mActiveSelectionMode == SelectionMode::Column) {
