@@ -1149,8 +1149,8 @@ void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
     if (lst) {
         for (const PSyntaxIssue& issue: *lst) {
             QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
-            p->beginX = issue->col;
-            p->endX = issue->endCol;
+            p->beginX = issue->startChar;
+            p->endX = issue->endChar;
             if (issue->issueType == CompileIssueType::Error) {
                 p->color = mSyntaxErrorColor;
             } else {
@@ -1567,7 +1567,7 @@ void Editor::copyAsHTML()
     if (!selAvail()) {
         doSelectLine();
     }
-    QSynedit::HTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
@@ -1640,10 +1640,6 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
     }
     pError->startChar = start;
     pError->endChar = start + token.length();
-//    pError->col = charToColumn(line,pError->startChar);
-//    pError->endCol = charToColumn(line,pError->endChar);
-    pError->col = pError->startChar;
-    pError->endCol = pError->endChar;
     pError->hint = hint;
     pError->token = token;
     pError->issueType = errorType;
@@ -1822,17 +1818,27 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                     invalidateLine(mHighlightCharPos2.line);
                 }
             }
-
         }
     }
 
     // scSelection includes anything caret related
     if (changes.testFlag(QSynedit::StatusChange::scSelection)) {
-        if (!selAvail() && pSettings->editor().highlightCurrentWord()) {
-            mCurrentHighlightedWord = wordAtCursor();
-        } else if (selAvail() && blockBegin() == wordStart()
-                   && blockEnd() == wordEnd()){
-            mCurrentHighlightedWord = selText();
+        QString token;
+        QSynedit::PTokenAttribute attri;
+        if (getTokenAttriAtRowCol(caretXY(), token,attri)
+                && (
+                    (attri->tokenType()==QSynedit::TokenType::Identifier)
+                    || (attri->tokenType() == QSynedit::TokenType::Keyword)
+                    || (attri->tokenType() == QSynedit::TokenType::Preprocessor)
+                    )) {
+            if (!selAvail() && pSettings->editor().highlightCurrentWord()) {
+                mCurrentHighlightedWord = token;
+            } else if (selAvail() && blockBegin() == wordStart()
+                       && blockEnd() == wordEnd()){
+                mCurrentHighlightedWord = selText();
+            } else {
+                mCurrentHighlightedWord = "";
+            }
         } else {
             mCurrentHighlightedWord = "";
         }
@@ -3312,7 +3318,7 @@ void Editor::print()
         return;
     }
 
-    QSynedit::QtSupportedHtmlExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::QtSupportedHtmlExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
 
     exporter.setTitle(QFileInfo(mFilename).fileName());
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
@@ -3348,7 +3354,7 @@ void Editor::print()
 
 void Editor::exportAsRTF(const QString &rtfFilename)
 {
-    QSynedit::RTFExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::RTFExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(rtfFilename));
     exporter.setUseBackground(pSettings->editor().copyRTFUseBackground());
     exporter.setFont(font());
@@ -3372,7 +3378,7 @@ void Editor::exportAsRTF(const QString &rtfFilename)
 
 void Editor::exportAsHTML(const QString &htmlFilename)
 {
-    QSynedit::HTMLExporter exporter(tabWidth(), pCharsetInfoManager->getDefaultSystemEncoding());
+    QSynedit::HTMLExporter exporter(tabSize(), pCharsetInfoManager->getDefaultSystemEncoding());
     exporter.setTitle(extractFileName(htmlFilename));
     exporter.setUseBackground(pSettings->editor().copyHTMLUseBackground());
     exporter.setFont(font());
@@ -3471,7 +3477,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                              pSettings->codeCompletion().height());
 
     // Position it at the top of the next line
-    QPoint popupPos = mapToGlobal(rowColumnToPixels(displayXY()));
+    QPoint popupPos = mapToGlobal(displayCoordToPixels(displayXY()));
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QSize  desktopSize = screen()->virtualSize();
     if (desktopSize.height() - popupPos.y() < mCompletionPopup->height() && popupPos.y() > mCompletionPopup->height())
@@ -3601,7 +3607,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
         return;
 
     // Position it at the top of the next line
-    QPoint p = rowColumnToPixels(displayXY());
+    QPoint p = displayCoordToPixels(displayXY());
     p.setY(p.y() + textHeight() + 2);
     mHeaderCompletionPopup->move(mapToGlobal(p));
 
@@ -4374,7 +4380,7 @@ void Editor::updateFunctionTip(bool showTip)
         return;
     }
     // Position it at the top of the next line
-    QPoint p = rowColumnToPixels(displayXY());
+    QPoint p = displayCoordToPixels(displayXY());
     p+=QPoint(0,textHeight()+2);
     pMainWindow->functionTip()->move(mapToGlobal(p));
 
@@ -5269,7 +5275,7 @@ void Editor::applySettings()
                     && syntaxer() && syntaxer()->supportBraceLevel());
     setOptions(options);
 
-    setTabWidth(pSettings->editor().tabWidth());
+    setTabSize(pSettings->editor().tabWidth());
     setInsertCaret(pSettings->editor().caretForInsert());
     setOverwriteCaret(pSettings->editor().caretForOverwrite());
     setCaretUseTextColor(pSettings->editor().caretUseTextColor());

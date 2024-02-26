@@ -29,18 +29,24 @@ class QSynEdit;
 class QSynEditPainter
 {
     struct SynTokenAccu {
-        int columns;
-        int columnsBefore;
-        QString s;
+        int width;
+        int left;
+        int startGlyph;
+        int endGlyph;
+//        QString s;
         QColor foreground;
         QColor background;
         FontStyles style;
+        QFont font;
+        QFont nonAsciiFont;
         bool showSpecialGlyphs;
     };
 
 public:
-    QSynEditPainter(QSynEdit * edit,QPainter* painter,int FirstRow, int LastRow,
-                       int FirstCol, int LastCol);
+    QSynEditPainter(QSynEdit * edit,QPainter* painter,
+                    int firstRow,
+                    int lastRow,
+                    int left, int right);
     QSynEditPainter(const QSynEditPainter&)=delete;
     QSynEditPainter& operator=(const QSynEditPainter&)=delete;
 
@@ -51,43 +57,61 @@ private:
     QColor colEditorBG();
     void computeSelectionInfo();
     void setDrawingColors(bool selected);
-    int columnToXValue(int col);
-    void paintToken(const QString& token, int tokenLen, int columnsBefore,
-                    int first, int last, bool isSelection, const QFont& font,
-                    const QFont& fontForNonAscii, bool showGlyphs);
+    int fixXValue(int xpos);
+    void paintToken(
+            const QString& lineText,
+            const QList<int> &glyphStartCharList,
+            const QList<int> &glyphStartPositionList,
+            int startGlyph,
+            int endGlyph,
+            int tokenWidth, int tokenLeft,
+            int first, int last, bool isSelection, const QFont& font,
+            const QFont& fontForNonAscii, bool showGlyphs);
     void paintEditAreas(const EditingAreaList& areaList);
-    void paintHighlightToken(bool bFillToEOL);
-    void addHighlightToken(const QString& token, int columnsBefore, int tokenColumns,
-                           int cLine, PTokenAttribute p_Attri, bool showGlyphs);
+    void paintHighlightToken(const QString& lineText,
+                             const QList<int> &glyphStartCharList,
+                             const QList<int> &glyphStartPositionsList, bool bFillToEOL);
+    void addHighlightToken(
+            const QString& lineText,
+            const QString& token, int tokenLeft,
+            int line, PTokenAttribute p_Attri, bool showGlyphs,
+            const QList<int> glyphStartCharList,
+            int tokenStartChar,
+            int tokenEndChar,
+            QList<int> &glyphStartPositionList,
+            int &tokenWidth
+            );
 
     void paintFoldAttributes();
     void getBraceColorAttr(int level, PTokenAttribute &attr);
     void paintLines();
 
 private:
-    QSynEdit* edit;
-    QPainter* painter;
+    QSynEdit* mEdit;
+    QPainter* mPainter;
     bool bDoRightEdge; // right edge
     int nRightEdge;
     // selection info
     bool bAnySelection; // any selection visible?
-    DisplayCoord vSelStart; // start of selected area
-    DisplayCoord vSelEnd; // end of selected area
+    DisplayCoord mSelStart; // start of selected area
+    DisplayCoord mSelEnd; // end of selected area
     // info about normal and selected text and background colors
-    bool bSpecialLine, bLineSelected, bCurrentLine;
+    bool mIsSpecialLine, mIsLineSelected, mIsCurrentLine;
     QColor colFG, colBG;
     QColor colSelFG, colSelBG;
     QColor colSpFG, colSpBG;
     // info about selection of the current line
-    int nLineSelStart, nLineSelEnd;
-    bool bComplexLine;
+    int mLineSelStart, mLineSelEnd;
+    bool mIsComplexLine;
     // painting the background and the text
     QRect rcLine, rcToken;
-    int vFirstLine, vLastLine;
+    int mFirstLine, mLastLine;
 
-    QRect AClip;
-    int aFirstRow, aLastRow, FirstCol, LastCol;
+    QRect mClip;
+    int mFirstRow, mLastRow, mLeft, mRight;
     SynTokenAccu mTokenAccu;
+
+    static QSet<QString> OperatorGlyphs;
 };
 
 }

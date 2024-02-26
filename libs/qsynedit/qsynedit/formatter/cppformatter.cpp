@@ -108,12 +108,12 @@ namespace QSynedit {
                         indentSpaces = editor->leftSpaces(editor->document()->getLine(matchingIndents.line));
                     } else if (rangeAfterFirstToken.indents.count()>=2){
                         IndentInfo info =  rangeAfterFirstToken.indents[rangeAfterFirstToken.indents.count()-2];
-                        indentSpaces = editor->leftSpaces(editor->document()->getLine(info.line))+editor->tabWidth();
+                        indentSpaces = editor->leftSpaces(editor->document()->getLine(info.line))+editor->tabSize();
                     } else
                         indentSpaces = 0;
                 } else if (rangePreceeding.getLastIndentType()!=IndentType::None) {
                     IndentInfo matchingIndents = rangePreceeding.getLastIndent();
-                    indentSpaces = editor->leftSpaces(editor->document()->getLine(matchingIndents.line))+editor->tabWidth();
+                    indentSpaces = editor->leftSpaces(editor->document()->getLine(matchingIndents.line))+editor->tabSize();
                 } else {
                     indentSpaces = 0;
                 }

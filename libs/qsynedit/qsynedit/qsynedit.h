@@ -47,7 +47,7 @@ enum StatusChange {
     scAll = 0x0001,
     scCaretX = 0x0002,
     scCaretY = 0x0004,
-    scLeftChar = 0x0008,
+    scLeftPos = 0x0008,
     scTopLine = 0x0010,
     scInsertMode = 0x0020,
     scModifyChanged = 0x0040,
@@ -75,31 +75,32 @@ Q_DECLARE_FLAGS(StateFlags,StateFlag)
 Q_DECLARE_OPERATORS_FOR_FLAGS(StateFlags)
 
 enum EditorOption {
-  eoAltSetsColumnMode =     0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
-  eoAutoIndent =            0x00000002, //Will auto calculate the indent when input
-  eoLigatureSupport =       0x00000004, //Support ligaures in fonts like fira code
-  eoDragDropEditing =       0x00000008, //Allows you to select a block of text and drag it within the document to another location
-  eoDropFiles =             0x00000010, //Allows the editor accept OLE file drops
-  eoEnhanceHomeKey =        0x00000020, //enhances home key positioning, similar to visual studio
-  eoEnhanceEndKey =         0x00000040, //enhances End key positioning, similar to JDeveloper
-  eoGroupUndo =             0x00000080, //When undoing/redoing actions, handle all continous changes of the same kind in one call instead undoing/redoing each command separately
-  eoHalfPageScroll =        0x00000100, //When scrolling with page-up and page-down commands, only scroll a half page at a time
-  eoHideShowScrollbars =    0x00000200, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
-  eoKeepCaretX =            0x00000400 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
-  eoRightMouseMovesCursor=  0x00000800, //When clicking with the right mouse for a popup menu, move the cursor to that location
-  eoScrollByOneLess =       0x00001000, //Forces scrolling to be one less
-  eoScrollPastEof =         0x00002000, //Allows the cursor to go past the end of file marker
-  eoScrollPastEol =         0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
+    eoAltSetsColumnMode =     0x00000001, //Holding down the Alt Key will put the selection mode into columnar format
+    eoAutoIndent =            0x00000002, //Will auto calculate the indent when input
+    eoLigatureSupport =       0x00000004, //Support ligaures in fonts like fira code
+    eoDragDropEditing =       0x00000008, //Allows you to select a block of text and drag it within the document to another location
+    eoDropFiles =             0x00000010, //Allows the editor accept OLE file drops
+    eoEnhanceHomeKey =        0x00000020, //enhances home key positioning, similar to visual studio
+    eoEnhanceEndKey =         0x00000040, //enhances End key positioning, similar to JDeveloper
+    eoGroupUndo =             0x00000080, //When undoing/redoing actions, handle all continous changes of the same kind in one call instead undoing/redoing each command separately
+    eoHalfPageScroll =        0x00000100, //When scrolling with page-up and page-down commands, only scroll a half page at a time
+    eoHideShowScrollbars =    0x00000200, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
+    eoKeepCaretX =            0x00000400 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
+    eoRightMouseMovesCursor=  0x00000800, //When clicking with the right mouse for a popup menu, move the cursor to that location
+    eoScrollByOneLess =       0x00001000, //Forces scrolling to be one less
+    eoScrollPastEof =         0x00002000, //Allows the cursor to go past the end of file marker
+    eoScrollPastEol =         0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
 //  eoShowSpecialChars =      0x00008000, //Shows the special Characters
 //  eoSpecialLineDefaultFg = 0x00010000, //disables the foreground text color override when using the OnSpecialLineColor event
-  eoTabIndent =             0x00020000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
-  eoTabsToSpaces =          0x00040000, //Converts a tab character to a specified number of space characters
-  eoShowRainbowColor    =   0x00080000,
-  eoSelectWordByDblClick=   0x00100000,
-  eoShowLeadingSpaces =   0x00200000,
-  eoShowTrailingSpaces   =   0x00400000,
-  eoShowInnerSpaces=   0x00800000,
-  eoShowLineBreaks      =   0x01000000,
+    eoTabIndent =             0x00020000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
+    eoTabsToSpaces =          0x00040000, //Converts a tab character to a specified number of space characters
+    eoShowRainbowColor    =   0x00080000,
+    eoSelectWordByDblClick =  0x00100000,
+    eoShowLeadingSpaces =     0x00200000,
+    eoShowTrailingSpaces =    0x00400000,
+    eoShowInnerSpaces =       0x00800000,
+    eoShowLineBreaks =        0x01000000,
+    eoForceMonospace =        0x02000000,
 };
 
 Q_DECLARE_FLAGS(EditorOptions, EditorOption)
@@ -124,12 +125,20 @@ enum class TransientType {
 using SynPaintTransientProc = std::function<void(const QPaintDevice& paintDevice,
         SynTransientType transientType)>;
         */
-using ProcessCommandProc = std::function<void(EditCommand& command, QChar& AChar, void* data)>;
-using MouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
-using PaintProc = std::function<void(const QPaintDevice& paintDevice )>;
+// using ProcessCommandProc = std::function<void(EditCommand& command, QChar& AChar, void* data)>;
+// using MouseCursorProc = std::function<void(const BufferCoord& aLineCharPos, QCursor &  aCursor)>;
+// using PaintProc = std::function<void(const QPaintDevice& paintDevice )>;
 using SearchMathedProc = std::function<SearchAction(const QString& sSearch,
     const QString& sReplace, int Line, int ch, int wordLen)>;
 using SearchConfirmAroundProc = std::function<bool ()>;
+
+struct GlyphPostionsListCache {
+    QString str;
+    QList<int> glyphCharList;
+    QList<int> glyphPositionList;
+    int strWidth;
+};
+
 
 class QSynEdit;
 using PSynEdit = std::shared_ptr<QSynEdit>;
@@ -141,6 +150,7 @@ public:
     explicit QSynEdit(QWidget* parent=nullptr);
     QSynEdit(const QSynEdit&)=delete;
     QSynEdit& operator=(const QSynEdit&)=delete;
+
     /**
      * Returns how many rows are there in the editor
      * @return
@@ -161,9 +171,14 @@ public:
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
     void invalidateGutterLines(int FirstLine, int LastLine);
-    DisplayCoord pixelsToNearestRowColumn(int aX, int aY) const;
-    DisplayCoord pixelsToRowColumn(int aX, int aY) const;
-    QPoint rowColumnToPixels(const DisplayCoord& coord) const;
+
+    int yposToRow(int y) const {
+        return std::max(1, mTopLine + (y / mTextHeight));
+    }
+
+    DisplayCoord pixelsToNearestGlyphPos(int aX, int aY) const;
+    DisplayCoord pixelsToGlyphPos(int aX, int aY) const;
+    QPoint displayCoordToPixels(const DisplayCoord& coord) const;
     DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
     BufferCoord displayToBufferPos(const DisplayCoord& p) const;
 
@@ -175,19 +190,23 @@ public:
 
     int leftSpaces(const QString& line) const;
     QString GetLeftSpacing(int charCount,bool wantTabs) const;
-    int charToColumn(int aLine, int aChar) const;
-    int charToColumn(const QString& s, int aChar) const;
-    int columnToChar(int aLine, int aColumn) const;
-    int stringColumns(const QString& line, int colsBefore) const;
+    int charToGlyphLeft(int line, int charPos) const;
+    int charToGlyphLeft(int line, const QString& s, int charPos) const;
+    //int charToColumn(const QString& s, int aChar) const;
+    int xposToGlyphStartChar(int line, int xpos) const;
+    int xposToGlyphStartChar(int line, const QString& s, int xpos) const;
+    int xposToGlyphLeft(int line, int xpos) const;
+    //int xposToGlyphRight(int line, int xpos) const;
+    int stringWidth(const QString& line, int left) const;
     int getLineIndent(const QString& line) const;
     int rowToLine(int aRow) const;
     int lineToRow(int aLine) const;
-    int foldRowToLine(int Row) const;
-    int foldLineToRow(int Line) const;
+    int foldRowToLine(int row) const;
+    int foldLineToRow(int line) const;
     void setDefaultKeystrokes();
     void setExtraKeystrokes();
-    void invalidateLine(int Line);
-    void invalidateLines(int FirstLine, int LastLine);
+    void invalidateLine(int line);
+    void invalidateLines(int firstLine, int lastLine);
     void invalidateSelection();
     void invalidateRect(const QRect& rect);
     void invalidate();
@@ -201,7 +220,6 @@ public:
     QChar charAt(const BufferCoord& pos);
     QChar nextNonSpaceChar(int line, int ch);
     QChar lastNonSpaceChar(int line, int ch);
-    int charColumns(QChar ch) const;
 
     bool isPointInSelection(const BufferCoord& Value) const;
     BufferCoord nextWordPos();
@@ -315,8 +333,8 @@ public:
 
     int linesInWindow() const;
 
-    int leftChar() const;
-    void setLeftChar(int Value);
+    int leftPos() const;
+    void setLeftPos(int value);
 
     BufferCoord blockBegin() const;
     BufferCoord blockEnd() const;
@@ -330,9 +348,13 @@ public:
     SelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SelectionMode &Value);
 
-    int charsInWindow() const;
+    int charWidth() const {
+        return mCharWidth;
+    }
 
-    int charWidth() const;
+    int viewWidth() const{
+        return clientWidth() - mGutterWidth - 2;
+    }
 
     void setUndoLimit(int size);
     void setUndoMemoryUsage(int size);
@@ -353,6 +375,9 @@ public:
 
     QString displayLineText();
     QString lineText() const;
+    QString lineText(int line) const {
+        return mDocument->getLine(line-1);
+    }
     void setLineText(const QString s);
 
     const PDocument& document() const;
@@ -367,8 +392,9 @@ public:
     EditorOptions getOptions() const;
     void setOptions(const EditorOptions &Value);
 
-    int tabWidth() const {    return mDocument->tabWidth(); }
-    void setTabWidth(int tabWidth);
+    int tabSize() const { return mDocument->tabSize(); }
+    void setTabSize(int tabSize);
+    int tabWidth() const { return mDocument->tabWidth(); }
 
     QColor caretColor() const;
     void setCaretColor(const QColor &caretColor);
@@ -484,11 +510,11 @@ private:
 
     void incPaintLock();
     void decPaintLock();
-    int clientWidth();
-    int clientHeight();
-    int clientTop();
-    int clientLeft();
-    QRect clientRect();
+    int clientWidth() const;
+    int clientHeight() const;
+    int clientTop() const;
+    int clientLeft() const;
+    QRect clientRect() const;
     void synFontChanged();
 
     void doSetSelText(const QString& value);
@@ -526,7 +552,7 @@ private:
     void initializeCaret();
     PCodeFoldingRange foldStartAtLine(int Line) const;
     bool foldCollapsedBetween(int startLine, int endLine) const;
-    QString substringByColumns(const QString& s, int startColumn, int& colLen);
+    //QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PCodeFoldingRange foldAroundLine(int line);
     PCodeFoldingRange foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
     PCodeFoldingRange checkFoldRange(PCodeFoldingRanges foldRangesToCheck,int line, bool wantCollapsed, bool AcceptFromLine, bool AcceptToLine);
@@ -654,7 +680,6 @@ private:
     int mCaretX;
     int mLastCaretColumn;
     int mCaretY;
-    int mCharsInWindow;
     int mCharWidth;
     QFont mFontDummy;
     QFont mFontForNonAscii;
@@ -665,7 +690,7 @@ private:
     bool mPainting;
     PDocument mDocument;
     int mLinesInWindow;
-    int mLeftChar;
+    int mLeftPos;
     int mPaintLock; // lock counter for internal calculations
     bool mReadOnly;
     int mRightEdge;
@@ -722,12 +747,12 @@ private:
     int mPainterLock; // lock counter to prevent repaint while painting
     bool mUndoing;
     // event handlers
-    ProcessCommandProc mOnCommandProcessed;
-    MouseCursorProc mOnMouseCursor;
-    PaintProc mOnPaint;
+    // ProcessCommandProc mOnCommandProcessed;
+    // MouseCursorProc mOnMouseCursor;
+    // PaintProc mOnPaint;
 //    SynPreparePaintHighlightTokenProc mOnPaintHighlightToken;
-    ProcessCommandProc mOnProcessingCommand;
-    ProcessCommandProc mOnProcessingUserCommand;
+    // ProcessCommandProc mOnProcessingCommand;
+    // ProcessCommandProc mOnProcessingUserCommand;
 
 //    SynSpecialLineColorsProc mOnSpecialLineColors;
 //    SynEditingAreasProc mOnEditingAreas;
@@ -754,6 +779,7 @@ private:
     int mWheelAccumulatedDeltaY;
 
     PFormatter mFormatter;
+    GlyphPostionsListCache mGlyphPostionCacheForInputMethod;
 
 friend class QSynEditPainter;
 

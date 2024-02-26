@@ -52,8 +52,8 @@ struct BufferCoord {
 };
 
 struct DisplayCoord {
-    int Column;
-    int Row;
+    int x;
+    int row;
 };
 
 enum FontStyle {

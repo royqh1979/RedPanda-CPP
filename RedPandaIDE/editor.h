@@ -110,8 +110,6 @@ public:
     };
 
     struct SyntaxIssue {
-        int col;
-        int endCol;
         int startChar;
         int endChar;
         CompileIssueType issueType;

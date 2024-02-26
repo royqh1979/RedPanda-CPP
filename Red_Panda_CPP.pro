@@ -21,8 +21,6 @@ qsynedit.depends = redpanda_qt_utils
 
 APP_NAME = RedPandaCPP
 
-APP_VERSION = 2.27
-
 win32: {
 SUBDIRS += \
 	redpanda-win-git-askpass
@@ -37,7 +35,7 @@ SUBDIRS += \
     RedPandaIDE.depends += redpanda-git-askpass
 }
 
-linux: {
+unix:!macos: {
     isEmpty(PREFIX) {
         PREFIX = /usr/local
     }
@@ -57,21 +55,17 @@ linux: {
     docs.files += LICENSE
     INSTALLS += docs
 
-    equals(XDG_ADAPTIVE_ICON, "ON") {
-        xdgicons.path = $${PREFIX}/share/icons/hicolor/scalable/apps/
-        xdgicons.files += platform/linux/redpandaide.svg
-        REDPANDA_ICON_PATH = redpandaide
-        INSTALLS += xdgicons
-    } else {
-        pixmaps.path = $${PREFIX}/share/pixmaps
-        pixmaps.files += platform/linux/redpandaide.png
-        REDPANDA_ICON_PATH = $${PREFIX}/share/pixmaps/redpandaide.png
-        INSTALLS += pixmaps
-    }
+    xdgicons.path = $${PREFIX}/share/icons/hicolor/scalable/apps/
+    xdgicons.files += platform/linux/redpandaide.svg
+    INSTALLS += xdgicons
 
     desktop.path = $${PREFIX}/share/applications
     desktop.files += platform/linux/redpandaide.desktop
     INSTALLS += desktop
+
+    mime.path = $${PREFIX}/share/mime/packages
+    mime.files = platform/linux/redpandaide.xml
+    INSTALLS += mime
 }
 
 win32: {
