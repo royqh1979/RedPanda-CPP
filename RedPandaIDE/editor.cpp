@@ -5287,7 +5287,9 @@ void Editor::applySettings()
 
     QStringList fontFamilies{
         pSettings->editor().fontName(),
-                pSettings->editor().fallbackFontName()
+                pSettings->editor().fallbackFontName(),
+                pSettings->editor().fallbackFontName2(),
+                pSettings->editor().fallbackFontName3(),
     };
 
     QFont f=QFont();
