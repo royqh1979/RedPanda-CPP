@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="text/x-devcpp-project">
+    <comment>Red Panda C++ project</comment>
+    <comment xml:lang="pt_BR">Projeto do Red Panda C++</comment>
+    <comment xml:lang="zh_CN">小熊猫 C++ 项目</comment>
+    <comment xml:lang="zh_TW">小熊貓 C++ 專案</comment>
+    <sub-class-of type="text/plain"/>
+    <glob pattern="*.dev"/>
+  </mime-type>
+</mime-info>

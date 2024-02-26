@@ -27,7 +27,6 @@ mkdir -p %{name}
 cd %{name}
 qmake-qt5 \
     PREFIX=/usr \
-    XDG_ADAPTIVE_ICON=ON \
     "%{_builddir}/RedPanda-CPP/Red_Panda_CPP.pro"
 make %{_smp_mflags}
 
@@ -42,5 +41,6 @@ make INSTALL_ROOT="%{buildroot}" install
 /usr/share/doc/RedPandaCPP/*
 /usr/share/applications/redpandaide.desktop
 /usr/share/icons/hicolor/scalable/apps/redpandaide.svg
+/usr/share/mime/packages/redpandaide.xml
 
 %changelog
