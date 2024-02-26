@@ -1394,6 +1394,14 @@
         <source>*Needs restart</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Fallback Font 2:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fallback Font 3:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorGeneralWidget</name>

@@ -356,7 +356,13 @@ public:
         void setEnableLigaturesSupport(bool newEnableLigaturesSupport);
 
         const QString &fallbackFontName() const;
-        void setFallbackFontName(const QString &newNonAsciiFontName);
+        void setFallbackFontName(const QString &newFontName);
+
+        const QString &fallbackFontName2() const;
+        void setFallbackFontName2(const QString &newFontName);
+
+        const QString &fallbackFontName3() const;
+        void setFallbackFontName3(const QString &newFontName);
 
         int mouseSelectionScrollSpeed() const;
         void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
@@ -448,6 +454,8 @@ public:
         //font
         QString mFontName;
         QString mFallbackFontName;
+        QString mFallbackFontName2;
+        QString mFallbackFontName3;
         int mFontSize;
         bool mFontOnlyMonospaced;
         double mLineSpacing;

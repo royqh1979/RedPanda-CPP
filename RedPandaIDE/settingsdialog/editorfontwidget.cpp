@@ -57,6 +57,8 @@ void EditorFontWidget::doLoad()
     ui->chkOnlyMonospacedFonts->setChecked(pSettings->editor().fontOnlyMonospaced());
     ui->cbFont->setCurrentFont(QFont(pSettings->editor().fontName()));
     ui->cbFallbackFont->setCurrentFont(QFont(pSettings->editor().fallbackFontName()));
+    ui->cbFallbackFont2->setCurrentFont(QFont(pSettings->editor().fallbackFontName2()));
+    ui->cbFallbackFont3->setCurrentFont(QFont(pSettings->editor().fallbackFontName3()));
     ui->spinFontSize->setValue(pSettings->editor().fontSize());
     ui->spinLineSpacing->setValue(pSettings->editor().lineSpacing());
     ui->chkLigature->setChecked(pSettings->editor().enableLigaturesSupport());
@@ -85,6 +87,8 @@ void EditorFontWidget::doSave()
     pSettings->editor().setFontOnlyMonospaced(ui->chkOnlyMonospacedFonts->isChecked());
     pSettings->editor().setFontName(ui->cbFont->currentFont().family());
     pSettings->editor().setFallbackFontName(ui->cbFallbackFont->currentFont().family());
+    pSettings->editor().setFallbackFontName2(ui->cbFallbackFont2->currentFont().family());
+    pSettings->editor().setFallbackFontName3(ui->cbFallbackFont3->currentFont().family());
     pSettings->editor().setFontSize(ui->spinFontSize->value());
     pSettings->editor().setLineSpacing(ui->spinLineSpacing->value());
 

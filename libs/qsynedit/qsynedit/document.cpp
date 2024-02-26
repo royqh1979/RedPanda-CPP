@@ -1750,7 +1750,7 @@ int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fon
     if (ch == '\t') {
         glyphWidth = tabWidth() - left % tabWidth();
     } else {
-        glyphWidth = fontMetrics.horizontalAdvance(ch);
+        glyphWidth = fontMetrics.horizontalAdvance(glyph);
         //qDebug()<<glyph<<glyphCols<<width<<mCharWidth;
     }
     return glyphWidth;

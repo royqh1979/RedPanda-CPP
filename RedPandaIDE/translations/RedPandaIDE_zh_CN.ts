@@ -2059,25 +2059,27 @@ p, li { white-space: pre-wrap; }
         <translation>表单</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="54"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="194"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="280"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="321"/>
         <source>*Needs restart</source>
         <translation>*需要重启之后生效</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="124"/>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="508"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="94"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="604"/>
         <source>Size:</source>
         <translation>大小:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="241"/>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="501"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="29"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="597"/>
         <source>Font:</source>
         <translation>字体:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="211"/>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="596"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="71"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="692"/>
         <source>Show only monospaced fonts</source>
         <translation>只显示等宽字体</translation>
     </message>
@@ -2094,92 +2096,102 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">显示特殊字符</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="131"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="36"/>
         <source>Enable ligatures support</source>
         <translation>启用连字(ligratures)功能</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="138"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="148"/>
         <source>Line Spacing:</source>
         <translation>行高：</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="234"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="155"/>
         <source>Fallback Font:</source>
         <translation>备选字体:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="251"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="162"/>
+        <source>Fallback Font 2:</source>
+        <translation>备选字体2:</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="255"/>
+        <source>Fallback Font 3:</source>
+        <translation>备选字体3:</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="347"/>
         <source>Show whitespaces</source>
         <translation>显示空白字符</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="257"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="353"/>
         <source>Leading</source>
         <translation>行首</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="264"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="360"/>
         <source>Inner</source>
         <translation>中间</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="271"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="367"/>
         <source>Trailing</source>
         <translation>行尾</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="278"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="374"/>
         <source>Line break</source>
         <translation>换行符</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="288"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="384"/>
         <source>Gutter</source>
         <translation>装订线</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="309"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="405"/>
         <source>Gutter is visible</source>
         <translation>显示装订线区域</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="331"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="427"/>
         <source>Left Offset</source>
         <translation>左侧留白</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="348"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="444"/>
         <source>Right Offset</source>
         <translation>右侧留白</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="381"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="477"/>
         <source>Show Line Numbers</source>
         <translation>显示行号</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="405"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="501"/>
         <source>Add leading zeros to line numbers</source>
         <translation>在行号前补齐前导0</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="412"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="508"/>
         <source>Line numbers starts at zero</source>
         <translation>第一行从0开始编号</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="419"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="515"/>
         <source>Auto calculate the digit count of line number</source>
         <translation>自动计算行号位数</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="441"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="537"/>
         <source>Digit count</source>
         <translation>行号位数</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="477"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="573"/>
         <source>Use Custom Font</source>
         <translation>使用自定义字体</translation>
     </message>
@@ -9059,7 +9071,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3440"/>
+        <location filename="../settings.cpp" line="3466"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -9270,7 +9282,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">只生成汇编代码(-S)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3442"/>
+        <location filename="../settings.cpp" line="3468"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -9291,13 +9303,13 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3432"/>
-        <location filename="../settings.cpp" line="3438"/>
+        <location filename="../settings.cpp" line="3458"/>
+        <location filename="../settings.cpp" line="3464"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3434"/>
+        <location filename="../settings.cpp" line="3460"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
@@ -9666,7 +9678,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../autolinkmanager.cpp" line="54"/>
         <location filename="../autolinkmanager.cpp" line="70"/>
         <location filename="../autolinkmanager.cpp" line="89"/>
-        <location filename="../settings.cpp" line="4055"/>
+        <location filename="../settings.cpp" line="4081"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="168"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="229"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -9721,7 +9733,7 @@ p, li { white-space: pre-wrap; }
         <translation>无法检测适用于 “%1” 的终端参数模式。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3300"/>
+        <location filename="../settings.cpp" line="3326"/>
         <source>Error executing platform compiler hint add-on</source>
         <translation>执行平台编译器提示附加组件错误</translation>
     </message>
@@ -10685,12 +10697,12 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="4042"/>
+        <location filename="../settings.cpp" line="4068"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="4043"/>
+        <location filename="../settings.cpp" line="4069"/>
         <source>Can&apos;t find terminal program!</source>
         <translation>找不到合适的终端程序！</translation>
     </message>
