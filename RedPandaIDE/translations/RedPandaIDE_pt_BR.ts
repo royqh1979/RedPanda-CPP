@@ -1557,6 +1557,10 @@
         <source>Fallback Font:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>*Needs restart</source>
+        <translation type="unfinished">*Necessário reiniciar</translation>
+    </message>
 </context>
 <context>
     <name>EditorGeneralWidget</name>

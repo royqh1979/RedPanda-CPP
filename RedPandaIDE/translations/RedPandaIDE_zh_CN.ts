@@ -1653,7 +1653,7 @@ p, li { white-space: pre-wrap; }
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="5476"/>
+        <location filename="../editor.cpp" line="5477"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -2059,20 +2059,25 @@ p, li { white-space: pre-wrap; }
         <translation>表单</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="117"/>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="501"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="54"/>
+        <source>*Needs restart</source>
+        <translation>*需要重启之后生效</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="124"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="508"/>
         <source>Size:</source>
         <translation>大小:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="234"/>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="494"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="241"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="501"/>
         <source>Font:</source>
         <translation>字体:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="204"/>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="589"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="211"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="596"/>
         <source>Show only monospaced fonts</source>
         <translation>只显示等宽字体</translation>
     </message>
@@ -2089,92 +2094,92 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">显示特殊字符</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="124"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="131"/>
         <source>Enable ligatures support</source>
         <translation>启用连字(ligratures)功能</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="131"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="138"/>
         <source>Line Spacing:</source>
         <translation>行高：</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="227"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="234"/>
         <source>Fallback Font:</source>
         <translation>备选字体:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="244"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="251"/>
         <source>Show whitespaces</source>
         <translation>显示空白字符</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="250"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="257"/>
         <source>Leading</source>
         <translation>行首</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="257"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="264"/>
         <source>Inner</source>
         <translation>中间</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="264"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="271"/>
         <source>Trailing</source>
         <translation>行尾</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="271"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="278"/>
         <source>Line break</source>
         <translation>换行符</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="281"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="288"/>
         <source>Gutter</source>
         <translation>装订线</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="302"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="309"/>
         <source>Gutter is visible</source>
         <translation>显示装订线区域</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="324"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="331"/>
         <source>Left Offset</source>
         <translation>左侧留白</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="341"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="348"/>
         <source>Right Offset</source>
         <translation>右侧留白</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="374"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="381"/>
         <source>Show Line Numbers</source>
         <translation>显示行号</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="398"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="405"/>
         <source>Add leading zeros to line numbers</source>
         <translation>在行号前补齐前导0</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="405"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="412"/>
         <source>Line numbers starts at zero</source>
         <translation>第一行从0开始编号</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="412"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="419"/>
         <source>Auto calculate the digit count of line number</source>
         <translation>自动计算行号位数</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="434"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="441"/>
         <source>Digit count</source>
         <translation>行号位数</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorfontwidget.ui" line="470"/>
+        <location filename="../settingsdialog/editorfontwidget.ui" line="477"/>
         <source>Use Custom Font</source>
         <translation>使用自定义字体</translation>
     </message>

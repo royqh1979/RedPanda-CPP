@@ -6131,13 +6131,14 @@ bool QSynEdit::event(QEvent *event)
         }
     }
         break;
-    case QEvent::FontChange:
-        synFontChanged();
-        if (mDocument)
-            mDocument->setFont(font());
-        break;
     case QEvent::MouseMove: {
         updateMouseCursor();
+        break;
+    }
+    case QEvent::FontChange: {
+        if (mDocument)
+            mDocument->setFont(font());
+        synFontChanged();
         break;
     }
     default:

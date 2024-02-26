@@ -5289,6 +5289,7 @@ void Editor::applySettings()
         pSettings->editor().fontName(),
                 pSettings->editor().fallbackFontName()
     };
+
     QFont f=QFont();
     f.setFamilies(fontFamilies);
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));

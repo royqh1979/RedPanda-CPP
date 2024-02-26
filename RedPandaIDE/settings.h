@@ -447,7 +447,7 @@ public:
         //Font
         //font
         QString mFontName;
-        QString mNonAsciiFontName;
+        QString mFallbackFontName;
         int mFontSize;
         bool mFontOnlyMonospaced;
         double mLineSpacing;
