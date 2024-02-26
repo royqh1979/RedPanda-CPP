@@ -808,10 +808,6 @@ protected:
     public:
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
 
-    // QWidget interface
-    const QFont &fontForNonAscii() const;
-    void setFontForNonAscii(const QFont &newFontForNonAscii);
-
     int mouseSelectionScrollSpeed() const;
     void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
 

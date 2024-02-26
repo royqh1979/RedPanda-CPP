@@ -5285,14 +5285,24 @@ void Editor::applySettings()
     codeFolding().indentGuidesColor = pSettings->editor().indentLineColor();
     codeFolding().fillIndents = pSettings->editor().fillIndents();
 
-    QFont f=QFont(pSettings->editor().fontName());
+    QStringList fontFamilies{
+        pSettings->editor().fontName(),
+                pSettings->editor().fallbackFontName()
+    };
+    QFont f=QFont();
+    f.setFamilies(fontFamilies);
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f.setStyleStrategy(QFont::PreferAntialias);
     setFont(f);
-    QFont f2=QFont(pSettings->editor().nonAsciiFontName());
-    f2.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
-    f2.setStyleStrategy(QFont::PreferAntialias);
-    setFontForNonAscii(f2);
+
+    // QFont f=QFont(pSettings->editor().fontName());
+    // f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
+    // f.setStyleStrategy(QFont::PreferAntialias);
+    // setFont(f);
+    // QFont f2=QFont(pSettings->editor().nonAsciiFontName());
+    // f2.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
+    // f2.setStyleStrategy(QFont::PreferAntialias);
+    // setFontForNonAscii(f2);
     setLineSpacingFactor(pSettings->editor().lineSpacing());
 
     // Set gutter properties

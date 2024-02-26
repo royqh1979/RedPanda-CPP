@@ -39,7 +39,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QFontComboBox" name="cbNonAsciiFont">
+          <widget class="QFontComboBox" name="cbFallbackFont">
            <property name="editable">
             <bool>false</bool>
            </property>
@@ -224,7 +224,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>Font for non-ascii Text:</string>
+         <string>Fallback Font:</string>
         </property>
        </widget>
       </item>

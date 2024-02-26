@@ -33,7 +33,6 @@ namespace QSynedit {
 Document::Document(const QFont& font, const QFont& nonAsciiFont, QObject *parent):
       QObject(parent),
       mFontMetrics(font),
-      mNonAsciiFontMetrics(nonAsciiFont),
       mTabSize(4),
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
       mMutex()
@@ -591,12 +590,11 @@ const QFontMetrics &Document::fontMetrics() const
     return mFontMetrics;
 }
 
-void Document::setFontMetrics(const QFont &newFont, const QFont& newNonAsciiFont)
+void Document::setFont(const QFont &newFont)
 {
     mFontMetrics = QFontMetrics(newFont);
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
     mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
-    mNonAsciiFontMetrics = QFontMetrics(newNonAsciiFont);
     invalidateAllLineWidth();
 }
 
@@ -896,11 +894,11 @@ int Document::stringWidth(const QString &str, int left) const
     return right - left;
 }
 
-int Document::stringWidth(const QString &str, int left, const QFontMetrics &asciFontMetrics, const QFontMetrics &nonAsciiFontMetrics)
+int Document::stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics)
 {
     QList<int> glyphStartCharList = calcGlyphStartCharList(str);
     int right;
-    calcGlyphPositionList(str, glyphStartCharList, asciFontMetrics, nonAsciiFontMetrics, left, right);
+    calcGlyphPositionList(str, glyphStartCharList, fontMetrics, left, right);
     return right - left;
 }
 
@@ -938,7 +936,7 @@ int Document::glyphWidth(int line, int glyphIdx)
 
 int Document::glyphWidth(const QString &glyph, int left) const
 {
-    return glyphWidth(glyph,left,mFontMetrics, mNonAsciiFontMetrics);
+    return glyphWidth(glyph,left,mFontMetrics);
 }
 
 int Document::charToGlyphIndex(int line, int charIdx)
@@ -971,7 +969,7 @@ QList<int> Document::calcLineWidth(const QString &lineText, const QList<int> &gl
     return calcGlyphPositionList(lineText,glyphStartCharList,0,width);
 }
 
-QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, const QFontMetrics &fontMetrics, const QFontMetrics &nonAsciiFontMetrics, int left, int &right) const
+QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, const QFontMetrics &fontMetrics, int left, int &right) const
 {
     right = std::max(0,left);
     int start,end;
@@ -984,7 +982,7 @@ QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<
             end = lineText.length();
         }
         QString glyph = lineText.mid(start,end-start);
-        int gWidth = glyphWidth(glyph, right, fontMetrics, nonAsciiFontMetrics);
+        int gWidth = glyphWidth(glyph, right, fontMetrics);
         glyphPostionList.append(right);
         right += gWidth;
     }
@@ -1157,7 +1155,6 @@ QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<
 {
     return calcGlyphPositionList(lineText, glyphStartCharList,
                                  mFontMetrics,
-                                 mNonAsciiFontMetrics,
                                  left,right);
 }
 
@@ -1720,7 +1717,7 @@ int searchForSegmentIdx(const QList<int> &segList, int minVal, int maxVal, int v
 int Document::updateGlyphStartPositionList(
         const QString &lineText,
         const QList<int> &glyphStartCharList, int startChar, int endChar,
-        const QFontMetrics &fontMetrics, const QFontMetrics &nonAsciiFontMetrics,
+        const QFontMetrics &fontMetrics,
         QList<int> &glyphStartPositionList, int left, int &right, int &startGlyph, int &endGlyph) const
 {
     right = std::max(0,left);
@@ -1735,7 +1732,7 @@ int Document::updateGlyphStartPositionList(
             end = lineText.length();
         }
         QString glyph = lineText.mid(start,end-start);
-        int gWidth = glyphWidth(glyph, right, fontMetrics, nonAsciiFontMetrics);
+        int gWidth = glyphWidth(glyph, right, fontMetrics);
         glyphStartPositionList[i] = right;
         right += gWidth;
     }
@@ -1744,19 +1741,16 @@ int Document::updateGlyphStartPositionList(
     return right-left;
 }
 
-int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fontMetrics, const QFontMetrics &nonAsciiFontMetrics) const
+int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fontMetrics) const
 {
     int glyphWidth;
-    if (glyph.length()==1 && glyph[0].unicode()<128) {
-        QChar ch = glyph[0];
-        if (ch == '\t') {
-            glyphWidth = tabWidth() - left % tabWidth();
-        } else {
-            glyphWidth = fontMetrics.horizontalAdvance(ch);
-            //qDebug()<<glyph<<glyphCols<<width<<mCharWidth;
-        }
+    if (glyph.length()==0)
+        return 0;
+    QChar ch = glyph[0];
+    if (ch == '\t') {
+        glyphWidth = tabWidth() - left % tabWidth();
     } else {
-        glyphWidth = nonAsciiFontMetrics.horizontalAdvance(glyph);
+        glyphWidth = fontMetrics.horizontalAdvance(ch);
         //qDebug()<<glyph<<glyphCols<<width<<mCharWidth;
     }
     return glyphWidth;

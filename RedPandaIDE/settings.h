@@ -355,8 +355,8 @@ public:
         bool enableLigaturesSupport() const;
         void setEnableLigaturesSupport(bool newEnableLigaturesSupport);
 
-        const QString &nonAsciiFontName() const;
-        void setNonAsciiFontName(const QString &newNonAsciiFontName);
+        const QString &fallbackFontName() const;
+        void setFallbackFontName(const QString &newNonAsciiFontName);
 
         int mouseSelectionScrollSpeed() const;
         void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
