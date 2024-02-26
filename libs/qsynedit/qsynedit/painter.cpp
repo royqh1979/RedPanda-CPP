@@ -190,7 +190,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
 
         // Form a rectangle for the square the user can click on
           rcFold.setLeft(mEdit->mGutterWidth - mEdit->mGutter.rightOffset());
-          rcFold.setTop(( - mEdit->mTopLine) * mEdit->mTextHeight);
+          rcFold.setTop((row - mEdit->mTopLine) * mEdit->mTextHeight);
           rcFold.setRight(rcFold.left() + mEdit->mGutter.rightOffset() - 4);
           rcFold.setBottom(rcFold.top() + mEdit->mTextHeight);
 
@@ -250,7 +250,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
         int line = mEdit->rowToLine(row);
         if ((line > mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
             break;
-        mEdit->onGutterPaint(*mPainter,line, 0, ( - mEdit->mTopLine) * mEdit->mTextHeight);
+        mEdit->onGutterPaint(*mPainter,line, 0, (row - mEdit->mTopLine) * mEdit->mTextHeight);
     }
 }
 
@@ -1198,7 +1198,8 @@ void QSynEditPainter::paintLines()
                 }
                 if (!addOnStr.isEmpty()) {
                     expandGlyphStartCharList(addOnStr, sLine.length(), glyphStartCharList);
-                    for (int i=0;i<glyphStartCharList.length()-glyphStartPositionsList.length();i++) {
+                    int len=glyphStartCharList.length()-glyphStartPositionsList.length();
+                    for (int i=0;i<len;i++) {
                         glyphStartPositionsList.append(tokenLeft);
                     }
                     attr = mEdit->mSyntaxer->symbolAttribute();
@@ -1232,9 +1233,9 @@ void QSynEditPainter::paintLines()
                     }
                 }
                 int glyphIdx;
-                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->beginX);
+                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->beginX-1);
                 area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
-                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->endX);
+                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->endX-1);
                 area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
             }
             //input method

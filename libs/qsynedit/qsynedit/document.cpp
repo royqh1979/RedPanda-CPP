@@ -1218,16 +1218,7 @@ DocumentLine::DocumentLine(DocumentLine::UpdateWidthFunc updateWidthFunc):
 
 int DocumentLine::glyphLength(int i) const
 {
-    if (i<0 || i>=mGlyphStartCharList.length())
-        return 0;
-    int start = glyphStartChar(i);
-    int end;
-    if (i+1<mGlyphStartCharList.length()) {
-       end = mGlyphStartCharList[i+1];
-    } else {
-       end = mLineText.length();
-    }
-    return end-start;
+    return calcSegmentInterval(mGlyphStartCharList, mLineText.length(), i);
 }
 
 QString DocumentLine::glyph(int i) const
@@ -1250,18 +1241,9 @@ int DocumentLine::glyphStartPosition(int i)
 
 int DocumentLine::glyphWidth(int i)
 {
-    if (i<0 || i>=mGlyphStartPositionList.length())
-        return 0;
-    if( mWidth <0)
+    if (mWidth <0)
         updateWidth();
-    int start = glyphStartPosition(i);
-    int end;
-    if (i+1<mGlyphStartPositionList.length()) {
-        end = mGlyphStartPositionList[i+1];
-    } else {
-        end = mWidth;
-    }
-    return end-start;
+    return calcSegmentInterval(mGlyphStartPositionList, mWidth, i);
 }
 
 int DocumentLine::width()
@@ -1764,7 +1746,7 @@ int Document::updateGlyphStartPositionList(
 int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fontMetrics, const QFontMetrics &nonAsciiFontMetrics) const
 {
     int glyphWidth;
-    if (glyph.length()==1 && glyph[0].unicode()<0xFF) {
+    if (glyph.length()==1 && glyph[0].unicode()<128) {
         QChar ch = glyph[0];
         if (ch == '\t') {
             glyphWidth = tabWidth() - left % tabWidth();
@@ -1779,7 +1761,7 @@ int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fon
     return glyphWidth;
 }
 
-void expandGlyphStartCharList(const QString &strAdded, int oldStrLen, QList<int> glyphStartCharList)
+void expandGlyphStartCharList(const QString &strAdded, int oldStrLen, QList<int> &glyphStartCharList)
 {
     QList<int> addedList = calcGlyphStartCharList(strAdded);
     for (int i=0;i<addedList.length();i++) {

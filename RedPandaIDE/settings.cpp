@@ -1481,7 +1481,7 @@ void Settings::Editor::doLoad()
 
     //Editor font
     mFontName = stringValue("font_name",DEFAULT_MONO_FONT);
-    QString defaultCjkFontName = CJK_MONO_FONT_SC;
+    QString defaultCjkFontName = DEFAULT_MONO_FONT;
     QString defaultLocaleName = QLocale::system().name();
     if (defaultLocaleName == "zh_TW")
         defaultCjkFontName = CJK_MONO_FONT_TC;
@@ -1489,10 +1489,12 @@ void Settings::Editor::doLoad()
         defaultCjkFontName = CJK_MONO_FONT_J;
     else if (defaultLocaleName == "ko_KR")
         defaultCjkFontName = CJK_MONO_FONT_K;
+    else if (defaultLocaleName == "zh_CN")
+        defaultCjkFontName = CJK_MONO_FONT_SC;
     mNonAsciiFontName = stringValue("non_ascii_font_name",defaultCjkFontName);
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
-    mLineSpacing = doubleValue("line_spacing",1.0);
+    mLineSpacing = doubleValue("line_spacing",1.1);
     mEnableLigaturesSupport = boolValue("enable_ligatures_support", true);
 
     mShowLeadingSpaces = boolValue("show_leading_spaces", false);

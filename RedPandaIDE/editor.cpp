@@ -1149,8 +1149,8 @@ void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
     if (lst) {
         for (const PSyntaxIssue& issue: *lst) {
             QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
-            p->beginX = issue->col;
-            p->endX = issue->endCol;
+            p->beginX = issue->startChar;
+            p->endX = issue->endChar;
             if (issue->issueType == CompileIssueType::Error) {
                 p->color = mSyntaxErrorColor;
             } else {
@@ -1640,8 +1640,6 @@ void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueT
     }
     pError->startChar = start;
     pError->endChar = start + token.length();
-    pError->col = pError->startChar;
-    pError->endCol = pError->endChar;
     pError->hint = hint;
     pError->token = token;
     pError->issueType = errorType;
