@@ -233,10 +233,15 @@ target("resources")
             pattern = "$${(.-)}",
             variables = {
                 PREFIX = get_config("prefix"),
-                REDPANDA_ICON_PATH = "redpandaide",
             },
         })
         add_installfiles("$(buildir)/redpandaide.desktop", {prefixdir = "$(prefix)/share/applications"})
+    end
+
+    -- mime type
+
+    if is_xdg() then
+        add_installfiles("platform/linux/redpandaide.xml", {prefixdir = "$(prefix)/share/mime/packages"})
     end
 
     -- qt.conf
