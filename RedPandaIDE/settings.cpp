@@ -697,7 +697,34 @@ void Settings::Editor::setFallbackFontName3(const QString &newFontName)
     mFallbackFontName3 = newFontName;
 }
 
+bool Settings::Editor::useFallbackFont2() const {
+    return mUseFallbackFont2;
+}
 
+void Settings::Editor::setUseFallbackFont2(bool useFont) {
+    mUseFallbackFont2 = useFont;
+}
+
+bool Settings::Editor::useFallbackFont3() const {
+    return mUseFallbackFont3;
+}
+
+void Settings::Editor::setUseFallbackFont3(bool useFont) {
+    mUseFallbackFont3 = useFont;
+}
+
+QStringList Settings::Editor::fontFamilies() const
+{
+    QStringList result {
+        mFontName,
+        mFallbackFontName,
+    };
+    if (mUseFallbackFont2)
+        result.append(mFallbackFontName2);
+    if (mUseFallbackFont3)
+        result.append(mFallbackFontName3);
+    return result;
+}
 
 int Settings::Editor::mouseSelectionScrollSpeed() const
 {
@@ -1373,6 +1400,9 @@ void Settings::Editor::doSave()
     saveValue("fallback_font_name", mFallbackFontName);
     saveValue("fallback_font_name2", mFallbackFontName2);
     saveValue("fallback_font_name3", mFallbackFontName3);
+    saveValue("use_fallback_font2", mUseFallbackFont2);
+    saveValue("use_fallback_font3", mUseFallbackFont3);
+
     saveValue("font_size", mFontSize);
     saveValue("font_only_monospaced", mFontOnlyMonospaced);
     saveValue("line_spacing",mLineSpacing);
@@ -1518,6 +1548,8 @@ void Settings::Editor::doLoad()
     mFallbackFontName = stringValue("fallback_font_name",defaultCjkFontName);
     mFallbackFontName2 = stringValue("fallback_font_name2",DEFAULT_MONO_FONT);
     mFallbackFontName3 = stringValue("fallback_font_name3",DEFAULT_MONO_FONT);
+    mUseFallbackFont2 = boolValue("use_fallback_font2", false);
+    mUseFallbackFont3 = boolValue("use_fallback_font3", false);
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.1);
