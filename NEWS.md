@@ -10,6 +10,7 @@ Red Panda C++ Version 2.27
   - enhancement: Support unicode combining characters.
   - enhancement: Don't force fixed-width when using non fixed-width fonts.
   - change: Replace non-ascii font with fallback font.
+  - enhancement: Display ascii control chars.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

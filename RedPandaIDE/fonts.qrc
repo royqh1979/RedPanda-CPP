@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/fonts">
+        <file alias="asciicontrol.ttf">resources/fonts/asciicontrol.ttf</file>
+    </qresource>
+</RCC>

@@ -555,6 +555,7 @@ else: unix:!android: target.path = $${PREFIX}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
+    fonts.qrc \
     codes.qrc \
     defaultconfigs.qrc \
     icons.qrc \

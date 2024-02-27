@@ -46,6 +46,7 @@
 #include <QSharedMemory>
 #include <QBuffer>
 #include <winuser.h>
+#include <QFontDatabase>
 
 #include "widgets/cpudialog.h"
 #endif
@@ -404,6 +405,7 @@ int main(int argc, char *argv[])
                                   e.reason(),
                                   QMessageBox::Ok);
         }
+        // qDebug()<<"Load font"<<QFontDatabase::addApplicationFont(":/fonts/asciicontrol.ttf");
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;

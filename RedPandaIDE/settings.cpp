@@ -723,6 +723,7 @@ QStringList Settings::Editor::fontFamilies() const
         result.append(mFallbackFontName2);
     if (mUseFallbackFont3)
         result.append(mFallbackFontName3);
+    result.append("Red Panda Control");
     return result;
 }
 
