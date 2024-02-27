@@ -534,8 +534,7 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
 
 void QSynEditPainter::paintHighlightToken(const QString& lineText,
                                           const QList<int> &glyphStartCharList,
-                                          const QList<int> &glyphStartPositionsList,
-                                          bool bFillToEOL)
+                                          const QList<int> &glyphStartPositionsList)
 {
     bool isComplexToken;
     int nC1, nC2, nC1Sel, nC2Sel;
@@ -625,43 +624,6 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
                         mTokenAccu.font, mTokenAccu.showSpecialGlyphs);
         }
     }
-
-    // Fill the background to the end of this line if necessary.
-    if (bFillToEOL && rcToken.left() < rcLine.right()) {
-        if (mIsSpecialLine && colSpBG.isValid())
-            colBG = colSpBG;
-        else
-            colBG = colEditorBG();
-        if (mIsComplexLine) {
-            nX1 = fixXValue(mLineSelStart);
-            nX2 = fixXValue(mLineSelEnd);
-            if (rcToken.left() < nX1) {
-                setDrawingColors(false);
-                rcToken.setRight(nX1);
-//                if (TokenAccu.Len != 0 && TokenAccu.Style != FontStyle::fsNone)
-//                    AdjustEndRect();
-                mPainter->fillRect(rcToken,mPainter->brush());
-                rcToken.setLeft(nX1);
-            }
-            if (rcToken.left() < nX2) {
-                setDrawingColors(true);
-                rcToken.setRight(nX2);
-                mPainter->fillRect(rcToken,mPainter->brush());
-                rcToken.setLeft(nX2);
-            }
-            if (rcToken.left() < rcLine.right()) {
-                setDrawingColors(false);
-                rcToken.setRight(rcLine.right());
-                mPainter->fillRect(rcToken,mPainter->brush());
-            }
-        }  else {
-            setDrawingColors(mIsLineSelected);
-            rcToken.setRight(rcLine.right());
-//            if (TokenAccu.Len != 0 && TokenAccu.Style != FontStyle::fsNone)
-//                AdjustEndRect();
-            mPainter->fillRect(rcToken,mPainter->brush());
-        }
-    }
 }
 
 // Store the token chars with the attributes in the TokenAccu
@@ -723,7 +685,7 @@ void QSynEditPainter::addHighlightToken(
         }
         // If we can't append it, then we have to paint the old token chars first.
         if (!bCanAppend)
-            paintHighlightToken(lineText, glyphStartCharList, glyphStartPositionList, false);
+            paintHighlightToken(lineText, glyphStartCharList, glyphStartPositionList);
     }
     if (bInitFont) {
         mTokenAccu.style = style;
@@ -954,6 +916,8 @@ void QSynEditPainter::paintLines()
         mIsComplexLine = false;
         mLineSelStart = 0;
         mLineSelEnd = 0;
+
+        bool selToEnd = false;;
         // Does the selection intersect the visible area?
         if (bAnySelection && (row >= mSelStart.row) && (row <= mSelEnd.row)) {
             // Default to a fully selected line. This is correct for the smLine
@@ -981,6 +945,8 @@ void QSynEditPainter::paintLines()
                     mLineSelEnd = xpos;
                     mIsComplexLine = true;
                 }
+            } else {
+                selToEnd = true;
             }
         } //endif bAnySelection
 
@@ -991,6 +957,14 @@ void QSynEditPainter::paintLines()
         rcLine.setHeight(mEdit->mTextHeight);
 
         mIsLineSelected = (!mIsComplexLine) && (mLineSelStart > 0);
+
+        if (mIsSpecialLine && colSpBG.isValid())
+            colBG = colSpBG;
+        else
+            colBG = colEditorBG();
+        setDrawingColors(selToEnd);
+        mPainter->fillRect(rcLine,mPainter->brush());
+
         rcToken = rcLine;
 
         int lineWidth;
@@ -1200,7 +1174,7 @@ void QSynEditPainter::paintLines()
             }
             // Draw anything that's left in the TokenAccu record. Fill to the end
             // of the invalid area with the correct colors.
-            paintHighlightToken(sLine, glyphStartCharList, glyphStartPositionsList, true);
+            paintHighlightToken(sLine, glyphStartCharList, glyphStartPositionsList);
 
             //Paint editingAreaBorders
             foreach (const PEditingArea& area, areaList) {

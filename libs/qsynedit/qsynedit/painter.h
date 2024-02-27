@@ -69,7 +69,7 @@ private:
     void paintEditAreas(const EditingAreaList& areaList);
     void paintHighlightToken(const QString& lineText,
                              const QList<int> &glyphStartCharList,
-                             const QList<int> &glyphStartPositionsList, bool bFillToEOL);
+                             const QList<int> &glyphStartPositionsList);
     void addHighlightToken(
             const QString& lineText,
             const QString& token, int tokenLeft,
