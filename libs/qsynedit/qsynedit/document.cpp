@@ -30,7 +30,7 @@
 
 namespace QSynedit {
 
-Document::Document(const QFont& font, const QFont& nonAsciiFont, QObject *parent):
+Document::Document(const QFont& font, QObject *parent):
       QObject(parent),
       mFontMetrics(font),
       mTabSize(4),

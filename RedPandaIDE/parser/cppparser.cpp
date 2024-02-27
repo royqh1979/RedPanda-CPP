@@ -1107,10 +1107,9 @@ void CppParser::resetParser()
         mFilesToScan.clear(); // list of base files to scan
         mNamespaces.clear();  // namespace and the statements in its scope
         mInlineNamespaces.clear();
-
+        mClassInheritances.clear();
         mPreprocessor.clear();
         mTokenizer.clear();
-
     }
 }
 
@@ -1436,8 +1435,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
 //    if (result->command=="sync_with_stdio") {
 //        qDebug()<<result->fullName<<result->isStatic()<<(int)result->accessibility;
 //    }
-
-
     return result;
 }
 
@@ -1605,13 +1602,17 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
                     }
                 }
 
-                // Find the corresponding PStatement
-                PStatement statement = doFindStatementOf(mCurrentFile,basename,
-                                                         isGlobal?PStatement():classStatement->parentScope.lock());
+                PClassInheritanceInfo inheritanceInfo = std::make_shared<ClassInheritanceInfo>();
 
-                if (statement && statement->kind == StatementKind::skClass) {
-                    inheritClassStatement(classStatement,isStruct,statement,lastInheritScopeType);
-                }
+                inheritanceInfo->derivedClass = classStatement;
+                inheritanceInfo->file = mCurrentFile;
+                inheritanceInfo->parentClassName = basename;
+                inheritanceInfo->isGlobal = isGlobal;
+                inheritanceInfo->isStruct = isStruct;
+                inheritanceInfo->visibility = lastInheritScopeType;
+                inheritanceInfo->handled = false;
+
+                mClassInheritances.append(inheritanceInfo);
             }
         }
 
@@ -4372,6 +4373,39 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
     mIndex++;
 }
 
+void CppParser::handleInheritances()
+{
+    for (int i=mClassInheritances.length()-1;i>=0;i--) {
+        PClassInheritanceInfo inheritanceInfo = mClassInheritances[i];
+        PStatement derivedStatement = inheritanceInfo->derivedClass.lock();
+        if (!derivedStatement) {
+            //the derived class is invalid, remove it
+            if (i<mClassInheritances.length()-1) {
+                mClassInheritances[i]=mClassInheritances.back();
+            } else {
+                mClassInheritances.pop_back();
+            }
+            continue;
+        }
+        if (inheritanceInfo->handled)
+            continue;
+        PStatement statement = doFindStatementOf(
+                    inheritanceInfo->file,
+                    inheritanceInfo->parentClassName,
+                    inheritanceInfo->isGlobal?PStatement():derivedStatement->parentScope.lock());
+
+        if (statement && statement->kind == StatementKind::skClass) {
+            inheritClassStatement(derivedStatement,
+                                  inheritanceInfo->isStruct,
+                                  statement,
+                                  inheritanceInfo->visibility);
+            inheritanceInfo->parentClassFilename = statement->fileName;
+            inheritanceInfo->handled = true;
+        }
+    }
+    //mClassInheritances.clear();
+}
+
 void CppParser::skipRequires()
 {
     mIndex++; //skip 'requires';
@@ -4459,10 +4493,12 @@ void CppParser::internalParse(const QString &fileName)
         if (!handleStatement())
             break;
     }
+
+    handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-//        mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-//        mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
@@ -4482,6 +4518,8 @@ void CppParser::inheritClassStatement(const PStatement& derived, bool isStruct,
         if (statement->accessibility == StatementAccessibility::Private
                 || statement->kind == StatementKind::skConstructor
                 || statement->kind == StatementKind::skDestructor)
+            continue;
+        if (derived->children.contains(statement->command))
             continue;
         StatementAccessibility m_acc;
         switch(access) {
@@ -5960,7 +5998,12 @@ void CppParser::internalInvalidateFile(const QString &fileName)
             mNamespaces.remove(key);
         }
     }
-
+    // class inheritance
+    // invalid class inheritance infos (derived class is not valid) whould be auto removed in handleInheritances()
+    foreach (const PClassInheritanceInfo& info, mClassInheritances) {
+        if (info->handled && info->parentClassFilename == fileName)
+            info->handled = false;
+    }
     // delete it from scannedfiles
     mPreprocessor.removeScannedFile(fileName);
 }

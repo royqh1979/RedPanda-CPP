@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>876</width>
-    <height>713</height>
+    <height>781</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -156,13 +156,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>Fallback Font 2:</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="1">
        <widget class="QWidget" name="widget_9" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -249,15 +242,8 @@
         </layout>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>Fallback Font 3:</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
-       <widget class="QWidget" name="widget_11" native="true">
+       <widget class="QWidget" name="panelFallbackFont2" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_9">
          <property name="leftMargin">
           <number>0</number>
@@ -272,7 +258,11 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QFontComboBox" name="cbFallbackFont2"/>
+          <widget class="QFontComboBox" name="cbFallbackFont2">
+           <property name="editable">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QLabel" name="label_13">
@@ -298,7 +288,7 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QWidget" name="widget_12" native="true">
+       <widget class="QWidget" name="panelFallbackFont3" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_11">
          <property name="leftMargin">
           <number>0</number>
@@ -313,7 +303,11 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QFontComboBox" name="cbFallbackFont3"/>
+          <widget class="QFontComboBox" name="cbFallbackFont3">
+           <property name="editable">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QLabel" name="label_14">
@@ -336,6 +330,20 @@
           </spacer>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="chkFallbackFont2">
+        <property name="text">
+         <string>Fallback Font 2:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="chkFallbackFont3">
+        <property name="text">
+         <string>Fallback Font 3:</string>
+        </property>
        </widget>
       </item>
      </layout>

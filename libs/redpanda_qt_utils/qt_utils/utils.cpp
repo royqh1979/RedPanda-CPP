@@ -724,12 +724,10 @@ QStringList absolutePaths(const QString &dirPath, const QStringList &relativePat
     return list;
 }
 
-
-
 bool isBinaryContent(const QByteArray &text)
 {
     for (char c:text) {
-        if (c>=0 && c<' ' && c!='\t' && c!='\n' && c!='\r') {
+        if (c==0) {
             return true;
         }
     }

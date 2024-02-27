@@ -364,6 +364,14 @@ public:
         const QString &fallbackFontName3() const;
         void setFallbackFontName3(const QString &newFontName);
 
+        bool useFallbackFont2() const;
+        void setUseFallbackFont2(bool useFont);
+
+        bool useFallbackFont3() const;
+        void setUseFallbackFont3(bool useFont);
+
+        QStringList fontFamilies() const;
+
         int mouseSelectionScrollSpeed() const;
         void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
 
@@ -456,6 +464,8 @@ public:
         QString mFallbackFontName;
         QString mFallbackFontName2;
         QString mFallbackFontName3;
+        bool mUseFallbackFont2;
+        bool mUseFallbackFont3;
         int mFontSize;
         bool mFontOnlyMonospaced;
         double mLineSpacing;

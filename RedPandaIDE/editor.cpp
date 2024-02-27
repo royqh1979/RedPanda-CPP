@@ -5285,15 +5285,8 @@ void Editor::applySettings()
     codeFolding().indentGuidesColor = pSettings->editor().indentLineColor();
     codeFolding().fillIndents = pSettings->editor().fillIndents();
 
-    QStringList fontFamilies{
-        pSettings->editor().fontName(),
-                pSettings->editor().fallbackFontName(),
-                pSettings->editor().fallbackFontName2(),
-                pSettings->editor().fallbackFontName3(),
-    };
-
     QFont f=QFont();
-    f.setFamilies(fontFamilies);
+    f.setFamilies(pSettings->editor().fontFamilies());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f.setStyleStrategy(QFont::PreferAntialias);
     setFont(f);

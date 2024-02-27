@@ -27,13 +27,13 @@ class EditorFontWidget;
 class EditorFontWidget : public SettingsWidget
 {
     Q_OBJECT
-
 public:
     explicit EditorFontWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
     ~EditorFontWidget();
 
 
 private slots:
+    void onFallbackFontsCheckStateChanged();
     void on_chkOnlyMonospacedFonts_stateChanged(int arg1);
     void on_chkGutterOnlyMonospacedFonts_stateChanged(int arg1);
 

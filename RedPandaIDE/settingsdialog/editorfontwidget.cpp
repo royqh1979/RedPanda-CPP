@@ -24,6 +24,12 @@ EditorFontWidget::EditorFontWidget(const QString& name, const QString& group, QW
     ui(new Ui::EditorFontWidget)
 {
     ui->setupUi(this);
+    ui->cbFallbackFont2->setEnabled(false);
+    ui->cbFallbackFont3->setEnabled(false);
+    connect(ui->chkFallbackFont2, &QCheckBox::stateChanged,
+            this, &EditorFontWidget::onFallbackFontsCheckStateChanged);
+    connect(ui->chkFallbackFont3, &QCheckBox::stateChanged,
+            this, &EditorFontWidget::onFallbackFontsCheckStateChanged);
 }
 
 EditorFontWidget::~EditorFontWidget()
@@ -59,6 +65,9 @@ void EditorFontWidget::doLoad()
     ui->cbFallbackFont->setCurrentFont(QFont(pSettings->editor().fallbackFontName()));
     ui->cbFallbackFont2->setCurrentFont(QFont(pSettings->editor().fallbackFontName2()));
     ui->cbFallbackFont3->setCurrentFont(QFont(pSettings->editor().fallbackFontName3()));
+    ui->chkFallbackFont2->setChecked(pSettings->editor().useFallbackFont2());
+    ui->chkFallbackFont3->setChecked(pSettings->editor().useFallbackFont3());
+
     ui->spinFontSize->setValue(pSettings->editor().fontSize());
     ui->spinLineSpacing->setValue(pSettings->editor().lineSpacing());
     ui->chkLigature->setChecked(pSettings->editor().enableLigaturesSupport());
@@ -89,6 +98,8 @@ void EditorFontWidget::doSave()
     pSettings->editor().setFallbackFontName(ui->cbFallbackFont->currentFont().family());
     pSettings->editor().setFallbackFontName2(ui->cbFallbackFont2->currentFont().family());
     pSettings->editor().setFallbackFontName3(ui->cbFallbackFont3->currentFont().family());
+    pSettings->editor().setUseFallbackFont2(ui->chkFallbackFont2->isChecked());
+    pSettings->editor().setUseFallbackFont3(ui->chkFallbackFont3->isChecked());
     pSettings->editor().setFontSize(ui->spinFontSize->value());
     pSettings->editor().setLineSpacing(ui->spinLineSpacing->value());
 
@@ -114,3 +125,10 @@ void EditorFontWidget::doSave()
     pSettings->editor().save();
     pMainWindow->updateEditorSettings();
 }
+
+void EditorFontWidget::onFallbackFontsCheckStateChanged()
+{
+    ui->cbFallbackFont2->setEnabled(ui->chkFallbackFont2->isChecked());
+    ui->cbFallbackFont3->setEnabled(ui->chkFallbackFont3->isChecked());
+}
+
