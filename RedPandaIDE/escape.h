@@ -31,18 +31,18 @@ QString escapeArgument(const QString &arg, bool isFirstArg, EscapeArgumentRule r
 
 EscapeArgumentRule platformShellEscapeArgumentRule();
 QString escapeArgumentForPlatformShell(const QString &arg, bool isFirstArg);
-QString dumpCommandForPlatformShell(const QString &prog, const QStringList &args);
+QString escapeCommandForPlatformShell(const QString &prog, const QStringList &args);
 
-EscapeArgumentRule makefileCommandEscapeArgumentRule();
+EscapeArgumentRule makefileRecipeEscapeArgumentRule();
 QString escapeArgumentForMakefileVariableValue(const QString &arg, bool isFirstArg);
-QString dumpArgumentsForMakefileVariableValue(const QStringList &args);
+QString escapeArgumentsForMakefileVariableValue(const QStringList &args);
 QString escapeFilenameForMakefileInclude(const QString &filename);
 QString escapeFilenameForMakefileTarget(const QString &filename);
 QString escapeFilenameForMakefilePrerequisite(const QString &filename);
-QString dumpFilenamesForMakefilePrerequisites(const QStringList &filenames);
+QString escapeFilenamesForMakefilePrerequisite(const QStringList &filenames);
 QString escapeArgumentForMakefileRecipe(const QString &arg, bool isFirstArg);
 
 QString escapeArgumentForInputField(const QString &arg, bool isFirstArg);
-QString dumpArgumentsForInputField(const QStringList &args);
+QString escapeArgumentsForInputField(const QStringList &args);
 
 #endif // ESCAPE_H

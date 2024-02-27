@@ -69,7 +69,7 @@ void Compiler::run()
         for(int i=0;i<mExtraArgumentsList.count();i++) {
             if (!beforeRunExtraCommand(i))
                 break;
-            QString command = dumpCommandForLog(mExtraCompilersList[i], mExtraArgumentsList[i]);
+            QString command = escapeCommandForLog(mExtraCompilersList[i], mExtraArgumentsList[i]);
             if (mExtraOutputFilesList[i].isEmpty()) {
                 log(tr(" - Command: %1").arg(command));
             } else {
@@ -764,9 +764,9 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
         output.close();
 }
 
-QString Compiler::dumpCommandForLog(const QString &cmd, const QStringList &arguments)
+QString Compiler::escapeCommandForLog(const QString &cmd, const QStringList &arguments)
 {
-    return dumpCommandForPlatformShell(extractFileName(cmd), arguments);
+    return escapeCommandForPlatformShell(extractFileName(cmd), arguments);
 }
 
 PCppParser Compiler::parser() const

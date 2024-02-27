@@ -86,7 +86,7 @@ protected:
     void log(const QString& msg);
     void error(const QString& msg);
     void runCommand(const QString& cmd, const QStringList& arguments, const QString& workingDir, const QByteArray& inputText=QByteArray(), const QString& outputFile=QString());
-    QString dumpCommandForLog(const QString &cmd, const QStringList &arguments);
+    QString escapeCommandForLog(const QString &cmd, const QStringList &arguments);
 
 protected:
     bool mOnlyCheckSyntax;

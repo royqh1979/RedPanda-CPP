@@ -135,7 +135,7 @@ void ToolsGeneralWidget::onEdited()
 void ToolsGeneralWidget::updateDemo()
 {
     QMap<QString,QString> macros = devCppMacroVariables();
-    ui->txtDemo->setText(dumpCommandForPlatformShell(
+    ui->txtDemo->setText(escapeCommandForPlatformShell(
                 parseMacros(ui->txtProgram->text(), macros),
                 parseArguments(ui->txtParameters->text(), macros, true)
     ));

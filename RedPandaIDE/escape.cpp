@@ -200,7 +200,7 @@ QString escapeArgumentForPlatformShell(const QString &arg, bool isFirstArg)
     return escapeArgument(arg, isFirstArg, platformShellEscapeArgumentRule());
 }
 
-QString dumpCommandForPlatformShell(const QString &prog, const QStringList &args)
+QString escapeCommandForPlatformShell(const QString &prog, const QStringList &args)
 {
     QStringList escapedArgs{escapeArgumentForPlatformShell(prog, true)};
     for (int i = 0; i < args.size(); ++i)
@@ -208,7 +208,7 @@ QString dumpCommandForPlatformShell(const QString &prog, const QStringList &args
     return escapedArgs.join(' ');
 }
 
-EscapeArgumentRule makefileCommandEscapeArgumentRule()
+EscapeArgumentRule makefileRecipeEscapeArgumentRule()
 {
 #ifdef Q_OS_WIN
     /* Lord knows why.
@@ -243,12 +243,12 @@ EscapeArgumentRule makefileCommandEscapeArgumentRule()
 QString escapeArgumentForMakefileVariableValue(const QString &arg, bool isFirstArg)
 {
     static QSet<QChar> needsMfEscaping = {'#'};
-    QString recipeEscaped = escapeArgument(arg, isFirstArg, makefileCommandEscapeArgumentRule());
+    QString recipeEscaped = escapeArgument(arg, isFirstArg, makefileRecipeEscapeArgumentRule());
     QString mfEscaped = contextualBackslashEscaping(recipeEscaped, needsMfEscaping);
     return mfEscaped.replace('$', "$$");
 }
 
-QString dumpArgumentsForMakefileVariableValue(const QStringList &args)
+QString escapeArgumentsForMakefileVariableValue(const QStringList &args)
 {
     QStringList escapedArgs;
     for (int i = 0; i < args.size(); ++i)
@@ -277,7 +277,7 @@ QString escapeFilenameForMakefilePrerequisite(const QString &filename)
     return result.replace('$', "$$");
 }
 
-QString dumpFilenamesForMakefilePrerequisites(const QStringList &filenames)
+QString escapeFilenamesForMakefilePrerequisites(const QStringList &filenames)
 {
     QStringList escapedFilenames;
     for (int i = 0; i < filenames.size(); ++i)
@@ -287,7 +287,7 @@ QString dumpFilenamesForMakefilePrerequisites(const QStringList &filenames)
 
 QString escapeArgumentForMakefileRecipe(const QString &arg, bool isFirstArg)
 {
-    QString shellEscaped = escapeArgument(arg, isFirstArg, makefileCommandEscapeArgumentRule());
+    QString shellEscaped = escapeArgument(arg, isFirstArg, makefileRecipeEscapeArgumentRule());
     return shellEscaped.replace('$', "$$");
 }
 
@@ -296,7 +296,7 @@ QString escapeArgumentForInputField(const QString &arg, bool isFirstArg)
     return escapeArgument(arg, isFirstArg, EscapeArgumentRule::BourneAgainShellPretty);
 }
 
-QString dumpArgumentsForInputField(const QStringList &args)
+QString escapeArgumentsForInputField(const QStringList &args)
 {
     QStringList escapedArgs;
     for (int i = 0; i < args.size(); ++i)

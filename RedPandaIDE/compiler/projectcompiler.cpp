@@ -249,11 +249,11 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     writeln(file, "RM       = " CLEAN_PROGRAM);
 
     // compiler flags
-    writeln(file, "LIBS     = " + dumpArgumentsForMakefileVariableValue(libraryArguments));
-    writeln(file, "INCS     = " + dumpArgumentsForMakefileVariableValue(cIncludeArguments));
-    writeln(file, "CXXINCS  = " + dumpArgumentsForMakefileVariableValue(cxxIncludeArguments));
-    writeln(file, "CXXFLAGS = $(CXXINCS) " + dumpArgumentsForMakefileVariableValue(cxxCompileArguments));
-    writeln(file, "CFLAGS   = $(INCS) " + dumpArgumentsForMakefileVariableValue(cCompileArguments));
+    writeln(file, "LIBS     = " + escapeArgumentsForMakefileVariableValue(libraryArguments));
+    writeln(file, "INCS     = " + escapeArgumentsForMakefileVariableValue(cIncludeArguments));
+    writeln(file, "CXXINCS  = " + escapeArgumentsForMakefileVariableValue(cxxIncludeArguments));
+    writeln(file, "CXXFLAGS = $(CXXINCS) " + escapeArgumentsForMakefileVariableValue(cxxCompileArguments));
+    writeln(file, "CFLAGS   = $(INCS) " + escapeArgumentsForMakefileVariableValue(cCompileArguments));
 #ifdef Q_OS_WIN
     writeln(file, "WINDRESFLAGS = " + dumpArgumentsForMakefileVariableValue(resourceArguments));
 #endif
@@ -262,9 +262,9 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     // do not use them in targets or command arguments, they have different escaping rules
     if (!objResFile.isEmpty()) {
         writeln(file, "RES      = " + escapeFilenameForMakefilePrerequisite(objResFile));
-        writeln(file, "OBJ      = " + dumpFilenamesForMakefilePrerequisites(Objects) + " $(RES)");
+        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisites(Objects) + " $(RES)");
     } else {
-        writeln(file, "OBJ      = " + dumpFilenamesForMakefilePrerequisites(Objects));
+        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisites(Objects));
     };
     writeln(file, "BIN      = " + escapeFilenameForMakefilePrerequisite(executable));
     if (mProject->options().usePrecompiledHeader
@@ -276,11 +276,11 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     // object referenced in command arguments
     // use them in targets or prerequisites, they have different escaping rules
     if (!objResFile.isEmpty()) {
-        writeln(file, "LINKOBJ  = " + dumpArgumentsForMakefileVariableValue(LinkObjects) + " " + escapeArgumentForMakefileVariableValue(objResFile, false));
-        writeln(file, "CLEANOBJ = " + dumpArgumentsForMakefileVariableValue(cleanObjects) + " " + escapeArgumentForMakefileVariableValue(cleanRes, false) + " " + escapeArgumentForMakefileVariableValue(cleanExe, false));
+        writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(LinkObjects) + " " + escapeArgumentForMakefileVariableValue(objResFile, false));
+        writeln(file, "CLEANOBJ = " + escapeArgumentsForMakefileVariableValue(cleanObjects) + " " + escapeArgumentForMakefileVariableValue(cleanRes, false) + " " + escapeArgumentForMakefileVariableValue(cleanExe, false));
     } else {
-        writeln(file, "LINKOBJ  = " + dumpArgumentsForMakefileVariableValue(LinkObjects));
-        writeln(file, "CLEANOBJ = " + dumpArgumentsForMakefileVariableValue(cleanObjects) + " " + escapeArgumentForMakefileVariableValue(cleanExe, false));
+        writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(LinkObjects));
+        writeln(file, "CLEANOBJ = " + escapeArgumentsForMakefileVariableValue(cleanObjects) + " " + escapeArgumentForMakefileVariableValue(cleanExe, false));
     };
 
     // This needs to be put in before the clean command.
@@ -609,7 +609,7 @@ bool ProjectCompiler::prepareForCompile()
     log(tr("Processing makefile:"));
     log("--------");
     log(tr("- makefile processer: %1").arg(mCompiler));
-    QString command = dumpCommandForLog(mCompiler, mArguments);
+    QString command = escapeCommandForLog(mCompiler, mArguments);
     log(tr("- Command: %1").arg(command));
     log("");
 

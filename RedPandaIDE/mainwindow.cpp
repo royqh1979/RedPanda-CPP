@@ -3385,10 +3385,10 @@ void MainWindow::updateTools()
                     QTemporaryFile file(QDir::tempPath()+QDir::separator()+"XXXXXX.bat");
                     file.setAutoRemove(false);
                     if (file.open()) {
-                        file.write(dumpCommandForPlatformShell(
+                        file.write(escapeCommandForPlatformShell(
                             "cd", {"/d", localizePath(workDir)}
                             ).toLocal8Bit() + LINE_BREAKER);
-                        file.write(dumpCommandForPlatformShell(program, params).toLocal8Bit()
+                        file.write(escapeCommandForPlatformShell(program, params).toLocal8Bit()
                                    + LINE_BREAKER);
                         file.close();
                         if (item->pauseAfterExit) {

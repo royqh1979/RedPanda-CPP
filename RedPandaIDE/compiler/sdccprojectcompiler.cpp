@@ -156,20 +156,20 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
     writeln(file, "PACKIHX  = " PACKIHX_PROGRAM);
     writeln(file, "MAKEBIN  = " MAKEBIN_PROGRAM);
 
-    writeln(file, "OBJ      = " + dumpFilenamesForMakefilePrerequisites(Objects));
-    writeln(file, "LINKOBJ  = " + dumpArgumentsForMakefileVariableValue(LinkObjects));
-    writeln(file,"CLEANOBJ = " + dumpArgumentsForMakefileVariableValue(cleanObjects) + ' ' +
+    writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisites(Objects));
+    writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(LinkObjects));
+    writeln(file,"CLEANOBJ = " + escapeArgumentsForMakefileVariableValue(cleanObjects) + ' ' +
         escapeArgumentForMakefileVariableValue(cleanIhx, false) + ' ' +
         escapeArgumentForMakefileVariableValue(cleanExe, false));
-    writeln(file, "LIBS     = " + dumpArgumentsForMakefileVariableValue(libraryArguments));
-    writeln(file, "INCS     = " + dumpArgumentsForMakefileVariableValue(cIncludeArguments));
+    writeln(file, "LIBS     = " + escapeArgumentsForMakefileVariableValue(libraryArguments));
+    writeln(file, "INCS     = " + escapeArgumentsForMakefileVariableValue(cIncludeArguments));
     writeln(file, "IHX_TAR  = " + escapeFilenameForMakefileTarget(ihx));
     writeln(file, "IHX_DEP  = " + escapeFilenameForMakefilePrerequisite(ihx));
     writeln(file, "IHX_ARG  = " + escapeArgumentForMakefileVariableValue(ihx, false));
     writeln(file, "BIN_TAR  = " + escapeFilenameForMakefileTarget(executable));
     writeln(file, "BIN_DEP  = " + escapeFilenameForMakefilePrerequisite(executable));
     writeln(file, "BIN_ARG  = " + escapeArgumentForMakefileVariableValue(executable, false));
-    writeln(file, "CFLAGS   = $(INCS) " + dumpArgumentsForMakefileVariableValue(cCompileArguments));
+    writeln(file, "CFLAGS   = $(INCS) " + escapeArgumentsForMakefileVariableValue(cCompileArguments));
     writeln(file, "RM       = " CLEAN_PROGRAM);
 
     writeln(file);
@@ -346,7 +346,7 @@ bool SDCCProjectCompiler::prepareForCompile()
     log(tr("Processing makefile:"));
     log("--------");
     log(tr("- makefile processer: %1").arg(mCompiler));
-    QString command = dumpCommandForLog(mCompiler, mArguments);
+    QString command = escapeCommandForLog(mCompiler, mArguments);
     log(tr("- Command: %1").arg(command));
     log("");
 

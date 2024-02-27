@@ -1882,11 +1882,11 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     QStringList compileParams;
     for (const QJsonValue &param : set["customCompileParams"].toArray())
         compileParams << param.toString();
-    mCustomCompileParams = dumpArgumentsForInputField(compileParams);
+    mCustomCompileParams = escapeArgumentsForInputField(compileParams);
     QStringList linkParams;
     for (const QJsonValue &param : set["customLinkParams"].toArray())
         linkParams << param.toString();
-    mCustomLinkParams = dumpArgumentsForInputField(linkParams);
+    mCustomLinkParams = escapeArgumentsForInputField(linkParams);
 
     if (!mAutoAddCharsetParams)
         mExecCharset = "UTF-8";
