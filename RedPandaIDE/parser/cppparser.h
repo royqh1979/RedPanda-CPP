@@ -516,6 +516,7 @@ private:
     void handleStructs(bool isTypedef = false);
     void handleUsing();
     void handleVar(const QString& typePrefix,bool isExtern,bool isStatic);
+    void handleInheritances();
     void skipRequires();
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
@@ -718,6 +719,7 @@ private:
     int mLockCount; // lock(don't reparse) when we need to find statements in a batch
     bool mParsing;
     QHash<QString,PStatementList> mNamespaces;  // namespace and the statements in its scope
+    QList<PClassInheritanceInfo> mClassInheritances;
     QSet<QString> mInlineNamespaces;
 #ifdef QT_DEBUG
     int mLastIndex;
