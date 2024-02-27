@@ -30,7 +30,7 @@
 
 namespace QSynedit {
 
-Document::Document(const QFont& font, const QFont& nonAsciiFont, QObject *parent):
+Document::Document(const QFont& font, QObject *parent):
       QObject(parent),
       mFontMetrics(font),
       mTabSize(4),
@@ -669,8 +669,8 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
             } else if (line.endsWith("\n")){
                 line.remove(line.length()-1,1);
             }
-            // if (isBinaryContent(line))
-            //     throw BinaryFileError(tr("'%1' is a binaray File!").arg(filename));
+            if (isBinaryContent(line))
+                throw BinaryFileError(tr("'%1' is a binaray File!").arg(filename));
             if (allAscii) {
                 allAscii = isTextAllAscii(line);
             }

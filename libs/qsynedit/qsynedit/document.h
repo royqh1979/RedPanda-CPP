@@ -210,7 +210,7 @@ class Document : public QObject
 {  
     Q_OBJECT
 public:
-    explicit Document(const QFont& font, const QFont& nonAsciiFont, QObject* parent=nullptr);
+    explicit Document(const QFont& font, QObject* parent=nullptr);
     Document(const Document&)=delete;
     Document& operator=(const Document&)=delete;
 

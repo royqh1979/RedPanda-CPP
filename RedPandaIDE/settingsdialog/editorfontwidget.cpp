@@ -24,6 +24,8 @@ EditorFontWidget::EditorFontWidget(const QString& name, const QString& group, QW
     ui(new Ui::EditorFontWidget)
 {
     ui->setupUi(this);
+    ui->cbFallbackFont2->setEnabled(false);
+    ui->cbFallbackFont3->setEnabled(false);
     connect(ui->chkFallbackFont2, &QCheckBox::stateChanged,
             this, &EditorFontWidget::onFallbackFontsCheckStateChanged);
     connect(ui->chkFallbackFont3, &QCheckBox::stateChanged,

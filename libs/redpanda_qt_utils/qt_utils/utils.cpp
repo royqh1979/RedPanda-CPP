@@ -724,15 +724,15 @@ QStringList absolutePaths(const QString &dirPath, const QStringList &relativePat
     return list;
 }
 
-// bool isBinaryContent(const QByteArray &text)
-// {
-//     for (char c:text) {
-//         if (c>=0 && c<' ' && c!='\t' && c!='\n' && c!='\r') {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
+bool isBinaryContent(const QByteArray &text)
+{
+    for (char c:text) {
+        if (c==0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void clearQPlainTextEditFormat(QTextEdit *editor)
 {

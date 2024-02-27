@@ -405,7 +405,8 @@ int main(int argc, char *argv[])
                                   e.reason(),
                                   QMessageBox::Ok);
         }
-        // qDebug()<<"Load font"<<QFontDatabase::addApplicationFont(":/fonts/asciicontrol.ttf");
+        // qDebug()<<"Load font";
+        QFontDatabase::addApplicationFont(":/fonts/asciicontrol.ttf");
 
         MainWindow mainWindow;
         pMainWindow = &mainWindow;

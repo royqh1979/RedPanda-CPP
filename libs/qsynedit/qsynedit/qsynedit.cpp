@@ -58,7 +58,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mPainting = false;
     mFontDummy = QFont("monospace",14);
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
-    mDocument = std::make_shared<Document>(mFontDummy, mFontDummy, this);
+    mDocument = std::make_shared<Document>(mFontDummy, this);
     //fPlugins := TList.Create;
     mMouseMoved = false;
     mMouseOrigin = QPoint(0,0);
