@@ -407,7 +407,7 @@ void QSynEditPainter::paintToken(
                         }
                         if (tryLigature) {
                             QString textToPaint = glyph;
-                            while(i+1<glyphStartCharList.length()) {
+                            while(i+1<endGlyph) {
                                 int glyphStart = glyphStartCharList[i+1];
                                 int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i+1);
                                 QString glyph2 = lineText.mid(glyphStart,glyphLen);
@@ -428,43 +428,36 @@ void QSynEditPainter::paintToken(
                                 mPainter->setFont(font);
                                 fontInited = true;
                             }
+                            //qDebug()<<"paint 1:"<<textToPaint;
                             mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
                             drawed = true;
                         }
                     }
                     if (!drawed) {
-                        if (glyph.length()==1 && glyph.front().unicode()<128) {
-                            QString ch;
+                        if (glyph.length()>0) {
+                            QString textToPaint = glyph;
                             int padding=0;
                             if (showGlyphs) {
                                 switch(glyph.front().unicode()) {
                                 case '\t':
-                                    ch=TabGlyph;
+                                    textToPaint=TabGlyph;
                                     padding=(glyphWidth-1)/2*mEdit->mCharWidth;
                                     break;
                                 case ' ':
-                                    ch=SpaceGlyph;
+                                    textToPaint=SpaceGlyph;
                                     break;
                                 default:
-                                    ch=glyph;
+                                    break;
                                 }
-                            } else {
-                                ch=glyph;
                             }
-                            if (ch!=" " && ch!="\t") {
+                            if (textToPaint!=" " && textToPaint!="\t") {
                                 if (!fontInited) {
                                     mPainter->setFont(font);
                                     fontInited = true;
                                 }
-                                mPainter->drawText(nX+padding,rcToken.bottom()-mPainter->fontMetrics().descent() , ch);
+                                //qDebug()<<"Drawing"<<textToPaint;
+                                mPainter->drawText(nX+padding,rcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
                             }
-                            //qDebug()<<"Drawing"<<glyph<<nX<<glyphWidth;
-                        } else {
-                            if (!fontInited) {
-                                mPainter->setFont(font);
-                                fontInited = true;
-                            }
-                            mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , glyph);
                         }
                         drawed = true;
                     }
