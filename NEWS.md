@@ -13,6 +13,9 @@ Red Panda C++ Version 2.27
   - enhancement: Display ascii control chars.
   - fix: Parser: invalidating file may lost class inheritance infos.
   - fix: Function argument infos are not correctly parsed.
+  - enhancement: Migrate external calls from command string to argv array to improve safety and security.
+  - enhancement: Support POSIX shell-like escaping in user inputs for compiler arguments.
+  - fix: (Hopefully) properly escape filenames and arguments in makefile generation.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

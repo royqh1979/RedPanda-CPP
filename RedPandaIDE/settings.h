@@ -631,6 +631,8 @@ public:
 
         QList<TerminalItem> loadTerminalList() const;
 
+        static QMap<QString, QString> terminalArgsPatternMagicVariables();
+
     private:
         bool isTerminalValid();
         void checkAndSetTerminal();
@@ -653,6 +655,8 @@ public:
         bool mUseCustomTerminal;
         bool mHideNonSupportFilesInFileView;
         bool mOpenFilesInSingleInstance;
+
+        static const QMap<QString, QString> mTerminalArgsPatternMagicVariables;
         // _Base interface
     protected:
         void doSave() override;

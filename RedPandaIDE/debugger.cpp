@@ -16,6 +16,7 @@
  */
 #include "debugger.h"
 #include "utils.h"
+#include "utils/parsearg.h"
 #include "mainwindow.h"
 #include "editor.h"
 #include "settings.h"
@@ -140,7 +141,7 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         //deleted when thread finished
         QStringList params;
         if (pSettings->executor().useParams())
-            params = splitProcessCommand(pSettings->executor().params());
+            params = parseArgumentsWithoutVariables(pSettings->executor().params());
         mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort(),params);
         if (pSettings->executor().redirectInput())
             mTarget->setInputFile(pSettings->executor().inputFilename());

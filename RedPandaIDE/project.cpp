@@ -1423,11 +1423,7 @@ void Project::buildPrivateResource()
         if (
                 (getFileType(unit->fileName()) == FileType::WindowsResourceSource)
                 && unit->compile() )
-            contents.append("#include \"" +
-                           genMakePath(
-                               extractRelativePath(directory(), unit->fileName()),
-                               false,
-                               false) + "\"");
+            contents.append("#include \"" + extractRelativePath(directory(), unit->fileName()) + "\"");
     }
 
     if (!mOptions.icon.isEmpty()) {
@@ -1450,11 +1446,8 @@ void Project::buildPrivateResource()
       contents.append("//");
       if (!mOptions.exeOutput.isEmpty())
           contents.append(
-                    "1 24 \"" +
-                       genMakePath2(
-                           includeTrailingPathDelimiter(mOptions.exeOutput)
-                           + extractFileName(executable()))
-                + ".Manifest\"");
+                    "1 24 \"" + includeTrailingPathDelimiter(mOptions.exeOutput)
+                           + extractFileName(executable()) + ".Manifest\"");
       else
           contents.append("1 24 \"" + extractFileName(executable()) + ".Manifest\"");
     }

@@ -197,6 +197,8 @@ SOURCES += \
     settingsdialog/settingswidget.cpp \
     systemconsts.cpp \
     utils.cpp \
+    utils/escape.cpp \
+    utils/parsearg.cpp \
     widgets/coloredit.cpp \
     widgets/compileargumentswidget.cpp \
     widgets/consolewidget.cpp \
@@ -324,6 +326,8 @@ HEADERS += \
     settingsdialog/settingswidget.h \
     systemconsts.h \
     utils.h \
+    utils/escape.h \
+    utils/parsearg.h \
     common.h \
     widgets/coloredit.h \
     widgets/compileargumentswidget.h \
