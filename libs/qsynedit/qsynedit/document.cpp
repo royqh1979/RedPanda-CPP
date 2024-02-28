@@ -836,6 +836,8 @@ QString Document::glyph(int line, int glyphIdx)
 QString Document::glyphAt(int line, int charPos)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return QString();
     QList<int> glyphStartCharList = mLines[line]->glyphStartCharList();
     int glyphIdx = charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charPos);
     return mLines[line]->glyph(glyphIdx);
@@ -844,6 +846,8 @@ QString Document::glyphAt(int line, int charPos)
 int Document::charToGlyphStartChar(int line, int charPos)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     QList<int> glyphStartCharList = mLines[line]->glyphStartCharList();
     int glyphIdx = charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charPos);
     return mLines[line]->glyphStartChar(glyphIdx);
@@ -1029,6 +1033,8 @@ int Document::xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int x
 int Document::charToGlyphStartPosition(int line, int charPos)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     QList<int> glyphStartCharList = mLines[line]->glyphStartCharList();
     int glyphIdx = charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charPos);
     return mLines[line]->glyphStartPosition(glyphIdx);
@@ -1047,7 +1053,7 @@ int Document::xposToGlyphStartChar(int line, int xpos)
 int Document::charToGlyphStartPosition(int line, const QString newStr, int charPos)
 {
     QMutexLocker locker(&mMutex);
-    if (mLines[line]->lineText() == newStr) {
+    if (line>=0 && line<count() && mLines[line]->lineText() == newStr) {
         return charToGlyphStartPosition(line,charPos);
     } else {
         QList<int> glyphStartCharList = calcGlyphStartCharList(newStr);

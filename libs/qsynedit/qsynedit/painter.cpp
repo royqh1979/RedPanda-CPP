@@ -379,13 +379,13 @@ void QSynEditPainter::paintToken(
                         bool tryLigature = false;
                         if (glyph.length()==0) {
                         } else if (glyph.length()==1 && glyph.front().unicode()<=32){
+                        } else if (mEdit->mOptions.testFlag(eoForceMonospace)
+                                   && glyphWidth != mPainter->fontMetrics().horizontalAdvance(glyph)) {
                         } else {
                             tryLigature = true;
                         }
                         if (tryLigature) {
                             QString textToPaint = glyph;
-                            int oldGlyphWidth = glyphWidth;
-                            int oldI = i;
                             while(i+1<endGlyph) {
                                 int glyphStart = glyphStartCharList[i+1];
                                 int glyphLen = calcSegmentInterval(glyphStartCharList,lineText.length(),i+1);
@@ -395,27 +395,27 @@ void QSynEditPainter::paintToken(
                                 if ( glyph2.length()<1
                                      ||
                                      (glyph2.length()==1
-                                      && glyph2.front().unicode()<32))
+                                      && glyph2.front().unicode()<=32))
                                     break;
-                                i+=1;
-                                glyphWidth += calcSegmentInterval(glyphStartPositionList, tokenRight, i);
-                                textToPaint+=glyph2;
+                                int glyph2Width = calcSegmentInterval(glyphStartPositionList, tokenRight, i+1);
+                                if (mEdit->mOptions.testFlag(eoForceMonospace)) {
+                                    if (glyphWidth+glyph2Width != mPainter->fontMetrics().horizontalAdvance(textToPaint+glyph2)) {
+                                        break;
+                                    }
+                                }
+                                i++;
+                                glyphWidth += glyph2Width;
+                                textToPaint += glyph2;
                                 if (tokenWidth + glyphWidth > last )
                                     break;
                             }
-                            if (glyphWidth
-                                    == mPainter->fontMetrics().horizontalAdvance(textToPaint)) {
-                                if (!fontInited) {
-                                    mPainter->setFont(font);
-                                    fontInited = true;
-                                }
-                                //qDebug()<<"paint 1:"<<textToPaint;
-                                mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
-                                drawed = true;
-                            } else {
-                                glyphWidth = oldGlyphWidth;
-                                i=oldI;
+                            if (!fontInited) {
+                                mPainter->setFont(font);
+                                fontInited = true;
                             }
+                            //qDebug()<<"paint 1:"<<textToPaint;
+                            mPainter->drawText(nX,rcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
+                            drawed = true;
                         }
                     }
                     if (!drawed) {
