@@ -7,7 +7,7 @@
 #include <QProcess>
 #include <QString>
 
-#include "escape.h"
+#include "utils/escape.h"
 
 int testIndex = 0;
 

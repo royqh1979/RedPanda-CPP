@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "escape.h"
+#include "utils/escape.h"
 
 #include <QSet>
 #include <QRegularExpression>
@@ -277,7 +277,7 @@ QString escapeFilenameForMakefilePrerequisite(const QString &filename)
     return result.replace('$', "$$");
 }
 
-QString escapeFilenamesForMakefilePrerequisites(const QStringList &filenames)
+QString escapeFilenamesForMakefilePrerequisite(const QStringList &filenames)
 {
     QStringList escapedFilenames;
     for (int i = 0; i < filenames.size(); ++i)

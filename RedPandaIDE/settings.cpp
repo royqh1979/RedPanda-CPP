@@ -19,7 +19,8 @@
 #include <QTextCodec>
 #include <algorithm>
 #include "utils.h"
-#include "escape.h"
+#include "utils/escape.h"
+#include "utils/parsearg.h"
 #include <QDir>
 #include "systemconsts.h"
 #include <QDebug>

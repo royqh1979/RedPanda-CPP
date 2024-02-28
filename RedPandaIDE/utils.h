@@ -167,9 +167,6 @@ QColor alphaBlend(const QColor &lower, const QColor &upper);
 
 QStringList getExecutableSearchPaths();
 
-QStringList parseArguments(const QString &command, const QMap<QString, QString> &variables, bool enableDevCppVariableExpansion);
-QStringList parseArgumentsWithoutVariables(const QString &command);
-
 QStringList platformCommandForTerminalArgsPreview();
 
 QString appArch();

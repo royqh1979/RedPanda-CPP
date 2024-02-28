@@ -20,7 +20,7 @@
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
 #include "../compiler/executablerunner.h"
-#include "escape.h"
+#include "utils/escape.h"
 
 #include <QFileDialog>
 #include <QMessageBox>

@@ -30,7 +30,6 @@ target("RedPandaIDE")
         "autolinkmanager.cpp",
         "colorscheme.cpp",
         "customfileiconprovider.cpp",
-        "escape.cpp",
         "gdbmiresultparser.cpp",
         "main.cpp",
         "projectoptions.cpp",
@@ -48,7 +47,9 @@ target("RedPandaIDE")
         -- problems
         "problems/freeprojectsetformat.cpp",
         "problems/ojproblemset.cpp",
-        "problems/problemcasevalidator.cpp")
+        "problems/problemcasevalidator.cpp",
+        "utils/escape.cpp",
+        "utils/parsearg.cpp")
 
     add_moc_classes(
         "caretlist",
@@ -245,4 +246,5 @@ target("test-escape")
     set_default(false)
     add_tests("test-escape")
 
-    add_files("escape.cpp", "test-escape.cpp")
+    add_files("utils/escape.cpp", "test/escape.cpp")
+    add_includedirs(".")

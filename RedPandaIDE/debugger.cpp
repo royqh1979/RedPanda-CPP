@@ -16,6 +16,7 @@
  */
 #include "debugger.h"
 #include "utils.h"
+#include "utils/parsearg.h"
 #include "mainwindow.h"
 #include "editor.h"
 #include "settings.h"

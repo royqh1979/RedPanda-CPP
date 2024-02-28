@@ -26,6 +26,7 @@
 #include "executablerunner.h"
 #include "ojproblemcasesrunner.h"
 #include "utils.h"
+#include "utils/parsearg.h"
 #include "../systemconsts.h"
 #include "../settings.h"
 #include <QMessageBox>

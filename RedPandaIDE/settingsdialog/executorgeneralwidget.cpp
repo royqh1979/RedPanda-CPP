@@ -19,6 +19,7 @@
 #include "../settings.h"
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
+#include "utils/parsearg.h"
 
 #include <QFileDialog>
 #include <QJsonDocument>

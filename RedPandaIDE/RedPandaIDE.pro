@@ -179,7 +179,6 @@ SOURCES += \
     debugger.cpp \
     editor.cpp \
     editorlist.cpp \
-    escape.cpp \
     iconsmanager.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -198,6 +197,8 @@ SOURCES += \
     settingsdialog/settingswidget.cpp \
     systemconsts.cpp \
     utils.cpp \
+    utils/escape.cpp \
+    utils/parsearg.cpp \
     widgets/coloredit.cpp \
     widgets/compileargumentswidget.cpp \
     widgets/consolewidget.cpp \
@@ -308,7 +309,6 @@ HEADERS += \
     debugger.h \
     editor.h \
     editorlist.h \
-    escape.h \
     iconsmanager.h \
     mainwindow.h \
     settingsdialog/compilersetdirectorieswidget.h \
@@ -326,6 +326,8 @@ HEADERS += \
     settingsdialog/settingswidget.h \
     systemconsts.h \
     utils.h \
+    utils/escape.h \
+    utils/parsearg.h \
     common.h \
     widgets/coloredit.h \
     widgets/compileargumentswidget.h \

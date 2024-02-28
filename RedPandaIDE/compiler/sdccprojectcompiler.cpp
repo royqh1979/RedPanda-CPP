@@ -20,7 +20,7 @@
 #include "../systemconsts.h"
 #include "qt_utils/utils.h"
 #include "utils.h"
-#include "escape.h"
+#include "utils/escape.h"
 
 #include <QDir>
 
@@ -156,7 +156,7 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
     writeln(file, "PACKIHX  = " PACKIHX_PROGRAM);
     writeln(file, "MAKEBIN  = " MAKEBIN_PROGRAM);
 
-    writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisites(Objects));
+    writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(Objects));
     writeln(file, "LINKOBJ  = " + escapeArgumentsForMakefileVariableValue(LinkObjects));
     writeln(file,"CLEANOBJ = " + escapeArgumentsForMakefileVariableValue(cleanObjects) + ' ' +
         escapeArgumentForMakefileVariableValue(cleanIhx, false) + ' ' +

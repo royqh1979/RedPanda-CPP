@@ -22,7 +22,8 @@
 #include "../editor.h"
 #include "qt_utils/utils.h"
 #include "utils.h"
-#include "escape.h"
+#include "utils/escape.h"
+#include "utils/parsearg.h"
 
 #include <QDir>
 
@@ -255,16 +256,16 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     writeln(file, "CXXFLAGS = $(CXXINCS) " + escapeArgumentsForMakefileVariableValue(cxxCompileArguments));
     writeln(file, "CFLAGS   = $(INCS) " + escapeArgumentsForMakefileVariableValue(cCompileArguments));
 #ifdef Q_OS_WIN
-    writeln(file, "WINDRESFLAGS = " + dumpArgumentsForMakefileVariableValue(resourceArguments));
+    writeln(file, "WINDRESFLAGS = " + escapeArgumentsForMakefileVariableValue(resourceArguments));
 #endif
 
     // objects referenced in prerequisites
     // do not use them in targets or command arguments, they have different escaping rules
     if (!objResFile.isEmpty()) {
         writeln(file, "RES      = " + escapeFilenameForMakefilePrerequisite(objResFile));
-        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisites(Objects) + " $(RES)");
+        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(Objects) + " $(RES)");
     } else {
-        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisites(Objects));
+        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(Objects));
     };
     writeln(file, "BIN      = " + escapeFilenameForMakefilePrerequisite(executable));
     if (mProject->options().usePrecompiledHeader

@@ -20,7 +20,7 @@
 #include "../project.h"
 #include "../iconsmanager.h"
 #include "utils.h"
-#include "escape.h"
+#include "utils/escape.h"
 
 #ifdef Q_OS_WIN
 #include <sysinfoapi.h>

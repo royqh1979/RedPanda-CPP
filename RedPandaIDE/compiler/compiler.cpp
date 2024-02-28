@@ -16,7 +16,8 @@
  */
 #include "compiler.h"
 #include "utils.h"
-#include "escape.h"
+#include "utils/escape.h"
+#include "utils/parsearg.h"
 #include "compilermanager.h"
 #include "../systemconsts.h"
 
