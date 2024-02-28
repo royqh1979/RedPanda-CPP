@@ -1549,7 +1549,7 @@ void Settings::Editor::doLoad()
     mFontName = stringValue("font_name",DEFAULT_MONO_FONT);
     QString defaultCjkFontName = DEFAULT_MONO_FONT;
     QString defaultLocaleName = QLocale::system().name();
-    bool isZhJa =
+    bool isCNJP =
             defaultLocaleName.startsWith("zh_")
             ||  defaultLocaleName.startsWith("ja_")
             || defaultLocaleName==("zh")
@@ -1571,7 +1571,7 @@ void Settings::Editor::doLoad()
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.1);
-    mForceFixedFontWidth = boolValue("force_fixed_font_width", isZhJa);
+    mForceFixedFontWidth = boolValue("force_fixed_font_width", isCNJP);
     // if (mForceFixedFontWidth)
     //     mEnableLigaturesSupport = false;
     // else

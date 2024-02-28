@@ -426,7 +426,7 @@ void QSynEditPainter::paintToken(
                                 switch(glyph.front().unicode()) {
                                 case '\t':
                                     textToPaint=TabGlyph;
-                                    padding=(glyphWidth-1)/2*mEdit->mCharWidth;
+                                    padding=(glyphWidth-mPainter->fontMetrics().horizontalAdvance(TabGlyph))/2;
                                     break;
                                 case ' ':
                                     textToPaint=SpaceGlyph;

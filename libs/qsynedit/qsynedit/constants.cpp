@@ -22,6 +22,6 @@ const QSet<QChar> WordBreakChars{'.', ',', ';', ':',
       '-', '*', '/', '\\', '|'};
 const QChar TabGlyph(0x2192);
 const QChar SpaceGlyph('.');
-const QChar LineBreakGlyph(0x2193);
+const QChar LineBreakGlyph(0x21A9);
 const QChar SoftBreakGlyph(0x2193);
 }
