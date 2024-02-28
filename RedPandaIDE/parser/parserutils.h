@@ -295,7 +295,19 @@ private:
     QVector<PCppScope> mScopes;
 };
 
-struct ClassInheritanceInfo;
+struct ClassInheritanceInfo {
+    std::weak_ptr<Statement> derivedClass;
+    QString file;
+    QString parentClassName;
+    bool isGlobal;
+    bool isStruct;
+    StatementAccessibility visibility;
+//    QString parentClassFilename;
+    bool handled;
+};
+
+using PClassInheritanceInfo = std::shared_ptr<ClassInheritanceInfo>;
+
 struct FileIncludes {
     QString baseFile;
     QMap<QString, bool> includeFiles; // true means the file is directly included, false means included indirectly

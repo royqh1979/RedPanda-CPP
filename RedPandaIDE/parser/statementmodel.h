@@ -53,17 +53,4 @@ private:
 #endif
 };
 
-struct ClassInheritanceInfo {
-    std::weak_ptr<Statement> derivedClass;
-    QString file;
-    QString parentClassName;
-    bool isGlobal;
-    bool isStruct;
-    StatementAccessibility visibility;
-//    QString parentClassFilename;
-    bool handled;
-};
-
-using PClassInheritanceInfo = std::shared_ptr<ClassInheritanceInfo>;
-
 #endif // STATEMENTMODEL_H
