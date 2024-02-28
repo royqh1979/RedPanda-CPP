@@ -1569,6 +1569,10 @@
         <source>Fallback Font 3:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Force fixed width</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditorGeneralWidget</name>

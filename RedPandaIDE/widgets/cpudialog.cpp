@@ -142,7 +142,11 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
 
 void CPUDialog::resetEditorFont(float dpi)
 {
-
+    QSynedit::EditorOptions options=ui->txtCode->getOptions();
+    options.setFlag(QSynedit::eoLigatureSupport, pSettings->editor().enableLigaturesSupport());
+    options.setFlag(QSynedit::eoForceMonospace,
+                    pSettings->editor().forceFixedFontWidth());
+    ui->txtCode->setOptions(options);
     QFont f=QFont();
     f.setFamilies(pSettings->editor().fontFamilies());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize(),dpi));

@@ -420,6 +420,9 @@ public:
         int tipsDelay() const;
         void setTipsDelay(int newTipsDelay);
 
+        bool forceFixedFontWidth() const;
+        void setForceFixedFontWidth(bool newForceFixedWidth);
+
     private:
         //General
         // indents
@@ -456,7 +459,6 @@ public:
         bool mShowRightEdgeLine;
         int mRightEdgeWidth;
         QColor mRightEdgeLineColor;
-        bool mEnableLigaturesSupport;
 
         //Font
         //font
@@ -469,6 +471,8 @@ public:
         int mFontSize;
         bool mFontOnlyMonospaced;
         double mLineSpacing;
+        bool mEnableLigaturesSupport;
+        bool mForceFixedFontWidth;
 
         bool mShowLeadingSpaces;
         bool mShowTrailingSpaces;

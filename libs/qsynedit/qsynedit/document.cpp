@@ -31,13 +31,14 @@
 namespace QSynedit {
 
 Document::Document(const QFont& font, QObject *parent):
-      QObject(parent),
-      mFontMetrics(font),
-      mTabSize(4),
+      QObject{parent},
+      mFontMetrics{font},
+      mTabSize{4},
+      mForceMonospace{false},
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-      mMutex()
+      mMutex{}
 #else
-      mMutex(QMutex::Recursive)
+      mMutex{QMutex::Recursive}
 #endif
 {
     mAppendNewLineAtEOF = true;
@@ -585,6 +586,19 @@ void Document::saveUTF32File(QFile &file, QTextCodec* codec)
     file.write(codec->fromUnicode(text));
 }
 
+bool Document::forceMonospace() const
+{
+    return mForceMonospace;
+}
+
+void Document::setForceMonospace(bool newForceMonospace)
+{
+    int oldValue = mForceMonospace;
+    mForceMonospace = newForceMonospace;
+    if (oldValue != mForceMonospace)
+        invalidateAllLineWidth();
+}
+
 const QFontMetrics &Document::fontMetrics() const
 {
     return mFontMetrics;
@@ -936,7 +950,7 @@ int Document::glyphWidth(int line, int glyphIdx)
 
 int Document::glyphWidth(const QString &glyph, int left) const
 {
-    return glyphWidth(glyph,left,mFontMetrics);
+    return glyphWidth(glyph,left,mFontMetrics,mForceMonospace);
 }
 
 int Document::charToGlyphIndex(int line, int charIdx)
@@ -982,7 +996,7 @@ QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<
             end = lineText.length();
         }
         QString glyph = lineText.mid(start,end-start);
-        int gWidth = glyphWidth(glyph, right, fontMetrics);
+        int gWidth = glyphWidth(glyph, right, fontMetrics, mForceMonospace);
         glyphPostionList.append(right);
         right += gWidth;
     }
@@ -1732,7 +1746,7 @@ int Document::updateGlyphStartPositionList(
             end = lineText.length();
         }
         QString glyph = lineText.mid(start,end-start);
-        int gWidth = glyphWidth(glyph, right, fontMetrics);
+        int gWidth = glyphWidth(glyph, right, fontMetrics, mForceMonospace);
         glyphStartPositionList[i] = right;
         right += gWidth;
     }
@@ -1741,17 +1755,21 @@ int Document::updateGlyphStartPositionList(
     return right-left;
 }
 
-int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fontMetrics) const
+int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fontMetrics, bool forceMonospace) const
 {
     int glyphWidth;
     if (glyph.length()==0)
         return 0;
     QChar ch = glyph[0];
-    if (ch == '\t') {
+    if (ch == '\t') {        
         glyphWidth = tabWidth() - left % tabWidth();
     } else {
         glyphWidth = fontMetrics.horizontalAdvance(glyph);
         //qDebug()<<glyph<<glyphCols<<width<<mCharWidth;
+    }
+    if (forceMonospace) {
+        int cols = std::ceil(glyphWidth / (double)mCharWidth);
+        glyphWidth = cols * mCharWidth;
     }
     return glyphWidth;
 }

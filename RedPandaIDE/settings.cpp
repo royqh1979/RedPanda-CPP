@@ -857,6 +857,16 @@ void Settings::Editor::setTipsDelay(int newTipsDelay)
     mTipsDelay = newTipsDelay;
 }
 
+bool Settings::Editor::forceFixedFontWidth() const
+{
+    return mForceFixedFontWidth;
+}
+
+void Settings::Editor::setForceFixedFontWidth(bool newForceFixedWidth)
+{
+    mForceFixedFontWidth = newForceFixedWidth;
+}
+
 bool Settings::Editor::showTrailingSpaces() const
 {
     return mShowTrailingSpaces;
@@ -1408,6 +1418,7 @@ void Settings::Editor::doSave()
     saveValue("font_only_monospaced", mFontOnlyMonospaced);
     saveValue("line_spacing",mLineSpacing);
     saveValue("enable_ligatures_support", mEnableLigaturesSupport);
+    saveValue("force_fixed_font_width", mForceFixedFontWidth);
 
     saveValue("show_leading_spaces", mShowLeadingSpaces);
     saveValue("show_trailing_spaces", mShowTrailingSpaces);
@@ -1538,6 +1549,12 @@ void Settings::Editor::doLoad()
     mFontName = stringValue("font_name",DEFAULT_MONO_FONT);
     QString defaultCjkFontName = DEFAULT_MONO_FONT;
     QString defaultLocaleName = QLocale::system().name();
+    bool isZhJa =
+            defaultLocaleName.startsWith("zh_")
+            ||  defaultLocaleName.startsWith("ja_")
+            || defaultLocaleName==("zh")
+            || defaultLocaleName == ("ja");
+
     if (defaultLocaleName == "zh_TW")
         defaultCjkFontName = CJK_MONO_FONT_TC;
     else if (defaultLocaleName == "ja_JP")
@@ -1554,7 +1571,13 @@ void Settings::Editor::doLoad()
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.1);
-    mEnableLigaturesSupport = boolValue("enable_ligatures_support", true);
+    mForceFixedFontWidth = boolValue("force_fixed_font_width", isZhJa);
+    // if (mForceFixedFontWidth)
+    //     mEnableLigaturesSupport = false;
+    // else
+    //     mEnableLigaturesSupport = boolValue("enable_ligatures_support", !isZhJa);
+    mEnableLigaturesSupport = boolValue("enable_ligatures_support", !isZhJa);
+
 
     mShowLeadingSpaces = boolValue("show_leading_spaces", false);
     mShowTrailingSpaces = boolValue("show_trailing_spaces", false);

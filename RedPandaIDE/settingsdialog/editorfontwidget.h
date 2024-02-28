@@ -37,6 +37,10 @@ private slots:
     void on_chkOnlyMonospacedFonts_stateChanged(int arg1);
     void on_chkGutterOnlyMonospacedFonts_stateChanged(int arg1);
 
+    // void on_chkLigature_toggled(bool checked);
+
+    // void on_chkForceFixedFontWidth_toggled(bool checked);
+
 private:
     Ui::EditorFontWidget *ui;
 

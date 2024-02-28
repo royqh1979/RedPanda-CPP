@@ -4077,14 +4077,18 @@ void QSynEdit::setOptions(const EditorOptions &Value)
         setTopLine(mTopLine);
 
         bool bUpdateAll =
-                !sameEditorOption(Value,mOptions,eoShowLeadingSpaces)
-                || !sameEditorOption(Value,mOptions,eoShowInnerSpaces)
-                || !sameEditorOption(Value,mOptions,eoShowTrailingSpaces)
-                || !sameEditorOption(Value,mOptions,eoShowLineBreaks)
-                || !sameEditorOption(Value,mOptions,eoShowRainbowColor);
+                !sameEditorOption(Value,mOptions, eoShowLeadingSpaces)
+                || !sameEditorOption(Value,mOptions, eoLigatureSupport)
+                || !sameEditorOption(Value,mOptions, eoForceMonospace)
+                || !sameEditorOption(Value,mOptions, eoShowInnerSpaces)
+                || !sameEditorOption(Value,mOptions, eoShowTrailingSpaces)
+                || !sameEditorOption(Value,mOptions, eoShowLineBreaks)
+                || !sameEditorOption(Value,mOptions, eoShowRainbowColor);
         //bool bUpdateScroll = (Options * ScrollOptions)<>(Value * ScrollOptions);
         bool bUpdateScroll = true;
         mOptions = Value;
+
+        mDocument->setForceMonospace(mOptions.testFlag(eoForceMonospace) );
 
         // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
         internalSetCaretXY(caretXY());
