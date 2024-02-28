@@ -1261,6 +1261,8 @@ void CppSyntaxer::procString()
         if (mLine[mRun]=='"') {
             mRun++;
             break;
+        } else if (mLine[mRun]==' ' || mLine[mRun]=='\t') {
+            return;
         } else if (mLine[mRun]=='\\') {
             if (mRun == mLineSize-1) {
                 mRun++;
@@ -1306,12 +1308,13 @@ void CppSyntaxer::procString()
 void CppSyntaxer::procStringStart()
 {
     mTokenId = TokenId::String;
+    mRange.state = RangeState::rsString;
     mRun += 1;
     if (mRun>=mLineSize) {
         mRange.state = RangeState::rsUnknown;
         return;
     }
-    procString();
+    //procString();
 }
 
 void CppSyntaxer::procTilde()

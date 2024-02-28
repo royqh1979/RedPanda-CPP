@@ -16,6 +16,7 @@ Red Panda C++ Version 2.27
   - enhancement: Migrate external calls from command string to argv array to improve safety and security.
   - enhancement: Support POSIX shell-like escaping in user inputs for compiler arguments.
   - fix: (Hopefully) properly escape filenames and arguments in makefile generation.
+  - enhancement: Beautify display for spaces and linebreaks.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
