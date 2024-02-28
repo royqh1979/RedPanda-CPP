@@ -4288,29 +4288,29 @@
 <context>
     <name>QSynedit::Document</name>
     <message>
-        <location filename="qsynedit/document.cpp" line="614"/>
+        <location filename="qsynedit/document.cpp" line="628"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>无法读取文件&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="654"/>
-        <location filename="qsynedit/document.cpp" line="777"/>
+        <location filename="qsynedit/document.cpp" line="668"/>
+        <location filename="qsynedit/document.cpp" line="791"/>
         <source>Can&apos;t load codec &apos;%1&apos;!</source>
         <translation>无法加载字符编码&quot;%1&quot;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="673"/>
+        <location filename="qsynedit/document.cpp" line="687"/>
         <source>&apos;%1&apos; is a binaray File!</source>
         <oldsource>This is a binaray File!</oldsource>
         <translation>&apos;%1&apos;是二进制文件！</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="780"/>
+        <location filename="qsynedit/document.cpp" line="794"/>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
         <translation>无法保存文件&quot;%1&quot;!</translation>
     </message>
     <message>
-        <location filename="qsynedit/document.cpp" line="803"/>
+        <location filename="qsynedit/document.cpp" line="817"/>
         <source>Data not correctly writed to file &apos;%1&apos;.</source>
         <translation>数据未能正确写入文件&quot;%1&quot;。</translation>
     </message>

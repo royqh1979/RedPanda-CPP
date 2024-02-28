@@ -864,14 +864,12 @@ QString QSynEdit::GetLeftSpacing(int charCount, bool wantTabs) const
 
 int QSynEdit::charToGlyphLeft(int line, int charPos) const
 {
-    Q_ASSERT(line>=1 && line <= mDocument->count());
     QString s = getDisplayStringAtLine(line);
     return mDocument->charToGlyphStartPosition(line-1, s, charPos-1);
 }
 
 int QSynEdit::charToGlyphLeft(int line, const QString &s, int charPos) const
 {
-    Q_ASSERT(line>=1 && line <= mDocument->count());
     return mDocument->charToGlyphStartPosition(line-1, s, charPos-1);
 }
 
@@ -4077,14 +4075,18 @@ void QSynEdit::setOptions(const EditorOptions &Value)
         setTopLine(mTopLine);
 
         bool bUpdateAll =
-                !sameEditorOption(Value,mOptions,eoShowLeadingSpaces)
-                || !sameEditorOption(Value,mOptions,eoShowInnerSpaces)
-                || !sameEditorOption(Value,mOptions,eoShowTrailingSpaces)
-                || !sameEditorOption(Value,mOptions,eoShowLineBreaks)
-                || !sameEditorOption(Value,mOptions,eoShowRainbowColor);
+                !sameEditorOption(Value,mOptions, eoShowLeadingSpaces)
+                || !sameEditorOption(Value,mOptions, eoLigatureSupport)
+                || !sameEditorOption(Value,mOptions, eoForceMonospace)
+                || !sameEditorOption(Value,mOptions, eoShowInnerSpaces)
+                || !sameEditorOption(Value,mOptions, eoShowTrailingSpaces)
+                || !sameEditorOption(Value,mOptions, eoShowLineBreaks)
+                || !sameEditorOption(Value,mOptions, eoShowRainbowColor);
         //bool bUpdateScroll = (Options * ScrollOptions)<>(Value * ScrollOptions);
         bool bUpdateScroll = true;
         mOptions = Value;
+
+        mDocument->setForceMonospace(mOptions.testFlag(eoForceMonospace) );
 
         // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
         internalSetCaretXY(caretXY());

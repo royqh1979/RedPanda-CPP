@@ -415,9 +415,14 @@ QString CppTokenizer::getNumber()
 
     QString result;
     if (offset != mCurrent) {
+        if (*mCurrent=='.') {
+            // keep '.' for decimal
+            mCurrent++;
+            while (isDigitChar(*mCurrent) || isHexChar(*mCurrent)) {
+                mCurrent++;
+            }
+        }
         result = QString(offset,mCurrent-offset);
-        if (*mCurrent=='.') // keep '.' for decimal
-            result += *mCurrent;
     }
     return result;
 }

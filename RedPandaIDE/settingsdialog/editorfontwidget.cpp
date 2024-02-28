@@ -71,6 +71,7 @@ void EditorFontWidget::doLoad()
     ui->spinFontSize->setValue(pSettings->editor().fontSize());
     ui->spinLineSpacing->setValue(pSettings->editor().lineSpacing());
     ui->chkLigature->setChecked(pSettings->editor().enableLigaturesSupport());
+    ui->chkForceFixedFontWidth->setChecked(pSettings->editor().forceFixedFontWidth());
     ui->chkLeadingSpaces->setChecked(pSettings->editor().showLeadingSpaces());
     ui->chkInnerSpaces->setChecked(pSettings->editor().showInnerSpaces());
     ui->chkTrailingSpaces->setChecked(pSettings->editor().showTrailingSpaces());
@@ -104,6 +105,7 @@ void EditorFontWidget::doSave()
     pSettings->editor().setLineSpacing(ui->spinLineSpacing->value());
 
     pSettings->editor().setEnableLigaturesSupport(ui->chkLigature->isChecked());
+    pSettings->editor().setForceFixedFontWidth(ui->chkForceFixedFontWidth->isChecked());
     pSettings->editor().setShowLeadingSpaces(ui->chkLeadingSpaces->isChecked());
     pSettings->editor().setShowInnerSpaces(ui->chkInnerSpaces->isChecked());
     pSettings->editor().setShowTrailingSpaces(ui->chkTrailingSpaces->isChecked());
@@ -131,4 +133,18 @@ void EditorFontWidget::onFallbackFontsCheckStateChanged()
     ui->cbFallbackFont2->setEnabled(ui->chkFallbackFont2->isChecked());
     ui->cbFallbackFont3->setEnabled(ui->chkFallbackFont3->isChecked());
 }
+
+
+// void EditorFontWidget::on_chkLigature_toggled(bool checked)
+// {
+//     if (ui->chkLigature->isChecked())
+//         ui->chkForceFixedFontWidth->setChecked(false);
+// }
+
+
+// void EditorFontWidget::on_chkForceFixedFontWidth_toggled(bool checked)
+// {
+//     if (ui->chkForceFixedFontWidth->isChecked())
+//         ui->chkLigature->setChecked(false);
+// }
 

@@ -5258,8 +5258,6 @@ void Editor::applySettings()
     options.setFlag(QSynedit::eoAutoIndent,pSettings->editor().autoIndent());
     options.setFlag(QSynedit::eoTabsToSpaces,pSettings->editor().tabToSpaces());
 
-    options.setFlag(QSynedit::eoLigatureSupport, pSettings->editor().enableLigaturesSupport());
-
     options.setFlag(QSynedit::eoKeepCaretX,pSettings->editor().keepCaretX());
     options.setFlag(QSynedit::eoEnhanceHomeKey,pSettings->editor().enhanceHomeKey());
     options.setFlag(QSynedit::eoEnhanceEndKey,pSettings->editor().enhanceEndKey());
@@ -5273,6 +5271,10 @@ void Editor::applySettings()
     options.setFlag(QSynedit::eoShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()
                     && syntaxer() && syntaxer()->supportBraceLevel());
+    options.setFlag(QSynedit::eoForceMonospace,
+                    pSettings->editor().forceFixedFontWidth());
+    options.setFlag(QSynedit::eoLigatureSupport,
+                    pSettings->editor().enableLigaturesSupport());
     setOptions(options);
 
     setTabSize(pSettings->editor().tabWidth());

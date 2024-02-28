@@ -1460,7 +1460,8 @@ PStatement CppParser::addStatement(const PStatement &parent,
         QChar ch=mTokenizer[i]->text[0];
         if (this->isIdentChar(ch)) {
             QString spaces=(i>argStart)?" ":"";
-            args+=spaces;
+            if (args.length()>0 && isWordChar(args.back()))
+                args+=spaces;
             word += mTokenizer[i]->text;
             if (!typeGetted) {
                 noNameArgs+=spaces+word;
@@ -1473,12 +1474,17 @@ PStatement CppParser::addStatement(const PStatement &parent,
             }
             word="";
         } else if (this->isDigitChar(ch)) {
-            args+=" ";
+        } else if (mTokenizer[i]->text=="::") {
+            if (braceLevel==0) {
+                noNameArgs+= mTokenizer[i]->text;
+            }
         } else {
             switch(ch.unicode()) {
             case ',':
-                if (braceLevel==0)
+                if (braceLevel==0) {
                     typeGetted=false;
+                    noNameArgs+= mTokenizer[i]->text;
+                }
                 break;
             case '{':
             case '[':
@@ -1495,15 +1501,17 @@ PStatement CppParser::addStatement(const PStatement &parent,
                 //todo: * and & processing
             case '*':
             case '&':
-                if (braceLevel==0)
-                    word+=ch;
+                if (braceLevel==0) {
+                    noNameArgs+= mTokenizer[i]->text;
+                }
                 break;
             }
-            noNameArgs+= mTokenizer[i]->text;
         }
         args+=mTokenizer[i]->text;
     }
-
+    if (!word.isEmpty()) {
+        noNameArgs.append(word);
+    }
     args="("+args.trimmed()+")";
     noNameArgs="("+noNameArgs.trimmed()+")";
     return addStatement(
@@ -1613,6 +1621,8 @@ void CppParser::setInheritance(int index, const PStatement& classStatement, bool
                 inheritanceInfo->handled = false;
 
                 mClassInheritances.append(inheritanceInfo);
+
+                handleInheritance(classStatement, inheritanceInfo);
             }
         }
 
@@ -4373,6 +4383,29 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
     mIndex++;
 }
 
+void CppParser::handleInheritance(PStatement derivedStatement, PClassInheritanceInfo inheritanceInfo)
+{
+    if (inheritanceInfo->handled)
+        return;
+    PStatement statement = doFindStatementOf(
+                inheritanceInfo->file,
+                inheritanceInfo->parentClassName,
+                inheritanceInfo->isGlobal?PStatement():derivedStatement->parentScope.lock());
+
+    if (statement && statement->kind == StatementKind::skClass) {
+        inheritClassStatement(derivedStatement,
+                              inheritanceInfo->isStruct,
+                              statement,
+                              inheritanceInfo->visibility);
+//        inheritanceInfo->parentClassFilename = statement->fileName;
+        inheritanceInfo->handled = true;
+        PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(statement->fileName);
+        Q_ASSERT(fileIncludes!=nullptr);
+        fileIncludes->handledInheritances.append(inheritanceInfo);
+    }
+
+}
+
 void CppParser::handleInheritances()
 {
     for (int i=mClassInheritances.length()-1;i>=0;i--) {
@@ -4387,21 +4420,7 @@ void CppParser::handleInheritances()
             }
             continue;
         }
-        if (inheritanceInfo->handled)
-            continue;
-        PStatement statement = doFindStatementOf(
-                    inheritanceInfo->file,
-                    inheritanceInfo->parentClassName,
-                    inheritanceInfo->isGlobal?PStatement():derivedStatement->parentScope.lock());
-
-        if (statement && statement->kind == StatementKind::skClass) {
-            inheritClassStatement(derivedStatement,
-                                  inheritanceInfo->isStruct,
-                                  statement,
-                                  inheritanceInfo->visibility);
-            inheritanceInfo->parentClassFilename = statement->fileName;
-            inheritanceInfo->handled = true;
-        }
+        handleInheritance(derivedStatement, inheritanceInfo);
     }
     //mClassInheritances.clear();
 }
@@ -4482,7 +4501,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-//       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+       // mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -5982,6 +6001,15 @@ void CppParser::internalInvalidateFile(const QString &fileName)
             }
         }
         p->statements.clear();
+
+        //invalidate all handledInheritances
+        for (std::weak_ptr<ClassInheritanceInfo> &pWeakInfo: p->handledInheritances) {
+            PClassInheritanceInfo info = pWeakInfo.lock();
+            if (info) {
+                info->handled = false;
+            }
+        }
+        p->handledInheritances.clear();
     }
 
     //remove all statements from namespace cache
@@ -6000,10 +6028,10 @@ void CppParser::internalInvalidateFile(const QString &fileName)
     }
     // class inheritance
     // invalid class inheritance infos (derived class is not valid) whould be auto removed in handleInheritances()
-    foreach (const PClassInheritanceInfo& info, mClassInheritances) {
-        if (info->handled && info->parentClassFilename == fileName)
-            info->handled = false;
-    }
+    // foreach (const PClassInheritanceInfo& info, mClassInheritances) {
+    //     if (info->handled && info->parentClassFilename == fileName)
+    //         info->handled = false;
+    // }
     // delete it from scannedfiles
     mPreprocessor.removeScannedFile(fileName);
 }

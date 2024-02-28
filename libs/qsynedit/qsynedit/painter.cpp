@@ -22,29 +22,6 @@
 
 namespace QSynedit {
 
-QSet<QString> QSynEditPainter::OperatorGlyphs {
-    "-",
-    "+",
-    "*",
-    "/",
-    "\\",
-    "~",
-    "!",
-    "@",
-    "#",
-    "$",
-    "%",
-    "^",
-    "&",
-    "|",
-    "=",
-    "<",
-    ">",
-    "?",
-    ":",
-};
-
-
 QSynEditPainter::QSynEditPainter(QSynEdit *edit, QPainter *painter, int firstRow, int lastRow, int left, int right):
     mEdit{edit},
     mPainter{painter},
@@ -402,6 +379,8 @@ void QSynEditPainter::paintToken(
                         bool tryLigature = false;
                         if (glyph.length()==0) {
                         } else if (glyph.length()==1 && glyph.front().unicode()<=32){
+                        } else if (mEdit->mOptions.testFlag(eoForceMonospace)
+                                   && glyphWidth != mPainter->fontMetrics().horizontalAdvance(glyph)) {
                         } else {
                             tryLigature = true;
                         }
@@ -416,11 +395,17 @@ void QSynEditPainter::paintToken(
                                 if ( glyph2.length()<1
                                      ||
                                      (glyph2.length()==1
-                                      && glyph2.front().unicode()<32))
+                                      && glyph2.front().unicode()<=32))
                                     break;
-                                i+=1;
-                                glyphWidth += calcSegmentInterval(glyphStartPositionList, tokenRight, i);
-                                textToPaint+=glyph2;
+                                int glyph2Width = calcSegmentInterval(glyphStartPositionList, tokenRight, i+1);
+                                if (mEdit->mOptions.testFlag(eoForceMonospace)) {
+                                    if (glyphWidth+glyph2Width != mPainter->fontMetrics().horizontalAdvance(textToPaint+glyph2)) {
+                                        break;
+                                    }
+                                }
+                                i++;
+                                glyphWidth += glyph2Width;
+                                textToPaint += glyph2;
                                 if (tokenWidth + glyphWidth > last )
                                     break;
                             }

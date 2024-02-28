@@ -548,6 +548,9 @@ public:
     const QFontMetrics &fontMetrics() const;
     void setFont(const QFont &newFont);
 
+    bool forceMonospace() const;
+    void setForceMonospace(bool newForceMonospace);
+
 public slots:
     void invalidateAllLineWidth();
 
@@ -569,7 +572,8 @@ private:
     void setLineWidth(int line, const QString& lineText, int newWidth, const QList<int> glyphStartPositionList);
 
     int glyphWidth(const QString& glyph, int left,
-                   const QFontMetrics &fontMetrics) const;
+                   const QFontMetrics &fontMetrics,
+                   bool forceMonospace) const;
 
     int xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const;
     int charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charPos) const;
@@ -604,6 +608,7 @@ private:
     bool mAppendNewLineAtEOF;
     int mIndexOfLongestLine;
     int mUpdateCount;
+    bool mForceMonospace;
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mMutex;
 #else
