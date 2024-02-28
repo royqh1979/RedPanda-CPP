@@ -22,29 +22,6 @@
 
 namespace QSynedit {
 
-QSet<QString> QSynEditPainter::OperatorGlyphs {
-    "-",
-    "+",
-    "*",
-    "/",
-    "\\",
-    "~",
-    "!",
-    "@",
-    "#",
-    "$",
-    "%",
-    "^",
-    "&",
-    "|",
-    "=",
-    "<",
-    ">",
-    "?",
-    ":",
-};
-
-
 QSynEditPainter::QSynEditPainter(QSynEdit *edit, QPainter *painter, int firstRow, int lastRow, int left, int right):
     mEdit{edit},
     mPainter{painter},

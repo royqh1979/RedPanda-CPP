@@ -60,7 +60,7 @@ struct ClassInheritanceInfo {
     bool isGlobal;
     bool isStruct;
     StatementAccessibility visibility;
-    QString parentClassFilename;
+//    QString parentClassFilename;
     bool handled;
 };
 

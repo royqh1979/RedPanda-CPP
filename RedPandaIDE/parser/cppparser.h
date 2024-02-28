@@ -516,6 +516,7 @@ private:
     void handleStructs(bool isTypedef = false);
     void handleUsing();
     void handleVar(const QString& typePrefix,bool isExtern,bool isStatic);
+    void handleInheritance(PStatement derivedClass, PClassInheritanceInfo pInfo);
     void handleInheritances();
     void skipRequires();
     void internalParse(const QString& fileName);

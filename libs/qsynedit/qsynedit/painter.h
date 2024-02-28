@@ -109,8 +109,6 @@ private:
     QRect mClip;
     int mFirstRow, mLastRow, mLeft, mRight;
     SynTokenAccu mTokenAccu;
-
-    static QSet<QString> OperatorGlyphs;
 };
 
 }
