@@ -1118,6 +1118,8 @@ void QSynEditPainter::paintLines()
                 foldRange = mEdit->foldStartAtLine(vLine);
                 if ((foldRange) && foldRange->collapsed) {
                     addOnStr = mEdit->syntaxer()->foldString(sLine);
+                    attr = mEdit->mSyntaxer->symbolAttribute();
+                    getBraceColorAttr(mEdit->mSyntaxer->getState().braceLevel,attr);
                 } else {
                     // Draw LineBreak glyph.
                     if (mEdit->mOptions.testFlag(eoShowLineBreaks)
@@ -1125,6 +1127,7 @@ void QSynEditPainter::paintLines()
                             && (!mIsSpecialLine)
                             && (mEdit->mDocument->lineWidth(vLine-1) < mRight)) {
                         addOnStr = LineBreakGlyph;
+                        attr = mEdit->mSyntaxer->whitespaceAttribute();
                     }
                 }
                 if (!addOnStr.isEmpty()) {
@@ -1133,8 +1136,6 @@ void QSynEditPainter::paintLines()
                     for (int i=0;i<len;i++) {
                         glyphStartPositionsList.append(tokenLeft);
                     }
-                    attr = mEdit->mSyntaxer->symbolAttribute();
-                    getBraceColorAttr(mEdit->mSyntaxer->getState().braceLevel,attr);
                     int oldLen = sLine.length();
                     sLine += addOnStr;
                     addHighlightToken(
