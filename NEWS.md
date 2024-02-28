@@ -11,7 +11,8 @@ Red Panda C++ Version 2.27
   - enhancement: Don't force fixed-width when using non fixed-width fonts.
   - change: Replace non-ascii font with fallback font.
   - enhancement: Display ascii control chars.
-  - fix: Parser: invalidating file may break class inheritance infos.
+  - fix: Parser: invalidating file may lost class inheritance infos.
+  - fix: Function argument infos are not correctly parsed.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

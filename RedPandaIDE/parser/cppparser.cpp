@@ -1460,7 +1460,8 @@ PStatement CppParser::addStatement(const PStatement &parent,
         QChar ch=mTokenizer[i]->text[0];
         if (this->isIdentChar(ch)) {
             QString spaces=(i>argStart)?" ":"";
-            args+=spaces;
+            if (args.length()>0 && isWordChar(args.back()))
+                args+=spaces;
             word += mTokenizer[i]->text;
             if (!typeGetted) {
                 noNameArgs+=spaces+word;
@@ -1473,12 +1474,17 @@ PStatement CppParser::addStatement(const PStatement &parent,
             }
             word="";
         } else if (this->isDigitChar(ch)) {
-            args+=" ";
+        } else if (mTokenizer[i]->text=="::") {
+            if (braceLevel==0) {
+                noNameArgs+= mTokenizer[i]->text;
+            }
         } else {
             switch(ch.unicode()) {
             case ',':
-                if (braceLevel==0)
+                if (braceLevel==0) {
                     typeGetted=false;
+                    noNameArgs+= mTokenizer[i]->text;
+                }
                 break;
             case '{':
             case '[':
@@ -1495,15 +1501,17 @@ PStatement CppParser::addStatement(const PStatement &parent,
                 //todo: * and & processing
             case '*':
             case '&':
-                if (braceLevel==0)
-                    word+=ch;
+                if (braceLevel==0) {
+                    noNameArgs+= mTokenizer[i]->text;
+                }
                 break;
             }
-            noNameArgs+= mTokenizer[i]->text;
         }
         args+=mTokenizer[i]->text;
     }
-
+    if (!word.isEmpty()) {
+        noNameArgs.append(word);
+    }
     args="("+args.trimmed()+")";
     noNameArgs="("+noNameArgs.trimmed()+")";
     return addStatement(
@@ -4493,7 +4501,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-//       mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+       // mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
