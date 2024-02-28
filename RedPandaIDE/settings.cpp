@@ -1571,7 +1571,7 @@ void Settings::Editor::doLoad()
     mFontSize = intValue("font_size",12);
     mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.1);
-    mForceFixedFontWidth = boolValue("force_fixed_font_width", false);
+    mForceFixedFontWidth = boolValue("force_fixed_font_width", isZhJa);
     // if (mForceFixedFontWidth)
     //     mEnableLigaturesSupport = false;
     // else
