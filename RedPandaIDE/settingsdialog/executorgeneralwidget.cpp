@@ -19,6 +19,7 @@
 #include "../settings.h"
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
+#include "utils/parsearg.h"
 
 #include <QFileDialog>
 #include <QJsonDocument>
@@ -90,7 +91,7 @@ void ExecutorGeneralWidget::updateIcons(const QSize &/*size*/)
 
 void ExecutorGeneralWidget::on_txtExecuteParamaters_textChanged(const QString &commandLine)
 {
-    QStringList parsed = splitProcessCommand(commandLine);
+    QStringList parsed = parseArgumentsWithoutVariables(commandLine);
     QJsonArray obj = QJsonArray::fromStringList(parsed);
     ui->txtParsedArgsInJson->setText(QJsonDocument{obj}.toJson());
 }

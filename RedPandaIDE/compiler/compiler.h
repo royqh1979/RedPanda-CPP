@@ -70,14 +70,14 @@ protected:
     virtual QByteArray pipedText();
     virtual bool prepareForRebuild() = 0;
     virtual bool beforeRunExtraCommand(int idx);
-    virtual QString getCharsetArgument(const QByteArray& encoding, FileType fileType, bool onlyCheckSyntax);
-    virtual QString getCCompileArguments(bool checkSyntax);
-    virtual QString getCppCompileArguments(bool checkSyntax);
-    virtual QString getCIncludeArguments();
-    virtual QString getProjectIncludeArguments();
-    virtual QString getCppIncludeArguments();
-    virtual QString getLibraryArguments(FileType fileType);
-    virtual QString parseFileIncludesForAutolink(
+    virtual QStringList getCharsetArgument(const QByteArray& encoding, FileType fileType, bool onlyCheckSyntax);
+    virtual QStringList getCCompileArguments(bool checkSyntax);
+    virtual QStringList getCppCompileArguments(bool checkSyntax);
+    virtual QStringList getCIncludeArguments();
+    virtual QStringList getProjectIncludeArguments();
+    virtual QStringList getCppIncludeArguments();
+    virtual QStringList getLibraryArguments(FileType fileType);
+    virtual QStringList parseFileIncludesForAutolink(
             const QString& filename,
             QSet<QString>& parsedFiles);
     virtual bool parseForceUTF8ForAutolink(
@@ -85,15 +85,16 @@ protected:
             QSet<QString>& parsedFiles);
     void log(const QString& msg);
     void error(const QString& msg);
-    void runCommand(const QString& cmd, const QString& arguments, const QString& workingDir, const QByteArray& inputText=QByteArray(), const QString& outputFile=QString());
+    void runCommand(const QString& cmd, const QStringList& arguments, const QString& workingDir, const QByteArray& inputText=QByteArray(), const QString& outputFile=QString());
+    QString escapeCommandForLog(const QString &cmd, const QStringList &arguments);
 
 protected:
     bool mOnlyCheckSyntax;
     QString mCompiler;
-    QString mArguments;
-    QStringList mExtraCompilersList;
-    QStringList mExtraArgumentsList;
-    QStringList mExtraOutputFilesList;
+    QStringList mArguments;
+    QList<QString> mExtraCompilersList;
+    QList<QStringList> mExtraArgumentsList;
+    QList<QString> mExtraOutputFilesList;
     QString mOutputFile;
     int mErrorCount;
     int mWarningCount;

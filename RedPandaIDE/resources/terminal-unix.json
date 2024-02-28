@@ -15,8 +15,8 @@
             {
                 "name": "CoreTerminal",
                 "path": "coreterminal",
-                "argsPattern": "$term -e \"$command\"",
-                "comment": "The pair of quotation mark around `$command` is only a visual symbol, not actually required."
+                "argsPattern": "$term -e \"$unix_command\"",
+                "comment": "The pair of quotation mark around `$unix_command` is only a visual symbol, not actually required."
             },
             {
                 "name": "iTerm2",
@@ -26,7 +26,7 @@
             {
                 "name": "kermit",
                 "path": "kermit",
-                "argsPattern": "$term -e \"$command\""
+                "argsPattern": "$term -e \"$unix_command\""
             },
             {
                 "name": "Kitty",
@@ -36,12 +36,12 @@
             {
                 "name": "ROXTerm",
                 "path": "roxterm",
-                "argsPattern": "$term -e \"$command\""
+                "argsPattern": "$term -e \"$unix_command\""
             },
             {
                 "name": "sakura",
                 "path": "sakura",
-                "argsPattern": "$term -e \"$command\""
+                "argsPattern": "$term -e \"$unix_command\""
             },
             {
                 "name": "Termit",
@@ -51,7 +51,7 @@
             {
                 "name": "Termite",
                 "path": "termite",
-                "argsPattern": "$term -e \"$command\""
+                "argsPattern": "$term -e \"$unix_command\""
             },
             {
                 "name": "Tilix",
@@ -116,7 +116,7 @@
             {
                 "name": "Terminology (Enlightenment)",
                 "path": "terminology",
-                "argsPattern": "$term -e \"$command\""
+                "argsPattern": "$term -e \"$unix_command\""
             },
             {
                 "name": "Xfce Terminal",
@@ -131,7 +131,7 @@
             {
                 "name": "Elementary Terminal",
                 "path": "io.elementary.terminal",
-                "argsPattern": "$term -e \"$command\"",
+                "argsPattern": "$term -e \"$unix_command\"",
                 "comment": "confirm to quit"
             },
             {

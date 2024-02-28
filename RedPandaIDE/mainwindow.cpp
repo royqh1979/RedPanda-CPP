@@ -22,6 +22,8 @@
 #include "settings.h"
 #include "qsynedit/constants.h"
 #include "debugger.h"
+#include "utils/escape.h"
+#include "utils/parsearg.h"
 #include "widgets/cpudialog.h"
 #include "widgets/filepropertiesdialog.h"
 #include "widgets/filenameeditdelegate.h"
@@ -3376,28 +3378,29 @@ void MainWindow::updateTools()
             QAction* action = new QAction(item->title,ui->menuTools);
             connect(action, &QAction::triggered,
                     [item] (){
-                QString program = parseMacros(item->program);
-                QString workDir = parseMacros(item->workingDirectory);
-                QString params = parseMacros(item->parameters);
+                QMap<QString, QString> macros = devCppMacroVariables();
+                QString program = parseMacros(item->program, macros);
+                QString workDir = parseMacros(item->workingDirectory, macros);
+                QStringList params = parseArguments(item->parameters, macros, true);
                 if (!program.endsWith(".bat",Qt::CaseInsensitive)) {
                     QTemporaryFile file(QDir::tempPath()+QDir::separator()+"XXXXXX.bat");
                     file.setAutoRemove(false);
                     if (file.open()) {
-                        file.write(QString("cd /d \"%1\"")
-                                   .arg(localizePath(workDir))
-                                   .toLocal8Bit()+LINE_BREAKER);
-                        file.write((program+" "+params).toLocal8Bit()
+                        file.write(escapeCommandForPlatformShell(
+                            "cd", {"/d", localizePath(workDir)}
+                            ).toLocal8Bit() + LINE_BREAKER);
+                        file.write(escapeCommandForPlatformShell(program, params).toLocal8Bit()
                                    + LINE_BREAKER);
                         file.close();
                         if (item->pauseAfterExit) {
                             executeFile(
                                         includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
-                                        " 1 \""+localizePath(file.fileName())+"\" ",
+                                        {"1", localizePath(file.fileName())},
                                         workDir, file.fileName());
                         } else {
                             executeFile(
                                         file.fileName(),
-                                        "",
+                                        {},
                                         workDir, file.fileName());
                         }
                     }
@@ -3405,7 +3408,7 @@ void MainWindow::updateTools()
                     if (item->pauseAfterExit) {
                         executeFile(
                                     includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
-                                    " 1 \""+program+"\" "+params,
+                                    QStringList{"1", program} + params,
                                     workDir, "");
                     } else {
                         executeFile(

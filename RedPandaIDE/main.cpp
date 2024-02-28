@@ -29,6 +29,7 @@
 #include <QDir>
 #include <QScreen>
 #include <QLockFile>
+#include <QFontDatabase>
 #include "common.h"
 #include "colorscheme.h"
 #include "iconsmanager.h"

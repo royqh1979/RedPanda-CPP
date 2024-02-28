@@ -1,0 +1,30 @@
+name: Unit
+
+on: [push, pull_request]
+
+jobs:
+  ubuntu_makefile_escape:
+    name: Unix makefile escape
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: '2.8.6'
+
+      - name: Setup Qt
+        uses: ConorMacBride/install-package@v1
+        with:
+          apt: libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
+
+      - name: Build
+        run: |
+          xmake f --qt=/usr
+          xmake b test-escape
+
+      - name: Test
+        run: |
+          export QT_ASSUME_STDERR_HAS_CONSOLE=1
+          xmake r test-escape

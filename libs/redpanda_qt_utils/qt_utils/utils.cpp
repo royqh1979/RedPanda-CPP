@@ -539,7 +539,7 @@ QString changeFileExt(const QString& filename, QString ext)
         path = includeTrailingPathDelimiter(fileInfo.path());
     }
     if (suffix.isEmpty()) {
-        return path+filename+ext;
+        return path+name+ext;
     } else {
         return path+fileInfo.completeBaseName()+ext;
     }

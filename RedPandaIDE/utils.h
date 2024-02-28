@@ -116,14 +116,12 @@ enum class ProblemCaseValidateType {
 };
 
 FileType getFileType(const QString& filename);
-QStringList splitProcessCommand(const QString& cmd);
 
-QString genMakePath(const QString& fileName,bool escapeSpaces, bool encloseInQuotes);
-QString genMakePath1(const QString& fileName);
-QString genMakePath2(const QString& fileName);
 bool programHasConsole(const QString& filename);
 
 QString parseMacros(const QString& s);
+QString parseMacros(const QString& s, const QMap<QString, QString>& variables);
+QMap<QString, QString> devCppMacroVariables();
 
 class CppParser;
 void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
@@ -138,7 +136,7 @@ QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const 
 void openFileFolderInExplorer(const QString& path);
 
 void executeFile(const QString& fileName,
-                 const QString& params,
+                 const QStringList& params,
                  const QString& workingDir,
                  const QString& tempFile);
 
@@ -169,9 +167,7 @@ QColor alphaBlend(const QColor &lower, const QColor &upper);
 
 QStringList getExecutableSearchPaths();
 
-QString escapeArgument(const QString &arg, bool isFirstArg);
-
-QString defaultShell();
+QStringList platformCommandForTerminalArgsPreview();
 
 QString appArch();
 QString osArch();

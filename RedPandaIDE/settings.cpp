@@ -19,6 +19,8 @@
 #include <QTextCodec>
 #include <algorithm>
 #include "utils.h"
+#include "utils/escape.h"
+#include "utils/parsearg.h"
 #include <QDir>
 #include "systemconsts.h"
 #include <QDebug>
@@ -1934,14 +1936,14 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
         mFullLoaded = false;
     }
 
-    QStringList escapedCompileParams;
+    QStringList compileParams;
     for (const QJsonValue &param : set["customCompileParams"].toArray())
-        escapedCompileParams.append(escapeArgument(param.toString(), false));
-    mCustomCompileParams = escapedCompileParams.join(' ');
-    QStringList escapedLinkParams;
+        compileParams << param.toString();
+    mCustomCompileParams = escapeArgumentsForInputField(compileParams);
+    QStringList linkParams;
     for (const QJsonValue &param : set["customLinkParams"].toArray())
-        escapedLinkParams.append(escapeArgument(param.toString(), false));
-    mCustomLinkParams = escapedLinkParams.join(' ');
+        linkParams << param.toString();
+    mCustomLinkParams = escapeArgumentsForInputField(linkParams);
 
     if (!mAutoAddCharsetParams)
         mExecCharset = "UTF-8";
@@ -2597,7 +2599,7 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
 #endif
 
     if (mUseCustomCompileParams) {
-        QStringList extraParams = splitProcessCommand(mCustomCompileParams);
+        QStringList extraParams = parseArgumentsWithoutVariables(mCustomCompileParams);
         arguments.append(extraParams);
     }
     arguments.append(NULL_FILE);
@@ -4122,7 +4124,12 @@ void Settings::Environment::checkAndSetTerminal()
     QMessageBox::critical(
                 nullptr,
                 QCoreApplication::translate("Settings","Error"),
-                QCoreApplication::translate("Settings","Can't find terminal program!"));
+        QCoreApplication::translate("Settings","Can't find terminal program!"));
+}
+
+QMap<QString, QString> Settings::Environment::terminalArgsPatternMagicVariables()
+{
+    return mTerminalArgsPatternMagicVariables;
 }
 
 QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalList() const
@@ -4165,7 +4172,7 @@ bool Settings::Environment::isTerminalValid()
     // terminal patter is empty
     if (mTerminalArgumentsPattern.isEmpty()) return false;
 
-    QStringList patternItems = splitProcessCommand(mTerminalArgumentsPattern);
+    QStringList patternItems = parseArguments(mTerminalArgumentsPattern, mTerminalArgsPatternMagicVariables, false);
 
     if (!(patternItems.contains("$argv")
           || patternItems.contains("$command")
@@ -4241,6 +4248,17 @@ void Settings::Environment::setTheme(const QString &theme)
 {
     mTheme = theme;
 }
+
+const QMap<QString, QString> Settings::Environment::mTerminalArgsPatternMagicVariables = {
+    {"term", "$term"},
+    {"integrated_term", "$integrated_term"},
+    {"argv", "$argv"},
+    {"command", "$command"},
+    {"unix_command", "$unix_command"},
+    {"dos_command", "$dos_command"},
+    {"lpCommandLine", "$lpCommandLine"},
+    {"tmpfile", "$tmpfile"},
+};
 
 Settings::Executor::Executor(Settings *settings):_Base(settings, SETTING_EXECUTOR)
 {
@@ -6708,25 +6726,58 @@ std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandFor
             wrappedArgs.append(includeTrailingPathDelimiter(pSettings->dirs().appDir())+terminal);
         else if (patternItem == "$argv")
             wrappedArgs.append(payloadArgsWithArgv0);
-        else if (patternItem == "$command") {
+        else if (patternItem == "$command" || patternItem == "$unix_command") {
+            // “$command” is for compatibility; previously used on multiple Unix terms
             QStringList escapedArgs;
             for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
                 auto &arg = payloadArgsWithArgv0[i];
-                auto escaped = escapeArgument(arg, i == 0);
+                auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::BourneAgainShellPretty);
                 escapedArgs.append(escaped);
             }
             wrappedArgs.push_back(escapedArgs.join(' '));
-        } else if (patternItem == "$tmpfile") {
+        } else if (patternItem == "$dos_command") {
+            QStringList escapedArgs;
+            for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                auto &arg = payloadArgsWithArgv0[i];
+                auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::WindowsCommandPrompt);
+                escapedArgs.append(escaped);
+            }
+            wrappedArgs.push_back(escapedArgs.join(' '));
+        } else if (patternItem == "$lpCommandLine") {
+            QStringList escapedArgs;
+            for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                auto &arg = payloadArgsWithArgv0[i];
+                auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::WindowsCreateProcess);
+                escapedArgs.append(escaped);
+            }
+            wrappedArgs.push_back(escapedArgs.join(' '));
+        } else if (patternItem == "$tmpfile" || patternItem == "$tmpfile.command") {
+            // “$tmpfile” is for compatibility; previously used on macOS Terminal.app
             temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
             if (temproryFile->open()) {
                 QStringList escapedArgs;
                 for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
                     auto &arg = payloadArgsWithArgv0[i];
-                    auto escaped = escapeArgument(arg, i == 0);
+                    auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::BourneAgainShellPretty);
                     escapedArgs.append(escaped);
                 }
                 temproryFile->write(escapedArgs.join(' ').toUtf8());
                 temproryFile->write("\n");
+                temproryFile->flush();
+                QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+            }
+            wrappedArgs.push_back(temproryFile->fileName());
+        } else if (patternItem == "$tmpfile.bat") {
+            temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.bat");
+            if (temproryFile->open()) {
+                QStringList escapedArgs;
+                for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                    auto &arg = payloadArgsWithArgv0[i];
+                    auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::WindowsCommandPrompt);
+                    escapedArgs.append(escaped);
+                }
+                temproryFile->write(escapedArgs.join(' ').toLocal8Bit());
+                temproryFile->write("\r\n");
                 temproryFile->flush();
                 QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
             }
@@ -6741,5 +6792,5 @@ std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandFor
 
 std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
 {
-    return wrapCommandForTerminalEmulator(terminal, splitProcessCommand(argsPattern), payloadArgsWithArgv0);
+    return wrapCommandForTerminalEmulator(terminal, parseArguments(argsPattern, Settings::Environment::terminalArgsPatternMagicVariables(), false), payloadArgsWithArgv0);
 }

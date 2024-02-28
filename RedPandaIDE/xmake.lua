@@ -47,7 +47,9 @@ target("RedPandaIDE")
         -- problems
         "problems/freeprojectsetformat.cpp",
         "problems/ojproblemset.cpp",
-        "problems/problemcasevalidator.cpp")
+        "problems/problemcasevalidator.cpp",
+        "utils/escape.cpp",
+        "utils/parsearg.cpp")
 
     add_moc_classes(
         "caretlist",
@@ -236,3 +238,13 @@ target("RedPandaIDE")
     if is_xdg() then
         on_install(install_bin)
     end
+
+target("test-escape")
+    set_kind("binary")
+    add_rules("qt.console")
+
+    set_default(false)
+    add_tests("test-escape")
+
+    add_files("utils/escape.cpp", "test/escape.cpp")
+    add_includedirs(".")

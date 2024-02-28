@@ -19,6 +19,8 @@
 #include "../mainwindow.h"
 #include "../project.h"
 #include "../iconsmanager.h"
+#include "utils.h"
+#include "utils/escape.h"
 
 #ifdef Q_OS_WIN
 #include <sysinfoapi.h>
@@ -83,7 +85,7 @@ void ProjectCompileParamatersWidget::on_btnChooseLib_clicked()
                 );
     if (!files.isEmpty()) {
         foreach (const QString& file,files) {
-            ui->txtLinker->appendPlainText(" "+genMakePath1(file));
+            ui->txtLinker->appendPlainText(" " + escapeArgument(file, false, EscapeArgumentRule::BourneAgainShellPretty));
         }
     }
 }
