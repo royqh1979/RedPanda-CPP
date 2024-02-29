@@ -736,74 +736,83 @@ void Editor::keyPressEvent(QKeyEvent *event)
             clearUserCodeInTabStops();
         } else {
             QString s = lineText().mid(0,caretX()-1).trimmed();
-            if (s=="/**") { //javadoc style docstring
-                s = lineText().mid(caretX()-1).trimmed();
-                if (s=="*/") {
-                    QSynedit::BufferCoord p = caretXY();
-                    setBlockBegin(p);
-                    p.ch = lineText().length()+1;
-                    setBlockEnd(p);
-                    setSelText("");
-                }
-                handled = true;
-                QStringList insertString;
-                insertString.append("");
-                PStatement function;
-                if (mParser)
-                    function = mParser->findFunctionAt(mFilename,caretY()+1);
-                if (function) {
-                    QStringList params;
-                    QString funcName = function->command;
-                    bool isVoid = (function->type  == "void");
-                    foreach (const PStatement& child, function->children) {
-                        if (child->kind == StatementKind::skParameter)
-                            params.append(child->command);
-                    }
-                    insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
-                    if (!params.isEmpty())
-                        insertString.append(" * ");
-                    foreach (const QString& param, params) {
-                        insertString.append(QString(" * @param %1 %2")
-                                            .arg(param, USER_CODE_IN_INSERT_POS));
-                    }
-                    if (!isVoid) {
-                        insertString.append(" * ");
-                        insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
-                    }
-                    insertString.append(" */");
-//                } else if (caretY()==1) { /* file header */
-//                    insertString.append(QString(" * @file %1<SOURCEPATH>%2")
-//                                        .arg(USER_CODE_IN_REPL_POS_BEGIN)
-//                                        .arg(USER_CODE_IN_REPL_POS_END));
-//                    insertString.append(QString(" * @brief: ")+ USER_CODE_IN_INSERT_POS);
-//                    insertString.append(QString(" * @version: ")+ USER_CODE_IN_INSERT_POS);
-//                    insertString.append(QString(" * @copyright: ")+ USER_CODE_IN_INSERT_POS);
-//                    insertString.append(QString(" * @author: ")+ USER_CODE_IN_INSERT_POS);
-//                    insertString.append(" * @date: <DATETIME>");
-//                    insertString.append(" * ");
-//                    insertString.append(" **/");
+            if (syntaxer()) {
+                if (caretY()==1) {
+                    syntaxer()->resetState();
                 } else {
-                    insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
-                    insertString.append(" */");
+                    syntaxer()->setState(document()->getSyntaxState(caretY()-2));
                 }
-                insertCodeSnippet(linesToText(insertString));
-            } else if (syntaxer()
-                       && caretY()>=2
-                       && syntaxer()->isLastLineCommentNotFinished(
-                           document()->getSyntaxState(caretY()-2).state)) {
-                s=trimLeft(lineText());
-                if (s.startsWith("* ")) {
-                    handled = true;
-                    int right = document()->getLine(caretY()-1).length()-caretX();
-                    s=lineBreak()+"* ";
-                    insertString(s,false);
-                    QSynedit::BufferCoord p = caretXY();
-                    p.line++;
-                    p.ch = document()->getLine(p.line-1).length()+1;
-                    if (right>0) {
-                        p.ch -=right+1;
+                syntaxer()->setLine(s,caretY());
+                syntaxer()->nextToEol();
+                int state = syntaxer()->getState().state;
+                if (syntaxer()->isLastLineCommentNotFinished(state)) {
+                    if (s=="/**") { //javadoc style docstring
+                        s = lineText().mid(caretX()-1).trimmed();
+                        if (s=="*/") {
+                            QSynedit::BufferCoord p = caretXY();
+                            setBlockBegin(p);
+                            p.ch = lineText().length()+1;
+                            setBlockEnd(p);
+                            setSelText("");
+                        }
+                        handled = true;
+                        QStringList insertString;
+                        insertString.append("");
+                        PStatement function;
+                        if (mParser)
+                            function = mParser->findFunctionAt(mFilename,caretY()+1);
+                        if (function) {
+                            QStringList params;
+                            QString funcName = function->command;
+                            bool isVoid = (function->type  == "void");
+                            foreach (const PStatement& child, function->children) {
+                                if (child->kind == StatementKind::skParameter)
+                                    params.append(child->command);
+                            }
+                            insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
+                            if (!params.isEmpty())
+                                insertString.append(" * ");
+                            foreach (const QString& param, params) {
+                                insertString.append(QString(" * @param %1 %2")
+                                                    .arg(param, USER_CODE_IN_INSERT_POS));
+                            }
+                            if (!isVoid) {
+                                insertString.append(" * ");
+                                insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
+                            }
+                            insertString.append(" */");
+        //                } else if (caretY()==1) { /* file header */
+        //                    insertString.append(QString(" * @file %1<SOURCEPATH>%2")
+        //                                        .arg(USER_CODE_IN_REPL_POS_BEGIN)
+        //                                        .arg(USER_CODE_IN_REPL_POS_END));
+        //                    insertString.append(QString(" * @brief: ")+ USER_CODE_IN_INSERT_POS);
+        //                    insertString.append(QString(" * @version: ")+ USER_CODE_IN_INSERT_POS);
+        //                    insertString.append(QString(" * @copyright: ")+ USER_CODE_IN_INSERT_POS);
+        //                    insertString.append(QString(" * @author: ")+ USER_CODE_IN_INSERT_POS);
+        //                    insertString.append(" * @date: <DATETIME>");
+        //                    insertString.append(" * ");
+        //                    insertString.append(" **/");
+                        } else {
+                            insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
+                            insertString.append(" */");
+                        }
+                        insertCodeSnippet(linesToText(insertString));
+                    } else {
+                        s=trimLeft(lineText());
+                        if (s.startsWith("* ")) {
+                            handled = true;
+                            int right = document()->getLine(caretY()-1).length()-caretX();
+                            s=lineBreak()+"* ";
+                            insertString(s,false);
+                            QSynedit::BufferCoord p = caretXY();
+                            p.line++;
+                            p.ch = document()->getLine(p.line-1).length()+1;
+                            if (right>0) {
+                                p.ch -=right+1;
+                            }
+                            setCaretXY(p);
+                        }
                     }
-                    setCaretXY(p);
                 }
             }
         }
