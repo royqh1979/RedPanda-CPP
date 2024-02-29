@@ -3715,6 +3715,8 @@ void QSynEdit::paintCaret(QPainter &painter, const QRect rcClip)
     if (m_blinkStatus!=1)
         return;
     painter.setClipRect(rcClip);
+    if (rcClip.left() < mGutterWidth)
+        return;
     EditCaretType ct;
     if (this->mInserting) {
         ct = mInsertCaret;
