@@ -199,6 +199,7 @@ public:
     void resetBreakpoints();
     bool notParsed();
     void insertLine();
+    void breakLine();
     void deleteWord();
     void deleteToWordStart();
     void deleteToWordEnd();

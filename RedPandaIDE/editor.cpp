@@ -2207,6 +2207,11 @@ void Editor::insertLine()
     processCommand(QSynedit::EditCommand::InsertLine,QChar(),nullptr);
 }
 
+void Editor::breakLine()
+{
+    processCommand(QSynedit::EditCommand::LineBreak,QChar(),nullptr);
+}
+
 void Editor::deleteWord()
 {
     processCommand(QSynedit::EditCommand::DeleteWord,QChar(),nullptr);
@@ -2777,23 +2782,13 @@ bool Editor::handleMultilineCommentCompletion()
 
 bool Editor::handleBraceCompletion()
 {
+    bool addSemicolon=false;
     QString s = lineText().trimmed();
     int i= caretY()-2;
     while ((s.isEmpty()) && (i>=0)) {
         s=document()->getLine(i).trimmed();
         i--;
     }
-    QString text=selText();
-    beginEditing();
-    processCommand(QSynedit::EditCommand::Char,'{');
-    QSynedit::BufferCoord oldCaret;
-    if (text.isEmpty()) {
-        oldCaret = caretXY();
-    } else {
-        setSelText(text);
-    }
-
-    processCommand(QSynedit::EditCommand::Char,'}');
     if (
         ( ( (s.startsWith("struct") && !s.endsWith(")"))
           || s.startsWith("class")
@@ -2804,10 +2799,51 @@ bool Editor::handleBraceCompletion()
           || (s.startsWith("enum") && !s.endsWith(")")) )
           && !s.contains(';')
         ) || s.endsWith('=')) {
-        processCommand(QSynedit::EditCommand::Char,';');
+        addSemicolon = true;
+//        processCommand(QSynedit::EditCommand::Char,';');
     }
-    if (text.isEmpty())
+
+    beginEditing();
+    if (!selAvail()) {
+        processCommand(QSynedit::EditCommand::Char,'{');
+        QSynedit::BufferCoord oldCaret = caretXY();
+        processCommand(QSynedit::EditCommand::Char,'}');
+        if (addSemicolon)
+            processCommand(QSynedit::EditCommand::Char,';');
         setCaretXY(oldCaret);
+    }  else {
+        QString text = selText();
+        QSynedit::BufferCoord oldSelBegin = blockBegin();
+        QSynedit::BufferCoord oldSelEnd = blockEnd();
+        bool shouldBreakLine = false;
+        bool shouldAddEndLine = false;
+        QString s1=document()->getLine(oldSelBegin.line-1).left(oldSelBegin.ch-1).trimmed();
+
+        if (s1.isEmpty() ) {
+            QString s2 = document()->getLine(oldSelEnd.line-1);
+            if (s2.left(oldSelEnd.ch-1).trimmed().isEmpty()) {
+                shouldBreakLine = true;
+            } else if (oldSelEnd.ch > trimRight(s2).length()) {
+                shouldBreakLine = true;
+            }
+            shouldAddEndLine = !s2.mid(oldSelEnd.ch).trimmed().isEmpty();
+        }
+        if (shouldBreakLine) {
+            text = "{" + lineBreak() + text;
+            if (!trimRight(text).endsWith(lineBreak())) {
+                text.append(lineBreak());
+            }
+        } else {
+            text = "{"+text;
+        }
+        if (addSemicolon)
+            text.append("};");
+        else
+            text.append("}");
+        if (shouldAddEndLine)
+            text.append(lineBreak());
+        setSelText(text);
+    }
     endEditing();
     return true;
 }

@@ -5474,20 +5474,16 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             if (i==text.length()-1) {
                 str = sRightSide;
             } else {
-                if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent) && notInComment) {
-                    str = GetLeftSpacing(calcIndentSpaces(caretY,"",true),true);
-                } else {
-                    str = "";
-                }
+                str = "";
             }
         } else {
             str = text[i];
             if (i==text.length()-1)
                 str += sRightSide;
-            if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent) && notInComment) {
-                int indentSpaces = calcIndentSpaces(caretY,str,true);
-                str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
-            }
+        }
+        if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent) && notInComment) {
+            int indentSpaces = calcIndentSpaces(caretY,str,true);
+            str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
         }
         properSetLine(caretY - 1, str,false);
         reparseLine(caretY);

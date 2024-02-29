@@ -197,7 +197,7 @@ QString trimRight(const QString &s)
         return s;
     int i = s.length()-1;
 //   while ((i>=0) && ((s[i] == '\r') || (s[i]=='\n') || (s[i] == '\t') || (s[i]==' ')))  {
-    while ((i>=0) && (s[i]<=32)) {
+    while ((i>=0) && ((s[i] == '\t') || (s[i]==' '))) {
         i--;
     };
     if (i>=0) {
@@ -215,7 +215,7 @@ QString trimLeft(const QString &s)
 //    while ((i<s.length()) && ((s[i] == '\r') || (s[i]=='\n') || (s[i] == '\t') || (s[i]==' ')))  {
 //        i++;
 //    };
-    while ((i<s.length()) && (s[i]<=32))  {
+    while ((i<s.length()) && ((s[i] == '\t') || (s[i]==' ')))  {
         i++;
     };
     if (i<s.length()) {

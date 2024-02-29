@@ -19,6 +19,8 @@ Red Panda C++ Version 2.27
   - enhancement: Beautify display for spaces and linebreaks.
   - fix: Insert line after comments may auto add an extra '*'.
   - fix: Can't show function tips for std::ios::sync_with_stdio.
+  - fix: Wrong indent for the line after the pasted context.
+  - Enhancement: When '{' is inputted and there are contents selected, auto add line breaks and indents.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
