@@ -22,6 +22,7 @@ Red Panda C++ Version 2.27
   - fix: Wrong indent for the line after the pasted context.
   - Enhancement: When '{' is inputted and there are contents selected, auto add line breaks and indents.
   - fix: Selected lines doesn't draw line break glyphs.
+  - fix: issue #215 (Caret may be drawn in the gutter.)
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
