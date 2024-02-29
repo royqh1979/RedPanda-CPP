@@ -2826,7 +2826,8 @@ bool Editor::handleBraceCompletion()
             } else if (oldSelEnd.ch > trimRight(s2).length()) {
                 shouldBreakLine = true;
             }
-            shouldAddEndLine = !s2.mid(oldSelEnd.ch).trimmed().isEmpty();
+            if (shouldBreakLine)
+                shouldAddEndLine = !s2.mid(oldSelEnd.ch).trimmed().isEmpty();
         }
         if (shouldBreakLine) {
             text = "{" + lineBreak() + text;
