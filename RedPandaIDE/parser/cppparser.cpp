@@ -359,6 +359,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
         if (!statement)
             return PStatement();
         // found in namespace
+        parentScopeType = statement->parentScope.lock();
     } else if ((phrase.length()>2) &&
                (phrase[0]==':') && (phrase[1]==':')) {
         //global
@@ -367,6 +368,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
         statement= findMemberOfStatement(nextScopeWord,PStatement());
         if (!statement)
             return PStatement();
+        parentScopeType = currentScope;
     } else {
         //unqualified name
         parentScopeType = currentScope;
@@ -375,7 +377,6 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
         if (!statement)
             return PStatement();
     }
-    parentScopeType = currentScope;
 
     if (!memberName.isEmpty() && (statement->kind == StatementKind::skTypedef)) {
         PStatement typeStatement = doFindTypeDefinitionOf(fileName,statement->type, parentScopeType);
