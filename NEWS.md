@@ -18,7 +18,7 @@ Red Panda C++ Version 2.27
   - fix: (Hopefully) properly escape filenames and arguments in makefile generation.
   - enhancement: Beautify display for spaces and linebreaks.
   - fix: Insert line after comments may auto add an extra '*'.
-  - fix: Can't show function tips for std::ios::sync_with_stdio
+  - fix: Can't show function tips for std::ios::sync_with_stdio.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
