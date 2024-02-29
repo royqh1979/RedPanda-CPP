@@ -3761,7 +3761,7 @@ void QSynEdit::paintCaret(QPainter &painter, const QRect rcClip)
 
 int QSynEdit::textOffset() const
 {
-    return mGutterWidth + 2 - mLeftPos;
+    return mGutterWidth + 2 - mLeftPos ;
 }
 
 EditCommand QSynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
@@ -6049,7 +6049,8 @@ void QSynEdit::paintEvent(QPaintEvent *event)
         nX1 = mLeftPos;
         if (rcClip.left() > mGutterWidth + 2 )
             nX1 += (rcClip.left() - mGutterWidth - 2 ) ;
-        nX2 = mLeftPos + (rcClip.right() - mGutterWidth - 2);
+        // nX2 = mLeftPos + (rcClip.right() - mGutterWidth - 2);
+        nX2 = rcClip.right();
         // lines
         nL1 = minMax(mTopLine + rcClip.top() / mTextHeight, mTopLine, displayLineCount());
         nL2 = minMax(mTopLine + (rcClip.bottom() + mTextHeight - 1) / mTextHeight, 1, displayLineCount());
@@ -6064,7 +6065,7 @@ void QSynEdit::paintEvent(QPaintEvent *event)
         if (rcClip.right() > mGutterWidth ) {
             rcDraw = rcClip;
             rcDraw.setLeft( std::max(rcDraw.left(), mGutterWidth));
-            textPainter.paintTextLines(rcDraw);
+            textPainter.paintEditingArea(rcDraw);
         }
 
         // Then the gutter area if it was (partly) invalidated.

@@ -125,6 +125,7 @@ void EditorFontWidget::doSave()
     pSettings->editor().setGutterFontSize(ui->spinGutterFontSize->value());
 
     pSettings->editor().save();
+    QFont::cleanup();
     pMainWindow->updateEditorSettings();
 }
 

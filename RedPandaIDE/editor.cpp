@@ -5334,6 +5334,7 @@ void Editor::applySettings()
     codeFolding().fillIndents = pSettings->editor().fillIndents();
 
     QFont f=QFont();
+    f.setFamily(pSettings->editor().fontName());
     f.setFamilies(pSettings->editor().fontFamilies());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f.setStyleStrategy(QFont::PreferAntialias);
@@ -5418,6 +5419,7 @@ static QSynedit::PTokenAttribute createRainbowAttribute(const QString& attrName,
     }
     return QSynedit::PTokenAttribute();
 }
+
 void Editor::applyColorScheme(const QString& schemeName)
 {
     QSynedit::EditorOptions options = getOptions();

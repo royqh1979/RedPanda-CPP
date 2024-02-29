@@ -49,7 +49,7 @@ public:
     QSynEditPainter(const QSynEditPainter&)=delete;
     QSynEditPainter& operator=(const QSynEditPainter&)=delete;
 
-    void paintTextLines(const QRect& clip);
+    void paintEditingArea(const QRect& clip);
     void paintGutter(const QRect& clip);
 
 private:
@@ -69,7 +69,8 @@ private:
     void paintEditAreas(const EditingAreaList& areaList);
     void paintHighlightToken(const QString& lineText,
                              const QList<int> &glyphStartCharList,
-                             const QList<int> &glyphStartPositionsList);
+                             const QList<int> &glyphStartPositionsList,
+                             bool bFillToEOL);
     void addHighlightToken(
             const QString& lineText,
             const QString& token, int tokenLeft,
@@ -103,7 +104,7 @@ private:
     int mLineSelStart, mLineSelEnd;
     bool mIsComplexLine;
     // painting the background and the text
-    QRect rcLine, rcToken;
+    QRect mRcLine, mRcToken;
     int mFirstLine, mLastLine;
 
     QRect mClip;

@@ -718,6 +718,7 @@ void Settings::Editor::setUseFallbackFont3(bool useFont) {
 QStringList Settings::Editor::fontFamilies() const
 {
     QStringList result {
+        //QString("%1 [%2]").arg(mFontName,mFallbackFontName),
         mFontName,
         mFallbackFontName,
     };
