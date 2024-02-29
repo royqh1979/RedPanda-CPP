@@ -21,6 +21,7 @@ Red Panda C++ Version 2.27
   - fix: Can't show function tips for std::ios::sync_with_stdio.
   - fix: Wrong indent for the line after the pasted context.
   - Enhancement: When '{' is inputted and there are contents selected, auto add line breaks and indents.
+  - fix: Selected lines doesn't draw line break glyphs.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

@@ -1137,8 +1137,6 @@ void QSynEditPainter::paintLines()
                 } else {
                     // Draw LineBreak glyph.
                     if (mEdit->mOptions.testFlag(eoShowLineBreaks)
-                            && (!mIsLineSelected)
-                            && (!mIsSpecialLine)
                             && (mEdit->mDocument->lineWidth(vLine-1) < mRight)) {
                         addOnStr = LineBreakGlyph;
                         attr = mEdit->mSyntaxer->whitespaceAttribute();
