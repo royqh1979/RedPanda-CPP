@@ -6051,8 +6051,7 @@ void QSynEdit::paintEvent(QPaintEvent *event)
         nX1 = mLeftPos;
         if (rcClip.left() > mGutterWidth + 2 )
             nX1 += (rcClip.left() - mGutterWidth - 2 ) ;
-        // nX2 = mLeftPos + (rcClip.right() - mGutterWidth - 2);
-        nX2 = rcClip.right();
+        nX2 = mLeftPos + (rcClip.right() - mGutterWidth - 2);
         // lines
         nL1 = minMax(mTopLine + rcClip.top() / mTextHeight, mTopLine, displayLineCount());
         nL2 = minMax(mTopLine + (rcClip.bottom() + mTextHeight - 1) / mTextHeight, 1, displayLineCount());
