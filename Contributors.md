@@ -31,6 +31,10 @@ author: Alan-CRL
 
 author: ÌìÒÀÀ¶(MZZW@github)
 
+### Theme Ä«Âä
+
+author: Ltabsyy(Ltabsyy@github)
+
 ## Color Schemes
 
 ### Monokai
