@@ -6,6 +6,7 @@ jobs:
   windows:
     name: Windows MSYS2
     strategy:
+      fail-fast: false
       matrix:
         msystem: [MINGW32, MINGW64, UCRT64, CLANG64]
         include:
@@ -49,6 +50,7 @@ jobs:
   windows_legacy:
     name: Windows NT 5.1–6.0 MinGW
     strategy:
+      fail-fast: false
       matrix:
         arch: [32, 64]
     runs-on: windows-2019
@@ -58,7 +60,7 @@ jobs:
     env:
       _MINGW_TOOLCHAIN: /c/Qt/Tools/mingw810_${{ matrix.arch }}
       _QT_INSTALL_PREFIX: /c/Qt/5.6.4/mingw81_${{ matrix.arch }}-redpanda
-      _REDPANDA_QT_BUILD: "20240116.0"
+      _REDPANDA_QT_BUILD: "20240301.0"
       _REDPANDA_QT_ARCHIVE: qt5.6.4-mingw81_${{ matrix.arch }}-redpanda.7z
 
     steps:
@@ -175,6 +177,7 @@ jobs:
   debian:
     name: Debian
     strategy:
+      fail-fast: false
       matrix:
         arch: [amd64, i386]
         version: ["10", "11", "12", sid]
@@ -206,6 +209,7 @@ jobs:
   ubuntu:
     name: Ubuntu
     strategy:
+      fail-fast: false
       matrix:
         version: ["20.04", "22.04", "23.10", "devel"]
     
