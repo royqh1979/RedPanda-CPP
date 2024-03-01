@@ -27,6 +27,10 @@ author: Alan-CRL
 
 author: Alan-CRL
 
+### Theme One Dark
+
+author: ÃÏ“¿¿∂(MZZW@github)
+
 ## Color Schemes
 
 ### Monokai
@@ -40,3 +44,7 @@ author: PerryDing
 ### Ochre_Butter
 
 author: PerryDing
+
+### One Dark
+
+author: ÃÏ“¿¿∂(MZZW@github)

@@ -413,7 +413,6 @@ void QSynEditPainter::paintToken(
                                 mPainter->setFont(font);
                                 fontInited = true;
                             }
-                            //qDebug()<<"paint 1:"<<textToPaint;
                             mPainter->drawText(nX,mRcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
                             drawed = true;
                         }
@@ -518,7 +517,6 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
     bool isComplexToken;
     int nC1, nC2, nC1Sel, nC2Sel;
     bool bU1, bSel, bU2;
-    int nX1, nX2;
     // Compute some helper variables.
     nC1 = std::max(mLeft, mTokenAccu.left);
     nC2 = std::min(mRight, mTokenAccu.left + mTokenAccu.width);
@@ -665,18 +663,17 @@ void QSynEditPainter::addHighlightToken(
     bool bCanAppend = false;
     bool bInitFont = (mTokenAccu.width==0);
     if (mTokenAccu.width > 0 ) {
-        if (showGlyphs == mTokenAccu.showSpecialGlyphs) {
-            // font style must be the same or token is only spaces
-            if (mTokenAccu.style != style) {
-                bInitFont = true;
-            } else {
-                if (
-                  // background color must be the same and
-                    (mTokenAccu.background == background) &&
-                  // foreground color must be the same or token is only spaces
-                  (mTokenAccu.foreground == foreground)) {
-                    bCanAppend = true;
-                }
+        // font style must be the same or token is only spaces
+        if (mTokenAccu.style != style) {
+            bInitFont = true;
+        } else {
+            if (
+                (showGlyphs == mTokenAccu.showSpecialGlyphs) &&
+              // background color must be the same and
+                (mTokenAccu.background == background) &&
+              // foreground color must be the same or token is only spaces
+              (mTokenAccu.foreground == foreground)) {
+                bCanAppend = true;
             }
         }
         // If we can't append it, then we have to paint the old token chars first.
@@ -909,7 +906,6 @@ void QSynEditPainter::paintLines()
         mLineSelStart = 0;
         mLineSelEnd = 0;
 
-        bool selToEnd = false;;
         // Does the selection intersect the visible area?
         if (bAnySelection && (row >= mSelStart.row) && (row <= mSelEnd.row)) {
             // Default to a fully selected line. This is correct for the smLine
@@ -937,8 +933,6 @@ void QSynEditPainter::paintLines()
                     mLineSelEnd = xpos;
                     mIsComplexLine = true;
                 }
-            } else {
-                selToEnd = true;
             }
         } //endif bAnySelection
 

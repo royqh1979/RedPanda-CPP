@@ -1272,7 +1272,6 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             }
         }
     }
-
     //selection
     if (syntaxer() && attr) {
         if (attr->tokenType() == QSynedit::TokenType::Keyword) {
