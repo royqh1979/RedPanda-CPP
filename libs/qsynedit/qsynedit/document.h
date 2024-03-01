@@ -540,7 +540,13 @@ public:
     }
 
     int tabWidth() const {
-        return mTabSize * mSpaceWidth;
+        return mTabSize * spaceWidth();
+    }
+
+    int spaceWidth() const {
+        if (mForceMonospace)
+            return mCharWidth;
+        return mSpaceWidth;
     }
 
     void setTabSize(int newTabSize);

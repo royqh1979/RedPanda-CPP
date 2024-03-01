@@ -761,7 +761,7 @@ void QSynEditPainter::paintFoldAttributes()
             tabSteps = 0;
             indentLevel = 0;
             while (tabSteps < lineIndent) {
-                X = tabSteps * mEdit->mCharWidth + mEdit->textOffset() - 1;
+                X = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                 tabSteps+=mEdit->tabSize();
                 indentLevel++ ;
                 if (mEdit->mSyntaxer) {
