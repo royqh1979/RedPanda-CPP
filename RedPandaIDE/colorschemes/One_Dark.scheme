@@ -91,7 +91,7 @@
         "underlined": false
     },
     "Function": {
-        "bold": false,
+        "bold": true,
         "foreground": "#ff61afef",
         "italic": false,
         "strikeout": false,
@@ -198,7 +198,7 @@
     },
     "Space": {
         "bold": false,
-        "foreground": "#ff98c379",
+        "foreground": "#ff4a505f",
         "italic": false,
         "strikeout": false,
         "underlined": false
