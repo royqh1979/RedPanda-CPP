@@ -33,7 +33,7 @@ author: ÌìÒÀÀ¶(MZZW@github)
 
 ### Theme Ä«Âä
 
-author: Ltabsyy(Ltabsyy@github)
+author: Ä«Âä³É°× Ltabsyy(Ltabsyy@github)
 
 ## Color Schemes
 
