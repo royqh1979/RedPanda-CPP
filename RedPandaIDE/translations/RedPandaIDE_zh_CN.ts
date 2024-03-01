@@ -5534,7 +5534,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../mainwindow.ui" line="3098"/>
         <source>Goto Page Start and Select</source>
-        <translation>跳转到行首并选中</translation>
+        <translation>跳转到页首并选中</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3106"/>
