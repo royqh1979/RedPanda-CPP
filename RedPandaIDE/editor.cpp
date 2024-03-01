@@ -605,15 +605,15 @@ void Editor::undoSymbolCompletion(int pos)
 {
     QSynedit::PTokenAttribute attr;
     QString token;
-    bool tokenFinished;
+    QSynedit::SyntaxState syntaxState;
 
     if (!syntaxer())
         return;
     if (!pSettings->editor().removeSymbolPairs())
         return;
-    if (!getTokenAttriAtRowCol(caretXY(), token, tokenFinished, attr))
+    if (!getTokenAttriAtRowCol(caretXY(), token, attr, syntaxState))
         return;
-    if ((attr->tokenType() == QSynedit::TokenType::Comment) && (!tokenFinished))
+    if (syntaxer()->isCommentNotFinished(syntaxState.state))
         return ;
     //convert caret x to string index;
     pos--;
@@ -745,7 +745,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 syntaxer()->setLine(s,caretY());
                 syntaxer()->nextToEol();
                 int state = syntaxer()->getState().state;
-                if (syntaxer()->isLastLineCommentNotFinished(state)) {
+                if (syntaxer()->isCommentNotFinished(state)) {
                     if (s=="/**") { //javadoc style docstring
                         s = lineText().mid(caretX()-1).trimmed();
                         if (s=="*/") {
@@ -2543,9 +2543,9 @@ bool Editor::handleSymbolCompletion(QChar key)
     if (syntaxer()) {
         if (caretX() <= 1) {
             if (caretY()>1) {
-                if (syntaxer()->isLastLineCommentNotFinished(document()->getSyntaxState(caretY() - 2).state))
+                if (syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 2).state))
                     return false;
-                if (syntaxer()->isLastLineStringNotFinished(document()->getSyntaxState(caretY() - 2).state)
+                if (syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 2).state)
                         && (key!='\"') && (key!='\''))
                     return false;
             }
@@ -2554,11 +2554,11 @@ bool Editor::handleSymbolCompletion(QChar key)
             // Check if that line is highlighted as  comment
             QSynedit::PTokenAttribute attr;
             QString token;
-            bool tokenFinished;
-            if (getTokenAttriAtRowCol(HighlightPos, token, tokenFinished, attr)) {
-                if ((attr->tokenType() == QSynedit::TokenType::Comment) && (!tokenFinished))
+            QSynedit::SyntaxState syntaxState;
+            if (getTokenAttriAtRowCol(HighlightPos, token, attr, syntaxState)) {
+                if (syntaxer()->isCommentNotFinished(syntaxState.state))
                     return false;
-                if ((attr->tokenType() == QSynedit::TokenType::String) && (!tokenFinished)
+                if (syntaxer()->isStringNotFinished(syntaxState.state)
                         && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
                     return false;
                 if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
@@ -3080,7 +3080,7 @@ Editor::QuoteStatus Editor::getQuoteStatus()
     QuoteStatus Result = QuoteStatus::NotQuote;
     if (!syntaxer())
         return Result;
-    if ((caretY()>1) && syntaxer()->isLastLineStringNotFinished(document()->getSyntaxState(caretY() - 2).state))
+    if ((caretY()>1) && syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 2).state))
         Result = QuoteStatus::DoubleQuote;
 
     QString Line = document()->getLine(caretY()-1);
@@ -3470,11 +3470,10 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 
     QString s;
     QSynedit::PTokenAttribute attr;
-    bool tokenFinished;
     QSynedit::BufferCoord pBeginPos, pEndPos;
     if (getTokenAttriAtRowCol(
                 QSynedit::BufferCoord{caretX() - 1,
-                caretY()}, s, tokenFinished, attr)) {
+                caretY()}, s, attr)) {
         if (attr->tokenType() == QSynedit::TokenType::Preprocessor) {//Preprocessor
             word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpDirective);
             if (!word.startsWith('#')) {

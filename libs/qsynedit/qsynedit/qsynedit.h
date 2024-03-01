@@ -264,7 +264,7 @@ public:
     bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
       PTokenAttribute& attri);
     bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
-      bool& tokenFinished, PTokenAttribute& attri);
+      PTokenAttribute& attri, SyntaxState &syntaxState);
     bool getTokenAttriAtRowColEx(const BufferCoord& pos, QString& token,
       int &start, PTokenAttribute& attri);
 

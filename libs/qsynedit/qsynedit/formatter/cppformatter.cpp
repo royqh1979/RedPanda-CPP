@@ -128,7 +128,7 @@ namespace QSynedit {
         SyntaxState range;
         while (commentStartLine>=1) {
             range = editor->document()->getSyntaxState(commentStartLine-1);
-            if (!editor->syntaxer()->isLastLineCommentNotFinished(range.state)){
+            if (!editor->syntaxer()->isCommentNotFinished(range.state)){
                 commentStartLine++;
                 break;
             }

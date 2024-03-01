@@ -108,7 +108,7 @@ private:
 
     void pushState();
     void popState();
-    bool isIdentStartChar(const QChar& ch) {
+    bool isIdentStartChar(const QChar& ch)  const override{
         if ((ch>='a') && (ch <= 'z')) {
             return true;
         }
@@ -145,9 +145,8 @@ public:
 
     // SynHighlighter interface
 public:
-    bool getTokenFinished() const override;
-    bool isLastLineCommentNotFinished(int state) const override;
-    bool isLastLineStringNotFinished(int state) const override;
+    bool isCommentNotFinished(int state) const override;
+    bool isStringNotFinished(int state) const override;
     SyntaxState getState() const override;
     void setState(const SyntaxState& rangeState) override;
     void resetState() override;

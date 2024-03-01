@@ -341,7 +341,9 @@ bool QSynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, PTo
     return getTokenAttriAtRowColEx(pos, token, tmpStart, attri);
 }
 
-bool QSynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, bool &tokenFinished, PTokenAttribute &attri)
+bool QSynEdit::getTokenAttriAtRowCol(
+        const BufferCoord &pos, QString &token,
+        PTokenAttribute &attri, SyntaxState &syntaxState)
 {
     int posX, posY, endPos, start;
     QString line;
@@ -362,10 +364,7 @@ bool QSynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, boo
                 endPos = start + token.length()-1;
                 if ((posX >= start) && (posX <= endPos)) {
                     attri = mSyntaxer->getTokenAttribute();
-                    if (posX == endPos)
-                        tokenFinished = mSyntaxer->getTokenFinished();
-                    else
-                        tokenFinished = false;
+                    syntaxState = mSyntaxer->getState();
                     return true;
                 }
                 mSyntaxer->next();
@@ -374,7 +373,6 @@ bool QSynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, boo
     }
     token = "";
     attri = PTokenAttribute();
-    tokenFinished = false;
     return false;
 }
 
@@ -2321,9 +2319,9 @@ void QSynEdit::insertLine(bool moveCaret)
         mSyntaxer->setLine(leftLineText, mCaretY-1);
         mSyntaxer->nextToEol();
         mDocument->setSyntaxState(mCaretY-1,mSyntaxer->getState());
-        notInComment = !mSyntaxer->isLastLineCommentNotFinished(
+        notInComment = !mSyntaxer->isCommentNotFinished(
                     mSyntaxer->getState().state)
-                && !mSyntaxer->isLastLineStringNotFinished(
+                && !mSyntaxer->isStringNotFinished(
                     mSyntaxer->getState().state);
     }
     int indentSpaces = 0;
@@ -5465,9 +5463,9 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
     for (int i=1;i<text.length();i++) {
         bool notInComment = true;
 //        if (mHighlighter) {
-//            notInComment = !mHighlighter->isLastLineCommentNotFinished(
+//            notInComment = !mHighlighter->isCommentNotFinished(
 //                    mHighlighter->getRangeState().state)
-//                && !mHighlighter->isLastLineStringNotFinished(
+//                && !mHighlighter->isStringNotFinished(
 //                    mHighlighter->getRangeState().state);
 //        }
         caretY=pos.line+i;

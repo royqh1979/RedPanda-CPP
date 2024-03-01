@@ -1505,17 +1505,7 @@ QString CppSyntaxer::blockCommentEndSymbol()
     return "*/";
 }
 
-bool CppSyntaxer::getTokenFinished() const
-{
-    if (mTokenId == TokenId::Comment
-            || mTokenId == TokenId::String
-            || mTokenId == TokenId::RawString) {
-        return mRange.state == RangeState::rsUnknown;
-    }
-    return true;
-}
-
-bool CppSyntaxer::isLastLineCommentNotFinished(int state) const
+bool CppSyntaxer::isCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||
             state == RangeState::rsDirectiveComment||
@@ -1523,7 +1513,7 @@ bool CppSyntaxer::isLastLineCommentNotFinished(int state) const
             state == RangeState::rsCppComment);
 }
 
-bool CppSyntaxer::isLastLineStringNotFinished(int state) const
+bool CppSyntaxer::isStringNotFinished(int state) const
 {
     return state == RangeState::rsString;
 }

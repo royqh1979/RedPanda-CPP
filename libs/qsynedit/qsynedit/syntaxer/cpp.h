@@ -177,9 +177,8 @@ private:
 
     // SynHighligterBase interface
 public:
-    bool getTokenFinished() const override;
-    bool isLastLineCommentNotFinished(int state) const override;
-    bool isLastLineStringNotFinished(int state) const override;
+    bool isCommentNotFinished(int state) const override;
+    bool isStringNotFinished(int state) const override;
     bool isDocstringNotFinished(int state) const override;
     bool eol() const override;
     QString getToken() const override;

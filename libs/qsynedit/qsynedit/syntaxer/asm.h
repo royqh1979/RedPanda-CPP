@@ -91,7 +91,7 @@ private:
     void StringProc();
     void SymbolProc();
     void UnknownProc();
-    bool isIdentStartChar(const QChar& ch);
+    bool isIdentStartChar(const QChar& ch) const override;
     static void initData();
 
     // SynHighlighter interface
@@ -108,9 +108,8 @@ public:
 
     // SynHighlighter interface
 public:
-    bool getTokenFinished() const override;
-    bool isLastLineCommentNotFinished(int state) const override;
-    bool isLastLineStringNotFinished(int state) const override;
+    bool isCommentNotFinished(int state) const override;
+    bool isStringNotFinished(int state) const override;
     SyntaxState getState() const override;
     void setState(const SyntaxState& rangeState) override;
     void resetState() override;

@@ -141,9 +141,8 @@ public:
     virtual bool isIdentChar(const QChar& ch) const;
     virtual bool isIdentStartChar(const QChar& ch) const;
 
-    virtual bool getTokenFinished() const = 0;
-    virtual bool isLastLineCommentNotFinished(int state) const = 0;
-    virtual bool isLastLineStringNotFinished(int state) const = 0;
+    virtual bool isCommentNotFinished(int state) const = 0;
+    virtual bool isStringNotFinished(int state) const = 0;
     virtual bool isDocstringNotFinished(int /* state */) const { return false; }
     virtual bool eol() const = 0;
     virtual SyntaxState getState() const = 0;

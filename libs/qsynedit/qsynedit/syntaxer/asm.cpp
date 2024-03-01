@@ -344,7 +344,7 @@ void ASMSyntaxer::UnknownProc()
     mTokenID = TokenId::Unknown;
 }
 
-bool ASMSyntaxer::isIdentStartChar(const QChar &ch)
+bool ASMSyntaxer::isIdentStartChar(const QChar &ch) const
 {
     if (ch == '_') {
         return true;
@@ -1718,17 +1718,12 @@ void ASMSyntaxer::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-bool ASMSyntaxer::getTokenFinished() const
+bool ASMSyntaxer::isCommentNotFinished(int /*state*/) const
 {
     return true;
 }
 
-bool ASMSyntaxer::isLastLineCommentNotFinished(int /*state*/) const
-{
-    return true;
-}
-
-bool ASMSyntaxer::isLastLineStringNotFinished(int /*state*/) const
+bool ASMSyntaxer::isStringNotFinished(int /*state*/) const
 {
     return true;
 }
