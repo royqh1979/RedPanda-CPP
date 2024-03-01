@@ -782,9 +782,9 @@ void QSynEditPainter::paintFoldAttributes()
                 if (mEdit->mCodeFolding.fillIndents) {
                     int X1;
                     if (tabSteps>lineIndent)
-                        X1 = lineIndent * mEdit->mCharWidth + mEdit->textOffset() - 1;
+                        X1 = lineIndent * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                     else
-                        X1 = tabSteps * mEdit->mCharWidth + mEdit->textOffset() - 1;
+                        X1 = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                     gradientStart.setAlpha(20);
                     gradientEnd.setAlpha(10);
                     QLinearGradient gradient(X,Y,X1,Y);
