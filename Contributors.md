@@ -52,3 +52,10 @@ author: PerryDing
 ### One Dark
 
 author: ÃÏ“¿¿∂(MZZW@github)
+
+## Fonts
+
+### Red Panda Control
+
+author:  cynao.CN(CyanoHao@github)
+
