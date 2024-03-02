@@ -448,7 +448,7 @@ void QSynEditPainter::paintToken(
                     nX += glyphWidth;
                 }
                 tokenWidth += glyphWidth;
-                if (tokenWidth > last)
+                if (tokenWidth >= last)
                     break;
             }
         }
