@@ -467,6 +467,8 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
     setDrawingColors(false);
     for (const PEditingArea& p:areaList) {
         int penWidth = std::max(1,mEdit->font().pixelSize() / 15);
+        if (p->type == EditingAreaType::eatWaveUnderLine)
+            penWidth = std::max(1,mEdit->font().pixelSize() / 21);
         if (p->beginX > mRight)
           continue;
         if (p->endX < mLeft)
@@ -488,6 +490,8 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
         mPainter->setBrush(Qt::NoBrush);
         switch(p->type) {
         case EditingAreaType::eatRectangleBorder:
+            rc.setTop(rc.top()+penWidth/2);
+            rc.setBottom(rc.bottom()-penWidth/2);
             mPainter->drawRect(rc);
             break;
         case EditingAreaType::eatUnderLine: {
