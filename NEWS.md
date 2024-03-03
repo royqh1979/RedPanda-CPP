@@ -25,6 +25,7 @@ Red Panda C++ Version 2.27
   - fix: issue #215 (Caret may be drawn in the gutter.)
   - change: Force use utf8 as the exec encoding for fmtlib in the auto link options page.
   - fix: After spaces in comments and strings, symbol completion for '{' and '(' are wrong.
+  - fix: Issue #230 Crash when input " in the txt files.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

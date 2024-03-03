@@ -2957,7 +2957,10 @@ bool Editor::handleDoubleQuoteCompletion()
                 endEditing();
                 return true;
             }
-            if ((ch == 0) || syntaxer()->isWordBreakChar(ch) || syntaxer()->isSpaceChar(ch)) {
+            if ((ch == 0)
+                    || !syntaxer()
+                    || ( syntaxer()->isWordBreakChar(ch)
+                             || syntaxer()->isSpaceChar(ch))) {
                 // insert ""
                 beginEditing();
                 processCommand(QSynedit::EditCommand::Char,'"');
