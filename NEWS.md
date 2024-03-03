@@ -28,6 +28,8 @@ Red Panda C++ Version 2.27
   - fix: Issue #230 Crash when input " in the txt files.
   - enhancement: Unique look&feel for the underline shown while ctrl+mouse over #include line.
   - enhancement: Better look&feel for the wave underline shown for syntax errors.
+  - fix: "float" in #include "float.h" is wrong syntax colored.
+  - enhancement: Unify syntax color for #include header name
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

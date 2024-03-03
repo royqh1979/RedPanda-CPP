@@ -1141,6 +1141,33 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
     }
 }
 
+bool trySetIncludeUnderline(const QString& lineText, const QChar& quoteStartChar,
+                  const QChar& quoteEndChar,
+                  QSynedit::PSyntaxer syntaxer,
+                  QColor foreColor,
+                  QSynedit::EditingAreaList &areaList
+                  ) {
+    int pos1=lineText.indexOf(quoteStartChar);
+    int pos2=lineText.lastIndexOf(quoteEndChar);
+    if (pos1>=0 && pos2>=0 && pos1 < pos2 ) {
+        QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
+        p->beginX = pos1+2;
+        p->endX = pos2+1;
+        p->type = QSynedit::EditingAreaType::eatUnderLine;
+        if (syntaxer) {
+            if (quoteStartChar=='\"')
+                p->color = syntaxer->stringAttribute()->foreground();
+            else
+                p->color = syntaxer->identifierAttribute()->foreground();
+        } else {
+            p->color = foreColor;
+        }
+        areaList.append(p);
+        return true;
+    }
+    return false;
+}
+
 void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
 {
     areaList.clear();
@@ -1172,20 +1199,8 @@ void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
     QString lineText = document()->getLine(line-1);
     if (mParser && mParser->isIncludeLine(lineText)) {
         if (line == mHoverModifiedLine) {
-            int pos1=std::max(lineText.indexOf("<"),lineText.indexOf("\""));
-            int pos2=std::max(lineText.lastIndexOf(">"),lineText.lastIndexOf("\""));
-            if (pos1>=0 && pos2>=0 && pos1 < pos2) {
-                QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
-                p->beginX = pos1+2;
-                p->endX = pos2+1;
-                p->type = QSynedit::EditingAreaType::eatUnderLine;
-                if (syntaxer()) {
-                    p->color = syntaxer()->identifierAttribute()->foreground();
-                } else {
-                    p->color = foregroundColor();
-                }
-                areaList.append(p);
-            }
+            if (!trySetIncludeUnderline(lineText,'<','>',syntaxer(), foregroundColor(), areaList))
+                trySetIncludeUnderline(lineText,'"','"',syntaxer(), foregroundColor(), areaList);
         }
     }
 }
@@ -1229,6 +1244,16 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         }
         QString lineText = document()->getLine(line-1);
         if (mParser->isIncludeLine(lineText)) {
+            int pos1=lineText.indexOf("<")+1;
+            int pos2=lineText.lastIndexOf(">")+1;
+            if (pos1>0 && pos2>0 && pos1<aChar && aChar<pos2) {
+                style = syntaxer()->identifierAttribute()->styles();
+                if (syntaxer()->identifierAttribute()->foreground().isValid())
+                    foreground = syntaxer()->identifierAttribute()->foreground();
+                if (syntaxer()->identifierAttribute()->background().isValid())
+                    background = syntaxer()->identifierAttribute()->background();
+            }
+            return;
         } else if (mParser->enabled() && attr->tokenType() == QSynedit::TokenType::Identifier) {
             QSynedit::BufferCoord p{aChar,line};
     //        BufferCoord pBeginPos,pEndPos;
