@@ -1235,32 +1235,27 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         return;
 
     if (mParser && syntaxer()) {
+        // ifdef lines
         if (!mParser->isLineVisible(mFilename, line)) {
-            if (syntaxer()->commentAttribute()->foreground().isValid())
-                foreground = syntaxer()->commentAttribute()->foreground();
-            if (syntaxer()->commentAttribute()->background().isValid())
-                background = syntaxer()->commentAttribute()->background();
+            foreground = syntaxer()->commentAttribute()->foreground();
+            background = syntaxer()->commentAttribute()->background();
             return;
         }
         QString lineText = document()->getLine(line-1);
         if (mParser->isIncludeLine(lineText)) {
+            // #include header names (<>)
             int pos1=lineText.indexOf("<")+1;
             int pos2=lineText.lastIndexOf(">")+1;
             if (pos1>0 && pos2>0 && pos1<aChar && aChar<pos2) {
                 style = syntaxer()->identifierAttribute()->styles();
-                if (syntaxer()->identifierAttribute()->foreground().isValid())
-                    foreground = syntaxer()->identifierAttribute()->foreground();
-                if (syntaxer()->identifierAttribute()->background().isValid())
-                    background = syntaxer()->identifierAttribute()->background();
+                foreground = syntaxer()->identifierAttribute()->foreground();
+                background = syntaxer()->identifierAttribute()->background();
             }
             return;
         } else if (mParser->enabled() && attr->tokenType() == QSynedit::TokenType::Identifier) {
+            //Syntax color for different identifier types
             QSynedit::BufferCoord p{aChar,line};
-    //        BufferCoord pBeginPos,pEndPos;
-    //        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
-    //        qDebug()<<s;
-    //        PStatement statement = mParser->findStatementOf(mFilename,
-    //          s , p.Line);
+
             StatementKind kind;
             if (mParser->parsing()){
                 kind=mIdentCache.value(QString("%1 %2").arg(aChar).arg(token),StatementKind::skUnknown);
@@ -1307,9 +1302,10 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             }
         }
     }
-    //selection
+
     if (syntaxer() && attr) {
         if (attr->tokenType() == QSynedit::TokenType::Keyword) {
+            //C++ type keywords
             if (CppTypeKeywords.contains(token)
                     ||
                     (
@@ -1322,10 +1318,8 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 PColorSchemeItem item = mStatementColors->value(StatementKind::skKeywordType,PColorSchemeItem());
 
                 if (item) {
-                    if (item->foreground().isValid())
-                        foreground = item->foreground();
-                    if (item->background().isValid())
-                        background = item->background();
+                    foreground = item->foreground();
+                    background = item->background();
                     style.setFlag(QSynedit::FontStyle::fsBold,item->bold());
                     style.setFlag(QSynedit::FontStyle::fsItalic,item->italic());
                     style.setFlag(QSynedit::FontStyle::fsUnderline,item->underlined());
@@ -1338,13 +1332,14 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 || (attr->tokenType() == QSynedit::TokenType::Preprocessor)
                 )
             && (token == mCurrentHighlightedWord)) {
+            // occurrencies of the selected identifier
             if (mCurrentHighlighWordForeground.isValid())
                 foreground = mCurrentHighlighWordForeground;
             if (mCurrentHighlighWordBackground.isValid())
                 background = mCurrentHighlighWordBackground;
         } else if (!selAvail() && attr->name() == SYNS_AttrSymbol
                    && pSettings->editor().highlightMathingBraces()) {
-            //        qDebug()<<line<<":"<<aChar<<" - "<<mHighlightCharPos1.Line<<":"<<mHighlightCharPos1.Char<<" - "<<mHighlightCharPos2.Line<<":"<<mHighlightCharPos2.Char;
+            // matching braces
             if ( (line == mHighlightCharPos1.line)
                     && (aChar == mHighlightCharPos1.ch)) {
                 if (mCurrentHighlighWordForeground.isValid())
@@ -1361,6 +1356,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             }
         }
     } else {
+        // occurrencies of the selected word
         if (token == mCurrentHighlightedWord) {
             if (mCurrentHighlighWordForeground.isValid())
                 foreground = mCurrentHighlighWordForeground;

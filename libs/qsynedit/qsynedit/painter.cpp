@@ -664,15 +664,16 @@ void QSynEditPainter::addHighlightToken(
 //    if (!Background.isValid() || (edit->mActiveLineColor.isValid() && bCurrentLine)) {
 //        Background = colEditorBG();
 //    }
+
+    mEdit->onPreparePaintHighlightToken(line,mEdit->mSyntaxer->getTokenPos()+1,
+        token,attri,style,foreground,background);
+
     if (!background.isValid() ) {
         background = colEditorBG();
     }
     if (!foreground.isValid()) {
         foreground = mEdit->mForegroundColor;
     }
-
-    mEdit->onPreparePaintHighlightToken(line,mEdit->mSyntaxer->getTokenPos()+1,
-        token,attri,style,foreground,background);
 
     // Do we have to paint the old chars first, or can we just append?
     bool bCanAppend = false;
