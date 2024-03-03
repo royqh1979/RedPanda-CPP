@@ -341,7 +341,6 @@ void QSynEditPainter::paintToken(
         const QFont& font, bool showGlyphs)
 {
     bool startPaint;
-    int nX;
     bool fontInited = false;
     int tokenRight = tokenWidth+tokenLeft;
 
@@ -351,7 +350,8 @@ void QSynEditPainter::paintToken(
     // qDebug()<<startGlyph<<endGlyph;
 
     if (last >= first && mRcToken.right() > mRcToken.left()) {
-        nX = fixXValue(first);
+        int nX = fixXValue(first);
+        int nY = mRcToken.bottom()-mPainter->fontMetrics().descent();
         first -= tokenLeft;
         last -= tokenLeft;
         QRect rcTokenBack = mRcToken;
@@ -413,7 +413,7 @@ void QSynEditPainter::paintToken(
                                 mPainter->setFont(font);
                                 fontInited = true;
                             }
-                            mPainter->drawText(nX,mRcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
+                            mPainter->drawText(nX, nY, textToPaint);
                             drawed = true;
                         }
                     }
@@ -440,7 +440,7 @@ void QSynEditPainter::paintToken(
                                     fontInited = true;
                                 }
                                 //qDebug()<<"Drawing"<<textToPaint;
-                                mPainter->drawText(nX+padding,mRcToken.bottom()-mPainter->fontMetrics().descent() , textToPaint);
+                                mPainter->drawText(nX+padding, nY, textToPaint);
                             }
                         }
                         drawed = true;
@@ -461,12 +461,12 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
 {
     QRect rc;
     int x1,x2;
-    int offset;
     //painter->setClipRect(rcLine);
     rc=mRcLine;
     rc.setBottom(rc.bottom()-1);
     setDrawingColors(false);
     for (const PEditingArea& p:areaList) {
+        int penWidth = std::max(1,mEdit->font().pixelSize() / 15);
         if (p->beginX > mRight)
           continue;
         if (p->endX < mLeft)
@@ -481,30 +481,41 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
           x2 = p->endX;
         rc.setLeft(fixXValue(x1));
         rc.setRight(fixXValue(x2));
-        mPainter->setPen(p->color);
+        QPen pen;
+        pen.setColor(p->color);
+        pen.setWidth(penWidth);
+        mPainter->setPen(pen);
         mPainter->setBrush(Qt::NoBrush);
         switch(p->type) {
         case EditingAreaType::eatRectangleBorder:
             mPainter->drawRect(rc);
             break;
-        case EditingAreaType::eatUnderLine:
-            mPainter->drawLine(rc.left(),rc.bottom(),rc.right(),rc.bottom());
+        case EditingAreaType::eatUnderLine: {
+            mPainter->drawLine(rc.left(),rc.bottom()-pen.width(),rc.right(),rc.bottom()-pen.width());
+        }
             break;
-        case EditingAreaType::eatWaveUnderLine:
-            offset=3;
+        case EditingAreaType::eatWaveUnderLine: {
+            int maxOffset = 2*penWidth;
+            int offset = maxOffset;
             int lastX=rc.left();
             int lastY=rc.bottom()-offset;
             int t = rc.left();
             while (t<rc.right()) {
-                t+=3;
-                if (t>rc.right())
+                t+=maxOffset;
+                if (t>=rc.right()) {
+                    int diff = t - rc.right();
+                    offset = (offset==0)?(maxOffset-diff):diff;
                     t = rc.right();
-                offset = 3 - offset;
-                mPainter->drawLine(lastX,lastY,t,rc.bottom()-offset);
+                    mPainter->drawLine(lastX,lastY,t,rc.bottom()-offset);
+                } else {
+                    offset = maxOffset - offset;
+                    mPainter->drawLine(lastX,lastY,t,rc.bottom()-offset);
+                }
                 lastX = t;
                 lastY = rc.bottom()-offset;
             }
-
+        }
+            break;
         }
     }
 }

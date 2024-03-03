@@ -1141,10 +1141,10 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
     }
 }
 
-void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
+void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
 {
     areaList.clear();
-    if (mTabStopBegin>=0 && mTabStopY == Line) {
+    if (mTabStopBegin>=0 && mTabStopY == line) {
         QSynedit::PEditingArea p = std::make_shared<QSynedit::EditingArea>();
         p->type = QSynedit::EditingAreaType::eatRectangleBorder;
 //        int spaceCount = leftSpaces(mLineBeforeTabStop);
@@ -1154,7 +1154,7 @@ void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
         p->color = syntaxer()->stringAttribute()->foreground();
         areaList.append(p);
     }
-    PSyntaxIssueList lst = getSyntaxIssuesAtLine(Line);
+    PSyntaxIssueList lst = getSyntaxIssuesAtLine(line);
     if (lst) {
         for (const PSyntaxIssue& issue: *lst) {
             QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
@@ -1167,6 +1167,20 @@ void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
             }
             p->type = QSynedit::EditingAreaType::eatWaveUnderLine;
             areaList.append(p);
+        }
+    }
+    QString lineText = document()->getLine(line-1);
+    if (mParser && mParser->isIncludeLine(lineText)) {
+        if (line == mHoverModifiedLine) {
+            int pos1=std::max(lineText.indexOf("<"),lineText.indexOf("\""));
+            int pos2=std::max(lineText.lastIndexOf(">"),lineText.lastIndexOf("\""));
+            if (pos1>=0 && pos2>=0 && pos1 < pos2) {
+                QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
+                p->beginX = pos1+2;
+                p->endX = pos2+1;
+                p->type = QSynedit::EditingAreaType::eatUnderLine;
+                areaList.append(p);
+            }
         }
     }
 }
@@ -1210,15 +1224,6 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         }
         QString lineText = document()->getLine(line-1);
         if (mParser->isIncludeLine(lineText)) {
-            if (line == mHoverModifiedLine) {
-                int pos1=std::max(lineText.indexOf("<"),lineText.indexOf("\""));
-                int pos2=std::max(lineText.lastIndexOf(">"),lineText.lastIndexOf("\""));
-                pos1++;
-                pos2++;
-                if (pos1>0 && pos2>0 && pos1<aChar && aChar < pos2) {
-                    style.setFlag(QSynedit::FontStyle::fsUnderline);
-                }
-            }
         } else if (mParser->enabled() && attr->tokenType() == QSynedit::TokenType::Identifier) {
             QSynedit::BufferCoord p{aChar,line};
     //        BufferCoord pBeginPos,pEndPos;
