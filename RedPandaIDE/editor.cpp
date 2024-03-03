@@ -1179,6 +1179,11 @@ void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
                 p->beginX = pos1+2;
                 p->endX = pos2+1;
                 p->type = QSynedit::EditingAreaType::eatUnderLine;
+                if (syntaxer()) {
+                    p->color = syntaxer()->identifierAttribute()->foreground();
+                } else {
+                    p->color = foregroundColor();
+                }
                 areaList.append(p);
             }
         }
