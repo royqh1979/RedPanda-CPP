@@ -488,15 +488,15 @@
         <translation>Erro desconhecido detectado.</translation>
     </message>
     <message>
-        <source> - Command: %1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source> - Command: %1 %2 &gt; &quot;%3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Command: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Command: %1 &gt; %2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1559,7 +1559,7 @@
     </message>
     <message>
         <source>*Needs restart</source>
-        <translation type="unfinished">*Necessário reiniciar</translation>
+        <translation type="obsolete">*Necessário reiniciar</translation>
     </message>
     <message>
         <source>Fallback Font 2:</source>
@@ -2286,7 +2286,7 @@
     </message>
     <message>
         <source>Command: %1 %2</source>
-        <translation>Comando: %1 %2</translation>
+        <translation type="vanished">Comando: %1 %2</translation>
     </message>
     <message>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
@@ -2299,6 +2299,10 @@
     <message>
         <source>GNU Assembler</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Command: %1</source>
+        <translation type="unfinished">Comando: %1</translation>
     </message>
 </context>
 <context>
@@ -5443,6 +5447,10 @@
         <source>Line: %1/%2 Char: %3/%4</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source> %1 Version</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>
@@ -5968,7 +5976,7 @@
     </message>
     <message>
         <source>- Command: %1 %2</source>
-        <translation>- Comando: %1 %2</translation>
+        <translation type="vanished">- Comando: %1 %2</translation>
     </message>
     <message>
         <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
@@ -5977,6 +5985,10 @@
     <message>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Command: %1</source>
+        <translation type="unfinished">- Comando: %1</translation>
     </message>
 </context>
 <context>
@@ -7417,12 +7429,16 @@
     </message>
     <message>
         <source>- Command: %1 %2</source>
-        <translation type="unfinished">- Comando: %1 %2</translation>
+        <translation type="obsolete">- Comando: %1 %2</translation>
     </message>
     <message>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
         <translation type="unfinished">Impossível remover o antigo arquivo executável &quot;%1&quot;.</translation>
+    </message>
+    <message>
+        <source>- Command: %1</source>
+        <translation type="unfinished">- Comando: %1</translation>
     </message>
 </context>
 <context>
@@ -7469,7 +7485,11 @@
     </message>
     <message>
         <source>- Command: %1 %2</source>
-        <translation type="unfinished">- Comando: %1 %2</translation>
+        <translation type="obsolete">- Comando: %1 %2</translation>
+    </message>
+    <message>
+        <source>- Command: %1</source>
+        <translation type="unfinished">- Comando: %1</translation>
     </message>
 </context>
 <context>
@@ -8102,11 +8122,15 @@
     </message>
     <message>
         <source>Command: %1 %2</source>
-        <translation>Comando: %1 %2</translation>
+        <translation type="vanished">Comando: %1 %2</translation>
     </message>
     <message>
         <source>Compiling...</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Command: %1</source>
+        <translation type="unfinished">Comando: %1</translation>
     </message>
 </context>
 <context>

@@ -389,15 +389,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source> - Command: %1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source> - Command: %1 %2 &gt; &quot;%3&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Command: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> - Command: %1 &gt; %2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1391,10 +1391,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>*Needs restart</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Fallback Font 2:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2098,10 +2094,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Command: %1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2111,6 +2103,10 @@
     </message>
     <message>
         <source>GNU Assembler</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5152,6 +5148,10 @@
         <source>Line: %1/%2 Char: %3/%4</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source> %1 Version</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MemoryModel</name>
@@ -5636,15 +5636,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>- Command: %1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Make program &apos;%1&apos; doesn&apos;t exists!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>- Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6833,12 +6833,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>- Command: %1 %2</source>
+        <source>Can&apos;t delete the old executable file &quot;%1&quot;.
+</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Can&apos;t delete the old executable file &quot;%1&quot;.
-</source>
+        <source>- Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6885,7 +6885,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>- Command: %1 %2</source>
+        <source>- Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7422,11 +7422,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Command: %1 %2</source>
+        <source>Compiling...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Compiling...</source>
+        <source>Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
