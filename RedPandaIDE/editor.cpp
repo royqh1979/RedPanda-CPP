@@ -287,7 +287,6 @@ void Editor::loadFile(QString filename) {
         checkSyntaxInBack();
     }
     reparseTodo();
-
     saveAutoBackup();
 }
 
@@ -1041,11 +1040,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
             return;
         case '(': {
             if (!selAvail()) {
-                QChar nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
-                if (!isIdentChar(nextCh) && nextCh!='('
-                        && nextCh!='"' && nextCh!='\'' ){
-                    handled = handleSymbolCompletion(ch);
-                }
+                // QChar nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
+                // if (!isIdentChar(nextCh) && nextCh!='('
+                //         && nextCh!='"' && nextCh!='\'' ){
+                //     handled = handleSymbolCompletion(ch);
+                // }
+                handled = handleSymbolCompletion(ch);
             } else {
                 handled = handleSymbolCompletion(ch);
             }
@@ -3513,6 +3513,57 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
         }
     }
 
+    // Scan the current function body
+    QSet<QString> keywords;
+
+    if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP ) {
+        if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+            if (word.startsWith("."))
+                keywords = QSynedit::ASMSyntaxer::ATTDirectives;
+            else if (word.startsWith("%"))
+                keywords = QSynedit::ASMSyntaxer::ATTRegisters;
+            else {
+                keywords = QSynedit::ASMSyntaxer::InstructionNames;
+            }
+        } else {
+            int pos = word.lastIndexOf(".");
+            if (pos>=0) {
+                QString scopeWord=word.left(pos);
+                word = word.mid(pos+1);
+                QMap<QString, QSet<QString> > scopedKeywords = syntaxer()->scopedKeywords();
+                keywords = scopedKeywords.value(scopeWord, QSet<QString>());
+            } else
+                keywords = syntaxer()->keywords();
+        }
+    } else {
+        switch(calcParserLanguage()) {
+        case ParserLanguage::CPlusPlus:
+            foreach (const QString& keyword, CppKeywords.keys()) {
+                keywords.insert(keyword);
+            }
+            break;
+        case ParserLanguage::C:
+            keywords = CKeywords;
+            break;
+#ifdef ENABLE_SDCC
+        case ParserLanguage::SDCC:
+            keywords = CKeywords;
+            foreach (const QString& keyword, SDCCKeywords.keys()) {
+                keywords.insert(keyword);
+            }
+            break;
+#endif
+        }
+        if (pSettings->editor().enableCustomCTypeKeywords()) {
+            foreach (const QString& keyword, pSettings->editor().customCTypeKeywords()) {
+                keywords.insert(keyword);
+            }
+        }
+    }
+
+    if (type == CodeCompletionType::KeywordsOnly && keywords.isEmpty())
+        return;
+
     mCompletionPopup->setRecordUsage(pSettings->codeCompletion().recordUsage());
     mCompletionPopup->setSortByScope(pSettings->codeCompletion().sortByScope());
     mCompletionPopup->setShowKeywords(pSettings->codeCompletion().showKeywords());
@@ -3566,54 +3617,6 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     }
     pMainWindow->functionTip()->hide();
     mCompletionPopup->show();
-    // Scan the current function body
-    QSet<QString> keywords;
-
-    if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP ) {
-        if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
-            if (word.startsWith("."))
-                keywords = QSynedit::ASMSyntaxer::ATTDirectives;
-            else if (word.startsWith("%"))
-                keywords = QSynedit::ASMSyntaxer::ATTRegisters;
-            else {
-                keywords = QSynedit::ASMSyntaxer::InstructionNames;
-            }
-        } else {
-            int pos = word.lastIndexOf(".");
-            if (pos>=0) {
-                QString scopeWord=word.left(pos);
-                word = word.mid(pos+1);
-                QMap<QString, QSet<QString> > scopedKeywords = syntaxer()->scopedKeywords();
-                keywords = scopedKeywords.value(scopeWord, QSet<QString>());
-            } else
-                keywords = syntaxer()->keywords();
-        }
-    } else {
-        switch(calcParserLanguage()) {
-        case ParserLanguage::CPlusPlus:
-            foreach (const QString& keyword, CppKeywords.keys()) {
-                keywords.insert(keyword);
-            }
-            break;
-        case ParserLanguage::C:
-            keywords = CKeywords;
-            break;
-#ifdef ENABLE_SDCC
-        case ParserLanguage::SDCC:
-            keywords = CKeywords;
-            foreach (const QString& keyword, SDCCKeywords.keys()) {
-                keywords.insert(keyword);
-            }
-            break;
-#endif
-        }
-        if (pSettings->editor().enableCustomCTypeKeywords()) {
-            foreach (const QString& keyword, pSettings->editor().customCTypeKeywords()) {
-                keywords.insert(keyword);
-            }
-        }
-    }
-
 
     if (word.isEmpty()) {
         //word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);

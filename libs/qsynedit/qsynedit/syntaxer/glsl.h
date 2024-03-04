@@ -175,24 +175,14 @@ public:
 
     QString languageName() override;
     ProgrammingLanguage language() override;
-
-    // SynHighlighter interface
-public:
     SyntaxState getState() const override;
-
-    // SynHighlighter interface
-public:
     QSet<QString> keywords() override;
-
-    // Highlighter interface
-public:
     bool supportBraceLevel() override;
-
-    // Syntaxer interface
-public:
     QString commentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
+    bool supportFolding() override;
+    bool needsLineState() override;
 };
 
 }

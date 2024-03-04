@@ -106,23 +106,18 @@ public:
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
 
-    // SynHighlighter interface
-public:
     bool isCommentNotFinished(int state) const override;
     bool isStringNotFinished(int state) const override;
     SyntaxState getState() const override;
     void setState(const SyntaxState& rangeState) override;
     void resetState() override;
 
-
-public:
+    bool supportFolding() override;
+    bool needsLineState() override;
     QSet<QString> keywords() override;
 
     bool isATT() const;
     void setATT(bool newATT);
-
-    // Syntaxer interface
-public:
     QString commentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;

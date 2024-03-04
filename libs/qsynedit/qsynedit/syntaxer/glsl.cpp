@@ -1446,6 +1446,6 @@ bool GLSLSyntaxer::supportFolding()
 
 bool GLSLSyntaxer::needsLineState()
 {
-
+    return true;
 }
 }

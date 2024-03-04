@@ -328,7 +328,7 @@ bool QSynEdit::canRedo() const
 int QSynEdit::maxScrollWidth() const
 {
     int maxWidth = mDocument->longestLineWidth();
-    if (mSyntaxer->supportFolding())
+    if (useCodeFolding())
         maxWidth += stringWidth(syntaxer()->foldString(""),maxWidth);
     if (mOptions.testFlag(eoScrollPastEol))
         return std::max(maxWidth ,1);
@@ -3478,7 +3478,7 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
     PCodeFoldingRange  collapsedFold;
     int line = 0;
     QString curLine;
-    if (mSyntaxer->supportFolding())
+    if (!useCodeFolding())
         return;
 
     while (line < mDocument->count()) { // index is valid for LinesToScan and fLines
@@ -6596,18 +6596,18 @@ void QSynEdit::onLinesCleared()
 
 void QSynEdit::onLinesDeleted(int line, int count)
 {
-    if (mUseCodeFolding)
+    if (useCodeFolding())
         foldOnLinesDeleted(line + 1, count);
     if (mSyntaxer->needsLineState()) {
         reparseLines(line, mDocument->count());
     }
     invalidateLines(line + 1, INT_MAX);
-//    invalidateGutterLines(index + 1, INT_MAX);
+    //invalidateGutterLines(line + 1, INT_MAX);
 }
 
 void QSynEdit::onLinesInserted(int line, int count)
 {
-    if (mUseCodeFolding)
+    if (useCodeFolding())
         foldOnLinesInserted(line + 1, count);
     if (mSyntaxer->needsLineState()) {
         reparseLines(line, mDocument->count());
@@ -6616,7 +6616,7 @@ void QSynEdit::onLinesInserted(int line, int count)
         reparseLines(line, line + count);
     }
     invalidateLines(line + 1, INT_MAX);
-//    invalidateGutterLines(index + 1, INT_MAX);
+    //invalidateGutterLines(line + 1, INT_MAX);
 }
 
 void QSynEdit::onLinesPutted(int line)
@@ -6624,9 +6624,11 @@ void QSynEdit::onLinesPutted(int line)
     if (mSyntaxer->needsLineState()) {
         reparseLines(line, mDocument->count());
         invalidateLines(line + 1, INT_MAX);
+        //invalidateGutterLines(line +1 , INT_MAX);
     } else {
         reparseLines(line, line+1);
         invalidateLine( line + 1 );
+        //invalidateGutterLine(line +1);
     }
 }
 
@@ -6711,7 +6713,7 @@ void QSynEdit::setBlockEnd(BufferCoord value)
           value.ch = 1;
     } else {
         int maxLen = mDocument->longestLineWidth();
-        if (mSyntaxer->supportFolding())
+        if (useCodeFolding())
             maxLen += stringWidth(mSyntaxer->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }
@@ -6818,7 +6820,7 @@ void QSynEdit::setBlockBegin(BufferCoord value)
             value.ch = 1;
     } else {
         int maxLen = mDocument->longestLineWidth();
-        if (mSyntaxer->supportFolding())
+        if (useCodeFolding())
             maxLen += stringWidth(mSyntaxer->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }

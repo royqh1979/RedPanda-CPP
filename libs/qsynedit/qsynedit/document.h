@@ -566,7 +566,7 @@ signals:
     void cleared();
     void deleted(int startLine, int count);
     void inserted(int startLine, int count);
-    void putted(int startLine, int count);
+    void putted(int line);
 protected:
     QString getTextStr() const;
     void setUpdateState(bool Updating);

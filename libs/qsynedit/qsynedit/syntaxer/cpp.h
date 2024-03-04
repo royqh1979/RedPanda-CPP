@@ -175,7 +175,7 @@ private:
     PTokenAttribute mGlobalVarAttribute;
     PTokenAttribute mLocalVarAttribute;
 
-    // SynHighligterBase interface
+    // Syntaxer interface
 public:
     bool isCommentNotFinished(int state) const override;
     bool isStringNotFinished(int state) const override;
@@ -193,34 +193,21 @@ public:
     QString languageName() override;
     ProgrammingLanguage language() override;
 
-    // SynHighlighter interface
-public:
     SyntaxState getState() const override;
-
-    // SynHighlighter interface
-public:
     bool isIdentChar(const QChar &ch) const override;
     bool isIdentStartChar(const QChar &ch) const override;
-
-    // SynHighlighter interface
-public:
     QSet<QString> keywords() override;
-
-    // SynHighlighter interface
-public:
     QString foldString(QString startLine) override;
     const QSet<QString> &customTypeKeywords() const;
     void setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords);
 
-    // Highlighter interface
-public:
     bool supportBraceLevel() override;
 
-    // Syntaxer interface
-public:
     QString commentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
+    virtual bool supportFolding() override;
+    virtual bool needsLineState() override;
 };
 
 }

@@ -122,7 +122,7 @@ public:
     Syntaxer(const Syntaxer&)=delete;
     Syntaxer& operator=(const Syntaxer&)=delete;
 
-    virtual const QMap<QString, PTokenAttribute>& attributes() const;
+    virtual QMap<QString, PTokenAttribute> attributes() const;
 
     const QSet<QChar>& wordBreakChars() const;
 

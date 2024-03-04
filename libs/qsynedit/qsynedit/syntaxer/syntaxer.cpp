@@ -19,7 +19,6 @@
 
 namespace QSynedit {
 Syntaxer::Syntaxer() :
-    mEnabled(true),
     mWordBreakChars{ WordBreakChars }
 {
     mCommentAttribute = std::make_shared<TokenAttribute>(SYNS_AttrComment,
@@ -42,7 +41,7 @@ Syntaxer::Syntaxer() :
     addAttribute(mSymbolAttribute);
 }
 
-const QMap<QString, PTokenAttribute>& Syntaxer::attributes() const
+QMap<QString, PTokenAttribute> Syntaxer::attributes() const
 {
     return mAttributes;
 }

@@ -131,7 +131,6 @@ private:
         return (ch>='0') && (ch<='9');
     }
 
-    // SynHighlighter interface
 public:
     bool eol() const override;
 
@@ -142,23 +141,17 @@ public:
     int getTokenPos() override;
     void next() override;
     void setLine(const QString &newLine, int lineNumber) override;
-
-    // SynHighlighter interface
-public:
     bool isCommentNotFinished(int state) const override;
     bool isStringNotFinished(int state) const override;
     SyntaxState getState() const override;
     void setState(const SyntaxState& rangeState) override;
     void resetState() override;
-
     bool isIdentChar(const QChar& ch) const override;
-public:
     QSet<QString> keywords() override;
-
-
-    // Syntaxer interface
-public:
     QString commentSymbol() override;
+    bool supportFolding() override;
+    bool needsLineState() override;
+
 };
 
 }
