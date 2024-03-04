@@ -1,4 +1,4 @@
-includes("./version_pri.lua")
+includes("./version.lua")
 
 TEST_VERSION = "$(shell git rev-list HEAD --count)"
 

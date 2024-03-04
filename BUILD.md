@@ -11,6 +11,7 @@ Recommended development environments:
    * Debugger integration with Qt.
 
 To setup development environment in Visual Studio Code:
+0. (Windows only) Enable Developer Mode in Windows Settings, and enable `core.symlinks` in Git (`git config core.symlinks true`).
 1. Install [xmake](https://xmake.io/) and [XMake extension](https://marketplace.visualstudio.com/items?itemName=tboox.xmake-vscode).
 2. Install [C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) for language and debugging support.
 3. Optionally install [clangd](https://clangd.llvm.org/) and [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) for better analysis.

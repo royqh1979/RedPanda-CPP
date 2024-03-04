@@ -15,7 +15,7 @@ CONFIG += ENABLE_SDCC
 
 APP_NAME = RedPandaCPP
 
-include(../version_pri.lua)
+include(../version.inc)
 
 # TEST_VERSION = beta2
 system(git rev-list HEAD --count): TEST_VERSION = $$system(git rev-list HEAD --count)
