@@ -1,6 +1,6 @@
 ﻿# 通用开发说明
 
-小熊猫 C++ 需要 Qt 5（≥ 5.12）。
+小熊猫 C++ 需要 Qt 5.15。
 
 推荐开发环境：
 1. Visual Studio Code。
@@ -235,7 +235,7 @@ qmake 变量：
 通用步骤:
 
 - 安装支持 C++17 的 GCC（≥ 7）或 Clang（≥ 6）。
-- 安装 Qt 5（≥ 5.12）Base、SVG、Tools 模块，包括库和开发文件。
+- 安装 Qt 5.15 Base、SVG、Tools 模块，包括库和开发文件。
 - 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt。
 
 基于 qmake 构建：

@@ -1,6 +1,6 @@
 # General Development Notes
 
-Red Panda C++ need Qt 5 (≥ 5.12) to build.
+Red Panda C++ need Qt 5.15 to build.
 
 Recommended development environments:
 1. Visual Studio Code.
@@ -235,7 +235,7 @@ To build with VS 2017 or later in Command Prompt:
 General steps:
 
 - Install recent version of GCC (≥ 7) or Clang (≥ 6) that supports C++17.
-- Install Qt 5 (≥ 5.12) Base, SVG and Tools modules, including both libraries and development files.
+- Install Qt 5.15 Base, SVG and Tools modules, including both libraries and development files.
 - Optionally install fcitx5-qt for building with static Qt library.
 
 qmake-based build steps:
