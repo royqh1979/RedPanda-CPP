@@ -376,39 +376,19 @@ Windows 宿主的额外要求：
 
 ## Linux AppImage
 
-1. 安装依赖包：Docker 或 Podman。
+Linux 宿主：
+```bash
+ARCH=x86_64
+podman run --rm -v $PWD:/mnt -w /mnt -e CARCH=$ARCH quay.io/redpanda-cpp/appimage-builder-$ARCH:20240304.0 packages/appimage/01-in-docker.sh
+```
 
-   Windows 宿主的额外要求：
-   - Docker 使用基于 WSL 2 的引擎，或者对此项目文件夹启用文件共享（Settings > Resources > File sharing）；
-   - PowerShell (Core) 或 Windows PowerShell。
-2. 准备构建环境。Linux 宿主：
-   ```bash
-   ARCH=x86_64 # 或 aarch64、riscv64
-   DOCKER=docker # 或 podman
-   $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
-   ```
-   Windows 宿主：
-   ```ps1
-   $ARCH = "x86_64" # 或 "aarch64"、"riscv64"
-   $DOCKER = "docker" # 或 "podman"
-   & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
-   ```
-3. 构建 AppImage。Linux 宿主：
-   ```bash
-   ARCH=x86_64
-   DOCKER=docker
-   $DOCKER run --rm -v $PWD:/build/RedPanda-CPP -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
-   ```
-   Windows 宿主：
-   ```ps1
-   $ARCH = "x86_64"
-   $DOCKER = "docker"
-   & $DOCKER run --rm -v "$(Get-Location):/build/RedPanda-CPP" -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
-   ```
-4. 运行小熊猫 C++.
-   ```bash
-   ./dist/RedPandaIDE-x86_64.AppImage # 或 *-aarch64.AppImage、*-riscv64.AppImage
-   ```
+Windows 宿主：
+```ps1
+$ARCH = "x86_64"
+podman run --rm -v "$(Get-Location):/mnt" -w /mnt -e CARCH=$ARCH redpanda-builder-$ARCH packages/appimage/01-in-docker.sh
+```
+
+Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder)。
 
 ## 异架构的模拟本机构建（emulated native build）
 

@@ -376,39 +376,19 @@ Note that these build scripts check out HEAD of the repo, so any changes should 
 
 ## Linux AppImage
 
-1. Install dependency: Docker or Podman.
+Linux host:
+```bash
+ARCH=x86_64
+podman run --rm -v $PWD:/mnt -w /mnt -e CARCH=$ARCH quay.io/redpanda-cpp/appimage-builder-$ARCH:20240304.0 packages/appimage/01-in-docker.sh
+```
 
-   Extra requirements for Windows host:
-   - Docker uses WSL 2 based engine, or enable file sharing on the project folder (Settings > Resources > File sharing);
-   - PowerShell (Core) or Windows PowerShell.
-2. Prepare build environment. Linux host:
-   ```bash
-   ARCH=x86_64 # or aarch64, riscv64
-   DOCKER=docker # or podman
-   $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
-   ```
-   Windows host:
-   ```ps1
-   $ARCH = "x86_64" # or "aarch64", "riscv64"
-   $DOCKER = "docker" # or "podman"
-   & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
-   ```
-3. Build AppImage. Linux host:
-   ```bash
-   ARCH=x86_64
-   DOCKER=docker
-   $DOCKER run --rm -v $PWD:/build/RedPanda-CPP -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
-   ```
-   Windows host:
-   ```ps1
-   $ARCH = "x86_64"
-   $DOCKER = "docker"
-   & $DOCKER run --rm -v "$(Get-Location):/build/RedPanda-CPP" -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
-   ```
-4. Run Red Panda C++.
-   ```bash
-   ./dist/RedPandaIDE-x86_64.AppImage # or *-aarch64.AppImage, *-riscv64.AppImage
-   ```
+Windows host:
+```ps1
+$ARCH = "x86_64"
+podman run --rm -v "$(Get-Location):/mnt" -w /mnt -e CARCH=$ARCH redpanda-builder-$ARCH packages/appimage/01-in-docker.sh
+```
+
+Dockerfiles are available in [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder).
 
 ## Emulated Native Build for Foreign Architectures
 
