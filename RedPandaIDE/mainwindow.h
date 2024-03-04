@@ -301,8 +301,10 @@ private:
     QStringList getDefaultCompilerSetBinDirs();
     void openShell(const QString& folder, const QString& shellCommand, const QStringList& binDirs);
     QAction* createAction(const QString& text,
-                             QWidget* parent,
-                             QKeySequence shortcut=QKeySequence());
+                          QWidget* parent,
+                          QKeySequence shortcut=QKeySequence(),
+                          Qt::ShortcutContext shortcutContext = Qt::ShortcutContext::WidgetWithChildrenShortcut
+                          );
     QAction* createShortcutCustomableAction(
             const QString& text,
             const QString& objectName,

@@ -2984,48 +2984,68 @@ void MainWindow::createCustomActions()
     //Files view
     mFilesView_CreateFolder = createAction(
                 tr("New Folder"),
-                ui->treeFiles);
+                ui->treeFiles,
+                Qt::CTRL + Qt::Key_F,
+                Qt::WidgetShortcut);
     connect(mFilesView_CreateFolder, &QAction::triggered,
             this, &MainWindow::onFilesViewCreateFolder);
 
     mFilesView_CreateFile = createAction(
                 tr("New File"),
-                ui->treeFiles);
+                ui->treeFiles,
+                Qt::CTRL + Qt::Key_N,
+                Qt::WidgetShortcut);
     connect(mFilesView_CreateFile, &QAction::triggered,
             this, &MainWindow::onFilesViewCreateFile);
 
     mFilesView_Rename = createAction(
                 tr("Rename"),
-                ui->treeFiles);
+                ui->treeFiles,
+                Qt::CTRL + Qt::Key_R,
+                Qt::WidgetShortcut);
     connect(mFilesView_Rename, &QAction::triggered,
             this, &MainWindow::onFilesViewRename);
 
     mFilesView_RemoveFile = createAction(
                 tr("Delete"),
-                ui->treeFiles);
-    mFilesView_RemoveFile->setShortcut(Qt::Key_Delete);
+                ui->treeFiles,
+                Qt::Key_Delete,
+                Qt::WidgetShortcut);
     connect(mFilesView_RemoveFile, &QAction::triggered,
             this, &MainWindow::onFilesViewRemoveFiles);
+
     mFilesView_Open = createAction(
                 tr("Open in Editor"),
-                ui->treeFiles);
+                ui->treeFiles,
+                Qt::Key_Return,
+                Qt::WidgetShortcut);
+    mFilesView_Open->setShortcuts(
+                {Qt::Key_Return, Qt::Key_Enter});
     connect(mFilesView_Open, &QAction::triggered,
             this, &MainWindow::onFilesViewOpen);
 
     mFilesView_OpenWithExternal = createAction(
                 tr("Open in External Program"),
-                ui->treeFiles);
+                ui->treeFiles,
+                Qt::CTRL + Qt::Key_O,
+                Qt::WidgetShortcut);
     connect(mFilesView_OpenWithExternal, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenWithExternal);
+
     mFilesView_OpenInTerminal = createAction(
                 tr("Open in Terminal"),
-                ui->treeFiles);
+                ui->treeFiles,
+                Qt::CTRL + Qt::Key_T,
+                Qt::WidgetShortcut);
     mFilesView_OpenInTerminal->setIcon(ui->actionOpen_Terminal->icon());
     connect(mFilesView_OpenInTerminal, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenInTerminal);
+
     mFilesView_OpenInExplorer = createAction(
                 tr("Open in Windows Explorer"),
-                ui->treeFiles);
+                ui->treeFiles,
+                Qt::CTRL + Qt::Key_E,
+                Qt::WidgetShortcut);
     mFilesView_OpenInExplorer->setIcon(ui->actionOpen_Containing_Folder->icon());
     connect(mFilesView_OpenInExplorer, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenInExplorer);
@@ -3139,12 +3159,13 @@ void MainWindow::initToolButtons()
 QAction* MainWindow::createAction(
         const QString& text,
         QWidget* parent,
-        QKeySequence shortcut) {
+        QKeySequence shortcut,
+        Qt::ShortcutContext shortcutContext) {
     QAction* action= new QAction(text,parent);
     if (!shortcut.isEmpty())
         action->setShortcut(shortcut);
     action->setPriority(QAction::HighPriority);
-    action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    action->setShortcutContext(shortcutContext);
     parent->addAction(action);
     return action;
 }
