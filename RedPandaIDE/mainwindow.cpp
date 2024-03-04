@@ -2984,25 +2984,19 @@ void MainWindow::createCustomActions()
     //Files view
     mFilesView_CreateFolder = createAction(
                 tr("New Folder"),
-                ui->treeFiles,
-                Qt::CTRL + Qt::Key_F,
-                Qt::WidgetShortcut);
+                ui->treeFiles);
     connect(mFilesView_CreateFolder, &QAction::triggered,
             this, &MainWindow::onFilesViewCreateFolder);
 
     mFilesView_CreateFile = createAction(
                 tr("New File"),
-                ui->treeFiles,
-                Qt::CTRL + Qt::Key_N,
-                Qt::WidgetShortcut);
+                ui->treeFiles);
     connect(mFilesView_CreateFile, &QAction::triggered,
             this, &MainWindow::onFilesViewCreateFile);
 
     mFilesView_Rename = createAction(
                 tr("Rename"),
-                ui->treeFiles,
-                Qt::CTRL + Qt::Key_R,
-                Qt::WidgetShortcut);
+                ui->treeFiles);
     connect(mFilesView_Rename, &QAction::triggered,
             this, &MainWindow::onFilesViewRename);
 
@@ -3026,26 +3020,20 @@ void MainWindow::createCustomActions()
 
     mFilesView_OpenWithExternal = createAction(
                 tr("Open in External Program"),
-                ui->treeFiles,
-                Qt::CTRL + Qt::Key_O,
-                Qt::WidgetShortcut);
+                ui->treeFiles);
     connect(mFilesView_OpenWithExternal, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenWithExternal);
 
     mFilesView_OpenInTerminal = createAction(
                 tr("Open in Terminal"),
-                ui->treeFiles,
-                Qt::CTRL + Qt::Key_T,
-                Qt::WidgetShortcut);
+                ui->treeFiles);
     mFilesView_OpenInTerminal->setIcon(ui->actionOpen_Terminal->icon());
     connect(mFilesView_OpenInTerminal, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenInTerminal);
 
     mFilesView_OpenInExplorer = createAction(
                 tr("Open in Windows Explorer"),
-                ui->treeFiles,
-                Qt::CTRL + Qt::Key_E,
-                Qt::WidgetShortcut);
+                ui->treeFiles);
     mFilesView_OpenInExplorer->setIcon(ui->actionOpen_Containing_Folder->icon());
     connect(mFilesView_OpenInExplorer, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenInExplorer);
