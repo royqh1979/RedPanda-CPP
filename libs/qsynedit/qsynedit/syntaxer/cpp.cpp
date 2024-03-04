@@ -1505,6 +1505,16 @@ QString CppSyntaxer::blockCommentEndSymbol()
     return "*/";
 }
 
+bool CppSyntaxer::supportFolding()
+{
+    return true;
+}
+
+bool CppSyntaxer::needsLineState()
+{
+    return true;
+}
+
 bool CppSyntaxer::isCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||

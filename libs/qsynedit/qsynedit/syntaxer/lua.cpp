@@ -984,6 +984,16 @@ QString LuaSyntaxer::blockCommentEndSymbol()
     return "]";
 }
 
+bool LuaSyntaxer::supportFolding()
+{
+    return true;
+}
+
+bool LuaSyntaxer::needsLineState()
+{
+    return false;
+}
+
 const QSet<QString> &LuaSyntaxer::customTypeKeywords() const
 {
     return mCustomTypeKeywords;

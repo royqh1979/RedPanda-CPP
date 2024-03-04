@@ -37,6 +37,7 @@ enum class ProgrammingLanguage {
     LUA,
     XMAKE,
     Custom,
+    Textfile,
     Unknown
 };
 

@@ -25,7 +25,7 @@
 #include <QPainter>
 #include <QTimerEvent>
 #include "syntaxer/syntaxer.h"
-#include "constants.h"
+#include "syntaxer/textfile.h"
 #include "painter.h"
 #include <QClipboard>
 #include <QDebug>
@@ -48,6 +48,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mWheelAccumulatedDeltaX{0},
     mWheelAccumulatedDeltaY{0}
 {
+    mSyntaxer = std::make_shared<TextSyntaxer>();
     mCharWidth=1;
     mTextHeight = 1;
     mLastKey = 0;
@@ -327,7 +328,7 @@ bool QSynEdit::canRedo() const
 int QSynEdit::maxScrollWidth() const
 {
     int maxWidth = mDocument->longestLineWidth();
-    if (syntaxer())
+    if (mSyntaxer->supportFolding())
         maxWidth += stringWidth(syntaxer()->foldString(""),maxWidth);
     if (mOptions.testFlag(eoScrollPastEol))
         return std::max(maxWidth ,1);
@@ -348,7 +349,7 @@ bool QSynEdit::getTokenAttriAtRowCol(
     int posX, posY, endPos, start;
     QString line;
     posY = pos.line - 1;
-    if (mSyntaxer && (posY >= 0) && (posY < mDocument->count())) {
+    if ((posY >= 0) && (posY < mDocument->count())) {
         line = mDocument->getLine(posY);
         if (posY == 0) {
             mSyntaxer->resetState();
@@ -381,7 +382,7 @@ bool QSynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, i
     int posX, posY, endPos;
     QString line;
     posY = pos.line - 1;
-    if (mSyntaxer && (posY >= 0) && (posY < mDocument->count())) {
+    if ((posY >= 0) && (posY < mDocument->count())) {
         line = mDocument->getLine(posY);
         if (posY == 0) {
             mSyntaxer->resetState();
@@ -442,55 +443,29 @@ void QSynEdit::doTrimTrailingSpaces()
     auto action=finally([this](){
         endEditing();
     });
-    if (mSyntaxer) {
-        for (int i=0;i<mDocument->count();i++) {
-            if (mDocument->getSyntaxState(i).hasTrailingSpaces) {
-                    int line = i+1;
-                    QString oldLine = mDocument->getLine(i);
-                    QString newLine = trimRight(oldLine);
-                    if (newLine.isEmpty())
-                        continue;
-                    properSetLine(i,newLine);
-                    mUndoList->addChange(
-                                ChangeReason::Delete,
-                                BufferCoord{1,line},
-                                BufferCoord{oldLine.length()+1, line},
-                                QStringList(oldLine),
-                                SelectionMode::Normal
-                                );
-                    mUndoList->addChange(
-                                ChangeReason::Insert,
-                                BufferCoord{1, line},
-                                BufferCoord{newLine.length()+1, line},
-                                QStringList(),
-                                SelectionMode::Normal
-                                );
-            }
+    for (int i=0;i<mDocument->count();i++) {
+        if (mDocument->getSyntaxState(i).hasTrailingSpaces) {
+                int line = i+1;
+                QString oldLine = mDocument->getLine(i);
+                QString newLine = trimRight(oldLine);
+                if (newLine.isEmpty())
+                    continue;
+                properSetLine(i,newLine);
+                mUndoList->addChange(
+                            ChangeReason::Delete,
+                            BufferCoord{1,line},
+                            BufferCoord{oldLine.length()+1, line},
+                            QStringList(oldLine),
+                            SelectionMode::Normal
+                            );
+                mUndoList->addChange(
+                            ChangeReason::Insert,
+                            BufferCoord{1, line},
+                            BufferCoord{newLine.length()+1, line},
+                            QStringList(),
+                            SelectionMode::Normal
+                            );
         }
-    } else {
-        for (int i=0;i<mDocument->count();i++) {
-            int line = i+1;
-            QString oldLine = mDocument->getLine(i);
-            QString newLine = trimRight(oldLine);
-            if (newLine.isEmpty())
-                continue;
-            properSetLine(i,newLine);
-            mUndoList->addChange(
-                        ChangeReason::Delete,
-                        BufferCoord{1,line},
-                        BufferCoord{oldLine.length()+1, line},
-                        QStringList(oldLine),
-                        SelectionMode::Normal
-                        );
-            mUndoList->addChange(
-                        ChangeReason::Insert,
-                        BufferCoord{1, line},
-                        BufferCoord{newLine.length()+1, line},
-                        QStringList(),
-                        SelectionMode::Normal
-                        );
-        }
-
     }
     mUndoList->endBlock();    
 }
@@ -685,7 +660,7 @@ void QSynEdit::invalidateGutterLines(int firstLine, int lastLine)
         // find the visible lines first
         if (lastLine < firstLine)
             std::swap(lastLine, firstLine);
-        if (mUseCodeFolding) {
+        if (useCodeFolding()) {
             firstLine = lineToRow(firstLine);
             if (lastLine <= mDocument->count())
               lastLine = lineToRow(lastLine);
@@ -775,7 +750,7 @@ DisplayCoord QSynEdit::bufferToDisplayPos(const BufferCoord &p) const
     if (p.line-1 <mDocument->count())
         result.x = charToGlyphLeft(p.line,p.ch);
     // Account for code folding
-    if (mUseCodeFolding)
+    if (useCodeFolding())
         result.row = foldLineToRow(result.row);
     return result;
 }
@@ -791,7 +766,7 @@ BufferCoord QSynEdit::displayToBufferPos(const DisplayCoord &p) const
     if (p.row<1)
         return result;
     // Account for code folding
-    if (mUseCodeFolding)
+    if (useCodeFolding())
         result.line = foldRowToLine(p.row);
     // Account for tabs
     if (result.line <= mDocument->count() ) {
@@ -928,7 +903,7 @@ int QSynEdit::getLineIndent(const QString &line) const
 
 int QSynEdit::rowToLine(int aRow) const
 {
-    if (mUseCodeFolding)
+    if (useCodeFolding())
         return foldRowToLine(aRow);
     else
         return aRow;
@@ -989,7 +964,7 @@ void QSynEdit::invalidateLine(int line)
         return;
 
     // invalidate text area of this line
-    if (mUseCodeFolding)
+    if (useCodeFolding())
         line = foldLineToRow(line);
     if (line >= mTopLine && line <= mTopLine + mLinesInWindow) {
         rcInval = { mGutterWidth,
@@ -1029,7 +1004,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
         if (lastLine >= mDocument->count())
           lastLine = INT_MAX; // paint empty space beyond last line
 
-        if (mUseCodeFolding) {
+        if (useCodeFolding()) {
           firstLine = lineToRow(firstLine);
           // Could avoid this conversion if (First = Last) and
           // (Length < CharsInWindow) but the dependency isn't worth IMO.
@@ -1247,7 +1222,7 @@ void QSynEdit::processGutterClick(QMouseEvent *event)
     int line = rowToLine(row);
 
     // Check if we clicked on a folding thing
-    if (mUseCodeFolding) {
+    if (useCodeFolding()) {
         PCodeFoldingRange foldRange = foldStartAtLine(line);
         if (foldRange) {
             // See if we actually clicked on the rectangle...
@@ -1595,7 +1570,7 @@ void QSynEdit::doComment()
     int endLine;
     if (mReadOnly)
         return;
-    if (!syntaxer() || syntaxer()->commentSymbol().isEmpty())
+    if (mSyntaxer->commentSymbol().isEmpty())
         return;
     beginEditing();
     auto action = finally([this]{
@@ -1609,7 +1584,7 @@ void QSynEdit::doComment()
         endLine = std::max(origBlockBegin.line - 1, origBlockEnd.line - 2);
     else
         endLine = origBlockEnd.line - 1;
-    QString commentSymbol = syntaxer()->commentSymbol();
+    QString commentSymbol = mSyntaxer->commentSymbol();
     int symbolLen = commentSymbol.length();
     for (int i = origBlockBegin.line - 1; i<=endLine; i++) {
         mDocument->putLine(i, commentSymbol + mDocument->getLine(i));
@@ -1640,9 +1615,9 @@ void QSynEdit::doUncomment()
     QStringList changeText;
     if (mReadOnly)
         return;
-    if (!syntaxer() || syntaxer()->commentSymbol().isEmpty())
+    if (mSyntaxer->commentSymbol().isEmpty())
         return;
-    QString commentSymbol=syntaxer()->commentSymbol();
+    QString commentSymbol=mSyntaxer->commentSymbol();
     int symbolLen = commentSymbol.length();
     changeText.append(commentSymbol);
     beginEditing();
@@ -1695,9 +1670,9 @@ void QSynEdit::doToggleComment()
     bool allCommented = true;
     if (mReadOnly)
         return;
-    if (!syntaxer() || syntaxer()->commentSymbol().isEmpty())
+    if (mSyntaxer->commentSymbol().isEmpty())
         return;
-    QString commentSymbol=syntaxer()->commentSymbol();
+    QString commentSymbol=mSyntaxer->commentSymbol();
 
     beginEditing();
     auto action = finally([this]{
@@ -1729,10 +1704,10 @@ void QSynEdit::doToggleBlockComment()
     QString s;
     if (mReadOnly)
         return;
-    if (!syntaxer() || syntaxer()->blockCommentBeginSymbol().isEmpty())
+    if (mSyntaxer->blockCommentBeginSymbol().isEmpty())
         return;
-    QString beginSymbol=syntaxer()->blockCommentBeginSymbol();
-    QString endSymbol=syntaxer()->blockCommentEndSymbol();
+    QString beginSymbol=mSyntaxer->blockCommentBeginSymbol();
+    QString endSymbol=mSyntaxer->blockCommentEndSymbol();
     int beginLen = beginSymbol.length();
     int endLen = endSymbol.length();
 
@@ -1849,7 +1824,7 @@ QString QSynEdit::getDisplayStringAtLine(int line) const
     QString s = mDocument->getLine(line-1);
     PCodeFoldingRange foldRange = foldStartAtLine(line);
     if ((foldRange) && foldRange->collapsed) {
-        return s+syntaxer()->foldString(s);
+        return s+mSyntaxer->foldString(s);
     }
     return s;
 }
@@ -2279,7 +2254,7 @@ void QSynEdit::insertLine(bool moveCaret)
     if (mCaretX>lineText().length()+1) {
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
-            QString s = temp+syntaxer()->foldString(temp);
+            QString s = temp+mSyntaxer->foldString(temp);
             if (mCaretX > s.length()) {
                 if (!mUndoing) {
                     addCaretToUndo();
@@ -2310,20 +2285,19 @@ void QSynEdit::insertLine(bool moveCaret)
     bool notInComment=true;
     properSetLine(mCaretY-1,leftLineText);
     //update range stated for line mCaretY
-    if (mSyntaxer) {
-        if (mCaretY==1) {
-            mSyntaxer->resetState();
-        } else {
-            mSyntaxer->setState(mDocument->getSyntaxState(mCaretY-2));
-        }
-        mSyntaxer->setLine(leftLineText, mCaretY-1);
-        mSyntaxer->nextToEol();
-        mDocument->setSyntaxState(mCaretY-1,mSyntaxer->getState());
-        notInComment = !mSyntaxer->isCommentNotFinished(
-                    mSyntaxer->getState().state)
-                && !mSyntaxer->isStringNotFinished(
-                    mSyntaxer->getState().state);
+    if (mCaretY==1) {
+        mSyntaxer->resetState();
+    } else {
+        mSyntaxer->setState(mDocument->getSyntaxState(mCaretY-2));
     }
+    mSyntaxer->setLine(leftLineText, mCaretY-1);
+    mSyntaxer->nextToEol();
+    mDocument->setSyntaxState(mCaretY-1,mSyntaxer->getState());
+    notInComment = !mSyntaxer->isCommentNotFinished(
+                mSyntaxer->getState().state)
+            && !mSyntaxer->isStringNotFinished(
+                mSyntaxer->getState().state);
+
     int indentSpaces = 0;
     if (mOptions.testFlag(eoAutoIndent)) {
         rightLineText=trimLeft(rightLineText);
@@ -2818,7 +2792,6 @@ void QSynEdit::doAddChar(const QChar& ch)
         // auto
         if (mActiveSelectionMode==SelectionMode::Normal
                 && mOptions.testFlag(eoAutoIndent)
-                && mSyntaxer
                 && mSyntaxer->language() == ProgrammingLanguage::CPP
                 && (oldCaretY<=mDocument->count()) ) {
 
@@ -3180,18 +3153,13 @@ void QSynEdit::recalcCharExtent()
     FontStyle styles[] = {FontStyle::fsBold, FontStyle::fsItalic, FontStyle::fsStrikeOut, FontStyle::fsUnderline};
     bool hasStyles[] = {false,false,false,false};
     int size = 4;
-    if (mSyntaxer && mSyntaxer->attributes().count()>0) {
+    if (mSyntaxer->attributes().count()>0) {
         for (const PTokenAttribute& attribute: mSyntaxer->attributes()) {
             for (int i=0;i<size;i++) {
                 if (attribute->styles().testFlag(styles[i]))
                     hasStyles[i] = true;
             }
         }
-    } else {
-        hasStyles[0] = font().bold();
-        hasStyles[1] = font().italic();
-        hasStyles[2] = font().strikeOut();
-        hasStyles[3] = font().underline();
     }
 
     mTextHeight  = 0;
@@ -3291,56 +3259,59 @@ void QSynEdit::updateModifiedStatus()
         emit statusChanged(StatusChange::scModifyChanged);
 }
 
-void QSynEdit::scanFrom(int index)
+void QSynEdit::reparseLines(int startLine, int endLine)
 {
     if (mEditingCount>0)
         return;
 
     SyntaxState state;
-    int idx = std::max(0,index);
-    if (idx >= mDocument->count())
+    startLine = std::max(0,startLine);
+    endLine = std::min(endLine, mDocument->count());
+
+    if (startLine >= endLine)
         return;
 
-    if (idx == 0) {
+    if (startLine == 0) {
         mSyntaxer->resetState();
     } else {
-        mSyntaxer->setState(mDocument->getSyntaxState(idx-1));
+        mSyntaxer->setState(mDocument->getSyntaxState(startLine-1));
     }
+    int line = startLine;
     do {
-        mSyntaxer->setLine(mDocument->getLine(idx), idx);
+        mSyntaxer->setLine(mDocument->getLine(line), line);
         mSyntaxer->nextToEol();
         state = mSyntaxer->getState();
-        mDocument->setSyntaxState(idx,state);
-        idx ++ ;
-    } while (idx < mDocument->count());
-    if (mUseCodeFolding)
+        mDocument->setSyntaxState(line,state);
+        line ++ ;
+    } while (line < endLine);
+    if (useCodeFolding())
         rescanFolds();
     return ;
 }
 
-void QSynEdit::reparseLine(int line)
-{
-    if (!mSyntaxer)
-        return;
-    line--;
-    line = std::max(0,line);
-    if (line >= mDocument->count())
-        return;
+// void QSynEdit::reparseLine(int line)
+// {
+//     if (!mSyntaxer)
+//         return;
+//     line--;
+//     line = std::max(0,line);
+//     if (line >= mDocument->count())
+//         return;
 
-    if (line == 0) {
-        mSyntaxer->resetState();
-    } else {
-        mSyntaxer->setState(mDocument->getSyntaxState(line-1));
-    }
-    mSyntaxer->setLine(mDocument->getLine(line), line);
-    mSyntaxer->nextToEol();
-    SyntaxState iRange = mSyntaxer->getState();
-    mDocument->setSyntaxState(line,iRange);
-}
+//     if (line == 0) {
+//         mSyntaxer->resetState();
+//     } else {
+//         mSyntaxer->setState(mDocument->getSyntaxState(line-1));
+//     }
+//     mSyntaxer->setLine(mDocument->getLine(line), line);
+//     mSyntaxer->nextToEol();
+//     SyntaxState iRange = mSyntaxer->getState();
+//     mDocument->setSyntaxState(line,iRange);
+// }
 
 void QSynEdit::reparseDocument()
 {
-    if (mSyntaxer && !mDocument->empty()) {
+    if (!mDocument->empty()) {
 //        qint64 begin=QDateTime::currentMSecsSinceEpoch();
         mSyntaxer->resetState();
         for (int i =0;i<mDocument->count();i++) {
@@ -3352,7 +3323,7 @@ void QSynEdit::reparseDocument()
 
 //        qDebug()<<diff<<mDocument->count();
     }
-    if (mUseCodeFolding)
+    if (useCodeFolding())
         rescanFolds();
 }
 
@@ -3389,7 +3360,7 @@ void QSynEdit::collapse(PCodeFoldingRange FoldRange)
     updateScrollbars();
 }
 
-void QSynEdit::foldOnListInserted(int Line, int Count)
+void QSynEdit::foldOnLinesInserted(int Line, int Count)
 {
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges->count()-1;i>=0;i--) {
@@ -3402,7 +3373,7 @@ void QSynEdit::foldOnListInserted(int Line, int Count)
     }
 }
 
-void QSynEdit::foldOnListDeleted(int Line, int Count)
+void QSynEdit::foldOnLinesDeleted(int Line, int Count)
 {
     // Delete collapsed inside selection
     for (int i = mAllFoldRanges->count()-1;i>=0;i--) {
@@ -3427,7 +3398,7 @@ void QSynEdit::foldOnListCleared()
 void QSynEdit::rescanFolds()
 {
     //qDebug()<<QDateTime::currentDateTime();
-    if (!mUseCodeFolding)
+    if (!useCodeFolding())
         return;
 //    qint64 begin=QDateTime::currentMSecsSinceEpoch();
 
@@ -3491,29 +3462,13 @@ void QSynEdit::scanForFoldRanges(PCodeFoldingRanges topFoldRanges)
 //this func should only be used in findSubFoldRange
 int QSynEdit::lineHasChar(int Line, int startChar, QChar character, const QString& tokenAttrName) {
     QString CurLine = mDocument->getLine(Line);
-    if (!mSyntaxer){
-        for (int i=startChar; i<CurLine.length();i++) {
-            if (CurLine[i]==character) {
-                return i;
-            }
-        }
-
-    } else {
-        /*
-        mHighlighter->setState(mLines->ranges(Line),
-                               mLines->braceLevel(Line),
-                               mLines->bracketLevel(Line),
-                               mLines->parenthesisLevel(Line));
-        mHighlighter->setLine(CurLine,Line);
-        */
-        QString token;
-        while (!mSyntaxer->eol()) {
-            token = mSyntaxer->getToken();
-            PTokenAttribute attr = mSyntaxer->getTokenAttribute();
-            if (token == character && attr->name()==tokenAttrName)
-                return mSyntaxer->getTokenPos();
-            mSyntaxer->next();
-        }
+    QString token;
+    while (!mSyntaxer->eol()) {
+        token = mSyntaxer->getToken();
+        PTokenAttribute attr = mSyntaxer->getTokenAttribute();
+        if (token == character && attr->name()==tokenAttrName)
+            return mSyntaxer->getTokenPos();
+        mSyntaxer->next();
     }
     return -1;
 }
@@ -3523,7 +3478,7 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
     PCodeFoldingRange  collapsedFold;
     int line = 0;
     QString curLine;
-    if (!mSyntaxer)
+    if (mSyntaxer->supportFolding())
         return;
 
     while (line < mDocument->count()) { // index is valid for LinesToScan and fLines
@@ -4528,7 +4483,7 @@ QString QSynEdit::selText() const
             PCodeFoldingRange foldRange = foldStartAtLine(blockEnd().line);
             QString s = mDocument->getLine(lastLine);
             if ((foldRange) && foldRange->collapsed && charTo>s.length()) {
-                s=s+syntaxer()->foldString(s);
+                s=s+mSyntaxer->foldString(s);
                 if (charTo>s.length()) {
                     lastLine = foldRange->toLine-1;
                     charTo = mDocument->getLine(lastLine).length()+1;
@@ -4607,7 +4562,7 @@ QStringList QSynEdit::getContent(BufferCoord startPos, BufferCoord endPos, Selec
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(lastLine);
         if ((foldRange) && foldRange->collapsed && chTo>s.length()) {
-            s=s+syntaxer()->foldString(s);
+            s=s+mSyntaxer->foldString(s);
             if (chTo>s.length()) {
                 lastLine = foldRange->toLine-1;
                 chTo = mDocument->getLine(lastLine).length()+1;
@@ -4663,7 +4618,7 @@ QString QSynEdit::lineBreak() const
 
 bool QSynEdit::useCodeFolding() const
 {
-    return mUseCodeFolding;
+    return mUseCodeFolding && mSyntaxer->supportFolding();
 }
 
 void QSynEdit::setUseCodeFolding(bool value)
@@ -4684,7 +4639,7 @@ QString QSynEdit::displayLineText()
         QString s= mDocument->getLine(mCaretY - 1);
         PCodeFoldingRange foldRange = foldStartAtLine(mCaretY);
         if ((foldRange) && foldRange->collapsed) {
-            return s+syntaxer()->foldString(s);
+            return s+mSyntaxer->foldString(s);
         }
         return s;
     }
@@ -4712,11 +4667,10 @@ PSyntaxer QSynEdit::syntaxer() const
 
 void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
 {
+    Q_ASSERT(syntaxer!=nullptr);
     PSyntaxer oldSyntaxer = mSyntaxer;
     mSyntaxer = syntaxer;
-    if (oldSyntaxer  && mSyntaxer &&
-            oldSyntaxer ->language() == syntaxer->language()) {
-    } else {
+    if (oldSyntaxer ->language() != syntaxer->language()) {
         recalcCharExtent();
         mDocument->beginUpdate();
         auto action=finally([this]{
@@ -5285,7 +5239,7 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
         QString s = mDocument->getLine(endPos.line-1);
         if ((foldRange) && foldRange->collapsed && endPos.ch>s.length()) {
-            QString newS=s+syntaxer()->foldString(s);
+            QString newS=s+mSyntaxer->foldString(s);
             if ((startPos.ch<=s.length() || startPos.line<endPos.line)
                     && endPos.ch>newS.length() ) {
                 //selection has whole block
@@ -5444,7 +5398,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
     int caretY=pos.line;
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
-        if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent)) {
+        if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent)) {
             QString s = trimLeft(text[0]);
             if (sLeftSide.isEmpty()) {
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
@@ -5458,7 +5412,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
         str = sLeftSide + text[0] + sRightSide;
         properSetLine(caretY - 1, str);
     }
-    reparseLine(caretY);
+    reparseLines(caretY,caretY+1);
     // step2: insert remaining lines of Value
     for (int i=1;i<text.length();i++) {
         bool notInComment = true;
@@ -5481,12 +5435,12 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             if (i==text.length()-1)
                 str += sRightSide;
         }
-        if (!mUndoing && mSyntaxer && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent) && notInComment) {
+        if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent) && notInComment) {
             int indentSpaces = calcIndentSpaces(caretY,str,true);
             str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
         }
         properSetLine(caretY - 1, str,false);
-        reparseLine(caretY);
+        reparseLines(caretY, caretY+1);
         result++;
     }
     bChangeScroll = !mOptions.testFlag(eoScrollPastEol);
@@ -5942,41 +5896,12 @@ void QSynEdit::endEditingWithoutUndo()
 
 bool QSynEdit::isIdentChar(const QChar &ch)
 {
-    if (mSyntaxer) {
-        return mSyntaxer->isIdentChar(ch);
-    } else {
-        if (ch == '_') {
-            return true;
-        }
-        if ((ch>='0') && (ch <= '9')) {
-            return true;
-        }
-        if ((ch>='a') && (ch <= 'z')) {
-            return true;
-        }
-        if ((ch>='A') && (ch <= 'Z')) {
-            return true;
-        }
-        return false;
-    }
+    return mSyntaxer->isIdentChar(ch);
 }
 
 bool QSynEdit::isIdentStartChar(const QChar &ch)
 {
-    if (mSyntaxer) {
-        return mSyntaxer->isIdentStartChar(ch);
-    } else {
-        if (ch == '_') {
-            return true;
-        }
-        if ((ch>='a') && (ch <= 'z')) {
-            return true;
-        }
-        if ((ch>='A') && (ch <= 'Z')) {
-            return true;
-        }
-        return false;
-    }
+    return mSyntaxer->isIdentStartChar(ch);
 }
 
 void QSynEdit::setRainbowAttrs(const PTokenAttribute &attr0, const PTokenAttribute &attr1, const PTokenAttribute &attr2, const PTokenAttribute &attr3)
@@ -6655,7 +6580,7 @@ void QSynEdit::onLinesChanging()
 
 void QSynEdit::onLinesCleared()
 {
-    if (mUseCodeFolding)
+    if (useCodeFolding())
         foldOnListCleared();
     clearUndo();
     // invalidate the *whole* client area
@@ -6669,34 +6594,40 @@ void QSynEdit::onLinesCleared()
     mStatusChanges.setFlag(StatusChange::scAll);
 }
 
-void QSynEdit::onLinesDeleted(int index, int count)
+void QSynEdit::onLinesDeleted(int line, int count)
 {
     if (mUseCodeFolding)
-        foldOnListDeleted(index + 1, count);
-    if (mSyntaxer && mDocument->count() > 0) {
-        scanFrom(index);
+        foldOnLinesDeleted(line + 1, count);
+    if (mSyntaxer->needsLineState()) {
+        reparseLines(line, mDocument->count());
     }
-    invalidateLines(index + 1, INT_MAX);
-    invalidateGutterLines(index + 1, INT_MAX);
+    invalidateLines(line + 1, INT_MAX);
+//    invalidateGutterLines(index + 1, INT_MAX);
 }
 
-void QSynEdit::onLinesInserted(int index, int count)
+void QSynEdit::onLinesInserted(int line, int count)
 {
     if (mUseCodeFolding)
-        foldOnListInserted(index + 1, count);
-    if (mSyntaxer && mDocument->count() > 0) {
-          scanFrom(index);
+        foldOnLinesInserted(line + 1, count);
+    if (mSyntaxer->needsLineState()) {
+        reparseLines(line, mDocument->count());
+    } else {
+        // new lines should be parsed
+        reparseLines(line, line + count);
     }
-    invalidateLines(index + 1, INT_MAX);
-    invalidateGutterLines(index + 1, INT_MAX);
+    invalidateLines(line + 1, INT_MAX);
+//    invalidateGutterLines(index + 1, INT_MAX);
 }
 
-void QSynEdit::onLinesPutted(int index, int /*count*/)
+void QSynEdit::onLinesPutted(int line)
 {
-    if (mSyntaxer) {
-        scanFrom(index);
+    if (mSyntaxer->needsLineState()) {
+        reparseLines(line, mDocument->count());
+        invalidateLines(line + 1, INT_MAX);
+    } else {
+        reparseLines(line, line+1);
+        invalidateLine( line + 1 );
     }
-    invalidateLines(index + 1, INT_MAX);
 }
 
 void QSynEdit::onUndoAdded()
@@ -6780,8 +6711,8 @@ void QSynEdit::setBlockEnd(BufferCoord value)
           value.ch = 1;
     } else {
         int maxLen = mDocument->longestLineWidth();
-        if (syntaxer())
-            maxLen += stringWidth(syntaxer()->foldString(""),maxLen);
+        if (mSyntaxer->supportFolding())
+            maxLen += stringWidth(mSyntaxer->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }
     if (value.ch != mBlockEnd.ch || value.line != mBlockEnd.line) {
@@ -6887,8 +6818,8 @@ void QSynEdit::setBlockBegin(BufferCoord value)
             value.ch = 1;
     } else {
         int maxLen = mDocument->longestLineWidth();
-        if (syntaxer())
-            maxLen += stringWidth(syntaxer()->foldString(""),maxLen);
+        if (mSyntaxer->supportFolding())
+            maxLen += stringWidth(mSyntaxer->foldString(""),maxLen);
         value.ch = minMax(value.ch, 1, maxLen+1);
     }
     if (selAvail()) {

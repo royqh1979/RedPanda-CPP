@@ -18,8 +18,6 @@ namespace QSynedit {
                                               QSynEdit *editor)
     {
         Q_ASSERT(editor!=nullptr);
-        if (!editor->syntaxer())
-            return 0;
         line = std::min(line, editor->document()->count()+1);
         if (line<=1)
             return 0;

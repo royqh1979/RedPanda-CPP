@@ -1438,4 +1438,14 @@ QString GLSLSyntaxer::blockCommentEndSymbol()
 {
     return "*/";
 }
+
+bool GLSLSyntaxer::supportFolding()
+{
+    return true;
+}
+
+bool GLSLSyntaxer::needsLineState()
+{
+
+}
 }

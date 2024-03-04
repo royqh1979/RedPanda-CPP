@@ -1755,8 +1755,7 @@ void MainWindow::updateCompilerSet(const Editor *e)
     if (mProject) {
         if ( !e || e->inProject()) {
             index = mProject->options().compilerSet;
-        } else if (e->syntaxer()
-                   && e->syntaxer()->language()==QSynedit::ProgrammingLanguage::Makefile
+        } else if (e->syntaxer()->language()==QSynedit::ProgrammingLanguage::Makefile
                    && mProject->directory() == extractFileDir(e->filename())) {
             index = mProject->options().compilerSet;
         }

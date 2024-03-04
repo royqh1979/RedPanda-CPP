@@ -122,7 +122,7 @@ public:
     Syntaxer(const Syntaxer&)=delete;
     Syntaxer& operator=(const Syntaxer&)=delete;
 
-    const QMap<QString, PTokenAttribute>& attributes() const;
+    virtual const QMap<QString, PTokenAttribute>& attributes() const;
 
     const QSet<QChar>& wordBreakChars() const;
 
@@ -166,12 +166,13 @@ public:
     virtual bool supportBraceLevel();
     virtual bool isSpaceChar(const QChar& ch);
     virtual bool isWordBreakChar(const QChar& ch);
-    bool enabled() const;
-    void setEnabled(bool value);
     virtual PTokenAttribute getAttribute(const QString& name) const;
     virtual QString commentSymbol();
     virtual QString blockCommentBeginSymbol();
     virtual QString blockCommentEndSymbol();
+
+    virtual bool supportFolding() = 0;
+    virtual bool needsLineState() = 0;
 
 
 protected:
@@ -188,7 +189,6 @@ protected:
 
 private:
     QMap<QString,PTokenAttribute> mAttributes;
-    bool mEnabled;
     QSet<QChar> mWordBreakChars;
 };
 

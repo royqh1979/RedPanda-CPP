@@ -477,7 +477,7 @@ void Document::putLine(int index, const QString &s, bool notify) {
                  && mLines[index]->width() > mLines[mIndexOfLongestLine]->width())
             mIndexOfLongestLine = index;
         if (notify)
-            emit putted(index,1);
+            emit putted(index);
         endUpdate();
     }
 }

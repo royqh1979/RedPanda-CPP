@@ -691,4 +691,14 @@ QString MakefileSyntaxer::commentSymbol()
     return "#";
 }
 
+bool MakefileSyntaxer::supportFolding()
+{
+    return false;
+}
+
+bool MakefileSyntaxer::needsLineState()
+{
+    return true;
+}
+
 }

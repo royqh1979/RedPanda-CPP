@@ -50,6 +50,8 @@ extern const QChar SoftBreakGlyph;
 #define SYNS_AttrSymbol "Symbol"
 #define SYNS_AttrVariable "Variable"
 #define SYNS_AttrSpace "Space"
+#define SYNS_AttrText "Text"
+
 
 // names of exporter output formats
 #define SYNS_ExporterFormatHTML "HTML"

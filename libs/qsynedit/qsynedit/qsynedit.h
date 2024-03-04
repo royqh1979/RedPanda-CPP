@@ -532,14 +532,14 @@ private:
     void recalcCharExtent();
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
-    void scanFrom(int index);
+    void reparseLines(int startLine, int endLine);
     void reparseLine(int line);
     void reparseDocument();
     void uncollapse(PCodeFoldingRange FoldRange);
     void collapse(PCodeFoldingRange FoldRange);
 
-    void foldOnListInserted(int Line, int Count);
-    void foldOnListDeleted(int Line, int Count);
+    void foldOnLinesInserted(int Line, int Count);
+    void foldOnLinesDeleted(int Line, int Count);
     void foldOnListCleared();
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
@@ -655,9 +655,9 @@ private slots:
     void onLinesChanged();
     void onLinesChanging();
     void onLinesCleared();
-    void onLinesDeleted(int index, int count);
-    void onLinesInserted(int index, int count);
-    void onLinesPutted(int index, int count);
+    void onLinesDeleted(int line, int count);
+    void onLinesInserted(int line, int count);
+    void onLinesPutted(int line, int count);
     //void onRedoAdded();
     void onScrollTimeout();
     void onDraggingScrollTimeout();

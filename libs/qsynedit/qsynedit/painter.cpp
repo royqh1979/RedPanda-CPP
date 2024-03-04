@@ -159,7 +159,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
     }
 
     // Draw the folding lines and squares
-    if (mEdit->mUseCodeFolding) {
+    if (mEdit->useCodeFolding()) {
       for (int row = mLastRow; row>= mFirstRow; row--) {
           int line = mEdit->rowToLine(row);
           if ((line > mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
@@ -780,20 +780,18 @@ void QSynEditPainter::paintFoldAttributes()
                 X = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                 tabSteps+=mEdit->tabSize();
                 indentLevel++ ;
-                if (mEdit->mSyntaxer) {
-                    if (mEdit->mCodeFolding.indentGuides) {
-                        PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
-                        getBraceColorAttr(indentLevel,attr);
-                        paintColor = attr->foreground();
-                    }
-                    if (mEdit->mCodeFolding.fillIndents) {
-                        PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
-                        getBraceColorAttr(indentLevel,attr);
-                        gradientStart=attr->foreground();
-                        attr = mEdit->mSyntaxer->symbolAttribute();
-                        getBraceColorAttr(indentLevel+1,attr);
-                        gradientStart=attr->foreground();
-                    }
+                if (mEdit->mCodeFolding.indentGuides) {
+                    PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
+                    getBraceColorAttr(indentLevel,attr);
+                    paintColor = attr->foreground();
+                }
+                if (mEdit->mCodeFolding.fillIndents) {
+                    PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
+                    getBraceColorAttr(indentLevel,attr);
+                    gradientStart=attr->foreground();
+                    attr = mEdit->mSyntaxer->symbolAttribute();
+                    getBraceColorAttr(indentLevel+1,attr);
+                    gradientStart=attr->foreground();
                 }
                 if (mEdit->mCodeFolding.fillIndents) {
                     int X1;
@@ -821,7 +819,7 @@ void QSynEditPainter::paintFoldAttributes()
         mPainter->setPen(oldPen);
     }
 
-    if (!mEdit->mUseCodeFolding)
+    if (!mEdit->useCodeFolding())
         return;
 
     // Paint collapsed lines using changed pen
@@ -972,250 +970,184 @@ void QSynEditPainter::paintLines()
         int lineWidth;
         QList<int> glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine-1,sLine);
         QList<int> glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(vLine-1,sLine, lineWidth);
-
-        if (!mEdit->mSyntaxer || !mEdit->mSyntaxer->enabled()) {
-              sToken = sLine;
-              tokenWidth = lineWidth;
-              if (mEdit->mOptions.testFlag(eoShowLineBreaks) && (!mIsLineSelected) && (!mIsSpecialLine) && (tokenWidth <= mLeft)) {
-                  expandGlyphStartCharList(LineBreakGlyph, sLine.length(), glyphStartCharList);
-                  int width = mEdit->document()->glyphWidth(LineBreakGlyph,0);
-                  glyphStartPositionsList.append(tokenWidth);
-                  sLine+=LineBreakGlyph;
-                  tokenWidth += width;
-              }
-              if (mIsComplexLine) {
-                  setDrawingColors(true);
-                  mRcToken.setLeft(std::max(mRcLine.left(), fixXValue(mLineSelStart)));
-                  mRcToken.setRight(std::min(mRcLine.right(), fixXValue(mLineSelEnd)));
-                  paintToken(
-                              sLine,
-                              glyphStartCharList,
-                              glyphStartPositionsList,
-                              0,
-                              glyphStartCharList.length(),
-                              tokenWidth, 0, mLineSelStart, mLineSelEnd,
-                              mEdit->font(),false);
-                  setDrawingColors(false);
-                  mRcToken.setLeft(std::max(mRcLine.left(), fixXValue(mLeft)));
-                  mRcToken.setRight(std::min(mRcLine.right(), fixXValue(mLineSelStart)));
-                  paintToken(
-                              sLine,
-                              glyphStartCharList,
-                              glyphStartPositionsList,
-                              0,
-                              glyphStartCharList.length(),
-                              tokenWidth, 0, mLeft, mLineSelStart,
-                              mEdit->font(), false);
-                  mRcToken.setLeft(std::max(mRcLine.left(), fixXValue(mLineSelEnd)));
-                  mRcToken.setRight(std::min(mRcLine.right(), fixXValue(mRight)));
-                  paintToken(
-                              sLine,
-                              glyphStartCharList,
-                              glyphStartPositionsList,
-                              0,
-                              glyphStartCharList.length(),
-                              tokenWidth, 0, mLineSelEnd, mRight,
-                              mEdit->font(), false);
-              } else {
-                  setDrawingColors(mIsLineSelected);
-                  paintToken(
-                              sLine,
-                              glyphStartCharList,
-                              glyphStartPositionsList,
-                              0,
-                              glyphStartCharList.length(),
-                              tokenWidth, 0, mLeft, mRight,
-                              mEdit->font(),false);
-              }
-              //Paint editingAreaBorders
-              if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
-                  PEditingArea area = std::make_shared<EditingArea>();
-                  area->beginX = mEdit->charToGlyphLeft(vLine, sLine, mEdit->mCaretX);
-                  area->endX = mEdit->charToGlyphLeft(vLine, sLine,mEdit->mCaretX + mEdit->mInputPreeditString.length());
-                  area->type = EditingAreaType::eatUnderLine;
-                  area->color = colFG;
-                  areaList.append(area);
-                  paintEditAreas(areaList);
-              }
+        {
+        // Initialize highlighter with line text and range info. It is
+        // necessary because we probably did not scan to the end of the last
+        // line - the internal highlighter range might be wrong.
+        if (vLine == 1) {
+            mEdit->mSyntaxer->resetState();
         } else {
-            // Initialize highlighter with line text and range info. It is
-            // necessary because we probably did not scan to the end of the last
-            // line - the internal highlighter range might be wrong.
-            if (vLine == 1) {
-                mEdit->mSyntaxer->resetState();
-            } else {
-                mEdit->mSyntaxer->setState(
-                            mEdit->mDocument->getSyntaxState(vLine-2));
+            mEdit->mSyntaxer->setState(
+                        mEdit->mDocument->getSyntaxState(vLine-2));
+        }
+        mEdit->mSyntaxer->setLine(sLine, vLine - 1);
+        // Try to concatenate as many tokens as possible to minimize the count
+        // of ExtTextOut calls necessary. This depends on the selection state
+        // or the line having special colors. For spaces the foreground color
+        // is ignored as well.
+        mTokenAccu.width = 0;
+        tokenLeft = 0;
+        // Test first whether anything of this token is visible.
+        while (!mEdit->mSyntaxer->eol()) {
+            sToken = mEdit->mSyntaxer->getToken();
+            if (sToken.isEmpty())  {
+                continue;
+                // mEdit->mSyntaxer->next();
+                // if (mEdit->mSyntaxer->eol())
+                //     break;
+                // sToken = mEdit->mSyntaxer->getToken();
+                // // Maybe should also test whether GetTokenPos changed...
+                // if (sToken.isEmpty()) {
+                //     //qDebug()<<QSynEdit::tr("The highlighter seems to be in an infinite loop");
+                //     throw BaseError(QSynEdit::tr("The syntaxer seems to be in an infinite loop"));
+                // }
             }
-            mEdit->mSyntaxer->setLine(sLine, vLine - 1);
-            // Try to concatenate as many tokens as possible to minimize the count
-            // of ExtTextOut calls necessary. This depends on the selection state
-            // or the line having special colors. For spaces the foreground color
-            // is ignored as well.
-            mTokenAccu.width = 0;
-            tokenLeft = 0;
-            // Test first whether anything of this token is visible.
-            while (!mEdit->mSyntaxer->eol()) {
-                sToken = mEdit->mSyntaxer->getToken();
-                if (sToken.isEmpty())  {
-                    continue;
-                    // mEdit->mSyntaxer->next();
-                    // if (mEdit->mSyntaxer->eol())
-                    //     break;
-                    // sToken = mEdit->mSyntaxer->getToken();
-                    // // Maybe should also test whether GetTokenPos changed...
-                    // if (sToken.isEmpty()) {
-                    //     //qDebug()<<QSynEdit::tr("The highlighter seems to be in an infinite loop");
-                    //     throw BaseError(QSynEdit::tr("The syntaxer seems to be in an infinite loop"));
-                    // }
-                }
-                int tokenStartChar = mEdit->mSyntaxer->getTokenPos();
-                int tokenEndChar = tokenStartChar + sToken.length();
+            int tokenStartChar = mEdit->mSyntaxer->getTokenPos();
+            int tokenEndChar = tokenStartChar + sToken.length();
 
-                // It's at least partially visible. Get the token attributes now.
-                attr = mEdit->mSyntaxer->getTokenAttribute();
+            // It's at least partially visible. Get the token attributes now.
+            attr = mEdit->mSyntaxer->getTokenAttribute();
 
-                //rainbow parenthesis
-                if (sToken == "["
-                        || sToken == "("
-                        || sToken == "{"
-                        ) {
-                    SyntaxState rangeState = mEdit->mSyntaxer->getState();
-                    getBraceColorAttr(rangeState.bracketLevel
-                                      +rangeState.braceLevel
-                                      +rangeState.parenthesisLevel
-                                      ,attr);
-                } else if (sToken == "]"
-                           || sToken == ")"
-                           || sToken == "}"
-                           ){
-                    SyntaxState rangeState = mEdit->mSyntaxer->getState();
-                    getBraceColorAttr(rangeState.bracketLevel
-                                      +rangeState.braceLevel
-                                      +rangeState.parenthesisLevel+1,
-                                      attr);
-                }
-                //input method
-                if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
-                    int startPos = mEdit->mSyntaxer->getTokenPos()+1;
-                    int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
-                    //qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
-                    if (!(endPos < mEdit->mCaretX
-                            || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
-                        if (!preeditAttr) {
-                            preeditAttr = attr;
-                        } else {
-                            attr = preeditAttr;
-                        }
-                    }
-                }
-                bool showGlyph=false;
-                if (attr && attr->tokenType() == TokenType::Space) {
-                    int pos = mEdit->mSyntaxer->getTokenPos();
-                    if (pos==0) {
-                        showGlyph = mEdit->mOptions.testFlag(eoShowLeadingSpaces);
-                    } else if (pos+sToken.length()==sLine.length()) {
-                        showGlyph = mEdit->mOptions.testFlag(eoShowTrailingSpaces);
-                    } else {
-                        showGlyph = mEdit->mOptions.testFlag(eoShowInnerSpaces);
-                    }
-                }
-                addHighlightToken(
-                            sLine,
-                            sToken,
-                            tokenLeft,
-                            vLine, attr,showGlyph,
-                            glyphStartCharList,
-                            tokenStartChar,
-                            tokenEndChar,
-                            glyphStartPositionsList,
-                            tokenWidth);
-                tokenLeft+=tokenWidth;
-                // Let the highlighter scan the next token.
-                mEdit->mSyntaxer->next();
-            }
-            mEdit->mDocument->setLineWidth(vLine-1, sLine, tokenLeft, glyphStartPositionsList);
-            if (tokenLeft<mRight) {
-                QString addOnStr;
-
-                // Paint folding
-                foldRange = mEdit->foldStartAtLine(vLine);
-                if ((foldRange) && foldRange->collapsed) {
-                    addOnStr = mEdit->syntaxer()->foldString(sLine);
-                    attr = mEdit->mSyntaxer->symbolAttribute();
-                    getBraceColorAttr(mEdit->mSyntaxer->getState().braceLevel,attr);
-                } else {
-                    // Draw LineBreak glyph.
-                    if (mEdit->mOptions.testFlag(eoShowLineBreaks)
-                            && (mEdit->mDocument->lineWidth(vLine-1) < mRight)) {
-                        addOnStr = LineBreakGlyph;
-                        attr = mEdit->mSyntaxer->whitespaceAttribute();
-                    }
-                }
-                if (!addOnStr.isEmpty()) {
-                    expandGlyphStartCharList(addOnStr, sLine.length(), glyphStartCharList);
-                    int len=glyphStartCharList.length()-glyphStartPositionsList.length();
-                    for (int i=0;i<len;i++) {
-                        glyphStartPositionsList.append(tokenLeft);
-                    }
-                    int oldLen = sLine.length();
-                    sLine += addOnStr;
-                    addHighlightToken(
-                                sLine,
-                                addOnStr,
-                                tokenLeft,
-                                vLine, attr, false,
-                                glyphStartCharList,
-                                oldLen,
-                                sLine.length(),
-                                glyphStartPositionsList,
-                                tokenWidth);
-                    tokenLeft += tokenWidth;
-                }
-            }
-            // Draw anything that's left in the TokenAccu record. Fill to the end
-            // of the invalid area with the correct colors.
-            paintHighlightToken(sLine, glyphStartCharList, glyphStartPositionsList, true);
-
-            //Paint editingAreaBorders
-            foreach (const PEditingArea& area, areaList) {
-                if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
-                    if (area->beginX > mEdit->mCaretX) {
-                        area->beginX += mEdit->mInputPreeditString.length();
-                    }
-                    if (area->endX > mEdit->mCaretX) {
-                        area->endX += mEdit->mInputPreeditString.length();
-                    }
-                }
-                int glyphIdx;
-                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->beginX-1);
-                area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
-                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->endX-1);
-                area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+            //rainbow parenthesis
+            if (sToken == "["
+                    || sToken == "("
+                    || sToken == "{"
+                    ) {
+                SyntaxState rangeState = mEdit->mSyntaxer->getState();
+                getBraceColorAttr(rangeState.bracketLevel
+                                  +rangeState.braceLevel
+                                  +rangeState.parenthesisLevel
+                                  ,attr);
+            } else if (sToken == "]"
+                       || sToken == ")"
+                       || sToken == "}"
+                       ){
+                SyntaxState rangeState = mEdit->mSyntaxer->getState();
+                getBraceColorAttr(rangeState.bracketLevel
+                                  +rangeState.braceLevel
+                                  +rangeState.parenthesisLevel+1,
+                                  attr);
             }
             //input method
             if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
-                PEditingArea area = std::make_shared<EditingArea>();
-                int glyphIdx;
-                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX-1);
-                area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
-                glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length()-1);
-                area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
-                area->type = EditingAreaType::eatUnderLine;
-                if (preeditAttr) {
-                    area->color = preeditAttr->foreground();
-                } else {
-                    area->color = colFG;
+                int startPos = mEdit->mSyntaxer->getTokenPos()+1;
+                int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
+                //qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
+                if (!(endPos < mEdit->mCaretX
+                        || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
+                    if (!preeditAttr) {
+                        preeditAttr = attr;
+                    } else {
+                        attr = preeditAttr;
+                    }
                 }
-                areaList.append(area);
-
-                mEdit->mGlyphPostionCacheForInputMethod.str = sLine;
-                mEdit->mGlyphPostionCacheForInputMethod.glyphCharList = glyphStartCharList;
-                mEdit->mGlyphPostionCacheForInputMethod.glyphPositionList = glyphStartPositionsList;
-                mEdit->mGlyphPostionCacheForInputMethod.strWidth = tokenLeft;
             }
-            paintEditAreas(areaList);
+            bool showGlyph=false;
+            if (attr && attr->tokenType() == TokenType::Space) {
+                int pos = mEdit->mSyntaxer->getTokenPos();
+                if (pos==0) {
+                    showGlyph = mEdit->mOptions.testFlag(eoShowLeadingSpaces);
+                } else if (pos+sToken.length()==sLine.length()) {
+                    showGlyph = mEdit->mOptions.testFlag(eoShowTrailingSpaces);
+                } else {
+                    showGlyph = mEdit->mOptions.testFlag(eoShowInnerSpaces);
+                }
+            }
+            addHighlightToken(
+                        sLine,
+                        sToken,
+                        tokenLeft,
+                        vLine, attr,showGlyph,
+                        glyphStartCharList,
+                        tokenStartChar,
+                        tokenEndChar,
+                        glyphStartPositionsList,
+                        tokenWidth);
+            tokenLeft+=tokenWidth;
+            // Let the highlighter scan the next token.
+            mEdit->mSyntaxer->next();
         }
+        mEdit->mDocument->setLineWidth(vLine-1, sLine, tokenLeft, glyphStartPositionsList);
+        if (tokenLeft<mRight) {
+            QString addOnStr;
+
+            // Paint folding
+            foldRange = mEdit->foldStartAtLine(vLine);
+            if ((foldRange) && foldRange->collapsed) {
+                addOnStr = mEdit->mSyntaxer->foldString(sLine);
+                attr = mEdit->mSyntaxer->symbolAttribute();
+                getBraceColorAttr(mEdit->mSyntaxer->getState().braceLevel,attr);
+            } else {
+                // Draw LineBreak glyph.
+                if (mEdit->mOptions.testFlag(eoShowLineBreaks)
+                        && (mEdit->mDocument->lineWidth(vLine-1) < mRight)) {
+                    addOnStr = LineBreakGlyph;
+                    attr = mEdit->mSyntaxer->whitespaceAttribute();
+                }
+            }
+            if (!addOnStr.isEmpty()) {
+                expandGlyphStartCharList(addOnStr, sLine.length(), glyphStartCharList);
+                int len=glyphStartCharList.length()-glyphStartPositionsList.length();
+                for (int i=0;i<len;i++) {
+                    glyphStartPositionsList.append(tokenLeft);
+                }
+                int oldLen = sLine.length();
+                sLine += addOnStr;
+                addHighlightToken(
+                            sLine,
+                            addOnStr,
+                            tokenLeft,
+                            vLine, attr, false,
+                            glyphStartCharList,
+                            oldLen,
+                            sLine.length(),
+                            glyphStartPositionsList,
+                            tokenWidth);
+                tokenLeft += tokenWidth;
+            }
+        }
+        // Draw anything that's left in the TokenAccu record. Fill to the end
+        // of the invalid area with the correct colors.
+        paintHighlightToken(sLine, glyphStartCharList, glyphStartPositionsList, true);
+
+        //Paint editingAreaBorders
+        foreach (const PEditingArea& area, areaList) {
+            if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
+                if (area->beginX > mEdit->mCaretX) {
+                    area->beginX += mEdit->mInputPreeditString.length();
+                }
+                if (area->endX > mEdit->mCaretX) {
+                    area->endX += mEdit->mInputPreeditString.length();
+                }
+            }
+            int glyphIdx;
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->beginX-1);
+            area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->endX-1);
+            area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+        }
+        //input method
+        if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
+            PEditingArea area = std::make_shared<EditingArea>();
+            int glyphIdx;
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX-1);
+            area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length()-1);
+            area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+            area->type = EditingAreaType::eatUnderLine;
+            if (preeditAttr) {
+                area->color = preeditAttr->foreground();
+            } else {
+                area->color = colFG;
+            }
+            areaList.append(area);
+
+            mEdit->mGlyphPostionCacheForInputMethod.str = sLine;
+            mEdit->mGlyphPostionCacheForInputMethod.glyphCharList = glyphStartCharList;
+            mEdit->mGlyphPostionCacheForInputMethod.glyphPositionList = glyphStartPositionsList;
+            mEdit->mGlyphPostionCacheForInputMethod.strWidth = tokenLeft;
+        }
+        paintEditAreas(areaList);
 
         // Now paint the right edge if necessary. We do it line by line to reduce
         // the flicker. Should not cost very much anyway, compared to the many

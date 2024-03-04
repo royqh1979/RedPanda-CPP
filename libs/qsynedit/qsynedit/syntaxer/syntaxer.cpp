@@ -218,18 +218,6 @@ QString Syntaxer::blockCommentEndSymbol()
     return QString();
 }
 
-bool Syntaxer::enabled() const
-{
-    return mEnabled;
-}
-
-void Syntaxer::setEnabled(bool value)
-{
-    if (value != mEnabled) {
-        mEnabled = value;
-    }
-}
-
 FontStyles TokenAttribute::styles() const
 {
     return mStyles;

@@ -1720,12 +1720,12 @@ void ASMSyntaxer::setLine(const QString &newLine, int lineNumber)
 
 bool ASMSyntaxer::isCommentNotFinished(int /*state*/) const
 {
-    return true;
+    return false;
 }
 
 bool ASMSyntaxer::isStringNotFinished(int /*state*/) const
 {
-    return true;
+    return false;
 }
 
 SyntaxState ASMSyntaxer::getState() const
@@ -1743,6 +1743,16 @@ void ASMSyntaxer::setState(const SyntaxState&)
 void ASMSyntaxer::resetState()
 {
     mHasTrailingSpaces = false;
+}
+
+bool ASMSyntaxer::supportFolding()
+{
+    return false;
+}
+
+bool ASMSyntaxer::needsLineState()
+{
+    return true;
 }
 
 QSet<QString> ASMSyntaxer::keywords()
