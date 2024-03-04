@@ -11,6 +11,7 @@
    * 调试器的 Qt 集成。
 
 设置 Visual Studio Code 开发环境的步骤：
+0. 在 Windows 设置中，启用 “开发人员模式”。启用 Git 的 `core.symlinks` 选项（`git config core.symlinks true`）。
 1. 安装 [xmake](https://xmake.io/) 和 [XMake 扩展](https://marketplace.visualstudio.com/items?itemName=tboox.xmake-vscode)。
 2. 安装 [C/C++ 扩展](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) 以支持语言和调试功能。
 3. 根据需要安装 [clangd](https://clangd.llvm.org/) 和 [clangd 扩展](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)以获得更好的代码分析能力。

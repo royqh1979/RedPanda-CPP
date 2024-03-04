@@ -1,5 +1,6 @@
-APP_VERSION = "2.26"
-TEST_VERSION = "alpha8"
+includes("./version.lua")
+
+TEST_VERSION = "$(shell git rev-list HEAD --count)"
 
 add_rules("mode.debug", "mode.release")
 set_warnings("all", "extra", "pedantic")

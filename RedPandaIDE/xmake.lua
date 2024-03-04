@@ -12,8 +12,12 @@ target("RedPandaIDE")
     add_options("app-name", "prefix", "libexecdir")
     add_options("lua-addon", "sdcc", "vcs")
 
-    if TEST_VERSION ~= nil then
-        add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '-' .. TEST_VERSION .. '"')
+    if APP_VERSION_SUFFIX ~= "" then
+        add_defines('APP_VERSION_SUFFIX="' .. APP_VERSION_SUFFIX .. '"')
+    end
+
+    if TEST_VERSION ~= "" then
+        add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '.' .. TEST_VERSION .. '"')
     else
         add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '"')
     end
