@@ -30,7 +30,7 @@ Red Panda C++ Version 2.27
   - enhancement: Better look&feel for the wave underline shown for syntax errors.
   - fix: "float" in #include "float.h" is wrong syntax colored.
   - enhancement: Unify syntax color for #include header name
-  - enhancement: Issue #229 Shortcuts for the tree view in files panel. 
+  - enhancement: Issue #229 Press Enter/Return in the tree view in files panel will open the file.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
