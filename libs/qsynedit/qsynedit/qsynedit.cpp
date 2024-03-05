@@ -3274,8 +3274,6 @@ void QSynEdit::updateModifiedStatus()
 
 void QSynEdit::reparseLines(int startLine, int endLine)
 {
-    if (mEditingCount>0)
-        return;
 
     SyntaxState state;
     startLine = std::max(0,startLine);
@@ -3295,8 +3293,11 @@ void QSynEdit::reparseLines(int startLine, int endLine)
         mSyntaxer->nextToEol();
         state = mSyntaxer->getState();
         mDocument->setSyntaxState(line,state);
-        line ++ ;
+        line++ ;
     } while (line < endLine);
+
+    if (mEditingCount>0)
+        return;
     if (useCodeFolding())
         rescanFolds();
     return ;
@@ -5428,7 +5429,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
         str = sLeftSide + text[0] + sRightSide;
         properSetLine(caretY - 1, str);
     }
-    reparseLines(caretY,caretY+1);
+    reparseLines(caretY-1,caretY);
     // step2: insert remaining lines of Value
     for (int i=1;i<text.length();i++) {
         bool notInComment = true;
@@ -5456,7 +5457,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
         }
         properSetLine(caretY - 1, str,false);
-        reparseLines(caretY, caretY+1);
+        reparseLines(caretY-1,caretY);
         result++;
     }
     bChangeScroll = !mOptions.testFlag(eoScrollPastEol);
