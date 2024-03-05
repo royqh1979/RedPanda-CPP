@@ -25,7 +25,8 @@ target("qsynedit")
         "qsynedit/syntaxer/glsl.cpp",
         "qsynedit/syntaxer/lua.cpp",
         "qsynedit/syntaxer/makefile.cpp",
-        "qsynedit/syntaxer/syntaxer.cpp")
+        "qsynedit/syntaxer/syntaxer.cpp",
+        "qsynedit/syntaxer/textfile.cpp")
 
     add_moc_classes(
         "qsynedit/document",
