@@ -634,7 +634,12 @@ bool QSynEdit::pointToLine(const QPoint &point, int &line)
 
 void QSynEdit::invalidateGutter()
 {
-    invalidateGutterLines(-1, -1);
+    if (mPaintLock>0) {
+        mStateFlags.setFlag(StateFlag::sfGutterRedrawNeeded);
+    } else {
+        mStateFlags.setFlag(StateFlag::sfGutterRedrawNeeded, false);
+        invalidateGutterLines(-1, -1);
+    }
 }
 
 void QSynEdit::invalidateGutterLine(int aLine)
@@ -1050,10 +1055,12 @@ void QSynEdit::invalidateRect(const QRect &rect)
 
 void QSynEdit::invalidate()
 {
-    if (mPainterLock>0)
-        return;
-    // qDebug()<<"invalidate";
-    viewport()->update();
+    if (mPainterLock>0) {
+        mStateFlags.setFlag(StateFlag::sfRedrawNeeded);
+    } else {
+        mStateFlags.setFlag(StateFlag::sfRedrawNeeded, false);
+        viewport()->update();
+    }
 }
 
 void QSynEdit::lockPainter()
@@ -2968,6 +2975,10 @@ void QSynEdit::decPaintLock()
         }
         if (mStateFlags.testFlag(StateFlag::sfCaretChanged))
             updateCaret();
+        if (mStateFlags.testFlag(StateFlag::sfGutterRedrawNeeded))
+            invalidateGutter();
+        if (mStateFlags.testFlag(StateFlag::sfRedrawNeeded))
+            invalidate();
         if (mStatusChanges!=0)
             doOnStatusChange(mStatusChanges);
         onEndFirstPaintLock();
@@ -3001,8 +3012,10 @@ QRect QSynEdit::clientRect() const
 
 void QSynEdit::synFontChanged()
 {
+    incPaintLock();
     recalcCharExtent();
     onSizeOrFontChanged(true);
+    decPaintLock();
 }
 
 
@@ -3799,8 +3812,12 @@ void QSynEdit::setLineSpacingFactor(double newLineSpacingFactor)
 {
     if (newLineSpacingFactor<1.0)
         newLineSpacingFactor = 1.0;
-    mLineSpacingFactor = newLineSpacingFactor;
-    recalcCharExtent();
+    if (mLineSpacingFactor != newLineSpacingFactor) {
+        incPaintLock();
+        mLineSpacingFactor = newLineSpacingFactor;
+        recalcCharExtent();
+        decPaintLock();
+    }
 }
 
 ScrollStyle QSynEdit::scrollBars() const
@@ -3912,8 +3929,10 @@ int QSynEdit::rightEdge() const
 void QSynEdit::setRightEdge(int newRightEdge)
 {
     if (mRightEdge != newRightEdge) {
+        incPaintLock();
         mRightEdge = newRightEdge;
         invalidate();
+        decPaintLock();
     }
 }
 
@@ -4006,8 +4025,10 @@ void QSynEdit::setCaretColor(const QColor &caretColor)
 void QSynEdit::setTabSize(int newTabSize)
 {
     if (newTabSize!=tabSize()) {
+        incPaintLock();
         mDocument->setTabSize(newTabSize);
         invalidate();
+        decPaintLock();
     }
 }
 
@@ -4023,6 +4044,7 @@ static bool sameEditorOption(const EditorOptions& value1, const EditorOptions& v
 void QSynEdit::setOptions(const EditorOptions &Value)
 {
     if (Value != mOptions) {
+        incPaintLock();
         //bool bSetDrag = mOptions.testFlag(eoDropFiles) != Value.testFlag(eoDropFiles);
         //if  (!mOptions.testFlag(eoScrollPastEol))
         setLeftPos(mLeftPos);
@@ -4037,8 +4059,6 @@ void QSynEdit::setOptions(const EditorOptions &Value)
                 || !sameEditorOption(Value,mOptions, eoShowTrailingSpaces)
                 || !sameEditorOption(Value,mOptions, eoShowLineBreaks)
                 || !sameEditorOption(Value,mOptions, eoShowRainbowColor);
-        //bool bUpdateScroll = (Options * ScrollOptions)<>(Value * ScrollOptions);
-        bool bUpdateScroll = true;
         mOptions = Value;
 
         mDocument->setForceMonospace(mOptions.testFlag(eoForceMonospace) );
@@ -4052,13 +4072,9 @@ void QSynEdit::setOptions(const EditorOptions &Value)
             setBlockEnd(vTempBlockEnd);
         }
         updateScrollbars();
-      // (un)register HWND as drop target
-//      if bSetDrag and not (csDesigning in ComponentState) and HandleAllocated then
-//        DragAcceptFiles(Handle, (eoDropFiles in fOptions));
         if (bUpdateAll)
             invalidate();
-        if (bUpdateScroll)
-            updateScrollbars();
+        decPaintLock();
     }
 }
 
@@ -6889,6 +6905,7 @@ void QSynEdit::setTopLine(int Value)
 
 void QSynEdit::onGutterChanged()
 {
+    incPaintLock();
     if (mGutter.showLineNumbers() && mGutter.autoSize())
         mGutter.autoSizeDigitCount(mDocument->count());
     int nW;
@@ -6902,6 +6919,7 @@ void QSynEdit::onGutterChanged()
         invalidateGutter();
     else
         setGutterWidth(nW);
+    decPaintLock();
 }
 
 void QSynEdit::onScrollTimeout()

@@ -61,13 +61,15 @@ Q_DECLARE_FLAGS(StatusChanges, StatusChange)
 Q_DECLARE_OPERATORS_FOR_FLAGS(StatusChanges)
 
 enum class StateFlag  {
-    sfCaretChanged = 0x0001,
-    sfScrollbarChanged = 0x0002,
-    sfLinesChanging = 0x0004,
-    sfIgnoreNextChar = 0x0008,
-    sfCaretVisible = 0x0010,
-    sfDblClicked = 0x0020,
-    sfWaitForDragging = 0x0040
+    sfCaretChanged =        0x0001,
+    sfScrollbarChanged =    0x0002,
+    sfLinesChanging =       0x0004,
+    sfIgnoreNextChar =      0x0008,
+    sfCaretVisible =        0x0010,
+    sfDblClicked =          0x0020,
+    sfWaitForDragging =     0x0040,
+    sfRedrawNeeded =        0x0080,
+    sfGutterRedrawNeeded =  0x0100,
 };
 
 Q_DECLARE_FLAGS(StateFlags,StateFlag)
@@ -271,6 +273,8 @@ public:
     void addGroupBreak();
     void beginEditing();
     void endEditing();
+    void beginSetting();
+    void endSetting();
     void addCaretToUndo();
     void addLeftTopToUndo();
     void addSelectionToUndo();
@@ -498,6 +502,8 @@ protected:
 
 protected:
     void doSelectLine();
+    void incPaintLock();
+    void decPaintLock();
 private:
     BufferCoord ensureBufferCoordValid(const BufferCoord& coord);
     void beginEditingWithoutUndo();
@@ -506,8 +512,7 @@ private:
     void computeCaret();
     void computeScroll(bool isDragging);
 
-    void incPaintLock();
-    void decPaintLock();
+
     int clientWidth() const;
     int clientHeight() const;
     int clientTop() const;
@@ -743,6 +748,7 @@ private:
     int mPaintTransientLock;
     bool mIsScrolling;
     int mPainterLock; // lock counter to prevent repaint while painting
+    int mOptionLock; // lock counter to prevent recalculate glyph widths while change settings;
     bool mUndoing;
     // event handlers
     // ProcessCommandProc mOnCommandProcessed;

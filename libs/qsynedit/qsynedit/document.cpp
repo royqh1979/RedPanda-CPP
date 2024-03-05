@@ -146,7 +146,10 @@ int Document::longestLineWidth() {
         mIndexOfLongestLine = -1;
         if (mLines.count() > 0 ) {
             for (int i=0;i<mLines.size();i++) {
-                int len = lineWidth(i);
+                int len = mLines[i]->width();
+                //Just estimate it.
+                if (len<0)
+                    len = mCharWidth * mLines[i]->lineText().length();
                 if (len > MaxLen) {
                     MaxLen = len;
                     mIndexOfLongestLine = i;

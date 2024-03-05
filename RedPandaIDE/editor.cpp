@@ -5298,6 +5298,7 @@ void Editor::setActiveBreakpointFocus(int Line, bool setFocus)
 
 void Editor::applySettings()
 {
+    incPaintLock();
     QSynedit::EditorOptions options = QSynedit::eoAltSetsColumnMode |
             QSynedit::eoDragDropEditing | QSynedit::eoDropFiles |  QSynedit::eoKeepCaretX | QSynedit::eoTabsToSpaces |
             QSynedit::eoRightMouseMovesCursor | QSynedit::eoScrollByOneLess | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo
@@ -5414,6 +5415,7 @@ void Editor::applySettings()
     setMouseWheelScrollSpeed(pSettings->editor().mouseWheelScrollSpeed());
     setMouseSelectionScrollSpeed(pSettings->editor().mouseSelectionScrollSpeed());
     invalidate();
+    decPaintLock();
 }
 
 static QSynedit::PTokenAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {

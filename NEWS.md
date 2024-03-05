@@ -31,6 +31,7 @@ Red Panda C++ Version 2.27
   - fix: "float" in #include "float.h" is wrong syntax colored.
   - enhancement: Unify syntax color for #include header name
   - enhancement: Issue #229 Press Enter/Return in the tree view in files panel will open the file.
+  - enhancement: Internal optimization for open/edit files.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
