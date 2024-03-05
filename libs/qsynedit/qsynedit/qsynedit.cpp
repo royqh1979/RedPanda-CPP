@@ -2985,6 +2985,18 @@ void QSynEdit::decPaintLock()
     }
 }
 
+SyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText)
+{
+    if (line == 0) {
+        syntaxer()->resetState();
+    } else {
+        syntaxer()->setState(mDocument->getSyntaxState(line-1));
+    }
+    syntaxer()->setLine(newLineText,line);
+    syntaxer()->nextToEol();
+    return syntaxer()->getState();
+}
+
 int QSynEdit::clientWidth() const
 {
     return viewport()->size().width();

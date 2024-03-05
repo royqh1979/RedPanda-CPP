@@ -46,11 +46,13 @@ public:
     };
 
     enum RangeState {
-        rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment, rsString,
+        rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment,
+        rsString, rsStringNextLine, rsStringUnfinished,
         rsMultiLineString, rsMultiLineDirective, rsCppComment,
         rsDocstring,
         rsStringEscapeSeq,
-        rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,rsChar,
+        rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,
+        rsChar, rsCharEscaping,
         rsDefineIdentifier, rsDefineRemaining,
     };
 
@@ -87,6 +89,13 @@ public:
     static const QSet<QString> Keywords;
 
     static const QSet<QString> ValidIntegerSuffixes;
+
+    bool isStringToNextLine(int state);
+    bool isRawStringStart(int state);
+    bool isRawStringNoEscape(int state);
+    bool isRawStringEnd(int state);
+    bool isCharNotFinished(int state);
+    bool isCharEscaping(int state);
 
     TokenId getTokenId();
 private:

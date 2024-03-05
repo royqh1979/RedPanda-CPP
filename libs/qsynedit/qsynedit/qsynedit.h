@@ -504,6 +504,7 @@ protected:
     void doSelectLine();
     void incPaintLock();
     void decPaintLock();
+    SyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
 private:
     BufferCoord ensureBufferCoordValid(const BufferCoord& coord);
     void beginEditingWithoutUndo();

@@ -263,6 +263,36 @@ const PTokenAttribute &CppSyntaxer::localVarAttribute() const
     return mLocalVarAttribute;
 }
 
+bool CppSyntaxer::isStringToNextLine(int state)
+{
+    return state == RangeState::rsStringNextLine;
+}
+
+bool CppSyntaxer::isRawStringStart(int state)
+{
+    return state == RangeState::rsRawString;
+}
+
+bool CppSyntaxer::isRawStringNoEscape(int state)
+{
+    return state == RangeState::rsRawStringNotEscaping;
+}
+
+bool CppSyntaxer::isRawStringEnd(int state)
+{
+    return state == RangeState::rsRawStringEnd;
+}
+
+bool CppSyntaxer::isCharNotFinished(int state)
+{
+    return state == RangeState::rsChar || state == RangeState::rsCharEscaping;
+}
+
+bool CppSyntaxer::isCharEscaping(int state)
+{
+    return state == RangeState::rsCharEscaping;
+}
+
 CppSyntaxer::TokenId CppSyntaxer::getTokenId()
 {
     return mTokenId;
@@ -370,17 +400,25 @@ void CppSyntaxer::procAnsiCStyleComment()
 void CppSyntaxer::procAsciiChar()
 {
     mTokenId = TokenId::Char;
-    do {
-        if (mLine[mRun] == '\\') {
-            if (mRun+1<mLineSize && (mLine[mRun+1] == '\'' || mLine[mRun+1] == '\\')) {
+    while (mRun < mLineSize) {
+        if (mLine[mRun] =='\'') {
+            mRun++;
+            break;
+        } if (mLine[mRun] == '\\') {
+            if (mRun+1>=mLineSize) {
+                mRun++;
+                mRange.state = RangeState::rsCharEscaping;
+                return;
+            } else if (mLine[mRun+1] == '\'' || mLine[mRun+1] == '\\') {
                 mRun+=1;
             }
+        } else if (isSpaceChar(mLine[mRun])) {
+            return;
         }
         mRun+=1;
-    } while (mRun < mLineSize && mLine[mRun]!='\'');
-    if (mRun<mLineSize && mLine[mRun] == '\'')
-        mRun+=1;
-    mRange.state = RangeState::rsUnknown;
+    }
+    if (mRun<mLineSize)
+        mRange.state = RangeState::rsUnknown;
 }
 
 void CppSyntaxer::procBraceClose()
@@ -968,8 +1006,7 @@ void CppSyntaxer::procRawString()
         mRange.extraData = std::make_shared<QVariant>("");
     while (mRun<mLineSize) {
         if (mRange.state!=RangeState::rsRawStringNotEscaping &&
-                (mLine[mRun]=='"'
-                 || mLine[mRun].isSpace()
+                (mLine[mRun].isSpace()
                  || mLine[mRun].unicode()>127
                  || mLine[mRun].unicode()<=32)) {
             mRange.state = RangeState::rsUnknown;
@@ -983,7 +1020,6 @@ void CppSyntaxer::procRawString()
         case '(':
             if (mRange.state==RangeState::rsRawString) {
                 mRange.state = RangeState::rsRawStringNotEscaping;
-                rawStringInitialDCharSeq += "\"";
                 mRange.extraData = std::make_shared<QVariant>(rawStringInitialDCharSeq);
             }
             break;
@@ -991,20 +1027,24 @@ void CppSyntaxer::procRawString()
             if (mRange.state == RangeState::rsRawStringNotEscaping) {
                 rawStringInitialDCharSeq = mRange.extraData->toString();
                 if ( mLine.mid(mRun+1,rawStringInitialDCharSeq.length()) == rawStringInitialDCharSeq) {
-                    mRun = mRun+1+rawStringInitialDCharSeq.length();
-                    mRange.state = RangeState::rsUnknown;
+                    mRun = mRun+rawStringInitialDCharSeq.length();
+                    mRange.state = RangeState::rsRawStringEnd;
                     mRange.extraData = nullptr;
-                    return;
                 }
+            }
+            break;
+        case '\"':
+            if (mRange.state == RangeState::rsRawStringEnd) {
+                mRange.state = RangeState::rsUnknown;
+                mRun++;
+                return;
             }
             break;
         }
         if (mRange.state == RangeState::rsRawString)
             rawStringInitialDCharSeq += mLine[mRun];
-        mRun+=1;
+        mRun++;
     }
-    if (mRun>=mLineSize && mRange.state != RangeState::rsRawStringNotEscaping)
-        mRange.state = RangeState::rsUnknown;
 }
 
 void CppSyntaxer::procRoundClose()
@@ -1253,7 +1293,7 @@ void CppSyntaxer::procStringEscapeSeq()
 void CppSyntaxer::procString()
 {
     if (mRun >= mLineSize) {
-        mRange.state = RangeState::rsUnknown;
+        mRange.state = RangeState::rsStringUnfinished;
         return;
     }
     mTokenId = TokenId::String;
@@ -1266,7 +1306,7 @@ void CppSyntaxer::procString()
         } else if (mLine[mRun]=='\\') {
             if (mRun == mLineSize-1) {
                 mRun++;
-                mRange.state = RangeState::rsString;
+                mRange.state = RangeState::rsStringNextLine;
                 return;
             }
             if (mRun+1<mLineSize) {
@@ -1302,7 +1342,10 @@ void CppSyntaxer::procString()
         }
         mRun+=1;
     }
-    mRange.state = RangeState::rsUnknown;
+    if (mRun>=mLineSize)
+        mRange.state = RangeState::rsStringUnfinished;
+    else
+        mRange.state = RangeState::rsUnknown;
 }
 
 void CppSyntaxer::procStringStart()
@@ -1311,7 +1354,7 @@ void CppSyntaxer::procStringStart()
     mRange.state = RangeState::rsString;
     mRun += 1;
     if (mRun>=mLineSize) {
-        mRange.state = RangeState::rsUnknown;
+        mRange.state = RangeState::rsStringUnfinished;
         return;
     }
     //procString();
@@ -1349,6 +1392,9 @@ void CppSyntaxer::processChar()
             procAndSymbol();
             break;
         case '\'':
+            mTokenId = TokenId::Char;
+            mRange.state = RangeState::rsChar;
+            mRun++;
             procAsciiChar();
             break;
         case '}':
@@ -1525,7 +1571,7 @@ bool CppSyntaxer::isCommentNotFinished(int state) const
 
 bool CppSyntaxer::isStringNotFinished(int state) const
 {
-    return state == RangeState::rsString;
+    return state == RangeState::rsString || state==RangeState::rsStringNextLine || state==RangeState::rsStringUnfinished;
 }
 
 bool CppSyntaxer::isDocstringNotFinished(int state) const
@@ -1591,6 +1637,13 @@ int CppSyntaxer::getTokenPos()
 
 void CppSyntaxer::next()
 {
+    if (mRun==0) {
+        switch(mRange.state) {
+        case RangeState::rsString:
+        case RangeState::rsChar:
+            mRange.state = RangeState::rsUnknown;
+        }
+    }
     mTokenPos = mRun;
     if (mLineSize == 0 && mRange.state == RangeState::rsString)
         mRange.state=RangeState::rsUnknown;
@@ -1613,6 +1666,7 @@ void CppSyntaxer::next()
             procDocstring();
             break;
         case RangeState::rsString:
+        case RangeState::rsStringNextLine:
             //qDebug()<<"*1-0-0*";
             procString();
             break;
@@ -1633,16 +1687,7 @@ void CppSyntaxer::next()
             procStringEscapeSeq();
             break;
         case RangeState::rsChar:
-            //qDebug()<<"*7-0-0*";
-            if (mRun>=mLineSize) {
-                procNull();
-            } else if (mLine[mRun]=='\'') {
-                mRange.state = rsUnknown;
-                mTokenId = TokenId::Char;
-                mRun+=1;
-            } else {
-                procAsciiChar();
-            }
+            procAsciiChar();
             break;
         case RangeState::rsDefineIdentifier:
             //qDebug()<<"*8-0-0*";
@@ -1654,7 +1699,6 @@ void CppSyntaxer::next()
             break;
         case RangeState::rsRawStringNotEscaping:
         case RangeState::rsRawString:
-        case RangeState::rsRawStringEnd:
             //qDebug()<<"*9-0-0*";
             procRawString();
             break;

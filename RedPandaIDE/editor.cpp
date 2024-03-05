@@ -732,15 +732,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
             clearUserCodeInTabStops();
         } else {
             QString s = lineText().mid(0,caretX()-1).trimmed();
-            if (caretY()==1) {
-                syntaxer()->resetState();
-            } else {
-                syntaxer()->setState(document()->getSyntaxState(caretY()-2));
-            }
-            syntaxer()->setLine(s,caretY());
-            syntaxer()->nextToEol();
-            int state = syntaxer()->getState().state;
-            if (syntaxer()->isCommentNotFinished(state)) {
+            QSynedit::SyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
+            if (syntaxer()->isCommentNotFinished(state.state)) {
                 if (s=="/**") { //javadoc style docstring
                     s = lineText().mid(caretX()-1).trimmed();
                     if (s=="*/") {
@@ -2961,7 +2954,7 @@ bool Editor::handleDoubleQuoteCompletion()
     QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
     if (ch == '"') {
-        if ((status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawString)
+        if ((status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawStringEnd)
             && !selAvail()) {
             setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
@@ -3100,118 +3093,31 @@ ParserLanguage Editor::calcParserLanguage()
 Editor::QuoteStatus Editor::getQuoteStatus()
 {
     QuoteStatus Result = QuoteStatus::NotQuote;
-    if ((caretY()>1) && syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 2).state))
-        Result = QuoteStatus::DoubleQuote;
-
-    QString Line = document()->getLine(caretY()-1);
-    int posX = caretX()-1;
-    if (posX >= Line.length()) {
-        posX = Line.length()-1;
-    }
-    for (int i=0; i<posX;i++) {
-        if (i+1<Line.length() && (Line[i] == 'R') && (Line[i+1] == '"') && (Result == QuoteStatus::NotQuote)) {
-            Result = QuoteStatus::RawString;
-            i++; // skip R
-        } else if (Line[i] == '(') {
-            switch(Result) {
-            case QuoteStatus::RawString:
-                Result=QuoteStatus::RawStringNoEscape;
-                break;
-            default:
-                break;
-            }
-        } else if (Line[i] == ')') {
-            switch(Result) {
-            case QuoteStatus::RawStringNoEscape:
-                Result=QuoteStatus::RawString;
-                break;
-            default:
-                break;
-            }
-        } else if (Line[i] == '"') {
-            switch(Result) {
-            case QuoteStatus::NotQuote:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            case QuoteStatus::SingleQuote:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::SingleQuoteEscape:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::DoubleQuote:
-                Result = QuoteStatus::NotQuote;
-                break;
-            case QuoteStatus::DoubleQuoteEscape:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            case QuoteStatus::RawString:
-                Result=QuoteStatus::NotQuote;
-                break;
-            default:
-                break;
-            }
-        } else if (Line[i] == '\'') {
-            switch(Result) {
-            case QuoteStatus::NotQuote:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::SingleQuote:
-                Result = QuoteStatus::NotQuote;
-                break;
-            case QuoteStatus::SingleQuoteEscape:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::DoubleQuote:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            case QuoteStatus::DoubleQuoteEscape:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            default:
-                break;
-            }
-        } else if (Line[i] == '\\') {
-            switch(Result) {
-            case QuoteStatus::NotQuote:
-                Result = QuoteStatus::NotQuote;
-                break;
-            case QuoteStatus::SingleQuote:
-                Result = QuoteStatus::SingleQuoteEscape;
-                break;
-            case QuoteStatus::SingleQuoteEscape:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::DoubleQuote:
-                Result = QuoteStatus::DoubleQuoteEscape;
-                break;
-            case QuoteStatus::DoubleQuoteEscape:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            default:
-                break;
-            }
-        } else {
-            switch(Result) {
-            case QuoteStatus::NotQuote:
-                Result = QuoteStatus::NotQuote;
-                break;
-            case QuoteStatus::SingleQuote:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::SingleQuoteEscape:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::DoubleQuote:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            case QuoteStatus::DoubleQuoteEscape:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            default:
-                break;
-            }
+    if (syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
+        QString s = lineText().mid(0,caretX()-1);
+        QSynedit::SyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
+        std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(syntaxer());
+        if (syntaxer()->isStringNotFinished(state.state)) {
+            if (cppSyntaxer->isStringToNextLine(state.state))
+                return QuoteStatus::DoubleQuoteEscape;
+            else
+                return QuoteStatus::DoubleQuote;
         }
+        if (cppSyntaxer->isCharNotFinished(state.state)) {
+            if (cppSyntaxer->isCharEscaping(state.state))
+                return QuoteStatus::SingleQuoteEscape;
+            else
+                return QuoteStatus::SingleQuote;
+        }
+        if (cppSyntaxer->isRawStringNoEscape(state.state))
+            return QuoteStatus::RawStringNoEscape;
+        if (cppSyntaxer->isRawStringStart(state.state))
+            return QuoteStatus::RawString;
+        if (cppSyntaxer->isRawStringEnd(state.state))
+            return QuoteStatus::RawStringEnd;
+        return QuoteStatus::NotQuote;
+    } else {
+        return QuoteStatus::NotQuote;
     }
     return Result;
 }

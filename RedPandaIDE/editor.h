@@ -84,7 +84,8 @@ public:
         DoubleQuote,
         DoubleQuoteEscape,
         RawString,
-        RawStringNoEscape
+        RawStringNoEscape,
+        RawStringEnd
     };
 
     enum class WordPurpose {
