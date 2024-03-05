@@ -29,7 +29,7 @@ TextSyntaxer::TextSyntaxer()
 void TextSyntaxer::procSpace()
 {
     mTokenID = TokenId::Space;
-    while (mLine[mRun]!=0 && mLine[mRun].isSpace())
+    while (mLine[mRun]!=0 && isSpaceChar(mLine[mRun]))
         mRun++;
     if (mRun>=mStringLen)
         mHasTrailingSpaces = true;
@@ -100,7 +100,7 @@ void TextSyntaxer::next()
     mTokenPos = mRun;
     if (mLine[mRun].unicode()==0) {
         procNull();
-    } else if (isSpaceChar(mLine[mRun].unicode())) {        
+    } else if (isSpaceChar(mLine[mRun])) {
         procSpace();
     } else {
         procText();

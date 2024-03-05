@@ -114,7 +114,7 @@ bool Syntaxer::supportBraceLevel()
 
 bool Syntaxer::isSpaceChar(const QChar &ch)
 {
-    return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
+    return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch.isSpace();
 }
 
 bool Syntaxer::isWordBreakChar(const QChar &ch)

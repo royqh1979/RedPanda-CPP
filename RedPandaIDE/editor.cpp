@@ -94,6 +94,15 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     QFileInfo fileInfo(mFilename);
     QSynedit::PSyntaxer syntaxer;
+    syntaxer = syntaxerManager.getSyntaxer(mFilename);
+    if (syntaxer) {
+        setSyntaxer(syntaxer);
+        setFormatter(syntaxerManager.getFormatter(syntaxer->language()));
+        setUseCodeFolding(true);
+    } else {
+        setUseCodeFolding(false);
+    }
+
     if (mProject && mEncodingOption==ENCODING_PROJECT) {
         mEncodingOption=mProject->options().encoding;
     }
@@ -107,15 +116,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
                                   e.reason());
         }
     }
-    syntaxer = syntaxerManager.getSyntaxer(mFilename);
     resolveAutoDetectEncodingOption();
-    if (syntaxer) {
-        setSyntaxer(syntaxer);
-        setFormatter(syntaxerManager.getFormatter(syntaxer->language()));
-        setUseCodeFolding(true);
-    } else {
-        setUseCodeFolding(false);
-    }
 
     if (mProject) {
         if (syntaxer && syntaxer->language() == QSynedit::ProgrammingLanguage::CPP)

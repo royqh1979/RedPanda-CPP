@@ -6522,7 +6522,7 @@ void QSynEdit::setGutterWidth(int Value)
     Value = std::max(Value, 0);
     if (mGutterWidth != Value) {
         mGutterWidth = Value;
-        onSizeOrFontChanged(false);
+        // onSizeOrFontChanged(false);
         invalidate();
     }
 }
