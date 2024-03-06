@@ -2,60 +2,83 @@ global function apiVersion(): ApiVersion
     return {
         kind = "compiler_hint",
         major = 0,
-        minor = 1,
+        minor = 2,
     }
 end
 
-local nameMap: {string:{string:string}} = {
-    systemGcc = {
-        en_US = "System GCC",
-        pt_BR = "GCC do sistema",
-        zh_CN = "系统 GCC",
-        zh_TW = "系統 GCC",
+local enum CompilerKind
+    "system"
+    "multilib"
+    "libx32"
+    "cross"
+    "mingw"
+end
+
+local compilerNameTemplate: {CompilerKind:{string:string}} = {
+    system = {
+        en_US = "System %1, %2",
+        pt_BR = "%1 sistema, %2",
+        zh_CN = "系统 %1，%2",
+        zh_TW = "系統 %1，%2",
     },
-    systemClang = {
-        en_US = "System Clang",
-        pt_BR = "Clang do sistema",
-        zh_CN = "系统 Clang",
-        zh_TW = "系統 Clang",
+    multilib = {
+        en_US = "Multilib %1, %2",
+        pt_BR = "%1 multilib, %2",
+        zh_CN = "Multilib %1，%2",
+        zh_TW = "Multilib %1，%2",
     },
-    multilibGcc = {
-        en_US = "Multilib GCC",
-        pt_BR = "GCC multilib",
-        zh_CN = "Multilib GCC",
-        zh_TW = "Multilib GCC",
+    libx32 = {
+        en_US = "Libx32 %1, %2",
+        pt_BR = "%1 libx32, %2",
+        zh_CN = "Libx32 %1，%2",
+        zh_TW = "Libx32 %1，%2",
     },
-    multilibClang = {
-        en_US = "Multilib Clang",
-        pt_BR = "Clang multilib",
-        zh_CN = "Multilib Clang",
-        zh_TW = "Multilib Clang",
+    cross = {
+        en_US = "Cross %1 %3, %2",
+        pt_BR = "%1 cruzado %3, %2",
+        zh_CN = "交叉编译 %1 %3，%2",
+        zh_TW = "交叉編譯 %1 %3，%2",
     },
-    mingwGcc = {
-        en_US = "MinGW GCC",
-        pt_BR = "GCC MinGW",
-        zh_CN = "MinGW GCC",
-        zh_TW = "MinGW GCC",
-    },
-    release = {
-        en_US = ", release",
-        pt_BR = ", lançamento",
-        zh_CN = "，发布",
-        zh_TW = "，發佈",
-    },
-    debug = {
-        en_US = ", debug",
-        pt_BR = ", depuração",
-        zh_CN = "，调试",
-        zh_TW = "，偵錯",
-    },
-    debugWithAsan = {
-        en_US = ", debug with ASan",
-        pt_BR = ", depuração com ASan",
-        zh_CN = "，ASan 调试",
-        zh_TW = "，ASan 偵錯",
+    mingw = {
+        en_US = "MinGW %1 %3, %2",
+        pt_BR = "MinGW %1 %3, %2",
+        zh_CN = "MinGW %1 %3，%2",
+        zh_TW = "MinGW %1 %3，%2",
     },
 }
+
+local enum Profile
+    "release"
+    "debug"
+    "debugWithAsan"
+end
+
+local profileNameMap: {Profile:{string:string}} = {
+    release = {
+        en_US = "release",
+        pt_BR = "lançamento",
+        zh_CN = "发布",
+        zh_TW = "發佈",
+    },
+    debug = {
+        en_US = "debug",
+        pt_BR = "depuração",
+        zh_CN = "调试",
+        zh_TW = "偵錯",
+    },
+    debugWithAsan = {
+        en_US = "debug with ASan",
+        pt_BR = "depuração com ASan",
+        zh_CN = "ASan 调试",
+        zh_TW = "ASan 偵錯",
+    },
+}
+
+local function nameGenerator(lang: string, name: string, kind: CompilerKind, profile: Profile, arch: string | nil): string
+    local template = compilerNameTemplate[kind][lang] or compilerNameTemplate[kind].en_US
+    local profileName = profileNameMap[profile][lang] or profileNameMap[profile].en_US
+    return C_Util.format(template, name, profileName, arch)
+end
 
 local function mergeCompilerSet(compilerSet: CompilerHint.CompilerSet, other: CompilerHint.CompilerSet)
     local c = compilerSet as {string:any}
@@ -66,16 +89,14 @@ local function mergeCompilerSet(compilerSet: CompilerHint.CompilerSet, other: Co
 end
 
 local record Config
-    isMultilib: boolean | nil
-    isMingw: boolean | nil
-    isClang: boolean | nil
     customCompileParams: {string} | nil
     customLinkParams: {string} | nil
+    arch: string | nil
     triplet: string | nil
 end
 
 local function generateConfig(
-    name: string, lang: string,
+    lang: string, name: string, kind: CompilerKind,
     cCompiler: string, cxxCompiler: string,
     config: Config
 ): CompilerHint.CompilerSet, CompilerHint.CompilerSet, CompilerHint.CompilerSet
@@ -85,11 +106,11 @@ local function generateConfig(
         debugger = "/usr/bin/gdb",
         debugServer = "/usr/bin/gdbserver",
         make = "/usr/bin/make",
-        compilerType = config.isClang and "Clang" or "GCC_UTF8",
+        compilerType = name:sub(1, 5) == "Clang" and "Clang" or "GCC_UTF8",
         preprocessingSuffix = ".i",
         compilationProperSuffix = ".s",
         assemblingSuffix = ".o",
-        executableSuffix = config.isMingw and ".exe" or "",
+        executableSuffix = kind == "mingw" and ".exe" or "",
         compilationStage = 3,
         ccCmdOptUsePipe = "on",
         ccCmdOptWarningAll = "on",
@@ -97,10 +118,10 @@ local function generateConfig(
         ccCmdOptCheckIsoConformance = "on",
         binDirs = {"/usr/bin"},
     }
-    if config.isMultilib then
+    if kind == "multilib" then
         commonOptions.ccCmdOptPointerSize = "32"
     end
-    if config.isMingw then
+    if kind == "mingw" then
         commonOptions.resourceCompiler = "/usr/bin/" .. config.triplet .. "-windres"
     end
     if config.customCompileParams then
@@ -110,17 +131,17 @@ local function generateConfig(
         commonOptions.customLinkParams = config.customLinkParams
     end
     local release = {
-        name = name .. (nameMap.release[lang] or nameMap.release.en_US),
+        name = nameGenerator(lang, name, kind, "release", config.arch),
         staticLink = true,
         linkCmdOptStripExe = "on",
         ccCmdOptOptimize = "2",
     }
     local debug_ = {
-        name = name .. (nameMap.debug[lang] or nameMap.debug.en_US),
+        name = nameGenerator(lang, name, kind, "debug", config.arch),
         ccCmdOptDebugInfo = "on",
     }
     local debugWithAsan = {
-        name = name .. (nameMap.debugWithAsan[lang] or nameMap.debugWithAsan.en_US),
+        name = nameGenerator(lang, name, kind, "debugWithAsan", config.arch),
         ccCmdOptDebugInfo = "on",
         ccCmdOptAddressSanitizer = "address",
     }
@@ -137,10 +158,28 @@ global function main(): CompilerHint
 
     local compilerList = {}
 
+    local gccDumpVersion = C_System.popen("/usr/bin/gcc", {"-dumpfullversion"})
+    gccDumpVersion = gccDumpVersion:match("^[0-9.]+")
+    local gccFsVersion = C_System.popen("/usr/bin/gcc", {"-dumpversion"})
+    gccFsVersion = gccFsVersion:match("^[0-9.]+")
+    local clangDumpVersion: string
+
     do
         local release, debug_, debugWithAsan = generateConfig(
-            nameMap.systemGcc[lang] or nameMap.systemGcc.en_US, lang,
-            "/usr/bin/gcc", "/usr/bin/g++",
+            lang, "GCC (" .. gccDumpVersion .. ")", "system", "/usr/bin/gcc", "/usr/bin/g++",
+            {}
+        )
+        table.insert(compilerList, release)
+        table.insert(compilerList, debug_)
+        table.insert(compilerList, debugWithAsan)
+    end
+
+    local versionedGccs = C_FileSystem.matchFiles("/usr/bin", "^gcc-[0-9]+$")
+    for _, gcc in ipairs(versionedGccs) do
+        local version = gcc:sub(5)
+        local name = "GCC " .. version
+        local release, debug_, debugWithAsan = generateConfig(
+            lang, name, "system", "/usr/bin/" .. gcc, "/usr/bin/g++-" .. version,
             {}
         )
         table.insert(compilerList, release)
@@ -149,23 +188,36 @@ global function main(): CompilerHint
     end
 
     if C_FileSystem.isExecutable("/usr/bin/clang") then
+        clangDumpVersion = C_System.popen("/usr/bin/clang", {"-dumpversion"})
+        clangDumpVersion = clangDumpVersion:match("^[0-9.]+")
         local release, debug_, debugWithAsan = generateConfig(
-            nameMap.systemClang[lang] or nameMap.systemClang.en_US, lang,
-            "/usr/bin/clang", "/usr/bin/clang++",
-            {isClang = true}
+            lang, "Clang (" .. clangDumpVersion .. ")", "system", "/usr/bin/clang", "/usr/bin/clang++",
+            {}
         )
         table.insert(compilerList, release)
         table.insert(compilerList, debug_)
         table.insert(compilerList, debugWithAsan)
     end
 
-    -- TODO: better to check 32-bit libstdc++.a (lib32stdc++-dev), but its path is not fixed
-    if arch == "x86_64" and C_FileSystem.exists("/usr/lib32/libc.a") then
+    local versionedClangs = C_FileSystem.matchFiles("/usr/bin", "^clang-[0-9]+$")
+    for _, clang in ipairs(versionedClangs) do
+        local version = clang:sub(7)
+        local name = "Clang " .. version
+        local release, debug_, debugWithAsan = generateConfig(
+            lang, name, "system", "/usr/bin/" .. clang, "/usr/bin/clang++-" .. version,
+            {}
+        )
+        table.insert(compilerList, release)
+        table.insert(compilerList, debug_)
+        table.insert(compilerList, debugWithAsan)
+    end
+
+    -- with lib32stdc++-dev installed, system GCC and Clang can target 32-bit
+    if arch == "x86_64" and C_FileSystem.exists("/usr/lib/gcc/x86_64-linux-gnu/" .. gccFsVersion .. "/32/libstdc++.a") then
         do
             local release, debug_, debugWithAsan = generateConfig(
-                nameMap.multilibGcc[lang] or nameMap.multilibGcc.en_US, lang,
-                "/usr/bin/gcc", "/usr/bin/g++",
-                {isMultilib = true}
+                lang, "GCC (" .. gccDumpVersion .. ")", "multilib", "/usr/bin/gcc", "/usr/bin/g++",
+                {}
             )
             table.insert(compilerList, release)
             table.insert(compilerList, debug_)
@@ -174,9 +226,37 @@ global function main(): CompilerHint
 
         if C_FileSystem.isExecutable("/usr/bin/clang") then
             local release, debug_, debugWithAsan = generateConfig(
-                nameMap.multilibClang[lang] or nameMap.multilibClang.en_US, lang,
-                "/usr/bin/clang", "/usr/bin/clang++",
-                {isClang = true, isMultilib = true}
+                lang, "Clang (" .. clangDumpVersion .. ")", "multilib", "/usr/bin/clang", "/usr/bin/clang++",
+                {}
+            )
+            table.insert(compilerList, release)
+            table.insert(compilerList, debug_)
+            table.insert(compilerList, debugWithAsan)
+        end
+    end
+
+    -- with libx32stdc++-dev installed, system GCC and Clang can target x32
+    if arch == "x86_64" and C_FileSystem.exists("/usr/lib/gcc/x86_64-linux-gnu/" .. gccFsVersion .. "/x32/libstdc++.a") then
+        do
+            local release, debug_, debugWithAsan = generateConfig(
+                lang, "GCC (" .. gccDumpVersion .. ")", "libx32", "/usr/bin/gcc", "/usr/bin/g++",
+                {
+                    customCompileParams = {"-mx32"},
+                    customLinkParams = {"-mx32"},
+                }
+            )
+            table.insert(compilerList, release)
+            table.insert(compilerList, debug_)
+            table.insert(compilerList, debugWithAsan)
+        end
+
+        if C_FileSystem.isExecutable("/usr/bin/clang") then
+            local release, debug_, debugWithAsan = generateConfig(
+                lang, "Clang (" .. clangDumpVersion .. ")", "libx32", "/usr/bin/clang", "/usr/bin/clang++",
+                {
+                    customCompileParams = {"-mx32"},
+                    customLinkParams = {"-mx32"},
+                }
             )
             table.insert(compilerList, release)
             table.insert(compilerList, debug_)
@@ -199,10 +279,10 @@ global function main(): CompilerHint
 
             do
                 local release, _, _ = generateConfig(
-                    (nameMap.mingwGcc[lang] or nameMap.mingwGcc.en_US) .. " x86_64", lang,
+                    lang, "GCC", "mingw",
                     "/usr/bin/x86_64-w64-mingw32-gcc", "/usr/bin/x86_64-w64-mingw32-g++",
                     {
-                        isMingw = true,
+                        arch = "x86_64",
                         triplet = "x86_64-w64-mingw32",
                         customLinkParams = {extraObjects.utf8init, extraObjects.utf8manifest},
                     }
@@ -219,10 +299,10 @@ global function main(): CompilerHint
 
             do
                 local release, _, _ = generateConfig(
-                    (nameMap.mingwGcc[lang] or nameMap.mingwGcc.en_US) .. " i686", lang,
+                    lang, "GCC", "mingw",
                     "/usr/bin/i686-w64-mingw32-gcc", "/usr/bin/i686-w64-mingw32-g++",
                     {
-                        isMingw = true,
+                        arch = "i686",
                         triplet = "i686-w64-mingw32",
                         customLinkParams = {extraObjects.utf8init, extraObjects.utf8manifest},
                     }
