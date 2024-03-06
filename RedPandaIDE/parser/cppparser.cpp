@@ -156,6 +156,14 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     PStatement statement = doFindStatementOf(fileName,phrase, line);
     if (!statement)
         return result;
+    if (statement->kind == StatementKind::skPreprocessor) {
+        if (statement->args.isEmpty()) {
+            QString name = expandMacro(statement->value);
+            statement = doFindStatementOf(fileName, name ,line);
+            if (!statement)
+                return result;
+        }
+    }
     PStatement parentScope;
     if (statement->kind == StatementKind::skClass) {
         parentScope = statement;
@@ -4560,36 +4568,12 @@ void CppParser::inheritClassStatement(const PStatement& derived, bool isStruct,
     }
 }
 
-void CppParser::fillListOfFunctions(const QString& fileName, int line,
-                                    const PStatement& statement,
-                                    const PStatement& scopeStatement, QStringList &list)
-{
-    StatementMap children = mStatementList.childrenStatements(scopeStatement);
-    for (const PStatement& child:children) {
-        if ((statement->command == child->command)
-#ifdef Q_OS_WIN
-                || (statement->command +'A' == child->command)
-                || (statement->command +'W' == child->command)
-#endif
-                ) {
-            if (line < child->line && (child->fileName == fileName))
-                continue;
-            list.append(prettyPrintStatement(child,child->fileName,child->line));
-        }
-    }
-}
-
 QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int line, const PStatement &statement, const PStatement &scopeStatement) const
 {
     QList<PStatement> result;
     StatementMap children = mStatementList.childrenStatements(scopeStatement);
     for (const PStatement& child:children) {
-        if (( (statement->command == child->command)
-#ifdef Q_OS_WIN
-                || (statement->command +'A' == child->command)
-                || (statement->command +'W' == child->command)
-#endif
-              ) ) {
+        if (statement->command == child->command) {
             if (line < child->line && (child->fileName == fileName))
                 continue;
             result.append(child);
@@ -6626,6 +6610,12 @@ void CppParser::parseCommandTypeAndArgs(QString &command, QString &typeSuffix, Q
         args="";
     }
 
+}
+
+QString CppParser::expandMacro(const QString &text) const
+{
+    QSet<QString> usedMacros;
+    return mPreprocessor.expandMacros(text, usedMacros);
 }
 
 const QSet<QString> &CppParser::projectFiles() const

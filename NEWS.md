@@ -86,6 +86,8 @@ Red Panda C++ Version 2.26
   - Enhancement: Improved Raw string support
   - Enhancement: New option for compiler set "Don't localize gcc output messages"
   - Enhancement: Optimization for drawing scrollbars.
+  - Enhancement: Issue #213 Expands macro when finding function tips.
+  
 
 Red Panda C++ Version 2.25
 

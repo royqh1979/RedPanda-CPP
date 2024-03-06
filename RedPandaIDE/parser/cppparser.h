@@ -274,10 +274,6 @@ private:
                                      const QString& phrase,
                                      int index,
                                      const PStatement& currentScope) const;
-
-    void fillListOfFunctions(const QString& fileName, int line,
-                             const PStatement& statement,
-                             const PStatement& scopeStatement, QStringList& list);
     QList<PStatement> getListOfFunctions(const QString& fileName, int line,
                                          const PStatement& statement,
                                          const PStatement& scopeStatement) const;
@@ -685,6 +681,8 @@ private:
     void parseCommandTypeAndArgs(QString& command,
                                  QString& typeSuffix,
                                  QString& args) const;
+    QString expandMacro(const QString& text) const;
+
 private:
     int mParserId;
     ParserLanguage mLanguage;
