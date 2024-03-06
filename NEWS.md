@@ -85,6 +85,7 @@ Red Panda C++ Version 2.26
   - Fix: Function list is not correctly retrived for full-scoped functions.
   - Enhancement: Improved Raw string support
   - Enhancement: New option for compiler set "Don't localize gcc output messages"
+  - Enhancement: Optimization for drawing scrollbars.
 
 Red Panda C++ Version 2.25
 

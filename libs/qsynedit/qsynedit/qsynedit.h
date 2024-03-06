@@ -62,14 +62,15 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(StatusChanges)
 
 enum class StateFlag  {
     sfCaretChanged =        0x0001,
-    sfScrollbarChanged =    0x0002,
-    sfLinesChanging =       0x0004,
-    sfIgnoreNextChar =      0x0008,
-    sfCaretVisible =        0x0010,
-    sfDblClicked =          0x0020,
-    sfWaitForDragging =     0x0040,
-    sfRedrawNeeded =        0x0080,
-    sfGutterRedrawNeeded =  0x0100,
+    sfHScrollbarChanged =   0x0002,
+    sfVScrollbarChanged =   0x0004,
+    sfLinesChanging =       0x0008,
+    sfIgnoreNextChar =      0x0010,
+    sfCaretVisible =        0x0020,
+    sfDblClicked =          0x0040,
+    sfWaitForDragging =     0x0080,
+    sfRedrawNeeded =        0x0100,
+    sfGutterRedrawNeeded =  0x0200,
 };
 
 Q_DECLARE_FLAGS(StateFlags,StateFlag)
@@ -533,7 +534,8 @@ private:
     void internalSetCaretY(int Value);
     void setStatusChanged(StatusChanges changes);
     void doOnStatusChange(StatusChanges changes);
-    void updateScrollbars();
+    void updateHScrollbar();
+    void updateVScrollbar();
     void updateCaret();
     void recalcCharExtent();
     QString expandAtWideGlyphs(const QString& S);

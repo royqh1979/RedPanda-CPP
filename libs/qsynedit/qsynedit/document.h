@@ -300,7 +300,7 @@ public:
      *
      * @return
      */
-    int longestLineWidth();
+    int maxLineWidth();
 
     /**
      * @brief get line break of the current document
@@ -567,6 +567,7 @@ signals:
     void deleted(int startLine, int count);
     void inserted(int startLine, int count);
     void putted(int line);
+    void maxLineWidthChanged(int newWidth);
 protected:
     QString getTextStr() const;
     void setUpdateState(bool Updating);
@@ -576,6 +577,7 @@ protected:
     void internalClear();
 private:
     void setLineWidth(int line, const QString& lineText, int newWidth, const QList<int> glyphStartPositionList);
+    void updateLongestLineWidth(int line, int width);
 
     int glyphWidth(const QString& glyph, int left,
                    const QFontMetrics &fontMetrics,
