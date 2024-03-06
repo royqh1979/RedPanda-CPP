@@ -403,7 +403,8 @@ void CppSyntaxer::procAsciiChar()
     while (mRun < mLineSize) {
         if (mLine[mRun] =='\'') {
             mRun++;
-            break;
+            mRange.state = RangeState::rsUnknown;
+            return;
         } if (mLine[mRun] == '\\') {
             if (mRun+1>=mLineSize) {
                 mRun++;
@@ -417,8 +418,6 @@ void CppSyntaxer::procAsciiChar()
         }
         mRun+=1;
     }
-    if (mRun<mLineSize)
-        mRange.state = RangeState::rsUnknown;
 }
 
 void CppSyntaxer::procBraceClose()
