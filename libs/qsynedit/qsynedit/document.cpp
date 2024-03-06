@@ -933,12 +933,16 @@ int Document::glyphCount(int line)
 int Document::glyphStartChar(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphStartChar(glyphIdx);
 }
 
 int Document::glyphLength(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphLength(glyphIdx);
 }
 
@@ -962,7 +966,7 @@ int Document::glyphWidth(const QString &glyph, int left) const
 int Document::charToGlyphIndex(int line, int charIdx)
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>count())
+    if (line<0 || line>=count())
         return 0;
     QList<int> glyphStartCharList = mLines[line]->glyphStartCharList();
     return charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charIdx);
