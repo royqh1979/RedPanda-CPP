@@ -337,6 +337,52 @@ jobs:
           name: musl-based Linux (latest Alpine)
           path: dist/*.apk
 
+  appimage:
+    name: Linux AppImage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
+
+      - name: Build
+        run: |
+          podman run --rm -v $PWD:/mnt -w /mnt -e CARCH=x86_64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0 packages/appimage/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux AppImage
+          path: dist/*.AppImage
+
+  static-deb:
+    name: Static Deb
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
+
+      - name: Build
+        run: |
+          packages/debian-static/builddeb.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Static Deb
+          path: dist/*.deb
+
   macos_x86_64:
     name: macOS x86_64
     runs-on: macos-latest
