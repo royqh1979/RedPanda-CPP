@@ -259,7 +259,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/packages/archlinux/01-in-docker.sh
+          podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/packages/archlinux/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -282,7 +282,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/fedora:latest /src/packages/fedora/01-in-docker.sh
+          podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/fedora:latest /src/packages/fedora/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -293,7 +293,6 @@ jobs:
   rpm_opensuse:
     name: RPM on openSUSE Tumbleweed
     runs-on: ubuntu-latest
-    if: false
 
     steps:
       - uses: actions/checkout@v2
@@ -306,7 +305,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/opensuse/tumbleweed:latest /src/packages/opensuse/01-in-docker.sh
+          podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/opensuse/tumbleweed:latest /src/packages/opensuse/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
