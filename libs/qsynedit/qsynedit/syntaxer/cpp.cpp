@@ -1300,7 +1300,8 @@ void CppSyntaxer::procString()
     while (mRun < mLineSize) {
         if (mLine[mRun]=='"') {
             mRun++;
-            break;
+            mRange.state = RangeState::rsUnknown;
+            return;
         } else if (mLine[mRun]==' ' || mLine[mRun]=='\t') {
             return;
         } else if (mLine[mRun]=='\\') {
@@ -1342,10 +1343,8 @@ void CppSyntaxer::procString()
         }
         mRun+=1;
     }
-    if (mRun>=mLineSize)
-        mRange.state = RangeState::rsStringUnfinished;
-    else
-        mRange.state = RangeState::rsUnknown;
+    // here mRun>=mLineSize
+    mRange.state = RangeState::rsStringUnfinished;
 }
 
 void CppSyntaxer::procStringStart()
