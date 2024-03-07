@@ -4290,9 +4290,18 @@ void QSynEdit::doUndoItem()
 //            qDebug()<<"undo delete";
 //            qDebug()<<Item->changeText();
 //            qDebug()<<Item->changeStartPos().Line<<Item->changeStartPos().Char;
-            doInsertText(item->changeStartPos(),item->changeText(),item->changeSelMode(),
-                         item->changeStartPos().line,
-                         item->changeEndPos().line);
+            BufferCoord startPos = item->changeStartPos();
+            BufferCoord endPos = item->changeEndPos();
+            if (item->changeSelMode()==SelectionMode::Column) {
+                int xFrom = charToGlyphLeft(startPos.line, startPos.ch);
+                int xTo = charToGlyphLeft(endPos.line, endPos.ch);
+                if (xFrom > xTo)
+                    std::swap(xFrom, xTo);
+                startPos.ch = xposToGlyphStartChar(startPos.line,xFrom);
+            }
+            doInsertText(startPos,item->changeText(),item->changeSelMode(),
+                         startPos.line,
+                         endPos.line);
             internalSetCaretXY(item->changeEndPos());
             mRedoList->addRedo(
                         item->changeReason(),
@@ -5263,7 +5272,6 @@ void QSynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
 
 void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode)
 {
-    bool UpdateMarks = false;
     int MarkOffset = 0;
     if (mode == SelectionMode::Normal) {
         PCodeFoldingRange foldRange = foldStartAtLine(endPos.line);
@@ -5293,15 +5301,15 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
             // Delete all lines in the selection range.
             mDocument->deleteLines(startPos.line, endPos.line - startPos.line);
             properSetLine(startPos.line-1,TempString);
-            UpdateMarks = true;
             internalSetCaretXY(startPos);
+            doLinesDeleted(startPos.line, endPos.line - startPos.line + MarkOffset);
         }
         break;
     case SelectionMode::Column:
     {
-        int firstLine = startPos.line - 1;
+        int firstLine = startPos.line;
         int xFrom = charToGlyphLeft(startPos.line, startPos.ch);
-        int lastLine = endPos.line - 1;
+        int lastLine = endPos.line;
         int xTo = charToGlyphLeft(endPos.line, endPos.ch);
         if (xFrom > xTo)
             std::swap(xFrom, xTo);
@@ -5309,26 +5317,27 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
             std::swap(firstLine,lastLine);
         QString result;
         for (int i = firstLine; i <= lastLine; i++) {
-            int l = xposToGlyphStartChar(i+1,xFrom);
-            int r = xposToGlyphStartChar(i+1,xTo-1)+1;
-            QString s = mDocument->getLine(i);
+            int l = xposToGlyphStartChar(i,xFrom);
+            int r = xposToGlyphStartChar(i,xTo);
+            QString s = mDocument->getLine(i-1);
             s.remove(l-1,r-l);
-            properSetLine(i,s);
+            properSetLine(i-1,s);
         }
         // Lines never get deleted completely, so keep caret at end.
-        startPos.ch = xposToGlyphStartChar(startPos.line,xFrom);
-        endPos.ch = xposToGlyphStartChar(endPos.line, xFrom);
-        internalSetCaretXY(startPos);
-        setBlockBegin(startPos);
-        setBlockEnd(endPos);
+        BufferCoord newStartPos = startPos;
+        BufferCoord newEndPos = endPos;
+        newStartPos.line = firstLine;
+        newStartPos.ch = xposToGlyphStartChar(newStartPos.line,xFrom);
+        newEndPos.line = lastLine;
+        newEndPos.ch = xposToGlyphStartChar(newEndPos.line, xFrom);
+        internalSetCaretXY(newStartPos);
+        setBlockBegin(newStartPos);
+        setBlockEnd(newEndPos);
         // Column deletion never removes a line entirely, so no mark
         // updating is needed here.
         break;
     }
     }
-    // Update marks
-    if (UpdateMarks)
-        doLinesDeleted(startPos.line, endPos.line - startPos.line + MarkOffset);
     endEditingWithoutUndo();
     if (!mUndoing) {
         mUndoList->addChange(ChangeReason::Delete,
@@ -5367,7 +5376,7 @@ void QSynEdit::doInsertText(const BufferCoord& pos,
         BufferCoord bb=blockBegin();
         BufferCoord be=blockEnd();
         int lenBefore = mDocument->getLine(be.line-1).length();
-        insertedLines = doInsertTextByColumnMode(text, startLine,endLine);
+        insertedLines = doInsertTextByColumnMode(pos, text, startLine,endLine);
         doLinesInserted(endLine-insertedLines+1,insertedLines);
         if (!text.isEmpty()) {
             int textLen = mDocument->getLine(be.line-1).length()-lenBefore;
@@ -5471,7 +5480,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
     return result;
 }
 
-int QSynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, int endLine)
+int QSynEdit::doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, int startLine, int endLine)
 {
     QString str;
     QString tempString;
@@ -5479,7 +5488,7 @@ int QSynEdit::doInsertTextByColumnMode(const QStringList& text, int startLine, i
     int len;
     BufferCoord  lineBreakPos;
     int result = 0;
-    DisplayCoord insertCoord = bufferToDisplayPos(caretXY());
+    DisplayCoord insertCoord = bufferToDisplayPos(pos);
     int insertXPos = insertCoord.x;
     line = startLine;
     if (!mUndoing) {

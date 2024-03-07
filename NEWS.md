@@ -34,6 +34,8 @@ Red Panda C++ Version 2.27
   - enhancement: Internal optimization for loading/editing files.
   - enhancement: Show space glyphs in C/C++ char literals.
   - enhancement: Optimization for string/raw string/char literal status check while completing symbols in c/c++ files.
+  - enhancement: Windows installer Hi-DPI support.
+  
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

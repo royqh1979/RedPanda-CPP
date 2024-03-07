@@ -1,6 +1,5 @@
 ####################################################################
 # Startup
-
 Unicode True
 !include "config.nsh"
 !define COMPILERFOLDER "MinGW64"
