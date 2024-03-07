@@ -1254,9 +1254,10 @@ QVariant CodeCompletionListModel::data(const QModelIndex &index, int role) const
         PStatement statement = mStatements->at(index.row());
         return statement->command;
         }
-    case Qt::DecorationRole:
+    case Qt::DecorationRole:{
         PStatement statement = mStatements->at(index.row());
         return pIconsManager->getPixmapForStatement(statement);
+    }
     }
     return QVariant();
 }

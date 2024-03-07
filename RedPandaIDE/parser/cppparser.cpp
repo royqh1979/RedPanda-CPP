@@ -4525,8 +4525,8 @@ void CppParser::internalParse(const QString &fileName)
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+//       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+//       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
@@ -5360,6 +5360,9 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
             if (statement && statement->kind == StatementKind::skConstructor) {
                 statement = statement->parentScope.lock();
             }
+            while (statement && statement->kind == StatementKind::skAlias) {
+                statement = doFindAliasedStatement(statement);
+            }
             if (statement) {
                 switch (statement->kind) {
                 case StatementKind::skNamespace:
@@ -5368,12 +5371,12 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 case StatementKind::skNamespaceAlias:
                     result = doFindAliasedNamespace(statement);
                     break;
-                case StatementKind::skAlias: {
-                    statement = doFindAliasedStatement(statement);
-                    if (statement)
-                        result = doCreateEvalType(fileName,statement);
-                }
-                    break;
+                // case StatementKind::skAlias: {
+                //     statement =
+                //     if (statement)
+                //         result = doCreateEvalType(fileName,statement);
+                // }
+                //     break;
                 case StatementKind::skVariable:
                 case StatementKind::skParameter:
                     result = doCreateEvalVariable(fileName,statement, previousResult?previousResult->templateParams:"",scope);

@@ -1253,6 +1253,8 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                             filename(),
                             expression,
                             p.line);
+                while (statement && statement->kind == StatementKind::skAlias)
+                    statement = mParser->findAliasedStatement(statement);
                 kind = getKindOfStatement(statement);
                 mIdentCache.insert(QString("%1 %2").arg(aChar).arg(token),kind);
             }
@@ -3766,6 +3768,9 @@ void Editor::completionInsert(bool appendFunc)
     if (appendFunc) {
         if (statement->kind == StatementKind::skAlias) {
             PStatement newStatement = mParser->findAliasedStatement(statement);
+            while (newStatement && newStatement->kind==StatementKind::skAlias) {
+                newStatement = mParser->findAliasedStatement(newStatement);
+            }
             if (newStatement)
                 statement = newStatement;
         }
@@ -4416,6 +4421,8 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
 //        qDebug()<<s;
         PStatement statement = mParser->findStatementOf(mFilename,
           s , p.line);
+        while (statement && statement->kind == StatementKind::skAlias)
+            statement = mParser->findAliasedStatement(statement);
         StatementKind kind = getKindOfStatement(statement);
         if (kind == StatementKind::skUnknown) {
             if ((pEndPos.line>=1)
@@ -4436,7 +4443,6 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
             break;
         case StatementKind::skClass:
         case StatementKind::skTypedef:
-        case StatementKind::skAlias:
             attr = cppSyntaxer->classAttribute();
             break;
         case StatementKind::skEnumClassType:
