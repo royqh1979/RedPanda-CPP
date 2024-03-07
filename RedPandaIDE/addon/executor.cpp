@@ -42,6 +42,7 @@ static QMap<QString, QMap<QString, lua_CFunction>> apiGroups{
      {
          {"exists", &luaApi_FileSystem_exists},             // (string) -> bool
          {"isExecutable", &luaApi_FileSystem_isExecutable}, // (string) -> bool
+         {"matchFiles", &luaApi_FileSystem_matchFiles},     // (string, string) -> [string]
      }},
     {"C_System",
      {
@@ -50,6 +51,7 @@ static QMap<QString, QMap<QString, lua_CFunction>> apiGroups{
          {"appLibexecDir", &luaApi_System_appLibexecDir},   // () -> string
          {"appResourceDir", &luaApi_System_appResourceDir}, // () -> string
          {"osArch", &luaApi_System_osArch},                 // () -> string
+         {"popen", &luaApi_System_popen},
          {"supportedAppArchList",
           &luaApi_System_supportedAppArchList}, // () -> string
 #ifdef Q_OS_WINDOWS
@@ -161,7 +163,7 @@ QJsonValue SimpleExecutor::runScript(const QByteArray &script,
 }
 
 CompilerHintExecutor::CompilerHintExecutor() : SimpleExecutor(
-    "compiler_hint", 0, 1,
+    "compiler_hint", 0, 2,
     {"C_Debug", "C_Desktop", "C_FileSystem", "C_System", "C_Util"})
 {
 }

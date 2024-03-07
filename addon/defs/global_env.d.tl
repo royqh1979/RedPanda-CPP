@@ -53,6 +53,10 @@ local record env
     
         -- return whether the path is executable
         isExecutable: function (path: string): boolean
+
+        -- return matched files in the directory (non-recursive), with Qt-style regex
+        -- e.g. matchFiles("/usr/bin", "^gcc-[0-9]+$") may return {"gcc-12", "gcc-13"}
+        matchFiles: function (dir: string, qtRegex: string): {string}
     end
 
     record C_System
@@ -78,6 +82,9 @@ local record env
         -- Windows arm64 is handled correctly even if Red Panda C++ runs under emulation
         osArch: function (): string
 
+        -- returns (1) stdout, (2) stderr and (3) exit status of the program
+        popen: function(prog: string, args: {string}, option: PopenOption | nil): string, string, PopenResult
+
         -- returns supported application architectures by OS, name following `QSysInfo`
         -- e.g. {"i386", "x86_64", "arm64"}
         -- Windows 10 1709 or later: accurate result
@@ -89,6 +96,30 @@ local record env
 
         -- read `subKey\name` from HKEY_CURRENT_USER and HKEY_LOCAL_MACHINE in order (Windows only)
         readRegistry: function (subKey: string, name: string): string | nil
+
+        record PopenOption
+            timeout: integer | nil -- in milliseconds
+        end
+
+        record PopenResult
+            exitStatus: QProcessExitStatus
+            error: QProcessProcessError | nil
+            exitCode: integer | nil -- only valid if exitStatus is NormalExit
+        end
+
+        enum QProcessExitStatus
+            "NormalExit"
+            "CrashExit"
+        end
+
+        enum QProcessProcessError
+            "FailedToStart"
+            "Crashed"
+            "Timedout"
+            "WriteError"
+            "ReadError"
+            "UnknownError"
+        end
     end
 
     record C_Util

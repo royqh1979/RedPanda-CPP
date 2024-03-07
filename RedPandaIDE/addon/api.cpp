@@ -22,6 +22,8 @@
 #include <QStyleFactory>
 #include <QJsonValue>
 #include <QMessageBox>
+#include <QRegularExpression>
+#include <chrono>
 
 #ifdef Q_OS_WINDOWS
 # include <windows.h>
@@ -236,6 +238,23 @@ extern "C" int luaApi_FileSystem_isExecutable(lua_State *L) noexcept {
     return 1;
 }
 
+// C_FileSystem.matchFiles(string, string) -> {string}
+extern "C" int luaApi_FileSystem_matchFiles(lua_State *L) noexcept {
+    QString dir = AddOn::RaiiLuaState::fetchString(L, 1);
+    QString pattern = AddOn::RaiiLuaState::fetchString(L, 2);
+    QRegularExpression re(pattern);
+    QStringList result;
+    QDirIterator it(dir, QDir::Files);
+    while (it.hasNext()) {
+        it.next();
+        if (re.match(it.fileName()).hasMatch())
+            result.append(it.fileName());
+    }
+    std::sort(result.begin(), result.end());
+    AddOn::RaiiLuaState::push(L, result);
+    return 1;
+}
+
 // C_System.appArch() -> string
 extern "C" int luaApi_System_appArch(lua_State *L) noexcept {
     AddOn::RaiiLuaState::push(L, appArch());
@@ -267,6 +286,104 @@ extern "C" int luaApi_System_appResourceDir(lua_State *L) noexcept {
 extern "C" int luaApi_System_osArch(lua_State *L) noexcept {
     AddOn::RaiiLuaState::push(L, osArch());
     return 1;
+}
+
+void luaApiImpl_System_popen(lua_State *L) {
+    using namespace std::chrono;
+    QMetaEnum exitStatusEnum = QMetaEnum::fromType<QProcess::ExitStatus>();
+    QMetaEnum processErrorEnum = QMetaEnum::fromType<QProcess::ProcessError>();
+
+    QString prog = AddOn::RaiiLuaState::fetchString(L, 1);
+    QStringList args;
+    try {
+        QJsonArray argsArray = AddOn::RaiiLuaState::fetchArray(L, 2);
+        for (const QJsonValue &arg : argsArray)
+            args.append(arg.toString());
+    } catch (const AddOn::LuaError &e) {
+        QString reason = e.reason() + " ('C_System.popen' argument #2)";
+        throw AddOn::LuaError(reason);
+    }
+
+    // fetch and normalize timeout
+    microseconds timeout;
+    AddOn::LuaExtraState &extraState = AddOn::RaiiLuaState::extraState(L);
+    try {
+        QJsonObject option;
+        if (lua_type(L, 3) == LUA_TTABLE)
+            option = AddOn::RaiiLuaState::fetchObject(L, 3);
+        if (option.contains("timeout"))
+            timeout = milliseconds(option["timeout"].toInt());
+        else
+            timeout = AddOn::RaiiLuaState::extraState(L).timeLimit;
+    } catch (const AddOn::LuaError &e) {
+        QString reason = e.reason() + " ('C_System.popen' argument #3)";
+        throw AddOn::LuaError(reason);
+    }
+    time_point<system_clock> deadline = system_clock::now() + timeout;
+    if (deadline > extraState.timeStart + timeout) {
+        deadline = extraState.timeStart + timeout;
+        timeout = duration_cast<microseconds>(deadline - system_clock::now());
+    }
+
+    QProcess process;
+    process.setProgram(prog);
+    process.setArguments(args);
+    process.start(QIODevice::ReadOnly);
+    if (!process.waitForStarted(duration_cast<milliseconds>(timeout).count())) {
+        QJsonObject result{
+            {"exitStatus", exitStatusEnum.valueToKey(QProcess::CrashExit)},
+            {"error", processErrorEnum.valueToKey(process.error())},
+        };
+        AddOn::RaiiLuaState::push(L, "");
+        AddOn::RaiiLuaState::push(L, "");
+        AddOn::RaiiLuaState::push(L, result);
+        return;
+    }
+
+    process.closeWriteChannel();
+    timeout = duration_cast<microseconds>(deadline - system_clock::now());
+    process.waitForFinished(duration_cast<milliseconds>(timeout).count());
+
+    QByteArray stdoutData = process.readAllStandardOutput();
+    QByteArray stderrData = process.readAllStandardError();
+
+    if (
+        QProcess::ExitStatus exitStatus = process.exitStatus();
+        exitStatus == QProcess::NormalExit
+    ) {
+        QJsonObject result{
+            {"exitStatus", exitStatusEnum.valueToKey(exitStatus)},
+            {"exitCode", process.exitCode()},
+        };
+        AddOn::RaiiLuaState::push(L, QString::fromUtf8(stdoutData));
+        AddOn::RaiiLuaState::push(L, QString::fromUtf8(stderrData));
+        AddOn::RaiiLuaState::push(L, result);
+    } else {
+        QJsonObject result{
+            {"exitStatus", exitStatusEnum.valueToKey(exitStatus)},
+            {"error", processErrorEnum.valueToKey(process.error())},
+        };
+        AddOn::RaiiLuaState::push(L, "");
+        AddOn::RaiiLuaState::push(L, QString::fromUtf8(stderrData));
+        AddOn::RaiiLuaState::push(L, result);
+    }
+}
+
+// C_System.popen(string, {string}, PopenOption) -> string, string, PopenResult
+extern "C" int luaApi_System_popen(lua_State *L) noexcept {
+    bool error = false;
+    try {
+        luaApiImpl_System_popen(L);
+    } catch (const AddOn::LuaError &e) {
+        error = true;
+        AddOn::RaiiLuaState::push(L, e.reason());
+    }
+    if (error) {
+        lua_error(L); // longjmp, never returns
+        __builtin_unreachable();
+    } else {
+        return 3;
+    }
 }
 
 static QString qtArchitectureNormalization(const QString &arch) {

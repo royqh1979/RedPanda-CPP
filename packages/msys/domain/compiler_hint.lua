@@ -2,7 +2,7 @@ function apiVersion()
    return {
       kind = "compiler_hint",
       major = 0,
-      minor = 1,
+      minor = 2,
    }
 end
 

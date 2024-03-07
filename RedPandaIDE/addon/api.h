@@ -30,12 +30,14 @@ extern "C" int luaApi_Desktop_systemStyle(lua_State *L) noexcept;
 
 extern "C" int luaApi_FileSystem_exists(lua_State *L) noexcept;
 extern "C" int luaApi_FileSystem_isExecutable(lua_State *L) noexcept;
+extern "C" int luaApi_FileSystem_matchFiles(lua_State *L) noexcept;
 
 extern "C" int luaApi_System_appArch(lua_State *L) noexcept;
 extern "C" int luaApi_System_appDir(lua_State *L) noexcept;
 extern "C" int luaApi_System_appLibexecDir(lua_State *L) noexcept;
 extern "C" int luaApi_System_appResourceDir(lua_State *L) noexcept;
 extern "C" int luaApi_System_osArch(lua_State *L) noexcept;
+extern "C" int luaApi_System_popen(lua_State *L) noexcept;
 extern "C" int luaApi_System_supportedAppArchList(lua_State *L) noexcept;
 #ifdef Q_OS_WINDOWS
 extern "C" int luaApi_System_readRegistry(lua_State *L) noexcept;
