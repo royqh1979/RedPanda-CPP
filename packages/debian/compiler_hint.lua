@@ -272,11 +272,6 @@ function main()
 
 
       if C_FileSystem.isExecutable("/usr/bin/x86_64-w64-mingw32-gcc") then
-         local extraObjects = {
-            utf8init = libexecDir .. "/x86_64-w64-mingw32/utf8init.o",
-            utf8manifest = libexecDir .. "/x86_64-w64-mingw32/utf8manifest.o",
-         }
-
          do
             local release, _, _ = generateConfig(
             lang, "GCC", "mingw",
@@ -284,7 +279,7 @@ function main()
             {
                arch = "x86_64",
                triplet = "x86_64-w64-mingw32",
-               customLinkParams = { extraObjects.utf8init, extraObjects.utf8manifest },
+               customLinkParams = {},
             })
 
             table.insert(compilerList, release)
@@ -292,11 +287,6 @@ function main()
       end
 
       if C_FileSystem.isExecutable("/usr/bin/i686-w64-mingw32-gcc") then
-         local extraObjects = {
-            utf8init = libexecDir .. "/i686-w64-mingw32/utf8init.o",
-            utf8manifest = libexecDir .. "/i686-w64-mingw32/utf8manifest.o",
-         }
-
          do
             local release, _, _ = generateConfig(
             lang, "GCC", "mingw",
@@ -304,7 +294,7 @@ function main()
             {
                arch = "i686",
                triplet = "i686-w64-mingw32",
-               customLinkParams = { extraObjects.utf8init, extraObjects.utf8manifest },
+               customLinkParams = {},
             })
 
             table.insert(compilerList, release)
