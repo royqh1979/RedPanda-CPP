@@ -33,6 +33,8 @@ SetDatablockOptimize on
 SetOverwrite try
 XPStyle on
 
+ManifestDPIAware true
+
 InstType "Full";1
 InstType "Minimal";2
 InstType "Safe";3

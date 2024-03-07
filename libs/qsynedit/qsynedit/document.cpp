@@ -470,14 +470,12 @@ void Document::putLine(int index, const QString &s, bool notify) {
             listIndexOutOfBounds(index);
         }
         beginUpdate();
-        int oldWidth = mLines[index]->width();
+        int oldWidth = -1;
+        if (mIndexOfLongestLine == index)
+            oldWidth = mLines[index]->mWidth;
         mLines[index]->setLineText( s );
         if (mIndexOfLongestLine == index && oldWidth>mLines[index]->width() )
             mIndexOfLongestLine = -1;
-        else if (mIndexOfLongestLine>=0
-                 && mIndexOfLongestLine<mLines.count()
-                 && mLines[index]->width() > mLines[mIndexOfLongestLine]->width())
-            mIndexOfLongestLine = index;
         if (notify)
             emit putted(index);
         endUpdate();
