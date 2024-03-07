@@ -2,6 +2,7 @@
 #include <windowsx.h>
 #include "resource.h"
 #include <stdio.h>
+#include <tchar.h>
 
 HINSTANCE hInst;
 
@@ -37,9 +38,9 @@ LRESULT CALLBACK TxtPasswordWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     switch(msg) {
         case WM_KEYDOWN:
         if (wParam==VK_RETURN) {
-            char s[500+1];
+            TCHAR s[500+1];
             Edit_GetText(hwndTxtPassword,s,500);
-            printf("%s", s);
+            _tprintf(_T("%s"), s);
             DestroyWindow(hMainDlg);
             return TRUE;
         }
