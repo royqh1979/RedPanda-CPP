@@ -14,6 +14,7 @@ cp -r RedPandaIDE $TMP_FOLDER
 cp README.md $TMP_FOLDER
 cp LICENSE $TMP_FOLDER
 cp NEWS.md $TMP_FOLDER
+cp version.inc $TMP_FOLDER
 cp -r platform $TMP_FOLDER
 cp Red_Panda_CPP.pro $TMP_FOLDER
 
