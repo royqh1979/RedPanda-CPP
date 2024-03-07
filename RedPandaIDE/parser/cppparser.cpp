@@ -3853,106 +3853,104 @@ void CppParser::handleStructs(bool isTypedef)
             mIndex=indexOfNextLeftBrace(mIndex);
         }
 
-        // Check for struct synonyms after close brace
-        if (isStruct) {
+        // Check for struct/class synonyms after close brace
 
-            // Walk to closing brace
-            i = indexOfMatchingBrace(mIndex); // step onto closing brace
+        // Walk to closing brace
+        i = indexOfMatchingBrace(mIndex); // step onto closing brace
 
-            if ((i + 1 < tokenCount) && !(
-                        mTokenizer[i + 1]->text.front() == ';'
-                        || mTokenizer[i + 1]->text.front() ==  '}')) {
-                // When encountering names again after struct body scanning, skip it
-                QString command = "";
-                QString args = "";
+        if ((i + 1 < tokenCount) && !(
+                    mTokenizer[i + 1]->text.front() == ';'
+                    || mTokenizer[i + 1]->text.front() ==  '}')) {
+            // When encountering names again after struct body scanning, skip it
+            QString command = "";
+            QString args = "";
 
-                // Add synonym before opening brace
-                while(true) {
-                    i++;
-                    if (mTokenizer[i]->text=='('
-                            || mTokenizer[i]->text==')') {
-                        //skip
-                    } else if (!(mTokenizer[i]->text == '{'
-                          || mTokenizer[i]->text == ','
-                          || mTokenizer[i]->text == ';')) {
-                        if (mTokenizer[i]->text.endsWith(']')) { // cut-off array brackets
-                            int pos = mTokenizer[i]->text.indexOf('[');
-                            command += mTokenizer[i]->text.mid(0,pos) + ' ';
-                            args =  mTokenizer[i]->text.mid(pos);
-                        } else if (mTokenizer[i]->text.front() == '*'
-                                   || mTokenizer[i]->text.front() == '&') { // do not add spaces after pointer operator
-                            command += mTokenizer[i]->text;
-                        } else {
-                            command += mTokenizer[i]->text + ' ';
-                        }
+            // Add synonym before opening brace
+            while(true) {
+                i++;
+                if (mTokenizer[i]->text=='('
+                        || mTokenizer[i]->text==')') {
+                    //skip
+                } else if (!(mTokenizer[i]->text == '{'
+                      || mTokenizer[i]->text == ','
+                      || mTokenizer[i]->text == ';')) {
+                    if (mTokenizer[i]->text.endsWith(']')) { // cut-off array brackets
+                        int pos = mTokenizer[i]->text.indexOf('[');
+                        command += mTokenizer[i]->text.mid(0,pos) + ' ';
+                        args =  mTokenizer[i]->text.mid(pos);
+                    } else if (mTokenizer[i]->text.front() == '*'
+                               || mTokenizer[i]->text.front() == '&') { // do not add spaces after pointer operator
+                        command += mTokenizer[i]->text;
                     } else {
-                        command = command.trimmed();
-                        QString suffix,tempArgs;
-                        parseCommandTypeAndArgs(command,suffix,tempArgs);
-                        if (!command.isEmpty() &&
-                                ( !firstSynonym
-                                  || command!=firstSynonym->command )) {
-                            //not define the struct yet, we define a unamed struct
-                            if (!firstSynonym) {
-                                firstSynonym = addStatement(
-                                            getCurrentScope(),
-                                            mCurrentFile,
-                                            prefix,
-                                            "___dummy___"+command,
-                                            "",
-                                            "",
-                                            "",
-                                            mTokenizer[i]->line,
-                                            //startLine,
-                                            StatementKind::skClass,
-                                            getScope(),
-                                            mCurrentMemberAccessibility,
-                                            StatementProperty::spHasDefinition | StatementProperty::spDummyStatement);
-                            }
-                            if (isTypedef) {
-                                //typedef
-                                addStatement(
-                                            getCurrentScope(),
-                                            mCurrentFile,
-                                            firstSynonym->command+suffix,
-                                            command,
-                                            args+tempArgs,
-                                            "",
-                                            "",
-                                            mTokenizer[mIndex]->line,
-                                            StatementKind::skTypedef,
-                                            getScope(),
-                                            mCurrentMemberAccessibility,
-                                            StatementProperty::spHasDefinition); // typedef
-                            } else {
-                                //variable define
-                                addStatement(
-                                  getCurrentScope(),
-                                  mCurrentFile,
-                                  firstSynonym->command+suffix,
-                                  command,
-                                  args+tempArgs,
-                                  "",
-                                  "",
-                                  mTokenizer[i]->line,
-                                  StatementKind::skVariable,
-                                  getScope(),
-                                  mCurrentMemberAccessibility,
-                                  StatementProperty::spHasDefinition); // TODO: not supported to pass list
-                            }
-                        }
-                        command = "";
+                        command += mTokenizer[i]->text + ' ';
                     }
-                    if (i >= tokenCount - 1)
-                        break;
-                    if (mTokenizer[i]->text=='{'
-                          || mTokenizer[i]->text== ';')
-                        break;
+                } else {
+                    command = command.trimmed();
+                    QString suffix,tempArgs;
+                    parseCommandTypeAndArgs(command,suffix,tempArgs);
+                    if (!command.isEmpty() &&
+                            ( !firstSynonym
+                              || command!=firstSynonym->command )) {
+                        //not define the struct yet, we define a unamed struct
+                        if (!firstSynonym) {
+                            firstSynonym = addStatement(
+                                        getCurrentScope(),
+                                        mCurrentFile,
+                                        prefix,
+                                        "___dummy___"+command,
+                                        "",
+                                        "",
+                                        "",
+                                        mTokenizer[i]->line,
+                                        //startLine,
+                                        StatementKind::skClass,
+                                        getScope(),
+                                        mCurrentMemberAccessibility,
+                                        StatementProperty::spHasDefinition | StatementProperty::spDummyStatement);
+                        }
+                        if (isTypedef) {
+                            //typedef
+                            addStatement(
+                                        getCurrentScope(),
+                                        mCurrentFile,
+                                        firstSynonym->command+suffix,
+                                        command,
+                                        args+tempArgs,
+                                        "",
+                                        "",
+                                        mTokenizer[mIndex]->line,
+                                        StatementKind::skTypedef,
+                                        getScope(),
+                                        mCurrentMemberAccessibility,
+                                        StatementProperty::spHasDefinition); // typedef
+                        } else {
+                            //variable define
+                            addStatement(
+                              getCurrentScope(),
+                              mCurrentFile,
+                              firstSynonym->command+suffix,
+                              command,
+                              args+tempArgs,
+                              "",
+                              "",
+                              mTokenizer[i]->line,
+                              StatementKind::skVariable,
+                              getScope(),
+                              mCurrentMemberAccessibility,
+                              StatementProperty::spHasDefinition); // TODO: not supported to pass list
+                        }
+                    }
+                    command = "";
                 }
-
-              // Nothing worth mentioning after closing brace
-              // Proceed to set first synonym as current class
+                if (i >= tokenCount - 1)
+                    break;
+                if (mTokenizer[i]->text=='{'
+                      || mTokenizer[i]->text== ';')
+                    break;
             }
+
+          // Nothing worth mentioning after closing brace
+          // Proceed to set first synonym as current class
         }
         if (!firstSynonym) {
             PStatement scope = getCurrentScope();
