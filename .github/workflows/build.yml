@@ -290,28 +290,28 @@ jobs:
           name: RPM on latest Fedora
           path: dist/*.rpm
 
-  rpm_opensuse:
-    name: RPM on openSUSE Tumbleweed
-    runs-on: ubuntu-latest
+  # rpm_opensuse:
+  #   name: RPM on openSUSE Tumbleweed
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/opensuse/tumbleweed:latest
+  #     - name: Fetch container image
+  #       run: |
+  #         podman pull --platform linux/amd64 docker.io/opensuse/tumbleweed:latest
 
-      - name: Build
-        run: |
-          podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/opensuse/tumbleweed:latest /src/packages/opensuse/01-in-docker.sh
+  #     - name: Build
+  #       run: |
+  #         podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/opensuse/tumbleweed:latest /src/packages/opensuse/01-in-docker.sh
 
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: RPM on openSUSE Tumbleweed
-          path: dist/*.rpm
+  #     - name: Upload
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: RPM on openSUSE Tumbleweed
+  #         path: dist/*.rpm
 
   musl:
     name: musl-based Linux (latest Alpine)
