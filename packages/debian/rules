@@ -6,12 +6,3 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
 	dh ${@} --buildsystem qmake
-
-override_dh_auto_build: 
-	dh_auto_build -O--buildsystem qmake
-
-override_dh_auto_install:
-	dh_auto_install -O--buildsystem=qmake
-	dh_install debian/compiler_hint.lua usr/libexec/RedPandaCPP
-
-endif
