@@ -21,12 +21,6 @@ Depends: ${shlibs:Depends},
 	 gdb,
 	 gdbserver
 Recommends: qterminal | deepin-terminal | konsole | gnome-terminal | terminator | lxterminal | mate-terminal | terminology | xfce4-terminal | alacritty | cool-retro-term | kitty | sakura | termit | tilix
-Suggests: clang,
-          gcc-multilib [amd64],
-          g++-multilib [amd64],
-          gcc-mingw-w64 [amd64],
-          g++-mingw-w64 [amd64],
-          wine [amd64]
 Description: A lightweight but powerful C/C++ IDE
  Red Panda C++ (Old name Red Panda Dev-C++ 7) is a full featured C/C++ IDE.
  It's the succesor of Red Panda Dev-C++ 6, which is developed by Delphi 7 and 

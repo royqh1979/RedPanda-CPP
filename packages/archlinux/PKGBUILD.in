@@ -11,13 +11,6 @@ makedepends=(qt5-tools)
 optdepends=(
     'clang: C/C++ compiler (alternative)'
 )
-optdepends_x86_64=(
-    'mingw-w64-gcc: Windows C/C++ compiler'
-    'wine: run Windows executable'
-    'aarch64-linux-gnu-gcc: AArch64 C/C++ compiler'
-    'qemu-user-static: run AArch64 executable'
-    'qemu-user-static-binfmt: run AArch64 executable'
-)
 conflicts=("${_pkgname,,}")
 provides=("${_pkgname,,}")
 source=(
