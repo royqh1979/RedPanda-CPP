@@ -400,6 +400,34 @@
         <source> - Command: %1 &gt; %2</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>error:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>fatal error:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>syntax error:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>warning:</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CompilerAutolinkWidget</name>

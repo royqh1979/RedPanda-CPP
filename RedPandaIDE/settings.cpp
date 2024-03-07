@@ -3747,7 +3747,8 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setAutoAddCharsetParams(mSettings->mSettings.value("AddCharset", true).toBool());
     pSet->setStaticLink(mSettings->mSettings.value("StaticLink", false).toBool());
     pSet->setPersistInAutoFind(mSettings->mSettings.value("PersistInAutoFind", false).toBool());
-    pSet->setForceEnglishOutput(mSettings->mSettings.value("forceEnglishOutput", false).toBool());
+    bool forceEnglishOutput=QLocale::system().name().startsWith("zh")?false:true;
+    pSet->setForceEnglishOutput(mSettings->mSettings.value("forceEnglishOutput", forceEnglishOutput).toBool());
 
     pSet->setExecCharset(mSettings->mSettings.value("ExecCharset", ENCODING_SYSTEM_DEFAULT).toString());
     if (pSet->execCharset().isEmpty()) {
