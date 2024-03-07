@@ -36,7 +36,7 @@ Red Panda C++ Version 2.27
   - enhancement: Optimization for string/raw string/char literal status check while completing symbols in c/c++ files.
   - enhancement: Windows installer Hi-DPI support.
   - fix: Delete/Insert in column editing mode.
-  - enhancement: Issue #196 Support using alias in C++ syntax highlighting/code completion/function tips.
+  - enhancement: Issue #196 Support C++ using alias in  syntax highlighting/code completion/function tips.
   
   
 
