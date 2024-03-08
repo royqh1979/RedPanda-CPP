@@ -277,6 +277,7 @@ private:
     QList<PStatement> getListOfFunctions(const QString& fileName, int line,
                                          const PStatement& statement,
                                          const PStatement& scopeStatement) const;
+    QSet<QString> internalGetIncludedFiles(const QString &filename) const;
     PStatement findMacro(const QString& phrase, const QString& fileName) const;
     PStatement findMemberOfStatement(
             const QString& filename,

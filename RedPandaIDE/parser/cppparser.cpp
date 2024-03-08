@@ -806,9 +806,7 @@ QStringList CppParser::getFileDirectIncludes(const QString &filename)
 
 }
 
-QSet<QString> CppParser::getIncludedFiles(const QString &filename)
-{
-    QMutexLocker locker(&mMutex);
+QSet<QString> CppParser::internalGetIncludedFiles(const QString &filename) const {
     QSet<QString> list;
     if (mParsing)
         return list;
@@ -823,6 +821,12 @@ QSet<QString> CppParser::getIncludedFiles(const QString &filename)
         }
     }
     return list;
+}
+
+QSet<QString> CppParser::getIncludedFiles(const QString &filename)
+{
+    QMutexLocker locker(&mMutex);
+    return internalGetIncludedFiles(filename);
 }
 
 QSet<QString> CppParser::getFileUsings(const QString &filename)
@@ -4584,8 +4588,11 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int lin
 {
     QList<PStatement> result;
     StatementMap children = mStatementList.childrenStatements(scopeStatement);
+    QSet<QString> includedFiles = internalGetIncludedFiles(fileName);
     for (const PStatement& child:children) {
         if (statement->command == child->command) {
+            if (!includedFiles.contains(fileName))
+                continue;
             if (line < child->line && (child->fileName == fileName))
                 continue;
             result.append(child);
