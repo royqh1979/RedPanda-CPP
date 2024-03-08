@@ -179,7 +179,7 @@ SOURCES += \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
     widgets/cpudialog.cpp \
-    debugger.cpp \
+    debugger/debugger.cpp \
     editor.cpp \
     editorlist.cpp \
     iconsmanager.cpp \
@@ -309,7 +309,7 @@ HEADERS += \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
     widgets/cpudialog.h \
-    debugger.h \
+    debugger/debugger.h \
     editor.h \
     editorlist.h \
     iconsmanager.h \
