@@ -2657,7 +2657,9 @@ void CppParser::handleEnum(bool isTypedef)
     int startLine = mTokenizer[mIndex]->line;
     mIndex++; //skip 'enum'
 
-    if (mIndex < tokenCount && mTokenizer[mIndex]->text == "class") {
+    if (mIndex < tokenCount &&
+            (mTokenizer[mIndex]->text == "class"
+             || mTokenizer[mIndex]->text == "struct")) {
         //enum class
         isEnumClass = true;
         mIndex++; //skip class
@@ -4535,8 +4537,8 @@ void CppParser::internalParse(const QString &fileName)
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+//       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+//       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
