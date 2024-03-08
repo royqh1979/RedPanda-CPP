@@ -186,4 +186,4 @@ public:
 };
 
 }
-#endif // SYNEDITGLSLHIGHLIGHTER_H
+#endif // QSYNEDIT_GLSL_SYNTAXER_H

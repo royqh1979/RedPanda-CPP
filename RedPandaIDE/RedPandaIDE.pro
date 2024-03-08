@@ -121,12 +121,14 @@ SOURCES += \
     compiler/projectcompiler.cpp \
     compiler/runner.cpp \
     customfileiconprovider.cpp \
-    gdbmiresultparser.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
+    debugger/debugger.cpp \
+    debugger/gdbmidebugger.cpp \
+    debugger/gdbmiresultparser.cpp \
     cpprefacter.cpp \
     parser/cppparser.cpp \
     parser/cpppreprocessor.cpp \
@@ -179,7 +181,6 @@ SOURCES += \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
     widgets/cpudialog.cpp \
-    debugger/debugger.cpp \
     editor.cpp \
     editorlist.cpp \
     iconsmanager.cpp \
@@ -255,9 +256,11 @@ HEADERS += \
     compiler/projectcompiler.h \
     compiler/runner.h \
     compiler/stdincompiler.h \
+    debugger/debugger.h \
+    debugger/gdbmidebugger.h \
+    debugger/gdbmiresultparser.h \
     cpprefacter.h \
     customfileiconprovider.h \
-    gdbmiresultparser.h \
     parser/cppparser.h \
     parser/cpppreprocessor.h \
     parser/cpptokenizer.h \
@@ -309,7 +312,6 @@ HEADERS += \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
     widgets/cpudialog.h \
-    debugger/debugger.h \
     editor.h \
     editorlist.h \
     iconsmanager.h \

@@ -195,4 +195,4 @@ private:
 using PSyntaxer = std::shared_ptr<Syntaxer>;
 using SyntaxerList = QVector<PSyntaxer>;
 }
-#endif // SYNHIGHLIGTERBASE_H
+#endif // QSYNEDIT_SYNTAXER_H

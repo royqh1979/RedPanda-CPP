@@ -125,4 +125,4 @@ public:
 
 }
 
-#endif // SYNEDITASMHIGHLIGHTER_H
+#endif // QSYNEDIT_ASM_SYNTAXER_H

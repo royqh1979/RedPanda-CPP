@@ -221,4 +221,4 @@ public:
 
 }
 
-#endif // SYNEDITCPPHIGHLIGHTER_H
+#endif // QSYNEDIT_CPP_SYNTAXER_H

@@ -295,11 +295,11 @@ private:
 };
 
 
-class DebugReader;
+class DebuggerClient;
 class DebugTarget;
 class Editor;
 
-using PDebugReader = std::shared_ptr<DebugReader>;
+using PDebugReader = std::shared_ptr<DebuggerClient>;
 
 class Debugger : public QObject
 {
@@ -417,7 +417,7 @@ private:
     std::shared_ptr<WatchModel> mWatchModel;
     std::shared_ptr<RegisterModel> mRegisterModel;
     std::shared_ptr<MemoryModel> mMemoryModel;
-    DebugReader *mReader;
+    DebuggerClient *mClient;
     DebugTarget *mTarget;
     bool mForceUTF8;
     bool mDebugInfosUsingUTF8;
@@ -462,21 +462,18 @@ protected:
     void run() override;
 };
 
-class DebugReader : public QThread
+class DebuggerClient : public QThread
 {
     Q_OBJECT
 public:
-    explicit DebugReader(Debugger* debugger, QObject *parent = nullptr);
-    void postCommand(const QString &Command, const QString &Params, DebugCommandSource  Source);
-    void registerInferiorStoppedCommand(const QString &Command, const QString &Params);
+    explicit DebuggerClient(Debugger* debugger, QObject *parent = nullptr);
+    virtual void postCommand(const QString &Command, const QString &Params, DebugCommandSource  Source) = 0;
+    virtual void registerInferiorStoppedCommand(const QString &Command, const QString &Params) = 0;
+    virtual void stopDebug() = 0;
+    bool commandRunning();
     QString debuggerPath() const;
     void setDebuggerPath(const QString &debuggerPath);
-    void stopDebug();
-
-    bool commandRunning();
     void waitStart();
-
-    bool inferiorPaused() const;
 
     bool processExited() const;
 
@@ -484,25 +481,9 @@ public:
 
     const QStringList &consoleOutput() const;
 
-    int breakPointLine() const;
-
-    const QString &breakPointFile() const;
-
     const PDebugCommand &currentCmd() const;
 
     bool updateCPUInfo() const;
-
-    bool updateLocals() const;
-
-    const QStringList &localsValue() const;
-
-    bool evalReady() const;
-
-    const QString &evalValue() const;
-
-    bool updateMemory() const;
-
-    const QStringList &memoryValue() const;
 
     bool receivedSFWarning() const;
 
@@ -585,22 +566,24 @@ private:
     QByteArray removeToken(const QByteArray& line);
 private slots:
     void asyncUpdate();
-private:
-    Debugger *mDebugger;
-    QString mDebuggerPath;
+protected:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mCmdQueueMutex;
 #else
     QMutex mCmdQueueMutex;
 #endif
-    QSemaphore mStartSemaphore;
     QQueue<PDebugCommand> mCmdQueue;
+    QList<PDebugCommand> mInferiorStoppedHookCommands;
+private:
+    Debugger *mDebugger;
+    QString mDebuggerPath;
+
+    QSemaphore mStartSemaphore;
     bool mErrorOccured;
     bool mAsyncUpdated;
     //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
     bool mCmdRunning;
     PDebugCommand mCurrentCmd;
-    std::shared_ptr<QProcess> mProcess;
     QStringList mBinDirs;
     QMap<QString,QStringList> mFileCache;
 
@@ -610,7 +593,6 @@ private:
     QString mSignalMeaning;
 
     //
-    QList<PDebugCommand> mInferiorStoppedHookCommands;
     bool mInferiorRunning;
     bool mProcessExited;
 
@@ -624,10 +606,6 @@ private:
     QString mCurrentFile;
     QStringList mConsoleOutput;
     QStringList mFullOutput;
-    bool mStop;
-    // QThread interface
-protected:
-    void run() override;
 };
 
 #endif // DEBUGGER_H

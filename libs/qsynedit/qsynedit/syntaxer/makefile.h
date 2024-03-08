@@ -155,4 +155,4 @@ public:
 };
 
 }
-#endif // MAKEFILE_H
+#endif // QSYNEDIT_MAKEFILE_SYNTAXER_H

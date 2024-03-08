@@ -175,4 +175,4 @@ public:
 
 }
 
-#endif // SYNEDITCPPHIGHLIGHTER_H
+#endif // QSYNEDIT_LUA_SYNTAXER_H

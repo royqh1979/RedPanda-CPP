@@ -84,4 +84,4 @@ public:
 };
 
 }
-#endif // MAKEFILE_H
+#endif // QSYNEDIT_TEXTFILE_SYNTAXER_H

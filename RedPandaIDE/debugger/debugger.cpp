@@ -52,7 +52,7 @@ Debugger::Debugger(QObject *parent) : QObject(parent),
     connect(mWatchModel.get(), &WatchModel::setWatchVarValue,
             this, &Debugger::setWatchVarValue);
     mExecuting = false;
-    mReader = nullptr;
+    mClient = nullptr;
     mTarget = nullptr;
     mCommandChanged = false;
     mLeftPageIndexBackup = -1;
@@ -158,56 +158,56 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         mTarget->waitStart();
     }
     //delete when thread finished
-    mReader = new DebugReader(this);
-    mReader->addBinDirs(binDirs);
-    mReader->addBinDir(pSettings->dirs().appDir());
-    mReader->setDebuggerPath(debuggerPath);
-    connect(mReader, &QThread::finished,this,&Debugger::cleanUpReader);
-    connect(mReader, &QThread::finished,mMemoryModel.get(),&MemoryModel::reset);
-    connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
-    connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
-    connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
-    connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
-    connect(mReader, &DebugReader::inferiorStopped, pMainWindow, &MainWindow::enableDebugActions);
+    mClient = new DebuggerClient(this);
+    mClient->addBinDirs(binDirs);
+    mClient->addBinDir(pSettings->dirs().appDir());
+    mClient->setDebuggerPath(debuggerPath);
+    connect(mClient, &QThread::finished,this,&Debugger::cleanUpReader);
+    connect(mClient, &QThread::finished,mMemoryModel.get(),&MemoryModel::reset);
+    connect(mClient, &DebuggerClient::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
+    connect(mClient, &DebuggerClient::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
+    connect(mClient, &DebuggerClient::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
+    connect(mClient, &DebuggerClient::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
+    connect(mClient, &DebuggerClient::inferiorStopped, pMainWindow, &MainWindow::enableDebugActions);
 
-    connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel.get(),
+    connect(mClient, &DebuggerClient::breakpointInfoGetted, mBreakpointModel.get(),
             &BreakpointModel::updateBreakpointNumber);
-    connect(mReader, &DebugReader::localsUpdated, pMainWindow,
+    connect(mClient, &DebuggerClient::localsUpdated, pMainWindow,
             &MainWindow::onLocalsReady);
-    connect(mReader, &DebugReader::memoryUpdated,this,
+    connect(mClient, &DebuggerClient::memoryUpdated,this,
             &Debugger::updateMemory);
-    connect(mReader, &DebugReader::evalUpdated,this,
+    connect(mClient, &DebuggerClient::evalUpdated,this,
             &Debugger::updateEval);
-    connect(mReader, &DebugReader::disassemblyUpdate,this,
+    connect(mClient, &DebuggerClient::disassemblyUpdate,this,
             &Debugger::updateDisassembly);
-    connect(mReader, &DebugReader::registerNamesUpdated, this,
+    connect(mClient, &DebuggerClient::registerNamesUpdated, this,
             &Debugger::updateRegisterNames);
-    connect(mReader, &DebugReader::registerValuesUpdated, this,
+    connect(mClient, &DebuggerClient::registerValuesUpdated, this,
             &Debugger::updateRegisterValues);
-    connect(mReader, &DebugReader::varCreated,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::varCreated,mWatchModel.get(),
             &WatchModel::updateVarInfo);
-    connect(mReader, &DebugReader::prepareVarChildren,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::prepareVarChildren,mWatchModel.get(),
             &WatchModel::prepareVarChildren);
-    connect(mReader, &DebugReader::addVarChild,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::addVarChild,mWatchModel.get(),
             &WatchModel::addVarChild);
-    connect(mReader, &DebugReader::varValueUpdated,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::varValueUpdated,mWatchModel.get(),
             &WatchModel::updateVarValue);
-    connect(mReader, &DebugReader::varsValueUpdated,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::varsValueUpdated,mWatchModel.get(),
             &WatchModel::updateAllHasMoreVars);
-    connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
+    connect(mClient, &DebuggerClient::inferiorContinued,pMainWindow,
             &MainWindow::removeActiveBreakpoints);
-    connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
+    connect(mClient, &DebuggerClient::inferiorStopped,pMainWindow,
             &MainWindow::setActiveBreakpoint);
-    connect(mReader, &DebugReader::watchpointHitted,pMainWindow,
+    connect(mClient, &DebuggerClient::watchpointHitted,pMainWindow,
             &MainWindow::onWatchpointHitted);
-    connect(mReader, &DebugReader::errorNoSymbolTable,pMainWindow,
+    connect(mClient, &DebuggerClient::errorNoSymbolTable,pMainWindow,
             &MainWindow::stopDebugForNoSymbolTable);
-    connect(mReader, &DebugReader::inferiorStopped,this,
+    connect(mClient, &DebuggerClient::inferiorStopped,this,
             &Debugger::refreshAll);
 
-    mReader->registerInferiorStoppedCommand("-stack-list-frames","");
-    mReader->start();
-    mReader->waitStart();
+    mClient->registerInferiorStoppedCommand("-stack-list-frames","");
+    mClient->start();
+    mClient->waitStart();
 
     pMainWindow->updateAppTitle();
 
@@ -220,7 +220,7 @@ void Debugger::stop() {
             mTarget->stopDebug();
             mTarget = nullptr;
         }
-        mReader->stopDebug();
+        mClient->stopDebug();
     }
     mCurrentSourceFile="";
 }
@@ -230,8 +230,8 @@ void Debugger::cleanUpReader()
         mExecuting = false;
 
         //stop debugger
-        mReader->deleteLater();
-        mReader=nullptr;
+        mClient->deleteLater();
+        mClient=nullptr;
 
         if (pMainWindow->cpuDialog()!=nullptr) {
             pMainWindow->cpuDialog()->close();
@@ -290,23 +290,23 @@ std::shared_ptr<WatchModel> Debugger::watchModel() const
 
 void Debugger::sendCommand(const QString &command, const QString &params, DebugCommandSource source)
 {
-    if (mExecuting && mReader) {
-        mReader->postCommand(command,params,source);
+    if (mExecuting && mClient) {
+        mClient->postCommand(command,params,source);
     }
 }
 
 bool Debugger::commandRunning()
 {
-    if (mExecuting && mReader) {
-        return mReader->commandRunning();
+    if (mExecuting && mClient) {
+        return mClient->commandRunning();
     }
     return false;
 }
 
 bool Debugger::inferiorRunning()
 {
-    if (mExecuting && mReader) {
-        return mReader->inferiorRunning();
+    if (mExecuting && mClient) {
+        return mClient->inferiorRunning();
     }
     return false;
 }
@@ -876,7 +876,7 @@ void Debugger::syncFinishedParsing()
     bool spawnedcpuform = false;
 
     // GDB determined that the source code is more recent than the executable. Ask the user if he wants to rebuild.
-    if (mReader->receivedSFWarning()) {
+    if (mClient->receivedSFWarning()) {
         if (QMessageBox::question(pMainWindow,
                                   tr("Compile"),
                                   tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
@@ -892,20 +892,20 @@ void Debugger::syncFinishedParsing()
     // show command output
     if (pSettings->debugger().enableDebugConsole() ) {
         if (pSettings->debugger().showDetailLog()) {
-            for (const QString& line:mReader->fullOutput()) {
+            for (const QString& line:mClient->fullOutput()) {
                 pMainWindow->addDebugOutput(line);
             }
         } else {
-            if (mReader->currentCmd() && mReader->currentCmd()->command == "disas") {
+            if (mClient->currentCmd() && mClient->currentCmd()->command == "disas") {
 
             } else {
-                for (const QString& line:mReader->consoleOutput()) {
+                for (const QString& line:mClient->consoleOutput()) {
                     pMainWindow->addDebugOutput(line);
                 }
                 if (
-                       (mReader->currentCmd()
-                        && mReader->currentCmd()->source== DebugCommandSource::Console)
-                        || !mReader->consoleOutput().isEmpty() ) {
+                        (mClient->currentCmd()
+                         && mClient->currentCmd()->source== DebugCommandSource::Console)
+                        || !mClient->consoleOutput().isEmpty() ) {
                     pMainWindow->addDebugOutput("(gdb)");
                 }
             }
@@ -913,20 +913,20 @@ void Debugger::syncFinishedParsing()
     }
 
     // The program to debug has stopped. Stop the debugger
-    if (mReader->processExited()) {
+    if (mClient->processExited()) {
         stop();
         return;
     }
 
-    if (mReader->signalReceived()
-            && mReader->signalName()!="SIGINT"
-            && mReader->signalName()!="SIGTRAP") {
+    if (mClient->signalReceived()
+            && mClient->signalName()!="SIGINT"
+            && mClient->signalName()!="SIGTRAP") {
         SignalMessageDialog dialog(pMainWindow);
         dialog.setOpenCPUInfo(pSettings->debugger().openCPUInfoWhenSignaled());
         dialog.setMessage(
-                    tr("Signal \"%1\" Received: ").arg(mReader->signalName())
+                    tr("Signal \"%1\" Received: ").arg(mClient->signalName())
                     + "<br />"
-                    + mReader->signalMeaning());
+                    + mClient->signalMeaning());
         int result = dialog.exec();
         if (result == QDialog::Accepted && dialog.openCPUInfo()) {
             pMainWindow->showCPUInfoDialog();
@@ -934,7 +934,7 @@ void Debugger::syncFinishedParsing()
     }
 
     // CPU form updates itself when spawned, don't update twice!
-    if ((mReader->updateCPUInfo() && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
+    if ((mClient->updateCPUInfo() && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
         pMainWindow->cpuDialog()->updateInfo();
     }
 }
@@ -990,7 +990,7 @@ bool Debugger::executing() const
     return mExecuting;
 }
 
-DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
+DebuggerClient::DebuggerClient(Debugger* debugger, QObject *parent) : QThread(parent),
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mCmdQueueMutex(),
 #else
@@ -1004,36 +1004,13 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
     mAsyncUpdated = false;
 }
 
-void DebugReader::postCommand(const QString &Command, const QString &Params,
-                               DebugCommandSource Source)
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    PDebugCommand pCmd = std::make_shared<DebugCommand>();
-    pCmd->command = Command;
-    pCmd->params = Params;
-    pCmd->source = Source;
-    mCmdQueue.enqueue(pCmd);
-//    if (!mCmdRunning)
-    //        runNextCmd();
-}
-
-void DebugReader::registerInferiorStoppedCommand(const QString &Command, const QString &Params)
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    PDebugCommand pCmd = std::make_shared<DebugCommand>();
-    pCmd->command = Command;
-    pCmd->params = Params;
-    pCmd->source = DebugCommandSource::Other;
-    mInferiorStoppedHookCommands.append(pCmd);
-}
-
-void DebugReader::clearCmdQueue()
+void DebuggerClient::clearCmdQueue()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     mCmdQueue.clear();
 }
 
-void DebugReader::processConsoleOutput(const QByteArray& line)
+void DebuggerClient::processConsoleOutput(const QByteArray& line)
 {
     if (line.length()>3 && line.startsWith("~\"") && line.endsWith("\"")) {
         QByteArray s=line.mid(2,line.length()-3);
@@ -1119,7 +1096,7 @@ void DebugReader::processConsoleOutput(const QByteArray& line)
     }
 }
 
-void DebugReader::processLogOutput(const QByteArray &line)
+void DebuggerClient::processLogOutput(const QByteArray &line)
 {
     if (mDebugger->debugInfosUsingUTF8() && line.endsWith(": No such file or directory.\n\"")) {
         QByteArray newLine = line;
@@ -1133,7 +1110,7 @@ void DebugReader::processLogOutput(const QByteArray &line)
     }
 }
 
-void DebugReader::processResult(const QByteArray &result)
+void DebuggerClient::processResult(const QByteArray &result)
 {
     GDBMIResultParser parser;
     GDBMIResultType resultType;
@@ -1186,7 +1163,7 @@ void DebugReader::processResult(const QByteArray &result)
 
 }
 
-void DebugReader::processExecAsyncRecord(const QByteArray &line)
+void DebuggerClient::processExecAsyncRecord(const QByteArray &line)
 {
     QByteArray result;
     GDBMIResultParser::ParseObject multiValues;
@@ -1260,7 +1237,7 @@ void DebugReader::processExecAsyncRecord(const QByteArray &line)
     }
 }
 
-void DebugReader::processError(const QByteArray &errorLine)
+void DebuggerClient::processError(const QByteArray &errorLine)
 {
     QString s = QString::fromLocal8Bit(errorLine);
     mConsoleOutput.append(s);
@@ -1272,7 +1249,7 @@ void DebugReader::processError(const QByteArray &errorLine)
 }
 static QRegularExpression reGdbSourceLine("^(\\d)+\\s+in\\s+(.+)$");
 
-void DebugReader::processResultRecord(const QByteArray &line)
+void DebuggerClient::processResultRecord(const QByteArray &line)
 {
     if (line.startsWith("^exit")) {
         mProcessExited = true;
@@ -1337,7 +1314,7 @@ void DebugReader::processResultRecord(const QByteArray &line)
     }
 }
 
-void DebugReader::processDebugOutput(const QByteArray& debugOutput)
+void DebuggerClient::processDebugOutput(const QByteArray& debugOutput)
 {
     // Only update once per update at most
     //WatchView.Items.BeginUpdate;
@@ -1385,7 +1362,7 @@ void DebugReader::processDebugOutput(const QByteArray& debugOutput)
     mFullOutput.clear();
 }
 
-void DebugReader::runInferiorStoppedHook()
+void DebuggerClient::runInferiorStoppedHook()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     foreach (const PDebugCommand& cmd, mInferiorStoppedHookCommands) {
@@ -1393,7 +1370,7 @@ void DebugReader::runInferiorStoppedHook()
     }
 }
 
-void DebugReader::runNextCmd()
+void DebuggerClient::runNextCmd()
 {
     QMutexLocker locker(&mCmdQueueMutex);
 
@@ -1406,7 +1383,7 @@ void DebugReader::runNextCmd()
     if (mCmdQueue.isEmpty()) {
         if (mDebugger->useDebugServer() && mInferiorRunning && !mAsyncUpdated) {
             mAsyncUpdated = true;
-            QTimer::singleShot(50,this,&DebugReader::asyncUpdate);
+            QTimer::singleShot(50,this,&DebuggerClient::asyncUpdate);
         }
         return;
     }
@@ -1451,7 +1428,6 @@ void DebugReader::runNextCmd()
         emit writeToDebugFailed();
     }
 
-//  if devDebugger.ShowCommandLog or pCmd^.ShowInConsole then begin
     if (pSettings->debugger().enableDebugConsole() ) {
         //update debug console
         if (pSettings->debugger().showDetailLog()
@@ -1461,7 +1437,7 @@ void DebugReader::runNextCmd()
     }
 }
 
-QStringList DebugReader::tokenize(const QString &s)
+QStringList DebuggerClient::tokenize(const QString &s)
 {
     QStringList result;
     int tStart,tEnd;
@@ -1557,7 +1533,7 @@ QStringList DebugReader::tokenize(const QString &s)
     return result;
 }
 
-bool DebugReader::outputTerminated(const QByteArray &text)
+bool DebuggerClient::outputTerminated(const QByteArray &text)
 {
     QStringList lines = textToLines(QString::fromUtf8(text));
     foreach (const QString& line,lines) {
@@ -1567,7 +1543,7 @@ bool DebugReader::outputTerminated(const QByteArray &text)
     return false;
 }
 
-void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
+void DebuggerClient::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
     QString filename;
     // gdb use system encoding for file path
@@ -1580,7 +1556,7 @@ void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpo
     emit breakpointInfoGetted(filename, line , number);
 }
 
-void DebugReader::handleFrame(const GDBMIResultParser::ParseValue &frame)
+void DebuggerClient::handleFrame(const GDBMIResultParser::ParseValue &frame)
 {
     if (frame.isValid()) {
         GDBMIResultParser::ParseObject frameObj = frame.object();
@@ -1598,7 +1574,7 @@ void DebugReader::handleFrame(const GDBMIResultParser::ParseValue &frame)
     }
 }
 
-void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack)
+void DebuggerClient::handleStack(const QList<GDBMIResultParser::ParseValue> & stack)
 {
     mDebugger->backtraceModel()->clear();
     foreach (const GDBMIResultParser::ParseValue& frameValue, stack) {
@@ -1616,7 +1592,7 @@ void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack
     }
 }
 
-void DebugReader::handleLocalVariables(const QList<GDBMIResultParser::ParseValue> &variables)
+void DebuggerClient::handleLocalVariables(const QList<GDBMIResultParser::ParseValue> &variables)
 {
     QStringList locals;
     foreach (const GDBMIResultParser::ParseValue& varValue, variables) {
@@ -1633,12 +1609,12 @@ void DebugReader::handleLocalVariables(const QList<GDBMIResultParser::ParseValue
     emit localsUpdated(locals);
 }
 
-void DebugReader::handleEvaluation(const QString &value)
+void DebuggerClient::handleEvaluation(const QString &value)
 {
     emit evalUpdated(value);
 }
 
-void DebugReader::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
+void DebuggerClient::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
 {
     QStringList memory;
     foreach (const GDBMIResultParser::ParseValue& row, rows) {
@@ -1654,7 +1630,7 @@ void DebugReader::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
     emit memoryUpdated(memory);
 }
 
-void DebugReader::handleRegisterNames(const QList<GDBMIResultParser::ParseValue> &names)
+void DebuggerClient::handleRegisterNames(const QList<GDBMIResultParser::ParseValue> &names)
 {
     QStringList nameList;
     foreach (const GDBMIResultParser::ParseValue& nameValue, names) {
@@ -1665,7 +1641,7 @@ void DebugReader::handleRegisterNames(const QList<GDBMIResultParser::ParseValue>
     emit registerNamesUpdated(nameList);
 }
 
-void DebugReader::handleRegisterValue(const QList<GDBMIResultParser::ParseValue> &values)
+void DebuggerClient::handleRegisterValue(const QList<GDBMIResultParser::ParseValue> &values)
 {
     QHash<int,QString> result;
     foreach (const GDBMIResultParser::ParseValue& val, values) {
@@ -1683,7 +1659,7 @@ void DebugReader::handleRegisterValue(const QList<GDBMIResultParser::ParseValue>
     emit registerValuesUpdated(result);
 }
 
-void DebugReader::handleCreateVar(const GDBMIResultParser::ParseObject &multiVars)
+void DebuggerClient::handleCreateVar(const GDBMIResultParser::ParseObject &multiVars)
 {
     if (!mCurrentCmd)
         return;
@@ -1696,7 +1672,7 @@ void DebugReader::handleCreateVar(const GDBMIResultParser::ParseObject &multiVar
     emit varCreated(expression,name,numChild,value,type,hasMore);
 }
 
-void DebugReader::handleListVarChildren(const GDBMIResultParser::ParseObject &multiVars)
+void DebuggerClient::handleListVarChildren(const GDBMIResultParser::ParseObject &multiVars)
 {
     if (!mCurrentCmd)
         return;
@@ -1723,7 +1699,7 @@ void DebugReader::handleListVarChildren(const GDBMIResultParser::ParseObject &mu
     }
 }
 
-void DebugReader::handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes)
+void DebuggerClient::handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes)
 {
     foreach (const GDBMIResultParser::ParseValue& value, changes) {
         GDBMIResultParser::ParseObject obj = value.object();
@@ -1741,7 +1717,7 @@ void DebugReader::handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue
     //emit varsValueUpdated();
 }
 
-QByteArray DebugReader::removeToken(const QByteArray &line)
+QByteArray DebuggerClient::removeToken(const QByteArray &line)
 {
     int p=0;
     while (p<line.length()) {
@@ -1756,7 +1732,7 @@ QByteArray DebugReader::removeToken(const QByteArray &line)
     return line;
 }
 
-void DebugReader::asyncUpdate()
+void DebuggerClient::asyncUpdate()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     if (mCmdQueue.isEmpty()) {
@@ -1765,172 +1741,91 @@ void DebugReader::asyncUpdate()
     mAsyncUpdated = false;
 }
 
-const QStringList &DebugReader::binDirs() const
+const QStringList &DebuggerClient::binDirs() const
 {
     return mBinDirs;
 }
 
-void DebugReader::addBinDirs(const QStringList &binDirs)
+void DebuggerClient::addBinDirs(const QStringList &binDirs)
 {
     mBinDirs.append(binDirs);
 }
 
-void DebugReader::addBinDir(const QString &binDir)
+void DebuggerClient::addBinDir(const QString &binDir)
 {
     mBinDirs.append(binDir);
 }
 
-const QString &DebugReader::signalMeaning() const
+const QString &DebuggerClient::signalMeaning() const
 {
     return mSignalMeaning;
 }
 
-const QString &DebugReader::signalName() const
+const QString &DebuggerClient::signalName() const
 {
     return mSignalName;
 }
 
-bool DebugReader::inferiorRunning() const
+bool DebuggerClient::inferiorRunning() const
 {
     return mInferiorRunning;
 }
 
-const QStringList &DebugReader::fullOutput() const
+const QStringList &DebuggerClient::fullOutput() const
 {
     return mFullOutput;
 }
 
-bool DebugReader::receivedSFWarning() const
+bool DebuggerClient::receivedSFWarning() const
 {
     return mReceivedSFWarning;
 }
 
-bool DebugReader::updateCPUInfo() const
+bool DebuggerClient::updateCPUInfo() const
 {
     return mUpdateCPUInfo;
 }
 
-const PDebugCommand &DebugReader::currentCmd() const
+const PDebugCommand &DebuggerClient::currentCmd() const
 {
     return mCurrentCmd;
 }
 
-const QStringList &DebugReader::consoleOutput() const
+const QStringList &DebuggerClient::consoleOutput() const
 {
     return mConsoleOutput;
 }
 
-bool DebugReader::signalReceived() const
+bool DebuggerClient::signalReceived() const
 {
     return mSignalReceived;
 }
 
-bool DebugReader::processExited() const
+bool DebuggerClient::processExited() const
 {
     return mProcessExited;
 }
 
-QString DebugReader::debuggerPath() const
+QString DebuggerClient::debuggerPath() const
 {
     return mDebuggerPath;
 }
 
-void DebugReader::setDebuggerPath(const QString &debuggerPath)
+void DebuggerClient::setDebuggerPath(const QString &debuggerPath)
 {
     mDebuggerPath = debuggerPath;
 }
 
-void DebugReader::stopDebug()
-{
-    mStop = true;
-}
-
-bool DebugReader::commandRunning()
+bool DebuggerClient::commandRunning()
 {
     return !mCmdQueue.isEmpty();
 }
 
-void DebugReader::waitStart()
+void DebuggerClient::waitStart()
 {
     mStartSemaphore.acquire(1);
 }
 
-void DebugReader::run()
-{
-    mStop = false;
-    mInferiorRunning = false;
-    mProcessExited = false;
-    mErrorOccured = false;
-    QString cmd = mDebuggerPath;
-//    QString arguments = "--annotate=2";
-    QStringList arguments{"--interpret=mi", "--silent"};
-    QString workingDir = QFileInfo(mDebuggerPath).path();
-
-    mProcess = std::make_shared<QProcess>();
-    auto action = finally([&]{
-        mProcess.reset();
-    });
-    mProcess->setProgram(cmd);
-    mProcess->setArguments(arguments);
-    mProcess->setProcessChannelMode(QProcess::MergedChannels);
-
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    QString path = env.value("PATH");
-    QStringList pathAdded = mBinDirs;
-    if (!path.isEmpty()) {
-        path = pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
-    } else {
-        path = pathAdded.join(PATH_SEPARATOR);
-    }
-    QString cmdDir = extractFileDir(cmd);
-    if (!cmdDir.isEmpty()) {
-        path = cmdDir + PATH_SEPARATOR + path;
-    }
-    env.insert("PATH",path);
-    mProcess->setProcessEnvironment(env);
-
-    mProcess->setWorkingDirectory(workingDir);
-
-    connect(mProcess.get(), &QProcess::errorOccurred,
-                    [&](){
-                        mErrorOccured= true;
-                    });
-    QByteArray buffer;
-    QByteArray readed;
-
-    mProcess->start();
-    mProcess->waitForStarted(5000);
-    mStartSemaphore.release(1);
-    while (true) {
-        mProcess->waitForFinished(1);
-        if (mProcess->state()!=QProcess::Running) {
-            break;
-        }
-        if (mStop) {
-            mProcess->terminate();
-            mProcess->kill();
-            break;
-        }
-        if (mErrorOccured)
-            break;
-        readed = mProcess->readAll();
-        buffer += readed;
-
-        if (readed.endsWith("\n")&& outputTerminated(buffer)) {
-            processDebugOutput(buffer);
-            buffer.clear();
-            mCmdRunning = false;
-            runNextCmd();
-        } else if (!mCmdRunning && readed.isEmpty()){
-            runNextCmd();
-        } else if (readed.isEmpty()){
-            msleep(1);
-        }
-    }
-    if (mErrorOccured) {
-        emit processError(mProcess->error());
-    }
-}
 
 BreakpointModel::BreakpointModel(QObject *parent):QAbstractTableModel(parent),
     mIsForProject(false)
