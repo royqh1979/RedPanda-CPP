@@ -164,6 +164,10 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
                 return result;
         }
     }
+    while(statement && statement->kind == StatementKind::skAlias)
+        statement = doFindAliasedStatement(statement);
+    if (!statement)
+        return result;
     PStatement parentScope;
     if (statement->kind == StatementKind::skClass) {
         parentScope = statement;
@@ -393,7 +397,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
     }
 
     //using alias like 'using std::vector;'
-    if (statement->kind == StatementKind::skAlias) {
+    while (statement->kind == StatementKind::skAlias) {
         statement = doFindAliasedStatement(statement);
         if (!statement)
             return PStatement();
@@ -637,14 +641,22 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const
         return PStatement();
     QString nsName=statement->type.mid(0,pos);
     QString name = statement->type.mid(pos+2);
-    PStatementList namespaceStatements = doFindNamespace(nsName);
-    if (!namespaceStatements)
-        return PStatement();
-    foreach (const PStatement& namespaceStatement, *namespaceStatements) {
-        QList<PStatement> resultList = findMembersOfStatement(name,namespaceStatement);
+    if (nsName.isEmpty()) {
+        QList<PStatement> resultList = findMembersOfStatement(name,PStatement());
         foreach(const PStatement& resultStatement,resultList) {
             if (resultStatement->kind != StatementKind::skAlias)
                 return resultStatement;
+        }
+    } else {
+        PStatementList namespaceStatements = doFindNamespace(nsName);
+        if (!namespaceStatements)
+            return PStatement();
+        foreach (const PStatement& namespaceStatement, *namespaceStatements) {
+            QList<PStatement> resultList = findMembersOfStatement(name,namespaceStatement);
+            foreach(const PStatement& resultStatement,resultList) {
+                if (resultStatement->kind != StatementKind::skAlias)
+                    return resultStatement;
+            }
         }
     }
     return PStatement();
@@ -4523,8 +4535,8 @@ void CppParser::internalParse(const QString &fileName)
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-//       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-//       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
