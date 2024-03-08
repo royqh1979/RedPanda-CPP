@@ -41,8 +41,8 @@ Red Panda C++ Version 2.27
   - fix: Using alias for global symbols are not correctly handled.
   - enhancement: Support "enum struct" Scoped enumerations.
   - fix: Function tips contains functions that not in the scope.
-  - fix: Hint for bold text (<b></b>) are not correctly handled in the function tips. 
-  
+  - fix: Hint for bold text (<b></b>) are not correctly handled in the function tips.
+  - fix: Full scope typed variables in lambda expressions is not correctly parsed.  
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

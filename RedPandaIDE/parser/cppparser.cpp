@@ -2953,15 +2953,25 @@ void CppParser::handleLambda(int index, int endIndex)
     scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,mTokenizer[bodyStart]->line);
     int i=bodyStart+1; // start after '{';
-    while (i+2<bodyEnd) {
-        if (tokenIsTypeOrNonKeyword(mTokenizer[i]->text)
+    QString sType;
+    while (i<bodyEnd) {
+        if (mTokenizer[i]->text=="::") {
+            sType="::";
+            i++;
+        }
+        while (i+1<bodyEnd && tokenIsTypeOrNonKeyword(mTokenizer[i]->text)
+                && mTokenizer[i+1]->text=="::") {
+            sType+=mTokenizer[i]->text;
+            sType+="::";
+            i+=2;
+        }
+        if (i+1<bodyEnd && tokenIsTypeOrNonKeyword(mTokenizer[i]->text)
                 && !mTokenizer[i]->text.endsWith('.')
                 && !mTokenizer[i]->text.endsWith("->")
                 && (mTokenizer[i+1]->text.startsWith('*')
                  || mTokenizer[i+1]->text.startsWith('&')
                  || tokenIsTypeOrNonKeyword(mTokenizer[i+1]->text)))
         {
-            QString sType;
             QString sName;
             while (i+1<bodyEnd) {
                 if (mTokenizer[i+1]->text==':'
@@ -2973,7 +2983,7 @@ void CppParser::handleLambda(int index, int endIndex)
                         )
                     break;
                 else {
-                    if (!sType.isEmpty())
+                    if (!sType.isEmpty() && !sType.endsWith("::"))
                         sType+=' ';
                     sType+=mTokenizer[i]->text;
                 }
@@ -3038,6 +3048,7 @@ void CppParser::handleLambda(int index, int endIndex)
             }
         }
         i=moveToEndOfStatement(i, true, bodyEnd);
+        sType="";
     }
     removeScopeLevel(mTokenizer[bodyEnd]->line);
 }
