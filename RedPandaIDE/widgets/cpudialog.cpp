@@ -19,7 +19,7 @@
 #include "ui_cpudialog.h"
 #include "../syntaxermanager.h"
 #include "../mainwindow.h"
-#include "../debugger.h"
+#include "../debugger/debugger.h"
 #include "../settings.h"
 #include "../colorscheme.h"
 #include "../iconsmanager.h"

@@ -50,7 +50,7 @@
 #include <QScrollBar>
 #include <QScreen>
 #include "iconsmanager.h"
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include "editorlist.h"
 #include <QDebug>
 #include "project.h"

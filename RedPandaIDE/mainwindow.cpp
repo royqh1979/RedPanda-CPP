@@ -21,7 +21,7 @@
 #include "systemconsts.h"
 #include "settings.h"
 #include "qsynedit/constants.h"
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include "utils/escape.h"
 #include "utils/parsearg.h"
 #include "widgets/cpudialog.h"
