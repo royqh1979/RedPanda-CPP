@@ -37,6 +37,11 @@ Red Panda C++ Version 2.27
   - enhancement: Windows installer Hi-DPI support.
   - fix: Delete/Insert in column editing mode.
   - enhancement: Issue #196 Support C++ using alias in  syntax highlighting/code completion/function tips.
+  - enhancement: Support annonymous class
+  - fix: Using alias for global symbols are not correctly handled.
+  - enhancement: Support "enum struct" Scoped enumerations.
+  - fix: Function tips contains functions that not in the scope.
+  - fix: Hint for bold text (<b></b>) are not correctly handled in the function tips.
   
   
 
