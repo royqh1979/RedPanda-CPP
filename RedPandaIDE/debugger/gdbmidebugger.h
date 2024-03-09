@@ -19,7 +19,13 @@
 
 #include "debugger.h"
 #include <QProcess>
+#include <QByteArray>
+#include <QList>
+#include <QMap>
+#include <QString>
+#include <QStringList>
 #include <memory>
+#include <QRegularExpression>
 
 class GDBMIDebuggerClient: public DebuggerClient {
     Q_OBJECT
@@ -34,9 +40,43 @@ public:
     // QThread interface
 protected:
     void run() override;
+    void runNextCmd() override;
+private:
+    QStringList tokenize(const QString& s) const;
+    bool outputTerminated(const QByteArray& text) const;
+    void handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint);
+    void handleCreateVar(const GDBMIResultParser::ParseObject &multiVars);
+    void handleFrame(const GDBMIResultParser::ParseValue &frame);
+    void handleStack(const QList<GDBMIResultParser::ParseValue> & stack);
+    void handleLocalVariables(const QList<GDBMIResultParser::ParseValue> & variables);
+    void handleEvaluation(const QString& value);
+    void handleMemory(const QList<GDBMIResultParser::ParseValue> & rows);
+    void handleRegisterNames(const QList<GDBMIResultParser::ParseValue> & names);
+    void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values);
+    void handleListVarChildren(const GDBMIResultParser::ParseObject& multiVars);
+    void handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes);
+    void processConsoleOutput(const QByteArray& line);
+    void processLogOutput(const QByteArray& line);
+    void processResult(const QByteArray& result);
+    void processExecAsyncRecord(const QByteArray& line);
+    void processError(const QByteArray& errorLine);
+    void processResultRecord(const QByteArray& line);
+    void processDebugOutput(const QByteArray& debugOutput);
+    QByteArray removeToken(const QByteArray& line) const;
+private slots:
+    void asyncUpdate();
 private:
     bool mStop;
     std::shared_ptr<QProcess> mProcess;
+    QMap<QString,QStringList> mFileCache;
+    int mCurrentLine;
+    qulonglong mCurrentAddress;
+    QString mCurrentFunc;
+    QString mCurrentFile;
+
+    bool mAsyncUpdated;
+
+    static const QRegularExpression REGdbSourceLine;
 };
 
 #endif // GDBMI_DEBUGGER_H

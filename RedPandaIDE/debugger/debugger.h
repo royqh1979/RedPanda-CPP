@@ -41,7 +41,8 @@ enum class DebugCommandSource {
 
 enum class DebuggerType {
     GDB,
-    LLDB_MI
+    LLDB_MI,
+    DAP
 };
 
 struct DebugCommand{
@@ -444,7 +445,7 @@ public:
     void addBinDirs(const QStringList &binDirs);
     void addBinDir(const QString &binDir);
 signals:
-    void processError(QProcess::ProcessError error);
+    void processFailed(QProcess::ProcessError error);
 private:
     QString mInferior;
     QStringList mArguments;
@@ -499,12 +500,13 @@ public:
     void addBinDirs(const QStringList &binDirs);
     void addBinDir(const QString &binDir);
 
+    Debugger* debugger() { return mDebugger; }
 signals:
     void parseStarted();
     void invalidateAllVars();
     void parseFinished();
     void writeToDebugFailed();
-    void processError(QProcess::ProcessError error);
+    void processFailed(QProcess::ProcessError error);
     void changeDebugConsoleLastLine(const QString& text);
     void cmdStarted();
     void cmdFinished();
@@ -536,36 +538,10 @@ signals:
                          const QString& newType, int newNumChildren,
                          bool hasMore);
     void varsValueUpdated();
-
-private:
+protected:
+    virtual void runNextCmd() = 0;
     void clearCmdQueue();
-
-    void runNextCmd();
-    QStringList tokenize(const QString& s);
-
-    bool outputTerminated(const QByteArray& text);
-    void handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint);
-    void handleFrame(const GDBMIResultParser::ParseValue &frame);
-    void handleStack(const QList<GDBMIResultParser::ParseValue> & stack);
-    void handleLocalVariables(const QList<GDBMIResultParser::ParseValue> & variables);
-    void handleEvaluation(const QString& value);
-    void handleMemory(const QList<GDBMIResultParser::ParseValue> & rows);
-    void handleRegisterNames(const QList<GDBMIResultParser::ParseValue> & names);
-    void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values);
-    void handleCreateVar(const GDBMIResultParser::ParseObject& multiVars);
-    void handleListVarChildren(const GDBMIResultParser::ParseObject& multiVars);
-    void handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes);
-    void processConsoleOutput(const QByteArray& line);
-    void processLogOutput(const QByteArray& line);
-    void processResult(const QByteArray& result);
-    void processExecAsyncRecord(const QByteArray& line);
-    void processError(const QByteArray& errorLine);
-    void processResultRecord(const QByteArray& line);
-    void processDebugOutput(const QByteArray& debugOutput);
     void runInferiorStoppedHook();
-    QByteArray removeToken(const QByteArray& line);
-private slots:
-    void asyncUpdate();
 protected:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mCmdQueueMutex;
@@ -573,39 +549,27 @@ protected:
     QMutex mCmdQueueMutex;
 #endif
     QQueue<PDebugCommand> mCmdQueue;
+    bool mCmdRunning;
+
     QList<PDebugCommand> mInferiorStoppedHookCommands;
+    bool mInferiorRunning;
+    bool mProcessExited;
+    PDebugCommand mCurrentCmd;
+    QStringList mConsoleOutput;
+    QStringList mFullOutput;
+    QSemaphore mStartSemaphore;
+    bool mSignalReceived;
+    bool mUpdateCPUInfo;
+
+    QString mSignalName;
+    QString mSignalMeaning;
+    bool mReceivedSFWarning;
 private:
     Debugger *mDebugger;
     QString mDebuggerPath;
 
-    QSemaphore mStartSemaphore;
-    bool mErrorOccured;
-    bool mAsyncUpdated;
-    //fOnInvalidateAllVars: TInvalidateAllVarsEvent;
-    bool mCmdRunning;
-    PDebugCommand mCurrentCmd;
     QStringList mBinDirs;
-    QMap<QString,QStringList> mFileCache;
 
-    //fWatchView: TTreeView;
-
-    QString mSignalName;
-    QString mSignalMeaning;
-
-    //
-    bool mInferiorRunning;
-    bool mProcessExited;
-
-    bool mSignalReceived;
-    bool mUpdateCPUInfo;
-    bool mReceivedSFWarning;
-
-    int mCurrentLine;
-    qulonglong mCurrentAddress;
-    QString mCurrentFunc;
-    QString mCurrentFile;
-    QStringList mConsoleOutput;
-    QStringList mFullOutput;
 };
 
 #endif // DEBUGGER_H
