@@ -19,11 +19,12 @@
 #include <QString>
 #include <QMap>
 #include <QVariant>
+#include <QJsonObject>
 #include <qt_utils/utils.h>
 
 class DAPMessageError : public BaseError {
 public:
-    explicit FileError(const QString& reason);
+    explicit DAPMessageError(const QString& reason);
 };
 
 struct DAPProtocolMessage{
@@ -33,11 +34,29 @@ struct DAPProtocolMessage{
 
 struct DAPRequest: public DAPProtocolMessage {
     QString command;
-    QVariantMap arguments;
+    QJsonObject arguments;
+};
+
+struct DAPEvent: public DAPProtocolMessage {
+    QString event;
+    QJsonObject body;
+};
+
+struct DAPResponse: public DAPProtocolMessage {
+    qint64 request_seq;
+    bool success;
+    QString command;
+    QString message;
+    QJsonObject body;
 };
 
 QString createDAPRequestMessage(
-        qint64 seq, const QString &command, const QVariantMap& arguments);
+        qint64 seq, const QString &command, const QJsonObject& arguments);
 
-DAPRequest parseDAPRequestMessage(const QByteArray& contentPart);
+QString createDAPResponseMessage(
+        qint64 seq, qint64 request_seq, bool success,
+        const QString& command, const QString& message, const QJsonObject& body);
+
+std::shared_ptr<DAPProtocolMessage> parseDAPMessage(const QByteArray& contentPart);
+
 #endif
