@@ -270,12 +270,14 @@ void Debugger::updateRegisterValues(const QHash<int, QString> &values)
 void Debugger::refreshAll()
 {
     refreshWatchVars();
-    sendCommand("-stack-list-variables", "--all-values");
-    if (memoryModel()->startAddress()>0)
-        sendCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
-                    .arg(memoryModel()->startAddress())
-                    .arg(pSettings->debugger().memoryViewRows())
-                    .arg(pSettings->debugger().memoryViewColumns())
+    if (mExecuting && mClient)
+        mClient->refreshStackVariables();
+    if (memoryModel()->startAddress()>0
+            && mExecuting && mClient)
+        mClient->readMemory(
+                    memoryModel()->startAddress(),
+                    pSettings->debugger().memoryViewRows(),
+                    pSettings->debugger().memoryViewColumns()
                     );
 }
 
@@ -314,7 +316,9 @@ bool Debugger::inferiorRunning()
 
 void Debugger::interrupt()
 {
-    sendCommand("-exec-interrupt", "");
+    if (mExecuting && mClient) {
+        mClient->interrupt();
+    }
 }
 
 bool Debugger::isForProject() const
@@ -437,13 +441,8 @@ PBreakpoint Debugger::breakpointAt(int line, const Editor *editor, int *index)
 void Debugger::setBreakPointCondition(int index, const QString &condition, bool forProject)
 {
     PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition, forProject);
-    if (condition.isEmpty()) {
-        sendCommand("-break-condition",
-                    QString("%1").arg(breakpoint->number));
-    } else {
-        sendCommand("-break-condition",
-                    QString("%1 %2").arg(breakpoint->number).arg(condition));
-    }
+    if (mExecuting && mClient)
+        mClient->setBreakpointCondition(breakpoint);
 }
 
 void Debugger::sendAllBreakpointsToDebugger()
@@ -495,8 +494,8 @@ void Debugger::loadForProject(const QString &filename, const QString &projectFol
 void Debugger::addWatchpoint(const QString &expression)
 {
     QString s=expression.trimmed();
-    if (!s.isEmpty()) {
-        sendCommand("-break-watch",s,DebugCommandSource::Other);
+    if (mExecuting && mClient) {
+        mClient->addWatchpoint(expression);
     }
 }
 
@@ -545,12 +544,12 @@ void Debugger::modifyWatchVarExpression(const QString &oldExpr, const QString &n
 
 void Debugger::refreshWatchVars()
 {
-    if (mExecuting) {
+    if (mExecuting && mClient) {
         sendAllWatchVarsToDebugger();
         if (mDebuggerType==DebuggerType::LLDB_MI) {
             for (PWatchVar var:mWatchModel->watchVars()) {
                 if (!var->name.isEmpty())
-                    sendCommand("-var-update",QString(" --all-values %1").arg(var->name));
+                    mClient->refreshWatchVar(var);
             }
         } else {
             sendCommand("-var-update"," --all-values *");
@@ -1003,23 +1002,6 @@ DebuggerClient::DebuggerClient(Debugger* debugger, QObject *parent) : QThread(pa
     mCmdRunning = false;
 }
 
-void DebuggerClient::clearCmdQueue()
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    mCmdQueue.clear();
-}
-
-void DebuggerClient::runInferiorStoppedHook()
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    foreach (const PDebugCommand& cmd, mInferiorStoppedHookCommands) {
-        mCmdQueue.push_front(cmd);
-    }
-}
-
-
-
-
 const QStringList &DebuggerClient::binDirs() const
 {
     return mBinDirs;
@@ -1063,11 +1045,6 @@ bool DebuggerClient::receivedSFWarning() const
 bool DebuggerClient::updateCPUInfo() const
 {
     return mUpdateCPUInfo;
-}
-
-const PDebugCommand &DebuggerClient::currentCmd() const
-{
-    return mCurrentCmd;
 }
 
 const QStringList &DebuggerClient::consoleOutput() const

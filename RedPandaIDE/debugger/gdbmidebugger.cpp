@@ -860,4 +860,65 @@ void GDBMIDebuggerClient::asyncUpdate()
     mAsyncUpdated = false;
 }
 
+const PDebugCommand &GDBMIDebuggerClient::currentCmd() const
+{
+    return mCurrentCmd;
+}
 
+void GDBMIDebuggerClient::interrupt()
+{
+    postCommand("-exec-interrupt", "", DebugCommandSource::Other);
+}
+
+void GDBMIDebuggerClient::refreshStackVariables()
+{
+    postCommand("-stack-list-variables", "--all-values", DebugCommandSource::Other);
+}
+
+void GDBMIDebuggerClient::readMemory(qulonglong startAddress, int rows, int cols)
+{
+    postCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
+                .arg(startAddress)
+                .arg(rows)
+                .arg(cols),
+                DebugCommandSource::Other
+                );
+}
+
+void GDBMIDebuggerClient::setBreakpointCondition(PBreakpoint breakpoint)
+{
+    Q_ASSERT(breakpoint!=nullptr);
+    QString condition = breakpoint->condition;
+    if (condition.isEmpty()) {
+        postCommand("-break-condition",
+                    QString("%1").arg(breakpoint->number), DebugCommandSource::Other);
+    } else {
+        postCommand("-break-condition",
+                    QString("%1 %2").arg(breakpoint->number).arg(condition), DebugCommandSource::Other);
+    }
+}
+
+void GDBMIDebuggerClient::addWatchpoint(const QString &watchExp)
+{
+    if (!watchExp.isEmpty())
+        postCommand("-break-watch", watchExp, DebugCommandSource::Other);
+}
+
+void GDBMIDebuggerClient::refreshWatchVar(PWatchVar var)
+{
+
+}
+
+void GDBMIDebuggerClient::runInferiorStoppedHook()
+{
+    QMutexLocker locker(&mCmdQueueMutex);
+    foreach (const PDebugCommand& cmd, mInferiorStoppedHookCommands) {
+        mCmdQueue.push_front(cmd);
+    }
+}
+
+void GDBMIDebuggerClient::clearCmdQueue()
+{
+    QMutexLocker locker(&mCmdQueueMutex);
+    mCmdQueue.clear();
+}

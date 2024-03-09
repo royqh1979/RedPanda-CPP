@@ -45,13 +45,6 @@ enum class DebuggerType {
     DAP
 };
 
-struct DebugCommand{
-    QString command;
-    QString params;
-    DebugCommandSource source;
-};
-
-using PDebugCommand = std::shared_ptr<DebugCommand>;
 struct WatchVar;
 using  PWatchVar = std::shared_ptr<WatchVar>;
 struct WatchVar {
@@ -482,8 +475,6 @@ public:
 
     const QStringList &consoleOutput() const;
 
-    const PDebugCommand &currentCmd() const;
-
     bool updateCPUInfo() const;
 
     bool receivedSFWarning() const;
@@ -501,6 +492,15 @@ public:
     void addBinDir(const QString &binDir);
 
     Debugger* debugger() { return mDebugger; }
+
+    //requests
+    virtual void interrupt() = 0;
+    virtual void refreshStackVariables() = 0;
+    virtual void readMemory(qulonglong startAddress, int rows, int cols) = 0;
+    virtual void setBreakpointCondition(PBreakpoint breakpoint) = 0;
+    virtual void addWatchpoint(const QString& watchExp) = 0;
+    virtual void refreshWatchVar(PWatchVar var) = 0;
+
 signals:
     void parseStarted();
     void invalidateAllVars();
@@ -540,21 +540,18 @@ signals:
     void varsValueUpdated();
 protected:
     virtual void runNextCmd() = 0;
-    void clearCmdQueue();
-    void runInferiorStoppedHook();
 protected:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mCmdQueueMutex;
 #else
     QMutex mCmdQueueMutex;
 #endif
-    QQueue<PDebugCommand> mCmdQueue;
+
     bool mCmdRunning;
 
-    QList<PDebugCommand> mInferiorStoppedHookCommands;
     bool mInferiorRunning;
     bool mProcessExited;
-    PDebugCommand mCurrentCmd;
+
     QStringList mConsoleOutput;
     QStringList mFullOutput;
     QSemaphore mStartSemaphore;

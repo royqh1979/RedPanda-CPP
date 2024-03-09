@@ -27,6 +27,14 @@
 #include <memory>
 #include <QRegularExpression>
 
+struct DebugCommand{
+    QString command;
+    QString params;
+    DebugCommandSource source;
+};
+
+using PDebugCommand = std::shared_ptr<DebugCommand>;
+
 class GDBMIDebuggerClient: public DebuggerClient {
     Q_OBJECT
 public:
@@ -37,6 +45,14 @@ public:
     void postCommand(const QString &Command, const QString &Params, DebugCommandSource Source) override;
     void registerInferiorStoppedCommand(const QString &Command, const QString &Params) override;
     void stopDebug() override;
+    const PDebugCommand &currentCmd() const;
+
+    void interrupt() override;
+    void refreshStackVariables() override;
+    void readMemory(qulonglong startAddress, int rows, int cols) override;
+    void setBreakpointCondition(PBreakpoint breakpoint) override;
+    void addWatchpoint(const QString& watchExp) override;
+    void refreshWatchVar(PWatchVar var) override;
     // QThread interface
 protected:
     void run() override;
@@ -63,6 +79,8 @@ private:
     void processResultRecord(const QByteArray& line);
     void processDebugOutput(const QByteArray& debugOutput);
     QByteArray removeToken(const QByteArray& line) const;
+    void runInferiorStoppedHook();
+    void clearCmdQueue();
 private slots:
     void asyncUpdate();
 private:
@@ -77,6 +95,11 @@ private:
     bool mAsyncUpdated;
 
     static const QRegularExpression REGdbSourceLine;
+
+    QQueue<PDebugCommand> mCmdQueue;
+    PDebugCommand mCurrentCmd;
+    QList<PDebugCommand> mInferiorStoppedHookCommands;
+
 };
 
 #endif // GDBMI_DEBUGGER_H

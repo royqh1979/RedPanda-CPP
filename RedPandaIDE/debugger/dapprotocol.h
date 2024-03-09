@@ -57,6 +57,9 @@ QString createDAPResponseMessage(
         qint64 seq, qint64 request_seq, bool success,
         const QString& command, const QString& message, const QJsonObject& body);
 
+QString createDAPEventMessage(
+        qint64 seq, const QString& event, const QJsonObject& body);
+
 std::shared_ptr<DAPProtocolMessage> parseDAPMessage(const QByteArray& contentPart);
 
 #endif
