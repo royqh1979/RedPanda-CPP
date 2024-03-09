@@ -21,7 +21,7 @@
 /packages/debian/control eol=lf
 /packages/debian/copyright eol=lf
 /platform/linux/install.sh eol=lf
-/platform/linux/redpandaide.desktop.in eol=lf
+/platform/linux/RedPandaIDE.desktop.in eol=lf
 /platform/linux/redpandaide.svg eol=lf
 /platform/linux/templates/*/*.txt eol=lf
 /platform/linux/templates/*/*.template eol=lf

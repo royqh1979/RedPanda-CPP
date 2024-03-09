@@ -29,7 +29,7 @@ rm /RedPandaIDE.AppDir/usr/libexec/RedPandaCPP/redpanda-git-askpass
 
 # setup AppImage resource
 cd /RedPandaIDE.AppDir
-ln -s usr/share/applications/redpandaide.desktop redpandaide.desktop
+ln -s usr/share/applications/RedPandaIDE.desktop RedPandaIDE.desktop
 ln -s usr/share/icons/hicolor/scalable/apps/redpandaide.svg redpandaide.svg
 # following files may come from Windows filesystem, use `install` to preseve file permission
 install -m755 "$SRC_DIR/packages/appimage/AppRun.sh" AppRun

@@ -39,7 +39,7 @@ make INSTALL_ROOT="%{buildroot}" install
 /usr/libexec/RedPandaCPP/*
 /usr/share/RedPandaCPP/*
 /usr/share/doc/RedPandaCPP/*
-/usr/share/applications/redpandaide.desktop
+/usr/share/applications/RedPandaIDE.desktop
 /usr/share/icons/hicolor/scalable/apps/redpandaide.svg
 /usr/share/mime/packages/redpandaide.xml
 
