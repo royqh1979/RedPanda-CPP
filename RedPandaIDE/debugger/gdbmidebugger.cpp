@@ -1025,6 +1025,12 @@ void GDBMIDebuggerClient::evalExpression(const QString &expression)
     postCommand("-data-evaluate-expression", expression);
 }
 
+void GDBMIDebuggerClient::selectFrame(PTrace trace)
+{
+    if (trace)
+        postCommand("-stack-select-frame", QString("%1").arg(trace->level));
+}
+
 void GDBMIDebuggerClient::refreshFrame()
 {
     postCommand("-stack-info-frame", "");

@@ -8771,8 +8771,8 @@ void MainWindow::switchCurrentStackTrace(int idx)
             e->setCaretPositionAndActivate(trace->line,1);
         }
         mDebugger->sendCommand("-stack-select-frame", QString("%1").arg(trace->level));
-        mDebugger->sendCommand("-stack-list-variables", "--all-values");
-        mDebugger->sendCommand("-var-update", "--all-values *");
+        mDebugger->refreshStackVariables();
+        mDebugger->refreshWatchVars();
         if (this->mCPUDialog) {
             this->mCPUDialog->updateInfo();
         }

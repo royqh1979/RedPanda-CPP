@@ -692,11 +692,23 @@ void Debugger::evalExpression(const QString &expression)
         mClient->evalExpression(expression);
 }
 
+void Debugger::selectFrame(PTrace trace)
+{
+    if (mClient)
+        mClient->selectFrame(trace);
+}
+
 void Debugger::refreshFrame()
 {
     if (mClient) {
         mClient->refreshFrame();
     }
+}
+
+void Debugger::refreshStackVariables()
+{
+    if (mClient)
+        mClient->refreshStackVariables();
 }
 
 void Debugger::refreshRegisters()

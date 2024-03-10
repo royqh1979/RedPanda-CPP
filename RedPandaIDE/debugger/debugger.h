@@ -349,11 +349,13 @@ public:
     void sendAllWatchVarsToDebugger();
     PWatchVar findWatchVar(const QString& expression);
     PWatchVar watchVarAt(const QModelIndex& index);
-    void refreshVars();
+    void refreshWatchVars();
 
     void readMemory(const QString& startAddress, int rows, int cols);
     void evalExpression(const QString& expression);
+    void selectFrame(PTrace trace);
     void refreshFrame();
+    void refreshStackVariables();
     void refreshRegisters();
     void disassembleCurrentFrame(bool blendMode);
     void setDisassemblyLanguage(bool isIntel);
@@ -412,7 +414,6 @@ private slots:
     void cleanUpReader();
     void updateRegisterNames(const QStringList& registerNames);
     void updateRegisterValues(const QHash<int,QString>& values);
-    void refreshWatchVars();
     void fetchVarChildren(const QString& varName);
 private:
     bool mExecuting;
@@ -535,6 +536,7 @@ public:
 
     virtual void evalExpression(const QString& expression) = 0;
 
+    virtual void selectFrame(PTrace trace) = 0;
     virtual void refreshFrame() = 0;
     virtual void refreshRegisters() = 0;
     virtual void disassembleCurrentFrame(bool blendMode) = 0;
