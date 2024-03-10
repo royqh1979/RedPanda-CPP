@@ -230,13 +230,13 @@ target("resources")
     -- desktop entry
 
     if is_xdg() then
-        add_configfiles("platform/linux/redpandaide.desktop.in", {
+        add_configfiles("platform/linux/RedPandaIDE.desktop.in", {
             pattern = "$${(.-)}",
             variables = {
                 PREFIX = get_config("prefix"),
             },
         })
-        add_installfiles("$(buildir)/redpandaide.desktop", {prefixdir = "$(prefix)/share/applications"})
+        add_installfiles("$(buildir)/RedPandaIDE.desktop", {prefixdir = "$(prefix)/share/applications"})
     end
 
     -- mime type
