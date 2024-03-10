@@ -906,7 +906,10 @@ void GDBMIDebuggerClient::addWatchpoint(const QString &watchExp)
 
 void GDBMIDebuggerClient::refreshWatchVar(PWatchVar var)
 {
-
+    Q_ASSERT(var!=nullptr);
+    postCommand("-var-update",
+                QString(" --all-values %1").arg(var->name),
+                DebugCommandSource::Other);
 }
 
 void GDBMIDebuggerClient::runInferiorStoppedHook()
