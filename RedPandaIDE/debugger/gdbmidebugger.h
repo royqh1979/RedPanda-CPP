@@ -48,10 +48,18 @@ public:
     DebuggerType clientType() override;
     const PDebugCommand &currentCmd() const;
 
+    void stepOver() override;
+    void stepInto() override;
+    void stepOut() override;
+    void runTo(const QString& filename, int line) override;
+    void resume() override;
+    void stepOverInstruction() override;
+    void stepIntoInstruction() override;
     void interrupt() override;
+
     void refreshStackVariables() override;
 
-    void readMemory(qulonglong startAddress, int rows, int cols) override;
+    void readMemory(const QString&  startAddress, int rows, int cols) override;
     void writeMemory(qulonglong address, unsigned char data) override;
 
     void addBreakpoint(PBreakpoint breakpoint) override;
@@ -68,9 +76,10 @@ public:
 
     void evalExpression(const QString& expression) override;
 
-    void refreshFrame();
-    void refreshRegisters();
-    void disassembleCurrentFrame(bool blendMode);
+    void refreshFrame() override;
+    void refreshRegisters() override;
+    void disassembleCurrentFrame(bool blendMode) override;
+    void setDisassemblyLanguage(bool isIntel) override;
     // QThread interface
 protected:
     void run() override;

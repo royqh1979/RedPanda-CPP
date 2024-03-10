@@ -306,6 +306,13 @@ public:
     bool commandRunning();
     bool inferiorRunning();
     void interrupt();
+    void stepOver();
+    void stepInto();
+    void stepOut();
+    void runTo(const QString& filename, int line);
+    void resume();
+    void stepOverInstruction();
+    void stepIntoInstruction();
 
     bool isForProject() const;
     void setIsForProject(bool newIsForProject);
@@ -344,9 +351,12 @@ public:
     PWatchVar watchVarAt(const QModelIndex& index);
     void refreshVars();
 
+    void readMemory(const QString& startAddress, int rows, int cols);
     void evalExpression(const QString& expression);
-
-
+    void refreshFrame();
+    void refreshRegisters();
+    void disassembleCurrentFrame(bool blendMode);
+    void setDisassemblyLanguage(bool isIntel);
 //    void notifyWatchVarUpdated(PWatchVar var);
 
     std::shared_ptr<BacktraceModel> backtraceModel();
@@ -381,7 +391,6 @@ signals:
 public slots:
     void stop();
     void refreshAll();
-
 private:
     void sendWatchCommand(PWatchVar var);
     void sendRemoveWatchCommand(PWatchVar var);
@@ -498,10 +507,18 @@ public:
     virtual DebuggerType clientType() = 0;
 
     //requests
+    virtual void stepOver() = 0;
+    virtual void stepInto() = 0;
+    virtual void stepOut() = 0;
+    virtual void runTo(const QString& filename, int line) = 0;
+    virtual void resume() = 0;
+    virtual void stepOverInstruction() = 0;
+    virtual void stepIntoInstruction() = 0;
     virtual void interrupt() = 0;
+
     virtual void refreshStackVariables() = 0;
 
-    virtual void readMemory(qulonglong startAddress, int rows, int cols) = 0;
+    virtual void readMemory(const QString& startAddress, int rows, int cols) = 0;
     virtual void writeMemory(qulonglong address, unsigned char data) = 0;
 
     virtual void addBreakpoint(PBreakpoint breakpoint) = 0;
@@ -521,7 +538,7 @@ public:
     virtual void refreshFrame() = 0;
     virtual void refreshRegisters() = 0;
     virtual void disassembleCurrentFrame(bool blendMode) = 0;
-
+    virtual void setDisassemblyLanguage(bool isIntel) = 0;
 
 signals:
     void parseStarted();

@@ -6416,7 +6416,7 @@ void MainWindow::on_actionStep_Over_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->sendCommand("-exec-next", "");
+        mDebugger->stepOver();
     }
 }
 
@@ -6424,7 +6424,7 @@ void MainWindow::on_actionStep_Into_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->sendCommand("-exec-step", "");
+        mDebugger->stepInto();
     }
 
 }
@@ -6433,7 +6433,7 @@ void MainWindow::on_actionStep_Out_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->sendCommand("-exec-finish", "");
+        mDebugger->stepOut();
     }
 
 }
@@ -6444,9 +6444,7 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
         Editor *e=mEditorList->getEditor();
         if (e!=nullptr) {
             //WatchView.Items.BeginUpdate();
-            mDebugger->sendCommand("-exec-until", QString("\"%1\":%2")
-                                   .arg(e->filename())
-                                   .arg(e->caretY()));
+            mDebugger->runTo(e->filename(), e->caretY());
         }
     }
 
@@ -6456,7 +6454,7 @@ void MainWindow::on_actionContinue_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->sendCommand("-exec-continue", "");
+        mDebugger->resume();
     }
 }
 
@@ -6512,10 +6510,9 @@ void MainWindow::onDebugMemoryAddressInput()
     if (!s.isEmpty()) {
 //        connect(mDebugger, &Debugger::memoryExamineReady,
 //                   this, &MainWindow::onMemoryExamineReady);
-        mDebugger->sendCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
-                               .arg(s)
-                               .arg(pSettings->debugger().memoryViewRows())
-                               .arg(pSettings->debugger().memoryViewColumns())
+        mDebugger->readMemory(s,
+                              pSettings->debugger().memoryViewRows(),
+                              pSettings->debugger().memoryViewColumns()
                                );
     }
 }

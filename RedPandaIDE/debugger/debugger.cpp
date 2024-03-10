@@ -275,7 +275,7 @@ void Debugger::refreshAll()
     if (memoryModel()->startAddress()>0
             && mClient)
         mClient->readMemory(
-                    memoryModel()->startAddress(),
+                    QString("%1").arg(memoryModel()->startAddress()),
                     pSettings->debugger().memoryViewRows(),
                     pSettings->debugger().memoryViewColumns()
                     );
@@ -309,9 +309,50 @@ bool Debugger::inferiorRunning()
 
 void Debugger::interrupt()
 {
-    if (mClient) {
+    if (mClient)
         mClient->interrupt();
-    }
+}
+
+void Debugger::stepOver()
+{
+    if (mClient)
+        mClient->stepOver();
+}
+
+void Debugger::stepInto()
+{
+    if (mClient)
+        mClient->stepInto();
+}
+
+void Debugger::stepOut()
+{
+    if (mClient)
+        mClient->stepOut();
+}
+
+void Debugger::runTo(const QString &filename, int line)
+{
+    if (mClient)
+        mClient->runTo(filename, line);
+}
+
+void Debugger::resume()
+{
+    if (mClient)
+        mClient->resume();
+}
+
+void Debugger::stepOverInstruction()
+{
+    if (mClient)
+        mClient->stepOverInstruction();
+}
+
+void Debugger::stepIntoInstruction()
+{
+    if (mClient)
+        mClient->stepIntoInstruction();
 }
 
 bool Debugger::isForProject() const
@@ -639,10 +680,41 @@ PWatchVar Debugger::watchVarAt(const QModelIndex &index)
     return mWatchModel->findWatchVar(index);
 }
 
+void Debugger::readMemory(const QString &startAddress, int rows, int cols)
+{
+    if (mClient)
+        mClient->readMemory(startAddress, rows, cols);
+}
+
 void Debugger::evalExpression(const QString &expression)
 {
     if (mClient)
         mClient->evalExpression(expression);
+}
+
+void Debugger::refreshFrame()
+{
+    if (mClient) {
+        mClient->refreshFrame();
+    }
+}
+
+void Debugger::refreshRegisters()
+{
+    if (mClient)
+        mClient->refreshRegisters();
+}
+
+void Debugger::disassembleCurrentFrame(bool blendMode)
+{
+    if (mClient)
+        mClient->disassembleCurrentFrame(blendMode);
+}
+
+void Debugger::setDisassemblyLanguage(bool isIntel)
+{
+    if (mClient)
+        mClient->setDisassemblyLanguage(isIntel);
 }
 
 //void Debugger::notifyWatchVarUpdated(PWatchVar var)

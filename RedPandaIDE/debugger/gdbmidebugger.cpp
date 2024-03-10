@@ -874,6 +874,43 @@ const PDebugCommand &GDBMIDebuggerClient::currentCmd() const
     return mCurrentCmd;
 }
 
+void GDBMIDebuggerClient::stepOver()
+{
+    postCommand("-exec-next", "");
+}
+
+void GDBMIDebuggerClient::stepInto()
+{
+    postCommand("-exec-step", "");
+}
+
+void GDBMIDebuggerClient::stepOut()
+{
+    postCommand("-exec-finish", "");
+}
+
+void GDBMIDebuggerClient::runTo(const QString &filename, int line)
+{
+    postCommand("-exec-until", QString("\"%1\":%2")
+                           .arg(filename)
+                           .arg(line));
+}
+
+void GDBMIDebuggerClient::resume()
+{
+    postCommand("-exec-continue", "");
+}
+
+void GDBMIDebuggerClient::stepOverInstruction()
+{
+    postCommand("-exec-next-instruction","");
+}
+
+void GDBMIDebuggerClient::stepIntoInstruction()
+{
+    postCommand("-exec-step-instruction","");
+}
+
 void GDBMIDebuggerClient::interrupt()
 {
     postCommand("-exec-interrupt", "");
@@ -884,7 +921,7 @@ void GDBMIDebuggerClient::refreshStackVariables()
     postCommand("-stack-list-variables", "--all-values");
 }
 
-void GDBMIDebuggerClient::readMemory(qulonglong startAddress, int rows, int cols)
+void GDBMIDebuggerClient::readMemory(const QString& startAddress, int rows, int cols)
 {
     postCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
                 .arg(startAddress)
@@ -1000,10 +1037,19 @@ void GDBMIDebuggerClient::refreshRegisters()
 
 void GDBMIDebuggerClient::disassembleCurrentFrame(bool blendMode)
 {
-    if (blendMode)
+    if (blendMode && clientType()==DebuggerType::GDB)
         postCommand("disas", "/s");
     else
         postCommand("disas", "");
+}
+
+void GDBMIDebuggerClient::setDisassemblyLanguage(bool isIntel)
+{
+    if (isIntel) {
+        postCommand("-gdb-set", "disassembly-flavor intel");
+    } else {
+        postCommand("-gdb-set", "disassembly-flavor att");
+    }
 }
 
 void GDBMIDebuggerClient::runInferiorStoppedHook()
