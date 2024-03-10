@@ -42,11 +42,15 @@ public:
 
     // DebuggerClient interface
 public:
-    void postCommand(const QString &Command, const QString &Params, DebugCommandSource Source = DebugCommandSource::Other) override;
-    void registerInferiorStoppedCommand(const QString &Command, const QString &Params) override;
+    void postCommand(const QString &command, const QString &params, DebugCommandSource source = DebugCommandSource::Other);
+
     void stopDebug() override;
     DebuggerType clientType() override;
     const PDebugCommand &currentCmd() const;
+    bool commandRunning() override;
+
+    void initialize(const QString& inferior, bool hasSymbols) override;
+    void runInferior(bool hasBreakpoints) override;
 
     void stepOver() override;
     void stepInto() override;
@@ -76,14 +80,19 @@ public:
 
     void evalExpression(const QString& expression) override;
 
+    void selectFrame(PTrace trace) override;
     void refreshFrame() override;
     void refreshRegisters() override;
     void disassembleCurrentFrame(bool blendMode) override;
     void setDisassemblyLanguage(bool isIntel) override;
+
+
+    void skipDirectoriesInSymbolSearch(const QStringList& lst) override;
+    void addSymbolSearchDirectories(const QStringList& lst) override;
     // QThread interface
 protected:
     void run() override;
-    void runNextCmd() override;
+    void runNextCmd();
 private:
     QStringList tokenize(const QString& s) const;
     bool outputTerminated(const QByteArray& text) const;
@@ -108,6 +117,7 @@ private:
     QByteArray removeToken(const QByteArray& line) const;
     void runInferiorStoppedHook();
     void clearCmdQueue();
+    void registerInferiorStoppedCommand(const QString &command, const QString &params);
 private slots:
     void asyncUpdate();
 private:

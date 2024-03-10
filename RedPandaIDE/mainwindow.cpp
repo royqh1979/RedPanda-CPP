@@ -2283,7 +2283,7 @@ void MainWindow::debug()
     QStringList binDirs;
     QSet<QString> unitFiles;
     switch(getCompileTarget()) {
-    case CompileTarget::Project:
+    case CompileTarget::Project: {
         compilerSet=pSettings->compilerSets().getSet(mProject->options().compilerSet);
         if (!compilerSet)
             compilerSet = pSettings->compilerSets().defaultSet();
@@ -2384,21 +2384,29 @@ void MainWindow::debug()
                 unitFiles.insert(unit->fileName());
         }
         mDebugger->deleteInvalidProjectBreakpoints(unitFiles);
-        if (!mDebugger->start(mProject->options().compilerSet, filePath, binDirs))
-            return;
-        filePath.replace('\\','/');
-        mDebugger->sendCommand("-file-exec-and-symbols", '"' + filePath + '"');
-
+        bool inferiorHasSymbols { true };
+        QString inferior { filePath };
         if (mProject->options().type == ProjectType::DynamicLib) {
-            QString host =mProject->options().hostApplication;
-            host.replace('\\','/');
-            mDebugger->sendCommand("-file-exec-file", '"' + host + '"');
+            inferior=mProject->options().hostApplication;
+            inferiorHasSymbols = false;
         }
+        inferior.replace('\\','/');
+        if (!mDebugger->startClient(
+                    mProject->options().compilerSet,
+                    inferior,
+                    inferiorHasSymbols,
+                    debugInferiorhasBreakpoint(),
+                    binDirs
+                    ))
+            return;
 
-        includeOrSkipDirs(mProject->options().includeDirs,
-                          pSettings->debugger().skipProjectLibraries());
-        includeOrSkipDirs(mProject->options().libDirs,
-                          pSettings->debugger().skipProjectLibraries());
+        mDebugger->includeOrSkipDirsInSymbolSearch(
+                    mProject->options().includeDirs,
+                    pSettings->debugger().skipProjectLibraries());
+        mDebugger->includeOrSkipDirsInSymbolSearch(
+                    mProject->options().libDirs,
+                    pSettings->debugger().skipProjectLibraries());
+    }
         break;
     case CompileTarget::File: {
             binDirs = compilerSet->binDirs();
@@ -2480,9 +2488,14 @@ void MainWindow::debug()
 
                 prepareDebugger();
                 QString filePath = debugFile.filePath().replace('\\','/');
-                if (!mDebugger->start(pSettings->compilerSets().defaultIndex(),filePath, binDirs,e->filename()))
+                if (!mDebugger->startClient(
+                            pSettings->compilerSets().defaultIndex(),
+                            filePath,
+                            true,
+                            debugInferiorhasBreakpoint(),
+                            binDirs,
+                            e->filename()))
                     return;
-                mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(filePath));
             }
         }
         break;
@@ -2494,53 +2507,7 @@ void MainWindow::debug()
 
     updateEditorActions();
 
-    // Add library folders
-    includeOrSkipDirs(compilerSet->libDirs(), pSettings->debugger().skipCustomLibraries());
-    includeOrSkipDirs(compilerSet->CIncludeDirs(), pSettings->debugger().skipCustomLibraries());
-    includeOrSkipDirs(compilerSet->CppIncludeDirs(), pSettings->debugger().skipCustomLibraries());
-
-    //gcc system libraries is auto loaded by gdb
-    if (pSettings->debugger().skipSystemLibraries()) {
-        includeOrSkipDirs(compilerSet->defaultCIncludeDirs(),true);
-        includeOrSkipDirs(compilerSet->defaultCIncludeDirs(),true);
-        includeOrSkipDirs(compilerSet->defaultCppIncludeDirs(),true);
-    }
-
-    mDebugger->sendAllBreakpointsToDebugger();
-
-    // Run the debugger
-    mDebugger->sendCommand("-gdb-set", "mi-async on");
-    mDebugger->sendCommand("-enable-pretty-printing","");
-    mDebugger->sendCommand("-data-list-register-names","");
-    mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
-    mDebugger->sendCommand("-gdb-set", "confirm off");
-    mDebugger->sendCommand("-gdb-set", "print repeats 10");
-    mDebugger->sendCommand("-gdb-set", "print null-stop");
-    mDebugger->sendCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
-    mDebugger->sendCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
-    mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(filePath))); // restore working directory
-    if (mDebugger->useDebugServer()) {
-        mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
-        if (!debugInferiorhasBreakpoint() || !debugEnabled) {
-            mDebugger->sendCommand("-break-insert","-t main");
-        }
-        if (pSettings->executor().useParams()) {
-            mDebugger->sendCommand("-exec-arguments", pSettings->executor().params());
-        }
-        mDebugger->sendCommand("-exec-continue","");
-    } else {
-#ifdef Q_OS_WIN
-        mDebugger->sendCommand("-gdb-set", "new-console on");
-#endif
-        if (pSettings->executor().useParams()) {
-            mDebugger->sendCommand("-exec-arguments", pSettings->executor().params());
-        }
-        if (!debugInferiorhasBreakpoint()) {
-            mDebugger->sendCommand("-exec-run","--start");
-        } else {
-            mDebugger->sendCommand("-exec-run","");
-        }
-    }
+    mDebugger->runInferior();
 }
 
 void MainWindow::showSearchPanel(bool showReplace)
@@ -3182,24 +3149,6 @@ void MainWindow::scanActiveProject(bool parse)
     } else {
         mProject->resetParserProjectFiles();
     };
-}
-
-void MainWindow::includeOrSkipDirs(const QStringList &dirs, bool skip)
-{
-    Q_ASSERT(mDebugger);
-    foreach (QString dir,dirs) {
-        QString dirName = dir.replace('\\','/');
-        if (skip) {
-            mDebugger->sendCommand(
-                        "skip",
-                        QString("-gfi \"%1/%2\"")
-                        .arg(dirName,"*.*"));
-        } else {
-            mDebugger->sendCommand(
-                        "-environment-directory",
-                        QString("\"%1\"").arg(dirName));
-        }
-    }
 }
 
 void MainWindow::onBookmarkContextMenu(const QPoint &pos)
@@ -6150,7 +6099,7 @@ void MainWindow::cleanUpCPUDialog()
 void MainWindow::onDebugCommandInput(const QString& command)
 {
     if (mDebugger->executing()) {
-        mDebugger->sendCommand(command,"", DebugCommandSource::Console);
+        mDebugger->runClientCommand(command,"", DebugCommandSource::Console);
     }
 }
 
@@ -6399,16 +6348,6 @@ bool MainWindow::debugInferiorhasBreakpoint()
             return true;
         }
     }
-//    if (!e->inProject()) {
-
-//    } else {
-//        for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints(e->inProject())) {
-//            Editor* e1 = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
-//            if (e1 && e1->inProject()) {
-//                return true;
-//            }
-//        }
-//    }
     return false;
 }
 
@@ -8770,7 +8709,7 @@ void MainWindow::switchCurrentStackTrace(int idx)
         if (e) {
             e->setCaretPositionAndActivate(trace->line,1);
         }
-        mDebugger->sendCommand("-stack-select-frame", QString("%1").arg(trace->level));
+        mDebugger->selectFrame(trace);
         mDebugger->refreshStackVariables();
         mDebugger->refreshWatchVars();
         if (this->mCPUDialog) {

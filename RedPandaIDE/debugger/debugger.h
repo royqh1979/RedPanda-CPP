@@ -302,7 +302,14 @@ public:
     explicit Debugger(QObject *parent = nullptr);
     ~Debugger();
     // Play/pause
-    bool start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs, const QString& sourceFile=QString());
+    bool startClient(
+            int compilerSetIndex,
+            const QString& inferior,
+            bool inferiorHasSymbols,
+            bool inferiorHasBreakpoints,
+            const QStringList& binDirs,
+            const QString& sourceFile=QString());
+    void runInferior();
     bool commandRunning();
     bool inferiorRunning();
     void interrupt();
@@ -313,6 +320,8 @@ public:
     void resume();
     void stepOverInstruction();
     void stepIntoInstruction();
+
+    void runClientCommand(const QString &command, const QString &params, DebugCommandSource source);
 
     bool isForProject() const;
     void setIsForProject(bool newIsForProject);
@@ -359,6 +368,8 @@ public:
     void refreshRegisters();
     void disassembleCurrentFrame(bool blendMode);
     void setDisassemblyLanguage(bool isIntel);
+    void includeOrSkipDirsInSymbolSearch(const QStringList &dirs, bool skip);
+
 //    void notifyWatchVarUpdated(PWatchVar var);
 
     std::shared_ptr<BacktraceModel> backtraceModel();
@@ -433,6 +444,7 @@ private:
     qint64 mLastLoadtime;
     qint64 mProjectLastLoadtime;
     QString mCurrentSourceFile;
+    bool mInferiorHasBreakpoints;
 };
 
 class DebugTarget: public QThread {
@@ -473,10 +485,8 @@ class DebuggerClient : public QThread
     Q_OBJECT
 public:
     explicit DebuggerClient(Debugger* debugger, QObject *parent = nullptr);
-    virtual void postCommand(const QString &Command, const QString &Params, DebugCommandSource  Source) = 0;
-    virtual void registerInferiorStoppedCommand(const QString &Command, const QString &Params) = 0;
     virtual void stopDebug() = 0;
-    bool commandRunning();
+    virtual bool commandRunning() = 0;
     QString debuggerPath() const;
     void setDebuggerPath(const QString &debuggerPath);
     void waitStart();
@@ -508,6 +518,9 @@ public:
     virtual DebuggerType clientType() = 0;
 
     //requests
+    virtual void initialize(const QString& inferior, bool hasSymbols) = 0;
+    virtual void runInferior(bool hasBreakpoints) = 0;
+
     virtual void stepOver() = 0;
     virtual void stepInto() = 0;
     virtual void stepOut() = 0;
@@ -542,6 +555,8 @@ public:
     virtual void disassembleCurrentFrame(bool blendMode) = 0;
     virtual void setDisassemblyLanguage(bool isIntel) = 0;
 
+    virtual void skipDirectoriesInSymbolSearch(const QStringList& lst) = 0;
+    virtual void addSymbolSearchDirectories(const QStringList& lst) = 0;
 signals:
     void parseStarted();
     void invalidateAllVars();
@@ -579,8 +594,6 @@ signals:
                          const QString& newType, int newNumChildren,
                          bool hasMore);
     void varsValueUpdated();
-protected:
-    virtual void runNextCmd() = 0;
 protected:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mCmdQueueMutex;

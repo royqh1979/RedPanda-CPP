@@ -310,7 +310,6 @@ private:
             const QString& objectName,
             QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
-    void includeOrSkipDirs(const QStringList& dirs, bool skip);
     void showSearchReplacePanel(bool show);
     void clearIssues();
     void doCompileRun(RunType runType);

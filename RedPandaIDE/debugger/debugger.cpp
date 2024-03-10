@@ -73,7 +73,12 @@ Debugger::~Debugger()
 //    delete mMemoryModel;
 }
 
-bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs, const QString& sourceFile)
+bool Debugger::startClient(int compilerSetIndex,
+                           const QString& inferior,
+                           bool inferiorHasSymbols,
+                           bool inferiorHasBreakpoints,
+                           const QStringList& binDirs,
+                           const QString& sourceFile)
 {
     mCurrentSourceFile = sourceFile;
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
@@ -206,15 +211,33 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
     connect(mClient, &DebuggerClient::inferiorStopped,this,
             &Debugger::refreshAll);
 
-    mClient->registerInferiorStoppedCommand("-stack-list-frames","");
     mClient->start();
     mClient->waitStart();
 
-    pMainWindow->updateAppTitle();
+    mClient->initialize(inferior, inferiorHasSymbols);
+    includeOrSkipDirsInSymbolSearch(compilerSet->libDirs(), pSettings->debugger().skipCustomLibraries());
+    includeOrSkipDirsInSymbolSearch(compilerSet->CIncludeDirs(), pSettings->debugger().skipCustomLibraries());
+    includeOrSkipDirsInSymbolSearch(compilerSet->CppIncludeDirs(), pSettings->debugger().skipCustomLibraries());
 
-    //Application.HintHidePause := 5000;
+    //gcc system libraries is auto loaded by gdb
+    if (pSettings->debugger().skipSystemLibraries()) {
+        includeOrSkipDirsInSymbolSearch(compilerSet->defaultCIncludeDirs(),true);
+        includeOrSkipDirsInSymbolSearch(compilerSet->defaultCIncludeDirs(),true);
+        includeOrSkipDirsInSymbolSearch(compilerSet->defaultCppIncludeDirs(),true);
+    }
+
+    sendAllBreakpointsToDebugger();
+    pMainWindow->updateAppTitle();
+    mInferiorHasBreakpoints = inferiorHasBreakpoints;
     return true;
 }
+
+void Debugger::runInferior()
+{
+    if (mClient)
+        mClient->runInferior(mInferiorHasBreakpoints);
+}
+
 void Debugger::stop() {
     if (mExecuting) {
         if (mTarget) {
@@ -353,6 +376,17 @@ void Debugger::stepIntoInstruction()
 {
     if (mClient)
         mClient->stepIntoInstruction();
+}
+
+void Debugger::runClientCommand(const QString &command, const QString &params, DebugCommandSource source)
+{
+    if (!mClient)
+        return;
+    if (mClient->clientType()!=DebuggerType::GDB
+            && mClient->clientType()!=DebuggerType::LLDB_MI)
+        return;
+    GDBMIDebuggerClient* gdbmiClient = dynamic_cast<GDBMIDebuggerClient*>(mClient);
+    gdbmiClient->postCommand(command, params, source);
 }
 
 bool Debugger::isForProject() const
@@ -930,6 +964,15 @@ void Debugger::addWatchVar(const PWatchVar &watchVar, bool forProject)
         sendWatchCommand(watchVar);
 }
 
+void Debugger::includeOrSkipDirsInSymbolSearch(const QStringList &dirs, bool skip)
+{
+    if (skip) {
+        mClient->skipDirectoriesInSymbolSearch(dirs);
+    } else {
+        mClient->addSymbolSearchDirectories(dirs);
+    }
+}
+
 void Debugger::syncFinishedParsing()
 {
     bool spawnedcpuform = false;
@@ -955,19 +998,23 @@ void Debugger::syncFinishedParsing()
                 pMainWindow->addDebugOutput(line);
             }
         } else {
-            if (mClient->currentCmd() && mClient->currentCmd()->command == "disas") {
+            // if (mClient->currentCmd() && mClient->currentCmd()->command == "disas") {
 
-            } else {
-                for (const QString& line:mClient->consoleOutput()) {
-                    pMainWindow->addDebugOutput(line);
-                }
-                if (
-                        (mClient->currentCmd()
-                         && mClient->currentCmd()->source== DebugCommandSource::Console)
-                        || !mClient->consoleOutput().isEmpty() ) {
-                    pMainWindow->addDebugOutput("(gdb)");
-                }
+            // } else {
+            //     for (const QString& line:mClient->consoleOutput()) {
+            //         pMainWindow->addDebugOutput(line);
+            //     }
+            //     if (
+            //             (mClient->currentCmd()
+            //              && mClient->currentCmd()->source== DebugCommandSource::Console)
+            //             || !mClient->consoleOutput().isEmpty() ) {
+            //         pMainWindow->addDebugOutput("(gdb)");
+            //     }
+            // }
+            for (const QString& line:mClient->consoleOutput()) {
+                pMainWindow->addDebugOutput(line);
             }
+            pMainWindow->addDebugOutput("(gdb)");
         }
     }
 
@@ -1131,11 +1178,6 @@ QString DebuggerClient::debuggerPath() const
 void DebuggerClient::setDebuggerPath(const QString &debuggerPath)
 {
     mDebuggerPath = debuggerPath;
-}
-
-bool DebuggerClient::commandRunning()
-{
-    return !mCmdQueue.isEmpty();
 }
 
 void DebuggerClient::waitStart()

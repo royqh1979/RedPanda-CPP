@@ -71,16 +71,16 @@ void DAPDebuggerClient::run()
         readed = mProcess->readAll();
         buffer += readed;
 
-        if (readed.endsWith("\n")&& outputTerminated(buffer)) {
-            processDebugOutput(buffer);
-            buffer.clear();
-            mCmdRunning = false;
-            runNextCmd();
-        } else if (!mCmdRunning && readed.isEmpty()){
-            runNextCmd();
-        } else if (readed.isEmpty()){
-            msleep(1);
-        }
+        // if (readed.endsWith("\n")&& outputTerminated(buffer)) {
+        //     processDebugOutput(buffer);
+        //     buffer.clear();
+        //     mCmdRunning = false;
+        //     runNextCmd();
+        // } else if (!mCmdRunning && readed.isEmpty()){
+        //     runNextCmd();
+        // } else if (readed.isEmpty()){
+        //     msleep(1);
+        // }
     }
     if (errorOccured) {
         emit processFailed(mProcess->error());

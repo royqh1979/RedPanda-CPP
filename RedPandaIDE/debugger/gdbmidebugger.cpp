@@ -35,27 +35,28 @@ GDBMIDebuggerClient::GDBMIDebuggerClient(
 {
     mProcess = std::make_shared<QProcess>();
     mAsyncUpdated = false;
+    registerInferiorStoppedCommand("-stack-list-frames","");
 }
 
-void GDBMIDebuggerClient::postCommand(const QString &Command, const QString &Params,
-                               DebugCommandSource Source)
+void GDBMIDebuggerClient::postCommand(const QString &command, const QString &params,
+                               DebugCommandSource source)
 {
     QMutexLocker locker(&mCmdQueueMutex);
     PDebugCommand pCmd = std::make_shared<DebugCommand>();
-    pCmd->command = Command;
-    pCmd->params = Params;
-    pCmd->source = Source;
+    pCmd->command = command;
+    pCmd->params = params;
+    pCmd->source = source;
     mCmdQueue.enqueue(pCmd);
 //    if (!mCmdRunning)
     //        runNextCmd();
 }
 
-void GDBMIDebuggerClient::registerInferiorStoppedCommand(const QString &Command, const QString &Params)
+void GDBMIDebuggerClient::registerInferiorStoppedCommand(const QString &command, const QString &params)
 {
     QMutexLocker locker(&mCmdQueueMutex);
     PDebugCommand pCmd = std::make_shared<DebugCommand>();
-    pCmd->command = Command;
-    pCmd->params = Params;
+    pCmd->command = command;
+    pCmd->params = params;
     pCmd->source = DebugCommandSource::Other;
     mInferiorStoppedHookCommands.append(pCmd);
 }
@@ -874,6 +875,52 @@ const PDebugCommand &GDBMIDebuggerClient::currentCmd() const
     return mCurrentCmd;
 }
 
+void GDBMIDebuggerClient::initialize(const QString& inferior, bool hasSymbols)
+{
+    postCommand("-gdb-set", "mi-async on");
+    postCommand("-enable-pretty-printing","");
+    postCommand("-data-list-register-names","");
+    postCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
+    postCommand("-gdb-set", "confirm off");
+    postCommand("-gdb-set", "print repeats 10");
+    postCommand("-gdb-set", "print null-stop");
+    postCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
+    postCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
+    postCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(inferior))); // restore working directory
+
+    if (hasSymbols) {
+        postCommand("-file-exec-and-symbols", '"' + inferior + '"');
+    } else {
+        postCommand("-file-exec-file", '"' + inferior + '"');
+    }
+}
+
+void GDBMIDebuggerClient::runInferior(bool hasBreakpoints)
+{
+    if (debugger()->useDebugServer()) {
+        postCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
+        if (!hasBreakpoints) {
+            postCommand("-break-insert","-t main");
+        }
+        if (pSettings->executor().useParams()) {
+            postCommand("-exec-arguments", pSettings->executor().params());
+        }
+        postCommand("-exec-continue","");
+    } else {
+#ifdef Q_OS_WIN
+        postCommand("-gdb-set", "new-console on");
+#endif
+        if (pSettings->executor().useParams()) {
+            postCommand("-exec-arguments", pSettings->executor().params());
+        }
+        if (!hasBreakpoints) {
+            postCommand("-exec-run","--start");
+        } else {
+            postCommand("-exec-run","");
+        }
+    }
+}
+
 void GDBMIDebuggerClient::stepOver()
 {
     postCommand("-exec-next", "");
@@ -1058,6 +1105,25 @@ void GDBMIDebuggerClient::setDisassemblyLanguage(bool isIntel)
     }
 }
 
+void GDBMIDebuggerClient::skipDirectoriesInSymbolSearch(const QStringList &lst)
+{
+    foreach(const QString &dirName, lst) {
+        postCommand(
+                    "skip",
+                    QString("-gfi \"%1/%2\"")
+                    .arg(dirName,"*.*"));
+    }
+}
+
+void GDBMIDebuggerClient::addSymbolSearchDirectories(const QStringList &lst)
+{
+    foreach(const QString &dirName, lst) {
+        postCommand(
+                    "-environment-directory",
+                    QString("\"%1\"").arg(dirName));
+    }
+}
+
 void GDBMIDebuggerClient::runInferiorStoppedHook()
 {
     QMutexLocker locker(&mCmdQueueMutex);
@@ -1070,4 +1136,9 @@ void GDBMIDebuggerClient::clearCmdQueue()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     mCmdQueue.clear();
+}
+
+bool GDBMIDebuggerClient::commandRunning()
+{
+    return !mCmdQueue.isEmpty();
 }
