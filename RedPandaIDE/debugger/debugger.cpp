@@ -159,7 +159,7 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         mTarget->waitStart();
     }
     //delete when thread finished
-    mClient = new GDBMIDebuggerClient(this);
+    mClient = new GDBMIDebuggerClient(this, debuggerType());
     mClient->addBinDirs(binDirs);
     mClient->addBinDir(pSettings->dirs().appDir());
     mClient->setDebuggerPath(debuggerPath);
@@ -270,10 +270,10 @@ void Debugger::updateRegisterValues(const QHash<int, QString> &values)
 void Debugger::refreshAll()
 {
     refreshWatchVars();
-    if (mExecuting && mClient)
+    if (mClient)
         mClient->refreshStackVariables();
     if (memoryModel()->startAddress()>0
-            && mExecuting && mClient)
+            && mClient)
         mClient->readMemory(
                     memoryModel()->startAddress(),
                     pSettings->debugger().memoryViewRows(),
@@ -291,16 +291,9 @@ std::shared_ptr<WatchModel> Debugger::watchModel() const
     return mWatchModel;
 }
 
-void Debugger::sendCommand(const QString &command, const QString &params, DebugCommandSource source)
-{
-    if (mExecuting && mClient) {
-        mClient->postCommand(command,params,source);
-    }
-}
-
 bool Debugger::commandRunning()
 {
-    if (mExecuting && mClient) {
+    if (mClient) {
         return mClient->commandRunning();
     }
     return false;
@@ -308,7 +301,7 @@ bool Debugger::commandRunning()
 
 bool Debugger::inferiorRunning()
 {
-    if (mExecuting && mClient) {
+    if (mClient) {
         return mClient->inferiorRunning();
     }
     return false;
@@ -316,7 +309,7 @@ bool Debugger::inferiorRunning()
 
 void Debugger::interrupt()
 {
-    if (mExecuting && mClient) {
+    if (mClient) {
         mClient->interrupt();
     }
 }
@@ -441,7 +434,7 @@ PBreakpoint Debugger::breakpointAt(int line, const Editor *editor, int *index)
 void Debugger::setBreakPointCondition(int index, const QString &condition, bool forProject)
 {
     PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition, forProject);
-    if (mExecuting && mClient)
+    if (mClient)
         mClient->setBreakpointCondition(breakpoint);
 }
 
@@ -494,7 +487,7 @@ void Debugger::loadForProject(const QString &filename, const QString &projectFol
 void Debugger::addWatchpoint(const QString &expression)
 {
     QString s=expression.trimmed();
-    if (mExecuting && mClient) {
+    if (mClient) {
         mClient->addWatchpoint(expression);
     }
 }
@@ -536,31 +529,29 @@ void Debugger::modifyWatchVarExpression(const QString &oldExpr, const QString &n
         var->name.clear();
         var->children.clear();
 
-        if (mExecuting) {
-            sendWatchCommand(var);
-        }
+        sendWatchCommand(var);
     }
 }
 
 void Debugger::refreshWatchVars()
 {
-    if (mExecuting && mClient) {
+    if (mClient) {
         sendAllWatchVarsToDebugger();
         if (mDebuggerType==DebuggerType::LLDB_MI) {
             for (PWatchVar var:mWatchModel->watchVars()) {
                 if (!var->name.isEmpty())
-                    mClient->refreshWatchVar(var);
+                    mClient->refreshWatch(var);
             }
         } else {
-            sendCommand("-var-update"," --all-values *");
+            mClient->refreshWatch();
         }
     }
 }
 
 void Debugger::fetchVarChildren(const QString &varName)
 {
-    if (mExecuting) {
-        sendCommand("-var-list-children",varName);
+    if (mClient) {
+        mClient->fetchWatchVarChildren(varName);
     }
 }
 
@@ -648,6 +639,12 @@ PWatchVar Debugger::watchVarAt(const QModelIndex &index)
     return mWatchModel->findWatchVar(index);
 }
 
+void Debugger::evalExpression(const QString &expression)
+{
+    if (mClient)
+        mClient->evalExpression(expression);
+}
+
 //void Debugger::notifyWatchVarUpdated(PWatchVar var)
 //{
 //    mWatchModel->notifyUpdated(var);
@@ -664,36 +661,20 @@ std::shared_ptr<BreakpointModel> Debugger::breakpointModel()
 
 void Debugger::sendWatchCommand(PWatchVar var)
 {
-    sendCommand("-var-create", var->expression);
+    if (mClient)
+        mClient->addWatch(var->expression);
 }
 
 void Debugger::sendRemoveWatchCommand(PWatchVar var)
 {
-    sendCommand("-var-delete",QString("%1").arg(var->name));
+    if (mClient)
+        mClient->removeWatch(var);
 }
 
 void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
 {
-    if (breakpoint && mExecuting) {
-        // break "filename":linenum
-        QString condition;
-        if (!breakpoint->condition.isEmpty()) {
-            condition = " -c " + breakpoint->condition;
-        }
-        QString filename = breakpoint->filename;
-        filename.replace('\\','/');
-        if (debuggerType()==DebuggerType::LLDB_MI) {
-            sendCommand("-break-insert",
-                        QString("%1 \"%2:%3\"")
-                        .arg(condition, filename)
-                        .arg(breakpoint->line));
-        } else {
-            sendCommand("-break-insert",
-                        QString("%1 --source \"%2\" --line %3")
-                        .arg(condition,filename)
-                        .arg(breakpoint->line));
-        }
-    }
+    if (mClient)
+        mClient->addBreakpoint(breakpoint);
 }
 
 void Debugger::sendClearBreakpointCommand(int index, bool forProject)
@@ -703,14 +684,8 @@ void Debugger::sendClearBreakpointCommand(int index, bool forProject)
 
 void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
 {
-    // Debugger already running? Remove it from GDB
-    if (breakpoint && breakpoint->number>=0 && mExecuting) {
-        //clear "filename":linenum
-        QString filename = breakpoint->filename;
-        filename.replace('\\','/');
-        sendCommand("-break-delete",
-                QString("%1").arg(breakpoint->number));
-    }
+    if (mClient)
+        mClient->removeBreakpoint(breakpoint);
 }
 
 QJsonArray BreakpointModel::toJson(const QString& projectFolder)
@@ -941,13 +916,15 @@ void Debugger::syncFinishedParsing()
 
 void Debugger::setMemoryData(qulonglong address, unsigned char data)
 {
-    sendCommand("-data-write-memory-bytes", QString("%1 \"%2\"").arg(address).arg(data,2,16,QChar('0')));
+    if (mClient)
+        mClient->writeMemory(address, data);
     refreshAll();
 }
 
 void Debugger::setWatchVarValue(const QString &name, const QString &value)
 {
-    sendCommand("-var-assign",QString("%1 %2").arg(name,value));
+    if (mClient)
+        mClient->writeWatchVar(name, value);
     refreshAll();
 }
 

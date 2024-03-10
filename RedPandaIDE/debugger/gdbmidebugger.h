@@ -38,21 +38,39 @@ using PDebugCommand = std::shared_ptr<DebugCommand>;
 class GDBMIDebuggerClient: public DebuggerClient {
     Q_OBJECT
 public:
-    explicit GDBMIDebuggerClient(Debugger* debugger, QObject *parent = nullptr);
+    explicit GDBMIDebuggerClient(Debugger* debugger, DebuggerType clientType, QObject *parent = nullptr);
 
     // DebuggerClient interface
 public:
-    void postCommand(const QString &Command, const QString &Params, DebugCommandSource Source) override;
+    void postCommand(const QString &Command, const QString &Params, DebugCommandSource Source = DebugCommandSource::Other) override;
     void registerInferiorStoppedCommand(const QString &Command, const QString &Params) override;
     void stopDebug() override;
+    DebuggerType clientType() override;
     const PDebugCommand &currentCmd() const;
 
     void interrupt() override;
     void refreshStackVariables() override;
+
     void readMemory(qulonglong startAddress, int rows, int cols) override;
-    void setBreakpointCondition(PBreakpoint breakpoint) override;
+    void writeMemory(qulonglong address, unsigned char data) override;
+
+    void addBreakpoint(PBreakpoint breakpoint) override;
+    void removeBreakpoint(PBreakpoint breakpoint) override;
     void addWatchpoint(const QString& watchExp) override;
-    void refreshWatchVar(PWatchVar var) override;
+    void setBreakpointCondition(PBreakpoint breakpoint) override;
+
+    void addWatch(const QString& expression) override;
+    void removeWatch(PWatchVar watchVar) override;
+    void writeWatchVar(const QString& varName, const QString& value) override;
+    void refreshWatch(PWatchVar var) override;
+    void refreshWatch() override;
+    void fetchWatchVarChildren(const QString& varName) override;
+
+    void evalExpression(const QString& expression) override;
+
+    void refreshFrame();
+    void refreshRegisters();
+    void disassembleCurrentFrame(bool blendMode);
     // QThread interface
 protected:
     void run() override;
@@ -100,6 +118,7 @@ private:
     PDebugCommand mCurrentCmd;
     QList<PDebugCommand> mInferiorStoppedHookCommands;
 
+    DebuggerType mClientType;
 };
 
 #endif // GDBMI_DEBUGGER_H

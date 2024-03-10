@@ -34,6 +34,7 @@ public:
     void postCommand(const QString &Command, const QString &Params, DebugCommandSource Source) override;
     void registerInferiorStoppedCommand(const QString &Command, const QString &Params) override;
     void stopDebug() override;
+    DebuggerType clientType() override;
 
 protected:
     void runNextCmd() override;

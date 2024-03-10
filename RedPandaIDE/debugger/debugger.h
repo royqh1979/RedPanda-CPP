@@ -303,8 +303,6 @@ public:
     ~Debugger();
     // Play/pause
     bool start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs, const QString& sourceFile=QString());
-    void sendCommand(const QString& command, const QString& params,
-                     DebugCommandSource source = DebugCommandSource::Other);
     bool commandRunning();
     bool inferiorRunning();
     void interrupt();
@@ -345,6 +343,10 @@ public:
     PWatchVar findWatchVar(const QString& expression);
     PWatchVar watchVarAt(const QModelIndex& index);
     void refreshVars();
+
+    void evalExpression(const QString& expression);
+
+
 //    void notifyWatchVarUpdated(PWatchVar var);
 
     std::shared_ptr<BacktraceModel> backtraceModel();
@@ -493,13 +495,33 @@ public:
 
     Debugger* debugger() { return mDebugger; }
 
+    virtual DebuggerType clientType() = 0;
+
     //requests
     virtual void interrupt() = 0;
     virtual void refreshStackVariables() = 0;
+
     virtual void readMemory(qulonglong startAddress, int rows, int cols) = 0;
-    virtual void setBreakpointCondition(PBreakpoint breakpoint) = 0;
+    virtual void writeMemory(qulonglong address, unsigned char data) = 0;
+
+    virtual void addBreakpoint(PBreakpoint breakpoint) = 0;
+    virtual void removeBreakpoint(PBreakpoint breakpoint) = 0;
     virtual void addWatchpoint(const QString& watchExp) = 0;
-    virtual void refreshWatchVar(PWatchVar var) = 0;
+    virtual void setBreakpointCondition(PBreakpoint breakpoint) = 0;
+
+    virtual void addWatch(const QString& expression) = 0;
+    virtual void removeWatch(PWatchVar watchVar) = 0;
+    virtual void writeWatchVar(const QString& varName, const QString& value) = 0;
+    virtual void refreshWatch(PWatchVar var) = 0;
+    virtual void refreshWatch() = 0;
+    virtual void fetchWatchVarChildren(const QString& varName) = 0;
+
+    virtual void evalExpression(const QString& expression) = 0;
+
+    virtual void refreshFrame() = 0;
+    virtual void refreshRegisters() = 0;
+    virtual void disassembleCurrentFrame(bool blendMode) = 0;
+
 
 signals:
     void parseStarted();

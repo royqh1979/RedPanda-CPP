@@ -6501,7 +6501,7 @@ void MainWindow::onDebugEvaluateInput()
     if (!s.isEmpty()) {
         connect(mDebugger.get(), &Debugger::evalValueReady,
                    this, &MainWindow::onEvalValueReady);
-        mDebugger->sendCommand("-data-evaluate-expression",s);
+        mDebugger->evalExpression(s);
         pMainWindow->debugger()->refreshAll();
     }
 }

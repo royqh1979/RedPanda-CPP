@@ -26,8 +26,12 @@
 
 const QRegularExpression GDBMIDebuggerClient::REGdbSourceLine("^(\\d)+\\s+in\\s+(.+)$");
 
-GDBMIDebuggerClient::GDBMIDebuggerClient(Debugger *debugger, QObject *parent):
-    DebuggerClient(debugger, parent)
+GDBMIDebuggerClient::GDBMIDebuggerClient(
+        Debugger *debugger,
+        DebuggerType clientType,
+        QObject *parent):
+    DebuggerClient{debugger, parent},
+    mClientType{clientType}
 {
     mProcess = std::make_shared<QProcess>();
     mAsyncUpdated = false;
@@ -59,6 +63,11 @@ void GDBMIDebuggerClient::registerInferiorStoppedCommand(const QString &Command,
 void GDBMIDebuggerClient::stopDebug()
 {
     mStop = true;
+}
+
+DebuggerType GDBMIDebuggerClient::clientType()
+{
+    return mClientType;
 }
 
 void GDBMIDebuggerClient::run()
@@ -867,12 +876,12 @@ const PDebugCommand &GDBMIDebuggerClient::currentCmd() const
 
 void GDBMIDebuggerClient::interrupt()
 {
-    postCommand("-exec-interrupt", "", DebugCommandSource::Other);
+    postCommand("-exec-interrupt", "");
 }
 
 void GDBMIDebuggerClient::refreshStackVariables()
 {
-    postCommand("-stack-list-variables", "--all-values", DebugCommandSource::Other);
+    postCommand("-stack-list-variables", "--all-values");
 }
 
 void GDBMIDebuggerClient::readMemory(qulonglong startAddress, int rows, int cols)
@@ -880,9 +889,47 @@ void GDBMIDebuggerClient::readMemory(qulonglong startAddress, int rows, int cols
     postCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
                 .arg(startAddress)
                 .arg(rows)
-                .arg(cols),
-                DebugCommandSource::Other
-                );
+                .arg(cols));
+}
+
+void GDBMIDebuggerClient::writeMemory(qulonglong address, unsigned char data)
+{
+    postCommand("-data-write-memory-bytes", QString("%1 \"%2\"").arg(address).arg(data,2,16,QChar('0')));
+}
+
+void GDBMIDebuggerClient::addBreakpoint(PBreakpoint breakpoint)
+{
+    if (breakpoint) {
+        // break "filename":linenum
+        QString condition;
+        if (!breakpoint->condition.isEmpty()) {
+            condition = " -c " + breakpoint->condition;
+        }
+        QString filename = breakpoint->filename;
+        filename.replace('\\','/');
+        if (clientType()==DebuggerType::LLDB_MI) {
+            postCommand("-break-insert",
+                        QString("%1 \"%2:%3\"")
+                        .arg(condition, filename)
+                        .arg(breakpoint->line));
+        } else {
+            postCommand("-break-insert",
+                        QString("%1 --source \"%2\" --line %3")
+                        .arg(condition,filename)
+                        .arg(breakpoint->line));
+        }
+    }
+}
+
+void GDBMIDebuggerClient::removeBreakpoint(PBreakpoint breakpoint)
+{
+    if (breakpoint && breakpoint->number>=0) {
+        //clear "filename":linenum
+        QString filename = breakpoint->filename;
+        filename.replace('\\','/');
+        postCommand("-break-delete",
+                QString("%1").arg(breakpoint->number));
+    }
 }
 
 void GDBMIDebuggerClient::setBreakpointCondition(PBreakpoint breakpoint)
@@ -891,25 +938,72 @@ void GDBMIDebuggerClient::setBreakpointCondition(PBreakpoint breakpoint)
     QString condition = breakpoint->condition;
     if (condition.isEmpty()) {
         postCommand("-break-condition",
-                    QString("%1").arg(breakpoint->number), DebugCommandSource::Other);
+                    QString("%1").arg(breakpoint->number));
     } else {
         postCommand("-break-condition",
-                    QString("%1 %2").arg(breakpoint->number).arg(condition), DebugCommandSource::Other);
+                    QString("%1 %2").arg(breakpoint->number).arg(condition));
     }
+}
+
+void GDBMIDebuggerClient::addWatch(const QString &expression)
+{
+    postCommand("-var-create", expression);
+}
+
+void GDBMIDebuggerClient::removeWatch(PWatchVar watchVar)
+{
+    postCommand("-var-delete",QString("%1").arg(watchVar->name));
+}
+
+void GDBMIDebuggerClient::writeWatchVar(const QString &varName, const QString &value)
+{
+    postCommand("-var-assign",QString("%1 %2").arg(varName, value));
 }
 
 void GDBMIDebuggerClient::addWatchpoint(const QString &watchExp)
 {
     if (!watchExp.isEmpty())
-        postCommand("-break-watch", watchExp, DebugCommandSource::Other);
+        postCommand("-break-watch", watchExp);
 }
 
-void GDBMIDebuggerClient::refreshWatchVar(PWatchVar var)
+void GDBMIDebuggerClient::refreshWatch(PWatchVar var)
 {
     Q_ASSERT(var!=nullptr);
     postCommand("-var-update",
-                QString(" --all-values %1").arg(var->name),
-                DebugCommandSource::Other);
+                QString(" --all-values %1").arg(var->name));
+}
+
+void GDBMIDebuggerClient::refreshWatch()
+{
+    postCommand("-var-update"," --all-values *");
+}
+
+void GDBMIDebuggerClient::fetchWatchVarChildren(const QString& varName)
+{
+    postCommand("-var-list-children", varName);
+}
+
+void GDBMIDebuggerClient::evalExpression(const QString &expression)
+{
+    postCommand("-data-evaluate-expression", expression);
+}
+
+void GDBMIDebuggerClient::refreshFrame()
+{
+    postCommand("-stack-info-frame", "");
+}
+
+void GDBMIDebuggerClient::refreshRegisters()
+{
+    postCommand("-data-list-register-values", "N");
+}
+
+void GDBMIDebuggerClient::disassembleCurrentFrame(bool blendMode)
+{
+    if (blendMode)
+        postCommand("disas", "/s");
+    else
+        postCommand("disas", "");
 }
 
 void GDBMIDebuggerClient::runInferiorStoppedHook()

@@ -86,3 +86,8 @@ void DAPDebuggerClient::run()
         emit processFailed(mProcess->error());
     }
 }
+
+DebuggerType DAPDebuggerClient::clientType()
+{
+    return DebuggerType::DAP;
+}
