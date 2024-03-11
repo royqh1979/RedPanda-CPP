@@ -98,7 +98,7 @@ bool Debugger::startClient(int compilerSetIndex,
     else
         setDebuggerType(DebuggerType::GDB);
     // force to lldb-server if using lldb-mi, which creates new console but does not bind inferior’s stdio to the new console on Windows.
-    setUseDebugServer(pSettings->debugger().useGDBServer());
+    setUseDebugServer(pSettings->debugger().useGDBServer() || mDebuggerType == DebuggerType::LLDB_MI);
     mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
     //QFile debuggerProgram(debuggerPath);
@@ -2335,7 +2335,7 @@ void DebugTarget::run()
             mGDBServer,
             "gdbserver",
             QString("localhost:%1").arg(mPort),
-            mInferior,
+            //mInferior,
         } + mArguments;
     else
         execArgs = QStringList{

@@ -165,7 +165,7 @@ void GDBMIDebuggerClient::runNextCmd()
     if (mCmdQueue.isEmpty()) {
         if (debugger()->useDebugServer() && mInferiorRunning && !mAsyncUpdated) {
             mAsyncUpdated = true;
-            QTimer::singleShot(50,this,&GDBMIDebuggerClient::asyncUpdate);
+            QTimer::singleShot(5000,this,&GDBMIDebuggerClient::asyncUpdate);
         }
         return;
     }
@@ -945,7 +945,8 @@ void GDBMIDebuggerClient::asyncUpdate()
 {
     QMutexLocker locker(&mCmdQueueMutex);
     if (mCmdQueue.isEmpty()) {
-        postCommand("-var-update"," --all-values *",DebugCommandSource::HeartBeat);
+        //postCommand("-var-update"," --all-values *",DebugCommandSource::HeartBeat);
+        postCommand("-stack-info-frame","",DebugCommandSource::HeartBeat);
     }
     mAsyncUpdated = false;
 }
@@ -974,20 +975,24 @@ void GDBMIDebuggerClient::initialize(const QString& inferior, bool hasSymbols)
     } else {
         postCommand("-file-exec-file", '"' + inferior + '"');
     }
-
+    if (debugger()->useDebugServer()) {
+        postCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
+    }
 }
 
 void GDBMIDebuggerClient::runInferior(bool hasBreakpoints)
 {
     if (debugger()->useDebugServer()) {
-        postCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
         if (!hasBreakpoints) {
             postCommand("-break-insert","-t main");
         }
         if (pSettings->executor().useParams()) {
             postCommand("-exec-arguments", pSettings->executor().params());
         }
-        postCommand("-exec-continue","");
+        if (clientType()==DebuggerType::LLDB_MI) {
+            postCommand("-exec-run","");
+        } else
+            postCommand("-exec-continue","");
     } else {
 #ifdef Q_OS_WIN
         postCommand("-gdb-set", "new-console on");
