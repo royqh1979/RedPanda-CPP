@@ -26,6 +26,7 @@
 #include "qsynedit/qsynedit.h"
 #include "compiler/compilerinfo.h"
 #include "utils.h"
+#include "utils/font.h"
 
 /**
  * use the following command to get gcc's default bin/library folders:
@@ -171,7 +172,6 @@ public:
         void setHalfPageScroll(bool halfPageScroll);
 
         QString fontName() const;
-        void setFontName(const QString &fontName);
 
         int fontSize() const;
         void setFontSize(int fontSize);
@@ -355,22 +355,9 @@ public:
         bool enableLigaturesSupport() const;
         void setEnableLigaturesSupport(bool newEnableLigaturesSupport);
 
-        const QString &fallbackFontName() const;
-        void setFallbackFontName(const QString &newFontName);
-
-        const QString &fallbackFontName2() const;
-        void setFallbackFontName2(const QString &newFontName);
-
-        const QString &fallbackFontName3() const;
-        void setFallbackFontName3(const QString &newFontName);
-
-        bool useFallbackFont2() const;
-        void setUseFallbackFont2(bool useFont);
-
-        bool useFallbackFont3() const;
-        void setUseFallbackFont3(bool useFont);
-
         QStringList fontFamilies() const;
+        void setFontFamilies(const QStringList &newFontFamilies);
+        QStringList fontFamiliesWithControlFont() const;
 
         int mouseSelectionScrollSpeed() const;
         void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
@@ -462,14 +449,8 @@ public:
 
         //Font
         //font
-        QString mFontName;
-        QString mFallbackFontName;
-        QString mFallbackFontName2;
-        QString mFallbackFontName3;
-        bool mUseFallbackFont2;
-        bool mUseFallbackFont3;
+        QStringList mFontFamilies;
         int mFontSize;
-        bool mFontOnlyMonospaced;
         double mLineSpacing;
         bool mEnableLigaturesSupport;
         bool mForceFixedFontWidth;

@@ -201,6 +201,7 @@ SOURCES += \
     systemconsts.cpp \
     utils.cpp \
     utils/escape.cpp \
+    utils/font.cpp \
     utils/parsearg.cpp \
     widgets/coloredit.cpp \
     widgets/compileargumentswidget.cpp \
@@ -330,6 +331,7 @@ HEADERS += \
     systemconsts.h \
     utils.h \
     utils/escape.h \
+    utils/font.h \
     utils/parsearg.h \
     common.h \
     widgets/coloredit.h \
