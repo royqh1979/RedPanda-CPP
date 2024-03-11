@@ -124,7 +124,7 @@ void GDBMIDebuggerClient::run()
         }
         if (mStop) {
             mProcess->readAll();
-            mProcess->write("quit\n");
+            mProcess->write("-gdb-exit\n");
             msleep(50);
             mProcess->readAll();
             msleep(50);
@@ -534,6 +534,31 @@ void GDBMIDebuggerClient::handleUpdateVarValue(const QList<GDBMIResultParser::Pa
     //emit varsValueUpdated();
 }
 
+void GDBMIDebuggerClient::handleDisassembly(const QList<GDBMIResultParser::ParseValue> &instructions)
+{
+    QStringList lines;
+    foreach (const GDBMIResultParser::ParseValue& value, instructions) {
+        QString line;
+        GDBMIResultParser::ParseObject obj = value.object();
+        if (mCurrentCmd && mCurrentCmd->params.contains("--source")) {
+
+        } else {
+            bool ok;
+            QString addr = obj["address"].value();
+            QString inst = obj["inst"].value();
+            QString offset = obj["offset"].value();
+            qulonglong addrVal = addr.toULongLong(&ok, 16);
+            if (addrVal == mCurrentAddress) {
+                line = "==> "+addr+ " " + inst;
+            } else {
+                line = "    "+addr+ " " + inst;
+            }
+            lines.append(line);
+        }
+    }
+    emit disassemblyUpdate(mCurrentFile, mCurrentFunc, lines);
+}
+
 void GDBMIDebuggerClient::processConsoleOutput(const QByteArray& line)
 {
     if (line.length()>3 && line.startsWith("~\"") && line.endsWith("\"")) {
@@ -684,6 +709,9 @@ void GDBMIDebuggerClient::processResult(const QByteArray &result)
     case GDBMIResultType::UpdateVarValue:
         handleUpdateVarValue(multiValues["changelist"].array());
         break;
+    case GDBMIResultType::Disassembly:
+        handleDisassembly(multiValues["asm_insns"].array());
+        break;
     default:
         break;
     }   
@@ -807,31 +835,34 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
                 }
                 if (debugger()->debugInfosUsingUTF8()) {
                     QStringList newOutput;
-                    foreach(const QString& s, disOutput) {
-                        QString line = s;
-                        if (!s.isEmpty() && s.front().isDigit()) {
-                            QRegularExpressionMatch match = REGdbSourceLine.match(s);
-//                            qDebug()<<s;
-                            if (match.hasMatch()) {
-                                bool isOk;
-                                int lineno=match.captured(1).toInt(&isOk)-1;;
-                                QString filename = match.captured(2).trimmed();
-                                if (isOk && fileExists(filename)) {
-                                    QStringList contents;
-                                    if (mFileCache.contains(filename))
-                                        contents = mFileCache.value(filename);
-                                    else {
-                                        if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,contents))
-                                            contents = readFileToLines(filename);
-                                        mFileCache[filename]=contents;
-                                    }
-                                    if (lineno>=0 && lineno<contents.size()) {
-                                        line = QString("%1\t%2").arg(lineno+1).arg(contents[lineno]);
+                    foreach(const QString& origLine, disOutput) {
+                        QStringList subLines = textToLines(origLine);
+                        foreach (const QString& s, subLines) {
+                            QString line = s;
+                            if (!s.isEmpty() && s.front().isDigit()) {
+                                QRegularExpressionMatch match = REGdbSourceLine.match(s);
+    //                            qDebug()<<s;
+                                if (match.hasMatch()) {
+                                    bool isOk;
+                                    int lineno=match.captured(1).toInt(&isOk)-1;;
+                                    QString filename = match.captured(2).trimmed();
+                                    if (isOk && fileExists(filename)) {
+                                        QStringList contents;
+                                        if (mFileCache.contains(filename))
+                                            contents = mFileCache.value(filename);
+                                        else {
+                                            if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,contents))
+                                                contents = readFileToLines(filename);
+                                            mFileCache[filename]=contents;
+                                        }
+                                        if (lineno>=0 && lineno<contents.size()) {
+                                            line = QString("%1\t%2").arg(lineno+1).arg(contents[lineno]);
+                                        }
                                     }
                                 }
                             }
+                            newOutput.append(line);
                         }
-                        newOutput.append(line);
                     }
                     disOutput=newOutput;
                 }
@@ -935,12 +966,15 @@ void GDBMIDebuggerClient::initialize(const QString& inferior, bool hasSymbols)
     postCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
     postCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
     postCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(inferior))); // restore working directory
+    if (clientType()==DebuggerType::GDB)
+        postCommand("-data-list-register-names","");
 
     if (hasSymbols) {
         postCommand("-file-exec-and-symbols", '"' + inferior + '"');
     } else {
         postCommand("-file-exec-file", '"' + inferior + '"');
     }
+
 }
 
 void GDBMIDebuggerClient::runInferior(bool hasBreakpoints)
@@ -974,7 +1008,6 @@ void GDBMIDebuggerClient::runInferior(bool hasBreakpoints)
             }
         }
     }
-    postCommand("-data-list-register-names","");
 }
 
 void GDBMIDebuggerClient::stepOver()
@@ -1144,6 +1177,8 @@ void GDBMIDebuggerClient::refreshFrame()
 
 void GDBMIDebuggerClient::refreshRegisters()
 {
+    if (clientType()==DebuggerType::LLDB_MI)
+        postCommand("-data-list-register-names","");
     postCommand("-data-list-register-values", "N");
 }
 
@@ -1153,6 +1188,13 @@ void GDBMIDebuggerClient::disassembleCurrentFrame(bool blendMode)
         postCommand("disas", "/s");
     else
         postCommand("disas", "");
+    // QString params=QString("-s 0x%1 -e 0x%2 -mode 0")
+    //         .arg(mCurrentAddress,0,16)
+    //         .arg(mCurrentAddress+1,0,16);
+
+    // // if (blendMode)
+    // //      params += " --source";
+    // postCommand("-data-disassemble",params);
 }
 
 void GDBMIDebuggerClient::setDisassemblyLanguage(bool isIntel)

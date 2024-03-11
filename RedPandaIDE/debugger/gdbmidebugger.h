@@ -108,6 +108,7 @@ private:
     void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values);
     void handleListVarChildren(const GDBMIResultParser::ParseObject& multiVars);
     void handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes);
+    void handleDisassembly(const QList<GDBMIResultParser::ParseValue> &instructions);
     void processConsoleOutput(const QByteArray& line);
     void processLogOutput(const QByteArray& line);
     void processResult(const QByteArray& result);
