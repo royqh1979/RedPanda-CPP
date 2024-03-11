@@ -42,8 +42,7 @@ Red Panda C++ Version 2.27
   - enhancement: Support "enum struct" Scoped enumerations.
   - fix: Function tips contains functions that not in the scope.
   - fix: Hint for bold text (<b></b>) are not correctly handled in the function tips.
-  
-  
+  - enhancement: Improve lldb-mi compatibility.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

@@ -123,6 +123,11 @@ void GDBMIDebuggerClient::run()
             break;
         }
         if (mStop) {
+            mProcess->readAll();
+            mProcess->write("quit\n");
+            msleep(50);
+            mProcess->readAll();
+            msleep(50);
             mProcess->terminate();
             mProcess->kill();
             break;
@@ -135,8 +140,8 @@ void GDBMIDebuggerClient::run()
         if (readed.endsWith("\n")&& outputTerminated(buffer)) {
             processDebugOutput(buffer);
             buffer.clear();
-            mCmdRunning = false;
-            runNextCmd();
+            // mCmdRunning = false;
+            // runNextCmd();
         } else if (!mCmdRunning && readed.isEmpty()){
             runNextCmd();
         } else if (readed.isEmpty()){
@@ -191,7 +196,7 @@ void GDBMIDebuggerClient::runNextCmd()
     }
     if (pCmd->command == "-var-create") {
         //hack for variable creation,to easy remember var expression
-        if (debugger()->debuggerType()==DebuggerType::LLDB_MI)
+        if (clientType()==DebuggerType::LLDB_MI)
             params = " - * "+params;
         else
             params = " - @ "+params;
@@ -407,6 +412,40 @@ void GDBMIDebuggerClient::handleMemory(const QList<GDBMIResultParser::ParseValue
     emit memoryUpdated(memory);
 }
 
+void GDBMIDebuggerClient::handleMemoryBytes(const QList<GDBMIResultParser::ParseValue> &rows)
+{
+    QStringList memory;
+    foreach (const GDBMIResultParser::ParseValue& row, rows) {
+        GDBMIResultParser::ParseObject rowObject = row.object();
+        bool ok;
+        qulonglong startAddr = rowObject["begin"].value().toLongLong(&ok, 16);
+        qulonglong endAddr = rowObject["end"].value().toLongLong(&ok, 16);
+        qulonglong offset = rowObject["offset"].value().toLongLong(&ok, 16);
+        startAddr += offset;
+        QByteArray contents = rowObject["contents"].value();
+        qulonglong addr = startAddr;
+        QStringList values;
+        int cols = pSettings->debugger().memoryViewColumns();
+        while (addr<endAddr) {
+            values.append("0x"+contents.mid((addr-startAddr)*2,2));
+            if ((addr-startAddr+1)%cols == 0) {
+                memory.append(QString("%1 %2").arg(
+                                  QString("0x%1").arg(addr - cols + 1 ,0,16),
+                                  values.join(" ")));
+                values.clear();
+            }
+            addr++;
+        }
+        if (!values.isEmpty()) {
+            memory.append(QString("%1 %2").arg(
+                              QString("0x%1").arg(addr - values.length() + 1 ,0,16),
+                              values.join(" ")));
+            values.clear();
+        }
+    }
+    emit memoryUpdated(memory);
+}
+
 void GDBMIDebuggerClient::handleRegisterNames(const QList<GDBMIResultParser::ParseValue> &names)
 {
     QStringList nameList;
@@ -611,40 +650,43 @@ void GDBMIDebuggerClient::processResult(const QByteArray &result)
         break;
     case GDBMIResultType::Breakpoint:
         handleBreakpoint(multiValues["bkpt"].object());
-        return;
+        break;
     case GDBMIResultType::Frame:
         handleFrame(multiValues["frame"]);
-        return;
+        break;
     case GDBMIResultType::FrameStack:
         handleStack(multiValues["stack"].array());
-        return;
+        break;
     case GDBMIResultType::LocalVariables:
         handleLocalVariables(multiValues["variables"].array());
-        return;
+        break;
     case GDBMIResultType::Evaluation:
         handleEvaluation(multiValues["value"].value());
-        return;
+        break;
     case GDBMIResultType::Memory:
         handleMemory(multiValues["memory"].array());
-        return;
+        break;
+    case GDBMIResultType::MemoryBytes:
+        handleMemoryBytes(multiValues["memory"].array());
+        break;
     case GDBMIResultType::RegisterNames:
         handleRegisterNames(multiValues["register-names"].array());
-        return;
+        break;
     case GDBMIResultType::RegisterValues:
         handleRegisterValue(multiValues["register-values"].array());
-        return;
+        break;
     case GDBMIResultType::CreateVar:
         handleCreateVar(multiValues);
-        return;
+        break;
     case GDBMIResultType::ListVarChildren:
         handleListVarChildren(multiValues);
-        return;
+        break;
     case GDBMIResultType::UpdateVarValue:
         handleUpdateVarValue(multiValues["changelist"].array());
-        return;
+        break;
     default:
-        return;
-    }
+        break;
+    }   
 }
 
 void GDBMIDebuggerClient::processExecAsyncRecord(const QByteArray &line)
@@ -734,6 +776,13 @@ void GDBMIDebuggerClient::processError(const QByteArray &errorLine)
 
 void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
 {
+    auto action = finally([this]() {
+        if (!mProcessExited) {
+            mCmdRunning = false;
+            runNextCmd();
+        }
+    });
+
     if (line.startsWith("^exit")) {
         mProcessExited = true;
         return;
@@ -879,7 +928,6 @@ void GDBMIDebuggerClient::initialize(const QString& inferior, bool hasSymbols)
 {
     postCommand("-gdb-set", "mi-async on");
     postCommand("-enable-pretty-printing","");
-    postCommand("-data-list-register-names","");
     postCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
     postCommand("-gdb-set", "confirm off");
     postCommand("-gdb-set", "print repeats 10");
@@ -913,12 +961,20 @@ void GDBMIDebuggerClient::runInferior(bool hasBreakpoints)
         if (pSettings->executor().useParams()) {
             postCommand("-exec-arguments", pSettings->executor().params());
         }
-        if (!hasBreakpoints) {
-            postCommand("-exec-run","--start");
-        } else {
+        if (clientType() == DebuggerType::LLDB_MI) {
+            if (!hasBreakpoints) {
+                postCommand("-break-insert","-t main");
+            }
             postCommand("-exec-run","");
+        } else {
+            if (!hasBreakpoints) {
+                postCommand("-exec-run","--start");
+            } else {
+                postCommand("-exec-run","");
+            }
         }
     }
+    postCommand("-data-list-register-names","");
 }
 
 void GDBMIDebuggerClient::stepOver()
@@ -970,10 +1026,13 @@ void GDBMIDebuggerClient::refreshStackVariables()
 
 void GDBMIDebuggerClient::readMemory(const QString& startAddress, int rows, int cols)
 {
-    postCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
+    // postCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
+    //             .arg(startAddress)
+    //             .arg(rows)
+    //             .arg(cols));
+    postCommand("-data-read-memory-bytes",QString("%1 %2")
                 .arg(startAddress)
-                .arg(rows)
-                .arg(cols));
+                .arg(rows * cols));
 }
 
 void GDBMIDebuggerClient::writeMemory(qulonglong address, unsigned char data)

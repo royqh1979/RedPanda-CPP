@@ -103,6 +103,7 @@ private:
     void handleLocalVariables(const QList<GDBMIResultParser::ParseValue> & variables);
     void handleEvaluation(const QString& value);
     void handleMemory(const QList<GDBMIResultParser::ParseValue> & rows);
+    void handleMemoryBytes(const QList<GDBMIResultParser::ParseValue> & rows);
     void handleRegisterNames(const QList<GDBMIResultParser::ParseValue> & names);
     void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values);
     void handleListVarChildren(const GDBMIResultParser::ParseObject& multiVars);

@@ -32,6 +32,7 @@ GDBMIResultParser::GDBMIResultParser()
 //    mResultTypes.insert("register-names",GDBMIResultType::RegisterNames);
 //    mResultTypes.insert("register-values",GDBMIResultType::RegisterValues);
     mResultTypes.insert("-data-read-memory",GDBMIResultType::Memory);
+    mResultTypes.insert("-data-read-memory-bytes",GDBMIResultType::MemoryBytes);
     mResultTypes.insert("-data-list-register-names",GDBMIResultType::RegisterNames);
     mResultTypes.insert("-data-list-register-values",GDBMIResultType::RegisterValues);
     mResultTypes.insert("-var-create",GDBMIResultType::CreateVar);
