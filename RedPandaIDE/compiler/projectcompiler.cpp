@@ -75,7 +75,7 @@ void ProjectCompiler::createStaticMakeFile()
     QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
     QString exeTarget = escapeFilenameForMakefileTarget(executable);
     QString exeCommand = escapeArgumentForMakefileRecipe(executable, false);
-    writeln(file, exeTarget + ": $(LINKOBJ)");
+    writeln(file, exeTarget + ": $(OBJ)");
     writeln(file, "\tar r " + exeCommand + " $(LINKOBJ)");
     writeln(file, "\tranlib " + exeCommand);
     writeMakeObjFilesRules(file);
@@ -88,7 +88,7 @@ void ProjectCompiler::createDynamicMakeFile()
     QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
     QString exeTarget = escapeFilenameForMakefileTarget(executable);
     QString exeCommand = escapeArgumentForMakefileRecipe(executable, false);
-    writeln(file, exeTarget + ": $(LINKOBJ)");
+    writeln(file, exeTarget + ": $(OBJ)");
     if (mProject->options().isCpp) {
         writeln(file, "\t$(CXX) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
     } else {

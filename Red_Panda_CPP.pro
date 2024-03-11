@@ -43,7 +43,7 @@ unix:!macos: {
         LIBEXECDIR = $${PREFIX}/libexec
     }
 
-    QMAKE_SUBSTITUTES += platform/linux/redpandaide.desktop.in
+    QMAKE_SUBSTITUTES += platform/linux/RedPandaIDE.desktop.in
 
     resources.path = $${PREFIX}/share/$${APP_NAME}
     resources.files += platform/linux/templates
@@ -60,7 +60,7 @@ unix:!macos: {
     INSTALLS += xdgicons
 
     desktop.path = $${PREFIX}/share/applications
-    desktop.files += platform/linux/redpandaide.desktop
+    desktop.files += platform/linux/RedPandaIDE.desktop
     INSTALLS += desktop
 
     mime.path = $${PREFIX}/share/mime/packages
