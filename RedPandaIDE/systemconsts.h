@@ -125,41 +125,6 @@
 #define SDCC_HEX_SUFFIX "hex"
 #define SDCC_REL_SUFFIX "rel"
 
-#if defined(Q_OS_WIN)
-#   define DEFAULT_UI_FONT   "Segoe UI"
-#   define CJK_UI_FONT_SC    "Microsoft YaHei UI"
-#   define CJK_UI_FONT_TC    "Microsoft JhengHei UI"
-#   define CJK_UI_FONT_J     "Yu Gothic UI"
-#   define CJK_UI_FONT_K     "Malgun Gothic"
-#   define DEFAULT_MONO_FONT "Consolas"
-#   define CJK_MONO_FONT_SC  "Microsoft YaHei"
-#   define CJK_MONO_FONT_TC  "Microsoft JhengHei"
-#   define CJK_MONO_FONT_J   "Yu Gothic"
-#   define CJK_MONO_FONT_K   "Malgun Gothic"
-#elif defined(Q_OS_MACOS)
-#   define DEFAULT_UI_FONT   "Helvetica Neue"
-#   define CJK_UI_FONT_SC    "PingFang SC"
-#   define CJK_UI_FONT_TC    "PingFang TC"
-#   define CJK_UI_FONT_J     "Hiragino Sans"
-#   define CJK_UI_FONT_K     "Apple SD Gothic Neo"
-#   define DEFAULT_MONO_FONT "Menlo"
-#   define CJK_MONO_FONT_SC  CJK_UI_FONT_SC
-#   define CJK_MONO_FONT_TC  CJK_UI_FONT_TC
-#   define CJK_MONO_FONT_J   CJK_UI_FONT_J
-#   define CJK_MONO_FONT_K   CJK_UI_FONT_K
-#else // XDG desktop
-#   define DEFAULT_UI_FONT   "Sans"             // use fontconfig default
-#   define CJK_UI_FONT_SC    "Noto Sans CJK SC"
-#   define CJK_UI_FONT_TC    "Noto Sans CJK TC"
-#   define CJK_UI_FONT_J     "Noto Sans CJK JP"
-#   define CJK_UI_FONT_K     "Noto Sans CJK KR"
-#   define DEFAULT_MONO_FONT "Monospace"        // use fontconfig default
-#   define CJK_MONO_FONT_SC  CJK_UI_FONT_SC     // intentionally: the "Mono" version is not stricly monospaced either, and has less weights
-#   define CJK_MONO_FONT_TC  CJK_UI_FONT_TC
-#   define CJK_MONO_FONT_J   CJK_UI_FONT_J
-#   define CJK_MONO_FONT_K   CJK_UI_FONT_K
-#endif
-
 class SystemConsts
 {
 public:

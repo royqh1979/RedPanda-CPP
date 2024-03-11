@@ -20,6 +20,7 @@
 #include <algorithm>
 #include "utils.h"
 #include "utils/escape.h"
+#include "utils/font.h"
 #include "utils/parsearg.h"
 #include <QDir>
 #include "systemconsts.h"
@@ -669,65 +670,14 @@ void Settings::Editor::setEnableLigaturesSupport(bool newEnableLigaturesSupport)
     mEnableLigaturesSupport = newEnableLigaturesSupport;
 }
 
-const QString &Settings::Editor::fallbackFontName() const
-{
-    return mFallbackFontName;
-}
-
-void Settings::Editor::setFallbackFontName(const QString &newFontName)
-{
-    mFallbackFontName = newFontName;
-}
-
-const QString &Settings::Editor::fallbackFontName2() const
-{
-    return mFallbackFontName2;
-}
-
-void Settings::Editor::setFallbackFontName2(const QString &newFontName)
-{
-    mFallbackFontName2 = newFontName;
-}
-
-const QString &Settings::Editor::fallbackFontName3() const
-{
-    return mFallbackFontName3;
-}
-
-void Settings::Editor::setFallbackFontName3(const QString &newFontName)
-{
-    mFallbackFontName3 = newFontName;
-}
-
-bool Settings::Editor::useFallbackFont2() const {
-    return mUseFallbackFont2;
-}
-
-void Settings::Editor::setUseFallbackFont2(bool useFont) {
-    mUseFallbackFont2 = useFont;
-}
-
-bool Settings::Editor::useFallbackFont3() const {
-    return mUseFallbackFont3;
-}
-
-void Settings::Editor::setUseFallbackFont3(bool useFont) {
-    mUseFallbackFont3 = useFont;
-}
-
 QStringList Settings::Editor::fontFamilies() const
 {
-    QStringList result {
-        //QString("%1 [%2]").arg(mFontName,mFallbackFontName),
-        mFontName,
-        mFallbackFontName,
-    };
-    if (mUseFallbackFont2)
-        result.append(mFallbackFontName2);
-    if (mUseFallbackFont3)
-        result.append(mFallbackFontName3);
-    result.append("Red Panda Control");
-    return result;
+    return mFontFamilies;
+}
+
+void Settings::Editor::setFontFamilies(const QStringList &newFontFamilies)
+{
+    mFontFamilies = newFontFamilies;
 }
 
 int Settings::Editor::mouseSelectionScrollSpeed() const
@@ -1300,16 +1250,6 @@ void Settings::Editor::setGutterVisible(bool gutterVisible)
     mGutterVisible = gutterVisible;
 }
 
-bool Settings::Editor::fontOnlyMonospaced() const
-{
-    return mFontOnlyMonospaced;
-}
-
-void Settings::Editor::setFontOnlyMonospaced(bool fontOnlyMonospaced)
-{
-    mFontOnlyMonospaced = fontOnlyMonospaced;
-}
-
 int Settings::Editor::fontSize() const
 {
     return mFontSize;
@@ -1322,12 +1262,7 @@ void Settings::Editor::setFontSize(int fontSize)
 
 QString Settings::Editor::fontName() const
 {
-    return mFontName;
-}
-
-void Settings::Editor::setFontName(const QString &fontName)
-{
-    mFontName = fontName;
+    return mFontFamilies.length() > 0 ? mFontFamilies[0] : "";
 }
 
 bool Settings::Editor::scrollByOneLess() const
@@ -1410,15 +1345,8 @@ void Settings::Editor::doSave()
 
     //Font
     //font
-    saveValue("font_name", mFontName);
-    saveValue("fallback_font_name", mFallbackFontName);
-    saveValue("fallback_font_name2", mFallbackFontName2);
-    saveValue("fallback_font_name3", mFallbackFontName3);
-    saveValue("use_fallback_font2", mUseFallbackFont2);
-    saveValue("use_fallback_font3", mUseFallbackFont3);
-
+    saveValue("font_families", mFontFamilies);
     saveValue("font_size", mFontSize);
-    saveValue("font_only_monospaced", mFontOnlyMonospaced);
     saveValue("line_spacing",mLineSpacing);
     saveValue("enable_ligatures_support", mEnableLigaturesSupport);
     saveValue("force_fixed_font_width", mForceFixedFontWidth);
@@ -1549,32 +1477,28 @@ void Settings::Editor::doLoad()
     mRightEdgeLineColor = colorValue("right_edge_line_color",Qt::yellow);
 
     //Editor font
-    mFontName = stringValue("font_name",DEFAULT_MONO_FONT);
-    QString defaultCjkFontName = DEFAULT_MONO_FONT;
-    QString defaultLocaleName = QLocale::system().name();
-    bool isCNJP =
-            defaultLocaleName.startsWith("zh_")
-            ||  defaultLocaleName.startsWith("ja_")
-            || defaultLocaleName==("zh")
-            || defaultLocaleName == ("ja");
+    QStringList fontFamilies = stringListValue("font_families", QStringList());
+    if (fontFamilies.empty()) {
+        // backward compatibility: try old font settings
+        QString fontName = stringValue("font_name", "");
+        if (!fontName.isEmpty())
+            fontFamilies.append(fontName);
+        QString nonAsciiFontName = stringValue("non_ascii_font_name", "");
+        if (!nonAsciiFontName.isEmpty())
+            fontFamilies.append(nonAsciiFontName);
 
-    if (defaultLocaleName == "zh_TW")
-        defaultCjkFontName = CJK_MONO_FONT_TC;
-    else if (defaultLocaleName == "ja_JP")
-        defaultCjkFontName = CJK_MONO_FONT_J;
-    else if (defaultLocaleName == "ko_KR")
-        defaultCjkFontName = CJK_MONO_FONT_K;
-    else if (defaultLocaleName == "zh_CN")
-        defaultCjkFontName = CJK_MONO_FONT_SC;
-    mFallbackFontName = stringValue("fallback_font_name",defaultCjkFontName);
-    mFallbackFontName2 = stringValue("fallback_font_name2",DEFAULT_MONO_FONT);
-    mFallbackFontName3 = stringValue("fallback_font_name3",DEFAULT_MONO_FONT);
-    mUseFallbackFont2 = boolValue("use_fallback_font2", false);
-    mUseFallbackFont3 = boolValue("use_fallback_font3", false);
+        if (fontFamilies.empty())
+            mFontFamilies = defaultEditorFonts(UnicodeSupportLevel::FullCodePoint);
+        else {
+            fontFamilies.append("Red Panda Control");
+            mFontFamilies = fontFamilies;
+        }
+    } else {
+        mFontFamilies = fontFamilies;
+    }
     mFontSize = intValue("font_size",12);
-    mFontOnlyMonospaced = boolValue("font_only_monospaced",true);
     mLineSpacing = doubleValue("line_spacing",1.1);
-    mForceFixedFontWidth = boolValue("force_fixed_font_width", isCNJP);
+    mForceFixedFontWidth = boolValue("force_fixed_font_width", isCjk());
     // if (mForceFixedFontWidth)
     //     mEnableLigaturesSupport = false;
     // else
@@ -1598,7 +1522,7 @@ void Settings::Editor::doLoad()
     mGutterLineNumbersStartZero = boolValue("gutter_line_numbers_start_zero",false);
     mGutterUseCustomFont = boolValue("gutter_use_custom_font",false);
 
-    mGutterFontName = stringValue("gutter_font_name",DEFAULT_MONO_FONT);
+    mGutterFontName = stringValue("gutter_font_name", defaultMonoFont());
     mGutterFontSize = intValue("gutter_font_size",12);
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
@@ -3879,29 +3803,10 @@ void Settings::Environment::doLoad()
 {
     //Appearance
     mTheme = stringValue("theme","dark");
-    QString defaultFontName = DEFAULT_UI_FONT;
-    QString defaultLocaleName = QLocale::system().name();
-    {
-        QString fontName;
-        if (defaultLocaleName == "zh_CN")
-            fontName = CJK_UI_FONT_SC;
-        else if (defaultLocaleName == "zh_TW")
-            fontName = CJK_UI_FONT_TC;
-        else if (defaultLocaleName == "ja_JP")
-            fontName = CJK_UI_FONT_J;
-        else if (defaultLocaleName == "ko_KR")
-            fontName = CJK_UI_FONT_K;
-        else
-            fontName = DEFAULT_UI_FONT;
-        QFont font(fontName);
-        if (font.exactMatch()) {
-            defaultFontName = fontName;
-        }
-    }
-    mInterfaceFont = stringValue("interface_font",defaultFontName);
+    mInterfaceFont = stringValue("interface_font", defaultUiFont());
     mInterfaceFontSize = intValue("interface_font_size",11);
     mIconZoomFactor = doubleValue("icon_zoom_factor",1.0);
-    mLanguage = stringValue("language", defaultLocaleName);
+    mLanguage = stringValue("language", QLocale::system().name());
     mIconSet = stringValue("icon_set","contrast");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
     mUseCustomTheme = boolValue("use_custom_theme", false);
@@ -4515,7 +4420,7 @@ void Settings::Executor::doLoad()
     mProblemCaseValidateType =(ProblemCaseValidateType)intValue("problem_case_validate_type", (int)ProblemCaseValidateType::Exact);
     mRedirectStderrToToolLog = boolValue("redirect_stderr_to_toollog", false);
 
-    mCaseEditorFontName = stringValue("case_editor_font_name",DEFAULT_MONO_FONT);
+    mCaseEditorFontName = stringValue("case_editor_font_name", defaultMonoFont());
     mCaseEditorFontSize = intValue("case_editor_font_size",11);
     mCaseEditorFontOnlyMonospaced = boolValue("case_editor_font_only_monospaced",true);
     int case_timeout = intValue("case_timeout", -1);
@@ -4744,11 +4649,7 @@ void Settings::Debugger::doLoad()
 {
     mEnableDebugConsole = boolValue("enable_debug_console",true);
     mShowDetailLog = boolValue("show_detail_log",false);
-#ifdef Q_OS_WIN
-    mFontName = stringValue("font_name","Consolas");
-#else
-    mFontName = stringValue("font_name","Dejavu Sans Mono");
-#endif
+    mFontName = stringValue("font_name", defaultMonoFont());
     mOnlyShowMono = boolValue("only_show_mono",true);
     mFontSize = intValue("font_size",14);
     mUseIntelStyle = boolValue("use_intel_style",false);

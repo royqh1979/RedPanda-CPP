@@ -18,11 +18,37 @@
 #define EDITORFONTWIDGET_H
 
 #include <QWidget>
+#include <QAbstractListModel>
 #include "settingswidget.h"
+#include "utils/font.h"
 
 namespace Ui {
 class EditorFontWidget;
 }
+
+class EditorFontModel : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    void addFont(const QString& font);
+    void remove(int index);
+    void clear();
+    void moveUp(int index);
+    void moveDown(int index);
+    QModelIndex lastFont();
+    const QStringList &fonts() const;
+    void updateFonts(const QStringList& fonts);
+
+    // QAbstractItemModel interface
+public:
+    int rowCount(const QModelIndex &parent) const override;
+    int columnCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+
+private:
+    QStringList mFonts;
+};
 
 class EditorFontWidget : public SettingsWidget
 {
@@ -33,9 +59,12 @@ public:
 
 
 private slots:
-    void onFallbackFontsCheckStateChanged();
-    void on_chkOnlyMonospacedFonts_stateChanged(int arg1);
     void on_chkGutterOnlyMonospacedFonts_stateChanged(int arg1);
+    void on_btnAddFont_clicked();
+    void on_btnRemoveFont_clicked();
+    void on_btnMoveFontUp_clicked();
+    void on_btnMoveFontDown_clicked();
+    void on_btnResetFonts_clicked();
 
     // void on_chkLigature_toggled(bool checked);
 
@@ -43,11 +72,13 @@ private slots:
 
 private:
     Ui::EditorFontWidget *ui;
+    EditorFontModel mModel;
 
     // SettingsWidget interface
 protected:
     void doLoad() override;
     void doSave() override;
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // EDITORFONTWIDGET_H
