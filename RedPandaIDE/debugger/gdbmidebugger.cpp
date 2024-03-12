@@ -1128,7 +1128,7 @@ void GDBMIDebuggerClient::setBreakpointCondition(PBreakpoint breakpoint)
 
 void GDBMIDebuggerClient::addWatch(const QString &expression)
 {
-    postCommand("-var-create", expression);
+    postCommand("-var-create", QString("\"%1\"").arg(expression));
 }
 
 void GDBMIDebuggerClient::removeWatch(PWatchVar watchVar)

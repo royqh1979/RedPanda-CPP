@@ -1710,7 +1710,7 @@ PWatchVar WatchModel::findWatchVar(const QModelIndex &index)
 PWatchVar WatchModel::findWatchVar(const QString &expr)
 {
     foreach (const PWatchVar &var, watchVars(mIsForProject)) {
-        if (expr == var->expression) {
+        if (expr == QString("\"%1\"").arg(var->expression)) {
             return var;
         }
     }
