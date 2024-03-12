@@ -1166,7 +1166,14 @@ void GDBMIDebuggerClient::fetchWatchVarChildren(const QString& varName)
 
 void GDBMIDebuggerClient::evalExpression(const QString &expression)
 {
-    postCommand("-data-evaluate-expression", expression);
+    QString escaped;
+    foreach(const QChar& ch, expression) {
+        if (ch.unicode()<=32) {
+            escaped+=QString("\\%1").arg(ch.unicode(),0,8);
+        } else
+            escaped+=ch;
+    }
+    postCommand("-data-evaluate-expression", QString("\"%1\"").arg(escaped));
 }
 
 void GDBMIDebuggerClient::selectFrame(PTrace trace)

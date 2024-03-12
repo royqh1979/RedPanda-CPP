@@ -43,7 +43,8 @@ Red Panda C++ Version 2.27
   - fix: Function tips contains functions that not in the scope.
   - fix: Hint for bold text (<b></b>) are not correctly handled in the function tips.
   - enhancement: Improve lldb-mi compatibility.
-  - fix: Full scope typed variables in lambda expressions is not correctly parsed.  
+  - fix: Full scope typed variables in lambda expressions is not correctly parsed. 
+  - fix: Failed to evaluate expressions while debugging, if the expression has spaces in it.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
