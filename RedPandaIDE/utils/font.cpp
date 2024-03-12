@@ -136,42 +136,42 @@ QStringList defaultCjkEditorFonts(const QString &locale)
     const QVersionNumber vista(6, 0);
     if (locale == "zh_TW" || locale == "zh_HK"){
         if (currentVersion >= vista)
-            return {"Microsoft JhengHei", "Meiryo", "Malgun Gothic"};
+            return {"Microsoft JhengHei"};
         else
-            return {"MingLiU", "MS Gothic", "GulimChe"};
+            return {"SimHei"};
     } else if (locale == "ja_JP") {
         if (currentVersion >= vista)
             // prefer Meiryo over Yu Gothic, and YaHei over JhengHei
             // they are bolder and more readable
-            return {"Meiryo", "Microsoft YaHei", "Malgun Gothic"};
+            return {"Meiryo", "Microsoft YaHei"};
         else
-            return {"MS Gothic", "NSimSun", "GulimChe"};
+            return {"MS Gothic", "SimHei"};
     } else if (locale == "ko_KR") {
         if (currentVersion >= vista)
-            return {"Malgun Gothic", "Microsoft YaHei", "Meiryo"};
+            return {"Malgun Gothic", "Microsoft YaHei"};
         else
-            return {"Gulim", "NSimSun", "MS Gothic"};
+            return {"Dotum", "SimHei"};
     } else {
         // finally fallback to zh_CN
         // with largest coverage, CJK ideographs have uniform look
         if (currentVersion >= vista)
-            return {"Microsoft YaHei", "Meiryo", "Malgun Gothic"};
+            return {"Microsoft YaHei"};
         else
-            return {"NSimSun", "MS Gothic", "GulimChe"};
+            return {"SimHei"};
     }
 #elif defined(Q_OS_MACOS)
     // TODO: coverage is not verified
     if (locale == "zh_TW")
-        return {"PingFang TC", "Hiragino Sans", "Apple SD Gothic Neo"};
+        return {"PingFang TC"};
     else if (locale == "zh_HK")
-        return {"PingFang HK", "Hiragino Sans", "Apple SD Gothic Neo"};
+        return {"PingFang HK"};
     else if (locale == "ja_JP")
         // prefer Hiragino Sans GB for uniform look of CJK ideographs
-        return {"Hiragino Sans", "Hiragino Sans GB", "Apple SD Gothic Neo"};
+        return {"Hiragino Sans", "Hiragino Sans GB"};
     else if (locale == "ko_KR")
-        return {"Apple SD Gothic Neo", "PingFang SC", "Hiragino Sans"};
+        return {"Apple SD Gothic Neo", "PingFang SC"};
     else
-        return {"PingFang SC", "Hiragino Sans", "Apple SD Gothic Neo"};
+        return {"PingFang SC"};
 #else // XDG desktop
     // Noto Sans CJK have same coverage, add one of them is enough
     // intentionally: the "Mono" variant is not strictly monospaced either, and has less weights
@@ -191,10 +191,10 @@ QStringList defaultCjkEditorFonts(const QString &locale)
 QStringList defaultFallbackEditorFonts(UnicodeSupportLevel level)
 {
 #if defined(Q_OS_WIN)
-    // TODO
+    // Use system fallback fonts
     return {};
 #elif defined(Q_OS_MACOS)
-    // TODO
+    // Use system fallback fonts
     return {};
 #else // XDG desktop
     static QStringList ltrSimple = {
