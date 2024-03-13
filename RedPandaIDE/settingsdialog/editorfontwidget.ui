@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>876</width>
-    <height>850</height>
+    <height>870</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,6 +25,9 @@
       </item>
       <item row="0" column="1">
        <widget class="QToolButton" name="btnAddFont">
+        <property name="toolTip">
+         <string>Add</string>
+        </property>
         <property name="text">
          <string>Add</string>
         </property>
@@ -37,6 +40,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
          <widget class="QToolButton" name="btnRemoveFont">
+          <property name="toolTip">
+           <string>Remove</string>
+          </property>
           <property name="text">
            <string>Remove</string>
           </property>
@@ -44,6 +50,9 @@
         </item>
         <item>
          <widget class="QToolButton" name="btnMoveFontUp">
+          <property name="toolTip">
+           <string>Move up</string>
+          </property>
           <property name="text">
            <string>Move up</string>
           </property>
@@ -51,6 +60,9 @@
         </item>
         <item>
          <widget class="QToolButton" name="btnMoveFontDown">
+          <property name="toolTip">
+           <string>Move down</string>
+          </property>
           <property name="text">
            <string>Move down</string>
           </property>
@@ -58,6 +70,9 @@
         </item>
         <item>
          <widget class="QToolButton" name="btnResetFonts">
+          <property name="toolTip">
+           <string>Reset</string>
+          </property>
           <property name="text">
            <string>Reset</string>
           </property>

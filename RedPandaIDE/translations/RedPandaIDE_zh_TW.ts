@@ -1407,19 +1407,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Fallback Font:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Fallback Font 2:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Fallback Font 3:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Force fixed width</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Move up</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Move down</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6671,14 +6679,6 @@
     </message>
     <message>
         <source>Error executing platform compiler hint add-on</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to parse json content: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The request message don&apos;t have &apos;%1&apos; field!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
