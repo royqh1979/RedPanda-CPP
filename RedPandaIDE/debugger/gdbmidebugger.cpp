@@ -165,7 +165,8 @@ void GDBMIDebuggerClient::runNextCmd()
     if (mCmdQueue.isEmpty()) {
         if (debugger()->useDebugServer() && mInferiorRunning && !mAsyncUpdated) {
             mAsyncUpdated = true;
-            QTimer::singleShot(5000,this,&GDBMIDebuggerClient::asyncUpdate);
+            //We must force refresh the response from the lldb-server....
+            QTimer::singleShot(500,this,&GDBMIDebuggerClient::asyncUpdate);
         }
         return;
     }
