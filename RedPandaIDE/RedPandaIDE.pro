@@ -129,8 +129,8 @@ SOURCES += \
     debugger/debugger.cpp \
     debugger/gdbmidebugger.cpp \
     debugger/gdbmiresultparser.cpp \
-    debugger/dapprotocol.cpp \
-    debugger/dapdebugger.cpp \    
+#    debugger/dapprotocol.cpp \
+#    debugger/dapdebugger.cpp \    
     cpprefacter.cpp \
     parser/cppparser.cpp \
     parser/cpppreprocessor.cpp \
@@ -261,8 +261,8 @@ HEADERS += \
     debugger/debugger.h \
     debugger/gdbmidebugger.h \
     debugger/gdbmiresultparser.h \
-    debugger/dapprotocol.h \    
-    debugger/dapdebugger.h \    
+#    debugger/dapprotocol.h \    
+#    debugger/dapdebugger.h \    
     cpprefacter.h \
     customfileiconprovider.h \
     parser/cppparser.h \
