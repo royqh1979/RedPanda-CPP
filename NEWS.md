@@ -50,6 +50,7 @@ Red Panda C++ Version 2.27
   - enhancement: Font list in the options / editor / font panel( by CyanoHao  ). 
   - enhancement: Text are vertically center aligned in lines( by CyanoHao  ).
   - fix: In the debugger console, Auto-wrapped lines  can't be correctly selected.
+  - enhancement: Auto choose a better font for theme choosing dialog in the first run.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
