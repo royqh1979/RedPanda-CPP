@@ -481,9 +481,7 @@ void QConsole::contentsLastRowsChanged(int rowCount)
 void QConsole::scrollTimerHandler()
 
 {
-    QPoint iMousePos;
-
-    iMousePos = QCursor::pos();
+    QPoint iMousePos = QCursor::pos();
     iMousePos = mapFromGlobal(iMousePos);
     RowColumn mousePosRC = pixelsToNearestRowColumn(iMousePos.x(),iMousePos.y());
 
@@ -543,14 +541,15 @@ void QConsole::mouseMoveEvent(QMouseEvent *event)
 {
     QAbstractScrollArea::mouseMoveEvent(event);
     Qt::MouseButtons buttons = event->buttons();
-    int X=event->pos().x();
-    int Y=event->pos().y();
+    int x=event->pos().x();
+    int y=event->pos().y();
 
     if ((buttons == Qt::LeftButton)) {
       // should we begin scrolling?
-      computeScrollY(Y);
-      RowColumn mousePosRC = pixelsToNearestRowColumn(X, Y);
+      computeScrollY(y);
+      RowColumn mousePosRC = pixelsToNearestRowColumn(x, y);
       LineChar mousePos = mContents.rowColumnToLineChar(mousePosRC);
+      //qDebug()<<x<<y<<mousePosRC.row<<mousePosRC.column<<mousePos.line<<mousePos.ch;
       if (mScrollDeltaY == 0) {
           int oldStartRow = mContents.lineCharToRowColumn(selectionBegin()).row+1;
           int oldEndRow = mContents.lineCharToRowColumn(selectionEnd()).row+1;
@@ -886,13 +885,13 @@ bool QConsole::hasSelection()
             || (mSelectionBegin.ch != mSelectionEnd.ch);
 }
 
-int QConsole::computeScrollY(int Y)
+int QConsole::computeScrollY(int y)
 {
     QRect iScrollBounds = viewport()->rect();
-    if (Y < iScrollBounds.top())
-        mScrollDeltaY = (Y - iScrollBounds.top()) / mRowHeight - 1;
-    else if (Y >= iScrollBounds.bottom())
-        mScrollDeltaY = (Y - iScrollBounds.bottom()) / mRowHeight + 1;
+    if (y < iScrollBounds.top())
+        mScrollDeltaY = (y - iScrollBounds.top()) / mRowHeight - 1;
+    else if (y >= iScrollBounds.bottom())
+        mScrollDeltaY = (y - iScrollBounds.bottom()) / mRowHeight + 1;
     else
         mScrollDeltaY = 0;
 
@@ -1159,13 +1158,18 @@ LineChar ConsoleLines::rowColumnToLineChar(int row, int column)
             int r=row - rows;
             QString fragment = line->fragments[r];
             int columnsBefore = 0;
+            int charsBefore = 0;
+            for (int j=0;j<r;j++) {
+                charsBefore += line->fragments[j].length();
+            }
             for (int j=0;j<fragment.size();j++) {
                 QChar ch = fragment[j];
                 int charColumns= mConsole->charColumns(ch, columnsBefore);
                 if (column>=columnsBefore && column<columnsBefore+charColumns) {
-                    result.ch = j;
+                    result.ch = charsBefore + j;
                     break;
                 }
+                columnsBefore += charColumns;
             }
             result.line = i;
             break;

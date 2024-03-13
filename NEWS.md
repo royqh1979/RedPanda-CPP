@@ -47,6 +47,9 @@ Red Panda C++ Version 2.27
   - fix: Failed to evaluate expressions while debugging, if the expression has spaces in it.
   - fix: When debugging, can't watch expressions that has spaces in it.
   - fix: Shortcuts in non-editor panels conficts with the editor.
+  - enhancement: Font list in the options / editor / font panel( by CyanoHao  ). 
+  - enhancement: Text are vertically center aligned in lines( by CyanoHao  ).
+  - fix: In the debugger console, Auto-wrapped lines  can't be correctly selected.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
