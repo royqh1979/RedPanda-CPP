@@ -570,7 +570,7 @@ void MainWindow::updateEditorActions(const Editor *e)
     //it's not a compile action, but put here for convinience
     ui->actionSaveAll->setEnabled(
                 (mProject!=nullptr || mEditorList->pageCount()>0));
-    if (e==nullptr) {
+    if (e==nullptr || !e->hasFocus()) {
         ui->actionAuto_Detect->setEnabled(false);
         ui->actionEncode_in_ANSI->setEnabled(false);
         ui->actionEncode_in_UTF_8->setEnabled(false);
@@ -590,7 +590,6 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionExport_As_HTML->setEnabled(false);
         ui->actionExport_As_RTF->setEnabled(false);
         ui->actionPrint->setEnabled(false);
-        ui->actionSelectAll->setEnabled(false);
         ui->actionToggleComment->setEnabled(false);
         ui->actionToggle_Block_Comment->setEnabled(false);
         ui->actionUnIndent->setEnabled(false);
@@ -604,6 +603,28 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionDelete_to_Word_End->setEnabled(false);
         ui->actionDelete_Last_Word->setEnabled(false);
 
+        ui->menuMove_Caret->setEnabled(false);
+        ui->actionPage_Up->setEnabled(false);
+        ui->actionPage_Down->setEnabled(false);
+        ui->actionGoto_Line_Start->setEnabled(false);
+        ui->actionGoto_Line_End->setEnabled(false);
+        ui->actionGoto_File_Start->setEnabled(false);
+        ui->actionGoto_File_End->setEnabled(false);
+        ui->actionGoto_Page_Start->setEnabled(false);
+        ui->actionGoto_Page_End->setEnabled(false);
+
+        ui->actionSelectAll->setEnabled(false);
+        ui->actionSelect_Word->setEnabled(false);
+        ui->actionMove_Selection_Up->setEnabled(false);
+        ui->actionMove_Selection_Down->setEnabled(false);
+        ui->actionPage_Up_and_Select->setEnabled(false);
+        ui->actionPage_Down_and_Select->setEnabled(false);
+        ui->actionGoto_Line_Start_and_Select->setEnabled(false);
+        ui->actionGoto_Line_End_and_Select->setEnabled(false);
+        ui->actionGoto_File_Start_and_Select->setEnabled(false);
+        ui->actionGoto_File_End_and_Select->setEnabled(false);
+        ui->actionGoto_Page_Start_and_Select->setEnabled(false);
+        ui->actionGoto_Page_End_and_Select->setEnabled(false);
 
         ui->actionFind->setEnabled(false);
         ui->actionReplace->setEnabled(false);
@@ -621,7 +642,15 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionRemove_Bookmark->setEnabled(false);
         ui->actionModify_Bookmark_Description->setEnabled(false);
 
+        ui->actionMatch_Bracket->setEnabled(false);
         ui->actionGo_to_Line->setEnabled(false);
+        ui->actionGoto_block_start->setEnabled(false);
+        ui->actionGoto_block_end->setEnabled(false);
+        ui->actionTrim_trailing_spaces->setEnabled(false);
+        mMenuInsertCodeSnippet->setEnabled(false);
+
+        ui->actionRename_Symbol->setEnabled(false);
+
         ui->actionLocate_in_Files_View->setEnabled(false);
         ui->actionToggle_Readonly->setEnabled(false);
 
@@ -653,7 +682,6 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionExport_As_HTML->setEnabled(true);
         ui->actionExport_As_RTF->setEnabled(true);
         ui->actionPrint->setEnabled(true);
-        ui->actionSelectAll->setEnabled(e->document()->count()>0);
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->document()->count()>0);
         ui->actionToggle_Block_Comment->setEnabled(!e->readOnly() && e->selAvail());
         ui->actionUnIndent->setEnabled(!e->readOnly() && e->document()->count()>0);
@@ -666,6 +694,28 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionDelete_to_Word_End->setEnabled(!e->readOnly() && e->document()->count()>0);
         ui->actionDelete_Last_Word->setEnabled(!e->readOnly() && e->document()->count()>0);
 
+        ui->menuMove_Caret->setEnabled(true);
+        ui->actionPage_Up->setEnabled(true);
+        ui->actionPage_Down->setEnabled(true);
+        ui->actionGoto_Line_Start->setEnabled(true);
+        ui->actionGoto_Line_End->setEnabled(true);
+        ui->actionGoto_File_Start->setEnabled(true);
+        ui->actionGoto_File_End->setEnabled(true);
+        ui->actionGoto_Page_Start->setEnabled(true);
+        ui->actionGoto_Page_End->setEnabled(true);
+
+        ui->actionSelectAll->setEnabled(e->document()->count()>0);
+        ui->actionSelect_Word->setEnabled(true);
+        ui->actionMove_Selection_Up->setEnabled(true);
+        ui->actionMove_Selection_Down->setEnabled(true);
+        ui->actionPage_Up_and_Select->setEnabled(true);
+        ui->actionPage_Down_and_Select->setEnabled(true);
+        ui->actionGoto_Line_Start_and_Select->setEnabled(true);
+        ui->actionGoto_Line_End_and_Select->setEnabled(true);
+        ui->actionGoto_File_Start_and_Select->setEnabled(true);
+        ui->actionGoto_File_End_and_Select->setEnabled(true);
+        ui->actionGoto_Page_Start_and_Select->setEnabled(true);
+        ui->actionGoto_Page_End_and_Select->setEnabled(true);
 
         ui->actionFind->setEnabled(true);
         ui->actionReplace->setEnabled(true);
@@ -684,7 +734,15 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionRemove_Bookmark->setEnabled(e->hasBookmark(line));
         ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
 
+        ui->actionMatch_Bracket->setEnabled(true);
         ui->actionGo_to_Line->setEnabled(true);
+        ui->actionGoto_block_start->setEnabled(true);
+        ui->actionGoto_block_end->setEnabled(true);
+        ui->actionTrim_trailing_spaces->setEnabled(true);
+        mMenuInsertCodeSnippet->setEnabled(true);
+
+        ui->actionRename_Symbol->setEnabled(true);
+
         ui->actionLocate_in_Files_View->setEnabled(!e->isNew());
         ui->actionToggle_Readonly->setEnabled(!e->modified());
 

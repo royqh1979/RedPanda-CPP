@@ -46,6 +46,7 @@ Red Panda C++ Version 2.27
   - fix: Full scope typed variables in lambda expressions is not correctly parsed. 
   - fix: Failed to evaluate expressions while debugging, if the expression has spaces in it.
   - fix: When debugging, can't watch expressions that has spaces in it.
+  - fix: Shortcuts in non-editor panels conficts with the editor.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

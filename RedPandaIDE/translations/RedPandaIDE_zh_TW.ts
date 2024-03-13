@@ -417,14 +417,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>fatal error:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>syntax error:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>warning:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5065,10 +5057,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Move Cursor</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Page Up</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5178,6 +5166,10 @@
     </message>
     <message>
         <source> %1 Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Move Caret</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6679,6 +6671,14 @@
     </message>
     <message>
         <source>Error executing platform compiler hint add-on</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to parse json content: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The request message don&apos;t have &apos;%1&apos; field!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
