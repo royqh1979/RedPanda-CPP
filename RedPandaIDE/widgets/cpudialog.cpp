@@ -146,7 +146,7 @@ void CPUDialog::resetEditorFont(float dpi)
     ui->txtCode->setOptions(options);
     QFont f=QFont();
     f.setFamily(pSettings->editor().fontName());
-    f.setFamilies(pSettings->editor().fontFamilies());
+    f.setFamilies(pSettings->editor().fontFamiliesWithControlFont());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize(),dpi));
     f.setStyleStrategy(QFont::PreferAntialias);
     ui->txtCode->setFont(f);

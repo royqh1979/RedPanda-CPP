@@ -152,7 +152,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
             textRect = mPainter->boundingRect(textRect, Qt::AlignLeft,s);
             mPainter->drawText(
                         (mEdit->mGutterWidth - mEdit->mGutter.rightOffset() - 2) - textRect.width(),
-                        rcLine.bottom() + ((mEdit->mTextHeight - int(textRect.height())) / 2 - mPainter->fontMetrics().descent()),
+                        rcLine.bottom() - (mEdit->mTextHeight - int(textRect.height())) / 2 - mPainter->fontMetrics().descent(),
                         s
                         );
         }
@@ -351,7 +351,10 @@ void QSynEditPainter::paintToken(
 
     if (last >= first && mRcToken.right() > mRcToken.left()) {
         int nX = fixXValue(first);
-        int nY = mRcToken.bottom()-mPainter->fontMetrics().descent();
+        int lineHeight = mRcToken.height();
+        int fontHeight = mPainter->fontMetrics().descent() + mPainter->fontMetrics().ascent();
+        int linePadding = (lineHeight - fontHeight) / 2;
+        int nY = mRcToken.bottom() - linePadding - mPainter->fontMetrics().descent();
         first -= tokenLeft;
         last -= tokenLeft;
         QRect rcTokenBack = mRcToken;

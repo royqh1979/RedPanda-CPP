@@ -53,6 +53,7 @@ target("RedPandaIDE")
         "problems/ojproblemset.cpp",
         "problems/problemcasevalidator.cpp",
         "utils/escape.cpp",
+        "utils/font.cpp",
         "utils/parsearg.cpp")
 
     add_moc_classes(

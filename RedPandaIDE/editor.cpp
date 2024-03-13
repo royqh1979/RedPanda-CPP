@@ -5258,7 +5258,7 @@ void Editor::applySettings()
 
     QFont f=QFont();
     f.setFamily(pSettings->editor().fontName());
-    f.setFamilies(pSettings->editor().fontFamilies());
+    f.setFamilies(pSettings->editor().fontFamiliesWithControlFont());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f.setStyleStrategy(QFont::PreferAntialias);
     setFont(f);
