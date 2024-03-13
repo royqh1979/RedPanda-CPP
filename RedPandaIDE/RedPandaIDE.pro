@@ -208,7 +208,6 @@ SOURCES += \
     utils/parsearg.cpp \
     widgets/coloredit.cpp \
     widgets/compileargumentswidget.cpp \
-    widgets/consolewidget.cpp \
     widgets/customdisablediconengine.cpp \
     widgets/customfilesystemmodel.cpp \
     widgets/custommakefileinfodialog.cpp \
@@ -342,7 +341,6 @@ HEADERS += \
     common.h \
     widgets/coloredit.h \
     widgets/compileargumentswidget.h \
-    widgets/consolewidget.h \
     widgets/customdisablediconengine.h \
     widgets/customfilesystemmodel.h \
     widgets/custommakefileinfodialog.h \

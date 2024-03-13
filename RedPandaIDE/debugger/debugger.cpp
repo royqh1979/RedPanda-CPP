@@ -997,7 +997,7 @@ void Debugger::syncFinishedParsing()
             for (const QString& line:mClient->fullOutput()) {
                 pMainWindow->addDebugOutput(line);
             }
-            pMainWindow->addDebugOutput("(gdb)");
+            //pMainWindow->addDebugOutput("(gdb)");
         } else {
             // if (mClient->currentCmd() && mClient->currentCmd()->command == "disas") {
 
