@@ -4584,7 +4584,7 @@ QString QSynEdit::selText() const
             QString result;
             for (int i = firstLine; i <= lastLine; i++) {
               int l = xposToGlyphStartChar(i,xFrom);
-              int r = xposToGlyphStartChar(i,xTo)+1;
+              int r = xposToGlyphStartChar(i,xTo);
               QString s = mDocument->getLine(i-1);
               result += s.mid(l-1,r-l);
               if (i<lastLine)
