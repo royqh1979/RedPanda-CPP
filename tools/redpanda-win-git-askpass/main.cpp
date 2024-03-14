@@ -40,7 +40,11 @@ LRESULT CALLBACK TxtPasswordWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         if (wParam==VK_RETURN) {
             TCHAR s[500+1];
             Edit_GetText(hwndTxtPassword,s,500);
-            _tprintf(_T("%s"), s);
+#ifdef _UNICODE
+            wprintf(L"%ls", s);
+#else
+            printf("%s",s);
+#endif
             DestroyWindow(hMainDlg);
             return TRUE;
         }
