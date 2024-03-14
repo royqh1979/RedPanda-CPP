@@ -52,7 +52,8 @@ Red Panda C++ Version 2.27
   - fix: In the debugger console, Auto-wrapped lines  can't be correctly selected.
   - enhancement: Auto choose a better font for theme choosing dialog in the first run.
   - fix: Debugger console's background not correctly cleared before redrawn.
-  - enhancement: Make output in the debugger console cleaner.
+  - enhancement: Make output in the debug console cleaner.
+  - enhancement: Execute the last debug command in the debug console if ENTER pressed.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

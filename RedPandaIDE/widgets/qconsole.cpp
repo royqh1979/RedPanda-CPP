@@ -570,7 +570,7 @@ void QConsole::keyPressEvent(QKeyEvent *event)
         if (mReadonly)
             return;
         emit commandInput(mCommand);
-        if (mHistorySize>0) {
+        if (mHistorySize>0 && !mCommand.trimmed().isEmpty()) {
             if (mCommandHistory.size()==mHistorySize) {
                 mCommandHistory.pop_front();
                 mHistoryIndex--;

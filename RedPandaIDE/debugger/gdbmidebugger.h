@@ -27,13 +27,13 @@
 #include <memory>
 #include <QRegularExpression>
 
-struct DebugCommand{
+struct GDBMICommand{
     QString command;
     QString params;
     DebugCommandSource source;
 };
 
-using PDebugCommand = std::shared_ptr<DebugCommand>;
+using PGDBMICommand = std::shared_ptr<GDBMICommand>;
 
 class GDBMIDebuggerClient: public DebuggerClient {
     Q_OBJECT
@@ -46,7 +46,7 @@ public:
 
     void stopDebug() override;
     DebuggerType clientType() override;
-    const PDebugCommand &currentCmd() const;
+    const PGDBMICommand &currentCmd() const;
     bool commandRunning() override;
 
     void initialize(const QString& inferior, bool hasSymbols) override;
@@ -135,9 +135,10 @@ private:
 
     static const QRegularExpression REGdbSourceLine;
 
-    QQueue<PDebugCommand> mCmdQueue;
-    PDebugCommand mCurrentCmd;
-    QList<PDebugCommand> mInferiorStoppedHookCommands;
+    QQueue<PGDBMICommand> mCmdQueue;
+    PGDBMICommand mCurrentCmd;
+    PGDBMICommand mLastConsoleCmd;
+    QList<PGDBMICommand> mInferiorStoppedHookCommands;
 
     DebuggerType mClientType;
 };

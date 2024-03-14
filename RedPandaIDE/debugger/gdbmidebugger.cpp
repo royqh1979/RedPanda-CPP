@@ -42,11 +42,24 @@ void GDBMIDebuggerClient::postCommand(const QString &command, const QString &par
                                DebugCommandSource source)
 {
     QMutexLocker locker(&mCmdQueueMutex);
-    PDebugCommand pCmd = std::make_shared<DebugCommand>();
+    PGDBMICommand pCmd;
+    if (source == DebugCommandSource::Console) {
+        if (command.trimmed().isEmpty()) {
+            if (mLastConsoleCmd) {
+                pCmd = mLastConsoleCmd;
+                mCmdQueue.enqueue(pCmd);
+                return;
+            }
+        }
+    }
+    pCmd = std::make_shared<GDBMICommand>();
+    if (source == DebugCommandSource::Console)
+        mLastConsoleCmd = pCmd;
     pCmd->command = command;
     pCmd->params = params;
     pCmd->source = source;
     mCmdQueue.enqueue(pCmd);
+
 //    if (!mCmdRunning)
     //        runNextCmd();
 }
@@ -54,7 +67,7 @@ void GDBMIDebuggerClient::postCommand(const QString &command, const QString &par
 void GDBMIDebuggerClient::registerInferiorStoppedCommand(const QString &command, const QString &params)
 {
     QMutexLocker locker(&mCmdQueueMutex);
-    PDebugCommand pCmd = std::make_shared<DebugCommand>();
+    PGDBMICommand pCmd = std::make_shared<GDBMICommand>();
     pCmd->command = command;
     pCmd->params = params;
     pCmd->source = DebugCommandSource::Other;
@@ -171,7 +184,7 @@ void GDBMIDebuggerClient::runNextCmd()
         return;
     }
 
-    PDebugCommand pCmd = mCmdQueue.dequeue();
+    PGDBMICommand pCmd = mCmdQueue.dequeue();
     mCmdRunning = true;
     mCurrentCmd = pCmd;
     if (pCmd->source!=DebugCommandSource::HeartBeat)
@@ -779,16 +792,17 @@ void GDBMIDebuggerClient::processExecAsyncRecord(const QByteArray &line)
         runInferiorStoppedHook();
         if (reason.isEmpty()) {
             QMutexLocker locker(&mCmdQueueMutex);
-            foreach (const PDebugCommand& cmd, mCmdQueue) {
+            foreach (const PGDBMICommand& cmd, mCmdQueue) {
                 //gdb-server connected, just ignore it
                 if (cmd->command=="-exec-continue")
                     return;
             }
         }
-        if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
-            emit inferiorStopped(mCurrentFile, mCurrentLine, false);
-        else
-            emit inferiorStopped(mCurrentFile, mCurrentLine, true);
+//        if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
+//            emit inferiorStopped(mCurrentFile, mCurrentLine, false);
+//        else
+//            emit inferiorStopped(mCurrentFile, mCurrentLine, true);
+        emit inferiorStopped(mCurrentFile, mCurrentLine, false);
     }
 }
 
@@ -953,7 +967,7 @@ void GDBMIDebuggerClient::asyncUpdate()
     mAsyncUpdated = false;
 }
 
-const PDebugCommand &GDBMIDebuggerClient::currentCmd() const
+const PGDBMICommand &GDBMIDebuggerClient::currentCmd() const
 {
     return mCurrentCmd;
 }
@@ -1242,7 +1256,7 @@ void GDBMIDebuggerClient::addSymbolSearchDirectories(const QStringList &lst)
 void GDBMIDebuggerClient::runInferiorStoppedHook()
 {
     QMutexLocker locker(&mCmdQueueMutex);
-    foreach (const PDebugCommand& cmd, mInferiorStoppedHookCommands) {
+    foreach (const PGDBMICommand& cmd, mInferiorStoppedHookCommands) {
         mCmdQueue.push_front(cmd);
     }
 }
