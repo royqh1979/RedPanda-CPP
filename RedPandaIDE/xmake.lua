@@ -34,7 +34,6 @@ target("RedPandaIDE")
         "autolinkmanager.cpp",
         "colorscheme.cpp",
         "customfileiconprovider.cpp",
-        "gdbmiresultparser.cpp",
         "main.cpp",
         "projectoptions.cpp",
         "settings.cpp",
@@ -44,6 +43,9 @@ target("RedPandaIDE")
         "visithistorymanager.cpp",
         -- compiler
         "compiler/compilerinfo.cpp",
+        -- debugger
+        "debugger/dapprotocol.cpp",
+        "debugger/gdbmiresultparser.cpp",
         -- parser
         "parser/cpppreprocessor.cpp",
         "parser/cpptokenizer.cpp",
@@ -60,7 +62,6 @@ target("RedPandaIDE")
         "caretlist",
         "codesnippetsmanager",
         "cpprefacter",
-        "debugger",
         "editor",
         "editorlist",
         "iconsmanager",
@@ -80,6 +81,10 @@ target("RedPandaIDE")
         "compiler/projectcompiler",
         "compiler/runner",
         "compiler/stdincompiler",
+        -- debugger
+        "debugger/dapdebugger",
+        "debugger/debugger",
+        "debugger/gdbmidebugger",
         -- parser
         "parser/cppparser",
         "parser/statementmodel",
@@ -93,7 +98,6 @@ target("RedPandaIDE")
         "widgets/codecompletionpopup",
         "widgets/coloredit",
         "widgets/compileargumentswidget",
-        "widgets/consolewidget",
         "widgets/customdisablediconengine",
         "widgets/customfilesystemmodel",
         "widgets/darkfusionstyle",
