@@ -728,7 +728,7 @@ void QConsole::paintEvent(QPaintEvent *event)
         QPainter cachePainter(mContentImage.get());
         cachePainter.setFont(font());
         if (viewport()->rect() == rcClip) {
-            painter.fillRect(rcClip, mBackground);
+            cachePainter.fillRect(rcClip, mBackground);
         }
         paintRows(cachePainter,nL1,nL2);
         painter.drawImage(rcClip,*mContentImage,rcClip);
