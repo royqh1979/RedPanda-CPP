@@ -51,6 +51,8 @@ Red Panda C++ Version 2.27
   - enhancement: Text are vertically center aligned in lines( by CyanoHao  ).
   - fix: In the debugger console, Auto-wrapped lines  can't be correctly selected.
   - enhancement: Auto choose a better font for theme choosing dialog in the first run.
+  - fix: Debugger console's background not correctly cleared before redrawn.
+  - enhancement: Make output in the debugger console cleaner.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
