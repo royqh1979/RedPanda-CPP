@@ -5275,7 +5275,7 @@ void Editor::applySettings()
 
     // Set gutter properties
     gutter().setLeftOffset(pointToPixel(pSettings->editor().fontSize()) + pSettings->editor().gutterLeftOffset());
-    gutter().setRightOffset(pSettings->editor().gutterRightOffset());
+    gutter().setRightOffset(pointToPixel(pSettings->editor().fontSize()) + pSettings->editor().gutterRightOffset());
     gutter().setBorderStyle(QSynedit::GutterBorderStyle::None);
     gutter().setUseFontStyle(pSettings->editor().gutterUseCustomFont());
     if (pSettings->editor().gutterUseCustomFont()) {

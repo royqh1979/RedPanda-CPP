@@ -3220,8 +3220,7 @@ void QSynEdit::recalcCharExtent()
     mTextHeight  = 0;
     mCharWidth = 0;
     QFontMetrics fm(font());
-    QFontMetrics fm2(font());
-    mTextHeight = std::max(fm.lineSpacing(),fm2.lineSpacing());
+    mTextHeight = fm.lineSpacing();
     mCharWidth = fm.horizontalAdvance("M");
 
     if (hasStyles[0]) { // has bold font

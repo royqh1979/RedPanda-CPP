@@ -160,6 +160,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
 
     // Draw the folding lines and squares
     if (mEdit->useCodeFolding()) {
+      int lineWidth = std::max(0.0,std::ceil(mEdit->font().pixelSize() / 15));
       for (int row = mLastRow; row>= mFirstRow; row--) {
           int line = mEdit->rowToLine(row);
           if ((line > mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
@@ -171,7 +172,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
           rcFold.setRight(rcFold.left() + mEdit->mGutter.rightOffset() - 4);
           rcFold.setBottom(rcFold.top() + mEdit->mTextHeight);
 
-          mPainter->setPen(mEdit->mCodeFolding.folderBarLinesColor);
+          mPainter->setPen(QPen(mEdit->mCodeFolding.folderBarLinesColor,lineWidth));
 
         // Need to paint a line?
           if (mEdit->foldAroundLine(line)) {
@@ -200,24 +201,28 @@ void QSynEditPainter::paintGutter(const QRect& clip)
 
             // make a square rect
             inflateRect(rcFold,-2, 0);
-            rcFold.setTop(
-                        rcFold.top() + ((mEdit->mTextHeight - rcFold.width()) / 2));
-            rcFold.setBottom(rcFold.top() + rcFold.width());
+            int size = std::min(mEdit->font().pixelSize() * 4 / 5, mEdit->mGutter.rightOffset()) - lineWidth;
+            float centerX = rcFold.left() + rcFold.width() / 2.0;
+            float centerY = rcFold.top() + rcFold.height() / 2.0;
+            float halfSize = size / 2.0;
+            rcFold.setLeft(centerX - halfSize);
+            rcFold.setRight(centerX + halfSize);
+            rcFold.setTop(centerY - halfSize);
+            rcFold.setBottom(centerY + halfSize);
 
             // Paint the square the user can click on
             mPainter->setBrush(mEdit->mGutter.color());
-            mPainter->setPen(mEdit->mCodeFolding.folderBarLinesColor);
+            //mPainter->setPen(mEdit->mCodeFolding.folderBarLinesColor);
             mPainter->drawRect(rcFold);
 
             // Paint minus sign
             mPainter->drawLine(
-                        rcFold.left() + 2, rcFold.top() + (rcFold.height() / 2 ),
-                        rcFold.right() - 2, rcFold.top() + (rcFold.height() / 2 ));
+                        rcFold.left() + lineWidth * 2 , centerY,
+                        rcFold.right() - lineWidth * 2 , centerY );
             // Paint vertical line of plus sign
             if (foldRange->collapsed) {
-                x = rcFold.left() + (rcFold.width() / 2);
-                mPainter->drawLine(x, rcFold.top() + 2,
-                                  x, rcFold.bottom() - 2);
+                mPainter->drawLine(centerX, rcFold.top() + lineWidth * 2,
+                                  centerX, rcFold.bottom() - lineWidth * 2 );
             }
         }
       }
