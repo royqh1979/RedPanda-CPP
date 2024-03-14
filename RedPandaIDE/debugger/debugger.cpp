@@ -1012,8 +1012,11 @@ void Debugger::syncFinishedParsing()
             //         pMainWindow->addDebugOutput("(gdb)");
             //     }
             // }
-            for (const QString& line:mClient->consoleOutput()) {
-                pMainWindow->addDebugOutput(line);
+            if (!mClient->consoleOutput().isEmpty()) {
+                for (const QString& line:mClient->consoleOutput()) {
+                    pMainWindow->addDebugOutput(line);
+                }
+                pMainWindow->addDebugOutput("(gdb)");
             }
         }
     }

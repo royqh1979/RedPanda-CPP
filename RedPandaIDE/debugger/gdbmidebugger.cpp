@@ -867,6 +867,7 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
                     }
                     disOutput=newOutput;
                 }
+                mConsoleOutput.clear();
                 emit disassemblyUpdate(mCurrentFile,mCurrentFunc, disOutput);
             }
         }
