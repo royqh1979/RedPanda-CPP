@@ -178,7 +178,7 @@ void GDBMIDebuggerClient::runNextCmd()
     if (mCmdQueue.isEmpty()) {
         if (debugger()->useDebugServer() && mInferiorRunning && !mAsyncUpdated) {
             mAsyncUpdated = true;
-            //We must force refresh the response from the lldb-server....
+            //We must force refresh the running state response from the lldb-server....
             QTimer::singleShot(500,this,&GDBMIDebuggerClient::asyncUpdate);
         }
         return;
@@ -791,17 +791,14 @@ void GDBMIDebuggerClient::processExecAsyncRecord(const QByteArray &line)
         }
         runInferiorStoppedHook();
         if (reason.isEmpty()) {
-            QMutexLocker locker(&mCmdQueueMutex);
-            foreach (const PGDBMICommand& cmd, mCmdQueue) {
-                //gdb-server connected, just ignore it
-                if (cmd->command=="-exec-continue")
-                    return;
-            }
+            return;
+            // QMutexLocker locker(&mCmdQueueMutex);
+            // foreach (const PGDBMICommand& cmd, mCmdQueue) {
+            //     //gdb-server connected, just ignore it
+            //     if (cmd->command=="-exec-continue")
+            //         return;
+            // }
         }
-//        if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
-//            emit inferiorStopped(mCurrentFile, mCurrentLine, false);
-//        else
-//            emit inferiorStopped(mCurrentFile, mCurrentLine, true);
         emit inferiorStopped(mCurrentFile, mCurrentLine, false);
     }
 }
@@ -836,6 +833,9 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
     }
     if (line.startsWith("^done")
             || line.startsWith("^running")) {
+        if (line.startsWith("^running")) {
+            mInferiorRunning = true;
+        }
         int pos = line.indexOf(',');
         if (pos>=0) {
             QByteArray result = line.mid(pos+1);
@@ -962,7 +962,10 @@ void GDBMIDebuggerClient::asyncUpdate()
     QMutexLocker locker(&mCmdQueueMutex);
     if (mCmdQueue.isEmpty()) {
         //postCommand("-var-update"," --all-values *",DebugCommandSource::HeartBeat);
-        postCommand("-stack-info-frame","",DebugCommandSource::HeartBeat);
+        if (clientType() == DebuggerType::GDB)
+            postCommand("-gdb-show","annotate",DebugCommandSource::HeartBeat);
+        else
+            postCommand("-stack-info-depth","annotate",DebugCommandSource::HeartBeat);
     }
     mAsyncUpdated = false;
 }
