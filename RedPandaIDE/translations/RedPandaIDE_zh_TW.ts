@@ -137,7 +137,7 @@
 <context>
     <name>BacktraceModel</name>
     <message>
-        <location filename="../debugger/debugger.cpp" line="+1488"/>
+        <location filename="../debugger/debugger.cpp" line="+1491"/>
         <source>Function</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1121,7 +1121,7 @@
 <context>
     <name>Debugger</name>
     <message>
-        <location filename="../debugger/debugger.cpp" line="-1170"/>
+        <location filename="../debugger/debugger.cpp" line="-1173"/>
         <source>No compiler set</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1186,12 +1186,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+52"/>
         <source>Signal &quot;%1&quot; Received: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="-130"/>
         <source>Save file &apos;%1&apos; failed.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4065,7 +4065,7 @@
     <message>
         <location line="-1833"/>
         <location line="+3"/>
-        <location filename="../mainwindow.cpp" line="+1457"/>
+        <location filename="../mainwindow.cpp" line="+1473"/>
         <location line="+5867"/>
         <source>New Problem Set</source>
         <translation type="unfinished"></translation>
@@ -5220,13 +5220,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-8312"/>
+        <location filename="../mainwindow.cpp" line="-8328"/>
         <location line="+72"/>
         <location line="+9"/>
         <location line="+8"/>
         <location line="+9"/>
         <location line="+61"/>
-        <location line="+1261"/>
+        <location line="+1277"/>
         <location line="+1823"/>
         <location line="+117"/>
         <location line="+1858"/>
@@ -5238,7 +5238,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-9412"/>
+        <location line="-9428"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5264,12 +5264,12 @@
     </message>
     <message>
         <location line="+85"/>
-        <location line="+8216"/>
+        <location line="+8232"/>
         <source>Problem Set %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-7580"/>
+        <location line="-7596"/>
         <location line="+6"/>
         <source>Load Theme Error</source>
         <translation type="unfinished"></translation>
@@ -5311,7 +5311,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+132"/>
+        <location line="+104"/>
+        <source>Line: %1/%2 Col: %3 Sel:%4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+44"/>
         <source>Read Only</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5409,7 +5414,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-1274"/>
+        <source>Line: %1/%2 Col: %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1253"/>
         <source>Open Source File</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6656,7 +6666,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-5091"/>
+        <location filename="../mainwindow.cpp" line="-5107"/>
         <source>Exact</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6671,7 +6681,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6945"/>
+        <location line="+6961"/>
         <source>Folder Not Empty</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6686,7 +6696,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-5593"/>
+        <location line="-5594"/>
         <source>Line: %1/%2 Char: %3/%4 Sel:%5</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6696,7 +6706,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-270"/>
+        <location line="-285"/>
         <source> %1 Version</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6709,7 +6719,7 @@
 <context>
     <name>MemoryModel</name>
     <message>
-        <location filename="../debugger/debugger.cpp" line="+2449"/>
+        <location filename="../debugger/debugger.cpp" line="+2452"/>
         <source>ascii: &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8239,7 +8249,7 @@
     </message>
     <message>
         <location filename="../editorlist.cpp" line="+170"/>
-        <location filename="../mainwindow.cpp" line="+3125"/>
+        <location filename="../mainwindow.cpp" line="+3141"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
