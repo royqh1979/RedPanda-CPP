@@ -54,6 +54,7 @@ Red Panda C++ Version 2.27
   - fix: Debugger console's background not correctly cleared before redrawn.
   - enhancement: Make output in the debug console cleaner.
   - enhancement: Execute the last debug command in the debug console if ENTER pressed.
+  - change: When debugging, don't auto set focus to the editor.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

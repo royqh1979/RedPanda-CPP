@@ -1152,7 +1152,7 @@ void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
 {
     removeActiveBreakpoints();
     // Then active the current line in the current file
-    Editor *e = openFile(fileName);
+    Editor *e = openFile(fileName, false);
     if (e!=nullptr) {
         e->setActiveBreakpointFocus(Line,setFocus);
         if (setFocus) {
@@ -2561,10 +2561,10 @@ void MainWindow::debug()
                 }
 
                 prepareDebugger();
-                QString filePath = debugFile.filePath().replace('\\','/');
+                QString newFilePath = debugFile.filePath().replace('\\','/');
                 if (!mDebugger->startClient(
                             pSettings->compilerSets().defaultIndex(),
-                            filePath,
+                            newFilePath,
                             true,
                             debugInferiorhasBreakpoint(),
                             binDirs,

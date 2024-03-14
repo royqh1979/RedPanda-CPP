@@ -3387,6 +3387,9 @@ void Settings::CompilerSets::loadSets()
     mSettings->mSettings.beginGroup(SETTING_COMPILTER_SETS);
     mDefaultIndex = mSettings->mSettings.value(SETTING_COMPILTER_SETS_DEFAULT_INDEX,-1).toInt();
     mDefaultIndexTimeStamp = mSettings->mSettings.value(SETTING_COMPILTER_SETS_DEFAULT_INDEX_TIMESTAMP,0).toLongLong();
+    //fix error time
+    if (mDefaultIndexTimeStamp > QDateTime::currentMSecsSinceEpoch())
+        mDefaultIndexTimeStamp = QDateTime::currentMSecsSinceEpoch();
     int listSize = mSettings->mSettings.value(SETTING_COMPILTER_SETS_COUNT,0).toInt();
     mSettings->mSettings.endGroup();
     bool loadError = false;
