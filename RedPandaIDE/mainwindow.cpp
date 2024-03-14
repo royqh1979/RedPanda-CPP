@@ -1501,7 +1501,7 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
         if (pSettings->editor().forceFixedFontWidth()){
             int col = e->charToGlyphLeft(e->caretY(),e->caretX())/e->charWidth()+1;
             if (e->selAvail()) {
-                msg = tr("Line: %1/%2 Col: %3 Sel:%4")
+                msg = tr("Line: %1/%2 Col: %3 Sel: %4")
                         .arg(e->caretY())
                         .arg(e->document()->count())
                         .arg(col)
@@ -1514,7 +1514,7 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
             }
         } else {
             if (e->selAvail()) {
-                msg = tr("Line: %1/%2 Char: %3/%4 Sel:%5")
+                msg = tr("Line: %1/%2 Char: %3/%4 Sel: %5")
                         .arg(e->caretY())
                         .arg(e->document()->count())
                         .arg(e->caretX())
