@@ -1498,19 +1498,35 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
 {
     if (!clear && e!=nullptr) {
         QString msg;
-        if (e->selAvail()) {
-            msg = tr("Line: %1/%2 Char: %3/%4 Sel:%5")
-                    .arg(e->caretY())
-                    .arg(e->document()->count())
-                    .arg(e->caretX())
-                    .arg(e->lineText().length())
-                    .arg(e->selText().length());
+        if (pSettings->editor().forceFixedFontWidth()){
+            int col = e->charToGlyphLeft(e->caretY(),e->caretX())/e->charWidth()+1;
+            if (e->selAvail()) {
+                msg = tr("Line: %1/%2 Col: %3 Sel:%5")
+                        .arg(e->caretY())
+                        .arg(e->document()->count())
+                        .arg(col)
+                        .arg(e->selText().length());
+            } else {
+                msg = tr("Line: %1/%2 Col: %3")
+                        .arg(e->caretY())
+                        .arg(e->document()->count())
+                        .arg(col);
+            }
         } else {
-            msg = tr("Line: %1/%2 Char: %3/%4")
-                    .arg(e->caretY())
-                    .arg(e->document()->count())
-                    .arg(e->caretX())
-                    .arg(e->lineText().length());
+            if (e->selAvail()) {
+                msg = tr("Line: %1/%2 Char: %3/%4 Sel:%5")
+                        .arg(e->caretY())
+                        .arg(e->document()->count())
+                        .arg(e->caretX())
+                        .arg(e->lineText().length())
+                        .arg(e->selText().length());
+            } else {
+                msg = tr("Line: %1/%2 Char: %3/%4")
+                        .arg(e->caretY())
+                        .arg(e->document()->count())
+                        .arg(e->caretX())
+                        .arg(e->lineText().length());
+            }
         }
         mFileInfoStatus->setText(msg);
     } else {
