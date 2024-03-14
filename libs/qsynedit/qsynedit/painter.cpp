@@ -91,7 +91,7 @@ void QSynEditPainter::paintEditingArea(const QRect& clip)
 
 void QSynEditPainter::paintGutter(const QRect& clip)
 {
-    QRect rcLine, rcFold;
+    QRectF rcLine, rcFold;
     int x;
 
     mClip = clip;
@@ -102,7 +102,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
     if (mEdit->mGutter.showLineNumbers()) {
         // prepare the rect initially
         rcLine = mClip;
-        rcLine.setRight( std::max(rcLine.right(), mEdit->mGutterWidth - 2));
+        rcLine.setRight( std::max(rcLine.right(), mEdit->mGutterWidth - 2.0));
         rcLine.setBottom(rcLine.top());
 
         if (mEdit->mGutter.useFontStyle()) {
@@ -200,7 +200,6 @@ void QSynEditPainter::paintGutter(const QRect& clip)
             }
 
             // make a square rect
-            inflateRect(rcFold,-2, 0);
             int size = std::min(mEdit->font().pixelSize() * 4 / 5, mEdit->mGutter.rightOffset()) - lineWidth;
             float centerX = rcFold.left() + rcFold.width() / 2.0;
             float centerY = rcFold.top() + rcFold.height() / 2.0;
@@ -217,7 +216,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
 
             // Paint minus sign
             mPainter->drawLine(
-                        rcFold.left() + lineWidth * 2 , centerY,
+                        rcFold.left() + lineWidth * 2 + 1 , centerY,
                         rcFold.right() - lineWidth * 2 , centerY );
             // Paint vertical line of plus sign
             if (foldRange->collapsed) {
