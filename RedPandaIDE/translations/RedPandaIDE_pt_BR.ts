@@ -1863,6 +1863,19 @@
     </message>
 </context>
 <context>
+    <name>EditorFontDialog</name>
+    <message>
+        <location filename="../widgets/editorfontdialog.ui" line="+14"/>
+        <source>Choose Font</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Show only monospaced fonts</source>
+        <translation>Mostrar apenas fontes com espaçamento único</translation>
+    </message>
+</context>
+<context>
     <name>EditorFontWidget</name>
     <message>
         <location filename="../settingsdialog/editorfontwidget.ui" line="+14"/>
@@ -1870,8 +1883,13 @@
         <translation>Configuração</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+488"/>
+        <location line="+27"/>
+        <location line="+3"/>
+        <source>Modify</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+491"/>
         <source>Font:</source>
         <translation>Fonte</translation>
     </message>
@@ -1950,7 +1968,24 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="-133"/>
+        <source>Font</source>
+        <translation type="unfinished">Fonte</translation>
+    </message>
+    <message>
+        <location line="+84"/>
+        <location line="+3"/>
+        <source>Move to top</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+3"/>
+        <source>Move to bottom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+66"/>
         <source>Line Spacing:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1989,31 +2024,31 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-99"/>
         <location line="+3"/>
         <source>Add</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="-33"/>
         <location line="+3"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+60"/>
         <location line="+3"/>
         <source>Move up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-13"/>
         <location line="+3"/>
         <source>Move down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-36"/>
         <location line="+3"/>
         <source>Reset</source>
         <translation type="unfinished">Reset</translation>
@@ -5688,12 +5723,22 @@
         <translation>Propriedades...</translation>
     </message>
     <message>
-        <location line="-1274"/>
+        <location line="-1280"/>
+        <source>Line: %1/%2 Col: %3 Sel: %4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Line: %1/%2 Col: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1253"/>
+        <location line="+7"/>
+        <source>Line: %1/%2 Char: %3/%4 Sel: %5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1246"/>
         <source>Open Source File</source>
         <translation>Abrir arquivo fonte</translation>
     </message>
@@ -6064,12 +6109,7 @@
         <translation>Quer mesmo fazer isso?</translation>
     </message>
     <message>
-        <location line="-4320"/>
-        <source>Line: %1/%2 Col: %3 Sel:%4</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4475"/>
+        <location line="+155"/>
         <location line="+105"/>
         <source>Compile Failed</source>
         <translation>Falha ao compilar</translation>
@@ -6995,12 +7035,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-5594"/>
-        <source>Line: %1/%2 Char: %3/%4 Sel:%5</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="-5587"/>
         <source>Line: %1/%2 Char: %3/%4</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8339,7 +8374,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+19"/>
-        <location filename="../settings.cpp" line="+4050"/>
+        <location filename="../settings.cpp" line="+4057"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-401"/>
         <location line="+61"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -9156,7 +9191,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="-138"/>
+        <location filename="../settings.cpp" line="-141"/>
         <source>Error executing platform compiler hint add-on</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10080,7 +10115,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="+724"/>
+        <location filename="../settings.cpp" line="+727"/>
         <source>Error</source>
         <translation type="unfinished">Erro</translation>
     </message>

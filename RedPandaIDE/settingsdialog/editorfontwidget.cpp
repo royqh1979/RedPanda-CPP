@@ -22,107 +22,35 @@
 #include "../iconsmanager.h"
 #include "utils.h"
 #include "utils/font.h"
+#include "widgets/editorfontdialog.h"
+#include <qabstractitemmodel.h>
 
-void EditorFontModel::addFont(const QString& font)
+Qt::ItemFlags EditorFontModel::flags(const QModelIndex &index) const
 {
-    beginInsertRows(QModelIndex(),mFonts.size(),mFonts.size());
-    mFonts.append(font);
-    endInsertRows();
-}
-
-void EditorFontModel::remove(int index)
-{
-    beginRemoveRows(QModelIndex(),index,index);
-    mFonts.removeAt(index);
-    endRemoveRows();
-}
-
-void EditorFontModel::clear()
-{
-    beginResetModel();
-    mFonts.clear();
-    endResetModel();
-}
-
-void EditorFontModel::moveUp(int index)
-{
-    if (index == 0)
-        return;
-    beginMoveRows(QModelIndex(),index,index,QModelIndex(),index - 1);
-    mFonts.move(index,index - 1);
-    endMoveRows();
-}
-
-void EditorFontModel::moveDown(int index)
-{
-    if (index == mFonts.size() - 1)
-        return;
-    beginMoveRows(QModelIndex(),index,index,QModelIndex(),index + 2);
-    mFonts.move(index,index + 1);
-    endMoveRows();
-}
-
-QModelIndex EditorFontModel::lastFont()
-{
-    return index(mFonts.size() - 1,0);
-}
-
-const QStringList &EditorFontModel::fonts() const
-{
-    return mFonts;
-}
-
-void EditorFontModel::updateFonts(const QStringList& fonts)
-{
-    beginResetModel();
-    mFonts = fonts;
-    endResetModel();
-}
-
-int EditorFontModel::rowCount(const QModelIndex &parent) const
-{
-    if (parent.isValid())
-        return 0;
-    return mFonts.size();
-}
-
-int EditorFontModel::columnCount(const QModelIndex &parent) const
-{
-    if (parent.isValid())
-        return 0;
-    return 1;
-}
-
-QVariant EditorFontModel::data(const QModelIndex &index, int role) const
-{
-    if (!index.isValid())
-        return QVariant();
-    if (role == Qt::DisplayRole)
-        return mFonts.at(index.row());
-    return QVariant();
-}
-
-bool EditorFontModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-    if (!index.isValid())
-        return false;
-    if (role == Qt::EditRole) {
-        mFonts[index.row()] = value.toString();
-        emit dataChanged(index,index);
-        return true;
+    Qt::ItemFlags flags = Qt::NoItemFlags;
+    if (index.isValid()) {
+        flags = Qt::ItemIsEnabled | Qt::ItemIsDragEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable ;
+    } else if (index.row() == -1) {
+        // -1 means it's a drop target?
+        flags = Qt::ItemIsDropEnabled;
     }
-    return false;
+    return flags;
 }
 
 EditorFontWidget::EditorFontWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),
-    ui(new Ui::EditorFontWidget)
+    ui(new Ui::EditorFontWidget),
+    mModel(pSettings->editor().fontFamilies())
 {
     ui->setupUi(this);
 
     QItemSelectionModel *m = ui->lstFontList->selectionModel();
     ui->lstFontList->setModel(&mModel);
     delete m;
+    ui->lstFontList->setDragEnabled(true);
+    ui->lstFontList->setAcceptDrops(true);
+    ui->lstFontList->setDropIndicatorShown(true);
+    ui->lstFontList->setDragDropMode(QAbstractItemView::InternalMove);
 }
 
 EditorFontWidget::~EditorFontWidget()
@@ -141,7 +69,14 @@ void EditorFontWidget::on_chkGutterOnlyMonospacedFonts_stateChanged(int)
 
 void EditorFontWidget::on_btnAddFont_clicked()
 {
-    mModel.addFont(ui->cbNewFont->currentFont().family());
+    QModelIndex index = ui->lstFontList->currentIndex();
+    int insertPos = index.isValid() ? index.row() + 1 : mModel.rowCount();
+    EditorFontDialog dlg(this);
+    if (dlg.exec() == QDialog::Accepted) {
+        mModel.insertRow(insertPos);
+        mModel.setData(mModel.index(insertPos), dlg.fontFamily());
+        ui->lstFontList->setCurrentIndex(mModel.index(insertPos));
+    }
 }
 
 void EditorFontWidget::on_btnRemoveFont_clicked()
@@ -149,7 +84,34 @@ void EditorFontWidget::on_btnRemoveFont_clicked()
     QModelIndex index = ui->lstFontList->currentIndex();
     if (!index.isValid())
         return;
-    mModel.remove(index.row());
+    mModel.removeRow(index.row());
+}
+
+void EditorFontWidget::on_btnModifyFont_clicked()
+{
+    QModelIndex index = ui->lstFontList->currentIndex();
+    if (!index.isValid())
+        return;
+    EditorFontDialog dlg(this);
+    dlg.setFontFamily(mModel.data(index, Qt::DisplayRole).toString());
+    if (dlg.exec() == QDialog::Accepted) {
+        mModel.setData(index, dlg.fontFamily());
+    }
+}
+
+void EditorFontWidget::on_btnResetFonts_clicked()
+{
+    mModel.setStringList(defaultEditorFonts());
+}
+
+void EditorFontWidget::on_btnMoveFontToTop_clicked()
+{
+    QModelIndex index = ui->lstFontList->currentIndex();
+    if (!index.isValid())
+        return;
+    if (index.row() == 0)
+        return;
+    mModel.moveRow(QModelIndex(), index.row(), QModelIndex(), 0);
 }
 
 void EditorFontWidget::on_btnMoveFontUp_clicked()
@@ -157,7 +119,9 @@ void EditorFontWidget::on_btnMoveFontUp_clicked()
     QModelIndex index = ui->lstFontList->currentIndex();
     if (!index.isValid())
         return;
-    mModel.moveUp(index.row());
+    if (index.row() == 0)
+        return;
+    mModel.moveRow(QModelIndex(), index.row(), QModelIndex(), index.row() - 1);
 }
 
 void EditorFontWidget::on_btnMoveFontDown_clicked()
@@ -165,21 +129,25 @@ void EditorFontWidget::on_btnMoveFontDown_clicked()
     QModelIndex index = ui->lstFontList->currentIndex();
     if (!index.isValid())
         return;
-    mModel.moveDown(index.row());
+    if (index.row() == mModel.rowCount() - 1)
+        return;
+    mModel.moveRow(QModelIndex(), index.row(), QModelIndex(), index.row() + 2);
 }
 
-void EditorFontWidget::on_btnResetFonts_clicked()
+void EditorFontWidget::on_btnMoveFontToBottom_clicked()
 {
-    mModel.updateFonts(defaultEditorFonts());
+    QModelIndex index = ui->lstFontList->currentIndex();
+    if (!index.isValid())
+        return;
+    if (index.row() == mModel.rowCount() - 1)
+        return;
+    mModel.moveRow(QModelIndex(), index.row(), QModelIndex(), mModel.rowCount());
 }
 
 void EditorFontWidget::doLoad()
 {
     //pSettings->editor().load();
     //font
-    ui->cbNewFont->setCurrentFont(QFont(defaultMonoFont()));
-    mModel.updateFonts(pSettings->editor().fontFamilies());
-
     ui->spinFontSize->setValue(pSettings->editor().fontSize());
     ui->spinLineSpacing->setValue(pSettings->editor().lineSpacing());
     ui->chkLigature->setChecked(pSettings->editor().enableLigaturesSupport());
@@ -206,7 +174,7 @@ void EditorFontWidget::doLoad()
 void EditorFontWidget::doSave()
 {
     //font
-    pSettings->editor().setFontFamilies(mModel.fonts());
+    pSettings->editor().setFontFamilies(mModel.stringList());
     pSettings->editor().setFontSize(ui->spinFontSize->value());
     pSettings->editor().setLineSpacing(ui->spinLineSpacing->value());
 
@@ -238,7 +206,10 @@ void EditorFontWidget::doSave()
 void EditorFontWidget::updateIcons(const QSize &/*size*/) {
     pIconsManager->setIcon(ui->btnAddFont, IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemoveFont, IconsManager::ACTION_MISC_REMOVE);
+    pIconsManager->setIcon(ui->btnModifyFont, IconsManager::ACTION_MISC_RENAME);
+    pIconsManager->setIcon(ui->btnResetFonts, IconsManager::ACTION_MISC_RESET);
+    pIconsManager->setIcon(ui->btnMoveFontToTop, IconsManager::ACTION_MISC_MOVETOP);
     pIconsManager->setIcon(ui->btnMoveFontUp, IconsManager::ACTION_MISC_MOVEUP);
     pIconsManager->setIcon(ui->btnMoveFontDown, IconsManager::ACTION_MISC_MOVEDOWN);
-    pIconsManager->setIcon(ui->btnResetFonts, IconsManager::ACTION_MISC_RESET);
+    pIconsManager->setIcon(ui->btnMoveFontToBottom, IconsManager::ACTION_MISC_MOVEBOTTOM);
 }

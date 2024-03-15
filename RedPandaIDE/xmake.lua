@@ -161,6 +161,7 @@ target("RedPandaIDE")
         "widgets/choosethemedialog",
         "widgets/cpudialog",
         "widgets/custommakefileinfodialog",
+        "widgets/editorfontdialog",
         "widgets/filepropertiesdialog",
         "widgets/infomessagebox",
         "widgets/newclassdialog",
