@@ -29,7 +29,7 @@ Qt::ItemFlags EditorFontModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flags = Qt::NoItemFlags;
     if (index.isValid()) {
-        flags = Qt::ItemIsEnabled | Qt::ItemIsDragEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable ;
+        flags = Qt::ItemIsEnabled | Qt::ItemIsDragEnabled | Qt::ItemIsSelectable ;
     } else if (index.row() == -1) {
         // -1 means it's a drop target?
         flags = Qt::ItemIsDropEnabled;
@@ -213,3 +213,15 @@ void EditorFontWidget::updateIcons(const QSize &/*size*/) {
     pIconsManager->setIcon(ui->btnMoveFontDown, IconsManager::ACTION_MISC_MOVEDOWN);
     pIconsManager->setIcon(ui->btnMoveFontToBottom, IconsManager::ACTION_MISC_MOVEBOTTOM);
 }
+
+void EditorFontWidget::on_lstFontList_doubleClicked(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+    EditorFontDialog dlg(this);
+    dlg.setFontFamily(mModel.data(index, Qt::DisplayRole).toString());
+    if (dlg.exec() == QDialog::Accepted) {
+        mModel.setData(index, dlg.fontFamily());
+    }
+}
+

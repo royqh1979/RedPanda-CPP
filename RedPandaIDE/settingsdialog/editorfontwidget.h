@@ -57,6 +57,8 @@ private slots:
 
     // void on_chkForceFixedFontWidth_toggled(bool checked);
 
+    void on_lstFontList_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::EditorFontWidget *ui;
     EditorFontModel mModel;
