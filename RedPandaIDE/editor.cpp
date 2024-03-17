@@ -1138,7 +1138,7 @@ bool trySetIncludeUnderline(const QString& lineText, const QChar& quoteStartChar
                   QSynedit::EditingAreaList &areaList
                   ) {
     int pos1=lineText.indexOf(quoteStartChar);
-    int pos2=lineText.lastIndexOf(quoteEndChar);
+    int pos2=lineText.indexOf(quoteEndChar,pos1+1);
     if (pos1>=0 && pos2>=0 && pos1 < pos2 ) {
         QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
         p->beginX = pos1+2;
@@ -1235,7 +1235,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         if (mParser->isIncludeLine(lineText)) {
             // #include header names (<>)
             int pos1=lineText.indexOf("<")+1;
-            int pos2=lineText.lastIndexOf(">")+1;
+            int pos2=lineText.indexOf(">",pos1);
             if (pos1>0 && pos2>0 && pos1<aChar && aChar<pos2) {
                 style = syntaxer()->identifierAttribute()->styles();
                 foreground = syntaxer()->identifierAttribute()->foreground();
