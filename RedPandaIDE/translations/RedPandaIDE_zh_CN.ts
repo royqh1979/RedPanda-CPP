@@ -2113,6 +2113,19 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
+    <name>EditorFontDialog</name>
+    <message>
+        <location filename="../widgets/editorfontdialog.ui" line="+14"/>
+        <source>Choose Font</source>
+        <translation>选择字体</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Show only monospaced fonts</source>
+        <translation>只显示等宽字体</translation>
+    </message>
+</context>
+<context>
     <name>EditorFontWidget</name>
     <message>
         <location filename="../settingsdialog/editorfontwidget.ui" line="+14"/>
@@ -2124,40 +2137,50 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">*需要重启之后生效</translation>
     </message>
     <message>
-        <location line="+149"/>
+        <location line="+176"/>
         <location line="+352"/>
         <source>Size:</source>
         <translation>大小:</translation>
     </message>
     <message>
-        <location line="-495"/>
-        <location line="+488"/>
+        <location line="-7"/>
         <source>Font:</source>
         <translation>字体:</translation>
     </message>
     <message>
-        <location line="-479"/>
+        <location line="-474"/>
         <location line="+3"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="-44"/>
+        <source>Font</source>
+        <translation>字体</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <location line="+3"/>
         <source>Remove</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+60"/>
         <location line="+3"/>
         <source>Move up</source>
         <translation>上移</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-13"/>
         <location line="+3"/>
         <source>Move down</source>
         <translation>下移</translation>
+    </message>
+    <message>
+        <location line="-46"/>
+        <location line="+3"/>
+        <source>Modify</source>
+        <translation>修改</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2166,7 +2189,19 @@ p, li { white-space: pre-wrap; }
         <translation>恢复默认</translation>
     </message>
     <message>
-        <location line="+526"/>
+        <location line="+50"/>
+        <location line="+3"/>
+        <source>Move to top</source>
+        <translation>移至顶部</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+3"/>
+        <source>Move to bottom</source>
+        <translation>移至底部</translation>
+    </message>
+    <message>
+        <location line="+513"/>
         <source>Show only monospaced fonts</source>
         <translation>只显示等宽字体</translation>
     </message>
@@ -6371,12 +6406,11 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">%1版</translation>
     </message>
     <message>
-        <location line="-1246"/>
         <source>Line: %1/%2 Char: %3/%4 Sel:%5</source>
-        <translation>行: %1/%2 字符: %3/%4 选中:%5</translation>
+        <translation type="vanished">行: %1/%2 字符: %3/%4 选中:%5</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-1239"/>
         <source>Line: %1/%2 Char: %3/%4</source>
         <translation>行: %1/%2 字符: %3/%4</translation>
     </message>
@@ -6562,12 +6596,22 @@ p, li { white-space: pre-wrap; }
         <translation> %1版</translation>
     </message>
     <message>
-        <location line="+271"/>
+        <location line="+265"/>
+        <source>Line: %1/%2 Col: %3 Sel: %4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Line: %1/%2 Col: %3</source>
         <translation>行: %1/%2 列: %3</translation>
     </message>
     <message>
-        <location line="+1333"/>
+        <location line="+7"/>
+        <source>Line: %1/%2 Char: %3/%4 Sel: %5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1326"/>
         <source>Remove All Bookmarks</source>
         <translation>删除全部书签</translation>
     </message>
@@ -6731,12 +6775,11 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">请取消该设置，重新编译然后重新启动调试。</translation>
     </message>
     <message>
-        <location line="-640"/>
         <source>Line: %1/%2 Col: %3 Sel:%4</source>
-        <translation>行: %1/%2 字符: %3 选中:%4</translation>
+        <translation type="vanished">行: %1/%2 字符: %3 选中:%4</translation>
     </message>
     <message>
-        <location line="+1273"/>
+        <location line="+633"/>
         <source>Goto Url</source>
         <translation>跳转到试题网址</translation>
     </message>
@@ -9191,7 +9234,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3448"/>
+        <location filename="../settings.cpp" line="+3455"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -9853,7 +9896,7 @@ p, li { white-space: pre-wrap; }
         <translation>无法检测适用于 “%1” 的终端参数模式。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="-742"/>
+        <location filename="../settings.cpp" line="-745"/>
         <source>Error executing platform compiler hint add-on</source>
         <translation>执行平台编译器提示附加组件错误</translation>
     </message>
@@ -10825,7 +10868,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="+724"/>
+        <location filename="../settings.cpp" line="+727"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>

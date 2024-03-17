@@ -212,6 +212,7 @@ SOURCES += \
     widgets/customfilesystemmodel.cpp \
     widgets/custommakefileinfodialog.cpp \
     widgets/darkfusionstyle.cpp \
+    widgets/editorfontdialog.cpp \
     widgets/editorstabwidget.cpp \
     widgets/filenameeditdelegate.cpp \
     widgets/filepropertiesdialog.cpp \
@@ -345,6 +346,7 @@ HEADERS += \
     widgets/customfilesystemmodel.h \
     widgets/custommakefileinfodialog.h \
     widgets/darkfusionstyle.h \
+    widgets/editorfontdialog.h \
     widgets/editorstabwidget.h \
     widgets/filenameeditdelegate.h \
     widgets/filepropertiesdialog.h \
@@ -416,6 +418,7 @@ FORMS += \
     settingsdialog/executorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui \
     widgets/custommakefileinfodialog.ui \
+    widgets/editorfontdialog.ui \
     widgets/filepropertiesdialog.ui \
     widgets/infomessagebox.ui \
     widgets/newclassdialog.ui \

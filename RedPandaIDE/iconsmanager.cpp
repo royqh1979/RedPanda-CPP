@@ -100,6 +100,8 @@ void IconsManager::updateActionIcons(const QString& iconSet, int size)
     mIconPixmaps.insert(ACTION_MISC_MOVEUP, createSVGIcon(iconFolder+"00Misc-14MoveUp.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_MOVEDOWN, createSVGIcon(iconFolder+"00Misc-15MoveDown.svg",size,size));
     mIconPixmaps.insert(ACTION_MISC_RESET, createSVGIcon(iconFolder+"00Misc-16Reset.svg",size,size));
+    mIconPixmaps.insert(ACTION_MISC_MOVETOP, createSVGIcon(iconFolder+"00Misc-17MoveTop.svg",size,size));
+    mIconPixmaps.insert(ACTION_MISC_MOVEBOTTOM, createSVGIcon(iconFolder+"00Misc-18MoveBottom.svg",size,size));
 
     mIconPixmaps.insert(ACTION_FILE_NEW, createSVGIcon(iconFolder+"01File-01New.svg",size,size));
     mIconPixmaps.insert(ACTION_FILE_OPEN, createSVGIcon(iconFolder+"01File-02Open.svg",size,size));

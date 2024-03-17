@@ -17,28 +17,15 @@
    <item>
     <widget class="QGroupBox" name="groupFontFamilies">
      <property name="title">
-      <string>Font:</string>
+      <string>Font</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <widget class="QFontComboBox" name="cbNewFont"/>
-      </item>
-      <item row="0" column="1">
-       <widget class="QToolButton" name="btnAddFont">
-        <property name="toolTip">
-         <string>Add</string>
-        </property>
-        <property name="text">
-         <string>Add</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0">
        <widget class="QListView" name="lstFontList"/>
       </item>
       <item row="1" column="1">
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
+       <layout class="QGridLayout" name="layoutFontListActions">
+        <item row="1" column="0">
          <widget class="QToolButton" name="btnRemoveFont">
           <property name="toolTip">
            <string>Remove</string>
@@ -48,27 +35,17 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QToolButton" name="btnMoveFontUp">
+        <item row="2" column="0">
+         <widget class="QToolButton" name="btnModifyFont">
           <property name="toolTip">
-           <string>Move up</string>
+           <string>Modify</string>
           </property>
           <property name="text">
-           <string>Move up</string>
+           <string>Modify</string>
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QToolButton" name="btnMoveFontDown">
-          <property name="toolTip">
-           <string>Move down</string>
-          </property>
-          <property name="text">
-           <string>Move down</string>
-          </property>
-         </widget>
-        </item>
-        <item>
+        <item row="3" column="0">
          <widget class="QToolButton" name="btnResetFonts">
           <property name="toolTip">
            <string>Reset</string>
@@ -78,7 +55,17 @@
           </property>
          </widget>
         </item>
-        <item>
+        <item row="0" column="0">
+         <widget class="QToolButton" name="btnAddFont">
+          <property name="toolTip">
+           <string>Add</string>
+          </property>
+          <property name="text">
+           <string>Add</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -90,6 +77,46 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item row="2" column="1">
+         <widget class="QToolButton" name="btnMoveFontDown">
+          <property name="toolTip">
+           <string>Move down</string>
+          </property>
+          <property name="text">
+           <string>Move down</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QToolButton" name="btnMoveFontUp">
+          <property name="toolTip">
+           <string>Move up</string>
+          </property>
+          <property name="text">
+           <string>Move up</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QToolButton" name="btnMoveFontToTop">
+          <property name="toolTip">
+           <string>Move to top</string>
+          </property>
+          <property name="text">
+           <string>Move to top</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QToolButton" name="btnMoveFontToBottom">
+          <property name="toolTip">
+           <string>Move to bottom</string>
+          </property>
+          <property name="text">
+           <string>Move to bottom</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

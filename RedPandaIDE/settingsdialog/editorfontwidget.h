@@ -18,7 +18,7 @@
 #define EDITORFONTWIDGET_H
 
 #include <QWidget>
-#include <QAbstractListModel>
+#include <QStringListModel>
 #include "settingswidget.h"
 #include "utils/font.h"
 
@@ -26,28 +26,12 @@ namespace Ui {
 class EditorFontWidget;
 }
 
-class EditorFontModel : public QAbstractListModel
+class EditorFontModel : public QStringListModel
 {
     Q_OBJECT
 public:
-    void addFont(const QString& font);
-    void remove(int index);
-    void clear();
-    void moveUp(int index);
-    void moveDown(int index);
-    QModelIndex lastFont();
-    const QStringList &fonts() const;
-    void updateFonts(const QStringList& fonts);
-
-    // QAbstractItemModel interface
-public:
-    int rowCount(const QModelIndex &parent) const override;
-    int columnCount(const QModelIndex &parent) const override;
-    QVariant data(const QModelIndex &index, int role) const override;
-    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
-
-private:
-    QStringList mFonts;
+    using QStringListModel::QStringListModel;
+    Qt::ItemFlags flags(const QModelIndex &index) const;
 };
 
 class EditorFontWidget : public SettingsWidget
@@ -62,9 +46,12 @@ private slots:
     void on_chkGutterOnlyMonospacedFonts_stateChanged(int arg1);
     void on_btnAddFont_clicked();
     void on_btnRemoveFont_clicked();
+    void on_btnModifyFont_clicked();
+    void on_btnResetFonts_clicked();
+    void on_btnMoveFontToTop_clicked();
     void on_btnMoveFontUp_clicked();
     void on_btnMoveFontDown_clicked();
-    void on_btnResetFonts_clicked();
+    void on_btnMoveFontToBottom_clicked();
 
     // void on_chkLigature_toggled(bool checked);
 
