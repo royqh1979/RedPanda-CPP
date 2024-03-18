@@ -56,6 +56,7 @@ Red Panda C++ Version 2.27
   - enhancement: Execute the last debug command in the debug console if ENTER pressed.
   - change: When debugging, don't auto set focus to the editor.
   - enhancement: Folding button scales with editor font.
+  - fix: Should show header completion popup in #include line comments.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

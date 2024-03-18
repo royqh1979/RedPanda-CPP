@@ -1131,13 +1131,13 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
     }
 }
 
-bool trySetIncludeUnderline(const QString& lineText, const QChar& quoteStartChar,
+void setIncludeUnderline(const QString& lineText, int startPos,
                   const QChar& quoteEndChar,
                   QSynedit::PSyntaxer syntaxer,
                   QColor foreColor,
                   QSynedit::EditingAreaList &areaList
                   ) {
-    int pos1=lineText.indexOf(quoteStartChar);
+    int pos1=startPos;
     int pos2=lineText.indexOf(quoteEndChar,pos1+1);
     if (pos1>=0 && pos2>=0 && pos1 < pos2 ) {
         QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
@@ -1145,7 +1145,7 @@ bool trySetIncludeUnderline(const QString& lineText, const QChar& quoteStartChar
         p->endX = pos2+1;
         p->type = QSynedit::EditingAreaType::eatUnderLine;
         if (syntaxer) {
-            if (quoteStartChar=='\"')
+            if (quoteEndChar=='\"')
                 p->color = syntaxer->stringAttribute()->foreground();
             else
                 p->color = syntaxer->identifierAttribute()->foreground();
@@ -1153,9 +1153,7 @@ bool trySetIncludeUnderline(const QString& lineText, const QChar& quoteStartChar
             p->color = foreColor;
         }
         areaList.append(p);
-        return true;
     }
-    return false;
 }
 
 void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
@@ -1189,8 +1187,16 @@ void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
     QString lineText = document()->getLine(line-1);
     if (mParser && mParser->isIncludeLine(lineText)) {
         if (line == mHoverModifiedLine) {
-            if (!trySetIncludeUnderline(lineText,'<','>',syntaxer(), foregroundColor(), areaList))
-                trySetIncludeUnderline(lineText,'"','"',syntaxer(), foregroundColor(), areaList);
+            int i=0;
+            while (i<lineText.length() && lineText[i]!='<' && lineText[i]!='\"')
+                i++;
+            if (i<lineText.length()) {
+                if (lineText[i]=='<') {
+                    setIncludeUnderline(lineText,i,'>',syntaxer(), foregroundColor(), areaList);
+                } else {
+                    setIncludeUnderline(lineText,i,'"',syntaxer(), foregroundColor(), areaList);
+                }
+            }
         }
     }
 }
@@ -1232,7 +1238,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             return;
         }
         QString lineText = document()->getLine(line-1);
-        if (mParser->isIncludeLine(lineText)) {
+        if (mParser->isIncludeLine(lineText) && attr->tokenType() != QSynedit::TokenType::Comment) {
             // #include header names (<>)
             int pos1=lineText.indexOf("<")+1;
             int pos2=lineText.indexOf(">",pos1);
@@ -3573,6 +3579,16 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
 
     if (!forceShow && mHeaderCompletionPopup->isVisible()) // already in search, don't do it again
         return;
+
+    QSynedit::BufferCoord  HighlightPos = QSynedit::BufferCoord{caretX()-1, caretY()};
+    // Check if that line is highlighted as  comment
+    QSynedit::PTokenAttribute attr;
+    QString token;
+    QSynedit::SyntaxState syntaxState;
+    if (getTokenAttriAtRowCol(HighlightPos, token, attr, syntaxState)) {
+        if (attr && attr->tokenType()==QSynedit::TokenType::Comment)
+            return;
+    }
 
     // Position it at the top of the next line
     QPoint p = displayCoordToPixels(displayXY());
