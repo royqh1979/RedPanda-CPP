@@ -78,7 +78,7 @@
     },
     "Float": {
         "bold": false,
-        "foreground": "#ffd18f52",
+        "foreground": "#ffd19a66",
         "italic": false,
         "strikeout": false,
         "underlined": false
@@ -121,7 +121,7 @@
     },
     "Hexadecimal": {
         "bold": false,
-        "foreground": "#ffd18f52",
+        "foreground": "#ffd19a66",
         "italic": false,
         "strikeout": false,
         "underlined": false
@@ -163,7 +163,7 @@
     },
     "Octal": {
         "bold": false,
-        "foreground": "#ffd18f52",
+        "foreground": "#ffd19a66",
         "italic": false,
         "strikeout": false,
         "underlined": false
