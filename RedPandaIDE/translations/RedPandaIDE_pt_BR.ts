@@ -555,7 +555,7 @@
         <translation>[Nota] </translation>
     </message>
     <message>
-        <location line="+547"/>
+        <location line="+548"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
         <translation>Falha ao iniciar a compilação para &apos;%1&apos;.</translation>
     </message>
@@ -590,7 +590,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-632"/>
+        <location line="-633"/>
         <source> - Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1382,7 +1382,7 @@
         <location filename="../editor.cpp" line="+372"/>
         <location line="+70"/>
         <location line="+29"/>
-        <location line="+1086"/>
+        <location line="+1092"/>
         <location line="+5"/>
         <location line="+21"/>
         <location line="+5"/>
@@ -1390,7 +1390,7 @@
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-1180"/>
+        <location line="-1186"/>
         <source>Save As</source>
         <translation>Salvar como</translation>
     </message>
@@ -1400,7 +1400,7 @@
         <translation>Arquivo %1 já aberto!</translation>
     </message>
     <message>
-        <location line="+1115"/>
+        <location line="+1121"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>O texto a ser copiado excede o limite do contador!</translation>
     </message>
@@ -1425,7 +1425,7 @@
         <translation>Imprimir documento</translation>
     </message>
     <message>
-        <location line="+778"/>
+        <location line="+788"/>
         <location line="+25"/>
         <location line="+47"/>
         <source>Ctrl+click for more info</source>
@@ -1457,13 +1457,13 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5331"/>
+        <location line="-5347"/>
         <location line="+434"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
     </message>
     <message>
-        <location line="+1576"/>
+        <location line="+1582"/>
         <source>hex: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1870,7 +1870,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+22"/>
         <source>Show only monospaced fonts</source>
         <translation>Mostrar apenas fontes com espaçamento único</translation>
     </message>

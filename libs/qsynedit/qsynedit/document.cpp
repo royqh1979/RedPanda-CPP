@@ -947,12 +947,16 @@ int Document::glyphLength(int line, int glyphIdx)
 int Document::glyphStartPostion(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphStartPosition(glyphIdx);
 }
 
 int Document::glyphWidth(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphWidth(glyphIdx);
 }
 

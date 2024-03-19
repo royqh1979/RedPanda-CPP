@@ -57,6 +57,7 @@ Red Panda C++ Version 2.27
   - change: When debugging, don't auto set focus to the editor.
   - enhancement: Folding button scales with editor font.
   - fix: Should show header completion popup in #include line comments.
+  - fix: Custom compile options not correctly parsed.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

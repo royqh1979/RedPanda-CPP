@@ -692,7 +692,7 @@ p, li { white-space: pre-wrap; }
         <translation>警告：</translation>
     </message>
     <message>
-        <location line="+519"/>
+        <location line="+520"/>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
         <translation>无法写入文件“%1”。</translation>
     </message>
@@ -1596,7 +1596,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../editor.cpp" line="+372"/>
         <location line="+70"/>
         <location line="+29"/>
-        <location line="+1086"/>
+        <location line="+1092"/>
         <location line="+5"/>
         <location line="+21"/>
         <location line="+5"/>
@@ -1608,7 +1608,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="-1473"/>
+        <location line="-1479"/>
         <location line="+434"/>
         <source>Error Load File</source>
         <translation>载入文件错误</translation>
@@ -1648,7 +1648,7 @@ p, li { white-space: pre-wrap; }
         <translation>文件%1已经被打开！</translation>
     </message>
     <message>
-        <location line="+1115"/>
+        <location line="+1121"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
@@ -1683,7 +1683,7 @@ p, li { white-space: pre-wrap; }
         <translation>打印文档</translation>
     </message>
     <message>
-        <location line="+778"/>
+        <location line="+788"/>
         <location line="+25"/>
         <location line="+47"/>
         <source>Ctrl+click for more info</source>
@@ -2120,7 +2120,7 @@ p, li { white-space: pre-wrap; }
         <translation>选择字体</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+22"/>
         <source>Show only monospaced fonts</source>
         <translation>只显示等宽字体</translation>
     </message>
@@ -6598,7 +6598,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+265"/>
         <source>Line: %1/%2 Col: %3 Sel: %4</source>
-        <translation type="unfinished"></translation>
+        <translation>行: %1/%2 列: %3 选中: %4</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -6608,7 +6608,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+7"/>
         <source>Line: %1/%2 Char: %3/%4 Sel: %5</source>
-        <translation type="unfinished"></translation>
+        <translation>行: %1/%2 字符: %3/%4 选中: %5</translation>
     </message>
     <message>
         <location line="+1326"/>
