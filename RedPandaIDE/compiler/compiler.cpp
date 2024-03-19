@@ -590,11 +590,12 @@ QStringList Compiler::getLibraryArguments(FileType fileType)
 
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {
-       QStringList params = textToLines(compilerSet()->customLinkParams());
-       if (!params.isEmpty()) {
+        QMap<QString, QString> macros = devCppMacroVariables();
+        QStringList params = parseArguments(compilerSet()->customLinkParams(), macros, true);
+        if (!params.isEmpty()) {
             foreach(const QString& param, params)
                 result << param;
-       }
+        }
     }
 
     if (mProject) {
