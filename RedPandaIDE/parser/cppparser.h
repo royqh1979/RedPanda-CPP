@@ -260,6 +260,7 @@ private:
     PStatement doFindStatementOf(const QString& fileName,
                                const QStringList& expression,
                                int line) const;
+    PStatement doFindAliasedStatement(const PStatement& statement, QSet<Statement *> foundSet) const;
     PStatement doFindAliasedStatement(const PStatement& statement) const;
 
     QList<PStatement> doListTypeStatements(const QString& fileName,int line) const;

@@ -631,7 +631,12 @@ QList<PStatement> CppParser::listTypeStatements(const QString &fileName, int lin
     return doListTypeStatements(fileName,line);
 }
 
-PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const
+PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const {
+    QSet<Statement *> foundSet;
+    return doFindAliasedStatement(statement,foundSet);
+}
+
+PStatement CppParser::doFindAliasedStatement(const PStatement &statement, QSet<Statement *> foundSet) const
 {
     if (!statement)
         return PStatement();
@@ -641,11 +646,18 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const
         return PStatement();
     QString nsName=statement->type.mid(0,pos);
     QString name = statement->type.mid(pos+2);
+    PFileIncludes fileIncludes = mPreprocessor.findFileIncludes(statement->fileName);
+    if (!fileIncludes)
+        return PStatement();
+    foundSet.insert(statement.get());
+    PStatement result;
     if (nsName.isEmpty()) {
         QList<PStatement> resultList = findMembersOfStatement(name,PStatement());
         foreach(const PStatement& resultStatement,resultList) {
-            if (resultStatement->kind != StatementKind::skAlias)
-                return resultStatement;
+            if (fileIncludes->includeFiles.contains(resultStatement->fileName)) {
+                result = resultStatement;
+                break;
+            }
         }
     } else {
         PStatementList namespaceStatements = doFindNamespace(nsName);
@@ -653,13 +665,22 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const
             return PStatement();
         foreach (const PStatement& namespaceStatement, *namespaceStatements) {
             QList<PStatement> resultList = findMembersOfStatement(name,namespaceStatement);
+
             foreach(const PStatement& resultStatement,resultList) {
-                if (resultStatement->kind != StatementKind::skAlias)
-                    return resultStatement;
+                if (fileIncludes->includeFiles.contains(resultStatement->fileName)) {
+                    result = resultStatement;
+                    break;
+                }
             }
+            if (result)
+                break;
         }
     }
-    return PStatement();
+    if (foundSet.contains(result.get()))
+        return PStatement();
+    if (result->kind == StatementKind::skAlias)
+        result = doFindAliasedStatement(result, foundSet);
+    return result;
 }
 
 QList<PStatement> CppParser::doListTypeStatements(const QString &fileName, int line) const
@@ -4602,6 +4623,8 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int lin
     QSet<QString> includedFiles = internalGetIncludedFiles(fileName);
     for (const PStatement& child:children) {
         if (statement->command == child->command) {
+            if (child->kind == StatementKind::skAlias)
+                continue;
             if (!includedFiles.contains(fileName))
                 continue;
             if (line < child->line && (child->fileName == fileName))
