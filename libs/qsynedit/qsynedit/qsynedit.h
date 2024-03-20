@@ -90,7 +90,7 @@ enum EditorOption {
     eoHideShowScrollbars =    0x00000200, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
     eoKeepCaretX =            0x00000400 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
     eoRightMouseMovesCursor=  0x00000800, //When clicking with the right mouse for a popup menu, move the cursor to that location
-    eoScrollByOneLess =       0x00001000, //Forces scrolling to be one less
+//    eoScrollByOneLess =       0x00001000, //Forces scrolling to be one less
     eoScrollPastEof =         0x00002000, //Allows the cursor to go past the end of file marker
     eoScrollPastEol =         0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
     eoInvertMouseScroll =     0x00008000, //Shows the special Characters

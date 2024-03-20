@@ -5651,9 +5651,6 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         int counter = mLinesInWindow;
         if (mOptions.testFlag(eoHalfPageScroll))
             counter /= 2;
-        if (mOptions.testFlag(eoScrollByOneLess)) {
-            counter -=1;
-        }
         if (counter<0)
             break;
         if (command == EditCommand::PageUp || command == EditCommand::SelPageUp) {

@@ -165,9 +165,6 @@ public:
         bool scrollPastEol() const;
         void setScrollPastEol(bool scrollPastEol);
 
-        bool scrollByOneLess() const;
-        void setScrollByOneLess(bool scrollByOneLess);
-
         bool halfPageScroll() const;
         void setHalfPageScroll(bool halfPageScroll);
 
@@ -410,9 +407,6 @@ public:
         bool forceFixedFontWidth() const;
         void setForceFixedFontWidth(bool newForceFixedWidth);
 
-        bool invertMouseScroll() const;
-        void setInvertMouseScroll(bool newInvertMouseScroll);
-
     private:
         //General
         // indents
@@ -440,11 +434,9 @@ public:
         bool mAutoHideScrollbar;
         bool mScrollPastEof;
         bool mScrollPastEol;
-        bool mScrollByOneLess;
         bool mHalfPageScroll;
         int mMouseWheelScrollSpeed;
         int mMouseSelectionScrollSpeed;
-        bool mInvertMouseScroll;
 
         //right margin
         bool mShowRightEdgeLine;

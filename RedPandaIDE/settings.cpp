@@ -825,16 +825,6 @@ void Settings::Editor::setForceFixedFontWidth(bool newForceFixedWidth)
     mForceFixedFontWidth = newForceFixedWidth;
 }
 
-bool Settings::Editor::invertMouseScroll() const
-{
-    return mInvertMouseScroll;
-}
-
-void Settings::Editor::setInvertMouseScroll(bool newInvertMouseScroll)
-{
-    mInvertMouseScroll = newInvertMouseScroll;
-}
-
 bool Settings::Editor::showTrailingSpaces() const
 {
     return mShowTrailingSpaces;
@@ -1280,16 +1270,6 @@ QString Settings::Editor::fontName() const
     return mFontFamilies.length() > 0 ? mFontFamilies[0] : "";
 }
 
-bool Settings::Editor::scrollByOneLess() const
-{
-    return mScrollByOneLess;
-}
-
-void Settings::Editor::setScrollByOneLess(bool scrollByOneLess)
-{
-    mScrollByOneLess = scrollByOneLess;
-}
-
 bool Settings::Editor::scrollPastEol() const
 {
     return mScrollPastEol;
@@ -1348,11 +1328,9 @@ void Settings::Editor::doSave()
     saveValue("auto_hide_scroll_bar", mAutoHideScrollbar);
     saveValue("scroll_past_eof", mScrollPastEof);
     saveValue("scroll_past_eol", mScrollPastEol);
-    saveValue("scroll_by_one_less", mScrollByOneLess);
     saveValue("half_page_scroll", mHalfPageScroll);
     saveValue("mouse_wheel_scroll_speed", mMouseWheelScrollSpeed);
     saveValue("mouse_selection_scroll_speed",mMouseSelectionScrollSpeed);
-    saveValue("invert_mouse_scroll",mInvertMouseScroll);
 
     //right edge
     saveValue("show_right_edge_line",mShowRightEdgeLine);
@@ -1481,11 +1459,9 @@ void Settings::Editor::doLoad()
     mAutoHideScrollbar = boolValue("auto_hide_scroll_bar", false);
     mScrollPastEof = boolValue("scroll_past_eof", true);
     mScrollPastEol = boolValue("scroll_past_eol", false);
-    mScrollByOneLess = boolValue("scroll_by_one_less", false);
     mHalfPageScroll = boolValue("half_page_scroll",false);
     mMouseWheelScrollSpeed = intValue("mouse_wheel_scroll_speed", 3);
     mMouseSelectionScrollSpeed = intValue("mouse_selection_scroll_speed",1);
-    mInvertMouseScroll = boolValue("invert_mouse_scroll", false);
 
 
     //right edge

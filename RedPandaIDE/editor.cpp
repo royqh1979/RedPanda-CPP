@@ -5231,7 +5231,7 @@ void Editor::applySettings()
     incPaintLock();
     QSynedit::EditorOptions options = QSynedit::eoAltSetsColumnMode |
             QSynedit::eoDragDropEditing | QSynedit::eoDropFiles |  QSynedit::eoKeepCaretX | QSynedit::eoTabsToSpaces |
-            QSynedit::eoRightMouseMovesCursor | QSynedit::eoScrollByOneLess | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo
+            QSynedit::eoRightMouseMovesCursor | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo
             | QSynedit::eoSelectWordByDblClick;
 
     options.setFlag(QSynedit::eoShowLeadingSpaces, pSettings->editor().showLeadingSpaces());
@@ -5250,10 +5250,8 @@ void Editor::applySettings()
     options.setFlag(QSynedit::eoHideShowScrollbars,pSettings->editor().autoHideScrollbar());
     options.setFlag(QSynedit::eoScrollPastEol,pSettings->editor().scrollPastEol());
     options.setFlag(QSynedit::eoScrollPastEof,pSettings->editor().scrollPastEof());
-    options.setFlag(QSynedit::eoScrollByOneLess,pSettings->editor().scrollByOneLess());
     options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
-    options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
-    options.setFlag(QSynedit::eoInvertMouseScroll, pSettings->editor().invertMouseScroll());
+    options.setFlag(QSynedit::eoInvertMouseScroll, false);
 
     options.setFlag(QSynedit::eoShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()

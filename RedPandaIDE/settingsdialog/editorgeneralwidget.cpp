@@ -76,13 +76,8 @@ void EditorGeneralWidget::doLoad()
     ui->chkScrollPastEOF->setChecked(pSettings->editor().scrollPastEof());
     ui->chkScrollPastEOL->setChecked(pSettings->editor().scrollPastEol());
     ui->chkScrollHalfPage->setChecked(pSettings->editor().halfPageScroll());
-    ui->chkScrollByOneLess->setChecked(pSettings->editor().scrollByOneLess());
     ui->spinMouseWheelScrollSpeed->setValue(pSettings->editor().mouseWheelScrollSpeed());
     ui->spinMouseSelectionScrollSpeed->setValue(pSettings->editor().mouseSelectionScrollSpeed());
-    if (pSettings->editor().invertMouseScroll())
-        ui->rbInvertScroll->setChecked(true);
-    else
-        ui->rbNaturalScroll->setChecked(true);
 
     //right margin line;
     ui->grpRightEdge->setChecked(pSettings->editor().showRightEdgeLine());
@@ -116,11 +111,9 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setAutoHideScrollbar(ui->chkAutoHideScrollBars->isChecked());
     pSettings->editor().setScrollPastEof(ui->chkScrollPastEOF->isChecked());
     pSettings->editor().setScrollPastEol(ui->chkScrollPastEOL->isChecked());
-    pSettings->editor().setScrollByOneLess(ui->chkScrollByOneLess->isChecked());
     pSettings->editor().setHalfPageScroll(ui->chkScrollHalfPage->isChecked());
     pSettings->editor().setMouseWheelScrollSpeed(ui->spinMouseWheelScrollSpeed->value());
     pSettings->editor().setMouseSelectionScrollSpeed(ui->spinMouseSelectionScrollSpeed->value());
-    pSettings->editor().setInvertMouseScroll(ui->rbInvertScroll->isChecked());
     //right margin line;
     pSettings->editor().setShowRightEdgeLine(ui->grpRightEdge->isChecked());
     pSettings->editor().setRightEdgeWidth(ui->spRightEdge->value());
