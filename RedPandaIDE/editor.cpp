@@ -876,9 +876,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 } else {
-                    QString lastWord = getPreviousWordAtPositionForSuggestion(ws);
-                    if (mParser && !lastWord.isEmpty()) {
-                        if (lastWord == "typedef" || lastWord == "const") {
+                    bool hasConst;
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(ws, hasConst);
+                    if (mParser && (!lastWord.isEmpty() || hasConst)) {
+                        if (lastWord.isEmpty()) {
+                            Q_ASSERT(hasConst);
+                            processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                            showCompletion(lastWord,false, CodeCompletionType::Types);
+                            handled=true;
+                            return;
+                        } else if ( lastWord == "typedef" ) {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false, CodeCompletionType::Types);
                             handled=true;
@@ -1436,7 +1443,8 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
             int idCharPressed=caretX()-ws.ch;
             idCharPressed += s.length();
             if (idCharPressed>=pSettings->codeCompletion().minCharRequired()) {
-                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                bool hasConst;
+                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY(), hasConst);
                 if (mParser && !lastWord.isEmpty()) {
                     if (CppTypeKeywords.contains(lastWord)) {
                         return;
@@ -4319,8 +4327,9 @@ void Editor::updateFunctionTip(bool showTip)
     //handle class initializer
     if (x >= 0 && hasPreviousWord) {
         QSynedit::BufferCoord pos = pWordBegin;
+        bool hasConst;
         pos.ch = pWordBegin.ch;
-        QString previousWord = getPreviousWordAtPositionForSuggestion(pos);
+        QString previousWord = getPreviousWordAtPositionForSuggestion(pos, hasConst);
 
         PStatement statement = mParser->findStatementOf(
                     mFilename,
@@ -4912,8 +4921,9 @@ QString getWordAtPosition(QSynedit::QSynEdit *editor, const QSynedit::BufferCoor
     return result;
 }
 
-QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord &p)
+QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord &p, bool &hasConst)
 {
+    hasConst = false;
     QString result;
     if ((p.line<1) || (p.line>document()->count())) {
         return "";
@@ -4969,8 +4979,12 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
             return "";
 
         result = s.mid(wordBegin, wordEnd - wordBegin+1);
-        if ((result != "const") && !skipNextWord)
+        if (result == "const" || result == "volatile")
+            hasConst = true;
+        else if (!skipNextWord)
             break;
+        // if ((result != "const") && !skipNextWord)
+        //     break;
         wordEnd = wordBegin-1;
     }
     return result;
