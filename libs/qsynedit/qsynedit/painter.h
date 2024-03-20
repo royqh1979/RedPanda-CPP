@@ -96,13 +96,13 @@ private:
     DisplayCoord mSelStart; // start of selected area
     DisplayCoord mSelEnd; // end of selected area
     // info about normal and selected text and background colors
-    bool mIsSpecialLine, mIsLineSelected, mIsCurrentLine;
+    bool mIsSpecialLine, mIsCurrentLine, mIsLineEndSelected;
     QColor colFG, colBG;
     QColor colSelFG, colSelBG;
     QColor colSpFG, colSpBG;
     // info about selection of the current line
     int mLineSelStart, mLineSelEnd;
-    bool mIsComplexLine;
+    bool mHasSelectionInLine;
     // painting the background and the text
     QRect mRcLine, mRcToken;
     int mFirstLine, mLastLine;

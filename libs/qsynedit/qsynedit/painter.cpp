@@ -545,13 +545,13 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
     // Compute some helper variables.
     nC1 = std::max(mLeft, mTokenAccu.left);
     nC2 = std::min(mRight, mTokenAccu.left + mTokenAccu.width);
-    if (mIsComplexLine) {
+    if (mHasSelectionInLine) {
         bU1 = (nC1 < mLineSelStart);
         bSel = (nC1 < mLineSelEnd) && (nC2 >= mLineSelStart);
         bU2 = (nC2 >= mLineSelEnd);
         isComplexToken = bSel && (bU1 || bU2);
     } else {
-        bSel = mIsLineSelected;
+        bSel = false;
         isComplexToken = false;
         bU1 = false;
         bU2 = false;
@@ -633,12 +633,12 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
             colBG = colSpBG;
         else
             colBG = colEditorBG();
-        if (mIsComplexLine) {
-            setDrawingColors(mRcToken.left() < mLineSelEnd);
+        if (mHasSelectionInLine) {
+            setDrawingColors(mIsLineEndSelected);
             mRcToken.setRight(mRcLine.right());
             mPainter->fillRect(mRcToken,mPainter->brush());
         }  else {
-            setDrawingColors(mIsLineSelected);
+            setDrawingColors(false);
             mRcToken.setRight(mRcLine.right());
             mPainter->fillRect(mRcToken,mPainter->brush());
         }
@@ -926,14 +926,16 @@ void QSynEditPainter::paintLines()
         // are possible (unselected before, selected, unselected after), only
         // unselected or only selected means bComplexLine will be FALSE. Start
         // with no selection, compute based on the visible columns.
-        mIsComplexLine = false;
+        mHasSelectionInLine = false;
         mLineSelStart = 0;
         mLineSelEnd = 0;
+        mIsLineEndSelected = false;
 
         // Does the selection intersect the visible area?
         if (bAnySelection && (row >= mSelStart.row) && (row <= mSelEnd.row)) {
             // Default to a fully selected line. This is correct for the smLine
             // selection mode and a good start for the smNormal mode.
+            mHasSelectionInLine = true;
             mLineSelStart = mLeft;
             mLineSelEnd = mRight + 1;
             if ((mEdit->mActiveSelectionMode == SelectionMode::Column) ||
@@ -942,9 +944,9 @@ void QSynEditPainter::paintLines()
                 if (xpos > mRight) {
                     mLineSelStart = 0;
                     mLineSelEnd = 0;
+                    mHasSelectionInLine = false;
                 } else if (xpos > mLeft) {
                     mLineSelStart = xpos;
-                    mIsComplexLine = true;
                 }
             }
             if ( (mEdit->mActiveSelectionMode == SelectionMode::Column) ||
@@ -953,10 +955,13 @@ void QSynEditPainter::paintLines()
                 if (xpos < mLeft) {
                     mLineSelStart = 0;
                     mLineSelEnd = 0;
+                    mHasSelectionInLine = false;
                 } else if (xpos < mRight) {
                     mLineSelEnd = xpos;
-                    mIsComplexLine = true;
                 }
+            }
+            if (mEdit->mActiveSelectionMode == SelectionMode::Normal) {
+                mIsLineEndSelected = (row>=mSelStart.row && row < mSelEnd.row);
             }
         } //endif bAnySelection
 
@@ -965,8 +970,6 @@ void QSynEditPainter::paintLines()
 //        rcLine.setBottom(rcLine.bottom()+edit->mTextHeight);
         mRcLine.setTop((row - mEdit->mTopLine) * mEdit->mTextHeight);
         mRcLine.setHeight(mEdit->mTextHeight);
-
-        mIsLineSelected = (!mIsComplexLine) && (mLineSelStart > 0);
 
         // if (mIsSpecialLine && colSpBG.isValid())
         //     colBG = colSpBG;
