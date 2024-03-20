@@ -676,6 +676,8 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement, QSet<S
                 break;
         }
     }
+    if (!result)
+        return PStatement();
     if (foundSet.contains(result.get()))
         return PStatement();
     if (result->kind == StatementKind::skAlias)
