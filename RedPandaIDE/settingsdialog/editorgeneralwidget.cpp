@@ -79,7 +79,10 @@ void EditorGeneralWidget::doLoad()
     ui->chkScrollByOneLess->setChecked(pSettings->editor().scrollByOneLess());
     ui->spinMouseWheelScrollSpeed->setValue(pSettings->editor().mouseWheelScrollSpeed());
     ui->spinMouseSelectionScrollSpeed->setValue(pSettings->editor().mouseSelectionScrollSpeed());
-    ui->rbInvertScroll->setChecked(pSettings->editor().invertMouseScroll());
+    if (pSettings->editor().invertMouseScroll())
+        ui->rbInvertScroll->setChecked(true);
+    else
+        ui->rbNaturalScroll->setChecked(true);
 
     //right margin line;
     ui->grpRightEdge->setChecked(pSettings->editor().showRightEdgeLine());
