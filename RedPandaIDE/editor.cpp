@@ -5253,6 +5253,8 @@ void Editor::applySettings()
     options.setFlag(QSynedit::eoScrollByOneLess,pSettings->editor().scrollByOneLess());
     options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
     options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
+    options.setFlag(QSynedit::eoInvertMouseScroll, pSettings->editor().invertMouseScroll());
+
     options.setFlag(QSynedit::eoShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()
                     && syntaxer()->supportBraceLevel());

@@ -1714,7 +1714,7 @@ p, li { white-space: pre-wrap; }
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+262"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -9234,7 +9234,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3455"/>
+        <location filename="../settings.cpp" line="+3467"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -9828,7 +9828,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">无标题</translation>
     </message>
     <message>
-        <location filename="../parser/cppparser.cpp" line="+1235"/>
+        <location filename="../parser/cppparser.cpp" line="+1258"/>
         <source>constructor</source>
         <translation>构造函数</translation>
     </message>
@@ -11950,7 +11950,22 @@ p, li { white-space: pre-wrap; }
         <translation>在滚动页时少滚动一行</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+7"/>
+        <source>Mouse Scroll Direction</source>
+        <translation>鼠标卷轴方向</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Natural</source>
+        <translation>正常</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Invert</source>
+        <translation>反向</translation>
+    </message>
+    <message>
+        <location line="+38"/>
         <source>Mouse Wheel Scroll Speed</source>
         <translation>鼠标滚轮卷轴速度（行）</translation>
     </message>
@@ -11976,7 +11991,7 @@ p, li { white-space: pre-wrap; }
         <translation>右边缘颜色</translation>
     </message>
     <message>
-        <location line="-331"/>
+        <location line="-367"/>
         <source>Caret for overwriting mode</source>
         <translation>覆写状态下的光标</translation>
     </message>

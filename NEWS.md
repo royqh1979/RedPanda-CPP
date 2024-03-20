@@ -58,6 +58,8 @@ Red Panda C++ Version 2.27
   - enhancement: Folding button scales with editor font.
   - fix: Should show header completion popup in #include line comments.
   - fix: Custom compile options not correctly parsed.
+  - enhancement: "Mouse scroll direction" option in Options / Editor / General
+  - change: Invert scroll direction in horizontal, like in vertical.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

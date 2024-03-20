@@ -410,6 +410,9 @@ public:
         bool forceFixedFontWidth() const;
         void setForceFixedFontWidth(bool newForceFixedWidth);
 
+        bool invertMouseScroll() const;
+        void setInvertMouseScroll(bool newInvertMouseScroll);
+
     private:
         //General
         // indents
@@ -441,6 +444,7 @@ public:
         bool mHalfPageScroll;
         int mMouseWheelScrollSpeed;
         int mMouseSelectionScrollSpeed;
+        bool mInvertMouseScroll;
 
         //right margin
         bool mShowRightEdgeLine;

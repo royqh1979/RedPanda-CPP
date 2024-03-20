@@ -1297,12 +1297,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+262"/>
         <source>Readonly</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-5347"/>
+        <location line="-5349"/>
         <location line="+434"/>
         <source>Error Load File</source>
         <translation type="unfinished"></translation>
@@ -8002,7 +8002,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+19"/>
-        <location filename="../settings.cpp" line="+4057"/>
+        <location filename="../settings.cpp" line="+4069"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-401"/>
         <location line="+61"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8310,7 +8310,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../parser/cppparser.cpp" line="+1235"/>
+        <location filename="../parser/cppparser.cpp" line="+1258"/>
         <source>constructor</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10275,7 +10275,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+7"/>
+        <source>Mouse Scroll Direction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Natural</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Invert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+38"/>
         <source>Mouse Wheel Scroll Speed</source>
         <translation type="unfinished"></translation>
     </message>

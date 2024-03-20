@@ -79,6 +79,7 @@ void EditorGeneralWidget::doLoad()
     ui->chkScrollByOneLess->setChecked(pSettings->editor().scrollByOneLess());
     ui->spinMouseWheelScrollSpeed->setValue(pSettings->editor().mouseWheelScrollSpeed());
     ui->spinMouseSelectionScrollSpeed->setValue(pSettings->editor().mouseSelectionScrollSpeed());
+    ui->rbInvertScroll->setChecked(pSettings->editor().invertMouseScroll());
 
     //right margin line;
     ui->grpRightEdge->setChecked(pSettings->editor().showRightEdgeLine());
@@ -116,7 +117,7 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setHalfPageScroll(ui->chkScrollHalfPage->isChecked());
     pSettings->editor().setMouseWheelScrollSpeed(ui->spinMouseWheelScrollSpeed->value());
     pSettings->editor().setMouseSelectionScrollSpeed(ui->spinMouseSelectionScrollSpeed->value());
-
+    pSettings->editor().setInvertMouseScroll(ui->rbInvertScroll->isChecked());
     //right margin line;
     pSettings->editor().setShowRightEdgeLine(ui->grpRightEdge->isChecked());
     pSettings->editor().setRightEdgeWidth(ui->spRightEdge->value());

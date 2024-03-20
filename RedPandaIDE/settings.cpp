@@ -825,6 +825,16 @@ void Settings::Editor::setForceFixedFontWidth(bool newForceFixedWidth)
     mForceFixedFontWidth = newForceFixedWidth;
 }
 
+bool Settings::Editor::invertMouseScroll() const
+{
+    return mInvertMouseScroll;
+}
+
+void Settings::Editor::setInvertMouseScroll(bool newInvertMouseScroll)
+{
+    mInvertMouseScroll = newInvertMouseScroll;
+}
+
 bool Settings::Editor::showTrailingSpaces() const
 {
     return mShowTrailingSpaces;
@@ -1342,6 +1352,7 @@ void Settings::Editor::doSave()
     saveValue("half_page_scroll", mHalfPageScroll);
     saveValue("mouse_wheel_scroll_speed", mMouseWheelScrollSpeed);
     saveValue("mouse_selection_scroll_speed",mMouseSelectionScrollSpeed);
+    saveValue("invert_mouse_scroll",mInvertMouseScroll);
 
     //right edge
     saveValue("show_right_edge_line",mShowRightEdgeLine);
@@ -1474,6 +1485,7 @@ void Settings::Editor::doLoad()
     mHalfPageScroll = boolValue("half_page_scroll",false);
     mMouseWheelScrollSpeed = intValue("mouse_wheel_scroll_speed", 3);
     mMouseSelectionScrollSpeed = intValue("mouse_selection_scroll_speed",1);
+    mInvertMouseScroll = boolValue("invert_mouse_scroll", false);
 
 
     //right edge
