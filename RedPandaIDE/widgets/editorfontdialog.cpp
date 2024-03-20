@@ -29,7 +29,6 @@ void EditorFontDialog::on_chkMonoOnly_toggled(bool checked)
     QString savedFont = ui->fontComboBox->currentFont().family();
     ui->fontComboBox->setFontFilters(checked ? QFontComboBox::MonospacedFonts : QFontComboBox::AllFonts);
     ui->fontComboBox->setCurrentFont(QFont(savedFont));
-    ui->fontComboBox->adjustSize();
 }
 
 
