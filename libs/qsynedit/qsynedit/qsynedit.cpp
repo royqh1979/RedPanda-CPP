@@ -266,14 +266,14 @@ void QSynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
         if (CallEnsureCursorPosVisible)
             ensureCursorPosVisible();
     } else {
-      // Also call UpdateLastCaretX if the caret didn't move. Apps don't know
-      // anything about fLastCaretX and they shouldn't need to. So, to avoid any
-      // unwanted surprises, always update fLastCaretX whenever CaretXY is
-      // assigned to.
-      // Note to SynEdit developers: If this is undesirable in some obscure
-      // case, just save the value of fLastCaretX before assigning to CaretXY and
-      // restore it afterward as appropriate.
-      updateLastCaretX();
+        // Also call UpdateLastCaretX if the caret didn't move. Apps don't know
+        // anything about fLastCaretX and they shouldn't need to. So, to avoid any
+        // unwanted surprises, always update fLastCaretX whenever CaretXY is
+        // assigned to.
+        // Note to SynEdit developers: If this is undesirable in some obscure
+        // case, just save the value of fLastCaretX before assigning to CaretXY and
+        // restore it afterward as appropriate.
+        updateLastCaretX();
     }
 
 }
@@ -3063,8 +3063,8 @@ void QSynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
     int visibleX = displayX();
     if (visibleX < leftPos())
         setLeftPos(visibleX);
-    else if (visibleX >= viewWidth() + leftPos() && viewWidth()>0)
-        setLeftPos(visibleX - viewWidth() + 1);
+    else if (visibleX > viewWidth() + leftPos() && viewWidth()>0)
+        setLeftPos(visibleX - viewWidth() + mCharWidth);
     else
         setLeftPos(leftPos());
     // Make sure Y is visible

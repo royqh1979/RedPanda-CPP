@@ -61,6 +61,7 @@ Red Panda C++ Version 2.27
   - enhancement: "Mouse scroll direction" option in Options / Editor / General
   - change: Invert scroll direction in horizontal, like in vertical.
   - enhancement: Show type completion info after 'const' and 'volatile'
+  - fix: Caret unseen when move to a long line end by press END.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
