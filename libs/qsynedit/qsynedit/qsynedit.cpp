@@ -3064,7 +3064,10 @@ void QSynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
     if (visibleX < leftPos())
         setLeftPos(visibleX);
     else if (visibleX > viewWidth() + leftPos() && viewWidth()>0)
-        setLeftPos(visibleX - viewWidth() + mCharWidth);
+        if (viewWidth() >= 3*mCharWidth )
+            setLeftPos(visibleX - viewWidth() + 3*mCharWidth);
+        else
+            setLeftPos(visibleX - viewWidth() + mCharWidth);
     else
         setLeftPos(leftPos());
     // Make sure Y is visible
