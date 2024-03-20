@@ -1,5 +1,6 @@
 #include "editorfontdialog.h"
 #include "ui_editorfontdialog.h"
+#include <QAbstractItemView>
 
 EditorFontDialog::EditorFontDialog(QWidget *parent)
     : QDialog(parent)
@@ -28,6 +29,7 @@ void EditorFontDialog::on_chkMonoOnly_toggled(bool checked)
 {
     QString savedFont = ui->fontComboBox->currentFont().family();
     ui->fontComboBox->setFontFilters(checked ? QFontComboBox::MonospacedFonts : QFontComboBox::AllFonts);
+    ui->fontComboBox->view()->reset();
     ui->fontComboBox->setCurrentFont(QFont(savedFont));
 }
 

@@ -98,4 +98,5 @@ void DebugGeneralWidget::on_chkOnlyMono_stateChanged(int)
     } else {
         ui->cbFont->setFontFilters(QFontComboBox::FontFilter::AllFonts);
     }
+    ui->cbFont->view()->reset();
 }
