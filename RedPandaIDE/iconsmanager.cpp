@@ -308,6 +308,8 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
             } else if (statement->accessibility == StatementAccessibility::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_METHOD));
+            } else {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_METHOD));
             }
         } else {
             if (statement->accessibility == StatementAccessibility::Protected) {
@@ -329,6 +331,8 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
             } else if (statement->accessibility == StatementAccessibility::Public) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_VAR));
+            } else {
+                return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_VAR));
             }
         } else {
             if (statement->accessibility == StatementAccessibility::Protected) {

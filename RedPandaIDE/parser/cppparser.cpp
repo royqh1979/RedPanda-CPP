@@ -1328,7 +1328,7 @@ void CppParser::addProjectFile(const QString &fileName, bool needScan)
     //value.replace('/','\\'); // only accept full file names
 
     // Update project listing
-        mProjectFiles.insert(fileName);
+    mProjectFiles.insert(fileName);
 
     // Only parse given file
     if (needScan && !mPreprocessor.fileScanned(fileName)) {
@@ -1342,7 +1342,7 @@ PStatement CppParser::addInheritedStatement(const PStatement& derived, const PSt
     PStatement statement = addStatement(
                 derived,
                 inherit->fileName,
-                inherit->type, // "Type" is already in use
+                inherit->type,
                 inherit->command,
                 inherit->args,
                 inherit->noNameArgs,

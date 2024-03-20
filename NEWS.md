@@ -62,6 +62,7 @@ Red Panda C++ Version 2.27
   - change: Invert scroll direction in horizontal, like in vertical.
   - enhancement: Show type completion info after 'const' and 'volatile'
   - fix: Caret unseen when move to a long line end by press END.
+  - fix: No icons for inherited class private members.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
