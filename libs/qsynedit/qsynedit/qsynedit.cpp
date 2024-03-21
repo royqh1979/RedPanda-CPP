@@ -5768,6 +5768,7 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         break;
     case EditCommand::LineBreakAtEnd:
         beginEditing();
+        addLeftTopToUndo();
         addCaretToUndo();
         addSelectionToUndo();
         moveCaretToLineEnd(false, false);
