@@ -2249,8 +2249,8 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType)
             // function call, skip it
             mIndex=moveToEndOfStatement(mIndex,true);
         }
-    } else if (mTokenizer[mIndex]->text.startsWith('*')
-               || mTokenizer[mIndex]->text.startsWith('&')
+    } else if (mTokenizer[mIndex]->text == "*"
+               || mTokenizer[mIndex]->text == "&"
                || mTokenizer[mIndex]->text=="::"
                || tokenIsIdentifier(mTokenizer[mIndex]->text)
                    ) {
@@ -3930,8 +3930,8 @@ void CppParser::handleStructs(bool isTypedef)
                         int pos = mTokenizer[i]->text.indexOf('[');
                         command += mTokenizer[i]->text.mid(0,pos) + ' ';
                         args =  mTokenizer[i]->text.mid(pos);
-                    } else if (mTokenizer[i]->text.front() == '*'
-                               || mTokenizer[i]->text.front() == '&') { // do not add spaces after pointer operator
+                    } else if (mTokenizer[i]->text == "*"
+                               || mTokenizer[i]->text == "&") { // do not add spaces after pointer operator
                         command += mTokenizer[i]->text;
                     } else {
                         command += mTokenizer[i]->text + ' ';
@@ -4575,8 +4575,8 @@ void CppParser::internalParse(const QString &fileName)
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-//       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-//       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+       // mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+       // mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();

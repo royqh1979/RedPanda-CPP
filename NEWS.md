@@ -65,6 +65,9 @@ Red Panda C++ Version 2.27
   - fix: No icons for inherited class private members.
   - fix: Ctrl+Return insert linebreak shouldn't scroll unnecessarilly.
   - enhancement: Move caret to line begin would scroll to the begin if possible.
+  - fix: Filename in tables in the debug panel are not correctly eroded.
+  - enhancement: Tooltip info for the stacktrace table in the debug panel.
+  - fix: '*=' is treadted as '*' when parsing. 
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
