@@ -3443,9 +3443,15 @@ void MainWindow::updateTools()
                                    + LINE_BREAKER);
                         file.close();
                         if (item->pauseAfterExit) {
+                            QString sharedMemoryId = QUuid::createUuid().toString();
+                            QStringList execArgs = QStringList{
+                                QString::number(RPF_PAUSE_CONSOLE),
+                                sharedMemoryId,
+                                localizePath(file.fileName())
+                            };
                             executeFile(
                                         includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
-                                        {"1", localizePath(file.fileName())},
+                                        execArgs,
                                         workDir, file.fileName());
                         } else {
                             executeFile(
@@ -3456,9 +3462,15 @@ void MainWindow::updateTools()
                     }
                 } else {
                     if (item->pauseAfterExit) {
+                        QString sharedMemoryId = QUuid::createUuid().toString();
+                        QStringList execArgs = QStringList{
+                            QString::number(RPF_PAUSE_CONSOLE),
+                            sharedMemoryId,
+                            localizePath(program)
+                        };
                         executeFile(
                                     includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
-                                    QStringList{"1", program} + params,
+                                    execArgs + params,
                                     workDir, "");
                     } else {
                         executeFile(
