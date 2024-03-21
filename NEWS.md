@@ -63,6 +63,8 @@ Red Panda C++ Version 2.27
   - enhancement: Show type completion info after 'const' and 'volatile'
   - fix: Caret unseen when move to a long line end by press END.
   - fix: No icons for inherited class private members.
+  - fix: Ctrl+Return insert linebreak shouldn't scroll unnecessarilly.
+  - enhancement: Move caret to line begin would scroll to the begin if possible.
 
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

@@ -529,7 +529,7 @@ private:
     void ensureCursorPosVisibleEx(bool ForceToMiddle);
     void scrollWindow(int dx,int dy);
     void setInternalDisplayXY(const DisplayCoord& aPos);
-    void internalSetCaretXY(const BufferCoord& Value);
+    void internalSetCaretXY(const BufferCoord& Value, bool ensureCaretVisible = true);
     void internalSetCaretX(int Value);
     void internalSetCaretY(int Value);
     void setStatusChanged(StatusChanges changes);
@@ -574,9 +574,9 @@ private:
     void moveCaretHorz(int deltaX, bool isSelection);
     void moveCaretVert(int deltaY, bool isSelection);
     void moveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
-                               bool isSelection);
+                               bool isSelection, bool ensureCaretVisible = true);
     void moveCaretToLineStart(bool isSelection);
-    void moveCaretToLineEnd(bool isSelection);
+    void moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible = true);
     void doGotoBlockStart(bool isSelection);
     void doGotoBlockEnd(bool isSelection);
     void doGotoEditorStart(bool isSelection);
