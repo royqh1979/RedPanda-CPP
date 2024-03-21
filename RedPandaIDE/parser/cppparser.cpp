@@ -6150,15 +6150,27 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
             addMethodParameterStatement(words,mTokenizer[i]->line,functionStatement);
             i=skipAssignment(i,argEnd);
         } else if (mTokenizer[i]->text=="::") {
-            words.append(mTokenizer[i]->text);
+            int lastIdx=words.count()-1;
+            if (lastIdx>=0 && words[lastIdx]!="const") {
+                words[lastIdx]=words[lastIdx]+mTokenizer[i]->text;
+            } else
+                words.append(mTokenizer[i]->text);
             i++;
         } else if (mTokenizer[i]->text==',') {
            addMethodParameterStatement(words,mTokenizer[i]->line,functionStatement);
            i++;
            words.clear();
+        } else if (isIdentChar(mTokenizer[i]->text[0])) {
+            // identifier
+            int lastIdx=words.count()-1;
+            if (lastIdx>=0 && words[lastIdx].endsWith("::")) {
+                words[lastIdx]=words[lastIdx]+mTokenizer[i]->text;
+            } else
+                words.append(mTokenizer[i]->text);
+            i++;
         } else if (isWordChar(mTokenizer[i]->text[0])) {
-            QString cmd=mTokenizer[i]->text;
-            words.append(cmd);
+            // * &
+            words.append(mTokenizer[i]->text);
             i++;
         } else if (mTokenizer[i]->text.startsWith("[")) {
             if (!words.isEmpty()) {
