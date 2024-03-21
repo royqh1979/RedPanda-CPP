@@ -73,6 +73,7 @@ Red Panda C++ Version 2.27
   - fix: Option 'Pause after run in console' for tools doesn't work.
   - fix: Filename that contains '&' doesn't correctly displayed in the editor tab.
   - enhancement: Type induction for "auto &&" vars.
+  - enhancement: Syntax highlighting for c++ attributes.
   
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

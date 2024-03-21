@@ -20,6 +20,9 @@
 #include <QFont>
 #include <QDebug>
 
+#define DATA_KEY_INITIAL_DCHAR_SEQ "initialDCharSeq"
+#define DATA_KEY_IN_ATTRIBUTE "inAttribute"
+
 namespace QSynedit {
 
 static const QSet<QString> CppStatementKeyWords {
@@ -152,6 +155,21 @@ const QSet<QString> CppSyntaxer::Keywords {
 
     "nullptr",
 };
+
+const QSet<QString> CppSyntaxer::StandardAttributes {
+    "noreturn",
+    "carries_dependency",
+    "deprecated",
+    "fallthrough",
+    "nodiscard",
+    "maybe_unused",
+    "likely",
+    "unlikely",
+    "no_unique_address",
+    "assume",
+    "optimize_for_synchronized"
+};
+
 CppSyntaxer::CppSyntaxer(): Syntaxer()
 {
     mCharAttribute = std::make_shared<TokenAttribute>(SYNS_AttrCharacter,
@@ -291,6 +309,12 @@ bool CppSyntaxer::isCharNotFinished(int state)
 bool CppSyntaxer::isCharEscaping(int state)
 {
     return state == RangeState::rsCharEscaping;
+}
+
+bool CppSyntaxer::isInAttribute(const SyntaxState &state)
+{
+    return state.extraData.contains(DATA_KEY_IN_ATTRIBUTE)
+            && state.extraData[DATA_KEY_IN_ATTRIBUTE].toBool();
 }
 
 CppSyntaxer::TokenId CppSyntaxer::getTokenId()
@@ -652,6 +676,8 @@ void CppSyntaxer::procIdentifier()
         if (CppStatementKeyWords.contains(word)) {
             pushIndents(IndentType::Statement);
         }
+    } else if (isInAttribute(mRange) && StandardAttributes.contains(word)) {
+        mTokenId = TokenId::Key;
     } else {
         mTokenId = TokenId::Identifier;
     }
@@ -1002,7 +1028,7 @@ void CppSyntaxer::procRawString()
     mTokenId = TokenId::RawString;
     QString rawStringInitialDCharSeq;
     if (mRange.state == RangeState::rsRawString)
-        mRange.extraData = std::make_shared<QVariant>("");
+        mRange.extraData[DATA_KEY_INITIAL_DCHAR_SEQ] = "";
     while (mRun<mLineSize) {
         if (mRange.state!=RangeState::rsRawStringNotEscaping &&
                 (mLine[mRun].isSpace()
@@ -1019,16 +1045,16 @@ void CppSyntaxer::procRawString()
         case '(':
             if (mRange.state==RangeState::rsRawString) {
                 mRange.state = RangeState::rsRawStringNotEscaping;
-                mRange.extraData = std::make_shared<QVariant>(rawStringInitialDCharSeq);
+                mRange.extraData[DATA_KEY_INITIAL_DCHAR_SEQ] = rawStringInitialDCharSeq;
             }
             break;
         case ')':
             if (mRange.state == RangeState::rsRawStringNotEscaping) {
-                rawStringInitialDCharSeq = mRange.extraData->toString();
+                rawStringInitialDCharSeq = mRange.extraData[DATA_KEY_INITIAL_DCHAR_SEQ].toString();
                 if ( mLine.mid(mRun+1,rawStringInitialDCharSeq.length()) == rawStringInitialDCharSeq) {
                     mRun = mRun+rawStringInitialDCharSeq.length();
                     mRange.state = RangeState::rsRawStringEnd;
-                    mRange.extraData = nullptr;
+                    mRange.extraData.remove(DATA_KEY_INITIAL_DCHAR_SEQ);
                 }
             }
             break;
@@ -1137,7 +1163,16 @@ void CppSyntaxer::procSpace()
 
 void CppSyntaxer::procSquareClose()
 {
-    mRun+=1;
+    mRun++;
+    if (mRun < mLineSize && mLine[mRun]==']') {
+        if (mRange.extraData.contains(DATA_KEY_IN_ATTRIBUTE)
+                && mRange.extraData[DATA_KEY_IN_ATTRIBUTE].toBool()) {
+            mTokenId = TokenId::Symbol;
+            mRun++;
+            mRange.extraData.remove(DATA_KEY_IN_ATTRIBUTE);
+            return;
+        }
+    }
     mTokenId = TokenId::Symbol;
     mRange.bracketLevel--;
     if (mRange.bracketLevel<0)
@@ -1147,10 +1182,16 @@ void CppSyntaxer::procSquareClose()
 
 void CppSyntaxer::procSquareOpen()
 {
-    mRun+=1;
-    mTokenId = TokenId::Symbol;
-    mRange.bracketLevel++;
-    pushIndents(IndentType::Bracket);
+    mRun++;
+    if (mRun < mLineSize && mLine[mRun]=='[') {
+        mRun++;
+        mTokenId = TokenId::Symbol;
+        mRange.extraData[DATA_KEY_IN_ATTRIBUTE]=true;
+    } else{
+        mTokenId = TokenId::Symbol;
+        mRange.bracketLevel++;
+        pushIndents(IndentType::Bracket);
+    }
 }
 
 void CppSyntaxer::procStar()

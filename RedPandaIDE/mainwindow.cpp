@@ -86,6 +86,7 @@
 #include <QMimeType>
 #include <QToolTip>
 #include <QCompleter>
+#include <QUuid>
 
 #include "mainwindow.h"
 #include <QScrollBar>

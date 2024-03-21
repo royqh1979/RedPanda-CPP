@@ -90,12 +90,15 @@ public:
 
     static const QSet<QString> ValidIntegerSuffixes;
 
+    static const QSet<QString> StandardAttributes;
+
     bool isStringToNextLine(int state);
     bool isRawStringStart(int state);
     bool isRawStringNoEscape(int state);
     bool isRawStringEnd(int state);
     bool isCharNotFinished(int state);
     bool isCharEscaping(int state);
+    bool isInAttribute(const SyntaxState &state);
 
     TokenId getTokenId();
 private:

@@ -23,7 +23,7 @@
 #include <QMap>
 #include <QSet>
 #include <QVector>
-#include <QVector>
+#include <QVariant>
 #include "../types.h"
 
 namespace QSynedit {
@@ -57,7 +57,7 @@ struct SyntaxState {
     QVector<IndentInfo> indents; // indents stack (needed by auto indent)
     IndentInfo lastUnindent;
     bool hasTrailingSpaces;
-    std::shared_ptr<QVariant> extraData;
+    QMap<QString,QVariant> extraData;
 
     bool operator==(const SyntaxState& s2);
     IndentInfo getLastIndent();
