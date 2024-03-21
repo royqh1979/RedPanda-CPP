@@ -475,7 +475,7 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
     for (const PEditingArea& p:areaList) {
         int penWidth = std::max(1.0,std::round(mEdit->font().pixelSize() / 15.0));
         if (p->type == EditingAreaType::eatWaveUnderLine)
-            penWidth = std::max(1.0,std::round(mEdit->font().pixelSize() / 21.0));
+            penWidth = std::max(1.0,std::round(mEdit->font().pixelSize() / 15.0));
         if (p->beginX > mRight)
           continue;
         if (p->endX < mLeft)
@@ -509,7 +509,7 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
         }
             break;
         case EditingAreaType::eatWaveUnderLine: {
-            int maxOffset = 2*penWidth;
+            int maxOffset = 3*penWidth;
             int offset = maxOffset;
             int lastX=rc.left();
             int lastY=rc.bottom()-offset;
