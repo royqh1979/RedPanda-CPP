@@ -62,6 +62,12 @@ Red Panda C++ Version 2.27
   - change: Invert scroll direction in horizontal, like in vertical.
   - enhancement: Show type completion info after 'const' and 'volatile'
   - fix: Caret unseen when move to a long line end by press END.
+  - fix: No icons for inherited class private members.
+  - fix: Ctrl+Return insert linebreak shouldn't scroll unnecessarilly.
+  - enhancement: Move caret to line begin would scroll to the begin if possible.
+  - fix: Filename in tables in the debug panel are not correctly eroded.
+  - enhancement: Tooltip info for the stacktrace table in the debug panel.
+  - fix: '*=' is treadted as '*' when parsing. 
   - fix: Can't correctly retrieve function parameters type.
 
 Red Panda C++ Version 2.26

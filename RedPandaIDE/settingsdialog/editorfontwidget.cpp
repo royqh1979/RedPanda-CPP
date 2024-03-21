@@ -65,6 +65,7 @@ void EditorFontWidget::on_chkGutterOnlyMonospacedFonts_stateChanged(int)
     } else {
         ui->cbGutterFont->setFontFilters(QFontComboBox::FontFilter::AllFonts);
     }
+    ui->cbGutterFont->view()->reset();
 }
 
 void EditorFontWidget::on_btnAddFont_clicked()

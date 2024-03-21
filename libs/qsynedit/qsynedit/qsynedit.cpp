@@ -3061,9 +3061,14 @@ void QSynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
     });
     // Make sure X is visible
     int visibleX = displayX();
-    if (visibleX < leftPos())
-        setLeftPos(visibleX);
-    else if (visibleX > viewWidth() + leftPos() && viewWidth()>0)
+    if (visibleX < leftPos()) {
+        if (viewWidth() / 3 >visibleX)
+            setLeftPos(0);
+        else if (viewWidth() > tabWidth() + mCharWidth)
+            setLeftPos(std::max(0,visibleX - tabWidth()));
+        else
+            setLeftPos(visibleX);
+    } else if (visibleX > viewWidth() + leftPos() && viewWidth()>0)
         if (viewWidth() >= 3*mCharWidth )
             setLeftPos(visibleX - viewWidth() + 3*mCharWidth);
         else
@@ -3100,9 +3105,9 @@ void QSynEdit::setInternalDisplayXY(const DisplayCoord &aPos)
     decPaintLock();
 }
 
-void QSynEdit::internalSetCaretXY(const BufferCoord &Value)
+void QSynEdit::internalSetCaretXY(const BufferCoord &Value, bool ensureCaretVisible)
 {
-    setCaretXYEx(true, Value);
+    setCaretXYEx(ensureCaretVisible, Value);
 }
 
 void QSynEdit::internalSetCaretX(int Value)
@@ -4871,7 +4876,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     mLastCaretColumn = SaveLastCaretX;
 }
 
-void QSynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection)
+void QSynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection, bool ensureCaretVisible)
 {
     if (mOptions.testFlag(EditorOption::eoGroupUndo)) {
         mUndoList->addGroupBreak();
@@ -4884,7 +4889,7 @@ void QSynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCo
         setBlockEnd(ptAfter);
     } else
         setBlockBegin(ptAfter);
-    internalSetCaretXY(ptAfter);
+    internalSetCaretXY(ptAfter,ensureCaretVisible);
     decPaintLock();
 }
 
@@ -4912,7 +4917,7 @@ void QSynEdit::moveCaretToLineStart(bool isSelection)
     moveCaretAndSelection(caretXY(), BufferCoord{newX, mCaretY}, isSelection);
 }
 
-void QSynEdit::moveCaretToLineEnd(bool isSelection)
+void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
 {
     int vNewX;
     if (mOptions.testFlag(EditorOption::eoEnhanceEndKey)) {
@@ -4930,7 +4935,7 @@ void QSynEdit::moveCaretToLineEnd(bool isSelection)
     } else
         vNewX = displayLineText().length() + 1;
 
-    moveCaretAndSelection(caretXY(), BufferCoord{vNewX, mCaretY}, isSelection);
+    moveCaretAndSelection(caretXY(), BufferCoord{vNewX, mCaretY}, isSelection, ensureCaretVisible);
 }
 
 void QSynEdit::doGotoBlockStart(bool isSelection)
@@ -5763,9 +5768,10 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         break;
     case EditCommand::LineBreakAtEnd:
         beginEditing();
+        addLeftTopToUndo();
         addCaretToUndo();
         addSelectionToUndo();
-        moveCaretToLineEnd(false);
+        moveCaretToLineEnd(false, false);
         insertLine(true);
         endEditing();
         break;

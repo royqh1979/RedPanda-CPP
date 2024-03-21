@@ -1465,6 +1465,7 @@ QVariant BacktraceModel::data(const QModelIndex &index, int role) const
         return QVariant();
     switch (role) {
     case Qt::DisplayRole:
+    case Qt::ToolTipRole:
         switch (index.column()) {
         case 0:
             return trace->funcname;

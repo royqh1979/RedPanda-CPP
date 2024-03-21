@@ -82,4 +82,5 @@ void ExecutorProblemSetWidget::on_chkOnlyMonospaced_stateChanged(int )
     } else {
         ui->cbFont->setFontFilters(QFontComboBox::FontFilter::AllFonts);
     }
+    ui->cbFont->view()->reset();
 }
