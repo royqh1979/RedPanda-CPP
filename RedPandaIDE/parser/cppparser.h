@@ -673,6 +673,7 @@ private:
     int indexOfNextColon(int index);
     int indexOfNextLeftBrace(int index);
     int indexPassParenthesis(int index);
+    int indexOfNextRightParenthesis(int index);
 //    int indexPassBraces(int index);
     int skipAssignment(int index, int endIndex);
     void skipNextSemicolon(int index);
@@ -684,7 +685,7 @@ private:
                                  QString& typeSuffix,
                                  QString& args) const;
     QString expandMacro(const QString& text) const;
-
+    static QStringList splitExpression(const QString& expr);
 private:
     int mParserId;
     ParserLanguage mLanguage;

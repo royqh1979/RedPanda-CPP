@@ -4193,8 +4193,12 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                         && !(addedVar->properties & StatementProperty::spFunctionPointer)
                         && AutoTypes.contains(addedVar->type)) {
                     //handle e.g.: for(auto x:vec)
-                    QStringList phraseExpression;
-                    phraseExpression.append(mTokenizer[mIndex+1]->text);
+                    int endIndex = indexOfNextRightParenthesis(mIndex+1);
+                    QString expressionText;
+                    for (int i=mIndex+1;i<endIndex;i++) {
+                        expressionText+=mTokenizer[i]->text;
+                    }
+                    QStringList phraseExpression = splitExpression(expressionText);
                     int pos = 0;
                     PEvalStatement aliasStatement = doEvalExpression(mCurrentFile,
                                             phraseExpression,
@@ -4212,6 +4216,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                                 addedVar->type = type;
                         }
                     }
+                    mIndex=endIndex;
                 }
                 addedVar.reset();
                 bool should_exit=false;
@@ -4249,21 +4254,11 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                 int pos = 0;
 
                 int endIndex = skipAssignment(mIndex, tokenCount);
-                QStringList phraseExpression;
+                QString expressionText;
                 for (int i=mIndex+1;i<endIndex;i++) {
-                    QString cmd = mTokenizer[i]->text;
-                    if (cmd.length()>1 && cmd.endsWith(".")) {
-                        phraseExpression.append(cmd.left(cmd.length()-1));
-                        phraseExpression.append(".");
-                    } else if (cmd.length()>2 && cmd.endsWith("->")) {
-                        phraseExpression.append(cmd.left(cmd.length()-2));
-                        phraseExpression.append("->");
-                    } else if (cmd.length()>2 && cmd.endsWith("::")) {
-                        phraseExpression.append(cmd.left(cmd.length()-2));
-                        phraseExpression.append("::");
-                    } else
-                        phraseExpression.append(cmd);
+                    expressionText.append(mTokenizer[i]->text);
                 }
+                QStringList phraseExpression = splitExpression(expressionText);
                 PEvalStatement aliasStatement = doEvalExpression(mCurrentFile,
                                         phraseExpression,
                                         pos,
@@ -4349,21 +4344,11 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic)
                     && AutoTypes.contains(addedVar->type)) {
                 int pos = 0;
                 int endIndex = mTokenizer[mIndex]->matchIndex;
-                QStringList phraseExpression;
+                QString expressionText;
                 for (int i=mIndex+1;i<endIndex;i++) {
-                    QString cmd = mTokenizer[i]->text;
-                    if (cmd.length()>1 && cmd.endsWith(".")) {
-                        phraseExpression.append(cmd.left(cmd.length()-1));
-                        phraseExpression.append(".");
-                    } else if (cmd.length()>2 && cmd.endsWith("->")) {
-                        phraseExpression.append(cmd.left(cmd.length()-2));
-                        phraseExpression.append("->");
-                    } else if (cmd.length()>2 && cmd.endsWith("::")) {
-                        phraseExpression.append(cmd.left(cmd.length()-2));
-                        phraseExpression.append("::");
-                    } else
-                        phraseExpression.append(cmd);
+                    expressionText.append(mTokenizer[i]->text);
                 }
+                QStringList phraseExpression = splitExpression(expressionText);
                 PEvalStatement aliasStatement = doEvalExpression(mCurrentFile,
                                         phraseExpression,
                                         pos,
@@ -6516,6 +6501,24 @@ int CppParser::indexPassParenthesis(int index)
     return index;
 }
 
+int CppParser::indexOfNextRightParenthesis(int index)
+{
+    int tokenCount = mTokenizer.tokenCount();
+    while (index<tokenCount) {
+        QString s =mTokenizer[index]->text;
+        switch(s[0].unicode()) {
+        case ')':
+            return index;
+        case '(':
+            index = mTokenizer[index]->matchIndex+1;
+            break;
+        default:
+            index++;
+        }
+    }
+    return index;
+}
+
 //int CppParser::indexPassBraces(int index)
 //{
 //    int tokenCount = mTokenizer.tokenCount();
@@ -6686,6 +6689,24 @@ QString CppParser::expandMacro(const QString &text) const
 {
     QSet<QString> usedMacros;
     return mPreprocessor.expandMacros(text, usedMacros);
+}
+
+QStringList CppParser::splitExpression(const QString &expr)
+{
+    QStringList result;
+    QSynedit::CppSyntaxer syntaxer;
+    syntaxer.resetState();
+    QStringList lines = textToLines(expr);
+    for(int i=0;i<lines.length();i++) {
+        syntaxer.setLine(lines[i],i+1);
+        while(!syntaxer.eol()) {
+            if (syntaxer.getTokenAttribute()->tokenType()!=QSynedit::TokenType::Comment
+                    && syntaxer.getTokenAttribute()->tokenType()!=QSynedit::TokenType::Space)
+                result.append(syntaxer.getToken());
+            syntaxer.next();
+        }
+    }
+    return result;
 }
 
 const QSet<QString> &CppParser::projectFiles() const

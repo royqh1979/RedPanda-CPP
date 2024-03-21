@@ -69,7 +69,8 @@ Red Panda C++ Version 2.27
   - enhancement: Tooltip info for the stacktrace table in the debug panel.
   - fix: '*=' is treadted as '*' when parsing. 
   - fix: Can't correctly retrieve function parameters type.
-
+  - fix: Auto type induction for expression contains '[]' are not correct.
+  
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
   - change: Use ctrl+mouseMove event to highlight jumpable symbols (instead of ctrl+tooltip).
