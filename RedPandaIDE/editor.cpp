@@ -5467,17 +5467,18 @@ void Editor::updateCaption(const QString& newCaption) {
     int index = mParentPageControl->indexOf(this);
     if (index==-1)
         return;
+    QString caption;
     if (newCaption.isEmpty()) {
-        QString caption = QFileInfo(mFilename).fileName();
+        caption = QFileInfo(mFilename).fileName();
         if (this->modified()) {
             caption.append("[*]");
         }
         if (this->readOnly()) {
             caption.append("["+tr("Readonly")+"]");
-        }
-        mParentPageControl->setTabText(index,caption);
+        }        
     } else {
-        mParentPageControl->setTabText(index,newCaption);
+        caption = newCaption;
     }
-
+    caption = caption.replace("&","&&");
+    mParentPageControl->setTabText(index,caption);
 }

@@ -71,6 +71,7 @@ Red Panda C++ Version 2.27
   - fix: Can't correctly retrieve function parameters type.
   - fix: Auto type induction for expression contains '[]' are not correct.
   - fix: Option 'Pause after run in console' for tools doesn't work.
+  - fix: Filename that contains '&' doesn't correctly displayed in the editor tab.
   
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
