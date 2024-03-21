@@ -569,12 +569,9 @@ void MainWindow::updateEditorActions()
     updateEditorActions(e);
 }
 
-void MainWindow::updateEditorActions(const Editor *e)
+void MainWindow::updateEncodingActions(const Editor *e)
 {
-    //it's not a compile action, but put here for convinience
-    ui->actionSaveAll->setEnabled(
-                (mProject!=nullptr || mEditorList->pageCount()>0));
-    if (e==nullptr || !e->hasFocus()) {
+    if (e==nullptr) {
         ui->actionAuto_Detect->setEnabled(false);
         ui->actionEncode_in_ANSI->setEnabled(false);
         ui->actionEncode_in_UTF_8->setEnabled(false);
@@ -583,6 +580,30 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionConvert_to_ANSI->setEnabled(false);
         ui->actionConvert_to_UTF_8->setEnabled(false);
         ui->actionConvert_to_UTF_8_BOM->setEnabled(false);
+    } else {
+        ui->actionAuto_Detect->setEnabled(true);
+        ui->actionEncode_in_ANSI->setEnabled(true);
+        ui->actionEncode_in_UTF_8->setEnabled(true);
+        ui->actionEncode_in_UTF_8_BOM->setEnabled(true);
+        mMenuEncoding->setEnabled(true);
+        ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT
+                && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
+        ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
+        ui->actionConvert_to_UTF_8_BOM->setEnabled(e->encodingOption()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
+    }
+}
+
+void MainWindow::disableEncodingActions()
+{
+    updateEncodingActions(nullptr);
+}
+
+void MainWindow::updateEditorActions(const Editor *e)
+{
+    //it's not a compile action, but put here for convinience
+    ui->actionSaveAll->setEnabled(
+                (mProject!=nullptr || mEditorList->pageCount()>0));
+    if (e==nullptr || !e->hasFocus()) {
         ui->actionCopy->setEnabled(false);
         ui->actionCut->setEnabled(false);
         ui->actionFoldAll->setEnabled(false);
@@ -664,16 +685,6 @@ void MainWindow::updateEditorActions(const Editor *e)
 
         ui->actionMove_To_Other_View->setEnabled(false);
     } else {
-        ui->actionAuto_Detect->setEnabled(true);
-        ui->actionEncode_in_ANSI->setEnabled(true);
-        ui->actionEncode_in_UTF_8->setEnabled(true);
-        ui->actionEncode_in_UTF_8_BOM->setEnabled(true);
-        mMenuEncoding->setEnabled(true);
-        ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT
-                && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
-        ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
-        ui->actionConvert_to_UTF_8_BOM->setEnabled(e->encodingOption()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
-
         ui->actionCopy->setEnabled(true);
         ui->actionCut->setEnabled(true);
         ui->actionFoldAll->setEnabled(e->document()->count()>0);
@@ -757,6 +768,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionMove_To_Other_View->setEnabled(editorList()->pageCount()>1);
     }
 
+    updateEncodingActions(e);
     updateCompileActions(e);
     updateCompilerSet(e);
 }
@@ -3613,7 +3625,9 @@ void MainWindow::buildEncodingMenu()
         });
     }
 
-    mMenuEncoding = new QMenu();
+    mMenuEncoding = new QMenu(this);
+    connect(mMenuEncoding, &QMenu::aboutToHide,
+            this, &MainWindow::disableEncodingActions);
     mMenuEncoding->setTitle(tr("File Encoding"));
     mMenuEncoding->addAction(ui->actionAuto_Detect);
     mMenuEncoding->addAction(ui->actionEncode_in_ANSI);
@@ -3995,7 +4009,10 @@ void MainWindow::onDebugConsoleContextMenu(const QPoint &pos)
 
 void MainWindow::onFileEncodingContextMenu(const QPoint &pos)
 {
-    mMenuEncoding->exec(mFileEncodingStatus->mapToGlobal(pos));
+    Editor * e = mEditorList->getEditor();
+    updateEncodingActions(e);
+    if (mMenuEncoding->isEnabled())
+        mMenuEncoding->exec(mFileEncodingStatus->mapToGlobal(pos));
 }
 
 void MainWindow::onFilesViewContextMenu(const QPoint &pos)

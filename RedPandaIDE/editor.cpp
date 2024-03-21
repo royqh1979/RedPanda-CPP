@@ -691,7 +691,7 @@ void Editor::focusOutEvent(QFocusEvent *event)
     //pMainWindow->updateClassBrowserForEditor(nullptr);
     if (!pMainWindow->isQuitting()) {
         pMainWindow->functionTip()->hide();
-        pMainWindow->updateEditorActions();
+        pMainWindow->updateEditorActions(nullptr);
     }
 }
 
