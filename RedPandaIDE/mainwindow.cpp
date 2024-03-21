@@ -205,10 +205,14 @@ MainWindow::MainWindow(QWidget *parent)
     m=ui->tblBreakpoints->selectionModel();
     ui->tblBreakpoints->setModel(mDebugger->breakpointModel().get());
     delete m;
+    ui->tblBreakpoints->setTextElideMode(Qt::ElideRight);
+    ui->tblBreakpoints->setWordWrap(false);
 
     m=ui->tblStackTrace->selectionModel();
     ui->tblStackTrace->setModel(mDebugger->backtraceModel().get());
     delete m;
+    ui->tblStackTrace->setTextElideMode(Qt::ElideRight);
+    ui->tblStackTrace->setWordWrap(false);
 
     m=ui->watchView->selectionModel();
     ui->watchView->setModel(mDebugger->watchModel().get());
