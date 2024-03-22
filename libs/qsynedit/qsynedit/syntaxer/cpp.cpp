@@ -116,7 +116,7 @@ const QSet<QString> CppSyntaxer::Keywords {
     "concept",
     "consteval",
     "constinit",
-    "co_wait",
+    "co_await",
     "co_return",
     "co_yield",
     "reflexpr",
