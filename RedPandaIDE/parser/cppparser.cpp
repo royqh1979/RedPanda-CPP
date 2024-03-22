@@ -1397,6 +1397,13 @@ PStatement CppParser::addStatement(const PStatement& parent,
         newType += newCommand.front();
         newCommand.remove(0,1); // remove first
     }
+    QString templateSpecializationParams;
+    int pos = newCommand.indexOf("<");
+    if (pos>0 && !newCommand.startsWith("operator<")) {
+        templateSpecializationParams = newCommand.mid(pos);
+        newCommand = newCommand.left(pos);
+        qDebug()<<newCommand<<templateSpecializationParams;
+    }
     newCommand.squeeze();
 //    if (newCommand.startsWith("::") && parent && kind!=StatementKind::skBlock ) {
 //        qDebug()<<command<<fileName<<line<<kind<<parent->fullName;
@@ -1437,6 +1444,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
     result->args = args;
     result->noNameArgs = noNameArgs;
     result->value = value;
+    result->templateSpecializationParams = templateSpecializationParams;
     result->kind = kind;
     result->scope = scope;
     result->accessibility = accessibility;
@@ -1457,7 +1465,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
     if (scope == StatementScope::Local)
         result->fullName =  newCommand;
     else
-        result->fullName =  getFullStatementName(newCommand, parent);
+        result->fullName =  getFullStatementName(newCommand + templateSpecializationParams, parent);
     result->usageCount = -1;
 
     result->args.squeeze();
@@ -4560,8 +4568,8 @@ void CppParser::internalParse(const QString &fileName)
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-       // mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-       // mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();

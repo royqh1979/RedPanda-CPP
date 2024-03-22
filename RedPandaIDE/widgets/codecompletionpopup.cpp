@@ -296,7 +296,7 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
             && (fileName == statement->fileName))
         return;
     mAddedStatements.insert(statement->command);
-    if (statement->kind == StatementKind::skUserCodeSnippet || !statement->fullName.contains("<"))
+    if (statement->kind == StatementKind::skUserCodeSnippet || !statement->command.contains("<"))
         mFullCompletionStatementList.append(statement);
 }
 

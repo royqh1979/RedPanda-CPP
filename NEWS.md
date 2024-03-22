@@ -74,6 +74,7 @@ Red Panda C++ Version 2.27
   - fix: Filename that contains '&' doesn't correctly displayed in the editor tab.
   - enhancement: Type induction for "auto &&" vars.
   - enhancement: Syntax highlighting for c++ attributes.
+  - enhancement: Show "std::function" in the completion list.
   
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
