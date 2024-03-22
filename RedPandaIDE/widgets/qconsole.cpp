@@ -795,6 +795,8 @@ void QConsole::loadCommandFromHistory()
         mCommand = mCommandHistory[mHistoryIndex];
     else
         mCommand = "";
+    if (mHistoryIndex>mCommandHistory.length())
+        mHistoryIndex=mCommandHistory.length();
     QString lastLine = mContents.getLastLine();
     int len=mCurrentEditableLine.length();
     lastLine.remove(lastLine.length()-len,INT_MAX);
