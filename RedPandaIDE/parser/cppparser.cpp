@@ -1402,7 +1402,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
     if (pos>0 && !newCommand.startsWith("operator<")) {
         templateSpecializationParams = newCommand.mid(pos);
         newCommand = newCommand.left(pos);
-        qDebug()<<newCommand<<templateSpecializationParams;
     }
     newCommand.squeeze();
 //    if (newCommand.startsWith("::") && parent && kind!=StatementKind::skBlock ) {
