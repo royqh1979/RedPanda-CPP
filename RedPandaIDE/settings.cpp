@@ -1461,7 +1461,7 @@ void Settings::Editor::doLoad()
     mScrollPastEol = boolValue("scroll_past_eol", false);
     mHalfPageScroll = boolValue("half_page_scroll",false);
     mMouseWheelScrollSpeed = intValue("mouse_wheel_scroll_speed", 3);
-    mMouseSelectionScrollSpeed = intValue("mouse_selection_scroll_speed",1);
+    mMouseSelectionScrollSpeed = intValue("mouse_selection_scroll_speed",10);
 
 
     //right edge

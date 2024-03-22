@@ -1771,11 +1771,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
     }
     if (scrollY != 0) {
         int y;
-        //qDebug()<<mScrollDeltaY;
-        if (QApplication::queryKeyboardModifiers().testFlag(Qt::ShiftModifier))
-          setTopPos(mTopPos + scrollY * mLinesInWindow * mTextHeight);
-        else
-          setTopPos(mTopPos + scrollY * mMouseSelectionScrollSpeed * mTextHeight);
+        setTopPos(mTopPos + scrollY * mMouseSelectionScrollSpeed);
         y = yposToRow(0);
         if (scrollY > 0)  // scrolling down?
             y+=mLinesInWindow - 1;
@@ -2537,7 +2533,7 @@ void QSynEdit::computeCaret()
 
     DisplayCoord vCaretNearestPos = pixelsToNearestGlyphPos(x, y);
     vCaretNearestPos.row = minMax(vCaretNearestPos.row, 1, displayLineCount());
-    setInternalDisplayXY(vCaretNearestPos);
+    setInternalDisplayXY(vCaretNearestPos, false);
 }
 
 void QSynEdit::computeScroll(bool isDragging)
@@ -2954,17 +2950,11 @@ void QSynEdit::decPaintLock()
     Q_ASSERT(mPaintLock > 0);
     mPaintLock--;
     if (mPaintLock == 0 ) {
-        bool scrollbarUpdated = false;
         if (mStateFlags.testFlag(StateFlag::sfHScrollbarChanged)) {
             updateHScrollbar();
-            scrollbarUpdated = true;
         }
         if (mStateFlags.testFlag(StateFlag::sfVScrollbarChanged)) {
             updateVScrollbar();
-            scrollbarUpdated = true;
-        }
-        if (scrollbarUpdated) {
-            ensureCursorPosVisible();
         }
         if (mStateFlags.testFlag(StateFlag::sfCaretChanged))
             updateCaret();
@@ -3079,10 +3069,10 @@ void QSynEdit::scrollWindow(int dx, int dy)
     verticalScrollBar()->setValue(ny);
 }
 
-void QSynEdit::setInternalDisplayXY(const DisplayCoord &aPos)
+void QSynEdit::setInternalDisplayXY(const DisplayCoord &aPos, bool ensureCaretVisible)
 {
     incPaintLock();
-    internalSetCaretXY(displayToBufferPos(aPos));
+    internalSetCaretXY(displayToBufferPos(aPos), ensureCaretVisible);
     decPaintLock();
 }
 

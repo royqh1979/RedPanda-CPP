@@ -528,7 +528,7 @@ private:
     void ensureCursorPosVisible();
     void ensureCursorPosVisibleEx(bool ForceToMiddle);
     void scrollWindow(int dx,int dy);
-    void setInternalDisplayXY(const DisplayCoord& aPos);
+    void setInternalDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
     void internalSetCaretXY(const BufferCoord& Value, bool ensureCaretVisible = true);
     void internalSetCaretX(int Value);
     void internalSetCaretY(int Value);
