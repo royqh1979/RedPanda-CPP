@@ -1788,7 +1788,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
         auto action = finally([this]{
             decPaintLock();
         });
-        internalSetCaretXY(vCaret);
+        internalSetCaretXY(vCaret, false);
 
         // if MouseCapture is True we're changing selection. otherwise we're dragging
         if (isDragging) {
@@ -1805,8 +1805,6 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
     } else  {
         mScrollTimer->singleShot(20,this,&QSynEdit::onScrollTimeout);
     }
-
-    //    computeScroll(isDragging);
 }
 
 void QSynEdit::beginEditing()
