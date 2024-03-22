@@ -345,6 +345,7 @@ void initParser()
 
     AutoTypes.insert("auto");
     AutoTypes.insert("auto &");
+    AutoTypes.insert("auto &&");
     AutoTypes.insert("const auto");
     AutoTypes.insert("const auto &");
 

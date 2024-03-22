@@ -609,12 +609,12 @@ int compareFileModifiedTime(const QString &filename1, const QString &filename2)
 }
 
 
-void inflateRect(QRect &rect, int delta)
+void inflateRect(QRectF &rect, float delta)
 {
     inflateRect(rect,delta,delta);
 }
 
-void inflateRect(QRect &rect, int dx, int dy)
+void inflateRect(QRectF &rect, float dx, float dy)
 {
     rect.setLeft(rect.left()-dx);
     rect.setRight(rect.right()+dx);

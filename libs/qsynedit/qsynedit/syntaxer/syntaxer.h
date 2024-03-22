@@ -23,7 +23,7 @@
 #include <QMap>
 #include <QSet>
 #include <QVector>
-#include <QVector>
+#include <QVariant>
 #include "../types.h"
 
 namespace QSynedit {
@@ -57,7 +57,7 @@ struct SyntaxState {
     QVector<IndentInfo> indents; // indents stack (needed by auto indent)
     IndentInfo lastUnindent;
     bool hasTrailingSpaces;
-    std::shared_ptr<QVariant> extraData;
+    QMap<QString,QVariant> extraData;
 
     bool operator==(const SyntaxState& s2);
     IndentInfo getLastIndent();
@@ -122,7 +122,7 @@ public:
     Syntaxer(const Syntaxer&)=delete;
     Syntaxer& operator=(const Syntaxer&)=delete;
 
-    const QMap<QString, PTokenAttribute>& attributes() const;
+    virtual QMap<QString, PTokenAttribute> attributes() const;
 
     const QSet<QChar>& wordBreakChars() const;
 
@@ -141,9 +141,8 @@ public:
     virtual bool isIdentChar(const QChar& ch) const;
     virtual bool isIdentStartChar(const QChar& ch) const;
 
-    virtual bool getTokenFinished() const = 0;
-    virtual bool isLastLineCommentNotFinished(int state) const = 0;
-    virtual bool isLastLineStringNotFinished(int state) const = 0;
+    virtual bool isCommentNotFinished(int state) const = 0;
+    virtual bool isStringNotFinished(int state) const = 0;
     virtual bool isDocstringNotFinished(int /* state */) const { return false; }
     virtual bool eol() const = 0;
     virtual SyntaxState getState() const = 0;
@@ -167,12 +166,13 @@ public:
     virtual bool supportBraceLevel();
     virtual bool isSpaceChar(const QChar& ch);
     virtual bool isWordBreakChar(const QChar& ch);
-    bool enabled() const;
-    void setEnabled(bool value);
     virtual PTokenAttribute getAttribute(const QString& name) const;
     virtual QString commentSymbol();
     virtual QString blockCommentBeginSymbol();
     virtual QString blockCommentEndSymbol();
+
+    virtual bool supportFolding() = 0;
+    virtual bool needsLineState() = 0;
 
 
 protected:
@@ -189,11 +189,10 @@ protected:
 
 private:
     QMap<QString,PTokenAttribute> mAttributes;
-    bool mEnabled;
     QSet<QChar> mWordBreakChars;
 };
 
 using PSyntaxer = std::shared_ptr<Syntaxer>;
 using SyntaxerList = QVector<PSyntaxer>;
 }
-#endif // SYNHIGHLIGTERBASE_H
+#endif // QSYNEDIT_SYNTAXER_H

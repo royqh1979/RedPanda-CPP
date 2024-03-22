@@ -344,7 +344,7 @@ void ASMSyntaxer::UnknownProc()
     mTokenID = TokenId::Unknown;
 }
 
-bool ASMSyntaxer::isIdentStartChar(const QChar &ch)
+bool ASMSyntaxer::isIdentStartChar(const QChar &ch) const
 {
     if (ch == '_') {
         return true;
@@ -1718,19 +1718,14 @@ void ASMSyntaxer::setLine(const QString &newLine, int lineNumber)
     next();
 }
 
-bool ASMSyntaxer::getTokenFinished() const
+bool ASMSyntaxer::isCommentNotFinished(int /*state*/) const
 {
-    return true;
+    return false;
 }
 
-bool ASMSyntaxer::isLastLineCommentNotFinished(int /*state*/) const
+bool ASMSyntaxer::isStringNotFinished(int /*state*/) const
 {
-    return true;
-}
-
-bool ASMSyntaxer::isLastLineStringNotFinished(int /*state*/) const
-{
-    return true;
+    return false;
 }
 
 SyntaxState ASMSyntaxer::getState() const
@@ -1748,6 +1743,16 @@ void ASMSyntaxer::setState(const SyntaxState&)
 void ASMSyntaxer::resetState()
 {
     mHasTrailingSpaces = false;
+}
+
+bool ASMSyntaxer::supportFolding()
+{
+    return false;
+}
+
+bool ASMSyntaxer::needsLineState()
+{
+    return true;
 }
 
 QSet<QString> ASMSyntaxer::keywords()

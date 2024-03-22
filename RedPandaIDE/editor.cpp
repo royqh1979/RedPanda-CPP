@@ -50,7 +50,7 @@
 #include <QScrollBar>
 #include <QScreen>
 #include "iconsmanager.h"
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include "editorlist.h"
 #include <QDebug>
 #include "project.h"
@@ -94,6 +94,15 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     QFileInfo fileInfo(mFilename);
     QSynedit::PSyntaxer syntaxer;
+    syntaxer = syntaxerManager.getSyntaxer(mFilename);
+    if (syntaxer) {
+        setSyntaxer(syntaxer);
+        setFormatter(syntaxerManager.getFormatter(syntaxer->language()));
+        setUseCodeFolding(true);
+    } else {
+        setUseCodeFolding(false);
+    }
+
     if (mProject && mEncodingOption==ENCODING_PROJECT) {
         mEncodingOption=mProject->options().encoding;
     }
@@ -107,15 +116,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
                                   e.reason());
         }
     }
-    syntaxer = syntaxerManager.getSyntaxer(mFilename);
     resolveAutoDetectEncodingOption();
-    if (syntaxer) {
-        setSyntaxer(syntaxer);
-        setFormatter(syntaxerManager.getFormatter(syntaxer->language()));
-        setUseCodeFolding(true);
-    } else {
-        setUseCodeFolding(false);
-    }
 
     if (mProject) {
         if (syntaxer && syntaxer->language() == QSynedit::ProgrammingLanguage::CPP)
@@ -282,14 +283,11 @@ void Editor::loadFile(QString filename) {
     default:
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
     }
-    if (syntaxer()) {
-        reparse(true);
-        if (pSettings->editor().syntaxCheckWhenLineChanged()) {
-            checkSyntaxInBack();
-        }
-        reparseTodo();
+    reparse(true);
+    if (pSettings->editor().syntaxCheckWhenLineChanged()) {
+        checkSyntaxInBack();
     }
-
+    reparseTodo();
     saveAutoBackup();
 }
 
@@ -605,15 +603,13 @@ void Editor::undoSymbolCompletion(int pos)
 {
     QSynedit::PTokenAttribute attr;
     QString token;
-    bool tokenFinished;
+    QSynedit::SyntaxState syntaxState;
 
-    if (!syntaxer())
-        return;
     if (!pSettings->editor().removeSymbolPairs())
         return;
-    if (!getTokenAttriAtRowCol(caretXY(), token, tokenFinished, attr))
+    if (!getTokenAttriAtRowCol(caretXY(), token, attr, syntaxState))
         return;
-    if ((attr->tokenType() == QSynedit::TokenType::Comment) && (!tokenFinished))
+    if (syntaxer()->isCommentNotFinished(syntaxState.state))
         return ;
     //convert caret x to string index;
     pos--;
@@ -693,8 +689,10 @@ void Editor::focusOutEvent(QFocusEvent *event)
 {
     QSynEdit::focusOutEvent(event);
     //pMainWindow->updateClassBrowserForEditor(nullptr);
-    if (!pMainWindow->isQuitting())
+    if (!pMainWindow->isQuitting()) {
         pMainWindow->functionTip()->hide();
+        pMainWindow->updateEditorActions(nullptr);
+    }
 }
 
 void Editor::keyPressEvent(QKeyEvent *event)
@@ -736,82 +734,73 @@ void Editor::keyPressEvent(QKeyEvent *event)
             clearUserCodeInTabStops();
         } else {
             QString s = lineText().mid(0,caretX()-1).trimmed();
-            if (syntaxer()) {
-                if (caretY()==1) {
-                    syntaxer()->resetState();
-                } else {
-                    syntaxer()->setState(document()->getSyntaxState(caretY()-2));
-                }
-                syntaxer()->setLine(s,caretY());
-                syntaxer()->nextToEol();
-                int state = syntaxer()->getState().state;
-                if (syntaxer()->isLastLineCommentNotFinished(state)) {
-                    if (s=="/**") { //javadoc style docstring
-                        s = lineText().mid(caretX()-1).trimmed();
-                        if (s=="*/") {
-                            QSynedit::BufferCoord p = caretXY();
-                            setBlockBegin(p);
-                            p.ch = lineText().length()+1;
-                            setBlockEnd(p);
-                            setSelText("");
+            QSynedit::SyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
+            if (syntaxer()->isCommentNotFinished(state.state)) {
+                if (s=="/**") { //javadoc style docstring
+                    s = lineText().mid(caretX()-1).trimmed();
+                    if (s=="*/") {
+                        QSynedit::BufferCoord p = caretXY();
+                        setBlockBegin(p);
+                        p.ch = lineText().length()+1;
+                        setBlockEnd(p);
+                        setSelText("");
+                    }
+                    handled = true;
+                    QStringList insertString;
+                    insertString.append("");
+                    PStatement function;
+                    if (mParser)
+                        function = mParser->findFunctionAt(mFilename,caretY()+1);
+                    if (function) {
+                        QStringList params;
+                        QString funcName = function->command;
+                        bool isVoid = (function->type  == "void");
+                        foreach (const PStatement& child, function->children) {
+                            if (child->kind == StatementKind::skParameter)
+                                params.append(child->command);
                         }
-                        handled = true;
-                        QStringList insertString;
-                        insertString.append("");
-                        PStatement function;
-                        if (mParser)
-                            function = mParser->findFunctionAt(mFilename,caretY()+1);
-                        if (function) {
-                            QStringList params;
-                            QString funcName = function->command;
-                            bool isVoid = (function->type  == "void");
-                            foreach (const PStatement& child, function->children) {
-                                if (child->kind == StatementKind::skParameter)
-                                    params.append(child->command);
-                            }
-                            insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
-                            if (!params.isEmpty())
-                                insertString.append(" * ");
-                            foreach (const QString& param, params) {
-                                insertString.append(QString(" * @param %1 %2")
-                                                    .arg(param, USER_CODE_IN_INSERT_POS));
-                            }
-                            if (!isVoid) {
-                                insertString.append(" * ");
-                                insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
-                            }
-                            insertString.append(" */");
-        //                } else if (caretY()==1) { /* file header */
-        //                    insertString.append(QString(" * @file %1<SOURCEPATH>%2")
-        //                                        .arg(USER_CODE_IN_REPL_POS_BEGIN)
-        //                                        .arg(USER_CODE_IN_REPL_POS_END));
-        //                    insertString.append(QString(" * @brief: ")+ USER_CODE_IN_INSERT_POS);
-        //                    insertString.append(QString(" * @version: ")+ USER_CODE_IN_INSERT_POS);
-        //                    insertString.append(QString(" * @copyright: ")+ USER_CODE_IN_INSERT_POS);
-        //                    insertString.append(QString(" * @author: ")+ USER_CODE_IN_INSERT_POS);
-        //                    insertString.append(" * @date: <DATETIME>");
-        //                    insertString.append(" * ");
-        //                    insertString.append(" **/");
-                        } else {
-                            insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
-                            insertString.append(" */");
+                        insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
+                        if (!params.isEmpty())
+                            insertString.append(" * ");
+                        foreach (const QString& param, params) {
+                            insertString.append(QString(" * @param %1 %2")
+                                                .arg(param, USER_CODE_IN_INSERT_POS));
                         }
-                        insertCodeSnippet(linesToText(insertString));
+                        if (!isVoid) {
+                            insertString.append(" * ");
+                            insertString.append(QString(" * @return ")+USER_CODE_IN_INSERT_POS);
+                        }
+                        insertString.append(" */");
+    //                } else if (caretY()==1) { /* file header */
+    //                    insertString.append(QString(" * @file %1<SOURCEPATH>%2")
+    //                                        .arg(USER_CODE_IN_REPL_POS_BEGIN)
+    //                                        .arg(USER_CODE_IN_REPL_POS_END));
+    //                    insertString.append(QString(" * @brief: ")+ USER_CODE_IN_INSERT_POS);
+    //                    insertString.append(QString(" * @version: ")+ USER_CODE_IN_INSERT_POS);
+    //                    insertString.append(QString(" * @copyright: ")+ USER_CODE_IN_INSERT_POS);
+    //                    insertString.append(QString(" * @author: ")+ USER_CODE_IN_INSERT_POS);
+    //                    insertString.append(" * @date: <DATETIME>");
+    //                    insertString.append(" * ");
+    //                    insertString.append(" **/");
                     } else {
-                        s=trimLeft(lineText());
-                        if (s.startsWith("* ")) {
-                            handled = true;
-                            int right = document()->getLine(caretY()-1).length()-caretX();
-                            s=lineBreak()+"* ";
-                            insertString(s,false);
-                            QSynedit::BufferCoord p = caretXY();
-                            p.line++;
-                            p.ch = document()->getLine(p.line-1).length()+1;
-                            if (right>0) {
-                                p.ch -=right+1;
-                            }
-                            setCaretXY(p);
+                        insertString.append(QString(" * ")+USER_CODE_IN_INSERT_POS);
+                        insertString.append(" */");
+                    }
+                    insertCodeSnippet(linesToText(insertString));
+                } else {
+                    s=trimLeft(lineText());
+                    if (s.startsWith("* ")) {
+                        handled = true;
+                        int right = document()->getLine(caretY()-1).length()-caretX();
+                        s=lineBreak()+"* ";
+                        insertString(s,false);
+                        QSynedit::BufferCoord p = caretXY();
+                        p.line++;
+                        p.ch = document()->getLine(p.line-1).length()+1;
+                        if (right>0) {
+                            p.ch -=right+1;
                         }
+                        setCaretXY(p);
                     }
                 }
             }
@@ -887,9 +876,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 } else {
-                    QString lastWord = getPreviousWordAtPositionForSuggestion(ws);
-                    if (mParser && !lastWord.isEmpty()) {
-                        if (lastWord == "typedef" || lastWord == "const") {
+                    bool hasConst;
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(ws, hasConst);
+                    if (mParser && (!lastWord.isEmpty() || hasConst)) {
+                        if (lastWord.isEmpty()) {
+                            Q_ASSERT(hasConst);
+                            processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                            showCompletion(lastWord,false, CodeCompletionType::Types);
+                            handled=true;
+                            return;
+                        } else if ( lastWord == "typedef" ) {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false, CodeCompletionType::Types);
                             handled=true;
@@ -976,7 +972,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 }
-            } else if (syntaxer()) {
+            } else {
                 //show keywords
                 processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                 showCompletion("",false,CodeCompletionType::KeywordsOnly);
@@ -994,7 +990,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 showHeaderCompletion(false);
                 handled=true;
                 return;
-            } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
+            } else if (syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
                 //preprocessor ?
                 if ((idCharPressed==0) && (ch=='#') && lineText().isEmpty()) {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
@@ -1010,14 +1006,14 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 }
-            } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::LUA) {
+            } else if (syntaxer()->language()==QSynedit::ProgrammingLanguage::LUA) {
                 if (ch=='.') {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::KeywordsOnly);
                     handled=true;
                     return;
                 }
-            } else if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+            } else if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
                 if ((idCharPressed==0) && (ch=='.')) {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::KeywordsOnly);
@@ -1047,11 +1043,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
             return;
         case '(': {
             if (!selAvail()) {
-                QChar nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
-                if (!isIdentChar(nextCh) && nextCh!='('
-                        && nextCh!='"' && nextCh!='\'' ){
-                    handled = handleSymbolCompletion(ch);
-                }
+                // QChar nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
+                // if (!isIdentChar(nextCh) && nextCh!='('
+                //         && nextCh!='"' && nextCh!='\'' ){
+                //     handled = handleSymbolCompletion(ch);
+                // }
+                handled = handleSymbolCompletion(ch);
             } else {
                 handled = handleSymbolCompletion(ch);
             }
@@ -1141,10 +1138,35 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
     }
 }
 
-void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
+void setIncludeUnderline(const QString& lineText, int startPos,
+                  const QChar& quoteEndChar,
+                  QSynedit::PSyntaxer syntaxer,
+                  QColor foreColor,
+                  QSynedit::EditingAreaList &areaList
+                  ) {
+    int pos1=startPos;
+    int pos2=lineText.indexOf(quoteEndChar,pos1+1);
+    if (pos1>=0 && pos2>=0 && pos1 < pos2 ) {
+        QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
+        p->beginX = pos1+2;
+        p->endX = pos2+1;
+        p->type = QSynedit::EditingAreaType::eatUnderLine;
+        if (syntaxer) {
+            if (quoteEndChar=='\"')
+                p->color = syntaxer->stringAttribute()->foreground();
+            else
+                p->color = syntaxer->identifierAttribute()->foreground();
+        } else {
+            p->color = foreColor;
+        }
+        areaList.append(p);
+    }
+}
+
+void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
 {
     areaList.clear();
-    if (mTabStopBegin>=0 && mTabStopY == Line) {
+    if (mTabStopBegin>=0 && mTabStopY == line) {
         QSynedit::PEditingArea p = std::make_shared<QSynedit::EditingArea>();
         p->type = QSynedit::EditingAreaType::eatRectangleBorder;
 //        int spaceCount = leftSpaces(mLineBeforeTabStop);
@@ -1154,7 +1176,7 @@ void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
         p->color = syntaxer()->stringAttribute()->foreground();
         areaList.append(p);
     }
-    PSyntaxIssueList lst = getSyntaxIssuesAtLine(Line);
+    PSyntaxIssueList lst = getSyntaxIssuesAtLine(line);
     if (lst) {
         for (const PSyntaxIssue& issue: *lst) {
             QSynedit::PEditingArea p=std::make_shared<QSynedit::EditingArea>();
@@ -1167,6 +1189,21 @@ void Editor::onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList)
             }
             p->type = QSynedit::EditingAreaType::eatWaveUnderLine;
             areaList.append(p);
+        }
+    }
+    QString lineText = document()->getLine(line-1);
+    if (mParser && mParser->isIncludeLine(lineText)) {
+        if (line == mHoverModifiedLine) {
+            int i=0;
+            while (i<lineText.length() && lineText[i]!='<' && lineText[i]!='\"')
+                i++;
+            if (i<lineText.length()) {
+                if (lineText[i]=='<') {
+                    setIncludeUnderline(lineText,i,'>',syntaxer(), foregroundColor(), areaList);
+                } else {
+                    setIncludeUnderline(lineText,i,'"',syntaxer(), foregroundColor(), areaList);
+                }
+            }
         }
     }
 }
@@ -1200,32 +1237,28 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (token.isEmpty())
         return;
 
-    if (mParser && syntaxer()) {
+    if (mParser) {
+        // ifdef lines
         if (!mParser->isLineVisible(mFilename, line)) {
-            if (syntaxer()->commentAttribute()->foreground().isValid())
-                foreground = syntaxer()->commentAttribute()->foreground();
-            if (syntaxer()->commentAttribute()->background().isValid())
-                background = syntaxer()->commentAttribute()->background();
+            foreground = syntaxer()->commentAttribute()->foreground();
+            background = syntaxer()->commentAttribute()->background();
             return;
         }
         QString lineText = document()->getLine(line-1);
-        if (mParser->isIncludeLine(lineText)) {
-            if (line == mHoverModifiedLine) {
-                int pos1=std::max(lineText.indexOf("<"),lineText.indexOf("\""));
-                int pos2=std::max(lineText.lastIndexOf(">"),lineText.lastIndexOf("\""));
-                pos1++;
-                pos2++;
-                if (pos1>0 && pos2>0 && pos1<aChar && aChar < pos2) {
-                    style.setFlag(QSynedit::FontStyle::fsUnderline);
-                }
+        if (mParser->isIncludeLine(lineText) && attr->tokenType() != QSynedit::TokenType::Comment) {
+            // #include header names (<>)
+            int pos1=lineText.indexOf("<")+1;
+            int pos2=lineText.indexOf(">",pos1);
+            if (pos1>0 && pos2>0 && pos1<aChar && aChar<pos2) {
+                style = syntaxer()->identifierAttribute()->styles();
+                foreground = syntaxer()->identifierAttribute()->foreground();
+                background = syntaxer()->identifierAttribute()->background();
             }
+            return;
         } else if (mParser->enabled() && attr->tokenType() == QSynedit::TokenType::Identifier) {
+            //Syntax color for different identifier types
             QSynedit::BufferCoord p{aChar,line};
-    //        BufferCoord pBeginPos,pEndPos;
-    //        QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
-    //        qDebug()<<s;
-    //        PStatement statement = mParser->findStatementOf(mFilename,
-    //          s , p.Line);
+
             StatementKind kind;
             if (mParser->parsing()){
                 kind=mIdentCache.value(QString("%1 %2").arg(aChar).arg(token),StatementKind::skUnknown);
@@ -1235,6 +1268,8 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                             filename(),
                             expression,
                             p.line);
+                while (statement && statement->kind == StatementKind::skAlias)
+                    statement = mParser->findAliasedStatement(statement);
                 kind = getKindOfStatement(statement);
                 mIdentCache.insert(QString("%1 %2").arg(aChar).arg(token),kind);
             }
@@ -1273,9 +1308,9 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
         }
     }
 
-    //selection
-    if (syntaxer() && attr) {
+    if (attr) {
         if (attr->tokenType() == QSynedit::TokenType::Keyword) {
+            //C++ type keywords
             if (CppTypeKeywords.contains(token)
                     ||
                     (
@@ -1288,10 +1323,8 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 PColorSchemeItem item = mStatementColors->value(StatementKind::skKeywordType,PColorSchemeItem());
 
                 if (item) {
-                    if (item->foreground().isValid())
-                        foreground = item->foreground();
-                    if (item->background().isValid())
-                        background = item->background();
+                    foreground = item->foreground();
+                    background = item->background();
                     style.setFlag(QSynedit::FontStyle::fsBold,item->bold());
                     style.setFlag(QSynedit::FontStyle::fsItalic,item->italic());
                     style.setFlag(QSynedit::FontStyle::fsUnderline,item->underlined());
@@ -1304,13 +1337,14 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                 || (attr->tokenType() == QSynedit::TokenType::Preprocessor)
                 )
             && (token == mCurrentHighlightedWord)) {
+            // occurrencies of the selected identifier
             if (mCurrentHighlighWordForeground.isValid())
                 foreground = mCurrentHighlighWordForeground;
             if (mCurrentHighlighWordBackground.isValid())
                 background = mCurrentHighlighWordBackground;
         } else if (!selAvail() && attr->name() == SYNS_AttrSymbol
                    && pSettings->editor().highlightMathingBraces()) {
-            //        qDebug()<<line<<":"<<aChar<<" - "<<mHighlightCharPos1.Line<<":"<<mHighlightCharPos1.Char<<" - "<<mHighlightCharPos2.Line<<":"<<mHighlightCharPos2.Char;
+            // matching braces
             if ( (line == mHighlightCharPos1.line)
                     && (aChar == mHighlightCharPos1.ch)) {
                 if (mCurrentHighlighWordForeground.isValid())
@@ -1327,6 +1361,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             }
         }
     } else {
+        // occurrencies of the selected word
         if (token == mCurrentHighlightedWord) {
             if (mCurrentHighlighWordForeground.isValid())
                 foreground = mCurrentHighlighWordForeground;
@@ -1408,7 +1443,8 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
             int idCharPressed=caretX()-ws.ch;
             idCharPressed += s.length();
             if (idCharPressed>=pSettings->codeCompletion().minCharRequired()) {
-                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY());
+                bool hasConst;
+                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY(), hasConst);
                 if (mParser && !lastWord.isEmpty()) {
                     if (CppTypeKeywords.contains(lastWord)) {
                         return;
@@ -1795,7 +1831,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                     clearUserCodeInTabStops();
                 }
             }
-        } else if (!selAvail() && syntaxer() && pSettings->editor().highlightMathingBraces()){
+        } else if (!selAvail() && pSettings->editor().highlightMathingBraces()){
             invalidateLine(mHighlightCharPos1.line);
             invalidateLine(mHighlightCharPos2.line);
             mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
@@ -1976,8 +2012,7 @@ void Editor::onTooltipTimer()
         }
     }
     if (reason == TipType::Number) {
-        if (!syntaxer() ||
-            (syntaxer()->language() != QSynedit::ProgrammingLanguage::Assembly
+        if ((syntaxer()->language() != QSynedit::ProgrammingLanguage::Assembly
              && syntaxer()->language() != QSynedit::ProgrammingLanguage::ATTAssembly
              )
             ) {
@@ -2013,9 +2048,8 @@ void Editor::onTooltipTimer()
         }
         break;
     case TipType::Keyword:
-        if (syntaxer() &&
-                (syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
-                 || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
+        if ((syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
+             || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
                 ) {
             if (!mCompletionPopup->isVisible()
                  && !mHeaderCompletionPopup->isVisible()) {
@@ -2084,9 +2118,8 @@ void Editor::onTooltipTimer()
         }
         break;
     case TipType::Number:
-        if (syntaxer() &&
-                (syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
-                 || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
+        if ((syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
+             || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
                 ) {
             bool neg=false;
             qlonglong val;
@@ -2111,9 +2144,8 @@ void Editor::onTooltipTimer()
         break;
     case TipType::Keyword:
         if (pSettings->editor().enableIdentifierToolTips()) {
-            if (syntaxer() &&
-                    (syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
-                     || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
+            if ((syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
+                 || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
                     ) {
                 hint = QSynedit::ASMSyntaxer::Instructions.value(s.toLower(),"");
             }
@@ -2270,7 +2302,7 @@ QStringList Editor::getExpressionAtPosition(
         const QSynedit::BufferCoord &pos)
 {
     QStringList result;
-    if (!syntaxer() || !parser())
+    if (!parser())
         return result;
     int line = pos.line-1;
     int ch = pos.ch-1;
@@ -2541,32 +2573,30 @@ bool Editor::handleSymbolCompletion(QChar key)
         return false;
 
     //todo: better methods to detect current caret type
-    if (syntaxer()) {
-        if (caretX() <= 1) {
-            if (caretY()>1) {
-                if (syntaxer()->isLastLineCommentNotFinished(document()->getSyntaxState(caretY() - 2).state))
-                    return false;
-                if (syntaxer()->isLastLineStringNotFinished(document()->getSyntaxState(caretY() - 2).state)
-                        && (key!='\"') && (key!='\''))
-                    return false;
-            }
-        } else {
-            QSynedit::BufferCoord  HighlightPos = QSynedit::BufferCoord{caretX()-1, caretY()};
-            // Check if that line is highlighted as  comment
-            QSynedit::PTokenAttribute attr;
-            QString token;
-            bool tokenFinished;
-            if (getTokenAttriAtRowCol(HighlightPos, token, tokenFinished, attr)) {
-                if ((attr->tokenType() == QSynedit::TokenType::Comment) && (!tokenFinished))
-                    return false;
-                if ((attr->tokenType() == QSynedit::TokenType::String) && (!tokenFinished)
-                        && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
-                    return false;
-                if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
-                    return false;
-                if ((key == '\'') && (attr->name() == "SYNS_AttrNumber"))
-                    return false;
-            }
+    if (caretX() <= 1) {
+        if (caretY()>1) {
+            if (syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 2).state))
+                return false;
+            if (syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 2).state)
+                    && (key!='\"') && (key!='\''))
+                return false;
+        }
+    } else {
+        QSynedit::BufferCoord  HighlightPos = QSynedit::BufferCoord{caretX()-1, caretY()};
+        // Check if that line is highlighted as  comment
+        QSynedit::PTokenAttribute attr;
+        QString token;
+        QSynedit::SyntaxState syntaxState;
+        if (getTokenAttriAtRowCol(HighlightPos, token, attr, syntaxState)) {
+            if (syntaxer()->isCommentNotFinished(syntaxState.state))
+                return false;
+            if (syntaxer()->isStringNotFinished(syntaxState.state)
+                    && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
+                return false;
+            if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
+                return false;
+            if ((key == '\'') && (attr->name() == "SYNS_AttrNumber"))
+                return false;
         }
     }
 
@@ -2696,7 +2726,7 @@ bool Editor::handleParentheseSkip()
 
       if (document()->count()==0)
           return false;
-      if (syntaxer() && syntaxer()->supportBraceLevel()) {
+      if (syntaxer()->supportBraceLevel()) {
           QSynedit::SyntaxState lastLineState = document()->getSyntaxState(document()->count()-1);
           if (lastLineState.parenthesisLevel==0) {
               setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
@@ -2743,7 +2773,7 @@ bool Editor::handleBracketSkip()
 
     if (document()->count()==0)
         return false;
-    if (syntaxer() && syntaxer()->supportBraceLevel()) {
+    if (syntaxer()->supportBraceLevel()) {
         QSynedit::SyntaxState lastLineState = document()->getSyntaxState(document()->count()-1);
         if (lastLineState.bracketLevel==0) {
             setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
@@ -2857,7 +2887,7 @@ bool Editor::handleBraceSkip()
     if (document()->count()==0)
         return false;
 
-    if (syntaxer() && syntaxer()->supportBraceLevel()) {
+    if (syntaxer()->supportBraceLevel()) {
         QSynedit::SyntaxState lastLineState = document()->getSyntaxState(document()->count()-1);
         if (lastLineState.braceLevel==0) {
             bool oldInsertMode = insertMode();
@@ -2942,7 +2972,7 @@ bool Editor::handleDoubleQuoteCompletion()
     QuoteStatus status = getQuoteStatus();
     QChar ch = getCurrentChar();
     if (ch == '"') {
-        if ((status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawString)
+        if ((status == QuoteStatus::DoubleQuote || status == QuoteStatus::RawStringEnd)
             && !selAvail()) {
             setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
@@ -2958,7 +2988,9 @@ bool Editor::handleDoubleQuoteCompletion()
                 endEditing();
                 return true;
             }
-            if ((ch == 0) || syntaxer()->isWordBreakChar(ch) || syntaxer()->isSpaceChar(ch)) {
+            if ((ch == 0)
+                    || ( syntaxer()->isWordBreakChar(ch)
+                             || syntaxer()->isSpaceChar(ch))) {
                 // insert ""
                 beginEditing();
                 processCommand(QSynedit::EditCommand::Char,'"');
@@ -3057,7 +3089,7 @@ void Editor::initParser()
             resetCppParser(mParser);
             mParser->setEnabled(
                         pSettings->codeCompletion().enabled() &&
-                        (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP));
+                        (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP));
         }
     } else {
         mParser = nullptr;
@@ -3079,120 +3111,31 @@ ParserLanguage Editor::calcParserLanguage()
 Editor::QuoteStatus Editor::getQuoteStatus()
 {
     QuoteStatus Result = QuoteStatus::NotQuote;
-    if (!syntaxer())
-        return Result;
-    if ((caretY()>1) && syntaxer()->isLastLineStringNotFinished(document()->getSyntaxState(caretY() - 2).state))
-        Result = QuoteStatus::DoubleQuote;
-
-    QString Line = document()->getLine(caretY()-1);
-    int posX = caretX()-1;
-    if (posX >= Line.length()) {
-        posX = Line.length()-1;
-    }
-    for (int i=0; i<posX;i++) {
-        if (i+1<Line.length() && (Line[i] == 'R') && (Line[i+1] == '"') && (Result == QuoteStatus::NotQuote)) {
-            Result = QuoteStatus::RawString;
-            i++; // skip R
-        } else if (Line[i] == '(') {
-            switch(Result) {
-            case QuoteStatus::RawString:
-                Result=QuoteStatus::RawStringNoEscape;
-                break;
-            default:
-                break;
-            }
-        } else if (Line[i] == ')') {
-            switch(Result) {
-            case QuoteStatus::RawStringNoEscape:
-                Result=QuoteStatus::RawString;
-                break;
-            default:
-                break;
-            }
-        } else if (Line[i] == '"') {
-            switch(Result) {
-            case QuoteStatus::NotQuote:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            case QuoteStatus::SingleQuote:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::SingleQuoteEscape:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::DoubleQuote:
-                Result = QuoteStatus::NotQuote;
-                break;
-            case QuoteStatus::DoubleQuoteEscape:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            case QuoteStatus::RawString:
-                Result=QuoteStatus::NotQuote;
-                break;
-            default:
-                break;
-            }
-        } else if (Line[i] == '\'') {
-            switch(Result) {
-            case QuoteStatus::NotQuote:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::SingleQuote:
-                Result = QuoteStatus::NotQuote;
-                break;
-            case QuoteStatus::SingleQuoteEscape:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::DoubleQuote:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            case QuoteStatus::DoubleQuoteEscape:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            default:
-                break;
-            }
-        } else if (Line[i] == '\\') {
-            switch(Result) {
-            case QuoteStatus::NotQuote:
-                Result = QuoteStatus::NotQuote;
-                break;
-            case QuoteStatus::SingleQuote:
-                Result = QuoteStatus::SingleQuoteEscape;
-                break;
-            case QuoteStatus::SingleQuoteEscape:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::DoubleQuote:
-                Result = QuoteStatus::DoubleQuoteEscape;
-                break;
-            case QuoteStatus::DoubleQuoteEscape:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            default:
-                break;
-            }
-        } else {
-            switch(Result) {
-            case QuoteStatus::NotQuote:
-                Result = QuoteStatus::NotQuote;
-                break;
-            case QuoteStatus::SingleQuote:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::SingleQuoteEscape:
-                Result = QuoteStatus::SingleQuote;
-                break;
-            case QuoteStatus::DoubleQuote:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            case QuoteStatus::DoubleQuoteEscape:
-                Result = QuoteStatus::DoubleQuote;
-                break;
-            default:
-                break;
-            }
+    if (syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
+        QString s = lineText().mid(0,caretX()-1);
+        QSynedit::SyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
+        std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(syntaxer());
+        if (syntaxer()->isStringNotFinished(state.state)) {
+            if (cppSyntaxer->isStringToNextLine(state.state))
+                return QuoteStatus::DoubleQuoteEscape;
+            else
+                return QuoteStatus::DoubleQuote;
         }
+        if (cppSyntaxer->isCharNotFinished(state.state)) {
+            if (cppSyntaxer->isCharEscaping(state.state))
+                return QuoteStatus::SingleQuoteEscape;
+            else
+                return QuoteStatus::SingleQuote;
+        }
+        if (cppSyntaxer->isRawStringNoEscape(state.state))
+            return QuoteStatus::RawStringNoEscape;
+        if (cppSyntaxer->isRawStringStart(state.state))
+            return QuoteStatus::RawString;
+        if (cppSyntaxer->isRawStringEnd(state.state))
+            return QuoteStatus::RawStringEnd;
+        return QuoteStatus::NotQuote;
+    } else {
+        return QuoteStatus::NotQuote;
     }
     return Result;
 }
@@ -3204,8 +3147,6 @@ void Editor::reparse(bool resetParser)
     if (!mParentPageControl)
         return;
     if (!pSettings->codeCompletion().enabled())
-        return;
-    if (!syntaxer())
         return;
     if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP
              && syntaxer()->language() != QSynedit::ProgrammingLanguage::GLSL)
@@ -3240,8 +3181,6 @@ void Editor::reparseTodo()
     if (!mInited)
         return;
     if (!mParentPageControl)
-        return;
-    if (!syntaxer())
         return;
     if (pSettings->editor().parseTodos())
         pMainWindow->todoParser()->parseFile(mFilename, inProject());
@@ -3454,13 +3393,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     if (!pSettings->codeCompletion().enabled())
         return;
     if (type==CodeCompletionType::KeywordsOnly) {
-        if (!syntaxer())
-            return;
     } else {
         if (!mParser || !mParser->enabled())
-            return;
-
-        if (!syntaxer())
             return;
     }
 
@@ -3471,11 +3405,10 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 
     QString s;
     QSynedit::PTokenAttribute attr;
-    bool tokenFinished;
     QSynedit::BufferCoord pBeginPos, pEndPos;
     if (getTokenAttriAtRowCol(
                 QSynedit::BufferCoord{caretX() - 1,
-                caretY()}, s, tokenFinished, attr)) {
+                caretY()}, s, attr)) {
         if (attr->tokenType() == QSynedit::TokenType::Preprocessor) {//Preprocessor
             word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpDirective);
             if (!word.startsWith('#')) {
@@ -3490,7 +3423,7 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                    (attr->tokenType() == QSynedit::TokenType::String) &&
                    (attr->tokenType() != QSynedit::TokenType::Character)) {
             return;
-        } else if (type==CodeCompletionType::KeywordsOnly && syntaxer() ) {
+        } else if (type==CodeCompletionType::KeywordsOnly ) {
             if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly)
                 word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
             else
@@ -3504,6 +3437,57 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
             return;
         }
     }
+
+    // Scan the current function body
+    QSet<QString> keywords;
+
+    if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP ) {
+        if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+            if (word.startsWith("."))
+                keywords = QSynedit::ASMSyntaxer::ATTDirectives;
+            else if (word.startsWith("%"))
+                keywords = QSynedit::ASMSyntaxer::ATTRegisters;
+            else {
+                keywords = QSynedit::ASMSyntaxer::InstructionNames;
+            }
+        } else {
+            int pos = word.lastIndexOf(".");
+            if (pos>=0) {
+                QString scopeWord=word.left(pos);
+                word = word.mid(pos+1);
+                QMap<QString, QSet<QString> > scopedKeywords = syntaxer()->scopedKeywords();
+                keywords = scopedKeywords.value(scopeWord, QSet<QString>());
+            } else
+                keywords = syntaxer()->keywords();
+        }
+    } else {
+        switch(calcParserLanguage()) {
+        case ParserLanguage::CPlusPlus:
+            foreach (const QString& keyword, CppKeywords.keys()) {
+                keywords.insert(keyword);
+            }
+            break;
+        case ParserLanguage::C:
+            keywords = CKeywords;
+            break;
+#ifdef ENABLE_SDCC
+        case ParserLanguage::SDCC:
+            keywords = CKeywords;
+            foreach (const QString& keyword, SDCCKeywords.keys()) {
+                keywords.insert(keyword);
+            }
+            break;
+#endif
+        }
+        if (pSettings->editor().enableCustomCTypeKeywords()) {
+            foreach (const QString& keyword, pSettings->editor().customCTypeKeywords()) {
+                keywords.insert(keyword);
+            }
+        }
+    }
+
+    if (type == CodeCompletionType::KeywordsOnly && keywords.isEmpty())
+        return;
 
     mCompletionPopup->setRecordUsage(pSettings->codeCompletion().recordUsage());
     mCompletionPopup->setSortByScope(pSettings->codeCompletion().sortByScope());
@@ -3558,54 +3542,6 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     }
     pMainWindow->functionTip()->hide();
     mCompletionPopup->show();
-    // Scan the current function body
-    QSet<QString> keywords;
-    if (syntaxer()) {
-        if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP ) {
-            if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
-                if (word.startsWith("."))
-                    keywords = QSynedit::ASMSyntaxer::ATTDirectives;
-                else if (word.startsWith("%"))
-                    keywords = QSynedit::ASMSyntaxer::ATTRegisters;
-                else {
-                    keywords = QSynedit::ASMSyntaxer::InstructionNames;
-                }
-            } else {
-                int pos = word.lastIndexOf(".");
-                if (pos>=0) {
-                    QString scopeWord=word.left(pos);
-                    word = word.mid(pos+1);
-                    QMap<QString, QSet<QString> > scopedKeywords = syntaxer()->scopedKeywords();
-                    keywords = scopedKeywords.value(scopeWord, QSet<QString>());
-                } else
-                    keywords = syntaxer()->keywords();
-            }
-        } else {
-            switch(calcParserLanguage()) {
-            case ParserLanguage::CPlusPlus:
-                foreach (const QString& keyword, CppKeywords.keys()) {
-                    keywords.insert(keyword);
-                }
-                break;
-            case ParserLanguage::C:
-                keywords = CKeywords;
-                break;
-#ifdef ENABLE_SDCC
-            case ParserLanguage::SDCC:
-                keywords = CKeywords;
-                foreach (const QString& keyword, SDCCKeywords.keys()) {
-                    keywords.insert(keyword);
-                }
-                break;
-#endif
-            }
-            if (pSettings->editor().enableCustomCTypeKeywords()) {
-                foreach (const QString& keyword, pSettings->editor().customCTypeKeywords()) {
-                    keywords.insert(keyword);
-                }
-            }
-        }
-    }
 
     if (word.isEmpty()) {
         //word=getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpCompletion);
@@ -3651,6 +3587,16 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
 
     if (!forceShow && mHeaderCompletionPopup->isVisible()) // already in search, don't do it again
         return;
+
+    QSynedit::BufferCoord  HighlightPos = QSynedit::BufferCoord{caretX()-1, caretY()};
+    // Check if that line is highlighted as  comment
+    QSynedit::PTokenAttribute attr;
+    QString token;
+    QSynedit::SyntaxState syntaxState;
+    if (getTokenAttriAtRowCol(HighlightPos, token, attr, syntaxState)) {
+        if (attr && attr->tokenType()==QSynedit::TokenType::Comment)
+            return;
+    }
 
     // Position it at the top of the next line
     QPoint p = displayCoordToPixels(displayXY());
@@ -3756,7 +3702,7 @@ bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
 {
     int y=pos.line-1;
     int x=pos.ch;
-    if (!syntaxer() || syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
+    if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
         return false;
     if (y==0)
         syntaxer()->resetState();
@@ -3837,7 +3783,7 @@ void Editor::completionInsert(bool appendFunc)
 // delete the part of the word that's already been typed ...
     QSynedit::BufferCoord p = wordEnd();
     QSynedit::BufferCoord pStart = wordStart();
-    if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+    if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
         if (statement->command.startsWith(".")
                 || statement->command.startsWith("%"))
             pStart.ch--;
@@ -3848,6 +3794,9 @@ void Editor::completionInsert(bool appendFunc)
     if (appendFunc) {
         if (statement->kind == StatementKind::skAlias) {
             PStatement newStatement = mParser->findAliasedStatement(statement);
+            while (newStatement && newStatement->kind==StatementKind::skAlias) {
+                newStatement = mParser->findAliasedStatement(newStatement);
+            }
             if (newStatement)
                 statement = newStatement;
         }
@@ -3946,7 +3895,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
         return false;
     QString oldPhrase = mCompletionPopup->memberPhrase();
     WordPurpose purpose = WordPurpose::wpCompletion;
-    if (syntaxer() && syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+    if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
         purpose = WordPurpose::wpATTASMKeywords;
     } else if (oldPhrase.startsWith('#')) {
         purpose = WordPurpose::wpDirective;
@@ -4086,7 +4035,7 @@ bool Editor::onCompletionInputMethod(QInputMethodEvent *event)
 Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
 {
     // Only allow in the text area...
-    if (pointToCharLine(point, pos) && syntaxer()) {
+    if (pointToCharLine(point, pos)) {
         //qDebug()<<gutterWidth()<<charWidth()<<point.y()<<point.x()<<pos.line<<pos.ch;
         if (!pMainWindow->debugger()->executing()
                 && getSyntaxIssueAtPosition(pos)) {
@@ -4185,7 +4134,7 @@ void Editor::showDebugHint(const QString &s, int line)
     connect(pMainWindow->debugger(), &Debugger::evalValueReady,
                this, &Editor::onTipEvalValueReady);
     mCurrentDebugTipWord = s;
-    pMainWindow->debugger()->sendCommand("-data-evaluate-expression",s);
+    pMainWindow->debugger()->evalExpression(s);
 }
 
 QString Editor::getErrorHint(const PSyntaxIssue& issue)
@@ -4232,8 +4181,6 @@ void Editor::updateFunctionTip(bool showTip)
         pMainWindow->functionTip()->hide();
         return;
     }
-    if (!syntaxer())
-        return;
 
     if (!mParser || !mParser->enabled())
         return;
@@ -4380,8 +4327,9 @@ void Editor::updateFunctionTip(bool showTip)
     //handle class initializer
     if (x >= 0 && hasPreviousWord) {
         QSynedit::BufferCoord pos = pWordBegin;
+        bool hasConst;
         pos.ch = pWordBegin.ch;
-        QString previousWord = getPreviousWordAtPositionForSuggestion(pos);
+        QString previousWord = getPreviousWordAtPositionForSuggestion(pos, hasConst);
 
         PStatement statement = mParser->findStatementOf(
                     mFilename,
@@ -4500,6 +4448,8 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
 //        qDebug()<<s;
         PStatement statement = mParser->findStatementOf(mFilename,
           s , p.line);
+        while (statement && statement->kind == StatementKind::skAlias)
+            statement = mParser->findAliasedStatement(statement);
         StatementKind kind = getKindOfStatement(statement);
         if (kind == StatementKind::skUnknown) {
             if ((pEndPos.line>=1)
@@ -4520,7 +4470,6 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
             break;
         case StatementKind::skClass:
         case StatementKind::skTypedef:
-        case StatementKind::skAlias:
             attr = cppSyntaxer->classAttribute();
             break;
         case StatementKind::skEnumClassType:
@@ -4650,7 +4599,7 @@ void Editor::setProject(Project *pProject)
         return;
     mProject = pProject;
     if (mProject) {
-        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
+        if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
             mParser = mProject->cppParser();
             if (isVisible()) {
                 if (mParser && mParser->parsing()) {
@@ -4972,8 +4921,9 @@ QString getWordAtPosition(QSynedit::QSynEdit *editor, const QSynedit::BufferCoor
     return result;
 }
 
-QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord &p)
+QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord &p, bool &hasConst)
 {
+    hasConst = false;
     QString result;
     if ((p.line<1) || (p.line>document()->count())) {
         return "";
@@ -5029,8 +4979,12 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
             return "";
 
         result = s.mid(wordBegin, wordEnd - wordBegin+1);
-        if ((result != "const") && !skipNextWord)
+        if (result == "const" || result == "volatile")
+            hasConst = true;
+        else if (!skipNextWord)
             break;
+        // if ((result != "const") && !skipNextWord)
+        //     break;
         wordEnd = wordBegin-1;
     }
     return result;
@@ -5155,8 +5109,6 @@ void Editor::checkSyntaxInBack()
     if (!mParentPageControl)
         return;
     if (readOnly())
-        return;
-    if (!syntaxer())
         return;
     pMainWindow->checkSyntaxInBack(this);
 }
@@ -5290,9 +5242,10 @@ void Editor::setActiveBreakpointFocus(int Line, bool setFocus)
 
 void Editor::applySettings()
 {
+    incPaintLock();
     QSynedit::EditorOptions options = QSynedit::eoAltSetsColumnMode |
             QSynedit::eoDragDropEditing | QSynedit::eoDropFiles |  QSynedit::eoKeepCaretX | QSynedit::eoTabsToSpaces |
-            QSynedit::eoRightMouseMovesCursor | QSynedit::eoScrollByOneLess | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo
+            QSynedit::eoRightMouseMovesCursor | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo
             | QSynedit::eoSelectWordByDblClick;
 
     options.setFlag(QSynedit::eoShowLeadingSpaces, pSettings->editor().showLeadingSpaces());
@@ -5311,12 +5264,12 @@ void Editor::applySettings()
     options.setFlag(QSynedit::eoHideShowScrollbars,pSettings->editor().autoHideScrollbar());
     options.setFlag(QSynedit::eoScrollPastEol,pSettings->editor().scrollPastEol());
     options.setFlag(QSynedit::eoScrollPastEof,pSettings->editor().scrollPastEof());
-    options.setFlag(QSynedit::eoScrollByOneLess,pSettings->editor().scrollByOneLess());
     options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
-    options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
+    options.setFlag(QSynedit::eoInvertMouseScroll, false);
+
     options.setFlag(QSynedit::eoShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()
-                    && syntaxer() && syntaxer()->supportBraceLevel());
+                    && syntaxer()->supportBraceLevel());
     options.setFlag(QSynedit::eoForceMonospace,
                     pSettings->editor().forceFixedFontWidth());
     options.setFlag(QSynedit::eoLigatureSupport,
@@ -5335,7 +5288,7 @@ void Editor::applySettings()
 
     QFont f=QFont();
     f.setFamily(pSettings->editor().fontName());
-    f.setFamilies(pSettings->editor().fontFamilies());
+    f.setFamilies(pSettings->editor().fontFamiliesWithControlFont());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f.setStyleStrategy(QFont::PreferAntialias);
     setFont(f);
@@ -5352,7 +5305,7 @@ void Editor::applySettings()
 
     // Set gutter properties
     gutter().setLeftOffset(pointToPixel(pSettings->editor().fontSize()) + pSettings->editor().gutterLeftOffset());
-    gutter().setRightOffset(pSettings->editor().gutterRightOffset());
+    gutter().setRightOffset(pointToPixel(pSettings->editor().fontSize()) + pSettings->editor().gutterRightOffset());
     gutter().setBorderStyle(QSynedit::GutterBorderStyle::None);
     gutter().setUseFontStyle(pSettings->editor().gutterUseCustomFont());
     if (pSettings->editor().gutterUseCustomFont()) {
@@ -5382,7 +5335,7 @@ void Editor::applySettings()
         setRightEdge(0);
     }
 
-    if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
+    if (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP) {
         QSet<QString> set;
         if (pSettings->editor().enableCustomCTypeKeywords()) {
             foreach(const QString& s, pSettings->editor().customCTypeKeywords())
@@ -5406,6 +5359,7 @@ void Editor::applySettings()
     setMouseWheelScrollSpeed(pSettings->editor().mouseWheelScrollSpeed());
     setMouseSelectionScrollSpeed(pSettings->editor().mouseSelectionScrollSpeed());
     invalidate();
+    decPaintLock();
 }
 
 static QSynedit::PTokenAttribute createRainbowAttribute(const QString& attrName, const QString& schemeName, const QString& schemeItemName) {
@@ -5425,7 +5379,7 @@ void Editor::applyColorScheme(const QString& schemeName)
     QSynedit::EditorOptions options = getOptions();
     options.setFlag(QSynedit::EditorOption::eoShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()
-                    && syntaxer() && syntaxer()->supportBraceLevel());
+                    && syntaxer()->supportBraceLevel());
     setOptions(options);
     syntaxerManager.applyColorScheme(syntaxer(),schemeName);
     if (pSettings->editor().rainbowParenthesis()) {
@@ -5513,17 +5467,18 @@ void Editor::updateCaption(const QString& newCaption) {
     int index = mParentPageControl->indexOf(this);
     if (index==-1)
         return;
+    QString caption;
     if (newCaption.isEmpty()) {
-        QString caption = QFileInfo(mFilename).fileName();
+        caption = QFileInfo(mFilename).fileName();
         if (this->modified()) {
             caption.append("[*]");
         }
         if (this->readOnly()) {
             caption.append("["+tr("Readonly")+"]");
-        }
-        mParentPageControl->setTabText(index,caption);
+        }        
     } else {
-        mParentPageControl->setTabText(index,newCaption);
+        caption = newCaption;
     }
-
+    caption = caption.replace("&","&&");
+    mParentPageControl->setTabText(index,caption);
 }

@@ -52,7 +52,7 @@ int findDotPosition(const QString &fileName)
 FilenameEditDelegate::FilenameEditDelegate(QObject *parent) : QStyledItemDelegate(parent) {}
 
 // Use our custom component when creating the editor.
-QWidget *FilenameEditDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+QWidget *FilenameEditDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &/*option*/, const QModelIndex &/*index*/) const
 {
     FilenameLineEdit *editor = new FilenameLineEdit(parent);
     return editor;

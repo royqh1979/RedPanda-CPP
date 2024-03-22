@@ -184,6 +184,7 @@ struct Statement {
     QString command; // identifier/name of statement "foo"
     QString args; // args "(int a,float b)"
     QString value; // Used for macro defines/typedef, "100" in "#defin COUNT 100"
+    QString templateSpecializationParams;
     StatementKind kind; // kind of statement class/variable/function/etc
     StatementScope scope; // global/local/classlocal
     StatementAccessibility accessibility; // protected/private/public

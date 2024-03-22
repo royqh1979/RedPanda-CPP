@@ -12,8 +12,12 @@ target("RedPandaIDE")
     add_options("app-name", "prefix", "libexecdir")
     add_options("lua-addon", "sdcc", "vcs")
 
-    if TEST_VERSION ~= nil then
-        add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '-' .. TEST_VERSION .. '"')
+    if APP_VERSION_SUFFIX ~= "" then
+        add_defines('APP_VERSION_SUFFIX="' .. APP_VERSION_SUFFIX .. '"')
+    end
+
+    if TEST_VERSION ~= "" then
+        add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '.' .. TEST_VERSION .. '"')
     else
         add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '"')
     end
@@ -30,7 +34,6 @@ target("RedPandaIDE")
         "autolinkmanager.cpp",
         "colorscheme.cpp",
         "customfileiconprovider.cpp",
-        "gdbmiresultparser.cpp",
         "main.cpp",
         "projectoptions.cpp",
         "settings.cpp",
@@ -40,6 +43,9 @@ target("RedPandaIDE")
         "visithistorymanager.cpp",
         -- compiler
         "compiler/compilerinfo.cpp",
+        -- debugger
+        "debugger/dapprotocol.cpp",
+        "debugger/gdbmiresultparser.cpp",
         -- parser
         "parser/cpppreprocessor.cpp",
         "parser/cpptokenizer.cpp",
@@ -49,13 +55,13 @@ target("RedPandaIDE")
         "problems/ojproblemset.cpp",
         "problems/problemcasevalidator.cpp",
         "utils/escape.cpp",
+        "utils/font.cpp",
         "utils/parsearg.cpp")
 
     add_moc_classes(
         "caretlist",
         "codesnippetsmanager",
         "cpprefacter",
-        "debugger",
         "editor",
         "editorlist",
         "iconsmanager",
@@ -75,6 +81,10 @@ target("RedPandaIDE")
         "compiler/projectcompiler",
         "compiler/runner",
         "compiler/stdincompiler",
+        -- debugger
+        "debugger/dapdebugger",
+        "debugger/debugger",
+        "debugger/gdbmidebugger",
         -- parser
         "parser/cppparser",
         "parser/statementmodel",
@@ -88,7 +98,6 @@ target("RedPandaIDE")
         "widgets/codecompletionpopup",
         "widgets/coloredit",
         "widgets/compileargumentswidget",
-        "widgets/consolewidget",
         "widgets/customdisablediconengine",
         "widgets/customfilesystemmodel",
         "widgets/darkfusionstyle",
@@ -152,6 +161,7 @@ target("RedPandaIDE")
         "widgets/choosethemedialog",
         "widgets/cpudialog",
         "widgets/custommakefileinfodialog",
+        "widgets/editorfontdialog",
         "widgets/filepropertiesdialog",
         "widgets/infomessagebox",
         "widgets/newclassdialog",

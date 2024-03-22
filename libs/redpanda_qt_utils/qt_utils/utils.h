@@ -150,8 +150,8 @@ int compareFileModifiedTime(const QString& filename1, const QString& filename2);
 int compareFileModifiedTime(const QString& filename1, qint64 timestamp);
 
 /* UI utils */
-void inflateRect(QRect& rect, int delta);
-void inflateRect(QRect& rect, int dx, int dy);
+void inflateRect(QRectF& rect, float delta);
+void inflateRect(QRectF& rect, float dx, float dy);
 
 int screenDPI();
 void setScreenDPI(int dpi);

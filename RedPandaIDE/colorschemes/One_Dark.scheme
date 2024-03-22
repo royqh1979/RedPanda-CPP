@@ -78,7 +78,7 @@
     },
     "Float": {
         "bold": false,
-        "foreground": "#ffd18f52",
+        "foreground": "#ffd19a66",
         "italic": false,
         "strikeout": false,
         "underlined": false
@@ -91,7 +91,7 @@
         "underlined": false
     },
     "Function": {
-        "bold": false,
+        "bold": true,
         "foreground": "#ff61afef",
         "italic": false,
         "strikeout": false,
@@ -121,7 +121,7 @@
     },
     "Hexadecimal": {
         "bold": false,
-        "foreground": "#ffd18f52",
+        "foreground": "#ffd19a66",
         "italic": false,
         "strikeout": false,
         "underlined": false
@@ -163,7 +163,7 @@
     },
     "Octal": {
         "bold": false,
-        "foreground": "#ffd18f52",
+        "foreground": "#ffd19a66",
         "italic": false,
         "strikeout": false,
         "underlined": false
@@ -198,7 +198,7 @@
     },
     "Space": {
         "bold": false,
-        "foreground": "#ff98c379",
+        "foreground": "#ff4a505f",
         "italic": false,
         "strikeout": false,
         "underlined": false

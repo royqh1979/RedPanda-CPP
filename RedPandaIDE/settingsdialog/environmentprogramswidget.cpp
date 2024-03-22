@@ -20,7 +20,9 @@
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
 #include "../compiler/executablerunner.h"
+#include "utils.h"
 #include "utils/escape.h"
+#include "utils/font.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -30,7 +32,7 @@ EnvironmentProgramsWidget::EnvironmentProgramsWidget(const QString& name, const 
     ui(new Ui::EnvironmentProgramsWidget)
 {
     ui->setupUi(this);
-    ui->labelCmdPreviewResult->setFont(QFont(DEFAULT_MONO_FONT));
+    ui->labelCmdPreviewResult->setFont(defaultMonoFont());
 #ifndef Q_OS_WINDOWS
     ui->grpUseCustomTerminal->setCheckable(false);
 #endif

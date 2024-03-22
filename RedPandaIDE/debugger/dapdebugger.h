@@ -14,22 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef CONSOLEWIDGET_H
-#define CONSOLEWIDGET_H
+#ifndef DAP_DEBUGGER_H
+#define DAP_DEBUGGER_H
 
-#include <QTextEdit>
+#include "debugger.h"
 
-class ConsoleWidget : public QTextEdit
-{
+class DAPDebuggerClient : public DebuggerClient {
     Q_OBJECT
 public:
-    explicit ConsoleWidget(QWidget* parent = nullptr);
+    explicit DAPDebuggerClient(Debugger* debugger, QObject *parent = nullptr);
+
+
+    // QThread interface
+protected:
+    void run() override;
+
+    // DebuggerClient interface
+public:
+    DebuggerType clientType() override;
+
 private:
-    QString mCurrentCommand;
-    QStringList mCommandHistory;
-    int mHistoryIndex;
-    int mHistorySize;
-    QString mPrompt;
+    void initializeRequest();
+private:
+    std::shared_ptr<QProcess> mProcess;
+    bool mStop;
 };
 
-#endif // CONSOLEWIDGET_H
+#endif

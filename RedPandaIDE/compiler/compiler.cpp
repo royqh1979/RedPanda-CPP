@@ -179,28 +179,42 @@ CompileIssueType Compiler::getIssueTypeFromOutputLine(QString &line)
 {
     CompileIssueType result = CompileIssueType::Other;
     line = line.trimmed();
-    int pos = line.indexOf(':');
-    if (pos>=0) {
-        QString s=line.mid(0,pos);
-        if (s == "error" || s == "fatal error"
-                || s == "syntax error") {
-            mErrorCount += 1;
-            line = tr("[Error] ")+line.mid(pos+1);
-            result = CompileIssueType::Error;
-        } else if (s.startsWith("warning")) {
-            mWarningCount += 1;
-            line = tr("[Warning] ")+line.mid(pos+1);
-            result = CompileIssueType::Warning;
-        } else if (s == "info") {
-            mWarningCount += 1;
-            line = tr("[Info] ")+line.mid(pos+1);
-            result = CompileIssueType::Info;
-        } else if (s == "note") {
-            mWarningCount += 1;
-            line = tr("[Note] ")+line.mid(pos+1);
-            result = CompileIssueType::Note;
+    if (line.startsWith(tr("error:"))) {
+        mErrorCount += 1;
+        line = tr("[Error] ")+line.mid(tr("error:").length());
+        result = CompileIssueType::Error;
+    } else if (line.startsWith(tr("warning:"))) {
+        mWarningCount += 1;
+        line = tr("[Warning] ")+line.mid(tr("warning:").length());
+        result = CompileIssueType::Warning;
+    } else {
+        int pos = line.indexOf(':');
+        if (pos>=0) {
+            QString s=line.mid(0,pos);
+            if (s == "error" || s == "fatal error"
+                    || s == "syntax error") {
+                mErrorCount += 1;
+                line = tr("[Error] ")+line.mid(pos+1);
+                result = CompileIssueType::Error;
+            } else if (s.startsWith("warning")
+                       || s.startsWith(tr("warning"))) {
+                mWarningCount += 1;
+                line = tr("[Warning] ")+line.mid(pos+1);
+                result = CompileIssueType::Warning;
+            } else if (s == "info"
+                       || s == tr("info")) {
+                mWarningCount += 1;
+                line = tr("[Info] ")+line.mid(pos+1);
+                result = CompileIssueType::Info;
+            } else if (s == "note"
+                       || s == tr("note")) {
+                mWarningCount += 1;
+                line = tr("[Note] ")+line.mid(pos+1);
+                result = CompileIssueType::Note;
+            }
         }
     }
+
     return result;
 }
 
@@ -576,11 +590,12 @@ QStringList Compiler::getLibraryArguments(FileType fileType)
 
     // Add global compiler linker extras
     if (compilerSet()->useCustomLinkParams() && !compilerSet()->customLinkParams().isEmpty()) {
-       QStringList params = textToLines(compilerSet()->customLinkParams());
-       if (!params.isEmpty()) {
+        QMap<QString, QString> macros = devCppMacroVariables();
+        QStringList params = parseArguments(compilerSet()->customLinkParams(), macros, true);
+        if (!params.isEmpty()) {
             foreach(const QString& param, params)
                 result << param;
-       }
+        }
     }
 
     if (mProject) {

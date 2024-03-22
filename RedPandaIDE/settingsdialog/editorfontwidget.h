@@ -18,11 +18,21 @@
 #define EDITORFONTWIDGET_H
 
 #include <QWidget>
+#include <QStringListModel>
 #include "settingswidget.h"
+#include "utils/font.h"
 
 namespace Ui {
 class EditorFontWidget;
 }
+
+class EditorFontModel : public QStringListModel
+{
+    Q_OBJECT
+public:
+    using QStringListModel::QStringListModel;
+    Qt::ItemFlags flags(const QModelIndex &index) const;
+};
 
 class EditorFontWidget : public SettingsWidget
 {
@@ -33,21 +43,31 @@ public:
 
 
 private slots:
-    void onFallbackFontsCheckStateChanged();
-    void on_chkOnlyMonospacedFonts_stateChanged(int arg1);
     void on_chkGutterOnlyMonospacedFonts_stateChanged(int arg1);
+    void on_btnAddFont_clicked();
+    void on_btnRemoveFont_clicked();
+    void on_btnModifyFont_clicked();
+    void on_btnResetFonts_clicked();
+    void on_btnMoveFontToTop_clicked();
+    void on_btnMoveFontUp_clicked();
+    void on_btnMoveFontDown_clicked();
+    void on_btnMoveFontToBottom_clicked();
 
     // void on_chkLigature_toggled(bool checked);
 
     // void on_chkForceFixedFontWidth_toggled(bool checked);
 
+    void on_lstFontList_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::EditorFontWidget *ui;
+    EditorFontModel mModel;
 
     // SettingsWidget interface
 protected:
     void doLoad() override;
     void doSave() override;
+    void updateIcons(const QSize &size) override;
 };
 
 #endif // EDITORFONTWIDGET_H

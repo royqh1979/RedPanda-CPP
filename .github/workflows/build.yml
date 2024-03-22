@@ -6,6 +6,7 @@ jobs:
   windows:
     name: Windows MSYS2
     strategy:
+      fail-fast: false
       matrix:
         msystem: [MINGW32, MINGW64, UCRT64, CLANG64]
         include:
@@ -24,6 +25,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup
         uses: msys2/setup-msys2@v2
@@ -49,6 +52,7 @@ jobs:
   windows_legacy:
     name: Windows NT 5.1–6.0 MinGW
     strategy:
+      fail-fast: false
       matrix:
         arch: [32, 64]
     runs-on: windows-2019
@@ -58,11 +62,13 @@ jobs:
     env:
       _MINGW_TOOLCHAIN: /c/Qt/Tools/mingw810_${{ matrix.arch }}
       _QT_INSTALL_PREFIX: /c/Qt/5.6.4/mingw81_${{ matrix.arch }}-redpanda
-      _REDPANDA_QT_BUILD: "20240116.0"
+      _REDPANDA_QT_BUILD: "20240301.0"
       _REDPANDA_QT_ARCHIVE: qt5.6.4-mingw81_${{ matrix.arch }}-redpanda.7z
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup toolchain
         uses: jurplel/install-qt-action@v3
@@ -104,6 +110,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup
         uses: jurplel/install-qt-action@v3
@@ -141,6 +149,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup
         uses: jurplel/install-qt-action@v3
@@ -175,9 +185,10 @@ jobs:
   debian:
     name: Debian
     strategy:
+      fail-fast: false
       matrix:
         arch: [amd64, i386]
-        version: ["10", "11", "12", sid]
+        version: ["11", "12"]
         include:
           - arch: amd64
             platform: linux/amd64
@@ -188,6 +199,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Fetch container image
         run: |
@@ -206,13 +219,16 @@ jobs:
   ubuntu:
     name: Ubuntu
     strategy:
+      fail-fast: false
       matrix:
-        version: ["20.04", "22.04", "23.10", "devel"]
+        version: ["22.04", "23.10", "devel"]
     
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Fetch container image
         run: |
@@ -234,6 +250,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Fetch container image
         run: |
@@ -241,7 +259,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/packages/archlinux/01-in-docker.sh
+          podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/packages/archlinux/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -255,6 +273,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Fetch container image
         run: |
@@ -262,7 +282,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/fedora:latest /src/packages/fedora/01-in-docker.sh
+          podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/fedora:latest /src/packages/fedora/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -270,27 +290,28 @@ jobs:
           name: RPM on latest Fedora
           path: dist/*.rpm
 
-  rpm_opensuse:
-    name: RPM on openSUSE Tumbleweed
-    runs-on: ubuntu-latest
-    if: false
+  # rpm_opensuse:
+  #   name: RPM on openSUSE Tumbleweed
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/opensuse/tumbleweed:latest
+  #     - name: Fetch container image
+  #       run: |
+  #         podman pull --platform linux/amd64 docker.io/opensuse/tumbleweed:latest
 
-      - name: Build
-        run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/opensuse/tumbleweed:latest /src/packages/opensuse/01-in-docker.sh
+  #     - name: Build
+  #       run: |
+  #         podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/opensuse/tumbleweed:latest /src/packages/opensuse/01-in-docker.sh
 
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: RPM on openSUSE Tumbleweed
-          path: dist/*.rpm
+  #     - name: Upload
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: RPM on openSUSE Tumbleweed
+  #         path: dist/*.rpm
 
   musl:
     name: musl-based Linux (latest Alpine)
@@ -298,6 +319,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Fetch container image
         run: |
@@ -313,12 +336,60 @@ jobs:
           name: musl-based Linux (latest Alpine)
           path: dist/*.apk
 
+  appimage:
+    name: Linux AppImage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
+
+      - name: Build
+        run: |
+          podman run --rm -v $PWD:/mnt -w /mnt -e CARCH=x86_64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0 packages/appimage/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux AppImage
+          path: dist/*.AppImage
+
+  static-deb:
+    name: Static Deb
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch container image
+        run: |
+          podman pull --platform linux/amd64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
+
+      - name: Build
+        run: |
+          packages/debian-static/builddeb.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Static Deb
+          path: dist/*.deb
+
   macos_x86_64:
     name: macOS x86_64
     runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup
         uses: jurplel/install-qt-action@v3

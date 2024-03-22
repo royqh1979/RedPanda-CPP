@@ -1,0 +1,14 @@
+Section: devel
+Priority: optional
+Maintainer: royqh1979@gmail.com
+Standards-Version: 4.3.0
+Homepage: https://github.com/royqh1979/RedPanda-CPP
+Package: redpanda-cpp-bin
+Version: __VERSION__
+Architecture: amd64
+Depends: gcc, g++, make, gdb, gdbserver,
+         libc6 (>= 2.17), libstdc++6 (>= 4.8),
+         libdbus-1-3, libfontconfig1, libfreetype6, libwayland-client0, libwayland-cursor0, libwayland-server0, libx11-6, libx11-xcb1, libxcb1, libxcb-icccm4, libxcb-image0, libxcb-keysyms1, libxcb-randr0, libxcb-render-util0, libxcb-render0, libxcb-shape0, libxcb-shm0, libxcb-sync1, libxcb-xfixes0, libxcb-xinerama0, libxcb-xkb1, libxcb1, libxext6, libxkbcommon-x11-0, libxkbcommon0, libzstd1
+Recommends: qterminal | deepin-terminal | konsole | gnome-terminal | terminator | lxterminal | mate-terminal | terminology | xfce4-terminal | alacritty | cool-retro-term | kitty | sakura | termit | tilix
+Suggests: clang
+Description: A lightweight but powerful C/C++ IDE, built upon static Qt 5.15

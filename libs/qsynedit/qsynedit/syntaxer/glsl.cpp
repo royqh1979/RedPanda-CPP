@@ -1236,24 +1236,14 @@ void GLSLSyntaxer::pushIndents(IndentType indentType, int line)
     mRange.indents.push_back(IndentInfo{indentType,line});
 }
 
-bool GLSLSyntaxer::getTokenFinished() const
-{
-    if (mTokenId == TokenId::Comment
-            || mTokenId == TokenId::String
-            || mTokenId == TokenId::RawString) {
-        return mRange.state == RangeState::rsUnknown;
-    }
-    return true;
-}
-
-bool GLSLSyntaxer::isLastLineCommentNotFinished(int state) const
+bool GLSLSyntaxer::isCommentNotFinished(int state) const
 {
     return (state == RangeState::rsAnsiC ||
             state == RangeState::rsDirectiveComment||
             state == RangeState::rsCppComment);
 }
 
-bool GLSLSyntaxer::isLastLineStringNotFinished(int state) const
+bool GLSLSyntaxer::isStringNotFinished(int state) const
 {
     return state == RangeState::rsMultiLineString;
 }
@@ -1447,5 +1437,15 @@ QString GLSLSyntaxer::blockCommentBeginSymbol()
 QString GLSLSyntaxer::blockCommentEndSymbol()
 {
     return "*/";
+}
+
+bool GLSLSyntaxer::supportFolding()
+{
+    return true;
+}
+
+bool GLSLSyntaxer::needsLineState()
+{
+    return true;
 }
 }

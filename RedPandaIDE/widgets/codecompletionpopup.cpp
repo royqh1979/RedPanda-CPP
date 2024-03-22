@@ -296,7 +296,7 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
             && (fileName == statement->fileName))
         return;
     mAddedStatements.insert(statement->command);
-    if (statement->kind == StatementKind::skUserCodeSnippet || !statement->fullName.contains("<"))
+    if (statement->kind == StatementKind::skUserCodeSnippet || !statement->command.contains("<"))
         mFullCompletionStatementList.append(statement);
 }
 
@@ -1254,9 +1254,10 @@ QVariant CodeCompletionListModel::data(const QModelIndex &index, int role) const
         PStatement statement = mStatements->at(index.row());
         return statement->command;
         }
-    case Qt::DecorationRole:
+    case Qt::DecorationRole:{
         PStatement statement = mStatements->at(index.row());
         return pIconsManager->getPixmapForStatement(statement);
+    }
     }
     return QVariant();
 }

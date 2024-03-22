@@ -24,7 +24,7 @@
 
 namespace QSynedit {
 
-enum class SelectionMode {Normal, Line, Column};
+enum class SelectionMode {Normal, Column};
 
 enum class ProgrammingLanguage {
     DecideBySuffix,
@@ -37,6 +37,7 @@ enum class ProgrammingLanguage {
     LUA,
     XMAKE,
     Custom,
+    Textfile,
     Unknown
 };
 

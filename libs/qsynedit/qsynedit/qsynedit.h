@@ -61,13 +61,16 @@ Q_DECLARE_FLAGS(StatusChanges, StatusChange)
 Q_DECLARE_OPERATORS_FOR_FLAGS(StatusChanges)
 
 enum class StateFlag  {
-    sfCaretChanged = 0x0001,
-    sfScrollbarChanged = 0x0002,
-    sfLinesChanging = 0x0004,
-    sfIgnoreNextChar = 0x0008,
-    sfCaretVisible = 0x0010,
-    sfDblClicked = 0x0020,
-    sfWaitForDragging = 0x0040
+    sfCaretChanged =        0x0001,
+    sfHScrollbarChanged =   0x0002,
+    sfVScrollbarChanged =   0x0004,
+    sfLinesChanging =       0x0008,
+    sfIgnoreNextChar =      0x0010,
+    sfCaretVisible =        0x0020,
+    sfDblClicked =          0x0040,
+    sfWaitForDragging =     0x0080,
+    sfRedrawNeeded =        0x0100,
+    sfGutterRedrawNeeded =  0x0200,
 };
 
 Q_DECLARE_FLAGS(StateFlags,StateFlag)
@@ -87,10 +90,10 @@ enum EditorOption {
     eoHideShowScrollbars =    0x00000200, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
     eoKeepCaretX =            0x00000400 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
     eoRightMouseMovesCursor=  0x00000800, //When clicking with the right mouse for a popup menu, move the cursor to that location
-    eoScrollByOneLess =       0x00001000, //Forces scrolling to be one less
+//    eoScrollByOneLess =       0x00001000, //Forces scrolling to be one less
     eoScrollPastEof =         0x00002000, //Allows the cursor to go past the end of file marker
     eoScrollPastEol =         0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
-//  eoShowSpecialChars =      0x00008000, //Shows the special Characters
+    eoInvertMouseScroll =     0x00008000, //Shows the special Characters
 //  eoSpecialLineDefaultFg = 0x00010000, //disables the foreground text color override when using the OnSpecialLineColor event
     eoTabIndent =             0x00020000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
     eoTabsToSpaces =          0x00040000, //Converts a tab character to a specified number of space characters
@@ -264,13 +267,15 @@ public:
     bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
       PTokenAttribute& attri);
     bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
-      bool& tokenFinished, PTokenAttribute& attri);
+      PTokenAttribute& attri, SyntaxState &syntaxState);
     bool getTokenAttriAtRowColEx(const BufferCoord& pos, QString& token,
       int &start, PTokenAttribute& attri);
 
     void addGroupBreak();
     void beginEditing();
     void endEditing();
+    void beginSetting();
+    void endSetting();
     void addCaretToUndo();
     void addLeftTopToUndo();
     void addSelectionToUndo();
@@ -498,6 +503,9 @@ protected:
 
 protected:
     void doSelectLine();
+    void incPaintLock();
+    void decPaintLock();
+    SyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
 private:
     BufferCoord ensureBufferCoordValid(const BufferCoord& coord);
     void beginEditingWithoutUndo();
@@ -506,8 +514,7 @@ private:
     void computeCaret();
     void computeScroll(bool isDragging);
 
-    void incPaintLock();
-    void decPaintLock();
+
     int clientWidth() const;
     int clientHeight() const;
     int clientTop() const;
@@ -522,24 +529,25 @@ private:
     void ensureCursorPosVisibleEx(bool ForceToMiddle);
     void scrollWindow(int dx,int dy);
     void setInternalDisplayXY(const DisplayCoord& aPos);
-    void internalSetCaretXY(const BufferCoord& Value);
+    void internalSetCaretXY(const BufferCoord& Value, bool ensureCaretVisible = true);
     void internalSetCaretX(int Value);
     void internalSetCaretY(int Value);
     void setStatusChanged(StatusChanges changes);
     void doOnStatusChange(StatusChanges changes);
-    void updateScrollbars();
+    void updateHScrollbar();
+    void updateVScrollbar();
     void updateCaret();
     void recalcCharExtent();
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
-    void scanFrom(int index);
-    void reparseLine(int line);
+    void reparseLines(int startLine, int endLine);
+    //void reparseLine(int line);
     void reparseDocument();
     void uncollapse(PCodeFoldingRange FoldRange);
     void collapse(PCodeFoldingRange FoldRange);
 
-    void foldOnListInserted(int Line, int Count);
-    void foldOnListDeleted(int Line, int Count);
+    void foldOnLinesInserted(int Line, int Count);
+    void foldOnLinesDeleted(int Line, int Count);
     void foldOnListCleared();
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
@@ -566,9 +574,9 @@ private:
     void moveCaretHorz(int deltaX, bool isSelection);
     void moveCaretVert(int deltaY, bool isSelection);
     void moveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
-                               bool isSelection);
+                               bool isSelection, bool ensureCaretVisible = true);
     void moveCaretToLineStart(bool isSelection);
-    void moveCaretToLineEnd(bool isSelection);
+    void moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible = true);
     void doGotoBlockStart(bool isSelection);
     void doGotoBlockEnd(bool isSelection);
     void doGotoEditorStart(bool isSelection);
@@ -585,8 +593,7 @@ private:
     void doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode);
     void doInsertText(const BufferCoord& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
     int doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
-    int doInsertTextByColumnMode(const QStringList& text, int startLine, int endLine);
-    int doInsertTextByLineMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
+    int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, int startLine, int endLine);
 
     void doTrimTrailingSpaces();
     void deleteFromTo(const BufferCoord& start, const BufferCoord& end);
@@ -655,9 +662,9 @@ private slots:
     void onLinesChanged();
     void onLinesChanging();
     void onLinesCleared();
-    void onLinesDeleted(int index, int count);
-    void onLinesInserted(int index, int count);
-    void onLinesPutted(int index, int count);
+    void onLinesDeleted(int line, int count);
+    void onLinesInserted(int line, int count);
+    void onLinesPutted(int line);
     //void onRedoAdded();
     void onScrollTimeout();
     void onDraggingScrollTimeout();
@@ -743,6 +750,7 @@ private:
     int mPaintTransientLock;
     bool mIsScrolling;
     int mPainterLock; // lock counter to prevent repaint while painting
+    int mOptionLock; // lock counter to prevent recalculate glyph widths while change settings;
     bool mUndoing;
     // event handlers
     // ProcessCommandProc mOnCommandProcessed;

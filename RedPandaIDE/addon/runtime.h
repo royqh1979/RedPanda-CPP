@@ -68,6 +68,7 @@ public:
     static long long fetchInteger(lua_State *L, int index);
     static double fetchNumber(lua_State *L, int index);
     static QString fetchString(lua_State *L, int index);
+    static QJsonArray fetchArray(lua_State *L, int index);
     static QJsonObject fetchObject(lua_State *L, int index);
     static QJsonValue fetch(lua_State *L, int index);
 
@@ -88,6 +89,8 @@ public:
     static void push(lua_State *L, bool value);
     static void push(lua_State *L, const QString &value);
     static void push(lua_State *L, const QStringList &value);
+    static void push(lua_State *L, const QJsonArray &value);
+    static void push(lua_State *L, const QJsonObject &value);
 
     int getTop();
     static int getTop(lua_State *L);
@@ -106,6 +109,10 @@ public:
 private:
     static QJsonValue fetchTableImpl(lua_State *L, int index, int depth);
     static QJsonValue fetchValueImpl(lua_State *L, int index, int depth);
+
+    static void pushArrayImpl(lua_State *L, const QJsonArray &value, int depth);
+    static void pushObjectImpl(lua_State *L, const QJsonObject &value, int depth);
+    static void pushValueImpl(lua_State *L, const QJsonValue &value, int depth);
 
 private:
     lua_State *mLua;

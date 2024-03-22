@@ -138,11 +138,10 @@ private:
     PTokenAttribute mStringEscapeSequenceAttribute;
     PTokenAttribute mCharAttribute;
 
-    // SynHighligterBase interface
+
 public:
-    bool getTokenFinished() const override;
-    bool isLastLineCommentNotFinished(int state) const override;
-    bool isLastLineStringNotFinished(int state) const override;
+    bool isCommentNotFinished(int state) const override;
+    bool isStringNotFinished(int state) const override;
     bool eol() const override;
     QString getToken() const override;
     const PTokenAttribute &getTokenAttribute() const override;
@@ -155,43 +154,25 @@ public:
 
     QString languageName() override;
     ProgrammingLanguage language() override;
-
-    // SynHighlighter interface
-public:
     SyntaxState getState() const override;
-
-    // SynHighlighter interface
-public:
     bool isIdentChar(const QChar &ch) const override;
     bool isIdentStartChar(const QChar& ch) const override;
-
-    // SynHighlighter interface
-public:
     QSet<QString> keywords() override;
-
-    // SynHighlighter interface
-public:
     QString foldString(QString startLine) override;
     const QSet<QString> &customTypeKeywords() const;
     void setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords);
-
-    // Highlighter interface
-public:
     bool supportBraceLevel() override;
-
-    // Syntaxer interface
-public:
     QMap<QString, QSet<QString> > scopedKeywords() override;
     bool useXMakeLibs() const;
     void setUseXMakeLibs(bool newUseXMakeLibs);
-
-    // Syntaxer interface
-public:
     QString commentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
+    bool supportFolding() override;
+    bool needsLineState() override;
+
 };
 
 }
 
-#endif // SYNEDITCPPHIGHLIGHTER_H
+#endif // QSYNEDIT_LUA_SYNTAXER_H

@@ -46,11 +46,13 @@ public:
     };
 
     enum RangeState {
-        rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment, rsString,
+        rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment,
+        rsString, rsStringNextLine, rsStringUnfinished,
         rsMultiLineString, rsMultiLineDirective, rsCppComment,
         rsDocstring,
         rsStringEscapeSeq,
-        rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,rsChar,
+        rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,
+        rsChar, rsCharEscaping,
         rsDefineIdentifier, rsDefineRemaining,
     };
 
@@ -87,6 +89,16 @@ public:
     static const QSet<QString> Keywords;
 
     static const QSet<QString> ValidIntegerSuffixes;
+
+    static const QSet<QString> StandardAttributes;
+
+    bool isStringToNextLine(int state);
+    bool isRawStringStart(int state);
+    bool isRawStringNoEscape(int state);
+    bool isRawStringEnd(int state);
+    bool isCharNotFinished(int state);
+    bool isCharEscaping(int state);
+    bool isInAttribute(const SyntaxState &state);
 
     TokenId getTokenId();
 private:
@@ -175,11 +187,10 @@ private:
     PTokenAttribute mGlobalVarAttribute;
     PTokenAttribute mLocalVarAttribute;
 
-    // SynHighligterBase interface
+    // Syntaxer interface
 public:
-    bool getTokenFinished() const override;
-    bool isLastLineCommentNotFinished(int state) const override;
-    bool isLastLineStringNotFinished(int state) const override;
+    bool isCommentNotFinished(int state) const override;
+    bool isStringNotFinished(int state) const override;
     bool isDocstringNotFinished(int state) const override;
     bool eol() const override;
     QString getToken() const override;
@@ -194,36 +205,23 @@ public:
     QString languageName() override;
     ProgrammingLanguage language() override;
 
-    // SynHighlighter interface
-public:
     SyntaxState getState() const override;
-
-    // SynHighlighter interface
-public:
     bool isIdentChar(const QChar &ch) const override;
     bool isIdentStartChar(const QChar &ch) const override;
-
-    // SynHighlighter interface
-public:
     QSet<QString> keywords() override;
-
-    // SynHighlighter interface
-public:
     QString foldString(QString startLine) override;
     const QSet<QString> &customTypeKeywords() const;
     void setCustomTypeKeywords(const QSet<QString> &newCustomTypeKeywords);
 
-    // Highlighter interface
-public:
     bool supportBraceLevel() override;
 
-    // Syntaxer interface
-public:
     QString commentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
+    virtual bool supportFolding() override;
+    virtual bool needsLineState() override;
 };
 
 }
 
-#endif // SYNEDITCPPHIGHLIGHTER_H
+#endif // QSYNEDIT_CPP_SYNTAXER_H

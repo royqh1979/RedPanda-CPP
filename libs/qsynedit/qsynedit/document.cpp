@@ -91,7 +91,9 @@ int Document::lineWidth(int line)
 {
     QMutexLocker locker(&mMutex);
     if (line>=0 && line < mLines.size()) {
-        return mLines[line]->width();
+        int width = mLines[line]->width();
+        //updateLongestLineWidth(width);
+        return width;
     } else
         return 0;
 }
@@ -139,14 +141,14 @@ int Document::blockEnded(int line)
         return 0;
 }
 
-int Document::longestLineWidth() {
+int Document::maxLineWidth() {
     QMutexLocker locker(&mMutex);
     if (mIndexOfLongestLine < 0) {
         int MaxLen = -1;
         mIndexOfLongestLine = -1;
         if (mLines.count() > 0 ) {
             for (int i=0;i<mLines.size();i++) {
-                int len = lineWidth(i);
+                int len = mLines[i]->mWidth;
                 if (len > MaxLen) {
                     MaxLen = len;
                     mIndexOfLongestLine = i;
@@ -468,16 +470,14 @@ void Document::putLine(int index, const QString &s, bool notify) {
             listIndexOutOfBounds(index);
         }
         beginUpdate();
-        int oldColumns = mLines[index]->width();
+        int oldWidth = -1;
+        if (mIndexOfLongestLine == index)
+            oldWidth = mLines[index]->mWidth;
         mLines[index]->setLineText( s );
-        if (mIndexOfLongestLine == index && oldColumns>mLines[index]->width() )
+        if (mIndexOfLongestLine == index && oldWidth>mLines[index]->width() )
             mIndexOfLongestLine = -1;
-        else if (mIndexOfLongestLine>=0
-                 && mIndexOfLongestLine<mLines.count()
-                 && mLines[index]->width() > mLines[mIndexOfLongestLine]->width())
-            mIndexOfLongestLine = index;
         if (notify)
-            emit putted(index,1);
+            emit putted(index);
         endUpdate();
     }
 }
@@ -931,24 +931,32 @@ int Document::glyphCount(int line)
 int Document::glyphStartChar(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphStartChar(glyphIdx);
 }
 
 int Document::glyphLength(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphLength(glyphIdx);
 }
 
 int Document::glyphStartPostion(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphStartPosition(glyphIdx);
 }
 
 int Document::glyphWidth(int line, int glyphIdx)
 {
     QMutexLocker locker(&mMutex);
+    if (line<0 || line>=count())
+        return 0;
     return mLines[line]->glyphWidth(glyphIdx);
 }
 
@@ -960,7 +968,7 @@ int Document::glyphWidth(const QString &glyph, int left) const
 int Document::charToGlyphIndex(int line, int charIdx)
 {
     QMutexLocker locker(&mMutex);
-    if (line<0 || line>count())
+    if (line<0 || line>=count())
         return 0;
     QList<int> glyphStartCharList = mLines[line]->glyphStartCharList();
     return charToGlyphIndex(mLines[line]->lineText(), glyphStartCharList, charIdx);
@@ -1168,7 +1176,19 @@ void Document::setLineWidth(int line, const QString &lineText, int newWidth, con
         return;
     mLines[line]->mWidth = newWidth;
     mLines[line]->mGlyphStartPositionList = glyphStartPositionList;
+    updateLongestLineWidth(line , newWidth);
     Q_ASSERT(mLines[line]->mGlyphStartPositionList.length() == mLines[line]->mGlyphStartCharList.length());
+}
+
+void Document::updateLongestLineWidth(int line, int width)
+{
+    if (mIndexOfLongestLine<0) {
+        mIndexOfLongestLine = line;
+        emit maxLineWidthChanged(width);
+    } else if (mLines[mIndexOfLongestLine]->mWidth < width) {
+        mIndexOfLongestLine = line;
+        emit maxLineWidthChanged(width);
+    }
 }
 
 QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, int left, int &right) const

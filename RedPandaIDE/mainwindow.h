@@ -131,6 +131,8 @@ public:
     void updateEditorBookmarks();
     void updateEditorBreakpoints();
     void updateEditorActions();
+    void updateEncodingActions(const Editor *e);
+    void disableEncodingActions();
     void updateEditorActions(const Editor *e);
     void updateProjectActions();
     void updateCompileActions();
@@ -301,14 +303,15 @@ private:
     QStringList getDefaultCompilerSetBinDirs();
     void openShell(const QString& folder, const QString& shellCommand, const QStringList& binDirs);
     QAction* createAction(const QString& text,
-                             QWidget* parent,
-                             QKeySequence shortcut=QKeySequence());
+                          QWidget* parent,
+                          QKeySequence shortcut=QKeySequence(),
+                          Qt::ShortcutContext shortcutContext = Qt::ShortcutContext::WidgetWithChildrenShortcut
+                          );
     QAction* createShortcutCustomableAction(
             const QString& text,
             const QString& objectName,
             QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
-    void includeOrSkipDirs(const QStringList& dirs, bool skip);
     void showSearchReplacePanel(bool show);
     void clearIssues();
     void doCompileRun(RunType runType);

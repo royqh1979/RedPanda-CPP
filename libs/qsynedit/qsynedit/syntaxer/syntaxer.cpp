@@ -19,7 +19,6 @@
 
 namespace QSynedit {
 Syntaxer::Syntaxer() :
-    mEnabled(true),
     mWordBreakChars{ WordBreakChars }
 {
     mCommentAttribute = std::make_shared<TokenAttribute>(SYNS_AttrComment,
@@ -42,7 +41,7 @@ Syntaxer::Syntaxer() :
     addAttribute(mSymbolAttribute);
 }
 
-const QMap<QString, PTokenAttribute>& Syntaxer::attributes() const
+QMap<QString, PTokenAttribute> Syntaxer::attributes() const
 {
     return mAttributes;
 }
@@ -115,7 +114,7 @@ bool Syntaxer::supportBraceLevel()
 
 bool Syntaxer::isSpaceChar(const QChar &ch)
 {
-    return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
+    return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch.isSpace();
 }
 
 bool Syntaxer::isWordBreakChar(const QChar &ch)
@@ -216,18 +215,6 @@ QString Syntaxer::blockCommentBeginSymbol()
 QString Syntaxer::blockCommentEndSymbol()
 {
     return QString();
-}
-
-bool Syntaxer::enabled() const
-{
-    return mEnabled;
-}
-
-void Syntaxer::setEnabled(bool value)
-{
-    if (value != mEnabled) {
-        mEnabled = value;
-    }
 }
 
 FontStyles TokenAttribute::styles() const

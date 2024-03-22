@@ -119,8 +119,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>955</width>
-     <height>21</height>
+     <width>2345</width>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -177,9 +177,9 @@
     <property name="title">
      <string>Edit</string>
     </property>
-    <widget class="QMenu" name="menuMove_Cursor">
+    <widget class="QMenu" name="menuMove_Caret">
      <property name="title">
-      <string>Move Cursor</string>
+      <string>Move Caret</string>
      </property>
      <addaction name="actionPage_Up"/>
      <addaction name="actionPage_Down"/>
@@ -206,7 +206,7 @@
     <addaction name="actionFoldAll"/>
     <addaction name="actionUnfoldAll"/>
     <addaction name="separator"/>
-    <addaction name="menuMove_Cursor"/>
+    <addaction name="menuMove_Caret"/>
     <addaction name="actionDelete_Line"/>
     <addaction name="actionDuplicate_Line"/>
     <addaction name="actionDelete_Word"/>
@@ -946,6 +946,7 @@
        <widget class="IssuesTable" name="tableIssues">
         <property name="font">
          <font>
+          <weight>50</weight>
           <bold>false</bold>
          </font>
         </property>
@@ -3196,8 +3197,6 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

@@ -361,13 +361,6 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="chkScrollByOneLess">
-        <property name="text">
-         <string>Forces page scroll to be one line less</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QWidget" name="widget_6" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <property name="leftMargin">

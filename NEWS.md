@@ -22,7 +22,62 @@ Red Panda C++ Version 2.27
   - fix: Wrong indent for the line after the pasted context.
   - Enhancement: When '{' is inputted and there are contents selected, auto add line breaks and indents.
   - fix: Selected lines doesn't draw line break glyphs.
-
+  - fix: issue #215 (Caret may be drawn in the gutter.)
+  - change: Force use utf8 as the exec encoding for fmtlib in the auto link options page.
+  - fix: After spaces in comments and strings, symbol completion for '{' and '(' are wrong.
+  - fix: Issue #230 Crash when input " in the txt files.
+  - enhancement: Unique look&feel for the underline shown while ctrl+mouse over #include line.
+  - enhancement: Better look&feel for the wave underline shown for syntax errors.
+  - fix: "float" in #include "float.h" is wrong syntax colored.
+  - enhancement: Unify syntax color for #include header name
+  - enhancement: Issue #229 Press Enter/Return in the tree view in files panel will open the file.
+  - enhancement: Internal optimization for loading/editing files.
+  - enhancement: Show space glyphs in C/C++ char literals.
+  - enhancement: Optimization for string/raw string/char literal status check while completing symbols in c/c++ files.
+  - enhancement: Windows installer Hi-DPI support.
+  - fix: Delete/Insert in column editing mode.
+  - enhancement: Issue #196 Support C++ using alias in  syntax highlighting/code completion/function tips.
+  - enhancement: Support annonymous class
+  - fix: Using alias for global symbols are not correctly handled.
+  - enhancement: Support "enum struct" Scoped enumerations.
+  - fix: Function tips contains functions that not in the scope.
+  - fix: Hint for bold text (<b></b>) are not correctly handled in the function tips.
+  - enhancement: Improve lldb-mi compatibility.
+  - fix: Full scope typed variables in lambda expressions is not correctly parsed. 
+  - fix: Failed to evaluate expressions while debugging, if the expression has spaces in it.
+  - fix: When debugging, can't watch expressions that has spaces in it.
+  - fix: Shortcuts in non-editor panels conficts with the editor.
+  - enhancement: Font list in the options / editor / font panel( by CyanoHao  ). 
+  - enhancement: Text are vertically center aligned in lines( by CyanoHao  ).
+  - fix: In the debugger console, Auto-wrapped lines  can't be correctly selected.
+  - enhancement: Auto choose a better font for theme choosing dialog in the first run.
+  - fix: Debugger console's background not correctly cleared before redrawn.
+  - enhancement: Make output in the debug console cleaner.
+  - enhancement: Execute the last debug command in the debug console if ENTER pressed.
+  - change: When debugging, don't auto set focus to the editor.
+  - enhancement: Folding button scales with editor font.
+  - fix: Should show header completion popup in #include line comments.
+  - fix: Custom compile options not correctly parsed.
+  - enhancement: "Mouse scroll direction" option in Options / Editor / General
+  - change: Invert scroll direction in horizontal, like in vertical.
+  - enhancement: Show type completion info after 'const' and 'volatile'
+  - fix: Caret unseen when move to a long line end by press END.
+  - fix: No icons for inherited class private members.
+  - fix: Ctrl+Return insert linebreak shouldn't scroll unnecessarilly.
+  - enhancement: Move caret to line begin would scroll to the begin if possible.
+  - fix: Filename in tables in the debug panel are not correctly eroded.
+  - enhancement: Tooltip info for the stacktrace table in the debug panel.
+  - fix: '*=' is treadted as '*' when parsing. 
+  - fix: Can't correctly retrieve function parameters type.
+  - fix: Auto type induction for expression contains '[]' are not correct.
+  - fix: Option 'Pause after run in console' for tools doesn't work.
+  - fix: Filename that contains '&' doesn't correctly displayed in the editor tab.
+  - enhancement: Type induction for "auto &&" vars.
+  - enhancement: Syntax highlighting for c++ attributes.
+  - enhancement: Show "std::function" in the completion list.
+  - enhancement: Improvement in italic font support.
+  
+  
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
   - change: Use ctrl+mouseMove event to highlight jumpable symbols (instead of ctrl+tooltip).
@@ -73,6 +128,9 @@ Red Panda C++ Version 2.26
   - Fix: Function list is not correctly retrived for full-scoped functions.
   - Enhancement: Improved Raw string support
   - Enhancement: New option for compiler set "Don't localize gcc output messages"
+  - Enhancement: Optimization for drawing scrollbars.
+  - Enhancement: Issue #213 Expands macro when finding function tips.
+  
 
 Red Panda C++ Version 2.25
 

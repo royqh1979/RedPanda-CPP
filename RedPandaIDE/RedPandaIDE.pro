@@ -15,9 +15,7 @@ CONFIG += ENABLE_SDCC
 
 APP_NAME = RedPandaCPP
 
-APP_VERSION = 2.27
-
-APP_VERSION_SUFFIX = alpha
+include(../version.inc)
 
 # TEST_VERSION = beta2
 system(git rev-list HEAD --count): TEST_VERSION = $$system(git rev-list HEAD --count)
@@ -58,10 +56,15 @@ win32: {
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += LIBEXECDIR=\\\"$${LIBEXECDIR}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
+
+!isEmpty(APP_VERSION_SUFFIX): {
+    DEFINES += APP_VERSION_SUFFIX=\\\"$${APP_VERSION_SUFFIX}\\\"
+}
+
 isEmpty(TEST_VERSION) {
-    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}$${APP_VERSION_SUFFIX}\\\"
+    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}\\\"
 } else {
-    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}$${APP_VERSION_SUFFIX}.$${TEST_VERSION}\\\"
+    DEFINES += REDPANDA_CPP_VERSION=\\\"$${APP_VERSION}.$${TEST_VERSION}\\\"
 }
 win32 {
     _WINDOWS_PREFER_OPENCONSOLE = $$(WINDOWS_PREFER_OPENCONSOLE)
@@ -118,12 +121,16 @@ SOURCES += \
     compiler/projectcompiler.cpp \
     compiler/runner.cpp \
     customfileiconprovider.cpp \
-    gdbmiresultparser.cpp \
     compiler/compiler.cpp \
     compiler/compilermanager.cpp \
     compiler/executablerunner.cpp \
     compiler/filecompiler.cpp \
     compiler/stdincompiler.cpp \
+    debugger/debugger.cpp \
+    debugger/gdbmidebugger.cpp \
+    debugger/gdbmiresultparser.cpp \
+#    debugger/dapprotocol.cpp \
+#    debugger/dapdebugger.cpp \    
     cpprefacter.cpp \
     parser/cppparser.cpp \
     parser/cpppreprocessor.cpp \
@@ -176,7 +183,6 @@ SOURCES += \
     widgets/codecompletionlistview.cpp \
     widgets/codecompletionpopup.cpp \
     widgets/cpudialog.cpp \
-    debugger.cpp \
     editor.cpp \
     editorlist.cpp \
     iconsmanager.cpp \
@@ -198,14 +204,15 @@ SOURCES += \
     systemconsts.cpp \
     utils.cpp \
     utils/escape.cpp \
+    utils/font.cpp \
     utils/parsearg.cpp \
     widgets/coloredit.cpp \
     widgets/compileargumentswidget.cpp \
-    widgets/consolewidget.cpp \
     widgets/customdisablediconengine.cpp \
     widgets/customfilesystemmodel.cpp \
     widgets/custommakefileinfodialog.cpp \
     widgets/darkfusionstyle.cpp \
+    widgets/editorfontdialog.cpp \
     widgets/editorstabwidget.cpp \
     widgets/filenameeditdelegate.cpp \
     widgets/filepropertiesdialog.cpp \
@@ -252,9 +259,13 @@ HEADERS += \
     compiler/projectcompiler.h \
     compiler/runner.h \
     compiler/stdincompiler.h \
+    debugger/debugger.h \
+    debugger/gdbmidebugger.h \
+    debugger/gdbmiresultparser.h \
+#    debugger/dapprotocol.h \    
+#    debugger/dapdebugger.h \    
     cpprefacter.h \
     customfileiconprovider.h \
-    gdbmiresultparser.h \
     parser/cppparser.h \
     parser/cpppreprocessor.h \
     parser/cpptokenizer.h \
@@ -306,7 +317,6 @@ HEADERS += \
     widgets/codecompletionlistview.h \
     widgets/codecompletionpopup.h \
     widgets/cpudialog.h \
-    debugger.h \
     editor.h \
     editorlist.h \
     iconsmanager.h \
@@ -327,15 +337,16 @@ HEADERS += \
     systemconsts.h \
     utils.h \
     utils/escape.h \
+    utils/font.h \
     utils/parsearg.h \
     common.h \
     widgets/coloredit.h \
     widgets/compileargumentswidget.h \
-    widgets/consolewidget.h \
     widgets/customdisablediconengine.h \
     widgets/customfilesystemmodel.h \
     widgets/custommakefileinfodialog.h \
     widgets/darkfusionstyle.h \
+    widgets/editorfontdialog.h \
     widgets/editorstabwidget.h \
     widgets/filenameeditdelegate.h \
     widgets/filepropertiesdialog.h \
@@ -407,6 +418,7 @@ FORMS += \
     settingsdialog/executorgeneralwidget.ui \
     settingsdialog/settingsdialog.ui \
     widgets/custommakefileinfodialog.ui \
+    widgets/editorfontdialog.ui \
     widgets/filepropertiesdialog.ui \
     widgets/infomessagebox.ui \
     widgets/newclassdialog.ui \

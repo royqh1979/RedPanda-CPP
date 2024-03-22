@@ -14,9 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "consolewidget.h"
+#ifndef FONT_H
+#define FONT_H
 
-ConsoleWidget::ConsoleWidget(QWidget *parent):QTextEdit(parent)
-{
+#include <QString>
+#include <QStringList>
+#include <QLocale>
 
-}
+enum class UnicodeSupportLevel {
+    BmpOnly = 0,
+    FullCodePoint = 1,
+    Contextual = 2,
+    Grapheme = 3,
+    Bidirectional = 4,
+};
+
+QString defaultUiFont();
+QString defaultMonoFont();
+QString defaultEmojiFont();
+bool isCjk(const QString &locale = QLocale::system().name());
+QStringList defaultCjkEditorFonts(const QString &locale);
+QStringList defaultFallbackEditorFonts();
+QStringList defaultEditorFonts();
+
+#endif // FONT_H

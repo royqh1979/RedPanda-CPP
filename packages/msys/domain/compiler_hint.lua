@@ -2,7 +2,7 @@ function apiVersion()
    return {
       kind = "compiler_hint",
       major = 0,
-      minor = 1,
+      minor = 2,
    }
 end
 
@@ -264,7 +264,7 @@ function main()
          programs,
          {
             arch = appArch,
-            customLinkParams = { "-Wl,utf8init.o", "-Wl,utf8manifest.o" },
+            customLinkParams = {},
             isClang = true,
          })
 
@@ -303,7 +303,7 @@ function main()
             programs,
             {
                arch = foreignArch,
-               customLinkParams = { "-Wl,utf8init.o", "-Wl,utf8manifest.o" },
+               customLinkParams = {},
                isClang = true,
             })
 
@@ -347,7 +347,6 @@ function main()
             },
             customLinkParams = {
                "-target", msvcTriplet,
-               "-Wl,utf8init.o", "-Wl,utf8manifest.o",
             },
             isClang = true,
          })
@@ -387,7 +386,6 @@ function main()
                },
                customLinkParams = {
                   "-target", msvcTriplet,
-                  "-Wl,utf8init.o", "-Wl,utf8manifest.o",
                },
                isClang = true,
             })

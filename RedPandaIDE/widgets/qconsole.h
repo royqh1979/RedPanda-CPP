@@ -199,7 +199,7 @@ private:
     bool caretInSelection();
     QString removeSelection();
     bool hasSelection();
-    int computeScrollY(int Y);
+    int computeScrollY(int y);
     RowColumn pixelsToNearestRowColumn(int x,int y);
     QString lineBreak();
 

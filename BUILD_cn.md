@@ -1,6 +1,6 @@
 ﻿# 通用开发说明
 
-小熊猫 C++ 需要 Qt 5（≥ 5.12）。
+小熊猫 C++ 需要 Qt 5.15。
 
 推荐开发环境：
 1. Visual Studio Code。
@@ -11,6 +11,7 @@
    * 调试器的 Qt 集成。
 
 设置 Visual Studio Code 开发环境的步骤：
+0. 在 Windows 设置中，启用 “开发人员模式”。启用 Git 的 `core.symlinks` 选项（`git config core.symlinks true`）。
 1. 安装 [xmake](https://xmake.io/) 和 [XMake 扩展](https://marketplace.visualstudio.com/items?itemName=tboox.xmake-vscode)。
 2. 安装 [C/C++ 扩展](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) 以支持语言和调试功能。
 3. 根据需要安装 [clangd](https://clangd.llvm.org/) 和 [clangd 扩展](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)以获得更好的代码分析能力。
@@ -234,7 +235,7 @@ qmake 变量：
 通用步骤:
 
 - 安装支持 C++17 的 GCC（≥ 7）或 Clang（≥ 6）。
-- 安装 Qt 5（≥ 5.12）Base、SVG、Tools 模块，包括库和开发文件。
+- 安装 Qt 5.15 Base、SVG、Tools 模块，包括库和开发文件。
 - 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt。
 
 基于 qmake 构建：
@@ -375,39 +376,19 @@ Windows 宿主的额外要求：
 
 ## Linux AppImage
 
-1. 安装依赖包：Docker 或 Podman。
+Linux 宿主：
+```bash
+ARCH=x86_64
+podman run --rm -v $PWD:/mnt -w /mnt -e CARCH=$ARCH quay.io/redpanda-cpp/appimage-builder-$ARCH:20240304.0 packages/appimage/01-in-docker.sh
+```
 
-   Windows 宿主的额外要求：
-   - Docker 使用基于 WSL 2 的引擎，或者对此项目文件夹启用文件共享（Settings > Resources > File sharing）；
-   - PowerShell (Core) 或 Windows PowerShell。
-2. 准备构建环境。Linux 宿主：
-   ```bash
-   ARCH=x86_64 # 或 aarch64、riscv64
-   DOCKER=docker # 或 podman
-   $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
-   ```
-   Windows 宿主：
-   ```ps1
-   $ARCH = "x86_64" # 或 "aarch64"、"riscv64"
-   $DOCKER = "docker" # 或 "podman"
-   & $DOCKER build -t redpanda-builder-$ARCH packages/appimage/dockerfile-$ARCH
-   ```
-3. 构建 AppImage。Linux 宿主：
-   ```bash
-   ARCH=x86_64
-   DOCKER=docker
-   $DOCKER run --rm -v $PWD:/build/RedPanda-CPP -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
-   ```
-   Windows 宿主：
-   ```ps1
-   $ARCH = "x86_64"
-   $DOCKER = "docker"
-   & $DOCKER run --rm -v "$(Get-Location):/build/RedPanda-CPP" -e CARCH=$ARCH redpanda-builder-$ARCH /build/RedPanda-CPP/packages/appimage/01-in-docker.sh
-   ```
-4. 运行小熊猫 C++.
-   ```bash
-   ./dist/RedPandaIDE-x86_64.AppImage # 或 *-aarch64.AppImage、*-riscv64.AppImage
-   ```
+Windows 宿主：
+```ps1
+$ARCH = "x86_64"
+podman run --rm -v "$(Get-Location):/mnt" -w /mnt -e CARCH=$ARCH redpanda-builder-$ARCH packages/appimage/01-in-docker.sh
+```
+
+Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder)。
 
 ## 异架构的模拟本机构建（emulated native build）
 

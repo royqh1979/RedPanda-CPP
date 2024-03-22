@@ -8,16 +8,8 @@ url="https://github.com/royqh1979/$_pkgname"
 license=('GPL3')
 depends=(qt5-base qt5-svg gcc gdb)
 makedepends=(qt5-tools)
-makedepends_x86_64=(mingw-w64-gcc)
 optdepends=(
     'clang: C/C++ compiler (alternative)'
-)
-optdepends_x86_64=(
-    'mingw-w64-gcc: Windows C/C++ compiler'
-    'wine: run Windows executable'
-    'aarch64-linux-gnu-gcc: AArch64 C/C++ compiler'
-    'qemu-user-static: run AArch64 executable'
-    'qemu-user-static-binfmt: run AArch64 executable'
 )
 conflicts=("${_pkgname,,}")
 provides=("${_pkgname,,}")
@@ -35,14 +27,6 @@ prepare() {
 }
 
 build() {
-    local _utf8dir="$srcdir/$_pkgname/platform/windows/utf8"
-    if [[ "$CARCH" == 'x86_64' ]]; then
-        x86_64-w64-mingw32-gcc -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o utf8init.x86_64.o "$_utf8dir/utf8init.cpp"
-        x86_64-w64-mingw32-windres -O coff -o utf8manifest.x86_64.o "$_utf8dir/utf8manifest.rc"
-        i686-w64-mingw32-gcc -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o utf8init.i686.o "$_utf8dir/utf8init.cpp"
-        i686-w64-mingw32-windres -O coff -o utf8manifest.i686.o "$_utf8dir/utf8manifest.rc"
-    fi
-
     mkdir redpanda-build
     cd redpanda-build
     qmake \
@@ -55,13 +39,6 @@ build() {
 package() {
     local _libexecdir="$pkgdir/usr/lib/RedPandaCPP"
     install -Dm644 "compiler_hint.lua" "$_libexecdir/compiler_hint.lua"
-
-    if [[ "$CARCH" == 'x86_64' ]]; then
-        install -Dm644 "utf8init.x86_64.o" "$_libexecdir/x86_64-w64-mingw32/utf8init.o"
-        install -Dm644 "utf8manifest.x86_64.o" "$_libexecdir/x86_64-w64-mingw32/utf8manifest.o"
-        install -Dm644 "utf8init.i686.o" "$_libexecdir/i686-w64-mingw32/utf8init.o"
-        install -Dm644 "utf8manifest.i686.o" "$_libexecdir/i686-w64-mingw32/utf8manifest.o"
-    fi
 
     cd redpanda-build
     make INSTALL_ROOT="$pkgdir" install

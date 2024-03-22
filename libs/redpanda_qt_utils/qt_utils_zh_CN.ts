@@ -4,120 +4,120 @@
 <context>
     <name>CharsetInfoManager</name>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="116"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="159"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="223"/>
+        <location filename="qt_utils/charsetinfo.cpp" line="+116"/>
+        <location line="+43"/>
+        <location line="+64"/>
         <source>Arabic</source>
         <translation>阿拉伯语</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="117"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="131"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="156"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="224"/>
+        <location line="-106"/>
+        <location line="+14"/>
+        <location line="+25"/>
+        <location line="+68"/>
         <source>Greek</source>
         <translation>希腊语系</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="118"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="160"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="221"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="227"/>
+        <location line="-106"/>
+        <location line="+42"/>
+        <location line="+61"/>
+        <location line="+6"/>
         <source>Baltic</source>
         <translation>巴尔干语系</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="119"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="123"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="124"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="127"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="155"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="218"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="229"/>
+        <location line="-108"/>
+        <location line="+4"/>
+        <location line="+1"/>
+        <location line="+3"/>
+        <location line="+28"/>
+        <location line="+63"/>
+        <location line="+11"/>
         <source>Western Europe</source>
         <translation>西欧语系</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="120"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="153"/>
+        <location line="-109"/>
+        <location line="+33"/>
         <source>Central Europe</source>
         <translation>中欧语系</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="121"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="130"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="154"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="163"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="207"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="217"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="222"/>
+        <location line="-32"/>
+        <location line="+9"/>
+        <location line="+24"/>
+        <location line="+9"/>
+        <location line="+44"/>
+        <location line="+10"/>
+        <location line="+5"/>
         <source>Cyrillic</source>
         <translation>西里尔语系</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="122"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="157"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="220"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="226"/>
+        <location line="-100"/>
+        <location line="+35"/>
+        <location line="+63"/>
+        <location line="+6"/>
         <source>Turkish</source>
         <translation>土耳其语系</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="125"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="129"/>
+        <location line="-101"/>
+        <location line="+4"/>
         <source>Northern Europe</source>
         <translation>北欧语系</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="126"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="158"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="225"/>
+        <location line="-3"/>
+        <location line="+32"/>
+        <location line="+67"/>
         <source>Hebrew</source>
         <translation>希伯来语</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="133"/>
+        <location line="-92"/>
         <source>Thai</source>
         <translation>泰语</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="135"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="245"/>
+        <location line="+2"/>
+        <location line="+110"/>
         <source>Japanese</source>
         <translation>日语</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="136"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="138"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="250"/>
+        <location line="-109"/>
+        <location line="+2"/>
+        <location line="+112"/>
         <source>Chinese</source>
         <translation>中文</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="137"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="247"/>
+        <location line="-113"/>
+        <location line="+110"/>
         <source>Korean</source>
         <translation>汉语</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="151"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="179"/>
-        <location filename="qt_utils/charsetinfo.cpp" line="262"/>
+        <location line="-96"/>
+        <location line="+28"/>
+        <location line="+83"/>
         <source>Unicode</source>
         <translation>Unicode</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="161"/>
+        <location line="-101"/>
         <source>Vietnamese</source>
         <translation>越南语</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="219"/>
+        <location line="+58"/>
         <source>Eastern Europe</source>
         <translation>东欧语系</translation>
     </message>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="228"/>
+        <location line="+9"/>
         <source>Celtic</source>
         <translation>凯尔特语</translation>
     </message>
@@ -125,7 +125,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="qt_utils/utils.cpp" line="57"/>
+        <location filename="qt_utils/utils.cpp" line="+57"/>
         <source>Index %1 out of range</source>
         <translation>下标%1越界</translation>
     </message>

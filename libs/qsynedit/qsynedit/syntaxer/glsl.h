@@ -161,9 +161,8 @@ private:
 
     // SynHighligterBase interface
 public:
-    bool getTokenFinished() const override;
-    bool isLastLineCommentNotFinished(int state) const override;
-    bool isLastLineStringNotFinished(int state) const override;
+    bool isCommentNotFinished(int state) const override;
+    bool isStringNotFinished(int state) const override;
     bool eol() const override;
     QString getToken() const override;
     const PTokenAttribute &getTokenAttribute() const override;
@@ -176,25 +175,15 @@ public:
 
     QString languageName() override;
     ProgrammingLanguage language() override;
-
-    // SynHighlighter interface
-public:
     SyntaxState getState() const override;
-
-    // SynHighlighter interface
-public:
     QSet<QString> keywords() override;
-
-    // Highlighter interface
-public:
     bool supportBraceLevel() override;
-
-    // Syntaxer interface
-public:
     QString commentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
+    bool supportFolding() override;
+    bool needsLineState() override;
 };
 
 }
-#endif // SYNEDITGLSLHIGHLIGHTER_H
+#endif // QSYNEDIT_GLSL_SYNTAXER_H

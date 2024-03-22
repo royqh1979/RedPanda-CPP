@@ -6,34 +6,3 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
 	dh ${@} --buildsystem qmake
-
-ifeq ($(DEB_HOST_ARCH), amd64)
-
-MINGW_UTF8_OBJS = x86_64-w64-mingw32/utf8init.o i686-w64-mingw32/utf8init.o x86_64-w64-mingw32/utf8manifest.o i686-w64-mingw32/utf8manifest.o
-
-override_dh_auto_build: $(MINGW_UTF8_OBJS)
-	dh_auto_build -O--buildsystem qmake
-
-x86_64-w64-mingw32/utf8init.o: platform/windows/utf8/utf8init.cpp
-	mkdir -p $(dir $@)
-	x86_64-w64-mingw32-g++ -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o $@ $<
-
-x86_64-w64-mingw32/utf8manifest.o: platform/windows/utf8/utf8manifest.rc
-	mkdir -p $(dir $@)
-	x86_64-w64-mingw32-windres -O coff -o $@ $<
-
-i686-w64-mingw32/utf8init.o: platform/windows/utf8/utf8init.cpp
-	mkdir -p $(dir $@)
-	i686-w64-mingw32-g++ -Os -fno-exceptions -nodefaultlibs -nostdlib -c -o $@ $<
-
-i686-w64-mingw32/utf8manifest.o: platform/windows/utf8/utf8manifest.rc
-	mkdir -p $(dir $@)
-	i686-w64-mingw32-windres -O coff -o $@ $<
-
-override_dh_auto_install:
-	dh_auto_install -O--buildsystem=qmake
-	dh_install debian/compiler_hint.lua usr/libexec/RedPandaCPP
-	dh_install x86_64-w64-mingw32/* usr/libexec/RedPandaCPP/x86_64-w64-mingw32
-	dh_install i686-w64-mingw32/* usr/libexec/RedPandaCPP/i686-w64-mingw32
-
-endif

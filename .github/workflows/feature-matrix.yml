@@ -6,12 +6,15 @@ jobs:
   ubuntu_2204:
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
         lua_addon: ["y", "n"]
         sdcc: ["y", "n"]
         vcs: ["y", "n"]
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup xmake
         uses: xmake-io/github-action-setup-xmake@v1
@@ -40,12 +43,15 @@ jobs:
   windows_msvc_x64:
     runs-on: windows-2019
     strategy:
+      fail-fast: false
       matrix:
         lua_addon: ["y", "n"]
         sdcc: ["y", "n"]
         vcs: ["y", "n"]
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup xmake
         uses: xmake-io/github-action-setup-xmake@v1

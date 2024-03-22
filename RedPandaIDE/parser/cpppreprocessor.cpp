@@ -515,29 +515,29 @@ void CppPreprocessor::handleUndefine(const QString &line)
     }
 }
 
-QString CppPreprocessor::expandMacros(const QString &line, QSet<QString> usedMacros)
+QString CppPreprocessor::expandMacros(const QString &text, QSet<QString> usedMacros) const
 {
     QString word;
     QString newLine;
-    int lenLine = line.length();
+    int lenLine = text.length();
     int i=0;
     while (i< lenLine) {
-        QChar ch=line[i];
+        QChar ch=text[i];
         if (isWordChar(ch)) {
             word += ch;
         } else {
             if (!word.isEmpty()) {
-                expandMacro(line,newLine,word,i,usedMacros);
+                expandMacro(text,newLine,word,i,usedMacros);
             }
             word = "";
             if (i< lenLine) {
-                newLine += line[i];
+                newLine += text[i];
             }
         }
         i++;
     }
     if (!word.isEmpty()) {
-        expandMacro(line,newLine,word,i, usedMacros);
+        expandMacro(text,newLine,word,i, usedMacros);
     }
     return newLine;
 }
@@ -574,29 +574,29 @@ QString CppPreprocessor::expandMacros()
     return newLine;
 }
 
-void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString &word, int &i, QSet<QString> usedMacros)
+void CppPreprocessor::expandMacro(const QString &text, QString &newText, const QString &word, int &i, QSet<QString> usedMacros) const
 {
     if (usedMacros.contains(word))
         return;
-    int lenLine = line.length();
+    int lenLine = text.length();
     PDefine define = getDefine(word);
     if (define && define->args=="" ) {
         usedMacros.insert(word);
         if (define->value != word ) {
-            newLine += expandMacros(define->value,usedMacros);
+            newText += expandMacros(define->value,usedMacros);
         } else
-            newLine += word;
+            newText += word;
     } else if (define && (define->args!="")) {
-        while ((i<lenLine) && (line[i] == ' ' || line[i]=='\t'))
+        while ((i<lenLine) && (text[i] == ' ' || text[i]=='\t'))
             i++;
         int argStart=-1;
         int argEnd=-1;
-        if ((i<lenLine) && (line[i]=='(')) {
+        if ((i<lenLine) && (text[i]=='(')) {
             argStart =i+1;
             int level=0;
             bool inString=false;
             while (i<lenLine) {
-                switch(line[i].unicode()) {
+                switch(text[i].unicode()) {
                 case '\\':
                     if (inString)
                         i++;
@@ -618,19 +618,19 @@ void CppPreprocessor::expandMacro(const QString &line, QString &newLine, QString
             }
             if (level==0) {
                 argEnd = i-2;
-                QString args = line.mid(argStart,argEnd-argStart+1).trimmed();
+                QString args = text.mid(argStart,argEnd-argStart+1).trimmed();
                 QString formattedValue = expandFunction(define,args);
                 usedMacros.insert(word);
-                newLine += expandMacros(formattedValue,usedMacros);
+                newText += expandMacros(formattedValue,usedMacros);
             }
         }
     } else {
-        newLine += word;
+        newText += word;
     }
     //    }
 }
 
-void CppPreprocessor::expandMacro(QString &newLine, QString &word, int &i, QSet<QString> usedMacros)
+void CppPreprocessor::expandMacro(QString &newLine, const QString &word, int &i, QSet<QString> usedMacros)
 {
     if (usedMacros.contains(word))
         return;
@@ -1462,7 +1462,7 @@ bool CppPreprocessor::skipParenthesis(const QString &line, int &index, int step)
     return false;
 }
 
-QString CppPreprocessor::expandFunction(PDefine define, QString args)
+QString CppPreprocessor::expandFunction(PDefine define, const QString &args)
 {
     // Replace function by this string
     QString result = define->formatValue;
@@ -1523,7 +1523,6 @@ QString CppPreprocessor::expandFunction(PDefine define, QString args)
                 || (define->varArgIndex!=-1 && argValues.length() < define->argUsed.length()-1)
                 ) {
             qDebug()<<"*** Expand Macro error ***";
-            qDebug()<<this->mFileName<<":"<<this->mIndex;
             qDebug()<<"Macro: "<<define->name<<define->args;
             qDebug()<<"Actual param: "<<args;
             qDebug()<<"Params splitted: "<<argValues;

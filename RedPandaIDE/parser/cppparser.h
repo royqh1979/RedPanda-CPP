@@ -260,6 +260,7 @@ private:
     PStatement doFindStatementOf(const QString& fileName,
                                const QStringList& expression,
                                int line) const;
+    PStatement doFindAliasedStatement(const PStatement& statement, QSet<Statement *> foundSet) const;
     PStatement doFindAliasedStatement(const PStatement& statement) const;
 
     QList<PStatement> doListTypeStatements(const QString& fileName,int line) const;
@@ -274,13 +275,10 @@ private:
                                      const QString& phrase,
                                      int index,
                                      const PStatement& currentScope) const;
-
-    void fillListOfFunctions(const QString& fileName, int line,
-                             const PStatement& statement,
-                             const PStatement& scopeStatement, QStringList& list);
     QList<PStatement> getListOfFunctions(const QString& fileName, int line,
                                          const PStatement& statement,
                                          const PStatement& scopeStatement) const;
+    QSet<QString> internalGetIncludedFiles(const QString &filename) const;
     PStatement findMacro(const QString& phrase, const QString& fileName) const;
     PStatement findMemberOfStatement(
             const QString& filename,
@@ -675,6 +673,7 @@ private:
     int indexOfNextColon(int index);
     int indexOfNextLeftBrace(int index);
     int indexPassParenthesis(int index);
+    int indexOfNextRightParenthesis(int index);
 //    int indexPassBraces(int index);
     int skipAssignment(int index, int endIndex);
     void skipNextSemicolon(int index);
@@ -685,6 +684,8 @@ private:
     void parseCommandTypeAndArgs(QString& command,
                                  QString& typeSuffix,
                                  QString& args) const;
+    QString expandMacro(const QString& text) const;
+    static QStringList splitExpression(const QString& expr);
 private:
     int mParserId;
     ParserLanguage mLanguage;

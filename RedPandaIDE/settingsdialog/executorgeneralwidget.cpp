@@ -19,6 +19,8 @@
 #include "../settings.h"
 #include "../iconsmanager.h"
 #include "../systemconsts.h"
+#include "utils.h"
+#include "utils/font.h"
 #include "utils/parsearg.h"
 
 #include <QFileDialog>
@@ -30,7 +32,7 @@ ExecutorGeneralWidget::ExecutorGeneralWidget(const QString& name, const QString&
     ui(new Ui::ExecutorGeneralWidget)
 {
     ui->setupUi(this);
-    ui->txtParsedArgsInJson->setFont(QFont(DEFAULT_MONO_FONT));
+    ui->txtParsedArgsInJson->setFont(defaultMonoFont());
 #ifdef Q_OS_WIN
     ui->chkVTSeq->setVisible(true);
 #else

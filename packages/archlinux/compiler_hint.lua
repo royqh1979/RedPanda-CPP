@@ -2,72 +2,76 @@ function apiVersion()
    return {
       kind = "compiler_hint",
       major = 0,
-      minor = 1,
+      minor = 2,
    }
 end
 
-local nameMap = {
-   systemGcc = {
-      en_US = "System GCC",
-      pt_BR = "GCC do sistema",
-      zh_CN = "系统 GCC",
-      zh_TW = "系統 GCC",
+
+
+
+
+
+
+
+local compilerNameTemplate = {
+   system = {
+      en_US = "System %1, %2",
+      pt_BR = "%1 sistema, %2",
+      zh_CN = "系统 %1，%2",
+      zh_TW = "系統 %1，%2",
    },
-   systemClang = {
-      en_US = "System Clang",
-      pt_BR = "Clang do sistema",
-      zh_CN = "系统 Clang",
-      zh_TW = "系統 Clang",
+   multilib = {
+      en_US = "Multilib %1, %2",
+      pt_BR = "%1 multilib, %2",
+      zh_CN = "Multilib %1，%2",
+      zh_TW = "Multilib %1，%2",
    },
-   multilibGcc = {
-      en_US = "Multilib GCC",
-      pt_BR = "GCC multilib",
-      zh_CN = "Multilib GCC",
-      zh_TW = "Multilib GCC",
+   cross = {
+      en_US = "Cross %1 %3, %2",
+      pt_BR = "%1 cruzado %3, %2",
+      zh_CN = "交叉编译 %1 %3，%2",
+      zh_TW = "交叉編譯 %1 %3，%2",
    },
-   multilibClang = {
-      en_US = "Multilib Clang",
-      pt_BR = "Clang multilib",
-      zh_CN = "Multilib Clang",
-      zh_TW = "Multilib Clang",
-   },
-   crossGcc = {
-      en_US = "Cross GCC",
-      pt_BR = "GCC cruzado",
-      zh_CN = "交叉编译 GCC",
-      zh_TW = "交叉編譯 GCC",
-   },
-   mingwGcc = {
-      en_US = "MinGW GCC",
-      pt_BR = "GCC MinGW",
-      zh_CN = "MinGW GCC",
-      zh_TW = "MinGW GCC",
-   },
-   mingwClang = {
-      en_US = "MinGW Clang",
-      pt_BR = "Clang MinGW",
-      zh_CN = "MinGW Clang",
-      zh_TW = "MinGW Clang",
-   },
-   release = {
-      en_US = ", release",
-      pt_BR = ", lançamento",
-      zh_CN = "，发布",
-      zh_TW = "，發佈",
-   },
-   debug = {
-      en_US = ", debug",
-      pt_BR = ", depuração",
-      zh_CN = "，调试",
-      zh_TW = "，偵錯",
-   },
-   debugWithAsan = {
-      en_US = ", debug with ASan",
-      pt_BR = ", depuração com ASan",
-      zh_CN = "，ASan 调试",
-      zh_TW = "，ASan 偵錯",
+   mingw = {
+      en_US = "MinGW %1 %3, %2",
+      pt_BR = "MinGW %1 %3, %2",
+      zh_CN = "MinGW %1 %3，%2",
+      zh_TW = "MinGW %1 %3，%2",
    },
 }
+
+
+
+
+
+
+
+local profileNameMap = {
+   release = {
+      en_US = "release",
+      pt_BR = "lançamento",
+      zh_CN = "发布",
+      zh_TW = "發佈",
+   },
+   debug = {
+      en_US = "debug",
+      pt_BR = "depuração",
+      zh_CN = "调试",
+      zh_TW = "偵錯",
+   },
+   debugWithAsan = {
+      en_US = "debug with ASan",
+      pt_BR = "depuração com ASan",
+      zh_CN = "ASan 调试",
+      zh_TW = "ASan 偵錯",
+   },
+}
+
+local function nameGenerator(lang, name, kind, profile, arch)
+   local template = compilerNameTemplate[kind][lang] or compilerNameTemplate[kind].en_US
+   local profileName = profileNameMap[profile][lang] or profileNameMap[profile].en_US
+   return C_Util.format(template, name, profileName, arch)
+end
 
 local function mergeCompilerSet(compilerSet, other)
    local c = compilerSet
@@ -84,10 +88,8 @@ end
 
 
 
-
-
 local function generateConfig(
-   name, lang,
+   lang, name, kind,
    cCompiler, cxxCompiler,
    config)
 
@@ -97,11 +99,11 @@ local function generateConfig(
       debugger = "/usr/bin/gdb",
       debugServer = "/usr/bin/gdbserver",
       make = "/usr/bin/make",
-      compilerType = config.isClang and "Clang" or "GCC_UTF8",
+      compilerType = name:sub(1, 5) == "Clang" and "Clang" or "GCC_UTF8",
       preprocessingSuffix = ".i",
       compilationProperSuffix = ".s",
       assemblingSuffix = ".o",
-      executableSuffix = config.isMingw and ".exe" or "",
+      executableSuffix = kind == "mingw" and ".exe" or "",
       compilationStage = 3,
       ccCmdOptUsePipe = "on",
       ccCmdOptWarningAll = "on",
@@ -109,10 +111,10 @@ local function generateConfig(
       ccCmdOptCheckIsoConformance = "on",
       binDirs = { "/usr/bin" },
    }
-   if config.isMultilib then
+   if kind == "multilib" then
       commonOptions.ccCmdOptPointerSize = "32"
    end
-   if config.isMingw then
+   if kind == "mingw" then
       commonOptions.resourceCompiler = "/usr/bin/" .. config.triplet .. "-windres"
    end
    if config.customCompileParams then
@@ -122,17 +124,17 @@ local function generateConfig(
       commonOptions.customLinkParams = config.customLinkParams
    end
    local release = {
-      name = name .. (nameMap.release[lang] or nameMap.release.en_US),
+      name = nameGenerator(lang, name, kind, "release", config.arch),
       staticLink = true,
       linkCmdOptStripExe = "on",
       ccCmdOptOptimize = "2",
    }
    local debug_ = {
-      name = name .. (nameMap.debug[lang] or nameMap.debug.en_US),
+      name = nameGenerator(lang, name, kind, "debug", config.arch),
       ccCmdOptDebugInfo = "on",
    }
    local debugWithAsan = {
-      name = name .. (nameMap.debugWithAsan[lang] or nameMap.debugWithAsan.en_US),
+      name = nameGenerator(lang, name, kind, "debugWithAsan", config.arch),
       ccCmdOptDebugInfo = "on",
       ccCmdOptAddressSanitizer = "address",
    }
@@ -151,8 +153,20 @@ function main()
 
    do
       local release, debug_, debugWithAsan = generateConfig(
-      nameMap.systemGcc[lang] or nameMap.systemGcc.en_US, lang,
-      "/usr/bin/gcc", "/usr/bin/g++",
+      lang, "GCC", "system", "/usr/bin/gcc", "/usr/bin/g++",
+      {})
+
+      table.insert(compilerList, release)
+      table.insert(compilerList, debug_)
+      table.insert(compilerList, debugWithAsan)
+   end
+
+   local versionedGccs = C_FileSystem.matchFiles("/usr/bin", "^gcc-[0-9]+$")
+   for _, gcc in ipairs(versionedGccs) do
+      local version = gcc:sub(5)
+      local name = "GCC " .. version
+      local release, debug_, debugWithAsan = generateConfig(
+      lang, name, "system", "/usr/bin/" .. gcc, "/usr/bin/g++-" .. version,
       {})
 
       table.insert(compilerList, release)
@@ -162,9 +176,8 @@ function main()
 
    if C_FileSystem.isExecutable("/usr/bin/clang") then
       local release, debug_, debugWithAsan = generateConfig(
-      nameMap.systemClang[lang] or nameMap.systemClang.en_US, lang,
-      "/usr/bin/clang", "/usr/bin/clang++",
-      { isClang = true })
+      lang, "Clang", "system", "/usr/bin/clang", "/usr/bin/clang++",
+      {})
 
       table.insert(compilerList, release)
       table.insert(compilerList, debug_)
@@ -175,9 +188,8 @@ function main()
    if arch == "x86_64" and C_FileSystem.isExecutable("/usr/lib32/libstdc++.so") then
       do
          local release, debug_, debugWithAsan = generateConfig(
-         nameMap.multilibGcc[lang] or nameMap.multilibGcc.en_US, lang,
-         "/usr/bin/gcc", "/usr/bin/g++",
-         { isMultilib = true })
+         lang, "GCC", "multilib", "/usr/bin/gcc", "/usr/bin/g++",
+         {})
 
          table.insert(compilerList, release)
          table.insert(compilerList, debug_)
@@ -186,9 +198,8 @@ function main()
 
       if C_FileSystem.isExecutable("/usr/bin/clang") then
          local release, debug_, debugWithAsan = generateConfig(
-         nameMap.multilibClang[lang] or nameMap.multilibClang.en_US, lang,
-         "/usr/bin/clang", "/usr/bin/clang++",
-         { isClang = true, isMultilib = true })
+         lang, "Clang", "multilib", "/usr/bin/clang", "/usr/bin/clang++",
+         {})
 
          table.insert(compilerList, release)
          table.insert(compilerList, debug_)
@@ -203,9 +214,9 @@ function main()
       C_FileSystem.isExecutable("/usr/bin/aarch64-linux-gnu-gcc")) then
 
       local release, _, _ = generateConfig(
-      (nameMap.crossGcc[lang] or nameMap.crossGcc.en_US) .. " aarch64", lang,
+      lang, "GCC", "cross",
       "/usr/bin/aarch64-linux-gnu-gcc", "/usr/bin/aarch64-linux-gnu-g++",
-      {})
+      { arch = "aarch64" })
 
       table.insert(compilerList, release)
    end
@@ -218,19 +229,14 @@ function main()
 
 
       if C_FileSystem.isExecutable("/usr/bin/x86_64-w64-mingw32-gcc") then
-         local extraObjects = {
-            utf8init = libexecDir .. "/x86_64-w64-mingw32/utf8init.o",
-            utf8manifest = libexecDir .. "/x86_64-w64-mingw32/utf8manifest.o",
-         }
-
          do
             local release, _, _ = generateConfig(
-            (nameMap.mingwGcc[lang] or nameMap.mingwGcc.en_US) .. " x86_64", lang,
+            lang, "GCC", "mingw",
             "/usr/bin/x86_64-w64-mingw32-gcc", "/usr/bin/x86_64-w64-mingw32-g++",
             {
-               isMingw = true,
+               arch = "x86_64",
                triplet = "x86_64-w64-mingw32",
-               customLinkParams = { extraObjects.utf8init, extraObjects.utf8manifest },
+               customLinkParams = {},
             })
 
             table.insert(compilerList, release)
@@ -239,16 +245,13 @@ function main()
 
          if C_FileSystem.isExecutable("/usr/bin/clang") then
             local release, _, _ = generateConfig(
-            (nameMap.mingwClang[lang] or nameMap.mingwClang.en_US) .. " x86_64", lang,
-            "/usr/bin/clang", "/usr/bin/clang++",
+            lang, "Clang", "mingw", "/usr/bin/clang", "/usr/bin/clang++",
             {
-               isClang = true,
-               isMingw = true,
+               arch = "x86_64",
                triplet = "x86_64-w64-mingw32",
                customCompileParams = { "-target", "x86_64-w64-mingw32" },
                customLinkParams = {
                   "-target", "x86_64-w64-mingw32",
-                  extraObjects.utf8init, extraObjects.utf8manifest,
                   "-lstdc++", "-lwinpthread",
                },
             })
@@ -258,19 +261,14 @@ function main()
       end
 
       if C_FileSystem.isExecutable("/usr/bin/i686-w64-mingw32-gcc") then
-         local extraObjects = {
-            utf8init = libexecDir .. "/i686-w64-mingw32/utf8init.o",
-            utf8manifest = libexecDir .. "/i686-w64-mingw32/utf8manifest.o",
-         }
-
          do
             local release, _, _ = generateConfig(
-            (nameMap.mingwGcc[lang] or nameMap.mingwGcc.en_US) .. " i686", lang,
+            lang, "GCC", "mingw",
             "/usr/bin/i686-w64-mingw32-gcc", "/usr/bin/i686-w64-mingw32-g++",
             {
-               isMingw = true,
+               arch = "i686",
                triplet = "i686-w64-mingw32",
-               customLinkParams = { extraObjects.utf8init, extraObjects.utf8manifest },
+               customLinkParams = {},
             })
 
             table.insert(compilerList, release)
@@ -279,16 +277,14 @@ function main()
 
          if C_FileSystem.isExecutable("/usr/bin/clang") then
             local release, _, _ = generateConfig(
-            (nameMap.mingwClang[lang] or nameMap.mingwClang.en_US) .. " i686", lang,
+            lang, "Clang", "mingw",
             "/usr/bin/clang", "/usr/bin/clang++",
             {
-               isClang = true,
-               isMingw = true,
+               arch = "i686",
                triplet = "i686-w64-mingw32",
                customCompileParams = { "-target", "i686-w64-mingw32" },
                customLinkParams = {
                   "-target", "i686-w64-mingw32",
-                  extraObjects.utf8init, extraObjects.utf8manifest,
                   "-lstdc++", "-lwinpthread",
                },
             })

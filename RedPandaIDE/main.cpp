@@ -39,6 +39,7 @@
 #include "editorlist.h"
 #include "widgets/choosethemedialog.h"
 #include "thememanager.h"
+#include "utils/font.h"
 
 #ifdef Q_OS_WIN
 #include <QTemporaryFile>
@@ -368,6 +369,7 @@ int main(int argc, char *argv[])
         if (firstRun) {
             //set theme
             ChooseThemeDialog themeDialog;
+            themeDialog.setFont(QFont(defaultUiFont(),11));
             themeDialog.exec();
             switch (themeDialog.theme()) {
             case ChooseThemeDialog::Theme::AutoFollowSystem:

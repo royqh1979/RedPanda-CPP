@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "debugger.h"
+#include "gdbmidebugger.h"
 #include "utils.h"
 #include "utils/parsearg.h"
 #include "mainwindow.h"
@@ -52,7 +53,7 @@ Debugger::Debugger(QObject *parent) : QObject(parent),
     connect(mWatchModel.get(), &WatchModel::setWatchVarValue,
             this, &Debugger::setWatchVarValue);
     mExecuting = false;
-    mReader = nullptr;
+    mClient = nullptr;
     mTarget = nullptr;
     mCommandChanged = false;
     mLeftPageIndexBackup = -1;
@@ -72,7 +73,12 @@ Debugger::~Debugger()
 //    delete mMemoryModel;
 }
 
-bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStringList& binDirs, const QString& sourceFile)
+bool Debugger::startClient(int compilerSetIndex,
+                           const QString& inferior,
+                           bool inferiorHasSymbols,
+                           bool inferiorHasBreakpoints,
+                           const QStringList& binDirs,
+                           const QString& sourceFile)
 {
     mCurrentSourceFile = sourceFile;
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
@@ -92,7 +98,7 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
     else
         setDebuggerType(DebuggerType::GDB);
     // force to lldb-server if using lldb-mi, which creates new console but does not bind inferior’s stdio to the new console on Windows.
-    setUseDebugServer(pSettings->debugger().useGDBServer() || debuggerType() == DebuggerType::LLDB_MI);
+    setUseDebugServer(pSettings->debugger().useGDBServer() || mDebuggerType == DebuggerType::LLDB_MI);
     mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
     //QFile debuggerProgram(debuggerPath);
@@ -158,69 +164,87 @@ bool Debugger::start(int compilerSetIndex, const QString& inferior, const QStrin
         mTarget->waitStart();
     }
     //delete when thread finished
-    mReader = new DebugReader(this);
-    mReader->addBinDirs(binDirs);
-    mReader->addBinDir(pSettings->dirs().appDir());
-    mReader->setDebuggerPath(debuggerPath);
-    connect(mReader, &QThread::finished,this,&Debugger::cleanUpReader);
-    connect(mReader, &QThread::finished,mMemoryModel.get(),&MemoryModel::reset);
-    connect(mReader, &DebugReader::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
-    connect(mReader, &DebugReader::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
-    connect(mReader, &DebugReader::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
-    connect(mReader, &DebugReader::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
-    connect(mReader, &DebugReader::inferiorStopped, pMainWindow, &MainWindow::enableDebugActions);
+    mClient = new GDBMIDebuggerClient(this, debuggerType());
+    mClient->addBinDirs(binDirs);
+    mClient->addBinDir(pSettings->dirs().appDir());
+    mClient->setDebuggerPath(debuggerPath);
+    connect(mClient, &QThread::finished,this,&Debugger::cleanUpReader);
+    connect(mClient, &QThread::finished,mMemoryModel.get(),&MemoryModel::reset);
+    connect(mClient, &DebuggerClient::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
+    connect(mClient, &DebuggerClient::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
+    connect(mClient, &DebuggerClient::cmdStarted,pMainWindow, &MainWindow::disableDebugActions);
+    connect(mClient, &DebuggerClient::cmdFinished,pMainWindow, &MainWindow::enableDebugActions);
+    connect(mClient, &DebuggerClient::inferiorStopped, pMainWindow, &MainWindow::enableDebugActions);
 
-    connect(mReader, &DebugReader::breakpointInfoGetted, mBreakpointModel.get(),
+    connect(mClient, &DebuggerClient::breakpointInfoGetted, mBreakpointModel.get(),
             &BreakpointModel::updateBreakpointNumber);
-    connect(mReader, &DebugReader::localsUpdated, pMainWindow,
+    connect(mClient, &DebuggerClient::localsUpdated, pMainWindow,
             &MainWindow::onLocalsReady);
-    connect(mReader, &DebugReader::memoryUpdated,this,
+    connect(mClient, &DebuggerClient::memoryUpdated,this,
             &Debugger::updateMemory);
-    connect(mReader, &DebugReader::evalUpdated,this,
+    connect(mClient, &DebuggerClient::evalUpdated,this,
             &Debugger::updateEval);
-    connect(mReader, &DebugReader::disassemblyUpdate,this,
+    connect(mClient, &DebuggerClient::disassemblyUpdate,this,
             &Debugger::updateDisassembly);
-    connect(mReader, &DebugReader::registerNamesUpdated, this,
+    connect(mClient, &DebuggerClient::registerNamesUpdated, this,
             &Debugger::updateRegisterNames);
-    connect(mReader, &DebugReader::registerValuesUpdated, this,
+    connect(mClient, &DebuggerClient::registerValuesUpdated, this,
             &Debugger::updateRegisterValues);
-    connect(mReader, &DebugReader::varCreated,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::varCreated,mWatchModel.get(),
             &WatchModel::updateVarInfo);
-    connect(mReader, &DebugReader::prepareVarChildren,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::prepareVarChildren,mWatchModel.get(),
             &WatchModel::prepareVarChildren);
-    connect(mReader, &DebugReader::addVarChild,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::addVarChild,mWatchModel.get(),
             &WatchModel::addVarChild);
-    connect(mReader, &DebugReader::varValueUpdated,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::varValueUpdated,mWatchModel.get(),
             &WatchModel::updateVarValue);
-    connect(mReader, &DebugReader::varsValueUpdated,mWatchModel.get(),
+    connect(mClient, &DebuggerClient::varsValueUpdated,mWatchModel.get(),
             &WatchModel::updateAllHasMoreVars);
-    connect(mReader, &DebugReader::inferiorContinued,pMainWindow,
+    connect(mClient, &DebuggerClient::inferiorContinued,pMainWindow,
             &MainWindow::removeActiveBreakpoints);
-    connect(mReader, &DebugReader::inferiorStopped,pMainWindow,
+    connect(mClient, &DebuggerClient::inferiorStopped,pMainWindow,
             &MainWindow::setActiveBreakpoint);
-    connect(mReader, &DebugReader::watchpointHitted,pMainWindow,
+    connect(mClient, &DebuggerClient::watchpointHitted,pMainWindow,
             &MainWindow::onWatchpointHitted);
-    connect(mReader, &DebugReader::errorNoSymbolTable,pMainWindow,
+    connect(mClient, &DebuggerClient::errorNoSymbolTable,pMainWindow,
             &MainWindow::stopDebugForNoSymbolTable);
-    connect(mReader, &DebugReader::inferiorStopped,this,
+    connect(mClient, &DebuggerClient::inferiorStopped,this,
             &Debugger::refreshAll);
 
-    mReader->registerInferiorStoppedCommand("-stack-list-frames","");
-    mReader->start();
-    mReader->waitStart();
+    mClient->start();
+    mClient->waitStart();
 
+    mClient->initialize(inferior, inferiorHasSymbols);
+    includeOrSkipDirsInSymbolSearch(compilerSet->libDirs(), pSettings->debugger().skipCustomLibraries());
+    includeOrSkipDirsInSymbolSearch(compilerSet->CIncludeDirs(), pSettings->debugger().skipCustomLibraries());
+    includeOrSkipDirsInSymbolSearch(compilerSet->CppIncludeDirs(), pSettings->debugger().skipCustomLibraries());
+
+    //gcc system libraries is auto loaded by gdb
+    if (pSettings->debugger().skipSystemLibraries()) {
+        includeOrSkipDirsInSymbolSearch(compilerSet->defaultCIncludeDirs(),true);
+        includeOrSkipDirsInSymbolSearch(compilerSet->defaultCIncludeDirs(),true);
+        includeOrSkipDirsInSymbolSearch(compilerSet->defaultCppIncludeDirs(),true);
+    }
+
+    sendAllBreakpointsToDebugger();
     pMainWindow->updateAppTitle();
-
-    //Application.HintHidePause := 5000;
+    mInferiorHasBreakpoints = inferiorHasBreakpoints;
     return true;
 }
+
+void Debugger::runInferior()
+{
+    if (mClient)
+        mClient->runInferior(mInferiorHasBreakpoints);
+}
+
 void Debugger::stop() {
     if (mExecuting) {
         if (mTarget) {
             mTarget->stopDebug();
             mTarget = nullptr;
         }
-        mReader->stopDebug();
+        mClient->stopDebug();
     }
     mCurrentSourceFile="";
 }
@@ -230,8 +254,8 @@ void Debugger::cleanUpReader()
         mExecuting = false;
 
         //stop debugger
-        mReader->deleteLater();
-        mReader=nullptr;
+        mClient->deleteLater();
+        mClient=nullptr;
 
         if (pMainWindow->cpuDialog()!=nullptr) {
             pMainWindow->cpuDialog()->close();
@@ -269,12 +293,14 @@ void Debugger::updateRegisterValues(const QHash<int, QString> &values)
 void Debugger::refreshAll()
 {
     refreshWatchVars();
-    sendCommand("-stack-list-variables", "--all-values");
-    if (memoryModel()->startAddress()>0)
-        sendCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
-                    .arg(memoryModel()->startAddress())
-                    .arg(pSettings->debugger().memoryViewRows())
-                    .arg(pSettings->debugger().memoryViewColumns())
+    if (mClient)
+        mClient->refreshStackVariables();
+    if (memoryModel()->startAddress()>0
+            && mClient)
+        mClient->readMemory(
+                    QString("%1").arg(memoryModel()->startAddress()),
+                    pSettings->debugger().memoryViewRows(),
+                    pSettings->debugger().memoryViewColumns()
                     );
 }
 
@@ -288,32 +314,79 @@ std::shared_ptr<WatchModel> Debugger::watchModel() const
     return mWatchModel;
 }
 
-void Debugger::sendCommand(const QString &command, const QString &params, DebugCommandSource source)
-{
-    if (mExecuting && mReader) {
-        mReader->postCommand(command,params,source);
-    }
-}
-
 bool Debugger::commandRunning()
 {
-    if (mExecuting && mReader) {
-        return mReader->commandRunning();
+    if (mClient) {
+        return mClient->commandRunning();
     }
     return false;
 }
 
 bool Debugger::inferiorRunning()
 {
-    if (mExecuting && mReader) {
-        return mReader->inferiorRunning();
+    if (mClient) {
+        return mClient->inferiorRunning();
     }
     return false;
 }
 
 void Debugger::interrupt()
 {
-    sendCommand("-exec-interrupt", "");
+    if (mClient)
+        mClient->interrupt();
+}
+
+void Debugger::stepOver()
+{
+    if (mClient)
+        mClient->stepOver();
+}
+
+void Debugger::stepInto()
+{
+    if (mClient)
+        mClient->stepInto();
+}
+
+void Debugger::stepOut()
+{
+    if (mClient)
+        mClient->stepOut();
+}
+
+void Debugger::runTo(const QString &filename, int line)
+{
+    if (mClient)
+        mClient->runTo(filename, line);
+}
+
+void Debugger::resume()
+{
+    if (mClient)
+        mClient->resume();
+}
+
+void Debugger::stepOverInstruction()
+{
+    if (mClient)
+        mClient->stepOverInstruction();
+}
+
+void Debugger::stepIntoInstruction()
+{
+    if (mClient)
+        mClient->stepIntoInstruction();
+}
+
+void Debugger::runClientCommand(const QString &command, const QString &params, DebugCommandSource source)
+{
+    if (!mClient)
+        return;
+    if (mClient->clientType()!=DebuggerType::GDB
+            && mClient->clientType()!=DebuggerType::LLDB_MI)
+        return;
+    GDBMIDebuggerClient* gdbmiClient = dynamic_cast<GDBMIDebuggerClient*>(mClient);
+    gdbmiClient->postCommand(command, params, source);
 }
 
 bool Debugger::isForProject() const
@@ -436,13 +509,8 @@ PBreakpoint Debugger::breakpointAt(int line, const Editor *editor, int *index)
 void Debugger::setBreakPointCondition(int index, const QString &condition, bool forProject)
 {
     PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition, forProject);
-    if (condition.isEmpty()) {
-        sendCommand("-break-condition",
-                    QString("%1").arg(breakpoint->number));
-    } else {
-        sendCommand("-break-condition",
-                    QString("%1 %2").arg(breakpoint->number).arg(condition));
-    }
+    if (mClient)
+        mClient->setBreakpointCondition(breakpoint);
 }
 
 void Debugger::sendAllBreakpointsToDebugger()
@@ -494,8 +562,8 @@ void Debugger::loadForProject(const QString &filename, const QString &projectFol
 void Debugger::addWatchpoint(const QString &expression)
 {
     QString s=expression.trimmed();
-    if (!s.isEmpty()) {
-        sendCommand("-break-watch",s,DebugCommandSource::Other);
+    if (mClient) {
+        mClient->addWatchpoint(expression);
     }
 }
 
@@ -536,31 +604,29 @@ void Debugger::modifyWatchVarExpression(const QString &oldExpr, const QString &n
         var->name.clear();
         var->children.clear();
 
-        if (mExecuting) {
-            sendWatchCommand(var);
-        }
+        sendWatchCommand(var);
     }
 }
 
 void Debugger::refreshWatchVars()
 {
-    if (mExecuting) {
+    if (mClient) {
         sendAllWatchVarsToDebugger();
         if (mDebuggerType==DebuggerType::LLDB_MI) {
             for (PWatchVar var:mWatchModel->watchVars()) {
                 if (!var->name.isEmpty())
-                    sendCommand("-var-update",QString(" --all-values %1").arg(var->name));
+                    mClient->refreshWatch(var);
             }
         } else {
-            sendCommand("-var-update"," --all-values *");
+            mClient->refreshWatch();
         }
     }
 }
 
 void Debugger::fetchVarChildren(const QString &varName)
 {
-    if (mExecuting) {
-        sendCommand("-var-list-children",varName);
+    if (mClient) {
+        mClient->fetchWatchVarChildren(varName);
     }
 }
 
@@ -648,6 +714,55 @@ PWatchVar Debugger::watchVarAt(const QModelIndex &index)
     return mWatchModel->findWatchVar(index);
 }
 
+void Debugger::readMemory(const QString &startAddress, int rows, int cols)
+{
+    if (mClient)
+        mClient->readMemory(startAddress, rows, cols);
+}
+
+void Debugger::evalExpression(const QString &expression)
+{
+    if (mClient)
+        mClient->evalExpression(expression);
+}
+
+void Debugger::selectFrame(PTrace trace)
+{
+    if (mClient)
+        mClient->selectFrame(trace);
+}
+
+void Debugger::refreshFrame()
+{
+    if (mClient) {
+        mClient->refreshFrame();
+    }
+}
+
+void Debugger::refreshStackVariables()
+{
+    if (mClient)
+        mClient->refreshStackVariables();
+}
+
+void Debugger::refreshRegisters()
+{
+    if (mClient)
+        mClient->refreshRegisters();
+}
+
+void Debugger::disassembleCurrentFrame(bool blendMode)
+{
+    if (mClient)
+        mClient->disassembleCurrentFrame(blendMode);
+}
+
+void Debugger::setDisassemblyLanguage(bool isIntel)
+{
+    if (mClient)
+        mClient->setDisassemblyLanguage(isIntel);
+}
+
 //void Debugger::notifyWatchVarUpdated(PWatchVar var)
 //{
 //    mWatchModel->notifyUpdated(var);
@@ -664,36 +779,20 @@ std::shared_ptr<BreakpointModel> Debugger::breakpointModel()
 
 void Debugger::sendWatchCommand(PWatchVar var)
 {
-    sendCommand("-var-create", var->expression);
+    if (mClient)
+        mClient->addWatch(var->expression);
 }
 
 void Debugger::sendRemoveWatchCommand(PWatchVar var)
 {
-    sendCommand("-var-delete",QString("%1").arg(var->name));
+    if (mClient)
+        mClient->removeWatch(var);
 }
 
 void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
 {
-    if (breakpoint && mExecuting) {
-        // break "filename":linenum
-        QString condition;
-        if (!breakpoint->condition.isEmpty()) {
-            condition = " -c " + breakpoint->condition;
-        }
-        QString filename = breakpoint->filename;
-        filename.replace('\\','/');
-        if (debuggerType()==DebuggerType::LLDB_MI) {
-            sendCommand("-break-insert",
-                        QString("%1 \"%2:%3\"")
-                        .arg(condition, filename)
-                        .arg(breakpoint->line));
-        } else {
-            sendCommand("-break-insert",
-                        QString("%1 --source \"%2\" --line %3")
-                        .arg(condition,filename)
-                        .arg(breakpoint->line));
-        }
-    }
+    if (mClient)
+        mClient->addBreakpoint(breakpoint);
 }
 
 void Debugger::sendClearBreakpointCommand(int index, bool forProject)
@@ -703,14 +802,8 @@ void Debugger::sendClearBreakpointCommand(int index, bool forProject)
 
 void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
 {
-    // Debugger already running? Remove it from GDB
-    if (breakpoint && breakpoint->number>=0 && mExecuting) {
-        //clear "filename":linenum
-        QString filename = breakpoint->filename;
-        filename.replace('\\','/');
-        sendCommand("-break-delete",
-                QString("%1").arg(breakpoint->number));
-    }
+    if (mClient)
+        mClient->removeBreakpoint(breakpoint);
 }
 
 QJsonArray BreakpointModel::toJson(const QString& projectFolder)
@@ -871,12 +964,21 @@ void Debugger::addWatchVar(const PWatchVar &watchVar, bool forProject)
         sendWatchCommand(watchVar);
 }
 
+void Debugger::includeOrSkipDirsInSymbolSearch(const QStringList &dirs, bool skip)
+{
+    if (skip) {
+        mClient->skipDirectoriesInSymbolSearch(dirs);
+    } else {
+        mClient->addSymbolSearchDirectories(dirs);
+    }
+}
+
 void Debugger::syncFinishedParsing()
 {
     bool spawnedcpuform = false;
 
     // GDB determined that the source code is more recent than the executable. Ask the user if he wants to rebuild.
-    if (mReader->receivedSFWarning()) {
+    if (mClient->receivedSFWarning()) {
         if (QMessageBox::question(pMainWindow,
                                   tr("Compile"),
                                   tr("Source file is more recent than executable.")+"<BR /><BR />" + tr("Recompile?"),
@@ -892,41 +994,48 @@ void Debugger::syncFinishedParsing()
     // show command output
     if (pSettings->debugger().enableDebugConsole() ) {
         if (pSettings->debugger().showDetailLog()) {
-            for (const QString& line:mReader->fullOutput()) {
+            for (const QString& line:mClient->fullOutput()) {
                 pMainWindow->addDebugOutput(line);
             }
+            //pMainWindow->addDebugOutput("(gdb)");
         } else {
-            if (mReader->currentCmd() && mReader->currentCmd()->command == "disas") {
+            // if (mClient->currentCmd() && mClient->currentCmd()->command == "disas") {
 
-            } else {
-                for (const QString& line:mReader->consoleOutput()) {
+            // } else {
+            //     for (const QString& line:mClient->consoleOutput()) {
+            //         pMainWindow->addDebugOutput(line);
+            //     }
+            //     if (
+            //             (mClient->currentCmd()
+            //              && mClient->currentCmd()->source== DebugCommandSource::Console)
+            //             || !mClient->consoleOutput().isEmpty() ) {
+            //         pMainWindow->addDebugOutput("(gdb)");
+            //     }
+            // }
+            if (!mClient->consoleOutput().isEmpty()) {
+                for (const QString& line:mClient->consoleOutput()) {
                     pMainWindow->addDebugOutput(line);
                 }
-                if (
-                       (mReader->currentCmd()
-                        && mReader->currentCmd()->source== DebugCommandSource::Console)
-                        || !mReader->consoleOutput().isEmpty() ) {
-                    pMainWindow->addDebugOutput("(gdb)");
-                }
+                pMainWindow->addDebugOutput("(gdb)");
             }
         }
     }
 
     // The program to debug has stopped. Stop the debugger
-    if (mReader->processExited()) {
+    if (mClient->processExited()) {
         stop();
         return;
     }
 
-    if (mReader->signalReceived()
-            && mReader->signalName()!="SIGINT"
-            && mReader->signalName()!="SIGTRAP") {
+    if (mClient->signalReceived()
+            && mClient->signalName()!="SIGINT"
+            && mClient->signalName()!="SIGTRAP") {
         SignalMessageDialog dialog(pMainWindow);
         dialog.setOpenCPUInfo(pSettings->debugger().openCPUInfoWhenSignaled());
         dialog.setMessage(
-                    tr("Signal \"%1\" Received: ").arg(mReader->signalName())
+                    tr("Signal \"%1\" Received: ").arg(mClient->signalName())
                     + "<br />"
-                    + mReader->signalMeaning());
+                    + mClient->signalMeaning());
         int result = dialog.exec();
         if (result == QDialog::Accepted && dialog.openCPUInfo()) {
             pMainWindow->showCPUInfoDialog();
@@ -934,20 +1043,22 @@ void Debugger::syncFinishedParsing()
     }
 
     // CPU form updates itself when spawned, don't update twice!
-    if ((mReader->updateCPUInfo() && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
+    if ((mClient->updateCPUInfo() && !spawnedcpuform) && (pMainWindow->cpuDialog()!=nullptr)) {
         pMainWindow->cpuDialog()->updateInfo();
     }
 }
 
 void Debugger::setMemoryData(qulonglong address, unsigned char data)
 {
-    sendCommand("-data-write-memory-bytes", QString("%1 \"%2\"").arg(address).arg(data,2,16,QChar('0')));
+    if (mClient)
+        mClient->writeMemory(address, data);
     refreshAll();
 }
 
 void Debugger::setWatchVarValue(const QString &name, const QString &value)
 {
-    sendCommand("-var-assign",QString("%1 %2").arg(name,value));
+    if (mClient)
+        mClient->writeWatchVar(name, value);
     refreshAll();
 }
 
@@ -990,7 +1101,7 @@ bool Debugger::executing() const
     return mExecuting;
 }
 
-DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
+DebuggerClient::DebuggerClient(Debugger* debugger, QObject *parent) : QThread(parent),
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mCmdQueueMutex(),
 #else
@@ -999,938 +1110,84 @@ DebugReader::DebugReader(Debugger* debugger, QObject *parent) : QThread(parent),
     mStartSemaphore(0)
 {
     mDebugger = debugger;
-    mProcess = std::make_shared<QProcess>();
     mCmdRunning = false;
-    mAsyncUpdated = false;
 }
 
-void DebugReader::postCommand(const QString &Command, const QString &Params,
-                               DebugCommandSource Source)
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    PDebugCommand pCmd = std::make_shared<DebugCommand>();
-    pCmd->command = Command;
-    pCmd->params = Params;
-    pCmd->source = Source;
-    mCmdQueue.enqueue(pCmd);
-//    if (!mCmdRunning)
-    //        runNextCmd();
-}
-
-void DebugReader::registerInferiorStoppedCommand(const QString &Command, const QString &Params)
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    PDebugCommand pCmd = std::make_shared<DebugCommand>();
-    pCmd->command = Command;
-    pCmd->params = Params;
-    pCmd->source = DebugCommandSource::Other;
-    mInferiorStoppedHookCommands.append(pCmd);
-}
-
-void DebugReader::clearCmdQueue()
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    mCmdQueue.clear();
-}
-
-void DebugReader::processConsoleOutput(const QByteArray& line)
-{
-    if (line.length()>3 && line.startsWith("~\"") && line.endsWith("\"")) {
-        QByteArray s=line.mid(2,line.length()-3);
-        QByteArray stringValue;
-        const char *p=s.data();
-        while (*p!=0) {
-            if (*p=='\\' && *(p+1)!=0) {
-                p++;
-                switch (*p) {
-                case '\'':
-                    stringValue+=0x27;
-                    p++;
-                    break;
-                case '"':
-                    stringValue+=0x22;
-                    p++;
-                    break;
-                case '?':
-                    stringValue+=0x3f;
-                    p++;
-                    break;
-                case '\\':
-                    stringValue+=0x5c;
-                    p++;
-                    break;
-                case 'a':
-                    stringValue+=0x07;
-                    p++;
-                    break;
-                case 'b':
-                    stringValue+=0x08;
-                    p++;
-                    break;
-                case 'f':
-                    stringValue+=0x0c;
-                    p++;
-                    break;
-                case 'n':
-                    stringValue+=0x0a;
-                    p++;
-                    break;
-                case 'r':
-                    stringValue+=0x0d;
-                    p++;
-                    break;
-                case 't':
-                    stringValue+=0x09;
-                    p++;
-                    break;
-                case 'v':
-                    stringValue+=0x0b;
-                    p++;
-                    break;
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                {
-                    int i=0;
-                    for (i=0;i<3;i++) {
-                        if (*(p+i)<'0' || *(p+i)>'7')
-                            break;
-                    }
-                    QByteArray numStr(p,i);
-                    bool ok;
-                    unsigned char ch = numStr.toInt(&ok,8);
-                    stringValue+=ch;
-                    p+=i;
-                    break;
-                }
-                }
-            } else {
-                stringValue+=*p;
-                p++;
-            }
-        }
-        //mConsoleOutput.append(QString::fromLocal8Bit(stringValue));
-        mConsoleOutput.append(QString::fromUtf8(stringValue));
-    }
-}
-
-void DebugReader::processLogOutput(const QByteArray &line)
-{
-    if (mDebugger->debugInfosUsingUTF8() && line.endsWith(": No such file or directory.\n\"")) {
-        QByteArray newLine = line;
-        newLine[0]='~';
-        int p=newLine.lastIndexOf(':');
-        if (p>0) {
-            newLine=newLine.left(p);
-            //qDebug()<<newLine;
-            processConsoleOutput(newLine);
-        }
-    }
-}
-
-void DebugReader::processResult(const QByteArray &result)
-{
-    GDBMIResultParser parser;
-    GDBMIResultType resultType;
-    GDBMIResultParser::ParseObject multiValues;
-    if (!mCurrentCmd)
-        return;
-    bool parseOk = parser.parse(result, mCurrentCmd->command, resultType,multiValues);
-    if (!parseOk)
-        return;
-    switch(resultType) {
-    case GDBMIResultType::BreakpointTable:
-    case GDBMIResultType::Locals:
-        break;
-    case GDBMIResultType::Breakpoint:
-        handleBreakpoint(multiValues["bkpt"].object());
-        return;
-    case GDBMIResultType::Frame:
-        handleFrame(multiValues["frame"]);
-        return;
-    case GDBMIResultType::FrameStack:
-        handleStack(multiValues["stack"].array());
-        return;
-    case GDBMIResultType::LocalVariables:
-        handleLocalVariables(multiValues["variables"].array());
-        return;
-    case GDBMIResultType::Evaluation:
-        handleEvaluation(multiValues["value"].value());
-        return;
-    case GDBMIResultType::Memory:
-        handleMemory(multiValues["memory"].array());
-        return;
-    case GDBMIResultType::RegisterNames:
-        handleRegisterNames(multiValues["register-names"].array());
-        return;
-    case GDBMIResultType::RegisterValues:
-        handleRegisterValue(multiValues["register-values"].array());
-        return;
-    case GDBMIResultType::CreateVar:
-        handleCreateVar(multiValues);
-        return;
-    case GDBMIResultType::ListVarChildren:
-        handleListVarChildren(multiValues);
-        return;
-    case GDBMIResultType::UpdateVarValue:
-        handleUpdateVarValue(multiValues["changelist"].array());
-        return;
-    default:
-        return;
-    }
-
-}
-
-void DebugReader::processExecAsyncRecord(const QByteArray &line)
-{
-    QByteArray result;
-    GDBMIResultParser::ParseObject multiValues;
-    GDBMIResultParser parser;
-    if (!parser.parseAsyncResult(line,result,multiValues))
-        return;
-    if (result == "running") {
-        mInferiorRunning = true;
-        mCurrentAddress=0;
-        mCurrentFile.clear();
-        mCurrentLine=-1;
-        mCurrentFunc.clear();
-        emit inferiorContinued();
-        return;
-    }
-    if (result == "stopped") {
-        mInferiorRunning = false;
-        QByteArray reason = multiValues["reason"].value();
-        if (reason == "exited") {
-            //inferior exited, gdb should terminate too
-            mProcessExited = true;
-            return;
-        }
-        if (reason == "exited-normally") {
-            //inferior exited, gdb should terminate too
-            mProcessExited = true;
-            return;
-        }
-        if (reason == "exited-signalled") {
-            //inferior exited, gdb should terminate too
-            mProcessExited = true;
-            mSignalReceived = true;
-            return;
-        }
-        mUpdateCPUInfo = true;
-        handleFrame(multiValues["frame"]);
-        if (reason == "signal-received") {
-            mSignalReceived = true;
-            mSignalName = multiValues["signal-name"].value();
-            mSignalMeaning = multiValues["signal-meaning"].value();
-        } else if (reason == "watchpoint-trigger") {
-            QString var,oldVal,newVal;
-            GDBMIResultParser::ParseValue wpt=multiValues["wpt"];
-            if (wpt.isValid()) {
-                GDBMIResultParser::ParseObject wptObj = wpt.object();
-                var=wptObj["exp"].value();
-            }
-            GDBMIResultParser::ParseValue varValue=multiValues["value"];
-            if (varValue.isValid()) {
-                GDBMIResultParser::ParseObject valueObj = varValue.object();
-                oldVal=valueObj["old"].value();
-                newVal=valueObj["new"].value();
-            }
-            if (!var.isEmpty()) {
-                emit watchpointHitted(var,oldVal,newVal);
-            }
-        }
-        runInferiorStoppedHook();
-        if (reason.isEmpty()) {
-            QMutexLocker locker(&mCmdQueueMutex);
-            foreach (const PDebugCommand& cmd, mCmdQueue) {
-                //gdb-server connected, just ignore it
-                if (cmd->command=="-exec-continue")
-                    return;
-            }
-        }
-        if (mCurrentCmd && mCurrentCmd->source == DebugCommandSource::Console)
-            emit inferiorStopped(mCurrentFile, mCurrentLine, false);
-        else
-            emit inferiorStopped(mCurrentFile, mCurrentLine, true);
-    }
-}
-
-void DebugReader::processError(const QByteArray &errorLine)
-{
-    QString s = QString::fromLocal8Bit(errorLine);
-    mConsoleOutput.append(s);
-    int idx=s.indexOf(",msg=\"No symbol table is loaded");
-    if (idx>0) {
-        emit errorNoSymbolTable();
-        return;
-    }
-}
-static QRegularExpression reGdbSourceLine("^(\\d)+\\s+in\\s+(.+)$");
-
-void DebugReader::processResultRecord(const QByteArray &line)
-{
-    if (line.startsWith("^exit")) {
-        mProcessExited = true;
-        return;
-    }
-    if (line.startsWith("^error")) {
-        processError(line);
-        return;
-    }
-    if (line.startsWith("^done")
-            || line.startsWith("^running")) {
-        int pos = line.indexOf(',');
-        if (pos>=0) {
-            QByteArray result = line.mid(pos+1);
-            processResult(result);
-        } else if (mCurrentCmd && !(mCurrentCmd->command.startsWith('-'))) {
-            if (mCurrentCmd->command == "disas") {
-                QStringList disOutput = mConsoleOutput;
-                if (disOutput.length()>=3) {
-                    disOutput.pop_back();
-                    disOutput.pop_front();
-                    disOutput.pop_front();
-                }
-                if (mDebugger->debugInfosUsingUTF8()) {
-                    QStringList newOutput;
-                    foreach(const QString& s, disOutput) {
-                        QString line = s;
-                        if (!s.isEmpty() && s.front().isDigit()) {
-                            QRegularExpressionMatch match = reGdbSourceLine.match(s);
-//                            qDebug()<<s;
-                            if (match.hasMatch()) {
-                                bool isOk;
-                                int lineno=match.captured(1).toInt(&isOk)-1;;
-                                QString filename = match.captured(2).trimmed();
-                                if (isOk && fileExists(filename)) {
-                                    QStringList contents;
-                                    if (mFileCache.contains(filename))
-                                        contents = mFileCache.value(filename);
-                                    else {
-                                        if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,contents))
-                                            contents = readFileToLines(filename);
-                                        mFileCache[filename]=contents;
-                                    }
-                                    if (lineno>=0 && lineno<contents.size()) {
-                                        line = QString("%1\t%2").arg(lineno+1).arg(contents[lineno]);
-                                    }
-                                }
-                            }
-                        }
-                        newOutput.append(line);
-                    }
-                    disOutput=newOutput;
-                }
-                emit disassemblyUpdate(mCurrentFile,mCurrentFunc, disOutput);
-            }
-        }
-        return ;
-    }
-    if (line.startsWith("^connected")) {
-        //TODO: connected to remote target
-        return;
-    }
-}
-
-void DebugReader::processDebugOutput(const QByteArray& debugOutput)
-{
-    // Only update once per update at most
-    //WatchView.Items.BeginUpdate;
-
-    emit parseStarted();
-
-    mConsoleOutput.clear();
-    mFullOutput.clear();
-
-    mSignalReceived = false;
-    mUpdateCPUInfo = false;
-    mReceivedSFWarning = false;
-    QList<QByteArray> lines = splitByteArrayToLines(debugOutput);
-
-    for (int i=0;i<lines.count();i++) {
-         QByteArray line = lines[i];
-         if (pSettings->debugger().showDetailLog())
-            mFullOutput.append(line);
-         line = removeToken(line);
-         if (line.isEmpty()) {
-             continue;
-         }
-         switch (line[0]) {
-         case '~': // console stream output
-             processConsoleOutput(line);
-             break;
-         case '@': // target stream output
-             break;
-         case '&': // log stream output
-             processLogOutput(line);
-             break;
-         case '^': // result record
-             processResultRecord(line);
-             break;
-         case '*': // exec async output
-             processExecAsyncRecord(line);
-             break;
-         case '+': // status async output
-         case '=': // notify async output
-             break;
-         }
-    }
-    emit parseFinished();
-    mConsoleOutput.clear();
-    mFullOutput.clear();
-}
-
-void DebugReader::runInferiorStoppedHook()
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    foreach (const PDebugCommand& cmd, mInferiorStoppedHookCommands) {
-        mCmdQueue.push_front(cmd);
-    }
-}
-
-void DebugReader::runNextCmd()
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-
-    if (mCurrentCmd) {
-        DebugCommandSource commandSource = mCurrentCmd->source;
-        mCurrentCmd=nullptr;
-        if (commandSource!=DebugCommandSource::HeartBeat)
-            emit cmdFinished();
-    }
-    if (mCmdQueue.isEmpty()) {
-        if (mDebugger->useDebugServer() && mInferiorRunning && !mAsyncUpdated) {
-            mAsyncUpdated = true;
-            QTimer::singleShot(50,this,&DebugReader::asyncUpdate);
-        }
-        return;
-    }
-
-    PDebugCommand pCmd = mCmdQueue.dequeue();
-    mCmdRunning = true;
-    mCurrentCmd = pCmd;
-    if (pCmd->source!=DebugCommandSource::HeartBeat)
-        emit cmdStarted();
-
-    QByteArray s;
-    QByteArray params;
-    s=pCmd->command.toLocal8Bit();
-    if (!pCmd->params.isEmpty()) {
-        params = pCmd->params.toLocal8Bit();
-    }
-
-    //clang compatibility
-    if (mDebugger->forceUTF8()) {
-        params = pCmd->params.toUtf8();
-    } else if (mDebugger->debugInfosUsingUTF8() &&
-               (pCmd->command=="-break-insert"
-                || pCmd->command=="-var-create"
-                || pCmd->command=="-data-read-memory"
-                || pCmd->command=="-data-evaluate-expression"
-                )) {
-        params = pCmd->params.toUtf8();
-    }
-    if (pCmd->command == "-var-create") {
-        //hack for variable creation,to easy remember var expression
-        if (mDebugger->debuggerType()==DebuggerType::LLDB_MI)
-            params = " - * "+params;
-        else
-            params = " - @ "+params;
-    } else if (pCmd->command == "-var-list-children") {
-        //hack for list variable children,to easy remember var expression
-        params = " --all-values \"" + params+'\"';
-    }
-    s+=" "+params;
-    s+= "\n";
-    if (mProcess->write(s)<0) {
-        emit writeToDebugFailed();
-    }
-
-//  if devDebugger.ShowCommandLog or pCmd^.ShowInConsole then begin
-    if (pSettings->debugger().enableDebugConsole() ) {
-        //update debug console
-        if (pSettings->debugger().showDetailLog()
-                && pCmd->source != DebugCommandSource::Console) {
-            emit changeDebugConsoleLastLine(pCmd->command + ' ' + params);
-        }
-    }
-}
-
-QStringList DebugReader::tokenize(const QString &s)
-{
-    QStringList result;
-    int tStart,tEnd;
-    int i=0;
-    while (i<s.length()) {
-        QChar ch = s[i];
-        if (ch == ' ' || ch == '\t'
-                || ch == '\r'
-                || ch == '\n') {
-//            if (!current.isEmpty()) {
-//                result.append(current);
-//                current = "";
-//            }
-            i++;
-            continue;
-        } else if (ch == '\'') {
-            tStart = i;
-            i++; //skip \'
-            while (i<s.length()) {
-                if (s[i]=='\'') {
-                    i++;
-                    break;
-                } else if (s[i] == '\\') {
-                    i+=2;
-                    continue;
-                }
-                i++;
-            }
-            tEnd = std::min(i,s.length());
-            result.append(s.mid(tStart,tEnd-tStart));
-        } else if (ch == '\"') {
-            tStart = i;
-            i++; //skip \'
-            while (i<s.length()) {
-                if (s[i]=='\"') {
-                    i++;
-                    break;
-                } else if (s[i] == '\\') {
-                    i+=2;
-                    continue;
-                }
-                i++;
-            }
-            tEnd = std::min(i,s.length());
-            result.append(s.mid(tStart,tEnd-tStart));
-        } else if (ch == '<') {
-            tStart = i;
-            i++;
-            while (i<s.length()) {
-                if (s[i]=='>') {
-                    i++;
-                    break;
-                }
-                i++;
-            }
-            tEnd = std::min(i,s.length());
-            result.append(s.mid(tStart,tEnd-tStart));
-        } else if (ch == '(') {
-            tStart = i;
-            i++;
-            while (i<s.length()) {
-                if (s[i]==')') {
-                    i++;
-                    break;
-                }
-                i++;
-            }
-            tEnd = std::min(i,s.length());
-            result.append(s.mid(tStart,tEnd-tStart));
-        } else if (ch == '_' ||
-                   ch == '.' ||
-                   ch == '+' ||
-                   ch == '-' ||
-                   ch.isLetterOrNumber() ) {
-            tStart = i;
-            while (i<s.length()) {
-                ch = s[i];
-                if (!(ch == '_' ||
-                     ch == '.' ||
-                     ch == '+' ||
-                     ch == '-' ||
-                     ch.isLetterOrNumber() ))
-                    break;
-                i++;
-            }
-            tEnd = std::min(i,s.length());
-            result.append(s.mid(tStart,tEnd-tStart));
-        } else {
-            result.append(s[i]);
-            i++;
-        }
-    }
-    return result;
-}
-
-bool DebugReader::outputTerminated(const QByteArray &text)
-{
-    QStringList lines = textToLines(QString::fromUtf8(text));
-    foreach (const QString& line,lines) {
-        if (line.trimmed() == "(gdb)")
-            return true;
-    }
-    return false;
-}
-
-void DebugReader::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
-{
-    QString filename;
-    // gdb use system encoding for file path
-    if (mDebugger->forceUTF8() || mDebugger->debugInfosUsingUTF8())
-        filename = breakpoint["fullname"].utf8PathValue();
-    else
-        filename = breakpoint["fullname"].pathValue();
-    int line = breakpoint["line"].intValue();
-    int number = breakpoint["number"].intValue();
-    emit breakpointInfoGetted(filename, line , number);
-}
-
-void DebugReader::handleFrame(const GDBMIResultParser::ParseValue &frame)
-{
-    if (frame.isValid()) {
-        GDBMIResultParser::ParseObject frameObj = frame.object();
-        bool ok;
-        mCurrentAddress = frameObj["addr"].hexValue(ok);
-        if (!ok)
-            mCurrentAddress=0;
-        mCurrentLine = frameObj["line"].intValue();
-        if (mDebugger->forceUTF8()
-                || mDebugger->debugInfosUsingUTF8())
-            mCurrentFile = frameObj["fullname"].utf8PathValue();
-        else
-            mCurrentFile = frameObj["fullname"].pathValue();
-        mCurrentFunc = frameObj["func"].value();
-    }
-}
-
-void DebugReader::handleStack(const QList<GDBMIResultParser::ParseValue> & stack)
-{
-    mDebugger->backtraceModel()->clear();
-    foreach (const GDBMIResultParser::ParseValue& frameValue, stack) {
-        GDBMIResultParser::ParseObject frameObject = frameValue.object();
-        PTrace trace = std::make_shared<Trace>();
-        trace->funcname = frameObject["func"].value();
-        if (mDebugger->forceUTF8() || mDebugger->debugInfosUsingUTF8())
-            trace->filename = frameObject["fullname"].utf8PathValue();
-        else
-            trace->filename = frameObject["fullname"].pathValue();
-        trace->line = frameObject["line"].intValue();
-        trace->level = frameObject["level"].intValue(0);
-        trace->address = frameObject["addr"].value();
-        mDebugger->backtraceModel()->addTrace(trace);
-    }
-}
-
-void DebugReader::handleLocalVariables(const QList<GDBMIResultParser::ParseValue> &variables)
-{
-    QStringList locals;
-    foreach (const GDBMIResultParser::ParseValue& varValue, variables) {
-        GDBMIResultParser::ParseObject varObject = varValue.object();
-        QString name = QString(varObject["name"].value());
-        QString value = QString(varObject["value"].value());
-        locals.append(
-                    QString("%1 = %2")
-                    .arg(
-                        name,
-                        value
-                ));
-    }
-    emit localsUpdated(locals);
-}
-
-void DebugReader::handleEvaluation(const QString &value)
-{
-    emit evalUpdated(value);
-}
-
-void DebugReader::handleMemory(const QList<GDBMIResultParser::ParseValue> &rows)
-{
-    QStringList memory;
-    foreach (const GDBMIResultParser::ParseValue& row, rows) {
-        GDBMIResultParser::ParseObject rowObject = row.object();
-        QList<GDBMIResultParser::ParseValue> data = rowObject["data"].array();
-        QStringList values;
-        foreach (const GDBMIResultParser::ParseValue& val, data) {
-            values.append(val.value());
-        }
-        memory.append(QString("%1 %2")
-                            .arg(rowObject["addr"].value(),values.join(" ")));
-    }
-    emit memoryUpdated(memory);
-}
-
-void DebugReader::handleRegisterNames(const QList<GDBMIResultParser::ParseValue> &names)
-{
-    QStringList nameList;
-    foreach (const GDBMIResultParser::ParseValue& nameValue, names) {
-//        QString text = nameValue.value().trimmed();
-//        if (!text.isEmpty())
-            nameList.append(nameValue.value());
-    }
-    emit registerNamesUpdated(nameList);
-}
-
-void DebugReader::handleRegisterValue(const QList<GDBMIResultParser::ParseValue> &values)
-{
-    QHash<int,QString> result;
-    foreach (const GDBMIResultParser::ParseValue& val, values) {
-        GDBMIResultParser::ParseObject obj = val.object();
-        int number = obj["number"].intValue();
-        QString value = obj["value"].value();
-        bool ok;
-        long long intVal;
-        intVal = value.toLongLong(&ok,10);
-        if (ok) {
-            value = QString("0x%1").arg(intVal,0,16);
-        }
-        result.insert(number,value);
-    }
-    emit registerValuesUpdated(result);
-}
-
-void DebugReader::handleCreateVar(const GDBMIResultParser::ParseObject &multiVars)
-{
-    if (!mCurrentCmd)
-        return;
-    QString expression = mCurrentCmd->params;
-    QString name = multiVars["name"].value();
-    int numChild = multiVars["numchild"].intValue(0);
-    QString value = multiVars["value"].value();
-    QString type = multiVars["type"].value();
-    bool hasMore = multiVars["has_more"].value() != "0";
-    emit varCreated(expression,name,numChild,value,type,hasMore);
-}
-
-void DebugReader::handleListVarChildren(const GDBMIResultParser::ParseObject &multiVars)
-{
-    if (!mCurrentCmd)
-        return;
-    QString parentName = mCurrentCmd->params;
-    int parentNumChild = multiVars["numchild"].intValue(0);
-    QList<GDBMIResultParser::ParseValue> children = multiVars["children"].array();
-    bool hasMore = multiVars["has_more"].value()!="0";
-    emit prepareVarChildren(parentName,parentNumChild,hasMore);
-    foreach(const GDBMIResultParser::ParseValue& child, children) {
-        GDBMIResultParser::ParseObject childObj = child.object();
-        QString name = childObj["name"].value();
-        QString exp = childObj["exp"].value();
-        int numChild = childObj["numchild"].intValue(0);
-        QString value = childObj["value"].value();
-        QString type = childObj["type"].value();
-        bool hasMore = childObj["has_more"].value() != "0";
-        emit addVarChild(parentName,
-                         name,
-                         exp,
-                         numChild,
-                         value,
-                         type,
-                         hasMore);
-    }
-}
-
-void DebugReader::handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes)
-{
-    foreach (const GDBMIResultParser::ParseValue& value, changes) {
-        GDBMIResultParser::ParseObject obj = value.object();
-        QString name = obj["name"].value();
-        QString val = obj["value"].value();
-        QString inScope = obj["in_scope"].value();
-        bool typeChanged = (obj["type_changed"].value()=="true");
-        QString newType = obj["new_type"].value();
-        int newNumChildren = obj["new_num_children"].intValue(-1);
-        bool hasMore = (obj["has_more"].value() == "1");
-        emit varValueUpdated(name,val,inScope,typeChanged,newType,newNumChildren,
-                             hasMore);
-    }
-    //todo: -var-list-children will freeze if the var is not correctly initialized
-    //emit varsValueUpdated();
-}
-
-QByteArray DebugReader::removeToken(const QByteArray &line)
-{
-    int p=0;
-    while (p<line.length()) {
-        QChar ch=line[p];
-        if (ch<'0' || ch>'9') {
-            break;
-        }
-        p++;
-    }
-    if (p<line.length())
-        return line.mid(p);
-    return line;
-}
-
-void DebugReader::asyncUpdate()
-{
-    QMutexLocker locker(&mCmdQueueMutex);
-    if (mCmdQueue.isEmpty()) {
-        postCommand("-var-update"," --all-values *",DebugCommandSource::HeartBeat);
-    }
-    mAsyncUpdated = false;
-}
-
-const QStringList &DebugReader::binDirs() const
+const QStringList &DebuggerClient::binDirs() const
 {
     return mBinDirs;
 }
 
-void DebugReader::addBinDirs(const QStringList &binDirs)
+void DebuggerClient::addBinDirs(const QStringList &binDirs)
 {
     mBinDirs.append(binDirs);
 }
 
-void DebugReader::addBinDir(const QString &binDir)
+void DebuggerClient::addBinDir(const QString &binDir)
 {
     mBinDirs.append(binDir);
 }
 
-const QString &DebugReader::signalMeaning() const
+const QString &DebuggerClient::signalMeaning() const
 {
     return mSignalMeaning;
 }
 
-const QString &DebugReader::signalName() const
+const QString &DebuggerClient::signalName() const
 {
     return mSignalName;
 }
 
-bool DebugReader::inferiorRunning() const
+bool DebuggerClient::inferiorRunning() const
 {
     return mInferiorRunning;
 }
 
-const QStringList &DebugReader::fullOutput() const
+const QStringList &DebuggerClient::fullOutput() const
 {
     return mFullOutput;
 }
 
-bool DebugReader::receivedSFWarning() const
+bool DebuggerClient::receivedSFWarning() const
 {
     return mReceivedSFWarning;
 }
 
-bool DebugReader::updateCPUInfo() const
+bool DebuggerClient::updateCPUInfo() const
 {
     return mUpdateCPUInfo;
 }
 
-const PDebugCommand &DebugReader::currentCmd() const
-{
-    return mCurrentCmd;
-}
-
-const QStringList &DebugReader::consoleOutput() const
+const QStringList &DebuggerClient::consoleOutput() const
 {
     return mConsoleOutput;
 }
 
-bool DebugReader::signalReceived() const
+bool DebuggerClient::signalReceived() const
 {
     return mSignalReceived;
 }
 
-bool DebugReader::processExited() const
+bool DebuggerClient::processExited() const
 {
     return mProcessExited;
 }
 
-QString DebugReader::debuggerPath() const
+QString DebuggerClient::debuggerPath() const
 {
     return mDebuggerPath;
 }
 
-void DebugReader::setDebuggerPath(const QString &debuggerPath)
+void DebuggerClient::setDebuggerPath(const QString &debuggerPath)
 {
     mDebuggerPath = debuggerPath;
 }
 
-void DebugReader::stopDebug()
-{
-    mStop = true;
-}
-
-bool DebugReader::commandRunning()
-{
-    return !mCmdQueue.isEmpty();
-}
-
-void DebugReader::waitStart()
+void DebuggerClient::waitStart()
 {
     mStartSemaphore.acquire(1);
 }
 
-void DebugReader::run()
-{
-    mStop = false;
-    mInferiorRunning = false;
-    mProcessExited = false;
-    mErrorOccured = false;
-    QString cmd = mDebuggerPath;
-//    QString arguments = "--annotate=2";
-    QStringList arguments{"--interpret=mi", "--silent"};
-    QString workingDir = QFileInfo(mDebuggerPath).path();
-
-    mProcess = std::make_shared<QProcess>();
-    auto action = finally([&]{
-        mProcess.reset();
-    });
-    mProcess->setProgram(cmd);
-    mProcess->setArguments(arguments);
-    mProcess->setProcessChannelMode(QProcess::MergedChannels);
-
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    QString path = env.value("PATH");
-    QStringList pathAdded = mBinDirs;
-    if (!path.isEmpty()) {
-        path = pathAdded.join(PATH_SEPARATOR) + PATH_SEPARATOR + path;
-    } else {
-        path = pathAdded.join(PATH_SEPARATOR);
-    }
-    QString cmdDir = extractFileDir(cmd);
-    if (!cmdDir.isEmpty()) {
-        path = cmdDir + PATH_SEPARATOR + path;
-    }
-    env.insert("PATH",path);
-    mProcess->setProcessEnvironment(env);
-
-    mProcess->setWorkingDirectory(workingDir);
-
-    connect(mProcess.get(), &QProcess::errorOccurred,
-                    [&](){
-                        mErrorOccured= true;
-                    });
-    QByteArray buffer;
-    QByteArray readed;
-
-    mProcess->start();
-    mProcess->waitForStarted(5000);
-    mStartSemaphore.release(1);
-    while (true) {
-        mProcess->waitForFinished(1);
-        if (mProcess->state()!=QProcess::Running) {
-            break;
-        }
-        if (mStop) {
-            mProcess->terminate();
-            mProcess->kill();
-            break;
-        }
-        if (mErrorOccured)
-            break;
-        readed = mProcess->readAll();
-        buffer += readed;
-
-        if (readed.endsWith("\n")&& outputTerminated(buffer)) {
-            processDebugOutput(buffer);
-            buffer.clear();
-            mCmdRunning = false;
-            runNextCmd();
-        } else if (!mCmdRunning && readed.isEmpty()){
-            runNextCmd();
-        } else if (readed.isEmpty()){
-            msleep(1);
-        }
-    }
-    if (mErrorOccured) {
-        emit processError(mProcess->error());
-    }
-}
 
 BreakpointModel::BreakpointModel(QObject *parent):QAbstractTableModel(parent),
     mIsForProject(false)
@@ -2208,6 +1465,7 @@ QVariant BacktraceModel::data(const QModelIndex &index, int role) const
         return QVariant();
     switch (role) {
     case Qt::DisplayRole:
+    case Qt::ToolTipRole:
         switch (index.column()) {
         case 0:
             return trace->funcname;
@@ -2456,7 +1714,7 @@ PWatchVar WatchModel::findWatchVar(const QModelIndex &index)
 PWatchVar WatchModel::findWatchVar(const QString &expr)
 {
     foreach (const PWatchVar &var, watchVars(mIsForProject)) {
-        if (expr == var->expression) {
+        if (expr == QString("\"%1\"").arg(var->expression)) {
             return var;
         }
     }
@@ -3081,7 +2339,7 @@ void DebugTarget::run()
             mGDBServer,
             "gdbserver",
             QString("localhost:%1").arg(mPort),
-            mInferior,
+            //mInferior,
         } + mArguments;
     else
         execArgs = QStringList{
@@ -3182,7 +2440,7 @@ void DebugTarget::run()
         msleep(1);
     }
     if (mErrorOccured) {
-        emit processError(mProcess->error());
+        emit processFailed(mProcess->error());
     }
 }
 

@@ -19,7 +19,7 @@
 #include "ui_cpudialog.h"
 #include "../syntaxermanager.h"
 #include "../mainwindow.h"
-#include "../debugger.h"
+#include "../debugger/debugger.h"
 #include "../settings.h"
 #include "../colorscheme.h"
 #include "../iconsmanager.h"
@@ -85,14 +85,11 @@ CPUDialog::~CPUDialog()
 void CPUDialog::updateInfo()
 {
     if (pMainWindow->debugger()->executing()) {
-        pMainWindow->debugger()->sendCommand("-stack-info-frame", "");
+        pMainWindow->debugger()->refreshFrame();
         // Load the registers..
         sendSyntaxCommand();
-        pMainWindow->debugger()->sendCommand("-data-list-register-values", "N");
-        if (ui->chkBlendMode->isChecked())
-            pMainWindow->debugger()->sendCommand("disas", "/s");
-        else
-            pMainWindow->debugger()->sendCommand("disas", "");
+        pMainWindow->debugger()->refreshRegisters();
+        pMainWindow->debugger()->disassembleCurrentFrame(ui->chkBlendMode->isChecked());
     }
 }
 
@@ -149,20 +146,15 @@ void CPUDialog::resetEditorFont(float dpi)
     ui->txtCode->setOptions(options);
     QFont f=QFont();
     f.setFamily(pSettings->editor().fontName());
-    f.setFamilies(pSettings->editor().fontFamilies());
+    f.setFamilies(pSettings->editor().fontFamiliesWithControlFont());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize(),dpi));
-    f.setStyleStrategy(QFont::NoFontMerging);
+    f.setStyleStrategy(QFont::PreferAntialias);
     ui->txtCode->setFont(f);
 }
 
 void CPUDialog::sendSyntaxCommand()
 {
-    // Set disassembly flavor
-    if (ui->rdIntel->isChecked()) {
-        pMainWindow->debugger()->sendCommand("-gdb-set", "disassembly-flavor intel");
-    } else {
-        pMainWindow->debugger()->sendCommand("-gdb-set", "disassembly-flavor att");
-    }
+    pMainWindow->debugger()->setDisassemblyLanguage(ui->rdIntel->isChecked());
 }
 
 void CPUDialog::closeEvent(QCloseEvent *event)
@@ -200,13 +192,13 @@ void CPUDialog::on_chkBlendMode_stateChanged(int)
 
 void CPUDialog::on_btnStepOverInstruction_clicked()
 {
-    pMainWindow->debugger()->sendCommand("-exec-next-instruction","");
+    pMainWindow->debugger()->stepOverInstruction();
 }
 
 
 void CPUDialog::on_btnStepIntoInstruction_clicked()
 {
-    pMainWindow->debugger()->sendCommand("-exec-step-instruction","");
+    pMainWindow->debugger()->stepIntoInstruction();
 }
 
 void CPUDialog::onUpdateIcons()

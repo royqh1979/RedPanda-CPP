@@ -84,7 +84,8 @@ public:
         DoubleQuote,
         DoubleQuoteEscape,
         RawString,
-        RawStringNoEscape
+        RawStringNoEscape,
+        RawStringEnd
     };
 
     enum class WordPurpose {
@@ -183,7 +184,7 @@ public:
     void removeBreakpointFocus();
     void modifyBreakpointProperty(int line);
     void setActiveBreakpointFocus(int Line, bool setFocus=true);
-    QString getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord& p);
+    QString getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord& p, bool &hasConst);
     QString getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::BufferCoord& p);
     void reformat(bool doReparse=true);
     void checkSyntaxInBack();

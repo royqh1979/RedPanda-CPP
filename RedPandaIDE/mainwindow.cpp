@@ -21,7 +21,7 @@
 #include "systemconsts.h"
 #include "settings.h"
 #include "qsynedit/constants.h"
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include "utils/escape.h"
 #include "utils/parsearg.h"
 #include "widgets/cpudialog.h"
@@ -86,6 +86,7 @@
 #include <QMimeType>
 #include <QToolTip>
 #include <QCompleter>
+#include <QUuid>
 
 #include "mainwindow.h"
 #include <QScrollBar>
@@ -205,10 +206,14 @@ MainWindow::MainWindow(QWidget *parent)
     m=ui->tblBreakpoints->selectionModel();
     ui->tblBreakpoints->setModel(mDebugger->breakpointModel().get());
     delete m;
+    ui->tblBreakpoints->setTextElideMode(Qt::ElideRight);
+    ui->tblBreakpoints->setWordWrap(false);
 
     m=ui->tblStackTrace->selectionModel();
     ui->tblStackTrace->setModel(mDebugger->backtraceModel().get());
     delete m;
+    ui->tblStackTrace->setTextElideMode(Qt::ElideRight);
+    ui->tblStackTrace->setWordWrap(false);
 
     m=ui->watchView->selectionModel();
     ui->watchView->setModel(mDebugger->watchModel().get());
@@ -565,11 +570,8 @@ void MainWindow::updateEditorActions()
     updateEditorActions(e);
 }
 
-void MainWindow::updateEditorActions(const Editor *e)
+void MainWindow::updateEncodingActions(const Editor *e)
 {
-    //it's not a compile action, but put here for convinience
-    ui->actionSaveAll->setEnabled(
-                (mProject!=nullptr || mEditorList->pageCount()>0));
     if (e==nullptr) {
         ui->actionAuto_Detect->setEnabled(false);
         ui->actionEncode_in_ANSI->setEnabled(false);
@@ -579,6 +581,30 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionConvert_to_ANSI->setEnabled(false);
         ui->actionConvert_to_UTF_8->setEnabled(false);
         ui->actionConvert_to_UTF_8_BOM->setEnabled(false);
+    } else {
+        ui->actionAuto_Detect->setEnabled(true);
+        ui->actionEncode_in_ANSI->setEnabled(true);
+        ui->actionEncode_in_UTF_8->setEnabled(true);
+        ui->actionEncode_in_UTF_8_BOM->setEnabled(true);
+        mMenuEncoding->setEnabled(true);
+        ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT
+                && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
+        ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
+        ui->actionConvert_to_UTF_8_BOM->setEnabled(e->encodingOption()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
+    }
+}
+
+void MainWindow::disableEncodingActions()
+{
+    updateEncodingActions(nullptr);
+}
+
+void MainWindow::updateEditorActions(const Editor *e)
+{
+    //it's not a compile action, but put here for convinience
+    ui->actionSaveAll->setEnabled(
+                (mProject!=nullptr || mEditorList->pageCount()>0));
+    if (e==nullptr || !e->hasFocus()) {
         ui->actionCopy->setEnabled(false);
         ui->actionCut->setEnabled(false);
         ui->actionFoldAll->setEnabled(false);
@@ -590,7 +616,6 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionExport_As_HTML->setEnabled(false);
         ui->actionExport_As_RTF->setEnabled(false);
         ui->actionPrint->setEnabled(false);
-        ui->actionSelectAll->setEnabled(false);
         ui->actionToggleComment->setEnabled(false);
         ui->actionToggle_Block_Comment->setEnabled(false);
         ui->actionUnIndent->setEnabled(false);
@@ -604,6 +629,28 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionDelete_to_Word_End->setEnabled(false);
         ui->actionDelete_Last_Word->setEnabled(false);
 
+        ui->menuMove_Caret->setEnabled(false);
+        ui->actionPage_Up->setEnabled(false);
+        ui->actionPage_Down->setEnabled(false);
+        ui->actionGoto_Line_Start->setEnabled(false);
+        ui->actionGoto_Line_End->setEnabled(false);
+        ui->actionGoto_File_Start->setEnabled(false);
+        ui->actionGoto_File_End->setEnabled(false);
+        ui->actionGoto_Page_Start->setEnabled(false);
+        ui->actionGoto_Page_End->setEnabled(false);
+
+        ui->actionSelectAll->setEnabled(false);
+        ui->actionSelect_Word->setEnabled(false);
+        ui->actionMove_Selection_Up->setEnabled(false);
+        ui->actionMove_Selection_Down->setEnabled(false);
+        ui->actionPage_Up_and_Select->setEnabled(false);
+        ui->actionPage_Down_and_Select->setEnabled(false);
+        ui->actionGoto_Line_Start_and_Select->setEnabled(false);
+        ui->actionGoto_Line_End_and_Select->setEnabled(false);
+        ui->actionGoto_File_Start_and_Select->setEnabled(false);
+        ui->actionGoto_File_End_and_Select->setEnabled(false);
+        ui->actionGoto_Page_Start_and_Select->setEnabled(false);
+        ui->actionGoto_Page_End_and_Select->setEnabled(false);
 
         ui->actionFind->setEnabled(false);
         ui->actionReplace->setEnabled(false);
@@ -621,7 +668,15 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionRemove_Bookmark->setEnabled(false);
         ui->actionModify_Bookmark_Description->setEnabled(false);
 
+        ui->actionMatch_Bracket->setEnabled(false);
         ui->actionGo_to_Line->setEnabled(false);
+        ui->actionGoto_block_start->setEnabled(false);
+        ui->actionGoto_block_end->setEnabled(false);
+        ui->actionTrim_trailing_spaces->setEnabled(false);
+        mMenuInsertCodeSnippet->setEnabled(false);
+
+        ui->actionRename_Symbol->setEnabled(false);
+
         ui->actionLocate_in_Files_View->setEnabled(false);
         ui->actionToggle_Readonly->setEnabled(false);
 
@@ -631,16 +686,6 @@ void MainWindow::updateEditorActions(const Editor *e)
 
         ui->actionMove_To_Other_View->setEnabled(false);
     } else {
-        ui->actionAuto_Detect->setEnabled(true);
-        ui->actionEncode_in_ANSI->setEnabled(true);
-        ui->actionEncode_in_UTF_8->setEnabled(true);
-        ui->actionEncode_in_UTF_8_BOM->setEnabled(true);
-        mMenuEncoding->setEnabled(true);
-        ui->actionConvert_to_ANSI->setEnabled(e->encodingOption()!=ENCODING_SYSTEM_DEFAULT
-                && e->fileEncoding()!=ENCODING_SYSTEM_DEFAULT);
-        ui->actionConvert_to_UTF_8->setEnabled(e->encodingOption()!=ENCODING_UTF8 && e->fileEncoding()!=ENCODING_UTF8);
-        ui->actionConvert_to_UTF_8_BOM->setEnabled(e->encodingOption()!=ENCODING_UTF8_BOM && e->fileEncoding()!=ENCODING_UTF8_BOM);
-
         ui->actionCopy->setEnabled(true);
         ui->actionCut->setEnabled(true);
         ui->actionFoldAll->setEnabled(e->document()->count()>0);
@@ -653,7 +698,6 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionExport_As_HTML->setEnabled(true);
         ui->actionExport_As_RTF->setEnabled(true);
         ui->actionPrint->setEnabled(true);
-        ui->actionSelectAll->setEnabled(e->document()->count()>0);
         ui->actionToggleComment->setEnabled(!e->readOnly() && e->document()->count()>0);
         ui->actionToggle_Block_Comment->setEnabled(!e->readOnly() && e->selAvail());
         ui->actionUnIndent->setEnabled(!e->readOnly() && e->document()->count()>0);
@@ -666,6 +710,28 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionDelete_to_Word_End->setEnabled(!e->readOnly() && e->document()->count()>0);
         ui->actionDelete_Last_Word->setEnabled(!e->readOnly() && e->document()->count()>0);
 
+        ui->menuMove_Caret->setEnabled(true);
+        ui->actionPage_Up->setEnabled(true);
+        ui->actionPage_Down->setEnabled(true);
+        ui->actionGoto_Line_Start->setEnabled(true);
+        ui->actionGoto_Line_End->setEnabled(true);
+        ui->actionGoto_File_Start->setEnabled(true);
+        ui->actionGoto_File_End->setEnabled(true);
+        ui->actionGoto_Page_Start->setEnabled(true);
+        ui->actionGoto_Page_End->setEnabled(true);
+
+        ui->actionSelectAll->setEnabled(e->document()->count()>0);
+        ui->actionSelect_Word->setEnabled(true);
+        ui->actionMove_Selection_Up->setEnabled(true);
+        ui->actionMove_Selection_Down->setEnabled(true);
+        ui->actionPage_Up_and_Select->setEnabled(true);
+        ui->actionPage_Down_and_Select->setEnabled(true);
+        ui->actionGoto_Line_Start_and_Select->setEnabled(true);
+        ui->actionGoto_Line_End_and_Select->setEnabled(true);
+        ui->actionGoto_File_Start_and_Select->setEnabled(true);
+        ui->actionGoto_File_End_and_Select->setEnabled(true);
+        ui->actionGoto_Page_Start_and_Select->setEnabled(true);
+        ui->actionGoto_Page_End_and_Select->setEnabled(true);
 
         ui->actionFind->setEnabled(true);
         ui->actionReplace->setEnabled(true);
@@ -684,7 +750,15 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionRemove_Bookmark->setEnabled(e->hasBookmark(line));
         ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
 
+        ui->actionMatch_Bracket->setEnabled(true);
         ui->actionGo_to_Line->setEnabled(true);
+        ui->actionGoto_block_start->setEnabled(true);
+        ui->actionGoto_block_end->setEnabled(true);
+        ui->actionTrim_trailing_spaces->setEnabled(true);
+        mMenuInsertCodeSnippet->setEnabled(true);
+
+        ui->actionRename_Symbol->setEnabled(true);
+
         ui->actionLocate_in_Files_View->setEnabled(!e->isNew());
         ui->actionToggle_Readonly->setEnabled(!e->modified());
 
@@ -695,6 +769,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionMove_To_Other_View->setEnabled(editorList()->pageCount()>1);
     }
 
+    updateEncodingActions(e);
     updateCompileActions(e);
     updateCompilerSet(e);
 }
@@ -1094,14 +1169,14 @@ void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
 {
     removeActiveBreakpoints();
     // Then active the current line in the current file
-    Editor *e = openFile(fileName);
+    Editor *e = openFile(fileName, false);
     if (e!=nullptr) {
         e->setActiveBreakpointFocus(Line,setFocus);
         if (setFocus) {
             activateWindow();
         }
     } else {
-        showCPUInfoDialog();
+    //   showCPUInfoDialog();
     }
     return;
 }
@@ -1177,6 +1252,9 @@ void MainWindow::updateAppTitle()
 void MainWindow::updateAppTitle(const Editor *e)
 {
     QString appName=tr("Red Panda C++");
+#ifdef APP_VERSION_SUFFIX
+    appName += tr(" %1 Version").arg(APP_VERSION_SUFFIX);
+#endif
     QCoreApplication *app = QApplication::instance();
     if (e && !e->inProject()) {
         QString str;
@@ -1437,19 +1515,35 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
 {
     if (!clear && e!=nullptr) {
         QString msg;
-        if (e->selAvail()) {
-            msg = tr("Line: %1/%2 Char: %3/%4 Sel:%5")
-                    .arg(e->caretY())
-                    .arg(e->document()->count())
-                    .arg(e->caretX())
-                    .arg(e->lineText().length())
-                    .arg(e->selText().length());
+        if (pSettings->editor().forceFixedFontWidth()){
+            int col = e->charToGlyphLeft(e->caretY(),e->caretX())/e->charWidth()+1;
+            if (e->selAvail()) {
+                msg = tr("Line: %1/%2 Col: %3 Sel: %4")
+                        .arg(e->caretY())
+                        .arg(e->document()->count())
+                        .arg(col)
+                        .arg(e->selText().length());
+            } else {
+                msg = tr("Line: %1/%2 Col: %3")
+                        .arg(e->caretY())
+                        .arg(e->document()->count())
+                        .arg(col);
+            }
         } else {
-            msg = tr("Line: %1/%2 Char: %3/%4")
-                    .arg(e->caretY())
-                    .arg(e->document()->count())
-                    .arg(e->caretX())
-                    .arg(e->lineText().length());
+            if (e->selAvail()) {
+                msg = tr("Line: %1/%2 Char: %3/%4 Sel: %5")
+                        .arg(e->caretY())
+                        .arg(e->document()->count())
+                        .arg(e->caretX())
+                        .arg(e->lineText().length())
+                        .arg(e->selText().length());
+            } else {
+                msg = tr("Line: %1/%2 Char: %3/%4")
+                        .arg(e->caretY())
+                        .arg(e->document()->count())
+                        .arg(e->caretX())
+                        .arg(e->lineText().length());
+            }
         }
         mFileInfoStatus->setText(msg);
     } else {
@@ -1752,8 +1846,7 @@ void MainWindow::updateCompilerSet(const Editor *e)
     if (mProject) {
         if ( !e || e->inProject()) {
             index = mProject->options().compilerSet;
-        } else if (e->syntaxer()
-                   && e->syntaxer()->language()==QSynedit::ProgrammingLanguage::Makefile
+        } else if (e->syntaxer()->language()==QSynedit::ProgrammingLanguage::Makefile
                    && mProject->directory() == extractFileDir(e->filename())) {
             index = mProject->options().compilerSet;
         }
@@ -2281,7 +2374,7 @@ void MainWindow::debug()
     QStringList binDirs;
     QSet<QString> unitFiles;
     switch(getCompileTarget()) {
-    case CompileTarget::Project:
+    case CompileTarget::Project: {
         compilerSet=pSettings->compilerSets().getSet(mProject->options().compilerSet);
         if (!compilerSet)
             compilerSet = pSettings->compilerSets().defaultSet();
@@ -2382,21 +2475,29 @@ void MainWindow::debug()
                 unitFiles.insert(unit->fileName());
         }
         mDebugger->deleteInvalidProjectBreakpoints(unitFiles);
-        if (!mDebugger->start(mProject->options().compilerSet, filePath, binDirs))
-            return;
-        filePath.replace('\\','/');
-        mDebugger->sendCommand("-file-exec-and-symbols", '"' + filePath + '"');
-
+        bool inferiorHasSymbols { true };
+        QString inferior { filePath };
         if (mProject->options().type == ProjectType::DynamicLib) {
-            QString host =mProject->options().hostApplication;
-            host.replace('\\','/');
-            mDebugger->sendCommand("-file-exec-file", '"' + host + '"');
+            inferior=mProject->options().hostApplication;
+            inferiorHasSymbols = false;
         }
+        inferior.replace('\\','/');
+        if (!mDebugger->startClient(
+                    mProject->options().compilerSet,
+                    inferior,
+                    inferiorHasSymbols,
+                    debugInferiorhasBreakpoint(),
+                    binDirs
+                    ))
+            return;
 
-        includeOrSkipDirs(mProject->options().includeDirs,
-                          pSettings->debugger().skipProjectLibraries());
-        includeOrSkipDirs(mProject->options().libDirs,
-                          pSettings->debugger().skipProjectLibraries());
+        mDebugger->includeOrSkipDirsInSymbolSearch(
+                    mProject->options().includeDirs,
+                    pSettings->debugger().skipProjectLibraries());
+        mDebugger->includeOrSkipDirsInSymbolSearch(
+                    mProject->options().libDirs,
+                    pSettings->debugger().skipProjectLibraries());
+    }
         break;
     case CompileTarget::File: {
             binDirs = compilerSet->binDirs();
@@ -2477,10 +2578,15 @@ void MainWindow::debug()
                 }
 
                 prepareDebugger();
-                QString filePath = debugFile.filePath().replace('\\','/');
-                if (!mDebugger->start(pSettings->compilerSets().defaultIndex(),filePath, binDirs,e->filename()))
+                QString newFilePath = debugFile.filePath().replace('\\','/');
+                if (!mDebugger->startClient(
+                            pSettings->compilerSets().defaultIndex(),
+                            newFilePath,
+                            true,
+                            debugInferiorhasBreakpoint(),
+                            binDirs,
+                            e->filename()))
                     return;
-                mDebugger->sendCommand("-file-exec-and-symbols", QString("\"%1\"").arg(filePath));
             }
         }
         break;
@@ -2492,53 +2598,7 @@ void MainWindow::debug()
 
     updateEditorActions();
 
-    // Add library folders
-    includeOrSkipDirs(compilerSet->libDirs(), pSettings->debugger().skipCustomLibraries());
-    includeOrSkipDirs(compilerSet->CIncludeDirs(), pSettings->debugger().skipCustomLibraries());
-    includeOrSkipDirs(compilerSet->CppIncludeDirs(), pSettings->debugger().skipCustomLibraries());
-
-    //gcc system libraries is auto loaded by gdb
-    if (pSettings->debugger().skipSystemLibraries()) {
-        includeOrSkipDirs(compilerSet->defaultCIncludeDirs(),true);
-        includeOrSkipDirs(compilerSet->defaultCIncludeDirs(),true);
-        includeOrSkipDirs(compilerSet->defaultCppIncludeDirs(),true);
-    }
-
-    mDebugger->sendAllBreakpointsToDebugger();
-
-    // Run the debugger
-    mDebugger->sendCommand("-gdb-set", "mi-async on");
-    mDebugger->sendCommand("-enable-pretty-printing","");
-    mDebugger->sendCommand("-data-list-register-names","");
-    mDebugger->sendCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
-    mDebugger->sendCommand("-gdb-set", "confirm off");
-    mDebugger->sendCommand("-gdb-set", "print repeats 10");
-    mDebugger->sendCommand("-gdb-set", "print null-stop");
-    mDebugger->sendCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
-    mDebugger->sendCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
-    mDebugger->sendCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(filePath))); // restore working directory
-    if (mDebugger->useDebugServer()) {
-        mDebugger->sendCommand("-target-select",QString("remote localhost:%1").arg(pSettings->debugger().GDBServerPort()));
-        if (!debugInferiorhasBreakpoint() || !debugEnabled) {
-            mDebugger->sendCommand("-break-insert","-t main");
-        }
-        if (pSettings->executor().useParams()) {
-            mDebugger->sendCommand("-exec-arguments", pSettings->executor().params());
-        }
-        mDebugger->sendCommand("-exec-continue","");
-    } else {
-#ifdef Q_OS_WIN
-        mDebugger->sendCommand("-gdb-set", "new-console on");
-#endif
-        if (pSettings->executor().useParams()) {
-            mDebugger->sendCommand("-exec-arguments", pSettings->executor().params());
-        }
-        if (!debugInferiorhasBreakpoint()) {
-            mDebugger->sendCommand("-exec-run","--start");
-        } else {
-            mDebugger->sendCommand("-exec-run","");
-        }
-    }
+    mDebugger->runInferior();
 }
 
 void MainWindow::showSearchPanel(bool showReplace)
@@ -3000,13 +3060,19 @@ void MainWindow::createCustomActions()
 
     mFilesView_RemoveFile = createAction(
                 tr("Delete"),
-                ui->treeFiles);
-    mFilesView_RemoveFile->setShortcut(Qt::Key_Delete);
+                ui->treeFiles,
+                Qt::Key_Delete,
+                Qt::WidgetShortcut);
     connect(mFilesView_RemoveFile, &QAction::triggered,
             this, &MainWindow::onFilesViewRemoveFiles);
+
     mFilesView_Open = createAction(
                 tr("Open in Editor"),
-                ui->treeFiles);
+                ui->treeFiles,
+                Qt::Key_Return,
+                Qt::WidgetShortcut);
+    mFilesView_Open->setShortcuts(
+                {Qt::Key_Return, Qt::Key_Enter});
     connect(mFilesView_Open, &QAction::triggered,
             this, &MainWindow::onFilesViewOpen);
 
@@ -3015,12 +3081,14 @@ void MainWindow::createCustomActions()
                 ui->treeFiles);
     connect(mFilesView_OpenWithExternal, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenWithExternal);
+
     mFilesView_OpenInTerminal = createAction(
                 tr("Open in Terminal"),
                 ui->treeFiles);
     mFilesView_OpenInTerminal->setIcon(ui->actionOpen_Terminal->icon());
     connect(mFilesView_OpenInTerminal, &QAction::triggered,
             this, &MainWindow::onFilesViewOpenInTerminal);
+
     mFilesView_OpenInExplorer = createAction(
                 tr("Open in Windows Explorer"),
                 ui->treeFiles);
@@ -3137,12 +3205,13 @@ void MainWindow::initToolButtons()
 QAction* MainWindow::createAction(
         const QString& text,
         QWidget* parent,
-        QKeySequence shortcut) {
+        QKeySequence shortcut,
+        Qt::ShortcutContext shortcutContext) {
     QAction* action= new QAction(text,parent);
     if (!shortcut.isEmpty())
         action->setShortcut(shortcut);
     action->setPriority(QAction::HighPriority);
-    action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    action->setShortcutContext(shortcutContext);
     parent->addAction(action);
     return action;
 }
@@ -3171,24 +3240,6 @@ void MainWindow::scanActiveProject(bool parse)
     } else {
         mProject->resetParserProjectFiles();
     };
-}
-
-void MainWindow::includeOrSkipDirs(const QStringList &dirs, bool skip)
-{
-    Q_ASSERT(mDebugger);
-    foreach (QString dir,dirs) {
-        QString dirName = dir.replace('\\','/');
-        if (skip) {
-            mDebugger->sendCommand(
-                        "skip",
-                        QString("-gfi \"%1/%2\"")
-                        .arg(dirName,"*.*"));
-        } else {
-            mDebugger->sendCommand(
-                        "-environment-directory",
-                        QString("\"%1\"").arg(dirName));
-        }
-    }
 }
 
 void MainWindow::onBookmarkContextMenu(const QPoint &pos)
@@ -3393,9 +3444,15 @@ void MainWindow::updateTools()
                                    + LINE_BREAKER);
                         file.close();
                         if (item->pauseAfterExit) {
+                            QString sharedMemoryId = QUuid::createUuid().toString();
+                            QStringList execArgs = QStringList{
+                                QString::number(RPF_PAUSE_CONSOLE),
+                                sharedMemoryId,
+                                localizePath(file.fileName())
+                            };
                             executeFile(
                                         includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
-                                        {"1", localizePath(file.fileName())},
+                                        execArgs,
                                         workDir, file.fileName());
                         } else {
                             executeFile(
@@ -3406,9 +3463,15 @@ void MainWindow::updateTools()
                     }
                 } else {
                     if (item->pauseAfterExit) {
+                        QString sharedMemoryId = QUuid::createUuid().toString();
+                        QStringList execArgs = QStringList{
+                            QString::number(RPF_PAUSE_CONSOLE),
+                            sharedMemoryId,
+                            localizePath(program)
+                        };
                         executeFile(
                                     includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
-                                    QStringList{"1", program} + params,
+                                    execArgs + params,
                                     workDir, "");
                     } else {
                         executeFile(
@@ -3575,7 +3638,9 @@ void MainWindow::buildEncodingMenu()
         });
     }
 
-    mMenuEncoding = new QMenu();
+    mMenuEncoding = new QMenu(this);
+    connect(mMenuEncoding, &QMenu::aboutToHide,
+            this, &MainWindow::disableEncodingActions);
     mMenuEncoding->setTitle(tr("File Encoding"));
     mMenuEncoding->addAction(ui->actionAuto_Detect);
     mMenuEncoding->addAction(ui->actionEncode_in_ANSI);
@@ -3957,7 +4022,10 @@ void MainWindow::onDebugConsoleContextMenu(const QPoint &pos)
 
 void MainWindow::onFileEncodingContextMenu(const QPoint &pos)
 {
-    mMenuEncoding->exec(mFileEncodingStatus->mapToGlobal(pos));
+    Editor * e = mEditorList->getEditor();
+    updateEncodingActions(e);
+    if (mMenuEncoding->isEnabled())
+        mMenuEncoding->exec(mFileEncodingStatus->mapToGlobal(pos));
 }
 
 void MainWindow::onFilesViewContextMenu(const QPoint &pos)
@@ -6139,7 +6207,7 @@ void MainWindow::cleanUpCPUDialog()
 void MainWindow::onDebugCommandInput(const QString& command)
 {
     if (mDebugger->executing()) {
-        mDebugger->sendCommand(command,"", DebugCommandSource::Console);
+        mDebugger->runClientCommand(command,"", DebugCommandSource::Console);
     }
 }
 
@@ -6388,16 +6456,6 @@ bool MainWindow::debugInferiorhasBreakpoint()
             return true;
         }
     }
-//    if (!e->inProject()) {
-
-//    } else {
-//        for (const PBreakpoint& breakpoint:mDebugger->breakpointModel()->breakpoints(e->inProject())) {
-//            Editor* e1 = mEditorList->getOpenedEditorByFilename(breakpoint->filename);
-//            if (e1 && e1->inProject()) {
-//                return true;
-//            }
-//        }
-//    }
     return false;
 }
 
@@ -6405,7 +6463,7 @@ void MainWindow::on_actionStep_Over_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->sendCommand("-exec-next", "");
+        mDebugger->stepOver();
     }
 }
 
@@ -6413,7 +6471,7 @@ void MainWindow::on_actionStep_Into_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->sendCommand("-exec-step", "");
+        mDebugger->stepInto();
     }
 
 }
@@ -6422,7 +6480,7 @@ void MainWindow::on_actionStep_Out_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->sendCommand("-exec-finish", "");
+        mDebugger->stepOut();
     }
 
 }
@@ -6433,9 +6491,7 @@ void MainWindow::on_actionRun_To_Cursor_triggered()
         Editor *e=mEditorList->getEditor();
         if (e!=nullptr) {
             //WatchView.Items.BeginUpdate();
-            mDebugger->sendCommand("-exec-until", QString("\"%1\":%2")
-                                   .arg(e->filename())
-                                   .arg(e->caretY()));
+            mDebugger->runTo(e->filename(), e->caretY());
         }
     }
 
@@ -6445,7 +6501,7 @@ void MainWindow::on_actionContinue_triggered()
 {
     if (mDebugger->executing()) {
         //WatchView.Items.BeginUpdate();
-        mDebugger->sendCommand("-exec-continue", "");
+        mDebugger->resume();
     }
 }
 
@@ -6490,7 +6546,7 @@ void MainWindow::onDebugEvaluateInput()
     if (!s.isEmpty()) {
         connect(mDebugger.get(), &Debugger::evalValueReady,
                    this, &MainWindow::onEvalValueReady);
-        mDebugger->sendCommand("-data-evaluate-expression",s);
+        mDebugger->evalExpression(s);
         pMainWindow->debugger()->refreshAll();
     }
 }
@@ -6501,10 +6557,9 @@ void MainWindow::onDebugMemoryAddressInput()
     if (!s.isEmpty()) {
 //        connect(mDebugger, &Debugger::memoryExamineReady,
 //                   this, &MainWindow::onMemoryExamineReady);
-        mDebugger->sendCommand("-data-read-memory",QString("%1 x 1 %2 %3 ")
-                               .arg(s)
-                               .arg(pSettings->debugger().memoryViewRows())
-                               .arg(pSettings->debugger().memoryViewColumns())
+        mDebugger->readMemory(s,
+                              pSettings->debugger().memoryViewRows(),
+                              pSettings->debugger().memoryViewColumns()
                                );
     }
 }
@@ -8762,9 +8817,9 @@ void MainWindow::switchCurrentStackTrace(int idx)
         if (e) {
             e->setCaretPositionAndActivate(trace->line,1);
         }
-        mDebugger->sendCommand("-stack-select-frame", QString("%1").arg(trace->level));
-        mDebugger->sendCommand("-stack-list-variables", "--all-values");
-        mDebugger->sendCommand("-var-update", "--all-values *");
+        mDebugger->selectFrame(trace);
+        mDebugger->refreshStackVariables();
+        mDebugger->refreshWatchVars();
         if (this->mCPUDialog) {
             this->mCPUDialog->updateInfo();
         }

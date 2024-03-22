@@ -98,6 +98,11 @@ QString RaiiLuaState::fetchString(lua_State *L, int index)
     return lua_tostring(L, index);
 }
 
+QJsonArray RaiiLuaState::fetchArray(lua_State *L, int index)
+{
+    return fetchTableImpl(L, index, 0).toArray();
+}
+
 QJsonObject RaiiLuaState::fetchObject(lua_State *L, int index)
 {
     return fetchTableImpl(L, index, 0).toObject();
@@ -181,6 +186,16 @@ void RaiiLuaState::push(lua_State *L, const QStringList &value)
         lua_pushstring(L, value[i].toUtf8().constData());
         lua_settable(L, -3);
     }
+}
+
+void RaiiLuaState::push(lua_State *L, const QJsonArray &value)
+{
+    pushArrayImpl(L, value, 0);
+}
+
+void RaiiLuaState::push(lua_State *L, const QJsonObject &value)
+{
+    pushObjectImpl(L, value, 0);
 }
 
 int RaiiLuaState::getTop()
@@ -311,6 +326,56 @@ QJsonValue RaiiLuaState::fetchValueImpl(lua_State *L, int index, int depth)
         const char *name = lua_typename(L, type);
         throw LuaError(QString("Lua type error: unknown type %1.").arg(name));
     }
+}
+
+void RaiiLuaState::pushArrayImpl(lua_State *L, const QJsonArray &value, int depth)
+{
+    if (depth == 1)
+        // check stack size at first recursion to avoid multiple reallocations
+        lua_checkstack(L, LUA_STACK_SIZE);
+    if (depth > TABLE_MAX_DEPTH)
+        throw LuaError("Lua runtime error: table nested too deeply");
+
+    lua_newtable(L);
+    for (int i = 0; i < value.size(); i++) {
+        push(L, i + 1);
+        pushValueImpl(L, value[i], depth);
+        lua_settable(L, -3);
+    }
+}
+
+void RaiiLuaState::pushObjectImpl(lua_State *L, const QJsonObject &value, int depth)
+{
+    if (depth == 1)
+        // check stack size at first recursion to avoid multiple reallocations
+        lua_checkstack(L, LUA_STACK_SIZE);
+    if (depth > TABLE_MAX_DEPTH)
+        throw LuaError("Lua runtime error: table nested too deeply");
+
+    lua_newtable(L);
+    for (auto it = value.begin(); it != value.end(); ++it) {
+        push(L, it.key());
+        pushValueImpl(L, it.value(), depth);
+        lua_settable(L, -3);
+    }
+}
+
+void RaiiLuaState::pushValueImpl(lua_State *L, const QJsonValue &value, int depth)
+{
+    if (value.isNull())
+        lua_pushnil(L);
+    else if (value.isBool())
+        lua_pushboolean(L, value.toBool());
+    else if (value.isDouble())
+        lua_pushnumber(L, value.toDouble());
+    else if (value.isString())
+        lua_pushstring(L, value.toString().toUtf8().constData());
+    else if (value.isObject())
+        pushObjectImpl(L, value.toObject(), depth + 1);
+    else if (value.isArray())
+        pushArrayImpl(L, value.toArray(), depth + 1);
+    else
+        throw LuaError("Lua type error: unknown type.");
 }
 
 QHash<lua_State *, LuaExtraState> RaiiLuaState::mExtraState;

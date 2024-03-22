@@ -80,6 +80,13 @@ public:
     void clearProjectIncludePaths();
     void removeScannedFile(const QString& filename);
 
+    PDefine getDefine(const QString& name) const{
+        return mDefines.value(name,PDefine());
+    }
+
+    QString expandMacros(const QString& text, QSet<QString> usedMacros) const;
+    void expandMacro(const QString &text, QString &newText, const QString &word, int &i, QSet<QString> usedMacros) const;
+
     const QStringList& result() const{
         return mResult;
     };
@@ -126,6 +133,7 @@ private:
         parentIsFalse
     };
 
+    static QString expandFunction(PDefine define,const QString &args);
     void preprocessBuffer();
     void skipToEndOfPreprocessor();
     void skipToPreprocessor();
@@ -135,15 +143,11 @@ private:
     void handleInclude(const QString& line, bool fromNext=false);
     void handlePreprocessor(const QString& value);
     void handleUndefine(const QString& line);
-    QString expandMacros(const QString& line, QSet<QString> usedMacros);
     QString expandMacros();
-    void expandMacro(const QString& line, QString& newLine, QString& word, int& i, QSet<QString> usedMacros);
-    void expandMacro(QString& newLine, QString& word, int& i, QSet<QString> usedMacros);
+    void expandMacro(QString &newLine, const QString &word, int& i, QSet<QString> usedMacros);
     QString removeGCCAttributes(const QString& line);
     void removeGCCAttribute(const QString&line, QString& newLine, int &i, const QString& word);
-    PDefine getDefine(const QString& name) const{
-        return mDefines.value(name,PDefine());
-    }
+
     // current file stuff
     PParsedFile getInclude(int index) const {
         return mIncludes[index];
@@ -235,7 +239,6 @@ static  bool isNumberChar(const QChar& ch);
     bool evaluateIf(const QString& line);
     QString expandDefines(QString line);
     bool skipParenthesis(const QString&line, int& index, int step = 1);
-    QString expandFunction(PDefine define,QString args);
     bool skipSpaces(const QString &expr, int& pos);
     bool evalNumber(const QString &expr, int& result, int& pos);
     bool evalTerm(const QString &expr, int& result, int& pos);

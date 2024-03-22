@@ -36,12 +36,6 @@
 #include <sys/posix_shm.h>
 #endif
 
-enum RunProgramFlag {
-    RPF_PAUSE_CONSOLE =     0x0001,
-    RPF_REDIRECT_INPUT =    0x0002,
-    RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-};
-
 CompilerManager::CompilerManager(QObject *parent) : QObject(parent),
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mCompileMutex(),

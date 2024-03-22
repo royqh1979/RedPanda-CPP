@@ -26,6 +26,7 @@ FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) :
     mInfoLabel = new QLabel(this);
     mInfoLabel->setWordWrap(true);
     mInfoLabel->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
+    mInfoLabel->setTextFormat(Qt::TextFormat::RichText);
     mTotalLabel = new QLabel(this);
     mTotalLabel->setWordWrap(false);
     mTotalLabel->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Preferred);
@@ -110,7 +111,6 @@ void FunctionTooltipWidget::previousTip()
 
 void FunctionTooltipWidget::updateTip()
 {
-
     mTotalLabel->setVisible(mInfos.length()>1);
     mUpButton->setVisible(mInfos.length()>1);
     mDownButton->setVisible(mInfos.length()>1);

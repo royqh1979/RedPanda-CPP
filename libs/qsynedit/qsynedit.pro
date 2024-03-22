@@ -51,6 +51,7 @@ SOURCES += qsynedit/codefolding.cpp \
     qsynedit/syntaxer/lua.cpp \
     qsynedit/types.cpp \
     qsynedit/syntaxer/makefile.cpp \
+    qsynedit/syntaxer/textfile.cpp \
     qsynedit/syntaxer/syntaxer.cpp
 
 HEADERS += \
@@ -77,6 +78,7 @@ HEADERS += \
     qsynedit/syntaxer/glsl.h \
     qsynedit/syntaxer/lua.h \
     qsynedit/syntaxer/makefile.h \
+    qsynedit/syntaxer/textfile.h \
     qsynedit/syntaxer/syntaxer.h
 
 INCLUDEPATH += ../redpanda_qt_utils

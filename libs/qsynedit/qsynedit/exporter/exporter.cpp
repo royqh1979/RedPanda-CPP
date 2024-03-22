@@ -53,7 +53,7 @@ void Exporter::exportAll(const PDocument& doc)
 void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord stop)
 {
     // abort if not all necessary conditions are met
-    if (!doc || !mSyntaxer || (doc->count() == 0))
+    if (!doc || (doc->count() == 0))
         return;
     stop.line = std::max(1, std::min(stop.line, doc->count()));
     stop.ch = std::max(1, std::min(stop.ch, doc->getLine(stop.line - 1).length() + 1));
