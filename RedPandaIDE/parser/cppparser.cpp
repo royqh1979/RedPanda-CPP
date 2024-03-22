@@ -2894,10 +2894,12 @@ void CppParser::handleLambda(int index, int maxIndex)
     int argEnd= mTokenizer[argStart]->matchIndex;
     //TODO: parse captures
     int bodyStart=indexOfNextLeftBrace(argEnd+1, maxIndex);
+    qDebug()<<index<<bodyStart<<maxIndex;
     if (bodyStart>=maxIndex) {
         return;
     }
     int bodyEnd = mTokenizer[bodyStart]->matchIndex;
+    qDebug()<<"end"<<index<<bodyEnd<<maxIndex;
     if (bodyEnd>maxIndex) {
         return;
     }
@@ -2916,104 +2918,12 @@ void CppParser::handleLambda(int index, int maxIndex)
                 StatementProperty::spHasDefinition);
     scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,mTokenizer[bodyStart]->line);
-    int i=bodyStart+1; // start after '{';
-    QString sType;
-    while (i<bodyEnd) {
-        if (mTokenizer[i]->text=="::") {
-            sType="::";
-            i++;
-        }
-        while (i+1<bodyEnd && tokenIsTypeOrNonKeyword(mTokenizer[i]->text)
-                && mTokenizer[i+1]->text=="::") {
-            sType+=mTokenizer[i]->text;
-            sType+="::";
-            i+=2;
-        }
-        if (i+1<bodyEnd && tokenIsTypeOrNonKeyword(mTokenizer[i]->text)
-                && !mTokenizer[i]->text.endsWith('.')
-                && !mTokenizer[i]->text.endsWith("->")
-                && (mTokenizer[i+1]->text.startsWith('*')
-                 || mTokenizer[i+1]->text.startsWith('&')
-                 || tokenIsTypeOrNonKeyword(mTokenizer[i+1]->text)))
-        {
-            QString sName;
-            while (i+1<bodyEnd) {
-                if (mTokenizer[i+1]->text==':'
-                        || mTokenizer[i+1]->text=='('
-                        || mTokenizer[i+1]->text=='='
-                        || mTokenizer[i+1]->text==';'
-                        || mTokenizer[i+1]->text==','
-                        || mTokenizer[i+1]->text=='{'
-                        )
-                    break;
-                else {
-                    if (!sType.isEmpty() && !sType.endsWith("::"))
-                        sType+=' ';
-                    sType+=mTokenizer[i]->text;
-                }
-                i++;
-            }
-            QString tempType;
-            while (i<bodyEnd) {
-                // Skip bit identifiers,
-                // e.g.:
-                // handle
-                // unsigned short bAppReturnCode:8,reserved:6,fBusy:1,fAck:1
-                // as
-                // unsigned short bAppReturnCode,reserved,fBusy,fAck
-                if (mTokenizer[i]->text.front() == ':') {
-                    while ( (i < bodyEnd)
-                            && !(
-                                mTokenizer[i]->text==','
-                                || mTokenizer[i]->text==';'
-                                || mTokenizer[i]->text=='='
-                                ))
-                        i++;
-                } else if (mTokenizer[i]->text==';') {
-                    break;
-                } else if (isIdentChar(mTokenizer[i]->text[0])) {
-                    QString cmd=mTokenizer[i]->text;
-                    if (cmd=="const") {
-                        tempType="const";
-                    } else {
-                        QString suffix;
-                        QString args;
-                        parseCommandTypeAndArgs(cmd,suffix,args);
-                        if (!cmd.isEmpty()) {
-                            addChildStatement(
-                                        lambdaBlock,
-                                        mCurrentFile,
-                                        (sType+' '+tempType+suffix).trimmed(),
-                                        cmd,
-                                        args,
-                                        "",
-                                        "",
-                                        mTokenizer[mIndex]->line,
-                                        StatementKind::skVariable,
-                                        getScope(),
-                                        mCurrentMemberAccessibility,
-                                        StatementProperty::spHasDefinition); // TODO: not supported to pass list
-                            tempType="";
-                        }
-                    }
-                    i++;
-                } else if (mTokenizer[i]->text=='(') {
-                    i=mTokenizer[i]->matchIndex+1;
-                } else if (mTokenizer[i]->text.endsWith('=')) {
-                    i = skipAssignment(i, bodyEnd);
-                } else if (mTokenizer[i]->text=='{') {
-                    tempType="";
-                    i=mTokenizer[i]->matchIndex+1;
-                } else {
-                    tempType="";
-                    i++;
-                }
-
-            }
-        }
-        i=moveToEndOfStatement(i, true, bodyEnd);
-        sType="";
-    }
+    qDebug()<<">?>>>>>";
+    int oldIndex = mIndex;
+    mIndex = bodyStart+1;
+    while (handleStatement(bodyEnd));
+    Q_ASSERT(mIndex == bodyEnd);
+    mIndex = oldIndex;
     removeScopeLevel(mTokenizer[bodyEnd]->line, maxIndex);
 }
 
