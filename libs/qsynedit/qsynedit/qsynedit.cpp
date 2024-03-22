@@ -6694,10 +6694,10 @@ void QSynEdit::setBlockEnd(BufferCoord value)
         } else {
             BufferCoord oldBlockEnd = mBlockEnd;
             mBlockEnd = value;
-            if (mActiveSelectionMode != SelectionMode::Column || oldBlockEnd.line != mBlockEnd.line) {
+            if (mActiveSelectionMode != SelectionMode::Column || mBlockBegin.ch != mBlockEnd.ch) {
                 invalidateLines(
-                            std::min(mBlockBegin.line, std::min(mBlockEnd.line, oldBlockEnd.line)),
-                            std::max(mBlockBegin.line, std::max(mBlockEnd.line, oldBlockEnd.line)));
+                            std::min(mBlockEnd.line, oldBlockEnd.line),
+                            std::max(mBlockEnd.line, oldBlockEnd.line));
             }
         }
         setStatusChanged(StatusChange::scSelection);

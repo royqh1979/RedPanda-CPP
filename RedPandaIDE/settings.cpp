@@ -1330,7 +1330,7 @@ void Settings::Editor::doSave()
     saveValue("scroll_past_eol", mScrollPastEol);
     saveValue("half_page_scroll", mHalfPageScroll);
     saveValue("mouse_wheel_scroll_speed", mMouseWheelScrollSpeed);
-    saveValue("mouse_selection_scroll_speed",mMouseSelectionScrollSpeed);
+    saveValue("mouse_drag_scroll_speed",mMouseSelectionScrollSpeed);
 
     //right edge
     saveValue("show_right_edge_line",mShowRightEdgeLine);
@@ -1461,7 +1461,7 @@ void Settings::Editor::doLoad()
     mScrollPastEol = boolValue("scroll_past_eol", false);
     mHalfPageScroll = boolValue("half_page_scroll",false);
     mMouseWheelScrollSpeed = intValue("mouse_wheel_scroll_speed", 3);
-    mMouseSelectionScrollSpeed = intValue("mouse_selection_scroll_speed",10);
+    mMouseSelectionScrollSpeed = intValue("mouse_drag_scroll_speed",10);
 
 
     //right edge
