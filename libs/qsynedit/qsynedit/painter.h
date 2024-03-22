@@ -25,6 +25,20 @@
 #include "gutter.h"
 
 namespace QSynedit {
+struct TokenTextInfo {
+    int left;
+    QString token;
+    QFont font;
+    QColor foreground;
+};
+
+struct TokenBackgroundInfo {
+    int left;
+    int width;
+    QColor background;
+};
+
+
 class QSynEdit;
 class QSynEditPainter
 {
@@ -55,8 +69,9 @@ public:
 private:
     QColor colEditorBG();
     void computeSelectionInfo();
-    void setDrawingColors(bool selected);
+    void getDrawingColors(bool selected, QColor& foreground , QColor& background);
     int fixXValue(int xpos);
+    void paintLine();
     void paintToken(
             const QString& lineText,
             const QList<int> &glyphStartCharList,
@@ -65,7 +80,10 @@ private:
             int endGlyph,
             int tokenWidth, int tokenLeft,
             int first, int last,
-            const QFont& fontForNonAscii, bool showGlyphs);
+            QColor foreground,
+            QColor background,
+            const QFont& font, bool showGlyphs
+            );
     void paintEditAreas(const EditingAreaList& areaList);
     void paintHighlightToken(const QString& lineText,
                              const QList<int> &glyphStartCharList,
@@ -106,6 +124,8 @@ private:
     // painting the background and the text
     QRect mRcLine, mRcToken;
     int mFirstLine, mLastLine;
+    QList<TokenTextInfo> mLineTokens;
+    QList<TokenBackgroundInfo> mLineTokenBackgrounds;
 
     QRect mClip;
     int mFirstRow, mLastRow, mLeft, mRight;

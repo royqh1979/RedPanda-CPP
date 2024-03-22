@@ -75,6 +75,8 @@ Red Panda C++ Version 2.27
   - enhancement: Type induction for "auto &&" vars.
   - enhancement: Syntax highlighting for c++ attributes.
   - enhancement: Show "std::function" in the completion list.
+  - enhancement: Improvement in italic font support.
+  
   
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

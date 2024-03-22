@@ -1407,7 +1407,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
 //    if (newCommand.startsWith("::") && parent && kind!=StatementKind::skBlock ) {
 //        qDebug()<<command<<fileName<<line<<kind<<parent->fullName;
 //    }
-
     if (kind == StatementKind::skConstructor
             || kind == StatementKind::skFunction
             || kind == StatementKind::skDestructor
