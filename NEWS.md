@@ -76,6 +76,7 @@ Red Panda C++ Version 2.27
   - enhancement: Syntax highlighting for c++ attributes.
   - enhancement: Show "std::function" in the completion list.
   - enhancement: Improvement in italic font support.
+  - fix: History not correctly loaded with up/down arrow key in the debug console.
   
   
 Red Panda C++ Version 2.26

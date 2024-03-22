@@ -31,11 +31,11 @@
 #include "../utils.h"
 
 QConsole::QConsole(QWidget *parent):
-    QAbstractScrollArea(parent),
-    mContents(this),
-    mContentImage()
+    QAbstractScrollArea{parent},
+    mContents{this},
+    mContentImage{}
 {
-    mHistorySize = 500;
+    mMaxHistory = 500;
     mHistoryIndex = -1;
     mCommand = "";
     mCurrentEditableLine = "";
@@ -73,14 +73,14 @@ QConsole::QConsole(QWidget *parent):
 
 }
 
-int QConsole::historySize() const
+int QConsole::maxHistory() const
 {
-    return mHistorySize;
+    return mMaxHistory;
 }
 
-void QConsole::setHistorySize(int historySize)
+void QConsole::setMaxHistory(int historySize)
 {
-    mHistorySize = historySize;
+    mMaxHistory = historySize;
 }
 
 int QConsole::tabSize() const
@@ -570,32 +570,28 @@ void QConsole::keyPressEvent(QKeyEvent *event)
         if (mReadonly)
             return;
         emit commandInput(mCommand);
-        if (mHistorySize>0 && !mCommand.trimmed().isEmpty()) {
-            if (mCommandHistory.size()==mHistorySize) {
-                mCommandHistory.pop_front();
-                mHistoryIndex--;
+        if (mMaxHistory>0 && !mCommand.trimmed().isEmpty()) {
+            if (mCommandHistory.isEmpty()
+                || mCommandHistory.last()!=mCommand) {
+                if (mCommandHistory.length()==mMaxHistory) {
+                    mCommandHistory.pop_front();
+                }
+                mCommandHistory.append(mCommand);
             }
-            if (mCommandHistory.size()==0 || mHistoryIndex<0 || mHistoryIndex == mCommandHistory.size()-1) {
-                mHistoryIndex=mCommandHistory.size();
-            }
-            mCommandHistory.append(mCommand);
+            mHistoryIndex = mCommandHistory.length();
         }
         mCommand="";
         addLine("");
         return;
     case Qt::Key_Up:
         event->accept();
-        if (mHistorySize>0 && mHistoryIndex>0) {
-            mHistoryIndex--;
-            loadCommandFromHistory();
-        }
+        mHistoryIndex--;
+        loadCommandFromHistory();
         return;
     case Qt::Key_Down:
         event->accept();
-        if (mHistorySize>0 && mHistoryIndex<mCommandHistory.size()-1) {
-            mHistoryIndex++;
-            loadCommandFromHistory();
-        }
+        mHistoryIndex++;
+        loadCommandFromHistory();
         return;
     case Qt::Key_Left:
         event->accept();
@@ -791,9 +787,14 @@ void QConsole::textInputed(const QString &text)
 
 void QConsole::loadCommandFromHistory()
 {
-    if (mHistorySize<=0)
+    if (mMaxHistory<=0)
         return;
-    mCommand = mCommandHistory[mHistoryIndex];
+    if (mHistoryIndex<0)
+        mHistoryIndex=0;
+    if (mHistoryIndex<mCommandHistory.length())
+        mCommand = mCommandHistory[mHistoryIndex];
+    else
+        mCommand = "";
     QString lastLine = mContents.getLastLine();
     int len=mCurrentEditableLine.length();
     lastLine.remove(lastLine.length()-len,INT_MAX);

@@ -22,8 +22,8 @@
 #include <QDebug>
 
 AboutDialog::AboutDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::AboutDialog)
+    QDialog{parent},
+    ui{new Ui::AboutDialog}
 {
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
