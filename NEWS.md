@@ -78,6 +78,7 @@ Red Panda C++ Version 2.27
   - fix: History not correctly loaded with up/down arrow key in the debug console.
   - enhancement: Improve lambda support.
   - enhancement: Show type completion hint after "constexpr"/"extern"/"static"/"consteval"/"constinit"/"const"/"volatile" etc.
+  - enhancement: Restore line position after file is modified outside and reloaded.
   
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

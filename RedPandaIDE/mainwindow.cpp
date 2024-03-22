@@ -5482,7 +5482,11 @@ void MainWindow::onFileChanged(const QString &path)
                                       QMessageBox::Yes|QMessageBox::No,
                                       QMessageBox::No) == QMessageBox::Yes) {
                 try {
+                    int topLine = e->topLine();
+                    QSynedit::BufferCoord caretPos = e->caretXY();
                     e->loadFile();
+                    e->setCaretPositionAndActivate(caretPos.line,1);
+                    e->setTopLine(topLine);
                 } catch(FileError e) {
                     QMessageBox::critical(this,tr("Error"),e.reason());
                 }
