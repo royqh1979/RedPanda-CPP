@@ -3053,7 +3053,7 @@ void QSynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
             setTopPos( (vCaretRow - (mLinesInWindow - 1) / 2-1) * mTextHeight);
     } else {
         if (vCaretRow < yposToRow(0))
-          setTopPos(vCaretRow);
+          setTopPos( (vCaretRow - 1) * mTextHeight);
         else if (vCaretRow > yposToRow(0) + (mLinesInWindow - 2) && mLinesInWindow > 2) {
           setTopPos( (vCaretRow - (mLinesInWindow - 2) -1) * mTextHeight);
         } else
@@ -6241,40 +6241,52 @@ void QSynEdit::wheelEvent(QWheelEvent *event)
              || (mWheelAccumulatedDeltaX<0 &&event->angleDelta().y()>0))
             mWheelAccumulatedDeltaX=0;
         mWheelAccumulatedDeltaX+=event->angleDelta().y();
+        int value = horizontalScrollBar()->value();
+        int oldValue = value;
         while (mWheelAccumulatedDeltaX>=120) {
             mWheelAccumulatedDeltaX-=120;
-            horizontalScrollBar()->setValue(horizontalScrollBar()->value()+sign*mMouseWheelScrollSpeed*mCharWidth);
+            value += sign*mMouseWheelScrollSpeed*mCharWidth;
         }
         while (mWheelAccumulatedDeltaX<=-120) {
             mWheelAccumulatedDeltaX+=120;
-            horizontalScrollBar()->setValue(horizontalScrollBar()->value()-sign*mMouseWheelScrollSpeed*mCharWidth);
+            value -= sign*mMouseWheelScrollSpeed*mCharWidth;
         }
+        if (value != oldValue)
+            horizontalScrollBar()->setValue(value);
     } else {
         if ( (mWheelAccumulatedDeltaY>0 &&event->angleDelta().y()<0)
              || (mWheelAccumulatedDeltaY<0 &&event->angleDelta().y()>0))
             mWheelAccumulatedDeltaY=0;
         mWheelAccumulatedDeltaY+=event->angleDelta().y();
+        int value = verticalScrollBar()->value();
+        int oldValue = value;
         while (mWheelAccumulatedDeltaY>=120) {
             mWheelAccumulatedDeltaY-=120;
-            verticalScrollBar()->setValue(verticalScrollBar()->value()+sign*mMouseWheelScrollSpeed*mTextHeight);
+            value += sign*mMouseWheelScrollSpeed*mTextHeight;
         }
         while (mWheelAccumulatedDeltaY<=-120) {
             mWheelAccumulatedDeltaY+=120;
-            verticalScrollBar()->setValue(verticalScrollBar()->value()-sign*mMouseWheelScrollSpeed*mTextHeight);
+            value -= sign*mMouseWheelScrollSpeed*mTextHeight;
         }
+        if (value != oldValue)
+            verticalScrollBar()->setValue(value);
 
         if ( (mWheelAccumulatedDeltaX>0 &&event->angleDelta().x()<0)
              || (mWheelAccumulatedDeltaX<0 &&event->angleDelta().x()>0))
             mWheelAccumulatedDeltaX=0;
         mWheelAccumulatedDeltaX+=event->angleDelta().x();
+        value = horizontalScrollBar()->value();
+        oldValue = value;
         while (mWheelAccumulatedDeltaX>=120) {
             mWheelAccumulatedDeltaX-=120;
-            horizontalScrollBar()->setValue(horizontalScrollBar()->value()+sign*mMouseWheelScrollSpeed*mCharWidth);
+            value += sign*mMouseWheelScrollSpeed*mCharWidth;
         }
         while (mWheelAccumulatedDeltaX<=-120) {
             mWheelAccumulatedDeltaX+=120;
-            horizontalScrollBar()->setValue(horizontalScrollBar()->value()-sign*mMouseWheelScrollSpeed*mCharWidth);
+            value -= sign*mMouseWheelScrollSpeed*mCharWidth;
         }
+        if (value != oldValue)
+            horizontalScrollBar()->setValue(value);
     }
     event->accept();
 }
