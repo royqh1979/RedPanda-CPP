@@ -61,7 +61,7 @@ struct ProjectModelNode {
 
 struct ProjectEditorLayout {
     QString filename;
-    int topLine;
+    int top;
     int left;
     int caretX;
     int caretY;

@@ -74,7 +74,7 @@ void QSynEditPainter::paintEditingArea(const QRect& clip)
     }
     // If there is anything visible below the last line, then fill this as well.
     mRcToken = mClip;
-    mRcToken.setTop((mLastRow - mEdit->mTopLine + 1) * mEdit->mTextHeight);
+    mRcToken.setTop((mLastRow - mEdit->yposToRow(0) + 1) * mEdit->mTextHeight);
     if (mRcToken.top() < mRcToken.bottom()) {
         mPainter->fillRect(mRcToken,colEditorBG());
         // Draw the right edge if necessary.
@@ -139,7 +139,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
             } else {
                 mPainter->setPen(textColor);
             }
-            int lineTop = (row - mEdit->mTopLine) * mEdit->mTextHeight;
+            int lineTop = (row - 1) * mEdit->mTextHeight - mEdit->mTopPos;
 
             // next line rect
             rcLine.setTop(lineTop);
@@ -168,7 +168,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
 
         // Form a rectangle for the square the user can click on
           rcFold.setLeft(mEdit->mGutterWidth - mEdit->mGutter.rightOffset());
-          rcFold.setTop((row - mEdit->mTopLine) * mEdit->mTextHeight);
+          rcFold.setTop((row - 1) * mEdit->mTextHeight - mEdit->mTopPos);
           rcFold.setRight(rcFold.left() + mEdit->mGutter.rightOffset() - 4);
           rcFold.setBottom(rcFold.top() + mEdit->mTextHeight);
 
@@ -231,7 +231,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
         int line = mEdit->rowToLine(row);
         if ((line > mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
             break;
-        mEdit->onGutterPaint(*mPainter,line, 0, (row - mEdit->mTopLine) * mEdit->mTextHeight);
+        mEdit->onGutterPaint(*mPainter,line, 0, (row - mEdit->yposToRow(0)) * mEdit->mTextHeight);
     }
 }
 
@@ -818,7 +818,7 @@ void QSynEditPainter::paintFoldAttributes()
                 break;
             int X;
             // Set vertical coord
-            int Y = (row - mEdit->mTopLine) * mEdit->mTextHeight; // limit inside clip rect
+            int Y = (row - mEdit->yposToRow(0)) * mEdit->mTextHeight; // limit inside clip rect
             if (mEdit->mTextHeight % 2 == 1 && vLine % 2 == 0) {
                 Y++;
             }
@@ -887,7 +887,7 @@ void QSynEditPainter::paintFoldAttributes()
             if (range->collapsed && !range->parentCollapsed() &&
                     (range->fromLine <= mLastLine) && (range->fromLine >= mFirstLine) ) {
                 // Get starting and end points
-                int Y = (mEdit->lineToRow(range->fromLine) - mEdit->mTopLine + 1) * mEdit->mTextHeight - 1;
+                int Y = (mEdit->lineToRow(range->fromLine) - mEdit->yposToRow(0) + 1) * mEdit->mTextHeight - 1;
                 mPainter->drawLine(mClip.left(),Y, mClip.right(),Y);
             }
         }
@@ -933,7 +933,7 @@ void QSynEditPainter::paintLines()
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
     // inside the loop. Get only the starting point for this.
     mRcLine = mClip;
-    mRcLine.setBottom((mFirstRow - mEdit->mTopLine) * mEdit->mTextHeight);
+    mRcLine.setBottom((mFirstRow - 1) * mEdit->mTextHeight - mEdit->mTopPos);
     mTokenAccu.width = 0;
     mTokenAccu.left = 0;
     mTokenAccu.style = FontStyle::fsNone;
@@ -1015,7 +1015,7 @@ void QSynEditPainter::paintLines()
         // Update the rcLine rect to this line.
 //        rcLine.setTop(rcLine.bottom());
 //        rcLine.setBottom(rcLine.bottom()+edit->mTextHeight);
-        mRcLine.setTop((row - mEdit->mTopLine) * mEdit->mTextHeight);
+        mRcLine.setTop((row - 1) * mEdit->mTextHeight - mEdit->mTopPos);
         mRcLine.setHeight(mEdit->mTextHeight);
 
         // if (mIsSpecialLine && colSpBG.isValid())

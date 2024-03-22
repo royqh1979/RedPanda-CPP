@@ -132,6 +132,7 @@ Red Panda C++ Version 2.26
   - Enhancement: New option for compiler set "Don't localize gcc output messages"
   - Enhancement: Optimization for drawing scrollbars.
   - Enhancement: Issue #213 Expands macro when finding function tips.
+  - Enhancement: Vertically scroll by pixel.
   
 
 Red Panda C++ Version 2.25

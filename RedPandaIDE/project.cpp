@@ -425,7 +425,7 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
             //editor->setInProject(true);
             editor->setCaretY(layout->caretY);
             editor->setCaretX(layout->caretX);
-            editor->setTopLine(layout->topLine);
+            editor->setTopPos(layout->top);
             editor->setLeftPos(layout->left);
             editor->activate();
             return editor;
@@ -662,7 +662,7 @@ void Project::saveLayout()
             jsonLayout["filename"]=unit->fileName();
             jsonLayout["caretX"]=editor->caretX();
             jsonLayout["caretY"]=editor->caretY();
-            jsonLayout["topLine"]=editor->topLine();
+            jsonLayout["top"]=editor->topPos();
             jsonLayout["left"]=editor->leftPos();
             jsonLayout["isOpen"]=true;
             jsonLayout["focused"]=(editor==e);
@@ -678,7 +678,7 @@ void Project::saveLayout()
                 jsonLayout["filename"]=unit->fileName();
                 jsonLayout["caretX"]=oldLayout->caretX;
                 jsonLayout["caretY"]=oldLayout->caretY;
-                jsonLayout["topLine"]=oldLayout->topLine;
+                jsonLayout["top"]=oldLayout->top;
                 jsonLayout["left"]=oldLayout->left;
                 jsonLayout["isOpen"]=false;
                 jsonLayout["focused"]=false;
@@ -1945,7 +1945,7 @@ QHash<QString, PProjectEditorLayout> Project::loadLayout()
         if (mUnits.contains(unitFilename)) {
             PProjectEditorLayout editorLayout = std::make_shared<ProjectEditorLayout>();
             editorLayout->filename=unitFilename;
-            editorLayout->topLine=jsonLayout["topLine"].toInt();
+            editorLayout->top=jsonLayout["top"].toInt();
             editorLayout->left=jsonLayout["left"].toInt();
             editorLayout->caretX=jsonLayout["caretX"].toInt();
             editorLayout->caretY=jsonLayout["caretY"].toInt();
@@ -2175,7 +2175,7 @@ void Project::loadUnitLayout(Editor *e)
     if (layout) {
         e->setCaretY(layout->caretY);
         e->setCaretX(layout->caretX);
-        e->setTopLine(layout->topLine);
+        e->setTopPos(layout->top);
         e->setLeftPos(layout->left);
     }
 }

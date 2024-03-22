@@ -5086,7 +5086,7 @@ void Editor::reformat(bool doReparse)
 #endif
     if (newContent.isEmpty())
         return;
-    int oldTopLine = topLine();
+    int oldTopPos = topPos();
     QSynedit::BufferCoord mOldCaret = caretXY();
 
     beginEditing();
@@ -5099,7 +5099,7 @@ void Editor::reformat(bool doReparse)
     setOptions(newOptions);
     replaceAll(QString::fromUtf8(newContent));
     setCaretXY(mOldCaret);
-    setTopLine(oldTopLine);
+    setTopPos(oldTopPos);
     setOptions(oldOptions);
     endEditing();
 

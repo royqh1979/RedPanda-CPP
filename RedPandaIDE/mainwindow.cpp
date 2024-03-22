@@ -3281,7 +3281,7 @@ bool MainWindow::saveLastOpens()
       fileObj["focused"] = editor->hasFocus();
       fileObj["caretX"] = editor->caretX();
       fileObj["caretY"] = editor->caretY();
-      fileObj["topLine"] = editor->topLine();
+      fileObj["top"] = editor->topPos();
       fileObj["left"] = editor->leftPos();
       filesArray.append(fileObj);
     }
@@ -3383,8 +3383,8 @@ void MainWindow::loadLastOpens()
         pos.ch = fileObj["caretX"].toInt(1);
         pos.line = fileObj["caretY"].toInt(1);
         editor->setCaretXY(pos);
-        editor->setTopLine(
-                    fileObj["topLine"].toInt(1)
+        editor->setTopPos(
+                    fileObj["top"].toInt(1)
                     );
         editor->setLeftPos(
                     fileObj["left"].toInt(1)
@@ -5482,11 +5482,11 @@ void MainWindow::onFileChanged(const QString &path)
                                       QMessageBox::Yes|QMessageBox::No,
                                       QMessageBox::No) == QMessageBox::Yes) {
                 try {
-                    int topLine = e->topLine();
+                    int top = e->topPos();
                     QSynedit::BufferCoord caretPos = e->caretXY();
                     e->loadFile();
                     e->setCaretPositionAndActivate(caretPos.line,1);
-                    e->setTopLine(topLine);
+                    e->setTopPos(top);
                 } catch(FileError e) {
                     QMessageBox::critical(this,tr("Error"),e.reason());
                 }

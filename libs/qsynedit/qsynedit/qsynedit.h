@@ -48,7 +48,7 @@ enum StatusChange {
     scCaretX = 0x0002,
     scCaretY = 0x0004,
     scLeftPos = 0x0008,
-    scTopLine = 0x0010,
+    scTopPos = 0x0010,
     scInsertMode = 0x0020,
     scModifyChanged = 0x0040,
     scSelection = 0x0080,
@@ -176,7 +176,7 @@ public:
     void invalidateGutterLines(int FirstLine, int LastLine);
 
     int yposToRow(int y) const {
-        return std::max(1, mTopLine + (y / mTextHeight));
+        return std::max(1, ((y + mTopPos) / mTextHeight) + 1 );
     }
 
     DisplayCoord pixelsToNearestGlyphPos(int aX, int aY) const;
@@ -333,8 +333,8 @@ public:
     bool isCaretVisible();
 
     // setter && getters
-    int topLine() const;
-    void setTopLine(int value);
+    int topPos() const;
+    void setTopPos(int value);
 
     int linesInWindow() const;
 
@@ -651,7 +651,7 @@ private:
     void doUncomment();
     void doToggleComment();
     void doToggleBlockComment();
-    void doMouseScroll(bool isDragging);
+    void doMouseScroll(bool isDragging, int scrollX, int scrollY);
 
     QString getDisplayStringAtLine(int line) const;
 
@@ -702,7 +702,7 @@ private:
     QColor mRightEdgeColor;
     ScrollStyle mScrollBars;
     int mTextHeight;
-    int mTopLine;
+    int mTopPos;
     PSyntaxer mSyntaxer;
     QColor mSelectedForeground;
     QColor mSelectedBackground;
@@ -742,8 +742,6 @@ private:
     //  fFocusList: TList;
     //  fPlugins: TList;
     QTimer*  mScrollTimer;
-    int mScrollDeltaX;
-    int mScrollDeltaY;
 
     PSynEdit  fChainedEditor;
 
