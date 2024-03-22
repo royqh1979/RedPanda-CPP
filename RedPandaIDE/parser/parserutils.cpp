@@ -146,7 +146,7 @@ void initParser()
     CppKeywords.insert("atomic_noexcept",KeywordType::None);
     CppKeywords.insert("consteval",KeywordType::None);
     CppKeywords.insert("constinit",KeywordType::None);
-    CppKeywords.insert("co_wait",KeywordType::None);
+    CppKeywords.insert("co_await",KeywordType::None);
     CppKeywords.insert("co_return",KeywordType::None);
     CppKeywords.insert("co_yield",KeywordType::None);
     CppKeywords.insert("reflexpr",KeywordType::None);
