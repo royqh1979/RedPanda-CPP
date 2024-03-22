@@ -204,10 +204,10 @@ private:
             const StatementAccessibility& classScope,
             StatementProperties properties);
     void addMethodParameterStatement(QStringList words,int line, const PStatement& functionStatement);
-    void setInheritance(int index, const PStatement& classStatement, bool isStruct);
+    void setInheritance(int index, const PStatement& classStatement, bool isStruct, int maxIndex);
     bool isCurrentScope(const QString& command) const;
     void addSoloScopeLevel(PStatement& statement, int line, bool shouldResetBlock=false); // adds new solo level
-    void removeScopeLevel(int line); // removes level
+    void removeScopeLevel(int line, int maxIndex); // removes level
 
     int indexOfMatchingBrace(int startAt) const {
         return mTokenizer[startAt]->matchIndex;
@@ -225,17 +225,17 @@ private:
 
     bool checkForConcept(KeywordType &keywordType) { return keywordType == KeywordType::Concept; }
     bool checkForKeyword(KeywordType &keywordType);
-    bool checkForNamespace(KeywordType keywordType);
+    bool checkForNamespace(KeywordType keywordType, int maxIndex);
     bool checkForPreprocessor();
 //    bool checkForLambda();
     bool checkForAccessibilitySpecifiers(KeywordType keywordType);
     bool checkForRequires(KeywordType keywordType) { return keywordType == KeywordType::Requires; }
-    bool checkForStructs(KeywordType keywordType);
-    bool checkForTypedefEnum();
-    bool checkForTypedefStruct();
-    bool checkForUsing(KeywordType keywordType);
+    bool checkForStructs(KeywordType keywordType, int maxIndex);
+    bool checkForTypedefEnum(int maxIndex);
+    bool checkForTypedefStruct(int maxIndex);
+    bool checkForUsing(KeywordType keywordType, int maxIndex);
 
-    void checkAndHandleMethodOrVar(KeywordType keywordType);
+    void checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex);
 
     QSet<QString> internalGetFileUsings(const QString& filename) const;
 
@@ -463,7 +463,7 @@ private:
     StatementAccessibility getClassMemberAccessibility(KeywordType keywordType) const;
 //    int getCurrentBlockBeginSkip() const;
 //    int getCurrentBlockEndSkip() const;
-    int getCurrentInlineNamespaceEndSkip() const;
+    int getCurrentInlineNamespaceEndSkip(int endIndex) const;
     PStatement getCurrentScope() const; // gets last item from last level
     QString getTemplateParam(const PStatement& statement, const QString& filename,
                                   const QString& phrase, int index, const PStatement& currentScope) const;
@@ -488,16 +488,15 @@ private:
     PStatement getTypeDef(const PStatement& statement,
                           const QString& fileName, const QString& aType) const;
 //    void handleCatchBlock();
-    void handleConcept();
-    void handleEnum(bool isTypedef);
-    void handleForBlock();
-    void handleKeyword(KeywordType skipType);
-    void handleLambda(int index, int endIndex);
+    void handleConcept(int maxIndex);
+    void handleEnum(bool isTypedef, int maxIndex);
+    void handleForBlock(int maxIndex);
+    void handleKeyword(KeywordType skipType, int maxIndex);
+    void handleLambda(int index, int maxIndex);
     void handleOperatorOverloading(
             const QString& sType,
-//            const QString& prefix,
             int operatorTokenIndex,
-            bool isStatic);
+            bool isStatic, int maxIndex);
     void handleMethod(
             StatementKind functionKind,
             const QString& sType,
@@ -505,18 +504,19 @@ private:
             int argStart,
             bool isStatic,
             bool isFriend,
-            bool isOperatorOverload=false);
-    void handleNamespace(KeywordType skipType);
-    void handleOtherTypedefs();
+            bool isOperatorOverload,
+            int maxIndex);
+    void handleNamespace(KeywordType skipType, int maxIndex);
+    void handleOtherTypedefs(int maxIndex);
     void handlePreprocessor();
-    void handleAccessibilitySpecifiers(KeywordType keywordType);
-    bool handleStatement();
-    void handleStructs(bool isTypedef = false);
-    void handleUsing();
-    void handleVar(const QString& typePrefix,bool isExtern,bool isStatic);
+    void handleAccessibilitySpecifiers(KeywordType keywordType, int maxIndex);
+    bool handleStatement(int maxIndex);
+    void handleStructs(bool isTypedef, int maxIndex);
+    void handleUsing(int maxIndex);
+    void handleVar(const QString& typePrefix,bool isExtern,bool isStatic, int maxIndex);
     void handleInheritance(PStatement derivedClass, PClassInheritanceInfo pInfo);
     void handleInheritances();
-    void skipRequires();
+    void skipRequires(int maxIndex);
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
     void inheritClassStatement(
@@ -667,19 +667,19 @@ private:
 
     void updateSerialId();
 
-    int indexOfNextSemicolon(int index, int endIndex=-1);
-    int indexOfNextPeriodOrSemicolon(int index, int endIndex=-1);
-    int indexOfNextSemicolonOrLeftBrace(int index);
-    int indexOfNextColon(int index);
-    int indexOfNextLeftBrace(int index);
-    int indexPassParenthesis(int index);
-    int indexOfNextRightParenthesis(int index);
+    int indexOfNextSemicolon(int index, int maxIndex);
+    int indexOfNextPeriodOrSemicolon(int index, int maxIndex);
+    int indexOfNextSemicolonOrLeftBrace(int index, int maxIndex);
+    int indexOfNextColon(int index, int maxIndex);
+    int indexOfNextLeftBrace(int index, int maxIndex);
+    int indexPassParenthesis(int index, int maxIndex);
+    int indexOfNextRightParenthesis(int index, int maxIndex);
 //    int indexPassBraces(int index);
-    int skipAssignment(int index, int endIndex);
-    void skipNextSemicolon(int index);
-    int moveToEndOfStatement(int index, bool checkLambda, int endIndex=-1);
+    int skipAssignment(int index, int maxIndex);
+    void skipNextSemicolon(int index, int maxIndex);
+    int moveToEndOfStatement(int index, bool checkLambda, int maxIndex);
 //    int moveToNextAssignmentOrEndOfStatement(int index, bool checkLambda, int endIndex=-1);
-    void skipParenthesis(int index);
+    void skipParenthesis(int index, int maxIndex);
     QString mergeArgs(int startIndex, int endIndex);
     void parseCommandTypeAndArgs(QString& command,
                                  QString& typeSuffix,
