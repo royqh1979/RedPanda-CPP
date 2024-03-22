@@ -132,7 +132,6 @@ public:
     void updateEditorBreakpoints();
     void updateEditorActions();
     void updateEncodingActions(const Editor *e);
-    void disableEncodingActions();
     void updateEditorActions(const Editor *e);
     void updateProjectActions();
     void updateCompileActions();

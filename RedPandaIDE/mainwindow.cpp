@@ -594,11 +594,6 @@ void MainWindow::updateEncodingActions(const Editor *e)
     }
 }
 
-void MainWindow::disableEncodingActions()
-{
-    updateEncodingActions(nullptr);
-}
-
 void MainWindow::updateEditorActions(const Editor *e)
 {
     //it's not a compile action, but put here for convinience
@@ -3639,8 +3634,6 @@ void MainWindow::buildEncodingMenu()
     }
 
     mMenuEncoding = new QMenu(this);
-    connect(mMenuEncoding, &QMenu::aboutToHide,
-            this, &MainWindow::disableEncodingActions);
     mMenuEncoding->setTitle(tr("File Encoding"));
     mMenuEncoding->addAction(ui->actionAuto_Detect);
     mMenuEncoding->addAction(ui->actionEncode_in_ANSI);
@@ -4022,8 +4015,6 @@ void MainWindow::onDebugConsoleContextMenu(const QPoint &pos)
 
 void MainWindow::onFileEncodingContextMenu(const QPoint &pos)
 {
-    Editor * e = mEditorList->getEditor();
-    updateEncodingActions(e);
     if (mMenuEncoding->isEnabled())
         mMenuEncoding->exec(mFileEncodingStatus->mapToGlobal(pos));
 }

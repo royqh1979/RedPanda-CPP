@@ -2916,7 +2916,6 @@ void CppParser::handleLambda(int index, int maxIndex)
                 StatementProperty::spHasDefinition);
     scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,mTokenizer[bodyStart]->line);
-    qDebug()<<">?>>>>>";
     int oldIndex = mIndex;
     mIndex = bodyStart+1;
     while (handleStatement(bodyEnd));
