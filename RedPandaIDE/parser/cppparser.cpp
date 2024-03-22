@@ -2894,12 +2894,10 @@ void CppParser::handleLambda(int index, int maxIndex)
     int argEnd= mTokenizer[argStart]->matchIndex;
     //TODO: parse captures
     int bodyStart=indexOfNextLeftBrace(argEnd+1, maxIndex);
-    qDebug()<<index<<bodyStart<<maxIndex;
     if (bodyStart>=maxIndex) {
         return;
     }
     int bodyEnd = mTokenizer[bodyStart]->matchIndex;
-    qDebug()<<"end"<<index<<bodyEnd<<maxIndex;
     if (bodyEnd>maxIndex) {
         return;
     }
@@ -6414,9 +6412,11 @@ int CppParser::skipAssignment(int index, int maxIndex)
         switch(mTokenizer[index]->text[0].unicode()) {
         case ';':
         case ',':
-        case '{':
+        case '}':
+        case ')':
             stop=true;
             break;
+        case '{':
         case '(':
             index = mTokenizer[index]->matchIndex+1;
             break;

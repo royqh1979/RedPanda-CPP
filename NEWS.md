@@ -77,6 +77,7 @@ Red Panda C++ Version 2.27
   - enhancement: Show "std::function" in the completion list.
   - enhancement: Improvement in italic font support.
   - fix: History not correctly loaded with up/down arrow key in the debug console.
+  - enhancement: Improve lambda support.
   
   
 Red Panda C++ Version 2.26
