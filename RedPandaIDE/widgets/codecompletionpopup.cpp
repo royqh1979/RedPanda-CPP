@@ -287,6 +287,7 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
     if (statement->kind == StatementKind::skConstructor
             || statement->kind == StatementKind::skDestructor
             || statement->kind == StatementKind::skBlock
+            || statement->kind == StatementKind::skLambda
             || statement->properties.testFlag(StatementProperty::spOperatorOverloading)
             || statement->properties.testFlag(StatementProperty::spDummyStatement)
             )
@@ -686,6 +687,28 @@ void CodeCompletionPopup::getCompletionFor(
                     foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
                         addChildren(namespaceStatement, fileName, line, isLambdaReturnType);
                     }
+                }
+                if (scopeStatement->kind == StatementKind::skLambda) {
+                    foreach (const QString& phrase, scopeStatement->lambdaCaptures) {
+                        if (phrase=="&" || phrase == "=" || phrase =="this")
+                            continue;
+                        PStatement statement = mParser->findStatementOf(
+                            scopeStatement->fileName,
+                                phrase,scopeStatement->line);
+                        if (statement)
+                            addStatement(statement,scopeStatement->fileName, scopeStatement->line);
+                    }
+                    if (scopeStatement->lambdaCaptures.contains("&")
+                            || scopeStatement->lambdaCaptures.contains("=")) {
+                        scopeStatement = scopeStatement->parentScope.lock();
+                        continue;
+                    } else if (scopeStatement->lambdaCaptures.contains("this")) {
+                        do {
+                            scopeStatement = scopeStatement->parentScope.lock();
+                        } while (scopeStatement && scopeStatement->kind!=StatementKind::skClass);
+                        continue;
+                    }
+                    break;
                 }
                 scopeStatement=scopeStatement->parentScope.lock();
             }

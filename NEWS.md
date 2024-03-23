@@ -76,7 +76,7 @@ Red Panda C++ Version 2.27
   - enhancement: Show "std::function" in the completion list.
   - enhancement: Improvement in italic font support.
   - fix: History not correctly loaded with up/down arrow key in the debug console.
-  - enhancement: Improve lambda support.
+  - enhancement: Improve lambda expression support.
   - enhancement: Show type completion hint after "constexpr"/"extern"/"static"/"consteval"/"constinit"/"const"/"volatile" etc.
   - enhancement: Restore line position after file is modified outside and reloaded.
   

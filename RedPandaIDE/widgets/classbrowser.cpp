@@ -363,7 +363,8 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
 
         if (statement->kind == StatementKind::skBlock)
             continue;
-
+        if (statement->kind == StatementKind::skLambda)
+            continue;
         if (statement->isInherited() && !pSettings->ui().classBrowserShowInherited())
             continue;
 

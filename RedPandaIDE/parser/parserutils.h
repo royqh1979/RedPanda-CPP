@@ -107,6 +107,7 @@ enum StatementKind  {
   skOperator,
   skParameter,
   skBlock,
+  skLambda,
   skUserCodeSnippet,  // user code template
   skKeyword, // keywords
   skKeywordType, //keywords for type (for color management)
@@ -197,6 +198,7 @@ struct Statement {
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
     QString noNameArgs;// Args without name
+    QSet<QString> lambdaCaptures;
     StatementProperties properties;
 
     // fields for code completion

@@ -531,16 +531,10 @@ private:
     void internalInvalidateFile(const QString& fileName);
     void internalInvalidateFiles(const QSet<QString>& files);
     QSet<QString> calculateFilesToBeReparsed(const QString& fileName);
-//    int calcKeyLenForStruct(const QString& word);
-//    {
-//    function GetClass(const Phrase: AnsiString): AnsiString;
-//    function GetMember(const Phrase: AnsiString): AnsiString;
-//    function GetOperator(const Phrase: AnsiString): AnsiString;
-//    function GetRemainder(const Phrase: AnsiString): AnsiString;
-//    }
     void scanMethodArgs(
             const PStatement& functionStatement,
             int argStart);
+    QSet<QString> parseLambdaCaptures(int index);
     QString splitPhrase(const QString& phrase, QString& sClazz,
                 QString& sOperator, QString &sMember) const;
     QString removeTemplateParams(const QString& phrase) const;

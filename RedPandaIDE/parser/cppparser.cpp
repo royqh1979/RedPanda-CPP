@@ -1458,8 +1458,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
         result->setInProject(false);
         result->setInSystemHeader(true);
     }
-    //result->children;
-    //result->friends;
     if (scope == StatementScope::Local)
         result->fullName =  newCommand;
     else
@@ -2887,6 +2885,7 @@ void CppParser::handleKeyword(KeywordType skipType, int maxIndex)
 void CppParser::handleLambda(int index, int maxIndex)
 {
     Q_ASSERT(mTokenizer[index]->text.startsWith('['));
+    QSet<QString> captures = parseLambdaCaptures(index);
     int startLine=mTokenizer[index]->line;
     int argStart=index+1;
     if (mTokenizer[argStart]->text!='(')
@@ -2910,10 +2909,11 @@ void CppParser::handleLambda(int index, int maxIndex)
                 "",
                 "",
                 startLine,
-                StatementKind::skBlock,
+                StatementKind::skLambda,
                 StatementScope::Local,
                 StatementAccessibility::None,
                 StatementProperty::spHasDefinition);
+    lambdaBlock->lambdaCaptures = captures;
     scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,mTokenizer[bodyStart]->line);
     int oldIndex = mIndex;
@@ -5979,8 +5979,35 @@ void CppParser::scanMethodArgs(const PStatement& functionStatement, int argStart
         }
     }
     addMethodParameterStatement(words,mTokenizer[i-1]->line,functionStatement);
+}
 
-
+QSet<QString> CppParser::parseLambdaCaptures(int index)
+{
+    QString s = mTokenizer[index]->text;
+    QString word;
+    QSet<QString> result;
+    //skip '[' ']'
+    for (int i=1;i<s.length()-1;i++) {
+        switch(s[i].unicode()){
+        case ',':
+            if (!word.isEmpty()) {
+                result.insert(word);
+                word.clear();
+            }
+            break;
+        case ' ':
+        case '\t':
+        case '*':
+            break;
+        default:
+            if (word=="&")
+                word.clear();
+            word+=s[i];
+        }
+    }
+    if (!word.isEmpty())
+        result.insert(word);
+    return result;
 }
 
 QString CppParser::splitPhrase(const QString &phrase, QString &sClazz,
