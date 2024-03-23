@@ -701,14 +701,17 @@ void CodeCompletionPopup::getCompletionFor(
                     if (scopeStatement->lambdaCaptures.contains("&")
                             || scopeStatement->lambdaCaptures.contains("=")) {
                         scopeStatement = scopeStatement->parentScope.lock();
-                        continue;
                     } else if (scopeStatement->lambdaCaptures.contains("this")) {
                         do {
                             scopeStatement = scopeStatement->parentScope.lock();
-                        } while (scopeStatement && scopeStatement->kind!=StatementKind::skClass);
-                        continue;
+                        } while (scopeStatement && scopeStatement->kind!=StatementKind::skClass
+                                 && scopeStatement->kind!=StatementKind::skNamespace);
+                    } else {
+                        do {
+                            scopeStatement = scopeStatement->parentScope.lock();
+                        } while (scopeStatement && scopeStatement->kind!=StatementKind::skNamespace);
                     }
-                    break;
+                    continue;
                 }
                 scopeStatement=scopeStatement->parentScope.lock();
             }
