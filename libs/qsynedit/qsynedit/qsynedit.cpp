@@ -55,7 +55,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mLastKeyModifiers = Qt::NoModifier;
     mModified = false;
     mPaintLock = 0;
-    mPainterLock = 0;
     mPainting = false;
     mFontDummy = QFont("monospace",14);
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
@@ -918,8 +917,6 @@ void QSynEdit::setExtraKeystrokes()
 void QSynEdit::invalidateLine(int line)
 {
     QRect rcInval;
-    if (mPainterLock >0)
-        return;
     if (line<1 || (line>mDocument->count() &&
                    line!=1) || !isVisible())
         return;
@@ -941,9 +938,6 @@ void QSynEdit::invalidateLine(int line)
 
 void QSynEdit::invalidateLines(int firstLine, int lastLine)
 {
-    if (mPainterLock>0)
-        return;
-
     if (!isVisible())
         return;
     //qDebug()<<"invalidate lines:"<<firstLine<<lastLine;
@@ -993,39 +987,26 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
 
 void QSynEdit::invalidateSelection()
 {
-    if (mPainterLock>0)
-        return;
     invalidateLines(blockBegin().line, blockEnd().line);
 }
 
 void QSynEdit::invalidateRect(const QRect &rect)
 {
-    if (mPainterLock>0)
-        return;
-    // if (rect.height()>mTextHeight)
-    //     qDebug()<<"invalidate rect"<<rect;
-    viewport()->update(rect);
+    if (mPaintLock>0) {
+        mStateFlags.setFlag(StateFlag::sfRedrawNeeded);
+    } else {
+        viewport()->update(rect);
+    }
 }
 
 void QSynEdit::invalidate()
 {
-    if (mPainterLock>0) {
+    if (mPaintLock>0) {
         mStateFlags.setFlag(StateFlag::sfRedrawNeeded);
     } else {
         mStateFlags.setFlag(StateFlag::sfRedrawNeeded, false);
         viewport()->update();
     }
-}
-
-void QSynEdit::lockPainter()
-{
-    mPainterLock++;
-}
-
-void QSynEdit::unlockPainter()
-{
-    Q_ASSERT(mPainterLock>0);
-    mPainterLock--;
 }
 
 bool QSynEdit::selAvail() const
@@ -1510,15 +1491,15 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
 
 void QSynEdit::doSelectAll()
 {
-    BufferCoord LastPt;
-    LastPt.ch = 1;
+    BufferCoord lastPt;
+    lastPt.ch = 1;
     if (mDocument->empty()) {
-        LastPt.line = 1;
+        lastPt.line = 1;
     } else {
-        LastPt.line = mDocument->count();
-        LastPt.ch = mDocument->getLine(LastPt.line-1).length()+1;
+        lastPt.line = mDocument->count();
+        lastPt.ch = mDocument->getLine(lastPt.line-1).length()+1;
     }
-    setCaretAndSelection(caretXY(), BufferCoord{1, 1}, LastPt);
+    setCaretAndSelection(caretXY(), BufferCoord{1, 1}, lastPt);
     // Selection should have changed...
     emit statusChanged(StatusChange::scSelection);
 }
@@ -5896,8 +5877,6 @@ bool QSynEdit::isCaretVisible()
 
 void QSynEdit::paintEvent(QPaintEvent *event)
 {
-    if (mPainterLock>0)
-        return;
     if (mPainting)
         return;
     mPainting = true;

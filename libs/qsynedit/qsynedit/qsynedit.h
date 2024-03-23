@@ -213,8 +213,6 @@ public:
     void invalidateSelection();
     void invalidateRect(const QRect& rect);
     void invalidate();
-    void lockPainter();
-    void unlockPainter();
     bool selAvail() const;
     bool colSelAvail() const;
     QString wordAtCursor();
@@ -747,7 +745,6 @@ private:
 
     int mPaintTransientLock;
     bool mIsScrolling;
-    int mPainterLock; // lock counter to prevent repaint while painting
     int mOptionLock; // lock counter to prevent recalculate glyph widths while change settings;
     bool mUndoing;
     // event handlers
