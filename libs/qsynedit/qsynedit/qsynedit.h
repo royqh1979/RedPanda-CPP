@@ -64,7 +64,7 @@ enum class StateFlag  {
     sfCaretChanged =        0x0001,
     sfHScrollbarChanged =   0x0002,
     sfVScrollbarChanged =   0x0004,
-    sfLinesChanging =       0x0008,
+//    sfLinesChanging =       0x0008,
     sfIgnoreNextChar =      0x0010,
     sfCaretVisible =        0x0020,
     sfDblClicked =          0x0040,
@@ -495,8 +495,6 @@ protected:
     virtual void onProcessCommand(EditCommand command, QChar car, void * pData);
     virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
     virtual void executeCommand(EditCommand command, QChar ch, void * pData);
-    virtual void onEndFirstPaintLock();
-    virtual void onBeginFirstPaintLock();
 
 protected:
     void doSelectLine();

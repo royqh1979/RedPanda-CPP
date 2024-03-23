@@ -224,6 +224,10 @@ void QSynEdit::setCaretY(int value)
 
 void QSynEdit::setCaretXY(const BufferCoord &value)
 {
+    incPaintLock();
+    auto action = finally([this](){
+        decPaintLock();
+    });
     setBlockBegin(value);
     setBlockEnd(value);
     internalSetCaretXY(value, true);
@@ -612,10 +616,7 @@ void QSynEdit::invalidateGutterLines(int firstLine, int lastLine)
         return;
     if (firstLine == -1 && lastLine == -1) {
         rcInval = QRect(0, 0, mGutterWidth, clientHeight());
-        if (mStateFlags.testFlag(StateFlag::sfLinesChanging))
-            mInvalidateRect = mInvalidateRect.united(rcInval);
-        else
-            invalidateRect(rcInval);
+        invalidateRect(rcInval);
     } else {
         // find the visible lines first
         if (lastLine < firstLine)
@@ -633,11 +634,7 @@ void QSynEdit::invalidateGutterLines(int firstLine, int lastLine)
         if (lastLine >= firstLine) {
             rcInval = {0, mTextHeight * (firstLine-1) - mTopPos,
                        mGutterWidth, mTextHeight * (lastLine - firstLine + 1)};
-            if (mStateFlags.testFlag(StateFlag::sfLinesChanging)) {
-                mInvalidateRect =  mInvalidateRect.united(rcInval);
-            } else {
-                invalidateRect(rcInval);
-            }
+            invalidateRect(rcInval);
         }
     }
 }
@@ -929,10 +926,7 @@ void QSynEdit::invalidateLine(int line)
                     mTextHeight * (line-1) - mTopPos,
                     clientWidth(),
                     mTextHeight};
-        if (mStateFlags.testFlag(StateFlag::sfLinesChanging))
-            mInvalidateRect = mInvalidateRect.united(rcInval);
-        else
-            invalidateRect(rcInval);
+        invalidateRect(rcInval);
     }
 }
 
@@ -944,11 +938,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
     if (firstLine == -1 && lastLine == -1) {
         QRect rcInval = clientRect();
         rcInval.setLeft(rcInval.left()+mGutterWidth);
-        if (mStateFlags.testFlag(StateFlag::sfLinesChanging)) {
-            mInvalidateRect = mInvalidateRect.united(rcInval);
-        } else {
-            invalidateRect(rcInval);
-        }
+        invalidateRect(rcInval);
     } else {
         firstLine = std::max(firstLine, 1);
         lastLine = std::max(lastLine, 1);
@@ -977,10 +967,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
                 mTextHeight * (firstLine-1)  - mTopPos,
                 clientWidth(), mTextHeight * (lastLine - firstLine + 1)
             };
-            if (mStateFlags.testFlag(StateFlag::sfLinesChanging))
-                mInvalidateRect = mInvalidateRect.united(rcInval);
-            else
-                invalidateRect(rcInval);
+            invalidateRect(rcInval);
         }
     }
 }
@@ -994,7 +981,10 @@ void QSynEdit::invalidateRect(const QRect &rect)
 {
     if (mPaintLock>0) {
         mStateFlags.setFlag(StateFlag::sfRedrawNeeded);
+        mInvalidateRect = mInvalidateRect.united(rect);
     } else {
+        // if (rect != calculateCaretRect())
+        //     qDebug()<<"invalid rect"<<QDateTime::currentDateTime();
         viewport()->update(rect);
     }
 }
@@ -1003,8 +993,9 @@ void QSynEdit::invalidate()
 {
     if (mPaintLock>0) {
         mStateFlags.setFlag(StateFlag::sfRedrawNeeded);
+        mInvalidateRect = clientRect();
     } else {
-        mStateFlags.setFlag(StateFlag::sfRedrawNeeded, false);
+        // qDebug()<<"invalidate"<<QDateTime::currentDateTime();
         viewport()->update();
     }
 }
@@ -1429,10 +1420,11 @@ void QSynEdit::setSelWord()
 
 void QSynEdit::setWordBlock(BufferCoord value)
 {
-//    if (mOptions.testFlag(eoScrollPastEol))
-//        Value.Char =
-//    else
-//        Value.Char = std::max(Value.Char, 1);
+    incPaintLock();
+    auto action = finally([this](){
+        decPaintLock();
+    });
+
     value.line = minMax(value.line, 1, mDocument->count());
     value.ch = std::max(value.ch, 1);
     QString TempString = mDocument->getLine(value.line - 1); //needed for CaretX = LineLength +1
@@ -1491,6 +1483,10 @@ int QSynEdit::calcIndentSpaces(int line, const QString& lineText, bool addIndent
 
 void QSynEdit::doSelectAll()
 {
+    incPaintLock();
+    auto action = finally([this](){
+        decPaintLock();
+    });
     BufferCoord lastPt;
     lastPt.ch = 1;
     if (mDocument->empty()) {
@@ -2868,8 +2864,8 @@ void QSynEdit::doPasteFromClipboard()
 
 void QSynEdit::incPaintLock()
 {
-    if (mPaintLock==0) {
-        onBeginFirstPaintLock();
+    if (mPaintLock == 0) {
+        mInvalidateRect={0,0,0,0};
     }
     mPaintLock ++ ;
 }
@@ -2877,6 +2873,14 @@ void QSynEdit::incPaintLock()
 void QSynEdit::decPaintLock()
 {
     Q_ASSERT(mPaintLock > 0);
+    if (mPaintLock == 1 ) {
+        if (mStatusChanges!=0)
+            doOnStatusChange(mStatusChanges);
+        if (mStateFlags.testFlag(StateFlag::sfCaretChanged))
+            updateCaret();
+        if (mStateFlags.testFlag(StateFlag::sfGutterRedrawNeeded))
+            invalidateGutter();
+    }
     mPaintLock--;
     if (mPaintLock == 0 ) {
         if (mStateFlags.testFlag(StateFlag::sfHScrollbarChanged)) {
@@ -2885,15 +2889,11 @@ void QSynEdit::decPaintLock()
         if (mStateFlags.testFlag(StateFlag::sfVScrollbarChanged)) {
             updateVScrollbar();
         }
-        if (mStateFlags.testFlag(StateFlag::sfCaretChanged))
-            updateCaret();
-        if (mStateFlags.testFlag(StateFlag::sfGutterRedrawNeeded))
-            invalidateGutter();
-        if (mStateFlags.testFlag(StateFlag::sfRedrawNeeded))
-            invalidate();
-        if (mStatusChanges!=0)
-            doOnStatusChange(mStatusChanges);
-        onEndFirstPaintLock();
+        if (mStateFlags.testFlag(StateFlag::sfRedrawNeeded)) {
+            invalidateRect(mInvalidateRect);
+            mStateFlags.setFlag(StateFlag::sfRedrawNeeded, false);
+            mInvalidateRect = {0,0,0,0};
+        }
     }
 }
 
@@ -2978,7 +2978,9 @@ void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
     // Make sure Y is visible
     int vCaretRow = displayY();
     if (ForceToMiddle) {
-        if (vCaretRow < yposToRow(0) || vCaretRow>(yposToRow(0) + (mLinesInWindow - 2)))
+        if ((vCaretRow-1) * mTextHeight < mTopPos
+                ||
+                vCaretRow * mTextHeight > mTopPos + clientHeight() )
             setTopPos( (vCaretRow - (mLinesInWindow - 1) / 2-1) * mTextHeight);
     } else {
         if ((vCaretRow-1) * mTextHeight < mTopPos)
@@ -3099,7 +3101,7 @@ void QSynEdit::updateHScrollbar()
                 horizontalScrollBar()->setMaximum(nMax);
                 horizontalScrollBar()->setPageStep(nPage);
                 horizontalScrollBar()->setValue(nPos);
-                horizontalScrollBar()->setSingleStep(1);
+                horizontalScrollBar()->setSingleStep(mCharWidth);
             } else
                 setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
         } else {
@@ -3133,7 +3135,7 @@ void QSynEdit::updateVScrollbar()
                 verticalScrollBar()->setMaximum(nMax);
                 verticalScrollBar()->setPageStep(nPage);
                 verticalScrollBar()->setValue(nPos);
-                verticalScrollBar()->setSingleStep(1);
+                verticalScrollBar()->setSingleStep(mTextHeight);
             } else
                 setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
         } else {
@@ -3400,15 +3402,13 @@ void QSynEdit::foldOnListCleared()
 
 void QSynEdit::rescanFolds()
 {
-    //qDebug()<<QDateTime::currentDateTime();
     if (!useCodeFolding())
         return;
-//    qint64 begin=QDateTime::currentMSecsSinceEpoch();
 
+    incPaintLock();
     rescanForFoldRanges();
-//    qint64 diff= QDateTime::currentMSecsSinceEpoch() - begin;
-//    qDebug()<<"-"<<diff;
     invalidateGutter();
+    decPaintLock();
 }
 
 void QSynEdit::rescanForFoldRanges()
@@ -3773,9 +3773,11 @@ void QSynEdit::onChanged()
 
 void QSynEdit::onScrolled(int)
 {
+    incPaintLock();
     mLeftPos = horizontalScrollBar()->value();
     mTopPos = verticalScrollBar()->value();
     invalidate();
+    decPaintLock();
 }
 
 const PFormatter &QSynEdit::formatter() const
@@ -5605,9 +5607,9 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         if (command == EditCommand::PageUp || command == EditCommand::SelPageUp) {
             counter = -counter;
         }
-        int gap = (lineToRow(caretY())-1) * mTextHeight - topPos();
         incPaintLock();
-        ensureCaretVisible();
+        ensureCaretVisibleEx(true);
+        int gap = (lineToRow(caretY())-1) * mTextHeight - topPos();
         moveCaretVert(counter, command == EditCommand::SelPageUp || command == EditCommand::SelPageDown);
         setTopPos((lineToRow(caretY())-1) * mTextHeight - gap);
         decPaintLock();
@@ -5811,18 +5813,6 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     default:
         break;
     }
-
-
-}
-
-void QSynEdit::onEndFirstPaintLock()
-{
-
-}
-
-void QSynEdit::onBeginFirstPaintLock()
-{
-
 }
 
 void QSynEdit::beginEditingWithoutUndo()
@@ -6110,6 +6100,10 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
 
 void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
 {
+    incPaintLock();
+    auto action = finally([this](){
+       decPaintLock();
+    });
     QAbstractScrollArea::mouseReleaseEvent(event);
     int X=event->pos().x();
     /* int Y=event->pos().y(); */
@@ -6128,13 +6122,7 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
         mStateFlags.setFlag(StateFlag::sfWaitForDragging, false);
     }
     mStateFlags.setFlag(StateFlag::sfDblClicked,false);
-    if (mMouseScrollOldTop > topPos()) {
-        if (topPos() % mTextHeight !=0)
-            setTopPos(topPos()/mTextHeight * mTextHeight);
-    } else if (mMouseScrollOldTop < topPos()) {
-        if (topPos() % mTextHeight !=0)
-            setTopPos( (topPos()/mTextHeight + 1) * mTextHeight);
-    }
+    ensureCaretVisible();
     if (oldCaret!=caretXY()) {
         if (mOptions.testFlag(EditorOption::eoGroupUndo))
             mUndoList->addGroupBreak();
@@ -6241,12 +6229,10 @@ void QSynEdit::wheelEvent(QWheelEvent *event)
         int oldValue = value;
         while (mWheelAccumulatedDeltaY>=120) {
             mWheelAccumulatedDeltaY-=120;
-            value = (value / mTextHeight) * mTextHeight;
             value += sign*mMouseWheelScrollSpeed*mTextHeight;
         }
         while (mWheelAccumulatedDeltaY<=-120) {
             mWheelAccumulatedDeltaY+=120;
-            value = (value / mTextHeight) * mTextHeight;
             value -= sign*mMouseWheelScrollSpeed*mTextHeight;
         }
         if (value != oldValue)
@@ -6508,7 +6494,6 @@ void QSynEdit::onBookMarkOptionsChanged()
 void QSynEdit::onLinesChanged()
 {
     SelectionMode vOldMode;
-    mStateFlags.setFlag(StateFlag::sfLinesChanging, false);
 
     if (mActiveSelectionMode == SelectionMode::Column) {
         BufferCoord oldBlockStart = blockBegin();
@@ -6523,19 +6508,15 @@ void QSynEdit::onLinesChanged()
         setBlockBegin(caretXY());
         mActiveSelectionMode = vOldMode;
     }
-    if (mInvalidateRect.width()==0)
-        invalidate();
-    else
-        invalidateRect(mInvalidateRect);
-    mInvalidateRect = {0,0,0,0};
     if (mGutter.showLineNumbers() && (mGutter.autoSize()))
         mGutter.autoSizeDigitCount(mDocument->count());
     setTopPos(mTopPos);
+    decPaintLock();
 }
 
 void QSynEdit::onLinesChanging()
 {
-    mStateFlags.setFlag(StateFlag::sfLinesChanging);
+    incPaintLock();
 }
 
 void QSynEdit::onLinesCleared()
@@ -6665,6 +6646,10 @@ void QSynEdit::clearSelection()
 
 void QSynEdit::setBlockEnd(BufferCoord value)
 {
+    incPaintLock();
+    auto action = finally([this](){
+        decPaintLock();
+    });
     value.line = minMax(value.line, 1, mDocument->count());
     if (mActiveSelectionMode == SelectionMode::Normal) {
       if (value.line >= 1 && value.line <= mDocument->count())
@@ -6774,6 +6759,10 @@ BufferCoord QSynEdit::blockBegin() const
 
 void QSynEdit::setBlockBegin(BufferCoord value)
 {
+    incPaintLock();
+    auto action = finally([this](){
+        decPaintLock();
+    });
     int nInval1, nInval2;
     bool SelChanged;
     value.line = minMax(value.line, 1, mDocument->count());
