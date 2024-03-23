@@ -67,6 +67,7 @@ static QSet<QString> CppTypeQualifiers {
     "static",
     "mutable",
     "volatile",
+    "inline"
 };
 
 Editor::Editor(QWidget *parent):
