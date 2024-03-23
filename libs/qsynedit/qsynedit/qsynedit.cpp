@@ -3110,7 +3110,7 @@ void QSynEdit::updateHScrollbar()
             }
             if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
                 nMaxScroll = maxScrollWidth();
-                nMin = 1;
+                nMin = 0;
                 nMax = nMaxScroll;
                 nPage = viewWidth();
                 nPos = mLeftPos;
@@ -3144,7 +3144,7 @@ void QSynEdit::updateVScrollbar()
 
             if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
                 nMaxScroll = maxScrollHeight();
-                nMin = 1;
+                nMin = 0;
                 nMax = std::max(1, nMaxScroll);
                 nPage = mLinesInWindow;
                 nPos = mTopPos;
@@ -6458,9 +6458,9 @@ void QSynEdit::dragLeaveEvent(QDragLeaveEvent *)
 int QSynEdit::maxScrollHeight() const
 {
     if (mOptions.testFlag(eoScrollPastEof))
-        return std::max(displayLineCount(),1) * mTextHeight - 1;
+        return (std::max(displayLineCount(),1) - 1) * mTextHeight;
     else
-        return std::max((displayLineCount()-mLinesInWindow+1) * mTextHeight - 1 , 1) ;
+        return std::max((displayLineCount()-mLinesInWindow+1) * mTextHeight, 1) ;
 }
 
 bool QSynEdit::modified() const
