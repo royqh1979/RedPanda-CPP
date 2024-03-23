@@ -818,7 +818,7 @@ void QSynEditPainter::paintFoldAttributes()
                 break;
             int X;
             // Set vertical coord
-            int Y = (row - mEdit->yposToRow(0)) * mEdit->mTextHeight; // limit inside clip rect
+            int Y = (row-1) * mEdit->mTextHeight - mEdit->mTopPos; // limit inside clip rect
             if (mEdit->mTextHeight % 2 == 1 && vLine % 2 == 0) {
                 Y++;
             }

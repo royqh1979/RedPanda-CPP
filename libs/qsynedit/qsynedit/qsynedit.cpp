@@ -2984,11 +2984,15 @@ void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
             setTopPos( (vCaretRow - (mLinesInWindow - 1) / 2-1) * mTextHeight);
     } else {
         if ((vCaretRow-1) * mTextHeight < mTopPos)
-          setTopPos( (vCaretRow - 1) * mTextHeight);
+            setTopPos( (vCaretRow - 1) * mTextHeight);
         else if (vCaretRow * mTextHeight > mTopPos + clientHeight() ) {
-          setTopPos( vCaretRow * mTextHeight - clientHeight());
+            int value =  vCaretRow * mTextHeight - clientHeight();
+            int offset = value % mTextHeight;
+            if (offset!=0)
+                value += (mTextHeight - offset);
+            setTopPos(value);
         } else
-          setTopPos(mTopPos);
+            setTopPos(mTopPos);
     }
 }
 
@@ -6810,6 +6814,7 @@ void QSynEdit::setLeftPos(int value)
     //int MaxVal;
     //QRect iTextArea;
     value = std::min(value,maxScrollWidth());
+    value = std::max(value, 0);
     if (value != mLeftPos) {
         horizontalScrollBar()->setValue(value);
         setStatusChanged(StatusChange::scLeftPos);
@@ -6829,7 +6834,7 @@ int QSynEdit::topPos() const
 void QSynEdit::setTopPos(int value)
 {
     value = std::min(value,maxScrollHeight());
-    value = std::max(value, 1);
+    value = std::max(value, 0);
     if (value != mTopPos) {
         verticalScrollBar()->setValue(value);
         setStatusChanged(StatusChange::scTopPos);
