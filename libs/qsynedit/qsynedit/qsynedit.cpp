@@ -2981,10 +2981,10 @@ void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
         if (vCaretRow < yposToRow(0) || vCaretRow>(yposToRow(0) + (mLinesInWindow - 2)))
             setTopPos( (vCaretRow - (mLinesInWindow - 1) / 2-1) * mTextHeight);
     } else {
-        if (vCaretRow < yposToRow(0))
+        if ((vCaretRow-1) * mTextHeight < mTopPos)
           setTopPos( (vCaretRow - 1) * mTextHeight);
-        else if (vCaretRow > yposToRow(0) + (mLinesInWindow - 2) && mLinesInWindow > 2) {
-          setTopPos( (vCaretRow - (mLinesInWindow - 2) -1) * mTextHeight);
+        else if (vCaretRow * mTextHeight > mTopPos + clientHeight() ) {
+          setTopPos( vCaretRow * mTextHeight - clientHeight());
         } else
           setTopPos(mTopPos);
     }
@@ -5605,7 +5605,12 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
         if (command == EditCommand::PageUp || command == EditCommand::SelPageUp) {
             counter = -counter;
         }
+        int gap = (lineToRow(caretY())-1) * mTextHeight - topPos();
+        incPaintLock();
+        ensureCaretVisible();
         moveCaretVert(counter, command == EditCommand::SelPageUp || command == EditCommand::SelPageDown);
+        setTopPos((lineToRow(caretY())-1) * mTextHeight - gap);
+        decPaintLock();
         break;
     }
     case EditCommand::PageTop:
