@@ -227,55 +227,7 @@ void QSynEdit::setCaretXY(const BufferCoord &value)
 {
     setBlockBegin(value);
     setBlockEnd(value);
-    setCaretXYEx(true,value);
-}
-
-void QSynEdit::setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value)
-{
-    value = ensureBufferCoordValid(value);
-//    if ((value.Char > nMaxX) && (! (mOptions.testFlag(SynEditorOption::eoScrollPastEol)) ) )
-//        value.Char = nMaxX;
-//    if (value.Char < 1)
-//        value.Char = 1;
-    if ((value.ch != mCaretX) || (value.line != mCaretY)) {
-        incPaintLock();
-        auto action = finally([this]{
-            decPaintLock();
-        });
-        // simply include the flags, fPaintLock is > 0
-        if (mCaretX != value.ch) {
-            mCaretX = value.ch;
-            mStatusChanges.setFlag(StatusChange::scCaretX);
-            mStateFlags.setFlag(StateFlag::sfHScrollbarChanged);
-            invalidateLine(mCaretY);
-        }
-        if (mCaretY != value.line) {
-            int oldCaretY = mCaretY;
-            mCaretY = value.line;
-            invalidateLine(mCaretY);
-            invalidateGutterLine(mCaretY);
-            invalidateLine(oldCaretY);
-            invalidateGutterLine(oldCaretY);
-            mStatusChanges.setFlag(StatusChange::scCaretY);
-            mStateFlags.setFlag(StateFlag::sfVScrollbarChanged);
-        }
-        // Call UpdateLastCaretX before DecPaintLock because the event handler it
-        // calls could raise an exception, and we don't want fLastCaretX to be
-        // left in an undefined state if that happens.
-        updateLastCaretX();
-        if (CallEnsureCursorPosVisible)
-            ensureCursorPosVisible();
-    } else {
-        // Also call UpdateLastCaretX if the caret didn't move. Apps don't know
-        // anything about fLastCaretX and they shouldn't need to. So, to avoid any
-        // unwanted surprises, always update fLastCaretX whenever CaretXY is
-        // assigned to.
-        // Note to SynEdit developers: If this is undesirable in some obscure
-        // case, just save the value of fLastCaretX before assigning to CaretXY and
-        // restore it afterward as appropriate.
-        updateLastCaretX();
-    }
-
+    internalSetCaretXY(value, true);
 }
 
 void QSynEdit::setCaretXYCentered(const BufferCoord &value)
@@ -284,14 +236,10 @@ void QSynEdit::setCaretXYCentered(const BufferCoord &value)
     auto action = finally([this] {
         decPaintLock();
     });
-    mStatusChanges.setFlag(StatusChange::scSelection);
-    setCaretXYEx(false,value);
-    if (selAvail())
-        invalidateSelection();
-    mBlockBegin.ch = mCaretX;
-    mBlockBegin.line = mCaretY;
-    mBlockEnd = mBlockBegin;
-    ensureCursorPosVisibleEx(true); // but here after block has been set
+    setBlockBegin(value);
+    setBlockEnd(value);
+    internalSetCaretXY(value, false);
+    ensureCaretVisibleEx(true); // but here after block has been set
 }
 
 void QSynEdit::uncollapseAroundLine(int line)
@@ -1839,7 +1787,7 @@ void QSynEdit::doDeleteLastChar()
     if (mReadOnly)
         return ;
     auto action = finally([this]{
-        ensureCursorPosVisible();
+        ensureCaretVisible();
     });
 
     if (mActiveSelectionMode==SelectionMode::Column) {
@@ -1908,7 +1856,7 @@ void QSynEdit::doDeleteCurrentChar()
         return;
     }
     auto action = finally([this]{
-        ensureCursorPosVisible();
+        ensureCaretVisible();
     });
 
     if (mActiveSelectionMode==SelectionMode::Column) {
@@ -2345,7 +2293,7 @@ void QSynEdit::insertLine(bool moveCaret)
     doLinesInserted(mCaretY - InsDelta, nLinesInserted);
     setBlockBegin(caretXY());
     setBlockEnd(caretXY());
-    ensureCursorPosVisible();
+    ensureCaretVisible();
     updateLastCaretX();
 }
 
@@ -2374,7 +2322,7 @@ void QSynEdit::doTabKey()
     }
     setSelTextPrimitive(QStringList(Spaces));
     endEditing();
-    ensureCursorPosVisible();
+    ensureCaretVisible();
 }
 
 void QSynEdit::doShiftTabKey()
@@ -2533,7 +2481,7 @@ void QSynEdit::computeCaret()
 
     DisplayCoord vCaretNearestPos = pixelsToNearestGlyphPos(x, y);
     vCaretNearestPos.row = minMax(vCaretNearestPos.row, 1, displayLineCount());
-    setInternalDisplayXY(vCaretNearestPos, false);
+    setCaretDisplayXY(vCaretNearestPos, false);
 }
 
 void QSynEdit::computeScroll(bool isDragging)
@@ -3019,12 +2967,12 @@ void QSynEdit::updateLastCaretX()
     mLastCaretColumn = displayX();
 }
 
-void QSynEdit::ensureCursorPosVisible()
+void QSynEdit::ensureCaretVisible()
 {
-    ensureCursorPosVisibleEx(false);
+    ensureCaretVisibleEx(false);
 }
 
-void QSynEdit::ensureCursorPosVisibleEx(bool ForceToMiddle)
+void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
 {
     incPaintLock();
     auto action = finally([this]{
@@ -3069,26 +3017,64 @@ void QSynEdit::scrollWindow(int dx, int dy)
     verticalScrollBar()->setValue(ny);
 }
 
-void QSynEdit::setInternalDisplayXY(const DisplayCoord &aPos, bool ensureCaretVisible)
+void QSynEdit::setCaretDisplayXY(const DisplayCoord &aPos, bool ensureCaretVisible)
 {
     incPaintLock();
     internalSetCaretXY(displayToBufferPos(aPos), ensureCaretVisible);
     decPaintLock();
 }
 
-void QSynEdit::internalSetCaretXY(const BufferCoord &Value, bool ensureCaretVisible)
+void QSynEdit::internalSetCaretXY(BufferCoord value, bool ensureVisible)
 {
-    setCaretXYEx(ensureCaretVisible, Value);
+    value = ensureBufferCoordValid(value);
+    if ((value.ch != mCaretX) || (value.line != mCaretY)) {
+        incPaintLock();
+        auto action = finally([this]{
+            decPaintLock();
+        });
+        // simply include the flags, fPaintLock is > 0
+        if (mCaretX != value.ch) {
+            mCaretX = value.ch;
+            mStatusChanges.setFlag(StatusChange::scCaretX);
+            mStateFlags.setFlag(StateFlag::sfHScrollbarChanged);
+            invalidateLine(mCaretY);
+        }
+        if (mCaretY != value.line) {
+            int oldCaretY = mCaretY;
+            mCaretY = value.line;
+            invalidateLine(mCaretY);
+            invalidateGutterLine(mCaretY);
+            invalidateLine(oldCaretY);
+            invalidateGutterLine(oldCaretY);
+            mStatusChanges.setFlag(StatusChange::scCaretY);
+            mStateFlags.setFlag(StateFlag::sfVScrollbarChanged);
+        }
+        // Call UpdateLastCaretX before DecPaintLock because the event handler it
+        // calls could raise an exception, and we don't want fLastCaretX to be
+        // left in an undefined state if that happens.
+        updateLastCaretX();
+        if (ensureVisible)
+            ensureCaretVisible();
+    } else {
+        // Also call UpdateLastCaretX if the caret didn't move. Apps don't know
+        // anything about fLastCaretX and they shouldn't need to. So, to avoid any
+        // unwanted surprises, always update fLastCaretX whenever CaretXY is
+        // assigned to.
+        // Note to SynEdit developers: If this is undesirable in some obscure
+        // case, just save the value of fLastCaretX before assigning to CaretXY and
+        // restore it afterward as appropriate.
+        updateLastCaretX();
+    }
 }
 
-void QSynEdit::internalSetCaretX(int Value)
+void QSynEdit::internalSetCaretX(int value)
 {
-    internalSetCaretXY(BufferCoord{Value, mCaretY});
+    internalSetCaretXY(BufferCoord{value, mCaretY});
 }
 
-void QSynEdit::internalSetCaretY(int Value)
+void QSynEdit::internalSetCaretY(int value)
 {
-    internalSetCaretXY(BufferCoord{mCaretX,Value});
+    internalSetCaretXY(BufferCoord{mCaretX,value});
 }
 
 void QSynEdit::setStatusChanged(StatusChanges changes)
@@ -4224,7 +4210,7 @@ void QSynEdit::doUndoItem()
                         item->changeNumber());
             internalSetCaretXY(item->changeStartPos());
             setBlockBegin(caretXY());
-            ensureCursorPosVisible();
+            ensureCaretVisible();
             break;
         }
         case ChangeReason::ReplaceLine:
@@ -4289,7 +4275,7 @@ void QSynEdit::doUndoItem()
                         item->changeSelMode(),
                         item->changeNumber());
             setBlockBegin(caretXY());
-            ensureCursorPosVisible();
+            ensureCaretVisible();
             break;
         }
         case ChangeReason::LineBreak:{
@@ -4778,7 +4764,7 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
     }
     // set caret and block begin / end
     incPaintLock();
-
+    ensureCaretVisible();
     moveCaretAndSelection(mBlockBegin, ptDst, isSelection);
     decPaintLock();
 }
@@ -4838,6 +4824,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 
     // set caret and block begin / end
     incPaintLock();
+    ensureCaretVisible();
     moveCaretAndSelection(mBlockBegin, vDstLineChar, isSelection);
     decPaintLock();
 
@@ -5160,8 +5147,8 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 setBlockBegin(ptCurrent);
 
                 //Be sure to use the Ex version of CursorPos so that it appears in the middle if necessary
-                setCaretXYEx(false, BufferCoord{ptCurrent.ch, ptCurrent.line});
-                ensureCursorPosVisibleEx(true);
+                internalSetCaretXY(BufferCoord{ptCurrent.ch, ptCurrent.line}, false);
+                ensureCaretVisibleEx(true);
                 ptCurrent.ch += nSearchLen;
                 setBlockEnd(ptCurrent);
 
@@ -5350,7 +5337,7 @@ void QSynEdit::doInsertText(const BufferCoord& pos,
         doLinesInserted(pos.line+1, insertedLines);
         internalSetCaretXY(newPos);
         setBlockBegin(newPos);
-        ensureCursorPosVisible();
+        ensureCaretVisible();
         break;
     case SelectionMode::Column:{
         BufferCoord bb=blockBegin();
@@ -5365,7 +5352,7 @@ void QSynEdit::doInsertText(const BufferCoord& pos,
             internalSetCaretXY(bb);
             setBlockBegin(bb);
             setBlockEnd(be);
-            ensureCursorPosVisible();
+            ensureCaretVisible();
         }
     }
         break;
@@ -6262,10 +6249,12 @@ void QSynEdit::wheelEvent(QWheelEvent *event)
         int oldValue = value;
         while (mWheelAccumulatedDeltaY>=120) {
             mWheelAccumulatedDeltaY-=120;
+            value = (value / mTextHeight) * mTextHeight;
             value += sign*mMouseWheelScrollSpeed*mTextHeight;
         }
         while (mWheelAccumulatedDeltaY<=-120) {
             mWheelAccumulatedDeltaY+=120;
+            value = (value / mTextHeight) * mTextHeight;
             value -= sign*mMouseWheelScrollSpeed*mTextHeight;
         }
         if (value != oldValue)

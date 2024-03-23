@@ -241,7 +241,6 @@ public:
     void setCaretX(int value);
     void setCaretY(int value);
     void setCaretXY(const BufferCoord& value);
-    void setCaretXYEx(bool CallEnsureCursorPosVisible, BufferCoord value);
     void setCaretXYCentered(const BufferCoord& value);
     void setCaretAndSelection(const BufferCoord& ptCaret,
                               const BufferCoord& ptSelBegin,
@@ -525,13 +524,13 @@ private:
     void doSetSelText(const QString& value);
 
     void updateLastCaretX();
-    void ensureCursorPosVisible();
-    void ensureCursorPosVisibleEx(bool ForceToMiddle);
+    void ensureCaretVisible();
+    void ensureCaretVisibleEx(bool ForceToMiddle);
     void scrollWindow(int dx,int dy);
-    void setInternalDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
-    void internalSetCaretXY(const BufferCoord& Value, bool ensureCaretVisible = true);
-    void internalSetCaretX(int Value);
-    void internalSetCaretY(int Value);
+    void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
+    void internalSetCaretXY(BufferCoord value, bool ensureVisible = true);
+    void internalSetCaretX(int value);
+    void internalSetCaretY(int value);
     void setStatusChanged(StatusChanges changes);
     void doOnStatusChange(StatusChanges changes);
     void updateHScrollbar();

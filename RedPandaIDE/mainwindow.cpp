@@ -9769,7 +9769,6 @@ void MainWindow::on_actionGo_to_Line_triggered()
     }
 }
 
-
 void MainWindow::on_actionNew_Template_triggered()
 {
     if (!mProject)
