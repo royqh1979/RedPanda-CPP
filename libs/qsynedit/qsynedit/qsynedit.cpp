@@ -6069,6 +6069,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
     bool bStartDrag = false;
     mMouseMoved = false;
     mMouseOrigin = event->pos();
+    mMouseScrollOldTop = topPos();
     Qt::MouseButton button = event->button();
     int X=event->pos().x();
     int Y=event->pos().y();
@@ -6143,6 +6144,13 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
         mStateFlags.setFlag(StateFlag::sfWaitForDragging, false);
     }
     mStateFlags.setFlag(StateFlag::sfDblClicked,false);
+    if (mMouseScrollOldTop > topPos()) {
+        if (topPos() % mTextHeight !=0)
+            setTopPos(topPos()/mTextHeight * mTextHeight);
+    } else if (mMouseScrollOldTop < topPos()) {
+        if (topPos() % mTextHeight !=0)
+            setTopPos( (topPos()/mTextHeight + 1) * mTextHeight);
+    }
     if (oldCaret!=caretXY()) {
         if (mOptions.testFlag(EditorOption::eoGroupUndo))
             mUndoList->addGroupBreak();

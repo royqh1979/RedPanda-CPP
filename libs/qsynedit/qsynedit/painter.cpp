@@ -520,6 +520,9 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
         pen.setWidth(penWidth);
         mPainter->setPen(pen);
         mPainter->setBrush(Qt::NoBrush);
+        int lineHeight = rc.height();
+        int fontHeight = mPainter->fontMetrics().descent() + mPainter->fontMetrics().ascent();
+        int linePadding = (lineHeight - fontHeight) / 2;
         switch(p->type) {
         case EditingAreaType::eatRectangleBorder:
             rc.setTop(rc.top()+penWidth/2);
@@ -527,17 +530,14 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
             rc.setBottom(rc.bottom()-penWidth/2);
             mPainter->drawRect(rc);
             break;
-        case EditingAreaType::eatUnderLine: {
-            int lineHeight = rc.height();
-            int fontHeight = mPainter->fontMetrics().descent() + mPainter->fontMetrics().ascent();
-            int linePadding = (lineHeight - fontHeight) / 2;
+        case EditingAreaType::eatUnderLine:
             mPainter->drawLine(rc.left(),rc.bottom()-linePadding-pen.width(),rc.right(),rc.bottom()-linePadding-pen.width());
-        }
             break;
         case EditingAreaType::eatWaveUnderLine: {
-            int lineHeight = rc.height();
-            int fontHeight = mPainter->fontMetrics().descent() + mPainter->fontMetrics().ascent();
-            int linePadding = (lineHeight - fontHeight) / 2;
+            if (linePadding>mPainter->fontMetrics().descent())
+                linePadding -= mPainter->fontMetrics().descent();
+            else
+                linePadding = 0;
             int maxOffset = std::min(3*penWidth, mPainter->fontMetrics().descent());
             maxOffset = std::max(3, maxOffset);
             int offset = maxOffset;

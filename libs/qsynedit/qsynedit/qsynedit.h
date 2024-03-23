@@ -689,6 +689,7 @@ private:
     QFont mFontForNonAscii;
     bool mMouseMoved;
     QPoint mMouseOrigin;
+    int mMouseScrollOldTop;
 
     bool mInserting;
     bool mPainting;
