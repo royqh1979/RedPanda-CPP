@@ -6378,6 +6378,11 @@ void QSynEdit::dropEvent(QDropEvent *event)
     endEditing();
     event->acceptProposedAction();
     mDropped = true;
+    if (topPos!=mMouseScrollOldTop) {
+        int offset = topPos % mTextHeight;
+        if (offset!=0)
+            topPos -= offset;
+    }
     setTopPos(topPos);
     setLeftPos(leftPos);
     internalSetCaretXY(coord);
