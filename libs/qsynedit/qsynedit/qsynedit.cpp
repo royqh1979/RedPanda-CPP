@@ -5876,8 +5876,10 @@ bool QSynEdit::isCaretVisible()
 
 void QSynEdit::paintEvent(QPaintEvent *event)
 {
-    if (mPainting)
+    if (mPainting) {
+        qDebug()<<"painting!";
         return;
+    }
     mPainting = true;
     auto action = finally([&,this] {
         mPainting = false;
