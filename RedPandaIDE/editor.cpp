@@ -4225,22 +4225,20 @@ void Editor::updateFunctionTip(bool showTip)
             QSynedit::PTokenAttribute attr = syntaxer()->getTokenAttribute();
             if (start>=currentChar)
                 break;
-
+            if (
+                (attr->tokenType() == QSynedit::TokenType::Comment
+                 || attr->tokenType() == QSynedit::TokenType::String
+                 )
+                && currentLine == caretPos.line-1 && start<caretPos.ch-1
+                && start+token.length()>=caretPos.ch-1) {
+                return; // in comment/string, do nothing
+            }
             if (attr->tokenType() != QSynedit::TokenType::Comment
                     && attr->tokenType() != QSynedit::TokenType::Space) {
-                if (foundFunctionStart) {
-                    if (attr!=syntaxer()->identifierAttribute())
-                        return; // not a function
-                    functionNamePos.line = currentLine+1;
-                    functionNamePos.ch = start+1;
-                    break;
-                }
+                if (attr->tokenType() == QSynedit::TokenType::String)
+                    token="\"\"";
                 tokens.append(token);
                 positions.append(start);
-            } else if (attr->tokenType() == QSynedit::TokenType::Comment
-                     && currentLine == caretPos.line-1 && start<caretPos.ch
-                     && start+token.length()>=caretPos.ch) {
-                return; // in comment, do nothing
             }
             syntaxer()->next();
         }
@@ -4292,6 +4290,18 @@ void Editor::updateFunctionTip(bool showTip)
                         paramsCount++;
                     }
                 }
+            }
+        } else {
+            int i = tokens.length()-1;
+            if (i>=0){
+                if (!tokens[i].isEmpty() &&
+                    isIdentStartChar(tokens[i].front())) {
+                    functionNamePos.line = currentLine+1;
+                    functionNamePos.ch = positions[i]+1;
+                    break;
+                }
+                // not a valid function
+                return;
             }
         }
         if (functionNamePos.ch>=0)

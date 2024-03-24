@@ -79,6 +79,8 @@ Red Panda C++ Version 2.27
   - enhancement: Improve lambda expression support.
   - enhancement: Show type completion hint after "constexpr"/"extern"/"static"/"consteval"/"constinit"/"const"/"volatile"/"inline" etc.
   - enhancement: Restore line position after file is modified outside and reloaded.
+  - fix: Caret on '('/',' in string/comment shouldn't invoke function info tips.
+  - fix: Function name not correctly found if it and the '(' is not in one line;
   
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
