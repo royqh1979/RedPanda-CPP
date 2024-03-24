@@ -4617,7 +4617,8 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
             i++;
         }
     }
-
+    if (pos>=phraseExpression.length())
+        return PEvalStatement();
     if (phraseExpression[pos] == "new") {
         pos++;
         if (pos>=phraseExpression.length())
@@ -4633,11 +4634,15 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
         if (result) {
             if (pos < phraseExpression.length())
                 result = PEvalStatement();
-            else if (result->kind != EvalStatementKind::Variable) {
+            else if (result->kind == EvalStatementKind::Variable) {
+                if (result->pointerLevel==0)
+                    result->pointerLevel = 1;
+            } else if (result->kind == EvalStatementKind::Type) {
+                result->kind = EvalStatementKind::Variable;
+                if (result->pointerLevel==0)
+                    result->pointerLevel = 1;
+            } else
                 result = PEvalStatement();
-            } else {
-                result->pointerLevel++;
-            }
         }
         return result;
     } else
@@ -4987,47 +4992,50 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
         } else if (phraseExpression[pos] == "[") {
             //skip to "]"
             doSkipInExpression(phraseExpression,pos,"[","]");
-            if (result->pointerLevel>0)
-                result->pointerLevel--;
-            else {
-                PStatement typeStatement = result->effectiveTypeStatement;
-                if (typeStatement
-                        && result->kind == EvalStatementKind::Variable
-                        && result->baseStatement) {
-                    if (STLContainers.contains(typeStatement->fullName)) {
-                        PStatement parentScope = result->baseStatement->parentScope.lock();
-                        QString typeName;
-                        if (!lastResult || lastResult->definitionString.isEmpty())
-                            typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
-                        else
-                            typeName = doFindFirstTemplateParamOf(fileName,lastResult->definitionString,parentScope);
-                        typeStatement = doFindTypeDefinitionOf(fileName, typeName,
-                                                         parentScope);
-                        if (typeStatement) {
-                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
-                            lastResult = result;
-                        } else {
-                            return PEvalStatement();
+            if (result->kind == EvalStatementKind::Type) {
+                // Array defintion
+                result->pointerLevel++;
+            } else if (result->kind == EvalStatementKind::Variable){
+                if (result->pointerLevel>0)
+                    result->pointerLevel--;
+                else {
+                    PStatement typeStatement = result->effectiveTypeStatement;
+                    if (typeStatement && result->baseStatement) {
+                        if (STLContainers.contains(typeStatement->fullName)) {
+                            PStatement parentScope = result->baseStatement->parentScope.lock();
+                            QString typeName;
+                            if (!lastResult || lastResult->definitionString.isEmpty())
+                                typeName = doFindFirstTemplateParamOf(fileName,result->baseStatement->type, parentScope);
+                            else
+                                typeName = doFindFirstTemplateParamOf(fileName,lastResult->definitionString,parentScope);
+                            typeStatement = doFindTypeDefinitionOf(fileName, typeName,
+                                                             parentScope);
+                            if (typeStatement) {
+                                result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
+                                lastResult = result;
+                            } else {
+                                return PEvalStatement();
+                            }
+                        } else if (STLMaps.contains(typeStatement->fullName)) {
+                            PStatement parentScope = result->baseStatement->parentScope.lock();
+                            QString typeName;
+                            if (!lastResult || lastResult->definitionString.isEmpty())
+                                typeName = doFindTemplateParamOf(fileName,result->baseStatement->type, 1,parentScope);
+                            else
+                                typeName = doFindTemplateParamOf(fileName,lastResult->definitionString,1,parentScope);
+                            typeStatement = doFindTypeDefinitionOf(fileName, typeName,
+                                                             parentScope);
+                            if (typeStatement) {
+                                result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
+                                lastResult = result;
+                            } else {
+                                return PEvalStatement();
+                            }
                         }
-                    } else if (STLMaps.contains(typeStatement->fullName)) {
-                        PStatement parentScope = result->baseStatement->parentScope.lock();
-                        QString typeName;
-                        if (!lastResult || lastResult->definitionString.isEmpty())
-                            typeName = doFindTemplateParamOf(fileName,result->baseStatement->type, 1,parentScope);
-                        else
-                            typeName = doFindTemplateParamOf(fileName,lastResult->definitionString,1,parentScope);
-                        typeStatement = doFindTypeDefinitionOf(fileName, typeName,
-                                                         parentScope);
-                        if (typeStatement) {
-                            result = doCreateTypedEvalVar(fileName,typeName,parentScope,result->baseStatement);
-                            lastResult = result;
-                        } else {
-                            return PEvalStatement();
-                        }
-                    }
 
-                } else {
-                    return PEvalStatement();
+                    } else {
+                        return PEvalStatement();
+                    }
                 }
             }
         } else if (phraseExpression[pos] == ".") {
@@ -5176,7 +5184,6 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
     PEvalStatement result;
     if (pos>=phraseExpression.length())
         return result;
-//    qDebug()<<"eval term"<<phraseExpression[pos];
     if (phraseExpression[pos]=="(") {
         pos++;
         result = doEvalExpression(fileName,phraseExpression,pos,scope,PEvalStatement(),freeScoped,false);
@@ -5311,6 +5318,15 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
 //            qDebug()<<"term kind:"<<(int)result->kind;
 //        }
         if (result && result->kind == EvalStatementKind::Type) {
+            if (result->templateParams.isEmpty()) {
+                if (pos<phraseExpression.length() && phraseExpression[pos]=='<') {
+                    int oldPos = pos;
+                    doSkipInExpression(phraseExpression,pos,"<",">");
+                    for(int i=oldPos;i<pos;i++) {
+                        result->templateParams+=phraseExpression[i];
+                    }
+                }
+            }
             //skip "struct", "const", "static", etc
             while(pos < phraseExpression.length()) {
                 QString token = phraseExpression[pos];
