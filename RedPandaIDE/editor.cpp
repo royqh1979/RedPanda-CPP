@@ -4203,9 +4203,24 @@ void Editor::updateFunctionTip(bool showTip)
     int currentParamPos = 1;
     if (currentLine>=document()->count())
         return;
+
     QChar ch=lastNonSpaceChar(currentLine,currentChar);
     if (ch!="(" && ch!=",")
         return;
+
+    QSynedit::PTokenAttribute attr;
+    QString token;
+    QSynedit::SyntaxState syntaxState;
+    QSynedit::BufferCoord pos = caretPos;
+    pos.ch--;
+    if (getTokenAttriAtRowCol(pos, token, attr, syntaxState)) {
+        if (syntaxer()->isStringNotFinished(syntaxState.state))
+            return;
+        if (syntaxer()->isCommentNotFinished(syntaxState.state))
+            return;
+        if (attr->tokenType() == QSynedit::TokenType::Character)
+            return;
+    }
 
     while (currentLine>=0) {
         QString line = document()->getLine(currentLine);
@@ -4225,14 +4240,7 @@ void Editor::updateFunctionTip(bool showTip)
             QSynedit::PTokenAttribute attr = syntaxer()->getTokenAttribute();
             if (start>=currentChar)
                 break;
-            if (
-                (attr->tokenType() == QSynedit::TokenType::Comment
-                 || attr->tokenType() == QSynedit::TokenType::String
-                 )
-                && currentLine == caretPos.line-1 && start<caretPos.ch-1
-                && start+token.length()>=caretPos.ch-1) {
-                return; // in comment/string, do nothing
-            }
+
             if (attr->tokenType() != QSynedit::TokenType::Comment
                     && attr->tokenType() != QSynedit::TokenType::Space) {
                 if (attr->tokenType() == QSynedit::TokenType::String)
