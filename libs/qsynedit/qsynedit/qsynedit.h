@@ -682,7 +682,6 @@ private:
     int mCaretY;
     int mCharWidth;
     QFont mFontDummy;
-    QFont mFontForNonAscii;
     bool mMouseMoved;
     QPoint mMouseOrigin;
     int mMouseScrollOldTop;
