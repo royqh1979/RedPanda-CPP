@@ -59,24 +59,21 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
     mDocument = std::make_shared<Document>(mFontDummy, this);
 
-    connect(mDocument.get(), &Document::maxLineWidthChanged,
-            this, &QSynEdit::updateHScrollbar);
-
     //fPlugins := TList.Create;
     mMouseMoved = false;
     mMouseOrigin = QPoint(0,0);
     mUndoing = false;
-    mDocument->connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
-    mDocument->connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
-    mDocument->connect(mDocument.get(), &Document::cleared, this, &QSynEdit::onLinesCleared);
-    mDocument->connect(mDocument.get(), &Document::deleted, this, &QSynEdit::onLinesDeleted);
-    mDocument->connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
-    mDocument->connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
+    connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
+    connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
+    connect(mDocument.get(), &Document::cleared, this, &QSynEdit::onLinesCleared);
+    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::onLinesDeleted);
+    connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
+    connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
             this, &QSynEdit::updateHScrollbar);
-    mDocument->connect(mDocument.get(), &Document::cleared, this, &QSynEdit::updateVScrollbar);
-    mDocument->connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
-    mDocument->connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
+    connect(mDocument.get(), &Document::cleared, this, &QSynEdit::updateVScrollbar);
+    connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
+    connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
 
     mGutterWidth = 0;
     mScrollBars = ScrollStyle::ssBoth;
@@ -290,9 +287,9 @@ int QSynEdit::maxScrollWidth() const
     if (useCodeFolding())
         maxWidth += stringWidth(syntaxer()->foldString(""),maxWidth);
     if (mOptions.testFlag(eoScrollPastEol))
-        return std::max(maxWidth ,1);
+        return std::max(maxWidth-2*mCharWidth, 0);
     else
-        return std::max(maxWidth-viewWidth()+mCharWidth, 1);
+        return std::max(maxWidth-viewWidth()+mCharWidth, 0);
 }
 
 bool QSynEdit::getTokenAttriAtRowCol(const BufferCoord &pos, QString &token, PTokenAttribute &attri)
@@ -6109,6 +6106,11 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
         mStateFlags.setFlag(StateFlag::sfWaitForDragging, false);
     }
     mStateFlags.setFlag(StateFlag::sfDblClicked,false);
+    if (mTopPos != mMouseScrollOldTop) {
+        int offset=mTopPos % mTextHeight;
+        if (offset != 0)
+            setTopPos(mTopPos - offset);
+    }
     ensureCaretVisible();
     if (oldCaret!=caretXY()) {
         if (mOptions.testFlag(EditorOption::eoGroupUndo))
@@ -6795,7 +6797,7 @@ void QSynEdit::setLeftPos(int value)
 {
     //int MaxVal;
     //QRect iTextArea;
-    value = std::min(value,maxScrollWidth());
+    //value = std::min(value,maxScrollWidth());
     value = std::max(value, 0);
     if (value != mLeftPos) {
         horizontalScrollBar()->setValue(value);
@@ -6815,7 +6817,7 @@ int QSynEdit::topPos() const
 
 void QSynEdit::setTopPos(int value)
 {
-    value = std::min(value,maxScrollHeight());
+    //value = std::min(value,maxScrollHeight());
     value = std::max(value, 0);
     if (value != mTopPos) {
         verticalScrollBar()->setValue(value);
