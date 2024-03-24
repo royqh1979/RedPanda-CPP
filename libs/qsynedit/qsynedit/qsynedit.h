@@ -68,9 +68,7 @@ enum class StateFlag  {
     sfIgnoreNextChar =      0x0010,
     sfCaretVisible =        0x0020,
     sfDblClicked =          0x0040,
-    sfWaitForDragging =     0x0080,
-    sfRedrawNeeded =        0x0100,
-    sfGutterRedrawNeeded =  0x0200,
+    sfWaitForDragging =     0x0080
 };
 
 Q_DECLARE_FLAGS(StateFlags,StateFlag)
@@ -724,7 +722,6 @@ private:
     bool mWantReturns;
     bool mWantTabs;
     Gutter mGutter;
-    QRect mInvalidateRect;
     StateFlags mStateFlags;
     EditorOptions mOptions;
     StatusChanges  mStatusChanges;

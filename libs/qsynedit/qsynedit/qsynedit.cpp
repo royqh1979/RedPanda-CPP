@@ -55,7 +55,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mLastKeyModifiers = Qt::NoModifier;
     mModified = false;
     mPaintLock = 0;
-    mPainting = false;
     mFontDummy = QFont("monospace",14);
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
     mDocument = std::make_shared<Document>(mFontDummy, this);
@@ -593,12 +592,7 @@ bool QSynEdit::pointToLine(const QPoint &point, int &line)
 
 void QSynEdit::invalidateGutter()
 {
-    if (mPaintLock>0) {
-        mStateFlags.setFlag(StateFlag::sfGutterRedrawNeeded);
-    } else {
-        mStateFlags.setFlag(StateFlag::sfGutterRedrawNeeded, false);
-        invalidateGutterLines(-1, -1);
-    }
+    invalidateGutterLines(-1, -1);
 }
 
 void QSynEdit::invalidateGutterLine(int aLine)
@@ -979,25 +973,12 @@ void QSynEdit::invalidateSelection()
 
 void QSynEdit::invalidateRect(const QRect &rect)
 {
-    if (mPaintLock>0) {
-        mStateFlags.setFlag(StateFlag::sfRedrawNeeded);
-        mInvalidateRect = mInvalidateRect.united(rect);
-    } else {
-        // if (rect != calculateCaretRect())
-        //     qDebug()<<"invalid rect"<<QDateTime::currentDateTime();
-        viewport()->update(rect);
-    }
+    viewport()->update(rect);
 }
 
 void QSynEdit::invalidate()
 {
-    if (mPaintLock>0) {
-        mStateFlags.setFlag(StateFlag::sfRedrawNeeded);
-        mInvalidateRect = clientRect();
-    } else {
-        // qDebug()<<"invalidate"<<QDateTime::currentDateTime();
-        viewport()->update();
-    }
+    viewport()->update();
 }
 
 bool QSynEdit::selAvail() const
@@ -2864,23 +2845,12 @@ void QSynEdit::doPasteFromClipboard()
 
 void QSynEdit::incPaintLock()
 {
-    if (mPaintLock == 0) {
-        mInvalidateRect={0,0,0,0};
-    }
     mPaintLock ++ ;
 }
 
 void QSynEdit::decPaintLock()
 {
     Q_ASSERT(mPaintLock > 0);
-    if (mPaintLock == 1 ) {
-        if (mStatusChanges!=0)
-            doOnStatusChange(mStatusChanges);
-        if (mStateFlags.testFlag(StateFlag::sfCaretChanged))
-            updateCaret();
-        if (mStateFlags.testFlag(StateFlag::sfGutterRedrawNeeded))
-            invalidateGutter();
-    }
     mPaintLock--;
     if (mPaintLock == 0 ) {
         if (mStateFlags.testFlag(StateFlag::sfHScrollbarChanged)) {
@@ -2889,11 +2859,10 @@ void QSynEdit::decPaintLock()
         if (mStateFlags.testFlag(StateFlag::sfVScrollbarChanged)) {
             updateVScrollbar();
         }
-        if (mStateFlags.testFlag(StateFlag::sfRedrawNeeded)) {
-            invalidateRect(mInvalidateRect);
-            mStateFlags.setFlag(StateFlag::sfRedrawNeeded, false);
-            mInvalidateRect = {0,0,0,0};
-        }
+        if (mStateFlags.testFlag(StateFlag::sfCaretChanged))
+            updateCaret();
+        if (mStatusChanges!=0)
+            doOnStatusChange(mStatusChanges);
     }
 }
 
@@ -5894,7 +5863,7 @@ void QSynEdit::paintEvent(QPaintEvent *event)
         cacheRC.setHeight(rcClip.height()*dpr);
         painter.drawImage(rcCaret,*mContentImage,cacheRC);
     } else {
-        //qDebug()<<"paint event:"<<rcClip;
+        //qDebug()<<"paint event:"<<QDateTime::currentDateTime()<<rcClip;
         QRect rcDraw;
         int nL1, nL2, nX1, nX2;
         // Compute the invalid area in lines / columns.
@@ -6522,7 +6491,6 @@ void QSynEdit::onLinesCleared()
         foldOnListCleared();
     clearUndo();
     // invalidate the *whole* client area
-    mInvalidateRect={0,0,0,0};
     invalidate();
     // set caret and selected block to start of text
     setCaretXY({1,1});
