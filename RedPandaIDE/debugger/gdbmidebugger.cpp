@@ -986,8 +986,8 @@ void GDBMIDebuggerClient::initialize(const QString& inferior, bool hasSymbols)
     postCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
     postCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
     postCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(inferior))); // restore working directory
-    if (clientType()==DebuggerType::GDB)
-        postCommand("-data-list-register-names","");
+    // if (clientType()==DebuggerType::GDB)
+    //     postCommand("-data-list-register-names","");
 
     if (hasSymbols) {
         postCommand("-file-exec-and-symbols", '"' + inferior + '"');
@@ -1208,8 +1208,9 @@ void GDBMIDebuggerClient::refreshFrame()
 
 void GDBMIDebuggerClient::refreshRegisters()
 {
-    if (clientType()==DebuggerType::LLDB_MI)
-        postCommand("-data-list-register-names","");
+    // if (clientType()==DebuggerType::LLDB_MI)
+    //     postCommand("-data-list-register-names","");
+    postCommand("-data-list-register-names","");
     postCommand("-data-list-register-values", "N");
 }
 
