@@ -4078,7 +4078,6 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                                         PEvalStatement(),
                                         true,false);
                 if(aliasStatement) {
-                    qDebug()<<phraseExpression<<aliasStatement->pointerLevel;
                     if (aliasStatement->effectiveTypeStatement) {
                         addedVar->type = aliasStatement->effectiveTypeStatement->fullName;
                         if (!addedVar->type.endsWith(">"))
@@ -4618,12 +4617,37 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
             i++;
         }
     }
-    return doEvalPointerArithmetic(fileName,
-                                        phraseExpression,
-                                        pos,
-                                        scope,
-                                        previousResult,
-                                   freeScoped);
+
+    if (phraseExpression[pos] == "new") {
+        pos++;
+        if (pos>=phraseExpression.length())
+            return PEvalStatement();
+        PEvalStatement result = doEvalExpression(
+                    fileName,
+                    phraseExpression,
+                    pos,
+                    scope,
+                    previousResult,
+                    freeScoped,
+                    false);
+        if (result) {
+            if (pos < phraseExpression.length())
+                result = PEvalStatement();
+            else if (result->kind != EvalStatementKind::Variable) {
+                result = PEvalStatement();
+            } else {
+                result->pointerLevel++;
+            }
+        }
+        return result;
+    } else
+        return doEvalPointerArithmetic(
+                    fileName,
+                    phraseExpression,
+                    pos,
+                    scope,
+                    previousResult,
+                    freeScoped);
 }
 
 PEvalStatement CppParser::doEvalPointerArithmetic(const QString &fileName, const QStringList &phraseExpression, int &pos, const PStatement &scope, const PEvalStatement &previousResult, bool freeScoped) const
@@ -5170,11 +5194,8 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
             if (token=="*") // for expression like (const * char)?
                 pointerLevel++;
             else if (mCppTypeKeywords.contains(token)
-                    || !mCppKeywords.contains(token)) {
+                    || !mCppKeywords.contains(token))
                 break;
-            } else if (token=="new") {
-                break;
-            }
             pos++;
         }
         if (pos>=phraseExpression.length() || phraseExpression[pos]==")")
@@ -5183,12 +5204,6 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
             result = doCreateEvalType(phraseExpression[pos]);
             pos++;
         } else if (isIdentifier(phraseExpression[pos])) {
-            bool isNew = (phraseExpression[pos] == "new");
-            if (isNew) {
-                pos++;
-                if (pos>=phraseExpression.length())
-                    return PEvalStatement();
-            }
             PStatement statement;
             if (freeScoped) {
                 if (!previousResult) {
@@ -5275,22 +5290,6 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                             && STLMaps.contains(parentStatement->fullName)) {
                         result->templateParams = previousResult->templateParams;
                     }
-                }
-            }
-            if (result && isNew) {
-                if (result->kind != EvalStatementKind::Type) {
-                    return PEvalStatement();
-                } else {
-                    if (pos >= phraseExpression.length())
-                        return PEvalStatement();
-                    if (phraseExpression[pos]=='{')
-                        doSkipInExpression(phraseExpression,pos,"{","}");
-                    else if (phraseExpression[pos]=='(')
-                        doSkipInExpression(phraseExpression,pos,"(",")");
-                    else
-                        return PEvalStatement();
-                    result->kind = EvalStatementKind::Variable;
-                    result->pointerLevel++;
                 }
             }
         } else if (isIntegerLiteral(phraseExpression[pos])) {
