@@ -688,7 +688,6 @@ private:
     int mMouseScrollOldTop;
 
     bool mInserting;
-    bool mPainting;
     PDocument mDocument;
     int mLinesInWindow;
     int mLeftPos;

@@ -5876,15 +5876,6 @@ bool QSynEdit::isCaretVisible()
 
 void QSynEdit::paintEvent(QPaintEvent *event)
 {
-    if (mPainting) {
-        qDebug()<<"painting!";
-        return;
-    }
-    mPainting = true;
-    auto action = finally([&,this] {
-        mPainting = false;
-    });
-
     // Now paint everything while the caret is hidden.
     QPainter painter(viewport());
     //Get the invalidated rect.
