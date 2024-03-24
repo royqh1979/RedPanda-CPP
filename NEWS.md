@@ -82,6 +82,7 @@ Red Panda C++ Version 2.27
   - fix: Caret on '('/',' in string/comment shouldn't invoke function info tips.
   - fix: Function name not correctly found if it and the '(' is not in one line;
   - fix: Register names in the cpu info are not in correct order.
+  - enhancement: Auto type induction for new / temp class object.
   
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
