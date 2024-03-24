@@ -4517,6 +4517,27 @@ QString QSynEdit::selText() const
     return "";
 }
 
+int QSynEdit::selCount() const
+{
+    if (!selAvail())
+        return 0;
+    if (mActiveSelectionMode == SelectionMode::Column)
+        return selText().length();
+    BufferCoord begin=blockBegin();
+    BufferCoord end = blockEnd();
+    if (begin.line == end.line)
+        return (end.ch - begin.ch);
+    int count = mDocument->getLine(begin.line-1).length()+1-begin.ch;
+    int lineEndCount = lineBreak().length();
+    count += lineEndCount;
+    for (int i=begin.line;i<end.line-1;i++) {
+        count += mDocument->getLine(i).length();
+        count += lineEndCount;
+    }
+    count+= end.ch-1;
+    return count;
+}
+
 QStringList QSynEdit::getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const
 {
     QStringList result;

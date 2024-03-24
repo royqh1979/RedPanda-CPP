@@ -384,6 +384,7 @@ public:
     bool empty();
 
     QString selText() const;
+    int selCount() const;
 
     QStringList getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const;
 

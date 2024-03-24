@@ -1517,7 +1517,7 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
                         .arg(e->caretY())
                         .arg(e->document()->count())
                         .arg(col)
-                        .arg(e->selText().length());
+                        .arg(e->selCount());
             } else {
                 msg = tr("Line: %1/%2 Col: %3")
                         .arg(e->caretY())
@@ -1531,7 +1531,7 @@ void MainWindow::updateStatusbarForLineCol(const Editor* e, bool clear)
                         .arg(e->document()->count())
                         .arg(e->caretX())
                         .arg(e->lineText().length())
-                        .arg(e->selText().length());
+                        .arg(e->selCount());
             } else {
                 msg = tr("Line: %1/%2 Char: %3/%4")
                         .arg(e->caretY())
