@@ -3560,7 +3560,6 @@ bool CppParser::handleStatement(int maxIndex)
     //Q_ASSERT(mIndex<999999);
 
     return mIndex < maxIndex;
-
 }
 
 void CppParser::handleStructs(bool isTypedef, int maxIndex)

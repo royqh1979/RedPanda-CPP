@@ -150,7 +150,6 @@ void initParser()
     CppKeywords.insert("co_return",KeywordType::None);
     CppKeywords.insert("co_yield",KeywordType::None);
     CppKeywords.insert("reflexpr",KeywordType::None);
-
     // its a type
     CppKeywords.insert("auto",KeywordType::None);
     CppKeywords.insert("bool",KeywordType::None);

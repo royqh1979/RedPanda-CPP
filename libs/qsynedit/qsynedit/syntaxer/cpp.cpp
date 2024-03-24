@@ -154,6 +154,10 @@ const QSet<QString> CppSyntaxer::Keywords {
     "union",
 
     "nullptr",
+    "override",
+    "final",
+    "import",
+    "module",
 };
 
 const QSet<QString> CppSyntaxer::StandardAttributes {
