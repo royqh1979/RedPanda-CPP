@@ -617,14 +617,14 @@ void QSynEdit::invalidateGutterLines(int firstLine, int lastLine)
             if (lastLine <= mDocument->count())
               lastLine = lineToRow(lastLine);
             else
-              lastLine = INT_MAX;
+              lastLine = mDocument->count() + mLinesInWindow + 2;
         }
-        firstLine = std::min(firstLine, yposToRow(0) );
-        lastLine = std::max(lastLine, yposToRow(clientHeight()));
+        int firstLineTop = std::max((firstLine-1)*mTextHeight, mTopPos);
+        int lastLineBottom = std::min(lastLine*mTextHeight, mTopPos+clientHeight());
         // any line visible?
         if (lastLine >= firstLine) {
-            rcInval = {0, mTextHeight * (firstLine-1) - mTopPos,
-                       mGutterWidth, mTextHeight * (lastLine - firstLine + 1)};
+            rcInval = {0, firstLineTop - mTopPos,
+                       mGutterWidth, lastLineBottom - firstLineTop};
             invalidateRect(rcInval);
         }
     }
@@ -925,7 +925,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
 {
     if (!isVisible())
         return;
-    //qDebug()<<"invalidate lines:"<<firstLine<<lastLine;
+    qDebug()<<"invalidate lines:"<<firstLine<<lastLine;
     if (firstLine == -1 && lastLine == -1) {
         QRect rcInval = clientRect();
         rcInval.setLeft(rcInval.left()+mGutterWidth);
@@ -938,7 +938,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
             std::swap(lastLine, firstLine);
 
         if (lastLine >= mDocument->count())
-          lastLine = INT_MAX; // paint empty space beyond last line
+            lastLine = mDocument->count() + mLinesInWindow + 2; // paint empty space beyond last line
 
         if (useCodeFolding()) {
           firstLine = lineToRow(firstLine);
@@ -948,17 +948,19 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
               lastLine = lineToRow(lastLine + 1) - 1;
         }
 
-        firstLine = std::min(firstLine, yposToRow(0));
-        lastLine = std::max(lastLine, yposToRow(clientHeight()));
+        int firstLineTop = std::max((firstLine-1)*mTextHeight, mTopPos);
+        int lastLineBottom = std::min(lastLine*mTextHeight, mTopPos+clientHeight());
 
+        qDebug()<<firstLineTop<<lastLineBottom<<firstLine<<lastLine;
         // any line visible?
-        if (lastLine >= firstLine) {
+        if (lastLineBottom >= firstLineTop) {
             QRect rcInval = {
                 clientLeft()+mGutterWidth,
-                mTextHeight * (firstLine-1)  - mTopPos,
-                clientWidth(), mTextHeight * (lastLine - firstLine + 1)
+                firstLineTop - mTopPos,
+                clientWidth(), lastLineBottom - firstLineTop
             };
             invalidateRect(rcInval);
+            qDebug()<<rcInval;
         }
     }
 }
@@ -6544,7 +6546,6 @@ void QSynEdit::onLinesDeleted(int line, int count)
         reparseLines(line, mDocument->count());
     }
     invalidateLines(line + 1, INT_MAX);
-    //invalidateGutterLines(line + 1, INT_MAX);
 }
 
 void QSynEdit::onLinesInserted(int line, int count)
@@ -6558,7 +6559,6 @@ void QSynEdit::onLinesInserted(int line, int count)
         reparseLines(line, line + count);
     }
     invalidateLines(line + 1, INT_MAX);
-    //invalidateGutterLines(line + 1, INT_MAX);
 }
 
 void QSynEdit::onLinesPutted(int line)
@@ -6566,11 +6566,9 @@ void QSynEdit::onLinesPutted(int line)
     if (mSyntaxer->needsLineState()) {
         reparseLines(line, mDocument->count());
         invalidateLines(line + 1, INT_MAX);
-        //invalidateGutterLines(line +1 , INT_MAX);
     } else {
         reparseLines(line, line+1);
         invalidateLine( line + 1 );
-        //invalidateGutterLine(line +1);
     }
 }
 
