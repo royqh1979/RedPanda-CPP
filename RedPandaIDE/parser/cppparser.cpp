@@ -4004,7 +4004,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                         && !(addedVar->properties & StatementProperty::spFunctionPointer)
                         && AutoTypes.contains(addedVar->type)) {
                     //handle e.g.: for(auto x:vec)
-                    int endIndex = indexOfNextRightParenthesis(mIndex+1, maxIndex);
+                    // for(auto x:vec ) is replaced by "for { auto x: vec ;"  in handleForAndCatch();
+                    int endIndex = indexOfNextSemicolon(mIndex+1, maxIndex);
                     QString expressionText;
                     for (int i=mIndex+1;i<endIndex;i++) {
                         expressionText+=mTokenizer[i]->text;
@@ -4336,9 +4337,9 @@ void CppParser::internalParse(const QString &fileName)
 
     QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-//        stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
-//        mPreprocessor.dumpDefinesTo("r:\\defines.txt");
-//        mPreprocessor.dumpIncludesListTo("r:\\includes.txt");
+       // stringsToFile(mPreprocessor.result(),QString("z:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+       // mPreprocessor.dumpDefinesTo("z:\\defines.txt");
+       // mPreprocessor.dumpIncludesListTo("z:\\includes.txt");
 #endif
     //qDebug()<<"preprocess"<<timer.elapsed();
     //reduce memory usage
@@ -4355,7 +4356,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-       // mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+       // mTokenizer.dumpTokens(QString("z:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -4367,12 +4368,14 @@ void CppParser::internalParse(const QString &fileName)
         if (!handleStatement(endIndex))
             break;
     }
-
+#ifdef QT_DEBUG
+       // mTokenizer.dumpTokens(QString("z:\\tokens-after-%1.txt").arg(extractFileName(fileName)));
+#endif
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-       mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-       mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+       // mStatementList.dumpAll(QString("z:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+       // mStatementList.dump(QString("z:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();

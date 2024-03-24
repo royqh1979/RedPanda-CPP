@@ -925,7 +925,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
 {
     if (!isVisible())
         return;
-    qDebug()<<"invalidate lines:"<<firstLine<<lastLine;
+    // qDebug()<<"invalidate lines:"<<firstLine<<lastLine;
     if (firstLine == -1 && lastLine == -1) {
         QRect rcInval = clientRect();
         rcInval.setLeft(rcInval.left()+mGutterWidth);
@@ -951,7 +951,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
         int firstLineTop = std::max((firstLine-1)*mTextHeight, mTopPos);
         int lastLineBottom = std::min(lastLine*mTextHeight, mTopPos+clientHeight());
 
-        qDebug()<<firstLineTop<<lastLineBottom<<firstLine<<lastLine;
+        // qDebug()<<firstLineTop<<lastLineBottom<<firstLine<<lastLine;
         // any line visible?
         if (lastLineBottom >= firstLineTop) {
             QRect rcInval = {
@@ -960,7 +960,7 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
                 clientWidth(), lastLineBottom - firstLineTop
             };
             invalidateRect(rcInval);
-            qDebug()<<rcInval;
+            // qDebug()<<rcInval;
         }
     }
 }
