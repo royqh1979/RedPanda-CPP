@@ -6302,6 +6302,14 @@ void QSynEdit::dropEvent(QDropEvent *event)
              && coord>=mDragSelBeginSave && coord<=mDragSelEndSave)
             ) {
         mDocument->deleteAt(mDocument->count()-1);
+        int topPos = mTopPos;
+        if (topPos!=mMouseScrollOldTop) {
+            int offset = topPos % mTextHeight;
+            if (offset!=0)
+                topPos -= offset;
+            setTopPos(topPos);
+            ensureCaretVisible();
+        }
         //do nothing if drag onto itself
         event->acceptProposedAction();
         mDropped = true;
