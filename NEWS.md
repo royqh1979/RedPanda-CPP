@@ -54,9 +54,7 @@ Red Panda C++ Version 2.27
   - enhancement: Execute the last debug command in the debug console if ENTER pressed.
   - change: When debugging, don't auto set focus to the editor.
   - enhancement: Folding button scales with editor font.
-  - fix: Should show header completion popup in #include line comments.
-  - fix: Custom compile options not correctly parsed.
-  - enhancement: "Mouse scroll direction" option in Options / Editor / General
+  - fix: Shouldn't show header completion popup in #include line comments.
   - change: Invert scroll direction in horizontal, like in vertical.
   - fix: Caret unseen when move to a long line end by press END.
   - fix: No icons for inherited class private members.
