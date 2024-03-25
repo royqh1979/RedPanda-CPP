@@ -43,10 +43,8 @@ Red Panda C++ Version 2.27
   - fix: Function tips contains functions that not in the scope.
   - fix: Hint for bold text (<b></b>) are not correctly handled in the function tips.
   - enhancement: Improve lldb-mi compatibility.
-  - fix: Full scope typed variables in lambda expressions is not correctly parsed. 
   - fix: Failed to evaluate expressions while debugging, if the expression has spaces in it.
   - fix: When debugging, can't watch expressions that has spaces in it.
-  - fix: Shortcuts in non-editor panels conficts with the editor.
   - enhancement: Font list in the options / editor / font panel( by CyanoHao  ). 
   - enhancement: Text are vertically center aligned in lines( by CyanoHao  ).
   - fix: In the debugger console, Auto-wrapped lines  can't be correctly selected.
@@ -83,7 +81,8 @@ Red Panda C++ Version 2.27
   - fix: Function name not correctly found if it and the '(' is not in one line;
   - fix: Register names in the cpu info are not in correct order.
   - enhancement: Auto type induction for new / temp class object.
-  
+  - Enhancement: Vertically scroll by pixel.
+    
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
   - change: Use ctrl+mouseMove event to highlight jumpable symbols (instead of ctrl+tooltip).
@@ -136,8 +135,6 @@ Red Panda C++ Version 2.26
   - Enhancement: New option for compiler set "Don't localize gcc output messages"
   - Enhancement: Optimization for drawing scrollbars.
   - Enhancement: Issue #213 Expands macro when finding function tips.
-  - Enhancement: Vertically scroll by pixel.
-  
 
 Red Panda C++ Version 2.25
 

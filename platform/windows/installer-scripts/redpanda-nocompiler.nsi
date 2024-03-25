@@ -1,5 +1,6 @@
 ####################################################################
 # Startup
+SetFont "Segoe UI" 11
 Unicode True
 !include "config.nsh"
 !define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win64.No.Compiler.Setup.exe"

@@ -1,5 +1,6 @@
 ####################################################################
 # Startup
+SetFont "Segoe UI" 11
 Unicode True
 !include "config32.nsh"
 !define COMPILERFOLDER "MinGW32"

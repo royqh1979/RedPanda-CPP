@@ -1,6 +1,6 @@
 ####################################################################
 # Startup
-
+SetFont "Segoe UI" 11
 !include "config-clang.nsh"
 !define COMPILERFOLDER "Clang64"
 !define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win64.${COMPILERNAME}.Setup.exe"
