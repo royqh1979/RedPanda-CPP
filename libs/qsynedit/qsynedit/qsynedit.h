@@ -501,6 +501,8 @@ protected:
     void decPaintLock();
     SyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
 private:
+    int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
+    void ensureLineAlignedWithTop(void);
     BufferCoord ensureBufferCoordValid(const BufferCoord& coord);
     void beginEditingWithoutUndo();
     void endEditingWithoutUndo();
@@ -683,7 +685,6 @@ private:
     QFont mFontDummy;
     bool mMouseMoved;
     QPoint mMouseOrigin;
-    int mMouseScrollOldTop;
 
     bool mInserting;
     PDocument mDocument;

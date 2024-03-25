@@ -841,7 +841,7 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
             QByteArray result = line.mid(pos+1);
             processResult(result);
         } else if (mCurrentCmd && !(mCurrentCmd->command.startsWith('-'))) {
-            if (mCurrentCmd->command == "disas") {
+            if (mCurrentCmd->command == "disas" && mCurrentCmd->source != DebugCommandSource::Console) {
                 QStringList disOutput = mConsoleOutput;
                 if (disOutput.length()>=3) {
                     disOutput.pop_back();

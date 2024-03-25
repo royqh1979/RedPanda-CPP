@@ -2653,7 +2653,7 @@ void MainWindow::prepareDebugger()
     // Clear logs
     ui->debugConsole->clear();
     if (pSettings->debugger().enableDebugConsole()) {
-        ui->debugConsole->addLine("(gdb) ");
+        ui->debugConsole->addLine("(gdb)");
     }
     ui->txtEvalOutput->clear();
 
@@ -4765,6 +4765,9 @@ void MainWindow::onDebugConsoleCopy()
 void MainWindow::onDebugConsoleClear()
 {
     ui->debugConsole->clear();
+    if (pSettings->debugger().enableDebugConsole()) {
+        ui->debugConsole->addLine("(gdb)");
+    }
 }
 
 void MainWindow::onFilesViewOpenInExplorer()

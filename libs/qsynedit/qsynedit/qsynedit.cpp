@@ -158,6 +158,8 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
             this, &QSynEdit::onScrolled);
     connect(verticalScrollBar(),&QScrollBar::valueChanged,
             this, &QSynEdit::onScrolled);
+    connect(verticalScrollBar(), &QAbstractSlider::sliderReleased,
+            this, qOverload<>(&QSynEdit::ensureLineAlignedWithTop));
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
 
@@ -2877,6 +2879,31 @@ SyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText
     return syntaxer()->getState();
 }
 
+int QSynEdit::calcLineAlignedTopPos(int currentValue, bool passFirstLine)
+{
+    int offset = currentValue % mTextHeight;
+    if (offset!=0) {
+        if (passFirstLine)
+            currentValue += (mTextHeight - offset);
+        else
+            currentValue -= offset;
+    }
+    return currentValue;
+}
+
+void QSynEdit::ensureLineAlignedWithTop(void)
+{
+    int value = mTopPos;
+    int offset = value % mTextHeight;
+    if (offset!=0) {
+        if (offset < mTextHeight / 3)
+            value -= offset;
+        else
+            value += (mTextHeight - offset);
+    }
+    setTopPos(value);
+}
+
 int QSynEdit::clientWidth() const
 {
     return viewport()->size().width();
@@ -2952,12 +2979,9 @@ void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
             setTopPos( (vCaretRow - (mLinesInWindow - 1) / 2-1) * mTextHeight);
     } else {
         if ((vCaretRow-1) * mTextHeight < mTopPos)
-            setTopPos( (vCaretRow - 1) * mTextHeight);
+            setTopPos((vCaretRow - 1) * mTextHeight);
         else if (vCaretRow * mTextHeight > mTopPos + clientHeight() ) {
-            int value =  vCaretRow * mTextHeight - clientHeight();
-            int offset = value % mTextHeight;
-            if (offset!=0)
-                value += (mTextHeight - offset);
+            int value = calcLineAlignedTopPos(vCaretRow * mTextHeight - clientHeight(), true);
             setTopPos(value);
         } else
             setTopPos(mTopPos);
@@ -6029,7 +6053,6 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
     bool bStartDrag = false;
     mMouseMoved = false;
     mMouseOrigin = event->pos();
-    mMouseScrollOldTop = topPos();
     Qt::MouseButton button = event->button();
     int X=event->pos().x();
     int Y=event->pos().y();
@@ -6108,11 +6131,7 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
         mStateFlags.setFlag(StateFlag::sfWaitForDragging, false);
     }
     mStateFlags.setFlag(StateFlag::sfDblClicked,false);
-    if (mTopPos != mMouseScrollOldTop) {
-        int offset=mTopPos % mTextHeight;
-        if (offset != 0)
-            setTopPos(mTopPos - offset);
-    }
+    ensureLineAlignedWithTop();
     ensureCaretVisible();
     if (oldCaret!=caretXY()) {
         if (mOptions.testFlag(EditorOption::eoGroupUndo))
@@ -6304,14 +6323,8 @@ void QSynEdit::dropEvent(QDropEvent *event)
              && coord>=mDragSelBeginSave && coord<=mDragSelEndSave)
             ) {
         mDocument->deleteAt(mDocument->count()-1);
-        int topPos = mTopPos;
-        if (topPos!=mMouseScrollOldTop) {
-            int offset = topPos % mTextHeight;
-            if (offset!=0)
-                topPos -= offset;
-            setTopPos(topPos);
-            ensureCaretVisible();
-        }
+        ensureLineAlignedWithTop();
+        ensureCaretVisible();
         //do nothing if drag onto itself
         event->acceptProposedAction();
         mDropped = true;
@@ -6388,11 +6401,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
     endEditing();
     event->acceptProposedAction();
     mDropped = true;
-    if (topPos!=mMouseScrollOldTop) {
-        int offset = topPos % mTextHeight;
-        if (offset!=0)
-            topPos -= offset;
-    }
+    topPos = calcLineAlignedTopPos(topPos, false);
     setTopPos(topPos);
     setLeftPos(leftPos);
     internalSetCaretXY(coord);

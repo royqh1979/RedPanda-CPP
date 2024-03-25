@@ -79,7 +79,9 @@ Red Panda C++ Version 2.27
   - fix: Function name not correctly found if it and the '(' is not in one line;
   - fix: Register names in the cpu info are not in correct order.
   - enhancement: Auto type induction for new / temp class object.
-  - Enhancement: Vertically scroll by pixel.
+  - enhancement: Vertically scroll by pixel.
+  - enhancement: Display (gdb) prompt in debug console after it's cleared.
+  - fix: Output of "disas" is not shown in debug console.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
