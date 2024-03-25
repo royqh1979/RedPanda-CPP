@@ -12,7 +12,7 @@ class EditorFontDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit EditorFontDialog(QWidget *parent = nullptr);
+    explicit EditorFontDialog(bool onlyMonospaceFont, QWidget *parent = nullptr);
     ~EditorFontDialog();
 
     QString fontFamily() const;

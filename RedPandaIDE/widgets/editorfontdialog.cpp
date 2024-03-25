@@ -2,11 +2,13 @@
 #include "ui_editorfontdialog.h"
 #include <QAbstractItemView>
 
-EditorFontDialog::EditorFontDialog(QWidget *parent)
+EditorFontDialog::EditorFontDialog(bool onlyMonospaceFont, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::EditorFontDialog)
 {
     ui->setupUi(this);
+    ui->chkMonoOnly->setChecked(onlyMonospaceFont);
+    ui->fontComboBox->setFontFilters(onlyMonospaceFont ? QFontComboBox::MonospacedFonts : QFontComboBox::AllFonts);
 }
 
 EditorFontDialog::~EditorFontDialog()

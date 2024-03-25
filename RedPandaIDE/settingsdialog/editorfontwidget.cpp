@@ -72,7 +72,7 @@ void EditorFontWidget::on_btnAddFont_clicked()
 {
     QModelIndex index = ui->lstFontList->currentIndex();
     int insertPos = index.isValid() ? index.row() + 1 : mModel.rowCount();
-    EditorFontDialog dlg(this);
+    EditorFontDialog dlg(insertPos==0, this);
     if (dlg.exec() == QDialog::Accepted) {
         mModel.insertRow(insertPos);
         mModel.setData(mModel.index(insertPos), dlg.fontFamily());
@@ -91,13 +91,7 @@ void EditorFontWidget::on_btnRemoveFont_clicked()
 void EditorFontWidget::on_btnModifyFont_clicked()
 {
     QModelIndex index = ui->lstFontList->currentIndex();
-    if (!index.isValid())
-        return;
-    EditorFontDialog dlg(this);
-    dlg.setFontFamily(mModel.data(index, Qt::DisplayRole).toString());
-    if (dlg.exec() == QDialog::Accepted) {
-        mModel.setData(index, dlg.fontFamily());
-    }
+    modifyFont(index);
 }
 
 void EditorFontWidget::on_btnResetFonts_clicked()
@@ -217,9 +211,14 @@ void EditorFontWidget::updateIcons(const QSize &/*size*/) {
 
 void EditorFontWidget::on_lstFontList_doubleClicked(const QModelIndex &index)
 {
+    modifyFont(index);
+}
+
+void EditorFontWidget::modifyFont(const QModelIndex &index)
+{
     if (!index.isValid())
         return;
-    EditorFontDialog dlg(this);
+    EditorFontDialog dlg(index.row()==0, this);
     dlg.setFontFamily(mModel.data(index, Qt::DisplayRole).toString());
     if (dlg.exec() == QDialog::Accepted) {
         mModel.setData(index, dlg.fontFamily());
