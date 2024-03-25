@@ -223,6 +223,7 @@ void QConsole::selectAll()
     if (mContents.lines()>0) {
         mSelectionBegin = {1,1};
         mSelectionEnd = { mContents.getLastLine().length()+1,mContents.lines()};
+        invalidate();
     }
 }
 

@@ -82,6 +82,7 @@ Red Panda C++ Version 2.27
   - enhancement: Vertically scroll by pixel.
   - enhancement: Display (gdb) prompt in debug console after it's cleared.
   - fix: Output of "disas" is not shown in debug console.
+  - fix: Display not correctly updated after select all in debug console.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
