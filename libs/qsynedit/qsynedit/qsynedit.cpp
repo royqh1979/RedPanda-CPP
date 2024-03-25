@@ -159,7 +159,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(verticalScrollBar(),&QScrollBar::valueChanged,
             this, &QSynEdit::onScrolled);
     connect(verticalScrollBar(), &QAbstractSlider::sliderReleased,
-            this, qOverload<>(&QSynEdit::ensureLineAlignedWithTop));
+            this, &QSynEdit::ensureLineAlignedWithTop);
     //enable input method
     setAttribute(Qt::WA_InputMethodEnabled);
 
@@ -3125,7 +3125,7 @@ void QSynEdit::updateVScrollbar()
                 nMaxScroll = maxScrollHeight();
                 nMin = 0;
                 nMax = std::max(1, nMaxScroll);
-                nPage = mLinesInWindow;
+                nPage = mLinesInWindow * mTextHeight;
                 nPos = mTopPos;
                 verticalScrollBar()->setMinimum(nMin);
                 verticalScrollBar()->setMaximum(nMax);
