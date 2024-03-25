@@ -146,6 +146,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>grpCompleSymbols</tabstop>
+  <tabstop>chkCompleteBrace</tabstop>
+  <tabstop>chkCompleteBracket</tabstop>
+  <tabstop>chkCompleteParenthesis</tabstop>
+  <tabstop>chkCompleteComments</tabstop>
+  <tabstop>chkCompleteSingleQuotation</tabstop>
+  <tabstop>chkCompleteDoubleQuotation</tabstop>
+  <tabstop>chkCompleteGlobalInclude</tabstop>
+  <tabstop>chkSkipMathingSymbols</tabstop>
+  <tabstop>chkRemoveSymbolPairs</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -320,6 +320,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>cbTheme</tabstop>
+  <tabstop>chkUseCustomTheme</tabstop>
+  <tabstop>cbFont</tabstop>
+  <tabstop>spinFontSize</tabstop>
+  <tabstop>cbIconSet</tabstop>
+  <tabstop>chkUseCustomIconSet</tabstop>
+  <tabstop>spinZoomFactor</tabstop>
+  <tabstop>cbLanguage</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

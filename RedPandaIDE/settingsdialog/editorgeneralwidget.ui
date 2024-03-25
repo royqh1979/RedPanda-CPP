@@ -608,6 +608,29 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>chkAutoIndent</tabstop>
+  <tabstop>chkTabToSpaces</tabstop>
+  <tabstop>spTabWidth</tabstop>
+  <tabstop>chkShowIndentLines</tabstop>
+  <tabstop>chkFillIndents</tabstop>
+  <tabstop>chkEnhanceHome</tabstop>
+  <tabstop>chkEnhanceEndKey</tabstop>
+  <tabstop>chkKeepCaretX</tabstop>
+  <tabstop>cbCaretForInsert</tabstop>
+  <tabstop>cbCaretForOverwrite</tabstop>
+  <tabstop>chkCaretUseTextColor</tabstop>
+  <tabstop>chkHighlightMatchingBraces</tabstop>
+  <tabstop>chkHighlightCurrentWord</tabstop>
+  <tabstop>chkAutoHideScrollBars</tabstop>
+  <tabstop>chkScrollPastEOL</tabstop>
+  <tabstop>chkScrollPastEOF</tabstop>
+  <tabstop>chkScrollHalfPage</tabstop>
+  <tabstop>spinMouseWheelScrollSpeed</tabstop>
+  <tabstop>spinMouseSelectionScrollSpeed</tabstop>
+  <tabstop>grpRightEdge</tabstop>
+  <tabstop>spRightEdge</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

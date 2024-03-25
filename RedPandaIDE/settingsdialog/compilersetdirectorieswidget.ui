@@ -114,6 +114,12 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>btnAdd</tabstop>
+  <tabstop>btnDelete</tabstop>
+  <tabstop>btnRemoveInvalid</tabstop>
+  <tabstop>listView</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

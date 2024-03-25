@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>906</width>
-    <height>578</height>
+    <height>582</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -249,6 +249,25 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>grpVersionInfo</tabstop>
+  <tabstop>spinMajor</tabstop>
+  <tabstop>spinMinor</tabstop>
+  <tabstop>spinRelease</tabstop>
+  <tabstop>spinBuild</tabstop>
+  <tabstop>chkAutoIncreaseBuildNumber</tabstop>
+  <tabstop>chkSyncProductWithFile</tabstop>
+  <tabstop>cbLanguage</tabstop>
+  <tabstop>txtFileDescription</tabstop>
+  <tabstop>txtFileVersion</tabstop>
+  <tabstop>txtProductName</tabstop>
+  <tabstop>txtProductVersion</tabstop>
+  <tabstop>txtOriginalFilename</tabstop>
+  <tabstop>txtInternalFilename</tabstop>
+  <tabstop>txtCompanyName</tabstop>
+  <tabstop>txtLegalCopyright</tabstop>
+  <tabstop>txtLegalTrademarks</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

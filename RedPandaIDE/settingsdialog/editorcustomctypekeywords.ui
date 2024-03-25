@@ -97,6 +97,13 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>grpEnableCustomKeywords</tabstop>
+  <tabstop>btnAdd</tabstop>
+  <tabstop>btnRemove</tabstop>
+  <tabstop>btnRemoveAll</tabstop>
+  <tabstop>lstKeywords</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

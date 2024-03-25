@@ -92,8 +92,13 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>txtHeader</tabstop>
+  <tabstop>txtPath</tabstop>
+  <tabstop>btnBrowse</tabstop>
+  <tabstop>btnCreate</tabstop>
+  <tabstop>btnCancel</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

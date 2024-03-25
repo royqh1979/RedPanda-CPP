@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1041</width>
-    <height>593</height>
+    <height>629</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -175,6 +175,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>rbAuto</tabstop>
+  <tabstop>rbDark</tabstop>
+  <tabstop>rbLight</tabstop>
+  <tabstop>rbC</tabstop>
+  <tabstop>rbCpp</tabstop>
+  <tabstop>btnOk</tabstop>
+ </tabstops>
  <resources>
   <include location="../icons.qrc"/>
  </resources>

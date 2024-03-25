@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>470</height>
+    <height>520</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -109,7 +109,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="cbCopyWithFormatAs" />
+       <widget class="QComboBox" name="cbCopyWithFormatAs"/>
       </item>
       <item>
        <spacer name="horizontalSpacer_4">
@@ -276,6 +276,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>grpCopySizeLimit</tabstop>
+  <tabstop>spinCopyCharLimits</tabstop>
+  <tabstop>spinCopyLineLimits</tabstop>
+  <tabstop>cbCopyWithFormatAs</tabstop>
+  <tabstop>chkCopyHTMLUseBackground</tabstop>
+  <tabstop>chkCopyHTMLUseEditorColor</tabstop>
+  <tabstop>cbHTMLColorScheme</tabstop>
+  <tabstop>chkCopyRTFUseBackground</tabstop>
+  <tabstop>chkCopyRTFUseEditorColor</tabstop>
+  <tabstop>cbRTFColorScheme</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

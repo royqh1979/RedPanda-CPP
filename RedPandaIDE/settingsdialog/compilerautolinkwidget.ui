@@ -95,8 +95,12 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>grpAutolink</tabstop>
+  <tabstop>btnAdd</tabstop>
+  <tabstop>btnRemove</tabstop>
+  <tabstop>tblAutolinks</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

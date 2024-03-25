@@ -49,8 +49,10 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>txtHost</tabstop>
+  <tabstop>btnBrowse</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

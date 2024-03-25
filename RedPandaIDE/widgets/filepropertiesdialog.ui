@@ -347,6 +347,21 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>cbFiles</tabstop>
+  <tabstop>txtProject</tabstop>
+  <tabstop>txtPath</tabstop>
+  <tabstop>txtRelativeToProject</tabstop>
+  <tabstop>txtLines</tabstop>
+  <tabstop>txtEmptyLines</tabstop>
+  <tabstop>txtCommentLines</tabstop>
+  <tabstop>txtCodeLines</tabstop>
+  <tabstop>txtCharacters</tabstop>
+  <tabstop>txtIncludes</tabstop>
+  <tabstop>txtFileSize</tabstop>
+  <tabstop>txtFileDate</tabstop>
+  <tabstop>btnOK</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

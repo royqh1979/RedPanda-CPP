@@ -550,6 +550,27 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>chkAutosave</tabstop>
+  <tabstop>spinArrayElements</tabstop>
+  <tabstop>spinCharacters</tabstop>
+  <tabstop>grpUseGDBServer</tabstop>
+  <tabstop>spinGDBServerPort</tabstop>
+  <tabstop>chkSkipSystemLib</tabstop>
+  <tabstop>chkSkipProjectLib</tabstop>
+  <tabstop>chkSkipCustomLib</tabstop>
+  <tabstop>grpEnableDebugConsole</tabstop>
+  <tabstop>cbFont</tabstop>
+  <tabstop>chkOnlyMono</tabstop>
+  <tabstop>sbFontSize</tabstop>
+  <tabstop>chkShowDetailLog</tabstop>
+  <tabstop>spinMemoryViewRows</tabstop>
+  <tabstop>spinMemoryViewColumns</tabstop>
+  <tabstop>chkShowCPUWhenSignaled</tabstop>
+  <tabstop>chkBlendMode</tabstop>
+  <tabstop>rbATT</tabstop>
+  <tabstop>rbIntel</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
  <buttongroups>

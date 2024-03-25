@@ -238,6 +238,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lstTemplates</tabstop>
+  <tabstop>rdCProject</tabstop>
+  <tabstop>rdCppProject</tabstop>
+  <tabstop>chkMakeDefaultLanguage</tabstop>
+  <tabstop>txtProjectName</tabstop>
+  <tabstop>txtLocation</tabstop>
+  <tabstop>btnBrowse</tabstop>
+  <tabstop>chkAsDefaultLocation</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

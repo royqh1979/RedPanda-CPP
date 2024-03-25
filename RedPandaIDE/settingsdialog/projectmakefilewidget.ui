@@ -55,8 +55,12 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>grpCustomMakefile</tabstop>
+  <tabstop>txtCustomMakefile</tabstop>
+  <tabstop>btnBrowse</tabstop>
+  <tabstop>btnInfo</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

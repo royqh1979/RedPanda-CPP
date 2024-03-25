@@ -113,8 +113,15 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>grpUseCustomTerminal</tabstop>
+  <tabstop>txtTerminal</tabstop>
+  <tabstop>btnChooseTerminal</tabstop>
+  <tabstop>txtArgsPattern</tabstop>
+  <tabstop>btnAutoDetectArgsPattern</tabstop>
+  <tabstop>labelCmdPreviewResult</tabstop>
+  <tabstop>btnTest</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

@@ -55,14 +55,14 @@ SearchInFileDialog::~SearchInFileDialog()
 void SearchInFileDialog::findInFiles(const QString &text)
 {
     ui->cbFind->setCurrentText(text);
-    ui->cbFind->setFocus();
+    ui->btnExecute->setFocus();
     show();
 }
 
 void SearchInFileDialog::findInFiles(const QString &keyword, SearchFileScope scope, QSynedit::SearchOptions options, const QString& folder, const QString& filters, bool searchSubfolders)
 {
     ui->cbFind->setCurrentText(keyword);
-    ui->cbFind->setFocus();
+    ui->btnExecute->setFocus();
 
     switch(scope) {
     case SearchFileScope::currentFile:

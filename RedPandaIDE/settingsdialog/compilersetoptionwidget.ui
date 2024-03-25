@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>823</width>
+    <width>892</width>
     <height>607</height>
    </rect>
   </property>
@@ -504,6 +504,46 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>cbCompilerSet</tabstop>
+  <tabstop>btnFindCompilers</tabstop>
+  <tabstop>btnAddCompilerSetByFolder</tabstop>
+  <tabstop>btnAddBlankCompilerSet</tabstop>
+  <tabstop>btnRenameCompilerSet</tabstop>
+  <tabstop>btnRemoveCompilerSet</tabstop>
+  <tabstop>settingTabs</tabstop>
+  <tabstop>chkAutoAddCharset</tabstop>
+  <tabstop>cbEncoding</tabstop>
+  <tabstop>cbEncodingDetails</tabstop>
+  <tabstop>chkStaticLink</tabstop>
+  <tabstop>chkForceEnglishOutput</tabstop>
+  <tabstop>chkPersistInAutoFind</tabstop>
+  <tabstop>chkUseCustomCompilerParams</tabstop>
+  <tabstop>txtCustomCompileParams</tabstop>
+  <tabstop>chkUseCustomLinkParams</tabstop>
+  <tabstop>txtCustomLinkParams</tabstop>
+  <tabstop>optionTabs</tabstop>
+  <tabstop>dirTabs</tabstop>
+  <tabstop>txtCCompiler</tabstop>
+  <tabstop>btnChooseCCompiler</tabstop>
+  <tabstop>txtCppCompiler</tabstop>
+  <tabstop>btnChooseCppCompiler</tabstop>
+  <tabstop>txtMake</tabstop>
+  <tabstop>btnChooseMake</tabstop>
+  <tabstop>txtDebugger</tabstop>
+  <tabstop>btnChooseGDB</tabstop>
+  <tabstop>txtGDBServer</tabstop>
+  <tabstop>btnChooseGDBServer</tabstop>
+  <tabstop>txtResourceCompiler</tabstop>
+  <tabstop>btnChooseResourceCompiler</tabstop>
+  <tabstop>rbPreprocessingOnly</tabstop>
+  <tabstop>rbCompilationProperOnly</tabstop>
+  <tabstop>rbGenerateExecutable</tabstop>
+  <tabstop>txtPreprocessingSuffix</tabstop>
+  <tabstop>txtCompilationSuffix</tabstop>
+  <tabstop>txtExecutableSuffix</tabstop>
+  <tabstop>cbBinarySuffix</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

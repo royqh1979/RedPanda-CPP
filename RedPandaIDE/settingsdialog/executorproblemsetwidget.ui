@@ -365,6 +365,21 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>grpProblemSet</tabstop>
+  <tabstop>grpCompetitiveCompanion</tabstop>
+  <tabstop>spinPortNumber</tabstop>
+  <tabstop>chkConvertInputHTML</tabstop>
+  <tabstop>chkConvertExpectedHTML</tabstop>
+  <tabstop>chkRedirectStderr</tabstop>
+  <tabstop>cbProblemCaseValidateType</tabstop>
+  <tabstop>grpEnableTimeout</tabstop>
+  <tabstop>spinCaseTimeout</tabstop>
+  <tabstop>spinMemoryLimit</tabstop>
+  <tabstop>cbFont</tabstop>
+  <tabstop>spinFontSize</tabstop>
+  <tabstop>chkOnlyMonospaced</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -345,14 +345,20 @@
          <item>
           <widget class="QPushButton" name="btnPrevious">
            <property name="text">
-            <string>Find Previous</string>
+            <string>Find &amp;Previous</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="btnNext">
            <property name="text">
-            <string>Find Next</string>
+            <string>Find &amp;Next</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
            </property>
            <property name="default">
             <bool>true</bool>
@@ -362,14 +368,20 @@
          <item>
           <widget class="QPushButton" name="btnReplace">
            <property name="text">
-            <string>Replace</string>
+            <string>&amp;Replace</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="btnReplaceAll">
            <property name="text">
-            <string>Replace All</string>
+            <string>Replace &amp;All</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -392,7 +404,10 @@
          <item>
           <widget class="QPushButton" name="btnClose">
            <property name="text">
-            <string>Close</string>
+            <string>&amp;Close</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -417,6 +432,24 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>btnPrevious</tabstop>
+  <tabstop>btnNext</tabstop>
+  <tabstop>btnReplace</tabstop>
+  <tabstop>btnReplaceAll</tabstop>
+  <tabstop>btnClose</tabstop>
+  <tabstop>cbFind</tabstop>
+  <tabstop>cbReplace</tabstop>
+  <tabstop>chkCaseSensetive</tabstop>
+  <tabstop>chkWholeWord</tabstop>
+  <tabstop>chkRegExp</tabstop>
+  <tabstop>chkWrapAround</tabstop>
+  <tabstop>chkCloseAfterSearch</tabstop>
+  <tabstop>rbFromCursor</tabstop>
+  <tabstop>rbEntireScope</tabstop>
+  <tabstop>rbGlobal</tabstop>
+  <tabstop>rbSelection</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -153,6 +153,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>txtDescription</tabstop>
+  <tabstop>spinTimeLimit</tabstop>
+  <tabstop>cbTimeLimitUnit</tabstop>
+  <tabstop>spinMemoryLimit</tabstop>
+  <tabstop>cbMemoryLimitUnit</tabstop>
+  <tabstop>txtURL</tabstop>
+  <tabstop>btnOk</tabstop>
+  <tabstop>btnCancel</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

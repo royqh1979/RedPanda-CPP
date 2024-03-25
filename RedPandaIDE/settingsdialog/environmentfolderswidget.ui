@@ -123,8 +123,15 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>txtConfigFolder</tabstop>
+  <tabstop>btnOpenConfigFolderInBrowser</tabstop>
+  <tabstop>txtThemeFolder</tabstop>
+  <tabstop>btnOpenThemeFolderInFileBrowser</tabstop>
+  <tabstop>txtIconSetFolder</tabstop>
+  <tabstop>btnOpenIconSetFolderInFileBrowser</tabstop>
+  <tabstop>btnResetDefault</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

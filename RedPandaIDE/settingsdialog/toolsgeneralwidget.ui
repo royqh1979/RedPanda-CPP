@@ -310,8 +310,23 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>btnAdd</tabstop>
+  <tabstop>btnRemove</tabstop>
+  <tabstop>lstTools</tabstop>
+  <tabstop>txtTitle</tabstop>
+  <tabstop>txtProgram</tabstop>
+  <tabstop>btnBrowseProgram</tabstop>
+  <tabstop>txtDirectory</tabstop>
+  <tabstop>btnBrowseWorkingDirectory</tabstop>
+  <tabstop>txtParameters</tabstop>
+  <tabstop>chkPauseConsole</tabstop>
+  <tabstop>txtDemo</tabstop>
+  <tabstop>btnInsertMacro</tabstop>
+  <tabstop>cbMacros</tabstop>
+  <tabstop>btnEditOk</tabstop>
+  <tabstop>btnEditCancel</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

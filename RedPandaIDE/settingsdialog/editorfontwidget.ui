@@ -671,6 +671,37 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lstFontList</tabstop>
+  <tabstop>btnAddFont</tabstop>
+  <tabstop>btnMoveFontToTop</tabstop>
+  <tabstop>btnRemoveFont</tabstop>
+  <tabstop>btnMoveFontUp</tabstop>
+  <tabstop>btnModifyFont</tabstop>
+  <tabstop>btnMoveFontDown</tabstop>
+  <tabstop>btnResetFonts</tabstop>
+  <tabstop>btnMoveFontToBottom</tabstop>
+  <tabstop>spinFontSize</tabstop>
+  <tabstop>spinLineSpacing</tabstop>
+  <tabstop>chkLigature</tabstop>
+  <tabstop>chkForceFixedFontWidth</tabstop>
+  <tabstop>chkLeadingSpaces</tabstop>
+  <tabstop>chkInnerSpaces</tabstop>
+  <tabstop>chkTrailingSpaces</tabstop>
+  <tabstop>chkLineBreaks</tabstop>
+  <tabstop>chkGutterVisible</tabstop>
+  <tabstop>spinGutterLeftOffset</tabstop>
+  <tabstop>spinGutterRightOffset</tabstop>
+  <tabstop>grpGutterShowLineNumbers</tabstop>
+  <tabstop>chkAddLeadingZeros</tabstop>
+  <tabstop>chkLineNumbersStartsZero</tabstop>
+  <tabstop>chkAutoSizeGutter</tabstop>
+  <tabstop>spinGutterDigitsCount</tabstop>
+  <tabstop>grpUseCustomFont</tabstop>
+  <tabstop>cbGutterFont</tabstop>
+  <tabstop>chkGutterOnlyMonospacedFonts</tabstop>
+  <tabstop>spinGutterFontSize</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

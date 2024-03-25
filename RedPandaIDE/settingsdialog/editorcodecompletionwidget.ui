@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>599</width>
-    <height>576</height>
+    <height>646</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -295,6 +295,26 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>grpEnabled</tabstop>
+  <tabstop>spinMinCharRequired</tabstop>
+  <tabstop>chkEditorShareCodeParser</tabstop>
+  <tabstop>chkClearWhenEditorHidden</tabstop>
+  <tabstop>chkShowSuggestionWhileTyping</tabstop>
+  <tabstop>chkParseLocalFiles</tabstop>
+  <tabstop>chkParseSystemFiles</tabstop>
+  <tabstop>chkShowKeywords</tabstop>
+  <tabstop>chkShowCodeIns</tabstop>
+  <tabstop>chkAppendFunc</tabstop>
+  <tabstop>chkIgnoreCases</tabstop>
+  <tabstop>chkSortByScope</tabstop>
+  <tabstop>chkHideSymbolsStartWithUnderline</tabstop>
+  <tabstop>chkHideSymbolsStartWithTwoUnderline</tabstop>
+  <tabstop>chkRecordUsage</tabstop>
+  <tabstop>btnClearUsageData</tabstop>
+  <tabstop>spinWidth</tabstop>
+  <tabstop>spinHeight</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

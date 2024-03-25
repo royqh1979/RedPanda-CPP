@@ -180,12 +180,16 @@
   <customwidget>
    <class>Editor</class>
    <extends>QFrame</extends>
-   <header location="global">editor.h</header>
+   <header>editor.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>tblSnippets</tabstop>
+  <tabstop>btnAdd</tabstop>
+  <tabstop>btnRemove</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

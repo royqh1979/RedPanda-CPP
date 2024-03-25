@@ -83,6 +83,11 @@ Red Panda C++ Version 2.27
   - enhancement: Display (gdb) prompt in debug console after it's cleared.
   - fix: Output of "disas" is not shown in debug console.
   - fix: Display not correctly updated after select all in debug console.
+  - change: Set focus to "find next" button when find/replace dialog is openned.
+  - change: Don't set focus to "close" button after searched in the find/replace dialog
+  - change: Set focus to "find" button when "find in files..." dialog is openned.
+  - enhancement: Correct tab orders for all setting pages/dialogs.
+  - enhancement: Shortcut key for buttons in find/replace and "find in files" dialogs.  
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

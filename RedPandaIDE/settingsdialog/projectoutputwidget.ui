@@ -110,8 +110,17 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>txtOutputDir</tabstop>
+  <tabstop>btnOutputDir</tabstop>
+  <tabstop>txtObjOutputDir</tabstop>
+  <tabstop>btnObjOutputDir</tabstop>
+  <tabstop>grpAutosaveCompileLog</tabstop>
+  <tabstop>txtCompileLog</tabstop>
+  <tabstop>btnCompileLog</tabstop>
+  <tabstop>grpOverrideOutput</tabstop>
+  <tabstop>txtOutputFilename</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

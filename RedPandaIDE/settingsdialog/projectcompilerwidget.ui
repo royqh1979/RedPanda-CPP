@@ -115,6 +115,14 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>cbCompilerSet</tabstop>
+  <tabstop>chkStaticLink</tabstop>
+  <tabstop>chkAddCharset</tabstop>
+  <tabstop>cbEncoding</tabstop>
+  <tabstop>cbEncodingDetails</tabstop>
+  <tabstop>tabOptions</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

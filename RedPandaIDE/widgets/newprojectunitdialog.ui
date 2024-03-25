@@ -108,8 +108,13 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>txtFilename</tabstop>
+  <tabstop>txtFolder</tabstop>
+  <tabstop>btnBrowse</tabstop>
+  <tabstop>btnOk</tabstop>
+  <tabstop>btnCancel</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

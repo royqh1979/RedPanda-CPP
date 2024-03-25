@@ -71,7 +71,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>6</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -883,10 +883,75 @@
   <customwidget>
    <class>Editor</class>
    <extends>QFrame</extends>
-   <header location="global">editor.h</header>
+   <header>editor.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>cbBraceStyle</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>chkAttachNamespaces</tabstop>
+  <tabstop>chkAttachClasses</tabstop>
+  <tabstop>chkAttachInline</tabstop>
+  <tabstop>chkAttachExternC</tabstop>
+  <tabstop>chkAttachClosingWhile</tabstop>
+  <tabstop>chkConvertTabs</tabstop>
+  <tabstop>rbIndentSpaces</tabstop>
+  <tabstop>rbIndentTabs</tabstop>
+  <tabstop>spinTabSize</tabstop>
+  <tabstop>spinIndentContinuation</tabstop>
+  <tabstop>cbMinConditionalIndent</tabstop>
+  <tabstop>spinMaxContinuationIndent</tabstop>
+  <tabstop>chkIndentClasses</tabstop>
+  <tabstop>chkIndentModifiers</tabstop>
+  <tabstop>chkIndentSwiches</tabstop>
+  <tabstop>chkIndentCases</tabstop>
+  <tabstop>chkIndentNamespaces</tabstop>
+  <tabstop>chkIndentAfterParens</tabstop>
+  <tabstop>chkIndentLabels</tabstop>
+  <tabstop>chkIndentPreprocBlock</tabstop>
+  <tabstop>chkIndentPreprocCond</tabstop>
+  <tabstop>chkIndentPreprocDefine</tabstop>
+  <tabstop>chkIndentCol1Comments</tabstop>
+  <tabstop>chkBreakBlocks</tabstop>
+  <tabstop>chkPadComma</tabstop>
+  <tabstop>chkBreakBlocksAll</tabstop>
+  <tabstop>chkPadOper</tabstop>
+  <tabstop>chkPadParenIn</tabstop>
+  <tabstop>chkPadParen</tabstop>
+  <tabstop>chkPadParenOut</tabstop>
+  <tabstop>chkPadFirstParenOut</tabstop>
+  <tabstop>chkPadHeader</tabstop>
+  <tabstop>chkUnpadParen</tabstop>
+  <tabstop>chkDeleteEmptyLines</tabstop>
+  <tabstop>chkDeleteMultipleEmptyLines</tabstop>
+  <tabstop>chkFillEmptyLines</tabstop>
+  <tabstop>rbAlignPointNone</tabstop>
+  <tabstop>rbAlignPointType</tabstop>
+  <tabstop>rbAlignPointerMiddle</tabstop>
+  <tabstop>rbAlignPointerName</tabstop>
+  <tabstop>rbAlignReferenceNone</tabstop>
+  <tabstop>rbAlignReferenceType</tabstop>
+  <tabstop>rbAlignReferenceMiddle</tabstop>
+  <tabstop>rbAlignReferenceName</tabstop>
+  <tabstop>chkBreakClosingBraces</tabstop>
+  <tabstop>chkBreakElseIf</tabstop>
+  <tabstop>chkBreakOneLineHeaders</tabstop>
+  <tabstop>chkAddBraces</tabstop>
+  <tabstop>chkAddOneLineBraces</tabstop>
+  <tabstop>chkRemoveBraces</tabstop>
+  <tabstop>chkBreakReturnTypeDecl</tabstop>
+  <tabstop>chkAttachReturnTypeDecl</tabstop>
+  <tabstop>chkBreakReturnType</tabstop>
+  <tabstop>chkAttachReturnType</tabstop>
+  <tabstop>chkKeepOneLineBlocks</tabstop>
+  <tabstop>chkKeepOneLineStatements</tabstop>
+  <tabstop>chkCloseTemplates</tabstop>
+  <tabstop>chkRemoveCommentPrefix</tabstop>
+  <tabstop>chkBreakMaxCodeLength</tabstop>
+  <tabstop>spinMaxCodeLength</tabstop>
+  <tabstop>chkBreakAfterLogical</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
  <buttongroups>

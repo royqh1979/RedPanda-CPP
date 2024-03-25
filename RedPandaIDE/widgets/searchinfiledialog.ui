@@ -310,21 +310,33 @@
       <item>
        <widget class="QPushButton" name="btnExecute">
         <property name="text">
-         <string>Find</string>
+         <string>&amp;Find</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="default">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnReplace">
         <property name="text">
-         <string>Replace</string>
+         <string>&amp;Replace</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnCancel">
         <property name="text">
-         <string>Cancel</string>
+         <string>&amp;Cancel</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -333,6 +345,23 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>btnExecute</tabstop>
+  <tabstop>btnReplace</tabstop>
+  <tabstop>btnCancel</tabstop>
+  <tabstop>cbFind</tabstop>
+  <tabstop>txtFilters</tabstop>
+  <tabstop>txtFolder</tabstop>
+  <tabstop>btnChangeFolder</tabstop>
+  <tabstop>cbSearchSubFolders</tabstop>
+  <tabstop>chkCaseSensetive</tabstop>
+  <tabstop>chkWholeWord</tabstop>
+  <tabstop>chkRegExp</tabstop>
+  <tabstop>rbCurrentFile</tabstop>
+  <tabstop>rbProject</tabstop>
+  <tabstop>rbOpenFiles</tabstop>
+  <tabstop>rbFolder</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

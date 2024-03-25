@@ -308,8 +308,18 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>txtName</tabstop>
+  <tabstop>txtFileName</tabstop>
+  <tabstop>txtOutputFile</tabstop>
+  <tabstop>cbEncoding</tabstop>
+  <tabstop>cbEncodingDetail</tabstop>
+  <tabstop>btnBrowse</tabstop>
+  <tabstop>btnRemove</tabstop>
+  <tabstop>lstType</tabstop>
+  <tabstop>cbDefaultCpp</tabstop>
+  <tabstop>cbSupportXPTheme</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

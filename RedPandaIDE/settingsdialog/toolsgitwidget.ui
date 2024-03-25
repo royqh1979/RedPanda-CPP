@@ -66,8 +66,11 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../icons.qrc"/>
- </resources>
+ <tabstops>
+  <tabstop>txtGitPath</tabstop>
+  <tabstop>btnBrowseGit</tabstop>
+  <tabstop>btnTestGit</tabstop>
+ </tabstops>
+ <resources/>
  <connections/>
 </ui>

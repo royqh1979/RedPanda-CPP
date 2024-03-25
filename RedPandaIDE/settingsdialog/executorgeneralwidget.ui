@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>617</width>
-    <height>449</height>
+    <width>635</width>
+    <height>504</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -155,6 +155,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>chkPauseConsole</tabstop>
+  <tabstop>chkVTSeq</tabstop>
+  <tabstop>chkMinimizeOnRun</tabstop>
+  <tabstop>grpExecuteParameters</tabstop>
+  <tabstop>txtExecuteParamaters</tabstop>
+  <tabstop>txtParsedArgsInJson</tabstop>
+  <tabstop>grpRedirectInput</tabstop>
+  <tabstop>txtRedirectInputFile</tabstop>
+  <tabstop>btnBrowse</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

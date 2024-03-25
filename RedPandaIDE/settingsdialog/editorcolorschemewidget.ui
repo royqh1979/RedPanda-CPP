@@ -384,15 +384,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ColorEdit</class>
+   <class>Editor</class>
    <extends>QFrame</extends>
-   <header location="global">widgets/coloredit.h</header>
+   <header>editor.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>Editor</class>
+   <class>ColorEdit</class>
    <extends>QFrame</extends>
-   <header location="global">editor.h</header>
+   <header location="global">widgets/coloredit.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -401,6 +401,18 @@
    <header location="global">widgets/qpatchedcombobox.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>cbScheme</tabstop>
+  <tabstop>btnSchemeMenu</tabstop>
+  <tabstop>treeItems</tabstop>
+  <tabstop>cbBackground</tabstop>
+  <tabstop>cbForeground</tabstop>
+  <tabstop>cbBold</tabstop>
+  <tabstop>cbItalic</tabstop>
+  <tabstop>cbStrikeout</tabstop>
+  <tabstop>cbUnderlined</tabstop>
+  <tabstop>chkRainborParenthesis</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

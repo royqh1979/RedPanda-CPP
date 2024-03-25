@@ -252,6 +252,21 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>chkReadonlySystemHeaders</tabstop>
+  <tabstop>chkLoadLastFiles</tabstop>
+  <tabstop>chkParseTodos</tabstop>
+  <tabstop>spinMaxUndo</tabstop>
+  <tabstop>spinMaxUndoMemory</tabstop>
+  <tabstop>rbNone</tabstop>
+  <tabstop>rbAutoReformat</tabstop>
+  <tabstop>rbRemoveTrailingSpaces</tabstop>
+  <tabstop>chkAutoDetectFileEncoding</tabstop>
+  <tabstop>cbEncoding</tabstop>
+  <tabstop>cbEncodingDetail</tabstop>
+  <tabstop>rbCFile</tabstop>
+  <tabstop>rbCppFile</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
