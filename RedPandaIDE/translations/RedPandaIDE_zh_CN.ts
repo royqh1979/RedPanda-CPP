@@ -1596,7 +1596,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../editor.cpp" line="+384"/>
         <location line="+70"/>
         <location line="+29"/>
-        <location line="+1088"/>
+        <location line="+1093"/>
         <location line="+5"/>
         <location line="+21"/>
         <location line="+5"/>
@@ -1608,7 +1608,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="-1475"/>
+        <location line="-1480"/>
         <location line="+434"/>
         <source>Error Load File</source>
         <translation>载入文件错误</translation>
@@ -1648,7 +1648,7 @@ p, li { white-space: pre-wrap; }
         <translation>文件%1已经被打开！</translation>
     </message>
     <message>
-        <location line="+1117"/>
+        <location line="+1122"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
@@ -1694,7 +1694,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location line="+919"/>
+        <location line="+920"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
@@ -3222,13 +3222,13 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+42"/>
-        <location line="+94"/>
+        <location line="+96"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
         <translation>无法删除旧的可执行文件&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-83"/>
         <source>GNU Assembler</source>
         <translation>GNU汇编</translation>
     </message>
@@ -3239,7 +3239,7 @@ p, li { white-space: pre-wrap; }
         <translation>找不到适合文件%1的编译器</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+43"/>
         <source>The Compiler &apos;%1&apos; doesn&apos;t exists!</source>
         <translation>编译器程序&quot;%1&quot;不存在！</translation>
     </message>
@@ -7930,7 +7930,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">案例运行超时</translation>
     </message>
     <message>
-        <location filename="../compiler/ojproblemcasesrunner.cpp" line="+178"/>
+        <location filename="../compiler/ojproblemcasesrunner.cpp" line="+87"/>
+        <source>--- stderr from %1 ---</source>
+        <translation type="unfinished">--- 来自“%1”的stderr ---</translation>
+    </message>
+    <message>
+        <location line="+91"/>
         <source>Time limit exceeded!</source>
         <translation>运行时间超限！</translation>
     </message>
@@ -8312,7 +8317,7 @@ p, li { white-space: pre-wrap; }
         <translation>- 资源文件: %1</translation>
     </message>
     <message>
-        <location line="+343"/>
+        <location line="+345"/>
         <source>Compiling project changes...</source>
         <translation>正在编译项目修改...</translation>
     </message>
@@ -9234,7 +9239,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3443"/>
+        <location filename="../settings.cpp" line="+3449"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -10421,7 +10426,7 @@ p, li { white-space: pre-wrap; }
         <translation>无法写入文件&apos;%1&apos;！</translation>
     </message>
     <message>
-        <location line="+214"/>
+        <location line="+212"/>
         <source>Compiling project changes...</source>
         <translation>正在编译项目修改...</translation>
     </message>

@@ -84,7 +84,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
     if (pSettings->executor().redirectStderrToToolLog()) {
-        emit logStderrOutput("\n");
+        emit logStderrOutput("\n"+tr("--- stderr from %1 ---").arg(problemCase->name)+"\n");
     } else {
         process.setProcessChannelMode(QProcess::MergedChannels);
         process.setReadChannel(QProcess::StandardOutput);

@@ -1382,7 +1382,7 @@
         <location filename="../editor.cpp" line="+384"/>
         <location line="+70"/>
         <location line="+29"/>
-        <location line="+1088"/>
+        <location line="+1093"/>
         <location line="+5"/>
         <location line="+21"/>
         <location line="+5"/>
@@ -1390,7 +1390,7 @@
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-1182"/>
+        <location line="-1187"/>
         <source>Save As</source>
         <translation>Salvar como</translation>
     </message>
@@ -1400,7 +1400,7 @@
         <translation>Arquivo %1 já aberto!</translation>
     </message>
     <message>
-        <location line="+1117"/>
+        <location line="+1122"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>O texto a ser copiado excede o limite do contador!</translation>
     </message>
@@ -1432,7 +1432,7 @@
         <translation>Ctrl+clik para mais informações</translation>
     </message>
     <message>
-        <location line="+919"/>
+        <location line="+920"/>
         <source>astyle not found</source>
         <translation>astyle não encontrado</translation>
     </message>
@@ -1457,13 +1457,13 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5368"/>
+        <location line="-5374"/>
         <location line="+434"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
     </message>
     <message>
-        <location line="+1578"/>
+        <location line="+1583"/>
         <source>hex: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2907,18 +2907,18 @@
     </message>
     <message>
         <location line="+42"/>
-        <location line="+94"/>
+        <location line="+96"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
         <translation>Impossível remover o antigo arquivo executável &quot;%1&quot;.</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-65"/>
         <source>Can&apos;t find the compiler for file %1</source>
         <translation>Impossível encontrar o compilador para o arquivo %1</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+43"/>
         <source>The Compiler &apos;%1&apos; doesn&apos;t exists!</source>
         <translation>O compilador &apos;%1&apos; é inexistente!</translation>
     </message>
@@ -2942,7 +2942,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-122"/>
+        <location line="-124"/>
         <source>Checking single file...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2952,7 +2952,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+70"/>
         <source>Command: %1</source>
         <translation type="unfinished">Comando: %1</translation>
     </message>
@@ -7345,7 +7345,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-91"/>
+        <source>--- stderr from %1 ---</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+94"/>
         <source>Memory limit exceeded!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7674,7 +7679,7 @@
         <translation>- Arquivo de recursos: %1</translation>
     </message>
     <message>
-        <location line="+343"/>
+        <location line="+345"/>
         <source>Compiling project changes...</source>
         <translation>Compilando alterações em projeto ...</translation>
     </message>
@@ -8374,7 +8379,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+19"/>
-        <location filename="../settings.cpp" line="+4045"/>
+        <location filename="../settings.cpp" line="+4051"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-401"/>
         <location line="+61"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -9676,7 +9681,7 @@
         <translation type="unfinished">Impossível abrir &apos;%1&apos; para gravar!</translation>
     </message>
     <message>
-        <location line="+214"/>
+        <location line="+212"/>
         <source>Compiling project changes...</source>
         <translation type="unfinished">Compilando alterações em projeto ...</translation>
     </message>

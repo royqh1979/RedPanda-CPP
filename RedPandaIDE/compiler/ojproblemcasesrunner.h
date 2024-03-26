@@ -49,6 +49,9 @@ public:
 
     void setMemoryLimit(size_t limit);
 
+    bool includeOutputFromStderr() const;
+    void setIncludeOutputFromStderr(bool newIncludeOutputFromStderr);
+
 signals:
     void caseStarted(const QString &caseId, int current, int total);
     void caseFinished(const QString &caseId, int current, int total);
@@ -68,6 +71,7 @@ private:
     int mOutputRefreshTime;
     int mExecTimeout;
     size_t mMemoryLimit;
+    bool mIncludeOutputFromStderr;
 };
 
 #endif // OJPROBLEMCASESRUNNER_H
