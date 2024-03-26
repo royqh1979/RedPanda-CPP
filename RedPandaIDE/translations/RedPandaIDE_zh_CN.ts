@@ -3099,7 +3099,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+26"/>
         <source>Redirect STDERR to Tools output panel</source>
-        <translation>将标准输出内容重定向到工具输出面板</translation>
+        <translation>将标准错误(stderr)内容重定向到工具输出面板</translation>
     </message>
     <message>
         <location line="+22"/>
