@@ -2178,7 +2178,6 @@ void Editor::onTooltipTimer()
 
 void Editor::onEndParsing()
 {
-
     mIdentCache.clear();
     invalidate();
 }
