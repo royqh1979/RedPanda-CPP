@@ -40,6 +40,7 @@ void CppPreprocessor::clear()
 
     //option data for the parser
     //{ List of current project's include path }
+    mHardDefines.clear();
     mDefines.clear();
     //mHardDefines.clear(); // set by "cpp -dM -E -xc NUL"
     mProjectIncludePaths.clear();
