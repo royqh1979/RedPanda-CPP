@@ -95,6 +95,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
   mHoverModifiedLine{-1},
   mWheelAccumulatedDelta{0}
 {
+    mLastFocusOutTime = 0;
     mInited=false;
     mBackupFile=nullptr;
     mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
@@ -704,6 +705,7 @@ void Editor::focusOutEvent(QFocusEvent *event)
     if (!pMainWindow->isQuitting()) {
         pMainWindow->functionTip()->hide();
     }
+    mLastFocusOutTime = QDateTime::currentMSecsSinceEpoch();
 }
 
 void Editor::keyPressEvent(QKeyEvent *event)
@@ -4544,6 +4546,11 @@ void Editor::cancelHoverLink()
         invalidateLine(mHoverModifiedLine);
         mHoverModifiedLine = -1;
     }
+}
+
+quint64 Editor::lastFocusOutTime() const
+{
+    return mLastFocusOutTime;
 }
 
 PCppParser Editor::sharedParser(ParserLanguage language)

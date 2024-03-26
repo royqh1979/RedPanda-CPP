@@ -356,6 +356,7 @@ private:
     int mHoverModifiedLine;
     int mWheelAccumulatedDelta;
     QMap<QString,StatementKind> mIdentCache;
+    qint64 mLastFocusOutTime;
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
 
@@ -399,6 +400,8 @@ public:
 
     bool canAutoSave() const;
     void setCanAutoSave(bool newCanAutoSave);
+
+    quint64 lastFocusOutTime() const;
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

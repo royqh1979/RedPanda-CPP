@@ -92,6 +92,7 @@ Red Panda C++ Version 2.27
   - enhancement: Auto define macro "_DEBUG" for "Debug" compiler set(like visual studio).
   - enhancement: Suggest macro names after "#ifdef"/"#ifndef".
   - enhancement: Info contents from stderr are logged into "Tools Output" panel, add problem case name info to the log. 
+  - fix: In split screen mode, editor on the right can't be correctly found by commands.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
