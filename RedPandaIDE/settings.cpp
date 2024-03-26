@@ -2526,8 +2526,6 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
         arguments.append("-D_DEBUG");
     arguments.append(NULL_FILE);
 
-    qDebug()<<arguments;
-
     QFileInfo ccompiler(mCCompiler);
     QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);
     // 'cpp.exe -dM -E -x c++ -std=c++17 NUL'
