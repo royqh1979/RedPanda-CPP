@@ -2510,6 +2510,10 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
             if (!mCompileOptions[key].isEmpty())
                 arguments.append(pOption->setting + mCompileOptions[key]);
         }
+        pOption = CompilerInfoManager::getCompilerOption(compilerType(), CC_CMD_OPT_DEBUG_INFO);
+        if (pOption && mCompileOptions.contains(CC_CMD_OPT_DEBUG_INFO)) {
+            arguments.append(pOption->setting);
+        }
 #ifdef ENABLE_SDCC
     }
 #endif
@@ -2518,7 +2522,11 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
         QStringList extraParams = parseArgumentsWithoutVariables(mCustomCompileParams);
         arguments.append(extraParams);
     }
+    if (arguments.contains("-g3"))
+        arguments.append("-D_DEBUG");
     arguments.append(NULL_FILE);
+
+    qDebug()<<arguments;
 
     QFileInfo ccompiler(mCCompiler);
     QByteArray output = getCompilerOutput(ccompiler.absolutePath(),ccompiler.fileName(),arguments);

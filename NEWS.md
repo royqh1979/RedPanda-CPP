@@ -88,6 +88,8 @@ Red Panda C++ Version 2.27
   - change: Set focus to "find" button when "find in files..." dialog is openned.
   - enhancement: Correct tab orders for all setting pages/dialogs.
   - enhancement: Shortcut key for buttons in find/replace and "find in files" dialogs.  
+  
+  - enhancement: Auto define macro "_DEBUG" for "Debug" compiler set(like visual studio).
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

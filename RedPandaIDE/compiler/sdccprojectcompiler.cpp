@@ -143,7 +143,8 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
 
     QStringList cCompileArguments = getCCompileArguments(mOnlyCheckSyntax);
     if (cCompileArguments.contains("-g3"))
-        cCompileArguments << "-D__DEBUG__";
+        cCompileArguments << "-D_DEBUG";
+
     QStringList libraryArguments = getLibraryArguments(FileType::Project);
     QStringList cIncludeArguments = getCIncludeArguments() + getProjectIncludeArguments();
 
