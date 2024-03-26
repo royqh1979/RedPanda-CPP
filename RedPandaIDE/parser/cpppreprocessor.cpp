@@ -35,6 +35,7 @@ void CppPreprocessor::clear()
     //used by parser even preprocess finished
     mIncludesList.clear();
     mFileDefines.clear(); //dictionary to save defines for each headerfile;
+    mFileUndefines.clear(); //dictionary to save undefines for each headerfile;
     mScannedFiles.clear();
 
     //option data for the parser
@@ -175,15 +176,27 @@ void CppPreprocessor::preprocess(const QString &fileName)
 
 void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
 {
+    //remove all defines defined in this file
     PDefineMap defineMap = mFileDefines.value(fileName,PDefineMap());
     if (defineMap) {
         foreach (const PDefine& define, *defineMap) {
             const PDefine& p = mDefines.value(define->name);
             if (p == define) {
                 mDefines.remove(define->name);
+                PDefine p2 = mHardDefines.value(define->name);
+                if (p2)
+                    mDefines.insert(define->name, p2);
             }
         }
         mFileDefines.remove(fileName);
+    }
+    //restore all defines undefined in this file
+    PDefineMap undefineMap = mFileUndefines.value(fileName,PDefineMap());
+    if (undefineMap) {
+        foreach (const PDefine& define, *undefineMap) {
+            mDefines.insert(define->name, define);
+        }
+        mFileUndefines.remove(fileName);
     }
 }
 
@@ -312,6 +325,7 @@ void CppPreprocessor::removeScannedFile(const QString &filename)
     mScannedFiles.remove(filename);
     mIncludesList.remove(filename);
     mFileDefines.remove(filename);
+    mFileUndefines.remove(filename);
 }
 
 QString CppPreprocessor::getNextPreprocessor()
@@ -505,12 +519,21 @@ void CppPreprocessor::handleUndefine(const QString &line)
     if (define) {
         //remove the define from defines set
         mDefines.remove(name);
-        //remove the define form the file where it defines
         if (define->filename == mFileName) {
+            //remove the define form the file where it defines
             PDefineMap defineMap = mFileDefines.value(mFileName);
             if (defineMap) {
                 defineMap->remove(name);
             }
+        } else {
+            // add it to undefine map
+            PDefineMap undefineMap = mFileUndefines.value(mFileName);
+            if (!undefineMap) {
+                undefineMap = std::make_shared<DefineMap>();
+                mFileUndefines.insert(mFileName,undefineMap);
+            }
+            if (!undefineMap->contains(name))
+                undefineMap->insert(name, define);
         }
     }
 }

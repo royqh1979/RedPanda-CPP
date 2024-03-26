@@ -225,12 +225,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
     // Get list of applicable flags
     QStringList cCompileArguments = getCCompileArguments(false);
     QStringList cxxCompileArguments = getCppCompileArguments(false);
-    if (cCompileArguments.contains("-g3")) {
-        cCompileArguments << "-D_DEBUG";
-    }
-    if (cxxCompileArguments.contains("-g3")) {
-        cxxCompileArguments << "-D_DEBUG";
-    }
+
     QStringList libraryArguments = getLibraryArguments(FileType::Project);
     QStringList cIncludeArguments = getCIncludeArguments();
     QStringList cxxIncludeArguments = getCppIncludeArguments();

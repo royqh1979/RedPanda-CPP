@@ -928,7 +928,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
                             //last word is a type keyword, this is a var or param define, and dont show suggestion
                             return;
-                        } else if (lastWord == "#ifdef" || lastWord == "#ifndef") {
+                        } else if (lastWord == "#ifdef" || lastWord == "#ifndef" || lastWord == "#undef") {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false, CodeCompletionType::Macros);
                             handled=true;

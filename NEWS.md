@@ -89,9 +89,11 @@ Red Panda C++ Version 2.27
   - enhancement: Correct tab orders for all setting pages/dialogs.
   - enhancement: Shortcut key for buttons in find/replace and "find in files" dialogs.  
   - enhancement: Auto define macro "_DEBUG" for "Debug" compiler set(like visual studio).
-  - enhancement: Suggest macro names after "#ifdef"/"#ifndef".
+  - enhancement: Suggest macro names after "#ifdef"/"#ifndef"/"#undef".
   - enhancement: If contents from stderr are logged into "Tools Output" panel, add problem case name info to the log. 
   - fix: In split screen mode, editor on the right can't be correctly found by commands.
+  - fix: Remove duplicated macro defines make it's lost in the parse result.
+  - fix: An undefined macro is still missing the the parse result after #undef is removed.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

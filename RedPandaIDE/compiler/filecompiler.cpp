@@ -138,9 +138,6 @@ bool FileCompiler::prepareForCompile()
     default:
         throw CompileError(tr("Can't find the compiler for file %1").arg(mFilename));
     }
-    if (mArguments.contains("-g3")) {
-        mArguments << "-D_DEBUG";
-    }
     if (!mOnlyCheckSyntax)
         mArguments += getLibraryArguments(fileType);
 

@@ -274,6 +274,7 @@ private:
     //used by parser even preprocess finished
     QHash<QString,PFileIncludes> mIncludesList;
     QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
+    QHash<QString, PDefineMap> mFileUndefines; //dictionary to save defines for each headerfile;
     QSet<QString> mScannedFiles;
 
     //option data for the parser
