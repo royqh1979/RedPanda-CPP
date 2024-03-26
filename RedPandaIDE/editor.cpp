@@ -926,6 +926,11 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
                             //last word is a type keyword, this is a var or param define, and dont show suggestion
                             return;
+                        } else if (lastWord == "#ifdef" || lastWord == "#ifndef") {
+                            processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                            showCompletion(lastWord,false, CodeCompletionType::Macros);
+                            handled=true;
+                            return;
                         }
                         PStatement statement = mParser->findStatementOf(
                                     mFilename,
@@ -4991,7 +4996,8 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
         while ((wordBegin >= 0) && (isIdentChar(s[wordBegin]) || s[wordBegin]==':') ) {
             wordBegin--;
         }
-        wordBegin++;
+        if (wordBegin<0 || s[wordBegin]!='#')
+            wordBegin++;
 
         if (s[wordBegin]>='0' && s[wordBegin]<='9') // not valid word
             return "";

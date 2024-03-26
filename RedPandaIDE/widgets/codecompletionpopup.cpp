@@ -113,6 +113,10 @@ void CodeCompletionPopup::prepareSearch(
         mIncludedFiles.clear();
         getKeywordCompletionFor(customKeywords);
         break;
+    case CodeCompletionType::Macros:
+        mIncludedFiles = mParser->getIncludedFiles(filename);
+        getMacroCompletionList(filename, line);
+        break;
     default:
         mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
@@ -580,6 +584,15 @@ void CodeCompletionPopup::getKeywordCompletionFor(const QSet<QString> &customKey
         foreach (const QString& keyword,customKeywords) {
             addKeyword(keyword);
         }
+    }
+}
+
+void CodeCompletionPopup::getMacroCompletionList(const QString &fileName, int line)
+{
+    const StatementMap& statementMap = mParser->statementList().childrenStatements(nullptr);
+    foreach(const PStatement& statement, statementMap.values()) {
+        if (statement->kind==StatementKind::skPreprocessor)
+            addStatement(statement,fileName,line);
     }
 }
 

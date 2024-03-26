@@ -90,6 +90,7 @@ Red Panda C++ Version 2.27
   - enhancement: Shortcut key for buttons in find/replace and "find in files" dialogs.  
   
   - enhancement: Auto define macro "_DEBUG" for "Debug" compiler set(like visual studio).
+  - enhancement: Suggest macro names after "#ifdef"/"#ifndef".
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

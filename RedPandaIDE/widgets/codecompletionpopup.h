@@ -43,6 +43,7 @@ enum class CodeCompletionType {
     FunctionWithoutDefinition,
     Namespaces,
     Types,
+    Macros,
     KeywordsOnly
 };
 
@@ -136,6 +137,7 @@ private:
     void addStatement(const PStatement& statement, const QString& fileName, int line);
     void filterList(const QString& member);
     void getKeywordCompletionFor(const QSet<QString>& customKeywords);
+    void getMacroCompletionList(const QString &fileName, int line);
     void getCompletionFor(
             QStringList ownerExpression,
             const QString& memberOperator,
