@@ -692,7 +692,7 @@ p, li { white-space: pre-wrap; }
         <translation>警告：</translation>
     </message>
     <message>
-        <location line="+520"/>
+        <location line="+528"/>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
         <translation>无法写入文件“%1”。</translation>
     </message>
@@ -873,7 +873,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">当变量占用栈空间大于此值时报错</translation>
     </message>
     <message>
-        <location line="+240"/>
+        <location line="+247"/>
         <location line="+7"/>
         <location line="+23"/>
         <location line="+27"/>
@@ -902,7 +902,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">编译时自动加入字符编码选项</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-148"/>
         <location line="+3"/>
         <source>Auto Find Compilers</source>
         <translation>自动搜索编译器</translation>
@@ -912,6 +912,11 @@ p, li { white-space: pre-wrap; }
         <location line="+3"/>
         <source>Find Compiler in the Folder</source>
         <translation>在指定文件夹中搜索编译器</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Add Compiler</source>
+        <translation>添加编译器</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1163,31 +1168,34 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+10"/>
-        <source>Compiler Set Folder</source>
-        <translation>编译器所在文件夹</translation>
+        <source>Compiler Folder</source>
+        <translation>编译器文件夹</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+156"/>
+        <source>Compiler</source>
+        <translation>编译器</translation>
+    </message>
+    <message>
+        <source>Compiler Set Folder</source>
+        <translation type="vanished">编译器所在文件夹</translation>
+    </message>
+    <message>
+        <location line="-138"/>
         <source>New name</source>
         <translation>新名称</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+68"/>
         <source>Locate C Compiler</source>
         <translation>定位C编译器</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <location line="+12"/>
-        <location line="+12"/>
-        <location line="+12"/>
-        <location line="+12"/>
-        <location line="+12"/>
         <source>Executable files (*.exe)</source>
-        <translation>可执行文件 (*.exe)</translation>
+        <translation type="vanished">可执行文件 (*.exe)</translation>
     </message>
     <message>
-        <location line="-50"/>
+        <location line="+12"/>
         <source>Locate C++ Compiler</source>
         <translation>定位C++编译器</translation>
     </message>
@@ -1593,10 +1601,10 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">失败</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="+384"/>
+        <location filename="../editor.cpp" line="+385"/>
         <location line="+70"/>
         <location line="+29"/>
-        <location line="+1093"/>
+        <location line="+1094"/>
         <location line="+5"/>
         <location line="+21"/>
         <location line="+5"/>
@@ -1608,7 +1616,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">无法写入文件&quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="-1480"/>
+        <location line="-1481"/>
         <location line="+434"/>
         <source>Error Load File</source>
         <translation>载入文件错误</translation>
@@ -1648,7 +1656,7 @@ p, li { white-space: pre-wrap; }
         <translation>文件%1已经被打开！</translation>
     </message>
     <message>
-        <location line="+1122"/>
+        <location line="+1123"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>要复制的内容超过了行数限制！</translation>
     </message>
@@ -1678,7 +1686,7 @@ p, li { white-space: pre-wrap; }
         <translation>十进制: %1</translation>
     </message>
     <message>
-        <location line="+1154"/>
+        <location line="+1153"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
@@ -1694,7 +1702,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location line="+920"/>
+        <location line="+928"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
@@ -3222,13 +3230,13 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+42"/>
-        <location line="+96"/>
+        <location line="+93"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
         <translation>无法删除旧的可执行文件&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location line="-83"/>
+        <location line="-80"/>
         <source>GNU Assembler</source>
         <translation>GNU汇编</translation>
     </message>
@@ -3239,7 +3247,7 @@ p, li { white-space: pre-wrap; }
         <translation>找不到适合文件%1的编译器</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+40"/>
         <source>The Compiler &apos;%1&apos; doesn&apos;t exists!</source>
         <translation>编译器程序&quot;%1&quot;不存在！</translation>
     </message>
@@ -7932,7 +7940,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../compiler/ojproblemcasesrunner.cpp" line="+87"/>
         <source>--- stderr from %1 ---</source>
-        <translation type="unfinished">--- 来自“%1”的stderr ---</translation>
+        <translation>--- 来自“%1”的stderr ---</translation>
     </message>
     <message>
         <location line="+91"/>
@@ -8132,7 +8140,7 @@ p, li { white-space: pre-wrap; }
         <translation>文件&apos;%1&apos;已在项目中</translation>
     </message>
     <message>
-        <location line="+374"/>
+        <location line="+370"/>
         <source>Project Updated</source>
         <translation>项目已升级</translation>
     </message>
@@ -8297,7 +8305,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ProjectCompiler</name>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="+111"/>
+        <location filename="../compiler/projectcompiler.cpp" line="+127"/>
         <source>Building makefile...</source>
         <translation>正在构建makefile...</translation>
     </message>
@@ -8312,12 +8320,12 @@ p, li { white-space: pre-wrap; }
         <translation>无法写入文件&apos;%1&apos;！</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+100"/>
         <source>- Resource File: %1</source>
         <translation>- 资源文件: %1</translation>
     </message>
     <message>
-        <location line="+345"/>
+        <location line="+343"/>
         <source>Compiling project changes...</source>
         <translation>正在编译项目修改...</translation>
     </message>
@@ -9052,7 +9060,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../editorlist.cpp" line="+170"/>
+        <location filename="../editorlist.cpp" line="+178"/>
         <location filename="../mainwindow.cpp" line="+3152"/>
         <source>Save</source>
         <translation>保存</translation>
@@ -9093,11 +9101,21 @@ p, li { white-space: pre-wrap; }
         <translation>GAS文件</translation>
     </message>
     <message>
+        <location line="+78"/>
+        <source>Executable files (*.exe)</source>
+        <translation>可执行文件 (*.exe)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>All files (*.*)</source>
+        <translation>所有文件 (*.*)</translation>
+    </message>
+    <message>
         <source>ASM files</source>
         <translation type="vanished">ASM文件</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-79"/>
         <source>Lua files</source>
         <translation>Lua文件</translation>
     </message>
@@ -9239,7 +9257,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3449"/>
+        <location filename="../settings.cpp" line="+3450"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -9482,7 +9500,7 @@ p, li { white-space: pre-wrap; }
         <translation>您需要小熊猫C++在下列位置搜索编译器吗：&lt;br /&gt;%1&lt;br /&gt;%2</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="-453"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="-454"/>
         <source>Binaries</source>
         <translation>二进制文件</translation>
     </message>
@@ -9528,7 +9546,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">下标&quot;%1&quot;越界</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+469"/>
+        <location filename="../utils.cpp" line="+472"/>
         <source>bytes</source>
         <translation>字节</translation>
     </message>
@@ -11607,7 +11625,7 @@ p, li { white-space: pre-wrap; }
         <translation>插入宏指令</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/toolsgeneralwidget.cpp" line="+86"/>
+        <location filename="../settingsdialog/toolsgeneralwidget.cpp" line="+87"/>
         <source>Save Changes?</source>
         <translation>保存修改？</translation>
     </message>
@@ -11646,9 +11664,8 @@ p, li { white-space: pre-wrap; }
         <translation>选择程序</translation>
     </message>
     <message>
-        <location line="+2"/>
         <source>Executable files (*.exe)</source>
-        <translation>可执行文件 (*.exe)</translation>
+        <translation type="vanished">可执行文件 (*.exe)</translation>
     </message>
 </context>
 <context>

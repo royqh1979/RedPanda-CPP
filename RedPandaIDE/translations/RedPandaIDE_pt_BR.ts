@@ -555,7 +555,7 @@
         <translation>[Nota] </translation>
     </message>
     <message>
-        <location line="+548"/>
+        <location line="+556"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
         <translation>Falha ao iniciar a compilação para &apos;%1&apos;.</translation>
     </message>
@@ -590,7 +590,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-633"/>
+        <location line="-641"/>
         <source> - Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -751,6 +751,11 @@
         <location line="+3"/>
         <source>Find Compiler in the Folder</source>
         <translation>Procurar compilador na pasta</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Add Compiler</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
@@ -937,11 +942,20 @@
     </message>
     <message>
         <location line="+10"/>
-        <source>Compiler Set Folder</source>
-        <translation>Nome da pasta do compilador</translation>
+        <source>Compiler Folder</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+156"/>
+        <source>Compiler</source>
+        <translation type="unfinished">Compilador</translation>
+    </message>
+    <message>
+        <source>Compiler Set Folder</source>
+        <translation type="vanished">Nome da pasta do compilador</translation>
+    </message>
+    <message>
+        <location line="-138"/>
         <source>New name</source>
         <translation>Novo nome</translation>
     </message>
@@ -986,22 +1000,16 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+67"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+68"/>
         <source>Locate C Compiler</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
-        <location line="+12"/>
-        <location line="+12"/>
-        <location line="+12"/>
-        <location line="+12"/>
-        <location line="+12"/>
         <source>Executable files (*.exe)</source>
-        <translation type="unfinished">Arquivos executáveis (*.exe)</translation>
+        <translation type="obsolete">Arquivos executáveis (*.exe)</translation>
     </message>
     <message>
-        <location line="-50"/>
+        <location line="+12"/>
         <source>Locate C++ Compiler</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1034,7 +1042,7 @@
         <translation type="obsolete">MB</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-177"/>
         <source>Searching for compilers...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1379,10 +1387,10 @@
         <translation type="vanished">sem nome</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="+384"/>
+        <location filename="../editor.cpp" line="+385"/>
         <location line="+70"/>
         <location line="+29"/>
-        <location line="+1093"/>
+        <location line="+1094"/>
         <location line="+5"/>
         <location line="+21"/>
         <location line="+5"/>
@@ -1390,7 +1398,7 @@
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-1187"/>
+        <location line="-1188"/>
         <source>Save As</source>
         <translation>Salvar como</translation>
     </message>
@@ -1400,7 +1408,7 @@
         <translation>Arquivo %1 já aberto!</translation>
     </message>
     <message>
-        <location line="+1122"/>
+        <location line="+1123"/>
         <source>The text to be copied exceeds count limit!</source>
         <translation>O texto a ser copiado excede o limite do contador!</translation>
     </message>
@@ -1420,7 +1428,7 @@
         <translation>O texto a ser removido excede o limite de caracteres!</translation>
     </message>
     <message>
-        <location line="+1692"/>
+        <location line="+1691"/>
         <source>Print Document</source>
         <translation>Imprimir documento</translation>
     </message>
@@ -1432,7 +1440,7 @@
         <translation>Ctrl+clik para mais informações</translation>
     </message>
     <message>
-        <location line="+920"/>
+        <location line="+928"/>
         <source>astyle not found</source>
         <translation>astyle não encontrado</translation>
     </message>
@@ -1457,13 +1465,13 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5374"/>
+        <location line="-5382"/>
         <location line="+434"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
     </message>
     <message>
-        <location line="+1583"/>
+        <location line="+1584"/>
         <source>hex: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2907,18 +2915,18 @@
     </message>
     <message>
         <location line="+42"/>
-        <location line="+96"/>
+        <location line="+93"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
         <translation>Impossível remover o antigo arquivo executável &quot;%1&quot;.</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-62"/>
         <source>Can&apos;t find the compiler for file %1</source>
         <translation>Impossível encontrar o compilador para o arquivo %1</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+40"/>
         <source>The Compiler &apos;%1&apos; doesn&apos;t exists!</source>
         <translation>O compilador &apos;%1&apos; é inexistente!</translation>
     </message>
@@ -2942,7 +2950,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-124"/>
+        <location line="-121"/>
         <source>Checking single file...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2952,7 +2960,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+67"/>
         <source>Command: %1</source>
         <translation type="unfinished">Comando: %1</translation>
     </message>
@@ -7479,7 +7487,7 @@
         <translation>Arquivo &apos;%1&apos; existente no projeto</translation>
     </message>
     <message>
-        <location line="+374"/>
+        <location line="+370"/>
         <source>Project Updated</source>
         <translation>Projeto atualizado</translation>
     </message>
@@ -7544,7 +7552,7 @@
         <translation>Desenvolvido com uso da IDE Red Panda C++</translation>
     </message>
     <message>
-        <location line="-1105"/>
+        <location line="-1101"/>
         <location line="+99"/>
         <source>Error</source>
         <translation type="unfinished">Erro</translation>
@@ -7659,7 +7667,7 @@
 <context>
     <name>ProjectCompiler</name>
     <message>
-        <location filename="../compiler/projectcompiler.cpp" line="+111"/>
+        <location filename="../compiler/projectcompiler.cpp" line="+127"/>
         <source>Building makefile...</source>
         <translation>Montando makefile ...</translation>
     </message>
@@ -7674,12 +7682,12 @@
         <translation>Impossível abrir &apos;%1&apos; para gravar!</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+100"/>
         <source>- Resource File: %1</source>
         <translation>- Arquivo de recursos: %1</translation>
     </message>
     <message>
-        <location line="+345"/>
+        <location line="+343"/>
         <source>Compiling project changes...</source>
         <translation>Compilando alterações em projeto ...</translation>
     </message>
@@ -8086,7 +8094,7 @@
 <context>
     <name>ProjectModel</name>
     <message>
-        <location filename="../project.cpp" line="+1592"/>
+        <location filename="../project.cpp" line="+1588"/>
         <source>File exists</source>
         <translation>Arquivo existente</translation>
     </message>
@@ -8379,7 +8387,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+19"/>
-        <location filename="../settings.cpp" line="+4051"/>
+        <location filename="../settings.cpp" line="+4052"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-401"/>
         <location line="+61"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8667,7 +8675,7 @@
         <translation type="vanished">sem nome</translation>
     </message>
     <message>
-        <location filename="../editorlist.cpp" line="+170"/>
+        <location filename="../editorlist.cpp" line="+178"/>
         <location filename="../mainwindow.cpp" line="+3152"/>
         <source>Save</source>
         <translation>Salvar</translation>
@@ -8973,11 +8981,21 @@
         <translation>Arquivos de ícones</translation>
     </message>
     <message>
+        <location line="+75"/>
+        <source>Executable files (*.exe)</source>
+        <translation type="unfinished">Arquivos executáveis (*.exe)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>All files (*.*)</source>
+        <translation type="unfinished">Todos os arquivos (*.*)</translation>
+    </message>
+    <message>
         <source>Index %1 out of range</source>
         <translation type="vanished">Índice %1 fora dos limites</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+469"/>
+        <location filename="../utils.cpp" line="+472"/>
         <source>bytes</source>
         <translation>bytes</translation>
     </message>
@@ -9076,7 +9094,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../systemconsts.cpp" line="-3"/>
+        <location filename="../systemconsts.cpp" line="-80"/>
         <source>GAS files</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10711,7 +10729,7 @@
         <translation>Inserir macro</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/toolsgeneralwidget.cpp" line="+86"/>
+        <location filename="../settingsdialog/toolsgeneralwidget.cpp" line="+87"/>
         <source>Save Changes?</source>
         <translation>Salvar alterações?</translation>
     </message>
@@ -10730,12 +10748,11 @@
         <translation>Selecionar programa</translation>
     </message>
     <message>
-        <location line="+2"/>
         <source>Executable files (*.exe)</source>
-        <translation>Arquivos executáveis (*.exe)</translation>
+        <translation type="vanished">Arquivos executáveis (*.exe)</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-186"/>
         <source>Do you want to save changes to &quot;%1&quot;?</source>
         <translation type="unfinished"></translation>
     </message>

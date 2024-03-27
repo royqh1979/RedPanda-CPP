@@ -22,6 +22,7 @@
 #include "utils.h"
 #include "utils/escape.h"
 #include "utils/parsearg.h"
+#include "../systemconsts.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -269,10 +270,10 @@ void ToolsGeneralWidget::on_btnBrowseWorkingDirectory_clicked()
 void ToolsGeneralWidget::on_btnBrowseProgram_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(
-                this,
-                tr("Select program"),
-                pSettings->dirs().appDir(),
-                tr("Executable files (*.exe)"));
+        this,
+        tr("Select program"),
+        pSettings->dirs().appDir(),
+        pSystemConsts->executableFileFilter());
     if (!fileName.isEmpty() ) {
         ui->txtProgram->setText(fileName);
     }

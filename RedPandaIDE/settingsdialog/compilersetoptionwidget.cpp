@@ -432,7 +432,7 @@ void CompilerSetOptionWidget::on_btnChooseCCompiler_clicked()
                 this,
                 tr("Locate C Compiler"),
                 getBinDir(),
-                tr("Executable files (*.exe)"));
+                pSystemConsts->executableFileFilter());
     if (fileExists(fileName))
         ui->txtCCompiler->setText(fileName);
 }
@@ -444,7 +444,7 @@ void CompilerSetOptionWidget::on_btnChooseCppCompiler_clicked()
                 this,
                 tr("Locate C++ Compiler"),
                 getBinDir(),
-                tr("Executable files (*.exe)"));
+                pSystemConsts->executableFileFilter());
     if (fileExists(fileName))
         ui->txtCppCompiler->setText(fileName);
 }
@@ -456,7 +456,7 @@ void CompilerSetOptionWidget::on_btnChooseMake_clicked()
                 this,
                 tr("Locate Make"),
                 getBinDir(),
-                tr("Executable files (*.exe)"));
+                pSystemConsts->executableFileFilter());
     if (fileExists(fileName))
         ui->txtMake->setText(fileName);
 }
@@ -468,7 +468,7 @@ void CompilerSetOptionWidget::on_btnChooseGDB_clicked()
                 this,
                 tr("Locate GDB"),
                 getBinDir(),
-                tr("Executable files (*.exe)"));
+                pSystemConsts->executableFileFilter());
     if (fileExists(fileName))
         ui->txtDebugger->setText(fileName);
 }
@@ -480,7 +480,7 @@ void CompilerSetOptionWidget::on_btnChooseGDBServer_clicked()
                 this,
                 tr("Locate GDB Server"),
                 getBinDir(),
-                tr("Executable files (*.exe)"));
+                pSystemConsts->executableFileFilter());
     if (fileExists(fileName))
         ui->txtGDBServer->setText(fileName);
 }
@@ -489,10 +489,10 @@ void CompilerSetOptionWidget::on_btnChooseGDBServer_clicked()
 void CompilerSetOptionWidget::on_btnChooseResourceCompiler_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(
-                this,
-                tr("Locate windres"),
-                getBinDir(),
-                tr("Executable files (*.exe)"));
+        this,
+        tr("Locate windres"),
+        getBinDir(),
+        pSystemConsts->executableFileFilter());
     if (fileExists(fileName))
         ui->txtResourceCompiler->setText(fileName);
 }
