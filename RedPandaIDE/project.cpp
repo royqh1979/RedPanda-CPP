@@ -1543,9 +1543,6 @@ void Project::buildPrivateResource()
           QFile::remove(resFile);
       mOptions.privateResource = "";
     }
-//    if fileExists(Res) then
-//      FileSetDate(Res, DateTimeToFileDate(Now)); // fix the "Clock skew detected" warning ;)
-
     // create XP manifest
     if (mOptions.supportXPThemes) {
         QStringList content;
@@ -1575,8 +1572,7 @@ void Project::buildPrivateResource()
         content.append("</dependency>");
         content.append("</assembly>");
         stringsToFile(content,executable() + ".Manifest");
-    } else if (fileExists(executable() + ".Manifest"))
-        QFile::remove(executable() + ".Manifest");
+    }
 
     // create private header file
     QString hFile = changeFileExt(rcFile, H_EXT);
