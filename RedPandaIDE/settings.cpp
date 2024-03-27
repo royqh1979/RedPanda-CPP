@@ -5744,7 +5744,7 @@ void Settings::CodeFormatter::doLoad()
     mAttachInlines = boolValue("attach_inlines",false);
     mAttachExternC = boolValue("attach_extern_c",false);
     mAttachClosingWhile = boolValue("attach_closing_while",false);
-    mIndentClasses = boolValue("indent_classes",true);
+    mIndentClasses = boolValue("indent_classes",false);
     mIndentModifiers = boolValue("indent_modifiers",false);
     mIndentSwitches = boolValue("indent_switches",true);
     mIndentCases = boolValue("indent_cases",false);
