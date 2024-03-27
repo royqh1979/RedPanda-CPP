@@ -3590,18 +3590,77 @@ bool ASFormatter::isInSwitchStatement() const
  *
  * @return        whether the current '+' or '-' is in an exponent.
  */
-bool ASFormatter::isInExponent() const
-{
-	assert(currentChar == '+' || currentChar == '-');
+bool ASFormatter::isInExponent() const {
+  assert (currentChar == '+' || currentChar == '-');
 
-	if (charNum >= 2)
-	{
-		char prevPrevFormattedChar = currentLine[charNum - 2];
-		char prevFormattedChar = currentLine[charNum - 1];
-		return ((prevFormattedChar == 'e' || prevFormattedChar == 'E')
-		        && (prevPrevFormattedChar == '.' || isDigit(prevPrevFormattedChar)));
-	}
-	return false;
+  if (charNum >= 2) {
+    char prevPrevFormattedChar = currentLine[charNum - 2];
+    char prevFormattedChar     = currentLine[charNum - 1];
+    //XQ135 modify//    return ((prevFormattedChar == 'e' || prevFormattedChar == 'E')
+    //XQ135 modify//            && (prevPrevFormattedChar == '.' || isDigit(prevPrevFormattedChar)));
+    char qian1 = prevFormattedChar;     //XQ135 modify// Start
+    char qian2 = prevPrevFormattedChar; //XQ135 modify//
+
+    bool isexp = false;
+    int i      = 2;
+    if (qian1 == 'e' || qian1 == 'E') {
+      while ((charNum - i) >= 0) {
+        qian2 = currentLine[charNum - i];
+        if (qian2 == '.' || isDigit (qian2)) {
+          isexp = true;
+        } else {
+          if (! (qian2 == ' ' || qian2 == '&' || qian2 == '|' || qian2 == '='
+                 || qian2 == 7   || qian2 == 10  || qian2 == 13  || qian2 == '~'
+                 || qian2 == '+' || qian2 == '-' || qian2 == '*' || qian2 == '/'
+                 || qian2 == '(' || qian2 == ')' || qian2 == '[' || qian2 == ']'
+                 || qian2 == '{' || qian2 == '}' || qian2 == ',' || qian2 == ':'
+                 || qian2 == ';' || qian2 == '.' || qian2 == '#' || qian2 == '<'
+                 || qian2 == '>' || qian2 == '^' || qian2 == '%' || qian2 == '!' )) {
+            isexp = false;
+          }
+          break;
+        }
+        i++;
+      }
+    }
+    if (isexp) {return true;}
+
+    if (! (qian1 == 'p' || qian1 == 'P')) {return false;}
+    i = 2;
+    while ((charNum - i) >= 0) {
+      qian2 = currentLine[charNum - i];
+      if (qian2 == '.' || isDigit (qian2) || qian2 == 'x' || qian2 == 'X'
+          || (qian2 >= 'a' && qian2 <= 'f') || (qian2 >= 'A' && qian2 <= 'F')) {
+        if (qian2 == 'x' || qian2 == 'X') {
+          if ((charNum - i - 1) >= 0) {
+            if (currentLine[charNum - i - 1] == '0') {
+              if ((charNum - i - 2) >= 0) {
+                qian2 = currentLine[charNum - i - 2];
+                if (qian2 == ' ' || qian2 == '&' || qian2 == '|' || qian2 == '='
+                    || qian2 == 7   || qian2 == 10  || qian2 == 13  || qian2 == '~'
+                    || qian2 == '+' || qian2 == '-' || qian2 == '*' || qian2 == '/'
+                    || qian2 == '(' || qian2 == ')' || qian2 == '[' || qian2 == ']'
+                    || qian2 == '{' || qian2 == '}' || qian2 == ',' || qian2 == ':'
+                    || qian2 == ';' || qian2 == '.' || qian2 == '#' || qian2 == '<'
+                    || qian2 == '>' || qian2 == '^' || qian2 == '%' || qian2 == '!') {
+                  return true;
+                } else {
+                  return false;
+                }
+              }
+              return true;
+            }
+            return false;
+          }
+          return false;
+        }
+      } else {
+        break;
+      }
+      i++; //XQ135 modify//  Floating-point number supporting hexadecimal representation
+    }      //XQ135 modify//  End     2024.3.24
+  }
+  return false;
 }
 
 /**
