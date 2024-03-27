@@ -94,6 +94,7 @@ Red Panda C++ Version 2.27
   - fix: In split screen mode, editor on the right can't be correctly found by commands.
   - fix: Remove duplicated macro defines make it's lost in the parse result.
   - fix: An undefined macro is still missing the the parse result after #undef is removed.
+  - fix: If a class method is overloaded, only one of them is inherited by it's children.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
