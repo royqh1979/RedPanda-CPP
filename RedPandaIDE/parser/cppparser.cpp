@@ -1484,9 +1484,6 @@ PStatement CppParser::addStatement(const PStatement& parent,
             fileIncludes->statements.insert(result->fullName,result);
         }
     }
-//    if (result->command=="sync_with_stdio") {
-//        qDebug()<<result->fullName<<result->isStatic()<<(int)result->accessibility;
-//    }
     return result;
 }
 
@@ -3055,9 +3052,6 @@ void CppParser::handleMethod(StatementKind functionKind,const QString &sType, co
         } else
             scopelessName = sName;
 
-//        qDebug()<<sName<<scopelessName<<parentClassName;
-//        if (scopeStatement)
-//            qDebug()<<"--"<<scopeStatement->fullName;
         // For function definitions, the parent class is given. Only use that as a parent
         if (!isDeclaration) {
             functionStatement=addStatement(
@@ -3361,7 +3355,7 @@ void CppParser::handleOtherTypedefs(int maxIndex)
         }
     }
 
-    // Step over semicolon (saves one HandleStatement loop)    
+    // Step over semicolon (saves one HandleStatement loop)
     mIndex++;
 }
 
@@ -3563,7 +3557,7 @@ bool CppParser::handleStatement(int maxIndex)
 }
 
 void CppParser::handleStructs(bool isTypedef, int maxIndex)
-{    
+{
     bool isFriend = false;
     QString prefix = mTokenizer[mIndex]->text;
     if (prefix == "friend") {
@@ -4397,8 +4391,20 @@ void CppParser::inheritClassStatement(const PStatement& derived, bool isStruct,
                 || statement->kind == StatementKind::skConstructor
                 || statement->kind == StatementKind::skDestructor)
             continue;
-        if (derived->children.contains(statement->command))
-            continue;
+        if (derived->children.contains(statement->command)) {
+            // test if all children with the same name are not inherited.
+            // If so, it's overwrited and shouldn't inherit.
+            QList<PStatement> children = derived->children.values(statement->command);
+            bool hasInherited = false;
+            foreach(const PStatement& child, children) {
+                if (child->isInherited()) {
+                    hasInherited = true;
+                    break;
+                }
+            }
+            if (!hasInherited)
+                continue;
+        }
         StatementAccessibility m_acc;
         switch(access) {
         case StatementAccessibility::Public:
