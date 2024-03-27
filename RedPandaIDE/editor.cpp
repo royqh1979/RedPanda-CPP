@@ -4400,13 +4400,16 @@ void Editor::updateFunctionTip(bool showTip)
     // Position it at the top of the next line
     QPoint p = displayCoordToPixels(displayXY());
     p+=QPoint(0,textHeight()+2);
-    pMainWindow->functionTip()->move(mapToGlobal(p));
 
     pMainWindow->functionTip()->setFunctioFullName(s);
     pMainWindow->functionTip()->guessFunction(paramsCount-1);
     pMainWindow->functionTip()->setParamIndex(
                 currentParamPos
                 );
+    int w = pMainWindow->functionTip()->width();
+    if (w+p.x() > clientWidth())
+        p.setX(clientWidth()-w-2);
+    pMainWindow->functionTip()->move(mapToGlobal(p));
     cancelHint();
     if (showTip)
         pMainWindow->functionTip()->show();

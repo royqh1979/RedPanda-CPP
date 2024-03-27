@@ -494,8 +494,12 @@ protected:
     virtual void onProcessCommand(EditCommand command, QChar car, void * pData);
     virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
     virtual void executeCommand(EditCommand command, QChar ch, void * pData);
-
 protected:
+    int clientWidth() const;
+    int clientHeight() const;
+    int clientTop() const;
+    int clientLeft() const;
+    QRect clientRect() const;
     void doSelectLine();
     void incPaintLock();
     void decPaintLock();
@@ -510,12 +514,6 @@ private:
     void computeCaret();
     void computeScroll(bool isDragging);
 
-
-    int clientWidth() const;
-    int clientHeight() const;
-    int clientTop() const;
-    int clientLeft() const;
-    QRect clientRect() const;
     void synFontChanged();
 
     void doSetSelText(const QString& value);
