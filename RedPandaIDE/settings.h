@@ -1550,6 +1550,7 @@ public:
         explicit CompilerSets(Settings* settings);
         PCompilerSet addSet();
         bool addSets(const QString& folder);
+        bool addSets(const QString& folder, const QString& c_prog);
         CompilerSetList clearSets();
         void findSets();
         void saveSets();
@@ -1571,7 +1572,6 @@ public:
         PCompilerSet addSet(const QString& folder, const QString& c_prog);
         PCompilerSet addSet(const PCompilerSet &pSet);
         PCompilerSet addSet(const QJsonObject &set);
-        bool addSets(const QString& folder, const QString& c_prog);
         void savePath(const QString& name, const QString& path);
         void savePathList(const QString& name, const QStringList& pathList);
 

@@ -505,9 +505,8 @@ void CompilerSetOptionWidget::on_btnAddCompilerSetByFile_clicked()
         return;
     QFileInfo fileInfo(file);
     if (!fileInfo.isExecutable())
-        return false;
-    if (!pSettings->compilerSets().addSets(fileInfo.absolutePath(), fileInfo.fileName()));
         return;
+    pSettings->compilerSets().addSets(fileInfo.absolutePath(), fileInfo.fileName());
     doLoad();
 }
 

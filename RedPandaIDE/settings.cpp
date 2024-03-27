@@ -2413,7 +2413,7 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
 #endif
             }
         }
-    }        
+    }
 
     // Set compiler folder
     QDir tmpDir(binDir);
@@ -3186,6 +3186,7 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
         if (set->binDirs().contains(folder) && extractFileName(set->CCompiler())==c_prog)
             return false;
     }
+    qDebug()<<folder<<c_prog;
     // Default, release profile
     PCompilerSet baseSet = addSet(folder,c_prog);
     if (!baseSet || baseSet->name().isEmpty())
