@@ -4392,17 +4392,16 @@ void CppParser::inheritClassStatement(const PStatement& derived, bool isStruct,
                 || statement->kind == StatementKind::skDestructor)
             continue;
         if (derived->children.contains(statement->command)) {
-            // test if all children with the same name are not inherited.
-            // If so, it's overwrited and shouldn't inherit.
+            // Check if it's overwritten(hidden) by the derived
             QList<PStatement> children = derived->children.values(statement->command);
-            bool hasInherited = false;
+            bool overwritten = false;
             foreach(const PStatement& child, children) {
-                if (child->isInherited()) {
-                    hasInherited = true;
+                if (!child->isInherited() && child->noNameArgs == statement->noNameArgs) {
+                    overwritten = true;
                     break;
                 }
             }
-            if (!hasInherited)
+            if (overwritten)
                 continue;
         }
         StatementAccessibility m_acc;

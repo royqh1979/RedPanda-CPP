@@ -39,8 +39,9 @@ private:
     void createStaticMakeFile();
     void createDynamicMakeFile();
     void newMakeFile(QFile& file);
+    void newMakeFile(QFile& file, bool &genModuleDef);
     void writeMakeHeader(QFile& file);
-    void writeMakeDefines(QFile& file);
+    void writeMakeDefines(QFile& file, bool &genModuleDef);
     void writeMakeTarget(QFile& file);
     void writeMakeIncludes(QFile& file);
     void writeMakeClean(QFile& file);

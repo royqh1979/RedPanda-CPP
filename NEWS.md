@@ -96,6 +96,8 @@ Red Panda C++ Version 2.27
   - fix: An undefined macro is still missing the the parse result after #undef is removed.
   - fix: If a class method is overloaded, only one of them is inherited by it's children.
   - enhancement: Adjust function tip pos to prevent it from run outside the right window edge.
+  - enhancement: Open ".def" (Module definition file) file in editor when double click it in the project view.
+  - enhancement: When a dll project has .def file, use it when generating the dll file.  
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

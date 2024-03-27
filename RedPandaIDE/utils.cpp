@@ -105,6 +105,9 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".vs",PATH_SENSITIVITY)) {
         return FileType::VerticeShader;
     }
+    if (filename.endsWith(".def",PATH_SENSITIVITY)) {
+        return FileType::ModuleDef;
+    }
     QFileInfo info(filename);
     if (info.suffix().isEmpty()) {
         return FileType::Other;

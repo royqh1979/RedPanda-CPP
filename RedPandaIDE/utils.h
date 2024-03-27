@@ -49,6 +49,7 @@ enum class FileType{
     Text, // text file
     FragmentShader,
     VerticeShader,
+    ModuleDef, // Windows Module Definition
     Other // any others
 };
 

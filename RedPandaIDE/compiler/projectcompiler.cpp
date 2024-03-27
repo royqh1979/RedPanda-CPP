@@ -54,7 +54,8 @@ void ProjectCompiler::buildMakeFile()
 void ProjectCompiler::createStandardMakeFile()
 {
     QFile file(mProject->makeFileName());
-    newMakeFile(file);
+    bool genModuleDef;
+    newMakeFile(file, genModuleDef);
     QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
     QString exeTarget = escapeFilenameForMakefileTarget(executable);
     QString exeCommand = escapeArgumentForMakefileRecipe(executable, false);
@@ -84,20 +85,35 @@ void ProjectCompiler::createStaticMakeFile()
 void ProjectCompiler::createDynamicMakeFile()
 {
     QFile file(mProject->makeFileName());
-    newMakeFile(file);
+    bool genModuleDef;
+    newMakeFile(file, genModuleDef);
     QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
     QString exeTarget = escapeFilenameForMakefileTarget(executable);
     QString exeCommand = escapeArgumentForMakefileRecipe(executable, false);
-    writeln(file, exeTarget + ": $(OBJ)");
-    if (mProject->options().isCpp) {
-        writeln(file, "\t$(CXX) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+    writeln(file, exeTarget + ": $(DEF) $(OBJ)");
+    if (genModuleDef) {
+        if (mProject->options().isCpp) {
+            writeln(file, "\t$(CXX) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) $(DEF) -Wl,--output-def,$(OUTPUT_DEF),--out-implib,$(STATIC)");
+        } else {
+            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) $(DEF) -Wl,--output-def,$(OUTPUT_DEF),--out-implib,$(STATIC)");
+        }
     } else {
-        writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) -Wl,--output-def,$(DEF),--out-implib,$(STATIC)");
+        if (mProject->options().isCpp) {
+            writeln(file, "\t$(CXX) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) $(DEF) -Wl,--out-implib,$(STATIC)");
+        } else {
+            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) $(DEF) -Wl,--out-implib,$(STATIC)");
+        }
     }
     writeMakeObjFilesRules(file);
 }
 
-void ProjectCompiler::newMakeFile(QFile& file)
+void ProjectCompiler::newMakeFile(QFile &file)
+{
+    bool dummy;
+    newMakeFile(file, dummy);
+}
+
+void ProjectCompiler::newMakeFile(QFile& file, bool &genModuleDef)
 {
     // Create OBJ output directory
     if (!mProject->options().objectOutput.isEmpty()) {
@@ -120,7 +136,7 @@ void ProjectCompiler::newMakeFile(QFile& file)
     writeMakeHeader(file);
 
     // Writes definition list
-    writeMakeDefines(file);
+    writeMakeDefines(file, genModuleDef);
 
     // Write PHONY and all targets
     writeMakeTarget(file);
@@ -152,24 +168,25 @@ void ProjectCompiler::writeMakeHeader(QFile &file)
     writeln(file);
 }
 
-void ProjectCompiler::writeMakeDefines(QFile &file)
+void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 {
     // Get list of object files
     QStringList Objects;
     QStringList LinkObjects;
     QStringList cleanObjects;
+    QStringList moduleDefines;
+
+    genModuleDef = false;
 
     // Create a list of object files
     foreach(const PProjectUnit &unit, mProject->unitList()) {
-        if (!unit->compile() && !unit->link())
-            continue;
 
         // Only process source files
-        QString RelativeName = extractRelativePath(mProject->directory(), unit->fileName());
-        FileType fileType = getFileType(RelativeName);
+        FileType fileType = getFileType(unit->fileName());
 
         if (fileType == FileType::CSource || fileType == FileType::CppSource
                 || fileType==FileType::GAS) {
+            QString relativeName = extractRelativePath(mProject->directory(), unit->fileName());
             if (!mProject->options().objectOutput.isEmpty()) {
                 // ofile = C:\MyProgram\obj\main.o
                 QString fullObjFile = includeTrailingPathDelimiter(mProject->options().objectOutput)
@@ -181,14 +198,15 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
                     LinkObjects << relativeObjFile;
                 }
             } else {
-                Objects << changeFileExt(RelativeName, OBJ_EXT);
-                cleanObjects << localizePath(changeFileExt(RelativeName, OBJ_EXT));
+                Objects << changeFileExt(relativeName, OBJ_EXT);
+                cleanObjects << localizePath(changeFileExt(relativeName, OBJ_EXT));
                 if (unit->link())
-                    LinkObjects << changeFileExt(RelativeName, OBJ_EXT);
+                    LinkObjects << changeFileExt(relativeName, OBJ_EXT);
             }
         }
+        if (fileType == FileType::ModuleDef)
+            moduleDefines.append(extractRelativePath(mProject->makeFileName(), unit->fileName()));
     }
-
     // Get windres file
     QString objResFile;
     QString cleanRes;
@@ -299,9 +317,12 @@ void ProjectCompiler::writeMakeDefines(QFile &file)
 
         QString defFile = localizePath(changeFileExt(libOutputFile, DEF_EXT));
         QString staticFile = localizePath(changeFileExt(libOutputFile, LIB_EXT));
+        writeln(file,"DEF      = " + escapeFilenamesForMakefilePrerequisite(moduleDefines));
+        writeln(file,"STATIC   = " + escapeFilenameForMakefilePrerequisite(staticFile));
 
-        writeln(file,"DEF      = " + escapeArgumentForMakefileVariableValue(defFile, false));
-        writeln(file,"STATIC   = " + escapeArgumentForMakefileVariableValue(staticFile, false));
+        genModuleDef = !moduleDefines.contains(defFile);
+        if (genModuleDef)
+            writeln(file,"OUTPUT_DEF = " + escapeFilenameForMakefilePrerequisite(defFile));
     }
     writeln(file);
 }
@@ -336,7 +357,7 @@ void ProjectCompiler::writeMakeClean(QFile &file)
     }
 
     if (mProject->options().type == ProjectType::DynamicLib) {
-        target +=" $(DEF) $(STATIC)";
+        target +=" $(STATIC)";
     }
     writeln(file, QString("\t-$(RM) %1 > %2 2>&1").arg(target,NULL_FILE));
     writeln(file);
