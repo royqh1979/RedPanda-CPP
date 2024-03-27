@@ -344,7 +344,7 @@ void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_clicked()
 
 void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_clicked()
 {
-    QString folder = QFileDialog::getExistingDirectory(this, tr("Compiler Set Folder"));
+    QString folder = QFileDialog::getExistingDirectory(this, tr("Compiler Folder"));
     int oldSize = pSettings->compilerSets().size();
 
     if (!pSettings->compilerSets().addSets(folder)) {
@@ -388,6 +388,7 @@ void CompilerSetOptionWidget::updateIcons(const QSize& /*size*/)
 {
     pIconsManager->setIcon(ui->btnFindCompilers, IconsManager::ACTION_EDIT_SEARCH);
     pIconsManager->setIcon(ui->btnAddCompilerSetByFolder, IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnAddCompilerSetByFile, IconsManager::ACTION_FILE_LOCATE);
     pIconsManager->setIcon(ui->btnAddBlankCompilerSet, IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemoveCompilerSet, IconsManager::ACTION_MISC_REMOVE);
     pIconsManager->setIcon(ui->btnRenameCompilerSet, IconsManager::ACTION_MISC_RENAME);
@@ -494,5 +495,19 @@ void CompilerSetOptionWidget::on_btnChooseResourceCompiler_clicked()
                 tr("Executable files (*.exe)"));
     if (fileExists(fileName))
         ui->txtResourceCompiler->setText(fileName);
+}
+
+
+void CompilerSetOptionWidget::on_btnAddCompilerSetByFile_clicked()
+{
+    QString file = QFileDialog::getOpenFileName(this, tr("Compiler"));
+    if (file.isEmpty())
+        return;
+    QFileInfo fileInfo(file);
+    if (!fileInfo.isExecutable())
+        return false;
+    if (!pSettings->compilerSets().addSets(fileInfo.absolutePath(), fileInfo.fileName()));
+        return;
+    doLoad();
 }
 

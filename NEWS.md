@@ -101,6 +101,7 @@ Red Panda C++ Version 2.27
   - fix: "project name".exe.manifest is auto removed when build the project.
   - fix: "0x3.12p+1" is treadted as a plus expression when reformatting code. ( by 绣球135@qq ）
   - change: Don't turn on the code format option "indent class" by default.
+  - enhancement: Add compiler set by choose the executable.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

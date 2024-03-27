@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>892</width>
+    <width>1005</width>
     <height>607</height>
    </rect>
   </property>
@@ -46,6 +46,13 @@
         </property>
         <property name="text">
          <string>Find Compiler in the Folder</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnAddCompilerSetByFile">
+        <property name="text">
+         <string>Add Compiler</string>
         </property>
        </widget>
       </item>
@@ -508,6 +515,7 @@
   <tabstop>cbCompilerSet</tabstop>
   <tabstop>btnFindCompilers</tabstop>
   <tabstop>btnAddCompilerSetByFolder</tabstop>
+  <tabstop>btnAddCompilerSetByFile</tabstop>
   <tabstop>btnAddBlankCompilerSet</tabstop>
   <tabstop>btnRenameCompilerSet</tabstop>
   <tabstop>btnRemoveCompilerSet</tabstop>
