@@ -761,7 +761,21 @@ bool ASBase::isCharPotentialOperator(char ch) const
 // NOTE: Visual C isdigit() gives assert error if char > 256
 bool ASBase::isDigit(char ch) const
 {
-	return (ch >= '0' && ch <= '9');
+    return (ch >= '0' && ch <= '9');
+}
+
+bool ASBase::isHexDigit(char ch) const
+{
+    return (ch >= '0' && ch <= '9')
+            ||  (ch >= 'a' && ch <= 'f')
+            ||  (ch >= 'A' && ch <= 'F');
+}
+
+bool ASBase::isLetterOrUnderLine(char ch) const
+{   return (ch >= 'a' && ch <= 'z')
+            || (ch >= 'A' && ch <= 'Z')
+            || (ch == '_');
+
 }
 
 // check if a specific character is a digit separator

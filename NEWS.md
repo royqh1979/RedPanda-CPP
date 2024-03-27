@@ -99,6 +99,7 @@ Red Panda C++ Version 2.27
   - enhancement: Open ".def" (Module definition file) file in editor when double click it in the project view.
   - enhancement: When a dll project has .def file, use it when generating the dll file.  
   - fix: "project name".exe.manifest is auto removed when build the project.
+  - fix: "0x3.12p+1" is treadted as a plus expression when reformatting code ( by 绣球135@qq ）
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

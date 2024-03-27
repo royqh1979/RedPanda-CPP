@@ -318,6 +318,8 @@ protected:  // functions definitions are at the end of ASResource.cpp
 	                           const vector<const string*>* possibleOperators) const;
 	string getCurrentWord(const string& line, size_t index) const;
 	bool isDigit(char ch) const;
+    bool isHexDigit(char ch) const;
+    bool isLetterOrUnderLine(char ch) const;
 	bool isLegalNameChar(char ch) const;
 	bool isCharPotentialHeader(const string& line, size_t i) const;
 	bool isCharPotentialOperator(char ch) const;
