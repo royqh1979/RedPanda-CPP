@@ -70,6 +70,7 @@ private slots:
     void on_btnChooseGDB_clicked();
     void on_btnChooseGDBServer_clicked();
     void on_btnChooseResourceCompiler_clicked();
+    void on_btnAddCompilerSetByFile_clicked();
 };
 
 #endif // COMPILERSETOPTIONWIDGET_H
