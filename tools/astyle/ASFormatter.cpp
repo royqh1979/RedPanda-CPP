@@ -3598,7 +3598,7 @@ bool ASFormatter::isInExponent() const
         return false;
 
     int i = charNum - 1;
-    char prevChar     = currentLine[i];
+    unsigned char prevChar = currentLine[i];
 
     if (prevChar == 'e' || prevChar == 'E') {
         i--;
@@ -3613,7 +3613,8 @@ bool ASFormatter::isInExponent() const
             } else if (isDigit(prevChar)) {
                 numCount++;
             } else {
-                if (isLetterOrUnderLine(prevChar) || prevChar == '$')
+                if (isLetterOrUnderLine(prevChar) || prevChar == '$'
+                        || prevChar>127)
                     return false;
                 break;
             }
@@ -3647,7 +3648,8 @@ bool ASFormatter::isInExponent() const
                     return false;
                 hasX = true;
             } else {
-                if (isLetterOrUnderLine(prevChar) || prevChar == '$')
+                if (isLetterOrUnderLine(prevChar) || prevChar == '$'
+                        || prevChar>127)
                     return false;
                 break;
             }
