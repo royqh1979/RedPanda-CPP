@@ -40,7 +40,7 @@ InstType "Minimal";2
 InstType "Safe";3
 
 ## Remember the installer language
-!define MUI_LANGDLL_REGISTRY_ROOT "HKLM"
+!define MUI_LANGDLL_REGISTRY_ROOT "ShCtx"
 !define MUI_LANGDLL_REGISTRY_KEY "Software\RedPanda-C++"
 !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
 
@@ -77,14 +77,13 @@ Section "$(SectionMainName)" SectionMain
   
   SetOutPath $INSTDIR
 
-  SetRegView 64
   ; Allways create an uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Redpanda-C++"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString" "$INSTDIR\uninstall.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${DEVCPP_VERSION}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "Publisher" "Roy Qu(royqh1979@gmail.com)"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Redpanda-C++"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString" "$INSTDIR\uninstall.exe"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${DEVCPP_VERSION}"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "Publisher" "Roy Qu(royqh1979@gmail.com)"
 
 
   ; Write required files
@@ -226,9 +225,7 @@ SubSection "$(SectionShortcutsName)" SectionShortcuts
 
 Section "$(SectionMenuLaunchName)" SectionMenuLaunch
   SectionIn 1 3
- 
-  ; always use all user start menu, normal users can delete these
-  SetShellVarContext all 
+
   StrCpy $0 $SMPROGRAMS ; start menu Programs folder
   CreateDirectory "$0\$(MessageAppName)"
   CreateShortCut "$0\$(MessageAppName)\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
@@ -238,9 +235,7 @@ SectionEnd
 
 Section "$(SectionDesktopLaunchName)" SectionDesktopLaunch
   SectionIn 1 3
-  
-  ; always use current user desktop, normal users can't delete all users' shortcuts
-  SetShellVarContext current
+
   CreateShortCut "$DESKTOP\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
 SectionEnd
 
@@ -274,6 +269,8 @@ Function .onInit
   IfFileExists "$APPDATA\Dev-Cpp\devcpp.cfg" 0 +2 # deprecated config file
     SectionSetFlags ${SectionConfig} ${SF_SELECTED}
 
+  SetShellVarContext all
+  SetRegView 64
 FunctionEnd
 
 Function myGuiInit
@@ -291,7 +288,7 @@ Function BackupAssoc
   ;$0 is an extension - for example ".dev"
 
   ;check if backup already exists
-  ReadRegStr $1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0" 
+  ReadRegStr $1 ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0" 
   ;don't backup if backup exists in registry
   StrCmp $1 "" 0 no_assoc
 
@@ -300,13 +297,16 @@ Function BackupAssoc
   StrCmp $1 "DevCpp$0" no_assoc
 
   StrCmp $1 "" no_assoc
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0" "$1"
+    WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0" "$1"
   no_assoc:
   
 FunctionEnd
 
 Function un.onInit
-   !insertmacro MUI_UNGETLANGUAGE
+  !insertmacro MUI_UNGETLANGUAGE
+
+  SetShellVarContext all
+  SetRegView 64
 FunctionEnd
 
 ;restore file association
@@ -314,7 +314,7 @@ Function un.RestoreAssoc
   ;$0 is an extension - for example ".dev"
 
   DeleteRegKey HKCR "$0"
-  ReadRegStr $1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0"
+  ReadRegStr $1 ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0"
   StrCmp $1 "" no_backup
     WriteRegStr HKCR "$0" "" "$1"
     Call un.RefreshShellIcons
@@ -383,7 +383,7 @@ Function GetParent
 FunctionEnd
 
 Function UninstallExisting
-    ReadRegStr $R0 HKLM  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
+    ReadRegStr $R0 ShCtx  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
 
     StrCmp $R0 "" done
 
@@ -418,15 +418,13 @@ Section "Uninstall"
   ; Remove uninstaller
   Delete "$INSTDIR\uninstall.exe"
 
-  ; Remove start menu stuff, located in all users folder
-  SetShellVarContext all 
+  ; Remove start menu stuff
   Delete "$SMPROGRAMS\$(MessageAppName)\$(MessageAppName).lnk"
   Delete "$SMPROGRAMS\$(MessageAppName)\License.lnk"
   Delete "$SMPROGRAMS\$(MessageAppName)\Uninstall $(MessageAppName).lnk"
   RMDir "$SMPROGRAMS\$(MessageAppName)"
   
-  ; Remove desktop stuff, located in current user folder
-  SetShellVarContext current
+  ; Remove desktop stuff
   Delete "$QUICKLAUNCH\$(MessageAppName).lnk"
   Delete "$DESKTOP\$(MessageAppName).lnk"
 
@@ -471,8 +469,8 @@ Section "Uninstall"
   Call un.DeleteDirIfEmpty
 
   ; Remove registry keys
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
-  DeleteRegKey HKCU "Software\RedPanda-C++"
+  DeleteRegKey ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
+  DeleteRegKey ShCtx "Software\RedPanda-C++"
 
   IfSilent +2 ; Don't ask when running in silent mode
   MessageBox MB_YESNO "$(MessageRemoveConfig)" IDNO Done
