@@ -6,7 +6,7 @@ set -euxo pipefail
 #   packages/msys/build-mingw.sh [-m|--msystem <MSYSTEM>] [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
 # Options:
 #   -m, --msystem <MSYSTEM>  switch to other MSYS2 environment
-#                            (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64)
+#                            (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64, CLANGARM64)
 #                            MUST be used before other options
 #   -c, --clean              clean build and package directories
 #   -nd, --no-deps           skip dependency check
@@ -24,7 +24,7 @@ if [[ $# -gt 1 && ($1 == "-m" || $1 == "--msystem") ]]; then
   msystem=$2
   shift 2
   case "${msystem}" in
-    MINGW32|MINGW64|UCRT64|CLANG32|CLANG64)
+    MINGW32|MINGW64|UCRT64|CLANG32|CLANG64|CLANGARM64)
       export MSYSTEM="${msystem}"
       exec /bin/bash --login "$0" "$@"
       ;;
@@ -38,33 +38,45 @@ fi
 case "${MSYSTEM}" in
   MINGW32|CLANG32)  # there is no UCRT32
     NSIS_ARCH=x86
-    BITNESS=32
-    COMPILER_NAME="MinGW-w64 i686 GCC 8.1"
-    ARCHIVE_MINGW_COMPILER_BASENAME="RedPanda.C++.${APP_VERSION}.win32.${COMPILER_NAME}"
-    ARCHIVE_NO_COMPILER_BASENAME="RedPanda.C++.${APP_VERSION}.win32.No.Compiler"
+    PACKAGE_BASENAME="RedPanda.C++.${APP_VERSION}.win32"
     ;;
   MINGW64|UCRT64|CLANG64)
     NSIS_ARCH=x64
-    BITNESS=64
-    COMPILER_NAME="MinGW-w64 X86_64 GCC 11.4"
-    ARCHIVE_MINGW_COMPILER_BASENAME="RedPanda.C++.${APP_VERSION}.win64.${COMPILER_NAME}"
-    ARCHIVE_NO_COMPILER_BASENAME="RedPanda.C++.${APP_VERSION}.win64.No.Compiler"
+    PACKAGE_BASENAME="RedPanda.C++.${APP_VERSION}.win64"
+    ;;
+  CLANGARM64)
+    NSIS_ARCH=arm64
+    PACKAGE_BASENAME="RedPanda.C++.${APP_VERSION}.arm64"
     ;;
   *)
     echo "This script must be run in one of the following MSYS2 shells:"
     echo "  - MINGW32 / CLANG32"
     echo "  - MINGW64 / UCRT64 / CLANG64"
+    echo "  - CLANGARM64"
     exit 1
     ;;
 esac
 
 CLEAN=0
 CHECK_DEPS=1
+compilers=()
+COMPILER_MINGW32=0
+COMPILER_MINGW64=0
 TARGET_DIR="$(pwd)/dist"
 while [[ $# -gt 0 ]]; do
   case $1 in
     -c|--clean)
       CLEAN=1
+      shift
+      ;;
+    --mingw32)
+      compilers+=("mingw32")
+      COMPILER_MINGW32=1
+      shift
+      ;;
+    --mingw64)
+      compilers+=("mingw64")
+      COMPILER_MINGW64=1
       shift
       ;;
     -nd|--no-deps)
@@ -87,7 +99,21 @@ PACKAGE_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-pkg"
 QMAKE="${MINGW_PREFIX}/qt5-static/bin/qmake"
 NSIS="/mingw32/bin/makensis"
 SOURCE_DIR="$(pwd)"
-MINGW_ARCHIVE="mingw${BITNESS}.7z"
+
+MINGW32_ARCHIVE="mingw32.7z"
+MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC 8.1"
+MINGW32_PACKAGE_SUFFIX="MinGW32_8.1"
+
+MINGW64_ARCHIVE="mingw64.7z"
+MINGW64_COMPILER_NAME="MinGW-w64 X86_64 GCC 11.4"
+MINGW64_PACKAGE_SUFFIX="MinGW64_11.4"
+
+if [[ ${#compilers[@]} -eq 0 ]]; then
+  PACKAGE_BASENAME="${PACKAGE_BASENAME}.NoCompiler"
+else
+  [[ ${COMPILER_MINGW32} -eq 1 ]] && PACKAGE_BASENAME="${PACKAGE_BASENAME}.${MINGW32_PACKAGE_SUFFIX}"
+  [[ ${COMPILER_MINGW64} -eq 1 ]] && PACKAGE_BASENAME="${PACKAGE_BASENAME}.${MINGW64_PACKAGE_SUFFIX}"
+fi
 
 function fn_print_progress() {
   echo -e "\e[1;32;44m$1\e[0m"
@@ -100,7 +126,7 @@ if [[ ${CHECK_DEPS} -eq 1 ]]; then
     MINGW32|MINGW64|UCRT64)
       compiler=gcc
       ;;
-    CLANG32|CLANG64)
+    CLANG32|CLANG64|CLANGARM64)
       compiler=clang
       ;;
   esac
@@ -117,8 +143,12 @@ if [[ ${CHECK_DEPS} -eq 1 ]]; then
   done
 fi
 
-if [[ ! -f "${SOURCE_DIR}/assets/${MINGW_ARCHIVE}" ]]; then
-  echo "Missing MinGW archive: assets/${MINGW_ARCHIVE}"
+if [[ ${COMPILER_MINGW32} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" ]]; then
+  echo "Missing MinGW archive: assets/${MINGW32_ARCHIVE}"
+  exit 1
+fi
+if [[ ${COMPILER_MINGW64} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" ]]; then
+  echo "Missing MinGW archive: assets/${MINGW64_ARCHIVE}"
   exit 1
 fi
 
@@ -136,7 +166,7 @@ fn_print_progress "Building..."
 pushd .
 cd "${BUILD_DIR}"
 qmake_flags=()
-[[ NSIS_ARCH == x64 ]] && qmake_flags+=("X86_64=ON")
+[[ ${NSIS_ARCH} == x64 ]] && qmake_flags+=("X86_64=ON")
 "$QMAKE" PREFIX="${PACKAGE_DIR}" ${qmake_flags[@]} -o Makefile "${SOURCE_DIR}/Red_Panda_Cpp.pro" -r
 mingw32-make -j$(nproc)
 mingw32-make install
@@ -153,45 +183,31 @@ cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda.nsi" .
 popd
 
-## make no-compiler package
+## make package
 
 pushd .
 cd "${PACKAGE_DIR}"
-SETUP_NAME="${ARCHIVE_NO_COMPILER_BASENAME}.Setup.exe"
-PORTABLE_NAME="${ARCHIVE_NO_COMPILER_BASENAME}.Portable.7z"
-
-fn_print_progress "Making no-compiler installer ..."
-"${NSIS}" \
-  -DAPP_VERSION="${APP_VERSION}" \
-  -DARCH="${NSIS_ARCH}" \
-  -DFINALNAME="${SETUP_NAME}" \
-  redpanda.nsi
-
-fn_print_progress "Making no-compiler Portable Package..."
-7z x "${SETUP_NAME}" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
-7z a -mmt -mx9 -ms=on -mqs=on -mf=BCJ2 "${PORTABLE_NAME}" "RedPanda-CPP"
-rm -rf "RedPanda-CPP"
-
-mv "${SETUP_NAME}" "${TARGET_DIR}"
-mv "${PORTABLE_NAME}" "${TARGET_DIR}"
-popd
-
-## make mingw package
-
-pushd .
-cd "${PACKAGE_DIR}"
-SETUP_NAME="${ARCHIVE_MINGW_COMPILER_BASENAME}.Setup.exe"
-PORTABLE_NAME="${ARCHIVE_MINGW_COMPILER_BASENAME}.Portable.7z"
+SETUP_NAME="${PACKAGE_BASENAME}.Setup.exe"
+PORTABLE_NAME="${PACKAGE_BASENAME}.Portable.7z"
 
 fn_print_progress "Making installer..."
-[[ ! -d "mingw${BITNESS}" ]] && 7z x "${SOURCE_DIR}/assets/${MINGW_ARCHIVE}" -o"${PACKAGE_DIR}"
 
-"${NSIS}" \
-  -DAPP_VERSION="${APP_VERSION}" \
-  -DARCH="${NSIS_ARCH}" \
-  -DFINALNAME="${SETUP_NAME}" \
-  -DHAVE_MINGW -DCOMPILERNAME="${COMPILER_NAME}" -DCOMPILERFOLDER="mingw${BITNESS}" \
-  redpanda.nsi
+nsis_flags=(
+  -DAPP_VERSION="${APP_VERSION}"
+  -DARCH="${NSIS_ARCH}"
+  -DFINALNAME="${SETUP_NAME}"
+  -DMINGW32_COMPILER_NAME="${MINGW32_COMPILER_NAME}"
+  -DMINGW64_COMPILER_NAME="${MINGW64_COMPILER_NAME}"
+)
+if [[ ${COMPILER_MINGW32} -eq 1 ]]; then
+  nsis_flags+=(-DHAVE_MINGW32)
+  [[ -d "mingw32" ]] || 7z x "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" -o"${PACKAGE_DIR}"
+fi
+if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
+  nsis_flags+=(-DHAVE_MINGW64)
+  [[ -d "mingw64" ]] || 7z x "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
+fi
+"${NSIS}" "${nsis_flags[@]}" redpanda.nsi
 
 fn_print_progress "Making Portable Package..."
 7z x "${SETUP_NAME}" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
