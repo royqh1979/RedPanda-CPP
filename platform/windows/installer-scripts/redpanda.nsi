@@ -499,10 +499,8 @@ Section "Uninstall"
   DeleteRegKey ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
   DeleteRegKey ShCtx "Software\RedPanda-C++"
 
-  IfSilent +2 ; Don't ask when running in silent mode
-  MessageBox MB_YESNO "$(MessageRemoveConfig)" IDNO Done
-
+  MessageBox MB_YESNO "$(MessageRemoveConfig)" /SD IDNO IDNO SkipRemoveConfig
   RMDir /r "$APPDATA\RedPandaIDE"
+SkipRemoveConfig:
 
-Done:
 SectionEnd
