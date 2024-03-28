@@ -1340,8 +1340,10 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             }
         }
         if (((attr->tokenType() == QSynedit::TokenType::Identifier)
-                || (attr->tokenType() == QSynedit::TokenType::Keyword)
-                || (attr->tokenType() == QSynedit::TokenType::Preprocessor)
+             || (attr->tokenType() == QSynedit::TokenType::Keyword)
+             || (attr->tokenType() == QSynedit::TokenType::Preprocessor)
+             || (attr->tokenType() == QSynedit::TokenType::String)
+             || (attr->tokenType() == QSynedit::TokenType::Comment)
                 )
             && (token == mCurrentHighlightedWord)) {
             // occurrencies of the selected identifier
@@ -1881,9 +1883,12 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             if (getTokenAttriAtRowCol(caretXY(), token,attri)
                 && (
                     (attri->tokenType()==QSynedit::TokenType::Identifier)
-                    || (attri->tokenType() == QSynedit::TokenType::Keyword)
-                    || (attri->tokenType() == QSynedit::TokenType::Preprocessor)
-                    )) {
+                        || (attri->tokenType() == QSynedit::TokenType::Keyword)
+                        || (attri->tokenType() == QSynedit::TokenType::Preprocessor)
+                        || (attri->tokenType() == QSynedit::TokenType::String)
+                        || (attri->tokenType() == QSynedit::TokenType::Comment))
+                    && !token.isEmpty()
+                    && isIdentStartChar(token[0])) {
                 mCurrentHighlightedWord = token;
             } else {
                 mCurrentHighlightedWord = "";

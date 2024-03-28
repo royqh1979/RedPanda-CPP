@@ -2,10 +2,7 @@
 # Startup
 SetFont "Segoe UI" 11
 Unicode True
-!include "config.nsh"
-!define COMPILERFOLDER "MinGW64"
-!define FINALNAME "RedPanda.C++.${DEVCPP_VERSION}.win64.${COMPILERNAME}.Setup.exe"
-!define DISPLAY_NAME "Red Panda C++ ${DEVCPP_VERSION}"
+!define DISPLAY_NAME "Red Panda C++ ${APP_VERSION} (${ARCH})"
 
 !include "MUI2.nsh"
 !include "lang.nsh"
@@ -20,7 +17,11 @@ OutFile "${FINALNAME}"
 Caption "${DISPLAY_NAME}"
 
 LicenseData "LICENSE"
-InstallDir $PROGRAMFILES64\RedPanda-Cpp
+!if "${ARCH}" == "x86"
+  InstallDir $PROGRAMFILES\RedPanda-Cpp
+!else
+  InstallDir $PROGRAMFILES64\RedPanda-Cpp
+!endif
 ####################################################################
 # Interface Settings
 
@@ -82,7 +83,7 @@ Section "$(SectionMainName)" SectionMain
   WriteUninstaller "$INSTDIR\uninstall.exe"
   WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Redpanda-C++"
   WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString" "$INSTDIR\uninstall.exe"
-  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${DEVCPP_VERSION}"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${APP_VERSION}"
   WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
   WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "Publisher" "Roy Qu(royqh1979@gmail.com)"
 
@@ -103,12 +104,14 @@ Section "$(SectionMainName)" SectionMain
 
 SectionEnd
 
-Section "$(SectionMinGWName)" SectionMinGW
-  SectionIn 1 3
-  SetOutPath $INSTDIR\MinGW64
+!ifdef HAVE_MINGW
+  Section "$(SectionMinGWName)" SectionMinGW
+    SectionIn 1 3
+    SetOutPath $INSTDIR\${COMPILERFOLDER}
 
-  File /nonfatal /r "${COMPILERFOLDER}\*"
-SectionEnd
+    File /nonfatal /r "${COMPILERFOLDER}\*"
+  SectionEnd
+!endif
 
 ####################################################################
 # File association
@@ -260,7 +263,9 @@ SectionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionMain}        "$(MessageSectionMain)"
-!insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW}      "$(MessageSectionMinGW)"
+!ifdef HAVE_MINGW
+  !insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW}      "$(MessageSectionMinGW)"
+!endif
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionConfig}      "$(MessageSectionConfig)"
@@ -279,7 +284,11 @@ Function .onInit
     SectionSetFlags ${SectionConfig} ${SF_SELECTED}
 
   SetShellVarContext all
-  SetRegView 64
+  !if "${ARCH}" == "x86"
+    SetRegView 32
+  !else
+    SetRegView 64
+  !endif
 FunctionEnd
 
 Function myGuiInit
@@ -290,6 +299,11 @@ Function myGuiInit
   SetRegView 64
   Call UninstallExisting
 
+  !if "${ARCH}" == "x86"
+    SetRegView 32
+  !else
+    SetRegView 64
+  !endif
 FunctionEnd
 
 ;backup file association
@@ -315,7 +329,11 @@ Function un.onInit
   !insertmacro MUI_UNGETLANGUAGE
 
   SetShellVarContext all
-  SetRegView 64
+  !if "${ARCH}" == "x86"
+    SetRegView 32
+  !else
+    SetRegView 64
+  !endif
 FunctionEnd
 
 ;restore file association

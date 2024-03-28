@@ -546,7 +546,6 @@ private:
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
     void scanForFoldRanges(PCodeFoldingRanges topFoldRanges);
-    int lineHasChar(int Line, int startChar, QChar character, const QString& tokenAttrName);
     void findSubFoldRange(PCodeFoldingRanges topFoldRanges,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent);
     PCodeFoldingRange collapsedFoldStartAtLine(int Line);
     void initializeCaret();
@@ -663,7 +662,7 @@ private slots:
     void onScrollTimeout();
     void onDraggingScrollTimeout();
     void onUndoAdded();
-    void onSizeOrFontChanged(bool bFont);
+    void onSizeOrFontChanged();
     void onChanged();
     void onScrolled(int value);
 

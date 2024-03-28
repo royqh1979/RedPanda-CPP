@@ -611,11 +611,11 @@ iconsets_files.files += $$files(resources/iconsets/*.json, true)
 ENABLE_LUA_ADDON {
     theme_files.files += $$files(themes/*.lua, false)
 } else {
-    theme_files.files += $$files(themes/*.json, false)
+    theme_files.files += $$files(resources/themes/*.json, false)
 }
-theme_files.files += $$files(themes/*.png, false)
+theme_files.files += $$files(resources/themes/*.png, false)
 
-colorscheme_files.files += $$files(colorschemes/*.scheme, false)
+colorscheme_files.files += $$files(resources/colorschemes/*.scheme, false)
 
 RESOURCES += qmake_qm_files
 RESOURCES += iconsets_files

@@ -251,11 +251,11 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
     case DataType::None:
         return dataDir;
     case DataType::ColorScheme:
-        return ":/colorschemes";
+        return ":/resources/colorschemes";
     case DataType::IconSet:
         return ":/resources/iconsets";
     case DataType::Theme:
-        return ":/themes";
+        return ":/resources/themes";
     case DataType::Template:
         return includeTrailingPathDelimiter(appResourceDir()) + "templates";
     }
@@ -3186,7 +3186,6 @@ bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_pro
         if (set->binDirs().contains(folder) && extractFileName(set->CCompiler())==c_prog)
             return false;
     }
-    qDebug()<<folder<<c_prog;
     // Default, release profile
     PCompilerSet baseSet = addSet(folder,c_prog);
     if (!baseSet || baseSet->name().isEmpty())

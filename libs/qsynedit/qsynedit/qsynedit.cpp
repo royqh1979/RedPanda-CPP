@@ -2933,7 +2933,6 @@ void QSynEdit::synFontChanged()
 {
     incPaintLock();
     recalcCharExtent();
-    onSizeOrFontChanged(true);
     decPaintLock();
 }
 
@@ -3161,8 +3160,6 @@ void QSynEdit::recalcCharExtent()
         }
     }
 
-    mTextHeight  = 0;
-    mCharWidth = 0;
     QFontMetrics fm(font());
     mTextHeight = fm.lineSpacing();
     mCharWidth = fm.horizontalAdvance("M");
@@ -3224,6 +3221,8 @@ void QSynEdit::recalcCharExtent()
             mCharWidth = fm.horizontalAdvance("M");
     }
     mTextHeight *= mLineSpacingFactor;
+
+    onSizeOrFontChanged();
 }
 
 QString QSynEdit::expandAtWideGlyphs(const QString &S)
@@ -3451,25 +3450,8 @@ void QSynEdit::rescanForFoldRanges()
 void QSynEdit::scanForFoldRanges(PCodeFoldingRanges topFoldRanges)
 {
     PCodeFoldingRanges parentFoldRanges = topFoldRanges;
-//    qint64 begin=QDateTime::currentMSecsSinceEpoch();
 
     findSubFoldRange(topFoldRanges, parentFoldRanges,PCodeFoldingRange());
-//    qint64 diff= QDateTime::currentMSecsSinceEpoch() - begin;
-//    qDebug()<<"?"<<diff;
-}
-
-//this func should only be used in findSubFoldRange
-int QSynEdit::lineHasChar(int Line, int startChar, QChar character, const QString& tokenAttrName) {
-    QString CurLine = mDocument->getLine(Line);
-    QString token;
-    while (!mSyntaxer->eol()) {
-        token = mSyntaxer->getToken();
-        PTokenAttribute attr = mSyntaxer->getTokenAttribute();
-        if (token == character && attr->name()==tokenAttrName)
-            return mSyntaxer->getTokenPos();
-        mSyntaxer->next();
-    }
-    return -1;
 }
 
 void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange parent)
@@ -3482,12 +3464,6 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
 
     while (line < mDocument->count()) { // index is valid for LinesToScan and fLines
         // If there is a collapsed fold over here, skip it
-//        collapsedFold = collapsedFoldStartAtLine(line + 1); // only collapsed folds remain
-//        if (collapsedFold) {
-//            line = collapsedFold->toLine;
-//            continue;
-//        }
-
         // Find an opening character on this line
         curLine = mDocument->getLine(line);
         int blockEnded=mDocument->blockEnded(line);
@@ -3522,8 +3498,6 @@ void QSynEdit::findSubFoldRange(PCodeFoldingRanges topFoldRanges, PCodeFoldingRa
         }
         line++;
     }
-
-
 }
 
 PCodeFoldingRange QSynEdit::collapsedFoldStartAtLine(int Line)
@@ -3740,26 +3714,15 @@ EditCommand QSynEdit::TranslateKeyCode(int key, Qt::KeyboardModifiers modifiers)
     return cmd;
 }
 
-void QSynEdit::onSizeOrFontChanged(bool bFont)
+void QSynEdit::onSizeOrFontChanged()
 {
-    if (mCharWidth != 0) {
-        mLinesInWindow = clientHeight() / mTextHeight;
-        if (bFont) {
-            if (mGutter.showLineNumbers())
-                onGutterChanged();
-            else {
-                updateHScrollbar();
-            }
-            mStateFlags.setFlag(StateFlag::sfCaretChanged,false);
-            invalidate();
-        } else {
-            updateHScrollbar();
-        }
-        //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEol))
-        setLeftPos(mLeftPos);
-        //if (!mOptions.testFlag(SynEditorOption::eoScrollPastEof))
-        setTopPos(mTopPos);
-    }
+    mLinesInWindow = clientHeight() / mTextHeight;
+    if (mGutter.showLineNumbers())
+        onGutterChanged();
+    updateHScrollbar();
+    updateVScrollbar();
+    mStateFlags.setFlag(StateFlag::sfCaretChanged,false);
+    invalidate();
 }
 
 void QSynEdit::onChanged()
@@ -4686,7 +4649,7 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
         });
         reparseDocument();
     }
-    onSizeOrFontChanged(true);
+    //onSizeOrFontChanged(true);
     invalidate();
 }
 
@@ -5963,15 +5926,8 @@ void QSynEdit::resizeEvent(QResizeEvent *)
     mContentImage = std::make_shared<QImage>(clientWidth()*dpr,clientHeight()*dpr,
                                                             QImage::Format_ARGB32);
     mContentImage->setDevicePixelRatio(dpr);
-//    QRect newRect = image->rect().intersected(mContentImage->rect());
 
-//    QPainter painter(image.get());
-
-    //painter.drawImage(newRect,*mContentImage);
-
-//    mContentImage = image;
-
-    onSizeOrFontChanged(false);
+    onSizeOrFontChanged();
 }
 
 void QSynEdit::timerEvent(QTimerEvent *event)
