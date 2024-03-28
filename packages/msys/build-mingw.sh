@@ -3,7 +3,14 @@
 set -euxo pipefail
 
 # Usage:
-#   packages/msys/build-x64.sh [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
+#   packages/msys/build-mingw.sh [-m|--msystem <MSYSTEM>] [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
+# Options:
+#   -m, --msystem <MSYSTEM>  switch to other MSYS2 environment
+#                            (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64)
+#                            MUST be used before other options
+#   -c, --clean              clean build and package directories
+#   -nd, --no-deps           skip dependency check
+#   -t, --target-dir <dir>   set target directory for the packages
 
 source version.inc
 [[ -n "${APP_VERSION_SUFFIX}" ]] && APP_VERSION="${APP_VERSION}${APP_VERSION_SUFFIX}"
@@ -11,6 +18,21 @@ source version.inc
 if [[ ! -v MSYSTEM ]]; then
   echo "This script must be run in MSYS2 shell"
   exit 1
+fi
+
+if [[ $# -gt 1 && ($1 == "-m" || $1 == "--msystem") ]]; then
+  msystem=$2
+  shift 2
+  case "${msystem}" in
+    MINGW32|MINGW64|UCRT64|CLANG32|CLANG64)
+      export MSYSTEM="${msystem}"
+      exec /bin/bash --login "$0" "$@"
+      ;;
+    *)
+      echo "Invalid MSYSTEM: ${msystem}"
+      exit 1
+      ;;
+  esac
 fi
 
 case "${MSYSTEM}" in
