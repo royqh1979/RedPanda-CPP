@@ -1,6 +1,0 @@
-####################################################################
-# Startup
-
-!define COMPILERNAME \"Clang 14.0.0\"
-!define DEVCPP_VERSION \"$${APP_VERSION}\"
-
