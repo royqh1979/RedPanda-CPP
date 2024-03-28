@@ -155,9 +155,9 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     hideCaret();
 
     connect(horizontalScrollBar(),&QScrollBar::valueChanged,
-            this, &QSynEdit::onScrolled);
+            this, &QSynEdit::onHScrolled);
     connect(verticalScrollBar(),&QScrollBar::valueChanged,
-            this, &QSynEdit::onScrolled);
+            this, &QSynEdit::onVScrolled);
     connect(verticalScrollBar(), &QAbstractSlider::sliderReleased,
             this, &QSynEdit::ensureLineAlignedWithTop);
     //enable input method
@@ -286,6 +286,8 @@ bool QSynEdit::canRedo() const
 int QSynEdit::maxScrollWidth() const
 {
     int maxWidth = mDocument->maxLineWidth();
+    if (maxWidth <= 0)
+        return INT_MAX; //all inlines invalid. Next paintEvent() will update it.
     if (useCodeFolding())
         maxWidth += stringWidth(syntaxer()->foldString(""),maxWidth);
     if (mOptions.testFlag(eoScrollPastEol))
@@ -3074,7 +3076,6 @@ void QSynEdit::doOnStatusChange(StatusChanges)
 
 void QSynEdit::updateHScrollbar()
 {
-    int nMaxScroll;
     int nMin,nMax,nPage,nPos;
     if (mPaintLock!=0) {
         mStateFlags.setFlag(StateFlag::sfHScrollbarChanged);
@@ -3087,9 +3088,8 @@ void QSynEdit::updateHScrollbar()
                 setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
             }
             if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
-                nMaxScroll = maxScrollWidth();
                 nMin = 0;
-                nMax = nMaxScroll;
+                nMax = maxScrollWidth();
                 nPage = viewWidth();
                 nPos = mLeftPos;
                 horizontalScrollBar()->setMinimum(nMin);
@@ -3735,14 +3735,18 @@ void QSynEdit::onChanged()
     emit changed();
 }
 
-void QSynEdit::onScrolled(int)
+void QSynEdit::onHScrolled(int)
 {
-    incPaintLock();
     mLeftPos = horizontalScrollBar()->value();
+    invalidate();
+}
+
+void QSynEdit::onVScrolled(int)
+{
     mTopPos = verticalScrollBar()->value();
     invalidate();
-    decPaintLock();
 }
+
 
 const PFormatter &QSynEdit::formatter() const
 {

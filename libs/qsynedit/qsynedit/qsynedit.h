@@ -664,7 +664,8 @@ private slots:
     void onUndoAdded();
     void onSizeOrFontChanged();
     void onChanged();
-    void onScrolled(int value);
+    void onHScrolled(int value);
+    void onVScrolled(int value);
 
 private:
     std::shared_ptr<QImage> mContentImage;

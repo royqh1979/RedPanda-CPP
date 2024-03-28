@@ -1013,7 +1013,6 @@ QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<
         right += gWidth;
     }
     return glyphPostionList;
-
 }
 
 int Document::xposToGlyphIndex(int line, int xpos)
