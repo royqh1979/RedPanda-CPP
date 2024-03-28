@@ -1875,22 +1875,22 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 
     // scSelection includes anything caret related
     if (changes.testFlag(QSynedit::StatusChange::scSelection)) {
-        QString token;
-        QSynedit::PTokenAttribute attri;
-        if (getTokenAttriAtRowCol(caretXY(), token,attri)
+        if (!selAvail() && pSettings->editor().highlightCurrentWord()) {
+            QString token;
+            QSynedit::PTokenAttribute attri;
+            if (getTokenAttriAtRowCol(caretXY(), token,attri)
                 && (
                     (attri->tokenType()==QSynedit::TokenType::Identifier)
                     || (attri->tokenType() == QSynedit::TokenType::Keyword)
                     || (attri->tokenType() == QSynedit::TokenType::Preprocessor)
                     )) {
-            if (!selAvail() && pSettings->editor().highlightCurrentWord()) {
                 mCurrentHighlightedWord = token;
-            } else if (selAvail() && blockBegin() == wordStart()
-                       && blockEnd() == wordEnd()){
-                mCurrentHighlightedWord = selText();
             } else {
                 mCurrentHighlightedWord = "";
             }
+        } else if (selAvail() && blockBegin() == wordStart()
+                   && blockEnd() == wordEnd()){
+            mCurrentHighlightedWord = selText();
         } else {
             mCurrentHighlightedWord = "";
         }

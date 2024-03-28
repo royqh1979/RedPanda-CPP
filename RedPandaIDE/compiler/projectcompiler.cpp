@@ -171,7 +171,7 @@ void ProjectCompiler::writeMakeHeader(QFile &file)
 void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 {
     // Get list of object files
-    QStringList Objects;
+    QStringList objects;
     QStringList LinkObjects;
     QStringList cleanObjects;
     QStringList moduleDefines;
@@ -192,13 +192,13 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
                 QString fullObjFile = includeTrailingPathDelimiter(mProject->options().objectOutput)
                         + extractFileName(unit->fileName());
                 QString relativeObjFile = extractRelativePath(mProject->directory(), changeFileExt(fullObjFile, OBJ_EXT));
-                Objects << relativeObjFile;
+                objects << relativeObjFile;
                 cleanObjects << localizePath(relativeObjFile);
                 if (unit->link()) {
                     LinkObjects << relativeObjFile;
                 }
             } else {
-                Objects << changeFileExt(relativeName, OBJ_EXT);
+                objects << changeFileExt(relativeName, OBJ_EXT);
                 cleanObjects << localizePath(changeFileExt(relativeName, OBJ_EXT));
                 if (unit->link())
                     LinkObjects << changeFileExt(relativeName, OBJ_EXT);
@@ -253,7 +253,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 
     QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
     QString cleanExe = localizePath(executable);
-    QString pchH = extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader);
+    QString pchHeader = extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader);
     QString pch = extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader + "." GCH_EXT);
 
     // programs
@@ -278,14 +278,14 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
     // do not use them in targets or command arguments, they have different escaping rules
     if (!objResFile.isEmpty()) {
         writeln(file, "RES      = " + escapeFilenameForMakefilePrerequisite(objResFile));
-        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(Objects) + " $(RES)");
+        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(objects) + " $(RES)");
     } else {
-        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(Objects));
+        writeln(file, "OBJ      = " + escapeFilenamesForMakefilePrerequisite(objects));
     };
     writeln(file, "BIN      = " + escapeFilenameForMakefilePrerequisite(executable));
     if (mProject->options().usePrecompiledHeader
             && fileExists(mProject->options().precompiledHeader)){
-        writeln(file, "PCH_H    = " + escapeFilenameForMakefilePrerequisite(pchH));
+        writeln(file, "PCH_H    = " + escapeFilenameForMakefilePrerequisite(pchHeader));
         writeln(file, "PCH      = " + escapeFilenameForMakefilePrerequisite(pch));
     }
 
@@ -624,6 +624,8 @@ bool ProjectCompiler::prepareForCompile()
         mArguments = makeAllArgs;
     }
     mDirectory = mProject->directory();
+
+    mOutputFile = mProject->executable();
 
     log(tr("Processing makefile:"));
     log("--------");

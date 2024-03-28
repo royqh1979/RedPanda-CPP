@@ -341,6 +341,7 @@ bool SDCCProjectCompiler::prepareForCompile()
     }
     mDirectory = mProject->directory();
 
+    mOutputFile = mProject->executable();
     log(tr("Processing makefile:"));
     log("--------");
     log(tr("- makefile processer: %1").arg(mCompiler));
