@@ -1,29 +1,90 @@
 #!/bin/bash
 
-TARGET_DIR="/r/"
-BUILD_DIR="${TEMP}/redpandacpp-build"
-PACKAGE_DIR="${TEMP}/RedPanda-CPP"
-GCC_DIR="/mingw32"
-PATH="${GCC_DIR}/bin:${PATH}"
-QMAKE="${GCC_DIR}/qt5-static/bin/qmake"
-NSIS="/d/Program Files (x86)/NSIS/bin/makensis.exe"
-SOURCE_DIR=`pwd`
-MINGW="/e/Workspaces/contributes/MinGW/MinGW32"
-MINGW_NAME="MinGW32"
+set -euxo pipefail
 
-rm -rf  "${BUILD_DIR}"
-test -z "${BUILD_DIR}" | mkdir "${BUILD_DIR}"
-rm -rf  "${PACKAGE_DIR}"
-mkdir "${PACKAGE_DIR}"
+# Usage:
+#   packages/msys/build-i686.sh [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
 
-echo "Building..."
+if [[ ! -v MSYSTEM || ${MSYSTEM} != "MINGW32" ]]; then
+  echo "This script must be run in a MinGW32 shell"
+  exit 1
+fi
+
+CLEAN=0
+CHECK_DEPS=1
+TARGET_DIR="$(pwd)/dist"
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -c|--clean)
+      CLEAN=1
+      shift
+      ;;
+    -nd|--no-deps)
+      CHECK_DEPS=0
+      shift
+      ;;
+    -t|--target-dir)
+      TARGET_DIR="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      exit 1
+      ;;
+  esac
+done
+
+BUILD_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-build"
+PACKAGE_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-pkg"
+QMAKE="${MINGW_PREFIX}/qt5-static/bin/qmake"
+NSIS="/mingw32/bin/makensis"
+SOURCE_DIR="$(pwd)"
+MINGW_ARCHIVE="mingw32.7z"
+
+function fn_print_progress() {
+  echo -e "\e[1;32;44m$1\e[0m"
+}
+
+## check deps
+
+if [[ ${CHECK_DEPS} -eq 1 ]]; then
+  deps=(
+    ${MINGW_PACKAGE_PREFIX}-{gcc,make,qt5-static,7zip}
+    mingw-w64-i686-nsis
+    git
+  )
+  for dep in ${deps[@]}; do
+    pacman -Q ${dep} &>/dev/null || {
+      echo "Missing dependency: ${dep}"
+      exit 1
+    }
+  done
+fi
+
+if [[ ! -f "${SOURCE_DIR}/assets/${MINGW_ARCHIVE}" ]]; then
+  echo "Missing ${MINGW_ARCHIVE}"
+  exit 1
+fi
+
+## prepare dirs
+
+if [[ ${CLEAN} -eq 1 ]]; then
+  rm -rf "${BUILD_DIR}"
+  rm -rf "${PACKAGE_DIR}"
+fi
+mkdir -p "${BUILD_DIR}" "${PACKAGE_DIR}" "${TARGET_DIR}"
+
+## build
+
+fn_print_progress "Building..."
 pushd .
 cd "${BUILD_DIR}"
-make distclean
 "$QMAKE" PREFIX="${PACKAGE_DIR}" -o Makefile "${SOURCE_DIR}\Red_Panda_Cpp.pro" -r -spec win32-g++ 
-make -j16
-make install
+mingw32-make -j$(nproc)
+mingw32-make install
 popd
+
+## prepare packaging resources
 
 echo "Making no-compiler installer ..."
 pushd .
@@ -33,59 +94,45 @@ cp "${SOURCE_DIR}/platform/windows/qt.conf" .
 
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686-nocompiler.nsi" .
-
-"${NSIS}" redpanda-i686-nocompiler.nsi
-rm -f lang.nsh
-rm -f config32.nsh
-rm -f config.nsh
-rm -f config-clang.nsh
-rm -f redpanda-i686-nocompiler.nsi
-
-SETUP_NAME=`ls *.Setup.exe`
-PORTABLE_NAME=`echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/'`
-mv "$SETUP_NAME" "${TARGET_DIR}"
+cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686.nsi" .
 popd
 
-pushd .
-cd "${TARGET_DIR}"
-echo "Making no-compiler Portable Package..."
-7z a -mmt8 -mx9  "${PORTABLE_NAME}" "${PACKAGE_DIR}"
-popd
-
-# we need reinstall config32.nsh
-pushd .
-cd "${BUILD_DIR}"
-make install
-popd
-
-echo "Making installer..."
+## make no-compiler package
 
 pushd .
 cd "${PACKAGE_DIR}"
-ln -s "${MINGW}" $MinGW_NAME
+fn_print_progress "Making no-compiler installer ..."
+"${NSIS}" redpanda-i686-nocompiler.nsi
 
-cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
-cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda-i686.nsi" .
+SETUP_NAME="$(ls *.Setup.exe)"
+PORTABLE_NAME="$(echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/')"
 
-"${NSIS}" redpanda-i686.nsi
-rm -f lang.nsh
-rm -f config32.nsh
-rm -f config.nsh
-rm -f config-clang.nsh
-rm -f redpanda-i686.nsi
+fn_print_progress "Making no-compiler Portable Package..."
+7z x "${SETUP_NAME}" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
+7z a -mmt -mx9 -ms=on -mqs=on -mf=BCJ2 "${PORTABLE_NAME}" "RedPanda-CPP"
+rm -rf "RedPanda-CPP"
 
-SETUP_NAME=`ls *.Setup.exe`
-PORTABLE_NAME=`echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/'`
-mv "$SETUP_NAME" "${TARGET_DIR}"
-
+mv "${SETUP_NAME}" "${TARGET_DIR}"
+mv "${PORTABLE_NAME}" "${TARGET_DIR}"
 popd
+
+## make mingw package
 
 pushd .
-cd "${TARGET_DIR}"
-echo "Making Portable Package..."
-7z a -mmt8 -mx9  "${PORTABLE_NAME}" "${PACKAGE_DIR}"
+cd "${PACKAGE_DIR}"
+fn_print_progress "Making installer..."
+[[ ! -d mingw32 ]] && 7z x "${SOURCE_DIR}/assets/${MINGW_ARCHIVE}" -o"${PACKAGE_DIR}"
+
+"${NSIS}" redpanda-i686.nsi
+
+SETUP_NAME="$(ls *.Setup.exe)"
+PORTABLE_NAME="$(echo $SETUP_NAME | sed 's/Setup.exe/Portable.7z/')"
+
+fn_print_progress "Making Portable Package..."
+7z x "${SETUP_NAME}" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
+7z a -mmt -mx9 -ms=on -mqs=on -mf=BCJ2 "${PORTABLE_NAME}" "RedPanda-CPP"
+rm -rf "RedPanda-CPP"
+
+mv "${SETUP_NAME}" "${TARGET_DIR}"
+mv "${PORTABLE_NAME}" "${TARGET_DIR}"
 popd
-
-echo "Clean up..."
-rm -rf "${PACKAGE_DIR}"
-
