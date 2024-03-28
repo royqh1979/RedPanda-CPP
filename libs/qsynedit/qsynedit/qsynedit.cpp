@@ -3148,6 +3148,9 @@ void QSynEdit::updateCaret()
 
 void QSynEdit::recalcCharExtent()
 {
+    int currentTopRow = mTopPos / mTextHeight;
+    int currentLeftCol = mLeftPos / mCharWidth;
+
     FontStyle styles[] = {FontStyle::fsBold, FontStyle::fsItalic, FontStyle::fsStrikeOut, FontStyle::fsUnderline};
     bool hasStyles[] = {false,false,false,false};
     int size = 4;
@@ -3222,6 +3225,8 @@ void QSynEdit::recalcCharExtent()
     }
     mTextHeight *= mLineSpacingFactor;
 
+    mTopPos = currentTopRow * mTextHeight;
+    mLeftPos = currentLeftCol * mCharWidth;
     onSizeOrFontChanged();
 }
 
