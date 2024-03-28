@@ -1680,6 +1680,7 @@ void CppSyntaxer::next()
             break;
         case RangeState::rsString:
         case RangeState::rsStringNextLine:
+        case RangeState::rsStringUnfinished:
             //qDebug()<<"*1-0-0*";
             procString();
             break;
