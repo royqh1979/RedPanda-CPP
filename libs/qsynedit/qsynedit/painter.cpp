@@ -495,12 +495,19 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
     rc.setBottom(rc.bottom()-1);
     for (const PEditingArea& p:areaList) {
         int penWidth;
-        if (mEdit->font().pixelSize()>=32)
-            penWidth = mEdit->font().pixelSize() / 16;
-        else if (mEdit->font().pixelSize()>=14)
-            penWidth = 2;
-        else
-            penWidth = 1;
+        if (p->type == EditingAreaType::eatWaveUnderLine) {
+            if (mEdit->font().pixelSize()>=16)
+                penWidth = mEdit->font().pixelSize() / 16;
+            else
+                penWidth = 1;
+        } else {
+            if (mEdit->font().pixelSize()>=32)
+                penWidth = mEdit->font().pixelSize() / 16;
+            else if (mEdit->font().pixelSize()>=14)
+                penWidth = 2;
+            else
+                penWidth = 1;
+        }
         if (p->beginX > mRight)
           continue;
         if (p->endX < mLeft)
@@ -517,7 +524,7 @@ void QSynEditPainter::paintEditAreas(const EditingAreaList &areaList)
         rc.setRight(fixXValue(x2));
         QPen pen;
         pen.setColor(p->color);
-        pen.setWidth(penWidth);
+        pen.setWidthF(penWidth);
         mPainter->setPen(pen);
         mPainter->setBrush(Qt::NoBrush);
         int lineHeight = rc.height();
