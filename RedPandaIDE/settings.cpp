@@ -251,11 +251,11 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
     case DataType::None:
         return dataDir;
     case DataType::ColorScheme:
-        return ":/colorschemes";
+        return ":/resources/colorschemes";
     case DataType::IconSet:
         return ":/resources/iconsets";
     case DataType::Theme:
-        return ":/themes";
+        return ":/resources/themes";
     case DataType::Template:
         return includeTrailingPathDelimiter(appResourceDir()) + "templates";
     }

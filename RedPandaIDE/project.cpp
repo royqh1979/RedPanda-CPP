@@ -1481,6 +1481,8 @@ void Project::buildPrivateResource()
         case ProjectType::DynamicLib:
             contents.append("FILETYPE VFT_DLL");
             break;
+        default:
+            break;
         }
         contents.append("{");
         contents.append("  BLOCK \"StringFileInfo\"");

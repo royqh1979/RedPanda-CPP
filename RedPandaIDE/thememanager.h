@@ -75,7 +75,9 @@ public:
 
     enum class ThemeType {
         JSON,
+#ifdef ENABLE_LUA_ADDON
         Lua,
+#endif
     };
 
     AppTheme(const QString& filename, ThemeType type, QObject* parent=nullptr);
