@@ -349,9 +349,19 @@ void CppSyntaxer::procCppStyleComment()
         return;
     }
     mTokenId = TokenId::Comment;
+    bool isWord = isIdentChar(mLine[mRun]);
     while (mRun<mLineSize) {
-        if (isSpaceChar(mLine[mRun]))
+        if (isSpaceChar(mLine[mRun])) {
             break;
+        } else {
+            if (isWord) {
+                if (!isIdentChar(mLine[mRun]))
+                    break;
+            } else {
+                if (isIdentChar(mLine[mRun]))
+                    break;
+            }
+        }
         mRun++;
     }
     if (mRun<mLineSize) {
@@ -364,48 +374,51 @@ void CppSyntaxer::procCppStyleComment()
 
 void CppSyntaxer::procDocstring()
 {
-    bool finishProcess = false;
     mTokenId = TokenId::Comment;
     if (mRun>=mLineSize) {
         procNull();
         return;
     }
+    bool isWord = isIdentChar(mLine[mRun]);
     while (mRun<mLineSize) {
-        switch(mLine[mRun].unicode()) {
-        case ' ':
-        case '\t':
-            return;
-        case '*':
+        if(isSpaceChar(mLine[mRun]))
+            break;
+        else if (mLine[mRun] == '*') {
             if (mRun+1<mLineSize && mLine[mRun+1] == '/') {
+                if (isWord)
+                    break;
                 mRun += 2;
                 mRange.state = RangeState::rsUnknown;
-                finishProcess = true;
-            } else
-                mRun+=1;
-            break;
-        default:
-            mRun+=1;
+                break;
+            }
+        } else {
+            if (isWord) {
+                if (!isIdentChar(mLine[mRun]))
+                    break;
+            } else {
+                if (isIdentChar(mLine[mRun]))
+                    break;
+            }
         }
-        if (finishProcess)
-            break;
+        mRun++;
     }
 }
 
 void CppSyntaxer::procAnsiCStyleComment()
 {
-    bool finishProcess = false;
     mTokenId = TokenId::Comment;
     if (mRun>=mLineSize) {
         procNull();
         return;
     }
+    bool isWord = isIdentChar(mLine[mRun]);
     while (mRun<mLineSize) {
-        switch(mLine[mRun].unicode()) {
-        case ' ':
-        case '\t':
-            return;
-        case '*':
+        if(isSpaceChar(mLine[mRun])) {
+            break;
+        } else if (mLine[mRun] == '*') {
             if (mRun+1<mLineSize && mLine[mRun+1] == '/') {
+                if (isWord)
+                    break;
                 mRun += 2;
                 if (mRange.state == RangeState::rsDirectiveComment &&
                             mRun<mLineSize && mLine[mRun]!='\r' && mLine[mRun]!='\n') {
@@ -413,15 +426,18 @@ void CppSyntaxer::procAnsiCStyleComment()
                 } else {
                     mRange.state = RangeState::rsUnknown;
                 }
-                finishProcess = true;
-            } else
-                mRun+=1;
-            break;
-        default:
-            mRun+=1;
+                break;
+            }
+        } else {
+            if (isWord) {
+                if (!isIdentChar(mLine[mRun]))
+                    break;
+            } else {
+                if (isIdentChar(mLine[mRun]))
+                    break;
+            }
         }
-        if (finishProcess)
-            break;
+        mRun++;
     }
 }
 
@@ -1126,9 +1142,7 @@ void CppSyntaxer::procSlash()
             if (mRun < mLineSize) {
                 if (mRange.state == RangeState::rsAnsiC && mLine[mRun] == '*' ) {
                     mRange.state = RangeState::rsDocstring;
-                    procDocstring();
-                } else
-                    procAnsiCStyleComment();
+                }
             }
             return;
         case '=':
@@ -1208,63 +1222,6 @@ void CppSyntaxer::procStar()
     }
 }
 
-//void CppSyntaxer::stringEndProc()
-//{
-//    mTokenId = TokenId::String;
-//    if (mRun>=mLineSize) {
-//        nullProc();
-//        return;
-//    }
-//    mRange.state = RangeState::rsUnknown;
-
-//    while (mRun<mLineSize) {
-//        if (mLine[mRun]=='"') {
-//            mRun += 1;
-//            break;
-//        } else if (isSpaceChar(mLine[mRun])) {
-//            mRange.state = RangeState::rsString;
-//            return;
-//        } else if (mLine[mRun]=='\\') {
-//            if (mRun == mLineSize-1) {
-//                mRun+=1;
-//                mRange.state = RangeState::rsMultiLineString;
-//                return;
-//            }
-//            if (mRun+1<mLineSize) {
-//                switch(mLine[mRun+1].unicode()) {
-//                case '\'':
-//                case '"':
-//                case '\\':
-//                case '?':
-//                case 'a':
-//                case 'b':
-//                case 'f':
-//                case 'n':
-//                case 'r':
-//                case 't':
-//                case 'v':
-//                case '0':
-//                case '1':
-//                case '2':
-//                case '3':
-//                case '4':
-//                case '5':
-//                case '6':
-//                case '7':
-//                case '8':
-//                case '9':
-//                case 'x':
-//                case 'u':
-//                case 'U':
-//                    mRange.state = RangeState::rsMultiLineStringEscapeSeq;
-//                    return;
-//                }
-//            }
-//        }
-//        mRun += 1;
-//    }
-//}
-
 void CppSyntaxer::procStringEscapeSeq()
 {
     mTokenId = TokenId::StringEscapeSeq;
@@ -1341,8 +1298,11 @@ void CppSyntaxer::procString()
         return;
     }
     mTokenId = TokenId::String;
+    bool isWord = isIdentChar(mLine[mRun]);
     while (mRun < mLineSize) {
         if (mLine[mRun]=='"') {
+            if (isWord)
+                break;
             mRun++;
             mRange.state = RangeState::rsUnknown;
             return;
@@ -1384,6 +1344,16 @@ void CppSyntaxer::procString()
                     return;
                 }
             }
+        } else {
+            if (isWord) {
+                if (!isIdentChar(mLine[mRun])) {
+                    break;
+                }
+            } else {
+                if (isIdentChar(mLine[mRun])) {
+                    break;
+                }
+            }
         }
         mRun+=1;
     }
@@ -1395,7 +1365,7 @@ void CppSyntaxer::procStringStart()
 {
     mTokenId = TokenId::String;
     mRange.state = RangeState::rsString;
-    mRun += 1;
+    mRun++; //skip \"
     if (mRun>=mLineSize) {
         mRange.state = RangeState::rsStringUnfinished;
         return;

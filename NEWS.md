@@ -103,6 +103,7 @@ Red Panda C++ Version 2.27
   - change: Don't turn on the code format option "indent class" by default.
   - enhancement: Add compiler set by choose the executable.
   - fix: Compile info for project doesn't have name of the project executable.
+  - enhancement: Highlight words in the string/comments.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
