@@ -768,14 +768,10 @@ void CodeCompletionPopup::getCompletionFor(
             PEvalStatement ownerStatement = mParser->evalExpression(fileName,
                                         ownerExpression,
                                         scope);
-//            qDebug()<<scopeName;
-//            qDebug()<<memberOperator;
-//            qDebug()<<memberExpression;
+
             if(!ownerStatement  || !ownerStatement->effectiveTypeStatement) {
-//                qDebug()<<"statement not found!";
                 return;
             }
-//            qDebug()<<"found: "<<ownerStatement->fullName;
             if (memberOperator == "::") {
                 if (ownerStatement->kind==EvalStatementKind::Namespace) {
                     //there might be many statements corresponding to one namespace;
