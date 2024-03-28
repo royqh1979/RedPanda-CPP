@@ -1,6 +1,0 @@
-####################################################################
-# Startup
-
-!define COMPILERNAME \"MinGW-w64 i686 GCC 8.1\"
-!define DEVCPP_VERSION \"$${APP_VERSION}\"
-

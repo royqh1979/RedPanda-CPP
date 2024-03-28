@@ -76,16 +76,10 @@ unix:!macos: {
 win32: {
     !isEmpty(PREFIX) {
         target.path = $${PREFIX}
-        QMAKE_SUBSTITUTES += platform/windows/installer-scripts/config.nsh.in
-        QMAKE_SUBSTITUTES += platform/windows/installer-scripts/config32.nsh.in
-        QMAKE_SUBSTITUTES += platform/windows/installer-scripts/config-clang.nsh.in
 
         resources.path = $${PREFIX}
 
         resources.files += platform/windows/templates
-        resources.files += platform/windows/installer-scripts/config.nsh
-        resources.files += platform/windows/installer-scripts/config32.nsh
-        resources.files += platform/windows/installer-scripts/config-clang.nsh
         resources.files += platform/windows/qt.conf
         resources.files += README.md
         resources.files += NEWS.md
