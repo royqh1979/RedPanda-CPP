@@ -180,6 +180,7 @@ cd "${PACKAGE_DIR}"
 cp "${SOURCE_DIR}/platform/windows/qt.conf" .
 
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/lang.nsh" .
+cp "${SOURCE_DIR}/platform/windows/installer-scripts/utils.nsh" .
 cp "${SOURCE_DIR}/platform/windows/installer-scripts/redpanda.nsi" .
 popd
 
@@ -198,6 +199,8 @@ nsis_flags=(
   -DFINALNAME="${SETUP_NAME}"
   -DMINGW32_COMPILER_NAME="${MINGW32_COMPILER_NAME}"
   -DMINGW64_COMPILER_NAME="${MINGW64_COMPILER_NAME}"
+  -DREQUIRED_WINDOWS_BUILD=7600
+  -DREQUIRED_WINDOWS_NAME="Windows 7"
 )
 if [[ ${COMPILER_MINGW32} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW32)
