@@ -11,7 +11,9 @@ function fn_print_help() {
                             (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64, CLANGARM64)
                             MUST be used before other options.
    -c, --clean              Clean build and package directories.
-   --mingw                  Build mingw integrated installer.
+   --mingw                  Alias for --mingw32 (x86 app) or --mingw64 (x64 app).
+   --mingw32                Build mingw32 integrated compiler.
+   --mingw64                Build mingw64 integrated compiler.
    -nd, --no-deps           Skip dependency check.
    -t, --target-dir <dir>   Set target directory for the packages."
 }
@@ -77,13 +79,31 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --mingw)
-      if [[ "${NSIS_ARCH}" == "x86" ]]; then
-		  compilers+=("mingw32")
-		  COMPILER_MINGW32=1
-      else
+      case "${NSIS_ARCH}" in
+        x86)
+          compilers+=("mingw32")
+          COMPILER_MINGW32=1
+          shift
+          ;;
+        x64)
           compilers+=("mingw64")
           COMPILER_MINGW64=1
-      fi
+          shift
+          ;;
+        *)
+          echo "ambiguous --mingw, please specify --mingw32 or --mingw64"
+          exit 1
+          ;;
+      esac
+      ;;
+    --mingw32)
+      compilers+=("mingw32")
+      COMPILER_MINGW32=1
+      shift
+      ;;
+    --mingw64)
+      compilers+=("mingw64")
+      COMPILER_MINGW64=1
       shift
       ;;
     -nd|--no-deps)
