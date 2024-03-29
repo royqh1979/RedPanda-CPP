@@ -1884,9 +1884,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                 && (
                     (attri->tokenType()==QSynedit::TokenType::Identifier)
                         || (attri->tokenType() == QSynedit::TokenType::Keyword)
-                        || (attri->tokenType() == QSynedit::TokenType::Preprocessor)
-                        || (attri->tokenType() == QSynedit::TokenType::String)
-                        || (attri->tokenType() == QSynedit::TokenType::Comment))
+                        || (attri->tokenType() == QSynedit::TokenType::Preprocessor))
                     && !token.isEmpty()
                     && isIdentStartChar(token[0])) {
                 mCurrentHighlightedWord = token;
