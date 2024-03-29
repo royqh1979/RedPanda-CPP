@@ -130,10 +130,10 @@ class SystemConsts
 public:
     SystemConsts();
     const QStringList& defaultFileFilters() const noexcept;
-    const QString& defaultCFileFilter() const noexcept;
-    const QString& defaultCPPFileFilter() const noexcept;
-    const QString& defaultAllFileFilter() const noexcept;
-    const QString& executableFileFilter() const noexcept;
+    QString defaultCFileFilter() const noexcept;
+    QString defaultCPPFileFilter() const noexcept;
+    QString defaultAllFileFilter() const noexcept;
+    QString executableFileFilter() const noexcept;
     QString fileFilterFor(const QString& suffix);
     void addDefaultFileFilter(const QString& name, const QString& fileExtensions);
     const QStringList &iconFileFilters() const;
