@@ -50,8 +50,8 @@
         "underlined": false
     },
     "Current Highlighted Word": {
-        "background": "#50005585",
         "bold": false,
+        "foreground": "#ffff3535",
         "italic": false,
         "strikeout": false,
         "underlined": false
