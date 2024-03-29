@@ -2,16 +2,19 @@
 
 set -euxo pipefail
 
-# Usage:
-#   packages/msys/build-mingw.sh [-m|--msystem <MSYSTEM>] [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
-# Options:
-#   -m, --msystem <MSYSTEM>  switch to other MSYS2 environment
-#                            (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64, CLANGARM64)
-#                            MUST be used before other options
-#   -c, --clean              clean build and package directories
-#   -nd, --no-deps           skip dependency check
-#   -t, --target-dir <dir>   set target directory for the packages
-
+function fn_print_help() {
+  echo " Usage:
+   packages/msys/build-mingw.sh [-m|--msystem <MSYSTEM>] [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
+ Options:
+   -h, --help               Display this information.
+   -m, --msystem <MSYSTEM>  Switch to other MSYS2 environment.
+                            (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64, CLANGARM64)
+                            MUST be used before other options.
+   -c, --clean              Clean build and package directories.
+   --mingw                  Build mingw integrated installer.
+   -nd, --no-deps           Skip dependency check.
+   -t, --target-dir <dir>   Set target directory for the packages."
+}
 source version.inc
 [[ -n "${APP_VERSION_SUFFIX}" ]] && APP_VERSION="${APP_VERSION}${APP_VERSION_SUFFIX}"
 
@@ -65,18 +68,22 @@ COMPILER_MINGW64=0
 TARGET_DIR="$(pwd)/dist"
 while [[ $# -gt 0 ]]; do
   case $1 in
+    -h|--help)
+      fn_print_help
+      exit 0
+      ;;
     -c|--clean)
       CLEAN=1
       shift
       ;;
-    --mingw32)
-      compilers+=("mingw32")
-      COMPILER_MINGW32=1
-      shift
-      ;;
-    --mingw64)
-      compilers+=("mingw64")
-      COMPILER_MINGW64=1
+    --mingw)
+      if [[ "${NSIS_ARCH}" == "x86" ]]; then
+		  compilers+=("mingw32")
+		  COMPILER_MINGW32=1
+      else
+          compilers+=("mingw64")
+          COMPILER_MINGW64=1
+      fi
       shift
       ;;
     -nd|--no-deps)
