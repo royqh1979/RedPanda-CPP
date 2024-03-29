@@ -4,6 +4,7 @@ SetFont "Segoe UI" 11
 Unicode True
 !define DISPLAY_NAME "Red Panda C++ ${APP_VERSION} (${ARCH})"
 
+!include "Integration.nsh"
 !include "LogicLib.nsh"
 !include "MUI2.nsh"
 !include "WinVer.nsh"
@@ -133,113 +134,89 @@ SubSection "$(SectionAssocsName)" SectionAssocs
 Section "$(SectionAssocExtNameBegin) .dev $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
-  StrCpy $0 ".dev"
-  Call BackupAssoc
-
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".dev" "" "DevCpp.dev"
   WriteRegStr HKCR "DevCpp.dev" "" "Dev-C++ Project File"
   WriteRegStr HKCR "DevCpp.dev\DefaultIcon" "" '$0,3'
   WriteRegStr HKCR "DevCpp.dev\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
+  ${NotifyShell_AssocChanged}
 SectionEnd
 
 Section "$(SectionAssocExtNameBegin) .c $(SectionAssocExtNameEnd)"
   SectionIn 1 3
-
-  StrCpy $0 ".c"
-  Call BackupAssoc
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".c" "" "DevCpp.c"
   WriteRegStr HKCR "DevCpp.c" "" "C Source File"
   WriteRegStr HKCR "DevCpp.c\DefaultIcon" "" '$0,4'
   WriteRegStr HKCR "DevCpp.c\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
+  ${NotifyShell_AssocChanged}
 SectionEnd
 
 Section "$(SectionAssocExtNameBegin) .cpp $(SectionAssocExtNameEnd)"
   SectionIn 1 3
-
-  StrCpy $0 ".cpp"
-  Call BackupAssoc
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cpp" "" "DevCpp.cpp"
   WriteRegStr HKCR "DevCpp.cpp" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cpp\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cpp\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
+  ${NotifyShell_AssocChanged}
 SectionEnd
 
 Section "$(SectionAssocExtNameBegin) .cxx $(SectionAssocExtNameEnd)"
   SectionIn 1 3
-
-  StrCpy $0 ".cxx"
-  Call BackupAssoc
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cxx" "" "DevCpp.cxx"
   WriteRegStr HKCR "DevCpp.cxx" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cxx\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cxx\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
+  ${NotifyShell_AssocChanged}
 SectionEnd
 
 Section "$(SectionAssocExtNameBegin) .cc $(SectionAssocExtNameEnd)"
   SectionIn 1 3
-
-  StrCpy $0 ".cc"
-  Call BackupAssoc
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cc" "" "DevCpp.cc"
   WriteRegStr HKCR "DevCpp.cc" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cc\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cc\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
+  ${NotifyShell_AssocChanged}
 SectionEnd
 
 Section "$(SectionAssocExtNameBegin) .hxx $(SectionAssocExtNameEnd)"
   SectionIn 1 3
-
-  StrCpy $0 ".hxx"
-  Call BackupAssoc
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".hxx" "" "DevCpp.hxx"
   WriteRegStr HKCR "DevCpp.hxx" "" "C++ Header File"
   WriteRegStr HKCR "DevCpp.hxx\DefaultIcon" "" '$0,7'
   WriteRegStr HKCR "DevCpp.hxx\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
+  ${NotifyShell_AssocChanged}
 SectionEnd
 
 Section "$(SectionAssocExtNameBegin) .h $(SectionAssocExtNameEnd)"
   SectionIn 1 3
-
-  StrCpy $0 ".h"
-  Call BackupAssoc
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".h" "" "DevCpp.h"
   WriteRegStr HKCR "DevCpp.h" "" "C Header File"
   WriteRegStr HKCR "DevCpp.h\DefaultIcon" "" '$0,6'
   WriteRegStr HKCR "DevCpp.h\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
+  ${NotifyShell_AssocChanged}
 SectionEnd
 
 Section "$(SectionAssocExtNameBegin) .hpp $(SectionAssocExtNameEnd)"
   SectionIn 1 3
-
-  StrCpy $0 ".hpp"
-  Call BackupAssoc
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".hpp" "" "DevCpp.hpp"
   WriteRegStr HKCR "DevCpp.hpp" "" "C++ Header File"
   WriteRegStr HKCR "DevCpp.hpp\DefaultIcon" "" '$0,7'
   WriteRegStr HKCR "DevCpp.hpp\Shell\Open\Command" "" '$0 "%1"'
-  Call RefreshShellIcons
+  ${NotifyShell_AssocChanged}
 SectionEnd
 
 SubSectionEnd
@@ -332,25 +309,6 @@ Function myGuiInit
   !insertmacro SectionAction_CheckMingw64
 FunctionEnd
 
-;backup file association
-Function BackupAssoc
-  ;$0 is an extension - for example ".dev"
-
-  ;check if backup already exists
-  ReadRegStr $1 ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0" 
-  ;don't backup if backup exists in registry
-  StrCmp $1 "" 0 no_assoc
-
-  ReadRegStr $1 HKCR "$0" ""
-  ;don't backup dev-cpp associations
-  StrCmp $1 "DevCpp$0" no_assoc
-
-  StrCmp $1 "" no_assoc
-    WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0" "$1"
-  no_assoc:
-  
-FunctionEnd
-
 Function un.onInit
   !insertmacro MUI_UNGETLANGUAGE
 
@@ -362,36 +320,11 @@ Function un.onInit
   !endif
 FunctionEnd
 
-;restore file association
-Function un.RestoreAssoc
-  ;$0 is an extension - for example ".dev"
-
-  DeleteRegKey HKCR "$0"
-  ReadRegStr $1 ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++\Backup" "$0"
-  StrCmp $1 "" no_backup
-    WriteRegStr HKCR "$0" "" "$1"
-    Call un.RefreshShellIcons
-  no_backup:
-  
-FunctionEnd
-
 ;http://nsis.sourceforge.net/archive/viewpage.php?pageid=202
 ;After changing file associations, you can call this macro to refresh the shell immediatly. 
 ;It calls the shell32 function SHChangeNotify. This will force windows to reload your changes from the registry.
 !define SHCNE_ASSOCCHANGED 0x08000000
 !define SHCNF_IDLIST 0
-
-Function RefreshShellIcons
-  ; By jerome tremblay - april 2003
-  System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v \
-  (${SHCNE_ASSOCCHANGED}, ${SHCNF_IDLIST}, 0, 0)'
-FunctionEnd
-
-Function un.RefreshShellIcons
-  ; By jerome tremblay - april 2003
-  System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v \
-  (${SHCNE_ASSOCCHANGED}, ${SHCNF_IDLIST}, 0, 0)'
-FunctionEnd
 
 Function un.DeleteDirIfEmpty
   FindFirst $R0 $R1 "$0\*.*"
@@ -481,18 +414,6 @@ Section "Uninstall"
   Delete "$QUICKLAUNCH\$(MessageAppName).lnk"
   Delete "$DESKTOP\$(MessageAppName).lnk"
 
-  ; Restore file associations
-  StrCpy $0 ".dev"
-  Call un.RestoreAssoc
-  StrCpy $0 ".c"
-  Call un.RestoreAssoc
-  StrCpy $0 ".cpp"
-  Call un.RestoreAssoc
-  StrCpy $0 ".h"
-  Call un.RestoreAssoc
-  StrCpy $0 ".hpp"
-  Call un.RestoreAssoc
- 
   DeleteRegKey HKCR "DevCpp.dev"
   DeleteRegKey HKCR "DevCpp.c"
   DeleteRegKey HKCR "DevCpp.cpp"
@@ -501,7 +422,7 @@ Section "Uninstall"
   DeleteRegKey HKCR "DevCpp.h"
   DeleteRegKey HKCR "DevCpp.hpp"
   DeleteRegKey HKCR "DevCpp.hxx"
-
+  ${NotifyShell_AssocChanged}
 
   Delete "$INSTDIR\NEWS.md"
   Delete "$INSTDIR\RedPandaIDE.exe"
