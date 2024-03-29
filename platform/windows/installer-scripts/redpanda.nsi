@@ -243,6 +243,11 @@ SectionEnd
 
 SubSectionEnd
 
+Section "$(SectionCompressName)" SectionCompress
+  DetailPrint "$(MessageCompressing)"
+  ExecWait '$SYSDIR\compact.exe /C /S /F /EXE:XPRESS16K "$INSTDIR\*"'
+SectionEnd
+
 Section "$(SectionConfigName)" SectionConfig
   SectionIn 3
 
@@ -262,6 +267,7 @@ SectionEnd
 !endif
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionCompress}    "$(MessageSectionCompress)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionConfig}      "$(MessageSectionConfig)"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
@@ -288,6 +294,7 @@ FunctionEnd
 
 Function .onSelChange
   !insertmacro SectionAction_CheckMingw64
+  !insertmacro SectionAction_CheckCompress
 FunctionEnd
 
 Function myGuiInit
@@ -307,6 +314,7 @@ Function myGuiInit
   !endif
 
   !insertmacro SectionAction_CheckMingw64
+  !insertmacro SectionAction_CheckCompress
 FunctionEnd
 
 Function un.onInit
