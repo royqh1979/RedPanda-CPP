@@ -650,6 +650,7 @@ private:
 
 
 private slots:
+    void onMaxLineWidthChanged();
     void onBookMarkOptionsChanged();
     void onGutterChanged();
     void onLinesChanged();

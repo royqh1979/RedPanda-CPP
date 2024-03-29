@@ -41,6 +41,8 @@
 #include <QTextEdit>
 #include <QMimeData>
 
+#define MAX_LINE_WIDTH_CHANGED_EVENT ((QEvent::Type)(QEvent::User+1))
+
 namespace QSynedit {
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mEditingCount{0},
@@ -70,7 +72,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
     connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
-            this, &QSynEdit::updateHScrollbar);
+            this, &QSynEdit::onMaxLineWidthChanged);
     connect(mDocument.get(), &Document::cleared, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
@@ -1741,6 +1743,12 @@ QString QSynEdit::getDisplayStringAtLine(int line) const
         return s+mSyntaxer->foldString(s);
     }
     return s;
+}
+
+void QSynEdit::onMaxLineWidthChanged()
+{
+    QEvent * event = new QEvent(MAX_LINE_WIDTH_CHANGED_EVENT);
+    qApp->postEvent(this,event);
 }
 
 void QSynEdit::doDeleteLastChar()
@@ -5952,6 +5960,9 @@ void QSynEdit::timerEvent(QTimerEvent *event)
 bool QSynEdit::event(QEvent *event)
 {
     switch(event->type()) {
+    case MAX_LINE_WIDTH_CHANGED_EVENT:
+        updateHScrollbar();
+        break;
     case QEvent::KeyPress:{
         QKeyEvent* keyEvent = static_cast<QKeyEvent *>(event);
         if(keyEvent->key() == Qt::Key_Tab || keyEvent->key() == Qt::Key_Backtab)
