@@ -104,12 +104,21 @@ Section "$(SectionMainName)" SectionMain
 
 SectionEnd
 
-!ifdef HAVE_MINGW
-  Section "$(SectionMinGWName)" SectionMinGW
+!ifdef HAVE_MINGW32
+  Section "$(SectionMinGW32Name)" SectionMinGW32
     SectionIn 1 3
-    SetOutPath $INSTDIR\${COMPILERFOLDER}
+    SetOutPath $INSTDIR
 
-    File /nonfatal /r "${COMPILERFOLDER}\*"
+    File /nonfatal /r "mingw32"
+  SectionEnd
+!endif
+
+!ifdef HAVE_MINGW64
+  Section "$(SectionMinGW64Name)" SectionMinGW64
+    SectionIn 1 3
+    SetOutPath $INSTDIR
+
+    File /nonfatal /r "mingw64"
   SectionEnd
 !endif
 
@@ -263,8 +272,11 @@ SectionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionMain}        "$(MessageSectionMain)"
-!ifdef HAVE_MINGW
-  !insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW}      "$(MessageSectionMinGW)"
+!ifdef HAVE_MINGW32
+  !insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW32}      "$(MessageSectionMinGW32)"
+!endif
+!ifdef HAVE_MINGW64
+  !insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW64}      "$(MessageSectionMinGW64)"
 !endif
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
@@ -488,9 +500,8 @@ Section "Uninstall"
 
   RMDir /r "$INSTDIR\Lang"
   RMDir /r "$INSTDIR\Templates"
-  RMDir /r "$INSTDIR\MinGW32"
-  RMDir /r "$INSTDIR\MinGW64"
-  RMDir /r "$INSTDIR\Clang64"
+  RMDir /r "$INSTDIR\mingw32"
+  RMDir /r "$INSTDIR\mingw64"
 
   StrCpy $0 "$INSTDIR"
   Call un.DeleteDirIfEmpty
