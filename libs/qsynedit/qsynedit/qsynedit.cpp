@@ -287,7 +287,7 @@ int QSynEdit::maxScrollWidth() const
 {
     int maxWidth = mDocument->maxLineWidth();
     if (maxWidth <= 0)
-        return INT_MAX; //all inlines invalid. Next paintEvent() will update it.
+        return maxWidth; //all inlines invalid. Next paintEvent() will update it.
     if (useCodeFolding())
         maxWidth += stringWidth(syntaxer()->foldString(""),maxWidth);
     if (mOptions.testFlag(eoScrollPastEol))
@@ -3090,6 +3090,8 @@ void QSynEdit::updateHScrollbar()
             if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
                 nMin = 0;
                 nMax = maxScrollWidth();
+                if (nMax<=0)
+                    return;
                 nPage = viewWidth();
                 nPos = mLeftPos;
                 horizontalScrollBar()->setMinimum(nMin);
@@ -3340,8 +3342,8 @@ void QSynEdit::uncollapse(PCodeFoldingRange FoldRange)
 
     // Redraw fold mark
     invalidateGutterLines(FoldRange->fromLine, INT_MAX);
-    updateVScrollbar();
     updateHScrollbar();
+    updateVScrollbar();
 }
 
 void QSynEdit::collapse(PCodeFoldingRange FoldRange)
