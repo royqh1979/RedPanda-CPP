@@ -46,8 +46,6 @@ void QSynEditPainter::paintEditingArea(const QRect& clip)
         nRightEdge = mEdit->textOffset()+ mEdit->mRightEdge * mEdit->mCharWidth; // pixel value
         if (nRightEdge >= mClip.left() &&nRightEdge <= mClip.right()) {
             bDoRightEdge = true;
-            QPen pen(mEdit->mRightEdgeColor,1);
-            mPainter->setPen(pen);
         }
     }
 
