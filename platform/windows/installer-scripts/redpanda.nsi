@@ -4,8 +4,13 @@ SetFont "Segoe UI" 11
 Unicode True
 !define DISPLAY_NAME "Red Panda C++ ${APP_VERSION} (${ARCH})"
 
+!include "LogicLib.nsh"
 !include "MUI2.nsh"
+!include "WinVer.nsh"
+!include "x64.nsh"
+
 !include "lang.nsh"
+!include "utils.nsh"
 
 !define MUI_CUSTOMFUNCTION_GUIINIT myGuiInit
 
@@ -288,6 +293,7 @@ SectionEnd
 
 Function .onInit
   !insertmacro MUI_LANGDLL_DISPLAY
+  !insertmacro DetectOsArch
 
   IfFileExists "C:\Dev-Cpp\devcpp.exe" 0 +2
     SectionSetFlags ${SectionConfig} ${SF_SELECTED} # Remove old Dev-Cpp config files
@@ -303,7 +309,13 @@ Function .onInit
   !endif
 FunctionEnd
 
+Function .onSelChange
+  !insertmacro SectionAction_CheckMingw64
+FunctionEnd
+
 Function myGuiInit
+  !insertmacro CheckOsArch
+  !insertmacro CheckOsBuild
 
   ; uninstall existing
   SetRegView 32
@@ -316,6 +328,8 @@ Function myGuiInit
   !else
     SetRegView 64
   !endif
+
+  !insertmacro SectionAction_CheckMingw64
 FunctionEnd
 
 ;backup file association

@@ -24,6 +24,11 @@ LangString SectionMenuLaunchName 1033  "Create Start Menu shortcuts"
 LangString SectionDesktopLaunchName 1033  "Create Desktop shortcut" 
 LangString SectionConfigName 1033  "Remove old configuration files" 
 
+LangString ErrorArchMismatch 1033 "Architecture mismatch. This package is for ${ARCH}, but the operating system is $osArch."
+LangString ErrorWindowsBuildRequired 1033 "Unsupported operating system. ${REQUIRED_WINDOWS_NAME} (${REQUIRED_WINDOWS_BUILD}) or later is required."
+
+LangString WarningArchMismatch 1033 "Note: installing Red Panda C++ for ${ARCH} on $osArch OS. You may want to install native build instead."
+
 /*  Simplified Chinese 2052 */
 LangString MessageAppName 2052 "小熊猫C++"
 LangString MessageSectionMain 2052 "小熊猫C++ IDE (集成开发环境)"
@@ -49,3 +54,8 @@ LangString SectionShortcutsName 2052  "快捷方式"
 LangString SectionMenuLaunchName 2052  "创建开始菜单程序项" 
 LangString SectionDesktopLaunchName 2052  "创建桌面快捷方式" 
 LangString SectionConfigName 2052  "删除原有配置文件" 
+
+LangString ErrorArchMismatch 2052 "架构不匹配。此软件包适用于 ${ARCH}，但操作系统是 $osArch。"
+LangString ErrorWindowsBuildRequired 2052 "不支持的操作系统。需要 ${REQUIRED_WINDOWS_NAME} (${REQUIRED_WINDOWS_BUILD}) 或更高版本。"
+
+LangString WarningArchMismatch 2052 "注意：在 $osArch 操作系统上安装小熊猫 C++ ${ARCH} 版本。你可能想要安装本机版本。"
