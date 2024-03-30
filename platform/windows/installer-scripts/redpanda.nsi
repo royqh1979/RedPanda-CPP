@@ -7,12 +7,24 @@ Unicode True
 !define APP_NAME_ZH_CN "小熊猫 C++"
 !define DISPLAY_NAME "$(StrAppName) ${APP_VERSION} (${ARCH})"
 
+!define INSTALL_NAME "RedPanda-Cpp"
 !define REGISTRY_PROGRAM_ID "RedPanda-C++"
 !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${REGISTRY_PROGRAM_ID}"
+
+!define MULTIUSER_EXECUTIONLEVEL Highest
+!define MULTIUSER_INSTALLMODE_COMMANDLINE
+!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY  "${UNINSTKEY}"
+!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_VALUENAME "CurrentUser"
+!define MULTIUSER_INSTALLMODE_INSTDIR "${INSTALL_NAME}"
+!define MULTIUSER_MUI
+!if "${ARCH}" != "x86"
+  !define MULTIUSER_USE_PROGRAMFILES64
+!endif
 
 !include "Integration.nsh"
 !include "LogicLib.nsh"
 !include "MUI2.nsh"
+!include "MultiUser.nsh"
 !include "WinVer.nsh"
 !include "WordFunc.nsh"
 !include "x64.nsh"
@@ -30,11 +42,7 @@ OutFile "${FINALNAME}"
 Caption "${DISPLAY_NAME}"
 
 LicenseData "LICENSE"
-!if "${ARCH}" == "x86"
-  InstallDir $PROGRAMFILES\RedPanda-Cpp
-!else
-  InstallDir $PROGRAMFILES64\RedPanda-Cpp
-!endif
+
 ####################################################################
 # Interface Settings
 
@@ -54,11 +62,6 @@ InstType "$(StrInstTypeFull)"    ;1
 InstType "$(StrInstTypeMinimal)" ;2
 InstType "$(StrInstTypeSafe)"    ;3
 
-## Remember the installer language
-!define MUI_LANGDLL_REGISTRY_ROOT "ShCtx"
-!define MUI_LANGDLL_REGISTRY_KEY "Software\RedPanda-C++"
-!define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
-
 ####################################################################
 # Pages
 
@@ -71,6 +74,7 @@ InstType "$(StrInstTypeSafe)"    ;3
 !define MUI_COMPONENTSPAGE_SMALLDESC
 
 !insertmacro MUI_PAGE_LICENSE "LICENSE"
+!insertmacro MULTIUSER_PAGE_INSTALLMODE
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -108,7 +112,7 @@ Section "$(SectionMainName)" SectionMain
   WriteRegStr ShCtx "${UNINSTKEY}" "DisplayVersion" "${APP_VERSION}"
   WriteRegStr ShCtx "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
   WriteRegStr ShCtx "${UNINSTKEY}" "Publisher" "Roy Qu (royqh1979@gmail.com)"
-
+  WriteRegStr ShCtx "${UNINSTKEY}" "$MultiUser.InstallMode" "1"
 
   ; Write required files
   File "RedPandaIDE.exe"
@@ -151,10 +155,10 @@ Section "$(SectionAssocExtNameBegin) .dev $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
-  WriteRegStr HKCR ".dev" "" "DevCpp.dev"
-  WriteRegStr HKCR "DevCpp.dev" "" "$(StrAppName) $(StrProjectFile)"
-  WriteRegStr HKCR "DevCpp.dev\DefaultIcon" "" '$0,3'
-  WriteRegStr HKCR "DevCpp.dev\Shell\Open\Command" "" '$0 "%1"'
+  WriteRegStr ShCtx "Software\Classes\.dev" "" "DevCpp.dev"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.dev" "" "$(StrAppName) $(StrProjectFile)"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.dev\DefaultIcon" "" '$0,3'
+  WriteRegStr ShCtx "Software\Classes\DevCpp.dev\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
@@ -162,10 +166,10 @@ Section "$(SectionAssocExtNameBegin) .c $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
-  WriteRegStr HKCR ".c" "" "DevCpp.c"
-  WriteRegStr HKCR "DevCpp.c" "" "C $(StrSourceFile)"
-  WriteRegStr HKCR "DevCpp.c\DefaultIcon" "" '$0,4'
-  WriteRegStr HKCR "DevCpp.c\Shell\Open\Command" "" '$0 "%1"'
+  WriteRegStr ShCtx "Software\Classes\.c" "" "DevCpp.c"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.c" "" "C $(StrSourceFile)"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.c\DefaultIcon" "" '$0,4'
+  WriteRegStr ShCtx "Software\Classes\DevCpp.c\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
@@ -173,10 +177,10 @@ Section "$(SectionAssocExtNameBegin) .cpp $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
-  WriteRegStr HKCR ".cpp" "" "DevCpp.cpp"
-  WriteRegStr HKCR "DevCpp.cpp" "" "C++ $(StrSourceFile)"
-  WriteRegStr HKCR "DevCpp.cpp\DefaultIcon" "" '$0,5'
-  WriteRegStr HKCR "DevCpp.cpp\Shell\Open\Command" "" '$0 "%1"'
+  WriteRegStr ShCtx "Software\Classes\.cpp" "" "DevCpp.cpp"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cpp" "" "C++ $(StrSourceFile)"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cpp\DefaultIcon" "" '$0,5'
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cpp\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
@@ -184,10 +188,10 @@ Section "$(SectionAssocExtNameBegin) .cxx $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
-  WriteRegStr HKCR ".cxx" "" "DevCpp.cxx"
-  WriteRegStr HKCR "DevCpp.cxx" "" "C++ $(StrSourceFile)"
-  WriteRegStr HKCR "DevCpp.cxx\DefaultIcon" "" '$0,5'
-  WriteRegStr HKCR "DevCpp.cxx\Shell\Open\Command" "" '$0 "%1"'
+  WriteRegStr ShCtx "Software\Classes\.cxx" "" "DevCpp.cxx"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cxx" "" "C++ $(StrSourceFile)"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cxx\DefaultIcon" "" '$0,5'
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cxx\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
@@ -195,10 +199,10 @@ Section "$(SectionAssocExtNameBegin) .cc $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
-  WriteRegStr HKCR ".cc" "" "DevCpp.cc"
-  WriteRegStr HKCR "DevCpp.cc" "" "C++ $(StrSourceFile)"
-  WriteRegStr HKCR "DevCpp.cc\DefaultIcon" "" '$0,5'
-  WriteRegStr HKCR "DevCpp.cc\Shell\Open\Command" "" '$0 "%1"'
+  WriteRegStr ShCtx "Software\Classes\.cc" "" "DevCpp.cc"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cc" "" "C++ $(StrSourceFile)"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cc\DefaultIcon" "" '$0,5'
+  WriteRegStr ShCtx "Software\Classes\DevCpp.cc\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
@@ -206,10 +210,10 @@ Section "$(SectionAssocExtNameBegin) .hxx $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
-  WriteRegStr HKCR ".hxx" "" "DevCpp.hxx"
-  WriteRegStr HKCR "DevCpp.hxx" "" "C++ $(StrHeaderFile)"
-  WriteRegStr HKCR "DevCpp.hxx\DefaultIcon" "" '$0,7'
-  WriteRegStr HKCR "DevCpp.hxx\Shell\Open\Command" "" '$0 "%1"'
+  WriteRegStr ShCtx "Software\Classes\.hxx" "" "DevCpp.hxx"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.hxx" "" "C++ $(StrHeaderFile)"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.hxx\DefaultIcon" "" '$0,7'
+  WriteRegStr ShCtx "Software\Classes\DevCpp.hxx\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
@@ -217,10 +221,10 @@ Section "$(SectionAssocExtNameBegin) .h $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
-  WriteRegStr HKCR ".h" "" "DevCpp.h"
-  WriteRegStr HKCR "DevCpp.h" "" "C $(StrHeaderFile)"
-  WriteRegStr HKCR "DevCpp.h\DefaultIcon" "" '$0,6'
-  WriteRegStr HKCR "DevCpp.h\Shell\Open\Command" "" '$0 "%1"'
+  WriteRegStr ShCtx "Software\Classes\.h" "" "DevCpp.h"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.h" "" "C $(StrHeaderFile)"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.h\DefaultIcon" "" '$0,6'
+  WriteRegStr ShCtx "Software\Classes\DevCpp.h\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
@@ -228,10 +232,10 @@ Section "$(SectionAssocExtNameBegin) .hpp $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
-  WriteRegStr HKCR ".hpp" "" "DevCpp.hpp"
-  WriteRegStr HKCR "DevCpp.hpp" "" "C++ $(StrHeaderFile)"
-  WriteRegStr HKCR "DevCpp.hpp\DefaultIcon" "" '$0,7'
-  WriteRegStr HKCR "DevCpp.hpp\Shell\Open\Command" "" '$0 "%1"'
+  WriteRegStr ShCtx "Software\Classes\.hpp" "" "DevCpp.hpp"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.hpp" "" "C++ $(StrHeaderFile)"
+  WriteRegStr ShCtx "Software\Classes\DevCpp.hpp\DefaultIcon" "" '$0,7'
+  WriteRegStr ShCtx "Software\Classes\DevCpp.hpp\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
@@ -291,6 +295,7 @@ SectionEnd
 # Functions, utilities
 
 Function .onInit
+  !insertmacro MULTIUSER_INIT
   !insertmacro MUI_LANGDLL_DISPLAY
   !insertmacro DetectOsArch
 
@@ -323,6 +328,7 @@ Function myGuiInit
 FunctionEnd
 
 Function un.onInit
+  !insertmacro MULTIUSER_UNINIT
   !insertmacro MUI_UNGETLANGUAGE
 
   SetShellVarContext all
@@ -395,14 +401,14 @@ Section "Uninstall"
   Delete "$DESKTOP\${APP_NAME_EN}.lnk"
   Delete "$DESKTOP\${APP_NAME_ZH_CN}.lnk"
 
-  DeleteRegKey HKCR "DevCpp.dev"
-  DeleteRegKey HKCR "DevCpp.c"
-  DeleteRegKey HKCR "DevCpp.cpp"
-  DeleteRegKey HKCR "DevCpp.cxx"
-  DeleteRegKey HKCR "DevCpp.cc"
-  DeleteRegKey HKCR "DevCpp.h"
-  DeleteRegKey HKCR "DevCpp.hpp"
-  DeleteRegKey HKCR "DevCpp.hxx"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.dev"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.c"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.cpp"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.cxx"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.cc"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.h"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.hpp"
+  DeleteRegKey ShCtx "Software\Classes\DevCpp.hxx"
   ${NotifyShell_AssocChanged}
 
   Delete "$INSTDIR\NEWS.md"
