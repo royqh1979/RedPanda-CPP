@@ -1,20 +1,13 @@
-﻿####################################################################
+####################################################################
 # Startup
 SetFont "Segoe UI" 11
 Unicode True
-
-!define APP_NAME_EN "Red Panda C++"
-!define APP_NAME_ZH_CN "小熊猫 C++"
-!define DISPLAY_NAME "$(StrAppName) ${APP_VERSION} (${ARCH})"
-
-!define REGISTRY_PROGRAM_ID "RedPanda-C++"
-!define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${REGISTRY_PROGRAM_ID}"
+!define DISPLAY_NAME "Red Panda C++ ${APP_VERSION} (${ARCH})"
 
 !include "Integration.nsh"
 !include "LogicLib.nsh"
 !include "MUI2.nsh"
 !include "WinVer.nsh"
-!include "WordFunc.nsh"
 !include "x64.nsh"
 
 !include "lang.nsh"
@@ -50,9 +43,9 @@ XPStyle on
 
 ManifestDPIAware true
 
-InstType "$(StrInstTypeFull)"    ;1
-InstType "$(StrInstTypeMinimal)" ;2
-InstType "$(StrInstTypeSafe)"    ;3
+InstType "Full";1
+InstType "Minimal";2
+InstType "Safe";3
 
 ## Remember the installer language
 !define MUI_LANGDLL_REGISTRY_ROOT "ShCtx"
@@ -85,13 +78,6 @@ InstType "$(StrInstTypeSafe)"    ;3
 !insertmacro MUI_LANGUAGE "SimpChinese"
 
 ####################################################################
-# Silently uninstall previous version
-
-Section "" SecUninstallPrevious
-  !insertmacro CheckPreviousInstaller
-SectionEnd
-
-####################################################################
 # Files, by option section
 
 Section "$(SectionMainName)" SectionMain
@@ -101,13 +87,11 @@ Section "$(SectionMainName)" SectionMain
 
   ; Allways create an uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
-  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayName" "$(StrAppName) (${ARCH})"
-  WriteRegStr ShCtx "${UNINSTKEY}" "InstallLocation" "$INSTDIR"
-  WriteRegStr ShCtx "${UNINSTKEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegStr ShCtx "${UNINSTKEY}" "QuietUninstallString" '"$INSTDIR\uninstall.exe" /S'
-  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayVersion" "${APP_VERSION}"
-  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
-  WriteRegStr ShCtx "${UNINSTKEY}" "Publisher" "Roy Qu (royqh1979@gmail.com)"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Redpanda-C++"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString" "$INSTDIR\uninstall.exe"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${APP_VERSION}"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
+  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "Publisher" "Roy Qu(royqh1979@gmail.com)"
 
 
   ; Write required files
@@ -146,13 +130,13 @@ SectionEnd
 
 ####################################################################
 # File association
-SectionGroup "$(SectionAssocsName)" SectionAssocs
+SubSection "$(SectionAssocsName)" SectionAssocs
 Section "$(SectionAssocExtNameBegin) .dev $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".dev" "" "DevCpp.dev"
-  WriteRegStr HKCR "DevCpp.dev" "" "$(StrAppName) $(StrProjectFile)"
+  WriteRegStr HKCR "DevCpp.dev" "" "Dev-C++ Project File"
   WriteRegStr HKCR "DevCpp.dev\DefaultIcon" "" '$0,3'
   WriteRegStr HKCR "DevCpp.dev\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -163,7 +147,7 @@ Section "$(SectionAssocExtNameBegin) .c $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".c" "" "DevCpp.c"
-  WriteRegStr HKCR "DevCpp.c" "" "C $(StrSourceFile)"
+  WriteRegStr HKCR "DevCpp.c" "" "C Source File"
   WriteRegStr HKCR "DevCpp.c\DefaultIcon" "" '$0,4'
   WriteRegStr HKCR "DevCpp.c\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -174,7 +158,7 @@ Section "$(SectionAssocExtNameBegin) .cpp $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cpp" "" "DevCpp.cpp"
-  WriteRegStr HKCR "DevCpp.cpp" "" "C++ $(StrSourceFile)"
+  WriteRegStr HKCR "DevCpp.cpp" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cpp\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cpp\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -185,7 +169,7 @@ Section "$(SectionAssocExtNameBegin) .cxx $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cxx" "" "DevCpp.cxx"
-  WriteRegStr HKCR "DevCpp.cxx" "" "C++ $(StrSourceFile)"
+  WriteRegStr HKCR "DevCpp.cxx" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cxx\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cxx\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -196,7 +180,7 @@ Section "$(SectionAssocExtNameBegin) .cc $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cc" "" "DevCpp.cc"
-  WriteRegStr HKCR "DevCpp.cc" "" "C++ $(StrSourceFile)"
+  WriteRegStr HKCR "DevCpp.cc" "" "C++ Source File"
   WriteRegStr HKCR "DevCpp.cc\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cc\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -207,7 +191,7 @@ Section "$(SectionAssocExtNameBegin) .hxx $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".hxx" "" "DevCpp.hxx"
-  WriteRegStr HKCR "DevCpp.hxx" "" "C++ $(StrHeaderFile)"
+  WriteRegStr HKCR "DevCpp.hxx" "" "C++ Header File"
   WriteRegStr HKCR "DevCpp.hxx\DefaultIcon" "" '$0,7'
   WriteRegStr HKCR "DevCpp.hxx\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -218,7 +202,7 @@ Section "$(SectionAssocExtNameBegin) .h $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".h" "" "DevCpp.h"
-  WriteRegStr HKCR "DevCpp.h" "" "C $(StrHeaderFile)"
+  WriteRegStr HKCR "DevCpp.h" "" "C Header File"
   WriteRegStr HKCR "DevCpp.h\DefaultIcon" "" '$0,6'
   WriteRegStr HKCR "DevCpp.h\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -229,40 +213,35 @@ Section "$(SectionAssocExtNameBegin) .hpp $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".hpp" "" "DevCpp.hpp"
-  WriteRegStr HKCR "DevCpp.hpp" "" "C++ $(StrHeaderFile)"
+  WriteRegStr HKCR "DevCpp.hpp" "" "C++ Header File"
   WriteRegStr HKCR "DevCpp.hpp\DefaultIcon" "" '$0,7'
   WriteRegStr HKCR "DevCpp.hpp\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
 SectionEnd
 
-SectionGroupEnd
+SubSectionEnd
 
 ####################################################################
 # Shortcuts
-SectionGroup "$(SectionShortcutsName)" SectionShortcuts
+SubSection "$(SectionShortcutsName)" SectionShortcuts
 
 Section "$(SectionMenuLaunchName)" SectionMenuLaunch
   SectionIn 1 3
 
   StrCpy $0 $SMPROGRAMS ; start menu Programs folder
-  CreateDirectory "$0\$(StrAppName)"
-  CreateShortCut "$0\$(StrAppName)\$(StrAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
-  CreateShortCut "$0\$(StrAppName)\License.lnk" "$INSTDIR\LICENSE"
-  CreateShortCut "$0\$(StrAppName)\$(StrUninstallerAppName).lnk" "$INSTDIR\uninstall.exe"
+  CreateDirectory "$0\$(MessageAppName)"
+  CreateShortCut "$0\$(MessageAppName)\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
+  CreateShortCut "$0\$(MessageAppName)\License.lnk" "$INSTDIR\LICENSE"
+  CreateShortCut "$0\$(MessageAppName)\Uninstall $(MessageAppName).lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
 Section "$(SectionDesktopLaunchName)" SectionDesktopLaunch
   SectionIn 1 3
 
-  CreateShortCut "$DESKTOP\$(StrAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
+  CreateShortCut "$DESKTOP\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
 SectionEnd
 
-SectionGroupEnd
-
-Section "$(SectionCompressName)" SectionCompress
-  DetailPrint "$(MessageCompressing)"
-  ExecWait '$SYSDIR\compact.exe /C /S /F /EXE:XPRESS16K "$INSTDIR\*"'
-SectionEnd
+SubSectionEnd
 
 Section "$(SectionConfigName)" SectionConfig
   SectionIn 3
@@ -283,7 +262,6 @@ SectionEnd
 !endif
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
-!insertmacro MUI_DESCRIPTION_TEXT ${SectionCompress}    "$(MessageSectionCompress)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionConfig}      "$(MessageSectionConfig)"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
@@ -310,16 +288,25 @@ FunctionEnd
 
 Function .onSelChange
   !insertmacro SectionAction_CheckMingw64
-  !insertmacro SectionAction_CheckCompress
 FunctionEnd
 
 Function myGuiInit
   !insertmacro CheckOsArch
   !insertmacro CheckOsBuild
-  !insertmacro CheckV2Installer
+
+  ; uninstall existing
+  SetRegView 32
+  Call UninstallExisting
+  SetRegView 64
+  Call UninstallExisting
+
+  !if "${ARCH}" == "x86"
+    SetRegView 32
+  !else
+    SetRegView 64
+  !endif
 
   !insertmacro SectionAction_CheckMingw64
-  !insertmacro SectionAction_CheckCompress
 FunctionEnd
 
 Function un.onInit
@@ -333,45 +320,77 @@ Function un.onInit
   !endif
 FunctionEnd
 
-Var /GLOBAL uninstallString
-Var /GLOBAL installLocation
-Var /GLOBAL oldVersion
-Var /GLOBAL versionCompareResult
+;http://nsis.sourceforge.net/archive/viewpage.php?pageid=202
+;After changing file associations, you can call this macro to refresh the shell immediatly. 
+;It calls the shell32 function SHChangeNotify. This will force windows to reload your changes from the registry.
+!define SHCNE_ASSOCCHANGED 0x08000000
+!define SHCNF_IDLIST 0
 
-Function UninstallExisting
-  ReadRegStr $uninstallString ShCtx  "${UNINSTKEY}"  "UninstallString"
-  ${If} $uninstallString != ""
-    ReadRegStr $installLocation ShCtx  "${UNINSTKEY}"  "InstallLocation"
-    DetailPrint "$(MessageUninstallingExisting)"
-    ; uninstallString already quoted; NSIS requires installLocation unquoted
-    ExecWait '$uninstallString /S _?=$installLocation'
-    Delete "$uninstallString"
-    RMDir "$installLocation"
-  ${EndIf}
+Function un.DeleteDirIfEmpty
+  FindFirst $R0 $R1 "$0\*.*"
+  strcmp $R1 "." 0 NoDelete
+   FindNext $R0 $R1
+   strcmp $R1 ".." 0 NoDelete
+    ClearErrors
+    FindNext $R0 $R1
+    IfErrors 0 NoDelete
+     FindClose $R0
+     Sleep 1000
+     RMDir "$0"
+  NoDelete:
+   FindClose $R0
 FunctionEnd
 
-Function UninstallV2
-  ReadRegStr $oldVersion HKLM "${UNINSTKEY}" "DisplayVersion"
-  ${If} $oldVersion != ""
-    ${VersionCompare} "3.0" "$oldVersion" $versionCompareResult
-    ${If} "$versionCompareResult" == 1  ; 1st version is greater
-      ReadRegStr $uninstallString HKLM  "${UNINSTKEY}"  "UninstallString"
-      GetFullPathName $installLocation "$uninstallString\.." ; remove '\uninstall.exe'
-      MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
-        "$(MessageUninstallV2)" \
-        /SD IDNO \
+Function GetParent
+ 
+  Exch $R0
+  Push $R1
+  Push $R2
+  Push $R3
+ 
+  StrCpy $R1 0
+  StrLen $R2 $R0
+ 
+  loop:
+    IntOp $R1 $R1 + 1
+    IntCmp $R1 $R2 get 0 get
+    StrCpy $R3 $R0 1 -$R1
+    StrCmp $R3 "\" get
+  Goto loop
+ 
+  get:
+    StrCpy $R0 $R0 -$R1
+ 
+    Pop $R3
+    Pop $R2
+    Pop $R1
+    Exch $R0
+ 
+FunctionEnd
+
+Function UninstallExisting
+    ReadRegStr $R0 ShCtx  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
+
+    StrCmp $R0 "" done
+
+    Push $R0
+    Call GetParent
+    Pop $R1
+
+    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
+        "$(MessageUninstallExisting)" \
         IDOK uninst
-      Abort
+    Abort
+
+    ;Run the uninstaller
     uninst:
-      ClearErrors
-      HideWindow
-      ClearErrors
-      ExecWait '"$uninstallString" _?=$installLocation'
-      Delete "$uninstallString"
-      RMDir "$installLocation"
-      BringToFront
-    ${EndIf}
-  ${EndIf}
+        ClearErrors
+        HideWindow
+        ClearErrors
+        ExecWait '"$R0" _?=$R1'
+        BringToFront
+
+    done:
 FunctionEnd
 
 ####################################################################
@@ -386,14 +405,14 @@ Section "Uninstall"
   Delete "$INSTDIR\uninstall.exe"
 
   ; Remove start menu stuff
-  RMDir /r "$SMPROGRAMS\${APP_NAME_EN}"
-  RMDir /r "$SMPROGRAMS\${APP_NAME_ZH_CN}"
+  Delete "$SMPROGRAMS\$(MessageAppName)\$(MessageAppName).lnk"
+  Delete "$SMPROGRAMS\$(MessageAppName)\License.lnk"
+  Delete "$SMPROGRAMS\$(MessageAppName)\Uninstall $(MessageAppName).lnk"
+  RMDir "$SMPROGRAMS\$(MessageAppName)"
 
   ; Remove desktop stuff
-  Delete "$QUICKLAUNCH\${APP_NAME_EN}.lnk"
-  Delete "$QUICKLAUNCH\${APP_NAME_ZH_CN}.lnk"
-  Delete "$DESKTOP\${APP_NAME_EN}.lnk"
-  Delete "$DESKTOP\${APP_NAME_ZH_CN}.lnk"
+  Delete "$QUICKLAUNCH\$(MessageAppName).lnk"
+  Delete "$DESKTOP\$(MessageAppName).lnk"
 
   DeleteRegKey HKCR "DevCpp.dev"
   DeleteRegKey HKCR "DevCpp.c"
@@ -419,10 +438,11 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\mingw32"
   RMDir /r "$INSTDIR\mingw64"
 
-  RMDir "$INSTDIR"
+  StrCpy $0 "$INSTDIR"
+  Call un.DeleteDirIfEmpty
 
   ; Remove registry keys
-  DeleteRegKey ShCtx "${UNINSTKEY}"
+  DeleteRegKey ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
   DeleteRegKey ShCtx "Software\RedPanda-C++"
 
   MessageBox MB_YESNO "$(MessageRemoveConfig)" /SD IDNO IDNO SkipRemoveConfig
