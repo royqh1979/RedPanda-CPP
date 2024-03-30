@@ -104,6 +104,7 @@ Red Panda C++ Version 2.27
   - enhancement: Add compiler set by choose the executable.
   - fix: Compile info for project doesn't have name of the project executable.
   - enhancement: Highlight words in the string/comments.
+  - fix: If there are only 1 line in the editor, shift+down can't select it.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

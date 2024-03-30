@@ -4787,7 +4787,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 
     BufferCoord vDstLineChar;
     if (ptDst.row == ptO.row && isSelection && deltaY!=0) {
-        if (ptDst.row==1) {
+        if (ptDst.row==1 && mDocument->count()>1) {
             vDstLineChar.ch=1;
             vDstLineChar.line=1;
         } else {
