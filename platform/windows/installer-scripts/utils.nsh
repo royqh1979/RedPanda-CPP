@@ -45,30 +45,6 @@ Var /GLOBAL sectionDepTemp
   ${EndIf}
 !macroend
 
-!macro CheckV2Installer
-  SetRegView 32
-  Call UninstallV2
-  SetRegView 64
-  Call UninstallV2
-  !if "${ARCH}" == "x86"
-    SetRegView 32
-  !else
-    SetRegView 64
-  !endif
-!macroend
-
-!macro CheckPreviousInstaller
-  SetRegView 32
-  Call UninstallExisting
-  SetRegView 64
-  Call UninstallExisting
-  !if "${ARCH}" == "x86"
-    SetRegView 32
-  !else
-    SetRegView 64
-  !endif
-!macroend
-
 !macro DisableSection section
   SectionGetFlags ${section} $sectionDepFlag
 
