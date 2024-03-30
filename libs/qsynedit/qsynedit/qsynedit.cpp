@@ -41,7 +41,8 @@
 #include <QTextEdit>
 #include <QMimeData>
 
-#define MAX_LINE_WIDTH_CHANGED_EVENT ((QEvent::Type)(QEvent::User+1))
+#define UPDATE_HORIZONTAL_SCROLLBAR_EVENT ((QEvent::Type)(QEvent::User+1))
+#define UPDATE_VERTICAL_SCROLLBAR_EVENT ((QEvent::Type)(QEvent::User+2))
 
 namespace QSynedit {
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
@@ -72,13 +73,12 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
     connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
-            this, &QSynEdit::onMaxLineWidthChanged);
+            this, &QSynEdit::onMaxLineChanged);
     connect(mDocument.get(), &Document::cleared, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
 
     mGutterWidth = 0;
-    mScrollBars = ScrollStyle::ssBoth;
 
     mUndoList = std::make_shared<UndoList>();
     mUndoList->connect(mUndoList.get(), &UndoList::addedUndo, this, &QSynEdit::onUndoAdded);
@@ -138,8 +138,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mBlockEnd = mBlockBegin;
     mOptions = eoAutoIndent
             | eoDragDropEditing | eoEnhanceEndKey | eoTabIndent |
-             eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick
-            | eoHideShowScrollbars ;
+             eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
 
     mScrollTimer = new QTimer(this);
     //mScrollTimer->setInterval(100);
@@ -169,6 +168,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     setAcceptDrops(true);
 
     setFont(mFontDummy);
+    setScrollBars(ScrollStyle::ssBoth);
 }
 
 int QSynEdit::displayLineCount() const
@@ -288,8 +288,9 @@ bool QSynEdit::canRedo() const
 int QSynEdit::maxScrollWidth() const
 {
     int maxWidth = mDocument->maxLineWidth();
+    qDebug()<<maxWidth;
     if (maxWidth <= 0)
-        return maxWidth; //all inlines invalid. Next paintEvent() will update it.
+        return 0;
     if (useCodeFolding())
         maxWidth += stringWidth(syntaxer()->foldString(""),maxWidth);
     if (mOptions.testFlag(eoScrollPastEol))
@@ -1745,9 +1746,15 @@ QString QSynEdit::getDisplayStringAtLine(int line) const
     return s;
 }
 
-void QSynEdit::onMaxLineWidthChanged()
+void QSynEdit::onMaxLineChanged()
 {
-    QEvent * event = new QEvent(MAX_LINE_WIDTH_CHANGED_EVENT);
+    invalidate(); // repaint first, to update line widths
+    updateHScrollBarLater();
+}
+
+void QSynEdit::updateHScrollBarLater()
+{
+    QEvent * event = new QEvent(UPDATE_HORIZONTAL_SCROLLBAR_EVENT);
     qApp->postEvent(this,event);
 }
 
@@ -3020,11 +3027,9 @@ void QSynEdit::internalSetCaretXY(BufferCoord value, bool ensureVisible)
         auto action = finally([this]{
             decPaintLock();
         });
-        // simply include the flags, fPaintLock is > 0
         if (mCaretX != value.ch) {
             mCaretX = value.ch;
             mStatusChanges.setFlag(StatusChange::scCaretX);
-            mStateFlags.setFlag(StateFlag::sfHScrollbarChanged);
             invalidateLine(mCaretY);
         }
         if (mCaretY != value.line) {
@@ -3035,7 +3040,6 @@ void QSynEdit::internalSetCaretXY(BufferCoord value, bool ensureVisible)
             invalidateLine(oldCaretY);
             invalidateGutterLine(oldCaretY);
             mStatusChanges.setFlag(StatusChange::scCaretY);
-            mStateFlags.setFlag(StateFlag::sfVScrollbarChanged);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it
         // calls could raise an exception, and we don't want fLastCaretX to be
@@ -3084,69 +3088,48 @@ void QSynEdit::doOnStatusChange(StatusChanges)
 
 void QSynEdit::updateHScrollbar()
 {
-    int nMin,nMax,nPage,nPos;
     if (mPaintLock!=0) {
         mStateFlags.setFlag(StateFlag::sfHScrollbarChanged);
     } else {
         mStateFlags.setFlag(StateFlag::sfHScrollbarChanged,false);
-        if (mScrollBars != ScrollStyle::ssNone) {
-            if (mOptions.testFlag(eoHideShowScrollbars)) {
-                setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
-            } else {
-                setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
-            }
-            if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
-                nMin = 0;
-                nMax = maxScrollWidth();
-                if (nMax<=0)
-                    return;
-                nPage = viewWidth();
-                nPos = mLeftPos;
-                horizontalScrollBar()->setMinimum(nMin);
-                horizontalScrollBar()->setMaximum(nMax);
-                horizontalScrollBar()->setPageStep(nPage);
-                horizontalScrollBar()->setValue(nPos);
-                horizontalScrollBar()->setSingleStep(mCharWidth);
-            } else
-                setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
-        } else {
-            setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-        }
+        updateHScrollBarLater();
     }
+}
+
+void QSynEdit::doUpdateHScrollbar()
+{
+    int nMin = 0;
+    int nMax = maxScrollWidth();
+    int nPage = viewWidth();
+    int nPos = mLeftPos;
+    horizontalScrollBar()->setMinimum(nMin);
+    horizontalScrollBar()->setMaximum(nMax);
+    horizontalScrollBar()->setPageStep(nPage);
+    horizontalScrollBar()->setValue(nPos);
+    horizontalScrollBar()->setSingleStep(mCharWidth);
 }
 
 void QSynEdit::updateVScrollbar()
 {
-    int nMaxScroll;
-    int nMin,nMax,nPage,nPos;
     if (mPaintLock!=0) {
         mStateFlags.setFlag(StateFlag::sfVScrollbarChanged);
     } else {
         mStateFlags.setFlag(StateFlag::sfVScrollbarChanged,false);
-        if (mScrollBars != ScrollStyle::ssNone) {
-            if (mOptions.testFlag(eoHideShowScrollbars)) {
-                setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
-            } else {
-                setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
-            }
-
-            if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
-                nMaxScroll = maxScrollHeight();
-                nMin = 0;
-                nMax = std::max(1, nMaxScroll);
-                nPage = mLinesInWindow * mTextHeight;
-                nPos = mTopPos;
-                verticalScrollBar()->setMinimum(nMin);
-                verticalScrollBar()->setMaximum(nMax);
-                verticalScrollBar()->setPageStep(nPage);
-                verticalScrollBar()->setValue(nPos);
-                verticalScrollBar()->setSingleStep(mTextHeight);
-            } else
-                setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-        } else {
-            setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-        }
+        doUpdateVScrollbar();
     }
+}
+
+void QSynEdit::doUpdateVScrollbar()
+{
+    int nMin = 0;
+    int nMax = maxScrollHeight();
+    int nPage = mLinesInWindow * mTextHeight;
+    int nPos = mTopPos;
+    verticalScrollBar()->setMinimum(nMin);
+    verticalScrollBar()->setMaximum(nMax);
+    verticalScrollBar()->setPageStep(nPage);
+    verticalScrollBar()->setValue(nPos);
+    verticalScrollBar()->setSingleStep(mTextHeight);
 }
 
 
@@ -3745,15 +3728,15 @@ void QSynEdit::onChanged()
     emit changed();
 }
 
-void QSynEdit::onHScrolled(int)
+void QSynEdit::onHScrolled(int value)
 {
-    mLeftPos = horizontalScrollBar()->value();
+    mLeftPos = value;
     invalidate();
 }
 
-void QSynEdit::onVScrolled(int)
+void QSynEdit::onVScrolled(int value)
 {
-    mTopPos = verticalScrollBar()->value();
+    mTopPos = value;
     invalidate();
 }
 
@@ -3797,7 +3780,28 @@ ScrollStyle QSynEdit::scrollBars() const
 
 void QSynEdit::setScrollBars(ScrollStyle newScrollBars)
 {
+    ScrollStyle oldScrollBars = mScrollBars;
     mScrollBars = newScrollBars;
+    if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
+        if (mOptions.testFlag(eoHideShowScrollbars)) {
+            setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+        } else {
+            setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
+        }
+        updateHScrollbar();
+    } else {
+        setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+    }
+    if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
+        if (mOptions.testFlag(eoHideShowScrollbars)) {
+            setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+        } else {
+            setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
+        }
+        updateVScrollbar();
+    } else {
+        setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+    }
 }
 
 int QSynEdit::mouseSelectionScrollSpeed() const
@@ -4011,26 +4015,21 @@ EditorOptions QSynEdit::getOptions() const
 static bool sameEditorOption(const EditorOptions& value1, const EditorOptions& value2, EditorOption flag) {
     return value1.testFlag(flag)==value2.testFlag(flag);
 }
-void QSynEdit::setOptions(const EditorOptions &Value)
+void QSynEdit::setOptions(const EditorOptions &value)
 {
-    if (Value != mOptions) {
+    if (value != mOptions) {
         incPaintLock();
-        //bool bSetDrag = mOptions.testFlag(eoDropFiles) != Value.testFlag(eoDropFiles);
-        //if  (!mOptions.testFlag(eoScrollPastEol))
-        setLeftPos(mLeftPos);
-        //if (!mOptions.testFlag(eoScrollPastEof))
-        setTopPos(mTopPos);
-
         bool bUpdateAll =
-                !sameEditorOption(Value,mOptions, eoShowLeadingSpaces)
-                || !sameEditorOption(Value,mOptions, eoLigatureSupport)
-                || !sameEditorOption(Value,mOptions, eoForceMonospace)
-                || !sameEditorOption(Value,mOptions, eoShowInnerSpaces)
-                || !sameEditorOption(Value,mOptions, eoShowTrailingSpaces)
-                || !sameEditorOption(Value,mOptions, eoShowLineBreaks)
-                || !sameEditorOption(Value,mOptions, eoShowRainbowColor);
-        mOptions = Value;
+                !sameEditorOption(value,mOptions, eoShowLeadingSpaces)
+                || !sameEditorOption(value,mOptions, eoLigatureSupport)
+                || !sameEditorOption(value,mOptions, eoForceMonospace)
+                || !sameEditorOption(value,mOptions, eoShowInnerSpaces)
+                || !sameEditorOption(value,mOptions, eoShowTrailingSpaces)
+                || !sameEditorOption(value,mOptions, eoShowLineBreaks)
+                || !sameEditorOption(value,mOptions, eoShowRainbowColor);
+        mOptions = value;
 
+        setScrollBars(mScrollBars);
         mDocument->setForceMonospace(mOptions.testFlag(eoForceMonospace) );
 
         // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
@@ -5960,8 +5959,8 @@ void QSynEdit::timerEvent(QTimerEvent *event)
 bool QSynEdit::event(QEvent *event)
 {
     switch(event->type()) {
-    case MAX_LINE_WIDTH_CHANGED_EVENT:
-        updateHScrollbar();
+    case UPDATE_HORIZONTAL_SCROLLBAR_EVENT:
+        doUpdateHScrollbar();
         break;
     case QEvent::KeyPress:{
         QKeyEvent* keyEvent = static_cast<QKeyEvent *>(event);
@@ -6421,7 +6420,7 @@ int QSynEdit::maxScrollHeight() const
     if (mOptions.testFlag(eoScrollPastEof))
         return (std::max(displayLineCount(),1) - 1) * mTextHeight;
     else
-        return std::max((displayLineCount()-mLinesInWindow+1) * mTextHeight, 1) ;
+        return std::max((displayLineCount()-mLinesInWindow+1) * mTextHeight, 0) ;
 }
 
 bool QSynEdit::modified() const
@@ -6798,8 +6797,13 @@ void QSynEdit::setLeftPos(int value)
     //value = std::min(value,maxScrollWidth());
     value = std::max(value, 0);
     if (value != mLeftPos) {
-        horizontalScrollBar()->setValue(value);
         setStatusChanged(StatusChange::scLeftPos);
+        if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal)
+            horizontalScrollBar()->setValue(value);
+        else {
+            mLeftPos = value;
+            invalidate();
+        }
     }
 }
 
@@ -6818,8 +6822,13 @@ void QSynEdit::setTopPos(int value)
     //value = std::min(value,maxScrollHeight());
     value = std::max(value, 0);
     if (value != mTopPos) {
-        verticalScrollBar()->setValue(value);
         setStatusChanged(StatusChange::scTopPos);
+        if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
+            verticalScrollBar()->setValue(value);
+        } else {
+            mTopPos = value;
+            invalidate();
+        }
     }
 }
 

@@ -5492,7 +5492,6 @@ void Editor::applyColorScheme(const QString& schemeName)
         mCurrentHighlighWordForeground = selectedForeground();
         mCurrentHighlighWordBackground = selectedBackground();
     }
-
     this->invalidate();
 }
 

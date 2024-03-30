@@ -567,7 +567,7 @@ signals:
     void deleted(int startLine, int count);
     void inserted(int startLine, int count);
     void putted(int line);
-    void maxLineWidthChanged(int newWidth);
+    void maxLineWidthChanged();
 protected:
     QString getTextStr() const;
     void setUpdateState(bool Updating);
@@ -576,8 +576,12 @@ protected:
     void putTextStr(const QString& text);
     void internalClear();
 private:
+    void beginSetLinesWidth();
+    void endSetLinesWidth();
     void setLineWidth(int line, const QString& lineText, int newWidth, const QList<int> glyphStartPositionList);
+    void emitMaxLineWidthChanged();
     void updateLongestLineWidth(int line, int width);
+    void invalidateIndexOfLongestLine();
 
     int glyphWidth(const QString& glyph, int left,
                    const QFontMetrics &fontMetrics,
@@ -617,6 +621,9 @@ private:
     int mIndexOfLongestLine;
     int mUpdateCount;
     bool mForceMonospace;
+
+    int mSetLineWidthLockCount;
+    bool mMaxLineChangedInSetLinesWidth;
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mMutex;
 #else

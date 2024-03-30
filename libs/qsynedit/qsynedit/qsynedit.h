@@ -529,7 +529,9 @@ private:
     void setStatusChanged(StatusChanges changes);
     void doOnStatusChange(StatusChanges changes);
     void updateHScrollbar();
+    void doUpdateHScrollbar();
     void updateVScrollbar();
+    void doUpdateVScrollbar();
     void updateCaret();
     void recalcCharExtent();
     QString expandAtWideGlyphs(const QString& S);
@@ -650,7 +652,8 @@ private:
 
 
 private slots:
-    void onMaxLineWidthChanged();
+    void onMaxLineChanged();
+    void updateHScrollBarLater();
     void onBookMarkOptionsChanged();
     void onGutterChanged();
     void onLinesChanged();

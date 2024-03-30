@@ -927,6 +927,10 @@ void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
 
 void QSynEditPainter::paintLines()
 {
+    mEdit->mDocument->beginSetLinesWidth();
+    auto action = finally([this](){
+        mEdit->mDocument->endSetLinesWidth();
+    });
     QString sLine; // the current line
     QString sToken; // token info
     int tokenLeft, tokenWidth;
