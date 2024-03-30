@@ -146,13 +146,11 @@ int Document::blockEnded(int line)
 int Document::maxLineWidth() {
     QMutexLocker locker(&mMutex);
     if (mIndexOfLongestLine < 0) {
-        qDebug()<<"!!!!";
         int MaxLen = -1;
         mIndexOfLongestLine = -1;
         if (mLines.count() > 0 ) {
             for (int i=0;i<mLines.size();i++) {
                 int len = mLines[i]->mWidth;
-                qDebug()<<len<<i;
                 if (len > MaxLen) {
                     MaxLen = len;
                     mIndexOfLongestLine = i;
@@ -161,7 +159,6 @@ int Document::maxLineWidth() {
         }
     }
     if (mIndexOfLongestLine >= 0) {
-        qDebug()<<mIndexOfLongestLine<<this->getLine(mIndexOfLongestLine);
         return mLines[mIndexOfLongestLine]->width();
     } else
         return -1;
@@ -197,8 +194,8 @@ void Document::insertItem(int line, const QString &s)
     PDocumentLine documentLine = std::make_shared<DocumentLine>(
                 mUpdateDocumentLineWidthFunc);
     documentLine->setLineText(s);
-    mIndexOfLongestLine = -1;
     mLines.insert(line,documentLine);
+    setIndexOfLongestLine(-1);
     endUpdate();
 }
 
@@ -207,7 +204,6 @@ void Document::addItem(const QString &s)
     beginUpdate();
     PDocumentLine line = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
     line->setLineText(s);
-    mIndexOfLongestLine = -1;
     mLines.append(line);
     endUpdate();
 }
@@ -287,13 +283,13 @@ void Document::setContents(const QStringList &text)
     });
     internalClear();
     if (text.count() > 0) {
-        mIndexOfLongestLine = -1;
         int FirstAdded = mLines.count();
 
         foreach (const QString& s,text) {
             addItem(s);
         }
         emit inserted(FirstAdded,text.count());
+        setIndexOfLongestLine(-1);
     }
 }
 
@@ -340,16 +336,15 @@ void Document::addLines(const QStringList &strings)
 {
     QMutexLocker locker(&mMutex);
     if (strings.count() > 0) {
-        mIndexOfLongestLine = -1;
         beginUpdate();
         auto action = finally([this]{
             endUpdate();
         });
         int FirstAdded = mLines.count();
-
         for (const QString& s:strings) {
             addItem(s);
         }
+        setIndexOfLongestLine(-1);
         emit inserted(FirstAdded,strings.count());
     }
 }
@@ -389,7 +384,7 @@ void Document::deleteLines(int index, int numLines)
     });
     if (mIndexOfLongestLine>=index) {
         if (mIndexOfLongestLine <index+numLines) {
-            invalidateIndexOfLongestLine();
+            setIndexOfLongestLine(-1);
         } else {
             mIndexOfLongestLine -= numLines;
         }
@@ -444,9 +439,9 @@ void Document::deleteAt(int index)
     }
     beginUpdate();
     if (mIndexOfLongestLine == index)
-        invalidateIndexOfLongestLine();
+        setIndexOfLongestLine(-1);
     else if (mIndexOfLongestLine>index)
-        invalidateIndexOfLongestLine();
+        setIndexOfLongestLine(-1);
     mLines.removeAt(index);
     emit deleted(index,1);
     endUpdate();
@@ -475,12 +470,15 @@ void Document::putLine(int index, const QString &s, bool notify) {
             listIndexOutOfBounds(index);
         }
         beginUpdate();
-        int oldWidth = -1;
-        if (mIndexOfLongestLine == index)
-            oldWidth = mLines[index]->mWidth;
-        mLines[index]->setLineText( s );
-        if (mIndexOfLongestLine == index && oldWidth>mLines[index]->width() )
-            invalidateIndexOfLongestLine();
+        int oldMaxWidth = maxLineWidth();
+        mLines[index]->setLineText(s);
+        int newWidth = mLines[index]->width(true);
+        if (mIndexOfLongestLine == index && oldMaxWidth>newWidth ) {
+            setIndexOfLongestLine(-1);
+        } else {
+            if (newWidth > oldMaxWidth)
+                setIndexOfLongestLine(index);
+        }
         if (notify)
             emit putted(index);
         endUpdate();
@@ -505,7 +503,7 @@ void Document::insertLines(int index, int numLines)
         return;
     beginUpdate();
     auto action = finally([this]{
-        invalidateIndexOfLongestLine();
+        setIndexOfLongestLine(-1);
         endUpdate();
     });
     PDocumentLine line;
@@ -636,7 +634,7 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
     auto action = finally([this]{
         if (mLines.count()>0)
             emit inserted(0,mLines.count());
-        invalidateIndexOfLongestLine();
+        setIndexOfLongestLine(-1);
         endUpdate();
     });
     //test for utf8 / utf 8 bom
@@ -1165,7 +1163,7 @@ void Document::internalClear()
         beginUpdate();
         int oldCount = mLines.count();
         mLines.clear();
-        invalidateIndexOfLongestLine();
+        setIndexOfLongestLine(-1);
         emit deleted(0,oldCount);
         endUpdate();
     }
@@ -1213,17 +1211,17 @@ void Document::emitMaxLineWidthChanged()
 void Document::updateLongestLineWidth(int line, int width)
 {
     if (mIndexOfLongestLine<0) {
-        mIndexOfLongestLine = line;
-        emitMaxLineWidthChanged();
+        setIndexOfLongestLine(line);
     } else if (mLines[mIndexOfLongestLine]->mWidth < width) {
-        mIndexOfLongestLine = line;
-        emitMaxLineWidthChanged();
+        setIndexOfLongestLine(line);
     }
 }
 
-void Document::invalidateIndexOfLongestLine()
+void Document::setIndexOfLongestLine(int line)
 {
-    mIndexOfLongestLine = -1;
+    mIndexOfLongestLine = line;
+    //mIndexOfLongestLine may not change, but it's width changed.
+    //so we must emit the signal here
     emitMaxLineWidthChanged();
 }
 
@@ -1279,9 +1277,8 @@ void Document::invalidateAllLineWidth()
     QMutexLocker locker(&mMutex);
     for (PDocumentLine& line:mLines) {
         line->invalidateWidth();
-        qDebug()<<line->mWidth<<line->mLineText<<"invalidated";
     }
-    invalidateIndexOfLongestLine();
+    setIndexOfLongestLine(-1);
 //    mIndexOfLongestLine = -1;
 }
 
@@ -1322,9 +1319,9 @@ int DocumentLine::glyphWidth(int i)
     return calcSegmentInterval(mGlyphStartPositionList, mWidth, i);
 }
 
-int DocumentLine::width()
+int DocumentLine::width(bool forceUpdate)
 {
-    if(mWidth<0)
+    if(mWidth<0 || forceUpdate)
         updateWidth();
     return mWidth;
 }

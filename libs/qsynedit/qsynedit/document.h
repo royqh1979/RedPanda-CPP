@@ -132,7 +132,7 @@ private:
      * @brief get the width (pixel) of the line text
      * @return the width (in width)
      */
-    int width();
+    int width(bool forceUpdate=false);
 
     /**
      * @brief get the state of the syntax highlighter after this line is parsed
@@ -581,7 +581,7 @@ private:
     void setLineWidth(int line, const QString& lineText, int newWidth, const QList<int> glyphStartPositionList);
     void emitMaxLineWidthChanged();
     void updateLongestLineWidth(int line, int width);
-    void invalidateIndexOfLongestLine();
+    void setIndexOfLongestLine(int line);
 
     int glyphWidth(const QString& glyph, int left,
                    const QFontMetrics &fontMetrics,

@@ -288,9 +288,8 @@ bool QSynEdit::canRedo() const
 int QSynEdit::maxScrollWidth() const
 {
     int maxWidth = mDocument->maxLineWidth();
-    qDebug()<<maxWidth;
-    if (maxWidth <= 0)
-        return 0;
+    if (maxWidth < 0)
+        return -1;
     if (useCodeFolding())
         maxWidth += stringWidth(syntaxer()->foldString(""),maxWidth);
     if (mOptions.testFlag(eoScrollPastEol))
@@ -704,9 +703,7 @@ DisplayCoord QSynEdit::bufferToDisplayPos(const BufferCoord &p) const
     // Account for tabs and charColumns
     if (p.line-1 <mDocument->count())
         result.x = charToGlyphLeft(p.line,p.ch);
-    // Account for code folding
-    if (useCodeFolding())
-        result.row = foldLineToRow(result.row);
+    result.row = lineToRow(result.row);
     return result;
 }
 
@@ -867,7 +864,10 @@ int QSynEdit::rowToLine(int aRow) const
 
 int QSynEdit::lineToRow(int aLine) const
 {
-    return bufferToDisplayPos({1, aLine}).row;
+    if (useCodeFolding())
+        return foldLineToRow(aLine);
+    else
+        return aLine;
 }
 
 int QSynEdit::foldRowToLine(int row) const
@@ -3092,7 +3092,7 @@ void QSynEdit::updateHScrollbar()
         mStateFlags.setFlag(StateFlag::sfHScrollbarChanged);
     } else {
         mStateFlags.setFlag(StateFlag::sfHScrollbarChanged,false);
-        updateHScrollBarLater();
+        doUpdateHScrollbar();
     }
 }
 
@@ -3100,6 +3100,8 @@ void QSynEdit::doUpdateHScrollbar()
 {
     int nMin = 0;
     int nMax = maxScrollWidth();
+    if (nMax<0)
+        return;
     int nPage = viewWidth();
     int nPos = mLeftPos;
     horizontalScrollBar()->setMinimum(nMin);
@@ -5951,6 +5953,8 @@ void QSynEdit::resizeEvent(QResizeEvent *)
 void QSynEdit::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == m_blinkTimerId) {
+        if (mPaintLock>0)
+            return;
         m_blinkStatus = 1- m_blinkStatus;
         updateCaret();
     }
@@ -6801,7 +6805,6 @@ void QSynEdit::setLeftPos(int value)
         if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal)
             horizontalScrollBar()->setValue(value);
         else {
-            mLeftPos = value;
             invalidate();
         }
     }
