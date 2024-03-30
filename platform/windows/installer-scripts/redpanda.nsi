@@ -130,7 +130,7 @@ SectionEnd
 
 ####################################################################
 # File association
-SubSection "$(SectionAssocsName)" SectionAssocs
+SectionGroup "$(SectionAssocsName)" SectionAssocs
 Section "$(SectionAssocExtNameBegin) .dev $(SectionAssocExtNameEnd)"
   SectionIn 1 3
 
@@ -219,11 +219,11 @@ Section "$(SectionAssocExtNameBegin) .hpp $(SectionAssocExtNameEnd)"
   ${NotifyShell_AssocChanged}
 SectionEnd
 
-SubSectionEnd
+SectionGroupEnd
 
 ####################################################################
 # Shortcuts
-SubSection "$(SectionShortcutsName)" SectionShortcuts
+SectionGroup "$(SectionShortcutsName)" SectionShortcuts
 
 Section "$(SectionMenuLaunchName)" SectionMenuLaunch
   SectionIn 1 3
@@ -241,7 +241,12 @@ Section "$(SectionDesktopLaunchName)" SectionDesktopLaunch
   CreateShortCut "$DESKTOP\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
 SectionEnd
 
-SubSectionEnd
+SectionGroupEnd
+
+Section "$(SectionCompressName)" SectionCompress
+  DetailPrint "$(MessageCompressing)"
+  ExecWait '$SYSDIR\compact.exe /C /S /F /EXE:XPRESS16K "$INSTDIR\*"'
+SectionEnd
 
 Section "$(SectionConfigName)" SectionConfig
   SectionIn 3
@@ -262,6 +267,7 @@ SectionEnd
 !endif
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionCompress}    "$(MessageSectionCompress)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionConfig}      "$(MessageSectionConfig)"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
@@ -288,6 +294,7 @@ FunctionEnd
 
 Function .onSelChange
   !insertmacro SectionAction_CheckMingw64
+  !insertmacro SectionAction_CheckCompress
 FunctionEnd
 
 Function myGuiInit
@@ -307,6 +314,7 @@ Function myGuiInit
   !endif
 
   !insertmacro SectionAction_CheckMingw64
+  !insertmacro SectionAction_CheckCompress
 FunctionEnd
 
 Function un.onInit
@@ -320,77 +328,27 @@ Function un.onInit
   !endif
 FunctionEnd
 
-;http://nsis.sourceforge.net/archive/viewpage.php?pageid=202
-;After changing file associations, you can call this macro to refresh the shell immediatly. 
-;It calls the shell32 function SHChangeNotify. This will force windows to reload your changes from the registry.
-!define SHCNE_ASSOCCHANGED 0x08000000
-!define SHCNF_IDLIST 0
-
-Function un.DeleteDirIfEmpty
-  FindFirst $R0 $R1 "$0\*.*"
-  strcmp $R1 "." 0 NoDelete
-   FindNext $R0 $R1
-   strcmp $R1 ".." 0 NoDelete
-    ClearErrors
-    FindNext $R0 $R1
-    IfErrors 0 NoDelete
-     FindClose $R0
-     Sleep 1000
-     RMDir "$0"
-  NoDelete:
-   FindClose $R0
-FunctionEnd
-
-Function GetParent
- 
-  Exch $R0
-  Push $R1
-  Push $R2
-  Push $R3
- 
-  StrCpy $R1 0
-  StrLen $R2 $R0
- 
-  loop:
-    IntOp $R1 $R1 + 1
-    IntCmp $R1 $R2 get 0 get
-    StrCpy $R3 $R0 1 -$R1
-    StrCmp $R3 "\" get
-  Goto loop
- 
-  get:
-    StrCpy $R0 $R0 -$R1
- 
-    Pop $R3
-    Pop $R2
-    Pop $R1
-    Exch $R0
- 
-FunctionEnd
+Var /GLOBAL uninstallString
+Var /GLOBAL installLocation
 
 Function UninstallExisting
-    ReadRegStr $R0 ShCtx  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
-
-    StrCmp $R0 "" done
-
-    Push $R0
-    Call GetParent
-    Pop $R1
-
+  ReadRegStr $uninstallString ShCtx  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
+  ${If} $uninstallString != ""
+    GetFullPathName $installLocation "$uninstallString\.." ; remove '\uninstall.exe'
     MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
-        "$(MessageUninstallExisting)" \
-        IDOK uninst
+      "$(MessageUninstallExisting)" \
+      /SD IDNO \
+      IDOK uninst
     Abort
-
-    ;Run the uninstaller
-    uninst:
-        ClearErrors
-        HideWindow
-        ClearErrors
-        ExecWait '"$R0" _?=$R1'
-        BringToFront
-
-    done:
+  uninst:
+    ClearErrors
+    HideWindow
+    ClearErrors
+    ExecWait '"$uninstallString" _?=$installLocation'
+    Delete "$uninstallString"
+    RMDir "$installLocation"
+    BringToFront
+  ${EndIf}
 FunctionEnd
 
 ####################################################################
@@ -438,8 +396,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\mingw32"
   RMDir /r "$INSTDIR\mingw64"
 
-  StrCpy $0 "$INSTDIR"
-  Call un.DeleteDirIfEmpty
+  RMDir "$INSTDIR"
 
   ; Remove registry keys
   DeleteRegKey ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"

@@ -67,3 +67,10 @@ Var /GLOBAL sectionDepTemp
     ${EndIf}
   !endif
 !macroend
+
+!macro SectionAction_CheckCompress
+  ; compact os is available since windows 10
+  ${IfNot} ${AtLeastBuild} 10240
+    !insertmacro DisableSection ${SectionCompress}
+  ${EndIf}
+!macroend
