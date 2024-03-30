@@ -1212,6 +1212,8 @@ void Document::updateLongestLineWidth(int line, int width)
 {
     if (mIndexOfLongestLine<0) {
         setIndexOfLongestLine(line);
+    } else if (mIndexOfLongestLine == line) {
+        emitMaxLineWidthChanged();
     } else if (mLines[mIndexOfLongestLine]->mWidth < width) {
         setIndexOfLongestLine(line);
     }
@@ -1822,7 +1824,7 @@ int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fon
     if (glyph.length()==0)
         return 0;
     QChar ch = glyph[0];
-    if (ch == '\t') {        
+    if (ch == '\t') {
         glyphWidth = tabWidth() - left % tabWidth();
     } else {
         glyphWidth = fontMetrics.horizontalAdvance(glyph);
