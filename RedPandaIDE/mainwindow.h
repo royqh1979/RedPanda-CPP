@@ -433,6 +433,7 @@ private slots:
     void on_EditorTabsRight_tabCloseRequested(int index);
 
     void onFileSystemModelLayoutChanged();
+    void onFileRenamedInFileSystemModel(const QString &path, const QString &oldName, const QString &newName);
 
     void on_actionOpen_triggered();
 

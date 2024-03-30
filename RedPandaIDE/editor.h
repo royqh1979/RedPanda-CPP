@@ -149,6 +149,7 @@ public:
     void saveFile(QString filename);
     bool save(bool force=false, bool reparse=true);
     bool saveAs(const QString& name="", bool fromProject = false);
+    void setFilename(const QString& newName);
     void activate();
 
     QTabWidget* pageControl() noexcept;

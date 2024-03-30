@@ -537,6 +537,77 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     return true;
 }
 
+void Editor::setFilename(const QString &newName)
+{
+    if (mFilename == newName)
+        return;
+    if (pMainWindow->editorList()->getOpenedEditorByFilename(newName)) {
+        return;
+    }
+    QString oldName = mFilename;
+    // Update project information
+    if (mProject) {
+        PProjectUnit unit = mProject->findUnit(oldName);
+        if (unit) {
+            mProject->renameUnit(unit, newName);
+        }
+    }
+
+    clearSyntaxIssues();
+    pMainWindow->fileSystemWatcher()->removePath(oldName);
+    if (pSettings->codeCompletion().enabled() && mParser && !inProject()) {
+        mParser->invalidateFile(oldName);
+    }
+
+    mFilename = newName;
+    if (mProject) {
+        mProject->associateEditor(this);
+    }
+    pMainWindow->fileSystemWatcher()->addPath(mFilename);
+    switch(getFileType(mFilename)) {
+    case FileType::CppSource:
+        mUseCppSyntax = true;
+        break;
+    case FileType::CSource:
+        mUseCppSyntax = false;
+        break;
+    default:
+        mUseCppSyntax = pSettings->editor().defaultFileCpp();
+    }
+
+    //update (reassign syntaxer)
+    QSynedit::PSyntaxer newSyntaxer = syntaxerManager.getSyntaxer(mFilename);
+    if (newSyntaxer) {
+        setUseCodeFolding(true);
+        setFormatter(syntaxerManager.getFormatter(newSyntaxer->language()));
+    } else {
+        setUseCodeFolding(false);
+        setFormatter(syntaxerManager.getFormatter(QSynedit::ProgrammingLanguage::Unknown));
+    }
+    setSyntaxer(newSyntaxer);
+
+    if (!newSyntaxer || newSyntaxer->language() != QSynedit::ProgrammingLanguage::CPP) {
+        mSyntaxIssues.clear();
+    }
+    applyColorScheme(pSettings->editor().colorScheme());
+
+    if (!inProject()) {
+        initParser();
+        reparse(false);
+        reparseTodo();
+    }
+
+    if (pSettings->editor().syntaxCheckWhenSave())
+        checkSyntaxInBack();
+
+    updateCaption();
+
+    emit renamed(oldName, newName , true);
+
+    initAutoBackup();
+    return;
+}
+
 void Editor::activate()
 {
     if (mParentPageControl)

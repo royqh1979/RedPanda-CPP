@@ -399,6 +399,10 @@ MainWindow::MainWindow(QWidget *parent)
     delete m;
     connect(&mFileSystemModel, &QFileSystemModel::layoutChanged,
             this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
+    connect(&mFileSystemModel, &QFileSystemModel::fileRenamed,
+            this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
+    connect(&mFileSystemModel, &QFileSystemModel::fileRenamed,
+            this, &MainWindow::onFileRenamedInFileSystemModel);
     mFileSystemModel.setReadOnly(false);
     mFileSystemModel.setIconProvider(&mFileSystemModelIconProvider);
 
@@ -5614,6 +5618,18 @@ void MainWindow::on_EditorTabsRight_tabCloseRequested(int index)
 void MainWindow::onFileSystemModelLayoutChanged()
 {
     ui->treeFiles->scrollTo(ui->treeFiles->currentIndex(),QTreeView::PositionAtCenter);
+}
+
+void MainWindow::onFileRenamedInFileSystemModel(const QString &path, const QString &oldName, const QString &newName)
+{
+    QDir folder(path);
+    QString oldFile = folder.absoluteFilePath(oldName);
+    QString newFile = folder.absoluteFilePath(newName);
+
+    Editor *e = mEditorList->getOpenedEditorByFilename(path);
+    if (e) {
+        e->setFilename(newFile);
+    }
 }
 
 void MainWindow::on_actionOpen_triggered()
