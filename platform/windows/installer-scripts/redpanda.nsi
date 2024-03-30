@@ -1,8 +1,11 @@
-####################################################################
+﻿####################################################################
 # Startup
 SetFont "Segoe UI" 11
 Unicode True
-!define DISPLAY_NAME "Red Panda C++ ${APP_VERSION} (${ARCH})"
+
+!define APP_NAME_EN "Red Panda C++"
+!define APP_NAME_ZH_CN "小熊猫 C++"
+!define DISPLAY_NAME "$(StrAppName) ${APP_VERSION} (${ARCH})"
 
 !define REGISTRY_PROGRAM_ID "RedPanda-C++"
 !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${REGISTRY_PROGRAM_ID}"
@@ -47,9 +50,9 @@ XPStyle on
 
 ManifestDPIAware true
 
-InstType "Full";1
-InstType "Minimal";2
-InstType "Safe";3
+InstType "$(StrInstTypeFull)"    ;1
+InstType "$(StrInstTypeMinimal)" ;2
+InstType "$(StrInstTypeSafe)"    ;3
 
 ## Remember the installer language
 !define MUI_LANGDLL_REGISTRY_ROOT "ShCtx"
@@ -98,13 +101,13 @@ Section "$(SectionMainName)" SectionMain
 
   ; Allways create an uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
-  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayName" "Redpanda-C++"
+  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayName" "$(StrAppName) (${ARCH})"
   WriteRegStr ShCtx "${UNINSTKEY}" "InstallLocation" "$INSTDIR"
   WriteRegStr ShCtx "${UNINSTKEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
   WriteRegStr ShCtx "${UNINSTKEY}" "QuietUninstallString" '"$INSTDIR\uninstall.exe" /S'
   WriteRegStr ShCtx "${UNINSTKEY}" "DisplayVersion" "${APP_VERSION}"
   WriteRegStr ShCtx "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
-  WriteRegStr ShCtx "${UNINSTKEY}" "Publisher" "Roy Qu(royqh1979@gmail.com)"
+  WriteRegStr ShCtx "${UNINSTKEY}" "Publisher" "Roy Qu (royqh1979@gmail.com)"
 
 
   ; Write required files
@@ -149,7 +152,7 @@ Section "$(SectionAssocExtNameBegin) .dev $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".dev" "" "DevCpp.dev"
-  WriteRegStr HKCR "DevCpp.dev" "" "Dev-C++ Project File"
+  WriteRegStr HKCR "DevCpp.dev" "" "$(StrAppName) $(StrProjectFile)"
   WriteRegStr HKCR "DevCpp.dev\DefaultIcon" "" '$0,3'
   WriteRegStr HKCR "DevCpp.dev\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -160,7 +163,7 @@ Section "$(SectionAssocExtNameBegin) .c $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".c" "" "DevCpp.c"
-  WriteRegStr HKCR "DevCpp.c" "" "C Source File"
+  WriteRegStr HKCR "DevCpp.c" "" "C $(StrSourceFile)"
   WriteRegStr HKCR "DevCpp.c\DefaultIcon" "" '$0,4'
   WriteRegStr HKCR "DevCpp.c\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -171,7 +174,7 @@ Section "$(SectionAssocExtNameBegin) .cpp $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cpp" "" "DevCpp.cpp"
-  WriteRegStr HKCR "DevCpp.cpp" "" "C++ Source File"
+  WriteRegStr HKCR "DevCpp.cpp" "" "C++ $(StrSourceFile)"
   WriteRegStr HKCR "DevCpp.cpp\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cpp\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -182,7 +185,7 @@ Section "$(SectionAssocExtNameBegin) .cxx $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cxx" "" "DevCpp.cxx"
-  WriteRegStr HKCR "DevCpp.cxx" "" "C++ Source File"
+  WriteRegStr HKCR "DevCpp.cxx" "" "C++ $(StrSourceFile)"
   WriteRegStr HKCR "DevCpp.cxx\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cxx\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -193,7 +196,7 @@ Section "$(SectionAssocExtNameBegin) .cc $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".cc" "" "DevCpp.cc"
-  WriteRegStr HKCR "DevCpp.cc" "" "C++ Source File"
+  WriteRegStr HKCR "DevCpp.cc" "" "C++ $(StrSourceFile)"
   WriteRegStr HKCR "DevCpp.cc\DefaultIcon" "" '$0,5'
   WriteRegStr HKCR "DevCpp.cc\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -204,7 +207,7 @@ Section "$(SectionAssocExtNameBegin) .hxx $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".hxx" "" "DevCpp.hxx"
-  WriteRegStr HKCR "DevCpp.hxx" "" "C++ Header File"
+  WriteRegStr HKCR "DevCpp.hxx" "" "C++ $(StrHeaderFile)"
   WriteRegStr HKCR "DevCpp.hxx\DefaultIcon" "" '$0,7'
   WriteRegStr HKCR "DevCpp.hxx\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -215,7 +218,7 @@ Section "$(SectionAssocExtNameBegin) .h $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".h" "" "DevCpp.h"
-  WriteRegStr HKCR "DevCpp.h" "" "C Header File"
+  WriteRegStr HKCR "DevCpp.h" "" "C $(StrHeaderFile)"
   WriteRegStr HKCR "DevCpp.h\DefaultIcon" "" '$0,6'
   WriteRegStr HKCR "DevCpp.h\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -226,7 +229,7 @@ Section "$(SectionAssocExtNameBegin) .hpp $(SectionAssocExtNameEnd)"
 
   StrCpy $0 $INSTDIR\RedPandaIDE.exe
   WriteRegStr HKCR ".hpp" "" "DevCpp.hpp"
-  WriteRegStr HKCR "DevCpp.hpp" "" "C++ Header File"
+  WriteRegStr HKCR "DevCpp.hpp" "" "C++ $(StrHeaderFile)"
   WriteRegStr HKCR "DevCpp.hpp\DefaultIcon" "" '$0,7'
   WriteRegStr HKCR "DevCpp.hpp\Shell\Open\Command" "" '$0 "%1"'
   ${NotifyShell_AssocChanged}
@@ -242,16 +245,16 @@ Section "$(SectionMenuLaunchName)" SectionMenuLaunch
   SectionIn 1 3
 
   StrCpy $0 $SMPROGRAMS ; start menu Programs folder
-  CreateDirectory "$0\$(MessageAppName)"
-  CreateShortCut "$0\$(MessageAppName)\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
-  CreateShortCut "$0\$(MessageAppName)\License.lnk" "$INSTDIR\LICENSE"
-  CreateShortCut "$0\$(MessageAppName)\Uninstall $(MessageAppName).lnk" "$INSTDIR\uninstall.exe"
+  CreateDirectory "$0\$(StrAppName)"
+  CreateShortCut "$0\$(StrAppName)\$(StrAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
+  CreateShortCut "$0\$(StrAppName)\License.lnk" "$INSTDIR\LICENSE"
+  CreateShortCut "$0\$(StrAppName)\$(StrUninstallerAppName).lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
 Section "$(SectionDesktopLaunchName)" SectionDesktopLaunch
   SectionIn 1 3
 
-  CreateShortCut "$DESKTOP\$(MessageAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
+  CreateShortCut "$DESKTOP\$(StrAppName).lnk" "$INSTDIR\RedPandaIDE.exe"
 SectionEnd
 
 SectionGroupEnd
@@ -383,14 +386,14 @@ Section "Uninstall"
   Delete "$INSTDIR\uninstall.exe"
 
   ; Remove start menu stuff
-  Delete "$SMPROGRAMS\$(MessageAppName)\$(MessageAppName).lnk"
-  Delete "$SMPROGRAMS\$(MessageAppName)\License.lnk"
-  Delete "$SMPROGRAMS\$(MessageAppName)\Uninstall $(MessageAppName).lnk"
-  RMDir "$SMPROGRAMS\$(MessageAppName)"
+  RMDir /r "$SMPROGRAMS\${APP_NAME_EN}"
+  RMDir /r "$SMPROGRAMS\${APP_NAME_ZH_CN}"
 
   ; Remove desktop stuff
-  Delete "$QUICKLAUNCH\$(MessageAppName).lnk"
-  Delete "$DESKTOP\$(MessageAppName).lnk"
+  Delete "$QUICKLAUNCH\${APP_NAME_EN}.lnk"
+  Delete "$QUICKLAUNCH\${APP_NAME_ZH_CN}.lnk"
+  Delete "$DESKTOP\${APP_NAME_EN}.lnk"
+  Delete "$DESKTOP\${APP_NAME_ZH_CN}.lnk"
 
   DeleteRegKey HKCR "DevCpp.dev"
   DeleteRegKey HKCR "DevCpp.c"
