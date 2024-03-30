@@ -179,7 +179,7 @@ target("RedPandaIDE")
 
     add_files(
         "resources/iconsets/**.svg", "resources/iconsets/**.json",
-        "themes/*.png",
+        "resources/themes/*.png",
         "colorschemes/*.scheme",
         {rule = "RedPandaIDE.auto_qrc"})
 
@@ -199,12 +199,12 @@ target("RedPandaIDE")
             "addon/executor.cpp",
             "addon/runtime.cpp")
         add_files(
-            "themes/*.lua",
+            "resources/themes/*.lua",
             {rule = "RedPandaIDE.auto_qrc"})
         add_links("lua")
     else
         add_files(
-            "themes/*.json",
+            "resources/themes/*.json",
             {rule = "RedPandaIDE.auto_qrc"})
     end
 
