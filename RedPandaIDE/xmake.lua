@@ -180,7 +180,8 @@ target("RedPandaIDE")
     add_files(
         "resources/iconsets/**.svg", "resources/iconsets/**.json",
         "resources/themes/*.png",
-        "colorschemes/*.scheme",
+        "resources/colorschemes/*.scheme",
+        "resources/fonts/asciicontrol.ttf",
         {rule = "RedPandaIDE.auto_qrc"})
 
     if is_os("windows") then
