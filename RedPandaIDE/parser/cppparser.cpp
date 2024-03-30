@@ -4615,7 +4615,7 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
                     PStatement macro = findMacro(word, fileName);
                     if (macro) {
                         if(!expandMacro(phraseExpression, i,  macro, usedMacros))
-                            continue;
+                            return PEvalStatement();
                     }
                 }
             }
@@ -5362,6 +5362,8 @@ bool CppParser::expandMacro(QStringList &phraseExpression, int pos, PStatement m
         phraseExpression.removeAt(pos);
         usedMacros.removeAt(pos);
     } else {
+        if (pos+1 >= phraseExpression.length() || phraseExpression[pos+1]!=")")
+            return false;
         QString args=macro->args.mid(1,macro->args.length()-2).trimmed(); // remove '(' ')'
 
         if(args=="")
