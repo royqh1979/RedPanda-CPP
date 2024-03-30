@@ -5626,7 +5626,7 @@ void MainWindow::onFileRenamedInFileSystemModel(const QString &path, const QStri
     QString oldFile = folder.absoluteFilePath(oldName);
     QString newFile = folder.absoluteFilePath(newName);
 
-    Editor *e = mEditorList->getOpenedEditorByFilename(path);
+    Editor *e = mEditorList->getOpenedEditorByFilename(oldFile);
     if (e) {
         e->setFilename(newFile);
     }
