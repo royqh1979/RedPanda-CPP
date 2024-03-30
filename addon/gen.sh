@@ -5,7 +5,7 @@ set -euo pipefail
 function gen-theme() {
   local file="$1"
   local bn="$(basename $file)"
-  local out="RedPandaIDE/themes/${bn%.tl}.lua"
+  local out="RedPandaIDE/resources/themes/${bn%.tl}.lua"
   echo -e "\033[1;33mChecking $file\033[0m"
   tl check --include-dir addon --global-env-def defs/theme --quiet "$file"
   echo -e "\033[1;32mCompiling $file\033[0m"
