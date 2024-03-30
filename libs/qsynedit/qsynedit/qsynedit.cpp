@@ -588,8 +588,7 @@ bool QSynEdit::pointToLine(const QPoint &point, int &line)
             || (point.y() > clientTop()+clientHeight())) {
         return false;
     }
-    line = rowToLine(
-                yposToRow(point.y() / mTextHeight));
+    line = rowToLine(yposToRow(point.y()));
     return true;
 }
 
@@ -718,8 +717,7 @@ BufferCoord QSynEdit::displayToBufferPos(const DisplayCoord &p) const
     if (p.row<1)
         return result;
     // Account for code folding
-    if (useCodeFolding())
-        result.line = foldRowToLine(p.row);
+    result.line = rowToLine(p.row);
     // Account for tabs
     if (result.line <= mDocument->count() ) {
         result.ch = xposToGlyphStartChar(result.line,p.x);

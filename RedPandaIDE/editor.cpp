@@ -2030,6 +2030,7 @@ void Editor::onTooltipTimer()
         }
     }
 
+
     // Get subject
     bool isIncludeLine = false;
     bool isIncludeNextLine = false;
