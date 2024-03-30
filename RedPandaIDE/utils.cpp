@@ -323,16 +323,16 @@ bool isGreenEdition()
 #ifdef Q_OS_WIN
     if (!gIsGreenEditionInited) {
         QString appPath = QApplication::instance()->applicationDirPath();
-        appPath = excludeTrailingPathDelimiter(appPath);
+        appPath = excludeTrailingPathDelimiter(localizePath(appPath));
         QString keyString = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++)";
         QString systemInstallPath;
-        readRegistry(HKEY_LOCAL_MACHINE, keyString, "UninstallString", systemInstallPath);
+        readRegistry(HKEY_LOCAL_MACHINE, keyString, "InstallLocation", systemInstallPath);
         if (!systemInstallPath.isEmpty())
-            systemInstallPath = excludeTrailingPathDelimiter(extractFileDir(systemInstallPath));
+            systemInstallPath = excludeTrailingPathDelimiter(systemInstallPath);
         QString userInstallPath;
-        readRegistry(HKEY_CURRENT_USER, keyString, "UninstallString", userInstallPath);
+        readRegistry(HKEY_CURRENT_USER, keyString, "InstallLocation", userInstallPath);
         if (!userInstallPath.isEmpty())
-            userInstallPath = excludeTrailingPathDelimiter(extractFileDir(userInstallPath));
+            userInstallPath = excludeTrailingPathDelimiter(userInstallPath);
         gIsGreenEdition = appPath.compare(systemInstallPath, Qt::CaseInsensitive) != 0 &&
                 appPath.compare(userInstallPath, Qt::CaseInsensitive) != 0;
         gIsGreenEditionInited = true;

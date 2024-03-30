@@ -4,10 +4,14 @@ SetFont "Segoe UI" 11
 Unicode True
 !define DISPLAY_NAME "Red Panda C++ ${APP_VERSION} (${ARCH})"
 
+!define REGISTRY_PROGRAM_ID "RedPanda-C++"
+!define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${REGISTRY_PROGRAM_ID}"
+
 !include "Integration.nsh"
 !include "LogicLib.nsh"
 !include "MUI2.nsh"
 !include "WinVer.nsh"
+!include "WordFunc.nsh"
 !include "x64.nsh"
 
 !include "lang.nsh"
@@ -78,6 +82,13 @@ InstType "Safe";3
 !insertmacro MUI_LANGUAGE "SimpChinese"
 
 ####################################################################
+# Silently uninstall previous version
+
+Section "" SecUninstallPrevious
+  !insertmacro CheckPreviousInstaller
+SectionEnd
+
+####################################################################
 # Files, by option section
 
 Section "$(SectionMainName)" SectionMain
@@ -87,11 +98,13 @@ Section "$(SectionMainName)" SectionMain
 
   ; Allways create an uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
-  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayName" "Redpanda-C++"
-  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "UninstallString" "$INSTDIR\uninstall.exe"
-  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayVersion" "${APP_VERSION}"
-  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
-  WriteRegStr ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++" "Publisher" "Roy Qu(royqh1979@gmail.com)"
+  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayName" "Redpanda-C++"
+  WriteRegStr ShCtx "${UNINSTKEY}" "InstallLocation" "$INSTDIR"
+  WriteRegStr ShCtx "${UNINSTKEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegStr ShCtx "${UNINSTKEY}" "QuietUninstallString" '"$INSTDIR\uninstall.exe" /S'
+  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayVersion" "${APP_VERSION}"
+  WriteRegStr ShCtx "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\RedPandaIDE.exe"
+  WriteRegStr ShCtx "${UNINSTKEY}" "Publisher" "Roy Qu(royqh1979@gmail.com)"
 
 
   ; Write required files
@@ -300,18 +313,7 @@ FunctionEnd
 Function myGuiInit
   !insertmacro CheckOsArch
   !insertmacro CheckOsBuild
-
-  ; uninstall existing
-  SetRegView 32
-  Call UninstallExisting
-  SetRegView 64
-  Call UninstallExisting
-
-  !if "${ARCH}" == "x86"
-    SetRegView 32
-  !else
-    SetRegView 64
-  !endif
+  !insertmacro CheckV2Installer
 
   !insertmacro SectionAction_CheckMingw64
   !insertmacro SectionAction_CheckCompress
@@ -330,24 +332,42 @@ FunctionEnd
 
 Var /GLOBAL uninstallString
 Var /GLOBAL installLocation
+Var /GLOBAL oldVersion
+Var /GLOBAL versionCompareResult
 
 Function UninstallExisting
-  ReadRegStr $uninstallString ShCtx  "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"  "UninstallString"
+  ReadRegStr $uninstallString ShCtx  "${UNINSTKEY}"  "UninstallString"
   ${If} $uninstallString != ""
-    GetFullPathName $installLocation "$uninstallString\.." ; remove '\uninstall.exe'
-    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
-      "$(MessageUninstallExisting)" \
-      /SD IDNO \
-      IDOK uninst
-    Abort
-  uninst:
-    ClearErrors
-    HideWindow
-    ClearErrors
-    ExecWait '"$uninstallString" _?=$installLocation'
+    ReadRegStr $installLocation ShCtx  "${UNINSTKEY}"  "InstallLocation"
+    DetailPrint "$(MessageUninstallingExisting)"
+    ; uninstallString already quoted; NSIS requires installLocation unquoted
+    ExecWait '$uninstallString /S _?=$installLocation'
     Delete "$uninstallString"
     RMDir "$installLocation"
-    BringToFront
+  ${EndIf}
+FunctionEnd
+
+Function UninstallV2
+  ReadRegStr $oldVersion HKLM "${UNINSTKEY}" "DisplayVersion"
+  ${If} $oldVersion != ""
+    ${VersionCompare} "3.0" "$oldVersion" $versionCompareResult
+    ${If} "$versionCompareResult" == 1  ; 1st version is greater
+      ReadRegStr $uninstallString HKLM  "${UNINSTKEY}"  "UninstallString"
+      GetFullPathName $installLocation "$uninstallString\.." ; remove '\uninstall.exe'
+      MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
+        "$(MessageUninstallV2)" \
+        /SD IDNO \
+        IDOK uninst
+      Abort
+    uninst:
+      ClearErrors
+      HideWindow
+      ClearErrors
+      ExecWait '"$uninstallString" _?=$installLocation'
+      Delete "$uninstallString"
+      RMDir "$installLocation"
+      BringToFront
+    ${EndIf}
   ${EndIf}
 FunctionEnd
 
@@ -399,7 +419,7 @@ Section "Uninstall"
   RMDir "$INSTDIR"
 
   ; Remove registry keys
-  DeleteRegKey ShCtx "Software\Microsoft\Windows\CurrentVersion\Uninstall\RedPanda-C++"
+  DeleteRegKey ShCtx "${UNINSTKEY}"
   DeleteRegKey ShCtx "Software\RedPanda-C++"
 
   MessageBox MB_YESNO "$(MessageRemoveConfig)" /SD IDNO IDNO SkipRemoveConfig
