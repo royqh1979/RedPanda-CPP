@@ -1,5 +1,45 @@
 #!/bin/bash
 
+set -euxo pipefail
+
+function fn_print_help() {
+  cat <<EOF
+Usage:
+  packages/msys/build-llvm.sh [-m|--msystem <MSYSTEM>] [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
+Options:
+  -h, --help               Display this information.
+  -m, --msystem <MSYSTEM>  Switch to other MSYS2 environment.
+                           (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64, CLANGARM64)
+                           MUST be used before other options.
+  -c, --clean              Clean build and package directories.
+  -nd, --no-deps           Skip dependency check.
+  -t, --target-dir <dir>   Set target directory for the packages.
+EOF
+}
+
+source version.inc
+[[ -n "${APP_VERSION_SUFFIX}" ]] && APP_VERSION="${APP_VERSION}${APP_VERSION_SUFFIX}"
+
+if [[ ! -v MSYSTEM ]]; then
+  echo "This script must be run in MSYS2 shell"
+  exit 1
+fi
+
+if [[ $# -gt 1 && ($1 == "-m" || $1 == "--msystem") ]]; then
+  msystem=$2
+  shift 2
+  case "${msystem}" in
+    MINGW32|MINGW64|UCRT64|CLANG32|CLANG64|CLANGARM64)
+      export MSYSTEM="${msystem}"
+      exec /bin/bash --login "$0" "$@"
+      ;;
+    *)
+      echo "Invalid MSYSTEM: ${msystem}"
+      exit 1
+      ;;
+  esac
+fi
+
 case $MSYSTEM in
   MINGW32|CLANG32)
     _NATIVE_ARCH=i686
@@ -22,25 +62,13 @@ case $MSYSTEM in
     ;;
 esac
 
-set -euxo pipefail
-
-GCC_VERSION="13.2.0"
-MINGW_VERSION="rt_v11-rev1"
 REDPANDA_LLVM_VERSION="17-r0"
-WINDOWS_TERMINAL_VERSION="1.18.3181.0"
+WINDOWS_TERMINAL_VERSION="1.19.10821.0"
 
 _QMAKE="$MINGW_PREFIX/qt5-static/bin/qmake"
 _NSIS="/mingw32/bin/makensis"
 
-_MINGW32_DIR="mingw32"
-_MINGW32_TRIPLET="i686-w64-mingw32"
-_MINGW32_ARCHIVE="i686-$GCC_VERSION-release-posix-dwarf-ucrt-$MINGW_VERSION.7z"
-_MINGW32_URL="https://github.com/niXman/mingw-builds-binaries/releases/download/$GCC_VERSION-$MINGW_VERSION/$_MINGW32_ARCHIVE"
-
-_MINGW64_DIR="mingw64"
-_MINGW64_TRIPLET="x86_64-w64-mingw32"
-_MINGW64_ARCHIVE="x86_64-$GCC_VERSION-release-posix-seh-ucrt-$MINGW_VERSION.7z"
-_MINGW64_URL="https://github.com/niXman/mingw-builds-binaries/releases/download/$GCC_VERSION-$MINGW_VERSION/$_MINGW64_ARCHIVE"
+_FINAL_NAME="redpanda-cpp-$APP_VERSION-$_DISPLAY_ARCH-llvm.exe"
 
 _LLVM_DIR="llvm-mingw"
 _LLVM_ARCHES=("x86_64" "i686" "aarch64")
@@ -53,32 +81,25 @@ _WINDOWS_TERMINAL_URL="https://github.com/microsoft/terminal/releases/download/v
 
 _SRCDIR="$PWD"
 _ASSETSDIR="$PWD/assets"
-_BUILDDIR="$TEMP/$MINGW_PACKAGE_PREFIX-redpanda-build"
-_PKGDIR="$TEMP/$MINGW_PACKAGE_PREFIX-redpanda-pkg"
+_BUILDDIR="$TEMP/redpanda-llvm-$MSYSTEM-build"
+_PKGDIR="$TEMP/redpanda-llvm-$MSYSTEM-pkg"
 _DISTDIR="$PWD/dist"
-
-_REDPANDA_VERSION=$(sed -nr -e '/APP_VERSION\s*=/ s/APP_VERSION\s*=\s*(([0-9]+\.)*[0-9]+)\s*/\1/p' "$_SRCDIR"/Red_Panda_CPP.pro)
-_REDPANDA_TESTVERSION=$(sed -nr -e '/TEST_VERSION\s*=/ s/TEST_VERSION\s*=\s*([A-Za-z0-9]*)\s*/\1/p' "$_SRCDIR"/Red_Panda_CPP.pro)
-if [[ -n $_REDPANDA_TESTVERSION ]]; then
-  _REDPANDA_VERSION="$_REDPANDA_VERSION.$_REDPANDA_TESTVERSION"
-fi
 
 _CLEAN=0
 _SKIP_DEPS_CHECK=0
-_7Z_REPACK=0
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --clean)
+    -c|--clean)
       _CLEAN=1
       shift
       ;;
-    --skip-deps-check)
+    -nd|--no-deps)
       _SKIP_DEPS_CHECK=1
       shift
       ;;
-    --7z)
-      _7Z_REPACK=1
-      shift
+    -t|--target-dir)
+      _DISTDIR="$2"
+      shift 2
       ;;
     *)
       echo "Unknown argument: $1"
@@ -101,8 +122,8 @@ function check-deps() {
   local deps=(
     $MINGW_PACKAGE_PREFIX-{$compiler,make,qt5-static}
     mingw-w64-i686-nsis
+    git
   )
-  [[ _7Z_REPACK -eq 1 ]] && deps+=("$MINGW_PACKAGE_PREFIX-7zip")
   for dep in "${deps[@]}"; do
     pacman -Q "$dep" >/dev/null 2>&1 || (
       echo "Missing dependency: $dep"
@@ -120,31 +141,8 @@ function prepare-dirs() {
 }
 
 function download-assets() {
-  if [[ $_NATIVE_ARCH == i686 ]]; then
-    [[ -f "$_ASSETSDIR/$_MINGW32_ARCHIVE" ]] || curl -L -o "$_ASSETSDIR/$_MINGW32_ARCHIVE" "$_MINGW32_URL"
-  fi
-  if [[ $_NATIVE_ARCH == x86_64 ]]; then
-    [[ -f "$_ASSETSDIR/$_MINGW64_ARCHIVE" ]] || curl -L -o "$_ASSETSDIR/$_MINGW64_ARCHIVE" "$_MINGW64_URL"
-  fi
   [[ -f "$_ASSETSDIR/$_LLVM_ARCHIVE" ]] || curl -L -o "$_ASSETSDIR/$_LLVM_ARCHIVE" "$_LLVM_URL"
   [[ -f "$_ASSETSDIR/$_WINDOWS_TERMINAL_ARCHIVE" ]] || curl -L -o "$_ASSETSDIR/$_WINDOWS_TERMINAL_ARCHIVE" "$_WINDOWS_TERMINAL_URL"
-}
-
-function prepare-mingw() {
-  local bit="$1"
-  eval local mingw_dir="\$_MINGW${bit}_DIR"
-  eval local mingw_archive="\$_MINGW${bit}_ARCHIVE"
-  eval local mingw_triplet="\$_MINGW${bit}_TRIPLET"
-  local mingw_dir="$_BUILDDIR/$mingw_dir"
-  local mingw_lib_dir="$mingw_dir/$mingw_triplet/lib"
-  local mingw_shared_dir="$mingw_dir/$mingw_triplet/bin"
-  local mingw_include_dir="$mingw_dir/$mingw_triplet/include"
-  if [[ ! -d "$mingw_dir" ]]; then
-    bsdtar -C "$_BUILDDIR" -xf "$_ASSETSDIR/$mingw_archive"
-    local old_path="$PATH"
-    export PATH="$mingw_dir/bin:$PATH"
-    export PATH="$old_path"
-  fi
 }
 
 function prepare-openconsole() {
@@ -169,39 +167,35 @@ function build() {
   time mingw32-make WINDOWS_PREFER_OPENCONSOLE=ON -j$(nproc)
   mingw32-make install
 
-  cp "$_SRCDIR"/packages/msys/domain/{main.nsi,lang.nsh,compiler_hint.lua} "$_PKGDIR"
+  cp "$_SRCDIR"/packages/msys/compiler_hint.lua "$_PKGDIR"
+  cp "$_SRCDIR"/platform/windows/installer-scripts/* "$_PKGDIR"
   cp "$_WINDOWS_TERMINAL_DIR/OpenConsole.exe" "$_PKGDIR"
-  if [[ $_NATIVE_ARCH == i686 ]]; then
-    [[ -d "$_PKGDIR/mingw32" ]] || cp -r "mingw32" "$_PKGDIR"
-  fi
-  if [[ $_NATIVE_ARCH == x86_64 ]]; then
-    [[ -d "$_PKGDIR/mingw64" ]] || cp -r "mingw64" "$_PKGDIR"
-  fi
   [[ -d "$_PKGDIR/llvm-mingw" ]] || bsdtar -C "$_PKGDIR" -xf "$_ASSETSDIR/$_LLVM_ARCHIVE"
   popd
 }
 
 function package() {
   pushd "$_PKGDIR"
-  "$_NSIS" -DVERSION="$_REDPANDA_VERSION" -DARCH="$_DISPLAY_ARCH" main.nsi
-  if [[ _7Z_REPACK -eq 1 ]]; then
-    7z x "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.exe" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
-    7z a -t7z -mx=9 -ms=on -mqs=on -mf=BCJ2 -m0="LZMA2:d=128m:fb=273:c=2g" "redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.7z" "RedPanda-CPP"
-    rm -rf "RedPanda-CPP"
-  fi
+  nsis_flags=(
+    -DAPP_VERSION="$APP_VERSION"
+    -DARCH="$_DISPLAY_ARCH"
+    -DFINALNAME="$_FINAL_NAME"
+    -DREQUIRED_WINDOWS_BUILD=18362
+    -DREQUIRED_WINDOWS_NAME="Windows 10 v1903"
+    -DHAVE_LLVM
+    -DHAVE_OPENCONSOLE
+  )
+  "$_NSIS" "${nsis_flags[@]}" redpanda.nsi
   popd
 }
 
 function dist() {
-  cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.exe" "$_DISTDIR"
-  [[ _7Z_REPACK -eq 1 ]] && cp "$_PKGDIR/redpanda-cpp-$_REDPANDA_VERSION-$_DISPLAY_ARCH.7z" "$_DISTDIR"
+  cp "$_PKGDIR/$_FINAL_NAME" "$_DISTDIR"
 }
 
 check-deps
 prepare-dirs
 download-assets
-[[ $_NATIVE_ARCH == i686 ]] && prepare-mingw 32
-[[ $_NATIVE_ARCH == x86_64 ]] && prepare-mingw 64
 prepare-openconsole
 prepare-src
 trap restore-src EXIT INT TERM

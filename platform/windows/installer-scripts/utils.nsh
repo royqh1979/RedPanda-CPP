@@ -15,6 +15,18 @@ Var /GLOBAL sectionDepTemp
 !macroend
 
 !macro CheckOsArch
+  ; special check for OpenConsole.exe:
+  ; - 32-bit cannot be installed on 64-bit OS
+  ; - x64 can be install on arm64 OS, following general rule
+  !ifdef HAVE_OPENCONSOLE
+    !if "${ARCH}" == "x86"
+      ${If} $osArch != "x86"
+        MessageBox MB_OK|MB_ICONSTOP "$(ErrorArchMismatch)"
+        Abort
+      ${EndIf}
+    !endif
+  !endif
+
   ; x64 cannot be installed on arm64 prior to Windows 11
   !if "${ARCH}" == "x64"
     ${If} $osArch == "arm64"
