@@ -30,7 +30,7 @@
         "PaletteTextDisabled":"#bebebe",
         "PaletteButtonDisabled": "#efefef",
         "PaletteButtonTextDisabled":"#bebebe",    
-        "PaletteHighlight":"#ffdddddd",
+        "PaletteHighlight":"#ff678cb1",
         "PaletteHighlightedText":"#ff000000"
     }
 }

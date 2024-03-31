@@ -107,6 +107,7 @@ Red Panda C++ Version 2.27
   - fix: If there are only 1 line in the editor, shift+down can't select it.
   - enhancement: By default, use monospaced font to display register values in the CPU Info dialog.
   - fix: Negative values in register like AH/AL are wrongs displayed as 32/64-bit number.
+  - Change: Background color for highlighted buttons in the default theme.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
