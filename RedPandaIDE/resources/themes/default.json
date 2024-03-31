@@ -31,6 +31,6 @@
         "PaletteButtonDisabled": "#efefef",
         "PaletteButtonTextDisabled":"#bebebe",    
         "PaletteHighlight":"#ff678cb1",
-        "PaletteHighlightedText":"#ff000000"
+        "PaletteHighlightedText":"#ffeeeeee"
     }
 }
