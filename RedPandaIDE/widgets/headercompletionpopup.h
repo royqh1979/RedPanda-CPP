@@ -43,7 +43,7 @@ using PHeaderCompletionListItem=std::shared_ptr<HeaderCompletionListItem>;
 class HeaderCompletionListModel: public QAbstractListModel {
     Q_OBJECT
 public:
-    explicit HeaderCompletionListModel(const QList<PHeaderCompletionListItem>* files,QObject *parent = nullptr);
+    explicit HeaderCompletionListModel(const QList<PHeaderCompletionListItem>* files, int matched, QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     void notifyUpdated();
@@ -53,12 +53,34 @@ public:
 
     void setFolderColor(const QColor &newFolderColor);
 
+    int matched() const;
+
+    void setMatched(int newMatched);
+
 private:
     const QList<PHeaderCompletionListItem> *mFiles;
     QColor mLocalColor;
     QColor mSystemColor;
     QColor mProjectColor;
     QColor mFolderColor;
+    int mMatched;
+};
+
+class HeaderCompletionListItemDelegate: public QStyledItemDelegate {
+    Q_OBJECT
+public:
+    HeaderCompletionListItemDelegate(HeaderCompletionListModel *model=nullptr, QWidget *parent = nullptr);
+
+    // QAbstractItemDelegate interface
+public:
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+
+    const QFont &font() const;
+    void setFont(const QFont &newFont);
+
+private:
+    HeaderCompletionListModel *mModel;
+    QFont mFont;
 };
 
 class HeaderCompletionPopup : public QWidget
@@ -97,6 +119,8 @@ private:
     bool mIgnoreCase;
     bool mSearchLocal;
     QString mCurrentFile;
+
+    HeaderCompletionListItemDelegate* mDelegate;
 
     // QWidget interface
 protected:

@@ -56,8 +56,6 @@ public:
     // QAbstractItemDelegate interface
 public:
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    CodeCompletionListModel *model() const;
-    void setModel(CodeCompletionListModel *newModel);
 
     const QColor &normalColor() const;
     void setNormalColor(const QColor &newNormalColor);

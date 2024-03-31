@@ -1326,12 +1326,28 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
 {
     PStatement statement;
     if (mModel && (statement = mModel->statement(index)) ) {
+        QFont normalFont{font()};
+        QFont matchedFont{font()};
+        normalFont.setBold(false);
+        normalFont.setUnderline(false);
+        matchedFont.setBold(true);
+        matchedFont.setUnderline(true);
         painter->save();
-        painter->setFont(font());
+        painter->setFont(normalFont);
         QColor normalColor = mNormalColor;
+        QColor matchedColor = mMatchedColor;
         if (option.state & QStyle::State_Selected) {
             painter->fillRect(option.rect, option.palette.highlight());
             normalColor = option.palette.color(QPalette::HighlightedText);
+            float h = mMatchedColor.hslHueF();
+            float s = mMatchedColor.hslSaturationF();
+            float l = normalColor.lightnessF();
+            if (l>0.85) {
+                l = 0.85;
+            } else if (l<0.15) {
+                l = 0.15;
+            }
+            matchedColor = QColor::fromHslF(h,s,l);
         }
         QPixmap icon = mModel->statementIcon(index);
         int x=option.rect.left();
@@ -1349,11 +1365,13 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
             if (pos<matchPosition->start) {
                 QString t = text.mid(pos,matchPosition->start-pos);
                 painter->setPen(normalColor);
+                painter->setFont(normalFont);
                 painter->drawText(x,y,t);
                 x+=painter->fontMetrics().horizontalAdvance(t);
             }
             QString t = text.mid(matchPosition->start, matchPosition->end-matchPosition->start);
-            painter->setPen(mMatchedColor);
+            painter->setPen(matchedColor);
+            painter->setFont(matchedFont);
             painter->drawText(x,y,t);
             x+=painter->fontMetrics().horizontalAdvance(t);
             pos=matchPosition->end;
@@ -1361,6 +1379,7 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
         if (pos<text.length()) {
             QString t = text.mid(pos,text.length()-pos);
             painter->setPen(normalColor);
+            painter->setFont(normalFont);
             painter->drawText(x,y,t);
             x+=painter->fontMetrics().horizontalAdvance(t);
         }
@@ -1368,16 +1387,6 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
     } else {
         QStyledItemDelegate::paint(painter, option, index);
     }
-}
-
-CodeCompletionListModel *CodeCompletionListItemDelegate::model() const
-{
-    return mModel;
-}
-
-void CodeCompletionListItemDelegate::setModel(CodeCompletionListModel *newModel)
-{
-    mModel = newModel;
 }
 
 const QColor &CodeCompletionListItemDelegate::normalColor() const

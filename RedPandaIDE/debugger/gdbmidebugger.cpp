@@ -480,14 +480,12 @@ void GDBMIDebuggerClient::handleRegisterValue(const QList<GDBMIResultParser::Par
         QString value = obj["value"].value();
         if (hexValue) {
             bool ok;
-            long long intVal;
-            intVal = value.toLongLong(&ok,16);
+            value.toLongLong(&ok,16);
             if (ok)
                 result.insert(number,value);
         } else {
             bool ok;
-            long long intVal;
-            intVal = value.toLongLong(&ok,10);
+            value.toLongLong(&ok,10);
             if (!ok)
                 result.insert(number,value);
         }
