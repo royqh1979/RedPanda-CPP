@@ -30,3 +30,27 @@ jobs:
         run: |
           export QT_ASSUME_STDERR_HAS_CONSOLE=1
           xmake r test-escape
+
+  teal_lua_consistency:
+    name: Teal–Lua consistency
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - uses: ConorMacBride/install-package@v1
+        with:
+          apt: luarocks
+
+      - name: Install Teal
+        run: |
+          sudo luarocks install tl
+
+      - name: Build
+        run: |
+          ./addon/gen.sh
+
+      - name: Check
+        run: |
+          git diff --exit-code
