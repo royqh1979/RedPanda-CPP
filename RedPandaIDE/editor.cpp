@@ -3605,11 +3605,9 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 
     mCompletionPopup->move(popupPos);
 
-//    fCompletionBox.CodeInsList := dmMain.CodeInserts.ItemList;
-//    fCompletionBox.SymbolUsage := dmMain.SymbolUsage;
-//    fCompletionBox.ShowCount := devCodeCompletion.MaxCount;
     //Set Font size;
     mCompletionPopup->setFont(font());
+    mCompletionPopup->setLineHeightFactor(pSettings->editor().lineSpacing());
     // Redirect key presses to completion box if applicable
     //todo:
     mCompletionPopup->setKeypressedCallback([this](QKeyEvent *event)->bool{
@@ -3690,6 +3688,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
                              pSettings->codeCompletion().height());
     //Set Font size;
     mHeaderCompletionPopup->setFont(font());
+    mHeaderCompletionPopup->setLineHeightFactor(pSettings->editor().lineSpacing());
 
     // Redirect key presses to completion box if applicable
     mHeaderCompletionPopup->setKeypressedCallback([this](QKeyEvent* event)->bool{

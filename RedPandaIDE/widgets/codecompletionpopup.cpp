@@ -22,6 +22,7 @@
 #include "../symbolusagemanager.h"
 #include "../colorscheme.h"
 #include "../iconsmanager.h"
+#include "../settings.h"
 
 #include <QKeyEvent>
 #include <QVBoxLayout>
@@ -151,12 +152,18 @@ bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSin
     setCursor(oldCursor);
 
     if (!mCompletionStatementList.isEmpty()) {
-        PColorSchemeItem item = mColors->value(StatementKind::skUnknown,PColorSchemeItem());
+        QString schemaName = pSettings->editor().colorScheme();
+        PColorSchemeItem item = pColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
+        if (item)
+            mDelegate->setCurrentSelectionColor(item->background());
+        else
+            mDelegate->setCurrentSelectionColor(palette().highlight().color());
+        item = pColorManager->getItem(schemaName, COLOR_SCHEME_TEXT);
         if (item)
             mDelegate->setNormalColor(item->foreground());
         else
             mDelegate->setNormalColor(palette().color(QPalette::Text));
-        item = mColors->value(StatementKind::skKeyword,PColorSchemeItem());
+        item = pColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
         if (item)
             mDelegate->setMatchedColor(item->foreground());
         else
@@ -1113,6 +1120,11 @@ void CodeCompletionPopup::setHideSymbolsStartWithTwoUnderline(bool newHideSymbol
     mHideSymbolsStartWithTwoUnderline = newHideSymbolsStartWithTwoUnderline;
 }
 
+void CodeCompletionPopup::setLineHeightFactor(float factor)
+{
+    mDelegate->setLineHeightFactor(factor);
+}
+
 bool CodeCompletionPopup::hideSymbolsStartWithTwoUnderline() const
 {
     return mHideSymbolsStartWithTwoUnderline;
@@ -1329,25 +1341,13 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
         QFont normalFont{font()};
         QFont matchedFont{font()};
         normalFont.setBold(false);
-        normalFont.setUnderline(false);
         matchedFont.setBold(true);
-        matchedFont.setUnderline(true);
         painter->save();
         painter->setFont(normalFont);
         QColor normalColor = mNormalColor;
         QColor matchedColor = mMatchedColor;
         if (option.state & QStyle::State_Selected) {
-            painter->fillRect(option.rect, option.palette.highlight());
-            normalColor = option.palette.color(QPalette::HighlightedText);
-            float h = mMatchedColor.hslHueF();
-            float s = mMatchedColor.hslSaturationF();
-            float l = normalColor.lightnessF();
-            if (l>0.85) {
-                l = 0.85;
-            } else if (l<0.15) {
-                l = 0.15;
-            }
-            matchedColor = QColor::fromHslF(h,s,l);
+            painter->fillRect(option.rect, mCurrentSelectionColor);
         }
         QPixmap icon = mModel->statementIcon(index);
         int x=option.rect.left();
@@ -1360,7 +1360,8 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
         }
         QString text = statement->command;
         int pos=0;
-        int y=option.rect.bottom()-painter->fontMetrics().descent();
+        int padding = (option.rect.height()-painter->fontMetrics().height())/2;
+        int y=option.rect.bottom()-painter->fontMetrics().descent()-padding;
         foreach (const PStatementMathPosition& matchPosition, statement->matchPositions) {
             if (pos<matchPosition->start) {
                 QString t = text.mid(pos,matchPosition->start-pos);
@@ -1419,9 +1420,37 @@ void CodeCompletionListItemDelegate::setFont(const QFont &newFont)
     mFont = newFont;
 }
 
+QSize CodeCompletionListItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    QSize size = QStyledItemDelegate::sizeHint(option, index);
+    size.setHeight(size.height()*mLineHeightFactor);
+    return size;
+}
+
+float CodeCompletionListItemDelegate::lineHeightFactor() const
+{
+    return mLineHeightFactor;
+}
+
+void CodeCompletionListItemDelegate::setLineHeightFactor(float newLineHeightFactor)
+{
+    mLineHeightFactor = newLineHeightFactor;
+}
+
+QColor CodeCompletionListItemDelegate::currentSelectionColor() const
+{
+    return mCurrentSelectionColor;
+}
+
+void CodeCompletionListItemDelegate::setCurrentSelectionColor(const QColor &newCurrentSelectionColor)
+{
+    mCurrentSelectionColor = newCurrentSelectionColor;
+}
+
 CodeCompletionListItemDelegate::CodeCompletionListItemDelegate(CodeCompletionListModel *model, QWidget *parent) : QStyledItemDelegate(parent),
     mModel(model)
 {
     mNormalColor = qApp->palette().color(QPalette::Text);
     mMatchedColor = qApp->palette().color(QPalette::BrightText);
+    mLineHeightFactor = 1.0;
 }

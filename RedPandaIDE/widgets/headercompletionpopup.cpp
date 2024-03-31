@@ -23,6 +23,9 @@
 #include "qpainter.h"
 #include "systemconsts.h"
 #include "../utils.h"
+#include "../settings.h"
+#include "../colorscheme.h"
+#include <qsynedit/constants.h>
 
 HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget(parent)
 {
@@ -89,6 +92,17 @@ bool HeaderCompletionPopup::search(const QString &phrase, bool autoHideOnSingleR
     setCursor(oldCursor);
 
     if (!mCompletionList.isEmpty()) {
+        QString schemaName = pSettings->editor().colorScheme();
+        PColorSchemeItem item = pColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
+        if (item)
+            mDelegate->setCurrentSelectionBackColor(item->background());
+        else
+            mDelegate->setCurrentSelectionBackColor(palette().highlight().color());
+        item = pColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
+        if (item)
+            mDelegate->setMatchedColor(item->foreground());
+        else
+            mDelegate->setMatchedColor(palette().color(QPalette::HighlightedText));
         mListView->setCurrentIndex(mModel->index(0,0));
         if (mCompletionList.count() == 1) {
             // if only one suggestion and auto hide , don't show the frame
@@ -141,6 +155,11 @@ QString HeaderCompletionPopup::selectedFilename(bool updateUsageCount)
         return item->filename;
     }
     return "";
+}
+
+void HeaderCompletionPopup::setLineHeightFactor(float newLineHeightFactor)
+{
+    mDelegate->setLineHeightFactor(newLineHeightFactor);
 }
 
 static bool sortByUsage(const PHeaderCompletionListItem& item1,const PHeaderCompletionListItem& item2){
@@ -390,7 +409,8 @@ void HeaderCompletionListModel::setMatched(int newMatched)
 
 HeaderCompletionListItemDelegate::HeaderCompletionListItemDelegate(HeaderCompletionListModel *model, QWidget *parent):
     QStyledItemDelegate{parent},
-    mModel{model}
+    mModel{model},
+    mLineHeightFactor{1.0}
 {
 
 }
@@ -410,26 +430,32 @@ void HeaderCompletionListItemDelegate::paint(QPainter *painter, const QStyleOpti
     QFont normalFont{font()};
     QFont matchedFont{font()};
     normalFont.setBold(false);
-    normalFont.setUnderline(false);
     matchedFont.setBold(true);
-    matchedFont.setUnderline(true);
     painter->setFont(normalFont);
     QColor normalColor = mModel->data(index, Qt::ForegroundRole).value<QColor>();
     if (option.state & QStyle::State_Selected) {
-        painter->fillRect(option.rect, option.palette.highlight());
-        normalColor = option.palette.color(QPalette::HighlightedText);
+        painter->fillRect(option.rect, mCurrentSelectionBackColor);
     }
-    painter->setPen(normalColor);
-    int y=option.rect.bottom()-painter->fontMetrics().descent();
+    int padding = (option.rect.height()-painter->fontMetrics().height())/2;
+    int y=option.rect.bottom()-painter->fontMetrics().descent()-padding;
     int x=0;
     QString t = text.left(mModel->matched());
+    painter->setPen(mMatchedColor);
     painter->setFont(matchedFont);
     painter->drawText(x,y,t);
     x+=painter->fontMetrics().horizontalAdvance(t);
     t = text.mid(mModel->matched());
+    painter->setPen(normalColor);
     painter->setFont(normalFont);
     painter->drawText(x,y,t);
     painter->restore();
+}
+
+QSize HeaderCompletionListItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    QSize size = QStyledItemDelegate::sizeHint(option, index);
+    size.setHeight(size.height()*mLineHeightFactor);
+    return size;
 }
 
 const QFont &HeaderCompletionListItemDelegate::font() const
@@ -440,4 +466,34 @@ const QFont &HeaderCompletionListItemDelegate::font() const
 void HeaderCompletionListItemDelegate::setFont(const QFont &newFont)
 {
     mFont=newFont;
+}
+
+float HeaderCompletionListItemDelegate::lineHeightFactor() const
+{
+    return mLineHeightFactor;
+}
+
+void HeaderCompletionListItemDelegate::setLineHeightFactor(float newLineHeightFactor)
+{
+    mLineHeightFactor = newLineHeightFactor;
+}
+
+QColor HeaderCompletionListItemDelegate::matchedColor() const
+{
+    return mMatchedColor;
+}
+
+void HeaderCompletionListItemDelegate::setMatchedColor(const QColor &newMatchedColor)
+{
+    mMatchedColor = newMatchedColor;
+}
+
+QColor HeaderCompletionListItemDelegate::currentSelectionBackColor() const
+{
+    return mCurrentSelectionBackColor;
+}
+
+void HeaderCompletionListItemDelegate::setCurrentSelectionBackColor(const QColor &newCurrentSelectionBackColor)
+{
+    mCurrentSelectionBackColor = newCurrentSelectionBackColor;
 }

@@ -74,13 +74,26 @@ public:
     // QAbstractItemDelegate interface
 public:
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 
     const QFont &font() const;
     void setFont(const QFont &newFont);
 
+    float lineHeightFactor() const;
+    void setLineHeightFactor(float newLineHeightFactor);
+
+    QColor matchedColor() const;
+    void setMatchedColor(const QColor &newMatchedColor);
+
+    QColor currentSelectionBackColor() const;
+    void setCurrentSelectionBackColor(const QColor &newCurrentSelectionBackColor);
+
 private:
     HeaderCompletionListModel *mModel;
+    QColor mCurrentSelectionBackColor;
+    QColor mMatchedColor;
     QFont mFont;
+    float mLineHeightFactor;
 };
 
 class HeaderCompletionPopup : public QWidget
@@ -97,6 +110,7 @@ public:
                             const QColor& systemColor,
                             const QColor& folderColor);
     QString selectedFilename(bool updateUsageCount);
+    void setLineHeightFactor(float newLineHeightFactor);
 
 private:
     void filterList(const QString& member);

@@ -56,6 +56,7 @@ public:
     // QAbstractItemDelegate interface
 public:
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 
     const QColor &normalColor() const;
     void setNormalColor(const QColor &newNormalColor);
@@ -66,11 +67,19 @@ public:
     const QFont &font() const;
     void setFont(const QFont &newFont);
 
+    float lineHeightFactor() const;
+    void setLineHeightFactor(float newLineHeightFactor);
+
+    QColor currentSelectionColor() const;
+    void setCurrentSelectionColor(const QColor &newCurrentSelectionColor);
+
 private:
     CodeCompletionListModel *mModel;
     QColor mNormalColor;
     QColor mMatchedColor;
+    QColor mCurrentSelectionColor;
     QFont mFont;
+    float mLineHeightFactor;
 };
 
 class CodeCompletionPopup : public QWidget
@@ -119,6 +128,7 @@ public:
     void setHideSymbolsStartWithUnderline(bool newHideSymbolsStartWithUnderline);
     bool hideSymbolsStartWithTwoUnderline() const;
     void setHideSymbolsStartWithTwoUnderline(bool newHideSymbolsStartWithTwoUnderline);
+    void setLineHeightFactor(float factor);
 
     const PStatement &currentScope() const;
     void setCurrentScope(const PStatement &newCurrentStatement);
