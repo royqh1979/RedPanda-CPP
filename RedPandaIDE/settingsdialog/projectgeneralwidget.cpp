@@ -35,6 +35,13 @@ ProjectGeneralWidget::ProjectGeneralWidget(const QString &name, const QString &g
     ui(new Ui::ProjectGeneralWidget)
 {
     ui->setupUi(this);
+    ui->cbType->addItems(
+                {
+                    "Win32 GUI",
+                    "Win32 Console",
+                    "Win32 Static Library",
+                    "Win32 DLL",
+                });
 }
 
 ProjectGeneralWidget::~ProjectGeneralWidget()
@@ -58,7 +65,9 @@ void ProjectGeneralWidget::doLoad()
 #else
     bool isMicroControllerProject = false;
 #endif
-    ui->grpType->setVisible(!isMicroControllerProject);
+    ui->cbType->setVisible(!isMicroControllerProject);
+    ui->cbDefaultCpp->setVisible(!isMicroControllerProject);
+    ui->cbSupportXPTheme->setVisible(!isMicroControllerProject);
     ui->grpIcon->setVisible(!isMicroControllerProject);
     ui->lblEncoding->setVisible(!isMicroControllerProject);
     ui->panelEncoding->setVisible(!isMicroControllerProject);
@@ -111,7 +120,7 @@ void ProjectGeneralWidget::doLoad()
         ui->cbEncodingDetail->setCurrentText(defaultEncoding);
     }
 
-    ui->lstType->setCurrentRow( static_cast<int>(project->options().type));
+    ui->cbType->setCurrentIndex(static_cast<int>(project->options().type));
 
     ui->cbDefaultCpp->setChecked(project->options().isCpp);
     ui->cbSupportXPTheme->setChecked(project->options().supportXPThemes);
@@ -133,7 +142,7 @@ void ProjectGeneralWidget::doSave()
         project->setEncoding(ui->cbEncoding->currentData().toByteArray());
     }
 
-    int row = std::max(0,ui->lstType->currentRow());
+    int row = std::max(0,ui->cbType->currentIndex());
     project->options().type = static_cast<ProjectType>(row);
 
     project->options().isCpp = ui->cbDefaultCpp->isChecked();
@@ -234,5 +243,14 @@ void ProjectGeneralWidget::updateIcons(const QSize &)
 {
     pIconsManager->setIcon(ui->btnBrowse,IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnRemove, IconsManager::ACTION_MISC_CROSS);
+}
+
+
+void ProjectGeneralWidget::on_cbType_currentIndexChanged(int index)
+{
+    std::shared_ptr<Project> project = pMainWindow->project();
+    if (!project)
+        return;
+    ui->txtOutputFile->setText(project->executable());
 }
 

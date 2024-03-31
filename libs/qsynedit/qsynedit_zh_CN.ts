@@ -4288,12 +4288,12 @@
 <context>
     <name>QSynedit::Document</name>
     <message>
-        <location filename="qsynedit/document.cpp" line="+628"/>
+        <location filename="qsynedit/document.cpp" line="+629"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>无法读取文件&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+39"/>
         <location line="+123"/>
         <source>Can&apos;t load codec &apos;%1&apos;!</source>
         <translation>无法加载字符编码&quot;%1&quot;!</translation>

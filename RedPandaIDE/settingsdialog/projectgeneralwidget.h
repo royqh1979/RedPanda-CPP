@@ -47,6 +47,8 @@ private slots:
     void on_cbEncoding_currentTextChanged(const QString &arg1);
 
     // SettingsWidget interface
+    void on_cbType_currentIndexChanged(int index);
+
 public:
     void init() override;
 
