@@ -54,4 +54,12 @@ bool BufferCoord::operator!=(const BufferCoord &coord)
     return coord.ch != ch || coord.line != line;
 }
 
+bool isAssemblyLanguage(ProgrammingLanguage lang)
+{
+    return lang == ProgrammingLanguage::Assembly
+            || lang == ProgrammingLanguage::ATTAssembly
+            || lang == ProgrammingLanguage::MixedAssembly
+            || lang == ProgrammingLanguage::MixedATTAssembly;
+}
+
 }

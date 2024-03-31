@@ -31,6 +31,8 @@ enum class ProgrammingLanguage {
     Composition,
     Assembly,
     ATTAssembly,
+    MixedAssembly,
+    MixedATTAssembly,
     CPP,
     GLSL,
     Makefile,
@@ -87,6 +89,7 @@ using PEditingArea = std::shared_ptr<EditingArea>;
 using EditingAreaList = QList<PEditingArea>;
 using PEditingAreaList = std::shared_ptr<EditingAreaList>;
 
+bool isAssemblyLanguage(ProgrammingLanguage lang);
 }
 
 #endif // TYPES_H

@@ -2093,10 +2093,7 @@ void Editor::onTooltipTimer()
         }
     }
     if (reason == TipType::Number) {
-        if ((syntaxer()->language() != QSynedit::ProgrammingLanguage::Assembly
-             && syntaxer()->language() != QSynedit::ProgrammingLanguage::ATTAssembly
-             )
-            ) {
+        if (!QSynedit::isAssemblyLanguage(syntaxer()->language())) {
             reason=TipType::None;
         }
     }
@@ -2130,9 +2127,7 @@ void Editor::onTooltipTimer()
         }
         break;
     case TipType::Keyword:
-        if ((syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
-             || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
-                ) {
+        if (QSynedit::isAssemblyLanguage(syntaxer()->language())) {
             if (!mCompletionPopup->isVisible()
                  && !mHeaderCompletionPopup->isVisible()) {
                 s = wordAtRowCol(p);
@@ -2200,9 +2195,7 @@ void Editor::onTooltipTimer()
         }
         break;
     case TipType::Number:
-        if ((syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
-             || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
-                ) {
+        if (QSynedit::isAssemblyLanguage(syntaxer()->language())) {
             bool neg=false;
             qlonglong val;
             bool ok;
@@ -2226,9 +2219,7 @@ void Editor::onTooltipTimer()
         break;
     case TipType::Keyword:
         if (pSettings->editor().enableIdentifierToolTips()) {
-            if ((syntaxer()->language() == QSynedit::ProgrammingLanguage::Assembly
-                 || syntaxer()->language() == QSynedit::ProgrammingLanguage::ATTAssembly)
-                    ) {
+            if (QSynedit::isAssemblyLanguage(syntaxer()->language())) {
                 hint = QSynedit::ASMSyntaxer::Instructions.value(s.toLower(),"");
             }
         }

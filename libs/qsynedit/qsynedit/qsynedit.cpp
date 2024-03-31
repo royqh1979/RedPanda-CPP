@@ -4662,12 +4662,9 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
     if (oldSyntaxer ->language() != syntaxer->language()) {
         recalcCharExtent();
         mDocument->beginUpdate();
-        auto action=finally([this]{
-            mDocument->endUpdate();
-        });
         reparseDocument();
+        mDocument->endUpdate();
     }
-    //onSizeOrFontChanged(true);
     invalidate();
 }
 

@@ -147,8 +147,9 @@ const QSet<QString> ASMSyntaxer::ATTDirectives {
     ".zero",".2byte",".4byte",".8byte"
 };
 
-ASMSyntaxer::ASMSyntaxer(bool isATT):
-    mATT(isATT)
+ASMSyntaxer::ASMSyntaxer(bool isATT, bool isCppMixed):
+    mATT{isATT},
+    mCppMixed{isCppMixed}
 {
     initData();
     mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber, TokenType::Number);
@@ -1661,7 +1662,7 @@ void ASMSyntaxer::next()
         SlashProc();
         break;
     case ';':
-        if (mATT) {
+        if (mATT || mCppMixed) {
             SymbolProc();
         } else
             CommentProc();

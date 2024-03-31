@@ -387,6 +387,7 @@ public:
     int selCount() const;
 
     QStringList getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const;
+    void reparseDocument();
 
     QString lineBreak() const;
 
@@ -538,7 +539,6 @@ private:
     void updateModifiedStatus();
     void reparseLines(int startLine, int endLine);
     //void reparseLine(int line);
-    void reparseDocument();
     void uncollapse(PCodeFoldingRange FoldRange);
     void collapse(PCodeFoldingRange FoldRange);
 

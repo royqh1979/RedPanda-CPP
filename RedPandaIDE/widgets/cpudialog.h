@@ -41,6 +41,7 @@ signals:
     void closed();
 private:
     void sendSyntaxCommand();
+    void updateSyntaxer();
 private:
     Ui::CPUDialog *ui;
     bool mInited;

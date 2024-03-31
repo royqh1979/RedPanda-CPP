@@ -44,7 +44,7 @@ class ASMSyntaxer : public Syntaxer
     };
 
 public:
-    explicit ASMSyntaxer(bool isATT=false);
+    explicit ASMSyntaxer(bool isATT=false, bool isCppMixed=false);
     ASMSyntaxer(const ASMSyntaxer&)=delete;
     ASMSyntaxer& operator=(const ASMSyntaxer&)=delete;
 
@@ -74,6 +74,7 @@ private:
     PTokenAttribute mRegisterAttribute;
     PTokenAttribute mLabelAttribute;
     bool mATT;
+    bool mCppMixed;
     QSet<QString> mKeywordsCache;
 
 private:

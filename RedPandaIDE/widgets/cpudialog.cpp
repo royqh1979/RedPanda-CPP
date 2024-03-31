@@ -33,7 +33,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     ui->setupUi(this);
-    ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::Assembly));
+    updateSyntaxer();
     ui->txtCode->setReadOnly(true);
     ui->txtCode->gutter().setShowLineNumbers(false);
     ui->txtCode->setCaretUseTextColor(true);
@@ -47,8 +47,6 @@ CPUDialog::CPUDialog(QWidget *parent) :
     options.setFlag(QSynedit::EditorOption::eoScrollPastEof,false);
     options.setFlag(QSynedit::EditorOption::eoScrollPastEol,false);
     ui->txtCode->setOptions(options);
-    syntaxerManager.applyColorScheme(ui->txtCode->syntaxer(),
-                                        pSettings->editor().colorScheme());
     PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
     if (item) {
         ui->txtCode->setActiveLineColor(item->background());
@@ -132,6 +130,8 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
         }
     }
     ui->txtCode->document()->setContents(lines);
+    ui->txtCode->reparseDocument();
+    ui->txtCode->invalidate();
     if (activeLine!=-1)
         ui->txtCode->setCaretXYCentered(QSynedit::BufferCoord{1,activeLine+1});
     mSetting=false;
@@ -157,6 +157,23 @@ void CPUDialog::sendSyntaxCommand()
     pMainWindow->debugger()->setDisassemblyLanguage(ui->rdIntel->isChecked());
 }
 
+void CPUDialog::updateSyntaxer()
+{
+    if (pSettings->debugger().blendMode()) {
+        if (pSettings->debugger().useIntelStyle())
+            ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::MixedAssembly));
+        else
+            ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::MixedATTAssembly));
+    } else {
+        if (pSettings->debugger().useIntelStyle())
+            ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::Assembly));
+        else
+            ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::ATTAssembly));
+    }
+    syntaxerManager.applyColorScheme(ui->txtCode->syntaxer(),
+                                        pSettings->editor().colorScheme());
+}
+
 void CPUDialog::closeEvent(QCloseEvent *event)
 {
     pSettings->ui().setCPUDialogWidth(width());
@@ -174,6 +191,7 @@ void CPUDialog::on_rdIntel_toggled(bool)
     updateInfo();
     pSettings->debugger().setUseIntelStyle(ui->rdIntel->isChecked());
     pSettings->debugger().save();
+    updateSyntaxer();
 }
 
 void CPUDialog::on_rdATT_toggled(bool)
@@ -181,6 +199,7 @@ void CPUDialog::on_rdATT_toggled(bool)
     updateInfo();
     pSettings->debugger().setUseIntelStyle(ui->rdIntel->isChecked());
     pSettings->debugger().save();
+    updateSyntaxer();
 }
 
 void CPUDialog::on_chkBlendMode_stateChanged(int)
@@ -188,6 +207,7 @@ void CPUDialog::on_chkBlendMode_stateChanged(int)
     updateInfo();
     pSettings->debugger().setBlendMode(ui->chkBlendMode->isCheckable());
     pSettings->debugger().save();
+    updateSyntaxer();
 }
 
 void CPUDialog::on_btnStepOverInstruction_clicked()
