@@ -195,7 +195,7 @@ void Document::insertItem(int line, const QString &s)
                 mUpdateDocumentLineWidthFunc);
     documentLine->setLineText(s);
     mLines.insert(line,documentLine);
-    setIndexOfLongestLine(-1);
+    mIndexOfLongestLine = -1;
     endUpdate();
 }
 
@@ -288,8 +288,8 @@ void Document::setContents(const QStringList &text)
         foreach (const QString& s,text) {
             addItem(s);
         }
+        mIndexOfLongestLine = -1;
         emit inserted(FirstAdded,text.count());
-        setIndexOfLongestLine(-1);
     }
 }
 
@@ -346,7 +346,7 @@ void Document::addLines(const QStringList &strings)
         for (const QString& s:strings) {
             addItem(s);
         }
-        setIndexOfLongestLine(-1);
+        mIndexOfLongestLine = -1;
         emit inserted(FirstAdded,strings.count());
     }
 }
@@ -386,7 +386,7 @@ void Document::deleteLines(int index, int numLines)
     });
     if (mIndexOfLongestLine>=index) {
         if (mIndexOfLongestLine <index+numLines) {
-            setIndexOfLongestLine(-1);
+            mIndexOfLongestLine = -1;
         } else {
             mIndexOfLongestLine -= numLines;
         }
@@ -441,9 +441,9 @@ void Document::deleteAt(int index)
     }
     beginUpdate();
     if (mIndexOfLongestLine == index)
-        setIndexOfLongestLine(-1);
+        mIndexOfLongestLine = -1;
     else if (mIndexOfLongestLine>index)
-        setIndexOfLongestLine(-1);
+        mIndexOfLongestLine -= 1;
     mLines.removeAt(index);
     emit deleted(index,1);
     endUpdate();
@@ -475,7 +475,7 @@ void Document::putLine(int index, const QString &s, bool notify) {
         mLines[index]->setLineText(s);
         if (mIndexOfLongestLine == index) {
             // width is invalidated, so we must recalculate longest line
-            setIndexOfLongestLine(-1);
+            mIndexOfLongestLine = -1;
         }
         if (notify)
             emit putted(index);
@@ -501,7 +501,6 @@ void Document::insertLines(int index, int numLines)
         return;
     beginUpdate();
     auto action = finally([this]{
-        setIndexOfLongestLine(-1);
         endUpdate();
     });
     PDocumentLine line;
@@ -510,6 +509,7 @@ void Document::insertLines(int index, int numLines)
         line = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
         mLines[i]=line;
     }
+    mIndexOfLongestLine = -1;
     emit inserted(index,numLines);
 }
 
@@ -632,7 +632,6 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
     auto action = finally([this]{
         if (mLines.count()>0)
             emit inserted(0,mLines.count());
-        setIndexOfLongestLine(-1);
         endUpdate();
     });
     //test for utf8 / utf 8 bom
@@ -1161,7 +1160,7 @@ void Document::internalClear()
         beginUpdate();
         int oldCount = mLines.count();
         mLines.clear();
-        setIndexOfLongestLine(-1);
+        mIndexOfLongestLine = -1;
         emit deleted(0,oldCount);
         endUpdate();
     }
@@ -1195,33 +1194,29 @@ void Document::setLineWidth(int line, const QString &lineText, int newWidth, con
     mLines[line]->mWidth = newWidth;
     mLines[line]->mGlyphStartPositionList = glyphStartPositionList;
     if (mIndexOfLongestLine<0) {
-        setIndexOfLongestLine(line);
+        mIndexOfLongestLine = line;
+        notifyMaxLineWidthChanged();
     } else if (mIndexOfLongestLine == line) {
-        if (oldWidth > newWidth)
-            setIndexOfLongestLine(-1);
-        else
-            emitMaxLineWidthChanged();
+        if (oldWidth > newWidth) {
+            mIndexOfLongestLine = -1;
+            notifyMaxLineWidthChanged();
+        } else {
+            notifyMaxLineWidthChanged();
+        }
     } else if (mLines[mIndexOfLongestLine]->mWidth < newWidth) {
-        setIndexOfLongestLine(line);
+        mIndexOfLongestLine = line;
+        notifyMaxLineWidthChanged();
     }
     Q_ASSERT(mLines[line]->mGlyphStartPositionList.length() == mLines[line]->mGlyphStartCharList.length());
 }
 
-void Document::emitMaxLineWidthChanged()
+void Document::notifyMaxLineWidthChanged()
 {
     if (mSetLineWidthLockCount>0) {
         mMaxLineChangedInSetLinesWidth = true;
     } else {
         emit maxLineWidthChanged();
     }
-}
-
-void Document::setIndexOfLongestLine(int line)
-{
-    mIndexOfLongestLine = line;
-    //mIndexOfLongestLine may not change, but it's width changed.
-    //so we must emit the signal here
-    emitMaxLineWidthChanged();
 }
 
 QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, int left, int &right) const
@@ -1277,8 +1272,7 @@ void Document::invalidateAllLineWidth()
     for (PDocumentLine& line:mLines) {
         line->invalidateWidth();
     }
-    setIndexOfLongestLine(-1);
-//    mIndexOfLongestLine = -1;
+    mIndexOfLongestLine = -1;
 }
 
 DocumentLine::DocumentLine(DocumentLine::UpdateWidthFunc updateWidthFunc):

@@ -3218,8 +3218,8 @@ void QSynEdit::recalcCharExtent()
     }
     mTextHeight *= mLineSpacingFactor;
 
-    mTopPos = currentTopRow * mTextHeight;
-    mLeftPos = currentLeftCol * mCharWidth;
+    setTopPos(currentTopRow * mTextHeight);
+    setLeftPos(currentLeftCol * mCharWidth);
     onSizeOrFontChanged();
 }
 
@@ -6799,6 +6799,7 @@ void QSynEdit::setLeftPos(int value)
     //value = std::min(value,maxScrollWidth());
     value = std::max(value, 0);
     if (value != mLeftPos) {
+        mLeftPos = value;
         setStatusChanged(StatusChange::scLeftPos);
         if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal)
             horizontalScrollBar()->setValue(value);
@@ -6824,10 +6825,10 @@ void QSynEdit::setTopPos(int value)
     value = std::max(value, 0);
     if (value != mTopPos) {
         setStatusChanged(StatusChange::scTopPos);
+        mTopPos = value;
         if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
             verticalScrollBar()->setValue(value);
         } else {
-            mTopPos = value;
             invalidate();
         }
     }

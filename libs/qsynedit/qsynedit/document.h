@@ -579,8 +579,7 @@ private:
     void beginSetLinesWidth();
     void endSetLinesWidth();
     void setLineWidth(int line, const QString& lineText, int newWidth, const QList<int> glyphStartPositionList);
-    void emitMaxLineWidthChanged();
-    void setIndexOfLongestLine(int line);
+    void notifyMaxLineWidthChanged();
 
     int glyphWidth(const QString& glyph, int left,
                    const QFontMetrics &fontMetrics,
