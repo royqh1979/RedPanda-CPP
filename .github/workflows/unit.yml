@@ -53,4 +53,4 @@ jobs:
 
       - name: Check
         run: |
-          git diff --exit-code
+          git diff --color --exit-code
