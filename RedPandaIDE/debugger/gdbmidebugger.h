@@ -105,7 +105,7 @@ private:
     void handleMemory(const QList<GDBMIResultParser::ParseValue> & rows);
     void handleMemoryBytes(const QList<GDBMIResultParser::ParseValue> & rows);
     void handleRegisterNames(const QList<GDBMIResultParser::ParseValue> & names);
-    void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values);
+    void handleRegisterValue(const QList<GDBMIResultParser::ParseValue> & values, bool hexValue);
     void handleListVarChildren(const GDBMIResultParser::ParseObject& multiVars);
     void handleUpdateVarValue(const QList<GDBMIResultParser::ParseValue> &changes);
     void handleDisassembly(const QList<GDBMIResultParser::ParseValue> &instructions);

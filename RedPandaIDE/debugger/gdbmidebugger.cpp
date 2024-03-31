@@ -471,20 +471,26 @@ void GDBMIDebuggerClient::handleRegisterNames(const QList<GDBMIResultParser::Par
     emit registerNamesUpdated(nameList);
 }
 
-void GDBMIDebuggerClient::handleRegisterValue(const QList<GDBMIResultParser::ParseValue> &values)
+void GDBMIDebuggerClient::handleRegisterValue(const QList<GDBMIResultParser::ParseValue> &values, bool hexValue)
 {
     QHash<int,QString> result;
     foreach (const GDBMIResultParser::ParseValue& val, values) {
         GDBMIResultParser::ParseObject obj = val.object();
         int number = obj["number"].intValue();
         QString value = obj["value"].value();
-        bool ok;
-        long long intVal;
-        intVal = value.toLongLong(&ok,10);
-        if (ok) {
-            value = QString("0x%1").arg(intVal,0,16);
+        if (hexValue) {
+            bool ok;
+            long long intVal;
+            intVal = value.toLongLong(&ok,16);
+            if (ok)
+                result.insert(number,value);
+        } else {
+            bool ok;
+            long long intVal;
+            intVal = value.toLongLong(&ok,10);
+            if (!ok)
+                result.insert(number,value);
         }
-        result.insert(number,value);
     }
     emit registerValuesUpdated(result);
 }
@@ -712,7 +718,7 @@ void GDBMIDebuggerClient::processResult(const QByteArray &result)
         handleRegisterNames(multiValues["register-names"].array());
         break;
     case GDBMIResultType::RegisterValues:
-        handleRegisterValue(multiValues["register-values"].array());
+        handleRegisterValue(multiValues["register-values"].array(), mCurrentCmd->params=="x");
         break;
     case GDBMIResultType::CreateVar:
         handleCreateVar(multiValues);
@@ -1207,6 +1213,7 @@ void GDBMIDebuggerClient::refreshFrame()
 void GDBMIDebuggerClient::refreshRegisters()
 {
     postCommand("-data-list-register-names","");
+    postCommand("-data-list-register-values", "x");
     postCommand("-data-list-register-values", "N");
 }
 

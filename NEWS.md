@@ -105,6 +105,8 @@ Red Panda C++ Version 2.27
   - fix: Compile info for project doesn't have name of the project executable.
   - enhancement: Highlight words in the string/comments.
   - fix: If there are only 1 line in the editor, shift+down can't select it.
+  - enhancement: By default, use monospaced font to display register values in the CPU Info dialog.
+  - fix: Negative values in register like AH/AL are wrongs displayed as 32/64-bit number.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
