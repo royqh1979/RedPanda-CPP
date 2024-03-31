@@ -609,7 +609,7 @@ iconsets_files.files += $$files(resources/iconsets/*.svg, true)
 iconsets_files.files += $$files(resources/iconsets/*.json, true)
 
 ENABLE_LUA_ADDON {
-    theme_files.files += $$files(themes/*.lua, false)
+    theme_files.files += $$files(resources/themes/*.lua, false)
 } else {
     theme_files.files += $$files(resources/themes/*.json, false)
 }

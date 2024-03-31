@@ -30,4 +30,4 @@
 
 # generated files
 compiler_hint.lua eol=lf
-/RedPandaIDE/themes/*.lua eol=lf
+/RedPandaIDE/resources/themes/*.lua eol=lf
