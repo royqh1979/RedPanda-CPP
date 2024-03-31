@@ -6,18 +6,9 @@ function apiVersion()
    }
 end
 
-local nameMap = {
-   en_US = "One Dark",
-   pt_BR = "One Dark",
-   zh_CN = "One Dark",
-   zh_TW = "One Dark",
-}
-
 function main()
-   local lang = C_Desktop.language()
-
    return {
-      ["name"] = nameMap[lang] or nameMap.en_US,
+      ["name"] = "One Dark",
       ["style"] = "RedPandaDarkFusion",
       ["default scheme"] = "One Dark",
       ["default iconset"] = "contrast",
@@ -46,7 +37,7 @@ function main()
          PaletteBrightText = "#E0E1E3",
          PaletteDark = "#282c34",
          PaletteMid = "#282c34",
-         PaletteMidLight = "#282c34",
+         PaletteMidlight = "#282c34",
          PaletteLight = "#282c34",
       },
    }
