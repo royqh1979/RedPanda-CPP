@@ -123,7 +123,10 @@ Section "$(SectionMainName)" SectionMain
   File "NEWS.md"
   File "README.md"
   File "qt.conf"
-  
+  !ifdef HAVE_OPENCONSOLE
+    File "OpenConsole.exe"
+  !endif
+
   ; Write required paths
   SetOutPath $INSTDIR\Templates
   File /nonfatal /r "Templates\*"
@@ -145,6 +148,15 @@ SectionEnd
     SetOutPath $INSTDIR
 
     File /nonfatal /r "mingw64"
+  SectionEnd
+!endif
+
+!ifdef HAVE_LLVM
+  Section "$(SectionLlvmName)" SectionLlvm
+    SectionIn 1 3
+    SetOutPath $INSTDIR
+
+    File /nonfatal /r "llvm-mingw"
   SectionEnd
 !endif
 
@@ -285,6 +297,9 @@ SectionEnd
 !ifdef HAVE_MINGW64
   !insertmacro MUI_DESCRIPTION_TEXT ${SectionMinGW64}      "$(MessageSectionMinGW64)"
 !endif
+!ifdef HAVE_LLVM
+  !insertmacro MUI_DESCRIPTION_TEXT ${SectionLlvm}        "$(MessageSectionLlvm)"
+!endif
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcuts}   "$(MessageSectionShortcuts)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssocs}      "$(MessageSectionAssocs)"
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionCompress}    "$(MessageSectionCompress)"
@@ -419,11 +434,13 @@ Section "Uninstall"
   Delete "$INSTDIR\LICENSE"
   Delete "$INSTDIR\README.md"
   Delete "$INSTDIR\qt.conf"
+  Delete "$INSTDIR\OpenConsole.exe"
 
   RMDir /r "$INSTDIR\Lang"
   RMDir /r "$INSTDIR\Templates"
   RMDir /r "$INSTDIR\mingw32"
   RMDir /r "$INSTDIR\mingw64"
+  RMDir /r "$INSTDIR\llvm-mingw"
 
   RMDir "$INSTDIR"
 
