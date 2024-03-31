@@ -5045,7 +5045,7 @@ QStringList Settings::CodeFormatter::getArguments()
         result.append(QString("--max-continuation-indent=%1").arg(mMaxContinuationIndent));
     if (mBreakBlocks)
         result.append("--break-blocks");
-    if (mBreakBlocksAll)
+    else if (mBreakBlocksAll)
         result.append("--break-blocks=all");
     if (mPadOper)
         result.append("--pad-oper");
@@ -5131,7 +5131,6 @@ QStringList Settings::CodeFormatter::getArguments()
         if (mBreakAfterLogical)
             result.append("--break-after-logical");
     }
-
     return result;
 }
 
