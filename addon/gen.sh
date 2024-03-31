@@ -25,6 +25,6 @@ function gen-compiler-hint() {
   tl gen --include-dir addon --global-env-def defs/compiler_hint --gen-compat off --gen-target 5.4 -o "$out" "$file"
 }
 
-gen-compiler-hint addon/compiler_hint/windows_domain.tl packages/msys/domain/compiler_hint.lua
+gen-compiler-hint addon/compiler_hint/windows_llvm.tl packages/msys/compiler_hint.lua
 gen-compiler-hint addon/compiler_hint/archlinux.tl packages/archlinux/compiler_hint.lua
 gen-compiler-hint addon/compiler_hint/debian.tl packages/debian/compiler_hint.lua
