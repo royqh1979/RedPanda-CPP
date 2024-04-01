@@ -125,7 +125,7 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
     int activeLine = -1;
     for (int i=0;i<lines.size();i++) {
         QString line = lines[i];
-        if (line.startsWith("=>")) {
+        if (line.startsWith("=>") || line.startsWith("->")) {
             activeLine = i;
         }
     }
@@ -159,7 +159,7 @@ void CPUDialog::sendSyntaxCommand()
 
 void CPUDialog::updateSyntaxer()
 {
-    if (pSettings->debugger().blendMode()) {
+    if (pSettings->debugger().blendMode() && pMainWindow->debugger()->supportDisassemlyBlendMode()) {
         if (pSettings->debugger().useIntelStyle())
             ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::MixedAssembly));
         else
@@ -240,6 +240,7 @@ void CPUDialog::showEvent(QShowEvent *event)
         sizes[1] = std::max(0,totalSize - sizes[0]);
         ui->splitter->setSizes(sizes);
     }
+    ui->chkBlendMode->setVisible(pMainWindow->debugger()->supportDisassemlyBlendMode());
 }
 
 

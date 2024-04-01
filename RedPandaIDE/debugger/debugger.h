@@ -396,7 +396,7 @@ public:
 
     bool useDebugServer() const;
     void setUseDebugServer(bool newUseDebugServer);
-
+    bool supportDisassemlyBlendMode();
 signals:
     void evalValueReady(const QString& s);
     void memoryExamineReady(const QStringList& s);

@@ -641,6 +641,11 @@ void Debugger::setUseDebugServer(bool newUseDebugServer)
     mUseDebugServer = newUseDebugServer;
 }
 
+bool Debugger::supportDisassemlyBlendMode()
+{
+    return mDebuggerType == DebuggerType::GDB;
+}
+
 bool Debugger::debugInfosUsingUTF8() const
 {
     return mDebugInfosUsingUTF8;
