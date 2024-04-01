@@ -3569,8 +3569,9 @@ bool CppParser::handleStatement(int maxIndex)
         if (keywordType == KeywordType::Extern) {
             if (mIndex+1<maxIndex) {
                 if (mTokenizer[mIndex+1]->text=="template") {
-                    //extern template, skit it
-                    mIndex+=2;
+                    //extern template, skit to ;
+                    //see https://en.cppreference.com/w/cpp/language/class_template#Class_template_instantiation
+                    skipNextSemicolon(mIndex, maxIndex);
                     goto _exit;
                 }
             }
