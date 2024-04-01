@@ -3786,7 +3786,6 @@ ScrollStyle QSynEdit::scrollBars() const
 
 void QSynEdit::setScrollBars(ScrollStyle newScrollBars)
 {
-    ScrollStyle oldScrollBars = mScrollBars;
     mScrollBars = newScrollBars;
     if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
         if (mOptions.testFlag(eoHideShowScrollbars)) {

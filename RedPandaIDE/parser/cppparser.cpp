@@ -4170,6 +4170,7 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                 break;
             }
             //not function pointer, fall through
+            [[fallthrough]];
         case '{':
             tempType="";
             if (mIndex+1<maxIndex

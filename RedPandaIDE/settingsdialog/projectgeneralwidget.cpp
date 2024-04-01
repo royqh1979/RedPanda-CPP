@@ -246,7 +246,7 @@ void ProjectGeneralWidget::updateIcons(const QSize &)
 }
 
 
-void ProjectGeneralWidget::on_cbType_currentIndexChanged(int index)
+void ProjectGeneralWidget::on_cbType_currentIndexChanged(int /*index*/)
 {
     std::shared_ptr<Project> project = pMainWindow->project();
     if (!project)
