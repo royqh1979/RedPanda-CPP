@@ -81,7 +81,9 @@ void AutolinkManager::load()
 #endif
     }
     if (file.open(QFile::ReadOnly)) {
-        QByteArray content = file.readAll();
+        QByteArray content = file.readAll().trimmed();
+        if (content.isEmpty())
+            return;
         QJsonDocument doc(QJsonDocument::fromJson(content));
         fromJson(doc.array());
         file.close();

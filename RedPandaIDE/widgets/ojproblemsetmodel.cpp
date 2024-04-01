@@ -174,7 +174,9 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
 {
     QFile file(fileName);
     if (file.open(QFile::ReadOnly)) {
-        QByteArray content = file.readAll();
+        QByteArray content = file.readAll().trimmed();
+        if (content.isEmpty())
+            return;
         QJsonParseError error;
         QJsonDocument doc(QJsonDocument::fromJson(content,&error));
         if (error.error!=QJsonParseError::NoError) {

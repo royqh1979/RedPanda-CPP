@@ -381,7 +381,9 @@ QList<PIconSet> IconsManager::listIconSets()
             pSet->displayName = pSet->name;
             QFile infoFile(includeTrailingPathDelimiter(fileInfo.absoluteFilePath())+"info.json");
             if (infoFile.exists() && infoFile.open(QFile::ReadOnly)) {
-                QByteArray content = infoFile.readAll();
+                QByteArray content = infoFile.readAll().trimmed();
+                if (content.isEmpty())
+                    return result;
                 QJsonParseError error;
                 QJsonDocument doc(QJsonDocument::fromJson(content,&error));
                 if (error.error  == QJsonParseError::NoError) {

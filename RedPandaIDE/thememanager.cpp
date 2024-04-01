@@ -204,7 +204,9 @@ AppTheme::AppTheme(const QString &filename, ThemeType type, QObject *parent):QOb
                         .arg(filename));
     }
     if (file.open(QFile::ReadOnly)) {
-        QByteArray content = file.readAll();
+        QByteArray content = file.readAll().trimmed();
+        if (content.isEmpty())
+            return;
         QJsonObject obj;
 
         switch (type) {

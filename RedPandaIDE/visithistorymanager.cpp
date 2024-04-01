@@ -96,8 +96,11 @@ PVisitHistory VisitHistoryManager::doLoad(const QString &filename, qint64 criter
     QFile file(filename);
     if (!file.open(QFile::ReadOnly))
         return pHistory;
+    QByteArray content = file.readAll().trimmed();
+    if (content.isEmpty())
+        return pHistory;
     QJsonParseError error;
-    QJsonDocument doc=QJsonDocument::fromJson(file.readAll(),&error);
+    QJsonDocument doc=QJsonDocument::fromJson(content, &error);
     if (error.error!=QJsonParseError::NoError)
         return pHistory;
     bool ok;

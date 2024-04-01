@@ -69,7 +69,9 @@ void ToolsManager::load()
         return;
     }
 
-    QByteArray json = file.readAll();
+    QByteArray json = file.readAll().trimmed();
+    if (json.isEmpty())
+        return;
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(json,&error);
     if (error.error != QJsonParseError::NoError) {

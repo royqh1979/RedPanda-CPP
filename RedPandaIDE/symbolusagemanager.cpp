@@ -42,7 +42,9 @@ void SymbolUsageManager::load()
                               tr("Can't open symbol usage file '%1' for read.")
                               .arg(filename));
     }
-    QByteArray contents = file.readAll();
+    QByteArray contents = file.readAll().trimmed();
+    if (contents.isEmpty())
+        return;
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(contents,&error);
     if (error.error != QJsonParseError::NoError) {

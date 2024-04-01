@@ -68,7 +68,9 @@ PColorScheme ColorScheme::load(const QString &filename)
         qDebug()<<QObject::tr("Can't open file '%1' for read").arg(file.fileName());
         return PColorScheme();
     }
-    QByteArray content = file.readAll();
+    QByteArray content = file.readAll().trimmed();
+    if (content.isEmpty())
+        return PColorScheme();
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(content,&error);
     if (error.error!=QJsonParseError::NoError) {

@@ -1928,7 +1928,9 @@ QHash<QString, PProjectEditorLayout> Project::loadLayout()
     QFile file(jsonFilename);
     if (!file.open(QIODevice::ReadOnly))
         return layouts;
-    QByteArray content = file.readAll();
+    QByteArray content = file.readAll().trimmed();
+    if (content.isEmpty())
+        return layouts;
     QJsonParseError parseError;
     QJsonDocument doc(QJsonDocument::fromJson(content,&parseError));
     file.close();
