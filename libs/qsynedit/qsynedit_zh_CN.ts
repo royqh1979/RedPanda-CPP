@@ -14,7 +14,7 @@
         <translation>写入数据失败。</translation>
     </message>
     <message>
-        <location filename="qsynedit/syntaxer/asm.cpp" line="+367"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="+368"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>byte swap.</source>
@@ -4288,7 +4288,7 @@
 <context>
     <name>QSynedit::Document</name>
     <message>
-        <location filename="qsynedit/document.cpp" line="+629"/>
+        <location filename="qsynedit/document.cpp" line="+616"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>无法读取文件&quot;%1&quot;.</translation>
     </message>
