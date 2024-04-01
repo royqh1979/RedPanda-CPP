@@ -279,6 +279,7 @@ public slots:
     void onFileSaved(const QString& path, bool inProject);
 
 private:
+    void executeTool(PToolItem item);
     int calIconSize(const QString &fontName, int fontPointSize);
     void hideAllSearchDialogs();
     void prepareSearchDialog();

@@ -20,13 +20,27 @@
 #include <QObject>
 #include <memory>
 
+enum class ToolItemInputOrigin {
+    None,
+    CurrentSelection,
+    WholeDocument
+};
+
+enum class ToolItemOutputTarget {
+    RedirectToNull,
+    RedirectToToolsOutputPanel,
+    ReplaceCurrentSelection,
+    RepalceWholeDocument,
+};
+
 struct ToolItem {
     QString id;
     QString title;
     QString program;
     QString workingDirectory;
     QString parameters;
-    bool pauseAfterExit;
+    ToolItemInputOrigin inputOrigin;
+    ToolItemOutputTarget outputTarget;
 };
 
 using PToolItem = std::shared_ptr<ToolItem>;

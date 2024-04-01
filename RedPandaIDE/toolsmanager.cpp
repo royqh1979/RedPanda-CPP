@@ -45,7 +45,8 @@ void ToolsManager::load()
 #endif
         item->workingDirectory = "<SOURCEPATH>";
         item->parameters = "<EXENAME>";
-        item->pauseAfterExit = false;
+        item->inputOrigin = ToolItemInputOrigin::None;
+        item->outputTarget = ToolItemOutputTarget::RedirectToToolsOutputPanel;
         mTools.append(item);
 //#ifdef Q_OS_WIN
 //        item = std::make_shared<ToolItem>();
@@ -96,7 +97,8 @@ void ToolsManager::load()
         item->program = object["program"].toString();
         item->workingDirectory = object["workingDirectory"].toString();
         item->parameters = object["parameters"].toString();
-        item->pauseAfterExit = object["pauseAfterExit"].toBool();
+        item->outputTarget = static_cast<ToolItemOutputTarget>(object["outputTarget"].toInt(0));
+        item->inputOrigin= static_cast<ToolItemInputOrigin>(object["inputOrigin"].toInt(0));
         mTools.append(item);
     }
 }
@@ -120,7 +122,8 @@ void ToolsManager::save()
         object["program"]=tool->program;
         object["workingDirectory"] = tool->workingDirectory;
         object["parameters"]=tool->parameters;
-        object["pauseAfterExit"]=tool->pauseAfterExit;
+        object["outputTarget"]=static_cast<int>(tool->outputTarget);
+        object["inputOrigin"]=static_cast<int>(tool->inputOrigin);
         array.append(object);
     }
     QJsonDocument doc;

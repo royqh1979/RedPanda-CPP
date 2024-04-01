@@ -5174,6 +5174,11 @@ void Editor::reformat(bool doReparse)
 #endif
     if (newContent.isEmpty())
         return;
+    replaceContent(QString::fromUtf8(newContent), doReparse);
+}
+
+void Editor::replaceContent(const QString &newContent, bool doReparse)
+{
     int oldTopPos = topPos();
     QSynedit::BufferCoord mOldCaret = caretXY();
 
@@ -5185,7 +5190,7 @@ void Editor::reformat(bool doReparse)
     QSynedit::EditorOptions newOptions = oldOptions;
     newOptions.setFlag(QSynedit::EditorOption::eoAutoIndent,false);
     setOptions(newOptions);
-    replaceAll(QString::fromUtf8(newContent));
+    replaceAll(newContent);
     setCaretXY(mOldCaret);
     setTopPos(oldTopPos);
     setOptions(oldOptions);
@@ -5198,6 +5203,7 @@ void Editor::reformat(bool doReparse)
         reparseTodo();
         pMainWindow->updateEditorActions();
     }
+
 }
 
 void Editor::checkSyntaxInBack()

@@ -274,11 +274,6 @@ public:
     void addCaretToUndo();
     void addLeftTopToUndo();
     void addSelectionToUndo();
-    void replaceAll(const QString& text) {
-        mUndoList->addChange(ChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
-        selectAll();
-        setSelText(text);
-    }
     void trimTrailingSpaces() {
         processCommand(EditCommand::TrimTrailingSpaces);
     }
@@ -496,6 +491,7 @@ protected:
     virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
     virtual void executeCommand(EditCommand command, QChar ch, void * pData);
 protected:
+    void replaceAll(const QString& text);
     int clientWidth() const;
     int clientHeight() const;
     int clientTop() const;

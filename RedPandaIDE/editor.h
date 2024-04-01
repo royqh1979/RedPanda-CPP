@@ -188,6 +188,7 @@ public:
     QString getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord& p, bool &hasTypeQualifier);
     QString getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::BufferCoord& p);
     void reformat(bool doReparse=true);
+    void replaceContent(const QString &newContent, bool doReparse=true);
     void checkSyntaxInBack();
     void gotoDeclaration(const QSynedit::BufferCoord& pos);
     void gotoDefinition(const QSynedit::BufferCoord& pos);

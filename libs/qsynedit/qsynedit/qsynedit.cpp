@@ -397,6 +397,13 @@ void QSynEdit::addSelectionToUndo()
                          mBlockEnd,QStringList(),mActiveSelectionMode);
 }
 
+void QSynEdit::replaceAll(const QString &text)
+{
+    mUndoList->addChange(ChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
+    selectAll();
+    setSelText(text);
+}
+
 void QSynEdit::doTrimTrailingSpaces()
 {
     if (mDocument->count()<=0)

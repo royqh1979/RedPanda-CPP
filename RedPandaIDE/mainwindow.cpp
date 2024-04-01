@@ -1214,6 +1214,65 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
     //updateForEncodingInfo();
 }
 
+void MainWindow::executeTool(PToolItem item)
+{
+    QMap<QString, QString> macros = devCppMacroVariables();
+    QString program = parseMacros(item->program, macros);
+    QString workDir = parseMacros(item->workingDirectory, macros);
+    QStringList params = parseArguments(item->parameters, macros, true);
+    Editor *e;
+    QByteArray inputContent;
+    QByteArray output;
+    switch(item->inputOrigin) {
+    case ToolItemInputOrigin::None:
+        break;
+    case ToolItemInputOrigin::CurrentSelection:
+        e=mEditorList->getEditor();
+        if (e)
+            inputContent=e->selText().toUtf8();
+        break;
+    case ToolItemInputOrigin::WholeDocument:
+        e=mEditorList->getEditor();
+        if (e)
+            inputContent=e->text().toUtf8();
+        break;
+    }
+
+    if (!fileExists(program)) {
+        QTemporaryFile file(QDir::tempPath()+QDir::separator()+"XXXXXX.bat");
+        file.setAutoRemove(false);
+        if (file.open()) {
+            file.write(escapeCommandForPlatformShell(
+                "cd", {"/d", localizePath(workDir)}
+                ).toLocal8Bit() + LINE_BREAKER);
+            file.write(escapeCommandForPlatformShell(program, params).toLocal8Bit()
+                       + LINE_BREAKER);
+            file.close();
+            output = runAndGetOutput(file.fileName(), workDir, params, inputContent);
+        }
+    } else {
+        output = runAndGetOutput(program, workDir, params, inputContent);
+    }
+    switch(item->outputTarget) {
+    case ToolItemOutputTarget::RedirectToToolsOutputPanel:
+        clearToolsOutput();
+        logToolsOutput(QString::fromUtf8(output));
+        break;
+    case ToolItemOutputTarget::RedirectToNull:
+        break;
+    case ToolItemOutputTarget::RepalceWholeDocument:
+        e=mEditorList->getEditor();
+        if (e)
+            e->replaceContent(QString::fromUtf8(output));
+        break;
+    case ToolItemOutputTarget::ReplaceCurrentSelection:
+        e=mEditorList->getEditor();
+        if (e)
+            e->setSelText(QString::fromUtf8(output));
+        break;
+    }
+}
+
 int MainWindow::calIconSize(const QString &fontName, int fontPointSize)
 {
     QFont font(fontName,fontPointSize);
@@ -3428,59 +3487,8 @@ void MainWindow::updateTools()
         foreach (const PToolItem& item, mToolsManager->tools()) {
             QAction* action = createShortcutCustomableAction(item->title,"tool-"+item->id);
             connect(action, &QAction::triggered,
-                    [item] (){
-                QMap<QString, QString> macros = devCppMacroVariables();
-                QString program = parseMacros(item->program, macros);
-                QString workDir = parseMacros(item->workingDirectory, macros);
-                QStringList params = parseArguments(item->parameters, macros, true);
-                if (!program.endsWith(".bat",Qt::CaseInsensitive)) {
-                    QTemporaryFile file(QDir::tempPath()+QDir::separator()+"XXXXXX.bat");
-                    file.setAutoRemove(false);
-                    if (file.open()) {
-                        file.write(escapeCommandForPlatformShell(
-                            "cd", {"/d", localizePath(workDir)}
-                            ).toLocal8Bit() + LINE_BREAKER);
-                        file.write(escapeCommandForPlatformShell(program, params).toLocal8Bit()
-                                   + LINE_BREAKER);
-                        file.close();
-                        if (item->pauseAfterExit) {
-                            QString sharedMemoryId = QUuid::createUuid().toString();
-                            QStringList execArgs = QStringList{
-                                QString::number(RPF_PAUSE_CONSOLE),
-                                sharedMemoryId,
-                                localizePath(file.fileName())
-                            };
-                            executeFile(
-                                        includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
-                                        execArgs,
-                                        workDir, file.fileName());
-                        } else {
-                            executeFile(
-                                        file.fileName(),
-                                        {},
-                                        workDir, file.fileName());
-                        }
-                    }
-                } else {
-                    if (item->pauseAfterExit) {
-                        QString sharedMemoryId = QUuid::createUuid().toString();
-                        QStringList execArgs = QStringList{
-                            QString::number(RPF_PAUSE_CONSOLE),
-                            sharedMemoryId,
-                            localizePath(program)
-                        };
-                        executeFile(
-                                    includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+CONSOLE_PAUSER,
-                                    execArgs + params,
-                                    workDir, "");
-                    } else {
-                        executeFile(
-                                    program,
-                                    params,
-                                    workDir, "");
-                    }
-                }
-
+                    [item,this] (){
+                executeTool(item);
             });
             ui->menuTools->addAction(action);
             actions.append(action);

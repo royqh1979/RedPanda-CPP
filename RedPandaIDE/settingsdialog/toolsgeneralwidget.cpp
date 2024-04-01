@@ -33,6 +33,20 @@ ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group
     ui(new Ui::ToolsGeneralWidget)
 {
     ui->setupUi(this);
+    ui->cbInput->addItems(
+                {
+                    tr("None"),
+                    tr("Current Selection"),
+                    tr("Whole Document"),
+                });
+    ui->cbOutput->addItems(
+                {
+                    tr("None"),
+                    tr("Tools Output"),
+                    tr("Replace Current Selection"),
+                    tr("Repalce Whole Document"),
+                });
+
     ui->cbMacros->setModel(&mMacroInfoModel);
     QItemSelectionModel *m=ui->lstTools->selectionModel();
     ui->lstTools->setModel(&mToolsModel);
@@ -54,7 +68,9 @@ ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group
             this, &ToolsGeneralWidget::onEdited);
     connect(ui->txtDirectory,&QLineEdit::textChanged,
             this, &ToolsGeneralWidget::onEdited);
-    connect(ui->chkPauseConsole,&QCheckBox::stateChanged,
+    connect(ui->cbInput, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &ToolsGeneralWidget::onEdited);
+    connect(ui->cbOutput, qOverload<int>(&QComboBox::currentIndexChanged),
             this, &ToolsGeneralWidget::onEdited);
 }
 
@@ -107,7 +123,8 @@ void ToolsGeneralWidget::finishEditing(bool askSave, const QModelIndex& itemInde
     item->parameters = ui->txtParameters->text();
     item->program = ui->txtProgram->text();
     item->title = ui->txtTitle->text();
-    item->pauseAfterExit = ui->chkPauseConsole->isChecked();
+    item->inputOrigin = static_cast<ToolItemInputOrigin>(ui->cbInput->currentIndex());
+    item->outputTarget = static_cast<ToolItemOutputTarget>(ui->cbOutput->currentIndex());
     mEdited=false;
 }
 
@@ -118,7 +135,8 @@ void ToolsGeneralWidget::prepareEdit(const PToolItem& item)
     ui->txtParameters->setText(item->parameters);
     ui->txtProgram->setText(item->program);
     ui->txtTitle->setText(item->title);
-    ui->chkPauseConsole->setChecked(item->pauseAfterExit);
+    ui->cbInput->setCurrentIndex(static_cast<int>(item->inputOrigin));
+    ui->cbOutput->setCurrentIndex(static_cast<int>(item->outputTarget));
     showEditPanel(true);
     ui->txtTitle->setFocus();
     mEdited = false;
@@ -200,7 +218,8 @@ void ToolsGeneralWidget::on_btnAdd_clicked()
     PToolItem item = std::make_shared<ToolItem>();
     item->id=QUuid::createUuid().toString();
     item->title = tr("untitled");
-    item->pauseAfterExit = false;
+    item->inputOrigin = ToolItemInputOrigin::None;
+    item->outputTarget = ToolItemOutputTarget::RedirectToToolsOutputPanel;
     mToolsModel.addTool(item);
     QModelIndex index=mToolsModel.index(mToolsModel.tools().count()-1);
     ui->lstTools->setCurrentIndex(index);
@@ -237,7 +256,7 @@ void ToolsGeneralWidget::updateIcons(const QSize &)
 {
     pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemove,IconsManager::ACTION_MISC_REMOVE);
-    pIconsManager->setIcon(ui->btnBrowseProgram,IconsManager::ACTION_FILE_OPEN_FOLDER);
+    pIconsManager->setIcon(ui->btnBrowseProgram,IconsManager::ACTION_FILE_LOCATE);
     pIconsManager->setIcon(ui->btnBrowseWorkingDirectory,IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
