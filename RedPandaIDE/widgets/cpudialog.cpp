@@ -46,6 +46,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     QSynedit::EditorOptions options=ui->txtCode->getOptions();
     options.setFlag(QSynedit::EditorOption::eoScrollPastEof,false);
     options.setFlag(QSynedit::EditorOption::eoScrollPastEol,false);
+    options.setFlag(QSynedit::EditorOption::eoShowRainbowColor, false);
     ui->txtCode->setOptions(options);
     PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
     if (item) {
