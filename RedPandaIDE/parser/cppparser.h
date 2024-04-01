@@ -262,6 +262,7 @@ private:
                                int line) const;
     PStatement doFindAliasedStatement(const PStatement& statement, QSet<Statement *> foundSet) const;
     PStatement doFindAliasedStatement(const PStatement& statement) const;
+    PStatement doFindNoTemplateSpecializationClass(const PStatement& statement) const;
 
     QList<PStatement> doListTypeStatements(const QString& fileName,int line) const;
 

@@ -636,6 +636,23 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const 
     return doFindAliasedStatement(statement,foundSet);
 }
 
+PStatement CppParser::doFindNoTemplateSpecializationClass(const PStatement &statement) const
+{
+    Q_ASSERT(statement!=nullptr);
+    Q_ASSERT(statement->kind == StatementKind::skClass);
+    if (statement->templateSpecializationParams.isEmpty())
+        return statement;
+    PStatement parent = statement->parentScope.lock();
+    const StatementMap & statementMap = mStatementList.childrenStatements(parent);
+    QList<PStatement> list = statementMap.values(statement->command);
+    foreach(const PStatement &child, list) {
+        if (child->kind == StatementKind::skClass
+                && child->templateSpecializationParams.isEmpty())
+            return child;
+    }
+    return statement;
+}
+
 PStatement CppParser::doFindAliasedStatement(const PStatement &statement, QSet<Statement *> foundSet) const
 {
     if (!statement)
@@ -2040,6 +2057,7 @@ bool CppParser::checkForKeyword(KeywordType& keywordType)
     case KeywordType::Operator:
     case KeywordType::Requires:
     case KeywordType::Concept:
+    case KeywordType::Extern:
         return false;
     default:
         return true;
@@ -3548,11 +3566,21 @@ bool CppParser::handleStatement(int maxIndex)
     } else if (keywordType == KeywordType::Inline) {
         mIndex++;
     }else {
+        if (keywordType == KeywordType::Extern) {
+            if (mIndex+1<maxIndex) {
+                if (mTokenizer[mIndex+1]->text=="template") {
+                    //extern template, skit it
+                    mIndex+=2;
+                    goto _exit;
+                }
+            }
+            keywordType = KeywordType::None;
+        }
         // it should be method/constructor/var
         checkAndHandleMethodOrVar(keywordType, maxIndex);
     }
     //Q_ASSERT(mIndex<999999);
-
+_exit:
     return mIndex < maxIndex;
 }
 
@@ -5256,18 +5284,14 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 case StatementKind::skNamespaceAlias:
                     result = doFindAliasedNamespace(statement);
                     break;
-                // case StatementKind::skAlias: {
-                //     statement =
-                //     if (statement)
-                //         result = doCreateEvalType(fileName,statement);
-                // }
-                //     break;
                 case StatementKind::skVariable:
                 case StatementKind::skParameter:
                     result = doCreateEvalVariable(fileName,statement, previousResult?previousResult->templateParams:"",scope);
                     break;
-                case StatementKind::skEnumType:
                 case StatementKind::skClass:
+                    statement = doFindNoTemplateSpecializationClass(statement);
+                    [[fallthrough]];
+                case StatementKind::skEnumType:
                 case StatementKind::skEnumClassType:
                 case StatementKind::skTypedef:
                     result = doCreateEvalType(fileName,statement);
@@ -5542,7 +5566,7 @@ PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatem
         int pointerLevel=0;
         QString templateParams;
         PStatement tempStatement;
-        PStatement effetiveTypeStatement  = doParseEvalTypeInfo(
+        PStatement effectiveTypeStatement  = doParseEvalTypeInfo(
                     fileName,
                     typeStatement->parentScope.lock(),
                     typeStatement->type + typeStatement->args,
@@ -5550,12 +5574,14 @@ PEvalStatement CppParser::doCreateEvalType(const QString& fileName,const PStatem
                     tempStatement,
                     pointerLevel,
                     templateParams);
+        if (effectiveTypeStatement && effectiveTypeStatement->kind == StatementKind::skClass)
+            effectiveTypeStatement = doFindNoTemplateSpecializationClass(effectiveTypeStatement);
         return std::make_shared<EvalStatement>(
                     baseType,
                     EvalStatementKind::Type,
                     PStatement(),
                     typeStatement,
-                    effetiveTypeStatement,
+                    effectiveTypeStatement,
                     pointerLevel,
                     templateParams
                     );

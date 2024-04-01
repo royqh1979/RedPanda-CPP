@@ -111,6 +111,7 @@ Red Panda C++ Version 2.27
   - enhancement: Make colors in code suggestion popup consistent with the editor.
   - enhancement: Make colors in header suggestion popup consistent with the editor.
   - fix: C++ source after ';' are treated as comments in cpu info window.
+  - enhancement: Support "extern template" in code parser.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

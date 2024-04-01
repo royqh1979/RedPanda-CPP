@@ -84,6 +84,7 @@ enum class KeywordType {
     Concept, //concept
     Requires, //requires
     None, // It's a keyword but don't process here
+    Extern,
     NotKeyword
 };
 

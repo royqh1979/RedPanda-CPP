@@ -218,7 +218,7 @@ void initParser()
 
     // it's part of type info
     CppKeywords.insert("const",KeywordType::None);
-    CppKeywords.insert("extern",KeywordType::None);
+    CppKeywords.insert("extern",KeywordType::Extern);
 
     CppKeywords.insert("operator",KeywordType::Operator);
 
