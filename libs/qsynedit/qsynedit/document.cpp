@@ -145,19 +145,6 @@ int Document::blockEnded(int line)
 
 int Document::maxLineWidth() {
     QMutexLocker locker(&mMutex);
-    if (mIndexOfLongestLine < 0) {
-        int MaxLen = -1;
-        mIndexOfLongestLine = -1;
-        if (mLines.count() > 0 ) {
-            for (int i=0;i<mLines.size();i++) {
-                int len = mLines[i]->mWidth;
-                if (len > MaxLen) {
-                    MaxLen = len;
-                    mIndexOfLongestLine = i;
-                }
-            }
-        }
-    }
     if (mIndexOfLongestLine >= 0) {
         return mLines[mIndexOfLongestLine]->width();
     } else
@@ -1179,7 +1166,7 @@ void Document::endSetLinesWidth()
     mSetLineWidthLockCount--;
     if (mSetLineWidthLockCount == 0) {
         if (mMaxLineChangedInSetLinesWidth)
-            emit maxLineWidthChanged();
+            updateMaxLineWidthAndNotify();
     }
 }
 
@@ -1195,28 +1182,45 @@ void Document::setLineWidth(int line, const QString &lineText, int newWidth, con
     mLines[line]->mGlyphStartPositionList = glyphStartPositionList;
     if (mIndexOfLongestLine<0) {
         mIndexOfLongestLine = line;
-        notifyMaxLineWidthChanged();
+        updateMaxLineWidthChanged();
     } else if (mIndexOfLongestLine == line) {
         if (oldWidth > newWidth) {
             mIndexOfLongestLine = -1;
-            notifyMaxLineWidthChanged();
-        } else {
-            notifyMaxLineWidthChanged();
+            updateMaxLineWidthChanged();
+        } else if (oldWidth < newWidth) {
+            updateMaxLineWidthChanged();
         }
     } else if (mLines[mIndexOfLongestLine]->mWidth < newWidth) {
         mIndexOfLongestLine = line;
-        notifyMaxLineWidthChanged();
+        updateMaxLineWidthChanged();
     }
     Q_ASSERT(mLines[line]->mGlyphStartPositionList.length() == mLines[line]->mGlyphStartCharList.length());
 }
 
-void Document::notifyMaxLineWidthChanged()
+void Document::updateMaxLineWidthChanged()
 {
     if (mSetLineWidthLockCount>0) {
         mMaxLineChangedInSetLinesWidth = true;
     } else {
-        emit maxLineWidthChanged();
+        updateMaxLineWidthAndNotify();
     }
+}
+
+void Document::updateMaxLineWidthAndNotify()
+{
+    int MaxLen = -1;
+    mIndexOfLongestLine = -1;
+    if (mLines.count() > 0 ) {
+        for (int i=0;i<mLines.size();i++) {
+            int len = mLines[i]->mWidth;
+            if (len > MaxLen) {
+                MaxLen = len;
+                mIndexOfLongestLine = i;
+            }
+        }
+    }
+    if (mIndexOfLongestLine>=0)
+        emit maxLineWidthChanged();
 }
 
 QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, int left, int &right) const

@@ -930,7 +930,6 @@ void QSynEdit::invalidateLines(int firstLine, int lastLine)
 {
     if (!isVisible())
         return;
-    // qDebug()<<"invalidate lines:"<<firstLine<<lastLine;
     if (firstLine == -1 && lastLine == -1) {
         QRect rcInval = clientRect();
         rcInval.setLeft(rcInval.left()+mGutterWidth);
