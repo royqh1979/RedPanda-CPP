@@ -489,8 +489,8 @@ MainWindow::MainWindow(QWidget *parent)
     updateEditorActions();
     updateCaretActions();
     updateEditorColorSchemes();
-    updateShortcuts();
     updateTools();
+    updateShortcuts();
     updateEditorSettings();
     //updateEditorBookmarks();
 }
@@ -3424,8 +3424,9 @@ void MainWindow::updateTools()
     ui->menuTools->addAction(ui->actionOptions);
     if (!mToolsManager->tools().isEmpty()) {
         ui->menuTools->addSeparator();
+        QList<QAction*> actions;
         foreach (const PToolItem& item, mToolsManager->tools()) {
-            QAction* action = new QAction(item->title,ui->menuTools);
+            QAction* action = createShortcutCustomableAction(item->title,"tool-"+item->id);
             connect(action, &QAction::triggered,
                     [item] (){
                 QMap<QString, QString> macros = devCppMacroVariables();
@@ -3482,7 +3483,11 @@ void MainWindow::updateTools()
 
             });
             ui->menuTools->addAction(action);
+            actions.append(action);
         }
+        ShortcutManager shortcutManager;
+        shortcutManager.load();
+        shortcutManager.applyTo(actions);
     }
 }
 

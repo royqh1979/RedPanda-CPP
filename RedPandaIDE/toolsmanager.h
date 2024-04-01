@@ -21,6 +21,7 @@
 #include <memory>
 
 struct ToolItem {
+    QString id;
     QString title;
     QString program;
     QString workingDirectory;

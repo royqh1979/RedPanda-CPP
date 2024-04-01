@@ -36,6 +36,7 @@ void ToolsManager::load()
     if (!fileExists(filename)) {
         mTools.clear();
         PToolItem item = std::make_shared<ToolItem>();
+        item->id = QUuid::createUuid().toString();
         item->title = tr("Remove Compiled");
 #ifdef Q_OS_WIN
         item->program = "del";
@@ -55,6 +56,7 @@ void ToolsManager::load()
 //        item->pauseAfterExit = false;
 //        mTools.append(item);
 //#endif
+        save();
         return;
     }
     //read config file
@@ -82,6 +84,10 @@ void ToolsManager::load()
     foreach (const QJsonValue& value,array) {
         QJsonObject object = value.toObject();
         PToolItem item = std::make_shared<ToolItem>();
+        if (!object.contains("id"))
+            item->id = QUuid::createUuid().toString();
+        else
+            item->id = object["id"].toString();
         item->title = object["title"].toString();
         if (item->title.isEmpty())
             continue;
@@ -107,6 +113,7 @@ void ToolsManager::save()
     QJsonArray array;
     foreach (const PToolItem& tool,mTools) {
         QJsonObject object;
+        object["id"]=tool->id;
         object["title"]=tool->title;
         object["program"]=tool->program;
         object["workingDirectory"] = tool->workingDirectory;

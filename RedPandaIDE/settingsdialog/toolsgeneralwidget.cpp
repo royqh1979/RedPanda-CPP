@@ -26,6 +26,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QUuid>
 
 ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group, QWidget *parent) :
     SettingsWidget(name,group,parent),
@@ -197,6 +198,7 @@ void ToolsGeneralWidget::on_btnAdd_clicked()
 {
     ui->lstTools->setCurrentIndex(QModelIndex());
     PToolItem item = std::make_shared<ToolItem>();
+    item->id=QUuid::createUuid().toString();
     item->title = tr("untitled");
     item->pauseAfterExit = false;
     mToolsModel.addTool(item);
