@@ -126,6 +126,9 @@ Section "$(SectionMainName)" SectionMain
   !ifdef HAVE_OPENCONSOLE
     File "OpenConsole.exe"
   !endif
+  !ifdef HAVE_COMPILER_HINT
+    File "compiler_hint.lua"
+  !endif
 
   ; Write required paths
   SetOutPath $INSTDIR\Templates
@@ -435,6 +438,7 @@ Section "Uninstall"
   Delete "$INSTDIR\README.md"
   Delete "$INSTDIR\qt.conf"
   Delete "$INSTDIR\OpenConsole.exe"
+  Delete "$INSTDIR\compiler_hint.lua"
 
   RMDir /r "$INSTDIR\Lang"
   RMDir /r "$INSTDIR\Templates"

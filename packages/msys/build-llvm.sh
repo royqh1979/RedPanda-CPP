@@ -62,7 +62,7 @@ case $MSYSTEM in
     ;;
 esac
 
-REDPANDA_LLVM_VERSION="17-r0"
+REDPANDA_LLVM_VERSION="18-r0"
 WINDOWS_TERMINAL_VERSION="1.19.10821.0"
 
 _QMAKE="$MINGW_PREFIX/qt5-static/bin/qmake"
@@ -184,6 +184,7 @@ function package() {
     -DREQUIRED_WINDOWS_NAME="Windows 10 v1903"
     -DHAVE_LLVM
     -DHAVE_OPENCONSOLE
+    -DHAVE_COMPILER_HINT
   )
   "$_NSIS" "${nsis_flags[@]}" redpanda.nsi
   popd

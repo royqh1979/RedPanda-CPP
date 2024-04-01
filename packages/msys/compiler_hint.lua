@@ -33,27 +33,6 @@ local profileNameMap = {
    },
 }
 
-local function nameGeneratorMingwGcc(lang, arch, profile, isUtf8)
-   local template = {
-      en_US = "MinGW GCC %1 in %2, %3",
-      pt_BR = "GCC MinGW %1 em %2, %3",
-      zh_CN = "%2 MinGW GCC %1，%3",
-      zh_TW = "%2 MinGW GCC %1，%3",
-   }
-   local systemCodePage = {
-      en_US = "system code page",
-      pt_Br = "página de código do sistema",
-      zh_CN = "系统代码页",
-      zh_TW = "系統代碼頁",
-   }
-   return C_Util.format(
-   template[lang] or template.en_US,
-   gnuArchMap[arch],
-   isUtf8 and "UTF-8" or systemCodePage[lang] or systemCodePage.en_US,
-   profileNameMap[profile][lang] or profileNameMap[profile].en_US)
-
-end
-
 local function nameGeneratorClang(lang, arch, profile, isMingw)
    local template = {
       en_US = "%1 Clang %2, %3",
@@ -169,75 +148,6 @@ function main()
    local noSearch = {}
    local preferCompiler = 0
 
-   local function checkAndAddMingw(arch)
-      local binDir
-      local libDir
-      local excludeBinDir
-      if arch == "i386" then
-         binDir = libexecDir .. "/mingw32/bin"
-         libDir = libexecDir .. "/mingw32/i686-w64-mingw32/lib"
-         excludeBinDir = libexecDir .. "/MinGW32/bin"
-      elseif arch == "x86_64" then
-         binDir = libexecDir .. "/mingw64/bin"
-         libDir = libexecDir .. "/mingw64/x86_64-w64-mingw32/lib"
-         excludeBinDir = libexecDir .. "/MinGW64/bin"
-      else
-         return
-      end
-
-      if not C_FileSystem.isExecutable(binDir .. "/gcc.exe") then
-         return
-      end
-
-      local programs = {
-         cCompiler = binDir .. "/gcc.exe",
-         cxxCompiler = binDir .. "/g++.exe",
-         make = binDir .. "/mingw32-make.exe",
-         debugger = binDir .. "/gdb.exe",
-         debugServer = binDir .. "/gdbserver.exe",
-         resourceCompiler = binDir .. "/windres.exe",
-         binDirs = { binDir },
-      }
-
-      if C_FileSystem.exists(libDir .. "/libutf8.a") then
-         local release, debug_, _ = generateConfig(
-         function(arch_, profile)
-            return nameGeneratorMingwGcc(lang, arch_, profile, true)
-         end,
-         programs,
-         {
-            arch = arch,
-            customLinkParams = { "-Wl,--whole-archive", "-lutf8", "-Wl,--no-whole-archive" },
-         })
-
-         table.insert(compilerList, release)
-         table.insert(compilerList, debug_)
-         if preferCompiler == 0 then
-            preferCompiler = 2
-         end
-      end
-
-      do
-         local release, debug_, _ = generateConfig(
-         function(arch_, profile)
-            return nameGeneratorMingwGcc(lang, arch_, profile, false)
-         end,
-         programs,
-         {
-            arch = arch,
-            isAnsi = true,
-         })
-
-         table.insert(compilerList, release)
-         table.insert(compilerList, debug_)
-         if preferCompiler == 0 then
-            preferCompiler = 2
-         end
-      end
-
-      table.insert(noSearch, excludeBinDir)
-   end
-
    local function checkAndAddClang()
       if not C_FileSystem.isExecutable(libexecDir .. "/llvm-mingw/bin/clang.exe") then
          return
@@ -247,6 +157,7 @@ function main()
       local appTriplet = gnuArchMap[appArch] .. "-w64-mingw32"
       local appDllDir = libexecDir .. "/llvm-mingw/" .. appTriplet .. "/bin"
       do
+         local libDir = libexecDir .. "/llvm-mingw/" .. appTriplet .. "/lib"
 
          local programs = {
             cCompiler = binDir .. "/" .. appTriplet .. "-clang.exe",
@@ -257,6 +168,10 @@ function main()
             resourceCompiler = binDir .. "/" .. appTriplet .. "-windres.exe",
             binDirs = { binDir, appDllDir },
          }
+         local customLinkParams = nil
+         if C_FileSystem.exists(libDir .. "/utf8init.o") then
+            customLinkParams = { "-Wl,utf8init.o", "-Wl,utf8manifest.o" }
+         end
          local release, debug_, debugWithAsan = generateConfig(
          function(arch_, profile)
             return nameGeneratorClang(lang, arch_, profile, true)
@@ -264,7 +179,7 @@ function main()
          programs,
          {
             arch = appArch,
-            customLinkParams = {},
+            customLinkParams = customLinkParams,
             isClang = true,
          })
 
@@ -287,6 +202,7 @@ function main()
          if foreignArch ~= appArch and gnuArch ~= nil then
             local foreignTriplet = gnuArch .. "-w64-mingw32"
             local foreignDllDir = libexecDir .. "/llvm-mingw/" .. foreignTriplet .. "/bin"
+            local libDir = libexecDir .. "/llvm-mingw/" .. foreignTriplet .. "/lib"
             local programs = {
                cCompiler = binDir .. "/" .. foreignTriplet .. "-clang.exe",
                cxxCompiler = binDir .. "/" .. foreignTriplet .. "-clang++.exe",
@@ -296,6 +212,10 @@ function main()
                resourceCompiler = binDir .. "/" .. foreignTriplet .. "-windres.exe",
                binDirs = { binDir, foreignDllDir },
             }
+            local customLinkParams = nil
+            if C_FileSystem.exists(libDir .. "/utf8init.o") then
+               customLinkParams = { "-Wl,utf8init.o", "-Wl,utf8manifest.o" }
+            end
             local release, _, _ = generateConfig(
             function(arch_, profile)
                return nameGeneratorClang(lang, arch_, profile, true)
@@ -303,7 +223,7 @@ function main()
             programs,
             {
                arch = foreignArch,
-               customLinkParams = {},
+               customLinkParams = customLinkParams,
                isClang = true,
             })
 
@@ -332,6 +252,11 @@ function main()
             binDirs = { llvmOrgBinDir },
             libDirs = { libDir },
          }
+         local customLinkParams = { "-target", msvcTriplet }
+         if C_FileSystem.exists(libDir .. "/utf8init.o") then
+            table.insert(customLinkParams, "-Wl,utf8init.o")
+            table.insert(customLinkParams, "-Wl,utf8manifest.o")
+         end
          local release, debug_, _ = generateConfig(
          function(arch, profile)
             return nameGeneratorClang(lang, arch, profile, false)
@@ -345,9 +270,7 @@ function main()
                "-fms-compatibility",
                "-fdelayed-template-parsing",
             },
-            customLinkParams = {
-               "-target", msvcTriplet,
-            },
+            customLinkParams = customLinkParams,
             isClang = true,
          })
 
@@ -371,6 +294,11 @@ function main()
                binDirs = { llvmOrgBinDir },
                libDirs = { libDir },
             }
+            local customLinkParams = { "-target", msvcTriplet }
+            if C_FileSystem.exists(libDir .. "/utf8init.o") then
+               table.insert(customLinkParams, "-Wl,utf8init.o")
+               table.insert(customLinkParams, "-Wl,utf8manifest.o")
+            end
             local release, _, _ = generateConfig(
             function(arch, profile)
                return nameGeneratorClang(lang, arch, profile, false)
@@ -384,9 +312,7 @@ function main()
                   "-fms-compatibility",
                   "-fdelayed-template-parsing",
                },
-               customLinkParams = {
-                  "-target", msvcTriplet,
-               },
+               customLinkParams = customLinkParams,
                isClang = true,
             })
 
@@ -396,18 +322,7 @@ function main()
       table.insert(noSearch, llvmOrgBinDir)
    end
 
-   if appArch == "x86_64" then
-      checkAndAddMingw("x86_64")
-      checkAndAddMingw("i386")
-      checkAndAddClang()
-   elseif appArch == "arm64" then
-      checkAndAddClang()
-      checkAndAddMingw("x86_64")
-      checkAndAddMingw("i386")
-   else
-      checkAndAddMingw("i386")
-      checkAndAddClang()
-   end
+   checkAndAddClang()
 
    local result = {
       compilerList = compilerList,
