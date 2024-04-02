@@ -367,11 +367,9 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
     } else {
         process.setProcessEnvironment(env);
     }
+    process.setProcessChannelMode(QProcess::MergedChannels);
+    process.setReadChannel(QProcess::StandardOutput);
     process.setWorkingDirectory(workingDir);
-    process.connect(&process,&QProcess::readyReadStandardError,
-                    [&](){
-        result.append(process.readAllStandardError());
-    });
     process.connect(&process,&QProcess::readyReadStandardOutput,
                     [&](){
         result.append(process.readAllStandardOutput());
@@ -387,7 +385,7 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
     process.closeWriteChannel();
     process.waitForFinished();
     if (errorOccurred) {
-        result += process.errorString().toUtf8();
+        result += process.errorString().toLocal8Bit();
     }
     return result;
 }

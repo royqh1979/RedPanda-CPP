@@ -1247,9 +1247,12 @@ void MainWindow::executeTool(PToolItem item)
         QTemporaryFile file(QDir::tempPath()+QDir::separator()+"XXXXXX.bat");
         file.setAutoRemove(false);
         if (file.open()) {
-            file.write(escapeCommandForPlatformShell(
-                "cd", {"/d", localizePath(workDir)}
-                ).toLocal8Bit() + LINE_BREAKER);
+            QString localizedDir=localizePath(workDir);
+            if (!localizedDir.isEmpty()) {
+                file.write(escapeCommandForPlatformShell(
+                    "cd", {"/d", localizedDir}
+                    ).toLocal8Bit() + LINE_BREAKER);
+            }
             file.write(escapeCommandForPlatformShell(program, params).toLocal8Bit()
                        + LINE_BREAKER);
             file.close();
