@@ -3479,7 +3479,17 @@ void MainWindow::loadLastOpens()
 
 void MainWindow::updateTools()
 {
+    QList<QAction*> oldToolActions;
+    //save old custom tools actions.
+    foreach(QAction* action, ui->menuTools->actions()) {
+        if (action->objectName().startsWith("tool-"))
+            oldToolActions.append(action);
+    }
     ui->menuTools->clear();
+    //delete old custom tools actions;
+    for(int i=0;i<oldToolActions.length();i++) {
+        delete oldToolActions[i];
+    }
     ui->menuTools->addAction(ui->actionOptions);
     if (!mToolsManager->tools().isEmpty()) {
         ui->menuTools->addSeparator();

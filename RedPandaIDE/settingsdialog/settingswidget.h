@@ -56,6 +56,10 @@ private:
     bool mSettingsChanged;
     QString mGroup;
     QString mName;
+
+    // QWidget interface
+protected:
+    void showEvent(QShowEvent *event) override;
 };
 
 #endif // SETTINGSWIDGET_H

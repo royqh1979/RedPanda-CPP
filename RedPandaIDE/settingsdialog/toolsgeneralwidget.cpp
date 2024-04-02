@@ -26,6 +26,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QUuid>
 
 ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group, QWidget *parent) :
@@ -53,8 +54,8 @@ ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group
     delete m;
     mCurrentEditingRow = -1;
     showEditPanel(false);
-    connect(ui->lstTools->selectionModel(), &QItemSelectionModel::currentRowChanged,
-            this,&ToolsGeneralWidget::onToolsCurrentChanged);
+    connect(ui->lstTools, &QAbstractItemView::doubleClicked,
+            this, &ToolsGeneralWidget::editTool);
     connect(ui->txtProgram,&QLineEdit::textChanged,
             this, &ToolsGeneralWidget::updateDemo);
     connect(ui->txtParameters,&QLineEdit::textChanged,
@@ -79,40 +80,35 @@ ToolsGeneralWidget::~ToolsGeneralWidget()
     delete ui;
 }
 
-void ToolsGeneralWidget::onToolsCurrentChanged(const QModelIndex &current, const QModelIndex &previous)
+void ToolsGeneralWidget::editTool(const QModelIndex &index)
 {
-    finishEditing(true,previous);
-    QModelIndex index = current;
+    if (mCurrentEditingRow>=-1)
+        return;
     if (!index.isValid())
         return;
-    PToolItem item = mToolsModel.getTool(index.row());
-    if (item) {
-        prepareEdit(item);
-    }
+    prepareEdit(index.row());
 }
 
-void ToolsGeneralWidget::finishEditing(bool askSave, const QModelIndex& itemIndex)
+void ToolsGeneralWidget::finishEditing(bool askSave)
 {
     auto action = finally([this]{
-        mEdited = false;
-        mCurrentEditingRow = -1;
-        showEditPanel(false);
+        cleanEditor();
     });
     if (mCurrentEditingRow == -1)
         return;
     if (!mEdited)
         return;
+    if (ui->txtTitle->text().isEmpty()) {
+        QMessageBox::critical(this,
+                              tr("Error"),
+                              tr("Title shouldn't be empty!"));
+        return;
+    }
     if (askSave && QMessageBox::question(this,
                           tr("Save Changes?"),
                           tr("Do you want to save changes to \"%1\"?").arg(ui->txtTitle->text()),
                           QMessageBox::Yes | QMessageBox::No,
                           QMessageBox::Yes) != QMessageBox::Yes) {
-        return;
-    }
-    if (ui->txtTitle->text().isEmpty()) {
-        QMessageBox::critical(this,
-                              tr("Error"),
-                              tr("Title shouldn't be empty!"));
         return;
     }
     PToolItem item = mToolsModel.getTool(mCurrentEditingRow);
@@ -122,11 +118,20 @@ void ToolsGeneralWidget::finishEditing(bool askSave, const QModelIndex& itemInde
     item->title = ui->txtTitle->text();
     item->inputOrigin = static_cast<ToolItemInputOrigin>(ui->cbInput->currentIndex());
     item->outputTarget = static_cast<ToolItemOutputTarget>(ui->cbOutput->currentIndex());
+    mToolsModel.updateTool(mCurrentEditingRow, item);
 }
 
-void ToolsGeneralWidget::prepareEdit(const PToolItem& item)
+void ToolsGeneralWidget::cleanEditor()
 {
-    mEditType = EditType::Edit;
+    mEdited = false;
+    mCurrentEditingRow = -1;
+    showEditPanel(false);
+}
+
+void ToolsGeneralWidget::prepareEdit(int row)
+{
+    mCurrentEditingRow = row;
+    PToolItem item = mToolsModel.getTool(row);
     ui->txtDirectory->setText(item->workingDirectory);
     ui->txtParameters->setText(item->parameters);
     ui->txtProgram->setText(item->program);
@@ -142,6 +147,7 @@ void ToolsGeneralWidget::showEditPanel(bool isShow)
 {
     ui->panelEdit->setVisible(isShow);
     ui->panelEditButtons->setVisible(!isShow);
+    ui->lstTools->setEnabled(!isShow);
 }
 
 void ToolsGeneralWidget::onEdited()
@@ -217,6 +223,65 @@ QVariant ToolsModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+Qt::ItemFlags ToolsModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags flags = Qt::NoItemFlags;
+    if (index.isValid()) {
+        flags = Qt::ItemIsEnabled | Qt::ItemIsDragEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
+    } else if (index.row() == -1) {
+        // -1 means it's a drop target?
+        flags = Qt::ItemIsDropEnabled;
+    }
+    return flags ;
+}
+
+Qt::DropActions ToolsModel::supportedDropActions() const
+{
+    return Qt::MoveAction;
+}
+
+bool ToolsModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+    Q_UNUSED(column);
+    mMoveTargetRow=row;
+    if (mMoveTargetRow==-1)
+        mMoveTargetRow=mTools.length();
+    return  QAbstractListModel::dropMimeData(data,action,row,0,parent);
+}
+
+bool ToolsModel::insertRows(int /* row */, int /*count*/, const QModelIndex &/*parent*/)
+{
+    return true;
+}
+
+bool ToolsModel::removeRows(int row, int count, const QModelIndex &/*parent*/)
+{
+    int sourceRow = row;
+    int destinationChild = mMoveTargetRow;
+    mMoveTargetRow=-1;
+    if (sourceRow < 0
+        || sourceRow + count - 1 >= mTools.count()
+        || destinationChild < 0
+        || destinationChild > mTools.count()
+        || sourceRow == destinationChild
+        || count <= 0) {
+        return false;
+    }
+    if (!beginMoveRows(QModelIndex(), sourceRow, sourceRow + count - 1, QModelIndex(), destinationChild))
+        return false;
+
+    int fromRow = sourceRow;
+    if (destinationChild < sourceRow)
+        fromRow += count - 1;
+    else
+        destinationChild--;
+    while (count--)
+        mTools.move(fromRow, destinationChild);
+    endMoveRows();
+    return true;
+}
+
+
 void ToolsGeneralWidget::on_btnAdd_clicked()
 {
     ui->lstTools->setCurrentIndex(QModelIndex());
@@ -226,9 +291,10 @@ void ToolsGeneralWidget::on_btnAdd_clicked()
     item->inputOrigin = ToolItemInputOrigin::None;
     item->outputTarget = ToolItemOutputTarget::RedirectToToolsOutputPanel;
     mToolsModel.addTool(item);
-    QModelIndex index=mToolsModel.index(mToolsModel.tools().count()-1);
+    int row = mToolsModel.tools().count() - 1;
+    QModelIndex index=mToolsModel.index(row);
     ui->lstTools->setCurrentIndex(index);
-    prepareEdit(item);
+    prepareEdit(row);
 }
 
 
@@ -240,8 +306,7 @@ void ToolsGeneralWidget::on_btnEditOk_clicked()
 
 void ToolsGeneralWidget::on_btnEditCancel_clicked()
 {
-    mEditType = EditType::None;
-    showEditPanel(false);
+    cleanEditor();
 }
 
 void ToolsGeneralWidget::doLoad()
@@ -260,6 +325,7 @@ void ToolsGeneralWidget::doSave()
 void ToolsGeneralWidget::updateIcons(const QSize &)
 {
     pIconsManager->setIcon(ui->btnAdd,IconsManager::ACTION_MISC_ADD);
+    pIconsManager->setIcon(ui->btnEdit, IconsManager::ACTION_MISC_RENAME);
     pIconsManager->setIcon(ui->btnRemove,IconsManager::ACTION_MISC_REMOVE);
     pIconsManager->setIcon(ui->btnBrowseProgram,IconsManager::ACTION_FILE_LOCATE);
     pIconsManager->setIcon(ui->btnBrowseWorkingDirectory,IconsManager::ACTION_FILE_OPEN_FOLDER);
@@ -268,8 +334,7 @@ void ToolsGeneralWidget::updateIcons(const QSize &)
 
 void ToolsGeneralWidget::on_btnRemove_clicked()
 {
-    mEditType = EditType::None;
-    finishEditing(false);
+    cleanEditor();
     QModelIndex index = ui->lstTools->currentIndex();
     if (index.isValid()) {
         mToolsModel.removeTool(index.row());
@@ -301,8 +366,19 @@ void ToolsGeneralWidget::on_btnBrowseProgram_clicked()
         pSettings->dirs().appDir(),
         pSystemConsts->executableFileFilter());
     if (!fileName.isEmpty() ) {
+        QString appPath = includeTrailingPathDelimiter(pSettings->dirs().appDir());
+        if (fileName.startsWith(appPath))
+            fileName = "<EXECPATH>"+fileName.mid(appPath.length());
         ui->txtProgram->setText(fileName);
     }
 }
 
+
+
+void ToolsGeneralWidget::on_btnEdit_clicked()
+{
+    const QModelIndex& index = ui->lstTools->currentIndex();
+    if (index.isValid())
+        editTool(index);
+}
 

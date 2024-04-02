@@ -37,6 +37,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QToolButton" name="btnEdit">
+        <property name="text">
+         <string>Edit</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QToolButton" name="btnRemove">
         <property name="text">
          <string>Remove</string>
@@ -94,6 +101,18 @@
       </property>
       <item>
        <widget class="QListView" name="lstTools">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="dragEnabled">
+         <bool>true</bool>
+        </property>
+        <property name="dragDropMode">
+         <enum>QAbstractItemView::DragDrop</enum>
+        </property>
+        <property name="defaultDropAction">
+         <enum>Qt::MoveAction</enum>
+        </property>
         <property name="alternatingRowColors">
          <bool>false</bool>
         </property>
@@ -340,6 +359,9 @@
   <tabstop>txtDirectory</tabstop>
   <tabstop>btnBrowseWorkingDirectory</tabstop>
   <tabstop>txtParameters</tabstop>
+  <tabstop>txtDemo</tabstop>
+  <tabstop>cbInput</tabstop>
+  <tabstop>cbOutput</tabstop>
   <tabstop>btnInsertMacro</tabstop>
   <tabstop>cbMacros</tabstop>
   <tabstop>btnEditOk</tabstop>

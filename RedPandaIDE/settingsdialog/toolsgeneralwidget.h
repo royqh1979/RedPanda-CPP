@@ -40,11 +40,21 @@ public:
 
 private:
     QList<PToolItem> mTools;
+    int mMoveTargetRow;
 
     // QAbstractItemModel interface
 public:
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
+
+    // QAbstractItemModel interface
+public:
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    Qt::DropActions supportedDropActions() const override;
+    bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
+    bool insertRows(int row, int count, const QModelIndex &parent) override;
+    bool removeRows(int row, int count, const QModelIndex &parent) override;
+
 };
 
 
@@ -55,12 +65,13 @@ public:
     explicit ToolsGeneralWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
     ~ToolsGeneralWidget();
 private:
-    void finishEditing(bool askSave, const QModelIndex& itemIndex=QModelIndex());
-    void prepareEdit(const PToolItem& PToolItem);
+    void finishEditing(bool askSave);
+    void cleanEditor();
+    void prepareEdit(int row);
     void showEditPanel(bool isShow);
 private slots:
     void onEdited();
-    void onToolsCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
+    void editTool(const QModelIndex &index);
     void updateDemo();
     void on_btnAdd_clicked();
 
@@ -75,6 +86,8 @@ private slots:
     void on_btnBrowseWorkingDirectory_clicked();
 
     void on_btnBrowseProgram_clicked();
+    void on_btnEdit_clicked();
+
 private:
     Ui::ToolsGeneralWidget *ui;
     MacroInfoModel mMacroInfoModel;
