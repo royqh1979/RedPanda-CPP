@@ -43,6 +43,7 @@
 #include "iconsmanager.h"
 #include "widgets/newclassdialog.h"
 #include "widgets/newheaderdialog.h"
+#include "utils/escape.h"
 #ifdef ENABLE_LUA_ADDON
 #include "addon/executor.h"
 #include "addon/runtime.h"
@@ -1210,6 +1211,9 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
             ui->treeFiles->update(index);
         }
     }
+#else
+    Q_UNUSED(path);
+    Q_UNUSED(inProject);
 #endif
     //updateForEncodingInfo();
 }
@@ -1237,6 +1241,7 @@ void MainWindow::executeTool(PToolItem item)
             inputContent=e->text().toUtf8();
         break;
     }
+    QString command;
 
     if (!fileExists(program)) {
         QTemporaryFile file(QDir::tempPath()+QDir::separator()+"XXXXXX.bat");
@@ -1248,15 +1253,20 @@ void MainWindow::executeTool(PToolItem item)
             file.write(escapeCommandForPlatformShell(program, params).toLocal8Bit()
                        + LINE_BREAKER);
             file.close();
+            command = escapeCommandForLog(file.fileName(), params);
             output = runAndGetOutput(file.fileName(), workDir, params, inputContent);
         }
     } else {
+        command = escapeCommandForLog(program, params);
         output = runAndGetOutput(program, workDir, params, inputContent);
     }
     switch(item->outputTarget) {
     case ToolItemOutputTarget::RedirectToToolsOutputPanel:
         clearToolsOutput();
+        logToolsOutput(tr(" - Command: %1").arg(command));
         logToolsOutput(QString::fromUtf8(output));
+        stretchMessagesPanel(true);
+        ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
         break;
     case ToolItemOutputTarget::RedirectToNull:
         break;

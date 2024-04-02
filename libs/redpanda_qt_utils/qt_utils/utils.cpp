@@ -511,10 +511,10 @@ void copyFolder(const QString &fromDir, const QString &toDir)
 
 QString includeTrailingPathDelimiter(const QString &path)
 {
-    if (path.endsWith('/') || path.endsWith(QDir::separator())) {
+    if (path.endsWith(QDir::separator()) || path.endsWith(QDir::separator())) {
         return path;
     } else {
-        return path + "/";
+        return path + QDir::separator();
     }
 }
 

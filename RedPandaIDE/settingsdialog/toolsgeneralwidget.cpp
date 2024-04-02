@@ -82,7 +82,7 @@ ToolsGeneralWidget::~ToolsGeneralWidget()
 
 void ToolsGeneralWidget::editTool(const QModelIndex &index)
 {
-    if (mCurrentEditingRow>=-1)
+    if (mCurrentEditingRow>=0)
         return;
     if (!index.isValid())
         return;
@@ -368,7 +368,7 @@ void ToolsGeneralWidget::on_btnBrowseProgram_clicked()
     if (!fileName.isEmpty() ) {
         QString appPath = includeTrailingPathDelimiter(pSettings->dirs().appDir());
         if (fileName.startsWith(appPath))
-            fileName = "<EXECPATH>"+fileName.mid(appPath.length());
+            fileName = QString("<EXECPATH>") + QDir::separator() + fileName.mid(appPath.length());
         ui->txtProgram->setText(fileName);
     }
 }
