@@ -44,7 +44,11 @@ void ToolsManager::load()
         item->program = "rm";
 #endif
         item->workingDirectory = "<SOURCEPATH>";
+#ifdef Q_OS_WIN
         item->parameters = "/q /f <EXENAME>";
+#else
+        item->parameters = "-f <EXENAME>";
+#endif
         item->inputOrigin = ToolItemInputOrigin::None;
         item->outputTarget = ToolItemOutputTarget::RedirectToToolsOutputPanel;
         item->isUTF8 = false;

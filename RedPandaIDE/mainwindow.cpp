@@ -1242,7 +1242,7 @@ void MainWindow::executeTool(PToolItem item)
         break;
     }
     QString command;
-
+#ifdef Q_OS_WIN
     if (!fileExists(program)) {
         QTemporaryFile file(QDir::tempPath()+QDir::separator()+"XXXXXX.bat");
         file.setAutoRemove(false);
@@ -1262,9 +1262,12 @@ void MainWindow::executeTool(PToolItem item)
             output = runAndGetOutput(cmd, workDir, args, inputContent);
         }
     } else {
+#endif
         command = escapeCommandForPlatformShell(program, params);
         output = runAndGetOutput(program, workDir, params, inputContent);
+#ifdef Q_OS_WIN
     }
+#endif
     switch(item->outputTarget) {
     case ToolItemOutputTarget::RedirectToToolsOutputPanel:
         logToolsOutput(tr(" - Command: %1").arg(command));
