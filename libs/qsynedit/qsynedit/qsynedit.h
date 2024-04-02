@@ -61,16 +61,13 @@ Q_DECLARE_FLAGS(StatusChanges, StatusChange)
 Q_DECLARE_OPERATORS_FOR_FLAGS(StatusChanges)
 
 enum class StateFlag  {
-    sfCaretChanged =        0x0001,
-    sfHScrollbarChanged =   0x0002,
-    sfVScrollbarChanged =   0x0004,
-//    sfLinesChanging =       0x0008,
-    sfIgnoreNextChar =      0x0010,
-    sfCaretVisible =        0x0020,
-    sfDblClicked =          0x0040,
-    sfWaitForDragging =     0x0080
+    HScrollbarChanged             = 0x0001,
+    VScrollbarChanged             = 0x0002,
+    DblClicked                    = 0x0004,
+    WaitForDragging               = 0x0008,
+    EnsureCaretVisible            = 0x0010,
+    EnsureCaretVisibleForceMiddle = 0x0020,
 };
-
 Q_DECLARE_FLAGS(StateFlags,StateFlag)
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(StateFlags)
@@ -648,7 +645,7 @@ private:
 
 
 private slots:
-    void onMaxLineChanged();
+    void onMaxLineWidthChanged();
     void updateHScrollBarLater();
     void onBookMarkOptionsChanged();
     void onGutterChanged();

@@ -147,6 +147,8 @@ int Document::maxLineWidth() {
     QMutexLocker locker(&mMutex);
     if (mIndexOfLongestLine >= 0) {
         return mLines[mIndexOfLongestLine]->width();
+    } else if (mLines.isEmpty()) {
+        return 0;
     } else
         return -1;
 }

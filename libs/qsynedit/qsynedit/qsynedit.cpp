@@ -73,7 +73,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
     connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
-            this, &QSynEdit::onMaxLineChanged);
+            this, &QSynEdit::onMaxLineWidthChanged);
     connect(mDocument.get(), &Document::cleared, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
@@ -1663,7 +1663,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
         mDropped=false;
         return;
     }
-    if (mStateFlags.testFlag(StateFlag::sfDblClicked))
+    if (mStateFlags.testFlag(StateFlag::DblClicked))
         return;
     if (!hasFocus())
         return;
@@ -1750,7 +1750,7 @@ QString QSynEdit::getDisplayStringAtLine(int line) const
     return s;
 }
 
-void QSynEdit::onMaxLineChanged()
+void QSynEdit::onMaxLineWidthChanged()
 {
     invalidate(); // repaint first, to update line widths
     updateHScrollBarLater();
@@ -2875,14 +2875,12 @@ void QSynEdit::decPaintLock()
     Q_ASSERT(mPaintLock > 0);
     mPaintLock--;
     if (mPaintLock == 0 ) {
-        if (mStateFlags.testFlag(StateFlag::sfHScrollbarChanged)) {
+        if (mStateFlags.testFlag(StateFlag::HScrollbarChanged)) {
             updateHScrollbar();
         }
-        if (mStateFlags.testFlag(StateFlag::sfVScrollbarChanged)) {
+        if (mStateFlags.testFlag(StateFlag::VScrollbarChanged)) {
             updateVScrollbar();
         }
-        if (mStateFlags.testFlag(StateFlag::sfCaretChanged))
-            updateCaret();
         if (mStatusChanges!=0)
             doOnStatusChange(mStatusChanges);
     }
@@ -2970,6 +2968,13 @@ void QSynEdit::ensureCaretVisible()
 
 void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
 {
+    if (mDocument->maxLineWidth()<0) {
+        if (ForceToMiddle)
+            mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle, true);
+        else
+            mStateFlags.setFlag(StateFlag::EnsureCaretVisible, true);
+        return;
+    }
     incPaintLock();
     auto action = finally([this]{
         decPaintLock();
@@ -2983,7 +2988,7 @@ void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
             setLeftPos(std::max(0,visibleX - tabWidth()));
         else
             setLeftPos(visibleX);
-    } else if (visibleX > viewWidth() + leftPos() && viewWidth()>0)
+    } else if (visibleX > viewWidth() + leftPos() - mCharWidth && viewWidth()>0)
         if (viewWidth() >= 3*mCharWidth )
             setLeftPos(visibleX - viewWidth() + 3*mCharWidth);
         else
@@ -3093,9 +3098,9 @@ void QSynEdit::doOnStatusChange(StatusChanges)
 void QSynEdit::updateHScrollbar()
 {
     if (mPaintLock!=0) {
-        mStateFlags.setFlag(StateFlag::sfHScrollbarChanged);
+        mStateFlags.setFlag(StateFlag::HScrollbarChanged);
     } else {
-        mStateFlags.setFlag(StateFlag::sfHScrollbarChanged,false);
+        mStateFlags.setFlag(StateFlag::HScrollbarChanged,false);
         doUpdateHScrollbar();
     }
 }
@@ -3113,14 +3118,21 @@ void QSynEdit::doUpdateHScrollbar()
     horizontalScrollBar()->setPageStep(nPage);
     horizontalScrollBar()->setValue(nPos);
     horizontalScrollBar()->setSingleStep(mCharWidth);
+    if (mStateFlags.testFlag(StateFlag::EnsureCaretVisible)) {
+        ensureCaretVisibleEx(false);
+        mStateFlags.setFlag(StateFlag::EnsureCaretVisible,false);
+    } else if (mStateFlags.testFlag(StateFlag::EnsureCaretVisibleForceMiddle)) {
+        ensureCaretVisibleEx(true);
+        mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle,false);
+    }
 }
 
 void QSynEdit::updateVScrollbar()
 {
     if (mPaintLock!=0) {
-        mStateFlags.setFlag(StateFlag::sfVScrollbarChanged);
+        mStateFlags.setFlag(StateFlag::VScrollbarChanged);
     } else {
-        mStateFlags.setFlag(StateFlag::sfVScrollbarChanged,false);
+        mStateFlags.setFlag(StateFlag::VScrollbarChanged,false);
         doUpdateVScrollbar();
     }
 }
@@ -3141,7 +3153,8 @@ void QSynEdit::doUpdateVScrollbar()
 
 void QSynEdit::updateCaret()
 {
-    mStateFlags.setFlag(StateFlag::sfCaretChanged,false);
+    if (mDocument->maxLineWidth()<0)
+        return;
     invalidateRect(calculateCaretRect());
 }
 
@@ -3725,7 +3738,6 @@ void QSynEdit::onSizeOrFontChanged()
         onGutterChanged();
     updateHScrollbar();
     updateVScrollbar();
-    mStateFlags.setFlag(StateFlag::sfCaretChanged,false);
     invalidate();
 }
 
@@ -5876,9 +5888,13 @@ void QSynEdit::paintEvent(QPaintEvent *event)
     QPainter painter(viewport());
     //Get the invalidated rect.
     QRect rcClip = event->rect();
-    QRect rcCaret = calculateCaretRect();
-
-    if (rcCaret == rcClip) {
+    QRect rcCaret;
+    bool onlyUpdateCaret = false;
+    if (mDocument->maxLineWidth()>=0) {
+        onlyUpdateCaret = (calculateCaretRect() == rcClip);
+    }
+    if (onlyUpdateCaret) {
+        rcCaret = rcClip;
         // only update caret
         // calculate the needed invalid area for caret
         // qDebug()<<"update caret"<<rcCaret;
@@ -6059,13 +6075,13 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
             mMouseDownPos = event->pos();
         }
         computeCaret();
-        mStateFlags.setFlag(StateFlag::sfWaitForDragging,false);
+        mStateFlags.setFlag(StateFlag::WaitForDragging,false);
         if (bWasSel && mOptions.testFlag(eoDragDropEditing) && (X >= mGutterWidth + 2)
                 && (mActiveSelectionMode == SelectionMode::Normal) && isPointInSelection(displayToBufferPos(pixelsToGlyphPos(X, Y))) ) {
             bStartDrag = true;
         }
         if (bStartDrag && !mReadOnly) {
-            mStateFlags.setFlag(StateFlag::sfWaitForDragging);
+            mStateFlags.setFlag(StateFlag::WaitForDragging);
         } else {
             if (event->modifiers() == Qt::ShiftModifier) {
                 //BlockBegin and BlockEnd are restored to their original position in the
@@ -6103,15 +6119,15 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
     }
 
     BufferCoord oldCaret=caretXY();
-    if (mStateFlags.testFlag(StateFlag::sfWaitForDragging) &&
-            !mStateFlags.testFlag(StateFlag::sfDblClicked)) {
+    if (mStateFlags.testFlag(StateFlag::WaitForDragging) &&
+            !mStateFlags.testFlag(StateFlag::DblClicked)) {
         computeCaret();
         if (! (event->modifiers() & Qt::ShiftModifier))
             setBlockBegin(caretXY());
         setBlockEnd(caretXY());
-        mStateFlags.setFlag(StateFlag::sfWaitForDragging, false);
+        mStateFlags.setFlag(StateFlag::WaitForDragging, false);
     }
-    mStateFlags.setFlag(StateFlag::sfDblClicked,false);
+    mStateFlags.setFlag(StateFlag::DblClicked,false);
     ensureLineAlignedWithTop();
     ensureCaretVisible();
     if (oldCaret!=caretXY()) {
@@ -6127,10 +6143,10 @@ void QSynEdit::mouseMoveEvent(QMouseEvent *event)
             || (std::abs(event->pos().x()-mMouseOrigin.x()) > 2) )
         mMouseMoved = true;
     Qt::MouseButtons buttons = event->buttons();
-    if (mStateFlags.testFlag(StateFlag::sfWaitForDragging)
+    if (mStateFlags.testFlag(StateFlag::WaitForDragging)
             && !mReadOnly) {
         if ( ( event->pos() - mMouseDownPos).manhattanLength()>=QApplication::startDragDistance()) {
-            mStateFlags.setFlag(StateFlag::sfWaitForDragging,false);
+            mStateFlags.setFlag(StateFlag::WaitForDragging,false);
             QDrag *drag = new QDrag(this);
             QMimeData *mimeData = new QMimeData;
 
@@ -6158,7 +6174,7 @@ void QSynEdit::mouseDoubleClickEvent(QMouseEvent *event)
     if (ptMouse.x() >= mGutterWidth) {
         if (mOptions.testFlag(EditorOption::eoSelectWordByDblClick))
             setSelWord();
-        mStateFlags.setFlag(StateFlag::sfDblClicked);
+        mStateFlags.setFlag(StateFlag::DblClicked);
     }
 }
 
@@ -6646,10 +6662,7 @@ void QSynEdit::setBlockEnd(BufferCoord value)
       else
           value.ch = 1;
     } else {
-        int maxLen = mDocument->maxLineWidth();
-        if (useCodeFolding())
-            maxLen += stringWidth(mSyntaxer->foldString(""),maxLen);
-        value.ch = minMax(value.ch, 1, maxLen+1);
+        value.ch = std::min(value.ch, 1);
     }
     if (value.ch != mBlockEnd.ch || value.line != mBlockEnd.line) {
         if (mActiveSelectionMode == SelectionMode::Column && value.ch != mBlockEnd.ch) {
@@ -6761,10 +6774,7 @@ void QSynEdit::setBlockBegin(BufferCoord value)
         else
             value.ch = 1;
     } else {
-        int maxLen = mDocument->maxLineWidth();
-        if (useCodeFolding())
-            maxLen += stringWidth(mSyntaxer->foldString(""),maxLen);
-        value.ch = minMax(value.ch, 1, maxLen+1);
+        value.ch = std::max(value.ch, 1);
     }
     if (selAvail()) {
         if (mBlockBegin.line < mBlockEnd.line) {
@@ -6801,11 +6811,16 @@ void QSynEdit::setLeftPos(int value)
     //value = std::min(value,maxScrollWidth());
     value = std::max(value, 0);
     if (value != mLeftPos) {
-        mLeftPos = value;
+        if (mDocument->maxLineWidth()<0)
+            mLeftPos = value;
         setStatusChanged(StatusChange::scLeftPos);
         if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal)
             horizontalScrollBar()->setValue(value);
         else {
+            if (mDocument->maxLineWidth()>0) {
+                mLeftPos = std::max(mLeftPos, 0);
+                mLeftPos = std::min(mLeftPos, maxScrollWidth());
+            }
             invalidate();
         }
     }
