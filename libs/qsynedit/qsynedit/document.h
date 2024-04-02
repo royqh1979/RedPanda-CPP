@@ -595,7 +595,6 @@ private:
     QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList, int left, int &right) const;
     QList<int> calcGlyphPositionList(const QString& lineText, int &width) const;
     QList<int> getGlyphStartCharList(int line, const QString &lineText);
-    QList<int> getGlyphStartPositionList(int line, const QString &lineText, int &lineWidth);
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);

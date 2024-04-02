@@ -1244,14 +1244,6 @@ QList<int> Document::getGlyphStartCharList(int line, const QString &lineText)
     return mLines[line]->glyphStartCharList();
 }
 
-QList<int> Document::getGlyphStartPositionList(int line, const QString &lineText, int &lineWidth)
-{
-    if (line<0 || line>=count() || mLines[line]->lineText()!=lineText)
-        return calcGlyphPositionList(lineText,lineWidth);
-    lineWidth = mLines[line]->width();
-    return mLines[line]->glyphStartPositionList();
-}
-
 NewlineType Document::getNewlineType()
 {
     QMutexLocker locker(&mMutex);
