@@ -1233,12 +1233,12 @@ void MainWindow::executeTool(PToolItem item)
     case ToolItemInputOrigin::CurrentSelection:
         e=mEditorList->getEditor();
         if (e)
-            inputContent=e->selText().toUtf8();
+            inputContent=stringToByteArray(e->selText(), item->isUTF8);
         break;
     case ToolItemInputOrigin::WholeDocument:
         e=mEditorList->getEditor();
         if (e)
-            inputContent=e->text().toUtf8();
+            inputContent=stringToByteArray(e->text(), item->isUTF8);
         break;
     }
     QString command;
@@ -1253,8 +1253,10 @@ void MainWindow::executeTool(PToolItem item)
             file.write(escapeCommandForPlatformShell(program, params).toLocal8Bit()
                        + LINE_BREAKER);
             file.close();
-            command = escapeCommandForPlatformShell(file.fileName(), params);
-            output = runAndGetOutput(file.fileName(), workDir, params, inputContent);
+            QString cmd="cmd";
+            QStringList args{"/C",file.fileName()};
+            command = escapeCommandForPlatformShell(cmd, args);
+            output = runAndGetOutput(cmd, workDir, args, inputContent);
         }
     } else {
         command = escapeCommandForPlatformShell(program, params);
@@ -1263,7 +1265,8 @@ void MainWindow::executeTool(PToolItem item)
     switch(item->outputTarget) {
     case ToolItemOutputTarget::RedirectToToolsOutputPanel:
         logToolsOutput(tr(" - Command: %1").arg(command));
-        logToolsOutput(QString::fromUtf8(output));
+        logToolsOutput("");
+        logToolsOutput(byteArrayToString(output, item->isUTF8));
         stretchMessagesPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabToolsOutput);
         break;
@@ -1272,12 +1275,12 @@ void MainWindow::executeTool(PToolItem item)
     case ToolItemOutputTarget::RepalceWholeDocument:
         e=mEditorList->getEditor();
         if (e)
-            e->replaceContent(QString::fromUtf8(output));
+            e->replaceContent(byteArrayToString(output, item->isUTF8));
         break;
     case ToolItemOutputTarget::ReplaceCurrentSelection:
         e=mEditorList->getEditor();
         if (e)
-            e->setSelText(QString::fromUtf8(output));
+            e->setSelText(byteArrayToString(output, item->isUTF8));
         break;
     }
 }

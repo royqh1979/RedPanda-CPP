@@ -41,6 +41,7 @@ struct ToolItem {
     QString parameters;
     ToolItemInputOrigin inputOrigin;
     ToolItemOutputTarget outputTarget;
+    bool isUTF8;
 };
 
 using PToolItem = std::shared_ptr<ToolItem>;

@@ -357,6 +357,7 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
 {
     QProcess process;
     QByteArray result;
+    bool errorOccurred = false;
     if (env.isEmpty()) {
         if (inheritEnvironment) {
             process.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
@@ -375,12 +376,19 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
                     [&](){
         result.append(process.readAllStandardOutput());
     });
+    process.connect(&process, &QProcess::errorOccurred,
+                    [&](){
+                        errorOccurred= true;
+                    });
     process.start(cmd,arguments);
     if (!inputContent.isEmpty()) {
         process.write(inputContent);
     }
     process.closeWriteChannel();
     process.waitForFinished();
+    if (errorOccurred) {
+        result += process.errorString().toUtf8();
+    }
     return result;
 }
 
@@ -612,4 +620,20 @@ QString osArch()
 #else
     return QSysInfo::currentCpuArchitecture();
 #endif
+}
+
+QString byteArrayToString(const QByteArray &content, bool isUTF8)
+{
+    if (isUTF8)
+        return QString::fromUtf8(content);
+    else
+        return QString::fromLocal8Bit(content);
+}
+
+QByteArray stringToByteArray(const QString &content, bool isUTF8)
+{
+    if (isUTF8)
+        return content.toUtf8();
+    else
+        return content.toLocal8Bit();
 }

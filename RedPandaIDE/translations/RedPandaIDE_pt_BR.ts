@@ -4276,7 +4276,7 @@
     <name>MainWindow</name>
     <message>
         <location filename="../mainwindow.ui" line="+14"/>
-        <location filename="../mainwindow.cpp" line="+1322"/>
+        <location filename="../mainwindow.cpp" line="+1324"/>
         <source>Red Panda C++</source>
         <translation>Red Panda C++</translation>
     </message>
@@ -5483,13 +5483,13 @@
         <translation>Ctrl+Shift+Down</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-8403"/>
+        <location filename="../mainwindow.cpp" line="-8406"/>
         <location line="+72"/>
         <location line="+9"/>
         <location line="+8"/>
         <location line="+9"/>
         <location line="+61"/>
-        <location line="+1356"/>
+        <location line="+1359"/>
         <location line="+1799"/>
         <location line="+117"/>
         <location line="+1866"/>
@@ -5501,7 +5501,7 @@
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-9503"/>
+        <location line="-9506"/>
         <source>New</source>
         <translation>Novo</translation>
     </message>
@@ -5527,18 +5527,18 @@
     </message>
     <message>
         <location line="+85"/>
-        <location line="+8307"/>
+        <location line="+8310"/>
         <source>Problem Set %1</source>
         <translation>Conjunto de problemas %1</translation>
     </message>
     <message>
-        <location line="-7660"/>
+        <location line="-7663"/>
         <location line="+6"/>
         <source>Load Theme Error</source>
         <translation>Erro ao carregar tema</translation>
     </message>
     <message>
-        <location line="+322"/>
+        <location line="+325"/>
         <location line="+2"/>
         <location line="+30"/>
         <location line="+2"/>
@@ -5731,12 +5731,12 @@
         <translation>Propriedades...</translation>
     </message>
     <message>
-        <location line="-1603"/>
+        <location line="-1604"/>
         <source> - Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+324"/>
         <source>Line: %1/%2 Col: %3 Sel: %4</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7018,7 +7018,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-5170"/>
+        <location filename="../mainwindow.cpp" line="-5173"/>
         <source>Exact</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7033,7 +7033,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7040"/>
+        <location line="+7043"/>
         <source>Folder Not Empty</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8381,7 +8381,7 @@
 <context>
     <name>QFileSystemModel</name>
     <message>
-        <location filename="../mainwindow.cpp" line="-1211"/>
+        <location filename="../mainwindow.cpp" line="-1214"/>
         <source>&lt;b&gt;The name &quot;%1&quot; cannot be used.&lt;/b&gt;&lt;p&gt;Try using another name, with fewer characters or no punctuation marks.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8681,7 +8681,7 @@
     </message>
     <message>
         <location filename="../editorlist.cpp" line="+178"/>
-        <location filename="../mainwindow.cpp" line="+3224"/>
+        <location filename="../mainwindow.cpp" line="+3227"/>
         <source>Save</source>
         <translation>Salvar</translation>
     </message>
@@ -9000,7 +9000,7 @@
         <translation type="vanished">Índice %1 fora dos limites</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+480"/>
+        <location filename="../utils.cpp" line="+488"/>
         <source>bytes</source>
         <translation>bytes</translation>
     </message>
@@ -10693,23 +10693,28 @@
         <translation>Remover</translation>
     </message>
     <message>
-        <location line="+234"/>
+        <location line="+123"/>
         <source>Output To</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+172"/>
+        <source>Use UTF8 as the encoding</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-196"/>
         <location line="+7"/>
         <source>Browse</source>
         <translation>Navegar</translation>
     </message>
     <message>
-        <location line="-111"/>
+        <location line="+27"/>
         <source>Parameters</source>
         <translation>Parâmetros</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+129"/>
         <source>Ok</source>
         <translation>Ok</translation>
     </message>
@@ -10719,12 +10724,12 @@
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="-116"/>
         <source>Redirect Input</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+20"/>
         <source>Title</source>
         <translation>Título</translation>
     </message>
@@ -10733,22 +10738,22 @@
         <translation type="vanished">Pausar a console após término do programa</translation>
     </message>
     <message>
-        <location line="-124"/>
+        <location line="-57"/>
         <source>Program</source>
         <translation>Programa</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+47"/>
         <source>Working Directory</source>
         <translation>Pasta de trabalho</translation>
     </message>
     <message>
-        <location line="-110"/>
+        <location line="+39"/>
         <source>Insert Macro</source>
         <translation>Inserir macro</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/toolsgeneralwidget.cpp" line="+108"/>
+        <location filename="../settingsdialog/toolsgeneralwidget.cpp" line="+110"/>
         <source>Save Changes?</source>
         <translation>Salvar alterações?</translation>
     </message>
@@ -10757,7 +10762,7 @@
         <translation type="vanished">Quer salvar as alterações na ferramenta atual?</translation>
     </message>
     <message>
-        <location line="+246"/>
+        <location line="+249"/>
         <source>Choose Folder</source>
         <translation>Escolher pasta</translation>
     </message>
@@ -10771,7 +10776,7 @@
         <translation type="vanished">Arquivos executáveis (*.exe)</translation>
     </message>
     <message>
-        <location line="-326"/>
+        <location line="-331"/>
         <location line="+6"/>
         <source>None</source>
         <translation type="unfinished"></translation>
@@ -10802,7 +10807,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+63"/>
         <source>Do you want to save changes to &quot;%1&quot;?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10817,7 +10822,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+188"/>
         <source>untitled</source>
         <translation type="unfinished">sem nome</translation>
     </message>
@@ -10873,7 +10878,7 @@
         <translation>Remover compilado</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+28"/>
         <location line="+13"/>
         <source>Read tools config failed</source>
         <translation>Falha ao ler configurações de ferramentas</translation>
@@ -10889,18 +10894,18 @@
         <translation>Falha ao ler arquivo de configurações de ferramentas &apos;%1&apos;: %2</translation>
     </message>
     <message>
-        <location line="+31"/>
-        <location line="+21"/>
+        <location line="+32"/>
+        <location line="+22"/>
         <source>Save tools config failed</source>
         <translation>Falha ao salvar configurações de ferramentas</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-21"/>
         <source>Can&apos;t open tools config file &apos;%1&apos; for write.</source>
         <translation>Impossível gravar o arquivo de configurações de ferramentas &apos;%1&apos;</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Write to tools config file &apos;%1&apos; failed.</source>
         <translation>Falha ao gravar o arquivo de configurações &apos;%1&apos;.</translation>
     </message>

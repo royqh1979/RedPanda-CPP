@@ -73,6 +73,8 @@ ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group
             this, &ToolsGeneralWidget::onEdited);
     connect(ui->cbOutput, qOverload<int>(&QComboBox::currentIndexChanged),
             this, &ToolsGeneralWidget::onEdited);
+    connect(ui->chkUTF8, &QCheckBox::stateChanged,
+            this, &ToolsGeneralWidget::onEdited);
 }
 
 ToolsGeneralWidget::~ToolsGeneralWidget()
@@ -118,6 +120,7 @@ void ToolsGeneralWidget::finishEditing(bool askSave)
     item->title = ui->txtTitle->text();
     item->inputOrigin = static_cast<ToolItemInputOrigin>(ui->cbInput->currentIndex());
     item->outputTarget = static_cast<ToolItemOutputTarget>(ui->cbOutput->currentIndex());
+    item->isUTF8 = ui->chkUTF8->isChecked();
     mToolsModel.updateTool(mCurrentEditingRow, item);
 }
 
@@ -138,6 +141,7 @@ void ToolsGeneralWidget::prepareEdit(int row)
     ui->txtTitle->setText(item->title);
     ui->cbInput->setCurrentIndex(static_cast<int>(item->inputOrigin));
     ui->cbOutput->setCurrentIndex(static_cast<int>(item->outputTarget));
+    ui->chkUTF8->setChecked(item->isUTF8);
     showEditPanel(true);
     ui->txtTitle->setFocus();
     mEdited = false;
@@ -290,6 +294,7 @@ void ToolsGeneralWidget::on_btnAdd_clicked()
     item->title = tr("untitled");
     item->inputOrigin = ToolItemInputOrigin::None;
     item->outputTarget = ToolItemOutputTarget::RedirectToToolsOutputPanel;
+    item->isUTF8 = false;
     mToolsModel.addTool(item);
     int row = mToolsModel.tools().count() - 1;
     QModelIndex index=mToolsModel.index(row);

@@ -44,9 +44,10 @@ void ToolsManager::load()
         item->program = "rm";
 #endif
         item->workingDirectory = "<SOURCEPATH>";
-        item->parameters = "<EXENAME>";
+        item->parameters = "/q /f <EXENAME>";
         item->inputOrigin = ToolItemInputOrigin::None;
         item->outputTarget = ToolItemOutputTarget::RedirectToToolsOutputPanel;
+        item->isUTF8 = false;
         mTools.append(item);
 //#ifdef Q_OS_WIN
 //        item = std::make_shared<ToolItem>();
@@ -99,6 +100,7 @@ void ToolsManager::load()
         item->parameters = object["parameters"].toString();
         item->outputTarget = static_cast<ToolItemOutputTarget>(object["outputTarget"].toInt(0));
         item->inputOrigin= static_cast<ToolItemInputOrigin>(object["inputOrigin"].toInt(0));
+        item->isUTF8 = object["isUTF8"].toBool(true);
         mTools.append(item);
     }
 }
@@ -124,6 +126,7 @@ void ToolsManager::save()
         object["parameters"]=tool->parameters;
         object["outputTarget"]=static_cast<int>(tool->outputTarget);
         object["inputOrigin"]=static_cast<int>(tool->inputOrigin);
+        object["isUTF8"]=tool->isUTF8;
         array.append(object);
     }
     QJsonDocument doc;
