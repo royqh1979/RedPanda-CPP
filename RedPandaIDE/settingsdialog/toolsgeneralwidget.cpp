@@ -51,7 +51,7 @@ ToolsGeneralWidget::ToolsGeneralWidget(const QString &name, const QString &group
     QItemSelectionModel *m=ui->lstTools->selectionModel();
     ui->lstTools->setModel(&mToolsModel);
     delete m;
-    mEditType = EditType::None;
+    mCurrentEditingRow = -1;
     showEditPanel(false);
     connect(ui->lstTools->selectionModel(), &QItemSelectionModel::currentRowChanged,
             this,&ToolsGeneralWidget::onToolsCurrentChanged);
@@ -94,9 +94,11 @@ void ToolsGeneralWidget::onToolsCurrentChanged(const QModelIndex &current, const
 void ToolsGeneralWidget::finishEditing(bool askSave, const QModelIndex& itemIndex)
 {
     auto action = finally([this]{
+        mEdited = false;
+        mCurrentEditingRow = -1;
         showEditPanel(false);
     });
-    if (mEditType == EditType::None)
+    if (mCurrentEditingRow == -1)
         return;
     if (!mEdited)
         return;
@@ -113,19 +115,13 @@ void ToolsGeneralWidget::finishEditing(bool askSave, const QModelIndex& itemInde
                               tr("Title shouldn't be empty!"));
         return;
     }
-    mEditType = EditType::None;
-    QModelIndex index=itemIndex.isValid()?itemIndex:ui->lstTools->currentIndex();
-    if (!index.isValid())
-        return;
-
-    PToolItem item = mToolsModel.getTool(index.row());
+    PToolItem item = mToolsModel.getTool(mCurrentEditingRow);
     item->workingDirectory = ui->txtDirectory->text();
     item->parameters = ui->txtParameters->text();
     item->program = ui->txtProgram->text();
     item->title = ui->txtTitle->text();
     item->inputOrigin = static_cast<ToolItemInputOrigin>(ui->cbInput->currentIndex());
     item->outputTarget = static_cast<ToolItemOutputTarget>(ui->cbOutput->currentIndex());
-    mEdited=false;
 }
 
 void ToolsGeneralWidget::prepareEdit(const PToolItem& item)
@@ -186,14 +182,23 @@ void ToolsModel::addTool(PToolItem item)
     endInsertRows();
 }
 
-PToolItem ToolsModel::getTool(int index)
+PToolItem ToolsModel::getTool(int row)
 {
-    return mTools[index];
+    return mTools[row];
 }
 
-void ToolsModel::removeTool(int index)
+void ToolsModel::updateTool(int row, PToolItem item)
 {
-    mTools.removeAt(index);
+    mTools[row] = item;
+    QModelIndex index=createIndex(row, 0);
+    emit dataChanged(index, index);
+}
+
+void ToolsModel::removeTool(int row)
+{
+    beginRemoveRows(QModelIndex(),row,row);
+    mTools.removeAt(row);
+    endRemoveRows();
 }
 
 int ToolsModel::rowCount(const QModelIndex &) const

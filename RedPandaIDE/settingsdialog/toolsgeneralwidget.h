@@ -34,8 +34,9 @@ public:
     const QList<PToolItem> &tools() const;
     void setTools(const QList<PToolItem> &newTools);
     void addTool(PToolItem item);
-    PToolItem getTool(int index);
-    void removeTool(int index);
+    PToolItem getTool(int row);
+    void updateTool(int row, PToolItem item);
+    void removeTool(int row);
 
 private:
     QList<PToolItem> mTools;
@@ -51,10 +52,6 @@ class ToolsGeneralWidget : public SettingsWidget
 {
     Q_OBJECT
 public:
-    enum class EditType {
-        Edit,
-        None
-    };
     explicit ToolsGeneralWidget(const QString& name, const QString& group, QWidget *parent = nullptr);
     ~ToolsGeneralWidget();
 private:
@@ -82,8 +79,8 @@ private:
     Ui::ToolsGeneralWidget *ui;
     MacroInfoModel mMacroInfoModel;
     ToolsModel mToolsModel;
-    EditType mEditType;
     bool mEdited;
+    int mCurrentEditingRow;
 
     // SettingsWidget interface
 protected:
