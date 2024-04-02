@@ -43,7 +43,6 @@
 #include "iconsmanager.h"
 #include "widgets/newclassdialog.h"
 #include "widgets/newheaderdialog.h"
-#include "utils/escape.h"
 #ifdef ENABLE_LUA_ADDON
 #include "addon/executor.h"
 #include "addon/runtime.h"
@@ -1227,6 +1226,7 @@ void MainWindow::executeTool(PToolItem item)
     Editor *e;
     QByteArray inputContent;
     QByteArray output;
+    clearToolsOutput();
     switch(item->inputOrigin) {
     case ToolItemInputOrigin::None:
         break;
@@ -1253,16 +1253,15 @@ void MainWindow::executeTool(PToolItem item)
             file.write(escapeCommandForPlatformShell(program, params).toLocal8Bit()
                        + LINE_BREAKER);
             file.close();
-            command = escapeCommandForLog(file.fileName(), params);
+            command = escapeCommandForPlatformShell(file.fileName(), params);
             output = runAndGetOutput(file.fileName(), workDir, params, inputContent);
         }
     } else {
-        command = escapeCommandForLog(program, params);
+        command = escapeCommandForPlatformShell(program, params);
         output = runAndGetOutput(program, workDir, params, inputContent);
     }
     switch(item->outputTarget) {
     case ToolItemOutputTarget::RedirectToToolsOutputPanel:
-        clearToolsOutput();
         logToolsOutput(tr(" - Command: %1").arg(command));
         logToolsOutput(QString::fromUtf8(output));
         stretchMessagesPanel(true);
