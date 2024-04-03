@@ -985,10 +985,12 @@ void GDBMIDebuggerClient::initialize(const QString& inferior, bool hasSymbols)
     postCommand("-enable-pretty-printing","");
     postCommand("-gdb-set", "width 0"); // don't wrap output, very annoying
     postCommand("-gdb-set", "confirm off");
-    postCommand("-gdb-set", "print repeats 10");
-    postCommand("-gdb-set", "print null-stop");
-    postCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
-    postCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
+    if (clientType() == DebuggerType::GDB) {
+        postCommand("-gdb-set", "print repeats 10");
+        postCommand("-gdb-set", "print null-stop");
+        postCommand("-gdb-set", QString("print elements %1").arg(pSettings->debugger().arrayElements())); // limit array elements to 30
+        postCommand("-gdb-set", QString("print characters %1").arg(pSettings->debugger().characters())); // limit array elements to 300
+    }
     postCommand("-environment-cd", QString("\"%1\"").arg(extractFileDir(inferior))); // restore working directory
 
     if (hasSymbols) {
