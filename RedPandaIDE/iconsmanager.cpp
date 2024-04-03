@@ -285,22 +285,22 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
         return QPixmap();
     StatementKind kind = getKindOfStatement(statement);
     switch (kind) {
-    case StatementKind::skTypedef:
+    case StatementKind::Typedef:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_TYPE));
-    case StatementKind::skClass:
+    case StatementKind::Class:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_CLASS));
-    case StatementKind::skNamespace:
-    case StatementKind::skNamespaceAlias:
+    case StatementKind::Namespace:
+    case StatementKind::NamespaceAlias:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_NAMESPACE));
-    case StatementKind::skPreprocessor:
+    case StatementKind::Preprocessor:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_DEFINE));
-    case StatementKind::skEnumClassType:
-    case StatementKind::skEnumType:
-    case StatementKind::skEnum:
+    case StatementKind::EnumClassType:
+    case StatementKind::EnumType:
+    case StatementKind::Enum:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_ENUM));
-    case StatementKind::skFunction:
-    case StatementKind::skConstructor:
-    case StatementKind::skDestructor:
+    case StatementKind::Function:
+    case StatementKind::Constructor:
+    case StatementKind::Destructor:
         if (statement->scope == StatementScope::Global)
             return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_METHOD));
         if (statement->isInherited()) {
@@ -321,11 +321,11 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
             }
         }
         break;
-    case StatementKind::skGlobalVariable:
+    case StatementKind::GlobalVariable:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_VAR));
-    case StatementKind::skLocalVariable:
+    case StatementKind::LocalVariable:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_LOCAL_VAR));
-    case StatementKind::skVariable:
+    case StatementKind::Variable:
         if (statement->isInherited()) {
             if (statement->accessibility == StatementAccessibility::Protected) {
                 return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
@@ -344,11 +344,11 @@ QPixmap IconsManager::getPixmapForStatement(PStatement statement)
             }
         }
         break;
-    case StatementKind::skKeyword:
+    case StatementKind::Keyword:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_KEYWORD));
-    case StatementKind::skUserCodeSnippet:
+    case StatementKind::UserCodeSnippet:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_CODE_SNIPPET));
-    case StatementKind::skAlias:
+    case StatementKind::Alias:
         return *(pIconsManager->getPixmap(IconsManager::PARSER_TYPE));
     default:
         break;

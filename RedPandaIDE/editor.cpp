@@ -840,7 +840,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         QString funcName = function->command;
                         bool isVoid = (function->type  == "void");
                         foreach (const PStatement& child, function->children) {
-                            if (child->kind == StatementKind::skParameter)
+                            if (child->kind == StatementKind::Parameter)
                                 params.append(child->command);
                         }
                         insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
@@ -975,11 +975,11 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             return;
                         } else if (CppTypeKeywords.contains(lastWord)) {
                             PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
-                            while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                            while(currentScope && currentScope->kind==StatementKind::Block) {
                                 currentScope = currentScope->parentScope.lock();
                             }
-                            if (!currentScope || currentScope->kind == StatementKind::skNamespace
-                                   || currentScope->kind == StatementKind::skClass) {
+                            if (!currentScope || currentScope->kind == StatementKind::Namespace
+                                   || currentScope->kind == StatementKind::Class) {
                                 //may define a function
                                 processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                                 showCompletion(lastWord,false,CodeCompletionType::FunctionWithoutDefinition);
@@ -1010,16 +1010,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
                                     lastWord,
                                     caretY());
                         StatementKind kind = getKindOfStatement(statement);
-                        if (kind == StatementKind::skClass
-                                || kind == StatementKind::skEnumClassType
-                                || kind == StatementKind::skEnumType
-                                || kind == StatementKind::skTypedef) {
+                        if (kind == StatementKind::Class
+                                || kind == StatementKind::EnumClassType
+                                || kind == StatementKind::EnumType
+                                || kind == StatementKind::Typedef) {
 
                             PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
-                            while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                            while(currentScope && currentScope->kind==StatementKind::Block) {
                                 currentScope = currentScope->parentScope.lock();
                             }
-                            if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
+                            if (!currentScope || currentScope->kind == StatementKind::Namespace) {
                                 //may define a function
                                 processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                                 showCompletion("",false,CodeCompletionType::FunctionWithoutDefinition);
@@ -1034,10 +1034,10 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(ws);
                     if (mParser && !lastWord.isEmpty()) {
                         PStatement currentScope = mParser->findScopeStatement(mFilename,caretY());
-                        while(currentScope && currentScope->kind==StatementKind::skBlock) {
+                        while(currentScope && currentScope->kind==StatementKind::Block) {
                             currentScope = currentScope->parentScope.lock();
                         }
-                        if (!currentScope || currentScope->kind == StatementKind::skNamespace) {
+                        if (!currentScope || currentScope->kind == StatementKind::Namespace) {
                             //may define a function
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion("",false,CodeCompletionType::FunctionWithoutDefinition);
@@ -1339,28 +1339,28 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
             StatementKind kind;
             if (mParser->parsing()){
-                kind=mIdentCache.value(QString("%1 %2").arg(aChar).arg(token),StatementKind::skUnknown);
+                kind=mIdentCache.value(QString("%1 %2").arg(aChar).arg(token),StatementKind::Unknown);
             } else {
                 QStringList expression = getExpressionAtPosition(p);
                 PStatement statement = parser()->findStatementOf(
                             filename(),
                             expression,
                             p.line);
-                while (statement && statement->kind == StatementKind::skAlias)
+                while (statement && statement->kind == StatementKind::Alias)
                     statement = mParser->findAliasedStatement(statement);
                 kind = getKindOfStatement(statement);
                 mIdentCache.insert(QString("%1 %2").arg(aChar).arg(token),kind);
             }
-            if (kind == StatementKind::skUnknown) {
+            if (kind == StatementKind::Unknown) {
                 QSynedit::BufferCoord pBeginPos,pEndPos;
                 QString s= getWordAtPosition(this,p, pBeginPos,pEndPos, WordPurpose::wpInformation);
                 if ((pEndPos.line>=1)
                   && (pEndPos.ch>=0)
                   && (pEndPos.ch+1 < document()->getLine(pEndPos.line-1).length())
                   && (document()->getLine(pEndPos.line-1)[pEndPos.ch+1] == '(')) {
-                    kind = StatementKind::skFunction;
+                    kind = StatementKind::Function;
                 } else {
-                    kind = StatementKind::skVariable;
+                    kind = StatementKind::Variable;
                 }
             }
             PColorSchemeItem item = mStatementColors->value(kind,PColorSchemeItem());
@@ -1398,7 +1398,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                         )
                 )
             {
-                PColorSchemeItem item = mStatementColors->value(StatementKind::skKeywordType,PColorSchemeItem());
+                PColorSchemeItem item = mStatementColors->value(StatementKind::KeywordType,PColorSchemeItem());
 
                 if (item) {
                     foreground = item->foreground();
@@ -1534,10 +1534,10 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
                                 lastWord,
                                 caretY());
                     StatementKind kind = getKindOfStatement(statement);
-                    if (kind == StatementKind::skClass
-                            || kind == StatementKind::skEnumClassType
-                            || kind == StatementKind::skEnumType
-                            || kind == StatementKind::skTypedef) {
+                    if (kind == StatementKind::Class
+                            || kind == StatementKind::EnumClassType
+                            || kind == StatementKind::EnumType
+                            || kind == StatementKind::Typedef) {
                         //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
   //                      if devEditor.UseTabnine then
   //                        ShowTabnineCompletion;
@@ -3843,7 +3843,7 @@ void Editor::completionInsert(bool appendFunc)
         return;
 
     if (pSettings->codeCompletion().recordUsage()
-            && statement->kind != StatementKind::skUserCodeSnippet) {
+            && statement->kind != StatementKind::UserCodeSnippet) {
         statement->usageCount+=1;
         pMainWindow->symbolUsageManager()->updateUsage(statement->fullName,
                                                          statement->usageCount);
@@ -3863,20 +3863,20 @@ void Editor::completionInsert(bool appendFunc)
 
     // if we are inserting a function,
     if (appendFunc) {
-        if (statement->kind == StatementKind::skAlias) {
+        if (statement->kind == StatementKind::Alias) {
             PStatement newStatement = mParser->findAliasedStatement(statement);
-            while (newStatement && newStatement->kind==StatementKind::skAlias) {
+            while (newStatement && newStatement->kind==StatementKind::Alias) {
                 newStatement = mParser->findAliasedStatement(newStatement);
             }
             if (newStatement)
                 statement = newStatement;
         }
-        if ( (statement->kind == StatementKind::skFunction
+        if ( (statement->kind == StatementKind::Function
                && !IOManipulators.contains(statement->fullName))
-                || statement->kind == StatementKind::skConstructor
-                || statement->kind == StatementKind::skDestructor
+                || statement->kind == StatementKind::Constructor
+                || statement->kind == StatementKind::Destructor
                 ||
-                (statement->kind == StatementKind::skPreprocessor
+                (statement->kind == StatementKind::Preprocessor
                   && !statement->args.isEmpty())) {
             QChar nextCh = nextNonSpaceChar(caretY()-1,p.ch-1);
             if (nextCh=='(') {
@@ -3891,14 +3891,14 @@ void Editor::completionInsert(bool appendFunc)
     }
 
     // ... by replacing the selection
-    if (statement->kind == StatementKind::skUserCodeSnippet) { // it's a user code template
+    if (statement->kind == StatementKind::UserCodeSnippet) { // it's a user code template
         // insertUserCodeIn(Statement->value);
         //first move caret to the begin of the word to be replaced
         insertCodeSnippet(statement->value);
     } else {
         if (
-                (statement->kind == StatementKind::skKeyword
-                 || statement->kind == StatementKind::skPreprocessor)
+                (statement->kind == StatementKind::Keyword
+                 || statement->kind == StatementKind::Preprocessor)
                 && (statement->command.startsWith('#')
                     || statement->command.startsWith('@'))
                 ) {
@@ -4168,9 +4168,9 @@ QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/
                 line);
     if (!statement)
         return result;
-    if (statement->kind == StatementKind::skFunction
-            || statement->kind == StatementKind::skConstructor
-            || statement->kind == StatementKind::skDestructor) {
+    if (statement->kind == StatementKind::Function
+            || statement->kind == StatementKind::Constructor
+            || statement->kind == StatementKind::Destructor) {
           result = getHintForFunction(statement,mFilename,line);
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);
@@ -4190,10 +4190,10 @@ void Editor::showDebugHint(const QString &s, int line)
         return;
     PStatement statement = mParser->findStatementOf(mFilename,s,line);
     if (statement) {
-        if (statement->kind != StatementKind::skVariable
-                && statement->kind != StatementKind::skGlobalVariable
-                && statement->kind != StatementKind::skLocalVariable
-                && statement->kind != StatementKind::skParameter) {
+        if (statement->kind != StatementKind::Variable
+                && statement->kind != StatementKind::GlobalVariable
+                && statement->kind != StatementKind::LocalVariable
+                && statement->kind != StatementKind::Parameter) {
             return;
         }
     }
@@ -4426,7 +4426,7 @@ void Editor::updateFunctionTip(bool showTip)
                     pos.line);
         if (statement) {
             PStatement typeStatement = mParser->findTypeDef(statement,mFilename);
-            if (typeStatement && typeStatement->kind == StatementKind::skClass) {
+            if (typeStatement && typeStatement->kind == StatementKind::Class) {
                 s = previousWord;
                 functionNamePos = pos;
             }
@@ -4540,52 +4540,52 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
 //        qDebug()<<s;
         PStatement statement = mParser->findStatementOf(mFilename,
           s , p.line);
-        while (statement && statement->kind == StatementKind::skAlias)
+        while (statement && statement->kind == StatementKind::Alias)
             statement = mParser->findAliasedStatement(statement);
         StatementKind kind = getKindOfStatement(statement);
-        if (kind == StatementKind::skUnknown) {
+        if (kind == StatementKind::Unknown) {
             if ((pEndPos.line>=1)
               && (pEndPos.ch>=0)
               && (pEndPos.ch < document()->getLine(pEndPos.line-1).length())
               && (document()->getLine(pEndPos.line-1)[pEndPos.ch] == '(')) {
-                kind = StatementKind::skFunction;
+                kind = StatementKind::Function;
             } else {
-                kind = StatementKind::skVariable;
+                kind = StatementKind::Variable;
             }
         }
         QSynedit::CppSyntaxer* cppSyntaxer = dynamic_cast<QSynedit::CppSyntaxer*>(syntaxer.get());
         switch(kind) {
-        case StatementKind::skFunction:
-        case StatementKind::skConstructor:
-        case StatementKind::skDestructor:
+        case StatementKind::Function:
+        case StatementKind::Constructor:
+        case StatementKind::Destructor:
             attr = cppSyntaxer->functionAttribute();
             break;
-        case StatementKind::skClass:
-        case StatementKind::skTypedef:
+        case StatementKind::Class:
+        case StatementKind::Typedef:
             attr = cppSyntaxer->classAttribute();
             break;
-        case StatementKind::skEnumClassType:
-        case StatementKind::skEnumType:
+        case StatementKind::EnumClassType:
+        case StatementKind::EnumType:
             break;
-        case StatementKind::skLocalVariable:
-        case StatementKind::skParameter:
+        case StatementKind::LocalVariable:
+        case StatementKind::Parameter:
             attr = cppSyntaxer->localVarAttribute();
             break;
-        case StatementKind::skVariable:
+        case StatementKind::Variable:
             attr = cppSyntaxer->variableAttribute();
             break;
-        case StatementKind::skGlobalVariable:
+        case StatementKind::GlobalVariable:
             attr = cppSyntaxer->globalVarAttribute();
             break;
-        case StatementKind::skEnum:
-        case StatementKind::skPreprocessor:
+        case StatementKind::Enum:
+        case StatementKind::Preprocessor:
             attr = cppSyntaxer->preprocessorAttribute();
             break;
-        case StatementKind::skKeyword:
+        case StatementKind::Keyword:
             attr = cppSyntaxer->keywordAttribute();
             break;
-        case StatementKind::skNamespace:
-        case StatementKind::skNamespaceAlias:
+        case StatementKind::Namespace:
+        case StatementKind::NamespaceAlias:
             attr = cppSyntaxer->stringAttribute();
             break;
         default:

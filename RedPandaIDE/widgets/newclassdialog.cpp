@@ -131,7 +131,7 @@ void NewClassCandidatesModel::fillClasses()
     if (!mParser->freeze())
         return;
     foreach( const PStatement& s, mParser->statementList().childrenStatements()) {
-        if (s->kind==StatementKind::skClass
+        if (s->kind==StatementKind::Class
                 && s->inProject()
                 && !s->command.startsWith("_")
                 && !s->command.contains("<")
@@ -141,7 +141,7 @@ void NewClassCandidatesModel::fillClasses()
                 mCandidates.append(s);
                 mClassNames.insert(s->fullName);
             }
-        } else if (s->kind == StatementKind::skNamespace
+        } else if (s->kind == StatementKind::Namespace
                    && !s->command.startsWith("_")
                    && !s->command.contains("<")) {
             fillClassesInNamespace(s);
@@ -157,7 +157,7 @@ void NewClassCandidatesModel::fillClasses()
 void NewClassCandidatesModel::fillClassesInNamespace(PStatement ns)
 {
     foreach( const PStatement& s, mParser->statementList().childrenStatements(ns)) {
-        if (s->kind==StatementKind::skClass
+        if (s->kind==StatementKind::Class
                 && s->inProject()
                 && !s->command.startsWith("_")
                 && !s->command.contains("<")
@@ -167,7 +167,7 @@ void NewClassCandidatesModel::fillClassesInNamespace(PStatement ns)
                 mCandidates.append(s);
                 mClassNames.insert(s->fullName);
             }
-        } else if (s->kind == StatementKind::skNamespace
+        } else if (s->kind == StatementKind::Namespace
                    && !s->command.startsWith("_")
                    && !s->command.contains("<")) {
             fillClassesInNamespace(s);

@@ -274,14 +274,14 @@ void CodeCompletionPopup::addFunctionWithoutDefinitionChildren(const PStatement&
             continue;
         }
         switch(childStatement->kind) {
-        case StatementKind::skConstructor:
-        case StatementKind::skFunction:
-        case StatementKind::skDestructor:
+        case StatementKind::Constructor:
+        case StatementKind::Function:
+        case StatementKind::Destructor:
             if (!childStatement->hasDefinition())
                 addStatement(childStatement,fileName,line);
             break;
-        case StatementKind::skClass:
-        case StatementKind::skNamespace:
+        case StatementKind::Class:
+        case StatementKind::Namespace:
             if (isIncluded(childStatement->fileName))
                 addStatement(childStatement,fileName,line);
             break;
@@ -295,12 +295,12 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
 {
     if (mAddedStatements.contains(statement->command))
         return;
-    if (statement->kind == StatementKind::skConstructor
-            || statement->kind == StatementKind::skDestructor
-            || statement->kind == StatementKind::skBlock
-            || statement->kind == StatementKind::skLambda
-            || statement->properties.testFlag(StatementProperty::spOperatorOverloading)
-            || statement->properties.testFlag(StatementProperty::spDummyStatement)
+    if (statement->kind == StatementKind::Constructor
+            || statement->kind == StatementKind::Destructor
+            || statement->kind == StatementKind::Block
+            || statement->kind == StatementKind::Lambda
+            || statement->properties.testFlag(StatementProperty::OperatorOverloading)
+            || statement->properties.testFlag(StatementProperty::DummyStatement)
             )
         return;
     if ((line!=-1)
@@ -308,7 +308,7 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
             && (fileName == statement->fileName))
         return;
     mAddedStatements.insert(statement->command);
-    if (statement->kind == StatementKind::skUserCodeSnippet || !statement->command.contains("<"))
+    if (statement->kind == StatementKind::UserCodeSnippet || !statement->command.contains("<"))
         mFullCompletionStatementList.append(statement);
 }
 
@@ -326,19 +326,19 @@ static bool defaultComparator(PStatement statement1,PStatement statement2) {
     if (statement1->caseMatched != statement2->caseMatched)
         return statement1->caseMatched > statement2->caseMatched;
     // Show user template first
-    if (statement1->kind == StatementKind::skUserCodeSnippet) {
-        if (statement2->kind != StatementKind::skUserCodeSnippet)
+    if (statement1->kind == StatementKind::UserCodeSnippet) {
+        if (statement2->kind != StatementKind::UserCodeSnippet)
             return true;
         else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
+    } else if (statement2->kind == StatementKind::UserCodeSnippet) {
         return false;
         // show keywords first
-    } else if ((statement1->kind == StatementKind::skKeyword)
-               && (statement2->kind != StatementKind::skKeyword)) {
+    } else if ((statement1->kind == StatementKind::Keyword)
+               && (statement2->kind != StatementKind::Keyword)) {
         return true;
-    } else if ((statement1->kind != StatementKind::skKeyword)
-               && (statement2->kind == StatementKind::skKeyword)) {
+    } else if ((statement1->kind != StatementKind::Keyword)
+               && (statement2->kind == StatementKind::Keyword)) {
         return false;
     } else
         return nameComparator(statement1,statement2);
@@ -354,22 +354,22 @@ static bool sortByScopeComparator(PStatement statement1,PStatement statement2){
     if (statement1->caseMatched != statement2->caseMatched)
         return statement1->caseMatched > statement2->caseMatched;
     // Show user template first
-    if (statement1->kind == StatementKind::skUserCodeSnippet) {
-        if (statement2->kind != StatementKind::skUserCodeSnippet)
+    if (statement1->kind == StatementKind::UserCodeSnippet) {
+        if (statement2->kind != StatementKind::UserCodeSnippet)
             return true;
         else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
+    } else if (statement2->kind == StatementKind::UserCodeSnippet) {
         return false;
         // show non-system defines before keyword
-    } else if (statement1->kind == StatementKind::skKeyword) {
-        if (statement2->kind != StatementKind::skKeyword) {
+    } else if (statement1->kind == StatementKind::Keyword) {
+        if (statement2->kind != StatementKind::Keyword) {
             //s1 keyword / s2 system defines, s1 < s2, should return true
             //s1 keyword / s2 not system defines, s2 < s1, should return false;
             return  statement2->inSystemHeader();
         } else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skKeyword) {
+    } else if (statement2->kind == StatementKind::Keyword) {
         //s1 system defines / s2 keyword, s2 < s1, should return false;
         //s1 not system defines / s2 keyword, s1 < s2, should return true;
         return  (!statement1->inSystemHeader());
@@ -398,23 +398,23 @@ static bool sortWithUsageComparator(PStatement statement1,PStatement statement2)
     if (statement1->caseMatched != statement2->caseMatched)
         return statement1->caseMatched > statement2->caseMatched;
     // Show user template first
-    if (statement1->kind == StatementKind::skUserCodeSnippet) {
-        if (statement2->kind != StatementKind::skUserCodeSnippet)
+    if (statement1->kind == StatementKind::UserCodeSnippet) {
+        if (statement2->kind != StatementKind::UserCodeSnippet)
             return true;
         else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
+    } else if (statement2->kind == StatementKind::UserCodeSnippet) {
         return false;
         //show most freq first
     }
     if (statement1->usageCount != statement2->usageCount)
         return statement1->usageCount > statement2->usageCount;
 
-    if ((statement1->kind != StatementKind::skKeyword)
-               && (statement2->kind == StatementKind::skKeyword)) {
+    if ((statement1->kind != StatementKind::Keyword)
+               && (statement2->kind == StatementKind::Keyword)) {
         return true;
-    } else if ((statement1->kind == StatementKind::skKeyword)
-               && (statement2->kind != StatementKind::skKeyword)) {
+    } else if ((statement1->kind == StatementKind::Keyword)
+               && (statement2->kind != StatementKind::Keyword)) {
         return false;
     } else
         return nameComparator(statement1,statement2);
@@ -430,12 +430,12 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
     if (statement1->caseMatched != statement2->caseMatched)
         return statement1->caseMatched > statement2->caseMatched;
     // Show user template first
-    if (statement1->kind == StatementKind::skUserCodeSnippet) {
-        if (statement2->kind != StatementKind::skUserCodeSnippet)
+    if (statement1->kind == StatementKind::UserCodeSnippet) {
+        if (statement2->kind != StatementKind::UserCodeSnippet)
             return true;
         else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skUserCodeSnippet) {
+    } else if (statement2->kind == StatementKind::UserCodeSnippet) {
         return false;
         //show most freq first
     }
@@ -443,14 +443,14 @@ static bool sortByScopeWithUsageComparator(PStatement statement1,PStatement stat
         return statement1->usageCount > statement2->usageCount;
 
         // show non-system defines before keyword
-    if (statement1->kind == StatementKind::skKeyword) {
-        if (statement2->kind != StatementKind::skKeyword) {
+    if (statement1->kind == StatementKind::Keyword) {
+        if (statement2->kind != StatementKind::Keyword) {
             //s1 keyword / s2 system defines, s1 < s2, should return true
             //s1 keyword / s2 not system defines, s2 < s1, should return false;
             return  statement2->inSystemHeader();
         } else
             return statement1->command < statement2->command;
-    } else if (statement2->kind == StatementKind::skKeyword) {
+    } else if (statement2->kind == StatementKind::Keyword) {
         //s1 system defines / s2 keyword, s2 < s1, should return false;
         //s1 not system defines / s2 keyword, s1 < s2, should return true;
         return  (!statement1->inSystemHeader());
@@ -598,7 +598,7 @@ void CodeCompletionPopup::getMacroCompletionList(const QString &fileName, int li
 {
     const StatementMap& statementMap = mParser->statementList().childrenStatements(nullptr);
     foreach(const PStatement& statement, statementMap.values()) {
-        if (statement->kind==StatementKind::skPreprocessor)
+        if (statement->kind==StatementKind::Preprocessor)
             addStatement(statement,fileName,line);
     }
 }
@@ -649,7 +649,7 @@ void CodeCompletionPopup::getCompletionFor(
                     PStatement statement = std::make_shared<Statement>();
                     statement->command = codeIn->prefix;
                     statement->value = codeIn->code;
-                    statement->kind = StatementKind::skUserCodeSnippet;
+                    statement->kind = StatementKind::UserCodeSnippet;
                     statement->fullName = codeIn->prefix;
                     statement->usageCount = 0;
                     mFullCompletionStatementList.append(statement);
@@ -686,13 +686,13 @@ void CodeCompletionPopup::getCompletionFor(
             // repeat until reach global
             while (scopeStatement) {
                 //add members of current scope that not added before
-                if (scopeStatement->kind == StatementKind::skNamespace) {
+                if (scopeStatement->kind == StatementKind::Namespace) {
                     PStatementList namespaceStatementsList =
                             mParser->findNamespace(scopeStatement->fullName);
                     foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
                         addChildren(namespaceStatement, fileName, line, isLambdaReturnType);
                     }
-                } else if (scopeStatement->kind == StatementKind::skClass) {
+                } else if (scopeStatement->kind == StatementKind::Class) {
                     addChildren(scopeStatement, fileName, -1, isLambdaReturnType);
                 } else {
                     addChildren(scopeStatement, fileName, line, isLambdaReturnType);
@@ -708,7 +708,7 @@ void CodeCompletionPopup::getCompletionFor(
                         addChildren(namespaceStatement, fileName, line, isLambdaReturnType);
                     }
                 }
-                if (scopeStatement->kind == StatementKind::skLambda) {
+                if (scopeStatement->kind == StatementKind::Lambda) {
                     foreach (const QString& phrase, scopeStatement->lambdaCaptures) {
                         if (phrase=="&" || phrase == "=" || phrase =="this")
                             continue;
@@ -724,12 +724,12 @@ void CodeCompletionPopup::getCompletionFor(
                     } else if (scopeStatement->lambdaCaptures.contains("this")) {
                         do {
                             scopeStatement = scopeStatement->parentScope.lock();
-                        } while (scopeStatement && scopeStatement->kind!=StatementKind::skClass
-                                 && scopeStatement->kind!=StatementKind::skNamespace);
+                        } while (scopeStatement && scopeStatement->kind!=StatementKind::Class
+                                 && scopeStatement->kind!=StatementKind::Namespace);
                     } else {
                         do {
                             scopeStatement = scopeStatement->parentScope.lock();
-                        } while (scopeStatement && scopeStatement->kind!=StatementKind::skNamespace);
+                        } while (scopeStatement && scopeStatement->kind!=StatementKind::Namespace);
                     }
                     continue;
                 }
@@ -863,8 +863,8 @@ void CodeCompletionPopup::getCompletionFor(
                     foreach (const PStatement& childStatement, children) {
                         if ((childStatement->accessibility==StatementAccessibility::Public)
                                 && !(
-                                    childStatement->kind == StatementKind::skConstructor
-                                    || childStatement->kind == StatementKind::skDestructor)
+                                    childStatement->kind == StatementKind::Constructor
+                                    || childStatement->kind == StatementKind::Destructor)
                                 && !mAddedStatements.contains(childStatement->command)) {
                             addStatement(childStatement,fileName,-1);
                         }
@@ -880,8 +880,8 @@ void CodeCompletionPopup::getCompletionFor(
                 if (!isIncluded(classTypeStatement->fileName) &&
                     !isIncluded(classTypeStatement->definitionFileName))
                     return;
-                if (classTypeStatement->kind == StatementKind::skEnumType
-                        || classTypeStatement->kind == StatementKind::skEnumClassType) {
+                if (classTypeStatement->kind == StatementKind::EnumType
+                        || classTypeStatement->kind == StatementKind::EnumClassType) {
                     const StatementMap& children =
                             mParser->statementList().childrenStatements(classTypeStatement);
                     foreach (const PStatement& child,children) {
@@ -896,11 +896,11 @@ void CodeCompletionPopup::getCompletionFor(
                         foreach (const PStatement& childStatement, children) {
                             if (
                               (childStatement->isStatic())
-                               || (childStatement->kind == StatementKind::skTypedef
-                                || childStatement->kind == StatementKind::skClass
-                                || childStatement->kind == StatementKind::skEnum
-                                || childStatement->kind == StatementKind::skEnumClassType
-                                || childStatement->kind == StatementKind::skEnumType
+                               || (childStatement->kind == StatementKind::Typedef
+                                || childStatement->kind == StatementKind::Class
+                                || childStatement->kind == StatementKind::Enum
+                                || childStatement->kind == StatementKind::EnumClassType
+                                || childStatement->kind == StatementKind::EnumType
                                    )) {
                                 addStatement(childStatement,fileName,-1);
                             }
@@ -912,11 +912,11 @@ void CodeCompletionPopup::getCompletionFor(
                         foreach (const PStatement& childStatement,children) {
                             if (
                               (childStatement->isStatic())
-                               || (childStatement->kind == StatementKind::skTypedef
-                                || childStatement->kind == StatementKind::skClass
-                                || childStatement->kind == StatementKind::skEnum
-                                || childStatement->kind == StatementKind::skEnumClassType
-                                || childStatement->kind == StatementKind::skEnumType
+                               || (childStatement->kind == StatementKind::Typedef
+                                || childStatement->kind == StatementKind::Class
+                                || childStatement->kind == StatementKind::Enum
+                                || childStatement->kind == StatementKind::EnumClassType
+                                || childStatement->kind == StatementKind::EnumType
                                    )) {
                                 if (childStatement->accessibility == StatementAccessibility::Public)
                                     addStatement(childStatement,fileName,-1);
@@ -950,12 +950,12 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
             getCompletionListForComplexKeyword(preWord);
             PStatement scopeStatement = mCurrentScope;
             //add members of current scope that not added before
-            while (scopeStatement && scopeStatement->kind!=StatementKind::skNamespace
-                   && scopeStatement->kind!=StatementKind::skClass) {
+            while (scopeStatement && scopeStatement->kind!=StatementKind::Namespace
+                   && scopeStatement->kind!=StatementKind::Class) {
                 scopeStatement = scopeStatement->parentScope.lock();
             }
             if (scopeStatement) {
-                if (scopeStatement->kind == StatementKind::skNamespace) {
+                if (scopeStatement->kind == StatementKind::Namespace) {
                     //namespace;
                     PStatementList namespaceStatementsList =
                             mParser->findNamespace(scopeStatement->fullName);
@@ -1007,7 +1007,7 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
                     }
                 }
                 return;
-            } else if (ownerStatement->effectiveTypeStatement->kind == StatementKind::skClass) {
+            } else if (ownerStatement->effectiveTypeStatement->kind == StatementKind::Class) {
                 addKeyword("operator");
                 addFunctionWithoutDefinitionChildren(ownerStatement->effectiveTypeStatement, fileName, line);
             }
@@ -1104,7 +1104,7 @@ void CodeCompletionPopup::addKeyword(const QString &keyword)
 {
     PStatement statement = std::make_shared<Statement>();
     statement->command = keyword;
-    statement->kind = StatementKind::skKeyword;
+    statement->kind = StatementKind::Keyword;
     statement->fullName = keyword;
     statement->usageCount = 0;
     mFullCompletionStatementList.append(statement);

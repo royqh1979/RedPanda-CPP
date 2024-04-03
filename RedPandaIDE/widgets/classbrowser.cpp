@@ -149,14 +149,14 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         if (node->statement) {
             if (!(node->statement->type.isEmpty())) {
-                if ((node->statement->kind == StatementKind::skFunction)
-                     || (node->statement->kind == StatementKind::skVariable)
-                     || (node->statement->kind == StatementKind::skTypedef)
+                if ((node->statement->kind == StatementKind::Function)
+                     || (node->statement->kind == StatementKind::Variable)
+                     || (node->statement->kind == StatementKind::Typedef)
                      ) {
                     return node->statement->command + node->statement->args + " : " + node->statement->type;
                 }
             }
-            if (node->statement->kind == StatementKind::skEnum) {
+            if (node->statement->kind == StatementKind::Enum) {
                 if (!node->statement->value.isEmpty())
                     return node->statement->command + node->statement->args + QString("(%1)").arg(node->statement->value);
                 else
@@ -168,9 +168,9 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
         if (mColors && node->statement) {
             PStatement statement = (node->statement);
             StatementKind kind = getKindOfStatement(statement);
-            if (kind == StatementKind::skKeyword) {
+            if (kind == StatementKind::Keyword) {
                 if (statement->command.startsWith('#'))
-                    kind = StatementKind::skPreprocessor;
+                    kind = StatementKind::Preprocessor;
             }
             PColorSchemeItem item = mColors->value(kind,PColorSchemeItem());
             if (item) {
@@ -361,9 +361,9 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
 //        if (statement->properties.testFlag(StatementProperty::spDummyStatement))
 //            continue;
 
-        if (statement->kind == StatementKind::skBlock)
+        if (statement->kind == StatementKind::Block)
             continue;
-        if (statement->kind == StatementKind::skLambda)
+        if (statement->kind == StatementKind::Lambda)
             continue;
         if (statement->isInherited() && !pSettings->ui().classBrowserShowInherited())
             continue;
@@ -457,10 +457,10 @@ ClassBrowserNode* ClassBrowserModel::getParentNode(const PStatement &parentState
 bool ClassBrowserModel::isScopeStatement(const PStatement &statement)
 {
     switch(statement->kind) {
-    case StatementKind::skClass:
-    case StatementKind::skNamespace:
-    case StatementKind::skEnumClassType:
-    case StatementKind::skEnumType:
+    case StatementKind::Class:
+    case StatementKind::Namespace:
+    case StatementKind::EnumClassType:
+    case StatementKind::EnumType:
         return true;
     default:
         return false;

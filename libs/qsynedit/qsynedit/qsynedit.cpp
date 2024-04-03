@@ -170,7 +170,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     setAcceptDrops(true);
 
     setFont(mFontDummy);
-    setScrollBars(ScrollStyle::ssBoth);
+    setScrollBars(ScrollStyle::Both);
 }
 
 int QSynEdit::displayLineCount() const
@@ -3801,7 +3801,7 @@ ScrollStyle QSynEdit::scrollBars() const
 void QSynEdit::setScrollBars(ScrollStyle newScrollBars)
 {
     mScrollBars = newScrollBars;
-    if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
+    if (mScrollBars == ScrollStyle::Both ||  mScrollBars == ScrollStyle::OnlyHorizontal) {
         if (mOptions.testFlag(EditorOption::AutoHideScrollbars)) {
             setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
         } else {
@@ -3811,7 +3811,7 @@ void QSynEdit::setScrollBars(ScrollStyle newScrollBars)
     } else {
         setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     }
-    if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
+    if (mScrollBars == ScrollStyle::Both ||  mScrollBars == ScrollStyle::OnlyVertical) {
         if (mOptions.testFlag(EditorOption::AutoHideScrollbars)) {
             setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
         } else {
@@ -6816,7 +6816,7 @@ void QSynEdit::setLeftPos(int value)
         if (mDocument->maxLineWidth()<0)
             mLeftPos = value;
         setStatusChanged(StatusChange::LeftPos);
-        if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal)
+        if (mScrollBars == ScrollStyle::Both ||  mScrollBars == ScrollStyle::OnlyHorizontal)
             horizontalScrollBar()->setValue(value);
         else {
             if (mDocument->maxLineWidth()>0) {
@@ -6845,7 +6845,7 @@ void QSynEdit::setTopPos(int value)
     if (value != mTopPos) {
         setStatusChanged(StatusChange::TopPos);
         mTopPos = value;
-        if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
+        if (mScrollBars == ScrollStyle::Both ||  mScrollBars == ScrollStyle::OnlyVertical) {
             verticalScrollBar()->setValue(value);
         } else {
             invalidate();

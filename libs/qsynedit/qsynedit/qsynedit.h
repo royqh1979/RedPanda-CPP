@@ -35,7 +35,7 @@
 namespace QSynedit {
 
 enum class ScrollStyle {
-    ssNone, ssHorizontal, ssVertical, ssBoth
+    None, OnlyHorizontal, OnlyVertical, Both
 };
 
 enum class EditCaretType {
