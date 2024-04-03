@@ -404,11 +404,11 @@ void QSynEditPainter::paintToken(
                 }
                 if (startPaint) {
                     bool drawed = false;
-                    if (mEdit->mOptions.testFlag(eoLigatureSupport))  {
+                    if (mEdit->mOptions.testFlag(EditorOption::LigatureSupport))  {
                         bool tryLigature = false;
                         if (glyph.length()==0) {
                         } else if (glyph.length()==1 && glyph.front().unicode()<=32){
-                        } else if (mEdit->mOptions.testFlag(eoForceMonospace)
+                        } else if (mEdit->mOptions.testFlag(EditorOption::ForceMonospace)
                                    && glyphWidth != mPainter->fontMetrics().horizontalAdvance(glyph)) {
                         } else {
                             tryLigature = true;
@@ -427,7 +427,7 @@ void QSynEditPainter::paintToken(
                                       && glyph2.front().unicode()<=32))
                                     break;
                                 int glyph2Width = calcSegmentInterval(glyphStartPositionList, tokenRight, i+1);
-                                if (mEdit->mOptions.testFlag(eoForceMonospace)) {
+                                if (mEdit->mOptions.testFlag(EditorOption::ForceMonospace)) {
                                     if (glyph2Width != mPainter->fontMetrics().horizontalAdvance(glyph2)) {
                                         break;
                                     }
@@ -902,7 +902,7 @@ void QSynEditPainter::paintFoldAttributes()
 
 void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
 {
-    if (!mEdit->mOptions.testFlag(EditorOption::eoShowRainbowColor))
+    if (!mEdit->mOptions.testFlag(EditorOption::ShowRainbowColor))
         return;
     if (attr->tokenType() != TokenType::Operator)
         return;
@@ -1115,11 +1115,11 @@ void QSynEditPainter::paintLines()
             if (attr && attr->tokenType() == TokenType::Space) {
                 int pos = mEdit->mSyntaxer->getTokenPos();
                 if (pos==0) {
-                    showGlyph = mEdit->mOptions.testFlag(eoShowLeadingSpaces);
+                    showGlyph = mEdit->mOptions.testFlag(EditorOption::ShowLeadingSpaces);
                 } else if (pos+sToken.length()==sLine.length()) {
-                    showGlyph = mEdit->mOptions.testFlag(eoShowTrailingSpaces);
+                    showGlyph = mEdit->mOptions.testFlag(EditorOption::ShowTrailingSpaces);
                 } else {
-                    showGlyph = mEdit->mOptions.testFlag(eoShowInnerSpaces);
+                    showGlyph = mEdit->mOptions.testFlag(EditorOption::ShowInnerSpaces);
                 }
             }
             addHighlightToken(
@@ -1148,7 +1148,7 @@ void QSynEditPainter::paintLines()
                 getBraceColorAttr(mEdit->mSyntaxer->getState().braceLevel,attr);
             } else {
                 // Draw LineBreak glyph.
-                if (mEdit->mOptions.testFlag(eoShowLineBreaks)
+                if (mEdit->mOptions.testFlag(EditorOption::ShowLineBreaks)
                         && (mEdit->mDocument->lineWidth(vLine-1) < mRight)) {
                     addOnStr = LineBreakGlyph;
                     attr = mEdit->mSyntaxer->whitespaceAttribute();

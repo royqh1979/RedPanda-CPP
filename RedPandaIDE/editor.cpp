@@ -162,7 +162,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     if (mParentPageControl)
         connect(this,&QSynEdit::gutterClicked,this,&Editor::onGutterClicked);
 
-    onStatusChanged(QSynedit::StatusChange::scOpenFile);
+    onStatusChanged(QSynedit::StatusChange::OpenFile);
 
     setAttribute(Qt::WA_Hover,true);
 
@@ -1853,16 +1853,16 @@ Editor::PSyntaxIssue Editor::getSyntaxIssueAtPosition(const QSynedit::BufferCoor
 
 void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 {
-    if ((!changes.testFlag(QSynedit::StatusChange::scReadOnly)
-            && !changes.testFlag(QSynedit::StatusChange::scInsertMode)
+    if ((!changes.testFlag(QSynedit::StatusChange::ReadOnly)
+            && !changes.testFlag(QSynedit::StatusChange::InsertMode)
             && (document()->count()!=mLineCount)
             && (document()->count()!=0) && ((mLineCount>0) || (document()->count()>1)))
             ||
         (mCurrentLineModified
-            && !changes.testFlag(QSynedit::StatusChange::scReadOnly)
-            && changes.testFlag(QSynedit::StatusChange::scCaretY))) {
+            && !changes.testFlag(QSynedit::StatusChange::ReadOnly)
+            && changes.testFlag(QSynedit::StatusChange::CaretY))) {
         mCurrentLineModified = false;
-        if (!changes.testFlag(QSynedit::StatusChange::scOpenFile)) {
+        if (!changes.testFlag(QSynedit::StatusChange::OpenFile)) {
             reparse(false);
             if (pSettings->editor().syntaxCheckWhenLineChanged())
                 checkSyntaxInBack();
@@ -1875,17 +1875,17 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 //        }
     }
     mLineCount = document()->count();
-    if (changes.testFlag(QSynedit::scModifyChanged)) {
+    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)) {
         updateCaption();
     }
-    if (changes.testFlag(QSynedit::scModified)) {
+    if (changes.testFlag(QSynedit::StatusChange::Modified)) {
         mCurrentLineModified = true;
         if (mParentPageControl)
             mCanAutoSave = true;
     }
 
-    if (changes.testFlag(QSynedit::StatusChange::scCaretX)
-            || changes.testFlag(QSynedit::StatusChange::scCaretY)) {
+    if (changes.testFlag(QSynedit::StatusChange::CaretX)
+            || changes.testFlag(QSynedit::StatusChange::CaretY)) {
         if (mTabStopBegin >=0) {
             if (mTabStopY==caretY()) {
                 if (mLineAfterTabStop.isEmpty()) {
@@ -1947,7 +1947,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
     }
 
     // scSelection includes anything caret related
-    if (changes.testFlag(QSynedit::StatusChange::scSelection)) {
+    if (changes.testFlag(QSynedit::StatusChange::Selection)) {
         if (!selAvail() && pSettings->editor().highlightCurrentWord()) {
             QString token;
             QSynedit::PTokenAttribute attri;
@@ -1986,17 +1986,17 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         }
     }
 
-    if (changes.testFlag(QSynedit::scInsertMode) || changes.testFlag(QSynedit::scReadOnly))
+    if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnly))
         pMainWindow->updateForStatusbarModeInfo();
 
     pMainWindow->updateEditorActions();
 
-    if (changes.testFlag(QSynedit::StatusChange::scCaretY) && mParentPageControl) {
+    if (changes.testFlag(QSynedit::StatusChange::CaretY) && mParentPageControl) {
         pMainWindow->caretList().addCaret(this,caretY(),caretX());
         pMainWindow->updateCaretActions();
     }
 
-    if (changes.testFlag(QSynedit::StatusChange::scReadOnly)) {
+    if (changes.testFlag(QSynedit::StatusChange::ReadOnly)) {
         if (!readOnly())
             initAutoBackup();
     }
@@ -5188,7 +5188,7 @@ void Editor::replaceContent(const QString &newContent, bool doReparse)
 
     QSynedit::EditorOptions oldOptions = getOptions();
     QSynedit::EditorOptions newOptions = oldOptions;
-    newOptions.setFlag(QSynedit::EditorOption::eoAutoIndent,false);
+    newOptions.setFlag(QSynedit::EditorOption::AutoIndent,false);
     setOptions(newOptions);
     replaceAll(newContent);
     setCaretXY(mOldCaret);
@@ -5347,36 +5347,38 @@ void Editor::setActiveBreakpointFocus(int Line, bool setFocus)
 void Editor::applySettings()
 {
     incPaintLock();
-    QSynedit::EditorOptions options = QSynedit::eoAltSetsColumnMode |
-            QSynedit::eoDragDropEditing | QSynedit::eoDropFiles |  QSynedit::eoKeepCaretX | QSynedit::eoTabsToSpaces |
-            QSynedit::eoRightMouseMovesCursor | QSynedit::eoTabIndent | QSynedit::eoHideShowScrollbars | QSynedit::eoGroupUndo
-            | QSynedit::eoSelectWordByDblClick;
-
-    options.setFlag(QSynedit::eoShowLeadingSpaces, pSettings->editor().showLeadingSpaces());
-    options.setFlag(QSynedit::eoShowTrailingSpaces, pSettings->editor().showTrailingSpaces());
-    options.setFlag(QSynedit::eoShowInnerSpaces, pSettings->editor().showInnerSpaces());
-    options.setFlag(QSynedit::eoShowLineBreaks, pSettings->editor().showLineBreaks());
+    QSynedit::EditorOptions options = QSynedit::EditorOption::AltSetsColumnMode
+            | QSynedit::EditorOption::DragDropEditing | QSynedit::EditorOption::DropFiles
+            | QSynedit::EditorOption::RightMouseMovesCursor
+            | QSynedit::EditorOption::TabIndent
+            | QSynedit::EditorOption::GroupUndo
+            | QSynedit::EditorOption::SelectWordByDblClick;
 
     //options
-    options.setFlag(QSynedit::eoAutoIndent,pSettings->editor().autoIndent());
-    options.setFlag(QSynedit::eoTabsToSpaces,pSettings->editor().tabToSpaces());
+    options.setFlag(QSynedit::EditorOption::ShowLeadingSpaces, pSettings->editor().showLeadingSpaces());
+    options.setFlag(QSynedit::EditorOption::ShowTrailingSpaces, pSettings->editor().showTrailingSpaces());
+    options.setFlag(QSynedit::EditorOption::ShowInnerSpaces, pSettings->editor().showInnerSpaces());
+    options.setFlag(QSynedit::EditorOption::ShowLineBreaks, pSettings->editor().showLineBreaks());
 
-    options.setFlag(QSynedit::eoKeepCaretX,pSettings->editor().keepCaretX());
-    options.setFlag(QSynedit::eoEnhanceHomeKey,pSettings->editor().enhanceHomeKey());
-    options.setFlag(QSynedit::eoEnhanceEndKey,pSettings->editor().enhanceEndKey());
+    options.setFlag(QSynedit::EditorOption::AutoIndent,pSettings->editor().autoIndent());
+    options.setFlag(QSynedit::EditorOption::TabsToSpaces,pSettings->editor().tabToSpaces());
 
-    options.setFlag(QSynedit::eoHideShowScrollbars,pSettings->editor().autoHideScrollbar());
-    options.setFlag(QSynedit::eoScrollPastEol,pSettings->editor().scrollPastEol());
-    options.setFlag(QSynedit::eoScrollPastEof,pSettings->editor().scrollPastEof());
-    options.setFlag(QSynedit::eoHalfPageScroll,pSettings->editor().halfPageScroll());
-    options.setFlag(QSynedit::eoInvertMouseScroll, false);
+    options.setFlag(QSynedit::EditorOption::KeepCaretX,pSettings->editor().keepCaretX());
+    options.setFlag(QSynedit::EditorOption::EnhanceHomeKey,pSettings->editor().enhanceHomeKey());
+    options.setFlag(QSynedit::EditorOption::EnhanceEndKey,pSettings->editor().enhanceEndKey());
 
-    options.setFlag(QSynedit::eoShowRainbowColor,
+    options.setFlag(QSynedit::EditorOption::AutoHideScrollbars,pSettings->editor().autoHideScrollbar());
+    options.setFlag(QSynedit::EditorOption::ScrollPastEol,pSettings->editor().scrollPastEol());
+    options.setFlag(QSynedit::EditorOption::ScrollPastEof,pSettings->editor().scrollPastEof());
+    options.setFlag(QSynedit::EditorOption::HalfPageScroll,pSettings->editor().halfPageScroll());
+    options.setFlag(QSynedit::EditorOption::InvertMouseScroll, false);
+
+    options.setFlag(QSynedit::EditorOption::ShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()
                     && syntaxer()->supportBraceLevel());
-    options.setFlag(QSynedit::eoForceMonospace,
+    options.setFlag(QSynedit::EditorOption::ForceMonospace,
                     pSettings->editor().forceFixedFontWidth());
-    options.setFlag(QSynedit::eoLigatureSupport,
+    options.setFlag(QSynedit::EditorOption::LigatureSupport,
                     pSettings->editor().enableLigaturesSupport());
     setOptions(options);
 
@@ -5481,7 +5483,7 @@ static QSynedit::PTokenAttribute createRainbowAttribute(const QString& attrName,
 void Editor::applyColorScheme(const QString& schemeName)
 {
     QSynedit::EditorOptions options = getOptions();
-    options.setFlag(QSynedit::EditorOption::eoShowRainbowColor,
+    options.setFlag(QSynedit::EditorOption::ShowRainbowColor,
                     pSettings->editor().rainbowParenthesis()
                     && syntaxer()->supportBraceLevel());
     setOptions(options);

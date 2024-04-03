@@ -136,9 +136,11 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mBlockBegin.ch = 1;
     mBlockBegin.line = 1;
     mBlockEnd = mBlockBegin;
-    mOptions = eoAutoIndent
-            | eoDragDropEditing | eoEnhanceEndKey | eoTabIndent |
-             eoGroupUndo | eoKeepCaretX | eoSelectWordByDblClick;
+    mOptions = EditorOption::AutoIndent
+            | EditorOption::DragDropEditing | EditorOption::EnhanceEndKey
+            | EditorOption::TabIndent | EditorOption::GroupUndo
+            | EditorOption::KeepCaretX
+            | EditorOption::SelectWordByDblClick;
 
     mScrollTimer = new QTimer(this);
     //mScrollTimer->setInterval(100);
@@ -266,7 +268,7 @@ void QSynEdit::setInsertMode(bool value)
     if (mInserting != value) {
         mInserting = value;
         updateCaret();
-        emit statusChanged(scInsertMode);
+        emit statusChanged(StatusChange::InsertMode);
     }
 }
 
@@ -292,7 +294,7 @@ int QSynEdit::maxScrollWidth() const
         return -1;
     if (useCodeFolding())
         maxWidth += stringWidth(syntaxer()->foldString(""),maxWidth);
-    if (mOptions.testFlag(eoScrollPastEol))
+    if (mOptions.testFlag(EditorOption::ScrollPastEol))
         return std::max(maxWidth-2*mCharWidth, 0);
     else
         return std::max(maxWidth-viewWidth()+mCharWidth, 0);
@@ -769,7 +771,7 @@ BufferCoord QSynEdit::displayToBufferPos(const DisplayCoord &p) const
 int QSynEdit::leftSpaces(const QString &line) const
 {
     int result = 0;
-    if (mOptions.testFlag(eoAutoIndent)) {
+    if (mOptions.testFlag(EditorOption::AutoIndent)) {
         for (QChar ch:line) {
             if (ch == '\t') {
                 result += tabSize() - (result % tabSize());
@@ -785,7 +787,7 @@ int QSynEdit::leftSpaces(const QString &line) const
 
 QString QSynEdit::GetLeftSpacing(int charCount, bool wantTabs) const
 {
-    if (wantTabs && !mOptions.testFlag(eoTabsToSpaces) && tabSize()>0) {
+    if (wantTabs && !mOptions.testFlag(EditorOption::TabsToSpaces) && tabSize()>0) {
         return QString(charCount / tabSize(),'\t') + QString(charCount % tabSize(),' ');
     } else {
         return QString(charCount,' ');
@@ -1488,7 +1490,7 @@ void QSynEdit::doSelectAll()
     }
     setCaretAndSelection(caretXY(), BufferCoord{1, 1}, lastPt);
     // Selection should have changed...
-    emit statusChanged(StatusChange::scSelection);
+    emit statusChanged(StatusChange::Selection);
 }
 
 void QSynEdit::doComment()
@@ -1709,7 +1711,7 @@ void QSynEdit::doMouseScroll(bool isDragging, int scrollX, int scrollY)
         } else
             setBlockEnd(caretXY());
 
-        if (mOptions.testFlag(EditorOption::eoGroupUndo))
+        if (mOptions.testFlag(EditorOption::GroupUndo))
             mUndoList->addGroupBreak();
     }
     if (isDragging) {
@@ -2025,7 +2027,7 @@ BufferCoord QSynEdit::ensureBufferCoordValid(const BufferCoord &coord)
         if (value.line < 1) {
             // this is just to make sure if Lines stringlist should be empty
             value.line = 1;
-            if (!mOptions.testFlag(EditorOption::eoScrollPastEol)) {
+            if (!mOptions.testFlag(EditorOption::ScrollPastEol)) {
                 nMaxX = 1;
             } else {
                 nMaxX = getDisplayStringAtLine(value.line).length()+1;
@@ -2232,10 +2234,10 @@ void QSynEdit::insertLine(bool moveCaret)
                 mSyntaxer->getState().state);
 
     int indentSpaces = 0;
-    if (mOptions.testFlag(eoAutoIndent)) {
+    if (mOptions.testFlag(EditorOption::AutoIndent)) {
         rightLineText=trimLeft(rightLineText);
         indentSpaces = calcIndentSpaces(mCaretY+1,
-                                        rightLineText,mOptions.testFlag(eoAutoIndent)
+                                        rightLineText,mOptions.testFlag(EditorOption::AutoIndent)
                                             );
     }
     QString indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
@@ -2247,7 +2249,7 @@ void QSynEdit::insertLine(bool moveCaret)
         if (!notInComment &&
                 ( leftLineText.endsWith("/*") && rightLineText.startsWith("*/")
                  )) {
-            indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent));
+            indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(EditorOption::AutoIndent));
             indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
             mDocument->insertLine(mCaretY, indentSpacesForRightLineText);
             nLinesInserted++;
@@ -2258,7 +2260,7 @@ void QSynEdit::insertLine(bool moveCaret)
         if (notInComment &&
                 ( leftLineText.endsWith('{') && rightLineText.startsWith('}')
                  )) {
-            indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(eoAutoIndent)
+            indentSpaces = calcIndentSpaces(mCaretY+1, "" , mOptions.testFlag(EditorOption::AutoIndent)
                                                                    && notInComment);
             indentSpacesForRightLineText = GetLeftSpacing(indentSpaces,true);
             mDocument->insertLine(mCaretY, indentSpacesForRightLineText);
@@ -2284,7 +2286,7 @@ void QSynEdit::doTabKey()
         return;
     }
     // Provide Visual Studio like block indenting
-    if (mOptions.testFlag(eoTabIndent) && canDoBlockIndent()) {
+    if (mOptions.testFlag(EditorOption::TabIndent) && canDoBlockIndent()) {
         doBlockIndent();
         return;
     }
@@ -2293,7 +2295,7 @@ void QSynEdit::doTabKey()
         setSelectedTextEmpty();
     }
     QString Spaces;
-    if (mOptions.testFlag(eoTabsToSpaces)) {
+    if (mOptions.testFlag(EditorOption::TabsToSpaces)) {
         int left = charToGlyphLeft(mCaretY,mCaretX);
         int i = std::ceil( (tabWidth() - (left) % tabWidth() ) / (float) tabSize());
         Spaces = QString(i,' ');
@@ -2308,7 +2310,7 @@ void QSynEdit::doTabKey()
 void QSynEdit::doShiftTabKey()
 {
     // Provide Visual Studio like block indenting
-    if (mOptions.testFlag(eoTabIndent) && canDoBlockIndent()) {
+    if (mOptions.testFlag(EditorOption::TabIndent) && canDoBlockIndent()) {
       doBlockUnindent();
       return;
     }
@@ -2522,12 +2524,12 @@ void QSynEdit::doBlockIndent()
         x = 1;
     } else {
         e = BE.line;
-        if (mOptions.testFlag(EditorOption::eoTabsToSpaces))
+        if (mOptions.testFlag(EditorOption::TabsToSpaces))
             x = caretX() + tabSize();
         else
           x = caretX() + 1;
     }
-    if (mOptions.testFlag(eoTabsToSpaces)) {
+    if (mOptions.testFlag(EditorOption::TabsToSpaces)) {
         spaces = QString(tabSize(),' ') ;
     } else {
         spaces = "\t";
@@ -2707,7 +2709,7 @@ void QSynEdit::doAddChar(const QChar& ch)
         int oldCaretY=mCaretY;
         // auto
         if (mActiveSelectionMode==SelectionMode::Normal
-                && mOptions.testFlag(eoAutoIndent)
+                && mOptions.testFlag(EditorOption::AutoIndent)
                 && mSyntaxer->language() == ProgrammingLanguage::CPP
                 && (oldCaretY<=mDocument->count()) ) {
 
@@ -3038,7 +3040,7 @@ void QSynEdit::internalSetCaretXY(BufferCoord value, bool ensureVisible)
         });
         if (mCaretX != value.ch) {
             mCaretX = value.ch;
-            mStatusChanges.setFlag(StatusChange::scCaretX);
+            mStatusChanges.setFlag(StatusChange::CaretX);
             invalidateLine(mCaretY);
         }
         if (mCaretY != value.line) {
@@ -3048,7 +3050,7 @@ void QSynEdit::internalSetCaretXY(BufferCoord value, bool ensureVisible)
             invalidateGutterLine(mCaretY);
             invalidateLine(oldCaretY);
             invalidateGutterLine(oldCaretY);
-            mStatusChanges.setFlag(StatusChange::scCaretY);
+            mStatusChanges.setFlag(StatusChange::CaretY);
         }
         // Call UpdateLastCaretX before DecPaintLock because the event handler it
         // calls could raise an exception, and we don't want fLastCaretX to be
@@ -3087,12 +3089,12 @@ void QSynEdit::setStatusChanged(StatusChanges changes)
 
 void QSynEdit::doOnStatusChange(StatusChanges)
 {
-    if (mStatusChanges.testFlag(StatusChange::scCaretX)
-            || mStatusChanges.testFlag(StatusChange::scCaretY)) {
+    if (mStatusChanges.testFlag(StatusChange::CaretX)
+            || mStatusChanges.testFlag(StatusChange::CaretY)) {
         qApp->inputMethod()->update(Qt::ImCursorPosition);
     }
     emit statusChanged(mStatusChanges);
-    mStatusChanges = StatusChange::scNone;
+    mStatusChanges = StatusChange::None;
 }
 
 void QSynEdit::updateHScrollbar()
@@ -3270,7 +3272,7 @@ void QSynEdit::updateModifiedStatus()
     setModified(mModified);
 //    qDebug()<<mModified<<oldModified;
     if (oldModified!=mModified)
-        emit statusChanged(StatusChange::scModifyChanged);
+        emit statusChanged(StatusChange::ModifyChanged);
 }
 
 void QSynEdit::reparseLines(int startLine, int endLine)
@@ -3800,7 +3802,7 @@ void QSynEdit::setScrollBars(ScrollStyle newScrollBars)
 {
     mScrollBars = newScrollBars;
     if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal) {
-        if (mOptions.testFlag(eoHideShowScrollbars)) {
+        if (mOptions.testFlag(EditorOption::AutoHideScrollbars)) {
             setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
         } else {
             setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
@@ -3810,7 +3812,7 @@ void QSynEdit::setScrollBars(ScrollStyle newScrollBars)
         setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     }
     if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
-        if (mOptions.testFlag(eoHideShowScrollbars)) {
+        if (mOptions.testFlag(EditorOption::AutoHideScrollbars)) {
             setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
         } else {
             setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
@@ -3961,7 +3963,7 @@ void QSynEdit::setReadOnly(bool readOnly)
 {
     if (mReadOnly != readOnly) {
         mReadOnly = readOnly;
-        emit statusChanged(scReadOnly);
+        emit statusChanged(StatusChange::ReadOnly);
     }
 }
 
@@ -4037,21 +4039,21 @@ void QSynEdit::setOptions(const EditorOptions &value)
     if (value != mOptions) {
         incPaintLock();
         bool bUpdateAll =
-                !sameEditorOption(value,mOptions, eoShowLeadingSpaces)
-                || !sameEditorOption(value,mOptions, eoLigatureSupport)
-                || !sameEditorOption(value,mOptions, eoForceMonospace)
-                || !sameEditorOption(value,mOptions, eoShowInnerSpaces)
-                || !sameEditorOption(value,mOptions, eoShowTrailingSpaces)
-                || !sameEditorOption(value,mOptions, eoShowLineBreaks)
-                || !sameEditorOption(value,mOptions, eoShowRainbowColor);
+                !sameEditorOption(value,mOptions, EditorOption::ShowLeadingSpaces)
+                || !sameEditorOption(value,mOptions, EditorOption::LigatureSupport)
+                || !sameEditorOption(value,mOptions, EditorOption::ForceMonospace)
+                || !sameEditorOption(value,mOptions, EditorOption::ShowInnerSpaces)
+                || !sameEditorOption(value,mOptions, EditorOption::ShowTrailingSpaces)
+                || !sameEditorOption(value,mOptions, EditorOption::ShowLineBreaks)
+                || !sameEditorOption(value,mOptions, EditorOption::ShowRainbowColor);
         mOptions = value;
 
         setScrollBars(mScrollBars);
-        mDocument->setForceMonospace(mOptions.testFlag(eoForceMonospace) );
+        mDocument->setForceMonospace(mOptions.testFlag(EditorOption::ForceMonospace) );
 
         // constrain caret position to MaxScrollWidth if eoScrollPastEol is enabled
         internalSetCaretXY(caretXY());
-        if (mOptions.testFlag(eoScrollPastEol)) {
+        if (mOptions.testFlag(EditorOption::ScrollPastEol)) {
             BufferCoord vTempBlockBegin = blockBegin();
             BufferCoord vTempBlockEnd = blockEnd();
             setBlockBegin(vTempBlockBegin);
@@ -4113,7 +4115,7 @@ void QSynEdit::doUndo()
                     if (item->changeNumber() == oldChangeNumber)
                         keepGoing = true;
                     else {
-                        keepGoing = (mOptions.testFlag(eoGroupUndo) &&
+                        keepGoing = (mOptions.testFlag(EditorOption::GroupUndo) &&
                             (lastChange == item->changeReason()) );
                     }
                     oldChangeNumber=item->changeNumber();
@@ -4130,12 +4132,12 @@ void QSynEdit::doUndoItem()
 {
     mUndoing = true;
     beginEditing();
-    bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
-    mOptions.setFlag(eoScrollPastEol);
+    bool ChangeScrollPastEol = ! mOptions.testFlag(EditorOption::ScrollPastEol);
+    mOptions.setFlag(EditorOption::ScrollPastEol);
     auto action = finally([&,this]{
         endEditing();
         if (ChangeScrollPastEol)
-            mOptions.setFlag(eoScrollPastEol,false);
+            mOptions.setFlag(EditorOption::ScrollPastEol,false);
         mUndoing = false;
     });
 
@@ -4312,7 +4314,7 @@ void QSynEdit::doRedo()
         if (item->changeNumber() == oldChangeNumber)
             keepGoing = true;
         else {
-            keepGoing = (mOptions.testFlag(eoGroupUndo) &&
+            keepGoing = (mOptions.testFlag(EditorOption::GroupUndo) &&
             (lastChange == item->changeReason()));
         }
         oldChangeNumber=item->changeNumber();
@@ -4332,15 +4334,15 @@ void QSynEdit::doRedo()
 void QSynEdit::doRedoItem()
 {
     mUndoing = true;
-    bool ChangeScrollPastEol = ! mOptions.testFlag(eoScrollPastEol);
-    mOptions.setFlag(eoScrollPastEol);
+    bool ChangeScrollPastEol = ! mOptions.testFlag(EditorOption::ScrollPastEol);
+    mOptions.setFlag(EditorOption::ScrollPastEol);
     mUndoList->setInsideRedo(true);
     beginEditing();
     auto action = finally([&,this]{
         endEditing();
         mUndoList->setInsideRedo(false);
         if (ChangeScrollPastEol)
-            mOptions.setFlag(eoScrollPastEol,false);
+            mOptions.setFlag(EditorOption::ScrollPastEol,false);
         mUndoing = false;
     });
     PUndoItem item = mRedoList->popItem();
@@ -4715,7 +4717,7 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
         else
             ptDst = blockEnd();
     } else {
-        if (mOptions.testFlag(eoAltSetsColumnMode)) {
+        if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
             if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly) {
                 setActiveSelectionMode(SelectionMode::Column);
             } else
@@ -4787,10 +4789,10 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     }
 
     if (ptO.row != ptDst.row) {
-        if (mOptions.testFlag(eoKeepCaretX))
+        if (mOptions.testFlag(EditorOption::KeepCaretX))
             ptDst.x = mLastCaretColumn;
     }
-    if (mOptions.testFlag(eoAltSetsColumnMode)) {
+    if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
         if (qApp->keyboardModifiers().testFlag(Qt::AltModifier) && !mReadOnly)
             setActiveSelectionMode(SelectionMode::Column);
         else
@@ -4831,7 +4833,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
 
 void QSynEdit::moveCaretAndSelection(const BufferCoord &ptBefore, const BufferCoord &ptAfter, bool isSelection, bool ensureCaretVisible)
 {
-    if (mOptions.testFlag(EditorOption::eoGroupUndo)) {
+    if (mOptions.testFlag(EditorOption::GroupUndo)) {
         mUndoList->addGroupBreak();
     }
 
@@ -4850,7 +4852,7 @@ void QSynEdit::moveCaretToLineStart(bool isSelection)
 {
     int newX;
     // home key enhancement
-    if (mOptions.testFlag(EditorOption::eoEnhanceHomeKey)) {
+    if (mOptions.testFlag(EditorOption::EnhanceHomeKey)) {
         QString s = mDocument->getLine(mCaretY - 1);
 
         int first_nonblank = 0;
@@ -4873,7 +4875,7 @@ void QSynEdit::moveCaretToLineStart(bool isSelection)
 void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
 {
     int vNewX;
-    if (mOptions.testFlag(EditorOption::eoEnhanceEndKey)) {
+    if (mOptions.testFlag(EditorOption::EnhanceEndKey)) {
         QString vText = displayLineText();
         int vLastNonBlank = vText.length()-1;
         int vMinX = 0;
@@ -5001,7 +5003,7 @@ void QSynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text
         endEditing();
     }
     decPaintLock();
-    setStatusChanged(StatusChange::scSelection);
+    setStatusChanged(StatusChange::Selection);
 }
 
 void QSynEdit::doSetSelText(const QString &value)
@@ -5167,8 +5169,8 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                         beginEditing();
                         dobatchReplace = true;
                     }
-                    bool oldAutoIndent = mOptions.testFlag(EditorOption::eoAutoIndent);
-                    mOptions.setFlag(EditorOption::eoAutoIndent,false);
+                    bool oldAutoIndent = mOptions.testFlag(EditorOption::AutoIndent);
+                    mOptions.setFlag(EditorOption::AutoIndent,false);
                     doSetSelText(replaceText);
                     nReplaceLen = caretX() - nFound;
                     // fix the caret position and the remaining results
@@ -5182,7 +5184,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                             }
                         }
                     }
-                    mOptions.setFlag(EditorOption::eoAutoIndent,oldAutoIndent);
+                    mOptions.setFlag(EditorOption::AutoIndent,oldAutoIndent);
                 }
             }
 
@@ -5380,7 +5382,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
     int caretY=pos.line;
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
-        if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent)) {
+        if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent)) {
             QString s = trimLeft(text[0]);
             if (sLeftSide.isEmpty()) {
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
@@ -5417,7 +5419,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             if (i==text.length()-1)
                 str += sRightSide;
         }
-        if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(eoAutoIndent) && notInComment) {
+        if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent) && notInComment) {
             int indentSpaces = calcIndentSpaces(caretY,str,true);
             str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
         }
@@ -5425,11 +5427,11 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
         reparseLines(caretY-1,caretY);
         result++;
     }
-    bChangeScroll = !mOptions.testFlag(eoScrollPastEol);
-    mOptions.setFlag(eoScrollPastEol);
+    bChangeScroll = !mOptions.testFlag(EditorOption::ScrollPastEol);
+    mOptions.setFlag(EditorOption::ScrollPastEol);
     auto action = finally([&,this]{
         if (bChangeScroll)
-            mOptions.setFlag(eoScrollPastEol,false);
+            mOptions.setFlag(EditorOption::ScrollPastEol,false);
     });
     newPos=BufferCoord{str.length() - sRightSide.length()+1,caretY};
     //onLinesPutted(startLine-1,result+1);
@@ -5612,7 +5614,7 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     case EditCommand::SelPageDown:
     {
         int counter = mLinesInWindow;
-        if (mOptions.testFlag(eoHalfPageScroll))
+        if (mOptions.testFlag(EditorOption::HalfPageScroll))
             counter /= 2;
         if (counter<0)
             break;
@@ -6059,7 +6061,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
 
     BufferCoord oldCaret=caretXY();
     if (button == Qt::RightButton) {
-        if (mOptions.testFlag(eoRightMouseMovesCursor) &&
+        if (mOptions.testFlag(EditorOption::RightMouseMovesCursor) &&
                 ( (selAvail() && ! isPointInSelection(displayToBufferPos(pixelsToGlyphPos(X, Y))))
                   || ! selAvail())) {
             invalidateSelection();
@@ -6076,7 +6078,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
         }
         computeCaret();
         mStateFlags.setFlag(StateFlag::WaitForDragging,false);
-        if (bWasSel && mOptions.testFlag(eoDragDropEditing) && (X >= mGutterWidth + 2)
+        if (bWasSel && mOptions.testFlag(EditorOption::DragDropEditing) && (X >= mGutterWidth + 2)
                 && (mActiveSelectionMode == SelectionMode::Normal) && isPointInSelection(displayToBufferPos(pixelsToGlyphPos(X, Y))) ) {
             bStartDrag = true;
         }
@@ -6087,7 +6089,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
                 //BlockBegin and BlockEnd are restored to their original position in the
                 //code from above and SetBlockEnd will take care of proper invalidation
                 setBlockEnd(caretXY());
-            } else if (mOptions.testFlag(eoAltSetsColumnMode)) {
+            } else if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
                 if (event->modifiers() == Qt::AltModifier && !mReadOnly)
                     setActiveSelectionMode(SelectionMode::Column);
                 else
@@ -6099,7 +6101,7 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
         }
     }
     if (oldCaret!=caretXY()) {
-        if (mOptions.testFlag(EditorOption::eoGroupUndo))
+        if (mOptions.testFlag(EditorOption::GroupUndo))
             mUndoList->addGroupBreak();
     }
 }
@@ -6131,7 +6133,7 @@ void QSynEdit::mouseReleaseEvent(QMouseEvent *event)
     ensureLineAlignedWithTop();
     ensureCaretVisible();
     if (oldCaret!=caretXY()) {
-        if (mOptions.testFlag(EditorOption::eoGroupUndo))
+        if (mOptions.testFlag(EditorOption::GroupUndo))
             mUndoList->addGroupBreak();
     }
 }
@@ -6156,7 +6158,7 @@ void QSynEdit::mouseMoveEvent(QMouseEvent *event)
             drag->exec(Qt::DropActions(Qt::CopyAction | Qt::MoveAction));
         }
     } else if (buttons == Qt::LeftButton) {
-        if (mOptions.testFlag(eoAltSetsColumnMode)) {
+        if (mOptions.testFlag(EditorOption::AltSetsColumnMode)) {
                 if (event->modifiers() == Qt::AltModifier && !mReadOnly)
                     setActiveSelectionMode(SelectionMode::Column);
                 else
@@ -6172,7 +6174,7 @@ void QSynEdit::mouseDoubleClickEvent(QMouseEvent *event)
     QAbstractScrollArea::mouseDoubleClickEvent(event);
     QPoint ptMouse = event->pos();
     if (ptMouse.x() >= mGutterWidth) {
-        if (mOptions.testFlag(EditorOption::eoSelectWordByDblClick))
+        if (mOptions.testFlag(EditorOption::SelectWordByDblClick))
             setSelWord();
         mStateFlags.setFlag(StateFlag::DblClicked);
     }
@@ -6209,7 +6211,7 @@ void QSynEdit::leaveEvent(QEvent *)
 
 void QSynEdit::wheelEvent(QWheelEvent *event)
 {
-    int sign = mOptions.testFlag(EditorOption::eoInvertMouseScroll)?+1:-1;
+    int sign = mOptions.testFlag(EditorOption::InvertMouseScroll)?+1:-1;
     if (event->modifiers() == Qt::ShiftModifier) {
         if ( (mWheelAccumulatedDeltaX>0 &&event->angleDelta().y()<0)
              || (mWheelAccumulatedDeltaX<0 &&event->angleDelta().y()>0))
@@ -6437,7 +6439,7 @@ void QSynEdit::dragLeaveEvent(QDragLeaveEvent *)
 
 int QSynEdit::maxScrollHeight() const
 {
-    if (mOptions.testFlag(eoScrollPastEof))
+    if (mOptions.testFlag(EditorOption::ScrollPastEof))
         return (std::max(displayLineCount(),1) - 1) * mTextHeight;
     else
         return std::max((displayLineCount()-mLinesInWindow+1) * mTextHeight, 0) ;
@@ -6452,7 +6454,7 @@ void QSynEdit::setModified(bool value)
 {
     if (value) {
         mLastModifyTime = QDateTime::currentDateTime();
-        emit statusChanged(StatusChange::scModified);
+        emit statusChanged(StatusChange::Modified);
     }
     if (value != mModified) {
         mModified = value;
@@ -6461,12 +6463,12 @@ void QSynEdit::setModified(bool value)
             mUndoList->clear();
             mRedoList->clear();
         } else {
-            if (mOptions.testFlag(EditorOption::eoGroupUndo)) {
+            if (mOptions.testFlag(EditorOption::GroupUndo)) {
                 mUndoList->addGroupBreak();
             }
             mUndoList->setInitialState();
         }
-        emit statusChanged(StatusChange::scModifyChanged);
+        emit statusChanged(StatusChange::ModifyChanged);
     }
 }
 
@@ -6541,7 +6543,7 @@ void QSynEdit::onLinesCleared()
     // scroll to start of text
     setTopPos(0);
     setLeftPos(0);
-    mStatusChanges.setFlag(StatusChange::scAll);
+    mStatusChanges.setFlag(StatusChange::AllCleared);
 }
 
 void QSynEdit::onLinesDeleted(int line, int count)
@@ -6604,7 +6606,7 @@ void QSynEdit::setActiveSelectionMode(const SelectionMode &Value)
         mActiveSelectionMode = Value;
         if (selAvail())
             invalidateSelection();
-        setStatusChanged(StatusChange::scSelection);
+        setStatusChanged(StatusChange::Selection);
     }
 }
 
@@ -6680,7 +6682,7 @@ void QSynEdit::setBlockEnd(BufferCoord value)
                             std::max(mBlockEnd.line, oldBlockEnd.line));
             }
         }
-        setStatusChanged(StatusChange::scSelection);
+        setStatusChanged(StatusChange::Selection);
     }
 }
 
@@ -6796,7 +6798,7 @@ void QSynEdit::setBlockBegin(BufferCoord value)
         mBlockEnd = value;
     }
     if (SelChanged)
-        setStatusChanged(StatusChange::scSelection);
+        setStatusChanged(StatusChange::Selection);
 }
 
 int QSynEdit::leftPos() const
@@ -6813,7 +6815,7 @@ void QSynEdit::setLeftPos(int value)
     if (value != mLeftPos) {
         if (mDocument->maxLineWidth()<0)
             mLeftPos = value;
-        setStatusChanged(StatusChange::scLeftPos);
+        setStatusChanged(StatusChange::LeftPos);
         if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssHorizontal)
             horizontalScrollBar()->setValue(value);
         else {
@@ -6841,7 +6843,7 @@ void QSynEdit::setTopPos(int value)
     //value = std::min(value,maxScrollHeight());
     value = std::max(value, 0);
     if (value != mTopPos) {
-        setStatusChanged(StatusChange::scTopPos);
+        setStatusChanged(StatusChange::TopPos);
         mTopPos = value;
         if (mScrollBars == ScrollStyle::ssBoth ||  mScrollBars == ScrollStyle::ssVertical) {
             verticalScrollBar()->setValue(value);

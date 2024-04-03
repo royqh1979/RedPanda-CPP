@@ -44,9 +44,9 @@ CPUDialog::CPUDialog(QWidget *parent) :
     ui->txtCode->setUseCodeFolding(false);
     ui->txtCode->setRightEdge(0);
     QSynedit::EditorOptions options=ui->txtCode->getOptions();
-    options.setFlag(QSynedit::EditorOption::eoScrollPastEof,false);
-    options.setFlag(QSynedit::EditorOption::eoScrollPastEol,false);
-    options.setFlag(QSynedit::EditorOption::eoShowRainbowColor, false);
+    options.setFlag(QSynedit::EditorOption::ScrollPastEof,false);
+    options.setFlag(QSynedit::EditorOption::ScrollPastEol,false);
+    options.setFlag(QSynedit::EditorOption::ShowRainbowColor, false);
     ui->txtCode->setOptions(options);
     PColorSchemeItem item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_ACTIVE_LINE);
     if (item) {
@@ -141,8 +141,8 @@ void CPUDialog::setDisassembly(const QString& file, const QString& funcName,cons
 void CPUDialog::resetEditorFont(float dpi)
 {
     QSynedit::EditorOptions options=ui->txtCode->getOptions();
-    options.setFlag(QSynedit::eoLigatureSupport, pSettings->editor().enableLigaturesSupport());
-    options.setFlag(QSynedit::eoForceMonospace,
+    options.setFlag(QSynedit::EditorOption::LigatureSupport, pSettings->editor().enableLigaturesSupport());
+    options.setFlag(QSynedit::EditorOption::ForceMonospace,
                     pSettings->editor().forceFixedFontWidth());
     ui->txtCode->setOptions(options);
     QFont f=QFont();
