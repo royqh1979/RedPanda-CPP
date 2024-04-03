@@ -38,22 +38,22 @@ ProjectOutputWidget::~ProjectOutputWidget()
 
 void ProjectOutputWidget::doLoad()
 {
-    ui->txtOutputDir->setText(pMainWindow->project()->options().exeOutput);
-    ui->txtObjOutputDir->setText(pMainWindow->project()->options().objectOutput);
-    ui->grpAutosaveCompileLog->setChecked(pMainWindow->project()->options().logOutputEnabled);
-    ui->txtCompileLog->setText(pMainWindow->project()->options().logOutput);
-    ui->grpOverrideOutput->setChecked(pMainWindow->project()->options().overrideOutput);
-    ui->txtOutputFilename->setText(pMainWindow->project()->options().overridenOutput);
+    ui->txtOutputDir->setText(pMainWindow->project()->options().folderForOutput);
+    ui->txtObjOutputDir->setText(pMainWindow->project()->options().folderForObjFiles);
+    ui->grpAutosaveCompileLog->setChecked(pMainWindow->project()->options().logOutput);
+    ui->txtCompileLog->setText(pMainWindow->project()->options().logFilename);
+    ui->grpOverrideOutput->setChecked(pMainWindow->project()->options().useCustomOutputFilename);
+    ui->txtOutputFilename->setText(pMainWindow->project()->options().customOutputFilename);
 }
 
 void ProjectOutputWidget::doSave()
 {
-    pMainWindow->project()->options().exeOutput = ui->txtOutputDir->text();
-    pMainWindow->project()->options().objectOutput = ui->txtObjOutputDir->text();
-    pMainWindow->project()->options().logOutputEnabled = ui->grpAutosaveCompileLog->isChecked();
-    pMainWindow->project()->options().logOutput = ui->txtCompileLog->text();
-    pMainWindow->project()->options().overrideOutput = ui->grpOverrideOutput->isChecked();
-    pMainWindow->project()->options().overridenOutput = ui->txtOutputFilename->text();
+    pMainWindow->project()->options().folderForOutput = ui->txtOutputDir->text();
+    pMainWindow->project()->options().folderForObjFiles = ui->txtObjOutputDir->text();
+    pMainWindow->project()->options().logOutput = ui->grpAutosaveCompileLog->isChecked();
+    pMainWindow->project()->options().logFilename = ui->txtCompileLog->text();
+    pMainWindow->project()->options().useCustomOutputFilename = ui->grpOverrideOutput->isChecked();
+    pMainWindow->project()->options().customOutputFilename = ui->txtOutputFilename->text();
     pMainWindow->project()->saveOptions();
 }
 

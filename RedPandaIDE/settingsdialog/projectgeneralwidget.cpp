@@ -74,7 +74,7 @@ void ProjectGeneralWidget::doLoad()
 
     ui->txtName->setText(project->name());
     ui->txtFileName->setText(project->filename());
-    ui->txtOutputFile->setText(project->executable());
+    ui->txtOutputFile->setText(project->outputFilename());
 
     int srcCount=0,headerCount=0,resCount=0,otherCount=0, totalCount=0;
     foreach (const PProjectUnit& unit, project->unitList()) {
@@ -251,6 +251,6 @@ void ProjectGeneralWidget::on_cbType_currentIndexChanged(int /*index*/)
     std::shared_ptr<Project> project = pMainWindow->project();
     if (!project)
         return;
-    ui->txtOutputFile->setText(project->executable());
+    ui->txtOutputFile->setText(project->outputFilename());
 }
 

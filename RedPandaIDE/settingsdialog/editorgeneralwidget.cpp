@@ -47,7 +47,7 @@ static void setCaretTypeIndex(QComboBox* combo, QSynedit::EditCaretType caretTyp
 
 static QSynedit::EditCaretType getCaretTypeIndex(QComboBox* combo) {
     if (combo->currentIndex()<0)
-        return QSynedit::EditCaretType::ctVerticalLine;
+        return QSynedit::EditCaretType::VerticalLine;
     return static_cast<QSynedit::EditCaretType>(combo->currentIndex());
 }
 void EditorGeneralWidget::doLoad()

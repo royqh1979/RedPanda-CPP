@@ -39,6 +39,8 @@ void CustomFileIconProvider::setRootFolder(const QString &folder)
 {
 #ifdef ENABLE_VCS
     mVCSRepository->setFolder(folder);
+#else
+    Q_UNUSED(folder);
 #endif
 }
 

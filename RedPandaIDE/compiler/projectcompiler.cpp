@@ -56,7 +56,7 @@ void ProjectCompiler::createStandardMakeFile()
     QFile file(mProject->makeFileName());
     bool genModuleDef;
     newMakeFile(file, genModuleDef);
-    QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
+    QString executable = extractRelativePath(mProject->makeFileName(), mProject->outputFilename());
     QString exeTarget = escapeFilenameForMakefileTarget(executable);
     QString exeCommand = escapeArgumentForMakefileRecipe(executable, false);
     writeln(file, exeTarget + ": $(OBJ)\n");
@@ -73,12 +73,12 @@ void ProjectCompiler::createStaticMakeFile()
 {
     QFile file(mProject->makeFileName());
     newMakeFile(file);
-    QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
-    QString exeTarget = escapeFilenameForMakefileTarget(executable);
-    QString exeCommand = escapeArgumentForMakefileRecipe(executable, false);
-    writeln(file, exeTarget + ": $(OBJ)");
-    writeln(file, "\tar r " + exeCommand + " $(LINKOBJ)");
-    writeln(file, "\tranlib " + exeCommand);
+    QString libFilename = extractRelativePath(mProject->makeFileName(), mProject->outputFilename());
+    QString libTarget = escapeFilenameForMakefileTarget(libFilename);
+    QString libCommand = escapeArgumentForMakefileRecipe(libFilename, false);
+    writeln(file, libTarget + ": $(OBJ)");
+    writeln(file, "\tar r " + libCommand + " $(LINKOBJ)");
+    writeln(file, "\tranlib " + libCommand);
     writeMakeObjFilesRules(file);
 }
 
@@ -87,21 +87,21 @@ void ProjectCompiler::createDynamicMakeFile()
     QFile file(mProject->makeFileName());
     bool genModuleDef;
     newMakeFile(file, genModuleDef);
-    QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
-    QString exeTarget = escapeFilenameForMakefileTarget(executable);
-    QString exeCommand = escapeArgumentForMakefileRecipe(executable, false);
-    writeln(file, exeTarget + ": $(DEF) $(OBJ)");
+    QString dynamicLibFilename = extractRelativePath(mProject->makeFileName(), mProject->outputFilename());
+    QString dynamicLibTarget = escapeFilenameForMakefileTarget(dynamicLibFilename);
+    QString dynamicLibCommand = escapeArgumentForMakefileRecipe(dynamicLibFilename, false);
+    writeln(file, dynamicLibTarget + ": $(DEF) $(OBJ)");
     if (genModuleDef) {
         if (mProject->options().isCpp) {
-            writeln(file, "\t$(CXX) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) $(DEF) -Wl,--output-def,$(OUTPUT_DEF),--out-implib,$(STATIC)");
+            writeln(file, "\t$(CXX) -mdll $(LINKOBJ) -o " + dynamicLibCommand + " $(LIBS) $(DEF) -Wl,--output-def,$(OUTPUT_DEF),--out-implib,$(STATIC)");
         } else {
-            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) $(DEF) -Wl,--output-def,$(OUTPUT_DEF),--out-implib,$(STATIC)");
+            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o " + dynamicLibCommand + " $(LIBS) $(DEF) -Wl,--output-def,$(OUTPUT_DEF),--out-implib,$(STATIC)");
         }
     } else {
         if (mProject->options().isCpp) {
-            writeln(file, "\t$(CXX) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) $(DEF) -Wl,--out-implib,$(STATIC)");
+            writeln(file, "\t$(CXX) -mdll $(LINKOBJ) -o " + dynamicLibCommand + " $(LIBS) $(DEF) -Wl,--out-implib,$(STATIC)");
         } else {
-            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o " + exeCommand + " $(LIBS) $(DEF) -Wl,--out-implib,$(STATIC)");
+            writeln(file, "\t$(CC) -mdll $(LINKOBJ) -o " + dynamicLibCommand + " $(LIBS) $(DEF) -Wl,--out-implib,$(STATIC)");
         }
     }
     writeMakeObjFilesRules(file);
@@ -116,12 +116,12 @@ void ProjectCompiler::newMakeFile(QFile &file)
 void ProjectCompiler::newMakeFile(QFile& file, bool &genModuleDef)
 {
     // Create OBJ output directory
-    if (!mProject->options().objectOutput.isEmpty()) {
-        QDir(mProject->directory()).mkpath(mProject->options().objectOutput);
+    if (!mProject->options().folderForObjFiles.isEmpty()) {
+        QDir(mProject->directory()).mkpath(mProject->options().folderForObjFiles);
     }
     // Create executable output directory
-    if (!mProject->options().exeOutput.isEmpty()) {
-        QDir(mProject->directory()).mkpath(mProject->options().exeOutput);
+    if (!mProject->options().folderForOutput.isEmpty()) {
+        QDir(mProject->directory()).mkpath(mProject->options().folderForOutput);
     }
     // Write more information to the log file than before
     log(tr("Building makefile..."));
@@ -187,9 +187,9 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
         if (fileType == FileType::CSource || fileType == FileType::CppSource
                 || fileType==FileType::GAS) {
             QString relativeName = extractRelativePath(mProject->directory(), unit->fileName());
-            if (!mProject->options().objectOutput.isEmpty()) {
+            if (!mProject->options().folderForObjFiles.isEmpty()) {
                 // ofile = C:\MyProgram\obj\main.o
-                QString fullObjFile = includeTrailingPathDelimiter(mProject->options().objectOutput)
+                QString fullObjFile = includeTrailingPathDelimiter(mProject->options().folderForObjFiles)
                         + extractFileName(unit->fileName());
                 QString relativeObjFile = extractRelativePath(mProject->directory(), changeFileExt(fullObjFile, OBJ_EXT));
                 objects << relativeObjFile;
@@ -212,8 +212,8 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
     QString cleanRes;
 #ifdef Q_OS_WIN
     if (!mProject->options().privateResource.isEmpty()) {
-        if (!mProject->options().objectOutput.isEmpty()) {
-            QString fullResFile = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+        if (!mProject->options().folderForObjFiles.isEmpty()) {
+            QString fullResFile = includeTrailingPathDelimiter(mProject->options().folderForObjFiles) +
                     changeFileExt(mProject->options().privateResource, RES_EXT);
 
             QString relativeResFile = extractRelativePath(mProject->directory(), fullResFile);
@@ -251,7 +251,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
     QStringList resourceArguments = parseArguments(mProject->options().resourceCmd, devCppMacroVariables(), true);
 #endif
 
-    QString executable = extractRelativePath(mProject->makeFileName(), mProject->executable());
+    QString executable = extractRelativePath(mProject->makeFileName(), mProject->outputFilename());
     QString cleanExe = localizePath(executable);
     QString pchHeader = extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader);
     QString pch = extractRelativePath(mProject->makeFileName(), mProject->options().precompiledHeader + "." GCH_EXT);
@@ -301,8 +301,8 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 
     // This needs to be put in before the clean command.
     if (mProject->options().type == ProjectType::DynamicLib) {
-        QString outputFileDir = extractFilePath(mProject->executable());
-        QString outputFilename = extractFileName(mProject->executable());
+        QString outputFileDir = extractFilePath(mProject->outputFilename());
+        QString outputFilename = extractFileName(mProject->outputFilename());
         QString libOutputFile;
         if (!outputFilename.startsWith("lib")) {
             libOutputFile = includeTrailingPathDelimiter(outputFileDir) + "lib" + outputFilename;
@@ -409,8 +409,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         }
         QString objFileNameTarget;
         QString objFileNameCommand;
-        if (!mProject->options().objectOutput.isEmpty()) {
-            QString fullObjname = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+        if (!mProject->options().folderForObjFiles.isEmpty()) {
+            QString fullObjname = includeTrailingPathDelimiter(mProject->options().folderForObjFiles) +
                     extractFileName(unit->fileName());
             QString objectFile = extractRelativePath(mProject->makeFileName(), changeFileExt(fullObjname, OBJ_EXT));
             objFileNameTarget = escapeFilenameForMakefileTarget(objectFile);
@@ -517,8 +517,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
 
         // Determine resource output file
         QString fullName;
-        if (!mProject->options().objectOutput.isEmpty()) {
-            fullName = includeTrailingPathDelimiter(mProject->options().objectOutput) +
+        if (!mProject->options().folderForObjFiles.isEmpty()) {
+            fullName = includeTrailingPathDelimiter(mProject->options().folderForObjFiles) +
                   changeFileExt(mProject->options().privateResource, RES_EXT);
         } else {
             fullName = changeFileExt(mProject->options().privateResource, RES_EXT);
@@ -625,7 +625,7 @@ bool ProjectCompiler::prepareForCompile()
     }
     mDirectory = mProject->directory();
 
-    mOutputFile = mProject->executable();
+    mOutputFile = mProject->outputFilename();
 
     log(tr("Processing makefile:"));
     log("--------");

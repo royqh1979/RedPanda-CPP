@@ -43,10 +43,10 @@ ProjectOptions::ProjectOptions()
     type = ProjectType::GUI;
     version = 3;
     isCpp = false;
-    logOutputEnabled = false;
+    logOutput = false;
     useCustomMakefile = false;
     usePrecompiledHeader = false;
-    overrideOutput = false;
+    useCustomOutputFilename = false;
     includeVersionInfo = false;
     supportXPThemes = false;
     compilerSet = 0;

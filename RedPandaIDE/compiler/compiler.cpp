@@ -43,8 +43,8 @@ Compiler::Compiler(const QString &filename, bool onlyCheckSyntax):
     mOnlyCheckSyntax{onlyCheckSyntax},
     mFilename{filename},
     mRebuild{false},
-    mForceEnglishOutput{false},
-    mParserForFile()
+    mParserForFile{},
+    mForceEnglishOutput{false}
 {
     getParserForFile(filename);
 }

@@ -2251,7 +2251,7 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
         }
         mProject->buildPrivateResource();
         if (mCompileSuccessionTask) {
-            mCompileSuccessionTask->execName = mProject->executable();
+            mCompileSuccessionTask->execName = mProject->outputFilename();
             mCompileSuccessionTask->isExecutable = true;
         }
         stretchMessagesPanel(true);
@@ -2371,14 +2371,14 @@ void MainWindow::runExecutable(RunType runType)
     CompileTarget target =getCompileTarget();
     if (target == CompileTarget::Project) {
         QStringList binDirs = mProject->binDirs();
-        QFileInfo execInfo(mProject->executable());
+        QFileInfo execInfo(mProject->outputFilename());
         QDateTime execModTime = execInfo.lastModified();
         if (execInfo.exists() && mProject->modifiedSince(execModTime)) {
             //if project options changed, or units added/removed
             //mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = runTypeToCompileSuccessionTaskType(runType);
-            mCompileSuccessionTask->execName=mProject->executable();
+            mCompileSuccessionTask->execName=mProject->outputFilename();
             mCompileSuccessionTask->isExecutable=true;
             mCompileSuccessionTask->binDirs=binDirs;
             compile(true);
@@ -2389,14 +2389,14 @@ void MainWindow::runExecutable(RunType runType)
             //mProject->saveAll();
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = runTypeToCompileSuccessionTaskType(runType);
-            mCompileSuccessionTask->execName=mProject->executable();
+            mCompileSuccessionTask->execName=mProject->outputFilename();
             mCompileSuccessionTask->isExecutable=true;
             mCompileSuccessionTask->binDirs=binDirs;
             compile();
             return;
         }
 
-        runExecutable(mProject->executable(),mProject->filename(),runType,
+        runExecutable(mProject->outputFilename(),mProject->filename(),runType,
                       binDirs);
     } else {
         Editor * editor = mEditorList->getEditor();
@@ -2486,24 +2486,24 @@ void MainWindow::debug()
         }
 
         // Did we compile?
-        if (!fileExists(mProject->executable())) {
+        if (!fileExists(mProject->outputFilename())) {
             mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
             mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-            mCompileSuccessionTask->execName = mProject->executable();
+            mCompileSuccessionTask->execName = mProject->outputFilename();
             mCompileSuccessionTask->isExecutable = true;
             mCompileSuccessionTask->binDirs = binDirs;
             compile();
             return;
         }
         {
-            QFileInfo execInfo(mProject->executable());
+            QFileInfo execInfo(mProject->outputFilename());
             QDateTime execModTime = execInfo.lastModified();
             if (execInfo.exists() && mProject->modifiedSince(execModTime)) {
                 //if project options changed, or units added/removed
                 //mProject->saveAll();
                 mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                 mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-                mCompileSuccessionTask->execName=mProject->executable();
+                mCompileSuccessionTask->execName=mProject->outputFilename();
                 mCompileSuccessionTask->isExecutable=true;
                 mCompileSuccessionTask->binDirs=binDirs;
                 compile(true);
@@ -2514,7 +2514,7 @@ void MainWindow::debug()
                 //mProject->saveAll();
                 mCompileSuccessionTask=std::make_shared<CompileSuccessionTask>();
                 mCompileSuccessionTask->type = CompileSuccessionTaskType::Debug;
-                mCompileSuccessionTask->execName=mProject->executable();
+                mCompileSuccessionTask->execName=mProject->outputFilename();
                 mCompileSuccessionTask->isExecutable=true;
                 mCompileSuccessionTask->binDirs=binDirs;
                 compile();
@@ -2542,7 +2542,7 @@ void MainWindow::debug()
         }
         // Reset UI, remove invalid breakpoints
         prepareDebugger();
-        filePath = mProject->executable();
+        filePath = mProject->outputFilename();
 
 //        mDebugger->setUseUTF8(e->fileEncoding() == ENCODING_UTF8 || e->fileEncoding() == ENCODING_UTF8_BOM);
 
@@ -8245,7 +8245,7 @@ void MainWindow::doCompileRun(RunType runType)
     QString execName;
     if (target == CompileTarget::Project) {
         binDirs = mProject->binDirs();
-        execName = mProject->executable();
+        execName = mProject->outputFilename();
     } else {
         binDirs = getDefaultCompilerSetBinDirs();
     }

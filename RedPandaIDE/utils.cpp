@@ -201,8 +201,8 @@ QMap<QString, QString> devCppMacroVariables()
         result["PROJECTFILENAME"] = extractFileName(e->filename());
         result["PROJECTPATH"] = localizePath(extractFileDir(e->filename()));
     } else if (pMainWindow->project()) {
-        result["EXENAME"] = extractFileName(pMainWindow->project()->executable());
-        result["EXEFILE"] = localizePath(pMainWindow->project()->executable());
+        result["EXENAME"] = extractFileName(pMainWindow->project()->outputFilename());
+        result["EXEFILE"] = localizePath(pMainWindow->project()->outputFilename());
         result["PROJECTNAME"] = pMainWindow->project()->name();
         result["PROJECTFILE"] = localizePath(pMainWindow->project()->filename());
         result["PROJECTFILENAME"] = extractFileName(pMainWindow->project()->filename());

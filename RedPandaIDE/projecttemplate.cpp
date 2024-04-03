@@ -152,9 +152,9 @@ void ProjectTemplate::readTemplateFile(const QString &fileName)
     mOptions.isCpp = mIni->GetBoolValue("Project", "IsCpp", false);
     mOptions.includeVersionInfo = mIni->GetBoolValue("Project", "IncludeVersionInfo", false);
     mOptions.supportXPThemes = mIni->GetBoolValue("Project", "SupportXPThemes", false);
-    mOptions.exeOutput = fromByteArray(mIni->GetValue("Project", "ExeOutput", ""));
-    mOptions.objectOutput = fromByteArray(mIni->GetValue("Project", "ObjectOutput", ""));
-    mOptions.logOutput = fromByteArray(mIni->GetValue("Project", "LogOutput", ""));
+    mOptions.folderForOutput = fromByteArray(mIni->GetValue("Project", "ExeOutput", ""));
+    mOptions.folderForObjFiles = fromByteArray(mIni->GetValue("Project", "ObjectOutput", ""));
+    mOptions.logFilename = fromByteArray(mIni->GetValue("Project", "LogOutput", ""));
     mOptions.execEncoding = mIni->GetValue("Project","ExecEncoding", ENCODING_SYSTEM_DEFAULT);
 
     mOptions.staticLink  = mIni->GetBoolValue("Project", "StaticLink",true);

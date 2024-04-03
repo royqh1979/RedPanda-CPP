@@ -113,8 +113,8 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     this->setFrameShape(QFrame::Panel);
     this->setFrameShadow(QFrame::Sunken);
     this->setLineWidth(1);
-    mInsertCaret = EditCaretType::ctVerticalLine;
-    mOverwriteCaret = EditCaretType::ctBlock;
+    mInsertCaret = EditCaretType::VerticalLine;
+    mOverwriteCaret = EditCaretType::Block;
     mActiveSelectionMode = SelectionMode::Normal;
     mReadOnly = false;
 
@@ -3675,7 +3675,7 @@ void QSynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         caretColor = mCaretColor;
     }
     switch(ct) {
-    case EditCaretType::ctVerticalLine: {
+    case EditCaretType::VerticalLine: {
         QRect caretRC;
         int size = std::max(1, mTextHeight/15);
         caretRC.setLeft(rcClip.left()+1);
@@ -3685,7 +3685,7 @@ void QSynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         painter.fillRect(caretRC,caretColor);
         break;
     }
-    case EditCaretType::ctHorizontalLine: {
+    case EditCaretType::HorizontalLine: {
         QRect caretRC;
         int size = std::max(1,mTextHeight/15);
         caretRC.setLeft(rcClip.left());
@@ -3695,10 +3695,10 @@ void QSynEdit::paintCaret(QPainter &painter, const QRect rcClip)
         painter.fillRect(caretRC,caretColor);
         break;
     }
-    case EditCaretType::ctBlock:
+    case EditCaretType::Block:
         painter.fillRect(rcClip, caretColor);
         break;
-    case EditCaretType::ctHalfBlock:
+    case EditCaretType::HalfBlock:
         QRect rc=rcClip;
         rc.setTop(rcClip.top()+rcClip.height() / 2);
         painter.fillRect(rcClip, caretColor);

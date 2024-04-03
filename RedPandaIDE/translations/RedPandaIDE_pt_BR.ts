@@ -1460,12 +1460,12 @@
         <translation>Inserir a condição de parada:</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+262"/>
         <source>Readonly</source>
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5452"/>
+        <location line="-5454"/>
         <location line="+505"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
@@ -4276,7 +4276,7 @@
     <name>MainWindow</name>
     <message>
         <location filename="../mainwindow.ui" line="+14"/>
-        <location filename="../mainwindow.cpp" line="+1324"/>
+        <location filename="../mainwindow.cpp" line="+1330"/>
         <source>Red Panda C++</source>
         <translation>Red Panda C++</translation>
     </message>
@@ -5483,13 +5483,13 @@
         <translation>Ctrl+Shift+Down</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-8406"/>
+        <location filename="../mainwindow.cpp" line="-8412"/>
         <location line="+72"/>
         <location line="+9"/>
         <location line="+8"/>
         <location line="+9"/>
         <location line="+61"/>
-        <location line="+1359"/>
+        <location line="+1365"/>
         <location line="+1799"/>
         <location line="+117"/>
         <location line="+1866"/>
@@ -5501,7 +5501,7 @@
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-9506"/>
+        <location line="-9512"/>
         <source>New</source>
         <translation>Novo</translation>
     </message>
@@ -5527,18 +5527,18 @@
     </message>
     <message>
         <location line="+85"/>
-        <location line="+8310"/>
+        <location line="+8316"/>
         <source>Problem Set %1</source>
         <translation>Conjunto de problemas %1</translation>
     </message>
     <message>
-        <location line="-7663"/>
+        <location line="-7669"/>
         <location line="+6"/>
         <source>Load Theme Error</source>
         <translation>Erro ao carregar tema</translation>
     </message>
     <message>
-        <location line="+325"/>
+        <location line="+331"/>
         <location line="+2"/>
         <location line="+30"/>
         <location line="+2"/>
@@ -7018,7 +7018,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-5173"/>
+        <location filename="../mainwindow.cpp" line="-5179"/>
         <source>Exact</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7033,7 +7033,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7043"/>
+        <location line="+7049"/>
         <source>Folder Not Empty</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8137,22 +8137,30 @@
         <translation>Configuração</translation>
     </message>
     <message>
-        <location line="+6"/>
         <location filename="../settingsdialog/projectoutputwidget.cpp" line="+67"/>
         <source>Executable output directory</source>
         <translation>Pasta do executável</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location filename="../settingsdialog/projectoutputwidget.ui" line="+15"/>
         <location line="+19"/>
         <location line="+25"/>
         <source>browse</source>
         <translation>navegar</translation>
     </message>
     <message>
-        <location line="-34"/>
         <source>Object file output directory</source>
-        <translation>Pasta do arquivo objeto</translation>
+        <translation type="vanished">Pasta do arquivo objeto</translation>
+    </message>
+    <message>
+        <location line="-53"/>
+        <source>Directory for output</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Directory for obj files</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+19"/>
@@ -8381,7 +8389,7 @@
 <context>
     <name>QFileSystemModel</name>
     <message>
-        <location filename="../mainwindow.cpp" line="-1214"/>
+        <location filename="../mainwindow.cpp" line="-1220"/>
         <source>&lt;b&gt;The name &quot;%1&quot; cannot be used.&lt;/b&gt;&lt;p&gt;Try using another name, with fewer characters or no punctuation marks.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8681,7 +8689,7 @@
     </message>
     <message>
         <location filename="../editorlist.cpp" line="+178"/>
-        <location filename="../mainwindow.cpp" line="+3227"/>
+        <location filename="../mainwindow.cpp" line="+3233"/>
         <source>Save</source>
         <translation>Salvar</translation>
     </message>
@@ -9000,7 +9008,7 @@
         <translation type="vanished">Índice %1 fora dos limites</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+488"/>
+        <location filename="../utils.cpp" line="+486"/>
         <source>bytes</source>
         <translation>bytes</translation>
     </message>
@@ -10878,7 +10886,7 @@
         <translation>Remover compilado</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <location line="+13"/>
         <source>Read tools config failed</source>
         <translation>Falha ao ler configurações de ferramentas</translation>

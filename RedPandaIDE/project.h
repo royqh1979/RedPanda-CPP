@@ -212,7 +212,7 @@ public:
 
     ~Project();
     QString directory() const;
-    QString executable() const;
+    QString outputFilename() const;
     QString makeFileName();
     QString xmakeFileName();
     bool unitsModifiedSince(const QDateTime& time);

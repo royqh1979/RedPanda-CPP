@@ -33,7 +33,7 @@ enum class ParserLanguage {
 #endif
 };
 
-inline qHash(const ParserLanguage& value, uint seed) {
+inline uint qHash(const ParserLanguage& value, uint seed) {
     return qHash((int)value, seed);
 }
 
@@ -118,7 +118,7 @@ enum class StatementKind  {
     Alias, // using alias
 };
 
-inline qHash(const StatementKind& value, uint seed) {
+inline uint qHash(const StatementKind& value, uint seed) {
     return qHash((int)value, seed);
 }
 

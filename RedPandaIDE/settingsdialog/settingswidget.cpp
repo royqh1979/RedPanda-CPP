@@ -203,6 +203,7 @@ void SettingsWidget::clearSettingsChanged()
 
 void SettingsWidget::showEvent(QShowEvent *event)
 {
+    Q_UNUSED(event);
     load();
 }
 

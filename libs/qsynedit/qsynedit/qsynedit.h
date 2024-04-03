@@ -39,7 +39,7 @@ enum class ScrollStyle {
 };
 
 enum class EditCaretType {
-    ctVerticalLine=0, ctHorizontalLine=1, ctHalfBlock=2, ctBlock=3
+    VerticalLine=0, HorizontalLine=1, HalfBlock=2, Block=3
 };
 
 enum class StatusChange {
@@ -111,12 +111,6 @@ enum class SearchAction {
     ReplaceAndExit,
     Skip,
     Exit
-};
-
-
-
-enum class TransientType {
-    ttBefore, ttAfter
 };
 
 /*

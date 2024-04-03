@@ -123,11 +123,11 @@ QString Project::directory() const
     return fileInfo.absolutePath();
 }
 
-QString Project::executable() const
+QString Project::outputFilename() const
 {
     QString exeFileName;
-    if (mOptions.overrideOutput && !mOptions.overridenOutput.isEmpty()) {
-        exeFileName = mOptions.overridenOutput;
+    if (mOptions.useCustomOutputFilename && !mOptions.customOutputFilename.isEmpty()) {
+        exeFileName = mOptions.customOutputFilename;
     } else {
         switch(mOptions.type) {
 #ifdef ENABLE_SDCC
@@ -155,9 +155,9 @@ QString Project::executable() const
         }
     }
     QString exePath;
-    if (!mOptions.exeOutput.isEmpty()) {
+    if (!mOptions.folderForOutput.isEmpty()) {
         QDir baseDir(directory());
-        exePath = baseDir.filePath(mOptions.exeOutput);
+        exePath = baseDir.filePath(mOptions.folderForOutput);
     } else {
         exePath = directory();
     }
@@ -1090,12 +1090,12 @@ bool Project::saveAsTemplate(const QString &templateFolder,
         ini->SetBoolValue("Project", "IncludeVersionInfo", true);
     if (mOptions.supportXPThemes)
         ini->SetBoolValue("Project", "SupportXPThemes", true);
-    if (!mOptions.exeOutput.isEmpty())
-        ini->SetValue("Project", "ExeOutput", extractRelativePath(directory(),mOptions.exeOutput).toUtf8());
-    if (!mOptions.objectOutput.isEmpty())
-        ini->SetValue("Project", "ObjectOutput", extractRelativePath(directory(),mOptions.objectOutput).toUtf8());
-    if (!mOptions.logOutput.isEmpty())
-        ini->SetValue("Project", "LogOutput", extractRelativePath(directory(),mOptions.logOutput).toUtf8());
+    if (!mOptions.folderForOutput.isEmpty())
+        ini->SetValue("Project", "ExeOutput", extractRelativePath(directory(),mOptions.folderForOutput).toUtf8());
+    if (!mOptions.folderForObjFiles.isEmpty())
+        ini->SetValue("Project", "ObjectOutput", extractRelativePath(directory(),mOptions.folderForObjFiles).toUtf8());
+    if (!mOptions.logFilename.isEmpty())
+        ini->SetValue("Project", "LogOutput", extractRelativePath(directory(),mOptions.logFilename).toUtf8());
     if (mOptions.execEncoding!=ENCODING_SYSTEM_DEFAULT)
         ini->SetValue("Project","ExecEncoding", mOptions.execEncoding);
 
@@ -1190,12 +1190,12 @@ void Project::saveOptions()
     ini.SetValue("Project", "ResourceCommand", toByteArray(textToLines(mOptions.resourceCmd).join(" ")));
     ini.SetLongValue("Project","IsCpp", mOptions.isCpp);
     ini.SetValue("Project","Icon", toByteArray(extractRelativePath(directory(), mOptions.icon)));
-    ini.SetValue("Project","ExeOutput", toByteArray(extractRelativePath(directory(),mOptions.exeOutput)));
-    ini.SetValue("Project","ObjectOutput", toByteArray(extractRelativePath(directory(),mOptions.objectOutput)));
-    ini.SetValue("Project","LogOutput", toByteArray(extractRelativePath(directory(),mOptions.logOutput)));
-    ini.SetLongValue("Project","LogOutputEnabled", mOptions.logOutputEnabled);
-    ini.SetLongValue("Project","OverrideOutput", mOptions.overrideOutput);
-    ini.SetValue("Project","OverrideOutputName", toByteArray(mOptions.overridenOutput));
+    ini.SetValue("Project","ExeOutput", toByteArray(extractRelativePath(directory(),mOptions.folderForOutput)));
+    ini.SetValue("Project","ObjectOutput", toByteArray(extractRelativePath(directory(),mOptions.folderForObjFiles)));
+    ini.SetValue("Project","LogOutput", toByteArray(extractRelativePath(directory(),mOptions.logFilename)));
+    ini.SetLongValue("Project","LogOutputEnabled", mOptions.logOutput);
+    ini.SetLongValue("Project","OverrideOutput", mOptions.useCustomOutputFilename);
+    ini.SetValue("Project","OverrideOutputName", toByteArray(mOptions.customOutputFilename));
     ini.SetValue("Project","HostApplication", toByteArray(extractRelativePath(directory(), mOptions.hostApplication)));
     ini.SetLongValue("Project","UseCustomMakefile", mOptions.useCustomMakefile);
     ini.SetValue("Project","CustomMakefile", toByteArray(extractRelativePath(directory(),mOptions.customMakefile)));
@@ -1444,12 +1444,12 @@ void Project::buildPrivateResource()
       contents.append("// THIS WILL MAKE THE PROGRAM USE THE COMMON CONTROLS");
       contents.append("// LIBRARY VERSION 6.0 (IF IT IS AVAILABLE)");
       contents.append("//");
-      if (!mOptions.exeOutput.isEmpty())
+      if (!mOptions.folderForOutput.isEmpty())
           contents.append(
-                    "1 24 \"" + includeTrailingPathDelimiter(mOptions.exeOutput)
-                           + extractFileName(executable()) + ".Manifest\"");
+                    "1 24 \"" + includeTrailingPathDelimiter(mOptions.folderForOutput)
+                      + extractFileName(outputFilename()) + ".Manifest\"");
       else
-          contents.append("1 24 \"" + extractFileName(executable()) + ".Manifest\"");
+          contents.append("1 24 \"" + extractFileName(outputFilename()) + ".Manifest\"");
     }
 
     if (mOptions.includeVersionInfo) {
@@ -1573,7 +1573,7 @@ void Project::buildPrivateResource()
         content.append("    </dependentAssembly>");
         content.append("</dependency>");
         content.append("</assembly>");
-        stringsToFile(content,executable() + ".Manifest");
+        stringsToFile(content,outputFilename() + ".Manifest");
     }
 
     // create private header file
@@ -2024,12 +2024,12 @@ void Project::loadOptions(SimpleIni& ini)
 #endif
         ));
         mOptions.isCpp = ini.GetBoolValue("Project", "IsCpp", false);
-        mOptions.exeOutput = generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "ExeOutput", "")));
-        mOptions.objectOutput =  generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "ObjectOutput", "")));
-        mOptions.logOutput = generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "LogOutput", "")));
-        mOptions.logOutputEnabled = ini.GetBoolValue("Project", "LogOutputEnabled", false);
-        mOptions.overrideOutput = ini.GetBoolValue("Project", "OverrideOutput", false);
-        mOptions.overridenOutput = fromByteArray(ini.GetValue("Project", "OverrideOutputName", ""));
+        mOptions.folderForOutput = generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "ExeOutput", "")));
+        mOptions.folderForObjFiles =  generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "ObjectOutput", "")));
+        mOptions.logFilename = generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "LogOutput", "")));
+        mOptions.logOutput = ini.GetBoolValue("Project", "LogOutputEnabled", false);
+        mOptions.useCustomOutputFilename = ini.GetBoolValue("Project", "OverrideOutput", false);
+        mOptions.customOutputFilename = fromByteArray(ini.GetValue("Project", "OverrideOutputName", ""));
         mOptions.hostApplication = generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "HostApplication", "")));
         mOptions.useCustomMakefile = ini.GetBoolValue("Project", "UseCustomMakefile", false);
         mOptions.customMakefile = generateAbsolutePath(directory(),fromByteArray(ini.GetValue("Project", "CustomMakefile", "")));
@@ -2155,7 +2155,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.versionInfo.legalCopyright = fromByteArray(ini.GetValue("VersionInfo", "LegalCopyright", ""));
         mOptions.versionInfo.legalTrademarks = fromByteArray(ini.GetValue("VersionInfo", "LegalTrademarks", ""));
         mOptions.versionInfo.originalFilename = fromByteArray(ini.GetValue("VersionInfo", "OriginalFilename",
-                                                                toByteArray(extractFileName(executable()))));
+                                                                           toByteArray(extractFileName(outputFilename()))));
         mOptions.versionInfo.productName = fromByteArray(ini.GetValue("VersionInfo", "ProductName", toByteArray(mName)));
         mOptions.versionInfo.productVersion = fromByteArray(ini.GetValue("VersionInfo", "ProductVersion", "0.1.1.1"));
         mOptions.versionInfo.autoIncBuildNr = ini.GetBoolValue("VersionInfo", "AutoIncBuildNr", false);

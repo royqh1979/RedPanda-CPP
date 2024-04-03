@@ -60,4 +60,5 @@ extern const QChar SoftBreakGlyph;
 
 }
 
+
 #endif // CONSTANTS_H

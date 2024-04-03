@@ -1722,7 +1722,7 @@ p, li { white-space: pre-wrap; }
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+262"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -4629,7 +4629,7 @@ p, li { white-space: pre-wrap; }
     <name>MainWindow</name>
     <message>
         <location filename="../mainwindow.ui" line="+14"/>
-        <location filename="../mainwindow.cpp" line="+1324"/>
+        <location filename="../mainwindow.cpp" line="+1330"/>
         <source>Red Panda C++</source>
         <translation>小熊猫C++</translation>
     </message>
@@ -4790,7 +4790,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">工具栏2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-1707"/>
+        <location filename="../mainwindow.cpp" line="-1713"/>
         <source>New</source>
         <translation>新建</translation>
     </message>
@@ -4923,7 +4923,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+5"/>
-        <location filename="../mainwindow.cpp" line="+2707"/>
+        <location filename="../mainwindow.cpp" line="+2713"/>
         <location line="+27"/>
         <location line="+200"/>
         <source>Copy</source>
@@ -6202,12 +6202,12 @@ p, li { white-space: pre-wrap; }
         <translation>文件编码</translation>
     </message>
     <message>
-        <location line="-3408"/>
+        <location line="-3414"/>
         <source>Recent Files</source>
         <translation>文件历史</translation>
     </message>
     <message>
-        <location line="+1069"/>
+        <location line="+1075"/>
         <location line="+2"/>
         <location line="+30"/>
         <location line="+2"/>
@@ -6529,7 +6529,7 @@ p, li { white-space: pre-wrap; }
         <translation>清除</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-2915"/>
+        <location filename="../mainwindow.cpp" line="-2921"/>
         <source>Export</source>
         <translation>导出</translation>
     </message>
@@ -6540,7 +6540,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+85"/>
-        <location line="+8310"/>
+        <location line="+8316"/>
         <source>Problem Set %1</source>
         <translation>试题集%1</translation>
     </message>
@@ -7496,13 +7496,13 @@ p, li { white-space: pre-wrap; }
         <translation>试题案例%1</translation>
     </message>
     <message>
-        <location line="-8554"/>
+        <location line="-8560"/>
         <location line="+72"/>
         <location line="+9"/>
         <location line="+8"/>
         <location line="+9"/>
         <location line="+61"/>
-        <location line="+1359"/>
+        <location line="+1365"/>
         <location line="+1799"/>
         <location line="+117"/>
         <location line="+1866"/>
@@ -7514,7 +7514,7 @@ p, li { white-space: pre-wrap; }
         <translation>错误</translation>
     </message>
     <message>
-        <location line="-9484"/>
+        <location line="-9490"/>
         <source>Recent Projects</source>
         <translation>项目历史</translation>
     </message>
@@ -7525,7 +7525,7 @@ p, li { white-space: pre-wrap; }
         <translation>载入主题失败</translation>
     </message>
     <message>
-        <location line="+453"/>
+        <location line="+459"/>
         <location line="+22"/>
         <source>Clear History</source>
         <translation>清除历史</translation>
@@ -7589,7 +7589,7 @@ p, li { white-space: pre-wrap; }
         <translation>确认转换</translation>
     </message>
     <message>
-        <location line="-9585"/>
+        <location line="-9591"/>
         <source>Exact</source>
         <translation>完全一致</translation>
     </message>
@@ -7608,7 +7608,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">行: %1 列: %2 (%3个字符) 总行数: %4</translation>
     </message>
     <message>
-        <location line="+2312"/>
+        <location line="+2318"/>
         <location line="+123"/>
         <location line="+2724"/>
         <source>If you are using the Release compiler set, please use choose the Debug version from toolbar.</source>
@@ -8800,22 +8800,30 @@ p, li { white-space: pre-wrap; }
         <translation>表单</translation>
     </message>
     <message>
-        <location line="+6"/>
         <location filename="../settingsdialog/projectoutputwidget.cpp" line="+67"/>
         <source>Executable output directory</source>
         <translation>可执行文件输出文件夹</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location filename="../settingsdialog/projectoutputwidget.ui" line="+15"/>
         <location line="+19"/>
         <location line="+25"/>
         <source>browse</source>
         <translation>浏览</translation>
     </message>
     <message>
-        <location line="-34"/>
         <source>Object file output directory</source>
-        <translation>目标文件输出文件夹</translation>
+        <translation type="vanished">目标文件输出文件夹</translation>
+    </message>
+    <message>
+        <location line="-53"/>
+        <source>Directory for output</source>
+        <translation>输出文件夹</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Directory for obj files</source>
+        <translation>obj文件夹</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -8825,7 +8833,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+25"/>
         <source>Override output filename</source>
-        <translation>自定义可执行文件名</translation>
+        <translation>自定义项目输出文件名</translation>
     </message>
     <message>
         <location filename="../settingsdialog/projectoutputwidget.cpp" line="+14"/>
@@ -9057,7 +9065,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>QFileSystemModel</name>
     <message>
-        <location filename="../mainwindow.cpp" line="-6540"/>
+        <location filename="../mainwindow.cpp" line="-6546"/>
         <source>&lt;b&gt;The name &quot;%1&quot; cannot be used.&lt;/b&gt;&lt;p&gt;Try using another name, with fewer characters or no punctuation marks.</source>
         <translation>&lt;b&gt;文件名 &quot;%1&quot; 无法被使用！&lt;/b&gt;&lt;p&gt;可能是重名、过长、为空或者是使用了不能出现在文件名里的符号。</translation>
     </message>
@@ -9066,7 +9074,7 @@ p, li { white-space: pre-wrap; }
     <name>QObject</name>
     <message>
         <location filename="../editorlist.cpp" line="+178"/>
-        <location filename="../mainwindow.cpp" line="+3227"/>
+        <location filename="../mainwindow.cpp" line="+3233"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
@@ -9551,7 +9559,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">下标&quot;%1&quot;越界</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+488"/>
+        <location filename="../utils.cpp" line="+486"/>
         <source>bytes</source>
         <translation>字节</translation>
     </message>
@@ -11782,7 +11790,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">在文件管理器中打开编译结果</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <location line="+13"/>
         <source>Read tools config failed</source>
         <translation>读取工具配置失败</translation>
