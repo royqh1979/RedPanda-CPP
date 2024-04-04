@@ -2245,6 +2245,7 @@ void Editor::onTooltipTimer()
 void Editor::onEndParsing()
 {
     mIdentCache.clear();
+    document()->invalidateAllLineWidth();
     invalidate();
 }
 
@@ -5562,7 +5563,8 @@ void Editor::applyColorScheme(const QString& schemeName)
         mCurrentHighlighWordForeground = selectedForeground();
         mCurrentHighlighWordBackground = selectedBackground();
     }
-    this->invalidate();
+    document()->invalidateAllLineWidth();
+    invalidate();
 }
 
 void Editor::updateCaption(const QString& newCaption) {

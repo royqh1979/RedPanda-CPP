@@ -1155,6 +1155,13 @@ void Document::internalClear()
     }
 }
 
+bool Document::lineWidthValid(int line)
+{
+    if (line<0 || line>=mLines.count())
+        return false;
+    return mLines[line]->mWidth>=0 && !mLines[line]->mIsTempWidth;
+}
+
 void Document::beginSetLinesWidth()
 {
     if (mSetLineWidthLockCount == 0) {
@@ -1172,15 +1179,15 @@ void Document::endSetLinesWidth()
     }
 }
 
-void Document::setLineWidth(int line, const QString &lineText, int newWidth, const QList<int> glyphStartPositionList)
+void Document::setLineWidth(int line, int newWidth, const QList<int> glyphStartPositionList)
 {
     QMutexLocker locker(&mMutex);
     if (line<0 || line>=count())
         return ;
-    if (lineText != mLines[line]->lineText())
-        return;
     int oldWidth = mLines[line]->mWidth;
+    //qDebug()<<line<<oldWidth<<newWidth;
     mLines[line]->mWidth = newWidth;
+    mLines[line]->mIsTempWidth = false;
     mLines[line]->mGlyphStartPositionList = glyphStartPositionList;
     if (mIndexOfLongestLine<0) {
         mIndexOfLongestLine = line;
@@ -1246,6 +1253,23 @@ QList<int> Document::getGlyphStartCharList(int line, const QString &lineText)
     return mLines[line]->glyphStartCharList();
 }
 
+QList<int> Document::getGlyphStartCharList(int line)
+{
+    if (line<0 || line>=count())
+        return QList<int>();
+    return mLines[line]->glyphStartCharList();
+}
+
+QList<int> Document::getGlyphStartPositionList(int line)
+{
+    return mLines[line]->glyphStartPositionList();
+}
+
+int Document::getLineWidth(int line)
+{
+    return mLines[line]->mWidth;
+}
+
 NewlineType Document::getNewlineType()
 {
     QMutexLocker locker(&mMutex);
@@ -1276,6 +1300,7 @@ void Document::invalidateAllLineWidth()
 DocumentLine::DocumentLine(DocumentLine::UpdateWidthFunc updateWidthFunc):
     mSyntaxState{},
     mWidth{-1},
+    mIsTempWidth{true},
     mUpdateWidthFunc{updateWidthFunc}
 {
 }

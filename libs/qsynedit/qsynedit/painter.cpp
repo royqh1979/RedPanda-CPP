@@ -707,9 +707,25 @@ void QSynEditPainter::addHighlightToken(
         const QList<int> glyphStartCharList,
         int tokenStartChar,
         int tokenEndChar,
+        bool calcGlyphPosition,
         QList<int> &glyphStartPositionList,
         int &tokenWidth)
 {
+    int tokenRight;
+    int startGlyph, endGlyph;
+    if (!calcGlyphPosition) {
+        tokenRight = std::max(0,tokenLeft);
+        startGlyph = searchForSegmentIdx(glyphStartCharList,0,lineText.length(),tokenStartChar);
+        endGlyph = searchForSegmentIdx(glyphStartCharList,0,lineText.length(),tokenEndChar);
+        for (int i=startGlyph;i<endGlyph;i++) {
+            int gWidth = calcSegmentInterval(glyphStartPositionList, mCurrentLineWidth, i);
+            tokenRight += gWidth;
+        }
+        tokenWidth = tokenRight-tokenLeft;
+        if (tokenRight<mLeft) {
+            return;
+        }
+    }
     QColor foreground, background;
     FontStyles style;
 
@@ -767,22 +783,22 @@ void QSynEditPainter::addHighlightToken(
         mTokenAccu.font.setUnderline(style & FontStyle::fsUnderline);
     }
     //calculate width of the token ( and update it's glyph start positions )
-    int tokenRight;
-    int startGlyph, endGlyph;
-    tokenWidth = mEdit->mDocument->updateGlyphStartPositionList(
-                lineText,
-                glyphStartCharList,
-                tokenStartChar,
-                tokenEndChar,
-                QFontMetrics(mTokenAccu.font),
-                glyphStartPositionList,
-                tokenLeft,
-                tokenRight,
-                startGlyph,
-                endGlyph);
+    if (calcGlyphPosition) {
+        tokenWidth = mEdit->mDocument->updateGlyphStartPositionList(
+                    lineText,
+                    glyphStartCharList,
+                    tokenStartChar,
+                    tokenEndChar,
+                    QFontMetrics(mTokenAccu.font),
+                    glyphStartPositionList,
+                    tokenLeft,
+                    tokenRight,
+                    startGlyph,
+                    endGlyph);
+    }
 
     // Only accumulate tokens if it's visible.
-    if (tokenLeft < mRight) {
+    if (tokenLeft < mRight && tokenRight>mLeft) {
         if (bCanAppend) {
             mTokenAccu.width += tokenWidth;
             Q_ASSERT(startGlyph == mTokenAccu.endGlyph);
@@ -951,6 +967,7 @@ void QSynEditPainter::paintLines()
     BufferCoord selectionEnd= mEdit->blockEnd();
     for (int row = mFirstRow; row<=mLastRow; row++) {
         int vLine = mEdit->rowToLine(row);
+        bool lineTextChanged = false;
         if (vLine > mEdit->mDocument->count() && mEdit->mDocument->count() != 0)
             break;
 
@@ -966,6 +983,7 @@ void QSynEditPainter::paintLines()
             int ch = mEdit->mDocument->charToGlyphStartChar(mEdit->mCaretY-1,mEdit->mCaretX-1);
             sLine = sLine.left(ch) + mEdit->mInputPreeditString
                     + sLine.mid(ch);
+            lineTextChanged = true;
         }
         // Initialize the text and background colors, maybe the line should
         // use special values for them.
@@ -1036,10 +1054,23 @@ void QSynEditPainter::paintLines()
 
         mRcToken = mRcLine;
 
-        QList<int> glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine-1,sLine);
+        QList<int> glyphStartCharList;
+        if (lineTextChanged) {
+            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine-1,sLine);
+        } else {
+            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine-1);
+        }
         // Ensure the list has the right number of elements.
         // Values in it doesn't matter, we'll recalculate them.
-        QList<int> glyphStartPositionsList = glyphStartCharList;
+        QList<int> glyphStartPositionsList;
+        bool lineWidthValid = mEdit->mDocument->lineWidthValid(vLine-1);
+        bool calculateGlyphPositions = ( mHasSelectionInLine ||  lineTextChanged || !lineWidthValid);
+        if (calculateGlyphPositions) {
+            glyphStartPositionsList = glyphStartCharList;
+        } else {
+            glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(vLine-1);
+            mCurrentLineWidth = mEdit->mDocument->getLineWidth(vLine-1);
+        }
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last
         // line - the internal highlighter range might be wrong.
@@ -1061,15 +1092,6 @@ void QSynEditPainter::paintLines()
             sToken = mEdit->mSyntaxer->getToken();
             if (sToken.isEmpty())  {
                 continue;
-                // mEdit->mSyntaxer->next();
-                // if (mEdit->mSyntaxer->eol())
-                //     break;
-                // sToken = mEdit->mSyntaxer->getToken();
-                // // Maybe should also test whether GetTokenPos changed...
-                // if (sToken.isEmpty()) {
-                //     //qDebug()<<QSynEdit::tr("The highlighter seems to be in an infinite loop");
-                //     throw BaseError(QSynEdit::tr("The syntaxer seems to be in an infinite loop"));
-                // }
             }
             int tokenStartChar = mEdit->mSyntaxer->getTokenPos();
             int tokenEndChar = tokenStartChar + sToken.length();
@@ -1130,13 +1152,21 @@ void QSynEditPainter::paintLines()
                         glyphStartCharList,
                         tokenStartChar,
                         tokenEndChar,
+                        calculateGlyphPositions,
                         glyphStartPositionsList,
                         tokenWidth);
             tokenLeft+=tokenWidth;
+            //We don't need to calculate line width,
+            //So we just quit if already out of the right edge of the editor
+            if (
+                    (!calculateGlyphPositions || lineTextChanged)
+                    && (tokenLeft>mRight))
+                    break;
             // Let the highlighter scan the next token.
             mEdit->mSyntaxer->next();
         }
-        mEdit->mDocument->setLineWidth(vLine-1, sLine, tokenLeft, glyphStartPositionsList);
+        if (!lineWidthValid)
+            mEdit->mDocument->setLineWidth(vLine-1, tokenLeft, glyphStartPositionsList);
         if (tokenLeft<mRight) {
             QString addOnStr;
 
@@ -1170,6 +1200,7 @@ void QSynEditPainter::paintLines()
                             glyphStartCharList,
                             oldLen,
                             sLine.length(),
+                            calculateGlyphPositions,
                             glyphStartPositionsList,
                             tokenWidth);
                 tokenLeft += tokenWidth;

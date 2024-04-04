@@ -96,6 +96,7 @@ private:
             const QList<int> glyphStartCharList,
             int tokenStartChar,
             int tokenEndChar,
+            bool calcGlyphPosition,
             QList<int> &glyphStartPositionList,
             int &tokenWidth
             );
@@ -121,6 +122,7 @@ private:
     // info about selection of the current line
     int mLineSelStart, mLineSelEnd;
     bool mHasSelectionInLine;
+    int mCurrentLineWidth;
     // painting the background and the text
     QRect mRcLine, mRcToken;
     int mFirstLine, mLastLine;

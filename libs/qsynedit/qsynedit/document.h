@@ -147,7 +147,7 @@ private:
 
     void setLineText(const QString &newLineText);
     void updateWidth();
-    void invalidateWidth() { mWidth = -1; mGlyphStartPositionList.clear(); }
+    void invalidateWidth() { mWidth = -1; mGlyphStartPositionList.clear(); mIsTempWidth = true;}
 private:
     QString mLineText; /* the unicode code points of the text */
     /**
@@ -181,7 +181,7 @@ private:
      * so it must be recalculated each time the font is changed.
      */
     int mWidth;
-
+    bool mIsTempWidth;
     UpdateWidthFunc mUpdateWidthFunc;
 
     friend class Document;
@@ -576,9 +576,10 @@ protected:
     void putTextStr(const QString& text);
     void internalClear();
 private:
+    bool lineWidthValid(int line);
     void beginSetLinesWidth();
     void endSetLinesWidth();
-    void setLineWidth(int line, const QString& lineText, int newWidth, const QList<int> glyphStartPositionList);
+    void setLineWidth(int line, int newWidth, const QList<int> glyphStartPositionList);
     void updateMaxLineWidthChanged();
     void updateMaxLineWidthAndNotify();
 
@@ -595,6 +596,9 @@ private:
     QList<int> calcGlyphPositionList(const QString& lineText, const QList<int> &glyphStartCharList, int left, int &right) const;
     QList<int> calcGlyphPositionList(const QString& lineText, int &width) const;
     QList<int> getGlyphStartCharList(int line, const QString &lineText);
+    QList<int> getGlyphStartCharList(int line);
+    QList<int> getGlyphStartPositionList(int line);
+    int getLineWidth(int line);
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
