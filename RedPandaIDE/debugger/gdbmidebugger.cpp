@@ -1107,7 +1107,7 @@ void GDBMIDebuggerClient::addBreakpoint(PBreakpoint breakpoint)
         // break "filename":linenum
         QString condition;
         if (!breakpoint->condition.isEmpty()) {
-            condition = " -c " + breakpoint->condition;
+            condition = QString(" -c \"%1\"").arg(breakpoint->condition);
         }
         QString filename = breakpoint->filename;
         filename.replace('\\','/');
@@ -1145,7 +1145,7 @@ void GDBMIDebuggerClient::setBreakpointCondition(PBreakpoint breakpoint)
                     QString("%1").arg(breakpoint->number));
     } else {
         postCommand("-break-condition",
-                    QString("%1 %2").arg(breakpoint->number).arg(condition));
+                    QString("%1 \"%2\"").arg(breakpoint->number).arg(condition));
     }
 }
 

@@ -333,6 +333,8 @@ private:
     void reparseNonProjectEditors();
     QString switchHeaderSourceTarget(Editor *editor);
 
+    void modifyBreakpointCondition(int index);
+
 private slots:
     void setupSlotsForProject();
     void onProjectUnitAdded(const QString &filename);
@@ -400,6 +402,7 @@ private slots:
     void onDebugConsoleSelectAll();
     void onDebugConsoleCopy();
     void onDebugConsoleClear();
+    void onBreakpointTableDoubleClicked(const QModelIndex& index);
     void onFilesViewOpenInExplorer();
     void onFilesViewOpenInTerminal();
     void onFilesViewOpenWithExternal();
@@ -421,7 +424,7 @@ private slots:
     void onProjectRenameUnit();
     void onBreakpointRemove();
     void onBreakpointViewRemoveAll();
-    void onBreakpointViewProperty();
+    void onModifyBreakpointCondition();
     void onSearchViewClearAll();
     void onSearchViewClear();
     void onTableIssuesClear();

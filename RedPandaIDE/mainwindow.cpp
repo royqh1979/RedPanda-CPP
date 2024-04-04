@@ -208,6 +208,8 @@ MainWindow::MainWindow(QWidget *parent)
     delete m;
     ui->tblBreakpoints->setTextElideMode(Qt::ElideRight);
     ui->tblBreakpoints->setWordWrap(false);
+    connect(ui->tblBreakpoints, &QTableView::doubleClicked,
+            this, &MainWindow::onBreakpointTableDoubleClicked);
 
     m=ui->tblStackTrace->selectionModel();
     ui->tblStackTrace->setModel(mDebugger->backtraceModel().get());
@@ -3016,7 +3018,7 @@ void MainWindow::createCustomActions()
                 tr("Breakpoint condition..."),
                 ui->tblBreakpoints);
     connect(mBreakpointViewPropertyAction,&QAction::triggered,
-            this, &MainWindow::onBreakpointViewProperty);
+            this, &MainWindow::onModifyBreakpointCondition);
 
     mBreakpointViewRemoveAllAction = createAction(
                 tr("Remove All Breakpoints"),
@@ -4815,6 +4817,13 @@ void MainWindow::onDebugConsoleClear()
     }
 }
 
+void MainWindow::onBreakpointTableDoubleClicked(const QModelIndex &index)
+{
+    if (index.isValid() && index.column()==2) {
+        modifyBreakpointCondition(index.row());
+    }
+}
+
 void MainWindow::onFilesViewOpenInExplorer()
 {
     QString path = mFileSystemModel.filePath(ui->treeFiles->currentIndex());
@@ -5079,25 +5088,11 @@ void MainWindow::onBreakpointViewRemoveAll()
     }
 }
 
-void MainWindow::onBreakpointViewProperty()
+void MainWindow::onModifyBreakpointCondition()
 {
     int index =ui->tblBreakpoints->selectionModel()->currentIndex().row();
 
-    PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(
-                index,
-                debugger()->isForProject()
-                );
-    if (breakpoint) {
-        bool isOk;
-        QString s=QInputDialog::getText(this,
-                                  tr("Break point condition"),
-                                  tr("Enter the condition of the breakpoint:"),
-                                QLineEdit::Normal,
-                                breakpoint->condition,&isOk);
-        if (isOk) {
-            pMainWindow->debugger()->setBreakPointCondition(index,s,debugger()->isForProject());
-        }
-    }
+    modifyBreakpointCondition(index);
 }
 
 void MainWindow::onSearchViewClearAll()
@@ -7833,6 +7828,26 @@ QString MainWindow::switchHeaderSourceTarget(Editor *editor)
         }
     }
     return QString();
+}
+
+void MainWindow::modifyBreakpointCondition(int index)
+{
+    PBreakpoint breakpoint = debugger()->breakpointModel()->breakpoint(
+                index,
+                debugger()->isForProject()
+                );
+    if (breakpoint) {
+        bool isOk;
+        QString s=QInputDialog::getText(this,
+                                  tr("Break point condition"),
+                                  tr("Enter the condition of the breakpoint:"),
+                                QLineEdit::Normal,
+                                breakpoint->condition,&isOk);
+        if (isOk) {
+            debugger()->setBreakPointCondition(index,s,debugger()->isForProject());
+        }
+    }
+
 }
 
 void MainWindow::setupSlotsForProject()
