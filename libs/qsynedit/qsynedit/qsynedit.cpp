@@ -1964,46 +1964,40 @@ void QSynEdit::doDeleteFromBOL()
 
 void QSynEdit::doDeleteLine()
 {
-    if (!mReadOnly && (mDocument->count() > 0)) {
-        PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
-        if (foldRange && foldRange->collapsed)
-            return;
-        beginEditing();
-        addCaretToUndo();
-        addSelectionToUndo();
-        if (selAvail())
-            setBlockBegin(caretXY());
-        QStringList helper(lineText());
-        if (mCaretY == mDocument->count()) {
-            if (mDocument->count()==1) {
-                mDocument->putLine(mCaretY - 1,"");
-                mUndoList->addChange(ChangeReason::Delete,
-                                     BufferCoord{1, mCaretY},
-                                     BufferCoord{helper.length() + 1, mCaretY},
-                                     helper, SelectionMode::Normal);
-            } else {
-                QString s = mDocument->getLine(mCaretY-2);
-                mDocument->deleteAt(mCaretY - 1);
-                helper.insert(0,"");
-                mUndoList->addChange(ChangeReason::Delete,
-                                     BufferCoord{s.length()+1, mCaretY-1},
-                                     BufferCoord{helper.length() + 1, mCaretY},
-                                     helper, SelectionMode::Normal);
-                doLinesDeleted(mCaretY, 1);
-                mCaretY--;
-            }
+    if (mReadOnly || (mDocument->count() <= 0))
+        return;
+    PCodeFoldingRange foldRange=foldStartAtLine(mCaretY);
+    if (foldRange && foldRange->collapsed)
+        return;
+    beginEditing();
+    addCaretToUndo();
+    addSelectionToUndo();
+    if (selAvail())
+        setBlockBegin(caretXY());
+    int oldCaretY = caretY();
+    bool isLastLine = (oldCaretY >= mDocument->count());
+    bool isFirstLine = (oldCaretY == 1);
+    BufferCoord startPos;
+    BufferCoord endPos;
+    if (isLastLine) {
+        if (isFirstLine) {
+            startPos.ch = 1;
+            startPos.line = oldCaretY;
         } else {
-            mDocument->deleteAt(mCaretY - 1);
-            helper.append("");
-            mUndoList->addChange(ChangeReason::Delete,
-                                 BufferCoord{1, mCaretY},
-                                 BufferCoord{helper.length() + 1, mCaretY},
-                                 helper, SelectionMode::Normal);
-            doLinesDeleted(mCaretY, 1);
+            startPos.ch = mDocument->getLine(oldCaretY-2).length()+1;
+            startPos.line = oldCaretY-1;
         }
-        endEditing();
-        internalSetCaretXY(BufferCoord{1, mCaretY}); // like seen in the Delphi editor
+        endPos.ch = lineText().length()+1;
+        endPos.line = oldCaretY;
+    } else {
+        startPos.ch = 1;
+        startPos.line = oldCaretY;
+        endPos.ch = 1;
+        endPos.line = oldCaretY+1;
     }
+    doDeleteText(startPos, endPos, SelectionMode::Normal);
+    endEditing();
+    internalSetCaretXY(BufferCoord{1, oldCaretY});
 }
 
 void QSynEdit::doSelectLine()

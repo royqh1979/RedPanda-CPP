@@ -114,6 +114,7 @@ Red Panda C++ Version 2.27
   - enhancement: Support "extern template" in code parser.
   - enhancement: Set shortcuts for tools menu item.
   - enhancement: Enhancement for custom tools.
+  - fix: Can't correctly undo/redo "Delete current line".
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
