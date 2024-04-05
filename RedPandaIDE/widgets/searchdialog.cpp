@@ -43,7 +43,7 @@ void SearchDialog::find(const QString &text)
 {
     mTabBar->setCurrentIndex(mSearchTabIdx);
     ui->cbFind->setCurrentText(text);
-    ui->btnNext->setFocus();
+    ui->cbFind->setFocus();
     show();
 }
 
@@ -51,8 +51,8 @@ void SearchDialog::replace(const QString &text)
 {
     mTabBar->setCurrentIndex(mReplaceTabIdx);
     ui->cbFind->setCurrentText(text);
-    ui->btnNext->setFocus();
-    //ui->cbReplace->setCurrentText("");
+    ui->cbReplace->setCurrentText(text);
+    ui->cbFind->setFocus();
     show();
 }
 
