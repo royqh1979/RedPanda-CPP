@@ -117,6 +117,8 @@ Red Panda C++ Version 2.27
   - fix: Can't correctly undo/redo "Delete current line".
   - fix: Breakpoint condition expression that contains spaces doesn't work.
   - enhancement: Double click on breakpoint table's condition cell to modify it.
+  - fix: Don't show function prototype tip for function name that contains namespace alias.
+  - fix: Can't save changes in project options -> compiler set , after base compiler set was changed.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
