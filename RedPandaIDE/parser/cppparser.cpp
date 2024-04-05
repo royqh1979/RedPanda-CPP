@@ -153,7 +153,14 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     if (mParsing)
         return result;
 
-    PStatement statement = doFindStatementOf(fileName,phrase, line);
+    QStringList expression = splitExpression(phrase);
+    PStatement scopeStatement = doFindScopeStatement(fileName,line);
+    int pos = 0;
+    PEvalStatement evalStatement = doEvalExpression(fileName, expression, pos, scopeStatement, PEvalStatement(), false, true);
+    if (!evalStatement)
+        return result;
+    PStatement statement = evalStatement->baseStatement;
+
     if (!statement)
         return result;
     if (statement->kind == StatementKind::Preprocessor) {
