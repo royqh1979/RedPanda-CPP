@@ -65,9 +65,6 @@ private slots:
 public:
     void init() override;
 
-    // QWidget interface
-protected:
-    void showEvent(QShowEvent *event) override;
 };
 
 #endif // PROJECTFILESWIDGET_H

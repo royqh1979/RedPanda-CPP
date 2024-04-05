@@ -810,22 +810,28 @@ void CppPreprocessor::openInclude(QString fileName)
         fileName.squeeze();
     }
     if (mIncludes.size()>0) {
-        PParsedFile topFile = mIncludes.front();
-        if (topFile->fileIncludes->includeFiles.contains(fileName)) {
-            PParsedFile innerMostFile = mIncludes.back();
-            innerMostFile->fileIncludes->includeFiles.insert(fileName, false);
-            return; //already included
-        }
+        // PParsedFile topFile = mIncludes.front();
+        // if (topFile->fileIncludes->includeFiles.contains(fileName)) {
+        //     PParsedFile innerMostFile = mIncludes.back();
+        //     innerMostFile->fileIncludes->includeFiles.insert(fileName, false);
+        //     return; //already included
+        // }
+        bool alreadyIncluded = false;
         for (PParsedFile& parsedFile:mIncludes) {
+            if (parsedFile->fileIncludes->includeFiles.contains(fileName)) {
+                alreadyIncluded = true;
+                continue;
+            }
             parsedFile->fileIncludes->includeFiles.insert(fileName,false);
         }
-        // Backup old position if we're entering a new file
         PParsedFile innerMostFile = mIncludes.back();
-        innerMostFile->index = mIndex;
-        innerMostFile->branches = mBranchResults.count();
-
         innerMostFile->fileIncludes->includeFiles.insert(fileName,true);
         innerMostFile->fileIncludes->directIncludes.append(fileName);
+        if (alreadyIncluded)
+            return;
+        // Backup old position if we're entering a new file
+        innerMostFile->index = mIndex;
+        innerMostFile->branches = mBranchResults.count();
     }
 
 //    // Add the new file to the includes of the current file

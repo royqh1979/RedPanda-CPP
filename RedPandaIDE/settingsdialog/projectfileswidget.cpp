@@ -34,6 +34,13 @@ ProjectFilesWidget::~ProjectFilesWidget()
 
 void ProjectFilesWidget::doLoad()
 {
+    if (ui->cbEncoding->count()>0) {
+        if (pMainWindow->project()->options().encoding==ENCODING_SYSTEM_DEFAULT) {
+            ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(tr("ANSI")));
+        } else {
+            ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)));
+        }
+    }
     ui->treeProject->expandAll();
     ui->grpFileOptions->setEnabled(false);
 }
@@ -273,19 +280,6 @@ void ProjectFilesWidget::init()
     delete m;
     SettingsWidget::init();
 }
-
-void ProjectFilesWidget::showEvent(QShowEvent *event)
-{
-    if (ui->cbEncoding->count()>0) {
-        if (pMainWindow->project()->options().encoding==ENCODING_SYSTEM_DEFAULT) {
-            ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(tr("ANSI")));
-        } else {
-            ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)));
-        }
-    }
-    SettingsWidget::showEvent(event);
-}
-
 
 void ProjectFilesWidget::on_cbEncodingDetail_currentTextChanged(const QString &)
 {
