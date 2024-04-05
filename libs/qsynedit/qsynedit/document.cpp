@@ -1184,7 +1184,7 @@ void Document::setLineWidth(int line, int newWidth, const QList<int> glyphStartP
     if (line<0 || line>=count())
         return ;
     int oldWidth = mLines[line]->mWidth;
-    //qDebug()<<line<<oldWidth<<newWidth;
+    // qDebug()<<line<<oldWidth<<newWidth;
     mLines[line]->mWidth = newWidth;
     mLines[line]->mIsTempWidth = false;
     mLines[line]->mGlyphStartPositionList = glyphStartPositionList;
