@@ -17,21 +17,21 @@
 #include "searchinfiledialog.h"
 #include "ui_searchinfiledialog.h"
 #include <QTabBar>
-#include "../editor.h"
-#include "../mainwindow.h"
-#include "../editorlist.h"
-#include <qsynedit/searcher/basicsearcher.h>
-#include <qsynedit/searcher/regexsearcher.h>
-#include "../project.h"
-#include "../settings.h"
-#include "../systemconsts.h"
 #include <QMessageBox>
 #include <QDebug>
 #include <QProgressDialog>
 #include <QCompleter>
 #include <QStack>
 #include <QFileDialog>
-
+#include <qsynedit/document.h>
+#include <qsynedit/searcher/basicsearcher.h>
+#include <qsynedit/searcher/regexsearcher.h>
+#include "../editor.h"
+#include "../mainwindow.h"
+#include "../editorlist.h"
+#include "../project.h"
+#include "../settings.h"
+#include "../systemconsts.h"
 
 SearchInFileDialog::SearchInFileDialog(QWidget *parent) :
     QDialog(parent),
@@ -378,14 +378,14 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSyn
     parentItem->parent = nullptr;
     execute(e,keyword,"",
                     [e,&parentItem, filename](const QString&,
-                    const QString&, int Line, int ch, int wordLen){
+                    const QString&, int line, int ch, int wordLen){
         PSearchResultTreeItem item = std::make_shared<SearchResultTreeItem>();
         item->filename = filename;
-        item->line = Line;
+        item->line = line;
         item->start = ch;
         item->len = wordLen;
         item->parent = parentItem.get();
-        item->text = e->document()->getLine(Line-1);
+        item->text = e->lineText(line);
         item->text.replace('\t',' ');
         parentItem->results.append(item);
         return QSynedit::SearchAction::Skip;

@@ -25,6 +25,7 @@
 #include <QDebug>
 #include <QInputDialog>
 #include <QFileDialog>
+#include <qsynedit/document.h>
 
 EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QString& group, QWidget *parent) :
     SettingsWidget(name,group,parent),

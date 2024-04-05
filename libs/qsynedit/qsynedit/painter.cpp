@@ -16,7 +16,9 @@
  */
 #include "painter.h"
 #include "qsynedit.h"
+#include "document.h"
 #include "constants.h"
+#include "syntaxer/syntaxer.h"
 #include <cmath>
 #include <QDebug>
 
@@ -847,7 +849,7 @@ void QSynEditPainter::paintFoldAttributes()
             lastNonBlank = vLine - 1;
             while (lastNonBlank + 1 < mEdit->mDocument->count() && mEdit->mDocument->getLine(lastNonBlank).isEmpty())
                 lastNonBlank++;
-            if (lastNonBlank>=mEdit->document()->count())
+            if (lastNonBlank>=mEdit->lineCount())
                 continue;
             lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(lastNonBlank));
             int braceLevel = mEdit->mDocument->getSyntaxState(lastNonBlank).braceLevel;
@@ -1158,9 +1160,7 @@ void QSynEditPainter::paintLines()
             tokenLeft+=tokenWidth;
             //We don't need to calculate line width,
             //So we just quit if already out of the right edge of the editor
-            if (
-                    (!calculateGlyphPositions || lineTextChanged)
-                    && (tokenLeft>mRight))
+            if (lineWidthValid && (tokenLeft>mRight))
                     break;
             // Let the highlighter scan the next token.
             mEdit->mSyntaxer->next();

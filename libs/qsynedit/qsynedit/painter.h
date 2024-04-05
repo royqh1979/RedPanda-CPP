@@ -21,8 +21,6 @@
 #include <QPainter>
 #include <QString>
 #include "types.h"
-#include "syntaxer/syntaxer.h"
-#include "gutter.h"
 
 namespace QSynedit {
 struct TokenTextInfo {
@@ -39,6 +37,10 @@ struct TokenBackgroundInfo {
 };
 
 
+class Syntaxer;
+using PSyntaxer = std::shared_ptr<Syntaxer>;
+class TokenAttribute;
+using PTokenAttribute = std::shared_ptr<TokenAttribute>;
 class QSynEdit;
 class QSynEditPainter
 {

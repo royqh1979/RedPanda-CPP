@@ -18,9 +18,24 @@
 #define EXPORTER_H
 
 #include <QString>
-#include "../qsynedit.h"
+#include <memory>
+#include <functional>
+#include <QIODevice>
+#include <QFont>
+#include <QColor>
+#include <QMap>
+#include "qt_utils/utils.h"
+#include "../types.h"
+
 
 namespace QSynedit {
+class Document;
+using PDocument = std::shared_ptr<Document>;
+class Syntaxer;
+using PSyntaxer = std::shared_ptr<Syntaxer>;
+class TokenAttribute;
+using PTokenAttribute = std::shared_ptr<TokenAttribute>;
+
 using FormatTokenHandler = std::function<void(PSyntaxer syntaxHighlighter, int line, int column, const QString& token,
     PTokenAttribute& attr)>;
 class Exporter

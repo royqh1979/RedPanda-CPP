@@ -46,7 +46,7 @@ void FilePropertiesDialog::calcFile(Editor *editor,
                                     int &includeLines,
                                     int &charCounts)
 {
-    totalLines = editor->document()->count();
+    totalLines = editor->lineCount();
     codeLines = 0;
     commentLines = 0;
     emptyLines = 0;
@@ -54,14 +54,14 @@ void FilePropertiesDialog::calcFile(Editor *editor,
     charCounts = 0;
     int lineBreakerLen = QString(LINE_BREAKER).length();
     // iterate through all lines of file
-    for (int i=0;i<editor->document()->count();i++) {
-        QString line = editor->document()->getLine(i);
+    for (int i=1;i<=editor->lineCount();i++) {
+        QString line = editor->lineText(i);
         charCounts+=line.length()+lineBreakerLen;
 //        while (j<line.length() && (line[j]=='\t' || line[j]==' '))
 //            j++;
         QString token;
         QSynedit::PTokenAttribute attr;
-        if (editor->getTokenAttriAtRowCol(QSynedit::BufferCoord{1,i+1},
+        if (editor->getTokenAttriAtRowCol(QSynedit::BufferCoord{1,i},
                                                 token,attr)) {
             // if it is preprocessor...
             if (attr->name() == SYNS_AttrPreprocessor) {
@@ -136,7 +136,7 @@ void FilePropertiesDialog::on_cbFiles_currentIndexChanged(int index)
         ui->txtProject->setText("-");
         ui->txtPath->setText(editor->filename());
         ui->txtRelativeToProject->setText("_");
-        ui->txtLines->setText(QString("%1").arg(editor->document()->count()));
+        ui->txtLines->setText(QString("%1").arg(editor->lineCount()));
 
         int totalLines, codeLines,emptyLines,commentLines,includeLines, charCounts;
         calcFile(editor,totalLines,commentLines,emptyLines,codeLines,includeLines,charCounts);

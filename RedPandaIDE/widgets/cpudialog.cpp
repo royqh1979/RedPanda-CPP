@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include <QDesktopWidget>
+#include <qsynedit/document.h>
 #include "cpudialog.h"
 #include "ui_cpudialog.h"
 #include "../syntaxermanager.h"

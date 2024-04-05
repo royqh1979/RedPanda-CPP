@@ -1145,7 +1145,7 @@ void GDBMIDebuggerClient::setBreakpointCondition(PBreakpoint breakpoint)
                     QString("%1").arg(breakpoint->number));
     } else {
         postCommand("-break-condition",
-                    QString("%1 \"%2\"").arg(breakpoint->number).arg(condition));
+                    QString("%1 %2").arg(breakpoint->number).arg(condition));
     }
 }
 

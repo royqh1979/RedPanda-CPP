@@ -14,15 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include <QFile>
+#include <QMessageBox>
+#include <QProgressDialog>
+#include <QTextCodec>
+#include <qsynedit/document.h>
 #include "cpprefacter.h"
 #include "mainwindow.h"
 #include "settings.h"
 #include "editor.h"
 #include "editorlist.h"
-#include <QFile>
-#include <QMessageBox>
-#include <QProgressDialog>
-#include <QTextCodec>
 #include "syntaxermanager.h"
 #include "project.h"
 
@@ -238,7 +239,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     }
     editor.setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP));
     int posY = 0;
-    while (posY < editor.document()->count()) {
+    while (posY < editor.lineCount()) {
         QString line = editor.document()->getLine(posY);
         if (line.isEmpty()) {
             posY++;
@@ -299,7 +300,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         oldEditor->clearSelection();
         oldEditor->addGroupBreak();
         oldEditor->beginEditing();
-        while (posY < oldEditor->document()->count()) {
+        while (posY < oldEditor->lineCount()) {
             QString line = oldEditor->document()->getLine(posY);
             if (posY == 0) {
                 syntaxer->resetState();
@@ -351,7 +352,7 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
 
         QStringList newContents;
         int posY = 0;
-        while (posY < editor.document()->count()) {
+        while (posY < editor.lineCount()) {
             QString line = editor.document()->getLine(posY);
             if (posY == 0) {
                 editor.syntaxer()->resetState();

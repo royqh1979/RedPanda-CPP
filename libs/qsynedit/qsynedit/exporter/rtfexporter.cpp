@@ -15,6 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "rtfexporter.h"
+
+#include <QFontMetrics>
 namespace QSynedit {
 
 RTFExporter::RTFExporter(int tabSize, const QByteArray charset):Exporter(tabSize,charset)

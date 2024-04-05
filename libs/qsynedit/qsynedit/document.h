@@ -18,7 +18,6 @@
 #define SYNEDITSTRINGLIST_H
 
 #include <QStringList>
-#include "syntaxer/syntaxer.h"
 #include <QFontMetrics>
 #include <QMutex>
 #include <QVector>

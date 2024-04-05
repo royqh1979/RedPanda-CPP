@@ -27,7 +27,6 @@
 #include "gutter.h"
 #include "codefolding.h"
 #include "types.h"
-#include "document.h"
 #include "keystrokes.h"
 #include "searcher/baseseacher.h"
 #include "formatter/formatter.h"
@@ -85,11 +84,11 @@ enum class EditorOption {
     AutoHideScrollbars =    0x00000200, //if enabled, then the scrollbars will only show when necessary.  If you have ScrollPastEOL, then it the horizontal bar will always be there (it uses MaxLength instead)
     KeepCaretX =            0x00000400 , //When moving through lines w/o Cursor Past EOL, keeps the X position of the cursor
     RightMouseMovesCursor=  0x00000800, //When clicking with the right mouse for a popup menu, move the cursor to that location
-//    eoScrollByOneLess =       0x00001000, //Forces scrolling to be one less
+//    ScrollByOneLess =       0x00001000, //Forces scrolling to be one less
     ScrollPastEof =         0x00002000, //Allows the cursor to go past the end of file marker
     ScrollPastEol =         0x00004000, //Allows the cursor to go past the last character into the white space at the end of a line
     InvertMouseScroll =     0x00008000, //Shows the special Characters
-//  eoSpecialLineDefaultFg = 0x00010000, //disables the foreground text color override when using the OnSpecialLineColor event
+//  SpecialLineDefaultFg = 0x00010000, //disables the foreground text color override when using the OnSpecialLineColor event
     TabIndent =             0x00020000, //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
     TabsToSpaces =          0x00040000, //Converts a tab character to a specified number of space characters
     ShowRainbowColor    =   0x00080000,
@@ -135,6 +134,18 @@ struct GlyphPostionsListCache {
 class QSynEdit;
 using PSynEdit = std::shared_ptr<QSynEdit>;
 
+class TokenAttribute;
+using PTokenAttribute = std::shared_ptr<TokenAttribute>;
+class Document;
+using PDocument = std::shared_ptr<Document>;
+class SyntaxState;
+class Syntaxer;
+using PSyntaxer = std::shared_ptr<Syntaxer>;
+class UndoList;
+class RedoList;
+using PUndoList = std::shared_ptr<UndoList>;
+using PRedoList = std::shared_ptr<RedoList>;
+
 class QSynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
@@ -143,6 +154,8 @@ public:
     QSynEdit(const QSynEdit&)=delete;
     QSynEdit& operator=(const QSynEdit&)=delete;
 
+
+    int lineCount() const;
     /**
      * Returns how many rows are there in the editor
      * @return
@@ -361,9 +374,7 @@ public:
 
     QString displayLineText();
     QString lineText() const;
-    QString lineText(int line) const {
-        return mDocument->getLine(line-1);
-    }
+    QString lineText(int line) const;
     void setLineText(const QString s);
 
     const PDocument& document() const;
@@ -380,9 +391,9 @@ public:
     EditorOptions getOptions() const;
     void setOptions(const EditorOptions &Value);
 
-    int tabSize() const { return mDocument->tabSize(); }
+    int tabSize() const;
     void setTabSize(int tabSize);
-    int tabWidth() const { return mDocument->tabWidth(); }
+    int tabWidth() const;
 
     QColor caretColor() const;
     void setCaretColor(const QColor &caretColor);

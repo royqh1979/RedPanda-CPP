@@ -15,7 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "qsynedit.h"
-#include "syntaxer/cpp.h"
+#include "document.h"
+#include "syntaxer/syntaxer.h""
 #include <QApplication>
 #include <QFontMetrics>
 #include <algorithm>
@@ -171,6 +172,11 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 
     setFont(mFontDummy);
     setScrollBars(ScrollStyle::Both);
+}
+
+int QSynEdit::lineCount() const
+{
+    return mDocument->count();
 }
 
 int QSynEdit::displayLineCount() const
@@ -4019,11 +4025,15 @@ void QSynEdit::setTabSize(int newTabSize)
     }
 }
 
+int QSynEdit::tabWidth() const
+{
+    return mDocument->tabWidth();
+}
+
 EditorOptions QSynEdit::getOptions() const
 {
     return mOptions;
 }
-
 
 static bool sameEditorOption(const EditorOptions& value1, const EditorOptions& value2, EditorOption flag) {
     return value1.testFlag(flag)==value2.testFlag(flag);
@@ -4059,6 +4069,11 @@ void QSynEdit::setOptions(const EditorOptions &value)
             invalidate();
         decPaintLock();
     }
+}
+
+int QSynEdit::tabSize() const
+{
+    return mDocument->tabSize();
 }
 
 void QSynEdit::doAddStr(const QString &s)
@@ -4656,6 +4671,11 @@ QString QSynEdit::lineText() const
         return QString();
 }
 
+QString QSynEdit::lineText(int line) const
+{
+    return mDocument->getLine(line-1);
+}
+
 void QSynEdit::setLineText(const QString s)
 {
     if (mCaretY >= 1 && mCaretY <= mDocument->count())
@@ -4890,7 +4910,7 @@ void QSynEdit::moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible)
 
 void QSynEdit::doGotoBlockStart(bool isSelection)
 {
-    if (mCaretY<0 || mCaretY>document()->count())
+    if (mCaretY<0 || mCaretY>lineCount())
         return;
     SyntaxState state = document()->getSyntaxState(mCaretY-1);
     //todo: handle block other than {}
@@ -4913,7 +4933,7 @@ void QSynEdit::doGotoBlockStart(bool isSelection)
 
 void QSynEdit::doGotoBlockEnd(bool isSelection)
 {
-    if (mCaretY<0 || mCaretY>document()->count())
+    if (mCaretY<0 || mCaretY>lineCount())
         return;
     SyntaxState state = document()->getSyntaxState(mCaretY-1);
     //todo: handle block other than {}
@@ -4921,7 +4941,7 @@ void QSynEdit::doGotoBlockEnd(bool isSelection)
         doGotoEditorEnd(isSelection);
     } else if (document()->blockEnded(mCaretY-1)==0){
         int line=mCaretY+1;
-        while (line<=document()->count()) {
+        while (line<=lineCount()) {
             if (document()->blockEnded(line-1)>document()->blockStarted(line-1)) {
                 moveCaretVert(line-1-mCaretY, isSelection);
                 moveCaretToLineStart(isSelection);

@@ -22,7 +22,6 @@
 #include <QTextStream>
 #include <QMutexLocker>
 #include <stdexcept>
-#include "qsynedit.h"
 #include <QMessageBox>
 #include <cmath>
 #include "qt_utils/charsetinfo.h"

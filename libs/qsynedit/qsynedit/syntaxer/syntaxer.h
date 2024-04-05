@@ -114,7 +114,7 @@ private:
     TokenType mTokenType;
 };
 
-typedef std::shared_ptr<TokenAttribute> PTokenAttribute;
+using PTokenAttribute = std::shared_ptr<TokenAttribute> ;
 
 class Syntaxer {
 public:
