@@ -34,13 +34,6 @@ ProjectFilesWidget::~ProjectFilesWidget()
 
 void ProjectFilesWidget::doLoad()
 {
-    std::shared_ptr<Project> project = pMainWindow->project();
-    if (!project)
-        return;
-    copyUnits();
-    QItemSelectionModel *m=ui->treeProject->selectionModel();
-    ui->treeProject->setModel(project->model());
-    delete m;
     ui->treeProject->expandAll();
     ui->grpFileOptions->setEnabled(false);
 }
@@ -251,20 +244,25 @@ void ProjectFilesWidget::on_treeProject_clicked(const QModelIndex &index)
 
 void ProjectFilesWidget::init()
 {
+    std::shared_ptr<Project> project = pMainWindow->project();
     ui->spinPriority->setMinimum(0);
     ui->spinPriority->setMaximum(9999);
     ui->cbEncodingDetail->setVisible(false);
     ui->cbEncoding->clear();
-    if (pMainWindow->project()->options().encoding==ENCODING_SYSTEM_DEFAULT) {
+    if (project->options().encoding==ENCODING_SYSTEM_DEFAULT) {
         ui->cbEncoding->addItem(tr("Project(%1)").arg(tr("ANSI"),ENCODING_PROJECT));
     } else {
-        ui->cbEncoding->addItem(tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)),ENCODING_PROJECT);
+        ui->cbEncoding->addItem(tr("Project(%1)").arg(QString(project->options().encoding)),ENCODING_PROJECT);
     }
     ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
         ui->cbEncoding->addItem(langName,langName);
     }
+    copyUnits();
+    QItemSelectionModel *m=ui->treeProject->selectionModel();
+    ui->treeProject->setModel(project->model());
+    delete m;
     SettingsWidget::init();
 }
 

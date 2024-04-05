@@ -131,7 +131,6 @@ void SettingsWidget::connectInputs()
     for (QGroupBox* p: findChildren<QGroupBox*>()) {
         connect(p, &QGroupBox::toggled,this, &SettingsWidget::setSettingsChanged);
     }
-
 }
 
 void SettingsWidget::disconnectInputs()

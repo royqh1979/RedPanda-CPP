@@ -122,7 +122,9 @@ void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int index)
 {
     std::shared_ptr<Project> project = pMainWindow->project();
     auto action = finally([this]{
-        this->refreshOptions();
+        disconnectInputs();
+        refreshOptions();
+        connectInputs();
     });
     if (!mInitialized || index==project->options().compilerSet) {
         return;
