@@ -692,7 +692,8 @@ void Editor::undoSymbolCompletion(int pos)
 
     if (!pSettings->editor().removeSymbolPairs())
         return;
-    if (!getTokenAttriAtRowCol(caretXY(), token, attr, syntaxState))
+    QSynedit::BufferCoord coord{pos, caretY()};
+    if (!getTokenAttriAtRowCol(coord, token, attr, syntaxState))
         return;
     if (syntaxer()->isCommentNotFinished(syntaxState.state))
         return ;
@@ -701,31 +702,36 @@ void Editor::undoSymbolCompletion(int pos)
 
     if (pos<0 || pos+1>=lineText().length())
         return;
-    QChar DeletedChar = lineText().at(pos);
-    QChar NextChar = lineText().at(pos+1);
-    if ((attr->tokenType() == QSynedit::TokenType::Character) && (DeletedChar != '\''))
+    QChar deletedChar = lineText().at(pos);
+    QChar nextChar = lineText().at(pos+1);
+    if ((attr->tokenType() == QSynedit::TokenType::Character) && (deletedChar != '\''))
         return;
 //    if (attr->tokenType() == QSynedit::TokenType::StringEscapeSequence)
 //        return;
     if (attr->tokenType() == QSynedit::TokenType::String) {
-        if ((DeletedChar!='"') && (DeletedChar!='('))
+        if (token=="\\\"")
             return;
-        if ((DeletedChar=='"') && (token!="\"\""))
-            return;
-        if ((DeletedChar=='(') && (!token.startsWith("R\"")))
+        if ((deletedChar!='"') || (nextChar!='"'))
             return;
     }
-    if ((DeletedChar == '\'') && (attr->tokenType() == QSynedit::TokenType::Number))
-        return;
-    if ((DeletedChar == '<') &&
+    if (deletedChar == '\'') {
+        if (attr->tokenType() != QSynedit::TokenType::Character)
+            return;
+        if (attr->tokenType() == QSynedit::TokenType::Number)
+            return;
+        if (token == "'\\''")
+            return;
+    }
+
+    if ((deletedChar == '<') &&
             !(mParser && mParser->isIncludeLine(lineText())))
         return;
-    if ( (pSettings->editor().completeBracket() && (DeletedChar == '[') && (NextChar == ']')) ||
-         (pSettings->editor().completeParenthese() && (DeletedChar == '(') && (NextChar == ')')) ||
-         (pSettings->editor().completeGlobalInclude() && (DeletedChar == '<') && (NextChar == '>')) ||
-         (pSettings->editor().completeBrace() && (DeletedChar == '{') && (NextChar == '}')) ||
-         (pSettings->editor().completeSingleQuote() && (DeletedChar == '\'') && (NextChar == '\'')) ||
-         (pSettings->editor().completeDoubleQuote() && (DeletedChar == '\"') && (NextChar == '\"'))) {
+    if ( (pSettings->editor().completeBracket() && (deletedChar == '[') && (nextChar == ']')) ||
+         (pSettings->editor().completeParenthese() && (deletedChar == '(') && (nextChar == ')')) ||
+         (pSettings->editor().completeGlobalInclude() && (deletedChar == '<') && (nextChar == '>')) ||
+         (pSettings->editor().completeBrace() && (deletedChar == '{') && (nextChar == '}')) ||
+         (pSettings->editor().completeSingleQuote() && (deletedChar == '\'') && (nextChar == '\'')) ||
+         (pSettings->editor().completeDoubleQuote() && (deletedChar == '\"') && (nextChar == '\"'))) {
          processCommand(QSynedit::EditCommand::DeleteChar);
     }
 }
