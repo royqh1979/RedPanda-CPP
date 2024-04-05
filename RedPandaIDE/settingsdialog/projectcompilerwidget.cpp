@@ -41,9 +41,6 @@ void ProjectCompilerWidget::refreshOptions()
         return;
     ui->panelAddCharset->setVisible(pSet->compilerType()!=CompilerType::Clang);
     //ui->chkAddCharset->setEnabled(pSet->compilerType()!=COMPILER_CLANG);
-    mOptions = pMainWindow->project()->options().compilerOptions;
-    if (mOptions.isEmpty())
-        mOptions = pSet->compileOptions();
 
     ui->tabOptions->resetUI(pSet,mOptions);
 
@@ -75,6 +72,9 @@ void ProjectCompilerWidget::refreshOptions()
 void ProjectCompilerWidget::doLoad()
 {
     mOptions = pMainWindow->project()->options().compilerOptions;
+    Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    if (mOptions.isEmpty() && pSet)
+        mOptions = pSet->compileOptions();
     ui->cbCompilerSet->blockSignals(true);
     ui->cbCompilerSet->setCurrentIndex(pMainWindow->project()->options().compilerSet);
     ui->cbCompilerSet->blockSignals(false);
@@ -168,7 +168,7 @@ void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int index)
         ui->cbCompilerSet->setCurrentIndex(project->options().compilerSet);
         return;
     }
-    project->setCompilerSet(index);
+    mOptions = pSet->compileOptions();
     setSettingsChanged();
     //project->saveOptions();
 }
