@@ -181,7 +181,7 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     } else
         parentScope = statement->parentScope.lock();
     if (parentScope && parentScope->kind == StatementKind::Namespace) {
-        PStatementList namespaceStatementsList = doFindNamespace(parentScope->command);
+        PStatementList namespaceStatementsList = doFindNamespace(parentScope->fullName);
         if (namespaceStatementsList) {
             for (PStatement& namespaceStatement  : *namespaceStatementsList) {
                 result.append(

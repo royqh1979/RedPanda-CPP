@@ -119,6 +119,8 @@ Red Panda C++ Version 2.27
   - enhancement: Double click on breakpoint table's condition cell to modify it.
   - fix: Don't show function prototype tip for function name that contains namespace alias.
   - fix: Can't save changes in project options -> compiler set , after base compiler set was changed.
+  - fix: Project options -> file doesn't work.
+  - fix: Don't show function prototype tip for function name that contains more than one namespace;
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
