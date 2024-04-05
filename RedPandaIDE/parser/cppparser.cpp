@@ -156,7 +156,7 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
     QStringList expression = splitExpression(phrase);
     PStatement scopeStatement = doFindScopeStatement(fileName,line);
     int pos = 0;
-    PEvalStatement evalStatement = doEvalExpression(fileName, expression, pos, scopeStatement, PEvalStatement(), false, true);
+    PEvalStatement evalStatement = doEvalExpression(fileName, expression, pos, scopeStatement, PEvalStatement(), true, true);
     if (!evalStatement)
         return result;
     PStatement statement = evalStatement->baseStatement;
