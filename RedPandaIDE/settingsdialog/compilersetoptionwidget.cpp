@@ -177,7 +177,6 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
 
 void CompilerSetOptionWidget::doLoad()
 {
-    disconnectInputs();
     ui->cbCompilerSet->clear();
     if (pSettings->compilerSets().size()<=0) {
         ui->btnRenameCompilerSet->setEnabled(false);
@@ -196,7 +195,6 @@ void CompilerSetOptionWidget::doLoad()
     }
     ui->cbCompilerSet->setCurrentIndex(index);
     reloadCurrentCompilerSet();
-    connectInputs();
 }
 
 void CompilerSetOptionWidget::doSave()

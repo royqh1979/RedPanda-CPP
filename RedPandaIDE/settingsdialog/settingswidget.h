@@ -38,6 +38,7 @@ public slots:
 protected:
     virtual void doLoad() = 0;
     virtual void doSave() = 0;
+    virtual void onLoaded();
     void connectAbstractItemView(QAbstractItemView* pView);
     void disconnectAbstractItemView(QAbstractItemView* pView);
     virtual void updateIcons(const QSize &size) ;

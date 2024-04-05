@@ -26,7 +26,6 @@ ProjectCompilerWidget::ProjectCompilerWidget(const QString &name, const QString 
     SettingsWidget(name,group,parent),
     ui(new Ui::ProjectCompilerWidget)
 {
-    mInitialized=false;
     ui->setupUi(this);
 }
 
@@ -76,10 +75,12 @@ void ProjectCompilerWidget::refreshOptions()
 void ProjectCompilerWidget::doLoad()
 {
     mOptions = pMainWindow->project()->options().compilerOptions;
+    ui->cbCompilerSet->blockSignals(true);
     ui->cbCompilerSet->setCurrentIndex(pMainWindow->project()->options().compilerSet);
+    ui->cbCompilerSet->blockSignals(false);
     ui->chkAddCharset->setChecked(pMainWindow->project()->options().addCharset);
     ui->chkStaticLink->setChecked(pMainWindow->project()->options().staticLink);
-    mInitialized=true;
+    refreshOptions();
 }
 
 void ProjectCompilerWidget::doSave()
@@ -87,7 +88,6 @@ void ProjectCompilerWidget::doSave()
     Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (!pSet)
         return;
-
     pMainWindow->project()->setCompilerSet(ui->cbCompilerSet->currentIndex());
     pMainWindow->project()->options().compilerOptions = ui->tabOptions->arguments(true);
     if (pSet->compilerType()!=CompilerType::Clang)
@@ -104,10 +104,12 @@ void ProjectCompilerWidget::doSave()
 
 void ProjectCompilerWidget::init()
 {
+    ui->cbCompilerSet->blockSignals(true);
     ui->cbCompilerSet->clear();
     for (size_t i=0;i<pSettings->compilerSets().size();i++) {
         ui->cbCompilerSet->addItem(pSettings->compilerSets().getSet(i)->name());
     }
+    ui->cbCompilerSet->blockSignals(false);
     ui->cbEncodingDetails->setVisible(false);
     ui->cbEncoding->clear();
     ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
@@ -120,15 +122,17 @@ void ProjectCompilerWidget::init()
 
 void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int index)
 {
+    if (index<0)
+        return;
     std::shared_ptr<Project> project = pMainWindow->project();
+    clearSettingsChanged();
+    disconnectInputs();
+    ui->cbCompilerSet->blockSignals(true);
     auto action = finally([this]{
-        disconnectInputs();
+        ui->cbCompilerSet->blockSignals(false);
         refreshOptions();
         connectInputs();
     });
-    if (!mInitialized || index==project->options().compilerSet) {
-        return;
-    }
     Settings::PCompilerSet pSet=pSettings->compilerSets().getSet(index);
 #ifdef ENABLE_SDCC
     if (pSet) {
@@ -165,7 +169,8 @@ void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int index)
         return;
     }
     project->setCompilerSet(index);
-    project->saveOptions();
+    setSettingsChanged();
+    //project->saveOptions();
 }
 
 void ProjectCompilerWidget::on_cbEncoding_currentTextChanged(const QString &/*arg1*/)

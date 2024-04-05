@@ -57,6 +57,11 @@ void ProjectFilesWidget::doSave()
     ui->treeProject->clicked(ui->treeProject->currentIndex());
 }
 
+void ProjectFilesWidget::onLoaded()
+{
+    disconnectAbstractItemView(ui->treeProject);
+}
+
 PProjectUnit ProjectFilesWidget::currentUnit()
 {
     QModelIndex index = ui->treeProject->currentIndex();
@@ -142,8 +147,9 @@ void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
         disableFileOptions();
         return;
     }
-    PProjectUnit unit = node->pUnit.lock();
+    PProjectUnit unit = currentUnit();
     if (unit) {
+        disconnectInputs();
         ui->grpFileOptions->setEnabled(true);
         ui->spinPriority->setValue(unit->priority());
         ui->chkCompile->setChecked(unit->compile());
@@ -153,6 +159,8 @@ void ProjectFilesWidget::on_treeProject_doubleClicked(const QModelIndex &index)
         ui->txtBuildCommand->setPlainText(unit->buildCmd());
         ui->txtBuildCommand->setEnabled(ui->chkOverrideBuildCommand->isChecked());
         loadUnitEncoding(unit);
+        connectInputs();
+        disconnectAbstractItemView(ui->treeProject);
     } else {
         disableFileOptions();
     }
@@ -266,7 +274,7 @@ void ProjectFilesWidget::init()
     SettingsWidget::init();
 }
 
-void ProjectFilesWidget::showEvent(QShowEvent */*event*/)
+void ProjectFilesWidget::showEvent(QShowEvent *event)
 {
     if (ui->cbEncoding->count()>0) {
         if (pMainWindow->project()->options().encoding==ENCODING_SYSTEM_DEFAULT) {
@@ -275,6 +283,7 @@ void ProjectFilesWidget::showEvent(QShowEvent */*event*/)
             ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)));
         }
     }
+    SettingsWidget::showEvent(event);
 }
 
 

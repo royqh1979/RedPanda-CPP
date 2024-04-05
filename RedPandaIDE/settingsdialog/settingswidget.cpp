@@ -45,14 +45,17 @@ void SettingsWidget::init()
             this, &SettingsWidget::onUpdateIcons);
     onUpdateIcons();
     //load();
-    connectInputs();
+    clearSettingsChanged();
 }
 
 void SettingsWidget::load()
 {
     try {
+        disconnectInputs();
         doLoad();
         clearSettingsChanged();
+        connectInputs();
+        onLoaded();
     } catch (FileError & e) {
         QMessageBox::warning(nullptr,
                          tr("Load Error"),
@@ -209,4 +212,9 @@ void SettingsWidget::showEvent(QShowEvent *event)
 void SettingsWidget::onUpdateIcons()
 {
     updateIcons(pIconsManager->actionIconSize());
+}
+
+void SettingsWidget::onLoaded()
+{
+
 }
