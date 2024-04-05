@@ -358,7 +358,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
     PStatement statement;
     getFullNamespace(phrase, namespaceName, remainder);
     if (!namespaceName.isEmpty()) {  // (namespace )qualified Name
-        PStatementList namespaceList = mNamespaces.value(namespaceName);
+        PStatementList namespaceList = doFindNamespace(namespaceName);
 
         if (!namespaceList || namespaceList->isEmpty())
             return PStatement();
@@ -1494,7 +1494,7 @@ PStatement CppParser::addStatement(const PStatement& parent,
     result->type.squeeze();
     mStatementList.add(result);
     if (result->kind == StatementKind::Namespace) {
-        PStatementList namespaceList = mNamespaces.value(result->fullName,PStatementList());
+        PStatementList namespaceList = doFindNamespace(result->fullName);
         if (!namespaceList) {
             namespaceList=std::make_shared<StatementList>();
             mNamespaces.insert(result->fullName,namespaceList);
