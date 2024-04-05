@@ -818,12 +818,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
             invalidateLine(caretY());
             clearUserCodeInTabStops();
         } else {
-            QString s = lineText().mid(0,caretX()-1).trimmed();
-            QSynedit::SyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
+            QString sLine = lineText().mid(0,caretX()-1).trimmed();
+            QSynedit::SyntaxState state = calcSyntaxStateAtLine(caretY()-1, sLine);
             if (syntaxer()->isCommentNotFinished(state.state)) {
-                if (s=="/**") { //javadoc style docstring
-                    s = lineText().mid(caretX()-1).trimmed();
-                    if (s=="*/") {
+                if (sLine=="/**") { //javadoc style docstring
+                    sLine = lineText().mid(caretX()-1).trimmed();
+                    if (sLine=="*/") {
                         QSynedit::BufferCoord p = caretXY();
                         setBlockBegin(p);
                         p.ch = lineText().length()+1;
@@ -862,12 +862,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     }
                     insertCodeSnippet(linesToText(insertString));
                 } else {
-                    s=trimLeft(lineText());
-                    if (s.startsWith("* ")) {
+                    sLine=trimLeft(lineText());
+                    if (sLine.startsWith("* ")) {
                         handled = true;
                         int right = lineText(caretY()).length()-caretX();
-                        s=lineBreak()+"* ";
-                        insertString(s,false);
+                        sLine=lineBreak()+"* ";
+                        insertString(sLine,false);
                         QSynedit::BufferCoord p = caretXY();
                         p.line++;
                         p.ch = lineText(p.line).length()+1;
@@ -1168,8 +1168,8 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
         QSynedit::BufferCoord p;
         TipType reason = getTipType(event->pos(),p);
         if (reason == TipType::Preprocessor) {
-            QString s = lineText(p.line);
-            if (mParser->isIncludeNextLine(s) || mParser->isIncludeLine(s))
+            QString sLine = lineText(p.line);
+            if (mParser->isIncludeNextLine(sLine) || mParser->isIncludeLine(sLine))
                 updateHoverLink(p.line);
         } else if (reason == TipType::Identifier) {
             updateHoverLink(p.line);
@@ -1270,17 +1270,17 @@ void Editor::onGetEditingAreas(int line, QSynedit::EditingAreaList &areaList)
             areaList.append(p);
         }
     }
-    QString s = lineText(line);
-    if (mParser && mParser->isIncludeLine(s)) {
+    QString sLine = lineText(line);
+    if (mParser && mParser->isIncludeLine(sLine)) {
         if (line == mHoverModifiedLine) {
             int i=0;
-            while (i<s.length() && s[i]!='<' && s[i]!='\"')
+            while (i<sLine.length() && sLine[i]!='<' && sLine[i]!='\"')
                 i++;
-            if (i<s.length()) {
-                if (s[i]=='<') {
-                    setIncludeUnderline(s,i,'>',syntaxer(), foregroundColor(), areaList);
+            if (i<sLine.length()) {
+                if (sLine[i]=='<') {
+                    setIncludeUnderline(sLine,i,'>',syntaxer(), foregroundColor(), areaList);
                 } else {
-                    setIncludeUnderline(s,i,'"',syntaxer(), foregroundColor(), areaList);
+                    setIncludeUnderline(sLine,i,'"',syntaxer(), foregroundColor(), areaList);
                 }
             }
         }
@@ -1323,11 +1323,11 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
             background = syntaxer()->commentAttribute()->background();
             return;
         }
-        QString s = lineText(line);
-        if (mParser->isIncludeLine(s) && attr->tokenType() != QSynedit::TokenType::Comment) {
+        QString sLine = lineText(line);
+        if (mParser->isIncludeLine(sLine) && attr->tokenType() != QSynedit::TokenType::Comment) {
             // #include header names (<>)
-            int pos1=s.indexOf("<")+1;
-            int pos2=s.indexOf(">",pos1);
+            int pos1=sLine.indexOf("<")+1;
+            int pos2=sLine.indexOf(">",pos1);
             if (pos1>0 && pos2>0 && pos1<aChar && aChar<pos2) {
                 style = syntaxer()->identifierAttribute()->styles();
                 foreground = syntaxer()->identifierAttribute()->foreground();
@@ -1489,13 +1489,13 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             QSynedit::BufferCoord p;
             if (mParser && pointToCharLine(event->pos(),p)) {
                 cancelHoverLink();
-                QString s = lineText(p.line);
-                if (mParser->isIncludeNextLine(s)) {
-                    QString filename = mParser->getHeaderFileName(mFilename,s, true);
+                QString sLine = lineText(p.line);
+                if (mParser->isIncludeNextLine(sLine)) {
+                    QString filename = mParser->getHeaderFileName(mFilename,sLine, true);
                     pMainWindow->openFile(filename);
                     return;
-                } if (mParser->isIncludeLine(s)) {
-                    QString filename = mParser->getHeaderFileName(mFilename,s);
+                } if (mParser->isIncludeLine(sLine)) {
+                    QString filename = mParser->getHeaderFileName(mFilename,sLine);
                     pMainWindow->openFile(filename);
                     return;
                 } else if (mParser->enabled()) {
@@ -2887,22 +2887,22 @@ bool Editor::handleMultilineCommentCompletion()
 bool Editor::handleBraceCompletion()
 {
     bool addSemicolon=false;
-    QString s = lineText().trimmed();
+    QString sLine = lineText().trimmed();
     int i= caretY()-2;
-    while ((s.isEmpty()) && (i>=0)) {
-        s=document()->getLine(i).trimmed();
+    while ((sLine.isEmpty()) && (i>=0)) {
+        sLine=document()->getLine(i).trimmed();
         i--;
     }
     if (
-        ( ( (s.startsWith("struct") && !s.endsWith(")"))
-          || s.startsWith("class")
-          || (s.startsWith("union") && !s.endsWith(")"))
-          || s.startsWith("typedef")
-          || s.startsWith("public")
-          || s.startsWith("private")
-          || (s.startsWith("enum") && !s.endsWith(")")) )
-          && !s.contains(';')
-        ) || s.endsWith('=')) {
+        ( ( (sLine.startsWith("struct") && !sLine.endsWith(")"))
+          || sLine.startsWith("class")
+          || (sLine.startsWith("union") && !sLine.endsWith(")"))
+          || sLine.startsWith("typedef")
+          || sLine.startsWith("public")
+          || sLine.startsWith("private")
+          || (sLine.startsWith("enum") && !sLine.endsWith(")")) )
+          && !sLine.contains(';')
+        ) || sLine.endsWith('=')) {
         addSemicolon = true;
 //        processCommand(QSynedit::EditCommand::Char,';');
     }
@@ -3782,13 +3782,11 @@ bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
     else
         syntaxer()->setState(document()->getSyntaxState(y-1));
     syntaxer()->setLine(document()->getLine(y),y);
-//    qDebug()<<x<<document()->getLine(y).length();
     QSynedit::SyntaxState state = syntaxer()->getState();
     while(!syntaxer()->eol()) {
         int start = syntaxer()->getTokenPos();
         QString token = syntaxer()->getToken();
         int end = start + token.length();
-//        qDebug()<<syntaxer()->getToken()<<start<<end;
         if (end>=x)
             break;
         state = syntaxer()->getState();
@@ -3798,44 +3796,6 @@ bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
     return state.parenthesisLevel>0;
 
 
-//    bool result = false;
-//    QString s = document()->getLine(y);
-//    int posY = y;
-//    int posX = std::min(x,s.length()-1); // x is started from 1
-//    int bracketLevel=0;
-
-//    while (true) {
-//        while (posX < 0) {
-//            posY--;
-//            if (posY < 0)
-//                return false;
-//            s = document()->getLine(posY);
-//            posX = s.length()-1;
-//        }
-//        if (s[posX] == '>'
-//                || s[posX] == ']') {
-//            bracketLevel++;
-//        } else if (s[posX] == '<'
-//                   || s[posX] == '[') {
-//            bracketLevel--;
-//        } else if (bracketLevel==0) {
-//            switch (s[posX].unicode()) {
-//            case '(':
-//                return true;
-//            case ';':
-//            case '{':
-//                return false;
-//            }
-//            if (!(isIdentChar(s[posX])
-//                  || s[posX] == ' '
-//                  || s[posX] == '\t'
-//                  || s[posX] == '*'
-//                  || s[posX] == '&'))
-//                break;;
-//        }
-//        posX--;
-//    }
-//    return result;
 }
 
 void Editor::completionInsert(bool appendFunc)
