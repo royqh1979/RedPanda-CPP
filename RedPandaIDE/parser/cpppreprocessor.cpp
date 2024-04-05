@@ -834,18 +834,6 @@ void CppPreprocessor::openInclude(QString fileName)
         innerMostFile->branches = mBranchResults.count();
     }
 
-//    // Add the new file to the includes of the current file
-//    // Only add items to the include list of the given file if the file hasn't been scanned yet
-//    // The above is fixed by checking for duplicates.
-//    // The proper way would be to do backtracking of files we have FINISHED scanned.
-//    // These are not the same files as the ones in fScannedFiles. We have STARTED scanning these.
-//    {
-//    if Assigned(fCurrentIncludes) then
-//      with fCurrentIncludes^ do
-//        if not ContainsText(IncludeFiles, FileName) then
-//          IncludeFiles := IncludeFiles + AnsiQuotedStr(FileName, '"') + ',';
-//    }
-
     // Create and add new buffer/position
     PParsedFile parsedFile = std::make_shared<ParsedFile>();
     parsedFile->index = 0;
