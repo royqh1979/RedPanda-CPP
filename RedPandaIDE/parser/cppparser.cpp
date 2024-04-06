@@ -154,13 +154,7 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, const Q
         return result;
 
     QStringList expression = splitExpression(phrase);
-    PStatement scopeStatement = doFindScopeStatement(fileName,line);
-    int pos = 0;
-    PEvalStatement evalStatement = doEvalExpression(fileName, expression, pos, scopeStatement, PEvalStatement(), true, true);
-    if (!evalStatement)
-        return result;
-    PStatement statement = evalStatement->baseStatement;
-
+    PStatement statement = doFindStatementOf(fileName, expression, line);
     if (!statement)
         return result;
     if (statement->kind == StatementKind::Preprocessor) {
@@ -5814,7 +5808,8 @@ PStatement CppParser::doParseEvalTypeInfo(
         }
         position--;
     }
-    typeStatement = doFindStatementOf(fileName,baseType,scope);
+    QStringList expression = splitExpression(baseType);
+    typeStatement = doFindStatementOf(fileName,expression,scope);
     PStatement effectiveTypeStatement = typeStatement;
     int level=0;
     while (effectiveTypeStatement && (effectiveTypeStatement->kind == StatementKind::Typedef

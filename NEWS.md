@@ -123,6 +123,7 @@ Red Panda C++ Version 2.27
   - fix: Don't show function prototype tip for function name that contains more than one namespace;
   - fix: Compiler set options "Check for stack smashing attacks (-fstack-protector)" was not correctly applied when compiling.
   - fix: can't jump to definition/declaration for symbols in using alias statement like "using ::printf".
+  - fix: Don't show completion suggestion for members of variable which type name has namespace alias;
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
