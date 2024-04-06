@@ -224,7 +224,7 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
-        for (const PFileIncludes& fileIncludes:mIncludesList) {
+        for (const PParsedFileInfo& fileIncludes:mIncludesList) {
             stream<<fileIncludes->baseFile<<" : "
         #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
@@ -478,7 +478,7 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     if (fileName.isEmpty())
         return;
 
-    PFileIncludes oldCurrentIncludes = mCurrentIncludes;
+    PParsedFileInfo oldCurrentIncludes = mCurrentIncludes;
     openInclude(fileName);
 }
 
@@ -803,7 +803,7 @@ void CppPreprocessor::removeGCCAttribute(const QString &line, QString &newLine, 
 
 void CppPreprocessor::openInclude(QString fileName)
 {
-    PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
+    PParsedFileInfo fileIncludes = getFileIncludesEntry(fileName);
     if (fileIncludes) {
         fileName = fileIncludes->baseFile;
     } else {
@@ -847,7 +847,7 @@ void CppPreprocessor::openInclude(QString fileName)
     mCurrentIncludes = getFileIncludesEntry(fileName);
     if (!mCurrentIncludes) {
         // do NOT create a new item for a file that's already in the list
-        mCurrentIncludes = std::make_shared<FileIncludes>();
+        mCurrentIncludes = std::make_shared<ParsedFileInfo>();
         mCurrentIncludes->baseFile = fileName;
         mIncludesList.insert(fileName,mCurrentIncludes);
     }
@@ -872,7 +872,7 @@ void CppPreprocessor::openInclude(QString fileName)
     } else {
         //add defines of already parsed including headers;
         addDefinesInFile(fileName);
-        PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
+        PParsedFileInfo fileIncludes = getFileIncludesEntry(fileName);
         if (fileIncludes) {
             for (PParsedFile& file:mIncludes) {
                 foreach (const QString& incFile,fileIncludes->includeFiles.keys()) {
@@ -959,7 +959,7 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
         }
     }
 
-    PFileIncludes fileIncludes = getFileIncludesEntry(fileName);
+    PParsedFileInfo fileIncludes = getFileIncludesEntry(fileName);
     if (fileIncludes) {
         foreach (const QString& file, fileIncludes->includeFiles.keys()) {
             addDefinesInFile(file);

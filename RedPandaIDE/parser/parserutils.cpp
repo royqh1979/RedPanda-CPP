@@ -767,7 +767,7 @@ bool isTypeKind(StatementKind kind)
     }
 }
 
-bool FileIncludes::isLineVisible(int line)
+bool ParsedFileInfo::isLineVisible(int line)
 {
     int lastI=-1;
     foreach(int i,branches.keys()) {

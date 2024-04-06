@@ -317,7 +317,7 @@ struct ClassInheritanceInfo {
 
 using PClassInheritanceInfo = std::shared_ptr<ClassInheritanceInfo>;
 
-struct FileIncludes {
+struct ParsedFileInfo {
     QString baseFile;
     QMap<QString, bool> includeFiles; // true means the file is directly included, false means included indirectly
     QStringList directIncludes; //
@@ -329,7 +329,7 @@ struct FileIncludes {
     QList<std::weak_ptr<ClassInheritanceInfo>> handledInheritances;
     bool isLineVisible(int line);
 };
-using PFileIncludes = std::shared_ptr<FileIncludes>;
+using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;
 
 extern QStringList CppDirectives;
 extern QStringList JavadocTags;
