@@ -68,6 +68,7 @@ void EnvironmentAppearanceWidget::doSave()
 {
     if (pSettings->environment().theme()!=ui->cbTheme->currentData().toString()) {
         ThemeManager themeManager;
+        themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
         PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
         if (appTheme && !appTheme->defaultColorScheme().isEmpty()) {
             pSettings->editor().setColorScheme(appTheme->defaultColorScheme());
@@ -93,6 +94,7 @@ void EnvironmentAppearanceWidget::doSave()
 void EnvironmentAppearanceWidget::init()
 {
     ThemeManager themeManager;
+    themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
     QList<PAppTheme> appThemes = themeManager.getThemes();
     foreach(const PAppTheme& appTheme, appThemes) {
         ui->cbTheme->addItem(appTheme->displayName(),appTheme->name());
@@ -111,6 +113,7 @@ void EnvironmentAppearanceWidget::init()
 void EnvironmentAppearanceWidget::on_cbTheme_currentIndexChanged(int /* index */)
 {
     ThemeManager themeManager;
+    themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
     PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
     if (appTheme && !appTheme->defaultIconSet().isEmpty()) {
         for (int i=0; i<ui->cbIconSet->count();i++) {
