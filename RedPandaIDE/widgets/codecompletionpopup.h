@@ -30,7 +30,7 @@ public:
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     PStatement statement(const QModelIndex &index) const;
-    QPixmap statementIcon(const QModelIndex &index) const;
+    QPixmap statementIcon(const QModelIndex &index, int size) const;
     void notifyUpdated();
 
 private:

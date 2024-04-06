@@ -1300,10 +1300,6 @@ QVariant CodeCompletionListModel::data(const QModelIndex &index, int role) const
         PStatement statement = mStatements->at(index.row());
         return statement->command;
         }
-    case Qt::DecorationRole:{
-        PStatement statement = mStatements->at(index.row());
-        return pIconsManager->getPixmapForStatement(statement);
-    }
     }
     return QVariant();
 }
@@ -1317,14 +1313,14 @@ PStatement CodeCompletionListModel::statement(const QModelIndex &index) const
     return mStatements->at(index.row());
 }
 
-QPixmap CodeCompletionListModel::statementIcon(const QModelIndex &index) const
+QPixmap CodeCompletionListModel::statementIcon(const QModelIndex &index, int size) const
 {
     if (!index.isValid())
         return QPixmap();
     if (index.row()>=mStatements->count())
         return QPixmap();
     PStatement statement = mStatements->at(index.row());
-    return pIconsManager->getPixmapForStatement(statement);
+    return pIconsManager->getPixmapForStatement(statement, size);
 }
 
 void CodeCompletionListModel::notifyUpdated()
@@ -1348,7 +1344,7 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
         if (option.state & QStyle::State_Selected) {
             painter->fillRect(option.rect, mCurrentSelectionColor);
         }
-        QPixmap icon = mModel->statementIcon(index);
+        QPixmap icon = mModel->statementIcon(index, QFontMetrics(font()).height());
         int x=option.rect.left();
         if (!icon.isNull()) {
             qreal dpr=icon.devicePixelRatioF();
@@ -1422,7 +1418,7 @@ void CodeCompletionListItemDelegate::setFont(const QFont &newFont)
 QSize CodeCompletionListItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     QSize size = QStyledItemDelegate::sizeHint(option, index);
-    size.setHeight(size.height()*mLineHeightFactor);
+    size.setHeight(QFontMetrics(mFont).height()*mLineHeightFactor);
     return size;
 }
 

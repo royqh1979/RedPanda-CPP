@@ -643,11 +643,11 @@ public:
     class CodeCompletion: public _Base {
     public:
         explicit CodeCompletion(Settings *settings);
-        int width() const;
-        void setWidth(int newWidth);
+        int widthInColumns() const;
+        void setWidthInColumns(int newWidth);
 
-        int height() const;
-        void setHeight(int newHeight);
+        int heightInLines() const;
+        void setHeightInLines(int newHeight);
 
         bool enabled() const;
         void setEnabled(bool newEnabled);
@@ -695,8 +695,8 @@ public:
         void setShareParser(bool newShareParser);
 
     private:
-        int mWidth;
-        int mHeight;
+        int mWidthInColumns;
+        int mHeightInLines;
         bool mEnabled;
         bool mParseLocalHeaders;
         bool mParseGlobalHeaders;

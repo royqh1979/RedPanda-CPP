@@ -547,7 +547,7 @@ void MainWindow::updateStatusbarForLineCol(bool clear)
 
 void MainWindow::updateEditorSettings()
 {
-    pIconsManager->updateEditorGuttorIcons(
+    pIconsManager->updateEditorGutterIcons(
                 pSettings->environment().iconSet(),
                 calIconSize(pSettings->editor().fontName(),pSettings->editor().fontSize())
                 );

@@ -303,6 +303,8 @@ private:
     void updateHoverLink(int line);
     void cancelHoverLink();
 
+    QSize calcCompletionPopupSize();
+
 private:
     bool mInited;
     QDateTime mBackupTime;
