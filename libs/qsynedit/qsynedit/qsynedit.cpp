@@ -16,7 +16,7 @@
  */
 #include "qsynedit.h"
 #include "document.h"
-#include "syntaxer/syntaxer.h""
+#include "syntaxer/syntaxer.h"
 #include <QApplication>
 #include <QFontMetrics>
 #include <algorithm>

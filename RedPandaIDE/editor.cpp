@@ -2423,6 +2423,8 @@ QStringList Editor::getExpressionAtPosition(
         }
         for (int i=tokens.count()-1;i>=0;i--) {
             QString token = tokens[i];
+            if (token=="using")
+                return result;
             switch(lastSymbolType) {
             case LastSymbolType::ScopeResolutionOperator: //before '::'
                 if (token==">") {
