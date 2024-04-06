@@ -173,7 +173,7 @@ void CompilerInfo::prepareCompilerOptions()
     addOption(CC_CMD_OPT_WARNING_AS_ERROR, QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, "-Werror");
     addOption(CC_CMD_OPT_ABORT_ON_ERROR , QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, "-Wfatal-errors");
     sl.clear();
-    sl.append(QPair<QString,QString>("Normal"," "));
+    sl.append(QPair<QString,QString>("Normal",""));
     sl.append(QPair<QString,QString>("Strong","-strong"));
     sl.append(QPair<QString,QString>("All","-all"));
     addOption(CC_CMD_OPT_STACK_PROTECTOR , QObject::tr("Check for stack smashing attacks (-fstack-protector)"), groupName, false, false, true, "-fstack-protector", CompilerOptionType::Choice, sl);
