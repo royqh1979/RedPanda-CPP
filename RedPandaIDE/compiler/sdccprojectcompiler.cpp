@@ -219,11 +219,11 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
         QString objStr = escapeFilenameForMakefilePrerequisite(shortFileName);
         // if we have scanned it, use scanned info
         if (parser && parser->fileScanned(unit->fileName())) {
-            QSet<QString> fileIncludes = parser->getIncludedFiles(unit->fileName());
+            QSet<QString> includedFiles = parser->getIncludedFiles(unit->fileName());
             foreach(const PProjectUnit &unit2, projectUnits) {
                 if (unit2==unit)
                     continue;
-                if (fileIncludes.contains(unit2->fileName())) {
+                if (includedFiles.contains(unit2->fileName())) {
                     QString header = extractRelativePath(mProject->makeFileName(),unit2->fileName());
                     objStr = objStr + ' ' + escapeFilenameForMakefilePrerequisite(header);
                 }

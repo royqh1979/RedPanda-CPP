@@ -437,8 +437,6 @@ QString CppTokenizer::getPreprocessor()
 QString CppTokenizer::getWord()
 {
     bool bFoundTemplate = false;
-    //  bIsSmartPointer:=False;
-
     // Skip spaces
     skipToNextToken();
 

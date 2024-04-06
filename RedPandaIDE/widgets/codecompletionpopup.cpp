@@ -88,7 +88,6 @@ void CodeCompletionPopup::prepareSearch(
     QMutexLocker locker(&mMutex);
     if (!isEnabled())
         return;
-    //Screen.Cursor := crHourglass;
     QCursor oldCursor = cursor();
     setCursor(Qt::CursorShape::WaitCursor);
 

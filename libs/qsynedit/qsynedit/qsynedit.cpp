@@ -63,7 +63,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mFontDummy.setStyleStrategy(QFont::PreferAntialias);
     mDocument = std::make_shared<Document>(mFontDummy, this);
 
-    //fPlugins := TList.Create;
     mMouseMoved = false;
     mMouseOrigin = QPoint(0,0);
     mUndoing = false;
@@ -103,11 +102,7 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mGutter.setRightOffset(21);
     mGutter.connect(&mGutter, &Gutter::changed, this, &QSynEdit::onGutterChanged);
     mGutterWidth = mGutter.realGutterWidth(charWidth());
-    //ControlStyle := ControlStyle + [csOpaque, csSetCaption, csNeedsBorderPaint];
-    //Height := 150;
-    //Width := 200;
     this->setCursor(Qt::CursorShape::IBeamCursor);
-    //TabStop := True;
     mInserting = true;
     mLineSpacingFactor = 1.0;
 
@@ -121,9 +116,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
 
     //stop qt to auto fill background
     setAutoFillBackground(false);
-    //fFocusList := TList.Create;
-    //fKbdHandler := TSynEditKbdHandler.Create;
-    //fMarkList.OnChange := MarkListChange;
     setDefaultKeystrokes();
     mRightEdgeColor = Qt::lightGray;
 
@@ -1158,7 +1150,6 @@ void QSynEdit::processGutterClick(QMouseEvent *event)
         PCodeFoldingRange foldRange = foldStartAtLine(line);
         if (foldRange) {
             // See if we actually clicked on the rectangle...
-            //rect.Left := Gutter.RealGutterWidth(CharWidth) - Gutter.RightOffset;
             QRect rect;
             rect.setLeft(mGutterWidth - mGutter.rightOffset());
             rect.setRight(rect.left() + mGutter.rightOffset() - 4);

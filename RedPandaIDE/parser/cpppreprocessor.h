@@ -41,7 +41,7 @@ struct ParsedFile {
     QString fileName; // Record filename, but not used now
     QStringList buffer; // do not concat them all
     int branches; //branch levels;
-    PParsedFileInfo fileIncludes; // includes of this file
+    PParsedFileInfo fileInfo; // info of this file
 };
 using PParsedFile = std::shared_ptr<ParsedFile>;
 
@@ -91,12 +91,12 @@ public:
         return mResult;
     };
 
-    PParsedFileInfo findFileIncludes(const QString& fileName) const {
-        return mIncludesList.value(fileName);
+    PParsedFileInfo findFileInfo(const QString& fileName) const {
+        return mFileInfos.value(fileName);
     }
 
     void removeFileIncludes(const QString& fileName) {
-        mIncludesList.remove(fileName);
+        mFileInfos.remove(fileName);
     }
 
     bool fileScanned(const QString& fileName) const {
@@ -169,7 +169,7 @@ private:
     }
     void setCurrentBranch(BranchResult value){
         if (!sameResultWithCurrentBranch(value)) {
-            mCurrentIncludes->branches.insert(mIndex+1,value==BranchResult::isTrue);
+            mCurrentFileInfo->branches.insert(mIndex+1,value==BranchResult::isTrue);
         }
         mBranchResults.append(value);
     }
@@ -179,12 +179,8 @@ private:
             mBranchResults.pop_back();
         }
         if (!sameResultWithCurrentBranch(value)) {
-            mCurrentIncludes->branches.insert(mIndex,getCurrentBranch()==BranchResult::isTrue);
+            mCurrentFileInfo->branches.insert(mIndex,getCurrentBranch()==BranchResult::isTrue);
         }
-    }
-    // include stuff
-    PParsedFileInfo getFileIncludesEntry(const QString& fileName){
-        return mIncludesList.value(fileName,PParsedFileInfo());
     }
     void addDefinesInFile(const QString& fileName);
     void addDefineByParts(const QString& name, const QString& args,
@@ -262,7 +258,7 @@ private:
     QString mFileName;
     QStringList mBuffer;
     QStringList mResult;
-    PParsedFileInfo mCurrentIncludes;
+    PParsedFileInfo mCurrentFileInfo;
     int mPreProcIndex;    
     QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
     QList<BranchResult> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
@@ -272,7 +268,7 @@ private:
 
     //Result across processings.
     //used by parser even preprocess finished
-    QHash<QString,PParsedFileInfo> mIncludesList;
+    QHash<QString, PParsedFileInfo> mFileInfos;
     QHash<QString, PDefineMap> mFileDefines; //dictionary to save defines for each headerfile;
     QHash<QString, PDefineMap> mFileUndefines; //dictionary to save defines for each headerfile;
     QSet<QString> mScannedFiles;

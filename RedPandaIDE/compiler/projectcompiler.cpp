@@ -384,11 +384,11 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         QString objStr = escapeFilenameForMakefilePrerequisite(shortFileName);
         // if we have scanned it, use scanned info
         if (parser && parser->fileScanned(unit->fileName())) {
-            QSet<QString> fileIncludes = parser->getIncludedFiles(unit->fileName());
+            QSet<QString> includedFiles = parser->getIncludedFiles(unit->fileName());
             foreach(const PProjectUnit &unit2, projectUnits) {
                 if (unit2==unit)
                     continue;
-                if (fileIncludes.contains(unit2->fileName())) {
+                if (includedFiles.contains(unit2->fileName())) {
                     if (mProject->options().usePrecompiledHeader &&
                            unit2->fileName() == mProject->options().precompiledHeader)
                         precompileStr = " $(PCH) ";

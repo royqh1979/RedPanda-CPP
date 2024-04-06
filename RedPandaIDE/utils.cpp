@@ -238,9 +238,6 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
         return;
     // Configure parser
     parser->resetParser();
-    //paser->enabled = pSettings-> devCodeCompletion.Enabled;
-//    CppParser.ParseLocalHeaders := devCodeCompletion.ParseLocalHeaders;
-//    CppParser.ParseGlobalHeaders := devCodeCompletion.ParseGlobalHeaders;
     parser->setEnabled(true);
     parser->setParseGlobalHeaders(true);
     parser->setParseLocalHeaders(true);

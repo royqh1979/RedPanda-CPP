@@ -5940,10 +5940,6 @@ void MainWindow::onCompileIssue(PCompileIssue issue)
         return;
     ui->tableIssues->addIssue(issue);
 
-    // Update tab caption
-//    if CompilerOutput.Items.Count = 1 then
-//      CompSheet.Caption := Lang[ID_SHEET_COMP] + ' (' + IntToStr(CompilerOutput.Items.Count) + ')';
-
     if (issue->type == CompileIssueType::Error || issue->type ==
             CompileIssueType::Warning) {
         Editor* e = mEditorList->getOpenedEditorByFilename(issue->filename);
@@ -7183,8 +7179,6 @@ void MainWindow::on_actionNew_Project_triggered()
             }
         }
 
-//     if cbDefault.Checked then
-//        devData.DefCpp := rbCpp.Checked;
         QDir projectDir = QDir(location);
         if (!projectDir.isEmpty()) {
             if (QMessageBox::question(

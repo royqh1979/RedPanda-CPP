@@ -1307,13 +1307,6 @@ bool Editor::onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgr
         backgroundColor = mBreakpointBackgroundColor;
         return true;
     }
-//    end else if Line = fErrorLine then begin
-//      StrToThemeColor(tc,  devEditor.Syntax.Values[cErr]);
-//      BG := tc.Background;
-//      FG := tc.Foreground;
-//      if (BG <> clNone) or (FG<>clNone) then
-//        Special := TRUE;
-//    end;
     return false;
 }
 
@@ -2789,8 +2782,6 @@ bool Editor::handleParentheseCompletion()
         }
         return true;
     }
-//    if (status == QuoteStatus::NotQuote) && FunctionTipAllowed then
-    //        fFunctionTip.Activated := true;
     return false;
 }
 
@@ -4150,7 +4141,6 @@ QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/
     } else {  // hard defines
         result = mParser->prettyPrintStatement(statement, mFilename);
     }
-//    Result := StringReplace(Result, '|', #5, [rfReplaceAll]);
     return result;
 }
 
