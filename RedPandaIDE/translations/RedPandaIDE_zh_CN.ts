@@ -3887,7 +3887,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+1"/>
         <source>Broken braces, indented blocks.</source>
-        <translation>花括号短号，代码段缩进</translation>
+        <translation>花括号断行，代码段缩进</translation>
     </message>
     <message>
         <location line="+5"/>
