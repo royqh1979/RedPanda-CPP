@@ -121,6 +121,7 @@ Red Panda C++ Version 2.27
   - fix: Can't save changes in project options -> compiler set , after base compiler set was changed.
   - fix: Project options -> file doesn't work.
   - fix: Don't show function prototype tip for function name that contains more than one namespace;
+  - fix: Compiler set options "Check for stack smashing attacks (-fstack-protector)" was not correctly applied when compiling.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
