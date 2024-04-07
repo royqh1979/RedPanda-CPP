@@ -41,7 +41,7 @@ IconsManager::IconsManager(QObject *parent) : QObject(parent)
     mMakeDisabledIconDarker = false;
 }
 
-void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
+void IconsManager::updateEditorGutterIcons(const QString& iconSet,int size)
 {
     QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"editor");
     updateMakeDisabledIconDarker(iconSet);
@@ -54,29 +54,12 @@ void IconsManager::updateEditorGuttorIcons(const QString& iconSet,int size)
 
 void IconsManager::updateParserIcons(const QString &iconSet, int size)
 {
-    QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"classparser");
-    updateMakeDisabledIconDarker(iconSet);
-    mIconPixmaps.insert(PARSER_TYPE, createSVGIcon(iconFolder+"type.svg",size,size));
-    mIconPixmaps.insert(PARSER_CLASS, createSVGIcon(iconFolder+"class.svg",size,size));
-    mIconPixmaps.insert(PARSER_NAMESPACE, createSVGIcon(iconFolder+"namespace.svg",size,size));
-    mIconPixmaps.insert(PARSER_DEFINE, createSVGIcon(iconFolder+"define.svg",size,size));
-    mIconPixmaps.insert(PARSER_ENUM, createSVGIcon(iconFolder+"enum.svg",size,size));;
-    mIconPixmaps.insert(PARSER_GLOBAL_METHOD, createSVGIcon(iconFolder+"global_method.svg",size,size));
-    mIconPixmaps.insert(PARSER_INHERITED_PROTECTED_METHOD, createSVGIcon(iconFolder+"method_inherited_protected.svg",size,size));
-    mIconPixmaps.insert(PARSER_INHERITED_METHOD, createSVGIcon(iconFolder+"method_inherited.svg",size,size));
-    mIconPixmaps.insert(PARSER_PROTECTED_METHOD, createSVGIcon(iconFolder+"method_protected.svg",size,size));
-    mIconPixmaps.insert(PARSER_PUBLIC_METHOD, createSVGIcon(iconFolder+"method_public.svg",size,size));
-    mIconPixmaps.insert(PARSER_PRIVATE_METHOD, createSVGIcon(iconFolder+"method_private.svg",size,size));
-    mIconPixmaps.insert(PARSER_GLOBAL_VAR, createSVGIcon(iconFolder+"global.svg",size,size));
-    mIconPixmaps.insert(PARSER_INHERITED_PROTECTD_VAR, createSVGIcon(iconFolder+"var_inherited_protected.svg",size,size));
-    mIconPixmaps.insert(PARSER_INHERITED_VAR, createSVGIcon(iconFolder+"var_inherited.svg",size,size));
-    mIconPixmaps.insert(PARSER_PROTECTED_VAR, createSVGIcon(iconFolder+"var_protected.svg",size,size));
-    mIconPixmaps.insert(PARSER_PUBLIC_VAR, createSVGIcon(iconFolder+"var_public.svg",size,size));
-    mIconPixmaps.insert(PARSER_PRIVATE_VAR, createSVGIcon(iconFolder+"var_private.svg",size,size));
-    mIconPixmaps.insert(PARSER_KEYWORD, createSVGIcon(iconFolder+"keyword.svg",size,size));
-    mIconPixmaps.insert(PARSER_CODE_SNIPPET, createSVGIcon(iconFolder+"code_snippet.svg",size,size));
-    mIconPixmaps.insert(PARSER_LOCAL_VAR, createSVGIcon(iconFolder+"var.svg",size,size));
-
+    mParserIconSize = size;
+    mParserIconSet = iconSet;
+    mCachedParserIconSet = "";
+    mCachedParserIconSize = -1;
+    mCachedParserIconPixmaps.clear();
+    updateParserIcons(mIconPixmaps,iconSet,size);
 }
 
 void IconsManager::updateActionIcons(const QString& iconSet, int size)
@@ -281,79 +264,26 @@ void IconsManager::prepareCustomIconSet(const QString &customIconSet)
 
 QPixmap IconsManager::getPixmapForStatement(PStatement statement)
 {
-    if (!statement)
-        return QPixmap();
-    StatementKind kind = getKindOfStatement(statement);
-    switch (kind) {
-    case StatementKind::Typedef:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_TYPE));
-    case StatementKind::Class:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_CLASS));
-    case StatementKind::Namespace:
-    case StatementKind::NamespaceAlias:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_NAMESPACE));
-    case StatementKind::Preprocessor:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_DEFINE));
-    case StatementKind::EnumClassType:
-    case StatementKind::EnumType:
-    case StatementKind::Enum:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_ENUM));
-    case StatementKind::Function:
-    case StatementKind::Constructor:
-    case StatementKind::Destructor:
-        if (statement->scope == StatementScope::Global)
-            return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_METHOD));
-        if (statement->isInherited()) {
-            if (statement->accessibility == StatementAccessibility::Protected) {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
-            } else if (statement->accessibility == StatementAccessibility::Public) {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_METHOD));
-            } else {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_METHOD));
-            }
-        } else {
-            if (statement->accessibility == StatementAccessibility::Protected) {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_METHOD));
-            } else if (statement->accessibility == StatementAccessibility::Public) {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_METHOD));
-            } else {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_METHOD));
-            }
-        }
-        break;
-    case StatementKind::GlobalVariable:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_GLOBAL_VAR));
-    case StatementKind::LocalVariable:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_LOCAL_VAR));
-    case StatementKind::Variable:
-        if (statement->isInherited()) {
-            if (statement->accessibility == StatementAccessibility::Protected) {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_PROTECTD_VAR));
-            } else if (statement->accessibility == StatementAccessibility::Public) {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_INHERITED_VAR));
-            } else {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_VAR));
-            }
-        } else {
-            if (statement->accessibility == StatementAccessibility::Protected) {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_PROTECTED_VAR));
-            } else if (statement->accessibility == StatementAccessibility::Public) {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_PUBLIC_VAR));
-            } else {
-                return *(pIconsManager->getPixmap(IconsManager::PARSER_PRIVATE_VAR));
-            }
-        }
-        break;
-    case StatementKind::Keyword:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_KEYWORD));
-    case StatementKind::UserCodeSnippet:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_CODE_SNIPPET));
-    case StatementKind::Alias:
-        return *(pIconsManager->getPixmap(IconsManager::PARSER_TYPE));
-    default:
-        break;
+    return getPixmapForStatement(mIconPixmaps, statement);
+}
+
+QPixmap IconsManager::getPixmapForStatement(PStatement statement, int size)
+{
+    if (size == mParserIconSize)
+        return getPixmapForStatement(statement);
+    if (mParserIconSet != mCachedParserIconSet
+        || size != mCachedParserIconSize) {
+        mCachedParserIconSet.clear();
+        mCachedParserIconSet = mParserIconSet;
+        mCachedParserIconSize = size;
+        updateParserIcons(mCachedParserIconPixmaps,mParserIconSet,size);
     }
-    return QPixmap();
+    return getPixmapForStatement(mCachedParserIconPixmaps, statement);
+}
+
+IconsManager::PPixmap IconsManager::getPixmap(const QMap<IconName, PPixmap> &iconPixmaps, IconName iconName) const
+{
+    return iconPixmaps.value(iconName, mDefaultIconPixmap);
 }
 
 const QString IconsManager::iconSetsFolder() const
@@ -403,4 +333,107 @@ QList<PIconSet> IconsManager::listIconSets()
 void IconsManager::updateMakeDisabledIconDarker(const QString& iconset )
 {
     mMakeDisabledIconDarker = (iconset == "contrast");
+}
+
+void IconsManager::updateParserIcons(QMap<IconName, PPixmap> &iconPixmaps, const QString &iconSet, int size)
+{
+    QString iconFolder = mIconSetTemplate.arg( iconSetsFolder(),iconSet,"classparser");
+    updateMakeDisabledIconDarker(iconSet);
+    iconPixmaps.insert(PARSER_TYPE, createSVGIcon(iconFolder+"type.svg",size,size));
+    iconPixmaps.insert(PARSER_CLASS, createSVGIcon(iconFolder+"class.svg",size,size));
+    iconPixmaps.insert(PARSER_NAMESPACE, createSVGIcon(iconFolder+"namespace.svg",size,size));
+    iconPixmaps.insert(PARSER_DEFINE, createSVGIcon(iconFolder+"define.svg",size,size));
+    iconPixmaps.insert(PARSER_ENUM, createSVGIcon(iconFolder+"enum.svg",size,size));;
+    iconPixmaps.insert(PARSER_GLOBAL_METHOD, createSVGIcon(iconFolder+"global_method.svg",size,size));
+    iconPixmaps.insert(PARSER_INHERITED_PROTECTED_METHOD, createSVGIcon(iconFolder+"method_inherited_protected.svg",size,size));
+    iconPixmaps.insert(PARSER_INHERITED_METHOD, createSVGIcon(iconFolder+"method_inherited.svg",size,size));
+    iconPixmaps.insert(PARSER_PROTECTED_METHOD, createSVGIcon(iconFolder+"method_protected.svg",size,size));
+    iconPixmaps.insert(PARSER_PUBLIC_METHOD, createSVGIcon(iconFolder+"method_public.svg",size,size));
+    iconPixmaps.insert(PARSER_PRIVATE_METHOD, createSVGIcon(iconFolder+"method_private.svg",size,size));
+    iconPixmaps.insert(PARSER_GLOBAL_VAR, createSVGIcon(iconFolder+"global.svg",size,size));
+    iconPixmaps.insert(PARSER_INHERITED_PROTECTD_VAR, createSVGIcon(iconFolder+"var_inherited_protected.svg",size,size));
+    iconPixmaps.insert(PARSER_INHERITED_VAR, createSVGIcon(iconFolder+"var_inherited.svg",size,size));
+    iconPixmaps.insert(PARSER_PROTECTED_VAR, createSVGIcon(iconFolder+"var_protected.svg",size,size));
+    iconPixmaps.insert(PARSER_PUBLIC_VAR, createSVGIcon(iconFolder+"var_public.svg",size,size));
+    iconPixmaps.insert(PARSER_PRIVATE_VAR, createSVGIcon(iconFolder+"var_private.svg",size,size));
+    iconPixmaps.insert(PARSER_KEYWORD, createSVGIcon(iconFolder+"keyword.svg",size,size));
+    iconPixmaps.insert(PARSER_CODE_SNIPPET, createSVGIcon(iconFolder+"code_snippet.svg",size,size));
+    iconPixmaps.insert(PARSER_LOCAL_VAR, createSVGIcon(iconFolder+"var.svg",size,size));
+}
+
+QPixmap IconsManager::getPixmapForStatement(const QMap<IconName, PPixmap> &iconPixmaps, PStatement statement)
+{
+    if (!statement)
+        return QPixmap();
+    StatementKind kind = getKindOfStatement(statement);
+    switch (kind) {
+    case StatementKind::Typedef:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_TYPE));
+    case StatementKind::Class:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_CLASS));
+    case StatementKind::Namespace:
+    case StatementKind::NamespaceAlias:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_NAMESPACE));
+    case StatementKind::Preprocessor:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_DEFINE));
+    case StatementKind::EnumClassType:
+    case StatementKind::EnumType:
+    case StatementKind::Enum:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_ENUM));
+    case StatementKind::Function:
+    case StatementKind::Constructor:
+    case StatementKind::Destructor:
+        if (statement->scope == StatementScope::Global)
+            return *(getPixmap(iconPixmaps, IconsManager::PARSER_GLOBAL_METHOD));
+        if (statement->isInherited()) {
+            if (statement->accessibility == StatementAccessibility::Protected) {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_INHERITED_PROTECTED_METHOD));
+            } else if (statement->accessibility == StatementAccessibility::Public) {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_INHERITED_METHOD));
+            } else {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_PRIVATE_METHOD));
+            }
+        } else {
+            if (statement->accessibility == StatementAccessibility::Protected) {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_PROTECTED_METHOD));
+            } else if (statement->accessibility == StatementAccessibility::Public) {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_PUBLIC_METHOD));
+            } else {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_PRIVATE_METHOD));
+            }
+        }
+        break;
+    case StatementKind::GlobalVariable:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_GLOBAL_VAR));
+    case StatementKind::LocalVariable:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_LOCAL_VAR));
+    case StatementKind::Variable:
+        if (statement->isInherited()) {
+            if (statement->accessibility == StatementAccessibility::Protected) {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_INHERITED_PROTECTD_VAR));
+            } else if (statement->accessibility == StatementAccessibility::Public) {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_INHERITED_VAR));
+            } else {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_PRIVATE_VAR));
+            }
+        } else {
+            if (statement->accessibility == StatementAccessibility::Protected) {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_PROTECTED_VAR));
+            } else if (statement->accessibility == StatementAccessibility::Public) {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_PUBLIC_VAR));
+            } else {
+                return *(getPixmap(iconPixmaps, IconsManager::PARSER_PRIVATE_VAR));
+            }
+        }
+        break;
+    case StatementKind::Keyword:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_KEYWORD));
+    case StatementKind::UserCodeSnippet:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_CODE_SNIPPET));
+    case StatementKind::Alias:
+        return *(getPixmap(iconPixmaps, IconsManager::PARSER_TYPE));
+    default:
+        break;
+    }
+    return QPixmap();
 }

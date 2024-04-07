@@ -3577,8 +3577,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     mCompletionPopup->setHideSymbolsStartWithUnderline(pSettings->codeCompletion().hideSymbolsStartsWithUnderLine());
     mCompletionPopup->setHideSymbolsStartWithTwoUnderline(pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine());
     mCompletionPopup->setIgnoreCase(pSettings->codeCompletion().ignoreCase());
-    mCompletionPopup->resize(pSettings->codeCompletion().width(),
-                             pSettings->codeCompletion().height());
+    QSize popSize = calcCompletionPopupSize();
+    mCompletionPopup->resize(popSize);
 
     // Position it at the top of the next line
     QPoint popupPos = mapToGlobal(displayCoordToPixels(displayXY()));
@@ -3675,10 +3675,10 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
     p.setY(p.y() + textHeight() + 2);
     mHeaderCompletionPopup->move(mapToGlobal(p));
 
-
     mHeaderCompletionPopup->setIgnoreCase(pSettings->codeCompletion().ignoreCase());
-    mHeaderCompletionPopup->resize(pSettings->codeCompletion().width(),
-                             pSettings->codeCompletion().height());
+
+    QSize popSize = calcCompletionPopupSize();
+    mHeaderCompletionPopup->resize(popSize);
     //Set Font size;
     mHeaderCompletionPopup->setFont(font());
     mHeaderCompletionPopup->setLineHeightFactor(pSettings->editor().lineSpacing());
@@ -4574,6 +4574,22 @@ void Editor::cancelHoverLink()
         invalidateLine(mHoverModifiedLine);
         mHoverModifiedLine = -1;
     }
+}
+
+QSize Editor::calcCompletionPopupSize()
+{
+#if QT_VERSION_MAJOR==5 && QT_VERSION_MINOR < 15
+    int screenHeight = qApp->primaryScreen()->size().height();
+    int screenWidht = qApp->primaryScreen()->size().width;
+#else
+    int screenHeight = screen()->size().height();
+    int screenWidth = screen()->size().width();
+#endif
+    int popWidth = std::min(pSettings->codeCompletion().widthInColumns() * charWidth(),
+                            screenWidth / 2) + 4;
+    int popHeight = std::min(pSettings->codeCompletion().heightInLines() * textHeight(),
+                             (screenHeight / 2 - textHeight() * 2)) + 4;
+    return QSize{popWidth, popHeight};
 }
 
 quint64 Editor::lastFocusOutTime() const

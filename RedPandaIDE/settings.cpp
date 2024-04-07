@@ -4843,30 +4843,30 @@ void Settings::CodeCompletion::setEnabled(bool newEnabled)
     mEnabled = newEnabled;
 }
 
-int Settings::CodeCompletion::height() const
+int Settings::CodeCompletion::heightInLines() const
 {
-    return mHeight;
+    return mHeightInLines;
 }
 
-void Settings::CodeCompletion::setHeight(int newHeight)
+void Settings::CodeCompletion::setHeightInLines(int newHeight)
 {
-    mHeight = newHeight;
+    mHeightInLines = newHeight;
 }
 
-int Settings::CodeCompletion::width() const
+int Settings::CodeCompletion::widthInColumns() const
 {
-    return mWidth;
+    return mWidthInColumns;
 }
 
-void Settings::CodeCompletion::setWidth(int newWidth)
+void Settings::CodeCompletion::setWidthInColumns(int newWidth)
 {
-    mWidth = newWidth;
+    mWidthInColumns = newWidth;
 }
 
 void Settings::CodeCompletion::doSave()
 {
-    saveValue("width",mWidth);
-    saveValue("height",mHeight);
+    saveValue("widthInColumns",mWidthInColumns);
+    saveValue("heightInLines",mHeightInLines);
     saveValue("enabled",mEnabled);
     saveValue("parse_local_headers",mParseLocalHeaders);
     saveValue("parse_global_headers",mParseGlobalHeaders);
@@ -4888,8 +4888,8 @@ void Settings::CodeCompletion::doSave()
 void Settings::CodeCompletion::doLoad()
 {
     //Appearance
-    mWidth = intValue("width",700);
-    mHeight = intValue("height",400);
+    mWidthInColumns = intValue("widthInColumns",30);
+    mHeightInLines = intValue("heightInLines",8);
     mEnabled = boolValue("enabled",true);
     mParseLocalHeaders = boolValue("parse_local_headers",true);
     mParseGlobalHeaders = boolValue("parse_global_headers",true);

@@ -41,8 +41,8 @@ void EditorCodeCompletionWidget::doLoad()
     ui->chkParseLocalFiles->setChecked(pSettings->codeCompletion().parseLocalHeaders());
     ui->chkParseSystemFiles->setChecked(pSettings->codeCompletion().parseGlobalHeaders());
 
-    ui->spinWidth->setValue(pSettings->codeCompletion().width());
-    ui->spinHeight->setValue(pSettings->codeCompletion().height());
+    ui->spinWidth->setValue(pSettings->codeCompletion().widthInColumns());
+    ui->spinHeight->setValue(pSettings->codeCompletion().heightInLines());
 
     ui->chkShowSuggestionWhileTyping->setChecked(pSettings->codeCompletion().showCompletionWhileInput());
     ui->chkRecordUsage->setChecked(pSettings->codeCompletion().recordUsage());
@@ -67,8 +67,8 @@ void EditorCodeCompletionWidget::doSave()
     pSettings->codeCompletion().setParseLocalHeaders(ui->chkParseLocalFiles->isChecked());
     pSettings->codeCompletion().setParseGlobalHeaders(ui->chkParseSystemFiles->isChecked());
 
-    pSettings->codeCompletion().setWidth(ui->spinWidth->value());
-    pSettings->codeCompletion().setHeight(ui->spinHeight->value());
+    pSettings->codeCompletion().setWidthInColumns(ui->spinWidth->value());
+    pSettings->codeCompletion().setHeightInLines(ui->spinHeight->value());
 
     pSettings->codeCompletion().setShowCompletionWhileInput(ui->chkShowSuggestionWhileTyping->isChecked());
     pSettings->codeCompletion().setRecordUsage(ui->chkRecordUsage->isChecked());

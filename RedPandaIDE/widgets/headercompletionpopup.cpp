@@ -454,7 +454,7 @@ void HeaderCompletionListItemDelegate::paint(QPainter *painter, const QStyleOpti
 QSize HeaderCompletionListItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     QSize size = QStyledItemDelegate::sizeHint(option, index);
-    size.setHeight(size.height()*mLineHeightFactor);
+    size.setHeight(QFontMetrics(mFont).height()*mLineHeightFactor);
     return size;
 }
 
