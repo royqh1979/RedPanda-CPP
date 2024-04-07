@@ -1344,7 +1344,9 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
         if (option.state & QStyle::State_Selected) {
             painter->fillRect(option.rect, mCurrentSelectionColor);
         }
-        QPixmap icon = mModel->statementIcon(index, QFontMetrics(font()).height());
+        QFontMetrics fm{font()};
+        int iconSize = fm.ascent();
+        QPixmap icon = mModel->statementIcon(index, iconSize);
         int x=option.rect.left();
         if (!icon.isNull()) {
             qreal dpr=icon.devicePixelRatioF();
