@@ -4,7 +4,7 @@ SetFont "Segoe UI" 11
 Unicode True
 
 !define APP_NAME_EN "Red Panda C++"
-!define APP_NAME_ZH_CN "小熊猫 C++"
+!define APP_NAME_ZH_CN "小熊猫C++"
 !define DISPLAY_NAME "$(StrAppName) ${APP_VERSION} (${ARCH})"
 
 !define INSTALL_NAME "RedPanda-Cpp"

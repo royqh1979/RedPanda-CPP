@@ -1,6 +1,6 @@
 ﻿# 通用开发说明
 
-小熊猫 C++ 需要 Qt 5.15。
+小熊猫C++ 需要 Qt 5.15。
 
 推荐开发环境：
 1. Visual Studio Code。
@@ -42,9 +42,9 @@ qmake 变量：
   - `OpenConsole.exe` 需要 Windows 10 1809 加入的 ConPTY 接口。
 
 关于 ARM 上的 Windows 的注记：
-- 小熊猫 C++ 只能在 Windows 11 ARM64 上构建 ARM64 版，成品应该能在 Windows 10 ARM64 上运行（但没有测试过）。
+- 小熊猫C++ 只能在 Windows 11 ARM64 上构建 ARM64 版，成品应该能在 Windows 10 ARM64 上运行（但没有测试过）。
   - 不支持 ARM64EC（“仿真兼容”）主机，即不能用 ARM64EC 工具链构建小熊猫 C++。
-  - （理论上）支持 ARM64EC 目标，也就是说，如果上游工具链支持 ARM64EC，那么小熊猫 C++ 可以构建 ARM64EC 程序和库。
+  - （理论上）支持 ARM64EC 目标，也就是说，如果上游工具链支持 ARM64EC，那么小熊猫C++ 可以构建 ARM64EC 程序和库。
 - 随着 [Windows 11 Insider Preview Build 25905 弃用 ARM32](https://blogs.windows.com/windows-insider/2023/07/12/announcing-windows-11-insider-preview-build-25905/)，小熊猫 C++ 今后也不会添加 ARM32 支持了。
 
 适用于旧版 Windows（NT 5.1 – 6.0）：
@@ -62,13 +62,13 @@ qmake 变量：
 
 ## MSYS2 的 Qt 库 + MinGW 工具链（推荐）
 
-小熊猫 C++ 应该能在 MSYS2 的 MinGW 工具链上构建，包括 3 个基于 GNU 的环境（MINGW32、MINGW64、UCRT64）中的 GCC 和 Clang，以及 3 个基于 LLVM 的环境（CLANG32、CLANG64、CLANGARM64）中的 Clang，关于环境的详情可参考 [MSYS2 的文档](https://www.msys2.org/docs/environments/)。以下几个工具链测试较充分：
+小熊猫C++ 应该能在 MSYS2 的 MinGW 工具链上构建，包括 3 个基于 GNU 的环境（MINGW32、MINGW64、UCRT64）中的 GCC 和 Clang，以及 3 个基于 LLVM 的环境（CLANG32、CLANG64、CLANGARM64）中的 Clang，关于环境的详情可参考 [MSYS2 的文档](https://www.msys2.org/docs/environments/)。以下几个工具链测试较充分：
 - MINGW32 GCC，
 - MINGW64 GCC，
 - UCRT64 GCC（x64 推荐），
 - CLANGARM64 Clang（ARM64 唯一可用且推荐的工具链）。
 
-小熊猫 C++ 官方版本使用 MINGW32 GCC 和 MINGW64 GCC 构建。
+小熊猫C++ 官方版本使用 MINGW32 GCC 和 MINGW64 GCC 构建。
 
 前置条件：
 
@@ -293,7 +293,7 @@ qmake 变量:
    ```bash
    sudo apt install /tmp/redpanda-cpp_*.deb
    ```
-4. 运行小熊猫 C++：
+4. 运行小熊猫C++：
    ```bash
    RedPandaIDE
    ```
@@ -367,7 +367,7 @@ Windows 宿主的额外要求：
    - Alpine Linux：`~/packages/unsupported/$(uname -m)/redpanda-cpp-git-*.apk`
    - Arch Linux：`/tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst`
    - Fedora、openSUSE：`~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm`
-4. 运行小熊猫 C++：
+4. 运行小熊猫C++：
    ```bash
    RedPandaIDE
    ```
@@ -392,7 +392,7 @@ Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cp
 
 ## 异架构的模拟本机构建（emulated native build）
 
-可以借助 QEMU 用户空间模拟，运行目标架构的本机工具链，来构建小熊猫 C++。
+可以借助 QEMU 用户空间模拟，运行目标架构的本机工具链，来构建小熊猫C++。
 
 注意：始终**在容器或 jail 中**运行模拟本机构建，因为混用不同架构的程序和库可能会损坏系统。
 

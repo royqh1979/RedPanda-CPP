@@ -1,5 +1,5 @@
 # RedPanda C++ 
-小熊猫 C++ (曾经用过的名称: 小熊猫 Dev-C++ 7) 是一款快速、轻量、开源并且跨平台的C/C++/GNU的编译工具。(Assembly IDE).
+小熊猫C++ (曾经用过的名称: 小熊猫Dev-C++ 7) 是一款快速、轻量、开源并且跨平台的C/C++/GNU的编译工具。(Assembly IDE).
 
 简体中文网站: [http://royqh.net/redpandacpp](http://royqh.net/redpandacpp)
 
