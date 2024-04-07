@@ -127,6 +127,7 @@ Red Panda C++ Version 2.27
   - fix: Theme manager not correctly inited in options dialog / environment / appearance.  
   - enhancement: Size of icons in the completion popup changes with the editor font size.
   - change: Completion popup size settings are based on editor's char width/line height.
+  - change: Remove "limit for copy" and "limit for undo" options.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

@@ -705,26 +705,6 @@ void Settings::Editor::setAutoDetectFileEncoding(bool newAutoDetectFileEncoding)
     mAutoDetectFileEncoding = newAutoDetectFileEncoding;
 }
 
-int Settings::Editor::undoLimit() const
-{
-    return mUndoLimit;
-}
-
-void Settings::Editor::setUndoLimit(int newUndoLimit)
-{
-    mUndoLimit = newUndoLimit;
-}
-
-int Settings::Editor::undoMemoryUsage() const
-{
-    return mUndoMemoryUsage;
-}
-
-void Settings::Editor::setUndoMemoryUsage(int newUndoMemoryUsage)
-{
-    mUndoMemoryUsage = newUndoMemoryUsage;
-}
-
 bool Settings::Editor::autoFormatWhenSaved() const
 {
     return mAutoFormatWhenSaved;
@@ -1125,36 +1105,6 @@ void Settings::Editor::setCopyRTFUseBackground(bool copyRTFUseBackground)
     mCopyRTFUseBackground = copyRTFUseBackground;
 }
 
-int Settings::Editor::copyLineLimits() const
-{
-    return mCopyLineLimits;
-}
-
-void Settings::Editor::setCopyLineLimits(int copyLineLimits)
-{
-    mCopyLineLimits = copyLineLimits;
-}
-
-int Settings::Editor::copyCharLimits() const
-{
-    return mCopyCharLimits;
-}
-
-void Settings::Editor::setCopyCharLimits(int copyCharLimits)
-{
-    mCopyCharLimits = copyCharLimits;
-}
-
-bool Settings::Editor::copySizeLimit() const
-{
-    return mCopySizeLimit;
-}
-
-void Settings::Editor::setCopySizeLimit(bool copyLimit)
-{
-    mCopySizeLimit = copyLimit;
-}
-
 int Settings::Editor::gutterLeftOffset() const
 {
     return mGutterLeftOffset;
@@ -1365,9 +1315,6 @@ void Settings::Editor::doSave()
     saveValue("gutter_font_only_monospaced",mGutterFontOnlyMonospaced);
 
     //copy
-    saveValue("copy_limit",mCopySizeLimit);
-    saveValue("copy_char_limits",mCopyCharLimits);
-    saveValue("copy_line_limits",mCopyLineLimits);
     saveValue("copy_with_format_as",mCopyWithFormatAs);
     saveValue("copy_rtf_use_background",mCopyRTFUseBackground);
     saveValue("copy_rtf_use_editor_color_scheme",mCopyRTFUseEditorColor);
@@ -1413,8 +1360,6 @@ void Settings::Editor::doSave()
     saveValue("auto_load_last_files",mAutoLoadLastFiles);
     saveValue("default_file_cpp",mDefaultFileCpp);
     saveValue("auto_detect_file_encoding",mAutoDetectFileEncoding);
-    saveValue("undo_limit",mUndoLimit);
-    saveValue("undo_memory_usage", mUndoMemoryUsage);
     saveValue("auto_format_when_saved", mAutoFormatWhenSaved);
     saveValue("remove_trailing_spaces_when_saved",mRemoveTrailingSpacesWhenSaved);
     saveValue("parse_todos",mParseTodos);
@@ -1518,9 +1463,6 @@ void Settings::Editor::doLoad()
     mGutterFontOnlyMonospaced = boolValue("gutter_font_only_monospaced",true);
 
     //copy
-    mCopySizeLimit = boolValue("copy_limit",false);
-    mCopyCharLimits = intValue("copy_char_limits",100);
-    mCopyLineLimits = intValue("copy_line_limits",100000);
 #ifdef Q_OS_WIN
     mCopyWithFormatAs = intValue("copy_with_format_as",1); //html
 #else
@@ -1576,8 +1518,6 @@ void Settings::Editor::doLoad()
     else
         mDefaultEncoding = value("default_encoding", ENCODING_UTF8).toByteArray();
     mAutoDetectFileEncoding = boolValue("auto_detect_file_encoding",true);
-    mUndoLimit = intValue("undo_limit",0);
-    mUndoMemoryUsage = intValue("undo_memory_usage", 0);
     mAutoFormatWhenSaved = boolValue("auto_format_when_saved", false);
     mRemoveTrailingSpacesWhenSaved = boolValue("remove_trailing_spaces_when_saved",false);
     mParseTodos = boolValue("parse_todos",true);

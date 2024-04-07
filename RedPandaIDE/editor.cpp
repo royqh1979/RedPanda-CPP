@@ -1645,21 +1645,6 @@ void Editor::resizeEvent(QResizeEvent *event)
 
 void Editor::copyToClipboard()
 {
-    if (pSettings->editor().copySizeLimit()) {
-        int startLine = blockBegin().line;
-        int endLine = blockEnd().line;
-        if ((endLine-startLine+1) > pSettings->editor().copyLineLimits()) {
-            QMessageBox::critical(pMainWindow,tr("Error"),
-                                     tr("The text to be copied exceeds count limit!"));
-            return;
-        }
-        if ((selText().length()) > pSettings->editor().copyCharLimits() * 1000) {
-            QMessageBox::critical(pMainWindow,tr("Error"),
-                                     tr("The text to be copied exceeds character limit!"));
-            return;
-        }
-    }
-
     switch(pSettings->editor().copyWithFormatAs()) {
     case 1: //HTML
         copyAsHTML();
@@ -1671,20 +1656,6 @@ void Editor::copyToClipboard()
 
 void Editor::cutToClipboard()
 {
-    if (pSettings->editor().copySizeLimit()) {
-        int startLine = blockBegin().line;
-        int endLine = blockEnd().line;
-        if ((endLine-startLine+1) > pSettings->editor().copyLineLimits()) {
-            QMessageBox::critical(pMainWindow,tr("Error"),
-                                     tr("The text to be cut exceeds count limit!"));
-            return;
-        }
-        if ((selText().length()) > pSettings->editor().copyCharLimits() * 1000) {
-            QMessageBox::critical(pMainWindow,tr("Error"),
-                                     tr("The text to be cut exceeds character limit!"));
-            return;
-        }
-    }
     QSynedit::QSynEdit::cutToClipboard();
 }
 
@@ -5433,9 +5404,6 @@ void Editor::applySettings()
 #endif
         ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);
     }
-
-    this->setUndoLimit(pSettings->editor().undoLimit());
-    this->setUndoMemoryUsage(pSettings->editor().undoMemoryUsage());
 
     initAutoBackup();
 

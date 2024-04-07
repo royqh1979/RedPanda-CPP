@@ -1373,16 +1373,12 @@ int DocumentLine::glyphStartChar(int i) const
 
 UndoList::UndoList():QObject()
 {
-    mMaxUndoActions = 1024;
-    mMaxMemoryUsage = 50 * 1024 * 1024;
     mNextChangeNumber = 1;
     mInsideRedo = false;
 
     mBlockChangeNumber=0;
     mBlockLock=0;
     mFullUndoImposible=false;
-    mBlockCount=0;
-    mMemoryUsage=0;
     mLastPoppedItemChangeNumber=0;
     mInitialChangeNumber = 0;
     mLastRestoredItemChangeNumber=0;
@@ -1402,14 +1398,9 @@ void UndoList::addChange(ChangeReason reason, const BufferCoord &startPos,
                 reason,
                 selMode,startPos,endPos,changeText,
                 changeNumber);
-//    qDebug()<<"add change"<<changeNumber<<(int)reason;
     mItems.append(newItem);
-    addMemoryUsage(newItem);
-    ensureMaxEntries();
 
     if (reason!=ChangeReason::GroupBreak && !inBlock()) {
-        mBlockCount++;
-//        qDebug()<<"add"<<mBlockCount;
         emit addedUndo();
     }
 }
@@ -1426,13 +1417,9 @@ void UndoList::restoreChange(PUndoItem item)
 {
     size_t changeNumber = item->changeNumber();
     mItems.append(item);
-    addMemoryUsage(item);
-    ensureMaxEntries();
     if (changeNumber>mNextChangeNumber)
         mNextChangeNumber=changeNumber;
     if (changeNumber!=mLastRestoredItemChangeNumber) {
-//        qDebug()<<"restore"<<mBlockCount;
-        mBlockCount++;
         emit addedUndo();
     }
     mLastRestoredItemChangeNumber=changeNumber;
@@ -1464,9 +1451,7 @@ void UndoList::clear()
     mInitialChangeNumber=0;
     mLastPoppedItemChangeNumber=0;
     mLastRestoredItemChangeNumber=0;
-    mBlockCount=0;
     mBlockLock=0;
-    mMemoryUsage=0;
 }
 
 void UndoList::endBlock()
@@ -1478,8 +1463,6 @@ void UndoList::endBlock()
             size_t iBlockID = mBlockChangeNumber;
             mBlockChangeNumber = 0;
             if (mItems.count() > 0 && peekItem()->changeNumber() == iBlockID) {
-                mBlockCount++;
-//                qDebug()<<"end block"<<mBlockCount;
                 emit addedUndo();
             }
         }
@@ -1494,30 +1477,6 @@ bool UndoList::inBlock()
 unsigned int UndoList::getNextChangeNumber()
 {
     return mNextChangeNumber++;
-}
-
-void UndoList::addMemoryUsage(PUndoItem item)
-{
-    if (!item)
-        return;
-    mMemoryUsage += item->memoryUsage();
-}
-
-void UndoList::reduceMemoryUsage(PUndoItem item)
-{
-    if (!item)
-        return;
-    mMemoryUsage -= item->memoryUsage();
-}
-
-int UndoList::maxMemoryUsage() const
-{
-    return mMaxMemoryUsage;
-}
-
-void UndoList::setMaxMemoryUsage(int newMaxMemoryUsage)
-{
-    mMaxMemoryUsage = newMaxMemoryUsage;
 }
 
 ChangeReason UndoList::lastChangeReason()
@@ -1548,16 +1507,7 @@ PUndoItem UndoList::popItem()
     else {
         PUndoItem item = mItems.last();
 //        qDebug()<<"popped"<<item->changeNumber()<<item->changeText()<<(int)item->changeReason()<<mLastPoppedItemChangeNumber;
-        if (mLastPoppedItemChangeNumber!=item->changeNumber() && item->changeReason()!=ChangeReason::GroupBreak) {
-            mBlockCount--;
-            Q_ASSERT(mBlockCount>=0);
-//            qDebug()<<"pop"<<mBlockCount;
-            if (mBlockCount<0) {
-                mBlockCount=0;
-            }
-        }
         mLastPoppedItemChangeNumber =  item->changeNumber();
-        reduceMemoryUsage(item);
         mItems.removeLast();
         return item;
     }
@@ -1571,19 +1521,6 @@ bool UndoList::canUndo()
 int UndoList::itemCount()
 {
     return mItems.count();
-}
-
-int UndoList::maxUndoActions() const
-{
-    return mMaxUndoActions;
-}
-
-void UndoList::setMaxUndoActions(int maxUndoActions)
-{
-    if (maxUndoActions!=mMaxUndoActions) {
-        mMaxUndoActions = maxUndoActions;
-        ensureMaxEntries();
-    }
 }
 
 bool UndoList::initialState()
@@ -1616,38 +1553,6 @@ void UndoList::setInsideRedo(bool insideRedo)
 bool UndoList::fullUndoImposible() const
 {
     return mFullUndoImposible;
-}
-
-void UndoList::ensureMaxEntries()
-{
-    if (mItems.isEmpty())
-        return;
-//    qDebug()<<QString("-- List Memory: %1 %2").arg(mMemoryUsage).arg(mMaxMemoryUsage);
-    if ((mMaxUndoActions >0 && mBlockCount > mMaxUndoActions)
-         || (mMaxMemoryUsage>0 && mMemoryUsage>mMaxMemoryUsage)){
-        PUndoItem lastItem = mItems.back();
-        mFullUndoImposible = true;
-        while (((mMaxUndoActions >0 && mBlockCount > mMaxUndoActions)
-               || (mMaxMemoryUsage>0 && mMemoryUsage>mMaxMemoryUsage))
-               && !mItems.isEmpty()) {
-            //remove all undo item in block
-            PUndoItem item = mItems.front();
-            size_t changeNumber = item->changeNumber();
-            //we shouldn't drop the newest changes;
-            if (changeNumber == lastItem->changeNumber())
-                break;
-            while (mItems.count()>0) {
-                item = mItems.front();
-                if (item->changeNumber()!=changeNumber)
-                    break;
-                reduceMemoryUsage(item);
-                mItems.removeFirst();
-            }
-            if (item->changeReason()!=ChangeReason::GroupBreak)
-                mBlockCount--;
-      }
-    }
-//    qDebug()<<QString("++ List Memory: %1").arg(mMemoryUsage);
 }
 
 SelectionMode UndoItem::changeSelMode() const

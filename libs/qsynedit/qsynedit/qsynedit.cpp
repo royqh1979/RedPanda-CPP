@@ -6493,17 +6493,6 @@ void QSynEdit::setGutterWidth(int Value)
     }
 }
 
-void QSynEdit::setUndoLimit(int size)
-{
-    mUndoList->setMaxUndoActions(size);
-}
-
-void QSynEdit::setUndoMemoryUsage(int size)
-{
-    mUndoList->setMaxMemoryUsage(size*1024*1024);
-//        mUndoList->setMaxMemoryUsage(size*1024);
-}
-
 void QSynEdit::onBookMarkOptionsChanged()
 {
     invalidateGutter();

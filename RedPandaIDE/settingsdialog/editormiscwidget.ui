@@ -36,58 +36,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_4">
-     <property name="title">
-      <string>Limits for Undo</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="2">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Memory Usage</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QSpinBox" name="spinMaxUndo">
-        <property name="minimum">
-         <number>0</number>
-        </property>
-        <property name="maximum">
-         <number>1000000000</number>
-        </property>
-        <property name="singleStep">
-         <number>50</number>
-        </property>
-        <property name="value">
-         <number>10000</number>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Steps</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QSpinBox" name="spinMaxUndoMemory">
-        <property name="suffix">
-         <string>MB</string>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="value">
-         <number>50</number>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QWidget" name="widget" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <property name="leftMargin">
@@ -256,8 +204,6 @@
   <tabstop>chkReadonlySystemHeaders</tabstop>
   <tabstop>chkLoadLastFiles</tabstop>
   <tabstop>chkParseTodos</tabstop>
-  <tabstop>spinMaxUndo</tabstop>
-  <tabstop>spinMaxUndoMemory</tabstop>
   <tabstop>rbNone</tabstop>
   <tabstop>rbAutoReformat</tabstop>
   <tabstop>rbRemoveTrailingSpaces</tabstop>

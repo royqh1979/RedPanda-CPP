@@ -212,15 +212,6 @@ public:
         int gutterRightOffset() const;
         void setGutterRightOffset(int gutterRightOffset);
 
-        bool copySizeLimit() const;
-        void setCopySizeLimit(bool copyLimit);
-
-        int copyCharLimits() const;
-        void setCopyCharLimits(int copyCharLimits);
-
-        int copyLineLimits() const;
-        void setCopyLineLimits(int copyLineLimits);
-
         bool copyRTFUseBackground() const;
         void setCopyRTFUseBackground(bool copyRTFUseBackground);
 
@@ -362,12 +353,6 @@ public:
         bool autoDetectFileEncoding() const;
         void setAutoDetectFileEncoding(bool newAutoDetectFileEncoding);
 
-        int undoLimit() const;
-        void setUndoLimit(int newUndoLimit);
-
-        int undoMemoryUsage() const;
-        void setUndoMemoryUsage(int newUndoMemoryUsage);
-
         bool autoFormatWhenSaved() const;
         void setAutoFormatWhenSaved(bool newAutoFormatWhenSaved);
 
@@ -471,9 +456,6 @@ public:
         bool mGutterFontOnlyMonospaced;
 
         //copy
-        bool mCopySizeLimit;
-        int mCopyCharLimits;
-        int mCopyLineLimits;
         int mCopyWithFormatAs;
         bool mCopyRTFUseBackground;
         bool mCopyRTFUseEditorColor;
@@ -519,8 +501,6 @@ public:
         bool mReadOnlySytemHeader;
         bool mAutoLoadLastFiles;
         bool mDefaultFileCpp;
-        int mUndoLimit;
-        int mUndoMemoryUsage;
         bool mAutoFormatWhenSaved;
         bool mRemoveTrailingSpacesWhenSaved;
         bool mParseTodos;

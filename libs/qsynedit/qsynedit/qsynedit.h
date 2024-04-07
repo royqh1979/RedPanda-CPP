@@ -355,9 +355,6 @@ public:
         return clientWidth() - mGutterWidth - 2;
     }
 
-    void setUndoLimit(int size);
-    void setUndoMemoryUsage(int size);
-
     int gutterWidth() const;
     void setGutterWidth(int value);
 

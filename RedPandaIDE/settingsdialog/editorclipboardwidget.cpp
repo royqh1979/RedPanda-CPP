@@ -60,10 +60,6 @@ void EditorClipboardWidget::doLoad()
     //pSettings->editor().load();
     //copy
     QString mCopyHTMLColorScheme;
-
-    ui->grpCopySizeLimit->setChecked(pSettings->editor().copySizeLimit());
-    ui->spinCopyCharLimits->setValue(pSettings->editor().copyCharLimits());
-    ui->spinCopyLineLimits->setValue(pSettings->editor().copyLineLimits());
     ui->cbCopyWithFormatAs->setCurrentIndex(std::max(0,std::min(ui->cbCopyWithFormatAs->count(),
                                                                 pSettings->editor().copyWithFormatAs())) );
     ui->chkCopyRTFUseBackground->setChecked(pSettings->editor().copyRTFUseBackground());
@@ -78,9 +74,6 @@ void EditorClipboardWidget::doLoad()
 void EditorClipboardWidget::doSave()
 {
     //copy
-    pSettings->editor().setCopySizeLimit(ui->grpCopySizeLimit->isChecked());
-    pSettings->editor().setCopyCharLimits(ui->spinCopyCharLimits->value());
-    pSettings->editor().setCopyLineLimits(ui->spinCopyLineLimits->value());
     pSettings->editor().setCopyWithFormatAs(ui->cbCopyWithFormatAs->currentIndex());
 
     pSettings->editor().setCopyRTFUseBackground(ui->chkCopyRTFUseBackground->isChecked());

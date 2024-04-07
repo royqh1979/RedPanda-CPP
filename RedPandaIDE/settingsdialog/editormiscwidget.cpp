@@ -64,8 +64,6 @@ void EditorMiscWidget::doLoad()
         }
         ui->cbEncodingDetail->setCurrentText(defaultEncoding);
     }
-    ui->spinMaxUndo->setValue(pSettings->editor().undoLimit());
-    ui->spinMaxUndoMemory->setValue(pSettings->editor().undoMemoryUsage());
     if (pSettings->editor().removeTrailingSpacesWhenSaved())
         ui->rbRemoveTrailingSpaces->setChecked(true);
     else if (pSettings->editor().autoFormatWhenSaved())
@@ -88,8 +86,6 @@ void EditorMiscWidget::doSave()
     } else {
         pSettings->editor().setDefaultEncoding(ui->cbEncoding->currentData().toByteArray());
     }
-    pSettings->editor().setUndoLimit(ui->spinMaxUndo->value());
-    pSettings->editor().setUndoMemoryUsage(ui->spinMaxUndoMemory->value());
     pSettings->editor().setAutoFormatWhenSaved(ui->rbAutoReformat->isChecked());
     pSettings->editor().setRemoveTrailingSpacesWhenSaved(ui->rbRemoveTrailingSpaces->isChecked());
     pSettings->editor().setParseTodos(ui->chkParseTodos->isChecked());

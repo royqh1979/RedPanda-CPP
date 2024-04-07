@@ -54,7 +54,6 @@ void EnvironmentPerformanceWidget::doLoad()
 //    }
 //#endif
     ui->chkEditorsShareParser->setChecked(pSettings->codeCompletion().shareParser());
-    ui->spinMaxUndoMemory->setValue(pSettings->editor().undoMemoryUsage());
 }
 
 void EnvironmentPerformanceWidget::doSave()
@@ -63,6 +62,5 @@ void EnvironmentPerformanceWidget::doSave()
     pSettings->codeCompletion().setShareParser(ui->chkEditorsShareParser->isChecked());
 
     pSettings->codeCompletion().save();
-    pSettings->editor().setUndoMemoryUsage(ui->spinMaxUndoMemory->value());
     pSettings->editor().save();
 }
