@@ -23,7 +23,7 @@ EnvironmentPerformanceWidget::EnvironmentPerformanceWidget(const QString& name, 
     ui(new Ui::EnvironmentPerformanceWidget)
 {
     ui->setupUi(this);
-    ui->chkClearWhenEditorHidden->setVisible(false);
+    //ui->chkClearWhenEditorHidden->setVisible(false);
 }
 
 EnvironmentPerformanceWidget::~EnvironmentPerformanceWidget()
