@@ -1367,13 +1367,14 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
 
             if (item) {
                 foreground = item->foreground();
-                //background = item->background();
+                background = item->background();
                 style.setFlag(QSynedit::FontStyle::fsBold,item->bold());
                 style.setFlag(QSynedit::FontStyle::fsItalic,item->italic());
                 style.setFlag(QSynedit::FontStyle::fsUnderline,item->underlined());
                 style.setFlag(QSynedit::FontStyle::fsStrikeOut,item->strikeout());
             } else {
                 foreground = syntaxer()->identifierAttribute()->foreground();
+                background = syntaxer()->identifierAttribute()->background();
             }
             if (line == mHoverModifiedLine) {
                 QSynedit::BufferCoord p;
