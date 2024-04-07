@@ -1345,7 +1345,7 @@ void CodeCompletionListItemDelegate::paint(QPainter *painter, const QStyleOption
             painter->fillRect(option.rect, mCurrentSelectionColor);
         }
         QFontMetrics fm{font()};
-        int iconSize = fm.ascent();
+        int iconSize = fm.height()*0.8;
         QPixmap icon = mModel->statementIcon(index, iconSize);
         int x=option.rect.left();
         if (!icon.isNull()) {
