@@ -3267,9 +3267,9 @@ void Settings::CompilerSets::findSets()
     QStringList pathList = path.split(PATH_SEPARATOR);
 #ifdef Q_OS_WIN
     pathList = QStringList{
-        mSettings->dirs().appDir() + "/Clang64/bin",
-        mSettings->dirs().appDir() + "/MinGW64/bin",
-        mSettings->dirs().appDir() + "/MinGW32/bin",
+        mSettings->dirs().appDir() + "/clang64/bin",
+        mSettings->dirs().appDir() + "/mingw64/bin",
+        mSettings->dirs().appDir() + "/mingw32/bin",
     } + pathList;
 #endif
     QString folder, canonicalFolder;
@@ -3381,8 +3381,8 @@ void Settings::CompilerSets::loadSets()
         QString msg = QObject::tr("Compiler set not configuared.")
                 +"<br /><br />"
                 +QObject::tr("Would you like Red Panda C++ to search for compilers in the following locations: <BR />'%1'<BR />'%2'? ")
-                .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW32")
-                .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW64");
+                .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "mingw32")
+                .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "mingw64");
 #else
         QString msg = QObject::tr("Compiler set not configuared.")
                 +"<br /><br />"
