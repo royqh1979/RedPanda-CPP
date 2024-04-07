@@ -1580,11 +1580,6 @@ size_t UndoItem::changeNumber() const
     return mChangeNumber;
 }
 
-unsigned int UndoItem::memoryUsage() const
-{
-    return mMemoryUsage;
-}
-
 UndoItem::UndoItem(ChangeReason reason, SelectionMode selMode,
                                  BufferCoord startPos, BufferCoord endPos,
                                  const QStringList& text, int number)
@@ -1599,9 +1594,6 @@ UndoItem::UndoItem(ChangeReason reason, SelectionMode selMode,
     foreach (const QString& s, text) {
         length+=s.length();
     }
-    mMemoryUsage =  length * sizeof(QChar) + text.length() * sizeof(QString)
-            + sizeof(UndoItem);
-//    qDebug()<<mMemoryUsage;
 }
 
 ChangeReason UndoItem::changeReason() const

@@ -656,7 +656,6 @@ private:
     BufferCoord mChangeEndPos;
     QStringList mChangeText;
     size_t mChangeNumber;
-    unsigned int mMemoryUsage;
 public:
     UndoItem(ChangeReason reason,
         SelectionMode selMode,
@@ -671,7 +670,6 @@ public:
     BufferCoord changeEndPos() const;
     QStringList changeText() const;
     size_t changeNumber() const;
-    unsigned int memoryUsage() const;
 };
 
 using PUndoItem = std::shared_ptr<UndoItem>;
