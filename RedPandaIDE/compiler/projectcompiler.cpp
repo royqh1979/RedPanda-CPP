@@ -246,7 +246,9 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
 
     QStringList libraryArguments = getLibraryArguments(FileType::Project);
     QStringList cIncludeArguments = getCIncludeArguments();
+    cIncludeArguments += getProjectIncludeArguments();
     QStringList cxxIncludeArguments = getCppIncludeArguments();
+    cxxIncludeArguments += getProjectIncludeArguments();
 #ifdef Q_OS_WIN
     QStringList resourceArguments = parseArguments(mProject->options().resourceCmd, devCppMacroVariables(), true);
 #endif
