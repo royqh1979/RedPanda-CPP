@@ -4101,8 +4101,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                                         PEvalStatement(),
                                         true,false);
                 if(aliasStatement) {
-                    if (aliasStatement->effectiveTypeStatement) {
-                        addedVar->type = aliasStatement->effectiveTypeStatement->fullName;
+                    if (aliasStatement->typeStatement) {
+                        addedVar->type = aliasStatement->typeStatement->fullName;
                         if (!addedVar->type.endsWith(">"))
                             addedVar->type += aliasStatement->templateParams;
                         if (aliasStatement->typeStatement
@@ -4193,8 +4193,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                                         PEvalStatement(),
                                         true,false);
                 if(aliasStatement  && aliasStatement->effectiveTypeStatement) {
-                    if (aliasStatement->effectiveTypeStatement) {
-                        addedVar->type = aliasStatement->effectiveTypeStatement->fullName;
+                    if (aliasStatement->typeStatement) {
+                        addedVar->type = aliasStatement->typeStatement->fullName;
                         if (!addedVar->type.endsWith(">"))
                             addedVar->type += aliasStatement->templateParams;
                         if (aliasStatement->typeStatement
