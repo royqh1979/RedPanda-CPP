@@ -3203,20 +3203,23 @@ void CppParser::handleNamespace(KeywordType skipType, int maxIndex)
         }
         //qDebug()<<command<<aliasName;
         //namespace alias
-        addStatement(
-            getCurrentScope(),
-            mCurrentFile,
-            aliasName, // name of the alias namespace
-            command, // command
-            "", // args
-            "", // noname args
-            "", // values
-            //mTokenizer[mIndex]^.Line,
-            startLine,
-            StatementKind::NamespaceAlias,
-            getScope(),
-            mCurrentMemberAccessibility,
-            StatementProperty::HasDefinition);
+        if (aliasName != command
+                && aliasName != getFullStatementName(command, getCurrentScope())) {
+            addStatement(
+                getCurrentScope(),
+                mCurrentFile,
+                aliasName, // name of the alias namespace
+                command, // command
+                "", // args
+                "", // noname args
+                "", // values
+                //mTokenizer[mIndex]^.Line,
+                startLine,
+                StatementKind::NamespaceAlias,
+                getScope(),
+                mCurrentMemberAccessibility,
+                StatementProperty::HasDefinition);
+        }
         mIndex++; // skip ;
         return;
     } else if (isInline) {
