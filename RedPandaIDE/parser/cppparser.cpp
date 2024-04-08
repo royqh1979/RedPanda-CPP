@@ -2603,6 +2603,8 @@ PStatement CppParser::getTypeDef(const PStatement& statement,
             || statement->kind == StatementKind::EnumType
             || statement->kind == StatementKind::EnumClassType) {
         return statement;
+    } else if (statement->kind == StatementKind::Constructor) {
+        return statement->parentScope.lock();
     } else if (statement->kind == StatementKind::Typedef) {
         if (statement->type == aType) // prevent infinite loop
             return statement;
