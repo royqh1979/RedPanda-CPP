@@ -130,6 +130,7 @@ Red Panda C++ Version 2.27
   - change: Remove "limit for copy" and "limit for undo" options.
   - fix: Can't find the correct type if current symbol is member of a class that has constructors.
   - fix: Alias a namespace to itself will create infinite loop.
+  - fix: Can't find symbols indirectly included by other files.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
