@@ -324,9 +324,9 @@ public:
     ParsedFileInfo& operator=(const ParsedFileInfo&)=delete;
     void insertBranch(int level, bool branchTrue);
     bool isLineVisible(int line) const;
-    void include(const QString &fileName);
-    void uninclude(const QString &fileName);
-    void directInclude(const QString &fileName);
+    void addInclude(const QString &fileName);
+    void removeInclude(const QString &fileName);
+    void addDirectInclude(const QString &fileName);
     bool including(const QString &fileName) const;
     PStatement findScopeAtLine(int line) const;
     void addStatement(const PStatement &statement);

@@ -778,11 +778,11 @@ void CppPreprocessor::openInclude(QString fileName)
             if (parsedFile->fileInfo->including(fileName)) {
                 alreadyIncluded = true;
             }
-            parsedFile->fileInfo->include(fileName);
+            parsedFile->fileInfo->addInclude(fileName);
         }
         PParsedFile innerMostFile = mIncludes.back();
-        innerMostFile->fileInfo->include(fileName);
-        innerMostFile->fileInfo->directInclude(fileName);
+        innerMostFile->fileInfo->addInclude(fileName);
+        innerMostFile->fileInfo->addDirectInclude(fileName);
         if (alreadyIncluded)
             return;
         // Backup old position if we're entering a new file
@@ -831,7 +831,7 @@ void CppPreprocessor::openInclude(QString fileName)
         if (fileInfo) {
             for (PParsedFile& file:mIncludes) {
                 foreach (const QString& incFile,fileInfo->includes()) {
-                    file->fileInfo->include(incFile);
+                    file->fileInfo->addInclude(incFile);
                 }
             }
         }

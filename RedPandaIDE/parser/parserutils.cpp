@@ -790,7 +790,7 @@ bool ParsedFileInfo::isLineVisible(int line) const
     return lastI<0?true:mBranches[lastI];
 }
 
-void ParsedFileInfo::include(const QString &fileName)
+void ParsedFileInfo::addInclude(const QString &fileName)
 {
     int count = mIncludeCounts.value(fileName,0);
     count++;
@@ -798,7 +798,7 @@ void ParsedFileInfo::include(const QString &fileName)
     mIncludes.insert(fileName);
 }
 
-void ParsedFileInfo::uninclude(const QString &fileName)
+void ParsedFileInfo::removeInclude(const QString &fileName)
 {
     int count = mIncludeCounts.value(fileName,0);
     count--;
@@ -809,7 +809,7 @@ void ParsedFileInfo::uninclude(const QString &fileName)
         mIncludeCounts.insert(fileName,count);
 }
 
-void ParsedFileInfo::directInclude(const QString &fileName)
+void ParsedFileInfo::addDirectInclude(const QString &fileName)
 {
     mDirectIncludes.append(fileName);
 }
