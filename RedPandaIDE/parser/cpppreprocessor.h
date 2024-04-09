@@ -69,16 +69,25 @@ public:
 
     void clearTempResults();
     void getDefineParts(const QString& input, QString &name, QString &args, QString &value);
-    void addHardDefineByLine(const QString& line);
-    void setScanOptions(bool parseSystem, bool parseLocal);
+    void addHardDefineByLine(const QString& line) { addDefineByLine(line,true); }
+    void setScanOptions(bool parseSystem, bool parseLocal) {
+        mParseSystem = parseSystem;
+        mParseLocal=parseLocal;
+    }
     void preprocess(const QString& fileName);
 
     void dumpDefinesTo(const QString& fileName) const;
     void dumpIncludesListTo(const QString& fileName) const;
     void addIncludePath(const QString& fileName);
     void addProjectIncludePath(const QString& fileName);
-    void clearIncludePaths();
-    void clearProjectIncludePaths();
+    void clearIncludePaths() {
+        mIncludePaths.clear();
+        mIncludePathList.clear();
+    }
+    void clearProjectIncludePaths() {
+        mProjectIncludePaths.clear();
+        mProjectIncludePathList.clear();
+    }
     void removeScannedFile(const QString& filename);
 
     PDefine getDefine(const QString& name) const{
@@ -116,12 +125,12 @@ public:
         return mProjectIncludePaths;
     }
 
-    const DefineMap &hardDefines() const;
+    const DefineMap &hardDefines() const { return mHardDefines; }
 
-    const QList<QString> &includePathList() const;
+    const QList<QString> &includePathList() const { return mIncludePathList; }
 
-    const QList<QString> &projectIncludePathList() const;
-    void setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream);
+    const QList<QString> &projectIncludePathList() const { return mProjectIncludePathList; }
+    void setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream) { mOnGetFileStream = newOnGetFileStream; }
 
     static QList<PDefineArgToken> tokenizeValue(const QString& value);
 
@@ -198,40 +207,46 @@ private:
     /*
      * '_','a'..'z','A'..'Z','0'..'9'
      */
-static  bool isWordChar(const QChar& ch);
+    static  bool isWordChar(const QChar& ch) {
+        return (ch=='_'
+                || ch.isLetter()
+                || (ch>='0' && ch<='9'));
+    }
+
     /*
      * 'A'..'Z', '0'..'9', 'a'..'z', '_', '*', '&', '~'
      */
-static  bool isIdentChar(const QChar& ch);
+    static  bool isIdentChar(const QChar& ch) {
+        return (ch=='_' || ch == '*' || ch == '&' || ch == '~' ||
+                ch.isLetter()
+                || (ch>='0' && ch<='9'));
+    }
+
     /*
      * '\r','\n'
      */
-static  bool isLineChar(const QChar& ch);
+    static  bool isLineChar(const QChar& ch) { return ch=='\r' || ch == '\n'; }
     /*
      *  '\t' ' '
      */
-static  bool isSpaceChar(const QChar& ch);
-    /*
-     * '+', '-', '*', '/', '!', '=', '<', '>', '&', '|', '^'
-     */
-//static  bool isOperatorChar(const QChar& ch);
+    static  bool isSpaceChar(const QChar& ch) { return ch == ' ' || ch == '\t'; }
 
     /*
      * 'A'..'Z', 'a'..'z', '_'
      */
-static  bool isMacroIdentChar(const QChar& ch);
+    static  bool isMacroIdentChar(const QChar& ch) { return ch.isLetter() || ch == '_'; }
 
     /*
      * '0'..'9'
      */
-static  bool isDigit(const QChar& ch);
+    static  bool isDigit(const QChar& ch) { return (ch>='0' && ch<='9'); }
 
     /*
      * '0'..'9','x',X','a'..'f','A'..'F','u','U','l','L'
      */
-static  bool isNumberChar(const QChar& ch);
+    static  bool isNumberChar(const QChar& ch);
 
-    QString lineBreak();
+    QString lineBreak() { return "\n"; }
 
     bool evaluateIf(const QString& line);
     QString expandDefines(QString line);
