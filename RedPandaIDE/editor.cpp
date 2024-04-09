@@ -3508,8 +3508,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     } else {
         switch(calcParserLanguage()) {
         case ParserLanguage::CPlusPlus:
-            foreach (const QString& keyword, CppKeywords.keys()) {
-                keywords.insert(keyword);
+            for(auto it = CppKeywords.begin();it!=CppKeywords.end();++it) {
+                keywords.insert(it.key());
             }
             break;
         case ParserLanguage::C:
@@ -3518,8 +3518,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 #ifdef ENABLE_SDCC
         case ParserLanguage::SDCC:
             keywords = CKeywords;
-            foreach (const QString& keyword, SDCCKeywords.keys()) {
-                keywords.insert(keyword);
+            for(auto it = SDCCKeywords.begin();it!=SDCCKeywords.end();++it) {
+                keywords.insert(it.key());
             }
             break;
 #endif
@@ -5398,8 +5398,8 @@ void Editor::applySettings()
 #ifdef ENABLE_SDCC
         if (!inProject() && pSettings->compilerSets().defaultSet()
                && pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
-            foreach(const QString& s, SDCCKeywords.keys())
-                set.insert(s);
+            for(auto it=SDCCKeywords.begin();it!=SDCCKeywords.end();++it)
+                set.insert(it.key());
         }
 #endif
         ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);

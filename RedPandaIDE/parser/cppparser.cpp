@@ -5926,9 +5926,9 @@ void CppParser::internalInvalidateFile(const QString &fileName)
     }
 
     //remove all statements from namespace cache
-    const QList<QString>& keys=mNamespaces.keys();
-    for (const QString& key:keys) {
-        PStatementList statements = mNamespaces.value(key);
+    for (auto it=mNamespaces.begin();it!=mNamespaces.end();++it) {
+        QString key = it.key();
+        PStatementList statements = it.value();
         for (int i=statements->size()-1;i>=0;i--) {
             PStatement statement = statements->at(i);
             if (statement->fileName == fileName) {
