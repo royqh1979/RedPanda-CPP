@@ -544,7 +544,7 @@ bool isCFile(const QString& filename)
     return CppSourceExts->contains(fileInfo.suffix().toLower());
 }
 
-PStatement CppScopes::findScopeAtLine(int line)
+PStatement CppScopes::findScopeAtLine(int line) const
 {
     if (mScopes.isEmpty())
         return PStatement();
@@ -582,7 +582,7 @@ void CppScopes::addScope(int line, PStatement scopeStatement)
     }
 }
 
-PStatement CppScopes::lastScope()
+PStatement CppScopes::lastScope() const
 {
     if (mScopes.isEmpty())
         return PStatement();
@@ -767,31 +767,129 @@ bool isTypeKind(StatementKind kind)
     }
 }
 
-bool ParsedFileInfo::isLineVisible(int line)
+ParsedFileInfo::ParsedFileInfo(const QString &fileName):
+    mFileName { fileName }
+{
+
+}
+
+void ParsedFileInfo::insertBranch(int level, bool branchTrue)
+{
+    mBranches.insert(level, branchTrue);
+}
+
+bool ParsedFileInfo::isLineVisible(int line) const
 {
     int lastI=-1;
-    foreach(int i,branches.keys()) {
+    foreach(int i,mBranches.keys()) {
         if (line<i)
             break;
         else
             lastI = i;
     }
-    return lastI<0?true:branches[lastI];
+    return lastI<0?true:mBranches[lastI];
 }
 
-void ParsedFileInfo::includeFile(const QString &fileName)
+void ParsedFileInfo::include(const QString &fileName)
 {
-    int count = includes.value(fileName,0);
+    int count = mIncludeCounts.value(fileName,0);
     count++;
-    includes.insert(fileName,count);
+    mIncludeCounts.insert(fileName,count);
+    mIncludes.insert(fileName);
 }
 
-void ParsedFileInfo::unincludeFile(const QString &fileName)
+void ParsedFileInfo::uninclude(const QString &fileName)
 {
-    int count = includes.value(fileName,0);
+    int count = mIncludeCounts.value(fileName,0);
     count--;
-    if (count<=0)
-        includes.remove(fileName);
-    else
-        includes.insert(fileName,count);
+    if (count<=0) {
+        mIncludeCounts.remove(fileName);
+        mIncludes.remove(fileName);
+    } else
+        mIncludeCounts.insert(fileName,count);
+}
+
+void ParsedFileInfo::directInclude(const QString &fileName)
+{
+    mDirectIncludes.append(fileName);
+}
+
+bool ParsedFileInfo::including(const QString &fileName) const
+{
+    return mIncludes.contains(fileName);
+}
+
+const QSet<QString>& ParsedFileInfo::includes() const
+{
+    return mIncludes;
+}
+
+const QList<std::weak_ptr<ClassInheritanceInfo> >& ParsedFileInfo::handledInheritances() const
+{
+    return mHandledInheritances;
+}
+
+QString ParsedFileInfo::fileName() const
+{
+    return mFileName;
+}
+
+PStatement ParsedFileInfo::findScopeAtLine(int line) const
+{
+    return mScopes.findScopeAtLine(line);
+}
+
+void ParsedFileInfo::addStatement(const PStatement &statement)
+{
+    mStatements.insert(statement->fullName,statement);
+}
+
+void ParsedFileInfo::clearStatements()
+{
+    mStatements.clear();
+}
+
+void ParsedFileInfo::addScope(int line, const PStatement &scope)
+{
+    mScopes.addScope(line,scope);
+}
+
+void ParsedFileInfo::removeLastScope()
+{
+    mScopes.removeLastScope();
+}
+
+PStatement ParsedFileInfo::lastScope() const
+{
+    return mScopes.lastScope();
+}
+
+void ParsedFileInfo::addUsing(const QString &usingSymbol)
+{
+    mUsings.insert(usingSymbol);
+}
+
+void ParsedFileInfo::addHandledInheritances(std::weak_ptr<ClassInheritanceInfo> classInheritanceInfo)
+{
+    mHandledInheritances.append(classInheritanceInfo);
+}
+
+void ParsedFileInfo::clearHandledInheritances()
+{
+    mHandledInheritances.clear();
+}
+
+const StatementMap& ParsedFileInfo::statements() const
+{
+    return mStatements;
+}
+
+const QSet<QString>& ParsedFileInfo::usings() const
+{
+    return mUsings;
+}
+
+const QStringList& ParsedFileInfo::directIncludes() const
+{
+    return mDirectIncludes;
 }

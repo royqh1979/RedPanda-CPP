@@ -225,7 +225,7 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
         for (const PParsedFileInfo& fileInfo:mFileInfos) {
-            stream<<fileInfo->fileName<<" : "
+            stream<<fileInfo->fileName()<<" : "
         #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
@@ -237,7 +237,7 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
         #else
                          <<endl;
         #endif
-            foreach (const QString& s,fileInfo->includes.keys()) {
+            foreach (const QString& s,fileInfo->includes()) {
                 stream<<"\t--"+s
         #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
@@ -762,7 +762,7 @@ void CppPreprocessor::openInclude(QString fileName)
 {
     PParsedFileInfo fileInfo = findFileInfo(fileName);
     if (fileInfo) {
-        fileName = fileInfo->fileName;
+        fileName = fileInfo->fileName();
     } else {
         fileName.squeeze();
     }
@@ -775,15 +775,14 @@ void CppPreprocessor::openInclude(QString fileName)
         // }
         bool alreadyIncluded = false;
         for (PParsedFile& parsedFile:mIncludes) {
-            if (parsedFile->fileInfo->includes.contains(fileName)) {
+            if (parsedFile->fileInfo->including(fileName)) {
                 alreadyIncluded = true;
-                continue;
             }
-            parsedFile->fileInfo->includes.insert(fileName,false);
+            parsedFile->fileInfo->include(fileName);
         }
         PParsedFile innerMostFile = mIncludes.back();
-        innerMostFile->fileInfo->includes.insert(fileName,true);
-        innerMostFile->fileInfo->directIncludes.append(fileName);
+        innerMostFile->fileInfo->include(fileName);
+        innerMostFile->fileInfo->directInclude(fileName);
         if (alreadyIncluded)
             return;
         // Backup old position if we're entering a new file
@@ -804,8 +803,7 @@ void CppPreprocessor::openInclude(QString fileName)
     mCurrentFileInfo = findFileInfo(fileName);
     if (!mCurrentFileInfo) {
         // do NOT create a new item for a file that's already in the list
-        mCurrentFileInfo = std::make_shared<ParsedFileInfo>();
-        mCurrentFileInfo->fileName = fileName;
+        mCurrentFileInfo = std::make_shared<ParsedFileInfo>(fileName);
         mFileInfos.insert(fileName,mCurrentFileInfo);
     }
     parsedFile->fileInfo = mCurrentFileInfo;
@@ -832,8 +830,8 @@ void CppPreprocessor::openInclude(QString fileName)
         PParsedFileInfo fileInfo = findFileInfo(fileName);
         if (fileInfo) {
             for (PParsedFile& file:mIncludes) {
-                foreach (const QString& incFile,fileInfo->includes.keys()) {
-                    file->fileInfo->includes.insert(incFile,false);
+                foreach (const QString& incFile,fileInfo->includes()) {
+                    file->fileInfo->include(incFile);
                 }
             }
         }
@@ -917,7 +915,7 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
 
     PParsedFileInfo fileInfo = findFileInfo(fileName);
     if (fileInfo) {
-        foreach (const QString& file, fileInfo->includes.keys()) {
+        foreach (const QString& file, fileInfo->includes()) {
             addDefinesInFile(file);
         }
     }

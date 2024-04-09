@@ -170,7 +170,7 @@ private:
     }
     void setCurrentBranch(BranchResult value){
         if (!sameResultWithCurrentBranch(value)) {
-            mCurrentFileInfo->branches.insert(mIndex+1,value==BranchResult::isTrue);
+            mCurrentFileInfo->insertBranch(mIndex+1,value==BranchResult::isTrue);
         }
         mBranchResults.append(value);
     }
@@ -180,7 +180,7 @@ private:
             mBranchResults.pop_back();
         }
         if (!sameResultWithCurrentBranch(value)) {
-            mCurrentFileInfo->branches.insert(mIndex,getCurrentBranch()==BranchResult::isTrue);
+            mCurrentFileInfo->insertBranch(mIndex,getCurrentBranch()==BranchResult::isTrue);
         }
     }
     void addDefinesInFile(const QString& fileName);

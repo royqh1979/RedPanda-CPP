@@ -286,7 +286,7 @@ void ClassBrowserModel::addMembers()
         PParsedFileInfo p = mParser->findFileIncludes(mCurrentFile);
         if (!p)
             return;
-        filterChildren(mRoot,p->statements);
+        filterChildren(mRoot,p->statements());
     } else {
         if (mParser->projectFiles().isEmpty())
             return;
@@ -294,7 +294,7 @@ void ClassBrowserModel::addMembers()
             PParsedFileInfo p = mParser->findFileIncludes(file);
             if (!p)
                 return;
-            filterChildren(mRoot,p->statements);
+            filterChildren(mRoot,p->statements());
         }
     }
     sortNode(mRoot);

@@ -295,9 +295,9 @@ using PCppScope = std::shared_ptr<CppScope>;
 class CppScopes {
 
 public:
-    PStatement findScopeAtLine(int line);
+    PStatement findScopeAtLine(int line) const;
     void addScope(int line, PStatement scopeStatement);
-    PStatement lastScope();
+    PStatement lastScope() const;
     void removeLastScope();
     void clear();
 private:
@@ -317,19 +317,46 @@ struct ClassInheritanceInfo {
 
 using PClassInheritanceInfo = std::shared_ptr<ClassInheritanceInfo>;
 
-struct ParsedFileInfo {
-    QString fileName;
-    QMap<QString, int> includes;
-    QStringList directIncludes; //
-    QSet<QString> usings; // namespaces it usings
-    StatementMap statements; // but we don't save temporary statements (full name as key)
-    StatementMap declaredStatements; // statements declared in this file (full name as key)
-    CppScopes scopes; // int is start line of the statement scope
-    QMap<int,bool> branches;
-    QList<std::weak_ptr<ClassInheritanceInfo>> handledInheritances;
-    bool isLineVisible(int line);
-    void includeFile(const QString &fileName);
-    void unincludeFile(const QString& fileName);
+class ParsedFileInfo {
+public:
+    ParsedFileInfo(const QString& fileName);
+    ParsedFileInfo(const ParsedFileInfo&)=delete;
+    ParsedFileInfo& operator=(const ParsedFileInfo&)=delete;
+    void insertBranch(int level, bool branchTrue);
+    bool isLineVisible(int line) const;
+    void include(const QString &fileName);
+    void uninclude(const QString &fileName);
+    void directInclude(const QString &fileName);
+    bool including(const QString &fileName) const;
+    PStatement findScopeAtLine(int line) const;
+    void addStatement(const PStatement &statement);
+    void clearStatements();
+    void addScope(int line, const PStatement &scope);
+    void removeLastScope();
+    PStatement lastScope() const;
+    void addUsing(const QString &usingSymbol);
+    void addHandledInheritances(std::weak_ptr<ClassInheritanceInfo> classInheritanceInfo);
+    void clearHandledInheritances();
+
+    QString fileName() const;
+    const StatementMap& statements() const;
+    const QSet<QString>& usings() const;
+    const QStringList& directIncludes() const;
+    const QSet<QString>& includes() const;
+    const QList<std::weak_ptr<ClassInheritanceInfo> >& handledInheritances() const;
+
+private:
+    QString mFileName;
+    QMap<QString, int> mIncludeCounts;
+    QSet<QString> mIncludes;
+    QStringList mDirectIncludes; //We need order here.
+    QSet<QString> mUsings; // namespaces it usings
+    StatementMap mStatements; // but we don't save temporary statements (full name as key)
+    StatementMap mDeclaredStatements; // statements declared in this file (full name as key)
+    CppScopes mScopes; // int is start line of the statement scope
+    QMap<int,bool> mBranches;
+    QList<std::weak_ptr<ClassInheritanceInfo>> mHandledInheritances;
+
 };
 using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;
 
