@@ -792,21 +792,7 @@ bool ParsedFileInfo::isLineVisible(int line) const
 
 void ParsedFileInfo::addInclude(const QString &fileName)
 {
-    int count = mIncludeCounts.value(fileName,0);
-    count++;
-    mIncludeCounts.insert(fileName,count);
     mIncludes.insert(fileName);
-}
-
-void ParsedFileInfo::removeInclude(const QString &fileName)
-{
-    int count = mIncludeCounts.value(fileName,0);
-    count--;
-    if (count<=0) {
-        mIncludeCounts.remove(fileName);
-        mIncludes.remove(fileName);
-    } else
-        mIncludeCounts.insert(fileName,count);
 }
 
 void ParsedFileInfo::addDirectInclude(const QString &fileName)

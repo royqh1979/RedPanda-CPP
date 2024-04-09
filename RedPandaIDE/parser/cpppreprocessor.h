@@ -96,7 +96,7 @@ public:
         return mFileInfos.value(fileName);
     }
 
-    void removeFileIncludes(const QString& fileName) {
+    void removeFileInfo(const QString& fileName) {
         mFileInfos.remove(fileName);
     }
 
@@ -151,7 +151,7 @@ private:
 
     // current file stuff
     PParsedFile getInclude(int index) const {
-        return mIncludes[index];
+        return mIncludeStack[index];
     }
     void openInclude(QString fileName);
     void closeInclude();
@@ -261,7 +261,7 @@ private:
     QStringList mResult;
     PParsedFileInfo mCurrentFileInfo;
     int mPreProcIndex;    
-    QList<PParsedFile> mIncludes; // stack of files we've stepped into. last one is current file, first one is source file
+    QList<PParsedFile> mIncludeStack; // stack of files we've stepped into. last one is current file, first one is source file
     QList<BranchResult> mBranchResults;// stack of branch results (boolean). last one is current branch, first one is outermost branch
     DefineMap mDefines; // working set, editable
     QSet<QString> mProcessed; // dictionary to save filename already processed

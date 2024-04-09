@@ -283,7 +283,7 @@ void ClassBrowserModel::addMembers()
         if (mCurrentFile.isEmpty())
             return;
         // show statements in the file
-        PParsedFileInfo p = mParser->findFileIncludes(mCurrentFile);
+        PParsedFileInfo p = mParser->findFileInfo(mCurrentFile);
         if (!p)
             return;
         filterChildren(mRoot,p->statements());
@@ -291,7 +291,7 @@ void ClassBrowserModel::addMembers()
         if (mParser->projectFiles().isEmpty())
             return;
         foreach(const QString& file,mParser->projectFiles()) {
-            PParsedFileInfo p = mParser->findFileIncludes(file);
+            PParsedFileInfo p = mParser->findFileInfo(file);
             if (!p)
                 return;
             filterChildren(mRoot,p->statements());

@@ -48,7 +48,7 @@ public:
                              const QString& phrase,
                              int line);
     PStatement findScopeStatement(const QString& filename, int line);
-    PParsedFileInfo findFileIncludes(const QString &filename, bool deleteIt = false);
+    PParsedFileInfo findFileInfo(const QString &filename);
     QString findFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
                                      const PStatement& currentScope);

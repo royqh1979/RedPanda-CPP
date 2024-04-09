@@ -2276,7 +2276,7 @@ bool Editor::notParsed()
 {
     if (!mParser)
         return true;
-    return mParser->findFileIncludes(mFilename)==nullptr;
+    return mParser->findFileInfo(mFilename)==nullptr;
 }
 
 void Editor::insertLine()

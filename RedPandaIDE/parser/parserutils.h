@@ -325,7 +325,6 @@ public:
     void insertBranch(int level, bool branchTrue);
     bool isLineVisible(int line) const;
     void addInclude(const QString &fileName);
-    void removeInclude(const QString &fileName);
     void addDirectInclude(const QString &fileName);
     bool including(const QString &fileName) const;
     PStatement findScopeAtLine(int line) const;
@@ -344,20 +343,20 @@ public:
     const QStringList& directIncludes() const;
     const QSet<QString>& includes() const;
     const QList<std::weak_ptr<ClassInheritanceInfo> >& handledInheritances() const;
+    const QSet<QString> &includedBySet() const;
+    int includedByCount(const QString &fileName) const;
 
 private:
     QString mFileName;
-    QMap<QString, int> mIncludeCounts;
     QSet<QString> mIncludes;
     QStringList mDirectIncludes; //We need order here.
     QSet<QString> mUsings; // namespaces it usings
     StatementMap mStatements; // but we don't save temporary statements (full name as key)
-    StatementMap mDeclaredStatements; // statements declared in this file (full name as key)
     CppScopes mScopes; // int is start line of the statement scope
     QMap<int,bool> mBranches;
     QList<std::weak_ptr<ClassInheritanceInfo>> mHandledInheritances;
-
 };
+
 using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;
 
 extern QStringList CppDirectives;

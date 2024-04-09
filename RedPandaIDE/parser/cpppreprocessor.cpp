@@ -58,7 +58,7 @@ void CppPreprocessor::clearTempResults()
     mBuffer.clear();
     mResult.clear();
     mCurrentFileInfo=nullptr;
-    mIncludes.clear(); // stack of files we've stepped into. last one is current file, first one is source file
+    mIncludeStack.clear(); // stack of files we've stepped into. last one is current file, first one is source file
     mBranchResults.clear();// stack of branch results (boolean). last one is current branch, first one is outermost branch
     //mDefines.clear(); // working set, editable
     mProcessed.clear(); // dictionary to save filename already processed
@@ -397,7 +397,7 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     if (getCurrentBranch()!=BranchResult::isTrue) // we're skipping due to a branch failure
         return;
 
-    PParsedFile file = mIncludes.back();
+    PParsedFile file = mIncludeStack.back();
     QString fileName;
     // Get full header file name
     QString currentDir = includeTrailingPathDelimiter(extractFileDir(file->fileName));
@@ -765,23 +765,20 @@ void CppPreprocessor::openInclude(QString fileName)
         fileName = fileInfo->fileName();
     } else {
         fileName.squeeze();
+        fileInfo = std::make_shared<ParsedFileInfo>(fileName);
     }
-    if (mIncludes.size()>0) {
-        // PParsedFile topFile = mIncludes.front();
-        // if (topFile->fileIncludes->includes.contains(fileName)) {
-        //     PParsedFile innerMostFile = mIncludes.back();
-        //     innerMostFile->fileIncludes->includes.insert(fileName, false);
-        //     return; //already included
-        // }
+    if (mIncludeStack.size()>0) {
         bool alreadyIncluded = false;
-        for (PParsedFile& parsedFile:mIncludes) {
+        for (PParsedFile& parsedFile:mIncludeStack) {
             if (parsedFile->fileInfo->including(fileName)) {
                 alreadyIncluded = true;
             }
             parsedFile->fileInfo->addInclude(fileName);
+            foreach (const QString& includedFileName,fileInfo->includes()) {
+                parsedFile->fileInfo->addInclude(includedFileName);
+            }
         }
-        PParsedFile innerMostFile = mIncludes.back();
-        innerMostFile->fileInfo->addInclude(fileName);
+        PParsedFile innerMostFile = mIncludeStack.back();
         innerMostFile->fileInfo->addDirectInclude(fileName);
         if (alreadyIncluded)
             return;
@@ -800,12 +797,8 @@ void CppPreprocessor::openInclude(QString fileName)
 
     // Keep track of files we include here
     // Only create new items for files we have NOT scanned yet
-    mCurrentFileInfo = findFileInfo(fileName);
-    if (!mCurrentFileInfo) {
-        // do NOT create a new item for a file that's already in the list
-        mCurrentFileInfo = std::make_shared<ParsedFileInfo>(fileName);
-        mFileInfos.insert(fileName,mCurrentFileInfo);
-    }
+    mCurrentFileInfo = fileInfo;
+    mFileInfos.insert(fileName,mCurrentFileInfo);
     parsedFile->fileInfo = mCurrentFileInfo;
 
     // Don't parse stuff we have already parsed
@@ -827,16 +820,8 @@ void CppPreprocessor::openInclude(QString fileName)
     } else {
         //add defines of already parsed including headers;
         addDefinesInFile(fileName);
-        PParsedFileInfo fileInfo = findFileInfo(fileName);
-        if (fileInfo) {
-            for (PParsedFile& file:mIncludes) {
-                foreach (const QString& incFile,fileInfo->includes()) {
-                    file->fileInfo->addInclude(incFile);
-                }
-            }
-        }
     }
-    mIncludes.append(parsedFile);
+    mIncludeStack.append(parsedFile);
 
     // Process it
     mIndex = parsedFile->index;
@@ -850,7 +835,7 @@ void CppPreprocessor::openInclude(QString fileName)
 
     // Update result file
     QString includeLine = "#include " + fileName + ":1";
-    if (mIncludes.count()>1) { // include from within a file
+    if (mIncludeStack.count()>1) { // include from within a file
       mResult[mPreProcIndex] = includeLine;
     } else {
       mResult.append(includeLine);
@@ -860,13 +845,13 @@ void CppPreprocessor::openInclude(QString fileName)
 
 void CppPreprocessor::closeInclude()
 {
-    if (mIncludes.isEmpty())
+    if (mIncludeStack.isEmpty())
         return;
-    mIncludes.pop_back();
+    mIncludeStack.pop_back();
 
-    if (mIncludes.isEmpty())
+    if (mIncludeStack.isEmpty())
         return;
-    PParsedFile parsedFile = mIncludes.back();
+    PParsedFile parsedFile = mIncludeStack.back();
 
     // Continue where we left off
     mIndex = parsedFile->index;
@@ -1177,7 +1162,7 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
 
 void CppPreprocessor::preprocessBuffer()
 {
-    while (mIncludes.count() > 0) {
+    while (mIncludeStack.count() > 0) {
         QString s;
         do {
             s = getNextPreprocessor();

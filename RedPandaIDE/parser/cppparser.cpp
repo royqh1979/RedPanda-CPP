@@ -207,12 +207,10 @@ PStatement CppParser::doFindScopeStatement(const QString &filename, int line) co
     return fileInfo->findScopeAtLine(line);
 }
 
-PParsedFileInfo CppParser::findFileIncludes(const QString &filename, bool deleteIt)
+PParsedFileInfo CppParser::findFileInfo(const QString &filename)
 {
     QMutexLocker locker(&mMutex);
     PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(filename);
-    if (deleteIt && fileInfo)
-        mPreprocessor.removeFileIncludes(filename);
     return fileInfo;
 }
 QString CppParser::findFirstTemplateParamOf(const QString &fileName, const QString &phrase, const PStatement& currentScope)
@@ -5903,11 +5901,9 @@ void CppParser::internalInvalidateFile(const QString &fileName)
         return;
 
     // remove its include files list
-    PParsedFileInfo p = findFileIncludes(fileName, true);
+    PParsedFileInfo p = mPreprocessor.findFileInfo(fileName);
     if (p) {
-        //fPreprocessor.InvalidDefinesInFile(FileName); //we don't need this, since we reset defines after each parse
-        //p->includes.clear();
-        //p->usings.clear();
+        //invalidDefinesInFile(FileName); //we don't need this, since we reset defines after each parse
         for(PStatement statement:p->statements()) {
             if (statement->fileName==fileName) {
                 mStatementList.deleteStatement(statement);
@@ -5917,7 +5913,6 @@ void CppParser::internalInvalidateFile(const QString &fileName)
                 statement->definitionLine = statement->line;
             }
         }
-        p->clearStatements();
 
         //invalidate all handledInheritances
         for (std::weak_ptr<ClassInheritanceInfo> pWeakInfo: p->handledInheritances()) {
@@ -5926,7 +5921,8 @@ void CppParser::internalInvalidateFile(const QString &fileName)
                 info->handled = false;
             }
         }
-        p->clearHandledInheritances();
+
+        mPreprocessor.removeFileInfo(fileName);
     }
 
     //remove all statements from namespace cache
@@ -5965,7 +5961,7 @@ QSet<QString> CppParser::calculateFilesToBeReparsed(const QString &fileName)
         return QSet<QString>();
     QSet<QString> result;
     result.insert(fileName);
-    foreach (const QString& file, mProjectFiles) {
+    foreach (const QString& file, mPreprocessor.scannedFiles()) {
         PParsedFileInfo fileInfo = mPreprocessor.findFileInfo(file);
         if (fileInfo && fileInfo->including(fileName)) {
             result.insert(file);
