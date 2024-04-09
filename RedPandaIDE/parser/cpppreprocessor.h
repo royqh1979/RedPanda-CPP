@@ -43,6 +43,7 @@ struct ParsedFile {
     int branches; //branch levels;
     PParsedFileInfo fileInfo; // info of this file
 };
+
 using PParsedFile = std::shared_ptr<ParsedFile>;
 
 class CppPreprocessor

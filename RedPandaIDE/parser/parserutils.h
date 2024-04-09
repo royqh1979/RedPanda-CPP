@@ -318,8 +318,8 @@ struct ClassInheritanceInfo {
 using PClassInheritanceInfo = std::shared_ptr<ClassInheritanceInfo>;
 
 struct ParsedFileInfo {
-    QString baseFile;
-    QMap<QString, bool> includeFiles; // true means the file is directly included, false means included indirectly
+    QString fileName;
+    QMap<QString, int> includes;
     QStringList directIncludes; //
     QSet<QString> usings; // namespaces it usings
     StatementMap statements; // but we don't save temporary statements (full name as key)
@@ -328,6 +328,8 @@ struct ParsedFileInfo {
     QMap<int,bool> branches;
     QList<std::weak_ptr<ClassInheritanceInfo>> handledInheritances;
     bool isLineVisible(int line);
+    void includeFile(const QString &fileName);
+    void unincludeFile(const QString& fileName);
 };
 using PParsedFileInfo = std::shared_ptr<ParsedFileInfo>;
 

@@ -225,7 +225,7 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
         for (const PParsedFileInfo& fileInfo:mFileInfos) {
-            stream<<fileInfo->baseFile<<" : "
+            stream<<fileInfo->fileName<<" : "
         #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
         #else
@@ -237,7 +237,7 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
         #else
                          <<endl;
         #endif
-            foreach (const QString& s,fileInfo->includeFiles.keys()) {
+            foreach (const QString& s,fileInfo->includes.keys()) {
                 stream<<"\t--"+s
         #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
                          <<Qt::endl;
@@ -762,27 +762,27 @@ void CppPreprocessor::openInclude(QString fileName)
 {
     PParsedFileInfo fileInfo = findFileInfo(fileName);
     if (fileInfo) {
-        fileName = fileInfo->baseFile;
+        fileName = fileInfo->fileName;
     } else {
         fileName.squeeze();
     }
     if (mIncludes.size()>0) {
         // PParsedFile topFile = mIncludes.front();
-        // if (topFile->fileIncludes->includeFiles.contains(fileName)) {
+        // if (topFile->fileIncludes->includes.contains(fileName)) {
         //     PParsedFile innerMostFile = mIncludes.back();
-        //     innerMostFile->fileIncludes->includeFiles.insert(fileName, false);
+        //     innerMostFile->fileIncludes->includes.insert(fileName, false);
         //     return; //already included
         // }
         bool alreadyIncluded = false;
         for (PParsedFile& parsedFile:mIncludes) {
-            if (parsedFile->fileInfo->includeFiles.contains(fileName)) {
+            if (parsedFile->fileInfo->includes.contains(fileName)) {
                 alreadyIncluded = true;
                 continue;
             }
-            parsedFile->fileInfo->includeFiles.insert(fileName,false);
+            parsedFile->fileInfo->includes.insert(fileName,false);
         }
         PParsedFile innerMostFile = mIncludes.back();
-        innerMostFile->fileInfo->includeFiles.insert(fileName,true);
+        innerMostFile->fileInfo->includes.insert(fileName,true);
         innerMostFile->fileInfo->directIncludes.append(fileName);
         if (alreadyIncluded)
             return;
@@ -805,7 +805,7 @@ void CppPreprocessor::openInclude(QString fileName)
     if (!mCurrentFileInfo) {
         // do NOT create a new item for a file that's already in the list
         mCurrentFileInfo = std::make_shared<ParsedFileInfo>();
-        mCurrentFileInfo->baseFile = fileName;
+        mCurrentFileInfo->fileName = fileName;
         mFileInfos.insert(fileName,mCurrentFileInfo);
     }
     parsedFile->fileInfo = mCurrentFileInfo;
@@ -832,8 +832,8 @@ void CppPreprocessor::openInclude(QString fileName)
         PParsedFileInfo fileInfo = findFileInfo(fileName);
         if (fileInfo) {
             for (PParsedFile& file:mIncludes) {
-                foreach (const QString& incFile,fileInfo->includeFiles.keys()) {
-                    file->fileInfo->includeFiles.insert(incFile,false);
+                foreach (const QString& incFile,fileInfo->includes.keys()) {
+                    file->fileInfo->includes.insert(incFile,false);
                 }
             }
         }
@@ -917,7 +917,7 @@ void CppPreprocessor::addDefinesInFile(const QString &fileName)
 
     PParsedFileInfo fileInfo = findFileInfo(fileName);
     if (fileInfo) {
-        foreach (const QString& file, fileInfo->includeFiles.keys()) {
+        foreach (const QString& file, fileInfo->includes.keys()) {
             addDefinesInFile(file);
         }
     }

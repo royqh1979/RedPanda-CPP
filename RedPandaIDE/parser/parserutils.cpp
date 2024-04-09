@@ -778,3 +778,20 @@ bool ParsedFileInfo::isLineVisible(int line)
     }
     return lastI<0?true:branches[lastI];
 }
+
+void ParsedFileInfo::includeFile(const QString &fileName)
+{
+    int count = includes.value(fileName,0);
+    count++;
+    includes.insert(fileName,count);
+}
+
+void ParsedFileInfo::unincludeFile(const QString &fileName)
+{
+    int count = includes.value(fileName,0);
+    count--;
+    if (count<=0)
+        includes.remove(fileName);
+    else
+        includes.insert(fileName,count);
+}
