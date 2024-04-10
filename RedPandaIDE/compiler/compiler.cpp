@@ -401,7 +401,7 @@ QStringList Compiler::getCharsetArgument(const QByteArray& encoding,FileType fil
         //qDebug()<<encodingName<<execEncodingName;
         if (checkSyntax) {
             result << "-finput-charset=" + encodingName;
-        } else if (encodingName!=execEncodingName) {
+        } else if (QString::compare(encodingName, execEncodingName, Qt::CaseInsensitive) != 0) {
             result += {
                 "-finput-charset=" + encodingName,
                 "-fexec-charset=" + execEncodingName,
