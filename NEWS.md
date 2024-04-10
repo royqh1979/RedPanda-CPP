@@ -131,6 +131,8 @@ Red Panda C++ Version 2.27
   - fix: Can't find the correct type if current symbol is member of a class that has constructors.
   - fix: Alias a namespace to itself will create infinite loop.
   - fix: Can't find symbols indirectly included by other files.
+  - enhancement: Function tip's width changes with editor width.
+  - fix: '<' / '>' not shown in function tips.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

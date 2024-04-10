@@ -1640,6 +1640,7 @@ void Editor::hideEvent(QHideEvent */*event*/)
 void Editor::resizeEvent(QResizeEvent *event)
 {
     QSynedit::QSynEdit::resizeEvent(event);
+    pMainWindow->functionTip()->setMinWidth(width()*3/4);
     pMainWindow->functionTip()->hide();
 }
 

@@ -18,9 +18,11 @@
 
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QDebug>
 
 FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) :
-    QFrame(parent, Qt::ToolTip | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus)
+    QFrame{parent, Qt::ToolTip | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus},
+    mMinWidth{410}
 {
     setFocusPolicy(Qt::NoFocus);
     mInfoLabel = new QLabel(this);
@@ -120,12 +122,19 @@ void FunctionTooltipWidget::updateTip()
         return;
     PFunctionInfo info = mInfos[mInfoIndex];
     QString text = info->returnType+ " " + info->name;
+    QString originText = text;
     if (info->params.length()==0) {
         text += "()";
+        originText += "()";
     } else {
         QStringList displayList;
+        QStringList originList;
         for (int i=0;i<info->params.length();i++){
-            const QString& param = info->params[i];
+            QString param = info->params[i];
+            originList.append(param);
+
+            param.replace("<","&lt;");
+            param.replace(">","&gt;");
             if (mParamIndex == i) {
                 displayList.append(QString("<b>%1</b>").arg(param));
             } else {
@@ -133,13 +142,14 @@ void FunctionTooltipWidget::updateTip()
             }
         }
         text += "( "+displayList.join(", ") + ") ";
+        originText += "( "+originList.join(", ") + ") ";
     }
     if (mInfos.length()>1) {
         mTotalLabel->setText(QString("%1/%2").arg(mInfoIndex+1).arg(mInfos.length()));
     }
-    int width = mInfoLabel->fontMetrics().horizontalAdvance(text);
-    if (width > 400) {
-        mInfoLabel->setMinimumWidth(410);
+    int width = mInfoLabel->fontMetrics().horizontalAdvance(originText)+10;
+    if (width > mMinWidth) {
+        mInfoLabel->setMinimumWidth(mMinWidth);
     } else {
         mInfoLabel->setMinimumWidth(width);
     }
@@ -190,6 +200,16 @@ QStringList FunctionTooltipWidget::splitArgs(QString argStr)
         result.append(s);
     }
     return result;
+}
+
+int FunctionTooltipWidget::minWidth() const
+{
+    return mMinWidth;
+}
+
+void FunctionTooltipWidget::setMinWidth(int newMinWidth)
+{
+    mMinWidth = newMinWidth;
 }
 
 const QString &FunctionTooltipWidget::functionFullName() const

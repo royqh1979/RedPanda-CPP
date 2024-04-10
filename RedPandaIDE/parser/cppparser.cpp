@@ -1524,11 +1524,13 @@ PStatement CppParser::addStatement(const PStatement &parent,
         QChar ch=mTokenizer[i]->text[0];
         if (this->isIdentChar(ch)) {
             QString spaces=(i>argStart)?" ":"";
-            if (args.length()>0 && isWordChar(args.back()))
+            if (args.length()>0 && (isWordChar(args.back()) || args.back()=='>'))
                 args+=spaces;
             word += mTokenizer[i]->text;
             if (!typeGetted) {
-                noNameArgs+=spaces+word;
+                if (noNameArgs.length()>0 && isWordChar(noNameArgs.back()))
+                    noNameArgs+=spaces;
+                noNameArgs+=word;
                 if (mCppTypeKeywords.contains(word) || !isCppKeyword(word))
                     typeGetted = true;
             } else {
@@ -1541,6 +1543,7 @@ PStatement CppParser::addStatement(const PStatement &parent,
         } else if (mTokenizer[i]->text=="::") {
             if (braceLevel==0) {
                 noNameArgs+= mTokenizer[i]->text;
+                typeGetted = false;
             }
         } else {
             switch(ch.unicode()) {
