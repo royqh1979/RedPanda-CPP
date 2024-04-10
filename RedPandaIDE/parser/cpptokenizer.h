@@ -49,31 +49,18 @@ public:
     void clear();
     void tokenize(const QStringList& buffer);
     void dumpTokens(const QString& fileName);
-    const PToken& operator[](int i) const {
-        return mTokenList[i];
-    }
-    int tokenCount() const {
-        return mTokenList.count();
-    }
-    static bool isIdentChar(const QChar& ch) {
-            return ch=='_' || ch.isLetter() ;
-    }
-    int lambdasCount() const {
-        return mLambdas.count();
-    }
+    const PToken& operator[](int i) const { return mTokenList[i]; }
+    int tokenCount() const { return mTokenList.count(); }
+    static bool isIdentChar(const QChar& ch) { return ch=='_' || ch.isLetter(); }
+    int lambdasCount() const { return mLambdas.count(); }
 
-    int indexOfFirstLambda() const {
-        return mLambdas.front();
-    }
-    void removeFirstLambda() {
-        mLambdas.pop_front();
-    }
+    int indexOfFirstLambda() const { return mLambdas.front(); }
+    void removeFirstLambda() { mLambdas.pop_front(); }
 
 private:
     void addToken(const QString& sText, int iLine, TokenType tokenType);
     void advance();
     void countLines();
-    PToken getToken(int index);
 
 //    QString getForInit();
     QString getNextToken(
@@ -81,11 +68,11 @@ private:
     QString getNumber();
     QString getPreprocessor();
     QString getWord();
-    bool isArguments();
+    bool isArguments() { return *mCurrent == '('; }
 //    bool isForInit();
-    bool isNumber();
-    bool isPreprocessor();
-    bool isWord();
+    bool isNumber() { return isDigitChar(*mCurrent); }
+    bool isPreprocessor() { return *mCurrent=='#'; }
+    bool isWord() { return isIdentChar(*mCurrent) && (*(mCurrent+1) != '"') && (*(mCurrent+1) != '\''); }
     void simplify(QString& output);
     void simplifyArgs(QString& output);
 //    void skipAssignment();
