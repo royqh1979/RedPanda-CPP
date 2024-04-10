@@ -37,7 +37,6 @@ class QColor;
 namespace QSynedit {
 
 int minMax(int x, int mi, int ma);
-int mulDiv(int a, int b, int c);
 BufferCoord maxBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
 BufferCoord minBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
 
