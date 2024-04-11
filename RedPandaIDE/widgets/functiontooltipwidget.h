@@ -54,6 +54,9 @@ public:
     const QString &functionFullName() const;
     void setFunctioFullName(const QString &newFunctioFullName);
 
+    int minWidth() const;
+    void setMinWidth(int newMinWidth);
+
 private:
     QStringList splitArgs(QString args);
 private:
@@ -67,6 +70,7 @@ private:
     QString mFunctioFullName;
 
     QList<PFunctionInfo> mInfos;
+    int mMinWidth;
 
     // QWidget interface
 protected:

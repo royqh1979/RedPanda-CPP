@@ -81,12 +81,6 @@ bool enumTokenAttributes(PSyntaxer syntaxer, bool skipDuplicates,
         tokenAttriProc, params, syntaxerList);
 }
 
-int mulDiv(int a, int b, int c)
-{
-    //todo: handle overflow?
-    return a*b/c;
-}
-
 FontStyles getFontStyles(const QFont &font)
 {
     FontStyles styles;

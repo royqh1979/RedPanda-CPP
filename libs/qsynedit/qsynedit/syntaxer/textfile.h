@@ -61,7 +61,6 @@ private:
     void procNull();
 
 public:
-    QMap<QString, PTokenAttribute> attributes() const override;
     bool eol() const override;
 
     QString languageName() override;

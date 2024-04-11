@@ -48,14 +48,6 @@ void TextSyntaxer::procNull()
     mState = RangeState::Unknown;
 }
 
-QMap<QString, PTokenAttribute> TextSyntaxer::attributes() const
-{
-    QMap<QString, PTokenAttribute> result;
-    result.insert(SYNS_AttrText, mTextAttribute);
-    result.insert(SYNS_AttrSpace, whitespaceAttribute());
-    return result;
-}
-
 bool TextSyntaxer::eol() const
 {
     return mTokenID == TokenId::Null;

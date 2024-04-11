@@ -93,18 +93,22 @@ public:
     TokenAttribute(const TokenAttribute&)=delete;
     TokenAttribute& operator=(const TokenAttribute&)=delete;
 
-    QString name() const;
+    QString name() const { return mName; }
 
-    FontStyles styles() const;
-    void setStyles(const FontStyles &styles);
+    FontStyles styles() const { return mStyles; }
+    void setStyles(const FontStyles &styles) {
+        if (mStyles!=styles) {
+            mStyles = styles;
+        }
+    }
 
-    const QColor &foreground() const;
-    void setForeground(const QColor &color);
+    const QColor &foreground() const { return mForeground; }
+    void setForeground(const QColor &color) { mForeground = color; }
 
-    const QColor &background() const;
-    void setBackground(const QColor &background);
+    const QColor &background() const { return mBackground; }
+    void setBackground(const QColor &background) { mBackground = background; }
 
-    TokenType tokenType() const;
+    TokenType tokenType() const { return mTokenType; }
 
 private:
     QColor mForeground;
@@ -122,21 +126,21 @@ public:
     Syntaxer(const Syntaxer&)=delete;
     Syntaxer& operator=(const Syntaxer&)=delete;
 
-    virtual QMap<QString, PTokenAttribute> attributes() const;
+    QMap<QString, PTokenAttribute> attributes() const { return mAttributes; }
 
-    const QSet<QChar>& wordBreakChars() const;
+    const QSet<QChar>& wordBreakChars() const { return mWordBreakChars; }
 
-    const PTokenAttribute& identifierAttribute() const;
+    const PTokenAttribute& identifierAttribute() const { return mIdentifierAttribute; }
 
-    const PTokenAttribute& keywordAttribute() const;
+    const PTokenAttribute& keywordAttribute() const { return mKeywordAttribute; }
 
-    const PTokenAttribute& commentAttribute() const;
+    const PTokenAttribute& commentAttribute() const { return mCommentAttribute; }
 
-    const PTokenAttribute& stringAttribute() const;
+    const PTokenAttribute& stringAttribute() const { return mStringAttribute; }
 
-    const PTokenAttribute& whitespaceAttribute() const;
+    const PTokenAttribute& whitespaceAttribute() const { return mWhitespaceAttribute; }
 
-    const PTokenAttribute& symbolAttribute() const;
+    const PTokenAttribute& symbolAttribute() const { return mSymbolAttribute; }
 
     virtual bool isIdentChar(const QChar& ch) const;
     virtual bool isIdentStartChar(const QChar& ch) const;
@@ -183,9 +187,9 @@ protected:
     PTokenAttribute mWhitespaceAttribute;
     PTokenAttribute mSymbolAttribute;
 
-    void addAttribute(PTokenAttribute attribute);
-    void clearAttributes();
-    virtual int attributesCount() const;
+    void addAttribute(PTokenAttribute attribute) { mAttributes[attribute->name()]=attribute; }
+    void clearAttributes() { mAttributes.clear(); }
+    virtual int attributesCount() const { return mAttributes.size(); }
 
 private:
     QMap<QString,PTokenAttribute> mAttributes;

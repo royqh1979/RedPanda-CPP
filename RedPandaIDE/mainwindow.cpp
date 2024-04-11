@@ -399,8 +399,8 @@ MainWindow::MainWindow(QWidget *parent)
     m=ui->treeFiles->selectionModel();
     ui->treeFiles->setModel(&mFileSystemModel);
     delete m;
-    connect(&mFileSystemModel, &QFileSystemModel::layoutChanged,
-            this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
+    // connect(&mFileSystemModel, &QFileSystemModel::layoutChanged,
+    //         this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
     connect(&mFileSystemModel, &QFileSystemModel::fileRenamed,
             this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
     connect(&mFileSystemModel, &QFileSystemModel::fileRenamed,

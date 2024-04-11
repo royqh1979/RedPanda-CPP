@@ -68,17 +68,13 @@ private:
      *
      * @return the glyphs count
      */
-    int glyphsCount() const {
-        return mGlyphStartCharList.length();
-    }
+    int glyphsCount() const { return mGlyphStartCharList.length(); }
 
     /**
      * @brief get list of start index of the glyphs in the line text
      * @return start indice of the glyph.
      */
-    const QList<int>& glyphStartCharList() const {
-        return mGlyphStartCharList;
-    }
+    const QList<int>& glyphStartCharList() const { return mGlyphStartCharList; }
 
     /**
      * @brief get list of start position of the glyphs in the line text
@@ -131,7 +127,7 @@ private:
      * @brief get the width (pixel) of the line text
      * @return the width (in width)
      */
-    int width(bool forceUpdate=false);
+    int width();
 
     /**
      * @brief get the state of the syntax highlighter after this line is parsed

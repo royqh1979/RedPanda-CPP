@@ -39,7 +39,6 @@ void StatementModel::add(const PStatement& statement)
 #ifdef QT_DEBUG
     mAllStatements.append(statement);
 #endif
-
 }
 
 void StatementModel::deleteStatement(const PStatement& statement)
@@ -59,29 +58,6 @@ void StatementModel::deleteStatement(const PStatement& statement)
     mAllStatements.removeOne(statement);
 #endif
 
-}
-
-const StatementMap &StatementModel::childrenStatements(const PStatement& statement) const
-{
-    if (!statement) {
-        return mGlobalStatements;
-    } else {
-        return statement->children;
-    }
-}
-
-const StatementMap &StatementModel::childrenStatements(std::weak_ptr<Statement> statement) const
-{
-    PStatement s = statement.lock();
-    return childrenStatements(s);
-}
-
-void StatementModel::clear() {
-    mCount=0;
-    mGlobalStatements.clear();
-#ifdef QT_DEBUG
-    mAllStatements.clear();
-#endif
 }
 
 #ifdef QT_DEBUG

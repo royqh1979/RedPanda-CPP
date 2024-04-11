@@ -138,11 +138,6 @@ void CppPreprocessor::getDefineParts(const QString &input, QString &name, QStrin
     args.squeeze();
 }
 
-void CppPreprocessor::addHardDefineByLine(const QString &line)
-{
-    addDefineByLine(line,true);
-}
-
 void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
 {
     // Remove define
@@ -157,22 +152,13 @@ void CppPreprocessor::addDefineByLine(const QString &line, bool hardCoded)
     addDefineByParts(name, args, value, hardCoded);
 }
 
-void CppPreprocessor::setScanOptions(bool parseSystem, bool parseLocal)
-{
-    mParseSystem = parseSystem;
-    mParseLocal=parseLocal;
-}
 
 void CppPreprocessor::preprocess(const QString &fileName)
 {
     clearTempResults();
     mFileName = fileName;
-    //mDefines = mHardDefines;
     openInclude(fileName);
-    //    StringsToFile(mBuffer,"f:\\buffer.txt");
     preprocessBuffer();
-    //    StringsToFile(mBuffer,"f:\\buffer.txt");
-    //    StringsToFile(mResult,"f:\\log.txt");
 }
 
 void CppPreprocessor::invalidDefinesInFile(const QString &fileName)
@@ -263,18 +249,6 @@ void CppPreprocessor::addProjectIncludePath(const QString &fileName)
         mProjectIncludePaths.insert(fileName);
         mProjectIncludePathList.append(fileName);
     }
-}
-
-void CppPreprocessor::clearIncludePaths()
-{
-    mIncludePaths.clear();
-    mIncludePathList.clear();
-}
-
-void CppPreprocessor::clearProjectIncludePaths()
-{
-    mProjectIncludePaths.clear();
-    mProjectIncludePathList.clear();
 }
 
 void CppPreprocessor::removeScannedFile(const QString &filename)
@@ -1204,71 +1178,6 @@ void CppPreprocessor::skipToPreprocessor()
     }
 }
 
-bool CppPreprocessor::isWordChar(const QChar &ch)
-{
-    if (ch=='_'
-            // || (ch>='a' && ch<='z') || (ch>='A' && ch<='Z')
-            || ch.isLetter()
-            || (ch>='0' && ch<='9')) {
-        return true;
-    }
-    return false;
-}
-
-bool CppPreprocessor::isIdentChar(const QChar &ch)
-{
-    if (ch=='_' || ch == '*' || ch == '&' || ch == '~' ||
-            ch.isLetter()
-            //(ch>='a' && ch<='z') || (ch>='A' && ch<='Z')
-            || (ch>='0' && ch<='9')) {
-        return true;
-    }
-    return false;
-}
-
-bool CppPreprocessor::isLineChar(const QChar &ch)
-{
-    return ch=='\r' || ch == '\n';
-}
-
-bool CppPreprocessor::isSpaceChar(const QChar &ch)
-{
-    return ch == ' ' || ch == '\t';
-}
-
-//bool CppPreprocessor::isOperatorChar(const QChar &ch)
-//{
-
-//    switch(ch.unicode()) {
-//    case '+':
-//    case '-':
-//    case '*':
-//    case '/':
-//    case '!':
-//    case '=':
-//    case '<':
-//    case '>':
-//    case '&':
-//    case '|':
-//    case '^':
-//        return true;
-//    default:
-//        return false;
-//    }
-//}
-
-bool CppPreprocessor::isMacroIdentChar(const QChar &ch)
-{
-    //return (ch>='A' && ch<='Z') || (ch>='a' && ch<='z')
-    return ch.isLetter()
-            || ch == '_';
-}
-
-bool CppPreprocessor::isDigit(const QChar &ch)
-{
-    return (ch>='0' && ch<='9');
-}
-
 bool CppPreprocessor::isNumberChar(const QChar &ch)
 {
     if (ch>='0' && ch<='9')
@@ -1288,11 +1197,6 @@ bool CppPreprocessor::isNumberChar(const QChar &ch)
     default:
         return false;
     }
-}
-
-QString CppPreprocessor::lineBreak()
-{
-    return "\n";
 }
 
 bool CppPreprocessor::evaluateIf(const QString &line)
@@ -1961,22 +1865,4 @@ int CppPreprocessor::evaluateExpression(QString line)
     return result;
 }
 
-void CppPreprocessor::setOnGetFileStream(const GetFileStreamCallBack &newOnGetFileStream)
-{
-    mOnGetFileStream = newOnGetFileStream;
-}
 
-const QList<QString> &CppPreprocessor::projectIncludePathList() const
-{
-    return mProjectIncludePathList;
-}
-
-const QList<QString> &CppPreprocessor::includePathList() const
-{
-    return mIncludePathList;
-}
-
-const DefineMap &CppPreprocessor::hardDefines() const
-{
-    return mHardDefines;
-}

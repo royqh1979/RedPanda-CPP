@@ -174,8 +174,6 @@ Q_DECLARE_FLAGS(StatementProperties, StatementProperty)
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(StatementProperties)
 
-
-
 using PStatementMathPosition = std::shared_ptr<StatementMatchPosition>;
 
 struct Statement;
@@ -184,8 +182,6 @@ using StatementList = QList<PStatement>;
 using PStatementList = std::shared_ptr<StatementList>;
 using StatementMap = QMultiMap<QString, PStatement>;
 struct Statement {
-//    Statement();
-//    ~Statement();
     std::weak_ptr<Statement> parentScope; // parent class/struct/namespace scope, use weak pointer to prevent circular reference
     QString type; // type "int"
     QString command; // identifier/name of statement "foo"
@@ -293,13 +289,19 @@ struct CppScope {
 
 using PCppScope = std::shared_ptr<CppScope>;
 class CppScopes {
-
 public:
     PStatement findScopeAtLine(int line) const;
     void addScope(int line, PStatement scopeStatement);
-    PStatement lastScope() const;
-    void removeLastScope();
-    void clear();
+    PStatement lastScope() const {
+        if (mScopes.isEmpty())
+            return PStatement();
+        return mScopes.back()->statement;
+    }
+    void removeLastScope() {
+        if (!mScopes.isEmpty())
+            mScopes.pop_back();
+    }
+    void clear() { mScopes.clear(); }
 private:
     QVector<PCppScope> mScopes;
 };
@@ -319,32 +321,30 @@ using PClassInheritanceInfo = std::shared_ptr<ClassInheritanceInfo>;
 
 class ParsedFileInfo {
 public:
-    ParsedFileInfo(const QString& fileName);
+    ParsedFileInfo(const QString& fileName): mFileName {fileName} { }
     ParsedFileInfo(const ParsedFileInfo&)=delete;
     ParsedFileInfo& operator=(const ParsedFileInfo&)=delete;
-    void insertBranch(int level, bool branchTrue);
+    void insertBranch(int level, bool branchTrue) { mBranches.insert(level, branchTrue); }
     bool isLineVisible(int line) const;
-    void addInclude(const QString &fileName);
-    void addDirectInclude(const QString &fileName);
-    bool including(const QString &fileName) const;
-    PStatement findScopeAtLine(int line) const;
-    void addStatement(const PStatement &statement);
-    void clearStatements();
-    void addScope(int line, const PStatement &scope);
-    void removeLastScope();
-    PStatement lastScope() const;
-    void addUsing(const QString &usingSymbol);
-    void addHandledInheritances(std::weak_ptr<ClassInheritanceInfo> classInheritanceInfo);
-    void clearHandledInheritances();
+    void addInclude(const QString &fileName) { mIncludes.insert(fileName); }
+    void addDirectInclude(const QString &fileName) { mDirectIncludes.append(fileName); }
+    bool including(const QString &fileName) const { return mIncludes.contains(fileName); }
+    PStatement findScopeAtLine(int line) const { return mScopes.findScopeAtLine(line); }
+    void addStatement(const PStatement &statement) { mStatements.insert(statement->fullName,statement); }
+    void clearStatements() { mStatements.clear(); }
+    void addScope(int line, const PStatement &scope) { mScopes.addScope(line,scope); }
+    void removeLastScope() { mScopes.removeLastScope(); }
+    PStatement lastScope() const { return mScopes.lastScope(); }
+    void addUsing(const QString &usingSymbol) { mUsings.insert(usingSymbol); }
+    void addHandledInheritances(std::weak_ptr<ClassInheritanceInfo> classInheritanceInfo) { mHandledInheritances.append(classInheritanceInfo); }
+    void clearHandledInheritances() { mHandledInheritances.clear(); }
 
-    QString fileName() const;
-    const StatementMap& statements() const;
-    const QSet<QString>& usings() const;
-    const QStringList& directIncludes() const;
-    const QSet<QString>& includes() const;
-    const QList<std::weak_ptr<ClassInheritanceInfo> >& handledInheritances() const;
-    const QSet<QString> &includedBySet() const;
-    int includedByCount(const QString &fileName) const;
+    QString fileName() const { return mFileName; }
+    const StatementMap& statements() const { return mStatements; }
+    const QSet<QString>& usings() const { return mUsings; }
+    const QStringList& directIncludes() const { return mDirectIncludes; }
+    const QSet<QString>& includes() const { return mIncludes; }
+    const QList<std::weak_ptr<ClassInheritanceInfo> >& handledInheritances() const { return mHandledInheritances; }
 
 private:
     QString mFileName;

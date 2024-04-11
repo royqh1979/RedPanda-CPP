@@ -30,12 +30,22 @@ public:
     StatementModel& operator=(const StatementModel&)=delete;
 
     void add(const PStatement& statement);
-//    function DeleteFirst: Integer;
-//    function DeleteLast: Integer;
     void deleteStatement(const PStatement& statement);
-    const StatementMap& childrenStatements(const PStatement& statement = PStatement()) const;
-    const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const;
-    void clear();
+    const StatementMap& childrenStatements(const PStatement& statement = PStatement()) const {
+        if (!statement) {
+            return mGlobalStatements;
+        } else {
+            return statement->children;
+        }
+    }
+    const StatementMap& childrenStatements(std::weak_ptr<Statement> statement) const { return childrenStatements(statement.lock()); }
+    void clear() {
+        mCount=0;
+        mGlobalStatements.clear();
+#ifdef QT_DEBUG
+        mAllStatements.clear();
+#endif
+    }
     int count() const { return mCount; }
 #ifdef QT_DEBUG
     void dump(const QString& logFile);

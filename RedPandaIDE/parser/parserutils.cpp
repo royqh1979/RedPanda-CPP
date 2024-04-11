@@ -529,7 +529,6 @@ bool isHFile(const QString& filename)
 {
     if (filename.isEmpty())
         return false;
-
     QFileInfo fileInfo(filename);
     return CppHeaderExts->contains(fileInfo.suffix().toLower());
 
@@ -576,28 +575,12 @@ void CppScopes::addScope(int line, PStatement scopeStatement)
     scope->startLine = line;
     scope->statement = scopeStatement;
     mScopes.append(scope);
+#ifdef QT_DEBUG
     if (!mScopes.isEmpty() && mScopes.back()->startLine>line) {
         qDebug()<<QString("Error: new scope %1 at %2 which is less that last scope %3")
                   .arg(scopeStatement->fullName, line,mScopes.back()->startLine>line);
     }
-}
-
-PStatement CppScopes::lastScope() const
-{
-    if (mScopes.isEmpty())
-        return PStatement();
-    return mScopes.back()->statement;
-}
-
-void CppScopes::removeLastScope()
-{
-    if (!mScopes.isEmpty())
-        mScopes.pop_back();
-}
-
-void CppScopes::clear()
-{
-    mScopes.clear();
+#endif
 }
 
 MemberOperatorType getOperatorType(const QString &phrase, int index)
@@ -767,17 +750,6 @@ bool isTypeKind(StatementKind kind)
     }
 }
 
-ParsedFileInfo::ParsedFileInfo(const QString &fileName):
-    mFileName { fileName }
-{
-
-}
-
-void ParsedFileInfo::insertBranch(int level, bool branchTrue)
-{
-    mBranches.insert(level, branchTrue);
-}
-
 bool ParsedFileInfo::isLineVisible(int line) const
 {
     int lastI=-1;
@@ -789,94 +761,4 @@ bool ParsedFileInfo::isLineVisible(int line) const
             lastI = i;
     }
     return lastI<0?true:mBranches[lastI];
-}
-
-void ParsedFileInfo::addInclude(const QString &fileName)
-{
-    mIncludes.insert(fileName);
-}
-
-void ParsedFileInfo::addDirectInclude(const QString &fileName)
-{
-    mDirectIncludes.append(fileName);
-}
-
-bool ParsedFileInfo::including(const QString &fileName) const
-{
-    return mIncludes.contains(fileName);
-}
-
-const QSet<QString>& ParsedFileInfo::includes() const
-{
-    return mIncludes;
-}
-
-const QList<std::weak_ptr<ClassInheritanceInfo> >& ParsedFileInfo::handledInheritances() const
-{
-    return mHandledInheritances;
-}
-
-QString ParsedFileInfo::fileName() const
-{
-    return mFileName;
-}
-
-PStatement ParsedFileInfo::findScopeAtLine(int line) const
-{
-    return mScopes.findScopeAtLine(line);
-}
-
-void ParsedFileInfo::addStatement(const PStatement &statement)
-{
-    mStatements.insert(statement->fullName,statement);
-}
-
-void ParsedFileInfo::clearStatements()
-{
-    mStatements.clear();
-}
-
-void ParsedFileInfo::addScope(int line, const PStatement &scope)
-{
-    mScopes.addScope(line,scope);
-}
-
-void ParsedFileInfo::removeLastScope()
-{
-    mScopes.removeLastScope();
-}
-
-PStatement ParsedFileInfo::lastScope() const
-{
-    return mScopes.lastScope();
-}
-
-void ParsedFileInfo::addUsing(const QString &usingSymbol)
-{
-    mUsings.insert(usingSymbol);
-}
-
-void ParsedFileInfo::addHandledInheritances(std::weak_ptr<ClassInheritanceInfo> classInheritanceInfo)
-{
-    mHandledInheritances.append(classInheritanceInfo);
-}
-
-void ParsedFileInfo::clearHandledInheritances()
-{
-    mHandledInheritances.clear();
-}
-
-const StatementMap& ParsedFileInfo::statements() const
-{
-    return mStatements;
-}
-
-const QSet<QString>& ParsedFileInfo::usings() const
-{
-    return mUsings;
-}
-
-const QStringList& ParsedFileInfo::directIncludes() const
-{
-    return mDirectIncludes;
 }

@@ -1334,9 +1334,9 @@ int DocumentLine::glyphWidth(int i)
     return calcSegmentInterval(mGlyphStartPositionList, mWidth, i);
 }
 
-int DocumentLine::width(bool forceUpdate)
+int DocumentLine::width()
 {
-    if(mWidth<0 || forceUpdate)
+    if(mWidth<0)
         updateWidth();
     return mWidth;
 }

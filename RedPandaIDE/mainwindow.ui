@@ -119,8 +119,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2345</width>
-     <height>30</height>
+     <width>1236</width>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -795,6 +795,11 @@
            <property name="text">
             <string>New Problem Set</string>
            </property>
+           <property name="icon">
+            <iconset>
+             <normalon>:/resources/iconsets/newlook/actions/08Problem-01Problem.svg</normalon>
+            </iconset>
+           </property>
           </widget>
          </item>
          <item>
@@ -804,6 +809,11 @@
            </property>
            <property name="text">
             <string>Add Problem</string>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normalon>:/resources/iconsets/newlook/actions/00Misc-03Add.svg</normalon>
+            </iconset>
            </property>
           </widget>
          </item>
@@ -815,6 +825,11 @@
            <property name="text">
             <string>Remove Problem</string>
            </property>
+           <property name="icon">
+            <iconset>
+             <normalon>:/resources/iconsets/newlook/actions/00Misc-04Remove.svg</normalon>
+            </iconset>
+           </property>
           </widget>
          </item>
          <item>
@@ -824,6 +839,11 @@
            </property>
            <property name="text">
             <string>Save Problem Set</string>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normalon>:/resources/iconsets/newlook/actions/01File-04SaveAs.svg</normalon>
+            </iconset>
            </property>
           </widget>
          </item>
@@ -835,6 +855,11 @@
            <property name="text">
             <string>Load Problem Set</string>
            </property>
+           <property name="icon">
+            <iconset>
+             <normalon>:/resources/iconsets/newlook/actions/06View-03Files.svg</normalon>
+            </iconset>
+           </property>
           </widget>
          </item>
          <item>
@@ -842,12 +867,22 @@
            <property name="text">
             <string>Import FPS Problem Set</string>
            </property>
+           <property name="icon">
+            <iconset>
+             <normalon>:/resources/iconsets/newlook/actions/00Misc-01Back.svg</normalon>
+            </iconset>
+           </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="btnExportFPS">
            <property name="text">
             <string>Export FPS Problem Set</string>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normalon>:/resources/iconsets/newlook/actions/00Misc-02Forward.svg</normalon>
+            </iconset>
            </property>
           </widget>
          </item>
@@ -917,7 +952,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>6</number>
+     <number>2</number>
     </property>
     <property name="iconSize">
      <size>
@@ -946,7 +981,6 @@
        <widget class="IssuesTable" name="tableIssues">
         <property name="font">
          <font>
-          <weight>50</weight>
           <bold>false</bold>
          </font>
         </property>
@@ -1098,7 +1132,7 @@
           <enum>QTabWidget::North</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="tabDebugConsole">
           <attribute name="title">
@@ -1628,6 +1662,10 @@
                <property name="text">
                 <string>Add Probem Case</string>
                </property>
+               <property name="icon">
+                <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+                 <normaloff>:/resources/iconsets/newlook/actions/00Misc-03Add.svg</normaloff>:/resources/iconsets/newlook/actions/00Misc-03Add.svg</iconset>
+               </property>
               </widget>
              </item>
              <item>
@@ -1638,6 +1676,10 @@
                <property name="text">
                 <string>Remove Problem Case</string>
                </property>
+               <property name="icon">
+                <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+                 <normaloff>:/resources/iconsets/newlook/actions/00Misc-04Remove.svg</normaloff>:/resources/iconsets/newlook/actions/00Misc-04Remove.svg</iconset>
+               </property>
               </widget>
              </item>
              <item>
@@ -1647,6 +1689,10 @@
                </property>
                <property name="text">
                 <string>Open Anwser Source File</string>
+               </property>
+               <property name="icon">
+                <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+                 <normaloff>:/resources/iconsets/newlook/actions/08Problem-04EditSource.svg</normaloff>:/resources/iconsets/newlook/actions/08Problem-04EditSource.svg</iconset>
                </property>
               </widget>
              </item>
@@ -1665,12 +1711,20 @@
                <property name="text">
                 <string>Run All Cases</string>
                </property>
+               <property name="icon">
+                <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+                 <normaloff>:/resources/iconsets/newlook/actions/08Problem-05RunCases.svg</normaloff>:/resources/iconsets/newlook/actions/08Problem-05RunCases.svg</iconset>
+               </property>
               </widget>
              </item>
              <item>
               <widget class="QToolButton" name="btnCaseValidateOptions">
                <property name="text">
                 <string>Problem Cases Validation Options</string>
+               </property>
+               <property name="icon">
+                <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+                 <normaloff>:/resources/iconsets/newlook/actions/00Misc-05Gear.svg</normaloff>:/resources/iconsets/newlook/actions/00Misc-05Gear.svg</iconset>
                </property>
               </widget>
              </item>
@@ -1789,6 +1843,10 @@
                <property name="text">
                 <string>Choose Input File</string>
                </property>
+               <property name="icon">
+                <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+                 <normaloff>:/resources/iconsets/newlook/actions/00Misc-07Folder.svg</normaloff>:/resources/iconsets/newlook/actions/00Misc-07Folder.svg</iconset>
+               </property>
               </widget>
              </item>
              <item row="0" column="2">
@@ -1904,6 +1962,10 @@
                <property name="text">
                 <string>Choose Expected Output File</string>
                </property>
+               <property name="icon">
+                <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+                 <normaloff>:/resources/iconsets/newlook/actions/00Misc-07Folder.svg</normaloff>:/resources/iconsets/newlook/actions/00Misc-07Folder.svg</iconset>
+               </property>
               </widget>
              </item>
             </layout>
@@ -1973,6 +2035,10 @@
    </widget>
   </widget>
   <action name="actionNew">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/01File-01New.svg</normaloff>:/resources/iconsets/newlook/actions/01File-01New.svg</iconset>
+   </property>
    <property name="text">
     <string>New C/C++ File</string>
    </property>
@@ -1984,6 +2050,10 @@
    </property>
   </action>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/01File-02Open.svg</normaloff>:/resources/iconsets/newlook/actions/01File-02Open.svg</iconset>
+   </property>
    <property name="text">
     <string>Open...</string>
    </property>
@@ -1992,6 +2062,10 @@
    </property>
   </action>
   <action name="actionSave">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/01File-03Save.svg</normaloff>:/resources/iconsets/newlook/actions/01File-03Save.svg</iconset>
+   </property>
    <property name="text">
     <string>Save</string>
    </property>
@@ -2000,6 +2074,10 @@
    </property>
   </action>
   <action name="actionSaveAs">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/01File-04SaveAs.svg</normaloff>:/resources/iconsets/newlook/actions/01File-04SaveAs.svg</iconset>
+   </property>
    <property name="text">
     <string>Save As...</string>
    </property>
@@ -2011,6 +2089,10 @@
    </property>
   </action>
   <action name="actionSaveAll">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/01File-05SaveAll.svg</normaloff>:/resources/iconsets/newlook/actions/01File-05SaveAll.svg</iconset>
+   </property>
    <property name="text">
     <string>Save All</string>
    </property>
@@ -2019,11 +2101,19 @@
    </property>
   </action>
   <action name="actionOptions">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/00Misc-05Gear.svg</normaloff>:/resources/iconsets/newlook/actions/00Misc-05Gear.svg</iconset>
+   </property>
    <property name="text">
     <string>Options</string>
    </property>
   </action>
   <action name="actionCompile">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-01Compile.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-01Compile.svg</iconset>
+   </property>
    <property name="text">
     <string>Compile</string>
    </property>
@@ -2035,6 +2125,10 @@
    </property>
   </action>
   <action name="actionRun">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-03Run.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-03Run.svg</iconset>
+   </property>
    <property name="text">
     <string>Run</string>
    </property>
@@ -2046,6 +2140,10 @@
    </property>
   </action>
   <action name="actionUndo">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/03Edit-01Undo.svg</normaloff>:/resources/iconsets/newlook/actions/03Edit-01Undo.svg</iconset>
+   </property>
    <property name="text">
     <string>Undo</string>
    </property>
@@ -2054,6 +2152,10 @@
    </property>
   </action>
   <action name="actionRedo">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/03Edit-02Redo.svg</normaloff>:/resources/iconsets/newlook/actions/03Edit-02Redo.svg</iconset>
+   </property>
    <property name="text">
     <string>Redo</string>
    </property>
@@ -2062,6 +2164,10 @@
    </property>
   </action>
   <action name="actionCut">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/03Edit-03Cut.svg</normaloff>:/resources/iconsets/newlook/actions/03Edit-03Cut.svg</iconset>
+   </property>
    <property name="text">
     <string>Cut</string>
    </property>
@@ -2070,6 +2176,10 @@
    </property>
   </action>
   <action name="actionCopy">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/03Edit-04Copy.svg</normaloff>:/resources/iconsets/newlook/actions/03Edit-04Copy.svg</iconset>
+   </property>
    <property name="text">
     <string>Copy</string>
    </property>
@@ -2078,6 +2188,10 @@
    </property>
   </action>
   <action name="actionPaste">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/03Edit-05Paste.svg</normaloff>:/resources/iconsets/newlook/actions/03Edit-05Paste.svg</iconset>
+   </property>
    <property name="text">
     <string>Paste</string>
    </property>
@@ -2094,6 +2208,10 @@
    </property>
   </action>
   <action name="actionIndent">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/03Edit-06Indent.svg</normaloff>:/resources/iconsets/newlook/actions/03Edit-06Indent.svg</iconset>
+   </property>
    <property name="text">
     <string>Indent</string>
    </property>
@@ -2102,6 +2220,10 @@
    </property>
   </action>
   <action name="actionUnIndent">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/03Edit-07Unindent.svg</normaloff>:/resources/iconsets/newlook/actions/03Edit-07Unindent.svg</iconset>
+   </property>
    <property name="text">
     <string>UnIndent</string>
    </property>
@@ -2156,6 +2278,10 @@
    </property>
   </action>
   <action name="actionRebuild">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-04Rebuild.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-04Rebuild.svg</iconset>
+   </property>
    <property name="text">
     <string>Rebuild All</string>
    </property>
@@ -2167,6 +2293,10 @@
    </property>
   </action>
   <action name="actionStop_Execution">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-11Stop.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-11Stop.svg</iconset>
+   </property>
    <property name="text">
     <string>Stop Execution</string>
    </property>
@@ -2175,6 +2305,10 @@
    </property>
   </action>
   <action name="actionDebug">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-06Debug.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-06Debug.svg</iconset>
+   </property>
    <property name="text">
     <string>Debug</string>
    </property>
@@ -2186,6 +2320,10 @@
    </property>
   </action>
   <action name="actionStep_Over">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-07StepOver.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-07StepOver.svg</iconset>
+   </property>
    <property name="text">
     <string>Step Over</string>
    </property>
@@ -2194,6 +2332,10 @@
    </property>
   </action>
   <action name="actionStep_Into">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-08StepInto.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-08StepInto.svg</iconset>
+   </property>
    <property name="text">
     <string>Step Into</string>
    </property>
@@ -2202,6 +2344,10 @@
    </property>
   </action>
   <action name="actionStep_Out">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-08StepOut.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-08StepOut.svg</iconset>
+   </property>
    <property name="text">
     <string>Step Out</string>
    </property>
@@ -2210,6 +2356,10 @@
    </property>
   </action>
   <action name="actionRun_To_Cursor">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-09RunToCursor.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-09RunToCursor.svg</iconset>
+   </property>
    <property name="text">
     <string>Run To Cursor</string>
    </property>
@@ -2218,6 +2368,10 @@
    </property>
   </action>
   <action name="actionContinue">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-10Continue.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-10Continue.svg</iconset>
+   </property>
    <property name="text">
     <string>Continue</string>
    </property>
@@ -2226,6 +2380,10 @@
    </property>
   </action>
   <action name="actionAdd_Watch">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-12AddWatch.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-12AddWatch.svg</iconset>
+   </property>
    <property name="text">
     <string>Add Watch...</string>
    </property>
@@ -2281,6 +2439,10 @@
    </property>
   </action>
   <action name="actionRemove_Watch">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-13RemoveWatch.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-13RemoveWatch.svg</iconset>
+   </property>
    <property name="text">
     <string>Remove Watch</string>
    </property>
@@ -2296,6 +2458,10 @@
    </property>
   </action>
   <action name="actionReformat_Code">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/04Code-05Reformat.svg</normaloff>:/resources/iconsets/newlook/actions/04Code-05Reformat.svg</iconset>
+   </property>
    <property name="text">
     <string>Reformat Code</string>
    </property>
@@ -2304,6 +2470,10 @@
    </property>
   </action>
   <action name="actionBack">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/04Code-01Back.svg</normaloff>:/resources/iconsets/newlook/actions/04Code-01Back.svg</iconset>
+   </property>
    <property name="text">
     <string>Go back</string>
    </property>
@@ -2312,6 +2482,10 @@
    </property>
   </action>
   <action name="actionForward">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/04Code-02Forward.svg</normaloff>:/resources/iconsets/newlook/actions/04Code-02Forward.svg</iconset>
+   </property>
    <property name="text">
     <string>Forward</string>
    </property>
@@ -2561,6 +2735,10 @@
    </property>
   </action>
   <action name="actionRun_Parameters">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-05Options.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-05Options.svg</iconset>
+   </property>
    <property name="text">
     <string>Running Parameters...</string>
    </property>
@@ -2723,6 +2901,10 @@
    </property>
   </action>
   <action name="actionInterrupt">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-16Interrupt.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-16Interrupt.svg</iconset>
+   </property>
    <property name="text">
     <string>Interrupt</string>
    </property>
@@ -2883,6 +3065,10 @@
    </property>
   </action>
   <action name="actionCompiler_Options">
+   <property name="icon">
+    <iconset resource="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc">
+     <normaloff>:/resources/iconsets/newlook/actions/05Run-17CompilerOptions.svg</normaloff>:/resources/iconsets/newlook/actions/05Run-17CompilerOptions.svg</iconset>
+   </property>
    <property name="text">
     <string>Compiler Options...</string>
    </property>
@@ -3197,6 +3383,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="Z:/Red_Panda_CPP/RedPandaIDE/release/qmake_iconsets_files.qrc"/>
+ </resources>
  <connections/>
 </ui>

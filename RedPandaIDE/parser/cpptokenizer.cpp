@@ -526,34 +526,6 @@ QString CppTokenizer::getWord()
     return result;
 }
 
-bool CppTokenizer::isArguments()
-{
-    return *mCurrent == '(';
-}
-
-//bool CppTokenizer::isForInit()
-//{
-//    return (*mCurrent == '(') && (mLastToken == "for");
-//}
-
-bool CppTokenizer::isNumber()
-{
-    return isDigitChar(*mCurrent);
-}
-
-bool CppTokenizer::isPreprocessor()
-{
-    return *mCurrent=='#';
-}
-
-bool CppTokenizer::isWord()
-{
-    bool result = isIdentChar(*mCurrent);
-    if (result && (*(mCurrent+1) == '"'))
-        result = false;
-    return result;
-}
-
 void CppTokenizer::simplify(QString &output)
 {
     //remove \n \r;

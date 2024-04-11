@@ -60,31 +60,31 @@ public:
     CppSyntaxer(const CppSyntaxer&)=delete;
     CppSyntaxer operator=(const CppSyntaxer&)=delete;
 
-    const PTokenAttribute &preprocessorAttribute() const;
+    const PTokenAttribute &preprocessorAttribute() const { return mPreprocessorAttribute; }
 
-    const PTokenAttribute &invalidAttribute() const;
+    const PTokenAttribute &invalidAttribute() const { return mInvalidAttribute; }
 
-    const PTokenAttribute &numberAttribute() const;
+    const PTokenAttribute &numberAttribute() const { return mNumberAttribute; }
 
-    const PTokenAttribute &floatAttribute() const;
+    const PTokenAttribute &floatAttribute() const { return mFloatAttribute; }
 
-    const PTokenAttribute &hexAttribute() const;
+    const PTokenAttribute &hexAttribute() const { return mHexAttribute; }
 
-    const PTokenAttribute &octAttribute() const;
+    const PTokenAttribute &octAttribute() const { return mOctAttribute; }
 
-    const PTokenAttribute &stringEscapeSequenceAttribute() const;
+    const PTokenAttribute &stringEscapeSequenceAttribute() const { return mStringEscapeSequenceAttribute; }
 
-    const PTokenAttribute &charAttribute() const;
+    const PTokenAttribute &charAttribute() const { return mCharAttribute; }
 
-    const PTokenAttribute &variableAttribute() const;
+    const PTokenAttribute &variableAttribute() const { return mVariableAttribute; }
 
-    const PTokenAttribute &functionAttribute() const;
+    const PTokenAttribute &functionAttribute() const { return mFunctionAttribute; }
 
-    const PTokenAttribute &classAttribute() const;
+    const PTokenAttribute &classAttribute() const { return mClassAttribute; }
 
-    const PTokenAttribute &globalVarAttribute() const;
+    const PTokenAttribute &globalVarAttribute() const { return mGlobalVarAttribute; }
 
-    const PTokenAttribute &localVarAttribute() const;
+    const PTokenAttribute &localVarAttribute() const { return mLocalVarAttribute; }
 
     static const QSet<QString> Keywords;
 
@@ -92,15 +92,15 @@ public:
 
     static const QSet<QString> StandardAttributes;
 
-    bool isStringToNextLine(int state);
-    bool isRawStringStart(int state);
-    bool isRawStringNoEscape(int state);
-    bool isRawStringEnd(int state);
-    bool isCharNotFinished(int state);
-    bool isCharEscaping(int state);
+    bool isStringToNextLine(int state) { return state == RangeState::rsStringNextLine; }
+    bool isRawStringStart(int state) { return state == RangeState::rsRawString; }
+    bool isRawStringNoEscape(int state) { return state == RangeState::rsRawStringNotEscaping; }
+    bool isRawStringEnd(int state) { return state == RangeState::rsRawStringEnd; }
+    bool isCharNotFinished(int state) { return state == RangeState::rsChar || state == RangeState::rsCharEscaping; }
+    bool isCharEscaping(int state) { return state == RangeState::rsCharEscaping; }
     bool isInAttribute(const SyntaxState &state);
 
-    TokenId getTokenId();
+    TokenId getTokenId() { return mTokenId; }
 private:
     void procAndSymbol();
     void procCppStyleComment();
@@ -159,7 +159,6 @@ private:
 
 private:
     SyntaxState mRange;
-//    SynRangeState mSpaceRange;
     QString mLine;
     int mLineSize;
     int mRun;
