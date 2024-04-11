@@ -3749,7 +3749,6 @@ void Settings::Environment::doLoad()
     mLanguage = stringValue("language", QLocale::system().name());
     mIconSet = stringValue("icon_set","contrast");
     mUseCustomIconSet = boolValue("use_custom_icon_set", false);
-    mUseCustomTheme = boolValue("use_custom_theme", false);
 
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
     if (!fileExists(mCurrentFolder)) {
@@ -3875,16 +3874,6 @@ bool Settings::Environment::useCustomIconSet() const
 void Settings::Environment::setUseCustomIconSet(bool newUseCustomIconSet)
 {
     mUseCustomIconSet = newUseCustomIconSet;
-}
-
-bool Settings::Environment::useCustomTheme() const
-{
-    return mUseCustomTheme;
-}
-
-void Settings::Environment::setUseCustomTheme(bool newUseCustomTheme)
-{
-    mUseCustomTheme = newUseCustomTheme;
 }
 
 bool Settings::Environment::hideNonSupportFilesInFileView() const

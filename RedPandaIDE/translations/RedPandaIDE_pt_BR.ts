@@ -10657,6 +10657,19 @@
     </message>
 </context>
 <context>
+    <name>ThemeManager</name>
+    <message>
+        <location filename="../thememanager.cpp" line="-206"/>
+        <source>custom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>built-in</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>TodoModel</name>
     <message>
         <location filename="../todoparser.cpp" line="+292"/>
