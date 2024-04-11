@@ -401,8 +401,8 @@ MainWindow::MainWindow(QWidget *parent)
     delete m;
     // connect(&mFileSystemModel, &QFileSystemModel::layoutChanged,
     //         this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
-    // connect(&mFileSystemModel, &QFileSystemModel::fileRenamed,
-    //         this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
+    connect(&mFileSystemModel, &QFileSystemModel::fileRenamed,
+            this, &MainWindow::onFileSystemModelLayoutChanged, Qt::QueuedConnection);
     connect(&mFileSystemModel, &QFileSystemModel::fileRenamed,
             this, &MainWindow::onFileRenamedInFileSystemModel);
     mFileSystemModel.setReadOnly(false);
