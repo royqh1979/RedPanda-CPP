@@ -478,7 +478,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 if (sourceEncoding==ENCODING_SYSTEM_DEFAULT)
                     sourceEncoding = defaultSystemEncoding;
 
-                if (sourceEncoding!=targetEncoding) {
+                if (QString::compare(sourceEncoding,targetEncoding,Qt::CaseInsensitive)!=0) {
                     encodingStr = QString(" -finput-charset=%1 -fexec-charset=%2")
                             .arg(QString(sourceEncoding),
                                  QString(targetEncoding));
