@@ -566,9 +566,6 @@ public:
         bool useCustomIconSet() const;
         void setUseCustomIconSet(bool newUseCustomIconSet);
 
-        bool useCustomTheme() const;
-        void setUseCustomTheme(bool newUseCustomTheme);
-
         bool hideNonSupportFilesInFileView() const;
         void setHideNonSupportFilesInFileView(bool newHideNonSupportFilesInFileView);
 

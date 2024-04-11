@@ -45,11 +45,7 @@ void EnvironmentFoldersWidget::doLoad()
     if (pSettings->environment().useCustomIconSet()) {
         ui->txtIconSetFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::IconSet));
     }
-    ui->txtThemeFolder->setEnabled(pSettings->environment().useCustomTheme());
-    ui->btnOpenThemeFolderInFileBrowser->setEnabled(pSettings->environment().useCustomTheme());
-    if (pSettings->environment().useCustomTheme()) {
-        ui->txtThemeFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::Theme));
-    }
+    ui->txtThemeFolder->setText(pSettings->dirs().config(Settings::Dirs::DataType::Theme));
 }
 
 void EnvironmentFoldersWidget::doSave()

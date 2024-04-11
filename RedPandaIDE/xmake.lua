@@ -179,7 +179,7 @@ target("RedPandaIDE")
 
     add_files(
         "resources/iconsets/**.svg", "resources/iconsets/**.json",
-        "resources/themes/*.png",
+        "resources/themes/*.lua", "resources/themes/*.json", "resources/themes/*.png",
         "resources/colorschemes/*.scheme",
         "resources/fonts/asciicontrol.ttf",
         {rule = "RedPandaIDE.auto_qrc"})
@@ -199,14 +199,7 @@ target("RedPandaIDE")
             "addon/api.cpp",
             "addon/executor.cpp",
             "addon/runtime.cpp")
-        add_files(
-            "resources/themes/*.lua",
-            {rule = "RedPandaIDE.auto_qrc"})
         add_links("lua")
-    else
-        add_files(
-            "resources/themes/*.json",
-            {rule = "RedPandaIDE.auto_qrc"})
     end
 
     if has_config("sdcc") then

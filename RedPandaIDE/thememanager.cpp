@@ -33,79 +33,52 @@
 #include "addon/runtime.h"
 #endif
 
-ThemeManager::ThemeManager(QObject *parent) : QObject(parent),
-    mUseCustomTheme(false)
+ThemeManager::ThemeManager(QObject *parent) : QObject(parent)
 {
 
 }
 
 PAppTheme ThemeManager::theme(const QString &themeName)
 {
-    if (mUseCustomTheme)
-        prepareCustomeTheme();
-    QString themeDir;
-    if (mUseCustomTheme) {
-        themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-    } else {
-        themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
-    }
-#ifdef ENABLE_LUA_ADDON
-    PAppTheme appTheme = std::make_shared<AppTheme>(QString("%1/%2.lua").arg(themeDir, themeName), AppTheme::ThemeType::Lua);
-#else
-    PAppTheme appTheme = std::make_shared<AppTheme>(QString("%1/%2.json").arg(themeDir, themeName), AppTheme::ThemeType::JSON);
-#endif
-    return appTheme;
-}
+    QString customThemeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    QString builtInThemeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+    PAppTheme appTheme = nullptr;
 
-bool ThemeManager::useCustomTheme() const
-{
-    return mUseCustomTheme;
-}
-
-void ThemeManager::setUseCustomTheme(bool newUseCustomTheme)
-{
-    mUseCustomTheme = newUseCustomTheme;
-}
-
-void ThemeManager::prepareCustomeTheme()
-{
-
-    if (QFile(pSettings->dirs().config(Settings::Dirs::DataType::Theme)).exists())
-        return;
-    copyFolder(pSettings->dirs().data(Settings::Dirs::DataType::Theme),pSettings->dirs().config(Settings::Dirs::DataType::Theme));
+    // custom overrides built-in
+    if (tryLoadThemeFromDir(customThemeDir, themeName, appTheme))
+        return appTheme;
+    if (tryLoadThemeFromDir(builtInThemeDir, themeName, appTheme))
+        return appTheme;
+    return nullptr;
 }
 
 QList<PAppTheme> ThemeManager::getThemes()
 {
-    if (mUseCustomTheme)
-        prepareCustomeTheme();
+    QString customThemeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    QString builtInThemeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
+    std::set<PAppTheme, ThemeCompare> themes;
 
-    QList<PAppTheme> result;
-    QString themeDir;
-    QString themeExtension;
-    AppTheme::ThemeType themeType;
-    if (mUseCustomTheme) {
-        themeDir = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-        themeExtension = "json";
-        themeType = AppTheme::ThemeType::JSON;
-    } else {
-        themeDir = pSettings->dirs().data(Settings::Dirs::DataType::Theme);
-#ifdef ENABLE_LUA_ADDON
-        themeExtension = "lua";
-        themeType = AppTheme::ThemeType::Lua;
-#else
-        themeExtension = "json";
-        themeType = AppTheme::ThemeType::JSON;
-#endif
-    }
-    QDirIterator it(themeDir);
-    while (it.hasNext()) {
-        it.next();
-        QFileInfo fileInfo = it.fileInfo();
-        if (fileInfo.suffix().compare(themeExtension, PATH_SENSITIVITY)==0) {
+    // custom overrides built-in
+    loadThemesFromDir(customThemeDir, themes);
+    loadThemesFromDir(builtInThemeDir, themes);
+
+    QList<PAppTheme> result(themes.begin(), themes.end());
+    return result;
+}
+
+bool ThemeManager::ThemeCompare::operator()(const PAppTheme &lhs, const PAppTheme &rhs) const
+{
+    return QFileInfo(lhs->filename()).baseName() < QFileInfo(rhs->filename()).baseName();
+}
+
+bool ThemeManager::tryLoadThemeFromDir(const QString &dir, const QString &themeName, PAppTheme &theme)
+{
+    for (const auto &[extension, type] : searchTypes) {
+        QString filename = QString("%1/%2.%3").arg(dir, themeName, extension);
+        if (QFile::exists(filename)) {
             try {
-                PAppTheme appTheme = std::make_shared<AppTheme>(fileInfo.absoluteFilePath(), themeType);
-                result.append(appTheme);
+                theme = std::make_shared<AppTheme>(filename, type);
+                return true;
             } catch(FileError e) {
                 //just skip it
             }
@@ -116,12 +89,32 @@ QList<PAppTheme> ThemeManager::getThemes()
 #endif
         }
     }
-    std::sort(result.begin(),result.end(),[](const PAppTheme &theme1, const PAppTheme &theme2){
-        return QFileInfo(theme1->filename()).baseName() <  QFileInfo(theme2->filename()).baseName();
-    });
-    return result;
+    return false;
 }
 
+void ThemeManager::loadThemesFromDir(const QString &dir, std::set<PAppTheme, ThemeCompare> &themes)
+{
+    for (const auto &[extension, type] : searchTypes) {
+        QDirIterator it(dir);
+        while (it.hasNext()) {
+            it.next();
+            QFileInfo fileInfo = it.fileInfo();
+            if (fileInfo.suffix().compare(extension, PATH_SENSITIVITY) == 0) {
+                try {
+                    PAppTheme appTheme = std::make_shared<AppTheme>(fileInfo.absoluteFilePath(), type);
+                    themes.insert(appTheme);
+                } catch(FileError e) {
+                    //just skip it
+                }
+#ifdef ENABLE_LUA_ADDON
+                catch(AddOn::LuaError e) {
+                    qDebug() << e.reason();
+                }
+#endif
+            }
+        }
+    }
+}
 
 QColor AppTheme::color(ColorRole role) const
 {

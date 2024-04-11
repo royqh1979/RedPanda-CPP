@@ -21,6 +21,7 @@
 #include <QColor>
 #include <memory>
 #include <QObject>
+#include <set>
 
 class AppTheme : public QObject{
     Q_OBJECT
@@ -122,13 +123,24 @@ class ThemeManager : public QObject
 public:
     explicit ThemeManager(QObject *parent = nullptr);
     PAppTheme theme(const QString& themeName);
-    bool useCustomTheme() const;
-    void setUseCustomTheme(bool newUseCustomTheme);
-    void prepareCustomeTheme();
     QList<PAppTheme> getThemes();
 
 private:
-    bool mUseCustomTheme;
+    struct ThemeCompare {
+        bool operator()(const PAppTheme &lhs, const PAppTheme &rhs) const;
+    };
+
+private:
+    bool tryLoadThemeFromDir(const QString &dir, const QString &themeName, PAppTheme &theme);
+    void loadThemesFromDir(const QString &dir, std::set<PAppTheme, ThemeCompare> &themes);
+
+    // lua overrides json
+    inline static const std::pair<QString, AppTheme::ThemeType> searchTypes[] = {
+#ifdef ENABLE_LUA_ADDON
+        { "lua", AppTheme::ThemeType::Lua },
+#endif
+        { "json", AppTheme::ThemeType::JSON },
+    };
 };
 
 #endif // THEMEMANAGER_H

@@ -136,13 +136,6 @@
        <widget class="QComboBox" name="cbTheme"/>
       </item>
       <item>
-       <widget class="QCheckBox" name="chkUseCustomTheme">
-        <property name="text">
-         <string>Use custom theme</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -322,7 +315,6 @@
  </widget>
  <tabstops>
   <tabstop>cbTheme</tabstop>
-  <tabstop>chkUseCustomTheme</tabstop>
   <tabstop>cbFont</tabstop>
   <tabstop>spinFontSize</tabstop>
   <tabstop>cbIconSet</tabstop>

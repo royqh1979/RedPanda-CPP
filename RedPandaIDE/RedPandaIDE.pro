@@ -608,11 +608,8 @@ qmake_qm_files.prefix = $$QM_FILES_RESOURCE_PREFIX
 iconsets_files.files += $$files(resources/iconsets/*.svg, true)
 iconsets_files.files += $$files(resources/iconsets/*.json, true)
 
-ENABLE_LUA_ADDON {
-    theme_files.files += $$files(resources/themes/*.lua, false)
-} else {
-    theme_files.files += $$files(resources/themes/*.json, false)
-}
+theme_files.files += $$files(resources/themes/*.lua, false)
+theme_files.files += $$files(resources/themes/*.json, false)
 theme_files.files += $$files(resources/themes/*.png, false)
 
 colorscheme_files.files += $$files(resources/colorschemes/*.scheme, false)
