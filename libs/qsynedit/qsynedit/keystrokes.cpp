@@ -215,12 +215,12 @@ void EditKeyStrokes::resetDefaults()
     add(EditCommand::SelPageTop, Qt::Key_PageUp, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
     add(EditCommand::LineStart, Qt::Key_Home, Qt::NoModifier);
     add(EditCommand::SelLineStart, Qt::Key_Home, Qt::ShiftModifier);
-    add(EditCommand::EditorStart, Qt::Key_Home, Qt::ControlModifier);
-    add(EditCommand::SelEditorStart, Qt::Key_Home, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
+    add(EditCommand::FileStart, Qt::Key_Home, Qt::ControlModifier);
+    add(EditCommand::SelFileStart, Qt::Key_Home, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
     add(EditCommand::LineEnd, Qt::Key_End, Qt::NoModifier);
     add(EditCommand::SelLineEnd, Qt::Key_End, Qt::ShiftModifier);
-    add(EditCommand::EditorEnd, Qt::Key_End, Qt::ControlModifier);
-    add(EditCommand::SelEditorEnd, Qt::Key_End, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
+    add(EditCommand::FileEnd, Qt::Key_End, Qt::ControlModifier);
+    add(EditCommand::SelFileEnd, Qt::Key_End, Qt::KeyboardModifiers(Qt::ShiftModifier|Qt::ControlModifier));
     add(EditCommand::ToggleMode, Qt::Key_Insert, Qt::NoModifier);
     add(EditCommand::DeleteChar, Qt::Key_Delete, Qt::NoModifier);
     add(EditCommand::DeleteLastChar, Qt::Key_Backspace, Qt::NoModifier);

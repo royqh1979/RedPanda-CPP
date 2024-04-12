@@ -281,12 +281,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     mCPUDialog = nullptr;
 
-//    applySettings();
-//    applyUISettings();
-//    updateProjectView();
-//    updateEditorActions();
-//    updateCaretActions();
-
     ui->cbReplaceInHistory->completer()->setCaseSensitivity(Qt::CaseSensitive);
     ui->cbEvaluate->completer()->setCaseSensitivity(Qt::CaseSensitive);
     ui->cbMemoryAddress->completer()->setCaseSensitivity(Qt::CaseSensitive);
@@ -481,6 +475,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->menuGit, &QMenu::aboutToShow,
             this, &MainWindow::updateVCSActions);
 #endif
+    initEditorActions();
     initToolButtons();
     buildContextMenus();
     updateAppTitle();
@@ -602,6 +597,11 @@ void MainWindow::updateEncodingActions(const Editor *e)
 
 void MainWindow::updateEditorActions(const Editor *e)
 {
+    ui->menuCode->menuAction()->setVisible(mEditorList->pageCount()>0);
+    ui->menuEdit->menuAction()->setVisible(mEditorList->pageCount()>0);
+    ui->menuSelection->menuAction()->setVisible(mEditorList->pageCount()>0);
+    ui->menuRefactor->menuAction()->setVisible(mEditorList->pageCount()>0);
+
     //it's not a compile action, but put here for convinience
     ui->actionSaveAll->setEnabled(
                 (mProject!=nullptr || mEditorList->pageCount()>0));
@@ -779,6 +779,8 @@ void MainWindow::updateEditorActions(const Editor *e)
 void MainWindow::updateProjectActions()
 {
     bool hasProject = (mProject != nullptr);
+    ui->menuProject->menuAction()->setVisible(hasProject);
+
     ui->actionNew_Template->setEnabled(hasProject);
     ui->actionView_Makefile->setEnabled(hasProject);
     ui->actionProject_New_File->setEnabled(hasProject);
@@ -7844,6 +7846,65 @@ void MainWindow::modifyBreakpointCondition(int index)
 
 }
 
+void MainWindow::initEditorActions()
+{
+    ui->menuCode->menuAction()->setVisible(false);
+    ui->menuEdit->menuAction()->setVisible(false);
+    ui->menuSelection->menuAction()->setVisible(false);
+    ui->menuRefactor->menuAction()->setVisible(false);
+
+    foreach (QAction* action, ui->menuEdit->actions()) {
+        if (action->objectName().isEmpty())
+            continue;
+        changeEditorActionParent(action);
+    }
+    foreach (QAction* action, ui->menuSelection->actions()) {
+        if (action->objectName().isEmpty())
+            continue;
+        changeEditorActionParent(action);
+    }
+    foreach (QAction* action, ui->menuCode->actions()) {
+        if (action->objectName().isEmpty())
+            continue;
+        changeEditorActionParent(action);
+    }
+    foreach (QAction* action, ui->menuRefactor->actions()) {
+        if (action->objectName().isEmpty())
+            continue;
+        changeEditorActionParent(action);
+    }
+    foreach (QAction* action, mMenuEncoding->actions()) {
+        if (action->objectName().isEmpty())
+            continue;
+        changeEditorActionParent(action);
+    }
+    changeEditorActionParent(ui->actionPrint);
+    changeEditorActionParent(ui->actionExport_As_HTML);
+    changeEditorActionParent(ui->actionExport_As_RTF);
+    changeEditorActionParent(ui->actionSave);
+    changeEditorActionParent(ui->actionSaveAs);
+    changeEditorActionParent(ui->actionClose);
+
+    changeEditorActionParent(ui->actionFind);
+    changeEditorActionParent(ui->actionReplace);
+    changeEditorActionParent(ui->actionFind_references);
+    changeEditorActionParent(ui->actionFind_Next);
+    changeEditorActionParent(ui->actionFind_Previous);
+    changeEditorActionParent(ui->actionToggle_Breakpoint);
+    changeEditorActionParent(ui->actionGoto_Declaration);
+    changeEditorActionParent(ui->actionGoto_Definition);
+    changeEditorActionParent(ui->actionFile_Properties);
+    changeEditorActionParent(ui->actionLocate_in_Files_View);
+    changeEditorActionParent(ui->actionSwitchHeaderSource);
+}
+
+void MainWindow::changeEditorActionParent(QAction *action)
+{
+    action->setParent(ui->splitterEditorPanel);
+    ui->splitterEditorPanel->addAction(action);
+    action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+}
+
 void MainWindow::setupSlotsForProject()
 {
     connect(mProject.get(), &Project::unitAdded,
@@ -10090,7 +10151,7 @@ void MainWindow::on_actionPage_Up_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::PageUp);
+        editor->pageUp();
     }
 }
 
@@ -10099,7 +10160,7 @@ void MainWindow::on_actionPage_Down_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::PageDown);
+        editor->pageDown();
     }
 }
 
@@ -10108,7 +10169,7 @@ void MainWindow::on_actionGoto_Line_Start_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::LineStart);
+        editor->gotoLineStart();
     }
 }
 
@@ -10117,7 +10178,7 @@ void MainWindow::on_actionGoto_Line_End_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::LineEnd);
+        editor->gotoLineEnd();
     }
 }
 
@@ -10126,7 +10187,7 @@ void MainWindow::on_actionGoto_File_Start_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::EditorStart);
+        editor->gotoFileStart();
     }
 }
 
@@ -10135,7 +10196,7 @@ void MainWindow::on_actionGoto_File_End_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::EditorEnd);
+        editor->gotoFileEnd();
     }
 }
 
@@ -10144,7 +10205,7 @@ void MainWindow::on_actionPage_Up_and_Select_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::SelPageUp);
+        editor->pageUpAndSelect();;
     }
 }
 
@@ -10153,7 +10214,7 @@ void MainWindow::on_actionPage_Down_and_Select_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::SelPageDown);
+        editor->pageDownAndSelect();
     }
 }
 
@@ -10162,7 +10223,7 @@ void MainWindow::on_actionGoto_Page_Start_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::PageTop);
+        editor->gotoPageStart();
     }
 }
 
@@ -10171,7 +10232,7 @@ void MainWindow::on_actionGoto_Page_End_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::PageBottom);
+        editor->gotoPageEnd();
     }
 }
 
@@ -10180,7 +10241,7 @@ void MainWindow::on_actionGoto_Page_Start_and_Select_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::SelPageTop);
+        editor->selectToPageStart();
     }
 }
 
@@ -10189,7 +10250,7 @@ void MainWindow::on_actionGoto_Page_End_and_Select_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::SelPageBottom);
+        editor->selectToPageEnd();
     }
 }
 
@@ -10198,7 +10259,7 @@ void MainWindow::on_actionGoto_Line_Start_and_Select_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::SelLineStart);
+        editor->selectToLineStart();
     }
 }
 
@@ -10207,7 +10268,7 @@ void MainWindow::on_actionGoto_Line_End_and_Select_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::SelLineEnd);
+        editor->selectToLineEnd();
     }
 }
 
@@ -10216,7 +10277,7 @@ void MainWindow::on_actionGoto_File_Start_and_Select_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::SelEditorStart);
+        editor->selectToFileStart();
     }
 }
 
@@ -10225,7 +10286,7 @@ void MainWindow::on_actionGoto_File_End_and_Select_triggered()
 {
     Editor * editor = mEditorList->getEditor();
     if (editor && editor->hasFocus()) {
-        editor->processCommand(QSynedit::EditCommand::SelEditorEnd);
+        editor->selectToFileEnd();
     }
 }
 

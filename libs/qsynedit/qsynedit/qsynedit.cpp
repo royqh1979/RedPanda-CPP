@@ -5643,13 +5643,13 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     case EditCommand::SelPageBottom:
         moveCaretVert(yposToRow(0)+mLinesInWindow-1-mCaretY, command == EditCommand::SelPageBottom);
         break;
-    case EditCommand::EditorStart:
-    case EditCommand::SelEditorStart:
-        doGotoEditorStart(command == EditCommand::SelEditorStart);
+    case EditCommand::FileStart:
+    case EditCommand::SelFileStart:
+        doGotoEditorStart(command == EditCommand::SelFileStart);
         break;
-    case EditCommand::EditorEnd:
-    case EditCommand::SelEditorEnd:
-        doGotoEditorEnd(command == EditCommand::SelEditorEnd);
+    case EditCommand::FileEnd:
+    case EditCommand::SelFileEnd:
+        doGotoEditorEnd(command == EditCommand::SelFileEnd);
         break;
     case EditCommand::BlockStart:
     case EditCommand::SelBlockStart:
