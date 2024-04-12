@@ -1985,6 +1985,12 @@ void MainWindow::updateActionIcons()
     for (QToolButton* btn: ui->panelFiles->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
     }
+    for (QToolButton* btn: ui->tabProblemSet->findChildren<QToolButton *>()) {
+        btn->setIconSize(iconSize);
+    }
+    for (QToolButton* btn: ui->panelProblemCaseInfo->findChildren<QToolButton *>()) {
+        btn->setIconSize(iconSize);
+    }
 
     ui->tabExplorer->setIconSize(iconSize);
     ui->tabMessages->setIconSize(iconSize);
