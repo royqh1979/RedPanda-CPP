@@ -5149,12 +5149,10 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
             );
     QMenu menu(this);
     QSynedit::BufferCoord p;
-    mEditorContextMenuPos = pos;
     int line;
     if (editor->getPositionOfMouse(p)) {
         line=p.line;
         if (!switchHeaderSourceTarget(editor).isEmpty()) {
-
             menu.addAction(ui->actionSwitchHeaderSource);
             menu.addSeparator();
         }
@@ -6322,16 +6320,6 @@ void MainWindow::on_actionPaste_triggered()
             editor->pasteFromClipboard();
             editor->activate();
         }
-    } else if (data->hasUrls()) {
-        QStringList filesToOpen;
-        foreach (const QUrl& url, data->urls()) {
-            QString s = url.toLocalFile();
-            if (!s.isEmpty()) {
-                filesToOpen.append(s);
-            }
-        }
-        if (!filesToOpen.isEmpty())
-            openFiles(filesToOpen);
     }
 }
 
@@ -6949,9 +6937,8 @@ void MainWindow::on_actionPrevious_Editor_triggered()
 void MainWindow::on_actionToggle_Breakpoint_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    int line;
-    if (editor && editor->pointToLine(mEditorContextMenuPos,line))
-        editor->toggleBreakpoint(line);
+    if (editor)
+        editor->toggleBreakpoint(editor->caretY());
 }
 
 
@@ -6973,12 +6960,11 @@ void MainWindow::on_actionClear_all_breakpoints_triggered()
 void MainWindow::on_actionBreakpoint_property_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    int line;
-    if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
+    if (editor) {
+        int line = editor->caretY();
         if (editor->hasBreakpoint(line))
             editor->modifyBreakpointProperty(line);
     }
-
 }
 
 
@@ -7002,10 +6988,9 @@ void MainWindow::on_actionGoto_Definition_triggered()
 void MainWindow::on_actionFind_references_triggered()
 {
     Editor * editor = mEditorList->getEditor();
-    QSynedit::BufferCoord pos;
-    if (editor && editor->pointToCharLine(mEditorContextMenuPos,pos)) {
+    if (editor) {
         CppRefacter refactor;
-        refactor.findOccurence(editor,pos);
+        refactor.findOccurence(editor, editor->caretXY());
         showSearchPanel(false);
     }
 }
@@ -8587,10 +8572,10 @@ TodoModel *MainWindow::todoModel()
 void MainWindow::on_actionAdd_bookmark_triggered()
 {
     Editor* editor = mEditorList->getEditor();
-    int line;
-    if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
+    if (editor) {
         if (editor->lineCount()<=0)
             return;
+        int line = editor->caretY();
         QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),
                                              tr("Description:"),QLineEdit::Normal,
                                              editor->lineText(line).trimmed());
@@ -8604,8 +8589,8 @@ void MainWindow::on_actionAdd_bookmark_triggered()
 void MainWindow::on_actionRemove_Bookmark_triggered()
 {
     Editor* editor = mEditorList->getEditor();
-    int line;
-    if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
+    if (editor) {
+        int line = editor->caretY();
         editor->removeBookmark(line);
         mBookmarkModel->removeBookmark(editor->filename(),line,editor->inProject());
     }
@@ -8629,8 +8614,8 @@ void MainWindow::on_tableBookmark_doubleClicked(const QModelIndex &index)
 void MainWindow::on_actionModify_Bookmark_Description_triggered()
 {
     Editor* editor = mEditorList->getEditor();
-    int line;
-    if (editor && editor->pointToLine(mEditorContextMenuPos,line)) {
+    if (editor) {
+        int line = editor->caretY();
         PBookmark bookmark = mBookmarkModel->bookmark(editor->filename(),line);
         if (bookmark) {
             QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),

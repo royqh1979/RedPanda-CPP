@@ -932,7 +932,6 @@ private:
     bool mClosingAll;
     bool mOpenningFiles;
     bool mSystemTurnedOff;
-    QPoint mEditorContextMenuPos;
     QTcpServer mTcpServer;
     QColor mErrorColor;
     CompileIssuesState mCompileIssuesState;
