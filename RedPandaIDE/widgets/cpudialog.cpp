@@ -104,7 +104,6 @@ void CPUDialog::updateDPI(float dpi)
     QFont font(pSettings->environment().interfaceFont());
     font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize(),dpi));
     font.setStyleStrategy(QFont::PreferAntialias);
-    font.setHintingPreference(QFont::PreferNoHinting);
     setFont(font);
     for (QWidget* p:findChildren<QWidget*>()) {
         if (p!=ui->txtCode)
@@ -152,7 +151,6 @@ void CPUDialog::resetEditorFont(float dpi)
     f.setFamilies(pSettings->editor().fontFamiliesWithControlFont());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize(),dpi));
     f.setStyleStrategy(QFont::PreferAntialias);
-    f.setHintingPreference(QFont::PreferNoHinting);
     ui->txtCode->setFont(f);
 }
 

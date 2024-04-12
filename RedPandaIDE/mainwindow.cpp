@@ -1031,7 +1031,6 @@ void MainWindow::applySettings()
     QFont font(pSettings->environment().interfaceFont());
     font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize()));
     font.setStyleStrategy(QFont::PreferAntialias);
-    font.setHintingPreference(QFont::PreferNoHinting);
     qApp->setFont(font);
     this->setFont(font);
     for (QWidget* p:findChildren<QWidget*>()) {
@@ -1053,7 +1052,6 @@ void MainWindow::applySettings()
     QFont caseEditorFont(pSettings->executor().caseEditorFontName());
     caseEditorFont.setPixelSize(pointToPixel(pSettings->executor().caseEditorFontSize()));
     font.setStyleStrategy(QFont::PreferAntialias);
-    font.setHintingPreference(QFont::PreferNoHinting);
     ui->txtProblemCaseInput->setFont(caseEditorFont);
     ui->lblProblemCaseInput->setFont(caseEditorFont);
     ui->txtProblemCaseOutput->setFont(caseEditorFont);

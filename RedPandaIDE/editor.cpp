@@ -5346,7 +5346,6 @@ void Editor::applySettings()
     f.setFamilies(pSettings->editor().fontFamiliesWithControlFont());
     f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     f.setStyleStrategy(QFont::PreferAntialias);
-    f.setHintingPreference(QFont::PreferNoHinting);
     setFont(f);
 
     // QFont f=QFont(pSettings->editor().fontName());
@@ -5372,7 +5371,6 @@ void Editor::applySettings()
         f.setPixelSize(pointToPixel(pSettings->editor().fontSize()));
     }
     f.setStyleStrategy(QFont::PreferAntialias);
-    f.setHintingPreference(QFont::PreferNoHinting);
     gutter().setFont(f);
     gutter().setDigitCount(pSettings->editor().gutterDigitsCount());
     gutter().setVisible(pSettings->editor().gutterVisible());
