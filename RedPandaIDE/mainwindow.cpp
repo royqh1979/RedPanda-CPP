@@ -1098,11 +1098,6 @@ void MainWindow::applySettings()
 //    for (int i=0;i<ui->cbFilesPath->count();i++) {
 //        ui->cbFilesPath->setItemIcon(i,pIconsManager->getIcon(IconsManager::FILESYSTEM_GIT));
 //    }
-#ifdef ENABLE_VCS
-    ui->menuGit->menuAction()->setVisible(pSettings->vcs().gitOk());
-#else
-    ui->menuGit->menuAction()->setVisible(false);
-#endif
     stretchExplorerPanel(!ui->tabExplorer->isShrinked());
     stretchMessagesPanel(!ui->tabMessages->isShrinked());
 }
