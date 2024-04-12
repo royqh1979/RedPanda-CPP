@@ -134,6 +134,9 @@ Section "$(SectionMainName)" SectionMain
   SetOutPath $INSTDIR\Templates
   File /nonfatal /r "Templates\*"
 
+  SetOutPath $INSTDIR\themes
+  File /nonfatal /r "themes\*"
+
 SectionEnd
 
 !ifdef HAVE_MINGW32
@@ -442,6 +445,7 @@ Section "Uninstall"
 
   RMDir /r "$INSTDIR\Lang"
   RMDir /r "$INSTDIR\Templates"
+  RMDir /r "$INSTDIR\themes"
   RMDir /r "$INSTDIR\mingw32"
   RMDir /r "$INSTDIR\mingw64"
   RMDir /r "$INSTDIR\llvm-mingw"

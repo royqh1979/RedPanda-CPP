@@ -179,7 +179,6 @@ target("RedPandaIDE")
 
     add_files(
         "resources/iconsets/**.svg", "resources/iconsets/**.json",
-        "resources/themes/*.lua", "resources/themes/*.json", "resources/themes/*.png",
         "resources/colorschemes/*.scheme",
         "resources/fonts/asciicontrol.ttf",
         {rule = "RedPandaIDE.auto_qrc"})

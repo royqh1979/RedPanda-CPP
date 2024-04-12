@@ -52,6 +52,7 @@ unix:!macos: {
 
     resources.path = $${PREFIX}/share/$${APP_NAME}
     resources.files += platform/linux/templates
+    resources.files += RedPandaIDE/resources/themes
     INSTALLS += resources
 
     docs.path = $${PREFIX}/share/doc/$${APP_NAME}
@@ -80,6 +81,7 @@ win32: {
         resources.path = $${PREFIX}
 
         resources.files += platform/windows/templates
+        resources.files += RedPandaIDE/resources/themes
         resources.files += platform/windows/qt.conf
         resources.files += README.md
         resources.files += NEWS.md

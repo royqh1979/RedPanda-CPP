@@ -213,6 +213,14 @@ target("resources")
         end
     end
 
+    -- themes
+
+    if is_xdg() then
+        add_installfiles("RedPandaIDE/resources/themes/(**.*)", {prefixdir = "$(prefix)/share/$(app-name)/themes"})
+    else
+        add_installfiles("RedPandaIDE/resources/themes/(**.*)", {prefixdir = "bin/themes"})
+    end
+
     -- docs
 
     if is_xdg() then

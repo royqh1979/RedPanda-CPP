@@ -255,7 +255,7 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
     case DataType::IconSet:
         return ":/resources/iconsets";
     case DataType::Theme:
-        return ":/resources/themes";
+        return includeTrailingPathDelimiter(appResourceDir()) + "themes";
     case DataType::Template:
         return includeTrailingPathDelimiter(appResourceDir()) + "templates";
     }
