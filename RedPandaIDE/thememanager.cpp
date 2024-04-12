@@ -119,6 +119,8 @@ QList<PAppTheme> ThemeManager::getThemes()
     std::sort(result.begin(),result.end(),[](const PAppTheme &theme1, const PAppTheme &theme2){
         return QFileInfo(theme1->filename()).baseName() <  QFileInfo(theme2->filename()).baseName();
     });
+    if (result.isEmpty())
+        result.append(AppTheme::fallbackTheme());
     return result;
 }
 
@@ -346,4 +348,19 @@ void AppTheme::setDefaultColorScheme(const QString &newDefaultColorScheme)
 const QString &AppTheme::style() const
 {
     return mStyle;
+}
+
+AppTheme::AppTheme() :
+    mName("__failsafe__theme__"),
+    mDisplayName("Fusion [fail-safe hard-coded]"),
+    mStyle("fusion"),
+    mDefaultColorScheme("Adaptive"),
+    mDefaultIconSet("newlook")
+{
+}
+
+PAppTheme AppTheme::fallbackTheme()
+{
+    static PAppTheme theme = PAppTheme(new AppTheme());
+    return theme;
 }

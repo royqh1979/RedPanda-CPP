@@ -22,6 +22,9 @@
 #include <memory>
 #include <QObject>
 
+class AppTheme;
+using PAppTheme = std::shared_ptr<AppTheme>;
+
 class AppTheme : public QObject{
     Q_OBJECT
 public:
@@ -102,6 +105,12 @@ public:
 
     const QString& filename() const;
 
+public:
+    static PAppTheme fallbackTheme();
+
+private:
+    AppTheme();
+
 private:
     static QPalette initialPalette();
 private:
@@ -113,8 +122,6 @@ private:
     QString mDefaultIconSet;
     QString mFilename;
 };
-
-using PAppTheme = std::shared_ptr<AppTheme>;
 
 class ThemeManager : public QObject
 {
