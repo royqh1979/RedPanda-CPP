@@ -229,9 +229,6 @@ global function main(): CompilerHint
         )
     ) then
         if C_FileSystem.isExecutable("/usr/bin/x86_64-w64-mingw32-gcc") then
-            local extraObjects = {
-            }
-
             do
                 local release, _, _ = generateConfig(
                     lang, "GCC", "mingw",
