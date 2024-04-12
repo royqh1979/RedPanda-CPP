@@ -21,6 +21,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
+#include <QUuid>
 #include "settings.h"
 #include "systemconsts.h"
 
