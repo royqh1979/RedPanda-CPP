@@ -236,11 +236,8 @@ MainWindow::MainWindow(QWidget *parent)
                              e.reason());
     }
 
-//    ui->actionIndent->setShortcut(Qt::Key_Tab);
-//    ui->actionUnIndent->setShortcut(Qt::Key_Tab | Qt::ShiftModifier);
-
     //mainmenu takes the owner
-    mMenuNew = new QMenu();
+    mMenuNew = new QMenu(this);
     mMenuNew->setTitle(tr("New"));
     mMenuNew->addAction(ui->actionNew);
     mMenuNew->addAction(ui->actionNew_GAS_File);
@@ -253,7 +250,6 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew->addAction(ui->actionNew_Header);
 
     ui->menuFile->insertMenu(ui->actionOpen,mMenuNew);
-
 
     mMenuExport = new QMenu(tr("Export"));
     mMenuExport->addAction(ui->actionExport_As_RTF);
@@ -475,10 +471,22 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->menuGit, &QMenu::aboutToShow,
             this, &MainWindow::updateVCSActions);
 #endif
-    initEditorActions();
+    //set action group name (show in the option / environment / shortcuts)
+    ui->actionNew->setData(mMenuNew->title());
+    ui->actionNew_GAS_File->setData(mMenuNew->title());
+    ui->actionNew_Text_File->setData(mMenuNew->title());
+    ui->actionNew_Project->setData(mMenuNew->title());
+
+    ui->actionRemove_Watch->setData(tr("Debug"));
+    ui->actionRemove_All_Watches->setData(tr("Debug"));
+    ui->actionModify_Watch->setData(tr("Debug"));
+    ui->actionRemove_All_Watches->setData(tr("Debug"));
+    ui->actionBreakpoint_property->setData(tr("Debug"));
+
     initToolButtons();
     buildContextMenus();
     updateAppTitle();
+    initEditorActions();
     //applySettings();
     applyUISettings();
     initDocks();
@@ -1578,6 +1586,8 @@ void MainWindow::updateShortcuts()
 {
     ShortcutManager manager;
     manager.load();
+    // foreach(QAction* action, listShortCutableActions())
+    //     qDebug()<<action->text()<<action->objectName();
     manager.applyTo(listShortCutableActions());
 }
 
@@ -2805,22 +2815,19 @@ void MainWindow::createCustomActions()
     // action for problem set
     mProblemSet_New = createAction(
                 tr("New Problem Set"),
-                ui->tabProblemSet
-                );
+                ui->tabProblemSet);
     connect(mProblemSet_New,&QAction::triggered,
             this, &MainWindow::onNewProblemSet);
 
     mProblemSet_Rename = createAction(
                 tr("Rename Problem Set"),
-                ui->tabProblemSet
-                );
+                ui->tabProblemSet);
     connect(mProblemSet_Rename, &QAction::triggered,
             this, &MainWindow::onRenameProblemSet);
 
     mProblemSet_Save = createAction(
                 tr("Save Problem Set"),
-                ui->tabProblemSet
-                );
+                ui->tabProblemSet);
     connect(mProblemSet_Save,&QAction::triggered,
             this, &MainWindow::onSaveProblemSet);
 
@@ -2854,26 +2861,22 @@ void MainWindow::createCustomActions()
     connect(mProblemSet_RemoveProblem,&QAction::triggered,
             this, &MainWindow::onRemoveProblem);
 
-
     //problem
     mProblem_OpenSource=createAction(
                 tr("Open Source File"),
-                ui->tabProblemSet
-                );
+                ui->tabProblemSet);
     connect(mProblem_OpenSource, &QAction::triggered, this,
             &MainWindow::onProblemOpenSource);
 
     mProblem_Rename=createAction(
                 tr("Rename Problem"),
-                ui->tabProblemSet
-                );
+                ui->tabProblemSet);
     connect(mProblem_Rename, &QAction::triggered, this,
             &MainWindow::onProblemRename);
 
     mProblem_GotoUrl=createAction(
                 tr("Goto Url"),
-                ui->tabProblemSet
-                );
+                ui->tabProblemSet);
     connect(mProblem_GotoUrl, &QAction::triggered, this,
             &MainWindow::onProblemGotoUrl);
 
@@ -2910,21 +2913,24 @@ void MainWindow::createCustomActions()
             &MainWindow::onOpenCaseValidationOptions);
 
     // problem case run
-    mProblem_RunAllCases = createShortcutCustomableAction(
+    mProblem_RunAllCases = createGlobalAction(
                 tr("Run All Cases"),
-                "Problem_RunAllCases");
+                "Problem_RunAllCases",
+                tr("Problem"));
     connect(mProblem_RunAllCases, &QAction::triggered, this,
             &MainWindow::onProblemRunAllCases);
 
-    mProblem_RunCurrentCase = createShortcutCustomableAction(
+    mProblem_RunCurrentCase = createGlobalAction(
                 tr("Run Current Case"),
-                "Problem_RunCurrentCases");
+                "Problem_RunCurrentCases",
+                tr("Problem"));
     connect(mProblem_RunCurrentCase, &QAction::triggered, this,
             &MainWindow::onProblemRunCurrentCase);
 
-    mProblem_batchSetCases = createShortcutCustomableAction(
+    mProblem_batchSetCases = createGlobalAction(
                 tr("Batch Set Cases"),
-                "Problem_BatchSetCases");
+                "Problem_BatchSetCases",
+                tr("Problem"));
     connect(mProblem_batchSetCases, &QAction::triggered, this,
             &MainWindow::onProblemBatchSetCases);
 
@@ -2971,7 +2977,8 @@ void MainWindow::createCustomActions()
 
     mDebugConsole_SelectAll=createAction(
                 tr("Select All"),
-                ui->debugConsole);
+                ui->debugConsole,
+                QKeySequence("Ctrl+A"));
     connect(mDebugConsole_SelectAll, &QAction::triggered,
             this, &MainWindow::onDebugConsoleSelectAll);
 
@@ -3184,13 +3191,14 @@ void MainWindow::createCustomActions()
             this, &MainWindow::onToolsOutputClear);
     mToolsOutput_Copy = createAction(
                 tr("Copy"),
-                ui->txtToolsOutput);
-    mToolsOutput_Copy->setShortcut(QKeySequence("Ctrl+C"));
+                ui->txtToolsOutput,
+                QKeySequence("Ctrl+C"));
     connect(mToolsOutput_Copy, &QAction::triggered,
             this, &MainWindow::onToolsOutputCopy);
     mToolsOutput_SelectAll = createAction(
                 tr("Select All"),
-                ui->txtToolsOutput);
+                ui->txtToolsOutput,
+                QKeySequence("Ctrl+A"));
     connect(mToolsOutput_SelectAll, &QAction::triggered,
             this, &MainWindow::onToolsOutputSelectAll);
 }
@@ -3296,10 +3304,12 @@ QAction* MainWindow::createAction(
     return action;
 }
 
-QAction *MainWindow::createShortcutCustomableAction(const QString &text, const QString &objectName, QKeySequence shortcut)
+QAction *MainWindow::createGlobalAction(const QString &text, const QString &objectName, const QString &groupName, QKeySequence shortcut)
 {
     QAction* action = createAction(text,this,shortcut);
     action->setObjectName(objectName);
+    action->setShortcutContext(Qt::WindowShortcut);
+    action->setData(groupName);
     return action;
 }
 
@@ -3517,7 +3527,7 @@ void MainWindow::updateTools()
         ui->menuTools->addSeparator();
         QList<QAction*> actions;
         foreach (const PToolItem& item, mToolsManager->tools()) {
-            QAction* action = createShortcutCustomableAction(item->title,"tool-"+item->id);
+            QAction* action = createGlobalAction(item->title,"tool-"+item->id, tr("Tools"));
             connect(action, &QAction::triggered,
                     [item,this] (){
                 executeTool(item);
@@ -7838,56 +7848,67 @@ void MainWindow::initEditorActions()
     ui->menuSelection->menuAction()->setVisible(false);
     ui->menuRefactor->menuAction()->setVisible(false);
 
-    foreach (QAction* action, ui->menuEdit->actions()) {
-        if (action->objectName().isEmpty())
-            continue;
-        changeEditorActionParent(action);
-    }
-    foreach (QAction* action, ui->menuSelection->actions()) {
-        if (action->objectName().isEmpty())
-            continue;
-        changeEditorActionParent(action);
-    }
-    foreach (QAction* action, ui->menuCode->actions()) {
-        if (action->objectName().isEmpty())
-            continue;
-        changeEditorActionParent(action);
-    }
-    foreach (QAction* action, ui->menuRefactor->actions()) {
-        if (action->objectName().isEmpty())
-            continue;
-        changeEditorActionParent(action);
-    }
-    foreach (QAction* action, mMenuEncoding->actions()) {
-        if (action->objectName().isEmpty())
-            continue;
-        changeEditorActionParent(action);
-    }
-    changeEditorActionParent(ui->actionPrint);
-    changeEditorActionParent(ui->actionExport_As_HTML);
-    changeEditorActionParent(ui->actionExport_As_RTF);
-    changeEditorActionParent(ui->actionSave);
-    changeEditorActionParent(ui->actionSaveAs);
-    changeEditorActionParent(ui->actionClose);
+    backupMenuForEditor(ui->menuEdit, mMenuEditBackup);
+    backupMenuForEditor(ui->menuSelection, mMenuSelectionBackup);
+    backupMenuForEditor(ui->menuCode, mMenuCodeBackup);
+    backupMenuForEditor(ui->menuRefactor, mMenuRefactorBackup);
+    backupMenuForEditor(ui->menuMove_Caret, mMenuMoveCaretBackup);
+    backupMenuForEditor(mMenuEncoding, mMenuEncodingBackup);
+    backupMenuForEditor(mMenuExport, mMenuExportBackup);
 
-    changeEditorActionParent(ui->actionFind);
-    changeEditorActionParent(ui->actionReplace);
-    changeEditorActionParent(ui->actionFind_references);
-    changeEditorActionParent(ui->actionFind_Next);
-    changeEditorActionParent(ui->actionFind_Previous);
-    changeEditorActionParent(ui->actionToggle_Breakpoint);
-    changeEditorActionParent(ui->actionGoto_Declaration);
-    changeEditorActionParent(ui->actionGoto_Definition);
-    changeEditorActionParent(ui->actionFile_Properties);
-    changeEditorActionParent(ui->actionLocate_in_Files_View);
-    changeEditorActionParent(ui->actionSwitchHeaderSource);
+    // changeEditorActionParent(ui->actionPrint, tr("File"));
+    // changeEditorActionParent(ui->actionSave, tr("File"));
+    // changeEditorActionParent(ui->actionSaveAs, tr("File"));
+    // changeEditorActionParent(ui->actionClose, tr("File"));
+
+    // changeEditorActionParent(ui->actionFind, tr("Search"));
+    // changeEditorActionParent(ui->actionReplace, tr("Search"));
+    changeEditorActionParent(ui->actionFind_references, tr("Search"));
+    // changeEditorActionParent(ui->actionFind_Next, tr("Search"));
+    // changeEditorActionParent(ui->actionFind_Previous, tr("Search"));
+    changeEditorActionParent(ui->actionToggle_Breakpoint, tr("Debug"));
+    changeEditorActionParent(ui->actionGoto_Declaration, tr("Code"));
+    changeEditorActionParent(ui->actionGoto_Definition, tr("Code"));
+    changeEditorActionParent(ui->actionFile_Properties, tr("Code"));
+    changeEditorActionParent(ui->actionLocate_in_Files_View, tr("Code"));
+    changeEditorActionParent(ui->actionSwitchHeaderSource, tr("Code"));
 }
 
-void MainWindow::changeEditorActionParent(QAction *action)
+void MainWindow::changeEditorActionParent(QAction *action, const QString& groupName)
 {
-    action->setParent(ui->splitterEditorPanel);
-    ui->splitterEditorPanel->addAction(action);
+    removeAction(action);
+    action->setParent(ui->EditorPanel);
+    ui->EditorPanel->addAction(action);
     action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    action->setData(groupName);
+}
+
+void MainWindow::backupMenuForEditor(QMenu *menu, QList<QAction *> &backup)
+{
+    foreach (QAction* action, menu->actions()) {
+        if (!action->objectName().isEmpty())
+            changeEditorActionParent(action, menu->title());
+        if (action->isSeparator()) {
+            action = new QAction();
+            action->setSeparator(true);
+        }
+        backup.append(action);
+    }
+    menu->clear();
+    connect(menu,&QMenu::aboutToShow,
+            [menu, backup] {
+        foreach (QAction* action, backup) {
+            if (action->isSeparator()) {
+                menu->addSeparator();
+            } else {
+                menu->addAction(action);
+            }
+        }
+    });
+    connect(menu,&QMenu::aboutToHide,
+            [menu] {
+        menu->clear();
+    });
 }
 
 void MainWindow::setupSlotsForProject()
@@ -8916,6 +8937,7 @@ bool MainWindow::openningFiles() const
 QList<QAction *> MainWindow::listShortCutableActions()
 {
     QList<QAction*> actions = findChildren<QAction *>(QString(), Qt::FindDirectChildrenOnly);
+    actions += ui->EditorPanel->actions();
     return actions;
 }
 
