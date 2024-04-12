@@ -55,8 +55,8 @@ enum class EditCommand {
     PageRight       = 12,   // Move cursor left one page
     PageTop         = 13,   // Move cursor to top of page
     PageBottom      = 14,   // Move cursor to bottom of page
-    EditorStart       = 15,   // Move cursor to absolute beginning
-    EditorEnd    = 16,   // Move cursor to absolute end
+    FileStart       = 15,   // Move cursor to absolute beginning
+    FileEnd    = 16,   // Move cursor to absolute end
     GotoXY          = 17,   // Move cursor to specific coordinates, Data = PPoint
     BlockStart      = 18,   // Move cursor to begin of block
     BlockEnd        = 19,   // Move cursor to end of block
@@ -84,8 +84,8 @@ enum class EditCommand {
     SelPageRight    = PageRight + Selection,
     SelPageTop      = PageTop + Selection,
     SelPageBottom   = PageBottom + Selection,
-    SelEditorStart    = EditorStart + Selection,
-    SelEditorEnd = EditorEnd + Selection,
+    SelFileStart    = FileStart + Selection,
+    SelFileEnd = FileEnd + Selection,
     SelGotoXY       = GotoXY + Selection,  // Data = PPoint
     SelBlockStart      = BlockStart + Selection,   // Move cursor to begin of scope
     SelBlockEnd        = BlockEnd + Selection,   // Move cursor to end of scope

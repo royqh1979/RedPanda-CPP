@@ -334,6 +334,8 @@ private:
     QString switchHeaderSourceTarget(Editor *editor);
 
     void modifyBreakpointCondition(int index);
+    void initEditorActions();
+    void changeEditorActionParent(QAction *action);
 
 private slots:
     void setupSlotsForProject();
@@ -1023,8 +1025,8 @@ private:
     QAction * mToolsOutput_Copy;
 
     QSortFilterProxyModel *mProjectProxyModel;
-
-   // QWidget interface
+    
+    // QWidget interface
 protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* event) override;

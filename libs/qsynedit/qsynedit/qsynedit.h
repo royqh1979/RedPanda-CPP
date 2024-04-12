@@ -234,7 +234,6 @@ public:
     BufferCoord prevWordPos();
     BufferCoord prevWordPosEx(const BufferCoord& XY);
 
-    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     //Caret
     void showCaret();
     void hideCaret();
@@ -500,6 +499,8 @@ protected:
     void incPaintLock();
     void decPaintLock();
     SyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
+    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
