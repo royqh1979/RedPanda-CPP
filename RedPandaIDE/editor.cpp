@@ -4552,7 +4552,7 @@ QSize Editor::calcCompletionPopupSize()
 {
 #if QT_VERSION_MAJOR==5 && QT_VERSION_MINOR < 15
     int screenHeight = qApp->primaryScreen()->size().height();
-    int screenWidht = qApp->primaryScreen()->size().width;
+    int screenWidth = qApp->primaryScreen()->size().width();
 #else
     int screenHeight = screen()->size().height();
     int screenWidth = screen()->size().width();
