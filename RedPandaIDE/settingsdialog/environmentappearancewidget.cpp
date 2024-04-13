@@ -86,7 +86,6 @@ void EnvironmentAppearanceWidget::doSave()
     pSettings->environment().setUseCustomIconSet(ui->chkUseCustomIconSet->isChecked());
     pSettings->environment().setUseCustomTheme(ui->chkUseCustomTheme->isChecked());
 
-
     pSettings->environment().save();
     pMainWindow->applySettings();
 }

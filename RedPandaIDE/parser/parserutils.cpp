@@ -753,7 +753,8 @@ bool isTypeKind(StatementKind kind)
 bool ParsedFileInfo::isLineVisible(int line) const
 {
     int lastI=-1;
-    foreach(int i,mBranches.keys()) {
+    for(auto it=mBranches.begin();it!=mBranches.end();++it) {
+        int i = it.key();
         if (line<i)
             break;
         else

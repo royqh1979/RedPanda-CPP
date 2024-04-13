@@ -2273,8 +2273,9 @@ void RegisterModel::updateNames(const QStringList &regNames)
 
 void RegisterModel::updateValues(const QHash<int, QString> registerValues)
 {
-    foreach(int row, registerValues.keys()){
-        mRegisterValues[row] = registerValues[row];
+    for(auto it = registerValues.begin();it!=registerValues.end();++it) {
+        int row = it.key();
+        mRegisterValues[row] = it.value();
     }
     emit dataChanged(createIndex(0,1),
                      createIndex(mRegisterNames.count()-1,1));

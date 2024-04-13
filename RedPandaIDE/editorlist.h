@@ -86,6 +86,7 @@ public:
 signals:
     void editorClosed();
     void editorRenamed(const QString& oldFilename, const QString& newFilename, bool firstSave);
+    void editorOpenned();
 
 private:
     QTabWidget* getNewEditorPageControl() const;

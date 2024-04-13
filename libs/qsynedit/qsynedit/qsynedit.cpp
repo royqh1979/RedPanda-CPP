@@ -5380,11 +5380,6 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             sLeftSide += QString(pos.ch - 1 - sLeftSide.length(),' ');
     }
     sRightSide = line.mid(pos.ch - 1);
-//    if (mUndoing) {
-//        SpaceCount = 0;
-//    } else {
-//        SpaceCount = leftSpaces(sLeftSide);
-//    }
     int caretY=pos.line;
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
@@ -5406,14 +5401,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
     // step2: insert remaining lines of Value
     for (int i=1;i<text.length();i++) {
         bool notInComment = true;
-//        if (mHighlighter) {
-//            notInComment = !mHighlighter->isCommentNotFinished(
-//                    mHighlighter->getRangeState().state)
-//                && !mHighlighter->isStringNotFinished(
-//                    mHighlighter->getRangeState().state);
-//        }
         caretY=pos.line+i;
-//        mStatusChanges.setFlag(SynStatusChange::scCaretY);
         if (text[i].isEmpty()) {
             if (i==text.length()-1) {
                 str = sRightSide;
@@ -5643,13 +5631,13 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     case EditCommand::SelPageBottom:
         moveCaretVert(yposToRow(0)+mLinesInWindow-1-mCaretY, command == EditCommand::SelPageBottom);
         break;
-    case EditCommand::EditorStart:
-    case EditCommand::SelEditorStart:
-        doGotoEditorStart(command == EditCommand::SelEditorStart);
+    case EditCommand::FileStart:
+    case EditCommand::SelFileStart:
+        doGotoEditorStart(command == EditCommand::SelFileStart);
         break;
-    case EditCommand::EditorEnd:
-    case EditCommand::SelEditorEnd:
-        doGotoEditorEnd(command == EditCommand::SelEditorEnd);
+    case EditCommand::FileEnd:
+    case EditCommand::SelFileEnd:
+        doGotoEditorEnd(command == EditCommand::SelFileEnd);
         break;
     case EditCommand::BlockStart:
     case EditCommand::SelBlockStart:

@@ -133,6 +133,14 @@ Red Panda C++ Version 2.27
   - fix: Can't find symbols indirectly included by other files.
   - enhancement: Function tip's width changes with editor width.
   - fix: '<' / '>' not shown in function tips.
+  - enhancement: In debug console, Ctrl+C/Ctrl+X/Ctrl+V conflicts with application action.
+  - enhancement: Auto hide Edit/Selection/Code/Refactor menu if no file openning.
+  - enhancement: Auto hide Project menu if no project openning.
+  - fix: Toggle breakpoint by shortcut may use wrong line.
+  - fix: Size of the icons in problem and problem set panel are not correct.
+  - fix: Shouldn't consider preceeding '&'/'*' when popping completion suggest list for variable members.
+  - fix: Positions of current matching parenthesis not correctly updated.
+  - fix: Can't show correct completion info for vars declared with template parameters ending with ">>".
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

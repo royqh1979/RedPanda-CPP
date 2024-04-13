@@ -1859,6 +1859,12 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 
     if (changes.testFlag(QSynedit::StatusChange::CaretX)
             || changes.testFlag(QSynedit::StatusChange::CaretY)) {
+        if (pSettings->editor().highlightMathingBraces()) {
+            invalidateLine(mHighlightCharPos1.line);
+            invalidateLine(mHighlightCharPos2.line);
+        }
+        mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
+        mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
         if (mTabStopBegin >=0) {
             if (mTabStopY==caretY()) {
                 if (mLineAfterTabStop.isEmpty()) {
@@ -1885,10 +1891,6 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                 }
             }
         } else if (!selAvail() && pSettings->editor().highlightMathingBraces()){
-            invalidateLine(mHighlightCharPos1.line);
-            invalidateLine(mHighlightCharPos2.line);
-            mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
-            mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
             // Is there a bracket char before us?
             int lineLength = lineText().length();
             int ch = caretX() - 2;
@@ -2341,6 +2343,10 @@ QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
         QStringList &memberExpression)
 {
     QStringList expression = getExpressionAtPosition(pos);
+    // *(Deference) and &(Address-of) has low precedence than '.'/'->',
+    //  so don't includes them in the owner expression in comletion calculation
+    while (!expression.isEmpty() && (expression.front()=='*' || expression.front()=='&'))
+        expression.pop_front();
     return getOwnerExpressionAndMember(expression,memberOperator,memberExpression);
 }
 
@@ -3509,8 +3515,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     } else {
         switch(calcParserLanguage()) {
         case ParserLanguage::CPlusPlus:
-            foreach (const QString& keyword, CppKeywords.keys()) {
-                keywords.insert(keyword);
+            for(auto it = CppKeywords.begin();it!=CppKeywords.end();++it) {
+                keywords.insert(it.key());
             }
             break;
         case ParserLanguage::C:
@@ -3519,8 +3525,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 #ifdef ENABLE_SDCC
         case ParserLanguage::SDCC:
             keywords = CKeywords;
-            foreach (const QString& keyword, SDCCKeywords.keys()) {
-                keywords.insert(keyword);
+            for(auto it = SDCCKeywords.begin();it!=SDCCKeywords.end();++it) {
+                keywords.insert(it.key());
             }
             break;
 #endif
@@ -4552,7 +4558,7 @@ QSize Editor::calcCompletionPopupSize()
 {
 #if QT_VERSION_MAJOR==5 && QT_VERSION_MINOR < 15
     int screenHeight = qApp->primaryScreen()->size().height();
-    int screenWidht = qApp->primaryScreen()->size().width;
+    int screenWidth = qApp->primaryScreen()->size().width();
 #else
     int screenHeight = screen()->size().height();
     int screenWidth = screen()->size().width();
@@ -5399,8 +5405,8 @@ void Editor::applySettings()
 #ifdef ENABLE_SDCC
         if (!inProject() && pSettings->compilerSets().defaultSet()
                && pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
-            foreach(const QString& s, SDCCKeywords.keys())
-                set.insert(s);
+            for(auto it=SDCCKeywords.begin();it!=SDCCKeywords.end();++it)
+                set.insert(it.key());
         }
 #endif
         ((QSynedit::CppSyntaxer*)(syntaxer().get()))->setCustomTypeKeywords(set);

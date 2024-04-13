@@ -339,13 +339,19 @@ private:
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped) const;
-    PEvalStatement doEvalCCast(
+
+    /*
+     * Dereference / Address-of / Type Cast / Prefix increment and decrement
+     * */
+    PEvalStatement doEvalTypeCast(
             const QString& fileName,
             const QStringList& phraseExpression,
             int &pos,
             const PStatement& scope,
             const PEvalStatement& previousResult,
             bool freeScoped) const;
+
+
     PEvalStatement doEvalMemberAccess(
             const QString& fileName,
             const QStringList& phraseExpression,

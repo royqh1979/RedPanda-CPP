@@ -234,7 +234,6 @@ public:
     BufferCoord prevWordPos();
     BufferCoord prevWordPosEx(const BufferCoord& XY);
 
-    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     //Caret
     void showCaret();
     void hideCaret();
@@ -450,30 +449,26 @@ public:
     void setBackgroundColor(const QColor &newBackgroundColor);
 
     bool isEmpty();
+
+    int mouseSelectionScrollSpeed() const;
+    void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
+
+    ScrollStyle scrollBars() const;
+    void setScrollBars(ScrollStyle newScrollBars);
+
+    double lineSpacingFactor() const;
+    void setLineSpacingFactor(double newLineSpacingFactor);
+
+    const QDateTime &lastModifyTime() const;
+
+    const PFormatter &formatter() const;
+    void setFormatter(const PFormatter &newFormatter);
 signals:
     void linesDeleted(int FirstLine, int Count);
     void linesInserted(int FirstLine, int Count);
-
     void changed();
-
-//    void chainUndoAdded();
-//    void chainRedoAdded();
-//    void chainLinesChanging();
-//    void chainLinesChanged();
-//    void chainListCleared();
-
-//    void chainListDeleted(int Index, int Count);
-//    void chainListInserted(int Index, int Count);
-//    void chainListPutted(int Index, int Count);
-
-//    void filesDropped(int X,int Y, const QStringList& AFiles);
     void gutterClicked(Qt::MouseButton button, int x, int y, int line);
-//    void imeInputed(const QString& s);
-
-//    void contextHelp(const QString& word);
-
     void statusChanged(StatusChanges changes);
-
     void fontChanged();
     void tabSizeChanged();
 protected:
@@ -500,6 +495,8 @@ protected:
     void incPaintLock();
     void decPaintLock();
     SyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
+    void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
@@ -726,11 +723,6 @@ private:
     StatusChanges  mStatusChanges;
     int mLastKey;
     Qt::KeyboardModifiers mLastKeyModifiers;
-    //fSearchEngine: TSynEditSearchCustom;
-    //fHookedCommandHandlers: TList;
-    //fKbdHandler: TSynEditKbdHandler;
-    //  fFocusList: TList;
-    //  fPlugins: TList;
     QTimer*  mScrollTimer;
 
     PSynEdit  fChainedEditor;
@@ -739,20 +731,7 @@ private:
     bool mIsScrolling;
     int mOptionLock; // lock counter to prevent recalculate glyph widths while change settings;
     bool mUndoing;
-    // event handlers
-    // ProcessCommandProc mOnCommandProcessed;
-    // MouseCursorProc mOnMouseCursor;
-    // PaintProc mOnPaint;
-//    SynPreparePaintHighlightTokenProc mOnPaintHighlightToken;
-    // ProcessCommandProc mOnProcessingCommand;
-    // ProcessCommandProc mOnProcessingUserCommand;
-
-//    SynSpecialLineColorsProc mOnSpecialLineColors;
-//    SynEditingAreasProc mOnEditingAreas;
-//    SynGutterGetTextProc  mOnGutterGetText;
-//    SynTGutterPaintProc mOnGutterPaint;
     int mGutterWidth;
-
     //caret blink related
     int m_blinkTimerId;
     int m_blinkStatus;
@@ -798,22 +777,8 @@ protected:
     bool viewportEvent(QEvent * event) override;
 
     // QWidget interface
-    public:
+public:
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
-
-    int mouseSelectionScrollSpeed() const;
-    void setMouseSelectionScrollSpeed(int newMouseSelectionScrollSpeed);
-
-    ScrollStyle scrollBars() const;
-    void setScrollBars(ScrollStyle newScrollBars);
-
-    double lineSpacingFactor() const;
-    void setLineSpacingFactor(double newLineSpacingFactor);
-
-    const QDateTime &lastModifyTime() const;
-
-    const PFormatter &formatter() const;
-    void setFormatter(const PFormatter &newFormatter);
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;

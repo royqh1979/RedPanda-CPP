@@ -305,11 +305,11 @@ private:
     QAction* createAction(const QString& text,
                           QWidget* parent,
                           QKeySequence shortcut=QKeySequence(),
-                          Qt::ShortcutContext shortcutContext = Qt::ShortcutContext::WidgetWithChildrenShortcut
-                          );
-    QAction* createShortcutCustomableAction(
-            const QString& text,
-            const QString& objectName,
+                          Qt::ShortcutContext shortcutContext = Qt::WidgetWithChildrenShortcut);
+    QAction* createGlobalAction(
+            const QString &text,
+            const QString &objectName,
+            const QString &groupName,
             QKeySequence shortcut=QKeySequence());
     void scanActiveProject(bool parse=false);
     void showSearchReplacePanel(bool show);
@@ -334,6 +334,9 @@ private:
     QString switchHeaderSourceTarget(Editor *editor);
 
     void modifyBreakpointCondition(int index);
+    void initEditorActions();
+    void changeEditorActionParent(QAction *action, const QString& groupName);
+    void backupMenuForEditor(QMenu* menu, QList<QAction *> &backup);
 
 private slots:
     void setupSlotsForProject();
@@ -872,6 +875,14 @@ private:
     QMenu *mMenuRecentProjects;
     QMenu *mMenuNew;
     QMenu *mMenuInsertCodeSnippet;
+    QList<QAction *> mMenuEditBackup;
+    QList<QAction *> mMenuCodeBackup;
+    QList<QAction *> mMenuSelectionBackup;
+    QList<QAction *> mMenuRefactorBackup;
+    QList<QAction *> mMenuEncodingBackup;
+    QList<QAction *> mMenuExportBackup;
+    QList<QAction *> mMenuMoveCaretBackup;
+
     QComboBox *mCompilerSet;
     std::shared_ptr<CompilerManager> mCompilerManager;
     std::shared_ptr<Debugger> mDebugger;
@@ -930,7 +941,6 @@ private:
     bool mClosingAll;
     bool mOpenningFiles;
     bool mSystemTurnedOff;
-    QPoint mEditorContextMenuPos;
     QTcpServer mTcpServer;
     QColor mErrorColor;
     CompileIssuesState mCompileIssuesState;
@@ -1023,8 +1033,8 @@ private:
     QAction * mToolsOutput_Copy;
 
     QSortFilterProxyModel *mProjectProxyModel;
-
-   // QWidget interface
+    
+    // QWidget interface
 protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* event) override;

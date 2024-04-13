@@ -228,6 +228,25 @@ public:
 
     static PCppParser sharedParser(ParserLanguage language);
 
+    void pageUp() { processCommand(QSynedit::EditCommand::PageUp); }
+    void pageDown() { processCommand(QSynedit::EditCommand::PageDown); }
+    void gotoLineStart() { processCommand(QSynedit::EditCommand::LineStart); }
+    void gotoLineEnd() { processCommand(QSynedit::EditCommand::LineEnd); }
+    void gotoPageStart() { processCommand(QSynedit::EditCommand::PageTop); }
+    void gotoPageEnd() { processCommand(QSynedit::EditCommand::PageBottom); }
+    void gotoFileStart() { processCommand(QSynedit::EditCommand::FileStart); }
+    void gotoFileEnd() { processCommand(QSynedit::EditCommand::FileEnd); }
+    void toggleReadonly();
+
+    void pageUpAndSelect() { processCommand(QSynedit::EditCommand::SelPageUp); }
+    void pageDownAndSelect() { processCommand(QSynedit::EditCommand::SelPageDown); }
+    void selectToLineStart() { processCommand(QSynedit::EditCommand::SelLineStart); }
+    void selectToLineEnd() { processCommand(QSynedit::EditCommand::SelLineEnd); }
+    void selectToPageStart() { processCommand(QSynedit::EditCommand::SelPageTop); }
+    void selectToPageEnd() { processCommand(QSynedit::EditCommand::SelPageBottom); }
+    void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
+    void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
+
 signals:
     void renamed(const QString& oldName, const QString& newName, bool firstSave);
     void fileSaved(const QString& filename, bool inProject);

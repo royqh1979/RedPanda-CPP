@@ -42,17 +42,20 @@ SearchDialog::~SearchDialog()
 void SearchDialog::find(const QString &text)
 {
     mTabBar->setCurrentIndex(mSearchTabIdx);
-    ui->cbFind->setCurrentText(text);
-    ui->cbFind->setFocus();
+    if (!text.isEmpty())
+        ui->cbFind->setCurrentText(text);
+    ui->btnNext->setFocus();
     show();
 }
 
 void SearchDialog::replace(const QString &text)
 {
     mTabBar->setCurrentIndex(mReplaceTabIdx);
-    ui->cbFind->setCurrentText(text);
-    ui->cbReplace->setCurrentText(text);
-    ui->cbFind->setFocus();
+    if (!text.isEmpty()) {
+        ui->cbFind->setCurrentText(text);
+        ui->cbReplace->setCurrentText(text);
+    }
+    ui->btnNext->setFocus();
     show();
 }
 

@@ -54,8 +54,9 @@ SearchInFileDialog::~SearchInFileDialog()
 
 void SearchInFileDialog::findInFiles(const QString &text)
 {
-    ui->cbFind->setCurrentText(text);
-    ui->cbFind->setFocus();
+    if (!text.isEmpty())
+        ui->cbFind->setCurrentText(text);
+    ui->btnExecute->setFocus();
     show();
 }
 
