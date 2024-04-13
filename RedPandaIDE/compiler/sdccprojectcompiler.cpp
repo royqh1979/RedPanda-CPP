@@ -195,7 +195,7 @@ void SDCCProjectCompiler::writeMakeIncludes(QFile &file)
 void SDCCProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
-    writeln(file, QString("\t@-$(RM) $(CLEANOBJ) 2>/dev/null||:").arg(NULL_FILE));
+    writeln(file, QString("\t@-$(RM) $(CLEANOBJ)>%1 2>%1||:").arg(NULL_FILE));
     writeln(file);
 }
 
@@ -269,7 +269,8 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 }else{
                     QString fullObjDir = includeTrailingPathDelimiter(mProject->options().folderForObjFiles);
                     QString relativeObjDir = extractRelativePath(mProject->directory(),fullObjDir);
-                    writeln(file, "\tcd "+ relativeObjDir+" &&$(CC) $(CFLAGS) -c " +"../"+ escapeArgumentForMakefileRecipe(shortFileName, false));
+                    QString objfile=extractRelativePath(fullObjDir,unit->fileName());
+                    writeln(file, "\tpushd "+ localizePath(relativeObjDir)+" &&$(CC) $(CFLAGS) -c " + localizePath(objfile));
                 }
 
                 }
