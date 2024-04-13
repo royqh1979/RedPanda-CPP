@@ -1859,6 +1859,12 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 
     if (changes.testFlag(QSynedit::StatusChange::CaretX)
             || changes.testFlag(QSynedit::StatusChange::CaretY)) {
+        if (pSettings->editor().highlightMathingBraces()) {
+            invalidateLine(mHighlightCharPos1.line);
+            invalidateLine(mHighlightCharPos2.line);
+        }
+        mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
+        mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
         if (mTabStopBegin >=0) {
             if (mTabStopY==caretY()) {
                 if (mLineAfterTabStop.isEmpty()) {
@@ -1885,10 +1891,6 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                 }
             }
         } else if (!selAvail() && pSettings->editor().highlightMathingBraces()){
-            invalidateLine(mHighlightCharPos1.line);
-            invalidateLine(mHighlightCharPos2.line);
-            mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
-            mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
             // Is there a bracket char before us?
             int lineLength = lineText().length();
             int ch = caretX() - 2;

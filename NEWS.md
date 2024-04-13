@@ -139,6 +139,7 @@ Red Panda C++ Version 2.27
   - fix: Toggle breakpoint by shortcut may use wrong line.
   - fix: Size of the icons in problem and problem set panel are not correct.
   - fix: Shouldn't consider preceeding '&'/'*' when popping completion suggest list for variable members.
+  - fix: Positions of current matching parenthesis not correctly updated.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
