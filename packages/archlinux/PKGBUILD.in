@@ -7,7 +7,7 @@ arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64' 'riscv64')
 url="https://github.com/royqh1979/$_pkgname"
 license=('GPL3')
 depends=(qt5-base qt5-svg gcc gdb)
-makedepends=(qt5-tools imagemagick)
+makedepends=(qt5-tools imagemagick librsvg)
 optdepends=(
     'clang: C/C++ compiler (alternative)'
 )
