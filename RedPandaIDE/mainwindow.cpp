@@ -999,32 +999,35 @@ void MainWindow::applySettings()
         themeManager.prepareCustomeTheme();
     }
     themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
+    PAppTheme appTheme;
     try {
-        PAppTheme appTheme = themeManager.theme(pSettings->environment().theme());
-        const QString& style = appTheme->style();
-        if (style == "RedPandaDarkFusion")
-            QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
-        else if (style == "RedPandaLightFusion")
-            QApplication::setStyle(new LightFusionStyle());//app takes the onwership
-        else
-            QApplication::setStyle(style);
-        qApp->setPalette(appTheme->palette());
-        //fix for qstatusbar bug
-        mFileEncodingStatus->setPalette(appTheme->palette());
-        mFileModeStatus->setPalette(appTheme->palette());
-        mFileInfoStatus->setPalette(appTheme->palette());
+        appTheme = themeManager.theme(pSettings->environment().theme());
     } catch (FileError e) {
         QMessageBox::critical(this,
                               tr("Load Theme Error"),
                               e.reason());
+        appTheme = AppTheme::fallbackTheme();
     }
 #ifdef ENABLE_LUA_ADDON
     catch (AddOn::LuaError e) {
         QMessageBox::critical(this,
                               tr("Load Theme Error"),
                               e.reason());
+        appTheme = AppTheme::fallbackTheme();
     }
 #endif
+    const QString& style = appTheme->style();
+    if (style == "RedPandaDarkFusion")
+        QApplication::setStyle(new DarkFusionStyle());//app takes the onwership
+    else if (style == "RedPandaLightFusion")
+        QApplication::setStyle(new LightFusionStyle());//app takes the onwership
+    else
+        QApplication::setStyle(style);
+    qApp->setPalette(appTheme->palette());
+    //fix for qstatusbar bug
+    mFileEncodingStatus->setPalette(appTheme->palette());
+    mFileModeStatus->setPalette(appTheme->palette());
+    mFileInfoStatus->setPalette(appTheme->palette());
 
     updateEditorColorSchemes();
 
