@@ -138,6 +138,7 @@ Red Panda C++ Version 2.27
   - enhancement: Auto hide Project menu if no project openning.
   - fix: Toggle breakpoint by shortcut may use wrong line.
   - fix: Size of the icons in problem and problem set panel are not correct.
+  - fix: Shouldn't consider preceeding '&'/'*' when popping completion suggest list for variable members.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

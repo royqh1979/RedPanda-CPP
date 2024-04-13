@@ -2341,6 +2341,10 @@ QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
         QStringList &memberExpression)
 {
     QStringList expression = getExpressionAtPosition(pos);
+    // *(Deference) and &(Address-of) has low precedence than '.'/'->',
+    //  so don't includes them in the owner expression in comletion calculation
+    while (!expression.isEmpty() && (expression.front()=='*' || expression.front()=='&'))
+        expression.pop_front();
     return getOwnerExpressionAndMember(expression,memberOperator,memberExpression);
 }
 
