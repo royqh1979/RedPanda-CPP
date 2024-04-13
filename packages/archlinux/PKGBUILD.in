@@ -7,7 +7,7 @@ arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64' 'riscv64')
 url="https://github.com/royqh1979/$_pkgname"
 license=('GPL3')
 depends=(qt5-base qt5-svg gcc gdb)
-makedepends=(qt5-tools)
+makedepends=(qt5-tools imagemagick)
 optdepends=(
     'clang: C/C++ compiler (alternative)'
 )
@@ -42,4 +42,13 @@ package() {
 
     cd redpanda-build
     make INSTALL_ROOT="$pkgdir" install
+
+    for size in 16 22 24 32 36 48 64 72 96 128 192 256 512; do
+        mkdir -p "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps"
+        magick convert \
+            -background none \
+            "$pkgdir/usr/share/icons/hicolor/scalable/apps/redpandaide.svg" \
+            -resize ${size}x${size} \
+            "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/redpandaide.png"
+    done
 }
