@@ -269,7 +269,7 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 }else{
                     QString fullObjDir = includeTrailingPathDelimiter(mProject->options().folderForObjFiles);
                     QString relativeObjDir = extractRelativePath(mProject->directory(),fullObjDir);
-                    QString objfile=extractRelativePath(fullObjDir,unit->fileName());
+                    QString objfile=extractRelativePath(generateAbsolutePath(mProject->directory(),relativeObjDir),unit->fileName());
                     writeln(file, "\tpushd "+ localizePath(relativeObjDir)+" &&$(CC) $(CFLAGS) -c " + localizePath(objfile));
                 }
 
