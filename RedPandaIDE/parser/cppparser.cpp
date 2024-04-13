@@ -5804,6 +5804,8 @@ PStatement CppParser::doParseEvalTypeInfo(
                 templateLevel++;
             } else if (token == ">") {
                 templateLevel--;
+            } else if (token == ">>") {
+                templateLevel-=2;
             }
             templateParams += token;
         }
