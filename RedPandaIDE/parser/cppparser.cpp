@@ -4686,7 +4686,7 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
         }
         return result;
     } else
-        return doEvalPointerArithmetic(
+        return doEvalArithmeticOperation(
                     fileName,
                     phraseExpression,
                     pos,
@@ -4695,7 +4695,7 @@ PEvalStatement CppParser::doEvalExpression(const QString& fileName,
                     freeScoped);
 }
 
-PEvalStatement CppParser::doEvalPointerArithmetic(const QString &fileName, const QStringList &phraseExpression, int &pos, const PStatement &scope, const PEvalStatement &previousResult, bool freeScoped) const
+PEvalStatement CppParser::doEvalArithmeticOperation(const QString &fileName, const QStringList &phraseExpression, int &pos, const PStatement &scope, const PEvalStatement &previousResult, bool freeScoped) const
 {
     if (pos>=phraseExpression.length())
         return PEvalStatement();
@@ -6594,9 +6594,18 @@ QStringList CppParser::splitExpression(const QString &expr)
     for(int i=0;i<lines.length();i++) {
         syntaxer.setLine(lines[i],i+1);
         while(!syntaxer.eol()) {
-            if (syntaxer.getTokenAttribute()->tokenType()!=QSynedit::TokenType::Comment
-                    && syntaxer.getTokenAttribute()->tokenType()!=QSynedit::TokenType::Space)
-                result.append(syntaxer.getToken());
+            QSynedit::TokenType tokenType = syntaxer.getTokenAttribute()->tokenType();
+            QString token = syntaxer.getToken();
+            if (tokenType == QSynedit::TokenType::Operator) {
+                if ( token == ">>" ) {
+                    result.append(">");
+                    result.append(">");
+                } else {
+                    result.append(token);
+                }
+            } else if (tokenType!=QSynedit::TokenType::Comment
+                    && tokenType!=QSynedit::TokenType::Space)
+                result.append(token);
             syntaxer.next();
         }
     }
