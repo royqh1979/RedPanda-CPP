@@ -195,7 +195,7 @@ void SDCCProjectCompiler::writeMakeIncludes(QFile &file)
 void SDCCProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
-    writeln(file, QString("\t-$(RM) $(CLEANOBJ) > %1 2>&1").arg(NULL_FILE));
+    writeln(file, QString("\t@-$(RM) $(CLEANOBJ) >%1 2>%1||:").arg(NULL_FILE));
     writeln(file);
 }
 
@@ -256,6 +256,7 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
         writeln(file, objStr);
 
         // Write custom build command
+
         if (unit->overrideBuildCmd() && !unit->buildCmd().isEmpty()) {
             QString BuildCmd = unit->buildCmd();
             BuildCmd.replace("<CRTAB>", "\n\t");
@@ -263,8 +264,16 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
             // Or roll our own
         } else {
             if (fileType==FileType::CSource) {
-                writeln(file, "\t$(CC) $(CFLAGS) -c " + escapeArgumentForMakefileRecipe(shortFileName, false));
-            }
+                if(mProject->options().folderForObjFiles.isEmpty()) {
+                    writeln(file, "\t$(CC) $(CFLAGS) -c " + escapeArgumentForMakefileRecipe(shortFileName, false));
+                }else{
+                    QString fullObjDir = includeTrailingPathDelimiter(mProject->options().folderForObjFiles);
+                    QString relativeObjDir = extractRelativePath(mProject->directory(),fullObjDir);
+                    QString objfile=extractRelativePath(generateAbsolutePath(mProject->directory(),relativeObjDir),unit->fileName());
+                    writeln(file, "\tpushd "+ localizePath(relativeObjDir)+" &&$(CC) $(CFLAGS) -c " + localizePath(objfile));
+                }
+
+                }
         }
     }
 
@@ -316,7 +325,7 @@ bool SDCCProjectCompiler::prepareForCompile()
         parallelParam = "-j1";
     }
 
-    QString makefile = 
+    QString makefile =
             extractRelativePath(mProject->directory(), mProject->makeFileName());
     QStringList cleanArgs{
         "-f",
