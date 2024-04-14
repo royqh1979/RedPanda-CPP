@@ -169,6 +169,7 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
     writeln(file, "BIN_ARG  = " + escapeArgumentForMakefileVariableValue(executable, false));
     writeln(file, "CFLAGS   = $(INCS) " + escapeArgumentsForMakefileVariableValue(cCompileArguments));
     writeln(file, "RM       = " CLEAN_PROGRAM);
+    writeln(file, "CD       = " CD_PROGRAM);
 
     writeln(file);
 }
@@ -195,7 +196,7 @@ void SDCCProjectCompiler::writeMakeIncludes(QFile &file)
 void SDCCProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
-    writeln(file, QString("\t@-$(RM) $(CLEANOBJ) >%1 2>%1||:").arg(NULL_FILE));
+    writeln(file, QString("\t-$(RM) $(CLEANOBJ) >%1 2>%1||:").arg(NULL_FILE));
     writeln(file);
 }
 
@@ -270,7 +271,7 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     QString fullObjDir = includeTrailingPathDelimiter(mProject->options().folderForObjFiles);
                     QString relativeObjDir = extractRelativePath(mProject->directory(),fullObjDir);
                     QString objfile=extractRelativePath(generateAbsolutePath(mProject->directory(),relativeObjDir),unit->fileName());
-                    writeln(file, "\tpushd "+ localizePath(relativeObjDir)+" &&$(CC) $(CFLAGS) -c " + localizePath(objfile));
+                    writeln(file, "\t$(CD) "+ localizePath(relativeObjDir)+" && $(CC) $(CFLAGS) -c " + localizePath(objfile));
                 }
 
                 }
