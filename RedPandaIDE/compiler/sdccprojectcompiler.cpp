@@ -196,7 +196,7 @@ void SDCCProjectCompiler::writeMakeIncludes(QFile &file)
 void SDCCProjectCompiler::writeMakeClean(QFile &file)
 {
     writeln(file, "clean: clean-custom");
-    writeln(file, QString("\t-$(RM) $(CLEANOBJ) >%1 2>%1||:").arg(NULL_FILE));
+    writeln(file, QString("\t-$(RM) $(CLEANOBJ) >%1 2>&1||:").arg(NULL_FILE));
     writeln(file);
 }
 

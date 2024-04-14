@@ -362,7 +362,7 @@ void ProjectCompiler::writeMakeClean(QFile &file)
     if (mProject->options().type == ProjectType::DynamicLib) {
         target +=" $(STATIC)";
     }
-    writeln(file, QString("\t-$(RM) %1 >%2 2>%2 ").arg(target,NULL_FILE));
+    writeln(file, QString("\t-$(RM) %1 >%2 2>&1").arg(target,NULL_FILE));
     writeln(file);
 }
 
