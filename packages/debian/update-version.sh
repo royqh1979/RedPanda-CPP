@@ -12,9 +12,11 @@ cd $DEBIAN_DIR
 pwd
 oldver=`head changelog -n 1 | sed -r 's/^redpanda-cpp\s\((.*)-(.*)\)\s.*$/\1/g'`
 count=`head changelog -n 1 | sed -r 's/^redpanda-cpp\s\((.*)-(.*)\)\s.*$/\2/g'`
-echo $oldver
+echo "Old version: $oldver"
+
 
 if [ "$oldver" != "$ver" ]; then
+  echo "Upgrade to $ver"
   tmpfile=$(mktemp)
   now=`date -R`
   echo "redpanda-cpp ($ver-1) unstable; urgency=medium" >> $tmpfile

@@ -45,7 +45,7 @@ function main()
          PaletteButtonDisabled = "#efefef",
          PaletteButtonTextDisabled = "#bebebe",
          PaletteHighlight = "#688DB2",
-         PaletteHighlightedText = "#000000",
+         PaletteHighlightedText = "#ffffff",
       },
    }
 end
