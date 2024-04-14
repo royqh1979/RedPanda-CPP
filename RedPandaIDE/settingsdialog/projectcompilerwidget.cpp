@@ -44,8 +44,8 @@ void ProjectCompilerWidget::refreshOptions()
 
     ui->tabOptions->resetUI(pSet,mOptions);
 
-    ui->chkStaticLink->setChecked(pSet->staticLink());
-    ui->chkAddCharset->setChecked(pSet->autoAddCharsetParams());
+    ui->chkStaticLink->setChecked(pMainWindow->project()->options().staticLink);
+    ui->chkAddCharset->setChecked(pMainWindow->project()->options().addCharset);
 
     QByteArray execEncoding = pMainWindow->project()->options().execEncoding;
     if (execEncoding == ENCODING_AUTO_DETECT
