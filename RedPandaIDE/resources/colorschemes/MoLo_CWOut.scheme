@@ -29,7 +29,7 @@
     },
     "Character": {
         "bold": true,
-        "foreground": "#ff007d17",
+        "foreground": "#ff64bc00",
         "italic": false,
         "strikeout": false,
         "underlined": false
