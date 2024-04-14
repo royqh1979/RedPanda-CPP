@@ -37,6 +37,9 @@ private:
 private:
     Ui::ProjectCompilerWidget *ui;
     QMap<QString,QString> mOptions;
+    bool mStaticLink;
+    bool mAddCharset;
+    QByteArray mExecCharset;
 
     // SettingsWidget interface
 protected:
