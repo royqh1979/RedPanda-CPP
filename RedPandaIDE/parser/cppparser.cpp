@@ -4108,8 +4108,18 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                 if(aliasStatement) {
                     if (aliasStatement->typeStatement) {
                         addedVar->type = aliasStatement->typeStatement->fullName;
-                        if (!addedVar->type.endsWith(">"))
-                            addedVar->type += aliasStatement->templateParams;
+                        if (!aliasStatement->templateParams.isEmpty()) {
+                            if (!addedVar->type.endsWith(">")) {
+                                addedVar->type += aliasStatement->templateParams;
+                            } else {
+                                QString type = addedVar->type;
+                                int pos = type.indexOf('<');
+                                if (pos>=0) {
+                                    type = type.left(pos);
+                                    addedVar->type = type + aliasStatement->templateParams;
+                                }
+                            }
+                        }
                         if (aliasStatement->typeStatement
                                 && STLIterators.contains(aliasStatement->typeStatement->command)
                                 && !aliasStatement->templateParams.isEmpty()) {
@@ -5379,13 +5389,17 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 pos++;
             }
             result->pointerLevel = pointerLevel;
+        } else if (result && result->kind == EvalStatementKind::Function
+                   && pos<phraseExpression.length()
+                   && phraseExpression[pos]=='<') {
+            result->templateParams = "";
+            int oldPos = pos;
+            doSkipInExpression(phraseExpression,pos,"<",">");
+            for(int i=oldPos;i<pos;i++) {
+                result->templateParams+=phraseExpression[i];
+            }
         }
     }
-//    qDebug()<<pos<<" term end";
-//    if (!result) {
-//        qDebug()<<"not found !!!!";
-//    }
-
     return result;
 }
 
@@ -5698,10 +5712,13 @@ PEvalStatement CppParser::doCreateEvalFunction(
     int pointerLevel=0;
     QString templateParams;
     PStatement typeStatement;
+    QString type = funcStatement->type;
+    if (funcStatement->fullName == "std::make_unique")
+        type = "unique_ptr";
     PStatement effetiveTypeStatement = doParseEvalTypeInfo(
                 fileName,
                 funcStatement->parentScope.lock(),
-                funcStatement->type,
+                type,
                 baseType,
                 typeStatement,
                 pointerLevel,

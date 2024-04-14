@@ -141,6 +141,7 @@ Red Panda C++ Version 2.27
   - fix: Shouldn't consider preceeding '&'/'*' when popping completion suggest list for variable members.
   - fix: Positions of current matching parenthesis not correctly updated.
   - fix: Can't show correct completion info for vars declared with template parameters ending with ">>".
+  - enhancement: Auto type induction for "std::make_shared"/"std::make_unique".
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
