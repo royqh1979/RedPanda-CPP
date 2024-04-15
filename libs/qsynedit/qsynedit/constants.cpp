@@ -20,8 +20,8 @@ namespace QSynedit {
 const QSet<QChar> WordBreakChars{'.', ',', ';', ':',
       '"', '\'', '!', '?', '[', ']', '(', ')', '{', '}', '^', '-', '=', '+',
       '-', '*', '/', '\\', '|'};
-const QChar TabGlyph(0x2192);
-const QChar SpaceGlyph(0x02FD);
-const QChar LineBreakGlyph(0x21A9);
-const QChar SoftBreakGlyph(0x2193);
+const QString TabGlyph{"\U000FFFFC"};
+const QString SpaceGlyph{"\U000FFFFD"};
+const QString LineBreakGlyph{"\U000FFFFB"};
+const QString SoftBreakGlyph{"\U000FFFFA"};
 }
