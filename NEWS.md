@@ -138,6 +138,12 @@ Red Panda C++ Version 2.27
   - enhancement: Auto hide Project menu if no project openning.
   - fix: Toggle breakpoint by shortcut may use wrong line.
   - fix: Size of the icons in problem and problem set panel are not correct.
+  - fix: Shouldn't consider preceeding '&'/'*' when popping completion suggest list for variable members.
+  - fix: Positions of current matching parenthesis not correctly updated.
+  - fix: Can't show correct completion info for vars declared with template parameters ending with ">>".
+  - enhancement: Auto type induction for "std::make_shared"/"std::make_unique".
+  - enhancement: sdcc project compiler: compile source file in subfolders.
+  - fix: project options -> compiler set -> static link & auto convert charset options not correctly loaded.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

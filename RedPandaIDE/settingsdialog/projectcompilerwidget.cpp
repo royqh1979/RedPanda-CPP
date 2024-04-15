@@ -44,10 +44,10 @@ void ProjectCompilerWidget::refreshOptions()
 
     ui->tabOptions->resetUI(pSet,mOptions);
 
-    ui->chkStaticLink->setChecked(pSet->staticLink());
-    ui->chkAddCharset->setChecked(pSet->autoAddCharsetParams());
+    ui->chkStaticLink->setChecked(mStaticLink);
+    ui->chkAddCharset->setChecked(mAddCharset);
 
-    QByteArray execEncoding = pMainWindow->project()->options().execEncoding;
+    QByteArray execEncoding = mExecCharset;
     if (execEncoding == ENCODING_AUTO_DETECT
             || execEncoding == ENCODING_SYSTEM_DEFAULT
             || execEncoding == ENCODING_UTF8) {
@@ -75,11 +75,12 @@ void ProjectCompilerWidget::doLoad()
     Settings::PCompilerSet pSet = pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
     if (mOptions.isEmpty() && pSet)
         mOptions = pSet->compileOptions();
+    mStaticLink = pMainWindow->project()->options().staticLink;
+    mAddCharset = pMainWindow->project()->options().addCharset;
+    mExecCharset = pMainWindow->project()->options().execEncoding;
     ui->cbCompilerSet->blockSignals(true);
     ui->cbCompilerSet->setCurrentIndex(pMainWindow->project()->options().compilerSet);
     ui->cbCompilerSet->blockSignals(false);
-    ui->chkAddCharset->setChecked(pMainWindow->project()->options().addCharset);
-    ui->chkStaticLink->setChecked(pMainWindow->project()->options().staticLink);
     refreshOptions();
 }
 
@@ -99,6 +100,10 @@ void ProjectCompilerWidget::doSave()
     } else {
         pMainWindow->project()->options().execEncoding = ui->cbEncoding->currentData().toString().toLocal8Bit();
     }
+    mOptions = pMainWindow->project()->options().compilerOptions;
+    mStaticLink = pMainWindow->project()->options().staticLink;
+    mAddCharset = pMainWindow->project()->options().addCharset;
+    mExecCharset = pMainWindow->project()->options().execEncoding;
     pMainWindow->project()->saveOptions();
 }
 
@@ -169,6 +174,10 @@ void ProjectCompilerWidget::on_cbCompilerSet_currentIndexChanged(int index)
         return;
     }
     mOptions = pSet->compileOptions();
+    mStaticLink = pSet->staticLink();
+    mAddCharset = pSet->autoAddCharsetParams();
+    mExecCharset = pSet->execCharset().toUtf8();
+
     setSettingsChanged();
     //project->saveOptions();
 }

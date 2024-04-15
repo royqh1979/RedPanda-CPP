@@ -173,10 +173,11 @@ void CompilerInfo::prepareCompilerOptions()
     addOption(CC_CMD_OPT_WARNING_AS_ERROR, QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, "-Werror");
     addOption(CC_CMD_OPT_ABORT_ON_ERROR , QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, "-Wfatal-errors");
     sl.clear();
-    sl.append(QPair<QString,QString>("Normal",""));
-    sl.append(QPair<QString,QString>("Strong","-strong"));
-    sl.append(QPair<QString,QString>("All","-all"));
-    addOption(CC_CMD_OPT_STACK_PROTECTOR , QObject::tr("Check for stack smashing attacks (-fstack-protector)"), groupName, false, false, true, "-fstack-protector", CompilerOptionType::Choice, sl);
+    sl.append(QPair<QString,QString>("Normal","protector"));
+    sl.append(QPair<QString,QString>("Explicit","protector-explicit"));
+    sl.append(QPair<QString,QString>("Strong","protector-strong"));
+    sl.append(QPair<QString,QString>("All","protector-all"));
+    addOption(CC_CMD_OPT_STACK_PROTECTOR , QObject::tr("Check for stack smashing attacks (-fstack-protector)"), groupName, false, false, true, "-fstack-", CompilerOptionType::Choice, sl);
     sl.clear();
     sl.append(QPair<QString,QString>("Address","address"));
     sl.append(QPair<QString,QString>("Hwaddress","hwaddress"));

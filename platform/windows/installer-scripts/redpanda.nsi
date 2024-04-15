@@ -131,8 +131,8 @@ Section "$(SectionMainName)" SectionMain
   !endif
 
   ; Write required paths
-  SetOutPath $INSTDIR\Templates
-  File /nonfatal /r "Templates\*"
+  SetOutPath $INSTDIR\templates
+  File /nonfatal /r "templates\*"
 
 SectionEnd
 
@@ -440,8 +440,7 @@ Section "Uninstall"
   Delete "$INSTDIR\OpenConsole.exe"
   Delete "$INSTDIR\compiler_hint.lua"
 
-  RMDir /r "$INSTDIR\Lang"
-  RMDir /r "$INSTDIR\Templates"
+  RMDir /r "$INSTDIR\templates"
   RMDir /r "$INSTDIR\mingw32"
   RMDir /r "$INSTDIR\mingw64"
   RMDir /r "$INSTDIR\llvm-mingw"

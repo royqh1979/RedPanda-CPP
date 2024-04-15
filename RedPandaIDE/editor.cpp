@@ -1859,6 +1859,12 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 
     if (changes.testFlag(QSynedit::StatusChange::CaretX)
             || changes.testFlag(QSynedit::StatusChange::CaretY)) {
+        if (pSettings->editor().highlightMathingBraces()) {
+            invalidateLine(mHighlightCharPos1.line);
+            invalidateLine(mHighlightCharPos2.line);
+        }
+        mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
+        mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
         if (mTabStopBegin >=0) {
             if (mTabStopY==caretY()) {
                 if (mLineAfterTabStop.isEmpty()) {
@@ -1885,10 +1891,6 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
                 }
             }
         } else if (!selAvail() && pSettings->editor().highlightMathingBraces()){
-            invalidateLine(mHighlightCharPos1.line);
-            invalidateLine(mHighlightCharPos2.line);
-            mHighlightCharPos1 = QSynedit::BufferCoord{0,0};
-            mHighlightCharPos2 = QSynedit::BufferCoord{0,0};
             // Is there a bracket char before us?
             int lineLength = lineText().length();
             int ch = caretX() - 2;
@@ -2341,6 +2343,10 @@ QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
         QStringList &memberExpression)
 {
     QStringList expression = getExpressionAtPosition(pos);
+    // *(Deference) and &(Address-of) has low precedence than '.'/'->',
+    //  so don't includes them in the owner expression in comletion calculation
+    while (!expression.isEmpty() && (expression.front()=='*' || expression.front()=='&'))
+        expression.pop_front();
     return getOwnerExpressionAndMember(expression,memberOperator,memberExpression);
 }
 
