@@ -35,7 +35,6 @@
 
 using SimpleIni = CSimpleIniA;
 using PSimpleIni = std::shared_ptr<SimpleIni>;
-using TemporaryFileOwner = std::unique_ptr<QTemporaryFile>;
 
 enum class FileType{
     GAS, // GNU assembler source file (.s)

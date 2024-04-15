@@ -2360,7 +2360,7 @@ void DebugTarget::run()
         } + mArguments;
     QString cmd;
     QStringList arguments;
-    std::unique_ptr<QTemporaryFile> fileOwner;
+    PNonExclusiveTemporaryFileOwner fileOwner;
 #ifdef Q_OS_WIN
     if (pSettings->environment().useCustomTerminal()) {
         std::tie(cmd, arguments, fileOwner) = wrapCommandForTerminalEmulator(

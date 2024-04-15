@@ -6557,7 +6557,23 @@ void Settings::Languages::setNoDebugDirectivesWhenGenerateASM(bool newNoDebugDir
     mNoDebugDirectivesWhenGenerateASM = newNoDebugDirectivesWhenGenerateASM;
 }
 
-std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
+NonExclusiveTemporaryFileOwner::NonExclusiveTemporaryFileOwner(std::unique_ptr<QTemporaryFile> &tempFile) :
+    filename(tempFile ? tempFile->fileName() : QString())
+{
+    if (tempFile) {
+        tempFile->flush();
+        tempFile->setAutoRemove(false);
+        tempFile = nullptr;
+    }
+}
+
+NonExclusiveTemporaryFileOwner::~NonExclusiveTemporaryFileOwner()
+{
+    if (!filename.isEmpty())
+        QFile::remove(filename);
+}
+
+std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
 {
     QStringList wrappedArgs;
     std::unique_ptr<QTemporaryFile> temproryFile;
@@ -6605,7 +6621,21 @@ std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandFor
                 }
                 temproryFile->write(escapedArgs.join(' ').toUtf8());
                 temproryFile->write("\n");
-                temproryFile->flush();
+                QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+            }
+            wrappedArgs.push_back(temproryFile->fileName());
+        } else if (patternItem == "$tmpfile.sh") {
+            temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
+            if (temproryFile->open()) {
+                QStringList escapedArgs = {"exec"};
+                for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                    auto &arg = payloadArgsWithArgv0[i];
+                    auto escaped = escapeArgument(arg, false, EscapeArgumentRule::BourneAgainShellPretty);
+                    escapedArgs.append(escaped);
+                }
+                temproryFile->write("#!/bin/sh\n");
+                temproryFile->write(escapedArgs.join(' ').toUtf8());
+                temproryFile->write("\n");
                 QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
             }
             wrappedArgs.push_back(temproryFile->fileName());
@@ -6620,7 +6650,6 @@ std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandFor
                 }
                 temproryFile->write(escapedArgs.join(' ').toLocal8Bit());
                 temproryFile->write("\r\n");
-                temproryFile->flush();
                 QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
             }
             wrappedArgs.push_back(temproryFile->fileName());
@@ -6628,11 +6657,11 @@ std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandFor
             wrappedArgs.push_back(patternItem);
     }
     if (wrappedArgs.empty())
-        return {QString(""), QStringList{}, std::move(temproryFile)};
-    return {wrappedArgs[0], wrappedArgs.mid(1), std::move(temproryFile)};
+        return {QString(""), QStringList{}, std::make_unique<NonExclusiveTemporaryFileOwner>(temproryFile)};
+    return {wrappedArgs[0], wrappedArgs.mid(1), std::make_unique<NonExclusiveTemporaryFileOwner>(temproryFile)};
 }
 
-std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
+std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
 {
     return wrapCommandForTerminalEmulator(terminal, parseArguments(argsPattern, Settings::Environment::terminalArgsPatternMagicVariables(), false), payloadArgsWithArgv0);
 }
