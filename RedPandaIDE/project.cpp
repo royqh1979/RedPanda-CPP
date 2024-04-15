@@ -1362,6 +1362,8 @@ QString Project::folder()
 
 void Project::buildPrivateResource()
 {
+    if (mOptions.type == ProjectType::MicroController)
+        return;
     int comp = 0;
     foreach (const PProjectUnit& unit,mUnits) {
         if (
