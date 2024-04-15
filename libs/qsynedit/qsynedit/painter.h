@@ -118,9 +118,9 @@ private:
     DisplayCoord mSelEnd; // end of selected area
     // info about normal and selected text and background colors
     bool mIsSpecialLine, mIsCurrentLine, mIsLineEndSelected;
-    QColor colFG, colBG;
-    QColor colSelFG, colSelBG;
-    QColor colSpFG, colSpBG;
+    QColor mForeground, mBackground;
+    QColor mSelectionForeground, mSelectionBackground;
+    QColor mSpecialLineForeground, mSpecialLineBackground;
     // info about selection of the current line
     int mLineSelStart, mLineSelEnd;
     bool mHasSelectionInLine;

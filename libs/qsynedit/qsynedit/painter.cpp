@@ -313,17 +313,17 @@ void QSynEditPainter::computeSelectionInfo()
 void QSynEditPainter::getDrawingColors(bool selected, QColor &foreground, QColor &background)
 {
     if (selected) {
-        if (colSelFG.isValid())
-            foreground = colSelFG;
+        if (mSelectionForeground.isValid())
+            foreground = mSelectionForeground;
         else
-            foreground = colFG;
-        if (colSelBG.isValid())
-            background = colSelBG;
+            foreground = mForeground;
+        if (mSelectionBackground.isValid())
+            background = mSelectionBackground;
         else
-            background = colBG;
+            background = mBackground;
     } else {
-        foreground = colFG;
-        background = colBG;
+        foreground = mForeground;
+        background = mBackground;
     }
 }
 
@@ -596,14 +596,8 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
     // Any token chars accumulated?
     if (mTokenAccu.width > 0) {
         // Initialize the colors and the font style.
-        colBG = mTokenAccu.background;
-        colFG = mTokenAccu.foreground;
-        if (mIsSpecialLine) {
-            if (colSpFG.isValid())
-                colFG = colSpFG;
-            if (colSpBG.isValid())
-                colBG = colSpBG;
-        }
+        mBackground = mTokenAccu.background;
+        mForeground = mTokenAccu.foreground;
 
         //        if (bSpecialLine && mEdit->mOptions.testFlag(eoSpecialLineDefaultFg))
 //            colFG = TokenAccu.FG;
@@ -674,10 +668,10 @@ void QSynEditPainter::paintHighlightToken(const QString& lineText,
 
     // Fill the background to the end of this line if necessary.
     if (bFillToEOL && mRcToken.left() < mRcLine.right()) {
-        if (mIsSpecialLine && colSpBG.isValid())
-            colBG = colSpBG;
+        if (mIsSpecialLine && mSpecialLineBackground.isValid())
+            mBackground = mSpecialLineBackground;
         else
-            colBG = colEditorBG();
+            mBackground = colEditorBG();
         QColor foreground,background;
         if (mHasSelectionInLine) {
             getDrawingColors(mIsLineEndSelected,foreground,background);
@@ -736,8 +730,8 @@ void QSynEditPainter::addHighlightToken(
         background = attri->background();
         style = attri->styles();
     } else {
-        foreground = colFG;
-        background = colBG;
+        foreground = mForeground;
+        background = mBackground;
         style = getFontStyles(mEdit->font());
     }
 
@@ -753,6 +747,14 @@ void QSynEditPainter::addHighlightToken(
     }
     if (!foreground.isValid()) {
         foreground = mEdit->mForegroundColor;
+    }
+
+    if (mIsSpecialLine) {
+        QColor oldForeground = foreground;
+        if (mSpecialLineForeground.isValid())
+            foreground = mSpecialLineForeground;
+        if (mSpecialLineBackground.isValid())
+            background = mSpecialLineBackground;
     }
 
     // Do we have to paint the old chars first, or can we just append?
@@ -989,14 +991,14 @@ void QSynEditPainter::paintLines()
         }
         // Initialize the text and background colors, maybe the line should
         // use special values for them.
-        colFG = mEdit->mForegroundColor;
-        colBG = colEditorBG();
-        colSpFG = QColor();
-        colSpBG = QColor();
-        mIsSpecialLine = mEdit->onGetSpecialLineColors(vLine, colSpFG, colSpBG);
+        mForeground = mEdit->mForegroundColor;
+        mBackground = colEditorBG();
+        mSpecialLineForeground = QColor();
+        mSpecialLineBackground = QColor();
+        mIsSpecialLine = mEdit->onGetSpecialLineColors(vLine, mSpecialLineForeground, mSpecialLineBackground);
 
-        colSelFG = mEdit->mSelectedForeground;
-        colSelBG = mEdit->mSelectedBackground;
+        mSelectionForeground = mEdit->mSelectedForeground;
+        mSelectionBackground = mEdit->mSelectedBackground;
         mEdit->onGetEditingAreas(vLine, areaList);
         // Get the information about the line selection. Three different parts
         // are possible (unselected before, selected, unselected after), only
@@ -1237,7 +1239,7 @@ void QSynEditPainter::paintLines()
             if (preeditAttr) {
                 area->color = preeditAttr->foreground();
             } else {
-                area->color = colFG;
+                area->color = mForeground;
             }
             areaList.append(area);
 

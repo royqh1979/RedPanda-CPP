@@ -1318,8 +1318,9 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
     if (mParser) {
         // ifdef lines
         if (!mParser->isLineVisible(mFilename, line)) {
-            foreground = syntaxer()->commentAttribute()->foreground();
             background = syntaxer()->commentAttribute()->background();
+            if (attr->tokenType() != QSynedit::TokenType::Space)
+                foreground = syntaxer()->commentAttribute()->foreground();
             return;
         }
         QString sLine = lineText(line);
