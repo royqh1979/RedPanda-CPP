@@ -3152,11 +3152,14 @@ void Editor::initParser()
 ParserLanguage Editor::calcParserLanguage()
 {
 #ifdef ENABLE_SDCC
-    if (!inProject()
-            && pSettings->compilerSets().defaultSet()
-            && pSettings->compilerSets().defaultSet()->compilerType()==CompilerType::SDCC) {
-        return ParserLanguage::SDCC;
+    Settings::PCompilerSet pSet;
+    if (inProject()) {
+        pSet = pSettings->compilerSets().getSet(mProject->options().compilerSet);
+    } else if (!inProject()) {
+        pSet = pSettings->compilerSets().defaultSet();
     }
+    if (pSet && pSet->compilerType()==CompilerType::SDCC)
+        return ParserLanguage::SDCC;
 #endif
     return mUseCppSyntax?ParserLanguage::CPlusPlus:ParserLanguage::C;
 }

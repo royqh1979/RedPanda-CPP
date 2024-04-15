@@ -241,6 +241,7 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
     parser->setEnabled(true);
     parser->setParseGlobalHeaders(true);
     parser->setParseLocalHeaders(true);
+
     // Set options depending on the current compiler set
     if (compilerSetIndex<0) {
         compilerSetIndex=pSettings->compilerSets().defaultIndex();
