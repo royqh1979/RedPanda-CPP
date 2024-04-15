@@ -1125,7 +1125,6 @@ void QSynEditPainter::paintLines()
             if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
                 int startPos = mEdit->mSyntaxer->getTokenPos()+1;
                 int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
-                //qDebug()<<startPos<<":"<<endPos<<" - "+sToken+" - "<<edit->mCaretX<<":"<<edit->mCaretX+edit->mInputPreeditString.length();
                 if (!(endPos < mEdit->mCaretX
                         || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
                     if (!preeditAttr) {
@@ -1200,7 +1199,7 @@ void QSynEditPainter::paintLines()
                             glyphStartCharList,
                             oldLen,
                             sLine.length(),
-                            calculateGlyphPositions,
+                            true,
                             glyphStartPositionsList,
                             tokenWidth);
                 tokenLeft += tokenWidth;
