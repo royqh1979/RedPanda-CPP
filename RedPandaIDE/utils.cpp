@@ -247,6 +247,8 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
         compilerSetIndex=pSettings->compilerSets().defaultIndex();
     }
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
+    if (compilerSet && compilerSet->compilerType()==CompilerType::SDCC)
+        parser->setLanguage(ParserLanguage::SDCC);
     parser->clearIncludePaths();
     bool isCpp = parser->language()==ParserLanguage::CPlusPlus;
     if (compilerSet) {
