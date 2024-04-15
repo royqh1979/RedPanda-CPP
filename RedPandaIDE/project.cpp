@@ -1581,8 +1581,11 @@ void Project::buildPrivateResource()
     // create private header file
     QString hFile = changeFileExt(rcFile, H_EXT);
     contents.clear();
-    QString def = extractFileName(rcFile);
+    QString def = extractFileName(hFile);
     def.replace(".","_");
+    def = def.toUpper();
+    if (def.front().isDigit())
+        def = "PROJECT_"+def;
     contents.append("/* THIS FILE WILL BE OVERWRITTEN BY Red Panda C++ */");
     contents.append("/* DO NOT EDIT ! */");
     contents.append("");

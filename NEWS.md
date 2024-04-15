@@ -145,6 +145,7 @@ Red Panda C++ Version 2.27
   - enhancement: sdcc project compiler: compile source file in subfolders.
   - fix: project options -> compiler set -> static link & auto convert charset options not correctly loaded.
   - change: Don't generate project resource files for sdcc project.
+  - fix: Name of the macro for project private resource header is not correct.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
