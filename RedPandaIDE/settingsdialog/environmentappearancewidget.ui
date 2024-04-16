@@ -136,13 +136,6 @@
        <widget class="QComboBox" name="cbTheme"/>
       </item>
       <item>
-       <widget class="QLabel" name="lblThemeCategory">
-        <property name="text">
-         <string>theme category</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

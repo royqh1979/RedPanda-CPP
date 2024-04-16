@@ -92,7 +92,7 @@ void EnvironmentAppearanceWidget::init()
     ThemeManager themeManager;
     QList<PAppTheme> appThemes = themeManager.getThemes();
     foreach(const PAppTheme& appTheme, appThemes) {
-        ui->cbTheme->addItem(appTheme->displayName(),appTheme->name());
+        ui->cbTheme->addItem(appTheme->categoryIcon() + " " + appTheme->displayName(), appTheme->name());
     }
     ui->cbLanguage->addItem(tr("English"),"en");
     ui->cbLanguage->addItem(tr("Portuguese"),"pt_BR");
@@ -109,7 +109,6 @@ void EnvironmentAppearanceWidget::on_cbTheme_currentIndexChanged(int /* index */
 {
     ThemeManager themeManager;
     PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
-    ui->lblThemeCategory->setText(appTheme->category());
     if(!appTheme->defaultIconSet().isEmpty()) {
         for (int i=0; i<ui->cbIconSet->count();i++) {
             if (ui->cbIconSet->itemData(i) == appTheme->defaultIconSet()) {

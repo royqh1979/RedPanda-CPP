@@ -45,9 +45,9 @@ PAppTheme ThemeManager::theme(const QString &themeName)
     PAppTheme appTheme = nullptr;
 
     // custom overrides built-in
-    if (tryLoadThemeFromDir(customThemeDir, tr("custom"), themeName, appTheme))
+    if (tryLoadThemeFromDir(customThemeDir, AppTheme::ThemeCategory::Custom, themeName, appTheme))
         return appTheme;
-    if (tryLoadThemeFromDir(builtInThemeDir, tr("built-in"), themeName, appTheme))
+    if (tryLoadThemeFromDir(builtInThemeDir, AppTheme::ThemeCategory::BuiltIn, themeName, appTheme))
         return appTheme;
     return AppTheme::fallbackTheme();
 }
@@ -59,8 +59,8 @@ QList<PAppTheme> ThemeManager::getThemes()
     std::set<PAppTheme, ThemeCompare> themes;
 
     // custom overrides built-in
-    loadThemesFromDir(customThemeDir, tr("custom"), themes);
-    loadThemesFromDir(builtInThemeDir, tr("built-in"), themes);
+    loadThemesFromDir(customThemeDir, AppTheme::ThemeCategory::Custom, themes);
+    loadThemesFromDir(builtInThemeDir, AppTheme::ThemeCategory::BuiltIn, themes);
 
     QList<PAppTheme> result(themes.begin(), themes.end());
     return result;
@@ -71,18 +71,14 @@ bool ThemeManager::ThemeCompare::operator()(const PAppTheme &lhs, const PAppThem
     return QFileInfo(lhs->filename()).baseName() < QFileInfo(rhs->filename()).baseName();
 }
 
-bool ThemeManager::tryLoadThemeFromDir(const QString &dir, const QString &dirType, const QString &themeName, PAppTheme &theme)
+bool ThemeManager::tryLoadThemeFromDir(const QString &dir, AppTheme::ThemeCategory category, const QString &themeName, PAppTheme &theme)
 {
     for (const auto &[extension, type] : searchTypes) {
         QString filename = QString("%2.%3").arg(themeName, extension);
         QString fullPath = QString("%1/%2").arg(dir, filename);
         if (QFile::exists(fullPath)) {
             try {
-                theme = std::make_shared<AppTheme>(fullPath, type);
-                if (theme->displayName().isEmpty()) {
-                    theme->setDisplayName(themeName);
-                }
-                theme->setCategory(QString("%1 %2").arg(dirType, filename));
+                theme = std::make_shared<AppTheme>(fullPath, type, category);
                 return true;
             } catch(FileError e) {
                 //just skip it
@@ -97,7 +93,7 @@ bool ThemeManager::tryLoadThemeFromDir(const QString &dir, const QString &dirTyp
     return false;
 }
 
-void ThemeManager::loadThemesFromDir(const QString &dir, const QString &dirType, std::set<PAppTheme, ThemeCompare> &themes)
+void ThemeManager::loadThemesFromDir(const QString &dir, AppTheme::ThemeCategory category, std::set<PAppTheme, ThemeCompare> &themes)
 {
     for (const auto &[extension, type] : searchTypes) {
         QDirIterator it(dir);
@@ -106,12 +102,7 @@ void ThemeManager::loadThemesFromDir(const QString &dir, const QString &dirType,
             QFileInfo fileInfo = it.fileInfo();
             if (fileInfo.suffix().compare(extension, PATH_SENSITIVITY) == 0) {
                 try {
-                    PAppTheme appTheme = std::make_shared<AppTheme>(fileInfo.absoluteFilePath(), type);
-                    if (appTheme->displayName().isEmpty()) {
-                        QString baseName = fileInfo.baseName();
-                        appTheme->setDisplayName(baseName);
-                    }
-                    appTheme->setCategory(QString("%1 %2").arg(dirType, fileInfo.fileName()));
+                    PAppTheme appTheme = std::make_shared<AppTheme>(fileInfo.absoluteFilePath(), type, category);
                     themes.insert(appTheme);
                 } catch(FileError e) {
                     //just skip it
@@ -198,9 +189,11 @@ QPalette AppTheme::palette() const
     return pal;
 }
 
-AppTheme::AppTheme(const QString &filename, ThemeType type, QObject *parent):QObject(parent)
+AppTheme::AppTheme(const QString &filename, ThemeType type, ThemeCategory category, QObject *parent):QObject(parent)
 {
     mFilename = filename;
+    mType = type;
+    mCategory = category;
     QFile file(filename);
     if (!file.exists()) {
         throw FileError(tr("Theme file '%1' doesn't exist!")
@@ -213,6 +206,8 @@ AppTheme::AppTheme(const QString &filename, ThemeType type, QObject *parent):QOb
         QJsonObject obj;
 
         switch (type) {
+        case ThemeType::HardCoded:
+            __builtin_unreachable();
         case ThemeType::JSON: {
             QJsonParseError error;
             QJsonDocument doc(QJsonDocument::fromJson(content, &error));
@@ -255,6 +250,8 @@ AppTheme::AppTheme(const QString &filename, ThemeType type, QObject *parent):QOb
         QFileInfo fileInfo(filename);
         mName = fileInfo.baseName();
         mDisplayName = obj["name"].toString();
+        if (mDisplayName.isEmpty())
+            mDisplayName = mName;
         mStyle = obj["style"].toString();
         mDefaultColorScheme = obj["default scheme"].toString();
         mDefaultIconSet = obj["default iconset"].toString();
@@ -316,6 +313,22 @@ const QString &AppTheme::filename() const
     return mFilename;
 }
 
+const QString AppTheme::categoryIcon() const
+{
+    switch (mCategory) {
+    case ThemeCategory::FailSafe:
+        return "❌";
+    case ThemeCategory::BuiltIn:
+        return "📦";
+    case ThemeCategory::Custom:
+        return "📄";
+    case ThemeCategory::Shared:
+        return "🌐";
+    default:
+        return "";
+    }
+}
+
 const QString &AppTheme::defaultIconSet() const
 {
     return mDefaultIconSet;
@@ -336,21 +349,6 @@ const QString &AppTheme::displayName() const
     return mDisplayName;
 }
 
-void AppTheme::setDisplayName(const QString &newDisplayName)
-{
-    mDisplayName = newDisplayName;
-}
-
-const QString &AppTheme::category() const
-{
-    return mCategory;
-}
-
-void AppTheme::setCategory(const QString &newCategory)
-{
-    mCategory = newCategory;
-}
-
 const QString &AppTheme::defaultColorScheme() const
 {
     return mDefaultColorScheme;
@@ -369,10 +367,11 @@ const QString &AppTheme::style() const
 AppTheme::AppTheme() :
     mName("__failsafe__theme__"),
     mDisplayName("Fusion"),
-    mCategory("fail-safe hard-coded"),
     mStyle("fusion"),
     mDefaultColorScheme("Adaptive"),
-    mDefaultIconSet("newlook")
+    mDefaultIconSet("newlook"),
+    mType(ThemeType::HardCoded),
+    mCategory(ThemeCategory::FailSafe)
 {
 }
 
