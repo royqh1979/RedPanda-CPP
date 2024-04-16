@@ -11535,6 +11535,19 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
+    <name>ThemeManager</name>
+    <message>
+        <location filename="../thememanager.cpp" line="-206"/>
+        <source>custom</source>
+        <translation>自定义</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>built-in</source>
+        <translation>内置</translation>
+    </message>
+</context>
+<context>
     <name>SynEdit</name>
     <message>
         <source>The highlighter seems to be in an infinite loop</source>

@@ -21,6 +21,7 @@
 #include <QColor>
 #include <memory>
 #include <QObject>
+#include <set>
 
 class AppTheme;
 using PAppTheme = std::shared_ptr<AppTheme>;
@@ -94,6 +95,10 @@ public:
     void setDefaultColorScheme(const QString &newDefaultColorScheme);
 
     const QString &displayName() const;
+    void setDisplayName(const QString &newDisplayName);
+
+    const QString &category() const;
+    void setCategory(const QString &newCategory);
 
     const QString &name() const;
 
@@ -117,6 +122,7 @@ private:
     QHash<int,QColor> mColors;
     QString mName;
     QString mDisplayName;
+    QString mCategory;
     QString mStyle;
     QString mDefaultColorScheme;
     QString mDefaultIconSet;
@@ -129,13 +135,24 @@ class ThemeManager : public QObject
 public:
     explicit ThemeManager(QObject *parent = nullptr);
     PAppTheme theme(const QString& themeName);
-    bool useCustomTheme() const;
-    void setUseCustomTheme(bool newUseCustomTheme);
-    void prepareCustomeTheme();
     QList<PAppTheme> getThemes();
 
 private:
-    bool mUseCustomTheme;
+    struct ThemeCompare {
+        bool operator()(const PAppTheme &lhs, const PAppTheme &rhs) const;
+    };
+
+private:
+    bool tryLoadThemeFromDir(const QString &dir, const QString &dirType, const QString &themeName, PAppTheme &theme);
+    void loadThemesFromDir(const QString &dir, const QString &dirType, std::set<PAppTheme, ThemeCompare> &themes);
+
+    // lua overrides json
+    inline static const std::pair<QString, AppTheme::ThemeType> searchTypes[] = {
+#ifdef ENABLE_LUA_ADDON
+        { "lua", AppTheme::ThemeType::Lua },
+#endif
+        { "json", AppTheme::ThemeType::JSON },
+    };
 };
 
 #endif // THEMEMANAGER_H

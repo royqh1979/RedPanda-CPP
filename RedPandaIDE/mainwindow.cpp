@@ -995,10 +995,6 @@ void MainWindow::updateEditorColorSchemes()
 void MainWindow::applySettings()
 {
     ThemeManager themeManager;
-    if (pSettings->environment().useCustomTheme()) {
-        themeManager.prepareCustomeTheme();
-    }
-    themeManager.setUseCustomTheme(pSettings->environment().useCustomTheme());
     PAppTheme appTheme;
     try {
         appTheme = themeManager.theme(pSettings->environment().theme());
