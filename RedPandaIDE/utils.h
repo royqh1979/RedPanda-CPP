@@ -194,4 +194,8 @@ QByteArray stringToByteArray(const QString& content, bool isUTF8);
 #define __builtin_unreachable() (__assume(0))
 #endif
 
+std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0);
+
+std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0);
+
 #endif // UTILS_H
