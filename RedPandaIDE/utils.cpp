@@ -25,6 +25,22 @@ using pIsWow64Process2_t = BOOL (WINAPI *)(
 );
 #endif
 
+NonExclusiveTemporaryFileOwner::NonExclusiveTemporaryFileOwner(std::unique_ptr<QTemporaryFile> &tempFile) :
+    filename(tempFile ? tempFile->fileName() : QString())
+{
+    if (tempFile) {
+        tempFile->flush();
+        tempFile->setAutoRemove(false);
+        tempFile = nullptr;
+    }
+}
+
+NonExclusiveTemporaryFileOwner::~NonExclusiveTemporaryFileOwner()
+{
+    if (!filename.isEmpty())
+        QFile::remove(filename);
+}
+
 FileType getFileType(const QString &filename)
 {
     if (filename.endsWith(".s",PATH_SENSITIVITY)) {

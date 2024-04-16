@@ -115,6 +115,21 @@ enum class ProblemCaseValidateType {
     IgnoreSpaces
 };
 
+struct NonExclusiveTemporaryFileOwner {
+    const QString filename;
+
+    // take ownership
+    explicit NonExclusiveTemporaryFileOwner(std::unique_ptr<QTemporaryFile> &tempFile);
+
+    NonExclusiveTemporaryFileOwner(const NonExclusiveTemporaryFileOwner &) = delete;
+    NonExclusiveTemporaryFileOwner(NonExclusiveTemporaryFileOwner &&) = delete;
+    NonExclusiveTemporaryFileOwner& operator=(const NonExclusiveTemporaryFileOwner &) = delete;
+    NonExclusiveTemporaryFileOwner& operator=(NonExclusiveTemporaryFileOwner &&) = delete;
+    ~NonExclusiveTemporaryFileOwner();
+};
+
+using PNonExclusiveTemporaryFileOwner = std::unique_ptr<NonExclusiveTemporaryFileOwner>;
+
 FileType getFileType(const QString& filename);
 
 bool programHasConsole(const QString& filename);

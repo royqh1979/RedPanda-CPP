@@ -6557,22 +6557,6 @@ void Settings::Languages::setNoDebugDirectivesWhenGenerateASM(bool newNoDebugDir
     mNoDebugDirectivesWhenGenerateASM = newNoDebugDirectivesWhenGenerateASM;
 }
 
-NonExclusiveTemporaryFileOwner::NonExclusiveTemporaryFileOwner(std::unique_ptr<QTemporaryFile> &tempFile) :
-    filename(tempFile ? tempFile->fileName() : QString())
-{
-    if (tempFile) {
-        tempFile->flush();
-        tempFile->setAutoRemove(false);
-        tempFile = nullptr;
-    }
-}
-
-NonExclusiveTemporaryFileOwner::~NonExclusiveTemporaryFileOwner()
-{
-    if (!filename.isEmpty())
-        QFile::remove(filename);
-}
-
 std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
 {
     QStringList wrappedArgs;

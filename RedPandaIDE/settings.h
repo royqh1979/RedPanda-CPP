@@ -1618,21 +1618,6 @@ private:
     Languages mLanguages;
 };
 
-struct NonExclusiveTemporaryFileOwner {
-    const QString filename;
-
-    // take ownership
-    explicit NonExclusiveTemporaryFileOwner(std::unique_ptr<QTemporaryFile> &tempFile);
-
-    NonExclusiveTemporaryFileOwner(const NonExclusiveTemporaryFileOwner &) = delete;
-    NonExclusiveTemporaryFileOwner(NonExclusiveTemporaryFileOwner &&) = delete;
-    NonExclusiveTemporaryFileOwner& operator=(const NonExclusiveTemporaryFileOwner &) = delete;
-    NonExclusiveTemporaryFileOwner& operator=(NonExclusiveTemporaryFileOwner &&) = delete;
-    ~NonExclusiveTemporaryFileOwner();
-};
-
-using PNonExclusiveTemporaryFileOwner = std::unique_ptr<NonExclusiveTemporaryFileOwner>;
-
 std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0);
 
 std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0);
