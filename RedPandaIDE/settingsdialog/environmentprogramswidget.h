@@ -17,6 +17,7 @@
 #ifndef ENVIRONMENTPROGRAMSWIDGET_H
 #define ENVIRONMENTPROGRAMSWIDGET_H
 
+#include "settings.h"
 #include "settingswidget.h"
 #include "utils.h"
 
@@ -34,7 +35,7 @@ public:
 
 private:
     auto resolveExecArguments(const QString &terminalPath, const QString &argsPatter)
-        -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>;
+        -> std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner>;
     void updateCommandPreview(const QString &terminalPath, const QString &argsPatter);
     void autoDetectAndUpdateArgumentsPattern(const QString &terminalPath);
 

@@ -1615,11 +1615,6 @@ private:
     Languages mLanguages;
 };
 
-
-std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0);
-
-std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0);
-
 extern Settings* pSettings;
 
 #endif // SETTINGS_H

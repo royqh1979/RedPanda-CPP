@@ -44,7 +44,7 @@ EnvironmentProgramsWidget::~EnvironmentProgramsWidget()
 }
 
 auto EnvironmentProgramsWidget::resolveExecArguments(const QString &terminalPath, const QString &argsPattern)
-    -> std::tuple<QString, QStringList, std::unique_ptr<QTemporaryFile>>
+    -> std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner>
 {
     return wrapCommandForTerminalEmulator(terminalPath, argsPattern, platformCommandForTerminalArgsPreview());
 }

@@ -35,7 +35,6 @@
 
 using SimpleIni = CSimpleIniA;
 using PSimpleIni = std::shared_ptr<SimpleIni>;
-using TemporaryFileOwner = std::unique_ptr<QTemporaryFile>;
 
 enum class FileType{
     GAS, // GNU assembler source file (.s)
@@ -116,6 +115,21 @@ enum class ProblemCaseValidateType {
     IgnoreSpaces
 };
 
+struct NonExclusiveTemporaryFileOwner {
+    const QString filename;
+
+    // take ownership
+    explicit NonExclusiveTemporaryFileOwner(std::unique_ptr<QTemporaryFile> &tempFile);
+
+    NonExclusiveTemporaryFileOwner(const NonExclusiveTemporaryFileOwner &) = delete;
+    NonExclusiveTemporaryFileOwner(NonExclusiveTemporaryFileOwner &&) = delete;
+    NonExclusiveTemporaryFileOwner& operator=(const NonExclusiveTemporaryFileOwner &) = delete;
+    NonExclusiveTemporaryFileOwner& operator=(NonExclusiveTemporaryFileOwner &&) = delete;
+    ~NonExclusiveTemporaryFileOwner();
+};
+
+using PNonExclusiveTemporaryFileOwner = std::unique_ptr<NonExclusiveTemporaryFileOwner>;
+
 FileType getFileType(const QString& filename);
 
 bool programHasConsole(const QString& filename);
@@ -179,5 +193,9 @@ QByteArray stringToByteArray(const QString& content, bool isUTF8);
 #ifdef _MSC_VER
 #define __builtin_unreachable() (__assume(0))
 #endif
+
+std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0);
+
+std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0);
 
 #endif // UTILS_H

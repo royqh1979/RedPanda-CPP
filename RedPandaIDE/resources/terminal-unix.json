@@ -126,6 +126,17 @@
         ]
     },
     {
+        "group": "Special Purpose",
+        "terminals": [
+            {
+                "name": "Wayland Terminal",
+                "path": "weston-terminal",
+                "argsPattern": "$term --shell $tmpfile.sh",
+                "comment": "integration with Weston compositor, for minimal Live CD/USB"
+            }
+        ]
+    },
+    {
         "group": "With minor issue",
         "terminals": [
             {

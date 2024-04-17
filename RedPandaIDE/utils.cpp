@@ -14,6 +14,8 @@
 #include "parser/cppparser.h"
 #include "compiler/executablerunner.h"
 #include <QComboBox>
+#include "utils/escape.h"
+#include "utils/parsearg.h"
 #ifdef Q_OS_WIN
 #include <QDesktopServices>
 #include <windows.h>
@@ -24,6 +26,22 @@ using pIsWow64Process2_t = BOOL (WINAPI *)(
     HANDLE hProcess, USHORT *pProcessMachine, USHORT *pNativeMachine
 );
 #endif
+
+NonExclusiveTemporaryFileOwner::NonExclusiveTemporaryFileOwner(std::unique_ptr<QTemporaryFile> &tempFile) :
+    filename(tempFile ? tempFile->fileName() : QString())
+{
+    if (tempFile) {
+        tempFile->flush();
+        tempFile->setAutoRemove(false);
+        tempFile = nullptr;
+    }
+}
+
+NonExclusiveTemporaryFileOwner::~NonExclusiveTemporaryFileOwner()
+{
+    if (!filename.isEmpty())
+        QFile::remove(filename);
+}
 
 FileType getFileType(const QString &filename)
 {
@@ -634,4 +652,97 @@ QByteArray stringToByteArray(const QString &content, bool isUTF8)
         return content.toUtf8();
     else
         return content.toLocal8Bit();
+}
+
+std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QStringList &argsPattern, const QStringList &payloadArgsWithArgv0)
+{
+    QStringList wrappedArgs;
+    std::unique_ptr<QTemporaryFile> temproryFile;
+    for (const QString &patternItem : argsPattern) {
+        if (patternItem == "$term")
+            wrappedArgs.append(terminal);
+        else if (patternItem == "$integrated_term")
+            wrappedArgs.append(includeTrailingPathDelimiter(pSettings->dirs().appDir())+terminal);
+        else if (patternItem == "$argv")
+            wrappedArgs.append(payloadArgsWithArgv0);
+        else if (patternItem == "$command" || patternItem == "$unix_command") {
+            // “$command” is for compatibility; previously used on multiple Unix terms
+            QStringList escapedArgs;
+            for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                auto &arg = payloadArgsWithArgv0[i];
+                auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::BourneAgainShellPretty);
+                escapedArgs.append(escaped);
+            }
+            wrappedArgs.push_back(escapedArgs.join(' '));
+        } else if (patternItem == "$dos_command") {
+            QStringList escapedArgs;
+            for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                auto &arg = payloadArgsWithArgv0[i];
+                auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::WindowsCommandPrompt);
+                escapedArgs.append(escaped);
+            }
+            wrappedArgs.push_back(escapedArgs.join(' '));
+        } else if (patternItem == "$lpCommandLine") {
+            QStringList escapedArgs;
+            for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                auto &arg = payloadArgsWithArgv0[i];
+                auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::WindowsCreateProcess);
+                escapedArgs.append(escaped);
+            }
+            wrappedArgs.push_back(escapedArgs.join(' '));
+        } else if (patternItem == "$tmpfile" || patternItem == "$tmpfile.command") {
+            // “$tmpfile” is for compatibility; previously used on macOS Terminal.app
+            temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
+            if (temproryFile->open()) {
+                QStringList escapedArgs;
+                for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                    auto &arg = payloadArgsWithArgv0[i];
+                    auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::BourneAgainShellPretty);
+                    escapedArgs.append(escaped);
+                }
+                temproryFile->write(escapedArgs.join(' ').toUtf8());
+                temproryFile->write("\n");
+                QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+            }
+            wrappedArgs.push_back(temproryFile->fileName());
+        } else if (patternItem == "$tmpfile.sh") {
+            temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.command");
+            if (temproryFile->open()) {
+                QStringList escapedArgs = {"exec"};
+                for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                    auto &arg = payloadArgsWithArgv0[i];
+                    auto escaped = escapeArgument(arg, false, EscapeArgumentRule::BourneAgainShellPretty);
+                    escapedArgs.append(escaped);
+                }
+                temproryFile->write("#!/bin/sh\n");
+                temproryFile->write(escapedArgs.join(' ').toUtf8());
+                temproryFile->write("\n");
+                QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+            }
+            wrappedArgs.push_back(temproryFile->fileName());
+        } else if (patternItem == "$tmpfile.bat") {
+            temproryFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/redpanda_XXXXXX.bat");
+            if (temproryFile->open()) {
+                QStringList escapedArgs;
+                for (int i = 0; i < payloadArgsWithArgv0.length(); i++) {
+                    auto &arg = payloadArgsWithArgv0[i];
+                    auto escaped = escapeArgument(arg, i == 0, EscapeArgumentRule::WindowsCommandPrompt);
+                    escapedArgs.append(escaped);
+                }
+                temproryFile->write(escapedArgs.join(' ').toLocal8Bit());
+                temproryFile->write("\r\n");
+                QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+            }
+            wrappedArgs.push_back(temproryFile->fileName());
+        } else
+            wrappedArgs.push_back(patternItem);
+    }
+    if (wrappedArgs.empty())
+        return {QString(""), QStringList{}, std::make_unique<NonExclusiveTemporaryFileOwner>(temproryFile)};
+    return {wrappedArgs[0], wrappedArgs.mid(1), std::make_unique<NonExclusiveTemporaryFileOwner>(temproryFile)};
+}
+
+std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
+{
+    return wrapCommandForTerminalEmulator(terminal, parseArguments(argsPattern, Settings::Environment::terminalArgsPatternMagicVariables(), false), payloadArgsWithArgv0);
 }

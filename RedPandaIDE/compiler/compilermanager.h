@@ -22,6 +22,7 @@
 #include "qt_utils/utils.h"
 #include "../utils.h"
 #include "../common.h"
+#include "settings.h"
 
 enum RunProgramFlag {
     RPF_PAUSE_CONSOLE =     0x0001,
@@ -103,7 +104,7 @@ private:
     int mSyntaxCheckIssueCount;
     Compiler* mBackgroundSyntaxChecker;
     Runner* mRunner;
-    TemporaryFileOwner mTempFileOwner;
+    PNonExclusiveTemporaryFileOwner mTempFileOwner;
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mCompileMutex;
     QRecursiveMutex mBackgroundSyntaxCheckMutex;
