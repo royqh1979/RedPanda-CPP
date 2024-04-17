@@ -78,13 +78,21 @@ public:
     Q_ENUM(ColorRole)
 
     enum class ThemeType {
+        HardCoded,
         JSON,
 #ifdef ENABLE_LUA_ADDON
         Lua,
 #endif
     };
 
-    AppTheme(const QString& filename, ThemeType type, QObject* parent=nullptr);
+    enum class ThemeCategory {
+        FailSafe,
+        BuiltIn,
+        Custom,
+        Shared,
+    };
+
+    AppTheme(const QString& filename, ThemeType type, ThemeCategory category, QObject* parent=nullptr);
 
     QColor color(ColorRole role) const;
     QPalette palette() const;
@@ -95,10 +103,6 @@ public:
     void setDefaultColorScheme(const QString &newDefaultColorScheme);
 
     const QString &displayName() const;
-    void setDisplayName(const QString &newDisplayName);
-
-    const QString &category() const;
-    void setCategory(const QString &newCategory);
 
     const QString &name() const;
 
@@ -109,6 +113,8 @@ public:
     static QString initialStyle();
 
     const QString& filename() const;
+
+    const QString categoryIcon() const;
 
 public:
     static PAppTheme fallbackTheme();
@@ -122,11 +128,12 @@ private:
     QHash<int,QColor> mColors;
     QString mName;
     QString mDisplayName;
-    QString mCategory;
     QString mStyle;
     QString mDefaultColorScheme;
     QString mDefaultIconSet;
     QString mFilename;
+    ThemeType mType;
+    ThemeCategory mCategory;
 };
 
 class ThemeManager : public QObject
@@ -143,8 +150,8 @@ private:
     };
 
 private:
-    bool tryLoadThemeFromDir(const QString &dir, const QString &dirType, const QString &themeName, PAppTheme &theme);
-    void loadThemesFromDir(const QString &dir, const QString &dirType, std::set<PAppTheme, ThemeCompare> &themes);
+    bool tryLoadThemeFromDir(const QString &dir, AppTheme::ThemeCategory category, const QString &themeName, PAppTheme &theme);
+    void loadThemesFromDir(const QString &dir, AppTheme::ThemeCategory category, std::set<PAppTheme, ThemeCompare> &themes);
 
     // lua overrides json
     inline static const std::pair<QString, AppTheme::ThemeType> searchTypes[] = {
