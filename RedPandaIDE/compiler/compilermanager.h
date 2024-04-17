@@ -22,7 +22,6 @@
 #include "qt_utils/utils.h"
 #include "../utils.h"
 #include "../common.h"
-#include "settings.h"
 
 enum RunProgramFlag {
     RPF_PAUSE_CONSOLE =     0x0001,
