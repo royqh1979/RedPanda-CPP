@@ -46,6 +46,7 @@ public:
 private slots:
     void on_cbTheme_currentIndexChanged(int index);
     void on_btnCustomize_clicked();
+    void on_btnOpenCustomThemeFolder_clicked();
 };
 
 #endif // ENVIRONMENTAPPEARANCEWIDGET_H

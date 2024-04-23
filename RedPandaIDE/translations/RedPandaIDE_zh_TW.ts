@@ -2130,7 +2130,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+179"/>
+        <location line="+186"/>
         <source>*Needs restart</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2150,13 +2150,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-158"/>
         <source>Icon Set:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+121"/>
         <source>Create a customized copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Open custom themes folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2182,16 +2187,6 @@
     <message>
         <location line="+1"/>
         <source>Traditional Chinese</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+32"/>
-        <source>Confirm Overwrite</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Custom Theme file %1 already exists.&lt;br /&gt;Do you want to overwrite it?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

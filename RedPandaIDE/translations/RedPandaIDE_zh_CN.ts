@@ -2643,7 +2643,7 @@ p, li { white-space: pre-wrap; }
         <translation>表单</translation>
     </message>
     <message>
-        <location line="+150"/>
+        <location line="+157"/>
         <source>Theme:</source>
         <translation>主题:</translation>
     </message>
@@ -2652,12 +2652,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">使用自定义主题</translation>
     </message>
     <message>
-        <location line="-144"/>
+        <location line="-151"/>
         <source>Icon Set:</source>
         <translation>图标集：</translation>
     </message>
     <message>
-        <location line="+176"/>
+        <location line="+183"/>
         <source>Use custom icon set</source>
         <translation>使用自定义图标</translation>
     </message>
@@ -2667,7 +2667,7 @@ p, li { white-space: pre-wrap; }
         <translation>图标缩放：</translation>
     </message>
     <message>
-        <location line="-202"/>
+        <location line="-209"/>
         <source>Font:</source>
         <translation>字体:</translation>
     </message>
@@ -2675,6 +2675,11 @@ p, li { white-space: pre-wrap; }
         <location line="+76"/>
         <source>Create a customized copy</source>
         <translation>自定义</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Open custom themes folder</source>
+        <translation>打开自定义主题文件夹</translation>
     </message>
     <message>
         <location line="+78"/>
@@ -2712,14 +2717,8 @@ p, li { white-space: pre-wrap; }
         <translation>繁体中文</translation>
     </message>
     <message>
-        <location line="+32"/>
         <source>Confirm Overwrite</source>
-        <translation>确认覆盖</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Custom Theme file %1 already exists.&lt;br /&gt;Do you want to overwrite it?</source>
-        <translation type="unfinished"></translation>
+        <translation type="vanished">确认覆盖</translation>
     </message>
 </context>
 <context>

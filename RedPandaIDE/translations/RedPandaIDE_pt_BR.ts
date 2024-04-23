@@ -2357,7 +2357,12 @@
         <translation>Fonte:</translation>
     </message>
     <message>
-        <location line="+179"/>
+        <location line="+83"/>
+        <source>Open custom themes folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+103"/>
         <source>*Needs restart</source>
         <translation>*Necessário reiniciar</translation>
     </message>
@@ -2367,12 +2372,12 @@
         <translation>Tema:</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-30"/>
         <source>Create a customized copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+85"/>
         <source>Language:</source>
         <translation>Idioma:</translation>
     </message>
@@ -2386,12 +2391,12 @@
         <translation type="vanished">Usar tema personalizado</translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-158"/>
         <source>Icon Set:</source>
         <translation>Conjunto de ícones:</translation>
     </message>
     <message>
-        <location line="+176"/>
+        <location line="+183"/>
         <source>Use custom icon set</source>
         <translation>Usar conjunto de ícones personalizado</translation>
     </message>
@@ -2414,16 +2419,6 @@
         <location line="+1"/>
         <source>Traditional Chinese</source>
         <translation>Chinês tradicional</translation>
-    </message>
-    <message>
-        <location line="+32"/>
-        <source>Confirm Overwrite</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Custom Theme file %1 already exists.&lt;br /&gt;Do you want to overwrite it?</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../settingsdialog/environmentappearancewidget.ui" line="+71"/>

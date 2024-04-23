@@ -545,7 +545,6 @@ void openFileFolderInExplorer(const QString &path)
                     QUrl("file:///"+
                          includeTrailingPathDelimiter(path),QUrl::TolerantMode));
     }
-
 }
 
 QColor alphaBlend(const QColor &lower, const QColor &upper) {

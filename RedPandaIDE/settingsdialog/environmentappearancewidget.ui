@@ -143,6 +143,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="btnOpenCustomThemeFolder">
+        <property name="text">
+         <string>Open custom themes folder</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

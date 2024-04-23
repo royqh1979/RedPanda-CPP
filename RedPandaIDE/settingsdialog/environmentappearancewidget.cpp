@@ -111,6 +111,7 @@ void EnvironmentAppearanceWidget::on_cbTheme_currentIndexChanged(int /* index */
     ThemeManager themeManager;
     PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
     ui->btnCustomize->setVisible(appTheme->category() == AppTheme::ThemeCategory::BuiltIn);
+    ui->btnOpenCustomThemeFolder->setVisible(appTheme->category() == AppTheme::ThemeCategory::Custom);
     if(!appTheme->defaultIconSet().isEmpty()) {
         for (int i=0; i<ui->cbIconSet->count();i++) {
             if (ui->cbIconSet->itemData(i) == appTheme->defaultIconSet()) {
@@ -141,5 +142,12 @@ void EnvironmentAppearanceWidget::on_btnCustomize_clicked()
         if (appTheme->name() == currentThemeName)
             ui->cbTheme->setCurrentIndex(i);
     }
+}
+
+
+void EnvironmentAppearanceWidget::on_btnOpenCustomThemeFolder_clicked()
+{
+    QString customThemeFolder = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    openFileFolderInExplorer(customThemeFolder);
 }
 
