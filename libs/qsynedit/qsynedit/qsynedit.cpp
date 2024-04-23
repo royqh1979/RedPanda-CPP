@@ -3230,9 +3230,12 @@ void QSynEdit::recalcCharExtent()
     }
     mTextHeight *= mLineSpacingFactor;
 
-    setTopPos(currentTopRow * mTextHeight);
-    setLeftPos(currentLeftCol * mCharWidth);
     onSizeOrFontChanged();
+    int newTopPos =  currentTopRow * mTextHeight;
+    setTopPos(newTopPos);
+    if (newTopPos!=mTopPos)
+        mTopPos = newTopPos;
+    setLeftPos(currentLeftCol * mCharWidth);
 }
 
 QString QSynEdit::expandAtWideGlyphs(const QString &S)
