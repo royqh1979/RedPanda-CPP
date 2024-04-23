@@ -2905,14 +2905,18 @@ void CppParser::handleLambda(int index, int maxIndex)
     QSet<QString> captures = parseLambdaCaptures(index);
     int startLine=mTokenizer[index]->line;
     int argStart=index+1;
-    if (mTokenizer[argStart]->text!='(')
+    int argEnd, bodyStart;
+    if (mTokenizer[argStart]->text == '(' ) {
+        argEnd = mTokenizer[argStart]->matchIndex;
+        bodyStart=indexOfNextLeftBrace(argEnd+1, maxIndex);
+        if (bodyStart>=maxIndex) {
+            return;
+        }
+    } else if (mTokenizer[argStart]->text == '{') {
+        argEnd = argStart;
+        bodyStart = argStart;
+    } else
         return;
-    int argEnd= mTokenizer[argStart]->matchIndex;
-    //TODO: parse captures
-    int bodyStart=indexOfNextLeftBrace(argEnd+1, maxIndex);
-    if (bodyStart>=maxIndex) {
-        return;
-    }
     int bodyEnd = mTokenizer[bodyStart]->matchIndex;
     if (bodyEnd>maxIndex) {
         return;
@@ -2931,7 +2935,8 @@ void CppParser::handleLambda(int index, int maxIndex)
                 StatementAccessibility::None,
                 StatementProperty::HasDefinition);
     lambdaBlock->lambdaCaptures = captures;
-    scanMethodArgs(lambdaBlock,argStart);
+    if (argEnd > argStart)
+        scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,mTokenizer[bodyStart]->line);
     int oldIndex = mIndex;
     mIndex = bodyStart+1;
