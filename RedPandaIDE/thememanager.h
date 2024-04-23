@@ -116,8 +116,12 @@ public:
 
     const QString categoryIcon() const;
 
+    bool copyTo(const QString& targetFolder);
+
 public:
     static PAppTheme fallbackTheme();
+
+    ThemeCategory category() const;
 
 private:
     AppTheme();

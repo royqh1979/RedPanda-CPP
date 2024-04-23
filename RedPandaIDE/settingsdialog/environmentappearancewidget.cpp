@@ -18,6 +18,7 @@
 #include "ui_environmentappearancewidget.h"
 
 #include <QApplication>
+#include <QMessageBox>
 #include <QStyleFactory>
 #include "../settings.h"
 #include "../mainwindow.h"
@@ -109,6 +110,7 @@ void EnvironmentAppearanceWidget::on_cbTheme_currentIndexChanged(int /* index */
 {
     ThemeManager themeManager;
     PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
+    ui->btnCustomize->setVisible(appTheme->category() == AppTheme::ThemeCategory::BuiltIn);
     if(!appTheme->defaultIconSet().isEmpty()) {
         for (int i=0; i<ui->cbIconSet->count();i++) {
             if (ui->cbIconSet->itemData(i) == appTheme->defaultIconSet()) {
@@ -116,6 +118,28 @@ void EnvironmentAppearanceWidget::on_cbTheme_currentIndexChanged(int /* index */
                 break;
             }
         }
+    }
+}
+
+
+void EnvironmentAppearanceWidget::on_btnCustomize_clicked()
+{
+    ThemeManager themeManager;
+    PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
+    QString customThemeFolder = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    QDir dir{customThemeFolder};
+    if (!dir.exists()) {
+        dir.mkpath(customThemeFolder);
+    }
+    appTheme->copyTo(customThemeFolder);
+    ui->cbTheme->clear();
+    QString currentThemeName = appTheme->name();
+    QList<PAppTheme> appThemes = themeManager.getThemes();
+    for (int i=0; i<appThemes.count();i++) {
+        const PAppTheme& appTheme =appThemes[i];
+        ui->cbTheme->addItem(appTheme->categoryIcon() + " " + appTheme->displayName(), appTheme->name());
+        if (appTheme->name() == currentThemeName)
+            ui->cbTheme->setCurrentIndex(i);
     }
 }
 

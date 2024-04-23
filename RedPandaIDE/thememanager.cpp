@@ -302,6 +302,11 @@ QPalette AppTheme::initialPalette()
     return palette;
 }
 
+AppTheme::ThemeCategory AppTheme::category() const
+{
+    return mCategory;
+}
+
 QString AppTheme::initialStyle()
 {
     static QString style = QApplication::style()->objectName();
@@ -327,6 +332,13 @@ const QString AppTheme::categoryIcon() const
     default:
         return "";
     }
+}
+
+bool AppTheme::copyTo(const QString &targetFolder)
+{
+    QFileInfo fileInfo{mFilename};
+    return QFile::copy(fileInfo.absoluteFilePath(),
+                QDir(targetFolder).absoluteFilePath(fileInfo.fileName()));
 }
 
 const QString &AppTheme::defaultIconSet() const

@@ -4,7 +4,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="qsynedit/exporter/exporter.cpp" line="+127"/>
+        <location filename="qsynedit/exporter/exporter.cpp" line="+128"/>
         <source>Can&apos;t open file &apos;%1&apos; to write!</source>
         <translation>无法写入文件&quot;%1&quot;!</translation>
     </message>
@@ -4288,7 +4288,7 @@
 <context>
     <name>QSynedit::Document</name>
     <message>
-        <location filename="qsynedit/document.cpp" line="+618"/>
+        <location filename="qsynedit/document.cpp" line="+617"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>无法读取文件&quot;%1&quot;.</translation>
     </message>

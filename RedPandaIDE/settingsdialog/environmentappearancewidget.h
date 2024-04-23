@@ -45,6 +45,7 @@ public:
     void init() override;
 private slots:
     void on_cbTheme_currentIndexChanged(int index);
+    void on_btnCustomize_clicked();
 };
 
 #endif // ENVIRONMENTAPPEARANCEWIDGET_H
