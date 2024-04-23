@@ -2332,6 +2332,13 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                     //Won't implement: ignore function decl like int (text)(int x) { };
                     return;
                 }
+                //it's a chain function call
+                if (mTokenizer[indexAfter]->text == "."
+                        || mTokenizer[indexAfter]->text == "->"
+                        || mTokenizer[indexAfter]->text == "::" ) {
+                    mIndex = indexOfNextPeriodOrSemicolon(indexAfter, maxIndex);
+                    return;
+                }
                 //it's not a function define
                 if (mTokenizer[indexAfter]->text == ',') {
                     // var decl with init

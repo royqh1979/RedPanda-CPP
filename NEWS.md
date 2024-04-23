@@ -148,6 +148,7 @@ Red Panda C++ Version 2.27
   - fix: Name of the macro for project private resource header is not correct.
   - fix: In sdcc project, sdcc keywords are not in completion suggest list.
   - fix: In sdcc project, parser are not correctly inited as sdcc parser.
+  - fix: Temp object + member function call is wrongly parsed as constructor.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
