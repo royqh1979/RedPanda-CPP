@@ -2357,8 +2357,24 @@
         <translation>Fonte:</translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+79"/>
+        <source>Customize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Open custom themes folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+3"/>
+        <source>Remove custom theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2372,12 +2388,12 @@
         <translation>Tema:</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-46"/>
         <source>Create a customized copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+101"/>
         <source>Language:</source>
         <translation>Idioma:</translation>
     </message>
@@ -2391,17 +2407,17 @@
         <translation type="vanished">Usar tema personalizado</translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-174"/>
         <source>Icon Set:</source>
         <translation>Conjunto de ícones:</translation>
     </message>
     <message>
-        <location line="+183"/>
+        <location line="+199"/>
         <source>Use custom icon set</source>
         <translation>Usar conjunto de ícones personalizado</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+98"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+105"/>
         <source>English</source>
         <translation>Inglês</translation>
     </message>

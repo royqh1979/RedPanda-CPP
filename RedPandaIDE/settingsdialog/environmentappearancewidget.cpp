@@ -88,6 +88,13 @@ void EnvironmentAppearanceWidget::doSave()
     pMainWindow->applySettings();
 }
 
+void EnvironmentAppearanceWidget::updateIcons(const QSize &size)
+{
+    pIconsManager->setIcon(ui->btnCustomize, IconsManager::ACTION_EDIT_COPY);
+    pIconsManager->setIcon(ui->btnOpenCustomThemeFolder, IconsManager::ACTION_MISC_FOLDER);
+    pIconsManager->setIcon(ui->btnRemoveCustomTheme, IconsManager::ACTION_MISC_REMOVE);
+}
+
 void EnvironmentAppearanceWidget::init()
 {
     ThemeManager themeManager;
@@ -112,6 +119,7 @@ void EnvironmentAppearanceWidget::on_cbTheme_currentIndexChanged(int /* index */
     PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
     ui->btnCustomize->setVisible(appTheme->category() == AppTheme::ThemeCategory::BuiltIn);
     ui->btnOpenCustomThemeFolder->setVisible(appTheme->category() == AppTheme::ThemeCategory::Custom);
+    ui->btnRemoveCustomTheme->setVisible(appTheme->category() == AppTheme::ThemeCategory::Custom);
     if(!appTheme->defaultIconSet().isEmpty()) {
         for (int i=0; i<ui->cbIconSet->count();i++) {
             if (ui->cbIconSet->itemData(i) == appTheme->defaultIconSet()) {
@@ -133,8 +141,20 @@ void EnvironmentAppearanceWidget::on_btnCustomize_clicked()
         dir.mkpath(customThemeFolder);
     }
     appTheme->copyTo(customThemeFolder);
+    refreshThemeList(appTheme->name());
+}
+
+
+void EnvironmentAppearanceWidget::on_btnOpenCustomThemeFolder_clicked()
+{
+    QString customThemeFolder = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
+    openFileFolderInExplorer(customThemeFolder);
+}
+
+void EnvironmentAppearanceWidget::refreshThemeList(const QString &currentThemeName)
+{
+    ThemeManager themeManager;
     ui->cbTheme->clear();
-    QString currentThemeName = appTheme->name();
     QList<PAppTheme> appThemes = themeManager.getThemes();
     for (int i=0; i<appThemes.count();i++) {
         const PAppTheme& appTheme =appThemes[i];
@@ -145,9 +165,13 @@ void EnvironmentAppearanceWidget::on_btnCustomize_clicked()
 }
 
 
-void EnvironmentAppearanceWidget::on_btnOpenCustomThemeFolder_clicked()
+void EnvironmentAppearanceWidget::on_btnRemoveCustomTheme_clicked()
 {
-    QString customThemeFolder = pSettings->dirs().config(Settings::Dirs::DataType::Theme);
-    openFileFolderInExplorer(customThemeFolder);
+    ThemeManager themeManager;
+    PAppTheme appTheme = themeManager.theme(ui->cbTheme->currentData().toString());
+    if (appTheme->category() != AppTheme::ThemeCategory::Custom)
+        return;
+    QFile::remove(appTheme->filename());
+    refreshThemeList(appTheme->name());
 }
 

@@ -136,16 +136,32 @@
        <widget class="QComboBox" name="cbTheme"/>
       </item>
       <item>
-       <widget class="QPushButton" name="btnCustomize">
-        <property name="text">
+       <widget class="QToolButton" name="btnCustomize">
+        <property name="toolTip">
          <string>Create a customized copy</string>
+        </property>
+        <property name="text">
+         <string>Customize</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnOpenCustomThemeFolder">
+       <widget class="QToolButton" name="btnRemoveCustomTheme">
+        <property name="toolTip">
+         <string>Remove custom theme</string>
+        </property>
         <property name="text">
+         <string>Remove custom theme</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnOpenCustomThemeFolder">
+        <property name="toolTip">
          <string>Open custom themes folder</string>
+        </property>
+        <property name="text">
+         <string>Open Folder</string>
         </property>
        </widget>
       </item>

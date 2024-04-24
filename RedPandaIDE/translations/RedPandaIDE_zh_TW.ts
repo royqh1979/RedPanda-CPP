@@ -2130,7 +2130,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+202"/>
         <source>*Needs restart</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2150,7 +2150,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-158"/>
+        <location line="-174"/>
         <source>Icon Set:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2160,8 +2160,24 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Customize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Open custom themes folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+3"/>
+        <source>Remove custom theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2170,7 +2186,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+98"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+105"/>
         <source>English</source>
         <translation type="unfinished"></translation>
     </message>

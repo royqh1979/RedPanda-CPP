@@ -337,8 +337,18 @@ const QString AppTheme::categoryIcon() const
 bool AppTheme::copyTo(const QString &targetFolder)
 {
     QFileInfo fileInfo{mFilename};
-    return QFile::copy(fileInfo.absoluteFilePath(),
-                QDir(targetFolder).absoluteFilePath(fileInfo.fileName()));
+    QFile originFile{fileInfo.absoluteFilePath()};
+    QFile targetFile{QDir(targetFolder).absoluteFilePath(fileInfo.fileName())};
+    if (!originFile.open(QFile::ReadOnly))
+        return false;
+    if (!targetFile.open(QFile::WriteOnly))
+        return false;
+    QByteArray contents = originFile.readAll();
+    if (targetFile.write(contents)!=contents.length())
+        return false;
+    targetFile.close();
+    originFile.close();
+    return true;
 }
 
 const QString &AppTheme::defaultIconSet() const

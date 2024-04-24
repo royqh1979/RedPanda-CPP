@@ -39,6 +39,7 @@ private:
 protected:
     void doLoad() override;
     void doSave() override;
+    void updateIcons(const QSize &size) override;
 
     // SettingsWidget interface
 public:
@@ -47,6 +48,11 @@ private slots:
     void on_cbTheme_currentIndexChanged(int index);
     void on_btnCustomize_clicked();
     void on_btnOpenCustomThemeFolder_clicked();
+    void on_btnRemoveCustomTheme_clicked();
+
+private:
+    void refreshThemeList(const QString& currentThemeName);
+
 };
 
 #endif // ENVIRONMENTAPPEARANCEWIDGET_H

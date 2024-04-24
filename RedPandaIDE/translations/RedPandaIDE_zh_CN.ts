@@ -2643,7 +2643,7 @@ p, li { white-space: pre-wrap; }
         <translation>表单</translation>
     </message>
     <message>
-        <location line="+157"/>
+        <location line="+173"/>
         <source>Theme:</source>
         <translation>主题:</translation>
     </message>
@@ -2652,12 +2652,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">使用自定义主题</translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-167"/>
         <source>Icon Set:</source>
         <translation>图标集：</translation>
     </message>
     <message>
-        <location line="+183"/>
+        <location line="+199"/>
         <source>Use custom icon set</source>
         <translation>使用自定义图标</translation>
     </message>
@@ -2667,7 +2667,7 @@ p, li { white-space: pre-wrap; }
         <translation>图标缩放：</translation>
     </message>
     <message>
-        <location line="-209"/>
+        <location line="-225"/>
         <source>Font:</source>
         <translation>字体:</translation>
     </message>
@@ -2677,9 +2677,25 @@ p, li { white-space: pre-wrap; }
         <translation>自定义</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Customize</source>
+        <translation>自定义</translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Open custom themes folder</source>
         <translation>打开自定义主题文件夹</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Open Folder</source>
+        <translation>打开文件夹</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+3"/>
+        <source>Remove custom theme</source>
+        <translation>删除自定义主题</translation>
     </message>
     <message>
         <location line="+78"/>
@@ -2697,7 +2713,7 @@ p, li { white-space: pre-wrap; }
         <translation>大小:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+98"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+105"/>
         <source>English</source>
         <translation>英语</translation>
     </message>
