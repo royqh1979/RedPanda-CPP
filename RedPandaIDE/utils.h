@@ -155,7 +155,11 @@ void executeFile(const QString& fileName,
                  const QString& workingDir,
                  const QString& tempFile);
 
+#ifdef Q_OS_WIN
 bool isGreenEdition();
+#else
+constexpr bool isGreenEdition() { return false; }
+#endif
 
 #ifdef Q_OS_WIN
 bool readRegistry(HKEY key, const QString& subKey, const QString& name, QString& value);

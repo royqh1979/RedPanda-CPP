@@ -335,10 +335,9 @@ int getNewFileNumber()
 #ifdef Q_OS_WIN
 static bool gIsGreenEdition = true;
 static bool gIsGreenEditionInited = false;
-#endif
+
 bool isGreenEdition()
 {
-#ifdef Q_OS_WIN
     if (!gIsGreenEditionInited) {
         QString appPath = QApplication::instance()->applicationDirPath();
         appPath = excludeTrailingPathDelimiter(localizePath(appPath));
@@ -364,10 +363,8 @@ bool isGreenEdition()
         gIsGreenEditionInited = true;
     }
     return gIsGreenEdition;
-#else
-    return false;
-#endif
 }
+#endif
 
 QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments,
                            const QByteArray &inputContent, bool inheritEnvironment,
