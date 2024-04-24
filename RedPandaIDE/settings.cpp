@@ -3461,6 +3461,11 @@ Settings::PCompilerSet Settings::CompilerSets::getSet(int index)
 }
 
 void Settings::CompilerSets::savePath(const QString& name, const QString& path) {
+    if (!isGreenEdition()) {
+        mSettings->mSettings.setValue(name, path);
+        return;
+    }
+
     QString s;
     QString prefix1 = excludeTrailingPathDelimiter(mSettings->mDirs.appDir()) + "/";
     QString prefix2 = excludeTrailingPathDelimiter(mSettings->mDirs.appDir()) + QDir::separator();
@@ -3475,6 +3480,11 @@ void Settings::CompilerSets::savePath(const QString& name, const QString& path) 
 }
 
 void Settings::CompilerSets::savePathList(const QString& name, const QStringList& pathList) {
+    if (!isGreenEdition()) {
+        mSettings->mSettings.setValue(name, pathList);
+        return;
+    }
+
     QStringList sl;
     for (const QString& path: pathList) {
         QString s;
@@ -3549,6 +3559,7 @@ void Settings::CompilerSets::saveSet(int index)
 
 QString Settings::CompilerSets::loadPath(const QString &name)
 {
+    // always do substitution for backward compatibility
     QString s =  mSettings->mSettings.value(name).toString();
     QString prefix = "%AppPath%/";
     if (s.startsWith(prefix)) {
@@ -3559,6 +3570,7 @@ QString Settings::CompilerSets::loadPath(const QString &name)
 
 void Settings::CompilerSets::loadPathList(const QString &name, QStringList& list)
 {
+    // always do substitution for backward compatibility
     list.clear();
     QStringList sl = mSettings->mSettings.value(name).toStringList();
     QString prefix = "%AppPath%/";
@@ -3772,11 +3784,8 @@ void Settings::Environment::doLoad()
 
     // check saved terminal path
     mTerminalPath = stringValue("terminal_path", "");
-#ifdef Q_OS_WINDOWS
-    // APP_DIR trick for windows portable app
-    // on other platforms multiple instances share the same configuration and thus the trick may break terminal path
+    // always do substitution for backward compatibility
     mTerminalPath.replace("%*APP_DIR*%",pSettings->dirs().appDir());
-#endif
     mTerminalArgumentsPattern = stringValue("terminal_arguments_pattern", "");
 
     checkAndSetTerminal();
@@ -4046,13 +4055,15 @@ void Settings::Environment::doSave()
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
     QString terminalPath = mTerminalPath;
-#ifdef Q_OS_WINDOWS
-    // APP_DIR trick for windows portable app
-    // on other platforms multiple instances share the same configuration and thus the trick may break terminal path
-    if (terminalPath.startsWith(pSettings->dirs().appDir())) {
-        terminalPath="%*APP_DIR*%"+terminalPath.mid(pSettings->dirs().appDir().length());
+    if (isGreenEdition())
+    {
+        // APP_DIR trick for windows portable app
+        // For non-portable app (other platform or Windows installer), multiple instances
+        // share the same configuration and thus the trick may break terminal path
+        if (terminalPath.startsWith(pSettings->dirs().appDir())) {
+            terminalPath="%*APP_DIR*%"+terminalPath.mid(pSettings->dirs().appDir().length());
+        }
     }
-#endif
 
     saveValue("terminal_path",terminalPath);
     saveValue("terminal_arguments_pattern",mTerminalArgumentsPattern);
