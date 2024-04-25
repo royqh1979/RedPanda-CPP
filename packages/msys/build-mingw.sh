@@ -121,13 +121,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ASTYLE_BUILD_DIR="${TEMP}/astyle-${MSYSTEM}-build"
 ASTYLE_VERSION_TAG="3.4.14"
 BUILD_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-build"
+ASTYLE_BUILD_DIR="${BUILD_DIR}/astyle"
 PACKAGE_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-pkg"
 QMAKE="${MINGW_PREFIX}/qt5-static/bin/qmake"
 NSIS="/mingw32/bin/makensis"
 SOURCE_DIR="$(pwd)"
+ASSETS_DIR="${SOURCE_DIR}/assets"
 
 MINGW32_ARCHIVE="mingw32.7z"
 MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC 8.1"
@@ -186,19 +187,30 @@ fi
 if [[ ${CLEAN} -eq 1 ]]; then
   rm -rf "${BUILD_DIR}"
   rm -rf "${PACKAGE_DIR}"
-  rm -rf "${ASTYLE_BUILD_DIR}"
 fi
-mkdir -p "${BUILD_DIR}" "${PACKAGE_DIR}" "${TARGET_DIR}" "${ASTYLE_BUILD_DIR}"
+mkdir -p "${BUILD_DIR}" "${PACKAGE_DIR}" "${TARGET_DIR}" "${ASTYLE_BUILD_DIR}" "${ASSETS_DIR}"
+
+## prepare assets
+
+fn_print_progress "Updating astyle repo..."
+if [[ ! -d "${ASSETS_DIR}/astyle" ]]; then
+  git clone --bare "https://gitlab.com/saalen/astyle" "${ASSETS_DIR}/astyle"
+fi
+pushd "${ASSETS_DIR}/astyle"
+if [[ -z "$(git tag -l ${ASTYLE_VERSION_TAG})" ]]; then
+  git fetch --all --tags
+fi
+popd
 
 ## build
 fn_print_progress "Building astyle..."
+pushd "${ASSETS_DIR}/astyle"
+git --work-tree="${ASTYLE_BUILD_DIR}" checkout -f "${ASTYLE_VERSION_TAG}"
+popd
+
 pushd .
 cd "${ASTYLE_BUILD_DIR}"
-[[ -d "astyle" ]] || git clone --depth 1 --branch "${ASTYLE_VERSION_TAG}" "https://gitlab.com/saalen/astyle"
-cd astyle
-mkdir -p build
-cd build
-cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release  -DCMAKE_EXE_LINKER_FLAGS="-static"
+cmake . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release  -DCMAKE_EXE_LINKER_FLAGS="-static"
 mingw32-make -j$(nproc)
 cp AStyle/AStyle.exe "${PACKAGE_DIR}/astyle.exe"
 popd
