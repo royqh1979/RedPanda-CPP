@@ -6,7 +6,7 @@ pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (developme
 arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64' 'riscv64')
 url="https://github.com/royqh1979/$_pkgname"
 license=('GPL3')
-depends=(qt5-base qt5-svg gcc gdb)
+depends=(qt5-base qt5-svg gcc gdb astyle)
 makedepends=(qt5-tools imagemagick librsvg)
 optdepends=(
     'clang: C/C++ compiler (alternative)'

@@ -8,7 +8,7 @@ Source0: RedPanda-CPP.tar.gz
 
 BuildRequires: gcc gcc-c++
 BuildRequires: qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel
-Requires: gcc gcc-c++
+Requires: gcc gcc-c++ astyle
 Requires: glibc-static libstdc++-static libasan
 Requires: qt5-qtbase qt5-qtsvg
 
