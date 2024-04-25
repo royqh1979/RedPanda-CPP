@@ -105,7 +105,7 @@ QString defaultMonoFont()
     if (font.exactMatch())
         return "Consolas";
     else
-        return "Courier New";
+        return "Lucida Console";
 #elif defined(Q_OS_MACOS)
     return "Menlo";
 #else // XDG desktop
