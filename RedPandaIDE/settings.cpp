@@ -3791,7 +3791,10 @@ void Settings::Environment::doLoad()
     checkAndSetTerminal();
 
     mAStylePath = stringValue("astyle_path","");
-    if (mAStylePath.isEmpty()) {
+    if (mAStylePath.isEmpty()
+            /* compatibily for old configuration */
+            || ( mAStylePath == includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle")
+            ) {
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
         QString path = env.value("PATH");
         QStringList pathList = path.split(PATH_SEPARATOR);
