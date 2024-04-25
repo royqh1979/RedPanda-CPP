@@ -143,6 +143,8 @@ QString generateAbsolutePath(const QString& dirPath, const QString& relativePath
 QStringList absolutePaths(const QString& dirPath, const QStringList& relativePaths);
 QString escapeSpacesInString(const QString& str);
 
+QString replacePrefix(const QString& oldString, const QString& prefix, const QString& newPrefix);
+
 
 bool isReadOnly(const QString& filename);
 

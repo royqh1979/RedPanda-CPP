@@ -5107,30 +5107,21 @@ void Editor::reformat(bool doReparse)
 {
     if (readOnly())
         return;
-#ifndef Q_OS_WIN
     if (!fileExists(pSettings->environment().AStylePath())) {
         QMessageBox::critical(this,
                               tr("astyle not found"),
                               tr("Can't find astyle in \"%1\".").arg(pSettings->environment().AStylePath()));
         return;
     }
-#endif
     //we must remove all breakpoints and syntax issues
 //    onLinesDeleted(1,lineCount());
     QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
     //qDebug()<<args;
-#ifdef Q_OS_WIN
-    QByteArray newContent = runAndGetOutput("astyle.exe",
-                                            pSettings->dirs().appDir(),
-                                            args,
-                                            content);
-#else
     QByteArray newContent = runAndGetOutput(pSettings->environment().AStylePath(),
                                             extractFileDir(pSettings->environment().AStylePath()),
                                             args,
                                             content);
-#endif
     if (newContent.isEmpty())
         return;
     replaceContent(QString::fromUtf8(newContent), doReparse);

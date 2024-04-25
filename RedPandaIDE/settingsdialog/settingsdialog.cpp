@@ -41,6 +41,7 @@
 #include "executorproblemsetwidget.h"
 #include "debuggeneralwidget.h"
 #include "formattergeneralwidget.h"
+#include "formatterpathwidget.h"
 #include "languageasmgenerationwidget.h"
 #include "projectgeneralwidget.h"
 #include "projectfileswidget.h"
@@ -58,9 +59,6 @@
 #ifdef Q_OS_WIN
 #include "environmentfileassociationwidget.h"
 #include "projectversioninfowidget.h"
-#endif
-#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS) // XDG desktop
-#include "formatterpathwidget.h"
 #endif
 #include <QDebug>
 #include <QMessageBox>
@@ -228,10 +226,8 @@ PSettingsDialog SettingsDialog::optionDialog()
     widget = new FormatterGeneralWidget(tr("General"),tr("Code Formatter"));
     dialog->addWidget(widget);
 
-#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS) // XDG desktop
     widget = new FormatterPathWidget(tr("Program"),tr("Code Formatter"));
     dialog->addWidget(widget);
-#endif
 
     widget = new ToolsGeneralWidget(tr("General"),tr("Tools"));
     dialog->addWidget(widget);

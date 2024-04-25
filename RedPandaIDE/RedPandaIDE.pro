@@ -157,6 +157,7 @@ SOURCES += \
     settingsdialog/environmentshortcutwidget.cpp \
     settingsdialog/executorproblemsetwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
+    settingsdialog/formatterpathwidget.cpp \
     settingsdialog/languageasmgenerationwidget.cpp \
 #    settingsdialog/languagecformatwidget.cpp \
     settingsdialog/projectcompileparamaterswidget.cpp \
@@ -291,6 +292,7 @@ HEADERS += \
     settingsdialog/environmentshortcutwidget.h \
     settingsdialog/executorproblemsetwidget.h \
     settingsdialog/formattergeneralwidget.h \
+    settingsdialog/formatterpathwidget.h \
     settingsdialog/languageasmgenerationwidget.h \
 #    settingsdialog/languagecformatwidget.h \
     settingsdialog/projectcompileparamaterswidget.h \
@@ -390,6 +392,7 @@ FORMS += \
     settingsdialog/environmentshortcutwidget.ui \
     settingsdialog/executorproblemsetwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
+    settingsdialog/formatterpathwidget.ui \
     settingsdialog/languageasmgenerationwidget.ui \
 #    settingsdialog/languagecformatwidget.ui \
     settingsdialog/projectcompileparamaterswidget.ui \
@@ -518,17 +521,6 @@ win32: {
     SOURCES += \
     settingsdialog/environmentfileassociationwidget.cpp \
     settingsdialog/projectversioninfowidget.cpp
-}
-
-unix: {
-    HEADERS += \
-    settingsdialog/formatterpathwidget.h
-
-    SOURCES += \
-    settingsdialog/formatterpathwidget.cpp
-
-    FORMS += \
-    settingsdialog/formatterpathwidget.ui
 }
 
 linux: {

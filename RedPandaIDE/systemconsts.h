@@ -40,6 +40,7 @@
 #define SDCC_PROGRAM   "sdcc.exe"
 #define PACKIHX_PROGRAM   "packihx.exe"
 #define MAKEBIN_PROGRAM   "makebin.exe"
+#define ASTYLE_PROGRAM     "astyle.exe"
 #else // Unix
 #define CONSOLE_PAUSER  "consolepauser"
 #define GCC_PROGRAM     "gcc"
@@ -61,6 +62,7 @@
 #define SDCC_PROGRAM   "sdcc"
 #define PACKIHX_PROGRAM   "packihx"
 #define MAKEBIN_PROGRAM   "makebin"
+#define ASTYLE_PROGRAM     "astyle"
 #endif
 
 #define DEV_PROJECT_EXT "dev"

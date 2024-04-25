@@ -2,13 +2,11 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     RedPandaIDE \
-    astyle \
     consolepauser \
     redpanda_qt_utils \
     qsynedit \
     lua
 
-astyle.subdir = tools/astyle
 consolepauser.subdir = tools/consolepauser
 redpanda_qt_utils.subdir = libs/redpanda_qt_utils
 qsynedit.subdir = libs/qsynedit
@@ -16,7 +14,7 @@ lua.subdir = libs/lua
 
 # Add the dependencies so that the RedPandaIDE project can add the depended programs
 # into the main app bundle
-RedPandaIDE.depends = astyle consolepauser qsynedit
+RedPandaIDE.depends = consolepauser qsynedit
 qsynedit.depends = redpanda_qt_utils
 
 APP_NAME = RedPandaCPP
@@ -28,7 +26,7 @@ include(version.inc)
 
 win32: {
 SUBDIRS += \
-	redpanda-win-git-askpass
+    redpanda-win-git-askpass
 redpanda-win-git-askpass.subdir = tools/redpanda-win-git-askpass
 RedPandaIDE.depends += redpanda-win-git-askpass
 }

@@ -752,3 +752,12 @@ int compareFileModifiedTime(const QString &filename, qint64 timestamp)
         return -1;
     return 0;
 }
+
+QString replacePrefix(const QString &oldString, const QString &prefix, const QString &newPrefix)
+{
+    QString result = oldString;
+    if (oldString.startsWith(prefix)) {
+        result = newPrefix+oldString.mid(prefix.length());
+    }
+    return result;
+}

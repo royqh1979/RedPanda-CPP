@@ -3785,12 +3785,33 @@ void Settings::Environment::doLoad()
     // check saved terminal path
     mTerminalPath = stringValue("terminal_path", "");
     // always do substitution for backward compatibility
-    mTerminalPath.replace("%*APP_DIR*%",pSettings->dirs().appDir());
+    mTerminalPath = replacePrefix(mTerminalPath, "%*APP_DIR*%", pSettings->dirs().appDir());
     mTerminalArgumentsPattern = stringValue("terminal_arguments_pattern", "");
 
     checkAndSetTerminal();
 
-    mAStylePath = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
+    mAStylePath = stringValue("astyle_path","");
+    if (mAStylePath.isEmpty()) {
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        QString path = env.value("PATH");
+        QStringList pathList = path.split(PATH_SEPARATOR);
+        pathList = QStringList{
+            mSettings->dirs().appDir(),
+            mSettings->dirs().appLibexecDir(),
+        } + pathList;
+
+        foreach (const QString& folder, pathList) {
+            QDir dir{folder};
+            QFileInfo fileInfo{dir.absoluteFilePath(ASTYLE_PROGRAM)};
+            if (fileInfo.exists()) {
+                mAStylePath = fileInfo.absoluteFilePath();
+                break;
+            }
+        }
+        if (isGreenEdition())
+            mAStylePath = replacePrefix(mAStylePath, pSettings->dirs().appDir() , "%*APP_DIR*%");
+    }
+
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
     mOpenFilesInSingleInstance = boolValue("open_files_in_single_instance",false);
 }
@@ -3857,12 +3878,17 @@ void Settings::Environment::setTerminalPath(const QString &terminalPath)
 
 QString Settings::Environment::AStylePath() const
 {
+    if (isGreenEdition()) {
+        return replacePrefix(mAStylePath, "%*APP_DIR*%", pSettings->dirs().appDir());
+    }
     return mAStylePath;
 }
 
 void Settings::Environment::setAStylePath(const QString &aStylePath)
 {
     mAStylePath = aStylePath;
+    if (isGreenEdition())
+        mAStylePath = replacePrefix(mAStylePath, pSettings->dirs().appDir() , "%*APP_DIR*%");
 }
 
 QString Settings::Environment::terminalArgumentsPattern() const
@@ -3943,7 +3969,7 @@ void Settings::Environment::checkAndSetTerminal()
     QList<TerminalItem> terminalList = loadTerminalList();
     for (const TerminalItem& termItem:terminalList) {
         QString term=termItem.terminal;
-        term.replace("%*APP_DIR*%",pSettings->dirs().appDir());
+        term = replacePrefix(term, "%*APP_DIR*%", pSettings->dirs().appDir());
         QFileInfo info{term};
         QString absoluteTerminalPath;
         if (info.isAbsolute()) {
@@ -4001,7 +4027,7 @@ QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalLi
             QString termExecutable = QFileInfo(path).fileName();
             QString pattern = terminal["argsPattern"].toString();
             Settings::Environment::TerminalItem terminalItem;
-            path.replace("%*APP_DIR*%", pSettings->dirs().appDir());
+            path = replacePrefix(path, "%*APP_DIR*%", pSettings->dirs().appDir());
             terminalItem.terminal = path;
             terminalItem.param = pattern;
             result.append(terminalItem);
@@ -4060,9 +4086,7 @@ void Settings::Environment::doSave()
         // APP_DIR trick for windows portable app
         // For non-portable app (other platform or Windows installer), multiple instances
         // share the same configuration and thus the trick may break terminal path
-        if (terminalPath.startsWith(pSettings->dirs().appDir())) {
-            terminalPath="%*APP_DIR*%"+terminalPath.mid(pSettings->dirs().appDir().length());
-        }
+        terminalPath = replacePrefix(terminalPath, pSettings->dirs().appDir(), "%*APP_DIR*%");
     }
 
     saveValue("terminal_path",terminalPath);
@@ -4070,7 +4094,7 @@ void Settings::Environment::doSave()
 #ifdef Q_OS_WINDOWS
     saveValue("use_custom_terminal",mUseCustomTerminal);
 #endif
-    saveValue("asyle_path",mAStylePath);
+    saveValue("astyle_path",mAStylePath);
 
     saveValue("hide_non_support_files_file_view",mHideNonSupportFilesInFileView);
     saveValue("open_files_in_single_instance",mOpenFilesInSingleInstance);
