@@ -121,7 +121,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ASTYLE_BUILD_DIR="${TEMP}/astyle-build"
+ASTYLE_BUILD_DIR="${TEMP}/astyle-${MSYSTEM}-build"
 ASTYLE_VERSION_TAG="3.4.14"
 BUILD_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-build"
 PACKAGE_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-pkg"
@@ -196,8 +196,7 @@ pushd .
 cd "${ASTYLE_BUILD_DIR}"
 [[ -d "astyle" ]] || git clone --depth 1 --branch "${ASTYLE_VERSION_TAG}" "https://gitlab.com/saalen/astyle"
 cd astyle
-[[ ! -d "build" ]] || rm -rf "build"
-mkdir build
+mkdir -p build
 cd build
 cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release  -DCMAKE_EXE_LINKER_FLAGS="-static"
 mingw32-make -j$(nproc)
