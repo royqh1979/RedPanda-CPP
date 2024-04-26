@@ -5032,8 +5032,6 @@ QStringList Settings::CodeFormatter::getArguments()
         result.append("--unpad-paren");
     if (mDeleteEmptyLines)
         result.append("--delete-empty-lines");
-    if (mDeleteMultipleEmptyLines)
-        result.append("--delete-multiple-empty-lines");
     if (mFillEmptyLines)
         result.append("--fill-empty-lines");
     switch(mAlignPointerStyle) {
@@ -5401,16 +5399,6 @@ void Settings::CodeFormatter::setDeleteEmptyLines(bool newDeleteEmptyLines)
     mDeleteEmptyLines = newDeleteEmptyLines;
 }
 
-bool Settings::CodeFormatter::deleteMultipleEmptyLines() const
-{
-    return mDeleteMultipleEmptyLines;
-}
-
-void Settings::CodeFormatter::setDeleteMultipleEmptyLines(bool newDeleteMultipleEmptyLines)
-{
-    mDeleteMultipleEmptyLines = newDeleteMultipleEmptyLines;
-}
-
 bool Settings::CodeFormatter::fillEmptyLines() const
 {
     return mFillEmptyLines;
@@ -5676,7 +5664,6 @@ void Settings::CodeFormatter::doSave()
     saveValue("pad_header",mPadHeader);
     saveValue("unpad_paren",mUnpadParen);
     saveValue("delete_empty_lines",mDeleteEmptyLines);
-    saveValue("delete_multiple_empty_lines",mDeleteMultipleEmptyLines);
     saveValue("fill_empty_lines",mFillEmptyLines);
     saveValue("align_pointer_style",mAlignPointerStyle);
     saveValue("align_reference_style",mAlignReferenceStyle);
@@ -5735,7 +5722,6 @@ void Settings::CodeFormatter::doLoad()
     mPadHeader = boolValue("pad_header",true);
     mUnpadParen = boolValue("unpad_paren",false);
     mDeleteEmptyLines = boolValue("delete_empty_lines",false);
-    mDeleteMultipleEmptyLines = boolValue("delete_multiple_empty_lines",false);
     mFillEmptyLines = boolValue("fill_empty_lines",false);
     mAlignPointerStyle = intValue("align_pointer_style", FormatterOperatorAlign::foaNone);
     mAlignReferenceStyle = intValue("align_reference_style", FormatterOperatorAlign::foaNone);

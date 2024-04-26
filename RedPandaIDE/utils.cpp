@@ -402,7 +402,28 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
     process.closeWriteChannel();
     process.waitForFinished();
     if (errorOccurred) {
-        result += process.errorString().toLocal8Bit();
+        switch(process.error()) {
+        case QProcess::FailedToStart:
+            result += "Failed to start process!";
+            break;
+        case QProcess::Crashed:
+            result += "Process crashed!";
+            break;
+        case QProcess::Timedout:
+            result += "Timeout!";
+            break;
+        case QProcess::ReadError:
+            result += "Read Error:";
+            break;
+        case QProcess::WriteError:
+            result += "Write Error:";
+            break;
+        case QProcess::UnknownError:
+            result += "Unknown Error:";
+            break;
+        }
+
+        //result += process.errorString().toLocal8Bit();
     }
     return result;
 }
@@ -743,4 +764,17 @@ std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandFor
 std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
 {
     return wrapCommandForTerminalEmulator(terminal, parseArguments(argsPattern, Settings::Environment::terminalArgsPatternMagicVariables(), false), payloadArgsWithArgv0);
+}
+
+QByteArray reformatContentUsingAstyle(const QByteArray &content, const QStringList &arguments)
+{
+    QProcessEnvironment env;
+    env.insert("LANG","en");
+    QByteArray newContent = runAndGetOutput(pSettings->environment().AStylePath(),
+                                            extractFileDir(pSettings->environment().AStylePath()),
+                                            arguments,
+                                            content,
+                                            false,
+                                            env);
+    return newContent;
 }

@@ -71,7 +71,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -362,6 +362,19 @@
          </layout>
         </widget>
        </item>
+       <item>
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_2">
@@ -369,10 +382,59 @@
        <string>Indentation 2</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
+       <item row="10" column="0">
+        <widget class="QCheckBox" name="chkIndentCol1Comments">
+         <property name="text">
+          <string>Indent line comments that start in column one</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QCheckBox" name="chkIndentPreprocDefine">
+         <property name="text">
+          <string>Indent multi-line preprocessor #define statements</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="chkIndentSwiches">
+         <property name="text">
+          <string>Indent switch blocks</string>
+         </property>
+        </widget>
+       </item>
        <item row="5" column="0">
         <widget class="QCheckBox" name="chkIndentLabels">
          <property name="text">
           <string>Indent labels</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QCheckBox" name="chkIndentPreprocCond">
+         <property name="text">
+          <string>Indent preprocessor conditional statements</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QCheckBox" name="chkIndentAfterParens">
+         <property name="text">
+          <string>Indent after parenthesis '(' or assignment '='</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="chkIndentModifiers">
+         <property name="text">
+          <string>Indent class access modifiers</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="chkIndentCases">
+         <property name="text">
+          <string>Indent cases</string>
          </property>
         </widget>
        </item>
@@ -390,41 +452,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QCheckBox" name="chkIndentModifiers">
-         <property name="text">
-          <string>Indent class access modifiers</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QCheckBox" name="chkIndentAfterParens">
-         <property name="text">
-          <string>Indent after parenthesis '(' or assignment '='</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0">
-        <widget class="QCheckBox" name="chkIndentPreprocCond">
-         <property name="text">
-          <string>Indent preprocessor conditional statements</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="1">
-        <widget class="QCheckBox" name="chkIndentPreprocDefine">
-         <property name="text">
-          <string>Indent multi-line preprocessor #define statements</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="0">
-        <widget class="QCheckBox" name="chkIndentCol1Comments">
-         <property name="text">
-          <string>Indent line comments that start in column one</string>
-         </property>
-        </widget>
-       </item>
        <item row="5" column="1">
         <widget class="QCheckBox" name="chkIndentPreprocBlock">
          <property name="text">
@@ -432,19 +459,18 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="chkIndentSwiches">
-         <property name="text">
-          <string>Indent switch blocks</string>
+       <item row="11" column="0">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QCheckBox" name="chkIndentCases">
-         <property name="text">
-          <string>Indent cases</string>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
          </property>
-        </widget>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -453,10 +479,10 @@
        <string>Padding 1</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="2" column="1">
-        <widget class="QCheckBox" name="chkPadOper">
+       <item row="4" column="1">
+        <widget class="QCheckBox" name="chkPadParen">
          <property name="text">
-          <string>Insert spaces around operators</string>
+          <string>Insert spaces around parenthesis</string>
          </property>
         </widget>
        </item>
@@ -488,10 +514,10 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="chkBreakBlocks">
+       <item row="10" column="0" colspan="2">
+        <widget class="QCheckBox" name="chkPadFirstParenOut">
          <property name="text">
-          <string>Insert empty lines arround unrelated blocks</string>
+          <string>Insert spaces around first parenthesis in a series on the out side  only</string>
          </property>
         </widget>
        </item>
@@ -502,19 +528,32 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="0" colspan="2">
-        <widget class="QCheckBox" name="chkPadFirstParenOut">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="chkBreakBlocks">
          <property name="text">
-          <string>Insert spaces around first parenthesis in a series on the out side  only</string>
+          <string>Insert empty lines arround unrelated blocks</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QCheckBox" name="chkPadParen">
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="chkPadOper">
          <property name="text">
-          <string>Insert spaces around parenthesis</string>
+          <string>Insert spaces around operators</string>
          </property>
         </widget>
+       </item>
+       <item row="12" column="0">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -523,38 +562,34 @@
        <string>Padding 2</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="1" column="0" colspan="6">
-        <widget class="QCheckBox" name="chkDeleteEmptyLines">
+       <item row="3" column="1">
+        <widget class="QRadioButton" name="rbAlignPointNone">
          <property name="text">
-          <string>Remove all empty lines. It will NOT delete lines added by the padding options.</string>
+          <string>none</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">pointerBtnGroup</string>
+         </attribute>
         </widget>
        </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_6">
+       <item row="4" column="1">
+        <widget class="QRadioButton" name="rbAlignReferenceNone">
          <property name="text">
-          <string>Attach a pointer operator to its :</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="6">
-        <widget class="QCheckBox" name="chkDeleteMultipleEmptyLines">
-         <property name="text">
-          <string>Remove all consecutive empty lines. It will NOT delete lines added by the padding options.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="2">
-        <widget class="QRadioButton" name="rbAlignReferenceType">
-         <property name="text">
-          <string>type(left)</string>
+          <string>none</string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">referenceBtnGroup</string>
          </attribute>
         </widget>
        </item>
-       <item row="4" column="2">
+       <item row="0" column="0" colspan="6">
+        <widget class="QCheckBox" name="chkUnpadParen">
+         <property name="text">
+          <string>Remove unnecessary space adding around parenthesis</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
         <widget class="QRadioButton" name="rbAlignPointType">
          <property name="text">
           <string>type(left)</string>
@@ -564,7 +599,78 @@
          </attribute>
         </widget>
        </item>
-       <item row="4" column="5">
+       <item row="3" column="4">
+        <widget class="QRadioButton" name="rbAlignPointerName">
+         <property name="text">
+          <string>name(right)</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">pointerBtnGroup</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QRadioButton" name="rbAlignReferenceMiddle">
+         <property name="text">
+          <string>middle</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">referenceBtnGroup</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Attach a pointer operator to its :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QRadioButton" name="rbAlignReferenceType">
+         <property name="text">
+          <string>type(left)</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">referenceBtnGroup</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="4" column="4">
+        <widget class="QRadioButton" name="rbAlignReferenceName">
+         <property name="text">
+          <string>name(right)</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">referenceBtnGroup</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="6">
+        <widget class="QCheckBox" name="chkDeleteEmptyLines">
+         <property name="text">
+          <string>Remove all empty lines. It will NOT delete lines added by the padding options.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="6">
+        <widget class="QCheckBox" name="chkFillEmptyLines">
+         <property name="text">
+          <string>Fill empty lines with the white space of the previous lines.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QRadioButton" name="rbAlignPointerMiddle">
+         <property name="text">
+          <string>middle</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">pointerBtnGroup</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="3" column="5">
         <spacer name="horizontalSpacer_6">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -577,86 +683,25 @@
          </property>
         </spacer>
        </item>
-       <item row="5" column="3">
-        <widget class="QRadioButton" name="rbAlignReferenceMiddle">
-         <property name="text">
-          <string>middle</string>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">referenceBtnGroup</string>
-         </attribute>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="6">
-        <widget class="QCheckBox" name="chkFillEmptyLines">
-         <property name="text">
-          <string>Fill empty lines with the white space of the previous lines.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="4">
-        <widget class="QRadioButton" name="rbAlignReferenceName">
-         <property name="text">
-          <string>name(right)</string>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">referenceBtnGroup</string>
-         </attribute>
-        </widget>
-       </item>
-       <item row="4" column="3">
-        <widget class="QRadioButton" name="rbAlignPointerMiddle">
-         <property name="text">
-          <string>middle</string>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">pointerBtnGroup</string>
-         </attribute>
-        </widget>
-       </item>
-       <item row="4" column="4">
-        <widget class="QRadioButton" name="rbAlignPointerName">
-         <property name="text">
-          <string>name(right)</string>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">pointerBtnGroup</string>
-         </attribute>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="6">
-        <widget class="QCheckBox" name="chkUnpadParen">
-         <property name="text">
-          <string>Remove unnecessary space adding around parenthesis</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="label_7">
          <property name="text">
           <string>Attach a reference operator to its :</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QRadioButton" name="rbAlignPointNone">
-         <property name="text">
-          <string>none</string>
+       <item row="5" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <attribute name="buttonGroup">
-          <string notr="true">pointerBtnGroup</string>
-         </attribute>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QRadioButton" name="rbAlignReferenceNone">
-         <property name="text">
-          <string>none</string>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
          </property>
-         <attribute name="buttonGroup">
-          <string notr="true">referenceBtnGroup</string>
-         </attribute>
-        </widget>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -665,10 +710,10 @@
        <string>Other 1</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_5">
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="chkBreakOneLineHeaders">
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="chkAddBraces">
          <property name="text">
-          <string>Break one line headers ('if','while','else'...) from the statement on the same line</string>
+          <string>Add braces to unbraced one line conditional statements</string>
          </property>
         </widget>
        </item>
@@ -679,10 +724,10 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="chkBreakClosingBraces">
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="chkBreakOneLineHeaders">
          <property name="text">
-          <string>Break braces before close headers ('else','catch&quot;...)</string>
+          <string>Break one line headers ('if','while','else'...) from the statement on the same line</string>
          </property>
         </widget>
        </item>
@@ -693,6 +738,13 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="chkBreakClosingBraces">
+         <property name="text">
+          <string>Break braces before close headers ('else','catch&quot;...)</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="0">
         <widget class="QCheckBox" name="chkBreakElseIf">
          <property name="text">
@@ -700,12 +752,18 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QCheckBox" name="chkAddBraces">
-         <property name="text">
-          <string>Add braces to unbraced one line conditional statements</string>
+       <item row="6" column="0">
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-        </widget>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -714,10 +772,10 @@
        <string>Other 2</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_6">
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="chkBreakReturnType">
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="chkAttachReturnType">
          <property name="text">
-          <string>Break return type from the function name in its definition</string>
+          <string>Attach return type to the function name in its definition</string>
          </property>
         </widget>
        </item>
@@ -728,10 +786,10 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
-        <widget class="QCheckBox" name="chkAttachReturnType">
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="chkBreakReturnType">
          <property name="text">
-          <string>Attach return type to the function name in its definition</string>
+          <string>Break return type from the function name in its definition</string>
          </property>
         </widget>
        </item>
@@ -755,6 +813,19 @@
           <string>Attach return type to the function name in its declaration</string>
          </property>
         </widget>
+       </item>
+       <item row="8" column="0">
+        <spacer name="verticalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -924,7 +995,6 @@
   <tabstop>chkPadHeader</tabstop>
   <tabstop>chkUnpadParen</tabstop>
   <tabstop>chkDeleteEmptyLines</tabstop>
-  <tabstop>chkDeleteMultipleEmptyLines</tabstop>
   <tabstop>chkFillEmptyLines</tabstop>
   <tabstop>rbAlignPointNone</tabstop>
   <tabstop>rbAlignPointType</tabstop>

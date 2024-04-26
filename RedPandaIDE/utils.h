@@ -148,6 +148,8 @@ QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const 
                            bool inheritEnvironment = false,
                            const QProcessEnvironment& env = QProcessEnvironment() );
 
+QByteArray reformatContentUsingAstyle(const QByteArray& content, const QStringList& arguments);
+
 void openFileFolderInExplorer(const QString& path);
 
 void executeFile(const QString& fileName,

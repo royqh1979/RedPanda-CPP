@@ -97,7 +97,6 @@ void FormatterGeneralWidget::doLoad()
     ui->chkPadHeader->setChecked(format.padHeader());
     ui->chkUnpadParen->setChecked(format.unpadParen());
     ui->chkDeleteEmptyLines->setChecked(format.deleteEmptyLines());
-    ui->chkDeleteMultipleEmptyLines->setChecked(format.deleteMultipleEmptyLines());
     ui->chkFillEmptyLines->setChecked(format.fillEmptyLines());
     switch(format.alignPointerStyle()) {
     case FormatterOperatorAlign::foaNone:
@@ -320,6 +319,10 @@ void FormatterGeneralWidget::on_chkBreakMaxCodeLength_stateChanged(int)
 
 void FormatterGeneralWidget::updateDemo()
 {
+    if (!fileExists(pSettings->environment().AStylePath())) {
+        ui->editDemo->document()->setText(Editor::tr("Can't find astyle in \"%1\".").arg(pSettings->environment().AStylePath()));
+        return;
+    }
     QFile file(":/codes/formatdemo.cpp");
     if (!file.open(QFile::ReadOnly))
         return;
@@ -327,11 +330,7 @@ void FormatterGeneralWidget::updateDemo()
 
     Settings::CodeFormatter formatter(nullptr);
     updateCodeFormatter(formatter);
-
-    QByteArray newContent = runAndGetOutput(pSettings->environment().AStylePath(),
-                                            extractFileDir(pSettings->environment().AStylePath()),
-                                            formatter.getArguments(),
-                                            content);
+    QByteArray newContent = reformatContentUsingAstyle(content, formatter.getArguments());
     ui->editDemo->document()->setText(newContent);
 }
 
@@ -376,7 +375,6 @@ void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format
     format.setPadHeader(ui->chkPadHeader->isChecked());
     format.setUnpadParen(ui->chkUnpadParen->isChecked());
     format.setDeleteEmptyLines(ui->chkDeleteEmptyLines->isChecked());
-    format.setDeleteMultipleEmptyLines(ui->chkDeleteMultipleEmptyLines->isChecked());
     format.setFillEmptyLines(ui->chkFillEmptyLines->isChecked());
     if (ui->rbAlignPointNone->isChecked()) {
         format.setAlignPointerStyle(FormatterOperatorAlign::foaNone);

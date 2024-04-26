@@ -5117,10 +5117,7 @@ void Editor::reformat(bool doReparse)
 //    onLinesDeleted(1,lineCount());
     QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
-    QByteArray newContent = runAndGetOutput(pSettings->environment().AStylePath(),
-                                            extractFileDir(pSettings->environment().AStylePath()),
-                                            args,
-                                            content);
+    QByteArray newContent = reformatContentUsingAstyle(content,args);
     if (newContent.isEmpty())
         return;
     replaceContent(QString::fromUtf8(newContent), doReparse);

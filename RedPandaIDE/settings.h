@@ -764,8 +764,6 @@ public:
         void setUnpadParen(bool newUnpadParen);
         bool deleteEmptyLines() const;
         void setDeleteEmptyLines(bool newDeleteEmptyLines);
-        bool deleteMultipleEmptyLines() const;
-        void setDeleteMultipleEmptyLines(bool newDeleteMultipleEmptyLines);
         bool fillEmptyLines() const;
         void setFillEmptyLines(bool newFillEmptyLines);
         int alignPointerStyle() const;
@@ -851,7 +849,6 @@ public:
         bool mPadHeader;
         bool mUnpadParen;
         bool mDeleteEmptyLines;
-        bool mDeleteMultipleEmptyLines;
         bool mFillEmptyLines;
         int mAlignPointerStyle;
         int mAlignReferenceStyle;
