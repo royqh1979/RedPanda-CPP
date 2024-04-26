@@ -230,184 +230,69 @@ To build with VS 2017 or later in Command Prompt:
    "%JOM%" install
    ```
 
-# Linux and Other freedesktop.org-conforming (XDG) Desktop Systems
+# Linux
 
-General steps:
+See also [more build instructions for freedesktop.org-conforming (XDG) desktop systems](./docs/detailed-build-xdg.md).
 
-- Install recent version of GCC (≥ 7) or Clang (≥ 6) that supports C++17.
-- Install Qt 5.15 Base, SVG and Tools modules, including both libraries and development files.
-- Optionally install fcitx5-qt for building with static Qt library.
+## Alpine Linux, Arch Linux, Debian and Its Derivatives, Fedora, openSUSE
 
-qmake-based build steps:
-
-1. Configure:
-   ```bash
-   qmake PREFIX=/usr/local /path/to/src/Red_Panda_CPP.pro
-   ```
-2. Build:
-   ```bash
-   make -j$(nproc)
-   ```
-3. Install:
-   ```bash
-   sudo make install
-   ```
-
-qmake variables:
-- `PREFIX`: default to `/usr/local`. It should be set to `/usr` when packaging.
-- `LIBEXECDIR`: directory for auxiliary executables, default to `$PREFIX/libexec`. Arch Linux uses `/usr/lib`.
-- `LINUX_STATIC_IME_PLUGIN=ON` (make phase): link to static ime plugin. Recommended for building with static version of Qt; **DO NOT** set for dynamic version of Qt.
-
-xmake-based build steps:
-
-1. Configure:
-   ```bash
-   xmake f -p linux -a x86_64 -m release --qt=/usr --prefix=/usr/local
-   ```
-2. Build:
-   ```bash
-   xmake
-   ```
-3. Install:
-   ```bash
-   sudo xmake install --root -o /  # `-o ...` imitates `DESTDIR=...` in `make install`
-   ```
-
-Hint: `xmake f --help` for more options.
-
-## Debian and Its Derivatives
-
-### “deb” Package for Current OS
-
-1. Install dependency:
-   ```bash
-   sudo apt install \
-     build-essential debhelper \
-     libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
-   ```
-2. Build the package:
-   ```bash
-   ./packages/debian/builddeb.sh
-   ```
-3. Install the package:
-   ```bash
-   sudo apt install /tmp/redpanda-cpp_*.deb
-   ```
-4. Run Red Panda C++:
-   ```bash
-   RedPandaIDE
-   ```
-
-### Build Packages for Multiple Architectures and Versions in Containers
-
-Extra requirements for Windows host:
-- Docker uses WSL 2 based engine, or enable file sharing on the project folder (Settings > Resources > File sharing);
-- PowerShell (Core) or Windows PowerShell.
-
-* Linux host:
-  ```bash
-  DOCKER=docker # or podman
-  SOURCE_DIR=/build/RedPanda-CPP # source directory *in container*
-  JOBS=$(nproc) # reduce it for multiple builds at same time
-
-  MIRROR=mirrors.kernel.org # leave empty for default mirror
-  PLATFORM=linux/amd64 # or linux/386, linux/arm64/v8, linux/arm/v7, linux/riscv64
-  IMAGE=debian:12 # or Ubuntu (e.g. ubuntu:22.04)
-
-  $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -e JOBS=$JOBS -v $PWD:$SOURCE_DIR --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
-  ```
-* Windows host:
-  ```ps1
-  $DOCKER = "docker" # or "podman"
-  $SOURCE_DIR = "/build/RedPanda-CPP" # source directory *in container*
-  $JOBS = $Env:NUMBER_OF_PROCESSORS # reduce it for multiple builds at same time
-
-  $MIRROR = "mirrors.kernel.org" # leave empty for default mirror
-  $PLATFORM = "linux/amd64" # or "linux/386", "linux/arm64/v8", "linux/arm/v7", "linux/riscv64"
-  $IMAGE = "debian:12" # or Ubuntu (e.g. "ubuntu:22.04")
-
-  & $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -e JOBS=$JOBS -v "$(Get-Location):$SOURCE_DIR" --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
-  ```
-
-### Manual Install
-
-1. Install compiler
-   ```bash
-   apt install gcc g++ make gdb gdbserver
-   ```
-2. Install Qt 5 and other dependencies
-   ```bash
-   apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
-   ```
-3. Fetch source code
-   ```bash
-   git clone https://github.com/royqh1979/RedPanda-CPP.git
-   ```
-4. Build
-   ```bash
-   cd RedPanda-CPP/
-   qmake Red_Panda_CPP.pro
-   make -j$(nproc)
-   sudo make install
-   ```
-5. Run
-   ```bash
-   RedPandaIDE
-   ```
-
-## Alpine Linux, Arch Linux, Fedora, openSUSE
-
-1. Setup build environment (documentation for [Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers), [Arch](https://wiki.archlinux.org/title/Makepkg), [RPM](https://rpm-packaging-guide.github.io/#prerequisites)).
+1. Setup build environment (documentation for [Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers), [Arch](https://wiki.archlinux.org/title/Makepkg), [Debians](https://wiki.debian.org/BuildingTutorial), [RPM](https://rpm-packaging-guide.github.io/#prerequisites)).
+   - For Debians:
+     ```sh
+     sudo apt install --no-install-recommends build-essential debhelper devscripts equivs
+     ```
 2. Call build script:
    - Alpine Linux: `./packages/alpine/buildapk.sh`
    - Arch Linux: `./packages/archlinux/buildpkg.sh`
+   - Debians: `./packages/debian/builddeb.sh`
    - Fedora: `./packages/fedora/buildrpm.sh`
    - openSUSE: `./packages/opensuse/buildrpm.sh`
 3. Install the package:
    - Alpine Linux: `~/packages/unsupported/$(uname -m)/redpanda-cpp-git-*.apk`
    - Arch Linux: `/tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst`
+   - Debians: `/tmp/redpanda-cpp_*.deb`
    - Fedora, openSUSE: `~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm`
 4. Run Red Panda C++:
    ```bash
    RedPandaIDE
    ```
 
-Note that these build scripts check out HEAD of the repo, so any changes should be committed before building.
+Note that some of these scripts check out HEAD of the repo, so any changes should be committed before building.
+
+Alternatively, build in container (rootless Podman preferred; Docker may break file permissions):
+
+```sh
+podman run --rm -v $PWD:/mnt -w /mnt <image> ./packages/<distro>/01-in-docker.sh
+
+# Arch Linux for example
+podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archlinux/01-in-docker.sh
+```
+
+The package will be placed in `dist/`.
+
+## Statically Linked Binary for Ubuntu 20.04 x86_64 (NOI Linux 2.0)
+
+The package `redpanda-cpp-bin` is roughly “AppImage repack”. The binary is actually built in a container. Thus the build host is not necessarily Ubuntu 20.04; any Linux distribution with Podman and dpkg should work.
+
+1. Install Podman, and dpkg if build host is not Debian or its derivatives:
+   ```sh
+   sudo apt install podman
+   ```
+   WARNING: DO NOT install packages with dpkg on non-Debians, or your system will be terminated.
+2. Call build script:
+   ```sh
+   ./packages/debian-static/builddeb.sh
+   ```
+
+The package will be placed in `dist/`.
 
 ## Linux AppImage
 
-Linux host:
 ```bash
-ARCH=x86_64
-podman run --rm -v $PWD:/mnt -w /mnt -e CARCH=$ARCH quay.io/redpanda-cpp/appimage-builder-$ARCH:20240304.0 packages/appimage/01-in-docker.sh
+podman run --rm -v $PWD:/mnt -w /mnt quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0 ./packages/appimage/01-in-docker.sh
 ```
 
-Windows host:
-```ps1
-$ARCH = "x86_64"
-podman run --rm -v "$(Get-Location):/mnt" -w /mnt -e CARCH=$ARCH redpanda-builder-$ARCH packages/appimage/01-in-docker.sh
-```
-
-Dockerfiles are available in [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder).
-
-## Emulated Native Build for Foreign Architectures
-
-It is possible to build Red Panda C++ for foreign architectures using targets’ native toolchains with QEMU user space emulation.
-
-Note: Always run emulated native build **in containers or jails**. Mixing architectures may kill your system.
-
-For Linux or BSD host, install statically linked QEMU user space emulator (package name is likely `qemu-user-static`) and make sure that binfmt support is enabled.
-
-For Windows host, Docker and Podman should have QEMU user space emulation enabled. If not,
-* For Docker:
-  ```ps1
-  docker run --rm --privileged multiarch/qemu-user-static:register
-  ```
-* For Podman, whose virtual machine is based on Fedora WSL, simply enable binfmt support:
-  ```ps1
-  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
-  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-riscv64-static.conf /proc/sys/fs/binfmt_misc/register
-  ```
+Dockerfiles are available in [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder). Available architectures: `x86_64`, `aarch64`, `riscv64`.
 
 # macOS
 

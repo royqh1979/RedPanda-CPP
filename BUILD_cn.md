@@ -230,142 +230,27 @@ qmake 变量：
    "%JOM%" install
    ```
 
-# Linux 和其他符合 freedesktop.org（XDG）规范的桌面系统
+# Linux
 
-通用步骤:
+另请参阅[详细构建指南——符合 freedesktop.org（XDG）规范的桌面系统](./docs/detailed-build-xdg-cn.md)。
 
-- 安装支持 C++17 的 GCC（≥ 7）或 Clang（≥ 6）。
-- 安装 Qt 5.15 Base、SVG、Tools 模块，包括库和开发文件。
-- 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt。
+## Alpine Linux、Arch Linux、Debian 及其衍生版本、Fedora、openSUSE
 
-基于 qmake 构建：
-
-1. 配置：
-   ```bash
-   qmake PREFIX=/usr/local /path/to/src/Red_Panda_CPP.pro
-   ```
-2. 构建：
-   ```bash
-   make -j$(nproc)
-   ```
-3. 安装：
-   ```bash
-   sudo make install
-   ```
-
-qmake 变量:
-- `PREFIX`：默认值是 `/usr/local`。打包时应该定义为 `/usr`。
-- `LIBEXECDIR`：辅助程序的路径，默认值是 `$PREFIX/libexec`。Arch Linux 使用 `/usr/lib`。
-- `LINUX_STATIC_IME_PLUGIN=ON`（make 阶段）：静态链接输入法插件。推荐在使用静态版本的 Qt 编译时启用；**不要**在使用动态版本的 Qt 编译时启用。
-
-基于 xmake 构建：
-
-1. 配置：
-   ```bash
-   xmake f -p linux -a x86_64 -m release --qt=/usr --prefix=/usr/local
-   ```
-2. 构建：
-   ```bash
-   xmake
-   ```
-3. 安装：
-   ```bash
-   sudo xmake install --root -o /  # -o ... 模拟了 make install 的 DESTDIR=...
-   ```
-
-提示：`xmake f --help` 可以查看更多选项。
-
-## Debian 及其衍生版本
-
-### 适用于当前系统的 deb 包
-
-1. 安装依赖包：
-   ```bash
-   sudo apt install \
-     build-essential debhelper \
-     libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
-   ```
-2. 构建 deb 包：
-   ```bash
-   ./packages/debian/builddeb.sh
-   ```
-3. 安装 deb 包：
-   ```bash
-   sudo apt install /tmp/redpanda-cpp_*.deb
-   ```
-4. 运行小熊猫C++：
-   ```bash
-   RedPandaIDE
-   ```
-
-### 在容器中构建适用于多架构/版本的包
-
-Windows 宿主的额外要求：
-- Docker 使用基于 WSL 2 的引擎，或者对此项目文件夹启用文件共享（Settings > Resources > File sharing）；
-- PowerShell (Core) 或 Windows PowerShell。
-
-* Linux 宿主：
-  ```bash
-  DOCKER=docker # 或 podman
-  SOURCE_DIR=/build/RedPanda-CPP # *容器内*的源代码路径
-  JOBS=$(nproc) # 同时构建多个包时可降低并行数
-
-  MIRROR=mirrors.ustc.edu.cn # 留空以使用默认的镜像站
-  PLATFORM=linux/amd64 # 或 linux/386、linux/arm64/v8、linux/arm/v7、linux/riscv64
-  IMAGE=debian:12 # 或 Ubuntu（如 ubuntu:22.04）
-
-  $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -e JOBS=$JOBS -v $PWD:$SOURCE_DIR --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
-  ```
-* Windows 宿主：
-  ```ps1
-  $DOCKER = "docker" # 或 "podman"
-  $SOURCE_DIR = "/build/RedPanda-CPP" # *容器内*的源代码路径
-  $JOBS = $Env:NUMBER_OF_PROCESSORS # 同时构建多个包时可降低并行数
-
-  $MIRROR = "mirrors.ustc.edu.cn" # 留空以使用默认的镜像站
-  $PLATFORM = "linux/amd64" # 或 "linux/386"、"linux/arm64/v8"、"linux/arm/v7"、"linux/riscv64"
-  $IMAGE = "debian:12" # 或 Ubuntu（如 "ubuntu:22.04"）
-
-  & $DOCKER run --rm -e MIRROR=$MIRROR -e SOURCE_DIR=$SOURCE_DIR -e JOBS=$JOBS -v "$(Get-Location):$SOURCE_DIR" --platform $PLATFORM $IMAGE $SOURCE_DIR/packages/debian/01-in-docker.sh
-  ```
-
-### 手动安装
-
-1. 安装编译器
-   ```bash
-   apt install gcc g++ make gdb gdbserver
-   ```
-2. 安装 Qt 5 和依赖包
-   ```bash
-   apt install qtbase5-dev qttools5-dev-tools libqt5svg5-dev git qterminal
-   ```
-3. 下载源码
-   ```bash
-   git clone https://gitee.com/royqh1979/RedPanda-CPP.git
-   ```
-4. 编译
-   ```bash
-   cd RedPanda-CPP/
-   qmake Red_Panda_CPP.pro
-   make -j$(nproc)
-   sudo make install
-   ```
-5. 运行
-   ```bash
-   RedPandaIDE
-   ```
-
-## Alpine Linux, Arch Linux, Fedora, openSUSE
-
-1. 准备构建环境（[Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers)、[Arch](https://wiki.archlinux.org/title/Makepkg)、[RPM](https://rpm-packaging-guide.github.io/#prerequisites) 文档）。
+1. 准备构建环境（[Alpine](https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers)、[Arch](https://wiki.archlinuxcn.org/wiki/Makepkg)、[Debians](https://wiki.debian.org/BuildingTutorial)、[RPM](https://rpm-packaging-guide.github.io/#prerequisites) 文档）。
+   - 对于 Debian 系：
+     ```sh
+     sudo apt install --no-install-recommends build-essential debhelper devscripts equivs
+     ```
 2. 调用构建脚本：
    - Alpine Linux：`./packages/alpine/buildapk.sh`
    - Arch Linux：`./packages/archlinux/buildpkg.sh`
+   - Debian 系：`./packages/debian/builddeb.sh`
    - Fedora：`./packages/fedora/buildrpm.sh`
    - openSUSE：`./packages/opensuse/buildrpm.sh`
 3. 安装软件包：
    - Alpine Linux：`~/packages/unsupported/$(uname -m)/redpanda-cpp-git-*.apk`
    - Arch Linux：`/tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst`
+   - Debian 系：`/tmp/redpanda-cpp_*.deb`
    - Fedora、openSUSE：`~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm`
 4. 运行小熊猫C++：
    ```bash
@@ -374,40 +259,40 @@ Windows 宿主的额外要求：
 
 注意：这些构建脚本签出此存储库的 HEAD，因此构建之前务必提交所有变更。
 
+此外，也可以在容器环境中构建（推荐使用 rootless Podman；Docker 可能搞乱文件权限）：
+
+```bash
+podman run --rm -v $PWD:/mnt -w /mnt <image> ./packages/<distro>/01-in-docker.sh
+
+# 以 Arch Linux 为例
+podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archlinux/01-in-docker.sh
+```
+
+软件包位于 `dist/` 目录下。
+
+## Ubuntu 20.04 x86_64（NOI Linux 2.0）静态链接包
+
+`redpanda-cpp-bin` 包大体上就是 “AppImage 重新打包”。真正的构建过程在容器中进行，因此构建主机不一定要 Ubuntu 20.04，任何 Linux 发行版只要有 Podman 和 dpkg 就行。
+
+1. 安装 Podman，如果不是 Debian 及其衍生版还要安装 dpkg。
+   ```sh
+   sudo apt install podman
+   ```
+   **警告**：**不要**在非 Debian 系上使用 dpkg 安装软件包，否则将会破坏系统。
+2. 调用构建脚本：
+   ```sh
+   ./packages/debian-static/builddeb.sh
+   ```
+
+软件包位于 `dist/` 目录下。
+
 ## Linux AppImage
 
-Linux 宿主：
 ```bash
-ARCH=x86_64
-podman run --rm -v $PWD:/mnt -w /mnt -e CARCH=$ARCH quay.io/redpanda-cpp/appimage-builder-$ARCH:20240304.0 packages/appimage/01-in-docker.sh
+podman run --rm -v $PWD:/mnt -w /mnt quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0 ./packages/appimage/01-in-docker.sh
 ```
 
-Windows 宿主：
-```ps1
-$ARCH = "x86_64"
-podman run --rm -v "$(Get-Location):/mnt" -w /mnt -e CARCH=$ARCH redpanda-builder-$ARCH packages/appimage/01-in-docker.sh
-```
-
-Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder)。
-
-## 异架构的模拟本机构建（emulated native build）
-
-可以借助 QEMU 用户空间模拟，运行目标架构的本机工具链，来构建小熊猫C++。
-
-注意：始终**在容器或 jail 中**运行模拟本机构建，因为混用不同架构的程序和库可能会损坏系统。
-
-对于 Linux 或 BSD 宿主，需要安装静态链接的 QEMU 用户空间模拟器（包名通常为 `qemu-user-static`）并确认已经启用 binfmt 支持。
-
-对于 Windows 宿主，Docker 和 Podman 应该已经启用了 QEMU 用户空间模拟。如果没有启用，
-* Docker：
-  ```ps1
-  docker run --rm --privileged multiarch/qemu-user-static:register
-  ```
-* Podman（其虚拟机基于 Fedora WSL）只需要启用 binfmt 支持：
-  ```ps1
-  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-aarch64-static.conf /proc/sys/fs/binfmt_misc/register
-  wsl -d podman-machine-default sudo cp /usr/lib/binfmt.d/qemu-riscv64-static.conf /proc/sys/fs/binfmt_misc/register
-  ```
+Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder)。可用架构：`x86_64`、`aarch64`、`riscv64`。
 
 # macOS
 
