@@ -129,6 +129,13 @@ Section "$(SectionMainName)" SectionMain
   !ifdef HAVE_COMPILER_HINT
     File "compiler_hint.lua"
   !endif
+  !ifdef HAVE_UCRT
+    ${IfNot} ${AtLeastWin10}
+      File "ucrt\ucrtbase.dll"
+      File "ucrt\api-ms-win-core-*.dll"
+      File "ucrt\api-ms-win-crt-*.dll"
+    ${EndIf}
+  !endif
 
   ; Write required paths
   SetOutPath $INSTDIR\templates
@@ -439,6 +446,9 @@ Section "Uninstall"
   Delete "$INSTDIR\qt.conf"
   Delete "$INSTDIR\OpenConsole.exe"
   Delete "$INSTDIR\compiler_hint.lua"
+  Delete "$INSTDIR\ucrtbase.dll"
+  Delete "$INSTDIR\api-ms-win-core-*.dll"
+  Delete "$INSTDIR\api-ms-win-crt-*.dll"
 
   RMDir /r "$INSTDIR\templates"
   RMDir /r "$INSTDIR\mingw32"

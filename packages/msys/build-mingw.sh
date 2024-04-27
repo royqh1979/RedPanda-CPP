@@ -14,6 +14,8 @@ function fn_print_help() {
    --mingw                  Alias for --mingw32 (x86 app) or --mingw64 (x64 app).
    --mingw32                Build mingw32 integrated compiler.
    --mingw64                Build mingw64 integrated compiler.
+   --ucrt <build>           Include UCRT in the package. Windows SDK required.
+                            e.g. '--ucrt 22621' for Windows 11 SDK 22H2.
    -nd, --no-deps           Skip dependency check.
    -t, --target-dir <dir>   Set target directory for the packages."
 }
@@ -68,6 +70,7 @@ compilers=()
 COMPILER_MINGW32=0
 COMPILER_MINGW64=0
 TARGET_DIR="$(pwd)/dist"
+UCRT=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
@@ -106,6 +109,22 @@ while [[ $# -gt 0 ]]; do
       COMPILER_MINGW64=1
       shift
       ;;
+    --ucrt)
+      case "${MSYSTEM}" in
+        CLANG32|UCRT64|CLANG64)
+          UCRT="$2"
+          shift 2
+          ;;
+        MINGW32|MINGW64)
+          echo "Error: Red Panda C++ is not built against UCRT."
+          exit 1
+          ;;
+        CLANGARM64)
+          echo "Error: UCRT is a system component on arm64, local deployment is not supported."
+          exit 1
+          ;;
+      esac
+      ;;
     -nd|--no-deps)
       CHECK_DEPS=0
       shift
@@ -129,6 +148,7 @@ QMAKE="${MINGW_PREFIX}/qt5-static/bin/qmake"
 NSIS="/mingw32/bin/makensis"
 SOURCE_DIR="$(pwd)"
 ASSETS_DIR="${SOURCE_DIR}/assets"
+UCRT_DIR="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.${UCRT}.0/ucrt/DLLs/${NSIS_ARCH}"
 
 MINGW32_ARCHIVE="mingw32.7z"
 MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC 8.1"
@@ -179,6 +199,10 @@ if [[ ${COMPILER_MINGW32} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}
 fi
 if [[ ${COMPILER_MINGW64} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" ]]; then
   echo "Missing MinGW archive: assets/${MINGW64_ARCHIVE}"
+  exit 1
+fi
+if [[ -n "${UCRT}" && ! -f "${UCRT_DIR}/ucrtbase.dll" ]]; then
+  echo "Missing Windows SDK, UCRT cannot be included."
   exit 1
 fi
 
@@ -262,6 +286,13 @@ fi
 if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW64)
   [[ -d "mingw64" ]] || 7z x "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
+fi
+if [[ -n "${UCRT}" ]]; then
+  nsis_flags+=(-DHAVE_UCRT)
+  if [[ ! -f ucrt/ucrtbase.dll ]]; then
+    mkdir -p ucrt
+    cp "${UCRT_DIR}"/*.dll ucrt
+  fi
 fi
 "${NSIS}" "${nsis_flags[@]}" redpanda.nsi
 
