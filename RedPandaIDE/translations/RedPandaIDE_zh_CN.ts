@@ -1694,17 +1694,18 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">未找到符号&apos;%1&apos;!</translation>
     </message>
     <message>
-        <location line="+944"/>
+        <location line="+943"/>
         <source>astyle not found</source>
         <translation>找不到astyle程序</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+326"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation>找不到astyle程序&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location line="+164"/>
+        <location line="+152"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
@@ -2682,7 +2683,7 @@ p, li { white-space: pre-wrap; }
         <translation>自定义</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+17"/>
         <source>Open custom themes folder</source>
         <translation>打开自定义主题文件夹</translation>
     </message>
@@ -2692,13 +2693,13 @@ p, li { white-space: pre-wrap; }
         <translation>打开文件夹</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-13"/>
         <location line="+3"/>
         <source>Remove custom theme</source>
         <translation>删除自定义主题</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+88"/>
         <source>Language:</source>
         <translation>语言:</translation>
     </message>
@@ -3484,17 +3485,17 @@ p, li { white-space: pre-wrap; }
         <translation>连续行的最大缩进空格数：</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+47"/>
         <source>Indentation 2</source>
         <translation>缩进2</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+27"/>
         <source>Indent labels</source>
         <translation>缩进标签(label)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+35"/>
         <source>Indent class blocks</source>
         <translation>缩进类定义(class)</translation>
     </message>
@@ -3504,197 +3505,201 @@ p, li { white-space: pre-wrap; }
         <translation>缩进命名空间定义(namespace)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-21"/>
         <source>Indent class access modifiers</source>
         <translation>缩进类访问限制符(&apos;public&apos;,&apos;private&apos;...)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent after parenthesis &apos;(&apos; or assignment &apos;=&apos;</source>
         <translation>在括号&apos;(&apos;或赋值号&apos;=&apos;后缩进</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent preprocessor conditional statements</source>
         <translation>缩进预处理条件指令(&apos;#if&apos;,&apos;#else&apos;,...)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-21"/>
         <source>Indent multi-line preprocessor #define statements</source>
         <translation>缩进多行#define语句</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent line comments that start in column one</source>
         <translation>缩进在第一列开始的行注释</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+70"/>
         <source>Indent preprocessor blocks</source>
         <translation>缩进预处理代码段</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-56"/>
         <source>Indent switch blocks</source>
         <translation>缩进switch语句</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+35"/>
         <source>Indent cases</source>
         <translation>缩进case语句</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+42"/>
         <source>Padding 1</source>
         <translation>填充1</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+76"/>
+        <source>Remove superfluous empty lines exceeding</source>
+        <translation>删除超过指定数量的多余空行</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Insert spaces around operators</source>
         <translation>在运算符周围插入空格</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-59"/>
         <source>Insert spaces after commas</source>
         <translation>在逗号后插入空格</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-41"/>
         <source>Insert spaces after parenthesis headers (&apos;if&apos;,&apos;for&apos;,...)</source>
         <translation>在语句和括号间插入空格(&apos;if&apos;,&apos;for&apos;...)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+27"/>
         <source>Insert spaces around parenthesis on the outside only</source>
         <translation>在括号外侧加入空格</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Insert spaces around parenthesis on the inside only</source>
         <translation>在括号内侧加入空格</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+28"/>
         <source>Insert empty lines arround unrelated blocks</source>
         <translation>在代码段之间加入空行</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+66"/>
         <source>Insert empty lines around all blocks</source>
         <oldsource>Insert empy lines around all blocks</oldsource>
         <translation>在所有代码段之间加入空行</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-80"/>
         <source>Insert spaces around first parenthesis in a series on the out side  only</source>
         <translation>在多层嵌套括号的最外侧加入空格</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+73"/>
         <source>Insert spaces around parenthesis</source>
         <translation>在括号两侧加入空格</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+22"/>
         <source>Padding 2</source>
         <translation>填充2</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+90"/>
         <source>Remove all empty lines. It will NOT delete lines added by the padding options.</source>
         <translation>删除所有空行。不影响填充选项自动插入的空行。</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-27"/>
         <source>Attach a pointer operator to its :</source>
         <translation>将指针运算符(&apos;*&apos;)放在：</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>Remove all consecutive empty lines. It will NOT delete lines added by the padding options.</source>
-        <translation>将连续的多个空行合并成一个。不影响填充选项自动插入的空行。</translation>
+        <translation type="vanished">将连续的多个空行合并成一个。不影响填充选项自动插入的空行。</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+10"/>
+        <location line="-30"/>
+        <location line="+37"/>
         <source>type(left)</source>
         <translation>类型侧（左侧）</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+27"/>
         <source>Fill empty lines with the white space of the previous lines.</source>
         <translation>使用前一行的缩进空格填充空行</translation>
     </message>
     <message>
-        <location line="-10"/>
-        <location line="+27"/>
+        <location line="-44"/>
+        <location line="+51"/>
         <source>middle</source>
         <translation>中间</translation>
     </message>
     <message>
-        <location line="-546"/>
+        <location line="-654"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note for the predefined format style&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;预定义排版方案说明&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location line="+536"/>
-        <location line="+20"/>
+        <location line="+593"/>
+        <location line="+37"/>
         <source>name(right)</source>
         <translation>名称侧（右侧）</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-54"/>
         <source>Remove unnecessary space adding around parenthesis</source>
         <translation>删除括号周围的多余空格</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+101"/>
         <source>Attach a reference operator to its :</source>
         <translation>将引用运算符(&apos;&amp;&apos;)放在：</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-121"/>
         <location line="+10"/>
         <source>none</source>
         <translation>不变</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+132"/>
         <source>Other 1</source>
         <translation>其它1</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+20"/>
         <source>Break one line headers (&apos;if&apos;,&apos;while&apos;,&apos;else&apos;...) from the statement on the same line</source>
         <translation>对单行条件(&apos;if&apos;,&apos;while&apos;,&apos;else&apos;)语句分行</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Add one line braces to unbraced one line conditional statements</source>
         <translation>用花括号括起单行条件体</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+21"/>
         <source>Break braces before close headers (&apos;else&apos;,&apos;catch&quot;...)</source>
         <translation>对结束语句(&apos;else&apos;,&apos;catch&apos;)和它之前的花括号断行</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Remove braces from a braced one line conditional statements</source>
         <translation>删除括起单行条件体语句的花括号</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Break &apos;else if&apos; statements into two lines</source>
         <translation>将&apos;else if&apos;语句断成两行</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-35"/>
         <source>Add braces to unbraced one line conditional statements</source>
         <translation>对条件和条件体语句在同一行上的，删除括起条件体语句的花括号</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+56"/>
         <source>Other 2</source>
         <translation>其它2</translation>
     </message>
@@ -3709,17 +3714,26 @@ p, li { white-space: pre-wrap; }
         <translation>将函数声明中的函数名和返回值类型断成两行</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-14"/>
         <source>Break return type from the function name in its definition</source>
         <translation>将函数定义中的函数名和返回值类型断成两行</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-14"/>
         <source>Attach return type to the function name in its definition</source>
         <translation>将函数定义中的函数名和返回值类型放在同一行</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <source>Remove superfluous continuous empty lines exceeding</source>
+        <translation type="vanished">删除超过指定数量的多余空行</translation>
+    </message>
+    <message>
+        <location line="-224"/>
+        <source>Remove superfluous whitespace</source>
+        <translation>删除多余的空格</translation>
+    </message>
+    <message>
+        <location line="+231"/>
         <source>Don&apos;t break blocks residing completely on one line</source>
         <translation>不对同一行上的多个代码段断行</translation>
     </message>
@@ -3729,7 +3743,7 @@ p, li { white-space: pre-wrap; }
         <translation>不对同一行上的多条语句断行</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+35"/>
         <source>Other 3</source>
         <translation>其它3</translation>
     </message>
@@ -3759,7 +3773,7 @@ p, li { white-space: pre-wrap; }
         <translation>字符</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+34"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="-292"/>
         <source>No minimal indent</source>
         <translation>无最小缩进量</translation>
     </message>
@@ -3806,7 +3820,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>FormatterStyleModel</name>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+125"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+127"/>
         <source>Default</source>
         <translation>默认</translation>
     </message>
@@ -9571,7 +9585,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">下标&quot;%1&quot;越界</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+504"/>
+        <location filename="../utils.cpp" line="+524"/>
         <source>bytes</source>
         <translation>字节</translation>
     </message>
@@ -9889,7 +9903,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+597"/>
+        <location filename="../settings.cpp" line="+638"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-403"/>
         <location line="+63"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -9944,7 +9958,7 @@ p, li { white-space: pre-wrap; }
         <translation>无法检测适用于 “%1” 的终端参数模式。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="-734"/>
+        <location filename="../settings.cpp" line="-775"/>
         <source>Error executing platform compiler hint add-on</source>
         <translation>执行平台编译器提示附加组件错误</translation>
     </message>
@@ -10948,7 +10962,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="+716"/>
+        <location filename="../settings.cpp" line="+757"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -11085,7 +11099,7 @@ p, li { white-space: pre-wrap; }
     <name>SettingsDialog</name>
     <message>
         <location filename="../settingsdialog/settingsdialog.ui" line="+14"/>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="+145"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="+143"/>
         <source>Options</source>
         <translation>选项</translation>
     </message>
@@ -11155,14 +11169,14 @@ p, li { white-space: pre-wrap; }
         <location line="+7223"/>
         <location line="+5"/>
         <location filename="../settingsdialog/settingsdialog.cpp" line="+10"/>
-        <location line="+97"/>
+        <location line="+95"/>
         <source>Compiler Set</source>
         <translation>编译器配置集</translation>
     </message>
     <message>
         <location line="-7227"/>
         <location line="+7223"/>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="-97"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="-95"/>
         <location line="+3"/>
         <source>Compiler</source>
         <translation>编译器</translation>
@@ -11178,13 +11192,13 @@ p, li { white-space: pre-wrap; }
         <location line="+41"/>
         <location line="+6"/>
         <location line="+3"/>
-        <location line="+8"/>
+        <location line="+6"/>
         <location line="+27"/>
         <source>General</source>
         <translation>通用</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="-85"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="-83"/>
         <location line="+3"/>
         <location line="+3"/>
         <location line="+3"/>
@@ -11290,7 +11304,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+3"/>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Code Formatter</source>
         <translation>代码排版</translation>
     </message>
@@ -11300,7 +11314,7 @@ p, li { white-space: pre-wrap; }
         <translation>程序</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <location line="+4"/>
         <source>Tools</source>
         <translation>工具</translation>

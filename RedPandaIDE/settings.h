@@ -815,6 +815,15 @@ public:
         bool indentAfterParens() const;
         void setIndentAfterParens(bool newIndentAfterParens);
 
+        bool squeezeLines() const;
+        void setSqueezeLines(bool newSqueezeLines);
+
+        int squeezeLinesNumber() const;
+        void setSqueezeLinesNumber(int newSqueezeLinesNumber);
+
+        bool squeezeWhitespace() const;
+        void setSqueezeWhitespace(bool newSqueezeWhitespace);
+
     private:
         int mBraceStyle;
         int mIndentStyle;
@@ -850,6 +859,9 @@ public:
         bool mUnpadParen;
         bool mDeleteEmptyLines;
         bool mFillEmptyLines;
+        bool mSqueezeLines;
+        int mSqueezeLinesNumber;
+        bool mSqueezeWhitespace;
         int mAlignPointerStyle;
         int mAlignReferenceStyle;
         bool mBreakClosingBraces;

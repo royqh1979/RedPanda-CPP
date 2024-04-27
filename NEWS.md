@@ -150,6 +150,10 @@ Red Panda C++ Version 2.27
   - fix: In sdcc project, parser are not correctly inited as sdcc parser.
   - fix: Temp object + member function call is wrongly parsed as constructor.
   - enhancement: Improve how to manage themes in Options → general → appearance.
+  - change: Use official astyle program.
+  - enhancement: New code format option: "Remove superfluous empty lines exceeding"
+  - enhancement: New code format option: "Remove superfluous spaces"
+  - change: Remove code format option: "Delete continuous empty lines"
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

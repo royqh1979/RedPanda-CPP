@@ -3881,10 +3881,13 @@ void Settings::Environment::setTerminalPath(const QString &terminalPath)
 
 QString Settings::Environment::AStylePath() const
 {
+    QString path = mAStylePath;
     if (isGreenEdition()) {
-        return replacePrefix(mAStylePath, "%*APP_DIR*%", pSettings->dirs().appDir());
+        path = replacePrefix(path, "%*APP_DIR*%", pSettings->dirs().appDir());
     }
-    return mAStylePath;
+    if (path.isEmpty())
+        path = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
+    return path;
 }
 
 void Settings::Environment::setAStylePath(const QString &aStylePath)
@@ -5034,6 +5037,10 @@ QStringList Settings::CodeFormatter::getArguments()
         result.append("--delete-empty-lines");
     if (mFillEmptyLines)
         result.append("--fill-empty-lines");
+    if (mSqueezeLines)
+        result.append(QString("--squeeze-lines=%1").arg(mSqueezeLinesNumber));
+    if (mSqueezeWhitespace)
+        result.append(QString("--squeeze-ws").arg(mSqueezeLinesNumber));
     switch(mAlignPointerStyle) {
     case FormatterOperatorAlign::foaNone:
         break;
@@ -5619,6 +5626,36 @@ void Settings::CodeFormatter::setIndentAfterParens(bool newIndentAfterParens)
     mIndentAfterParens = newIndentAfterParens;
 }
 
+bool Settings::CodeFormatter::squeezeWhitespace() const
+{
+    return mSqueezeWhitespace;
+}
+
+void Settings::CodeFormatter::setSqueezeWhitespace(bool newSqueezeWhitespace)
+{
+    mSqueezeWhitespace = newSqueezeWhitespace;
+}
+
+int Settings::CodeFormatter::squeezeLinesNumber() const
+{
+    return mSqueezeLinesNumber;
+}
+
+void Settings::CodeFormatter::setSqueezeLinesNumber(int newSqueezeLinesNumber)
+{
+    mSqueezeLinesNumber = newSqueezeLinesNumber;
+}
+
+bool Settings::CodeFormatter::squeezeLines() const
+{
+    return mSqueezeLines;
+}
+
+void Settings::CodeFormatter::setSqueezeLines(bool newSqueezeLines)
+{
+    mSqueezeLines = newSqueezeLines;
+}
+
 bool Settings::CodeFormatter::indentSwitches() const
 {
     return mIndentSwitches;
@@ -5665,6 +5702,10 @@ void Settings::CodeFormatter::doSave()
     saveValue("unpad_paren",mUnpadParen);
     saveValue("delete_empty_lines",mDeleteEmptyLines);
     saveValue("fill_empty_lines",mFillEmptyLines);
+    saveValue("squeeze_lines", mSqueezeLines);
+    saveValue("squeeze_line_number", mSqueezeLinesNumber);
+    saveValue("squeeze_whitespace", mSqueezeWhitespace);
+
     saveValue("align_pointer_style",mAlignPointerStyle);
     saveValue("align_reference_style",mAlignReferenceStyle);
     saveValue("break_closing_braces",mBreakClosingBraces);
@@ -5723,6 +5764,10 @@ void Settings::CodeFormatter::doLoad()
     mUnpadParen = boolValue("unpad_paren",false);
     mDeleteEmptyLines = boolValue("delete_empty_lines",false);
     mFillEmptyLines = boolValue("fill_empty_lines",false);
+
+    mSqueezeLines = boolValue("squeeze_lines", false);
+    mSqueezeLinesNumber = intValue("squeeze_line_number", 1);
+    mSqueezeWhitespace = boolValue("squeeze_whitespace", false);
     mAlignPointerStyle = intValue("align_pointer_style", FormatterOperatorAlign::foaNone);
     mAlignReferenceStyle = intValue("align_reference_style", FormatterOperatorAlign::foaNone);
     mBreakClosingBraces = boolValue("break_closing_braces",false);

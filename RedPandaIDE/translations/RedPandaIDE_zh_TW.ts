@@ -1253,17 +1253,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+944"/>
+        <location line="+943"/>
         <source>astyle not found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+326"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+164"/>
+        <location line="+152"/>
         <source>Break point condition</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1278,7 +1279,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-5410"/>
+        <location line="-5397"/>
         <location line="+505"/>
         <source>Error Load File</source>
         <translation type="unfinished"></translation>
@@ -2165,7 +2166,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+17"/>
         <source>Open custom themes folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2175,13 +2176,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-13"/>
         <location line="+3"/>
         <source>Remove custom theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+65"/>
         <source>Use custom icon set</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2890,17 +2891,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+47"/>
         <source>Indentation 2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+27"/>
         <source>Indent labels</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+35"/>
         <source>Indent class blocks</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2910,211 +2911,216 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-21"/>
         <source>Indent class access modifiers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent after parenthesis &apos;(&apos; or assignment &apos;=&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent preprocessor conditional statements</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-21"/>
         <source>Indent multi-line preprocessor #define statements</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent line comments that start in column one</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+70"/>
         <source>Indent preprocessor blocks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-56"/>
         <source>Indent switch blocks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+35"/>
         <source>Indent cases</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+42"/>
         <source>Padding 1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+76"/>
+        <source>Remove superfluous empty lines exceeding</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Insert spaces around operators</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-59"/>
         <source>Insert spaces after commas</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-41"/>
         <source>Insert spaces after parenthesis headers (&apos;if&apos;,&apos;for&apos;,...)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+27"/>
         <source>Insert spaces around parenthesis on the outside only</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Insert spaces around parenthesis on the inside only</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+28"/>
         <source>Insert empty lines arround unrelated blocks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+66"/>
         <source>Insert empty lines around all blocks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-80"/>
         <source>Insert spaces around first parenthesis in a series on the out side  only</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+73"/>
         <source>Insert spaces around parenthesis</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+22"/>
         <source>Padding 2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+90"/>
         <source>Remove all empty lines. It will NOT delete lines added by the padding options.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-27"/>
         <source>Attach a pointer operator to its :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Remove all consecutive empty lines. It will NOT delete lines added by the padding options.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <location line="+10"/>
+        <location line="-30"/>
+        <location line="+37"/>
         <source>type(left)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+23"/>
-        <location line="+27"/>
+        <location line="-17"/>
+        <location line="+51"/>
         <source>middle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-7"/>
         <source>Fill empty lines with the white space of the previous lines.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+20"/>
+        <location line="-54"/>
+        <location line="+37"/>
         <source>name(right)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-54"/>
         <source>Remove unnecessary space adding around parenthesis</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+101"/>
         <source>Attach a reference operator to its :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-121"/>
         <location line="+10"/>
         <source>none</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+132"/>
         <source>Other 1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+20"/>
         <source>Break one line headers (&apos;if&apos;,&apos;while&apos;,&apos;else&apos;...) from the statement on the same line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Add one line braces to unbraced one line conditional statements</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+21"/>
         <source>Break braces before close headers (&apos;else&apos;,&apos;catch&quot;...)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Remove braces from a braced one line conditional statements</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Break &apos;else if&apos; statements into two lines</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-35"/>
         <source>Add braces to unbraced one line conditional statements</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+56"/>
         <source>Other 2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+20"/>
         <source>Break return type from the function name in its definition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Don&apos;t break blocks residing completely on one line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-231"/>
+        <source>Remove superfluous whitespace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+224"/>
         <source>Attach return type to the function name in its definition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+21"/>
         <source>Don&apos;t break multiple statements residing on one line</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3129,7 +3135,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+21"/>
         <source>Other 3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3159,7 +3165,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+34"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="-292"/>
         <source>No minimal indent</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3206,7 +3212,7 @@
 <context>
     <name>FormatterStyleModel</name>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+125"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+127"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7888,7 +7894,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+3980"/>
+        <location filename="../settings.cpp" line="+4021"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-403"/>
         <location line="+63"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8297,7 +8303,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="-589"/>
+        <location filename="../settings.cpp" line="-630"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8379,7 +8385,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+504"/>
+        <location filename="../utils.cpp" line="+524"/>
         <source>bytes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9324,7 +9330,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="+716"/>
+        <location filename="../settings.cpp" line="+757"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9338,7 +9344,7 @@
     <name>SettingsDialog</name>
     <message>
         <location filename="../settingsdialog/settingsdialog.ui" line="+14"/>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="+145"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="+143"/>
         <source>Options</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9368,7 +9374,7 @@
         <location line="+41"/>
         <location line="+6"/>
         <location line="+3"/>
-        <location line="+8"/>
+        <location line="+6"/>
         <location line="+27"/>
         <source>General</source>
         <translation type="unfinished"></translation>
@@ -9376,7 +9382,7 @@
     <message>
         <location line="+1"/>
         <location line="+405"/>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="-44"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="-42"/>
         <location line="+3"/>
         <source>Program Runner</source>
         <translation type="unfinished"></translation>
@@ -9428,14 +9434,14 @@
         <location line="+7223"/>
         <location line="+5"/>
         <location filename="../settingsdialog/settingsdialog.cpp" line="+10"/>
-        <location line="+97"/>
+        <location line="+95"/>
         <source>Compiler Set</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-7227"/>
         <location line="+7223"/>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="-97"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="-95"/>
         <location line="+3"/>
         <source>Compiler</source>
         <translation type="unfinished"></translation>
@@ -9517,7 +9523,7 @@
     </message>
     <message>
         <location line="+3"/>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Code Formatter</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9527,7 +9533,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <location line="+4"/>
         <source>Tools</source>
         <translation type="unfinished"></translation>
@@ -9609,7 +9615,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-147"/>
+        <location line="-145"/>
         <source>Custom C/C++ Keywords</source>
         <translation type="unfinished"></translation>
     </message>

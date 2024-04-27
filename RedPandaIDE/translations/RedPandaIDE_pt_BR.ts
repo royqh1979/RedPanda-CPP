@@ -1432,17 +1432,18 @@
         <translation>Ctrl+clik para mais informações</translation>
     </message>
     <message>
-        <location line="+944"/>
+        <location line="+943"/>
         <source>astyle not found</source>
         <translation>astyle não encontrado</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+326"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
         <translation>Impossível encontrar astyle em &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+164"/>
+        <location line="+152"/>
         <source>Break point condition</source>
         <translation>Condição de parada</translation>
     </message>
@@ -1457,7 +1458,7 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5410"/>
+        <location line="-5397"/>
         <location line="+505"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
@@ -2362,7 +2363,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+17"/>
         <source>Open custom themes folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2372,13 +2373,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-13"/>
         <location line="+3"/>
         <source>Remove custom theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+103"/>
+        <location line="+113"/>
         <source>*Needs restart</source>
         <translation>*Necessário reiniciar</translation>
     </message>
@@ -3137,17 +3138,17 @@
         <translation>Indentação máxima para linha de continuação</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+47"/>
         <source>Indentation 2</source>
         <translation>Indentação 2</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+27"/>
         <source>Indent labels</source>
         <translation>Indentar labels</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+35"/>
         <source>Indent class blocks</source>
         <translation>Indentar blocos de classes</translation>
     </message>
@@ -3157,72 +3158,77 @@
         <translation>Indentar namespaces</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-21"/>
         <source>Indent class access modifiers</source>
         <translation>Indentar modificadores de acesso em classe</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent after parenthesis &apos;(&apos; or assignment &apos;=&apos;</source>
         <translation>Indentar após abrir parêntese &apos;(&apos; ou atribuir &apos;=&apos;</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent preprocessor conditional statements</source>
         <translation>Indentar instruções condicionais do preprocessador</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-21"/>
         <source>Indent multi-line preprocessor #define statements</source>
         <translation>Indentar instruções #define com múltiplas linhas no preprocessador</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Indent line comments that start in column one</source>
         <translation>Indentar linha de comentários que comece na primeira coluna</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+70"/>
         <source>Indent preprocessor blocks</source>
         <translation>Indentar blocos do preprocessador</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-56"/>
         <source>Indent switch blocks</source>
         <translation>Indentar blocos de switch</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+35"/>
         <source>Indent cases</source>
         <translation>Indentar cases</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+42"/>
         <source>Padding 1</source>
         <translation>Preenchimento</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+76"/>
+        <source>Remove superfluous empty lines exceeding</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Insert spaces around operators</source>
         <translation>Inserir espaços em torno de operadores</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-59"/>
         <source>Insert spaces after commas</source>
         <translation>Inserir espaços após vírgulas</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-41"/>
         <source>Insert spaces after parenthesis headers (&apos;if&apos;,&apos;for&apos;,...)</source>
         <translation>Inserir espaços após parênteses de cabeçalhos em (&apos;if&apos;,&apos;for&apos;,...)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+27"/>
         <source>Insert spaces around parenthesis on the outside only</source>
         <translation>Inserir espaços apenas externamente aos parentêses</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Insert spaces around parenthesis on the inside only</source>
         <translation>Inserir espaços apenas internamente aos parênteses</translation>
     </message>
@@ -3231,136 +3237,140 @@
         <translation type="vanished">Inserir linhas em branco em torno de blocos não relacionados</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+94"/>
         <source>Insert empty lines around all blocks</source>
         <translation>Inserir linhas em branco em todos os blocos</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-80"/>
         <source>Insert spaces around first parenthesis in a series on the out side  only</source>
         <translation>Inserir espaços apenas externamente em torno do primeiro parêntese em uma série</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+73"/>
         <source>Insert spaces around parenthesis</source>
         <translation>Inserir espaços em torno de parêntese</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+22"/>
         <source>Padding 2</source>
         <translation>Preenchimento 2</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+90"/>
         <source>Remove all empty lines. It will NOT delete lines added by the padding options.</source>
         <translation>Remover todas as linhas em branco. NÃO removerá linhas acrescentadas pelas opções de preenchimento.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-27"/>
         <source>Attach a pointer operator to its :</source>
         <translation>Anexar operador de ponteiro a:</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>Remove all consecutive empty lines. It will NOT delete lines added by the padding options.</source>
-        <translation>Remover todas as linhas em branco consecutivas. NÃO removerá as linhas acrescentadas pelas opções de preeenchimento.</translation>
+        <translation type="vanished">Remover todas as linhas em branco consecutivas. NÃO removerá as linhas acrescentadas pelas opções de preeenchimento.</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+10"/>
+        <location line="-30"/>
+        <location line="+37"/>
         <source>type(left)</source>
         <translation>tipo (esquerdo)</translation>
     </message>
     <message>
-        <location line="+23"/>
-        <location line="+27"/>
+        <location line="-17"/>
+        <location line="+51"/>
         <source>middle</source>
         <translation>central</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-7"/>
         <source>Fill empty lines with the white space of the previous lines.</source>
         <translation>Preencher linhas em branco com white space de linhas anteriores.</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+20"/>
+        <location line="-54"/>
+        <location line="+37"/>
         <source>name(right)</source>
         <translation>nome (direito)</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-54"/>
         <source>Remove unnecessary space adding around parenthesis</source>
         <translation>Remover espaços desnecessários em torno de parênteses</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+101"/>
         <source>Attach a reference operator to its :</source>
         <translation>Anexar operador de referência a:</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-121"/>
         <location line="+10"/>
         <source>none</source>
         <translation>nenhum</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+132"/>
         <source>Other 1</source>
         <translation>Outros 1</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+20"/>
         <source>Break one line headers (&apos;if&apos;,&apos;while&apos;,&apos;else&apos;...) from the statement on the same line</source>
         <translation>Separar linhas em cabeçalhos (&apos;if&apos;,&apos;while&apos;,&apos;else&apos;...) a partir da instrução na mesma linha</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Add one line braces to unbraced one line conditional statements</source>
         <translation>Acrescentar chaves em uma linha às instruções condicionais com apenas uma linha</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+21"/>
         <source>Break braces before close headers (&apos;else&apos;,&apos;catch&quot;...)</source>
         <translation>Separar chaves ao fechar cabeçalhos (&apos;else&apos;,&apos;catch&quot;...)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Remove braces from a braced one line conditional statements</source>
         <translation>Remover chaves de instruções condicionais com apenas uma linha</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Break &apos;else if&apos; statements into two lines</source>
         <translation>Separar em duas linhas instruções em &apos;else if&apos;</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-35"/>
         <source>Add braces to unbraced one line conditional statements</source>
         <translation>Acrescentar chaves às instruções condicionais com apenas uma linha</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+56"/>
         <source>Other 2</source>
         <translation>Outros 2</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+20"/>
         <source>Break return type from the function name in its definition</source>
         <translation>Separar tipo de retorno do nome de função em sua definição</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-7"/>
         <source>Don&apos;t break blocks residing completely on one line</source>
         <translation>Não separar blocos que estejam em uma linha apenas.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-231"/>
+        <source>Remove superfluous whitespace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+224"/>
         <source>Attach return type to the function name in its definition</source>
         <translation>Anexar tipo de retorno ao nome de função em sua definição</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+21"/>
         <source>Don&apos;t break multiple statements residing on one line</source>
         <translation>Não separar instruções múltiplas que estejam em uma mesma linha</translation>
     </message>
@@ -3375,7 +3385,7 @@
         <translation>Anexar tipo de retorno ao nome da função em sua declaração</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+21"/>
         <source>Other 3</source>
         <translation>Outros 3</translation>
     </message>
@@ -3405,12 +3415,12 @@
         <translation>Colocar a condição lógica por último na linha anterior, ao separar linhas</translation>
     </message>
     <message>
-        <location line="-356"/>
+        <location line="-440"/>
         <source>Insert empty lines arround unrelated blocks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+34"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="-292"/>
         <source>No minimal indent</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3457,7 +3467,7 @@
 <context>
     <name>FormatterStyleModel</name>
     <message>
-        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+125"/>
+        <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+127"/>
         <source>Default</source>
         <translation>Padrão</translation>
     </message>
@@ -8392,7 +8402,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+3980"/>
+        <location filename="../settings.cpp" line="+4021"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-403"/>
         <location line="+63"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8908,7 +8918,7 @@
         <translation>Usar pipes em lugar de arquivos temporários durante compilação (-pipe)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="-589"/>
+        <location filename="../settings.cpp" line="-630"/>
         <source>Confirm</source>
         <translation>Confirmar</translation>
     </message>
@@ -9000,7 +9010,7 @@
         <translation type="vanished">Índice %1 fora dos limites</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+504"/>
+        <location filename="../utils.cpp" line="+524"/>
         <source>bytes</source>
         <translation>bytes</translation>
     </message>
@@ -10163,7 +10173,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="+716"/>
+        <location filename="../settings.cpp" line="+757"/>
         <source>Error</source>
         <translation type="unfinished">Erro</translation>
     </message>
@@ -10177,7 +10187,7 @@
     <name>SettingsDialog</name>
     <message>
         <location filename="../settingsdialog/settingsdialog.ui" line="+14"/>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="+145"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="+143"/>
         <source>Options</source>
         <translation>Opções</translation>
     </message>
@@ -10207,7 +10217,7 @@
         <location line="+41"/>
         <location line="+6"/>
         <location line="+3"/>
-        <location line="+8"/>
+        <location line="+6"/>
         <location line="+27"/>
         <source>General</source>
         <translation>Geral</translation>
@@ -10215,7 +10225,7 @@
     <message>
         <location line="+1"/>
         <location line="+405"/>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="-44"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="-42"/>
         <location line="+3"/>
         <source>Program Runner</source>
         <translation>Executar</translation>
@@ -10271,14 +10281,14 @@
         <location line="+7223"/>
         <location line="+5"/>
         <location filename="../settingsdialog/settingsdialog.cpp" line="+10"/>
-        <location line="+97"/>
+        <location line="+95"/>
         <source>Compiler Set</source>
         <translation>Compilador</translation>
     </message>
     <message>
         <location line="-7227"/>
         <location line="+7223"/>
-        <location filename="../settingsdialog/settingsdialog.cpp" line="-97"/>
+        <location filename="../settingsdialog/settingsdialog.cpp" line="-95"/>
         <location line="+3"/>
         <source>Compiler</source>
         <translation>Compilador</translation>
@@ -10360,7 +10370,7 @@
     </message>
     <message>
         <location line="+3"/>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Code Formatter</source>
         <translation>Formatador de código</translation>
     </message>
@@ -10370,7 +10380,7 @@
         <translation>Programa</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <location line="+4"/>
         <source>Tools</source>
         <translation>Ferramentas</translation>
@@ -10456,7 +10466,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-147"/>
+        <location line="-145"/>
         <source>Custom C/C++ Keywords</source>
         <translation type="unfinished"></translation>
     </message>

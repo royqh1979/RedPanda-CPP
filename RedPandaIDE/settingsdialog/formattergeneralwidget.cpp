@@ -98,6 +98,9 @@ void FormatterGeneralWidget::doLoad()
     ui->chkUnpadParen->setChecked(format.unpadParen());
     ui->chkDeleteEmptyLines->setChecked(format.deleteEmptyLines());
     ui->chkFillEmptyLines->setChecked(format.fillEmptyLines());
+    ui->chkSqueezeEmptyLines->setChecked(format.squeezeLines());
+    ui->spinSqueezeEmptyLines->setValue(format.squeezeLinesNumber());
+    ui->chkSqueezeWhitespace->setChecked(format.squeezeWhitespace());
     switch(format.alignPointerStyle()) {
     case FormatterOperatorAlign::foaNone:
         ui->rbAlignPointNone->setChecked(true);
@@ -376,6 +379,10 @@ void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format
     format.setUnpadParen(ui->chkUnpadParen->isChecked());
     format.setDeleteEmptyLines(ui->chkDeleteEmptyLines->isChecked());
     format.setFillEmptyLines(ui->chkFillEmptyLines->isChecked());
+    format.setSqueezeLines(ui->chkSqueezeEmptyLines->isChecked());
+    format.setSqueezeLinesNumber(ui->spinSqueezeEmptyLines->value());
+    format.setSqueezeWhitespace(ui->chkSqueezeWhitespace->isChecked());
+
     if (ui->rbAlignPointNone->isChecked()) {
         format.setAlignPointerStyle(FormatterOperatorAlign::foaNone);
     } else if (ui->rbAlignPointType->isChecked()) {
