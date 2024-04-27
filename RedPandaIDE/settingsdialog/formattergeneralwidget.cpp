@@ -31,6 +31,9 @@ FormatterGeneralWidget::FormatterGeneralWidget(const QString& name, const QStrin
     connect(this, &SettingsWidget::settingsChanged,
                this, &FormatterGeneralWidget::updateDemo);
 
+    connect(ui->chkSqueezeEmptyLines, &QCheckBox::toggled,
+            ui->spinSqueezeEmptyLines, &QSpinBox::setEnabled);
+
     ui->cbMinConditionalIndent->addItem(tr("No minimal indent"),0);
     ui->cbMinConditionalIndent->addItem(tr("Indent at least one additional indent"),1);
     ui->cbMinConditionalIndent->addItem(tr("Indent at least two additional indents"),2);
@@ -99,6 +102,7 @@ void FormatterGeneralWidget::doLoad()
     ui->chkDeleteEmptyLines->setChecked(format.deleteEmptyLines());
     ui->chkFillEmptyLines->setChecked(format.fillEmptyLines());
     ui->chkSqueezeEmptyLines->setChecked(format.squeezeLines());
+    ui->spinSqueezeEmptyLines->setEnabled(format.squeezeLines());
     ui->spinSqueezeEmptyLines->setValue(format.squeezeLinesNumber());
     ui->chkSqueezeWhitespace->setChecked(format.squeezeWhitespace());
     switch(format.alignPointerStyle()) {
