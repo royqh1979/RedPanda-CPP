@@ -189,11 +189,8 @@ jobs:
       matrix:
         arch: [amd64, i386]
         version: ["11", "12"]
-        include:
-          - arch: amd64
-            platform: linux/amd64
-          - arch: i386
-            platform: linux/386
+    env:
+      IMAGE: docker.io/${{ matrix.arch }}/debian:${{ matrix.version }}
 
     runs-on: ubuntu-latest
 
@@ -202,13 +199,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch container image
-        run: |
-          podman pull --platform ${{ matrix.platform }} docker.io/${{ matrix.arch }}/debian:${{ matrix.version }}
-
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 debian:${{ matrix.version }} /src/packages/debian/01-in-docker.sh
+          podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/debian/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -221,8 +214,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["22.04", "23.10", "devel"]
-    
+        version: ["22.04", "23.10", "24.04", "devel"]
+    env:
+      IMAGE: docker.io/amd64/ubuntu:${{ matrix.version }}
+
     runs-on: ubuntu-latest
 
     steps:
@@ -230,13 +225,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/amd64/ubuntu:${{ matrix.version }}
-
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 ubuntu:${{ matrix.version }} /src/packages/debian/01-in-docker.sh
+          podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/debian/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -247,19 +238,17 @@ jobs:
   archlinux:
     name: Arch Linux
     runs-on: ubuntu-latest
+    env:
+      IMAGE: docker.io/amd64/archlinux:latest
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/amd64/archlinux:latest
-
       - name: Build
         run: |
-          podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/archlinux:latest /src/packages/archlinux/01-in-docker.sh
+          podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/archlinux/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -267,68 +256,70 @@ jobs:
           name: Arch Linux
           path: dist/*.pkg.tar.zst
 
-  rpm_fedora:
-    name: RPM on latest Fedora
+  fedora:
+    name: Fedora
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["latest", "rawhide"]
+    env:
+      IMAGE: docker.io/amd64/fedora:${{ matrix.version }}
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 docker.io/amd64/fedora:latest
-
       - name: Build
         run: |
-          podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/fedora:latest /src/packages/fedora/01-in-docker.sh
+          podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/fedora/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: RPM on latest Fedora
+          name: Fedora ${{ matrix.version }} x86_64
           path: dist/*.rpm
 
-  # rpm_opensuse:
-  #   name: RPM on openSUSE Tumbleweed
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
-
-  #     - name: Fetch container image
-  #       run: |
-  #         podman pull --platform linux/amd64 docker.io/opensuse/tumbleweed:latest
-
-  #     - name: Build
-  #       run: |
-  #         podman run --security-opt seccomp=unconfined --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/opensuse/tumbleweed:latest /src/packages/opensuse/01-in-docker.sh
-
-  #     - name: Upload
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: RPM on openSUSE Tumbleweed
-  #         path: dist/*.rpm
-
-  musl:
-    name: musl-based Linux (latest Alpine)
+  opensuse:
+    name: openSUSE
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: ["leap", "tumbleweed"]
+    env:
+      IMAGE: docker.io/opensuse/${{ matrix.edition }}:latest
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Fetch container image
+      - name: Build
         run: |
-          podman pull --platform linux/amd64 docker.io/amd64/alpine:latest
+          podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/opensuse/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: openSUSE ${{ matrix.edition }} x86_64
+          path: dist/*.rpm
+
+  musl:
+    name: musl-based Linux (latest Alpine)
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: docker.io/amd64/alpine:latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Build
         run: |
-          podman run --rm -e SOURCE_DIR=/src -v $GITHUB_WORKSPACE:/src --platform linux/amd64 docker.io/amd64/alpine:latest /src/packages/alpine/01-in-docker.sh
+          podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/alpine/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -339,19 +330,17 @@ jobs:
   appimage:
     name: Linux AppImage
     runs-on: ubuntu-latest
+    env:
+      IMAGE: quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
-
       - name: Build
         run: |
-          podman run --rm -v $PWD:/mnt -w /mnt -e CARCH=x86_64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0 packages/appimage/01-in-docker.sh
+          podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/appimage/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
@@ -367,10 +356,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      - name: Fetch container image
-        run: |
-          podman pull --platform linux/amd64 quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
 
       - name: Build
         run: |

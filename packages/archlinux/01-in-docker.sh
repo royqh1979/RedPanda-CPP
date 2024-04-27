@@ -13,9 +13,8 @@ useradd -m builduser
 echo 'builduser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builduser
 echo "MAKEFLAGS=-j$(($(nproc)+1))" >>/etc/makepkg.conf
 
-cd $SOURCE_DIR
-su builduser -c "git config --global --add safe.directory $SOURCE_DIR"
+su builduser -c "git config --global --add safe.directory $PWD"
 su builduser -c ./packages/archlinux/buildpkg.sh
 
-mkdir -p $SOURCE_DIR/dist
-cp /tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst $SOURCE_DIR/dist/
+mkdir -p dist
+cp /tmp/redpanda-cpp-git/redpanda-cpp-git-*.pkg.tar.zst dist/

@@ -1,11 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
-make distclean
+set -xeuo pipefail
 
 TMP_FOLDER=/tmp/redpandaide
-test -n $TMP_FOLDER | rm -rf $TMP_FOLDER
-test -z $TMP_FOLDER | mkdir $TMP_FOLDER
-
+[[ -d $TMP_FOLDER ]] && rm -rf $TMP_FOLDER
+mkdir -p "$TMP_FOLDER"
 
 cp -r packages/debian $TMP_FOLDER 
 cp -r tools $TMP_FOLDER 
@@ -19,5 +18,6 @@ cp -r platform $TMP_FOLDER
 cp Red_Panda_CPP.pro $TMP_FOLDER
 
 cd $TMP_FOLDER
+command -v mk-build-deps && mk-build-deps -i -t "apt -y --no-install-recommends" debian/control
 sed -i '/CONFIG += ENABLE_LUA_ADDON/ { s/^#\s*// }' RedPandaIDE/RedPandaIDE.pro
 dpkg-buildpackage -us -uc

@@ -12,6 +12,7 @@ else
   VERSION="$APP_VERSION.$TEST_VERSION"
 fi
 
+CARCH=$(gcc -dumpmachine | cut -d- -f1)
 APPIMAGE_FILE=RedPandaIDE-$VERSION-$CARCH.AppImage
 RUNTIME_FILE=/opt/appimage-runtime
 RUNTIME_SIZE=$(wc -c <$RUNTIME_FILE)
