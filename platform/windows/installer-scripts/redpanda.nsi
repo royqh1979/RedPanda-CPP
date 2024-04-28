@@ -333,13 +333,6 @@ Function .onInit
 	
   IfFileExists "$APPDATA\Dev-Cpp\devcpp.cfg" 0 +2 # deprecated config file
     SectionSetFlags ${SectionConfig} ${SF_SELECTED}
-
-  SetShellVarContext all
-  !if "${ARCH}" == "x86"
-    SetRegView 32
-  !else
-    SetRegView 64
-  !endif
 FunctionEnd
 
 Function .onSelChange
@@ -350,7 +343,20 @@ FunctionEnd
 Function myGuiInit
   !insertmacro CheckOsArch
   !insertmacro CheckOsBuild
+
+  ; V2 always installs for all users
+  SetShellVarContext all
   !insertmacro CheckV2Installer
+
+  ; for unprivileged per-user (mode selection will be skipped)
+  ; correct context will be set later if per-machine chosen
+  SetShellVarContext current
+
+  !if "${ARCH}" == "x86"
+    SetRegView 32
+  !else
+    SetRegView 64
+  !endif
 
   !insertmacro SectionAction_CheckMingw64
   !insertmacro SectionAction_CheckCompress
@@ -360,7 +366,6 @@ Function un.onInit
   !insertmacro MULTIUSER_UNINIT
   !insertmacro MUI_UNGETLANGUAGE
 
-  SetShellVarContext all
   !if "${ARCH}" == "x86"
     SetRegView 32
   !else

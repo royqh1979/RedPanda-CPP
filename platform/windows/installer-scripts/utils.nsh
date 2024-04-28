@@ -62,11 +62,6 @@ Var /GLOBAL sectionDepTemp
   Call UninstallV2
   SetRegView 64
   Call UninstallV2
-  !if "${ARCH}" == "x86"
-    SetRegView 32
-  !else
-    SetRegView 64
-  !endif
 !macroend
 
 !macro CheckPreviousInstaller
