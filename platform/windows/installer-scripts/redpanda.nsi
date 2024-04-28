@@ -1,6 +1,10 @@
 ﻿####################################################################
 # Startup
-SetFont "Segoe UI" 11
+!ifdef USE_MODERN_FONT
+  SetFont "Segoe UI" 11
+!else
+  SetFont "Tahoma" 11
+!endif
 Unicode True
 
 !define APP_NAME_EN "Red Panda C++"
