@@ -55,15 +55,20 @@ jobs:
       fail-fast: false
       matrix:
         arch: [32, 64]
+        include:
+          - arch: 32
+            vcArch: x86
+          - arch: 64
+            vcArch: x64
     runs-on: windows-2019
     defaults:
       run:
         shell: bash
     env:
-      _MINGW_TOOLCHAIN: /c/Qt/Tools/mingw810_${{ matrix.arch }}
-      _QT_INSTALL_PREFIX: /c/Qt/5.6.4/mingw81_${{ matrix.arch }}-redpanda
-      _REDPANDA_QT_BUILD: "20240301.0"
-      _REDPANDA_QT_ARCHIVE: qt5.6.4-mingw81_${{ matrix.arch }}-redpanda.7z
+      _QT_VERSION: "5.15.13"
+      _QT_NAME: mingw132_${{ matrix.arch }}-redpanda
+      _REDPANDA_QT_BUILD: "20240428.0"
+      _MINGW_LITE_RELEASE: "13.2.0-r4"
 
     steps:
       - uses: actions/checkout@v2
@@ -71,30 +76,25 @@ jobs:
           fetch-depth: 0
 
       - name: Setup toolchain
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '5.15.2'
-          host: windows
-          target: desktop
-          arch: win${{ matrix.arch }}_mingw81
-          archives: qtbase
-          tools: tools_mingw,qt.tools.win${{ matrix.arch }}_mingw810
-          dir: C:/
+        run: |
+          curl -LO https://github.com/redpanda-cpp/mingw-lite/releases/download/$_MINGW_LITE_RELEASE/mingw${{ matrix.arch }}-ucrt-$_MINGW_LITE_RELEASE.7z
+          7z x mingw${{ matrix.arch }}-ucrt-$_MINGW_LITE_RELEASE.7z
 
       - name: Setup Qt
         run: |
-          curl -LO https://github.com/redpanda-cpp/qtbase-5.6/releases/download/$_REDPANDA_QT_BUILD/$_REDPANDA_QT_ARCHIVE
-          7z x $_REDPANDA_QT_ARCHIVE -oC:/Qt
+          curl -LO https://github.com/redpanda-cpp/qtbase-xp/releases/download/$_REDPANDA_QT_BUILD/$_QT_NAME.7z
+          7z x $_QT_NAME.7z -oC:/Qt
 
       - name: Build
         run: |
-          export PATH="$_QT_INSTALL_PREFIX/bin:$_MINGW_TOOLCHAIN/bin:$PATH"
+          export PATH="/c/Qt/$_QT_VERSION/$_QT_NAME/bin:$PWD/mingw${{ matrix.arch }}/bin:$PATH"
 
           mkdir build && pushd build
           {
             qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
             mingw32-make -j$(nproc)
             mingw32-make install
+            cp "/c/Program Files (x86)/Windows Kits/10/Redist/10.0.22621.0/ucrt/DLLs/${{ matrix.vcArch }}"/*.dll $GITHUB_WORKSPACE/pkg/
           }
           popd
 
