@@ -400,12 +400,7 @@ bool stringsToFile(const QStringList &list, const QString &fileName)
         return false;
     QTextStream stream(&file);
     for (const QString& s:list) {
-        stream<<s
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-             <<Qt::endl;
-#else
-             <<endl;
-#endif
+        stream<<s<<Qt::endl;
     }
     return true;
 }

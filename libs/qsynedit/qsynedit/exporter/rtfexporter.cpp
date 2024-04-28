@@ -147,11 +147,7 @@ QString RTFExporter::getFormatName()
 QString RTFExporter::getHeader()
 {
     QFontMetrics fm(mFont);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)    
     int tabWidth = mTabSize * fm.horizontalAdvance("M")*72*20/fm.fontDpi();
-#else  
-    int tabWidth = mTabSize * fm.horizontalAdvance("M")*72*20/96;
-#endif
 
     QString result = QString("{\\rtf1\\ansi\\deff0\\deftab%1").arg(tabWidth) + getFontTable();
     // all the colors

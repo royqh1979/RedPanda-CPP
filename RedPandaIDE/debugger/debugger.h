@@ -595,11 +595,7 @@ signals:
                          bool hasMore);
     void varsValueUpdated();
 protected:
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mCmdQueueMutex;
-#else
-    QMutex mCmdQueueMutex;
-#endif
 
     bool mCmdRunning;
 

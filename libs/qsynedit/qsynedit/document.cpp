@@ -36,11 +36,7 @@ Document::Document(const QFont& font, QObject *parent):
     mForceMonospace{false},
     mSetLineWidthLockCount{0},
     mMaxLineChangedInSetLinesWidth{false},
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-      mMutex{}
-#else
-      mMutex{QMutex::Recursive}
-#endif
+    mMutex{}
 {
     mAppendNewLineAtEOF = true;
     mNewlineType = NewlineType::Windows;
