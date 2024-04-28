@@ -1,7 +1,6 @@
 QT       += core gui printsupport network svg xml widgets
 
-# without `c++14` old versions of qmake will explicitly set `-std=gnu++98`
-CONFIG += c++14 c++17
+CONFIG += c++17
 CONFIG += nokey
 
 # uncomment the following line to enable vcs (git) support

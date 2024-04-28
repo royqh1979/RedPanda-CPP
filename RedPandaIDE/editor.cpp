@@ -3564,7 +3564,6 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
 
     // Position it at the top of the next line
     QPoint popupPos = mapToGlobal(displayCoordToPixels(displayXY()));
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QSize  desktopSize = screen()->virtualSize();
     if (desktopSize.height() - popupPos.y() < mCompletionPopup->height() && popupPos.y() > mCompletionPopup->height())
         popupPos-=QPoint(0, mCompletionPopup->height()+2);
@@ -3574,9 +3573,6 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     if (desktopSize.width() -  popupPos.x() < mCompletionPopup->width() ) {
         popupPos.setX(std::max(0, desktopSize.width()-mCompletionPopup->width())-10);
     }
-#else
-    popupPos+=QPoint(0,textHeight()+2);
-#endif
 
     mCompletionPopup->move(popupPos);
 
@@ -4560,13 +4556,8 @@ void Editor::cancelHoverLink()
 
 QSize Editor::calcCompletionPopupSize()
 {
-#if QT_VERSION_MAJOR==5 && QT_VERSION_MINOR < 15
-    int screenHeight = qApp->primaryScreen()->size().height();
-    int screenWidth = qApp->primaryScreen()->size().width();
-#else
     int screenHeight = screen()->size().height();
     int screenWidth = screen()->size().width();
-#endif
     int popWidth = std::min(pSettings->codeCompletion().widthInColumns() * charWidth(),
                             screenWidth / 2) + 4;
     int popHeight = std::min(pSettings->codeCompletion().heightInLines() * textHeight(),

@@ -4645,12 +4645,7 @@ void MainWindow::onFilesViewCreateFile()
         fileName = QString("untitled%1").arg(count)+suffix;
     }
     QFile file(dir.filePath(fileName));
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     file.open(QFile::NewOnly);
-#else
-    // workaround: try create but do not truncate
-    file.open(QFile::ReadWrite);
-#endif
     file.close();
     QModelIndex newIndex = mFileSystemModel.index(dir.filePath(fileName));
     connect(&mFileSystemModel,&QFileSystemModel::directoryLoaded,
@@ -7716,19 +7711,11 @@ void MainWindow::doFilesViewRemoveFile(const QModelIndex &index)
                                       + tr("Do you really want to delete it?"),
                             QMessageBox::Yes | QMessageBox::No, QMessageBox::No)!=QMessageBox::Yes)
             return;
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,2)
         if (!QFile::moveToTrash(dir.absolutePath()))
             dir.removeRecursively();
-#else
-        dir.removeRecursively();
-#endif
     } else {
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,2)
         if (!QFile::moveToTrash(mFileSystemModel.filePath(index)))
             QFile::remove(mFileSystemModel.filePath(index));
-#else
-        QFile::remove(mFileSystemModel.filePath(index));
-#endif
     }
 }
 

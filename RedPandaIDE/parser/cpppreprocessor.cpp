@@ -195,12 +195,7 @@ void CppPreprocessor::dumpDefinesTo(const QString &fileName) const
         for (const PDefine& define:mDefines) {
             stream<<QString("%1 %2 %3 %4 %5\n")
                     .arg(define->name,define->args,define->value)
-                    .arg(define->hardCoded).arg(define->formatValue)
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                 <<Qt::endl;
-#else
-                 <<endl;
-#endif
+                    .arg(define->hardCoded).arg(define->formatValue)<<Qt::endl;
         }
     }
 }
@@ -211,25 +206,10 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
     if (file.open(QIODevice::WriteOnly|QIODevice::Truncate)) {
         QTextStream stream(&file);
         for (const PParsedFileInfo& fileInfo:mFileInfos) {
-            stream<<fileInfo->fileName()<<" : "
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
-            stream<<"\t**includes:**"
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
+            stream<<fileInfo->fileName()<<" : "<<Qt::endl;
+            stream<<"\t**includes:**"<<Qt::endl;
             foreach (const QString& s,fileInfo->includes()) {
-                stream<<"\t--"+s
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                         <<Qt::endl;
-        #else
-                         <<endl;
-        #endif
+                stream<<"\t--"+s<<Qt::endl;
             }
         }
     }

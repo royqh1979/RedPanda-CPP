@@ -32,11 +32,7 @@
 
 CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     QWidget(parent),
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mMutex()
-#else
-    mMutex(QMutex::Recursive)
-#endif
 {
     setWindowFlags(Qt::Popup);
     mListView = new CodeCompletionListView(this);

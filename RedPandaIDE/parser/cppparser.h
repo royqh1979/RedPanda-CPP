@@ -729,11 +729,7 @@ private:
 #ifdef QT_DEBUG
     int mLastIndex;
 #endif
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mMutex;
-#else
-    QMutex mMutex;
-#endif
     QMap<QString,KeywordType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;
 };

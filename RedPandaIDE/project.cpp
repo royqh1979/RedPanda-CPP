@@ -538,12 +538,8 @@ bool Project::internalRemoveUnit(PProjectUnit& unit, bool doClose , bool removeF
     }
 
     if (removeFile) {
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,2)
         if (!QFile::moveToTrash(unit->fileName()))
             QFile::remove(unit->fileName());
-#else
-        QFile::remove(unit->fileName());
-#endif
     }
 
 //if not fUnits.GetItem(index).fNew then
@@ -1635,13 +1631,7 @@ void Project::checkProjectFileForUpdate(SimpleIni &ini)
     if (!oldRes.isEmpty()) {
         QFile::copy(mFilename,mFilename+".bak");
         QStringList sl;
-        sl = oldRes.split(';',
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-            Qt::SkipEmptyParts
-#else
-            QString::SkipEmptyParts
-#endif
-                          );
+        sl = oldRes.split(';', Qt::SkipEmptyParts);
         for (int i=0;i<sl.count();i++){
             const QString& s = sl[i];
             QByteArray groupName = toByteArray(QString("Unit%1").arg(uCount+i));
@@ -1992,42 +1982,12 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.cppCompilerCmd = fromByteArray(ini.GetValue("Project", "CppCompiler", "")).replace(";CONFIG_LINE;","\n");
         mOptions.linkerCmd = fromByteArray(ini.GetValue("Project", "Linker", "")).replace(";CONFIG_LINE;","\n");
         mOptions.resourceCmd = fromByteArray(ini.GetValue("Project", "ResourceCommand", "")).replace(";CONFIG_LINE;","\n");
-        mOptions.binDirs = absolutePaths(fromByteArray(ini.GetValue("Project", "Bins", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-            Qt::SkipEmptyParts
-#else
-            QString::SkipEmptyParts
-#endif
-        ));
-        mOptions.libDirs = absolutePaths(fromByteArray(ini.GetValue("Project", "Libs", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-            Qt::SkipEmptyParts
-#else
-            QString::SkipEmptyParts
-#endif
-        ));
-        mOptions.includeDirs = absolutePaths(fromByteArray(ini.GetValue("Project", "Includes", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-            Qt::SkipEmptyParts
-#else
-            QString::SkipEmptyParts
-#endif
-        ));
+        mOptions.binDirs = absolutePaths(fromByteArray(ini.GetValue("Project", "Bins", "")).split(";", Qt::SkipEmptyParts));
+        mOptions.libDirs = absolutePaths(fromByteArray(ini.GetValue("Project", "Libs", "")).split(";", Qt::SkipEmptyParts));
+        mOptions.includeDirs = absolutePaths(fromByteArray(ini.GetValue("Project", "Includes", "")).split(";", Qt::SkipEmptyParts));
         mOptions.privateResource = fromByteArray(ini.GetValue("Project", "PrivateResource", ""));
-        mOptions.resourceIncludes = absolutePaths(fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-         Qt::SkipEmptyParts
-#else
-         QString::SkipEmptyParts
-#endif
-        ));
-        mOptions.makeIncludes = absolutePaths(fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";",
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-         Qt::SkipEmptyParts
-#else
-         QString::SkipEmptyParts
-#endif
-        ));
+        mOptions.resourceIncludes = absolutePaths(fromByteArray(ini.GetValue("Project", "ResourceIncludes", "")).split(";", Qt::SkipEmptyParts));
+        mOptions.makeIncludes = absolutePaths(fromByteArray(ini.GetValue("Project", "MakeIncludes", "")).split(";", Qt::SkipEmptyParts));
         mOptions.isCpp = ini.GetBoolValue("Project", "IsCpp", false);
         mOptions.folderForOutput = generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "ExeOutput", "")));
         mOptions.folderForObjFiles =  generateAbsolutePath(directory(), fromByteArray(ini.GetValue("Project", "ObjectOutput", "")));
@@ -2041,13 +2001,7 @@ void Project::loadOptions(SimpleIni& ini)
         mOptions.usePrecompiledHeader = ini.GetBoolValue("Project", "UsePrecompiledHeader", false);
         mOptions.precompiledHeader = generateAbsolutePath(directory(),fromByteArray(ini.GetValue("Project", "PrecompiledHeader", "")));
         mOptions.cmdLineArgs = fromByteArray(ini.GetValue("Project", "CommandLine", ""));
-        mFolders = fromByteArray(ini.GetValue("Project", "Folders", "")).split(";",
-        #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-                   Qt::SkipEmptyParts
-        #else
-                   QString::SkipEmptyParts
-        #endif
-               );
+        mFolders = fromByteArray(ini.GetValue("Project", "Folders", "")).split(";", Qt::SkipEmptyParts);
         mOptions.includeVersionInfo = ini.GetBoolValue("Project", "IncludeVersionInfo", false);
         mOptions.supportXPThemes = ini.GetBoolValue("Project", "SupportXPThemes", false);
         mOptions.compilerSet = ini.GetLongValue("Project", "CompilerSet", pSettings->compilerSets().defaultIndex());

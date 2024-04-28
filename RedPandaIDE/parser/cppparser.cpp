@@ -39,11 +39,7 @@ static QString calcFullname(const QString& parentName, const QString& name) {
 }
 
 CppParser::CppParser(QObject *parent) : QObject(parent),
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mMutex()
-#else
-    mMutex(QMutex::Recursive)
-#endif
 {
     mParserId = cppParserCount.fetchAndAddRelaxed(1);
     mLanguage = ParserLanguage::CPlusPlus;
@@ -6659,12 +6655,7 @@ void CppParser::setLanguage(ParserLanguage newLanguage)
         mCppTypeKeywords = CppTypeKeywords;
 #ifdef ENABLE_SDCC
         if (mLanguage == ParserLanguage::SDCC) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
             mCppKeywords.insert(SDCCKeywords);
-#else
-            for (auto &k : SDCCKeywords.keys())
-                mCppKeywords[k] = SDCCKeywords[k];
-#endif
             mCppTypeKeywords.unite(SDCCTypeKeywords);
         }
 #endif

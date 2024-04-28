@@ -621,11 +621,7 @@ private:
 
     int mSetLineWidthLockCount;
     bool mMaxLineChangedInSetLinesWidth;
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QRecursiveMutex mMutex;
-#else
-    QMutex mMutex;
-#endif
 
     friend class QSynEditPainter;
 };

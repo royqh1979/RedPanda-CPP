@@ -24,11 +24,7 @@
 
 static QRegularExpression todoReg("\\b(todo|fixme)\\b", QRegularExpression::CaseInsensitiveOption);
 TodoParser::TodoParser(QObject *parent) : QObject(parent),
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mMutex()
-#else
-    mMutex(QMutex::Recursive)
-#endif
 {
     mThread = nullptr;
 }

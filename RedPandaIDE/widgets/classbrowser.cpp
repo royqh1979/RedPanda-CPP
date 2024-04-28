@@ -26,11 +26,7 @@
 #include "../iconsmanager.h"
 
 ClassBrowserModel::ClassBrowserModel(QObject *parent):QAbstractItemModel(parent),
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mMutex()
-#else
-    mMutex(QMutex::Recursive)
-#endif
 {
     mClassBrowserType = ProjectClassBrowserType::CurrentFile;
     mRoot = new ClassBrowserNode();

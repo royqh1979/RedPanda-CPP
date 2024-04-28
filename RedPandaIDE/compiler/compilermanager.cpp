@@ -37,15 +37,9 @@
 #endif
 
 CompilerManager::CompilerManager(QObject *parent) : QObject(parent),
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     mCompileMutex(),
     mBackgroundSyntaxCheckMutex(),
     mRunnerMutex()
-#else
-    mCompileMutex(QMutex::Recursive),
-    mBackgroundSyntaxCheckMutex(QMutex::Recursive),
-    mRunnerMutex(QMutex::Recursive)
-#endif
 {
     mCompiler = nullptr;
     mBackgroundSyntaxChecker = nullptr;
