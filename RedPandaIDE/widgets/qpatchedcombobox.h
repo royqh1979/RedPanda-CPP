@@ -35,6 +35,13 @@ protected:
         QListView::resizeEvent(event);
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    void initViewItemOption(QStyleOptionViewItem *option) const override
+    {
+        QListView::initViewItemOption(option);
+        option->showDecorationSelected = true;
+    }
+#else
     QStyleOptionViewItem viewOptions() const override
     {
         QStyleOptionViewItem option = QListView::viewOptions();
@@ -43,6 +50,7 @@ protected:
 //            option.font = combo->font();
         return option;
     }
+#endif
 
     void paintEvent(QPaintEvent *e) override
     {
@@ -59,7 +67,11 @@ protected:
                 menuOpt.checkType = QStyleOptionMenuItem::NotCheckable;
                 menuOpt.menuRect = e->rect();
                 menuOpt.maxIconWidth = 0;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                menuOpt.reservedShortcutWidth = 0;
+#else
                 menuOpt.tabWidth = 0;
+#endif
                 QPainter p(viewport());
                 combo->style()->drawControl(QStyle::CE_MenuEmptyArea, &menuOpt, &p, this);
             }

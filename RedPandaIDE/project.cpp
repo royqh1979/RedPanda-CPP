@@ -16,6 +16,7 @@
  */
 #include "project.h"
 #include "editor.h"
+#include "qt_utils/utils.h"
 #include "utils.h"
 #include "systemconsts.h"
 #include "editorlist.h"
@@ -31,7 +32,6 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
-#include <QTextCodec>
 #include <QMessageBox>
 #include <QDirIterator>
 #include <QMimeDatabase>
@@ -255,7 +255,7 @@ void Project::open()
         if (newUnit->encoding()!=ENCODING_UTF16_BOM &&
                 newUnit->encoding()!=ENCODING_UTF8_BOM &&
                 newUnit->encoding()!=ENCODING_UTF32_BOM &&
-                QTextCodec::codecForName(newUnit->encoding())==nullptr) {
+                !isEncodingAvailable(newUnit->encoding())) {
             newUnit->setEncoding(ENCODING_PROJECT);
         }
         newUnit->setRealEncoding(ini.GetValue(groupName, "RealEncoding",ENCODING_ASCII));
@@ -944,11 +944,9 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
     updateCompilerSetting();
     mOptions.icon = aTemplate->icon();
 
-    QTextCodec* codec=QTextCodec::codecForName(mOptions.encoding);
-    if (!codec)
+    if (!isEncodingAvailable(mOptions.encoding))
         mOptions.encoding=ENCODING_SYSTEM_DEFAULT;
-    codec=QTextCodec::codecForName(mOptions.execEncoding);
-    if (!codec)
+    if (!isEncodingAvailable(mOptions.execEncoding))
         mOptions.execEncoding=ENCODING_SYSTEM_DEFAULT;
 
     // Copy icon to project directory
@@ -2611,7 +2609,7 @@ QVariant ProjectModel::data(const QModelIndex &index, int role) const
         if (p->isUnit) {
             PProjectUnit unit = p->pUnit.lock();
             if (unit)
-                icon = mIconProvider->icon(unit->fileName());
+                icon = mIconProvider->icon(QFileInfo(unit->fileName()));
         } else {
             if (p == mProject->rootNode().get()) {
 #ifdef ENABLE_VCS

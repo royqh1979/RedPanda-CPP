@@ -200,7 +200,7 @@ MakefileSyntaxer::MakefileSyntaxer()
 void MakefileSyntaxer::procSpace()
 {
     mTokenID = TokenId::Space;
-    while (mLine[mRun]!=0 && mLine[mRun]<=32)
+    while (mLine[mRun]!=0 && mLine[mRun] <= ' ')
         mRun++;
     if (mRun>=mStringLen)
         mHasTrailingSpaces = true;

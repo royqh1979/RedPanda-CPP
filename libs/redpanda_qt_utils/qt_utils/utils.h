@@ -26,9 +26,15 @@
 #include <QThread>
 #include <QProcessEnvironment>
 
+#if QT_VERSION_MAJOR >= 6
+# include <QStringEncoder>
+# include <QStringDecoder>
+#else
+class QTextCodec;
+#endif
+
 class QByteArray;
 class QTextStream;
-class QTextCodec;
 
 #define ENCODING_AUTO_DETECT "AUTO"
 #define ENCODING_UTF8   "UTF-8"
@@ -67,7 +73,7 @@ public:
 };
 
 /* text processing utils */
-const QByteArray guessTextEncoding(const QByteArray& text);
+QString guessTextEncoding(const QByteArray& text);
 
 const QChar *getNullTerminatedStringData(const QString& str);
 
@@ -109,9 +115,7 @@ void readStreamToLines(QTextStream* stream, LineProcessFunc lineFunc);
  * @param codec
  * @return
  */
-QStringList readFileToLines(const QString& fileName, QTextCodec* codec);
 QStringList readFileToLines(const QString& fileName);
-void readFileToLines(const QString& fileName, QTextCodec* codec, LineProcessFunc lineFunc);
 
 QByteArray readFileToByteArray(const QString& fileName);
 
@@ -204,4 +208,108 @@ finally(F&& f) noexcept
     return final_action<typename std::remove_cv<typename std::remove_reference<F>::type>::type>(
         std::forward<F>(f));
 }
+
+class TextEncoder {
+public:
+    explicit TextEncoder(const char *name);
+    explicit TextEncoder(const QByteArray &name);
+    TextEncoder(const TextEncoder &other) = delete;
+    TextEncoder(TextEncoder &&other) noexcept = default;
+    TextEncoder &operator=(const TextEncoder &other) = delete;
+    TextEncoder &operator=(TextEncoder &&other) noexcept = default;
+    ~TextEncoder() = default;
+
+#if QT_VERSION_MAJOR >= 6
+private:
+    TextEncoder(QStringEncoder &&encoder);
+#endif
+
+public:
+    bool isValid() const;
+    QByteArray name() const;
+    std::pair<bool, QByteArray> encode(const QString &text);
+    QByteArray encodeUnchecked(const QString &text);
+
+public:
+    static TextEncoder encoderForUtf8();
+    static TextEncoder encoderForUtf16();
+    static TextEncoder encoderForUtf32();
+    static TextEncoder encoderForSystem();
+
+private:
+#if QT_VERSION_MAJOR >= 6
+    QStringEncoder mEncoder;
+#else
+    QTextCodec *mCodec;
+#endif
+};
+
+class TextDecoder {
+public:
+    explicit TextDecoder(const char *name);
+    explicit TextDecoder(const QByteArray &name);
+    TextDecoder(const TextDecoder &other) = delete;
+    TextDecoder(TextDecoder &&other) noexcept = default;
+    TextDecoder &operator=(const TextDecoder &other) = delete;
+    TextDecoder &operator=(TextDecoder &&other) noexcept = default;
+    ~TextDecoder() = default;
+
+#if QT_VERSION_MAJOR >= 6
+private:
+    TextDecoder(QStringDecoder &&decoder);
+#endif
+
+public:
+    bool isValid() const;
+    QByteArray name() const;
+    std::pair<bool, QString> decode(const QByteArray &text);
+    QString decodeUnchecked(const QByteArray &text);
+
+public:
+    static TextDecoder decoderForUtf8();
+    static TextDecoder decoderForUtf16();
+    static TextDecoder decoderForUtf32();
+    static TextDecoder decoderForSystem();
+
+private:
+#if QT_VERSION_MAJOR >= 6
+    QStringDecoder mDecoder;
+#else
+    QTextCodec *mCodec;
+#endif
+};
+
+const QStringList &availableEncodings();
+
+bool isEncodingAvailable(const QByteArray &encoding);
+
+#if QT_VERSION_MAJOR >= 6
+
+namespace std {
+    constexpr inline int max(int a, qsizetype b) {
+        return max<int>(a, b);
+    }
+    constexpr inline int max(qsizetype a, int b) {
+        return max<int>(a, b);
+    }
+    constexpr inline int min(int a, qsizetype b) {
+        return min<int>(a, b);
+    }
+    constexpr inline int min(qsizetype a, int b) {
+        return min<int>(a, b);
+    }
+}
+
+#endif
+
+inline bool isAsciiPrint(int c)
+{
+    return c >= 32 && c <= 126;
+}
+
+inline bool isLexicalSpace(QChar c)
+{
+    return c.unicode() >= 1 && c.unicode() <= 32;
+}
+
 #endif // UTILS_H

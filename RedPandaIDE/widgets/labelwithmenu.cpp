@@ -33,7 +33,11 @@ void LabelWithMenu::mousePressEvent(QMouseEvent *event)
     event->accept();
 }
 
+#if QT_VERSION_MAJOR >= 6
+void LabelWithMenu::enterEvent(QEnterEvent *event)
+#else
 void LabelWithMenu::enterEvent(QEvent *event)
+#endif
 {
     mCursor = cursor();
     setCursor(Qt::PointingHandCursor);

@@ -19,6 +19,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QDebug>
+#include <qt_utils/utils.h>
 
 FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) :
     QFrame{parent, Qt::ToolTip | Qt::WindowStaysOnTopHint | Qt::WindowDoesNotAcceptFocus},

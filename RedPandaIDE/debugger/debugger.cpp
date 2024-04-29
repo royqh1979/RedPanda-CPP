@@ -2542,11 +2542,8 @@ QVariant MemoryModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         if (col==line->datas.count()) {
             QString s;
-            foreach (unsigned char ch, line->datas) {
-                if (ch<' ' || ch>=128)
-                    s+='.';
-                else
-                    s+=ch;
+            for (char ch : line->datas) {
+                s += isAsciiPrint(ch) ? ch : '.';
             }
             return s;
         } else

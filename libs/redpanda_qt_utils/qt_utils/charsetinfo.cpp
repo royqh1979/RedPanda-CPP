@@ -21,8 +21,6 @@
 #include <QSet>
 #ifdef Q_OS_WIN
 #include <windows.h>
-#else
-#include <langinfo.h>
 #endif
 
 CharsetInfoManager* pCharsetInfoManager;
@@ -37,7 +35,7 @@ QByteArray CharsetInfoManager::getDefaultSystemEncoding()
     }
     return "unknown";
 #else
-    return QByteArray(nl_langinfo(CODESET));
+    return "UTF-8";
 #endif
 }
 

@@ -28,7 +28,6 @@
 #include <QImageWriter>
 #include <QImageWriter>
 #include <QMessageBox>
-#include <QTextCodec>
 
 ProjectGeneralWidget::ProjectGeneralWidget(const QString &name, const QString &group, QWidget *parent) :
     SettingsWidget(name,group,parent),

@@ -16,7 +16,6 @@
  */
 #include "settings.h"
 #include <QApplication>
-#include <QTextCodec>
 #include <algorithm>
 #include "utils.h"
 #include "utils/escape.h"

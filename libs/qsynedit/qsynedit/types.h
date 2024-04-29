@@ -46,6 +46,10 @@ enum class ProgrammingLanguage {
 struct BufferCoord {
     int ch;
     int line;
+
+    BufferCoord() = default;
+    constexpr BufferCoord(qsizetype ch_, qsizetype line_) : ch(ch_), line(line_) {}
+
     bool operator==(const BufferCoord& coord);
     bool operator>=(const BufferCoord& coord);
     bool operator>(const BufferCoord& coord);

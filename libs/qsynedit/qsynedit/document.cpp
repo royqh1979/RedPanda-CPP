@@ -18,12 +18,12 @@
 #include "qt_utils/utils.h"
 #include <QDataStream>
 #include <QFile>
-#include <QTextCodec>
 #include <QTextStream>
 #include <QMutexLocker>
 #include <stdexcept>
 #include <QMessageBox>
 #include <cmath>
+#include <optional>
 #include "qt_utils/charsetinfo.h"
 #include <QDateTime>
 #include <QDebug>
@@ -498,12 +498,11 @@ void Document::insertLines(int index, int numLines)
 
 
 bool Document::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
-    QTextCodec* codec = QTextCodec::codecForName(encodingName);
-    if (!codec)
+    TextDecoder decoder(encodingName);
+    if (!decoder.isValid())
         return false;
     file.reset();
     internalClear();
-    QTextCodec::ConverterState state;
     while (true) {
         if (file.atEnd()){
             break;
@@ -516,10 +515,9 @@ bool Document::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
         } else if (line.endsWith("\n")){
             line.remove(line.length()-1,1);
         }
-        QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
-        if (state.invalidChars>0) {
+        auto [ok, newLine] = decoder.decode(line);
+        if (!ok) {
             return false;
-            break;
         }
         addItem(newLine);
     }
@@ -528,46 +526,46 @@ bool Document::tryLoadFileByEncoding(QByteArray encodingName, QFile& file) {
 
 void Document::loadUTF16BOMFile(QFile &file)
 {
-    QTextCodec* codec=QTextCodec::codecForName(ENCODING_UTF16);
-    if (!codec)
+    TextDecoder decoder = TextDecoder::decoderForUtf16();
+    if (!decoder.isValid())
         return;
     file.reset();
     internalClear();
     QByteArray buf = file.readAll();
     if (buf.length()<2)
         return;
-    QString text = codec->toUnicode(buf.mid(2));
+    QString text = decoder.decodeUnchecked(buf.mid(2));
     this->setText(text);
 }
 
 void Document::loadUTF32BOMFile(QFile &file)
 {
-    QTextCodec* codec=QTextCodec::codecForName(ENCODING_UTF32);
-    if (!codec)
+    TextDecoder decoder = TextDecoder::decoderForUtf32();
+    if (!decoder.isValid())
         return;
     file.reset();
     internalClear();
     QByteArray buf = file.readAll();
     if (buf.length()<4)
         return;
-    QString text = codec->toUnicode(buf.mid(4));
+    QString text = decoder.decodeUnchecked(buf.mid(4));
     this->setText(text);
 }
 
-void Document::saveUTF16File(QFile &file, QTextCodec* codec)
+void Document::saveUTF16File(QFile &file, TextEncoder &encoder)
 {
-    if (!codec)
+    if (!encoder.isValid())
         return;
     QString text=getTextStr();
-    file.write(codec->fromUnicode(text));
+    file.write(encoder.encodeUnchecked(text));
 }
 
-void Document::saveUTF32File(QFile &file, QTextCodec* codec)
+void Document::saveUTF32File(QFile &file, TextEncoder &encoder)
 {
-    if (!codec)
+    if (!encoder.isValid())
         return;
     QString text=getTextStr();
-    file.write(codec->fromUnicode(text));
+    file.write(encoder.encodeUnchecked(text));
 }
 
 void Document::setTabSize(int newTabSize)
@@ -606,15 +604,14 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
             return;
         }
         QByteArray line = file.readLine();
-        QTextCodec* codec;
-        QTextCodec::ConverterState state;
+        std::optional<TextDecoder> decoder;
         bool needReread = false;
         bool allAscii = true;
         //test for BOM
         if ((line.length()>=3) && ((unsigned char)line[0]==0xEF) && ((unsigned char)line[1]==0xBB) && ((unsigned char)line[2]==0xBF) ) {
             realEncoding = ENCODING_UTF8_BOM;
             line = line.mid(3);
-            codec = QTextCodec::codecForName(ENCODING_UTF8);
+            decoder = TextDecoder::decoderForUtf8();
         } else if ((line.length()>=4) && ((unsigned char)line[0]==0xFF) && ((unsigned char)line[1]==0xFE)
                    && ((unsigned char)line[2]==0x00)
                    && ((unsigned char)line[3]==0x00)) {
@@ -627,9 +624,9 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
             return;
         } else {
             realEncoding = ENCODING_UTF8;
-            codec = QTextCodec::codecForName(ENCODING_UTF8);
+            decoder = TextDecoder::decoderForUtf8();
         }
-        if (!codec)
+        if (!decoder.has_value())
             throw FileError(tr("Can't load codec '%1'!").arg(QString(realEncoding)));
         if (line.endsWith("\r\n")) {
             mNewlineType = NewlineType::Windows;
@@ -656,8 +653,8 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
             if (allAscii) {
                 addItem(QString::fromLatin1(line));
             } else {
-                QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
-                if (state.invalidChars>0) {
+                auto [ok, newLine] = decoder->decode(line);
+                if (!ok) {
                     needReread = true;
                     break;
                 }
@@ -703,13 +700,16 @@ void Document::loadFromFile(const QString& filename, const QByteArray& encoding,
         realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
     }
     file.reset();
-    QTextStream textStream(&file);
+    QByteArray data = file.readAll();
+    QString text;
+    QTextStream textStream(&text);
     if (realEncoding == ENCODING_UTF8_BOM) {
         textStream.setAutoDetectUnicode(true);
-        textStream.setCodec(ENCODING_UTF8);
+        text = QString::fromUtf8(data);
     } else {
         textStream.setAutoDetectUnicode(false);
-        textStream.setCodec(realEncoding);
+        TextDecoder decoder(realEncoding);
+        text = decoder.decodeUnchecked(data);
     }
     QString line;
     internalClear();
@@ -731,28 +731,28 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
                                    const QByteArray& defaultEncoding, QByteArray& realEncoding)
 {
     QMutexLocker locker(&mMutex);
-    QTextCodec* codec;
+    std::optional<TextEncoder> encoder;
     realEncoding = encoding;
     QString codecName = realEncoding;
     if (realEncoding == ENCODING_UTF16_BOM || realEncoding == ENCODING_UTF16) {
-        codec = QTextCodec::codecForName(ENCODING_UTF16);
+        encoder = TextEncoder::encoderForUtf16();
         codecName = ENCODING_UTF16;
     } else if (realEncoding == ENCODING_UTF32_BOM || realEncoding == ENCODING_UTF32) {
-        codec = QTextCodec::codecForName(ENCODING_UTF32);
+        encoder = TextEncoder::encoderForUtf32();
         codecName = ENCODING_UTF32;
     } else if (realEncoding == ENCODING_UTF8_BOM) {
-        codec = QTextCodec::codecForName(ENCODING_UTF8);
+        encoder = TextEncoder::encoderForUtf8();
         codecName = ENCODING_UTF8;
     } else if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
-        codec = QTextCodec::codecForLocale();
+        encoder = TextEncoder::encoderForSystem();
         codecName = realEncoding;
     } else if (realEncoding == ENCODING_AUTO_DETECT) {
-        codec = QTextCodec::codecForName(defaultEncoding);
+        encoder = TextEncoder(defaultEncoding);
         codecName = defaultEncoding;
     } else {
-        codec = QTextCodec::codecForName(realEncoding);
+        encoder = TextEncoder(realEncoding);
     }
-    if (!codec)
+    if (!encoder.has_value() || !encoder->isValid())
         throw FileError(tr("Can't load codec '%1'!").arg(codecName));
 
     if (!file.open(QFile::WriteOnly | QFile::Truncate))
@@ -760,10 +760,10 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     if (mLines.isEmpty())
         return;
     if (realEncoding == ENCODING_UTF16) {
-        saveUTF16File(file,codec);
+        saveUTF16File(file, encoder.value());
         return;
     } else if (realEncoding == ENCODING_UTF32) {
-        saveUTF32File(file,codec);
+        saveUTF32File(file, encoder.value());
         return;
     } if (realEncoding == ENCODING_UTF8_BOM) {
         file.putChar(0xEF);
@@ -774,7 +774,7 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     QByteArray data;
     for (PDocumentLine& line:mLines) {
         QString text = line->lineText()+lineBreak();
-        data = codec->fromUnicode(text);
+        data = encoder->encodeUnchecked(text);
         if (allAscii) {
             allAscii = (data==text.toLatin1());
         }
@@ -784,10 +784,10 @@ void Document::saveToFile(QFile &file, const QByteArray& encoding,
     if (allAscii) {
         realEncoding = ENCODING_ASCII;
     } else if (realEncoding == ENCODING_SYSTEM_DEFAULT) {
-        if (QString(codec->name()).compare("System",Qt::CaseInsensitive)==0) {
+        if (encoder->name().compare("System",Qt::CaseInsensitive)==0) {
             realEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
         } else {
-            realEncoding = codec->name();
+            realEncoding = encoder->name();
         }
     }
 }

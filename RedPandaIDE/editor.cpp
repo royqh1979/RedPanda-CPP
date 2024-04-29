@@ -18,7 +18,6 @@
 
 #include <QtCore/QFileInfo>
 #include <QFont>
-#include <QTextCodec>
 #include <QVariant>
 #include <QWheelEvent>
 #include <QGuiApplication>
@@ -30,7 +29,6 @@
 #include <QPrinter>
 #include <QPrintDialog>
 #include <QTextDocument>
-#include <QTextCodec>
 #include <QScrollBar>
 #include <QScreen>
 #include <memory>
@@ -4230,7 +4228,7 @@ void Editor::updateFunctionTip(bool showTip)
         return;
 
     QChar ch=lastNonSpaceChar(currentLine,currentChar);
-    if (ch!="(" && ch!=",")
+    if (ch!='(' && ch!=',')
         return;
 
     QSynedit::PTokenAttribute attr;

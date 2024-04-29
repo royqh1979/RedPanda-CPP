@@ -51,6 +51,9 @@ struct RowColumn {
 struct LineChar {
     int ch;
     int line;
+
+    LineChar() = default;
+    constexpr LineChar(qsizetype ch_, qsizetype line_) : ch(ch_), line(line_) {}
 };
 
 class QConsole;

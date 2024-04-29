@@ -115,7 +115,11 @@ void ColorEdit::mouseReleaseEvent(QMouseEvent *)
     }
 }
 
+#if QT_VERSION_MAJOR >= 6
+void ColorEdit::enterEvent(QEnterEvent *)
+#else
 void ColorEdit::enterEvent(QEvent *)
+#endif
 {
     setCursor(Qt::PointingHandCursor);
 }

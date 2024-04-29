@@ -309,7 +309,7 @@ void ASMSyntaxer::SpaceProc()
         mRun++;
         if (mLine[mRun] == 0 || mLine[mRun] == '\r' || mLine[mRun] == '\n')
             break;
-        if (mLine[mRun] > 32)
+        if (!isLexicalSpace(mLine[mRun]))
             break;
     }
     if (mRun>=mStringLen)
@@ -1696,7 +1696,7 @@ void ASMSyntaxer::next()
             NumberProc();
         } else if (isIdentStartChar(mLine[mRun])) {
             IdentProc(IdentPrefix::None);
-        } else if (mLine[mRun]<=32) {
+        } else if (isLexicalSpace(mLine[mRun])) {
             SpaceProc();
         } else {
             UnknownProc();

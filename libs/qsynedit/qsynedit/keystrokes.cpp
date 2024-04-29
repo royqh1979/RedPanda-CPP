@@ -30,9 +30,9 @@ EditKeyStroke::EditKeyStroke()
 QKeySequence EditKeyStroke::keySequence() const
 {
     if (mKey2 == 0) {
-        return QKeySequence(mKey + mKeyModifiers);
+        return QKeySequence(mKey | mKeyModifiers);
     } else {
-        return QKeySequence(mKey + mKeyModifiers, mKey2+mKeyModifiers2);
+        return QKeySequence(mKey | mKeyModifiers, mKey2 | mKeyModifiers2);
     }
 }
 

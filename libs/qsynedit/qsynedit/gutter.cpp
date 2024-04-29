@@ -16,6 +16,7 @@
  */
 #include "gutter.h"
 #include "algorithm"
+#include <qt_utils/utils.h>
 
 namespace QSynedit {
 

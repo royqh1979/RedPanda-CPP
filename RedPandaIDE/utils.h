@@ -215,4 +215,12 @@ struct ExternalResource {
     ~ExternalResource();
 };
 
+#if QT_VERSION_MAJOR >= 6
+// for xml.name() == "tag"
+inline bool operator==(QStringView a, const char *b)
+{
+    return a.compare(b);
+}
+#endif
+
 #endif // UTILS_H

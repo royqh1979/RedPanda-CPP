@@ -18,7 +18,6 @@
 #include "compilermanager.h"
 #include <QFile>
 #include <QFileInfo>
-#include <QTextCodec>
 
 StdinCompiler::StdinCompiler(const QString &filename,const QByteArray& encoding, const QString& content, bool onlyCheckSyntax):
     Compiler(filename, onlyCheckSyntax),
@@ -98,9 +97,9 @@ QByteArray StdinCompiler::pipedText()
     if (mEncoding == ENCODING_ASCII)
         return mContent.toLatin1();
 
-    QTextCodec* codec = QTextCodec::codecForName(mEncoding);
-    if (codec) {
-        return codec->fromUnicode(mContent);
+    TextEncoder encoder(mEncoding);
+    if (encoder.isValid()) {
+        return encoder.encodeUnchecked(mContent);
     } else {
         return mContent.toLocal8Bit();
     }

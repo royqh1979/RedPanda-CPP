@@ -16,6 +16,7 @@
  */
 #include "lua.h"
 #include "../constants.h"
+#include "qt_utils/utils.h"
 
 #include <QFont>
 #include <QDebug>
@@ -587,7 +588,7 @@ void LuaSyntaxer::spaceProc()
 {
     mRun += 1;
     mTokenId = TokenId::Space;
-    while (mRun<mLineSize && mLine[mRun]>=1 && mLine[mRun]<=32)
+    while (mRun<mLineSize && isLexicalSpace(mLine[mRun]))
         mRun+=1;
     if (mRun>=mLineSize) {
         mRange.hasTrailingSpaces = true;

@@ -17,7 +17,6 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QProgressDialog>
-#include <QTextCodec>
 #include <qsynedit/document.h>
 #include "cpprefacter.h"
 #include "mainwindow.h"
