@@ -95,7 +95,7 @@ void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord 
                 continue;
             }
             if (i==stop.line && (startPos+token.length() > stop.ch)) {
-                token = token.remove(stop.ch - startPos - 1);
+                token = token.left(stop.ch - startPos - 1);
             }
             if (i==start.line && startPos < start.ch-1) {
                 token = token.mid(start.ch-1-startPos);
