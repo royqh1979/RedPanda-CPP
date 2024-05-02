@@ -155,6 +155,8 @@ Red Panda C++ Version 2.27
   - enhancement: New code format option: "Remove superfluous spaces"
   - change: Remove code format option: "Delete continuous empty lines"
   - fix: Current editor wouldn't get parsed, when it's switched from another editor being parsed.
+  - enhancement: Support macro in #include preprocessing statements.
+  - fix: In options -> code format -> Program, Choose astyle path button doesn't work.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
