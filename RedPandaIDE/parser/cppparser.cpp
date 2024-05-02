@@ -989,7 +989,7 @@ bool CppParser::isSystemHeaderFile(const QString &fileName)
     return ::isSystemHeaderFile(fileName,mPreprocessor.includePaths());
 }
 
-void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNotParsed, bool updateView)
+void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNotParsed, bool updateView, std::weak_ptr<CppParser> parserPtr)
 {
     if (!mEnabled)
         return;
@@ -1001,6 +1001,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
             mLastParseFileCommand->inProject = inProject;
             mLastParseFileCommand->onlyIfNotParsed = onlyIfNotParsed;
             mLastParseFileCommand->updateView = updateView;
+            mLastParseFileCommand->parserPtr = parserPtr;
             return;
         }
         if (mLockCount>0)
@@ -1020,12 +1021,13 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
                 emit onEndParsing(mFilesScannedCount,0);
 
             if (mLastParseFileCommand) {
-                mParsing = false;
-                ::parseFile(PCppParser{this},
-                            mLastParseFileCommand->fileName,
-                            mLastParseFileCommand->inProject,
-                            mLastParseFileCommand->onlyIfNotParsed,
-                            mLastParseFileCommand->updateView);
+                PCppParser parser=mLastParseFileCommand->parserPtr.lock();
+                if (parser)
+                    ::parseFile(parser,
+                                mLastParseFileCommand->fileName,
+                                mLastParseFileCommand->inProject,
+                                mLastParseFileCommand->onlyIfNotParsed,
+                                mLastParseFileCommand->updateView);
                 mLastParseFileCommand = nullptr;
             }
             mParsing = false;
@@ -6768,7 +6770,7 @@ CppFileParserThread::CppFileParserThread(
 void CppFileParserThread::run()
 {
     if (mParser) {
-        mParser->parseFile(mFileName,mInProject,mOnlyIfNotParsed,mUpdateView);
+        mParser->parseFile(mFileName,mInProject,mOnlyIfNotParsed,mUpdateView,mParser);
     }
 }
 
