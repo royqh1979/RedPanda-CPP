@@ -154,6 +154,7 @@ Red Panda C++ Version 2.27
   - enhancement: New code format option: "Remove superfluous empty lines exceeding"
   - enhancement: New code format option: "Remove superfluous spaces"
   - change: Remove code format option: "Delete continuous empty lines"
+  - fix: Current editor wouldn't get parsed, when it's switched from another editor being parsed.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

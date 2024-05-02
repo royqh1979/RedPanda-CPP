@@ -380,9 +380,27 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
         includes = mIncludePathList;
         projectIncludes = mProjectIncludePathList;
     }
+
+    int i=1; // skip '#'
+    int len=line.length();
+    //skip spaces
+    while (i<len && isSpaceChar(line[i]))
+        i++;
+    //skip 'include'
+    while (i<len && isIdentChar(line[i]))
+        i++;
+    //skip spaces
+    while (i<len && isSpaceChar(line[i]))
+        i++;
+    if (i>=line.length())
+        return;
+    QString s=line.mid(i);
+    QSet<QString> usedMacros;
+    s = expandMacros(s, usedMacros);
+
     fileName = getHeaderFilename(
                 file->fileName,
-                line,
+                s,
                 includes,
                 projectIncludes);
 

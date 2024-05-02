@@ -1681,14 +1681,17 @@ void MainWindow::setProjectCurrentFile(const QString &filename)
 void MainWindow::openFiles(const QStringList &files)
 {
     mOpeningFiles=true;
-    auto action=finally([this]{
-        mOpeningFiles=false;
-    });
     mEditorList->beginUpdate();
-    mOpenningFiles = true;
     auto end = finally([this] {
         this->mEditorList->endUpdate();
-        mOpenningFiles = false;
+        mOpeningFiles=false;
+        Editor* e=mEditorList->getEditor();
+        if (e) {
+            e->reparse(false);
+            e->checkSyntaxInBack();
+            e->reparseTodo();
+            e->activate();
+        }
     });
     //Check if there is a project file in the list and open it
     for (const QString& file:files) {
@@ -1703,14 +1706,6 @@ void MainWindow::openFiles(const QStringList &files)
     }
     if (files.length()>0) {
         openFile(files.last(),true);
-    }
-    mEditorList->endUpdate();
-    Editor* e=mEditorList->getEditor();
-    if (e) {
-        e->reparse(false);
-        e->checkSyntaxInBack();
-        e->reparseTodo();
-        e->activate();
     }
 }
 

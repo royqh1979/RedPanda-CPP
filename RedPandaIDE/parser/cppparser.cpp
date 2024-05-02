@@ -995,22 +995,40 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
         return;
     {
         QMutexLocker locker(&mMutex);
-        if (mParsing || mLockCount>0)
+        if (mParsing) {
+            mLastParseFileCommand = std::make_unique<ParseFileCommand>();
+            mLastParseFileCommand->fileName = fileName;
+            mLastParseFileCommand->inProject = inProject;
+            mLastParseFileCommand->onlyIfNotParsed = onlyIfNotParsed;
+            mLastParseFileCommand->updateView = updateView;
             return;
-        updateSerialId();
+        }
+        if (mLockCount>0)
+            return;
         mParsing = true;
+        updateSerialId();
         if (updateView)
             emit onBusy();
         emit onStartParsing();
     }
     {
         auto action = finally([&,this]{
-            mParsing = false;
-
+            QMutexLocker locker(&mMutex);
             if (updateView)
                 emit onEndParsing(mFilesScannedCount,1);
             else
                 emit onEndParsing(mFilesScannedCount,0);
+
+            if (mLastParseFileCommand) {
+                mParsing = false;
+                ::parseFile(PCppParser{this},
+                            mLastParseFileCommand->fileName,
+                            mLastParseFileCommand->inProject,
+                            mLastParseFileCommand->onlyIfNotParsed,
+                            mLastParseFileCommand->updateView);
+                mLastParseFileCommand = nullptr;
+            }
+            mParsing = false;
         });
         QString fName = fileName;
         if (onlyIfNotParsed && mPreprocessor.fileScanned(fName))
@@ -1040,15 +1058,6 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
             emit onProgress(fileName,mFilesToScanCount,mFilesScannedCount);
             internalParse(fileName);
         }
-
-//        if (inProject)
-//            mProjectFiles.insert(fileName);
-//        else {
-//            mProjectFiles.remove(fileName);
-//        }
-
-        // Parse from disk or stream
-
     }
 }
 
@@ -6758,7 +6767,7 @@ CppFileParserThread::CppFileParserThread(
 
 void CppFileParserThread::run()
 {
-    if (mParser && !mParser->parsing()) {
+    if (mParser) {
         mParser->parseFile(mFileName,mInProject,mOnlyIfNotParsed,mUpdateView);
     }
 }

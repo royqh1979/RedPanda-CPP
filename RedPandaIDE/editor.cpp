@@ -4064,10 +4064,10 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
                     // do not allow when dragging selection
                     if (isPointInSelection(pos))
                         return TipType::Selection;
-                } else if (mParser && mParser->isIncludeLine(lineText(pos.line))) {
-                    return TipType::Preprocessor;
                 } else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
                     return TipType::Identifier;
+                } else if (mParser && mParser->isIncludeLine(lineText(pos.line))) {
+                    return TipType::Preprocessor;
                 } else if (attr->tokenType() == QSynedit::TokenType::Number) {
                     return TipType::Number;
                 } else if (attr->tokenType() == QSynedit::TokenType::Keyword) {

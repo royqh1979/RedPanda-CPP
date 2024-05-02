@@ -30,6 +30,15 @@ class CppParser : public QObject
     Q_OBJECT
 
 public:
+
+    struct ParseFileCommand {
+        QString fileName;
+        bool inProject;
+        bool onlyIfNotParsed;
+        bool updateView;
+    };
+
+    using PParseFileCommand = std::unique_ptr<ParseFileCommand>;
     explicit CppParser(QObject *parent = nullptr);
     CppParser(const CppParser&)=delete;
     CppParser& operator=(const CppParser)=delete;
@@ -732,6 +741,8 @@ private:
     QRecursiveMutex mMutex;
     QMap<QString,KeywordType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;
+
+    PParseFileCommand mLastParseFileCommand;
 };
 using PCppParser = std::shared_ptr<CppParser>;
 
