@@ -25,7 +25,7 @@ protected:
     void doSave() override;
     void updateIcons(const QSize &size) override;
 private slots:
-    void on_btnChooseAstyle_triggered(QAction *arg1);
+    void on_btnChooseAstyle_clicked();
 };
 
 #endif // FORMATTERPATHWIDGET_H

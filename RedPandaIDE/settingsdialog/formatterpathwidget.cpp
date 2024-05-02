@@ -33,7 +33,7 @@ void FormatterPathWidget::updateIcons(const QSize &/*size*/)
     pIconsManager->setIcon(ui->btnChooseAstyle, IconsManager::ACTION_FILE_OPEN_FOLDER);
 }
 
-void FormatterPathWidget::on_btnChooseAstyle_triggered(QAction */*arg1*/)
+void FormatterPathWidget::on_btnChooseAstyle_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(
                 this,
@@ -44,3 +44,4 @@ void FormatterPathWidget::on_btnChooseAstyle_triggered(QAction */*arg1*/)
         ui->txtAstyle->setText(fileName);
     }
 }
+
