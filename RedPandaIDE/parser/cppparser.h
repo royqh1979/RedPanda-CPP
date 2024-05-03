@@ -121,7 +121,7 @@ public:
     bool isSystemHeaderFile(const QString& fileName);
     void parseFile(const QString& fileName, bool inProject,
                    bool onlyIfNotParsed = false, bool updateView = true,
-                   std::weak_ptr<CppParser> parserPtr = nullptr);
+                   std::weak_ptr<CppParser> parserPtr = std::weak_ptr<CppParser>{});
     void parseFileList(bool updateView = true);
     void parseHardDefines();
     bool parsing() const;
