@@ -989,7 +989,7 @@ bool CppParser::isSystemHeaderFile(const QString &fileName)
     return ::isSystemHeaderFile(fileName,mPreprocessor.includePaths());
 }
 
-void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNotParsed, bool updateView, std::weak_ptr<CppParser> parserPtr)
+void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNotParsed, bool updateView, std::shared_ptr<CppParser> parserPtr)
 {
     if (!mEnabled)
         return;
@@ -1021,13 +1021,11 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
                 emit onEndParsing(mFilesScannedCount,0);
 
             if (mLastParseFileCommand) {
-                PCppParser parser=mLastParseFileCommand->parserPtr.lock();
-                if (parser)
-                    ::parseFile(parser,
-                                mLastParseFileCommand->fileName,
-                                mLastParseFileCommand->inProject,
-                                mLastParseFileCommand->onlyIfNotParsed,
-                                mLastParseFileCommand->updateView);
+                ::parseFile(mLastParseFileCommand->parserPtr,
+                            mLastParseFileCommand->fileName,
+                            mLastParseFileCommand->inProject,
+                            mLastParseFileCommand->onlyIfNotParsed,
+                            mLastParseFileCommand->updateView);
                 mLastParseFileCommand = nullptr;
             }
             mParsing = false;

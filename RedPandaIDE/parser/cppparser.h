@@ -36,7 +36,7 @@ public:
         bool inProject;
         bool onlyIfNotParsed;
         bool updateView;
-        std::weak_ptr<CppParser> parserPtr;
+        std::shared_ptr<CppParser> parserPtr;
     };
 
     using PParseFileCommand = std::unique_ptr<ParseFileCommand>;
@@ -121,7 +121,7 @@ public:
     bool isSystemHeaderFile(const QString& fileName);
     void parseFile(const QString& fileName, bool inProject,
                    bool onlyIfNotParsed = false, bool updateView = true,
-                   std::weak_ptr<CppParser> parserPtr = std::weak_ptr<CppParser>{});
+                   std::shared_ptr<CppParser> parserPtr = nullptr);
     void parseFileList(bool updateView = true);
     void parseHardDefines();
     bool parsing() const;
