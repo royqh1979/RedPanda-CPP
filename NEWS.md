@@ -158,6 +158,7 @@ Red Panda C++ Version 2.27
   - enhancement: Support macro in #include preprocessing statements.
   - fix: In options -> code format -> Program, Choose astyle path button doesn't work.
   - fix: project not correctly reparsed after rename unit.
+  - enhancement: support C++ 17 structured binding in stl map containers foreach loop.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

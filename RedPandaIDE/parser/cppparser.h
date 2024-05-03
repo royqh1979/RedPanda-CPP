@@ -508,6 +508,7 @@ private:
     PStatement getTypeDef(const PStatement& statement,
                           const QString& fileName, const QString& aType) const;
 //    void handleCatchBlock();
+    void doAddVar(const QString& name, const QString& type, bool isConst, const QString& suffix);
     void handleConcept(int maxIndex);
     void handleEnum(bool isTypedef, int maxIndex);
     void handleForBlock(int maxIndex);
@@ -532,6 +533,7 @@ private:
     void handleAccessibilitySpecifiers(KeywordType keywordType, int maxIndex);
     bool handleStatement(int maxIndex);
     void handleStructs(bool isTypedef, int maxIndex);
+    void handleStructredBinding(const QString& sType, int maxIndex);
     void handleUsing(int maxIndex);
     void handleVar(const QString& typePrefix,bool isExtern,bool isStatic, int maxIndex);
     void handleInheritance(PStatement derivedClass, PClassInheritanceInfo pInfo);

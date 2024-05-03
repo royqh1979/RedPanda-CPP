@@ -2299,6 +2299,9 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                                       mIndex,
                                       isStatic, maxIndex);
                 return;
+            } else if (mTokenizer[mIndex]->text.startsWith("[")) {
+                handleStructredBinding(sType,maxIndex);
+                return;
             } else if (mTokenizer[mIndex + 1]->text == '(') {
 #ifdef ENABLE_SDCC
                 if (mLanguage==ParserLanguage::SDCC && mTokenizer[mIndex]->text=="__at") {
@@ -2625,6 +2628,32 @@ PStatement CppParser::getTypeDef(const PStatement& statement,
         return result;
     } else
         return PStatement();
+}
+
+void CppParser::doAddVar(const QString &name, const QString &type, bool isConst, const QString& suffix)
+{
+    if (!isIdentifier(name))
+        return;
+    if (type.isEmpty())
+        return;
+    QString realType = type;
+    if (isConst)
+        realType = "const "+realType;
+    if (!suffix.isEmpty())
+        realType += " "+suffix;
+    addChildStatement(
+                getCurrentScope(),
+                mCurrentFile,
+                realType,
+                name,
+                "",
+                "",
+                "",
+                mTokenizer[mIndex]->line,
+                StatementKind::Variable,
+                getScope(),
+                mCurrentMemberAccessibility,
+                StatementProperty::HasDefinition);
 }
 
 void CppParser::handleConcept(int maxIndex)
@@ -3892,6 +3921,58 @@ void CppParser::handleStructs(bool isTypedef, int maxIndex)
     }
 }
 
+void CppParser::handleStructredBinding(const QString &sType, int maxIndex)
+{
+    if (mIndex+1 < maxIndex
+            && AutoTypes.contains(sType)
+            && ((mTokenizer[mIndex+1]->text == ":")
+                || (mTokenizer[mIndex+1]->text == "="))) {
+        QString typeName;
+        QString templateParams;
+        int endIndex = indexOfNextSemicolon(mIndex+2, maxIndex);
+        QString expressionText;
+        for (int i=mIndex+2;i<endIndex;i++) {
+            expressionText+=mTokenizer[i]->text+" ";
+        }
+        QStringList phraseExpression = splitExpression(expressionText);
+        int pos = 0;
+        PEvalStatement aliasStatement = doEvalExpression(mCurrentFile,
+                                phraseExpression,
+                                pos,
+                                getCurrentScope(),
+                                PEvalStatement(),
+                                true,false);
+        if(aliasStatement && aliasStatement->effectiveTypeStatement) {
+            if ( mTokenizer[mIndex+1]->text == ":" ) {
+                if (STLMaps.contains(aliasStatement->effectiveTypeStatement->fullName)) {
+                    typeName = "std::pair";
+                    templateParams = aliasStatement->templateParams;
+                }
+            }
+            if (typeName == "std::pair" && !templateParams.isEmpty()) {
+                QString firstType = doFindFirstTemplateParamOf(mCurrentFile,aliasStatement->templateParams,
+                                                                                  getCurrentScope());
+                QString secondType = doFindTemplateParamOf(mCurrentFile,aliasStatement->templateParams,1,
+                                                                                  getCurrentScope());
+                QString s = mTokenizer[mIndex]->text;
+                s = s.mid(1,s.length()-2);
+                QStringList lst = s.split(",");
+                if (lst.length()==2) {
+                    QString firstVar = lst[0].trimmed();
+                    QString secondVar = lst[1].trimmed;
+                    bool isConst = sType.startsWith("const");
+                    QString suffix;
+                    if (sType.endsWith("&&")) suffix = "&&";
+                    else if (sType.endsWith("&")) suffix = "&";
+                    doAddVar(firstVar, firstType, isConst, suffix);
+                    doAddVar(secondVar, secondType, isConst, suffix);
+                }
+            }
+        }
+    }
+    mIndex = indexOfNextPeriodOrSemicolon(mIndex+1, maxIndex);
+}
+
 void CppParser::handleUsing(int maxIndex)
 {
     int startLine = mTokenizer[mIndex]->line;
@@ -4185,7 +4266,6 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                                 StatementKind::Variable,
                                 getScope(),
                                 mCurrentMemberAccessibility,
-                                //True,
                                 (isExtern?StatementProperty::None:StatementProperty::HasDefinition)
                                 | (isStatic?StatementProperty::Static:StatementProperty::None)
                                 | StatementProperty::FunctionPointer);
@@ -4273,7 +4353,6 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                                     StatementKind::Variable,
                                     getScope(),
                                     mCurrentMemberAccessibility,
-                                    //True,
                                     (isExtern?StatementProperty::None:StatementProperty::HasDefinition)
                                     | (isStatic?StatementProperty::Static:StatementProperty::None));
                         tempType="";
