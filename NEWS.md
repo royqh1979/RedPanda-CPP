@@ -157,6 +157,7 @@ Red Panda C++ Version 2.27
   - fix: Current editor wouldn't get parsed, when it's switched from another editor being parsed.
   - enhancement: Support macro in #include preprocessing statements.
   - fix: In options -> code format -> Program, Choose astyle path button doesn't work.
+  - fix: project not correctly reparsed after rename unit.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

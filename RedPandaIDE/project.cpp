@@ -704,17 +704,17 @@ void Project::renameUnit(PProjectUnit& unit, const QString &newFileName)
         mParser->addProjectFile(newFileName,true);
     }
 
+    if (mParser)
+        mParser->invalidateFile(unit->fileName());
     Editor * editor=unitEditor(unit);
     if (editor) {
         //prevent recurse
         editor->saveAs(newFileName,true);
     } else {
-        if (mParser)
-            mParser->invalidateFile(unit->fileName());
         copyFile(unit->fileName(),newFileName,true);
-        if (mParser)
-            mParser->parseFile(newFileName,true);
     }
+    if (mParser)
+        mParser->parseFile(newFileName,true);
 
     internalRemoveUnit(unit,false,true);
 
