@@ -2299,7 +2299,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                                       mIndex,
                                       isStatic, maxIndex);
                 return;
-            } else if (mTokenizer[mIndex]->text.startsWith("[")) {
+            } else if (mTokenizer[mIndex]->text.startsWith("[") && AutoTypes.contains(sType)) {
                 handleStructredBinding(sType,maxIndex);
                 return;
             } else if (mTokenizer[mIndex + 1]->text == '(') {
@@ -3924,7 +3924,6 @@ void CppParser::handleStructs(bool isTypedef, int maxIndex)
 void CppParser::handleStructredBinding(const QString &sType, int maxIndex)
 {
     if (mIndex+1 < maxIndex
-            && AutoTypes.contains(sType)
             && ((mTokenizer[mIndex+1]->text == ":")
                 || (mTokenizer[mIndex+1]->text == "="))) {
         QString typeName;
