@@ -64,6 +64,7 @@ esac
 
 REDPANDA_LLVM_VERSION="18-r0"
 WINDOWS_TERMINAL_VERSION="1.19.10821.0"
+ASTYLE_VERSION_TAG="3.4.14"
 
 _QMAKE="$MINGW_PREFIX/qt5-static/bin/qmake"
 _NSIS="/mingw32/bin/makensis"
@@ -82,6 +83,7 @@ _WINDOWS_TERMINAL_URL="https://github.com/microsoft/terminal/releases/download/v
 _SRCDIR="$PWD"
 _ASSETSDIR="$PWD/assets"
 _BUILDDIR="$TEMP/redpanda-llvm-$MSYSTEM-build"
+_ASTYLE_BUILD_DIR="${_BUILDDIR}/astyle"
 _PKGDIR="$TEMP/redpanda-llvm-$MSYSTEM-pkg"
 _DISTDIR="$PWD/dist"
 
@@ -137,12 +139,20 @@ function prepare-dirs() {
     [[ -d "$_BUILDDIR" ]] && rm -rf "$_BUILDDIR"
     [[ -d "$_PKGDIR" ]] && rm -rf "$_PKGDIR"
   fi
-  mkdir -p "$_ASSETSDIR" "$_BUILDDIR" "$_PKGDIR" "$_DISTDIR"
+  mkdir -p "$_ASSETSDIR" "$_BUILDDIR" "$_ASTYLE_BUILD_DIR" "$_PKGDIR" "$_DISTDIR"
 }
 
 function download-assets() {
   [[ -f "$_ASSETSDIR/$_LLVM_ARCHIVE" ]] || curl -L -o "$_ASSETSDIR/$_LLVM_ARCHIVE" "$_LLVM_URL"
   [[ -f "$_ASSETSDIR/$_WINDOWS_TERMINAL_ARCHIVE" ]] || curl -L -o "$_ASSETSDIR/$_WINDOWS_TERMINAL_ARCHIVE" "$_WINDOWS_TERMINAL_URL"
+  
+  if [[ ! -d "$_ASSETSDIR/astyle" ]]; then
+    git clone --bare "https://gitlab.com/saalen/astyle" "$_ASSETSDIR/astyle"
+  fi
+  pushd "$_ASSETSDIR/astyle"
+  if [[ -z "$(git tag -l "$ASTYLE_VERSION_TAG")" ]]; then
+    git fetch --all --tags
+  fi
 }
 
 function prepare-openconsole() {
@@ -159,6 +169,18 @@ function prepare-src() {
 
 function restore-src() {
   mv "$_SRCDIR"/RedPandaIDE/RedPandaIDE.pro{.bak,}
+}
+
+function build-astyle() {
+  pushd "$_ASSETSDIR/astyle"
+  git --work-tree="${_ASTYLE_BUILD_DIR}" checkout -f "$ASTYLE_VERSION_TAG"
+  popd
+
+  pushd "$_ASTYLE_BUILD_DIR"
+  cmake . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-static"
+  mingw32-make -j$(nproc)
+  cp AStyle/AStyle.exe "$_PKGDIR/astyle.exe"
+  popd
 }
 
 function build() {
@@ -200,6 +222,7 @@ prepare-dirs
 download-assets
 prepare-openconsole
 prepare-src
+build-astyle
 trap restore-src EXIT INT TERM
 build
 package
