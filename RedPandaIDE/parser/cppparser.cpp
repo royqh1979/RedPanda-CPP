@@ -2299,9 +2299,6 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                                       mIndex,
                                       isStatic, maxIndex);
                 return;
-            } else if (mTokenizer[mIndex]->text.startsWith("[") && AutoTypes.contains(sType)) {
-                handleStructredBinding(sType,maxIndex);
-                return;
             } else if (mTokenizer[mIndex + 1]->text == '(') {
 #ifdef ENABLE_SDCC
                 if (mLanguage==ParserLanguage::SDCC && mTokenizer[mIndex]->text=="__at") {
@@ -2406,6 +2403,11 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
                        ||mTokenizer[mIndex + 1]->text == ':'
                        ||mTokenizer[mIndex + 1]->text == '{'
                        || mTokenizer[mIndex + 1]->text == '=') {
+                if (mTokenizer[mIndex]->text.startsWith("[")
+                        && AutoTypes.contains(sType)) {
+                    handleStructredBinding(sType,maxIndex);
+                    return;
+                }
                 handleVar(sType+" "+sName,isExtern,isStatic, maxIndex);
                 return;
             } else if ( mTokenizer[mIndex + 1]->text == "::") {
@@ -3958,7 +3960,7 @@ void CppParser::handleStructredBinding(const QString &sType, int maxIndex)
                 QStringList lst = s.split(",");
                 if (lst.length()==2) {
                     QString firstVar = lst[0].trimmed();
-                    QString secondVar = lst[1].trimmed;
+                    QString secondVar = lst[1].trimmed();
                     bool isConst = sType.startsWith("const");
                     QString suffix;
                     if (sType.endsWith("&&")) suffix = "&&";
