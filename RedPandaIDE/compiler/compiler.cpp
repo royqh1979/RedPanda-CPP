@@ -433,7 +433,14 @@ QStringList Compiler::getCCompileArguments(bool checkSyntax)
                 result << pOption->setting;
             else if (pOption->type == CompilerOptionType::Input)
                 result += {pOption->setting, compileOptions[key]};
-            else {
+            else if (pOption->type == CompilerOptionType::Number) {
+                bool ok;
+                int val = compileOptions[key].toInt(&ok);
+                if (ok) {
+                    val = pOption->scale * val;
+                    result += QString("%1%2").arg(pOption->setting).arg(val);
+                }
+            } else {
                 result << pOption->setting + compileOptions[key];
             }
         }
@@ -480,7 +487,14 @@ QStringList Compiler::getCppCompileArguments(bool checkSyntax)
                 result << pOption->setting;
             else if (pOption->type == CompilerOptionType::Input)
                 result += {pOption->setting, compileOptions[key]};
-            else {
+            else if (pOption->type == CompilerOptionType::Number) {
+                bool ok;
+                int val = compileOptions[key].toInt(&ok);
+                if (ok) {
+                    val = pOption->scale * val;
+                    result += QString("%1%2").arg(pOption->setting).arg(val);
+                }
+            } else {
                 result << pOption->setting + compileOptions[key];
             }
         }
@@ -590,7 +604,14 @@ QStringList Compiler::getLibraryArguments(FileType fileType)
                 result << pOption->setting;
             else if (pOption->type == CompilerOptionType::Input)
                 result += {pOption->setting, compileOptions[key]};
-            else {
+            else if (pOption->type == CompilerOptionType::Number) {
+                bool ok;
+                int val = compileOptions[key].toInt(&ok);
+                if (ok) {
+                    val = pOption->scale * val;
+                    result += QString("%1%2").arg(pOption->setting).arg(val);
+                }
+            } else {
                 result << pOption->setting + compileOptions[key];
             }
         }

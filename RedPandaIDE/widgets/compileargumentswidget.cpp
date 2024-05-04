@@ -21,6 +21,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QSpinBox>
 
 CompileArgumentsWidget::CompileArgumentsWidget(QWidget *parent) :
     QTabWidget(parent)
@@ -79,6 +80,20 @@ QMap<QString, QString> CompileArgumentsWidget::arguments( bool includeUnset) con
                     QString t=pText->text().trimmed();
                     if (!t.isEmpty())
                         args.insert(key,t);
+                    else {
+                        if (includeUnset)
+                            args.insert(key,"");
+                        else
+                            args.remove(key);
+                    }
+                }
+                    break;
+                case CompilerOptionType::Number:
+                {
+                    QSpinBox* pInput = static_cast<QSpinBox *>(pLayout->itemAtPosition(j,2)->widget());
+                    int val=pInput->value();
+                    if (val>0)
+                        args.insert(key,QString("%1").arg(val));
                     else {
                         if (includeUnset)
                             args.insert(key,"");
@@ -155,6 +170,21 @@ void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QSt
             pLayout->addWidget(new QLabel(pOption->name,pWidget),row,1);
             QLineEdit* pInput = new QLineEdit(pWidget);
             pInput->setText(options.value(pOption->key,""));
+            pLayout->addWidget(pInput,row,2);
+        }
+            break;
+        case CompilerOptionType::Number:
+        {
+            pLayout->addWidget(new QLabel(pOption->name,pWidget),row,1);
+            QSpinBox* pInput = new QSpinBox(pWidget);
+            bool ok;
+            int val = options.value(pOption->key,"").toInt(&ok);
+            if (!ok)
+                val = 0;
+            pInput->setSuffix(pOption->unit);
+            pInput->setMinimum(pOption->minValue);
+            pInput->setMaximum(pOption->maxValue);
+            pInput->setValue(val);
             pLayout->addWidget(pInput,row,2);
         }
             break;

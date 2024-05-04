@@ -32,7 +32,7 @@ bool CompilerInfo::supportSyntaxCheck()
     return true;
 }
 
-void CompilerInfo::addOption(const QString &key, const QString &name,
+PCompilerOption CompilerInfo::addOption(const QString &key, const QString &name,
                              const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting,
                              CompilerOptionType type, const CompileOptionChoiceList &choices)
 {
@@ -47,8 +47,30 @@ void CompilerInfo::addOption(const QString &key, const QString &name,
     pOption->setting= setting;
     pOption->type = type;
     pOption->choices = choices;
+    pOption->scale = 1;
     mCompilerOptions.insert(key,pOption);
     mCompilerOptionList.append(pOption);
+    return pOption;
+}
+
+PCompilerOption CompilerInfo::addNumberOption(const QString &key, const QString &name, const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting, const QString &suffix, int scale, int minValue, int maxValue)
+{
+    PCompilerOption pOption = std::make_shared<CompilerOption>();
+    pOption->key = key;
+    pOption->name = name;
+    pOption->section = section;
+    pOption->isC = isC;
+    pOption->isCpp = isCpp;
+    pOption->isLinker = isLinker;
+    pOption->setting= setting;
+    pOption->type = CompilerOptionType::Number;
+    pOption->unit = suffix;
+    pOption->scale = scale;
+    pOption->minValue = minValue;
+    pOption->maxValue = maxValue;
+    mCompilerOptions.insert(key,pOption);
+    mCompilerOptionList.append(pOption);
+    return pOption;
 }
 
 void CompilerInfo::init()
@@ -194,6 +216,8 @@ void CompilerInfo::prepareCompilerOptions()
 
     // Linker
     groupName = QObject::tr("Linker");
+    //addNumberOption(LINK_CMD_OPT_STACK_SIZE, QObject::tr("Stack Size"), groupName, false, false, true, "-Wl,--stack,","MB",1024*1024,0,99999);
+
     addOption(CC_CMD_OPT_USE_PIPE, QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, "-pipe");
     //addOption(LINK_CMD_OPT_LINK_OBJC, QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, "-lobjc");
     addOption(LINK_CMD_OPT_NO_LINK_STDLIB,QObject::tr("Do not use standard system libraries (-nostdlib)"), groupName, false, false, true, "-nostdlib");

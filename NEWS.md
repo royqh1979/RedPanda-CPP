@@ -159,7 +159,7 @@ Red Panda C++ Version 2.27
   - fix: In options -> code format -> Program, Choose astyle path button doesn't work.
   - fix: project not correctly reparsed after rename unit.
   - enhancement: support C++ 17 structured binding in stl map containers foreach loop.
-  - fix: Crash when has source line like "std::cout << (3+4*4>5*(4+3)-1 && (4-3>5)) <<std::endl;";
+  - fix: Crash when has source line like "std::cout << (3+4*4>5*(4+3)-1 && (4-3>5)) <<std::endl;".
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

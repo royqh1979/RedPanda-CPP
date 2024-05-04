@@ -39,6 +39,7 @@
 #define LINK_CMD_OPT_NO_LINK_STDLIB "link_cmd_opt_no_link_stdlib"
 #define LINK_CMD_OPT_NO_CONSOLE "link_cmd_opt_no_console"
 #define LINK_CMD_OPT_STRIP_EXE "link_cmd_opt_strip_exe"
+#define LINK_CMD_OPT_STACK_SIZE "link_cmd_opt_stack_size"
 #define CC_CMD_OPT_DEBUG_INFO "cc_cmd_opt_debug_info"
 #define CC_CMD_OPT_ADDRESS_SANITIZER "cc_cmd_opt_address_sanitizer"
 #define CC_CMD_OPT_STACK_PROTECTOR "cc_cmd_opt_stack_protector"
@@ -85,7 +86,8 @@ enum class CompilerType {
 enum class CompilerOptionType {
     Checkbox,
     Choice,
-    Input
+    Input,
+    Number
 };
 
 using CompileOptionChoiceList = QList<QPair<QString,QString>>;
@@ -100,6 +102,11 @@ typedef struct {
     QString setting; // "-g3"
     CompilerOptionType type;
     CompileOptionChoiceList choices; // replaces "Yes/No" standard choices (max 30 different choices)
+    /* for spin control */
+    QString unit;  //suffix
+    int scale; //Scale
+    int minValue;
+    int maxValue;
 } CompilerOption;
 
 using PCompilerOption = std::shared_ptr<CompilerOption>;
@@ -125,7 +132,7 @@ public:
     virtual bool supportStaticLink()=0;
     virtual bool supportSyntaxCheck();
 protected:
-    void addOption(const QString& key,
+    PCompilerOption addOption(const QString& key,
                    const QString& name,
                    const QString section,
                    bool isC,
@@ -134,6 +141,18 @@ protected:
                    const QString& setting,
                    CompilerOptionType type = CompilerOptionType::Checkbox,
                    const CompileOptionChoiceList& choices = CompileOptionChoiceList());
+    PCompilerOption addNumberOption(const QString& key,
+                   const QString& name,
+                   const QString section,
+                   bool isC,
+                   bool isCpp,
+                   bool isLinker,
+                   const QString& setting,
+                   const QString& suffix,
+                   int scale,
+                   int minValue,
+                   int maxValue
+                    );
     virtual void prepareCompilerOptions();
 protected:
     CompilerOptionMap mCompilerOptions;
