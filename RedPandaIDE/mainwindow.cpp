@@ -5185,6 +5185,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
             menu.addAction(ui->actionAdd_Watch);
             menu.addAction(ui->actionAdd_Watchpoint);
             menu.addAction(ui->actionToggle_Breakpoint);
+            menu.addAction(ui->actionBreakpoint_property);
             menu.addAction(ui->actionClear_all_breakpoints);
             menu.addSeparator();
         }

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>936</width>
+    <width>1935</width>
     <height>619</height>
    </rect>
   </property>
@@ -2542,7 +2542,7 @@
     <string>Goto Declaration</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+G</string>
+    <string>Ctrl+J</string>
    </property>
   </action>
   <action name="actionGoto_Definition">
@@ -2550,7 +2550,7 @@
     <string>Goto Definition</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+G</string>
+    <string>Ctrl+Shift+J</string>
    </property>
   </action>
   <action name="actionFind_references">
@@ -3016,6 +3016,9 @@
    <property name="text">
     <string>Go to Line...</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
+   </property>
   </action>
   <action name="actionNew_Template">
    <property name="text">
@@ -3065,6 +3068,9 @@
   <action name="actionToggle_Readonly">
    <property name="text">
     <string>Toggle Readonly</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+R</string>
    </property>
   </action>
   <action name="actionSubmit_Issues">
