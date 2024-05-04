@@ -4240,6 +4240,10 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
             tempType+=mTokenizer[mIndex]->text;
             mIndex++;
             break;
+        case ',':
+            tempType="";
+            mIndex++;
+            break;
         case '(':
             if (mTokenizer[mIndex]->matchIndex+1<maxIndex
                     && mTokenizer[mTokenizer[mIndex]->matchIndex+1]->text=='(') {
@@ -4361,8 +4365,8 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                 }
                 mIndex++;
             } else {
-                tempType="";
-                mIndex++;
+                mIndex = indexOfNextPeriodOrSemicolon(mIndex, maxIndex);
+                return;
             }
         }
     }
