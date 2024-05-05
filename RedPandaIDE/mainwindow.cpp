@@ -5148,7 +5148,8 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     QSynedit::BufferCoord p;
     int line;
     if (editor->getPositionOfMouse(p)) {
-        line=p.line;
+        if (!editor->getLineOfMouse(line))
+            line=-1;
         if (!switchHeaderSourceTarget(editor).isEmpty()) {
             menu.addAction(ui->actionSwitchHeaderSource);
             menu.addSeparator();
@@ -5194,7 +5195,6 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionFile_Properties);
     } else {
         //mouse on gutter
-
         if (!editor->getLineOfMouse(line))
             line=-1;
         if (canDebug) {
