@@ -5507,8 +5507,9 @@ bool CppParser::expandMacro(QStringList &phraseExpression, int pos, PStatement m
         phraseExpression.removeAt(pos);
         usedMacros.removeAt(pos);
     } else {
-        if (pos+1 >= phraseExpression.length() || phraseExpression[pos+1]!=")")
-            return false;
+        //don't expand
+        if (pos+1 >= phraseExpression.length() || phraseExpression[pos+1]!="(")
+            return true;
         QString args=macro->args.mid(1,macro->args.length()-2).trimmed(); // remove '(' ')'
 
         if(args=="")

@@ -164,6 +164,7 @@ Red Panda C++ Version 2.27
   - enhancement: New compiler option "stack size" in the link subpage.
   - change: Set "Ctrl+G" as the shortcut for "Goto page..."
   - change: Set "Ctrl+B" as the shortcut for "Toggle Bookmark"
+  - fix: Fail to evaluate expressions if macro can't be expanded.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

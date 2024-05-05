@@ -761,17 +761,11 @@ void CodeCompletionPopup::getCompletionFor(
 
             PStatement scope = mCurrentScope;//the scope the expression in
             PStatement parentTypeStatement;
-//            QString scopeName = ownerExpression.join("");
-//            PStatement ownerStatement = mParser->findStatementOf(
-//                        fileName,
-//                        scopeName,
-//                        mCurrentStatement,
-//                        parentTypeStatement);
             PEvalStatement ownerStatement = mParser->evalExpression(fileName,
                                         ownerExpression,
                                         scope);
 
-            if(!ownerStatement  || !ownerStatement->effectiveTypeStatement) {
+            if(!ownerStatement || !ownerStatement->effectiveTypeStatement) {
                 return;
             }
             if (memberOperator == "::") {
