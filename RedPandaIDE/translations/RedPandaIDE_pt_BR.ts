@@ -2628,12 +2628,11 @@
         <translation>ação</translation>
     </message>
     <message>
-        <location line="+77"/>
         <source>Function</source>
-        <translation>Função</translation>
+        <translation type="vanished">Função</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+79"/>
         <source>Shortcut</source>
         <translation>Atalho</translation>
     </message>
@@ -2647,6 +2646,11 @@
         <source>Shortcut &quot;%1&quot; is used by &quot;%2&quot;.</source>
         <translation>Atalho &quot;%1&quot; é usado para &quot;%2&quot; </translation>
     </message>
+    <message>
+        <location line="+20"/>
+        <source>Action</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnvironmentShortcutWidget</name>
@@ -2657,7 +2661,7 @@
     </message>
     <message>
         <location line="+21"/>
-        <source>Keyword</source>
+        <source>Search Actions</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

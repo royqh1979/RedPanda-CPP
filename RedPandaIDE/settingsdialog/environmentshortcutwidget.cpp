@@ -160,7 +160,7 @@ QVariant EnvironmentShortcutModel::headerData(int section, Qt::Orientation orien
         if (role == Qt::DisplayRole) {
             switch(section) {
             case 0:
-                return tr("Function");
+                return tr("Action");
             case 1:
                 return tr("Shortcut");
             }

@@ -2944,8 +2944,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+20"/>
-        <source>Function</source>
+        <source>Action</source>
         <translation>功能</translation>
+    </message>
+    <message>
+        <source>Function</source>
+        <translation type="vanished">功能</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2962,8 +2966,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+21"/>
+        <source>Search Actions</source>
+        <translation type="unfinished">搜索功能</translation>
+    </message>
+    <message>
         <source>Keyword</source>
-        <translation>关键字</translation>
+        <translation type="vanished">关键字</translation>
     </message>
 </context>
 <context>
