@@ -177,11 +177,12 @@ void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QSt
         {
             pLayout->addWidget(new QLabel(pOption->name,pWidget),row,1);
             QSpinBox* pInput = new QSpinBox(pWidget);
+            QString defaultValue = QString("%1").arg(pOption->defaultValue);
             bool ok;
-            int val = options.value(pOption->key,"").toInt(&ok);
+            int val = options.value(pOption->key,defaultValue).toInt(&ok);
             if (!ok)
                 val = 0;
-            pInput->setSuffix(pOption->unit);
+            pInput->setSuffix(pOption->suffix);
             pInput->setMinimum(pOption->minValue);
             pInput->setMaximum(pOption->maxValue);
             pInput->setValue(val);

@@ -178,6 +178,7 @@ public:
     void toggleBreakpoint(int line);
     void clearBreakpoints();
     bool hasBreakpoint(int line);
+    void toggleBookmark(int line);
     void addBookmark(int line);
     void removeBookmark(int line);
     bool hasBookmark(int line) const;

@@ -154,7 +154,7 @@ DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG 
     counter.cb = sizeof(counter);
     if (GetProcessMemoryInfo(pi.hProcess,&counter,
                                  sizeof(counter))){
-            peakMemory = counter.PeakWorkingSetSize/1024;
+        peakMemory = counter.PeakPagefileUsage/1024;
     }
     FILETIME creationTime;
     FILETIME exitTime;

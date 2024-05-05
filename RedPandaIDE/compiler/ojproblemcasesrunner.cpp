@@ -160,7 +160,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         counter.cb = sizeof(counter);
         if (GetProcessMemoryInfo(hProcess,&counter,
                                  sizeof(counter))){
-            problemCase->runningMemory = counter.PeakWorkingSetSize;
+            problemCase->runningMemory = counter.PeakPagefileUsage;
         }
         FILETIME creationTime;
         FILETIME exitTime;

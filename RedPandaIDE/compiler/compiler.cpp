@@ -724,7 +724,8 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
     }
     if (compilerSet() && compilerSet()->forceEnglishOutput())
         env.insert("LANG","en");
-    env.insert("LDFLAGS","-Wl,--stack,12582912");
+    //env.insert("LDFLAGS","-Wl,--stack,12582912");
+    env.insert("LDFLAGS","");
     env.insert("CFLAGS","");
     env.insert("CXXFLAGS","");
     process.setProcessEnvironment(env);

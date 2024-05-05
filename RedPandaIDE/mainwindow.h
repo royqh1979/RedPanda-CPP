@@ -630,10 +630,6 @@ private slots:
 
     void on_actionEGE_Manual_triggered();
 
-    void on_actionAdd_bookmark_triggered();
-
-    void on_actionRemove_Bookmark_triggered();
-
     void on_tableBookmark_doubleClicked(const QModelIndex &index);
 
     void on_actionModify_Bookmark_Description_triggered();
@@ -859,6 +855,8 @@ private slots:
     void on_actionTurtle_Graphics_Manual_triggered();
 
     void on_cbProblemCaseValidateType_currentIndexChanged(int index);
+
+    void on_actionToggle_Bookmark_triggered();
 
 private:
     Ui::MainWindow *ui;

@@ -53,7 +53,7 @@ PCompilerOption CompilerInfo::addOption(const QString &key, const QString &name,
     return pOption;
 }
 
-PCompilerOption CompilerInfo::addNumberOption(const QString &key, const QString &name, const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting, const QString &suffix, int scale, int minValue, int maxValue)
+PCompilerOption CompilerInfo::addNumberOption(const QString &key, const QString &name, const QString section, bool isC, bool isCpp, bool isLinker, const QString &setting, const QString &suffix, int scale, int defaultValue, int minValue, int maxValue)
 {
     PCompilerOption pOption = std::make_shared<CompilerOption>();
     pOption->key = key;
@@ -64,8 +64,9 @@ PCompilerOption CompilerInfo::addNumberOption(const QString &key, const QString 
     pOption->isLinker = isLinker;
     pOption->setting= setting;
     pOption->type = CompilerOptionType::Number;
-    pOption->unit = suffix;
+    pOption->suffix = suffix;
     pOption->scale = scale;
+    pOption->defaultValue = defaultValue;
     pOption->minValue = minValue;
     pOption->maxValue = maxValue;
     mCompilerOptions.insert(key,pOption);
@@ -216,7 +217,7 @@ void CompilerInfo::prepareCompilerOptions()
 
     // Linker
     groupName = QObject::tr("Linker");
-    //addNumberOption(LINK_CMD_OPT_STACK_SIZE, QObject::tr("Stack Size"), groupName, false, false, true, "-Wl,--stack,","MB",1024*1024,0,99999);
+    addNumberOption(LINK_CMD_OPT_STACK_SIZE, QObject::tr("Stack Size"), groupName, false, false, true, "-Wl,--stack,","MB",1024*1024,12,0,99999);
 
     addOption(CC_CMD_OPT_USE_PIPE, QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, "-pipe");
     //addOption(LINK_CMD_OPT_LINK_OBJC, QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, "-lobjc");

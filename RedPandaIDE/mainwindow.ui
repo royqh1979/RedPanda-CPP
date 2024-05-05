@@ -241,8 +241,7 @@
     <addaction name="actionGoto_block_start"/>
     <addaction name="actionGoto_block_end"/>
     <addaction name="separator"/>
-    <addaction name="actionAdd_bookmark"/>
-    <addaction name="actionRemove_Bookmark"/>
+    <addaction name="actionToggle_Bookmark"/>
     <addaction name="actionModify_Bookmark_Description"/>
     <addaction name="separator"/>
     <addaction name="actionTrim_trailing_spaces"/>
@@ -2562,9 +2561,6 @@
    <property name="text">
     <string>Open containing folder</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+B</string>
-   </property>
    <property name="shortcutContext">
     <enum>Qt::ApplicationShortcut</enum>
    </property>
@@ -2685,16 +2681,6 @@
   <action name="actionEGE_Manual">
    <property name="text">
     <string>EGE Manual</string>
-   </property>
-  </action>
-  <action name="actionAdd_bookmark">
-   <property name="text">
-    <string>Add Bookmark</string>
-   </property>
-  </action>
-  <action name="actionRemove_Bookmark">
-   <property name="text">
-    <string>Remove Bookmark</string>
    </property>
   </action>
   <action name="actionModify_Bookmark_Description">
@@ -3266,6 +3252,17 @@
   <action name="actionTurtle_Graphics_Manual">
    <property name="text">
     <string>Turtle Graphics Tutorial</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionToggle_Bookmark">
+   <property name="text">
+    <string>Toggle Bookmark</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

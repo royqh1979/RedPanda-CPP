@@ -673,8 +673,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionClose_All->setEnabled(false);
         ui->actionClose_Others->setEnabled(false);
 
-        ui->actionAdd_bookmark->setEnabled(false);
-        ui->actionRemove_Bookmark->setEnabled(false);
+        ui->actionToggle_Bookmark->setEnabled(false);
         ui->actionModify_Bookmark_Description->setEnabled(false);
 
         ui->actionMatch_Bracket->setEnabled(false);
@@ -755,8 +754,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionClose_Others->setEnabled(mEditorList->pageCount()>1);
 
         int line = e->caretY();
-        ui->actionAdd_bookmark->setEnabled(e->lineCount()>0 && !e->hasBookmark(line));
-        ui->actionRemove_Bookmark->setEnabled(e->hasBookmark(line));
+        ui->actionToggle_Bookmark->setEnabled(e->lineCount()>0);
         ui->actionModify_Bookmark_Description->setEnabled(e->hasBookmark(line));
 
         ui->actionMatch_Bracket->setEnabled(true);
@@ -2018,8 +2016,7 @@ void MainWindow::updateActionIcons()
 
     ui->actionBack->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_BACK));
     ui->actionForward->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_FORWARD));
-    ui->actionAdd_bookmark->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_ADD_BOOKMARK));
-    ui->actionRemove_Bookmark->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_REMOVE_BOOKMARK));
+    ui->actionToggle_Bookmark->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_ADD_BOOKMARK));
     ui->actionReformat_Code->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_REFORMAT));
 
     ui->actionProject_New_File->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROJECT_NEW_FILE));
@@ -5189,8 +5186,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
             menu.addAction(ui->actionClear_all_breakpoints);
             menu.addSeparator();
         }
-        menu.addAction(ui->actionAdd_bookmark);
-        menu.addAction(ui->actionRemove_Bookmark);
+        menu.addAction(ui->actionToggle_Bookmark);
         menu.addAction(ui->actionModify_Bookmark_Description);
         menu.addSeparator();
         menu.addAction(ui->actionGo_to_Line);
@@ -5207,19 +5203,16 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
             menu.addAction(ui->actionClear_all_breakpoints);
             menu.addSeparator();
         }
-        menu.addAction(ui->actionAdd_bookmark);
-        menu.addAction(ui->actionRemove_Bookmark);
+        menu.addAction(ui->actionToggle_Bookmark);
         menu.addAction(ui->actionModify_Bookmark_Description);
         menu.addSeparator();
         menu.addAction(ui->actionGo_to_Line);
     }
     ui->actionLocate_in_Files_View->setEnabled(!editor->isNew());
     ui->actionBreakpoint_property->setEnabled(editor->hasBreakpoint(line));
-    ui->actionAdd_bookmark->setEnabled(
+    ui->actionToggle_Bookmark->setEnabled(
                 line>=0 && editor->lineCount()>0
-                && !editor->hasBookmark(line)
                 );
-    ui->actionRemove_Bookmark->setEnabled(editor->hasBookmark(line));
     ui->actionModify_Bookmark_Description->setEnabled(editor->hasBookmark(line));
     menu.exec(editor->viewport()->mapToGlobal(pos));
 }
@@ -8572,35 +8565,6 @@ TodoModel *MainWindow::todoModel()
     return &mTodoModel;
 }
 
-
-void MainWindow::on_actionAdd_bookmark_triggered()
-{
-    Editor* editor = mEditorList->getEditor();
-    if (editor) {
-        if (editor->lineCount()<=0)
-            return;
-        int line = editor->caretY();
-        QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),
-                                             tr("Description:"),QLineEdit::Normal,
-                                             editor->lineText(line).trimmed());
-        desc = desc.trimmed();
-        editor->addBookmark(line);
-        mBookmarkModel->addBookmark(editor->filename(),line,desc,editor->inProject());
-    }
-}
-
-
-void MainWindow::on_actionRemove_Bookmark_triggered()
-{
-    Editor* editor = mEditorList->getEditor();
-    if (editor) {
-        int line = editor->caretY();
-        editor->removeBookmark(line);
-        mBookmarkModel->removeBookmark(editor->filename(),line,editor->inProject());
-    }
-}
-
-
 void MainWindow::on_tableBookmark_doubleClicked(const QModelIndex &index)
 {
     if (!index.isValid())
@@ -10317,5 +10281,25 @@ void MainWindow::on_cbProblemCaseValidateType_currentIndexChanged(int index)
 {
     pSettings->executor().setProblemCaseValidateType((ProblemCaseValidateType)index);
     pSettings->executor().save();
+}
+
+
+void MainWindow::on_actionToggle_Bookmark_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        if (editor->lineCount()<=0)
+            return;
+        int line = editor->caretY();
+        editor->toggleBookmark(line);
+        if (editor->hasBookmark(line)) {
+            QString desc = QInputDialog::getText(editor,tr("Bookmark Description"),
+                                                 tr("Description:"),QLineEdit::Normal,
+                                                 editor->lineText(line).trimmed());
+            desc = desc.trimmed();
+            mBookmarkModel->addBookmark(editor->filename(),line,desc,editor->inProject());
+        } else
+            mBookmarkModel->removeBookmark(editor->filename(),line,editor->inProject());
+    }
 }
 

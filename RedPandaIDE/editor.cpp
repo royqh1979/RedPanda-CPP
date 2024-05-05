@@ -5212,6 +5212,15 @@ bool Editor::hasBreakpoint(int line)
     return mBreakpointLines.contains(line);
 }
 
+void Editor::toggleBookmark(int line)
+{
+    if (hasBookmark(line)) {
+        removeBookmark(line);
+    } else {
+        addBookmark(line);
+    }
+}
+
 void Editor::addBookmark(int line)
 {
     mBookmarkLines.insert(line);

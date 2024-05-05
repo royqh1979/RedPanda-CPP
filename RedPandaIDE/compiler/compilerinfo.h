@@ -103,8 +103,9 @@ typedef struct {
     CompilerOptionType type;
     CompileOptionChoiceList choices; // replaces "Yes/No" standard choices (max 30 different choices)
     /* for spin control */
-    QString unit;  //suffix
     int scale; //Scale
+    QString suffix;  //suffix
+    int defaultValue;
     int minValue;
     int maxValue;
 } CompilerOption;
@@ -150,6 +151,7 @@ protected:
                    const QString& setting,
                    const QString& suffix,
                    int scale,
+                   int defaultValue,
                    int minValue,
                    int maxValue
                     );
