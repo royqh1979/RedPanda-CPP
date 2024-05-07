@@ -1068,7 +1068,7 @@ void QSynEditPainter::paintLines()
         // Values in it doesn't matter, we'll recalculate them.
         QList<int> glyphStartPositionsList;
         bool lineWidthValid = mEdit->mDocument->lineWidthValid(vLine-1);
-        bool calculateGlyphPositions = ( mHasSelectionInLine ||  lineTextChanged || !lineWidthValid);
+        bool calculateGlyphPositions = ( lineTextChanged || !lineWidthValid);
         if (calculateGlyphPositions) {
             glyphStartPositionsList = glyphStartCharList;
         } else {
