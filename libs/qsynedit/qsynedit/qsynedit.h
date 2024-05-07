@@ -529,7 +529,7 @@ private:
     void recalcCharExtent();
     QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
-    void reparseLines(int startLine, int endLine);
+    int reparseLines(int startLine, int endLine);
     //void reparseLine(int line);
     void uncollapse(PCodeFoldingRange FoldRange);
     void collapse(PCodeFoldingRange FoldRange);

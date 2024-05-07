@@ -3268,7 +3268,7 @@ void QSynEdit::updateModifiedStatus()
         emit statusChanged(StatusChange::ModifyChanged);
 }
 
-void QSynEdit::reparseLines(int startLine, int endLine)
+int QSynEdit::reparseLines(int startLine, int endLine)
 {
 
     SyntaxState state;
@@ -3276,7 +3276,7 @@ void QSynEdit::reparseLines(int startLine, int endLine)
     endLine = std::min(endLine, mDocument->count());
 
     if (startLine >= endLine)
-        return;
+        return startLine;
 
     if (startLine == 0) {
         mSyntaxer->resetState();
@@ -3288,15 +3288,18 @@ void QSynEdit::reparseLines(int startLine, int endLine)
         mSyntaxer->setLine(mDocument->getLine(line), line);
         mSyntaxer->nextToEol();
         state = mSyntaxer->getState();
+        if (line >= endLine && state == mDocument->getSyntaxState(line)) {
+            break;
+        }
         mDocument->setSyntaxState(line,state);
-        line++ ;
+        line++;
     } while (line < endLine);
 
     if (mEditingCount>0)
-        return;
+        return line;
     if (useCodeFolding())
         rescanFolds();
-    return ;
+    return line;
 }
 
 // void QSynEdit::reparseLine(int line)
@@ -6537,7 +6540,7 @@ void QSynEdit::onLinesDeleted(int line, int count)
     if (useCodeFolding())
         foldOnLinesDeleted(line + 1, count);
     if (mSyntaxer->needsLineState()) {
-        reparseLines(line, mDocument->count());
+        reparseLines(line, line + 1);
     }
     invalidateLines(line + 1, INT_MAX);
 }
@@ -6547,7 +6550,7 @@ void QSynEdit::onLinesInserted(int line, int count)
     if (useCodeFolding())
         foldOnLinesInserted(line + 1, count);
     if (mSyntaxer->needsLineState()) {
-        reparseLines(line, mDocument->count());
+        reparseLines(line, line + count);
     } else {
         // new lines should be parsed
         reparseLines(line, line + count);
@@ -6558,10 +6561,10 @@ void QSynEdit::onLinesInserted(int line, int count)
 void QSynEdit::onLinesPutted(int line)
 {
     if (mSyntaxer->needsLineState()) {
-        reparseLines(line, mDocument->count());
+        reparseLines(line, line + 1);
         invalidateLines(line + 1, INT_MAX);
     } else {
-        reparseLines(line, line+1);
+        reparseLines(line, line + 1);
         invalidateLine( line + 1 );
     }
 }

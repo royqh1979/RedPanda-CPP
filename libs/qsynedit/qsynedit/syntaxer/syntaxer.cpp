@@ -169,6 +169,7 @@ bool SyntaxState::operator==(const SyntaxState &s2)
             && (parenthesisLevel == s2.parenthesisLevel) // current parenthesis embedding level (needed by rainbow color)
             && (indents == s2.indents)
             && (lastUnindent == s2.lastUnindent)
+            && (extraData == s2.extraData)
             ;
 }
 
