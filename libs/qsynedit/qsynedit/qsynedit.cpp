@@ -3293,10 +3293,15 @@ int QSynEdit::reparseLines(int startLine, int endLine)
         }
         mDocument->setSyntaxState(line,state);
         line++;
-    } while (line < endLine);
+    } while (line < mDocument->count());
+
+    //don't rescan folds if only currentLine is reparsed
+    if (line-startLine==1)
+        return line;
 
     if (mEditingCount>0)
         return line;
+
     if (useCodeFolding())
         rescanFolds();
     return line;
