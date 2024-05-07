@@ -25,27 +25,24 @@
 #include <QMessageBox>
 #include <cmath>
 #include "qt_utils/charsetinfo.h"
+#include <QDateTime>
 #include <QDebug>
 
 namespace QSynedit {
 
 Document::Document(const QFont& font, QObject *parent):
     QObject{parent},
-    mFontMetrics{font},
-    mTabSize{4},
-    mForceMonospace{false},
     mSetLineWidthLockCount{0},
     mMaxLineChangedInSetLinesWidth{false},
-    mMutex{}
+    mMutex{},
+    mGlyphCalculator{font}
 {
     mAppendNewLineAtEOF = true;
     mNewlineType = NewlineType::Windows;
     mIndexOfLongestLine = -1;
     mUpdateCount = 0;
-    mCharWidth =  mFontMetrics.horizontalAdvance("M");
-    mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
-    mUpdateDocumentLineWidthFunc = std::bind(&Document::calcLineWidth,
-        this,
+    mUpdateDocumentLineWidthFunc = std::bind(&GlyphCalculator::calcLineWidth,
+        &mGlyphCalculator,
         std::placeholders::_1,
         std::placeholders::_2,
         std::placeholders::_3);
@@ -95,6 +92,22 @@ int Document::lineWidth(int line)
         return 0;
 }
 
+void Document::updateLineWidth(int line)
+{
+    QMutexLocker locker(&mMutex);
+    if (line>=0 && line < mLines.size()) {
+        if (mLines[line]->mWidth<0) {
+            int width;
+            QList<int> glyphPositions = mGlyphCalculator.calcLineWidth(
+                        mLines[line]->lineText(),
+                        mLines[line]->glyphStartCharList(),
+                        width);
+            setLineWidth(line, width,glyphPositions);
+            mLines[line]->mIsTempWidth = true;
+        }
+    }
+}
+
 int Document::lineWidth(int line, const QString &newText)
 {
     QMutexLocker locker(&mMutex);
@@ -104,7 +117,7 @@ int Document::lineWidth(int line, const QString &newText)
     if (lineText==newText) {
         return mLines[line]->width();
     } else {
-        return stringWidth(newText,0);
+        return mGlyphCalculator.stringWidth(newText,0);
     }
 }
 
@@ -571,38 +584,20 @@ void Document::saveUTF32File(QFile &file, QTextCodec* codec)
     file.write(codec->fromUnicode(text));
 }
 
-bool Document::forceMonospace() const
+void Document::setTabSize(int newTabSize)
 {
-    return mForceMonospace;
+    if (tabSize()!=newTabSize) {
+        mGlyphCalculator.setTabSize(newTabSize);
+        invalidateAllLineWidth();
+    }
 }
 
 void Document::setForceMonospace(bool newForceMonospace)
 {
-    int oldValue = mForceMonospace;
-    mForceMonospace = newForceMonospace;
-    if (oldValue != mForceMonospace)
+    int oldValue = forceMonospace();
+    mGlyphCalculator.setForceMonospace(newForceMonospace);
+    if (oldValue != newForceMonospace)
         invalidateAllLineWidth();
-}
-
-const QFontMetrics &Document::fontMetrics() const
-{
-    return mFontMetrics;
-}
-
-void Document::setFont(const QFont &newFont)
-{
-    mFontMetrics = QFontMetrics(newFont);
-    mCharWidth =  mFontMetrics.horizontalAdvance("M");
-    mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
-    invalidateAllLineWidth();
-}
-
-void Document::setTabSize(int newTabSize)
-{
-    if (mTabSize!=newTabSize) {
-        mTabSize = newTabSize;
-        invalidateAllLineWidth();
-    }
 }
 
 void Document::loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding)
@@ -888,7 +883,7 @@ QList<int> calcGlyphStartCharList(const QString &text)
     return glyphStartCharList;
 }
 
-int Document::stringWidth(const QString &str, int left) const
+int GlyphCalculator::stringWidth(const QString &str, int left) const
 {
     QList<int> glyphStartCharList = calcGlyphStartCharList(str);
     int right;
@@ -896,7 +891,7 @@ int Document::stringWidth(const QString &str, int left) const
     return right - left;
 }
 
-int Document::stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics)
+int GlyphCalculator::stringWidth(const QString &str, int left, const QFontMetrics &fontMetrics)
 {
     QList<int> glyphStartCharList = calcGlyphStartCharList(str);
     int right;
@@ -944,11 +939,6 @@ int Document::glyphWidth(int line, int glyphIdx)
     return mLines[line]->glyphWidth(glyphIdx);
 }
 
-int Document::glyphWidth(const QString &glyph, int left) const
-{
-    return glyphWidth(glyph,left,mFontMetrics,mForceMonospace);
-}
-
 int Document::charToGlyphIndex(int line, int charIdx)
 {
     QMutexLocker locker(&mMutex);
@@ -974,12 +964,7 @@ int Document::charToGlyphIndex(const QString& str, QList<int> glyphStartCharList
     // return glyphStartCharList.length()-1;
 }
 
-QList<int> Document::calcLineWidth(const QString &lineText, const QList<int> &glyphStartCharList, int &width)
-{
-    return calcGlyphPositionList(lineText,glyphStartCharList,0,width);
-}
-
-QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, const QFontMetrics &fontMetrics, int left, int &right) const
+QList<int> GlyphCalculator::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, const QFontMetrics &fontMetrics, int left, int &right) const
 {
     right = std::max(0,left);
     int start,end;
@@ -1050,7 +1035,7 @@ int Document::charToGlyphStartPosition(int line, const QString newStr, int charP
         QList<int> glyphStartCharList = calcGlyphStartCharList(newStr);
         int glyphIdx = charToGlyphIndex(newStr, glyphStartCharList, charPos);
         int width;
-        QList<int> glyphStartPositionList = calcGlyphPositionList(newStr, width);
+        QList<int> glyphStartPositionList = mGlyphCalculator.calcGlyphPositionList(newStr, width);
         if (glyphIdx<glyphStartCharList.length())
             return glyphStartPositionList[glyphIdx];
         else
@@ -1069,7 +1054,7 @@ int Document::xposToGlyphStartChar(int line, const QString newStr, int xpos)
         glyphPositionList = mLines[line]->glyphStartPositionList();
         width = mLines[line]->width();
     } else {
-        glyphPositionList = calcGlyphPositionList(mLines[line]->lineText(), width);
+        glyphPositionList = mGlyphCalculator.calcGlyphPositionList(mLines[line]->lineText(), width);
     }
     int glyphIdx = xposToGlyphIndex(width, glyphPositionList, xpos);
     return mLines[line]->glyphStartChar(glyphIdx);
@@ -1206,7 +1191,8 @@ void Document::updateMaxLineWidthChanged()
     if (mSetLineWidthLockCount>0) {
         mMaxLineChangedInSetLinesWidth = true;
     } else {
-        updateMaxLineWidthAndNotify();
+        //updateMaxLineWidthAndNotify();
+        emit maxLineWidthChanged();
     }
 }
 
@@ -1227,15 +1213,7 @@ void Document::updateMaxLineWidthAndNotify()
         emit maxLineWidthChanged();
 }
 
-QList<int> Document::calcGlyphPositionList(const QString &lineText, const QList<int> &glyphStartCharList, int left, int &right) const
-{
-    return calcGlyphPositionList(lineText, glyphStartCharList,
-                                 mFontMetrics,
-                                 left,right);
-}
-
-
-QList<int> Document::calcGlyphPositionList(const QString &lineText, int &width) const
+QList<int> GlyphCalculator::calcGlyphPositionList(const QString &lineText, int &width) const
 {
     QList<int> glyphStartCharList = calcGlyphStartCharList(lineText);
     return calcGlyphPositionList(lineText,glyphStartCharList,0,width);
@@ -1290,13 +1268,20 @@ void Document::invalidateAllLineWidth()
         line->invalidateWidth();
     }
     mIndexOfLongestLine = -1;
+    FindMaxLineWidthThread *thread = new FindMaxLineWidthThread(mLines, mGlyphCalculator);
+    connect(thread, &FindMaxLineWidthThread::maxWidthLineFound,
+            this, &Document::maxWidthLineFound);
+    connect(thread, &QThread::finished,
+            thread, &QThread::deleteLater);
+    thread->start();
 }
 
 DocumentLine::DocumentLine(DocumentLine::UpdateWidthFunc updateWidthFunc):
     mSyntaxState{},
     mWidth{-1},
     mIsTempWidth{true},
-    mUpdateWidthFunc{updateWidthFunc}
+    mUpdateWidthFunc{updateWidthFunc},
+    mTimestamp{QDateTime::currentMSecsSinceEpoch()}
 {
 }
 
@@ -1339,6 +1324,7 @@ int DocumentLine::width()
 
 void DocumentLine::setLineText(const QString &newLineText)
 {
+    mTimestamp = QDateTime::currentMSecsSinceEpoch();
     mLineText = newLineText;
     mGlyphStartCharList = calcGlyphStartCharList(newLineText);
     invalidateWidth();
@@ -1697,7 +1683,7 @@ int searchForSegmentIdx(const QList<int> &segList, int minVal, int maxVal, int v
     return -1;
 }
 
-int Document::updateGlyphStartPositionList(
+int GlyphCalculator::updateGlyphStartPositionList(
         const QString &lineText,
         const QList<int> &glyphStartCharList, int startChar, int endChar,
         const QFontMetrics &fontMetrics,
@@ -1724,7 +1710,7 @@ int Document::updateGlyphStartPositionList(
     return right-left;
 }
 
-int Document::glyphWidth(const QString &glyph, int left, const QFontMetrics &fontMetrics, bool forceMonospace) const
+int GlyphCalculator::glyphWidth(const QString &glyph, int left, const QFontMetrics &fontMetrics, bool forceMonospace) const
 {
     int glyphWidth;
     if (glyph.length()==0)
@@ -1767,6 +1753,47 @@ int segmentIntervalStart(const QList<int> &segList, int minVal, int maxVal, int 
     if (idx>=segList.length())
         return maxVal;
     return segList[idx];
+}
+
+GlyphCalculator::GlyphCalculator(const QFont &font):
+    mFontMetrics{font},
+    mTabSize{4},
+    mForceMonospace{false}
+{
+    mCharWidth =  mFontMetrics.horizontalAdvance("M");
+    mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
+}
+
+void GlyphCalculator::setFont(const QFont &newFont)
+{
+    mFontMetrics = QFontMetrics(newFont);
+    mCharWidth =  mFontMetrics.horizontalAdvance("M");
+    mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
+}
+
+FindMaxLineWidthThread::FindMaxLineWidthThread(const DocumentLines &lines, const GlyphCalculator &glyphCalculator, QObject *parent):
+    QThread(parent),
+    mLines{lines},
+    mGlyphCalculator{glyphCalculator}
+{
+
+}
+
+void FindMaxLineWidthThread::run()
+{
+    int maxWidth = 0;
+    int maxWidthLine = -1;
+    for (int i=0;i<mLines.size();i++) {
+        int width = mLines[i]->mWidth;
+        if ( width < 0 )
+            width = mGlyphCalculator.stringWidth(mLines[i]->lineText(),0);
+        if (width > maxWidth) {
+            maxWidth = width;
+            maxWidthLine = i;
+        }
+    }
+    if (maxWidthLine >= 0)
+        emit maxWidthLineFound(maxWidthLine);
 }
 
 }

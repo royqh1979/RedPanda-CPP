@@ -750,7 +750,6 @@ void QSynEditPainter::addHighlightToken(
     }
 
     if (mIsSpecialLine) {
-        QColor oldForeground = foreground;
         if (mSpecialLineForeground.isValid())
             foreground = mSpecialLineForeground;
         if (mSpecialLineBackground.isValid())
@@ -788,7 +787,7 @@ void QSynEditPainter::addHighlightToken(
     }
     //calculate width of the token ( and update it's glyph start positions )
     if (calcGlyphPosition) {
-        tokenWidth = mEdit->mDocument->updateGlyphStartPositionList(
+        tokenWidth = mEdit->mDocument->mGlyphCalculator.updateGlyphStartPositionList(
                     lineText,
                     glyphStartCharList,
                     tokenStartChar,
