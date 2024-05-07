@@ -4718,7 +4718,7 @@ void QSynEdit::setSyntaxer(const PSyntaxer &syntaxer)
         reparseDocument();
         mDocument->endUpdate();
     }
-    mDocument->invalidateAllLineWidth();
+    mDocument->invalidateAllNonTempLineWidth();
     invalidate();
 }
 

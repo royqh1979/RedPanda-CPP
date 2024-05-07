@@ -1276,12 +1276,20 @@ void Document::invalidateAllLineWidth()
     thread->start();
 }
 
+void Document::invalidateAllNonTempLineWidth()
+{
+    QMutexLocker locker(&mMutex);
+    for (PDocumentLine& line:mLines) {
+        if (!line->mIsTempWidth)
+            line->mIsTempWidth;
+    }
+}
+
 DocumentLine::DocumentLine(DocumentLine::UpdateWidthFunc updateWidthFunc):
     mSyntaxState{},
     mWidth{-1},
     mIsTempWidth{true},
-    mUpdateWidthFunc{updateWidthFunc},
-    mTimestamp{QDateTime::currentMSecsSinceEpoch()}
+    mUpdateWidthFunc{updateWidthFunc}
 {
 }
 
@@ -1324,7 +1332,6 @@ int DocumentLine::width()
 
 void DocumentLine::setLineText(const QString &newLineText)
 {
-    mTimestamp = QDateTime::currentMSecsSinceEpoch();
     mLineText = newLineText;
     mGlyphStartCharList = calcGlyphStartCharList(newLineText);
     invalidateWidth();

@@ -179,7 +179,6 @@ private:
     int mWidth;
     bool mIsTempWidth;
     UpdateWidthFunc mUpdateWidthFunc;
-    qint64 mTimestamp;
     friend class Document;
     friend class FindMaxLineWidthThread;
 };
@@ -349,7 +348,7 @@ public:
      * @return
      */
     int lineWidth(int line);
-    
+
     void updateLineWidth(int line);
 
     /**
@@ -637,7 +636,7 @@ public:
     void setForceMonospace(bool newForceMonospace);
 
 public slots:
-    void invalidateAllLineWidth();
+    void invalidateAllNonTempLineWidth();
 
 signals:
     void changed();
@@ -659,6 +658,7 @@ protected:
         emit lineWidthUpdateNeeded(line);
     }
 private:
+    void invalidateAllLineWidth();
     bool lineWidthValid(int line);
     void beginSetLinesWidth();
     void endSetLinesWidth();
