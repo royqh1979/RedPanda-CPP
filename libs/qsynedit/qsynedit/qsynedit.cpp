@@ -44,20 +44,6 @@
 
 #define UPDATE_HORIZONTAL_SCROLLBAR_EVENT ((QEvent::Type)(QEvent::User+1))
 #define UPDATE_VERTICAL_SCROLLBAR_EVENT ((QEvent::Type)(QEvent::User+2))
-#define UPDATE_LINE_WIDTH_EVENT ((QEvent::Type)(QEvent::User+3))
-
-class UpdateLineWidthEvent: public QEvent{
-public:
-    explicit UpdateLineWidthEvent(int line):
-        QEvent{UPDATE_LINE_WIDTH_EVENT},
-        mLine{line}
-    {
-
-    }
-    int line() const { return mLine; }
-private:
-    int mLine;
-};
 
 namespace QSynedit {
 QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
@@ -91,7 +77,6 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     connect(mDocument.get(), &Document::cleared, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
-    connect(mDocument.get(), &Document::lineWidthUpdateNeeded, this, &QSynEdit::onLineWidthUpdateNeeded);
 
     mGutterWidth = 0;
 
@@ -1770,12 +1755,6 @@ void QSynEdit::onMaxLineWidthChanged()
     updateHScrollBarLater();
 }
 
-void QSynEdit::onLineWidthUpdateNeeded(int line)
-{
-    UpdateLineWidthEvent * event = new UpdateLineWidthEvent(line);
-    qApp->postEvent(this,event);
-}
-
 void QSynEdit::updateHScrollBarLater()
 {
     QEvent * event = new QEvent(UPDATE_HORIZONTAL_SCROLLBAR_EVENT);
@@ -3163,12 +3142,6 @@ void QSynEdit::doUpdateVScrollbar()
     verticalScrollBar()->setValue(nPos);
     verticalScrollBar()->setSingleStep(mTextHeight);
 }
-
-void QSynEdit::doUpdateLineWidth(int line)
-{
-    mDocument->updateLineWidth(line);
-}
-
 
 void QSynEdit::updateCaret()
 {
@@ -6007,12 +5980,6 @@ bool QSynEdit::event(QEvent *event)
     case UPDATE_HORIZONTAL_SCROLLBAR_EVENT:
         event->setAccepted(true);
         doUpdateHScrollbar();
-        break;
-    case UPDATE_LINE_WIDTH_EVENT: {
-        event->setAccepted(true);
-        UpdateLineWidthEvent* updateEvent = dynamic_cast<UpdateLineWidthEvent *>(event);
-        doUpdateLineWidth(updateEvent->line());
-    }
         break;
     case QEvent::KeyPress:{
         QKeyEvent* keyEvent = dynamic_cast<QKeyEvent *>(event);

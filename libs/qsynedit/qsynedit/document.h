@@ -36,7 +36,6 @@ QList<int> calcGlyphStartCharList(const QString &text);
 void expandGlyphStartCharList(const QString& strAdded, int oldStrLen, QList<int> &glyphStartCharList);
 
 class Document;
-class FindMaxLineWidthThread;
 
 using SearchConfirmAroundProc = std::function<bool ()>;
 /**
@@ -180,7 +179,6 @@ private:
     bool mIsTempWidth;
     UpdateWidthFunc mUpdateWidthFunc;
     friend class Document;
-    friend class FindMaxLineWidthThread;
 };
 
 typedef std::shared_ptr<DocumentLine> PDocumentLine;
@@ -275,26 +273,6 @@ private:
     bool mForceMonospace;
 };
 
-class FindMaxLineWidthThread: public QThread {
-    Q_OBJECT
-public:
-    explicit FindMaxLineWidthThread(
-            const DocumentLines &lines,
-            const GlyphCalculator& glyphCalculator,
-            QObject* parent=nullptr);
-    FindMaxLineWidthThread(const FindMaxLineWidthThread&) = delete;
-signals:
-    void maxWidthLineFound(int line);
-private:
-    DocumentLines mLines;
-    GlyphCalculator mGlyphCalculator;
-
-    // QThread interface
-protected:
-    void run() override;
-};
-
-
 /**
  * @brief The Document class
  *
@@ -348,8 +326,6 @@ public:
      * @return
      */
     int lineWidth(int line);
-
-    void updateLineWidth(int line);
 
     /**
      * @brief get width of the specified text / line
@@ -646,7 +622,6 @@ signals:
     void inserted(int startLine, int count);
     void putted(int line);
     void maxLineWidthChanged();
-    void lineWidthUpdateNeeded(int line);
 protected:
     QString getTextStr() const;
     void setUpdateState(bool Updating);
@@ -654,9 +629,6 @@ protected:
     void addItem(const QString& s);
     void putTextStr(const QString& text);
     void internalClear();
-    void maxWidthLineFound(int line) {
-        emit lineWidthUpdateNeeded(line);
-    }
 private:
     void invalidateAllLineWidth();
     bool lineWidthValid(int line);

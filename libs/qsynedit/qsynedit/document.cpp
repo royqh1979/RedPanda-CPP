@@ -92,22 +92,6 @@ int Document::lineWidth(int line)
         return 0;
 }
 
-void Document::updateLineWidth(int line)
-{
-    QMutexLocker locker(&mMutex);
-    if (line>=0 && line < mLines.size()) {
-        if (mLines[line]->mWidth<0) {
-            int width;
-            QList<int> glyphPositions = mGlyphCalculator.calcLineWidth(
-                        mLines[line]->lineText(),
-                        mLines[line]->glyphStartCharList(),
-                        width);
-            setLineWidth(line, width,glyphPositions);
-            mLines[line]->mIsTempWidth = true;
-        }
-    }
-}
-
 int Document::lineWidth(int line, const QString &newText)
 {
     QMutexLocker locker(&mMutex);
@@ -1268,12 +1252,6 @@ void Document::invalidateAllLineWidth()
         line->invalidateWidth();
     }
     mIndexOfLongestLine = -1;
-    FindMaxLineWidthThread *thread = new FindMaxLineWidthThread(mLines, mGlyphCalculator);
-    connect(thread, &FindMaxLineWidthThread::maxWidthLineFound,
-            this, &Document::maxWidthLineFound);
-    connect(thread, &QThread::finished,
-            thread, &QThread::deleteLater);
-    thread->start();
 }
 
 void Document::invalidateAllNonTempLineWidth()
@@ -1776,31 +1754,6 @@ void GlyphCalculator::setFont(const QFont &newFont)
     mFontMetrics = QFontMetrics(newFont);
     mCharWidth =  mFontMetrics.horizontalAdvance("M");
     mSpaceWidth = mFontMetrics.horizontalAdvance(" ");
-}
-
-FindMaxLineWidthThread::FindMaxLineWidthThread(const DocumentLines &lines, const GlyphCalculator &glyphCalculator, QObject *parent):
-    QThread(parent),
-    mLines{lines},
-    mGlyphCalculator{glyphCalculator}
-{
-
-}
-
-void FindMaxLineWidthThread::run()
-{
-    int maxWidth = 0;
-    int maxWidthLine = -1;
-    for (int i=0;i<mLines.size();i++) {
-        int width = mLines[i]->mWidth;
-        if ( width < 0 )
-            width = mGlyphCalculator.stringWidth(mLines[i]->lineText(),0);
-        if (width > maxWidth) {
-            maxWidth = width;
-            maxWidthLine = i;
-        }
-    }
-    if (maxWidthLine >= 0)
-        emit maxWidthLineFound(maxWidthLine);
 }
 
 }
