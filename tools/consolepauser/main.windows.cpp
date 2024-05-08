@@ -61,17 +61,22 @@ string GetErrorMessage() {
     string result(MAX_ERROR_LENGTH,0);
     FormatMessageA(
         FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,GetLastError(),MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),&result[0],result.size(),NULL);
+        NULL,GetLastError(),MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),result.data(),result.size(),NULL);
 
     // Clear newlines at end of string
-    for(int i = result.length()-1;i >= 0;i--) {
-        if(isspace(result[i])) {
-            result[i] = 0;
-        } else {
-            break;
-        }
-    }
+    while (result.length() > 0 && (result.back() == 0 || isspace(result.back())))
+        result.pop_back();
     return result;
+}
+
+void Win32PError(const string &msg)
+{
+    DWORD error = GetLastError();
+    const size_t len = msg.length() + 100;
+    string buf(len, 0);
+    snprintf(buf.data(), len, "[consolepauser] %s failed with 0x%08lx: ", msg.c_str(), error);
+    string message = buf.c_str() + GetErrorMessage();
+    fprintf(stderr, "%s\n", message.c_str());
 }
 
 void PauseExit(int exitcode, bool reInp) {
@@ -141,10 +146,11 @@ DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG 
         printf("\nError %lu: %s\n",GetLastError(),GetErrorMessage().c_str());
         PauseExit(EXIT_FAILURE,reInp);
     }
-    WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
-    if ( bSuccess == FALSE ) {
-        printf( "AssignProcessToJobObject failed: error %lu\n", GetLastError() );
-        return 0;
+    if (hJob != nullptr) {
+        WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
+        if ( bSuccess == FALSE ) {
+            Win32PError("AssignProcessToJobObject");
+        }
     }
 
     WaitForSingleObject(pi.hProcess, INFINITE); // Wait for it to finish
@@ -206,17 +212,15 @@ int main(int argc, char** argv) {
     hJob= CreateJobObject( &sa, NULL );
 
     if ( hJob == NULL ) {
-        printf( "CreateJobObject failed: error %lu\n", GetLastError() );
-        return 0;
-    }
-
-    JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
-    memset(&info,0,sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
-    info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-    WINBOOL bSuccess = SetInformationJobObject( hJob, JobObjectExtendedLimitInformation, &info, sizeof( info ) );
-    if ( bSuccess == FALSE ) {
-        printf( "SetInformationJobObject failed: error %lu\n", GetLastError() );
-        return 0;
+        Win32PError("CreateJobObject");
+    } else {
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
+        memset(&info,0,sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        WINBOOL bSuccess = SetInformationJobObject( hJob, JobObjectExtendedLimitInformation, &info, sizeof( info ) );
+        if ( bSuccess == FALSE ) {
+            Win32PError("SetInformationJobObject");
+        }
     }
 
     bool reInp;
