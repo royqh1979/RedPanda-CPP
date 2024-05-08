@@ -1420,7 +1420,7 @@
         <translation type="vanished">O texto a ser removido excede o limite de caracteres!</translation>
     </message>
     <message>
-        <location line="+2894"/>
+        <location line="+2906"/>
         <source>Print Document</source>
         <translation>Imprimir documento</translation>
     </message>
@@ -1458,7 +1458,7 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5397"/>
+        <location line="-5409"/>
         <location line="+505"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
@@ -2661,7 +2661,7 @@
     </message>
     <message>
         <location line="+21"/>
-        <source>Search Actions</source>
+        <source>Filter Actions</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4286,7 +4286,7 @@
         <translation>Red Panda C++</translation>
     </message>
     <message>
-        <location line="+497"/>
+        <location line="+499"/>
         <location line="+2252"/>
         <source>Files</source>
         <translation>Arquivos</translation>
@@ -4424,8 +4424,8 @@
         <translation>Expressão de endereço:</translation>
     </message>
     <message>
-        <location line="-1037"/>
-        <location line="+1076"/>
+        <location line="-1039"/>
+        <location line="+1078"/>
         <location line="+1505"/>
         <location filename="../mainwindow.cpp" line="+5886"/>
         <source>Search</source>
@@ -4548,7 +4548,7 @@
         <translation type="vanished">...</translation>
     </message>
     <message>
-        <location line="-1788"/>
+        <location line="-1790"/>
         <source>File</source>
         <translation>Arquivo</translation>
     </message>
@@ -4570,7 +4570,7 @@
     </message>
     <message>
         <location line="+55"/>
-        <location line="+161"/>
+        <location line="+163"/>
         <location filename="../mainwindow.cpp" line="+4324"/>
         <location line="+1"/>
         <location line="+1"/>
@@ -5098,11 +5098,21 @@
         <translation>Declaração Goto</translation>
     </message>
     <message>
+        <location line="+732"/>
+        <source>Code Completion</source>
+        <translation type="unfinished">Complementar código</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Ctrl+Shift+/</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Ctrl+Shift+G</source>
         <translation type="vanished">Ctrl+Shift+G</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-727"/>
         <source>Goto Definition</source>
         <translation>Definição Goto</translation>
     </message>
@@ -7081,7 +7091,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="-3072"/>
+        <location filename="../mainwindow.ui" line="-3074"/>
         <source>Move Caret</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8817,7 +8827,7 @@
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+347"/>
+        <location line="+349"/>
         <source>Code Generation</source>
         <translation>Geração de código</translation>
     </message>
@@ -8830,7 +8840,7 @@
         <translation type="vanished">Otimizar menor, porém mantendo completa compatibilidade (-tune)</translation>
     </message>
     <message>
-        <location line="-261"/>
+        <location line="-263"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>Habilitar uso de instruções específicar (-mx)</translation>
     </message>
@@ -8902,7 +8912,7 @@
         <translation type="vanished">Link para um programa Objective C (-lobjc)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>Não usar bibliotecas padrões do sistema (-nostdlib)</translation>
     </message>
@@ -8917,7 +8927,7 @@
         <translation>Não gerar executável (-s)</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-42"/>
         <source>Generate debugging information (-g3)</source>
         <translation>Gerar informação para depuração (-g3)</translation>
     </message>
@@ -8934,7 +8944,7 @@
         <translation type="vanished">Não montar, compilar e gerar código em assembly (-S)</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+38"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>Usar pipes em lugar de arquivos temporários durante compilação (-pipe)</translation>
     </message>
@@ -9085,7 +9095,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="-105"/>
+        <location filename="../compiler/compilerinfo.cpp" line="-107"/>
         <source>C++ Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9155,7 +9165,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+248"/>
+        <location line="+250"/>
         <source>Processor (-m)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9175,12 +9185,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-262"/>
+        <location line="-263"/>
         <source>Stack Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+263"/>
+        <location line="+264"/>
         <source>Use movc instead of movx to read from external ram</source>
         <translation type="unfinished"></translation>
     </message>

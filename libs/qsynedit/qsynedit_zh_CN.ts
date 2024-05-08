@@ -4288,7 +4288,7 @@
 <context>
     <name>QSynedit::Document</name>
     <message>
-        <location filename="qsynedit/document.cpp" line="+613"/>
+        <location filename="qsynedit/document.cpp" line="+592"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
         <translation>无法读取文件&quot;%1&quot;.</translation>
     </message>

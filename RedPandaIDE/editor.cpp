@@ -2338,6 +2338,23 @@ void Editor::gotoBlockEnd()
     processCommand(QSynedit::EditCommand::BlockEnd,QChar(),nullptr);
 }
 
+void Editor::showCodeCompletion()
+{
+    if (!pSettings->codeCompletion().enabled())
+        return;
+
+    if (mParser) {
+        if (mParser->isIncludeLine(lineText())) {
+            // is a #include line
+            showHeaderCompletion(false);
+        } else {
+            showCompletion("",true,CodeCompletionType::Normal);
+        }
+    } else {
+        showCompletion("",true,CodeCompletionType::KeywordsOnly);
+    }
+}
+
 QStringList Editor::getOwnerExpressionAndMemberAtPositionForCompletion(
         const QSynedit::BufferCoord &pos,
         QString &memberOperator,

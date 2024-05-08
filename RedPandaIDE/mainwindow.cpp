@@ -10303,3 +10303,12 @@ void MainWindow::on_actionToggle_Bookmark_triggered()
     }
 }
 
+
+void MainWindow::on_actionCode_Completion_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        editor->showCodeCompletion();
+    }
+}
+

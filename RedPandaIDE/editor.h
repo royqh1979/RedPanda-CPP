@@ -213,6 +213,7 @@ public:
     void deleteToBOL();
     void gotoBlockStart();
     void gotoBlockEnd();
+    void showCodeCompletion();
 
     QStringList getOwnerExpressionAndMemberAtPositionForCompletion(
             const QSynedit::BufferCoord& pos,

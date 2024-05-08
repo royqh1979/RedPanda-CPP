@@ -858,6 +858,8 @@ private slots:
 
     void on_actionToggle_Bookmark_triggered();
 
+    void on_actionCode_Completion_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;

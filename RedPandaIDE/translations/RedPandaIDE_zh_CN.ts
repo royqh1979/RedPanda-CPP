@@ -1678,7 +1678,7 @@ p, li { white-space: pre-wrap; }
         <translation>十进制: %1</translation>
     </message>
     <message>
-        <location line="+1159"/>
+        <location line="+1171"/>
         <source>Print Document</source>
         <translation>打印文档</translation>
     </message>
@@ -2966,8 +2966,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+21"/>
+        <source>Filter Actions</source>
+        <translation>过滤功能</translation>
+    </message>
+    <message>
         <source>Search Actions</source>
-        <translation type="unfinished">搜索功能</translation>
+        <translation type="obsolete">搜索功能</translation>
     </message>
     <message>
         <source>Keyword</source>
@@ -4667,7 +4671,7 @@ p, li { white-space: pre-wrap; }
         <translation>小熊猫C++</translation>
     </message>
     <message>
-        <location line="+931"/>
+        <location line="+933"/>
         <location line="+1834"/>
         <location filename="../mainwindow.cpp" line="+4658"/>
         <location line="+3"/>
@@ -4682,7 +4686,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">编译日志</translation>
     </message>
     <message>
-        <location line="-2651"/>
+        <location line="-2653"/>
         <source>File</source>
         <translation>文件</translation>
     </message>
@@ -4693,18 +4697,18 @@ p, li { white-space: pre-wrap; }
         <translation>工具</translation>
     </message>
     <message>
-        <location line="+1966"/>
+        <location line="+1968"/>
         <location line="+3"/>
         <source>Run</source>
         <translation>运行</translation>
     </message>
     <message>
-        <location line="-1938"/>
+        <location line="-1940"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location line="+86"/>
+        <location line="+88"/>
         <location line="+328"/>
         <location line="+2147"/>
         <source>Project</source>
@@ -4774,8 +4778,8 @@ p, li { white-space: pre-wrap; }
         <translation>局部变量</translation>
     </message>
     <message>
-        <location line="-1002"/>
-        <location line="+1076"/>
+        <location line="-1004"/>
+        <location line="+1078"/>
         <location line="+1505"/>
         <location filename="../mainwindow.cpp" line="+5886"/>
         <source>Search</source>
@@ -4807,13 +4811,13 @@ p, li { white-space: pre-wrap; }
         <translation>关闭</translation>
     </message>
     <message>
-        <location line="-2325"/>
+        <location line="-2327"/>
         <source>Execute</source>
         <translation>运行</translation>
     </message>
     <message>
         <location line="+80"/>
-        <location line="+161"/>
+        <location line="+163"/>
         <location filename="../mainwindow.cpp" line="+4"/>
         <location line="+1"/>
         <location line="+1"/>
@@ -5108,12 +5112,12 @@ p, li { white-space: pre-wrap; }
         <translation>单步进入</translation>
     </message>
     <message>
-        <location line="-2138"/>
+        <location line="-2140"/>
         <source>Move Caret</source>
         <translation>移动光标</translation>
     </message>
     <message>
-        <location line="+539"/>
+        <location line="+541"/>
         <location line="+27"/>
         <location line="+2023"/>
         <source>Problem Set</source>
@@ -5560,11 +5564,21 @@ p, li { white-space: pre-wrap; }
         <translation>跳转到声明处</translation>
     </message>
     <message>
+        <location line="+732"/>
+        <source>Code Completion</source>
+        <translation>代码补全</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Ctrl+Shift+/</source>
+        <translation>Ctrl+Shift+/</translation>
+    </message>
+    <message>
         <source>Ctrl+Shift+G</source>
         <translation type="vanished">Ctrl+Shift+G</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-727"/>
         <source>Goto Definition</source>
         <translation>跳转到定义处</translation>
     </message>
@@ -9275,7 +9289,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+347"/>
+        <location line="+349"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
@@ -9288,7 +9302,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location line="-261"/>
+        <location line="-263"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>启用特定指令集(-mx)</translation>
     </message>
@@ -9303,7 +9317,7 @@ p, li { white-space: pre-wrap; }
         <translation>使用下列指针大小编译(-mx)</translation>
     </message>
     <message>
-        <location line="+274"/>
+        <location line="+276"/>
         <source>Processor (-m)</source>
         <translation>处理器类型(-m)</translation>
     </message>
@@ -9316,7 +9330,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">性能分析</translation>
     </message>
     <message>
-        <location line="-272"/>
+        <location line="-274"/>
         <source>Generate debugging information (-g3)</source>
         <translation>生成调试信息(-g3)</translation>
     </message>
@@ -9384,12 +9398,12 @@ p, li { white-space: pre-wrap; }
         <translation>检查是否严格遵守ISO C/C++标准</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+26"/>
         <source>Stack Size</source>
         <translation>栈空间大小</translation>
     </message>
     <message>
-        <location line="+252"/>
+        <location line="+253"/>
         <source>Language standard (--std)</source>
         <translation>C语言标准(--std)</translation>
     </message>
@@ -9473,7 +9487,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location line="-309"/>
+        <location line="-311"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
@@ -9497,7 +9511,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">链接Objective-C程序 (-lobjc)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>不使用标准库和系统启动文件(-nostdlib)</translation>
     </message>

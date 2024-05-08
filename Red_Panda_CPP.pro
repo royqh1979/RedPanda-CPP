@@ -24,19 +24,19 @@ include(version.inc)
     APP_VERSION = "$${APP_VERSION}$${APP_VERSION_SUFFIX}"
 }
 
-win32: {
-SUBDIRS += \
-    redpanda-win-git-askpass
-redpanda-win-git-askpass.subdir = tools/redpanda-win-git-askpass
-RedPandaIDE.depends += redpanda-win-git-askpass
-}
+# win32: {
+# SUBDIRS += \
+#     redpanda-win-git-askpass
+# redpanda-win-git-askpass.subdir = tools/redpanda-win-git-askpass
+# RedPandaIDE.depends += redpanda-win-git-askpass
+# }
 
-unix: {
-SUBDIRS += \
-    redpanda-git-askpass
-    redpanda-git-askpass.subdir = tools/redpanda-git-askpass
-    RedPandaIDE.depends += redpanda-git-askpass
-}
+# unix: {
+# SUBDIRS += \
+#     redpanda-git-askpass
+#     redpanda-git-askpass.subdir = tools/redpanda-git-askpass
+#     RedPandaIDE.depends += redpanda-git-askpass
+# }
 
 unix:!macos: {
     isEmpty(PREFIX) {
