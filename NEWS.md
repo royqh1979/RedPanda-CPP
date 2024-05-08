@@ -162,10 +162,10 @@ Red Panda C++ Version 2.27
   - fix: Crash when has source line like "std::cout << (3+4*4>5*(4+3)-1 && (4-3>5)) <<std::endl;".
   - fix: The memory usage displayed after program execution is wrong.
   - enhancement: New compiler option "stack size" in the link subpage.
-  - change: Set "Ctrl+G" as the shortcut for "Goto page..."
+  - change: Set "Ctrl+G" as the shortcut for "Goto line..."
   - change: Set "Ctrl+B" as the shortcut for "Toggle Bookmark"
   - fix: Fail to evaluate expressions if macro can't be expanded.
-  - enhancement: New menu item "Code completion".
+  - enhancement: New menu item "Code completion" in "Code" menu.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
