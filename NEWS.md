@@ -166,6 +166,7 @@ Red Panda C++ Version 2.27
   - change: Set "Ctrl+B" as the shortcut for "Toggle Bookmark"
   - fix: Fail to evaluate expressions if macro can't be expanded.
   - enhancement: New menu item "Code completion" in "Code" menu.
+  - fix: Can't compile / run assembly files in gcc 13/14 .
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.
