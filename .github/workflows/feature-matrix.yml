@@ -10,7 +10,6 @@ jobs:
       matrix:
         lua_addon: ["y", "n"]
         sdcc: ["y", "n"]
-        vcs: ["y", "n"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -28,8 +27,8 @@ jobs:
 
       - name: Build
         run: |
-          name="redpanda-cpp-${{ matrix.lua_addon }}-${{ matrix.sdcc }}-${{ matrix.vcs }}"
-          xmake f --qt=/usr --prefix=/ --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }} --vcs=${{ matrix.vcs }}
+          name="redpanda-cpp-${{ matrix.lua_addon }}-${{ matrix.sdcc }}"
+          xmake f --qt=/usr --prefix=/ --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }}
           xmake b
           xmake i -o "pkg/$name"
           tar -cf "pkg/$name.tar" -C pkg "$name"
@@ -37,7 +36,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Ubuntu 22.04 - lua-addon=${{ matrix.lua_addon }}, sdcc=${{ matrix.sdcc }}, vcs=${{ matrix.vcs }}
+          name: Ubuntu 22.04 - lua-addon=${{ matrix.lua_addon }}, sdcc=${{ matrix.sdcc }}
           path: pkg/*.tar
 
   windows_msvc_x64:
@@ -47,7 +46,6 @@ jobs:
       matrix:
         lua_addon: ["y", "n"]
         sdcc: ["y", "n"]
-        vcs: ["y", "n"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -69,8 +67,8 @@ jobs:
 
       - name: Build
         run: |
-          $install_dir = "pkg/redpanda-cpp-${{ matrix.lua_addon }}-${{ matrix.sdcc }}-${{ matrix.vcs }}"
-          xmake f -p windows -a x64 --qt="${env:QT_ROOT_DIR}" --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }} --vcs=${{ matrix.vcs }}
+          $install_dir = "pkg/redpanda-cpp-${{ matrix.lua_addon }}-${{ matrix.sdcc }}"
+          xmake f -p windows -a x64 --qt="${env:QT_ROOT_DIR}" --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }}
           xmake b
           xmake i -o $install_dir
           mv $install_dir/bin/* $install_dir/
@@ -80,5 +78,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Windows MSVC x64 - lua-addon=${{ matrix.lua_addon }}, sdcc=${{ matrix.sdcc }}, vcs=${{ matrix.vcs }}
+          name: Windows MSVC x64 - lua-addon=${{ matrix.lua_addon }}, sdcc=${{ matrix.sdcc }}
           path: pkg/*
