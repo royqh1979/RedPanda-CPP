@@ -576,9 +576,11 @@ void CppScopes::addScope(int line, PStatement scopeStatement)
     scope->statement = scopeStatement;
     mScopes.append(scope);
 #ifdef QT_DEBUG
-    if (!mScopes.isEmpty() && mScopes.back()->startLine>line) {
+    if (!mScopes.isEmpty() && mScopes.back()->startLine > line) {
         qDebug()<<QString("Error: new scope %1 at %2 which is less that last scope %3")
-                  .arg(scopeStatement->fullName, line,mScopes.back()->startLine>line);
+                  .arg(scopeStatement->fullName)
+                  .arg(line)
+                  .arg(mScopes.back()->startLine);
     }
 #endif
 }

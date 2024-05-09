@@ -238,7 +238,7 @@ QString variableExpansion(const QString &command, int &pos, const QMap<QString, 
                             unescaped.append("\\u");
                         } else {
                             int hex = digits.toUInt(nullptr, 16);
-                            QByteArray encoded = QString(hex).toUtf8();
+                            QByteArray encoded = QString(QChar(hex)).toUtf8();
                             unescaped.append(encoded);
                         }
                         break;
@@ -251,7 +251,8 @@ QString variableExpansion(const QString &command, int &pos, const QMap<QString, 
                             unescaped.append("\\U");
                         } else {
                             int hex = digits.toUInt(nullptr, 16);
-                            QByteArray encoded = QString(hex).toUtf8();
+                            char32_t s = hex;
+                            QByteArray encoded = QString::fromUcs4(&s, 1).toUtf8();
                             unescaped.append(encoded);
                         }
                         break;
