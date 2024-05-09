@@ -258,7 +258,7 @@ void BookmarkModel::save(const QString &filename, const QString& projectFolder)
             } else {
                 PBookmark pTemp = list[idx];
                 if (pTemp->timestamp<=bookmark->timestamp) {
-                    bookmark->description = pTemp->timestamp;
+                    bookmark->description = pTemp->description;
                     bookmark->timestamp = pTemp->timestamp;
                     if (forProject == mIsForProject)
                         emit dataChanged(createIndex(idx,2),createIndex(idx,2));

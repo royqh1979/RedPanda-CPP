@@ -3239,7 +3239,7 @@ void QSynEdit::recalcCharExtent()
 
 QString QSynEdit::expandAtWideGlyphs(const QString &S)
 {
-    QString Result(S.length()*2); // speed improvement
+    QString Result(S.length()*2, QChar(0)); // speed improvement
     int  j = 0;
     for (int i=0;i<S.length();i++) {
         int CountOfAvgGlyphs = ceil(fontMetrics().horizontalAdvance(S[i])/(double)mCharWidth);
