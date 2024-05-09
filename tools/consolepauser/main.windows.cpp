@@ -157,7 +157,7 @@ DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG 
     WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
     if ( bSuccess == FALSE ) {
         printf( "AssignProcessToJobObject failed: error %lu\n", GetLastError() );
-        PauseExit(EXIT_ASSGIN_PROCESS_JOB_FAILED);
+        PauseExit(EXIT_ASSGIN_PROCESS_JOB_FAILED,reInp);
     }
 
     WaitForSingleObject(pi.hProcess, INFINITE); // Wait for it to finish
