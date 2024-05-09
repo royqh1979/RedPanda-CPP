@@ -51,7 +51,8 @@ Var /GLOBAL sectionDepTemp
 !macroend
 
 !macro CheckOsBuild
-  ${IfNot} ${AtLeastBuild} ${REQUIRED_WINDOWS_BUILD}
+  ${IfNot} ${IsNT}
+  ${OrIfNot} ${AtLeastBuild} ${REQUIRED_WINDOWS_BUILD}
     MessageBox MB_OK|MB_ICONSTOP "$(ErrorWindowsBuildRequired)"
     Abort
   ${EndIf}
