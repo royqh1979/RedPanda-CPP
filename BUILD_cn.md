@@ -29,7 +29,7 @@
 | ------------------ | --- | --- | ----- |
 | MSYS2 + 基于 GNU 的 MinGW | ✔️ | ✔️ | ❌ |
 | MSYS2 + 基于 LLVM 的 MinGW | ✔️ | ✔️ | ✔️ |
-| [Windows XP](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW UCRT](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
+| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
 另请参阅[详细构建指南——Windows](./docs/detailed-build-win-cn.md)。
 
@@ -77,20 +77,18 @@
 - `--mingw`：`--mingw32`（x86 程序）或 `--mingw64`（x64 程序）的别名。
 - `--ucrt <build>`：把 Windows SDK 附带的 UCRT 运行时添加到包中。例如 `--ucrt 22621` 表示 Windows 11 SDK 22H2。
 
-## 用于 Windows XP 的 Qt 库 + MinGW UCRT 工具链
+## 用于 Windows NT 5.x 的 Qt 库 + MinGW Lite 工具链
 
-`build-xp.sh` 脚本和 `build-mingw.sh` 类似，但是会根据当前 MSYS2 环境下载独立的 MinGW UCRT 工具链来构建用于 Windows XP 的小熊猫C++：
-- MINGW32/CLANG32：构建 x86 程序；
-- MINGW64/UCRT64/CLANG64：构建 x64 程序。
+`build-xp.sh` 脚本和 `build-mingw.sh` 类似，但是会下载独立的 MinGW Lite 工具链来构建用于 Windows NT 5.x 的小熊猫C++。
 
 前置条件：
 
 0. Windows 10 x64 或更高版本。
 1. 安装 MSYS2。
-2. 在所选环境中安装所需工具：
+2. 安装所需工具：
    ```bash
    pacman -S \
-     $MINGW_PACKAGE_PREFIX-{7zip,cmake} \
+     mingw-w64-x86_64-{7zip,cmake} \
      mingw-w64-i686-nsis \
      git curl
    ```
@@ -100,26 +98,26 @@
      C:
      └─ Qt
         └─ 5.15.13
-           ├─ mingw132_32-redpanda
+           ├─ mingw141_32-msvcrt-redpanda
            │  ├─ bin
            │  ├─ include
            │  ├─ lib
            │  └─ ...
-           └─ mingw132_64-redpanda
+           └─ mingw141_64-msvcrt-redpanda
               ├─ bin
               ├─ include
               ├─ lib
               └─ ...
      ```
    - 也可以从源代码自行构建 Qt 并在构建时指定 `--qt` 参数。
-4. 安装 Windows 11 SDK 22H2 以获取 UCRT 运行时。
 
 要构建此项目，启动所选的 MSYS2 环境，然后运行
 ```bash
-./packages/msys/build-xp.sh --ucrt 22621
+./packages/msys/build-xp.sh -p 32-msvcrt
 ```
 
 此脚本除了接受 `build-mingw.sh` 的参数外，还接受以下参数：
+- `-p|--profile <profile>`：（必需）MinGW Lite 和 Qt 库的编译配置。可用的配置有 `64-ucrt`、`32-ucrt`、`64-msvcrt`、`32-msvcrt`、`32-win2000`。
 - `--qt <dir>`：指定 Qt 库目录。例如 `--qt /d/myqt-32`。
 
   目录结构应该如下：

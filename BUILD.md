@@ -29,7 +29,7 @@ To setup development environment in Visual Studio Code:
 | ---------------------------- | --- | --- | ----- |
 | MSYS2 + GNU-based MinGW | ✔️ | ✔️ | ❌ |
 | MSYS2 + LLVM-based MinGW | ✔️ | ✔️ | ✔️ |
-| [Windows XP](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW UCRT](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
+| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
 See also [more build instructions for Windows](./docs/detailed-build-win.md).
 
@@ -77,20 +77,18 @@ Extra arguments for `build-mingw.sh`:
 - `--mingw`: alias for `--mingw32` (x86 app) or `--mingw64` (x64 app).
 - `--ucrt <build>`: add UCRT runtime from Windows SDK to the package. e.g. `--ucrt 22621` for Windows 11 SDK 22H2.
 
-## Windows XP Qt Library with MinGW UCRT Toolchain
+## Windows NT 5.x Qt Library with MinGW Lite Toolchain
 
-The script `build-xp.sh` is alike `build-mingw.sh`, but it will download a standalone MinGW UCRT toolchain to build Red Panda C++ for Windows XP, according to current MSYS2 environment:
-- MINGW32/CLANG32: build x86 app;
-- MINGW64/UCRT64/CLANG64: build x64 app.
+The script `build-xp.sh` is alike `build-mingw.sh`, but it will download a standalone MinGW Lite toolchain to build Red Panda C++ for Windows NT 5.x.
 
 Prerequisites:
 
 0. Windows 10 x64 or later.
 1. Install MSYS2.
-2. In selected environment, install required utils:
+2. Install required utils:
    ```bash
    pacman -S \
-     $MINGW_PACKAGE_PREFIX-{7zip,cmake} \
+     mingw-w64-x86_64-{7zip,cmake} \
      mingw-w64-i686-nsis \
      git curl
    ```
@@ -100,26 +98,26 @@ Prerequisites:
      C:
      └─ Qt
         └─ 5.15.13
-           ├─ mingw132_32-redpanda
+           ├─ mingw141_32-msvcrt-redpanda
            │  ├─ bin
            │  ├─ include
            │  ├─ lib
            │  └─ ...
-           └─ mingw132_64-redpanda
+           └─ mingw141_64-msvcrt-redpanda
               ├─ bin
               ├─ include
               ├─ lib
               └─ ...
      ```
    - Or you can build from source and specify the path with `--qt` argument.
-4. Install Windows 11 SDK 22H2 for UCRT runtime.
 
 To build, launch selected MSYS2 environment, run:
 ```bash
-./packages/msys/build-xp.sh --ucrt 22621
+./packages/msys/build-xp.sh -p 32-msvcrt
 ```
 
 This script accepts the same arguments as `build-mingw.sh`, plus:
+- `-p|--profile <profile>`: (REQUIRED) the profile of MinGW Lite as well as Qt library. Available profiles are `64-ucrt`, `64-msvcrt`, `32-ucrt`, `32-msvcrt`, `32-win2000`.
 - `--qt <dir>`: set Qt directory. e.g. `--qt /d/myqt-32`.
 
   The directory structure should be like
