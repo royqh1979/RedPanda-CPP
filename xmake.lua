@@ -189,7 +189,6 @@ if has_config("lua-addon") then
 end
 includes("libs/qsynedit")
 includes("libs/redpanda_qt_utils")
-includes("tools/astyle")
 includes("tools/consolepauser")
 if has_config("vcs") then
     if is_os("windows") then

@@ -12,5 +12,3 @@ make LINUX_STATIC_IME_PLUGIN=ON -j$(nproc)
 
 # install RedPanda C++ to AppDir
 make INSTALL_ROOT=/out install
-# remove unnecessary, huge files
-rm /out/usr/libexec/RedPandaCPP/redpanda-git-askpass

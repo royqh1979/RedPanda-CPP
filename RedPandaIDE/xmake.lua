@@ -144,6 +144,7 @@ target("RedPandaIDE")
         "settingsdialog/executorgeneralwidget",
         "settingsdialog/executorproblemsetwidget",
         "settingsdialog/formattergeneralwidget",
+        "settingsdialog/formatterpathwidget",
         "settingsdialog/languageasmgenerationwidget",
         "settingsdialog/projectcompileparamaterswidget",
         "settingsdialog/projectcompilerwidget",
@@ -188,9 +189,6 @@ target("RedPandaIDE")
         add_ui_classes(
             "settingsdialog/environmentfileassociationwidget",
             "settingsdialog/projectversioninfowidget")
-    else
-        add_ui_classes(
-            "settingsdialog/formatterpathwidget")
     end
 
     if has_config("lua-addon") then

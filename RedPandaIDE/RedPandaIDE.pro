@@ -612,10 +612,7 @@ RESOURCES += colorscheme_files
 
 macos: {
     # Add needed executables into the main app bundle
-    bundled_executable.files = \
-        $$OUT_PWD/../tools/astyle/astyle \
-        $$OUT_PWD/../tools/consolepauser/consolepauser \
-        $$OUT_PWD/../tools/redpanda-git-askpass/redpanda-git-askpass.app/Contents/MacOS/redpanda-git-askpass
+    bundled_executable.files = $$OUT_PWD/../tools/consolepauser/consolepauser
     bundled_executable.path = Contents/MacOS
 
     # Also bundled templates

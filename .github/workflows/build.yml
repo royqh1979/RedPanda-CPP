@@ -369,7 +369,7 @@ jobs:
 
   macos_x86_64:
     name: macOS x86_64
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
       - uses: actions/checkout@v2
