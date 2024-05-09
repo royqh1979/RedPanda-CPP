@@ -3237,27 +3237,6 @@ void QSynEdit::recalcCharExtent()
     setLeftPos(currentLeftCol * mCharWidth);
 }
 
-QString QSynEdit::expandAtWideGlyphs(const QString &S)
-{
-    QString Result(S.length()*2, QChar(0)); // speed improvement
-    int  j = 0;
-    for (int i=0;i<S.length();i++) {
-        int CountOfAvgGlyphs = ceil(fontMetrics().horizontalAdvance(S[i])/(double)mCharWidth);
-        if (j+CountOfAvgGlyphs>=Result.length())
-            Result.resize(Result.length()+128);
-        // insert CountOfAvgGlyphs filling chars
-        while (CountOfAvgGlyphs>1) {
-            Result[j]=QChar(0xE000);
-            j++;
-            CountOfAvgGlyphs--;
-        }
-        Result[j]=S[i];
-        j++;
-    }
-    Result.resize(j);
-    return Result;
-}
-
 void QSynEdit::updateModifiedStatus()
 {
     bool oldModified = mModified;

@@ -527,7 +527,6 @@ private:
     void doUpdateVScrollbar();
     void updateCaret();
     void recalcCharExtent();
-    QString expandAtWideGlyphs(const QString& S);
     void updateModifiedStatus();
     int reparseLines(int startLine, int endLine);
     //void reparseLine(int line);
