@@ -24,6 +24,7 @@ using std::string;
 #include <processthreadsapi.h>
 #include <conio.h>
 #include <stdbool.h>
+#include <versionhelpers.h>
 
 #ifndef WINBOOL
 #define WINBOOL BOOL
@@ -52,6 +53,7 @@ enum RunProgramFlag {
 };
 
 HANDLE hJob;
+bool enableJobControl = IsWindowsXPOrGreater();
 
 bool pauseBeforeExit = false;
 
@@ -154,10 +156,12 @@ DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG 
         printf("\nError %lu: %s\n",GetLastError(),GetErrorMessage().c_str());
         PauseExit(EXIT_CREATE_PROCESS_FAILED,reInp);
     }
-    WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
-    if ( bSuccess == FALSE ) {
-        printf( "AssignProcessToJobObject failed: error %lu\n", GetLastError() );
-        PauseExit(EXIT_ASSGIN_PROCESS_JOB_FAILED,reInp);
+    if (enableJobControl) {
+        WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
+        if ( bSuccess == FALSE ) {
+            printf( "AssignProcessToJobObject failed: error %lu\n", GetLastError() );
+            PauseExit(EXIT_ASSGIN_PROCESS_JOB_FAILED,reInp);
+        }
     }
 
     WaitForSingleObject(pi.hProcess, INFINITE); // Wait for it to finish
@@ -221,20 +225,22 @@ int main(int argc, char** argv) {
     // Then build the to-run application command
     string command = GetCommand(argc, argv, reInp, enableVisualTerminalSeq);
 
-    hJob= CreateJobObject( &sa, NULL );
+    if (enableJobControl) {
+        hJob= CreateJobObject( &sa, NULL );
 
-    if ( hJob == NULL ) {
-        printf( "CreateJobObject failed: error %lu\n", GetLastError() );
-        PauseExit(EXIT_CREATE_JOB_OBJ_FAILED,reInp);
-    }
+        if ( hJob == NULL ) {
+            printf( "CreateJobObject failed: error %lu\n", GetLastError() );
+            PauseExit(EXIT_CREATE_JOB_OBJ_FAILED,reInp);
+        }
 
-    JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
-    memset(&info,0,sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
-    info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-    WINBOOL bSuccess = SetInformationJobObject( hJob, JobObjectExtendedLimitInformation, &info, sizeof( info ) );
-    if ( bSuccess == FALSE ) {
-        printf( "SetInformationJobObject failed: error %lu\n", GetLastError() );
-        PauseExit(EXIT_SET_JOB_OBJ_INFO_FAILED,reInp);
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
+        memset(&info,0,sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        WINBOOL bSuccess = SetInformationJobObject( hJob, JobObjectExtendedLimitInformation, &info, sizeof( info ) );
+        if ( bSuccess == FALSE ) {
+            printf( "SetInformationJobObject failed: error %lu\n", GetLastError() );
+            PauseExit(EXIT_SET_JOB_OBJ_INFO_FAILED,reInp);
+        }
     }
 
     HANDLE hOutput = NULL;
