@@ -35,6 +35,7 @@
 #include <QJsonObject>
 #include "widgets/signalmessagedialog.h"
 #include <QApplication>
+#include <QRegularExpression>
 
 Debugger::Debugger(QObject *parent) : QObject(parent),
     mForceUTF8(false),
@@ -2461,7 +2462,7 @@ MemoryModel::MemoryModel(int dataPerLine, QObject *parent):
 void MemoryModel::updateMemory(const QStringList &value)
 {
     int maxDataPerLine=-1;
-    QRegExp delimiter("(\\s+)");
+    QRegularExpression delimiter("(\\s+)");
     QList<PMemoryLine> newModel;
     for (int i=0;i<value.length();i++) {
         QString line = value[i].trimmed();
