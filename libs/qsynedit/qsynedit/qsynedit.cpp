@@ -38,7 +38,6 @@
 #include <QMessageBox>
 #include <QDrag>
 #include <QMimeData>
-#include <QDesktopWidget>
 #include <QTextEdit>
 #include <QMimeData>
 

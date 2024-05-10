@@ -25,7 +25,6 @@
 #include <QMessageBox>
 #include <QStringList>
 #include <QAbstractNativeEventFilter>
-#include <QDesktopWidget>
 #include <QDir>
 #include <QScreen>
 #include <QLockFile>

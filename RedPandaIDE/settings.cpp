@@ -28,7 +28,6 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QScreen>
-#include <QDesktopWidget>
 #include <QRegularExpression>
 #include <QJsonDocument>
 #include <QJsonObject>
