@@ -28,7 +28,6 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QScreen>
-#include <QDesktopWidget>
 #include <QRegularExpression>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -6443,19 +6442,23 @@ void Settings::UI::doLoad()
     mProblemOrder = intValue("problem_order",6);
 
     //dialogs
-    mCPUDialogWidth = intValue("cpu_dialog_width",977*qApp->desktop()->width()/1920);
-    mCPUDialogHeight = intValue("cpu_dialog_height",622*qApp->desktop()->height()/1080);
-    mCPUDialogSplitterPos = intValue("cpu_dialog_splitter",500*qApp->desktop()->width()/1920);
-    mSettingsDialogWidth = intValue("settings_dialog_width",977*qApp->desktop()->width()/1920);
-    mSettingsDialogHeight = intValue("settings_dialog_height",622*qApp->desktop()->height()/1080);
-    mSettingsDialogSplitterPos = intValue("settings_dialog_splitter",300*qApp->desktop()->width()/1920);
+    QRect geometry = qApp->primaryScreen()->geometry();
+    int width = geometry.width();
+    int height = geometry.height();
 
-    mNewProjectDialogWidth = intValue("new_project_dialog_width", 900*qApp->desktop()->width()/1920);
-    mNewProjectDialogHeight = intValue("new_project_dialog_height", 600*qApp->desktop()->height()/1080);
-    mNewClassDialogWidth = intValue("new_class_dialog_width", 642*qApp->desktop()->width()/1920);
-    mNewClassDialogHeight = intValue("new_class_dialog_height", 300*qApp->desktop()->height()/1080);
-    mNewHeaderDialogWidth = intValue("new_header_dialog_width", 642*qApp->desktop()->width()/1920);
-    mNewHeaderDialogHeight = intValue("new_header_dialog_height", 300*qApp->desktop()->height()/1080);
+    mCPUDialogWidth = intValue("cpu_dialog_width", 977 * width / 1920);
+    mCPUDialogHeight = intValue("cpu_dialog_height", 622 * height / 1080);
+    mCPUDialogSplitterPos = intValue("cpu_dialog_splitter", 500 * width / 1920);
+    mSettingsDialogWidth = intValue("settings_dialog_width", 977 * width / 1920);
+    mSettingsDialogHeight = intValue("settings_dialog_height", 622 * height / 1080);
+    mSettingsDialogSplitterPos = intValue("settings_dialog_splitter", 300 * width / 1920);
+
+    mNewProjectDialogWidth = intValue("new_project_dialog_width", 900 * width / 1920);
+    mNewProjectDialogHeight = intValue("new_project_dialog_height", 600 * height / 1080);
+    mNewClassDialogWidth = intValue("new_class_dialog_width", 642 * width / 1920);
+    mNewClassDialogHeight = intValue("new_class_dialog_height", 300 * height / 1080);
+    mNewHeaderDialogWidth = intValue("new_header_dialog_width", 642 * width / 1920);
+    mNewHeaderDialogHeight = intValue("new_header_dialog_height", 300 * height / 1080);
 }
 
 #ifdef ENABLE_VCS

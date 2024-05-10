@@ -16,7 +16,7 @@
  */
 #include "regexsearcher.h"
 
-#include <QRegExp>
+#include <QRegularExpression>
 
 namespace QSynedit {
 

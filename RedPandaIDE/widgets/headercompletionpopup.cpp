@@ -39,7 +39,7 @@ HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget(parent)
     mListView->setItemDelegate(mDelegate);
     setLayout(new QVBoxLayout());
     layout()->addWidget(mListView);
-    layout()->setMargin(0);
+    layout()->setContentsMargins(0, 0, 0, 0);
 
     mListView->setFocus();
 

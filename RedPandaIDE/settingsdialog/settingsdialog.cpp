@@ -63,7 +63,6 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QModelIndex>
-#include <QDesktopWidget>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
