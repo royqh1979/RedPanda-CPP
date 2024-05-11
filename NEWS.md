@@ -167,6 +167,7 @@ Red Panda C++ Version 2.27
   - fix: Fail to evaluate expressions if macro can't be expanded.
   - enhancement: New menu item "Code completion" in "Code" menu.
   - fix: Can't compile / run assembly files in gcc 13/14 .
+  - enhancement: Show full filepath in the tooltip of editor tab.
     
 Red Panda C++ Version 2.26
   - enhancement: Code suggestion for embedded std::vectors.

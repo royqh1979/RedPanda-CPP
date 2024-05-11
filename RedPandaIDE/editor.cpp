@@ -5547,4 +5547,5 @@ void Editor::updateCaption(const QString& newCaption) {
     }
     caption = caption.replace("&","&&");
     mParentPageControl->setTabText(index,caption);
+    mParentPageControl->setTabToolTip(index, mFilename);
 }
