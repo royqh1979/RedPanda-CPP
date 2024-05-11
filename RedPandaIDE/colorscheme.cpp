@@ -538,7 +538,7 @@ void ColorManager::initItemDefines()
     addDefine(COLOR_SCHEME_GUTTER,
               QObject::tr("Gutter"),
               QObject::tr("Editor"),
-              true,true,true);
+              true,false,false);
     addDefine(COLOR_SCHEME_GUTTER_ACTIVE_LINE,
               QObject::tr("Gutter Active Line"),
               QObject::tr("Editor"),
