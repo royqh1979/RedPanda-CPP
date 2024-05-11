@@ -1,4 +1,4 @@
-Red Panda C++ Version 2.27
+Red Panda C++ Version 3.0
 
   - enhancement: New chinese translation for invalid filename messagebox. (by XY0797@github.com)
   - enhancement: Limit the minimum font size in options dialog to 5. (by XY0797@github.com)
