@@ -77,13 +77,8 @@ string GetErrorMessage() {
         NULL,GetLastError(),MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),&result[0],result.size(),NULL);
 
     // Clear newlines at end of string
-    for(int i = result.length()-1;i >= 0;i--) {
-        if(isspace(result[i])) {
-            result[i] = 0;
-        } else {
-            break;
-        }
-    }
+    while (!result.empty() && (result.back() == 0 || isspace(result.back())))
+        result.pop_back();
     return result;
 }
 
