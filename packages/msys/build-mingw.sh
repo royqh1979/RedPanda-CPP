@@ -150,10 +150,12 @@ SOURCE_DIR="$(pwd)"
 ASSETS_DIR="${SOURCE_DIR}/assets"
 UCRT_DIR="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.${UCRT}.0/ucrt/DLLs/${NSIS_ARCH}"
 
+MINGW32_FOLDER="mingw32"
 MINGW32_ARCHIVE="mingw32.7z"
-MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC 8.1"
-MINGW32_PACKAGE_SUFFIX="MinGW32_8.1"
+MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC 11.2"
+MINGW32_PACKAGE_SUFFIX="MinGW32_11.2"
 
+MINGW64_FOLDER="mingw64"
 MINGW64_ARCHIVE="mingw64.7z"
 MINGW64_COMPILER_NAME="MinGW-w64 X86_64 GCC 11.4"
 MINGW64_PACKAGE_SUFFIX="MinGW64_11.4"
@@ -193,12 +195,12 @@ if [[ ${CHECK_DEPS} -eq 1 ]]; then
   done
 fi
 
-if [[ ${COMPILER_MINGW32} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" ]]; then
-  echo "Missing MinGW archive: assets/${MINGW32_ARCHIVE}"
+if [[ ${COMPILER_MINGW32} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" && ! -d "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" ]]; then
+  echo "Missing MinGW archive: assets/${MINGW32_ARCHIVE} or MinGW folder: assets/${MINGW32_FOLDER}"
   exit 1
 fi
-if [[ ${COMPILER_MINGW64} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" ]]; then
-  echo "Missing MinGW archive: assets/${MINGW64_ARCHIVE}"
+if [[ ${COMPILER_MINGW64} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" && ! -d "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" ]]; then
+  echo "Missing MinGW archive: assets/${MINGW64_ARCHIVE} or MinGW folder: assets/${MINGW64_FOLDER}"
   exit 1
 fi
 if [[ -n "${UCRT}" && ! -f "${UCRT_DIR}/ucrtbase.dll" ]]; then
@@ -282,11 +284,17 @@ nsis_flags=(
 )
 if [[ ${COMPILER_MINGW32} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW32)
-  [[ -d "mingw32" ]] || 7z x "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" -o"${PACKAGE_DIR}"
+  if [[ ! -d "mingw32" ]]; then
+	[[ -f "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" ]] && 7z x "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" -o"${PACKAGE_DIR}"
+	[[ -d "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" ]] && cp -a --dereference "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" "${PACKAGE_DIR}"
+  fi 
 fi
 if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW64)
-  [[ -d "mingw64" ]] || 7z x "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
+  if [[ ! -d "mingw64" ]]; then  
+	[[ -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" ]] && 7z x "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
+	[[ -d "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" ]] && cp -a --dereference "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" "${PACKAGE_DIR}"
+  fi
 fi
 if [[ -n "${UCRT}" ]]; then
   nsis_flags+=(-DHAVE_UCRT)
