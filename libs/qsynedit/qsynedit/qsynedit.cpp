@@ -6636,7 +6636,7 @@ void QSynEdit::setBlockEnd(BufferCoord value)
       else
           value.ch = 1;
     } else {
-        value.ch = std::min(value.ch, 1);
+        value.ch = std::max(value.ch, 1);
     }
     if (value.ch != mBlockEnd.ch || value.line != mBlockEnd.line) {
         if (mActiveSelectionMode == SelectionMode::Column && value.ch != mBlockEnd.ch) {
