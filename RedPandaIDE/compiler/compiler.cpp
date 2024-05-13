@@ -148,7 +148,7 @@ int Compiler::getLineNumberFromOutputLine(QString &line)
         pos = line.indexOf(',');
     }
     if (pos>=0) {
-        result = line.midRef(0,pos).toInt();
+        result = QStringView(line.data(), pos).toInt();
         if (result > 0)
             line.remove(0,pos+1);
     } else {
@@ -168,7 +168,7 @@ int Compiler::getColunmnFromOutputLine(QString &line)
         pos = line.indexOf(',');
     }
     if (pos>=0) {
-        result = line.midRef(0,pos).toInt();
+        result = QStringView(line.data(), pos).toInt();
         if (result > 0)
             line.remove(0,pos+1);
     }

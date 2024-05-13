@@ -252,7 +252,7 @@ QString QConsole::selText()
         QString s = mContents.getLine(Last);
         if (Last == mContents.lines())
             s+= this->mCommand;
-        result += s.leftRef(ColTo);
+        result.append(s.data(), ColTo);
         return result;
     }
 }

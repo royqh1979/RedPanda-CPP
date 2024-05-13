@@ -4497,7 +4497,8 @@ QString QSynEdit::selText() const
                     result += mDocument->getLine(i);
                     result+=lineBreak();
                 }
-                result += mDocument->getLine(lastLine).leftRef(charTo-1);
+                const QString &line = mDocument->getLine(lastLine);
+                result.append(line.data(), charTo-1);
                 return result;
             }
         }
