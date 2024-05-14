@@ -88,8 +88,9 @@ void EnvironmentAppearanceWidget::doSave()
     pMainWindow->applySettings();
 }
 
-void EnvironmentAppearanceWidget::updateIcons(const QSize &size)
+void EnvironmentAppearanceWidget::updateIcons(const QSize & size)
 {
+    Q_UNUSED(size);
     pIconsManager->setIcon(ui->btnCustomize, IconsManager::ACTION_EDIT_COPY);
     pIconsManager->setIcon(ui->btnOpenCustomThemeFolder, IconsManager::ACTION_MISC_FOLDER);
     pIconsManager->setIcon(ui->btnRemoveCustomTheme, IconsManager::ACTION_MISC_REMOVE);

@@ -49,7 +49,8 @@ void CppTokenizer::tokenize(const QStringList &buffer)
         mBufferStr+='\n';
         mBufferStr+=mBuffer[i];
     }
-    mStart = mBufferStr.data();
+    mBufferStr.append(QChar(0));
+    mStart = mBufferStr.constData();
     mCurrent = mStart;
     mLineCount = mStart;
     QString s = "";
@@ -271,7 +272,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                 if (*(mCurrent+1)!='[') {
                     *pTokenType=TokenType::LambdaCaptures;
                     countLines();
-                    QChar* backup=mCurrent;
+                    const QChar* backup=mCurrent;
                     skipPair('[',']');
                     result = QString(backup,mCurrent-backup);
                     done = true;
@@ -399,7 +400,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
 
 QString CppTokenizer::getNumber()
 {
-    QChar* offset = mCurrent;
+    const QChar* offset = mCurrent;
 
     if (isDigitChar(*mCurrent)) {
         while (isDigitChar(*mCurrent) || isHexChar(*mCurrent)) {
@@ -424,7 +425,7 @@ QString CppTokenizer::getNumber()
 
 QString CppTokenizer::getPreprocessor()
 {
-    QChar *offset = mCurrent;
+    const QChar *offset = mCurrent;
     skipToEOL();
     return QString(offset, mCurrent-offset);
 }
@@ -436,7 +437,7 @@ QString CppTokenizer::getWord()
     skipToNextToken();
 
     // Get next word...
-    QChar* offset = mCurrent;
+    const QChar* offset = mCurrent;
 
     mCurrent++;
     // Copy the word ahead of us
@@ -474,7 +475,7 @@ QString CppTokenizer::getWord()
         if (currentWord!="operator") {
             // Skip template contents, but keep template variable types
             if (*mCurrent == '<') {
-                offset = mCurrent;
+                const QChar* offset = mCurrent;
 
                 if (bFoundTemplate) {
                     skipTemplateArgs();
@@ -486,7 +487,7 @@ QString CppTokenizer::getWord()
                 if (*(mCurrent+1)!='[') {
                     // Append array stuff
                     while(true) {
-                        offset = mCurrent;
+                        const QChar* offset = mCurrent;
                         skipPair('[', ']');
                         result += QString(offset,mCurrent-offset);
                         simplifyArgs(result);
@@ -647,7 +648,7 @@ void CppTokenizer::skipPair(const QChar &cStart, const QChar cEnd)
 
 bool CppTokenizer::skipAngleBracketPair()
 {
-    QChar* backup=mCurrent;
+    const QChar* backup=mCurrent;
     QVector<QChar> stack;
     while (*mCurrent != '\0') {
         switch((*mCurrent).unicode()) {
@@ -732,7 +733,7 @@ void CppTokenizer::skipRawString()
         case ')':
             if (noEscape) {
                 bool ok=true;
-                QChar* pChar=mCurrent+1;
+                const QChar* pChar=mCurrent+1;
                 for (int i=0;i<dCharSeq.length();i++) {
                     if (*pChar!=dCharSeq[i]) {
                         ok=false;
@@ -787,7 +788,7 @@ void CppTokenizer::skipTemplateArgs()
 
     if (skipAngleBracketPair())
         return;
-    QChar* lastBracketPos = mCurrent;
+    const QChar* lastBracketPos = mCurrent;
     bool shouldExit=false;
     while (true) {
         switch(mCurrent->unicode()) {

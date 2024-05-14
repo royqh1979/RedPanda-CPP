@@ -146,9 +146,9 @@ private:
 private:
     QStringList mBuffer;
     QString mBufferStr;
-    QChar* mStart;
-    QChar* mCurrent;
-    QChar* mLineCount;
+    const QChar* mStart;
+    const QChar* mCurrent;
+    const QChar* mLineCount;
     int mCurrentLine;
     QString mLastToken;
     TokenList mTokenList;
