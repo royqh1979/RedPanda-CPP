@@ -1037,7 +1037,7 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
                     currentType=ContentType::Other;
                     break;
                 case ContentType::RawString:
-                    if (line.midRef(0,pos).endsWith(')'+delimiter))
+                    if (QStringView(line.data(), pos).endsWith(')'+delimiter))
                         currentType = ContentType::Other;
                     break;
                 case ContentType::Other:

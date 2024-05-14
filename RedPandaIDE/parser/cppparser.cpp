@@ -3449,7 +3449,7 @@ void CppParser::handlePreprocessor()
 
             // Mention progress to user if we enter a NEW file
             bool ok;
-            int line = s.midRef(delimPos+1).toInt(&ok);
+            int line = QStringView(s.begin() + delimPos + 1, s.end()).toInt(&ok);
             if (line == 1) {
                 mFilesScannedCount++;
                 mFilesToScanCount++;
