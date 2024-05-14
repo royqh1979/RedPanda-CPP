@@ -1,6 +1,7 @@
 Red Panda C++ Version 3.1
 
   - fix: Can't correctly select in column mode.
+  - fix: Can't correctly parse template parameters that contains "->", like "std::queue<std::function<auto()->void>>";
 
 Red Panda C++ Version 3.0
 
@@ -174,6 +175,7 @@ Red Panda C++ Version 3.0
   - enhancement: Show full filepath in the tooltip of editor tab.
     
 Red Panda C++ Version 2.26
+
   - enhancement: Code suggestion for embedded std::vectors.
   - change: Use ctrl+mouseMove event to highlight jumpable symbols (instead of ctrl+tooltip).
   - enhancement: Auto adjust position of the suggestion popup window.

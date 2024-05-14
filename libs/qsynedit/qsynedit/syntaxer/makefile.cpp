@@ -16,6 +16,7 @@
  */
 #include "makefile.h"
 #include "../constants.h"
+#include <qt_utils/utils.h>
 //#include <QDebug>
 
 namespace QSynedit {
@@ -643,7 +644,7 @@ void MakefileSyntaxer::next()
 void MakefileSyntaxer::setLine(const QString &newLine, int lineNumber)
 {
     mLineString = newLine;
-    mLine = mLineString.data();
+    mLine = getNullTerminatedStringData(mLineString);
     mLineNumber = lineNumber;
     mRun = 0;
     next();

@@ -60,7 +60,7 @@ public:
     static const QSet<QString> Directives;
     static const QSet<QString> ATTDirectives;
 private:
-    QChar* mLine;
+    const QChar* mLine;
     QString mLineString;
     int mLineNumber;
     int mRun;

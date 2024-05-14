@@ -16,6 +16,7 @@
  */
 #include "glsl.h"
 #include "../constants.h"
+#include <qt_utils/utils.h>
 
 #include <QFont>
 
@@ -1360,7 +1361,7 @@ void GLSLSyntaxer::next()
 void GLSLSyntaxer::setLine(const QString &newLine, int lineNumber)
 {
     mLineString = newLine;
-    mLine = mLineString.data();
+    mLine = getNullTerminatedStringData(mLineString);
     mLineNumber = lineNumber;
     mRun = 0;
     mRange.blockStarted = 0;

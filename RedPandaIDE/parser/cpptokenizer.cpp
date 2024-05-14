@@ -49,7 +49,8 @@ void CppTokenizer::tokenize(const QStringList &buffer)
         mBufferStr+='\n';
         mBufferStr+=mBuffer[i];
     }
-    mBufferStr.append(QChar(0));
+    //QByteArray is always '\0'-terminated unless it's created by QbyteArray::fromRawData()
+    //mBufferStr.append(QChar(0));
     mStart = mBufferStr.constData();
     mCurrent = mStart;
     mLineCount = mStart;
@@ -695,8 +696,8 @@ bool CppTokenizer::skipAngleBracketPair()
             return false;
         case '-':
             if (*(mCurrent+1)=='>') {
-                mCurrent=backup;
-                return false;
+                mCurrent+=2;
+                continue;
             }
             break;
         case '.':

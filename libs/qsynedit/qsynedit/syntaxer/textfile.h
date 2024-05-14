@@ -42,7 +42,7 @@ public:
 
     static const QSet<QString> Directives;
 private:
-    QChar* mLine;
+    const QChar* mLine;
     QString mLineString;
     int mLineNumber;
     int mRun;

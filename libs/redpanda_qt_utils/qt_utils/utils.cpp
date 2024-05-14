@@ -756,3 +756,12 @@ QString replacePrefix(const QString &oldString, const QString &prefix, const QSt
     }
     return result;
 }
+
+const QChar *getNullTerminatedStringData(const QString &str)
+{
+    const QChar* result = str.constData();
+    if (result[str.size()]!=QChar(0)) {
+        result = str.data();
+    }
+    return result;
+}

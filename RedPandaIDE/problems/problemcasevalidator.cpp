@@ -89,7 +89,7 @@ bool ProblemCaseValidator::equalIgnoringSpaces(const QString &s1, const QString 
 QStringList ProblemCaseValidator::split(const QString &s)
 {
     QStringList result;
-    const QChar* p = s.data();
+    const QChar* p = getNullTerminatedStringData(s);
     const QChar* start = p;
     while (p->unicode()!=0) {
         if (p->isSpace()) {

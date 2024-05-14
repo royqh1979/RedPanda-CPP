@@ -134,7 +134,7 @@ private:
     SyntaxState mRange;
 //    SynRangeState mSpaceRange;
     QString mLineString;
-    QChar* mLine;
+    const QChar* mLine;
     int mLineSize;
     int mRun;
     int mStringLen;
