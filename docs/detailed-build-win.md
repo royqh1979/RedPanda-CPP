@@ -58,7 +58,8 @@ To build:
 
 Prerequisites:
 
-0. Windows 7 x64 or later. ARM64 is not supported.
+0. Windows 10 x64 or later. ARM64 is not supported.
+   - For MSVC toolchain, Windows has to use Unicode UTF-8 for worldwide language support.
 1. Install Qt with online installer from [Qt.io](https://www.qt.io/download-qt-installer-oss).
    - Select the library (in _Qt_ group, _Qt 5.15.2_ subgroup, check at lease one of _MinGW 8.1.0 32-bit_, _MinGW 8.1.0 64-bit_, _MSVC 2019 32-bit_ or _MSVC 2019 64-bit_).
    - For MinGW toolchain, select the toolchain (in _Qt_ group, _Developer and Designer Tools_ subgroup, check _MinGW 8.1.0 32-bit_ or _MinGW 8.1.0 64-bit_, matching the library).
@@ -115,15 +116,11 @@ To build:
 
 Prerequisites:
 
-0. Windows 7 x64 or later. ARM64 is not supported.
-   - For a fresh installation of Windows 7, install following components in order:
-     1. SHA-2 code signing support (prerequisite of .NET Framework 4.8),
-     2. .NET Framework 4.8 (prerequisite of Windows Management Framework 5.1 and Visual Studio; also optional dependency of Git for Windows),
-     3. Windows Management Framework 5.1 (prerequisite of vcpkg bootstrapping).
+0. Windows 10 x64 or later. ARM64 is not supported.
+   - For MSVC toolchain, Windows has to use Unicode UTF-8 for worldwide language support.
 1. Install Visual Studio 2017 or later, or Visual Studio Build Tools 2017 or later, with _Desktop Development with C++_ workload.
    - In _Installation Details_ panel, under the _Desktop Development with C++_ workload, select at least one _MSVC x86/x64 build tools_ and one _Windows SDK_.
 2. Install [standalone vcpkg](https://vcpkg.io/en/getting-started).
-   - As of 2023.08.09, [a patch](./packages/windows/vcpkg-win7-2023.08.09.patch) is required for Windows 7 to use compatible version of Python. Affected files will change over time, so manually edit them to apply the patch.
 3. Install Qt with vcpkg.
    ```ps1
    $TARGET = "x64-windows-static" # or "x86-windows-static"
