@@ -39,8 +39,8 @@ fi
 PROFILE=$2
 shift 2
 
-QT_VERSION="5.15.13"
-QT_NAME="mingw141_${PROFILE}-redpanda"
+QT_VERSION="5.15.13+redpanda1"
+QT_NAME="mingw141_${PROFILE}"
 case "${PROFILE}" in
   64-ucrt|64-msvcrt)
     NSIS_ARCH=x64
@@ -161,10 +161,6 @@ SOURCE_DIR="$(pwd)"
 ASSETS_DIR="${SOURCE_DIR}/assets"
 UCRT_DIR="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.${UCRT}.0/ucrt/DLLs/${NSIS_ARCH}"
 
-MINGW_LITE_RELEASE="14.1.0-r1"
-HOST_MINGW_ARCHIVE="mingw${PROFILE}-${MINGW_LITE_RELEASE}.7z"
-HOST_MINGW_BIT="${PROFILE%%-*}"
-
 REDPANDA_MINGW_RELEASE="11.4.0-r0"
 MINGW32_ARCHIVE="mingw32-${REDPANDA_MINGW_RELEASE}.7z"
 MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC"
@@ -174,6 +170,7 @@ MINGW64_ARCHIVE="mingw64-${REDPANDA_MINGW_RELEASE}.7z"
 MINGW64_COMPILER_NAME="MinGW-w64 x86_64 GCC"
 MINGW64_PACKAGE_SUFFIX="mingw64"
 
+MINGW_LITE_RELEASE="14.1.0-r2"
 MINGW32_WIN2000_ARCHIVE="mingw32-win2000-${MINGW_LITE_RELEASE}.7z"
 
 if [[ ${#compilers[@]} -eq 0 ]]; then
@@ -213,6 +210,8 @@ if [[ -n "${UCRT}" && ! -f "${UCRT_DIR}/ucrtbase.dll" ]]; then
   exit 1
 fi
 
+export PATH="${QT_DIR}/bin:${PATH}"
+
 ## prepare dirs
 
 if [[ ${CLEAN} -eq 1 ]]; then
@@ -242,12 +241,6 @@ fi
 if [[ ${COMPILER_MINGW32_WIN2000} -eq 1 && ! -f "${ASSETS_DIR}/${MINGW32_WIN2000_ARCHIVE}" ]]; then
   curl -L "https://github.com/redpanda-cpp/mingw-lite/releases/download/${MINGW_LITE_RELEASE}/${MINGW32_WIN2000_ARCHIVE}" -o "${ASSETS_DIR}/${MINGW32_WIN2000_ARCHIVE}"
 fi
-
-## prepare host compiler
-
-[[ -f "${ASSETS_DIR}/${HOST_MINGW_ARCHIVE}" ]] || curl -L "https://github.com/redpanda-cpp/mingw-lite/releases/download/${MINGW_LITE_RELEASE}/${HOST_MINGW_ARCHIVE}" -o "${ASSETS_DIR}/${HOST_MINGW_ARCHIVE}"
-[[ -x "${BUILD_DIR}/mingw${HOST_MINGW_BIT}/bin/gcc.exe" ]] || "${_7Z}" x "${ASSETS_DIR}/${HOST_MINGW_ARCHIVE}" -o"${BUILD_DIR}"
-export PATH="${BUILD_DIR}/mingw${HOST_MINGW_BIT}/bin:${PATH}"
 
 ## build
 fn_print_progress "Building astyle..."

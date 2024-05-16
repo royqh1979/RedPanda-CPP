@@ -79,7 +79,7 @@ Extra arguments for `build-mingw.sh`:
 
 ## Windows NT 5.x Qt Library with MinGW Lite Toolchain
 
-The script `build-xp.sh` is alike `build-mingw.sh`, but it will download a standalone MinGW Lite toolchain to build Red Panda C++ for Windows NT 5.x.
+The script `build-xp.sh` is alike `build-mingw.sh`, but the toolchain is provided by Qt library.
 
 Prerequisites:
 
@@ -97,21 +97,27 @@ Prerequisites:
      ```
      C:
      └─ Qt
-        └─ 5.15.13
-           ├─ mingw141_32-msvcrt-redpanda
+        └─ 5.15.13+redpanda1
+           ├─ mingw141_32-msvcrt
            │  ├─ bin
+           │  │  ├─ gcc.exe
+           │  │  ├─ mingw32-make.exe
+           │  │  └─ qmake.exe
            │  ├─ include
            │  ├─ lib
            │  └─ ...
-           └─ mingw141_64-msvcrt-redpanda
+           └─ mingw141_64-msvcrt
               ├─ bin
+              │  ├─ gcc.exe
+              │  ├─ mingw32-make.exe
+              │  └─ qmake.exe
               ├─ include
               ├─ lib
               └─ ...
      ```
    - Or you can build from source and specify the path with `--qt` argument.
 
-To build, launch selected MSYS2 environment, run:
+To build, launch MSYS2 environment, run:
 ```bash
 ./packages/msys/build-xp.sh -p 32-msvcrt
 ```
