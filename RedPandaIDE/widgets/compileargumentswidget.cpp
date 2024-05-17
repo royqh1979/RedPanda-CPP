@@ -92,7 +92,7 @@ QMap<QString, QString> CompileArgumentsWidget::arguments( bool includeUnset) con
                 {
                     QSpinBox* pInput = static_cast<QSpinBox *>(pLayout->itemAtPosition(j,2)->widget());
                     int val=pInput->value();
-                    if (val>0)
+                    if (val>=0)
                         args.insert(key,QString("%1").arg(val));
                     else {
                         if (includeUnset)
