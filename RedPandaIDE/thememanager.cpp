@@ -322,13 +322,13 @@ const QString AppTheme::categoryIcon() const
 {
     switch (mCategory) {
     case ThemeCategory::FailSafe:
-        return "❌";
+        return QString{"\U0000274C"}; //❌
     case ThemeCategory::BuiltIn:
-        return "📦";
+        return QString{"\U0001F4E6"}; //📦
     case ThemeCategory::Custom:
-        return "📄";
+        return  QString{"\U0001F4C4"}; //📄
     case ThemeCategory::Shared:
-        return "🌐";
+        return QString{"\U0001F310"}; //🌐
     default:
         return "";
     }
