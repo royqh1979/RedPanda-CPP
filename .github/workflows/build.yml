@@ -50,59 +50,56 @@ jobs:
           path: pkg/
 
   windows_legacy:
-    name: Windows NT 5.1–6.0 MinGW
+    name: Windows NT 5.x
     strategy:
       fail-fast: false
       matrix:
-        arch: [32, 64]
+        profile:
+          - 64-ucrt
+          - 32-ucrt
+          - 64-msvcrt
+          - 32-msvcrt
+          - 32-win2000
         include:
-          - arch: 32
-            vcArch: x86
-          - arch: 64
-            vcArch: x64
+          - isUcrt: 0
+          - profile: 64-ucrt
+            isUcrt: 1
+          - profile: 32-ucrt
+            isUcrt: 1
     runs-on: windows-2019
     defaults:
       run:
-        shell: bash
+        shell: msys2 {0}
     env:
-      _QT_VERSION: "5.15.13"
-      _QT_NAME: mingw132_${{ matrix.arch }}-redpanda
-      _REDPANDA_QT_BUILD: "20240428.0"
-      _MINGW_LITE_RELEASE: "13.2.0-r4"
+      _REDPANDA_QT_BUILD: "5.15.13+redpanda1"
+      _QT_NAME: mingw141_${{ matrix.profile }}
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Setup toolchain
-        run: |
-          curl -LO https://github.com/redpanda-cpp/mingw-lite/releases/download/$_MINGW_LITE_RELEASE/mingw${{ matrix.arch }}-ucrt-$_MINGW_LITE_RELEASE.7z
-          7z x mingw${{ matrix.arch }}-ucrt-$_MINGW_LITE_RELEASE.7z
+      - name: Setup
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-x86_64-7zip mingw-w64-x86_64-cmake mingw-w64-i686-nsis curl git
 
       - name: Setup Qt
         run: |
           curl -LO https://github.com/redpanda-cpp/qtbase-xp/releases/download/$_REDPANDA_QT_BUILD/$_QT_NAME.7z
-          7z x $_QT_NAME.7z -oC:/Qt
+          /mingw64/bin/7z x $_QT_NAME.7z -oC:/Qt
 
       - name: Build
         run: |
-          export PATH="/c/Qt/$_QT_VERSION/$_QT_NAME/bin:$PWD/mingw${{ matrix.arch }}/bin:$PATH"
-
-          mkdir build && pushd build
-          {
-            qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
-            mingw32-make -j$(nproc)
-            mingw32-make install
-            cp "/c/Program Files (x86)/Windows Kits/10/Redist/10.0.22621.0/ucrt/DLLs/${{ matrix.vcArch }}"/*.dll $GITHUB_WORKSPACE/pkg/
-          }
-          popd
+          ./packages/msys/build-xp.sh -p ${{ matrix.profile }} $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
 
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Windows NT 5.1–6.0 MinGW - arch=${{ matrix.arch }}
-          path: pkg/
+          name: Windows NT 5.x - profile=${{ matrix.profile }}
+          path: dist/*
 
   windows_msvc_x64:
     name: Windows MSVC x64

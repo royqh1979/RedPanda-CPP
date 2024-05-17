@@ -79,7 +79,7 @@
 
 ## 用于 Windows NT 5.x 的 Qt 库 + MinGW Lite 工具链
 
-`build-xp.sh` 脚本和 `build-mingw.sh` 类似，但是会下载独立的 MinGW Lite 工具链来构建用于 Windows NT 5.x 的小熊猫C++。
+`build-xp.sh` 脚本和 `build-mingw.sh` 类似，但是工具链由 Qt 库提供。
 
 前置条件：
 
@@ -97,21 +97,27 @@
      ```
      C:
      └─ Qt
-        └─ 5.15.13
-           ├─ mingw141_32-msvcrt-redpanda
+        └─ 5.15.13+redpanda1
+           ├─ mingw141_32-msvcrt
            │  ├─ bin
+           │  │  ├─ gcc.exe
+           │  │  ├─ mingw32-make.exe
+           │  │  └─ qmake.exe
            │  ├─ include
            │  ├─ lib
            │  └─ ...
-           └─ mingw141_64-msvcrt-redpanda
+           └─ mingw141_64-msvcrt
               ├─ bin
+              │  ├─ gcc.exe
+              │  ├─ mingw32-make.exe
+              │  └─ qmake.exe
               ├─ include
               ├─ lib
               └─ ...
      ```
    - 也可以从源代码自行构建 Qt 并在构建时指定 `--qt` 参数。
 
-要构建此项目，启动所选的 MSYS2 环境，然后运行
+要构建此项目，启动 MSYS2 环境，然后运行
 ```bash
 ./packages/msys/build-xp.sh -p 32-msvcrt
 ```

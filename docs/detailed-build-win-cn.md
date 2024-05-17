@@ -56,7 +56,8 @@ qmake 变量：
 
 前置条件：
 
-0. Windows 7 x64 或更高版本。不支持 ARM64。
+0. Windows 10 x64 或更高版本。不支持 ARM64。
+   - 对于 MSVC 工具链，Windows 必须使用 Unicode UTF-8 提供全球语言支持。
 1. 用 [Qt.io](https://www.qt.io/download-qt-installer-oss) 或[镜像站](https://mirrors.sjtug.sjtu.edu.cn/docs/qt)的在线安装器安装 Qt。
    - 选中 Qt 库（“Qt” 组下的 “Qt 5.15.2” 小组，勾选 “MinGW 8.1.0 32-bit” “MinGW 8.1.0 64-bit” “MSVC 2019 32-bit” “MSVC 2019 64-bit” 中的至少一个）。
    - 对于 MinGW 工具链，选中相应的工具链（“Qt” 组下的 “Developer and Designer Tools” 小组，“MinGW 8.1.0 32-bit” 或 “MinGW 8.1.0 64-bit”，匹配库的版本）。
@@ -113,15 +114,11 @@ qmake 变量：
 
 前置条件：
 
-0. Windows 7 x64 或更高版本。不支持 ARM64。
-   - 在全新安装的 Windows 7 上，依次安装以下组件：
-     1. SHA-2 代码签名支持（.NET Framework 4.8 的前置条件），
-     2. .NET Framework 4.8（Windows 管理框架 5.1 和 Visual Studio 的前置条件，也是 Git for Windows 的可选依赖），
-     3. Windows 管理框架 5.1（vcpkg 自举的前置条件）。
+0. Windows 10 x64 或更高版本。不支持 ARM64。
+   - Windows 必须使用 Unicode UTF-8 提供全球语言支持。
 1. 安装 Visual Studio 2017 或更高版本，或 “Visual Studio 构建工具 2017” 或更高版本，带有 “使用 C++ 的桌面开发” 工作负载。
    - 在 “安装详细信息” 面板，“使用 C++ 的桌面开发” 之下，至少选择一个 “MSVC x86/x64 生成工具” 和一个 Windows SDK。
 2. 安装 [vcpkg 的独立版本](https://github.com/microsoft/vcpkg/blob/master/README_zh_CN.md#快速开始-windows)。
-   - 截至 2023.08.09，Windows 7 需要[一个补丁](./packages/windows/vcpkg-win7-2023.08.09.patch)以使用兼容的 Python 版本。受影响的文件可能会被修改，所以最好手动修改这些文件。
 3. 用 vcpkg 安装 Qt。
    ```ps1
    $TARGET = "x64-windows-static" # 或 "x86-windows-static"
