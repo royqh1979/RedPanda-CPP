@@ -2,8 +2,9 @@ Red Panda C++ Version 3.1
 
   - fix: Can't correctly select in column mode.
   - fix: Can't correctly parse template parameters that contains "->", like "std::queue<std::function<auto()->void>>";
-  - fix: Shouldn't warn "xxx.s is modifed" when "Generate assembly" is reran.
-  - fix: Shouldn't warn "Makefile is modifed" when "View Makefile" is reran.
+  - fix: Shouldn't warn "xxx.s is modifed" when "Generate assembly" is rerun.
+  - fix: Shouldn't warn "Makefile is modifed" when "View Makefile" is rerun.
+  - fix: In compiler options page, Can't save default stack size to 0MB.
 
 Red Panda C++ Version 3.0
 

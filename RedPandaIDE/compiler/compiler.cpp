@@ -436,7 +436,7 @@ QStringList Compiler::getCCompileArguments(bool checkSyntax)
             else if (pOption->type == CompilerOptionType::Number) {
                 bool ok;
                 int val = compileOptions[key].toInt(&ok);
-                if (ok) {
+                if (ok && val>0) {
                     val = pOption->scale * val;
                     result += QString("%1%2").arg(pOption->setting).arg(val);
                 }
@@ -490,7 +490,7 @@ QStringList Compiler::getCppCompileArguments(bool checkSyntax)
             else if (pOption->type == CompilerOptionType::Number) {
                 bool ok;
                 int val = compileOptions[key].toInt(&ok);
-                if (ok) {
+                if (ok && val>0) {
                     val = pOption->scale * val;
                     result += QString("%1%2").arg(pOption->setting).arg(val);
                 }
@@ -607,7 +607,7 @@ QStringList Compiler::getLibraryArguments(FileType fileType)
             else if (pOption->type == CompilerOptionType::Number) {
                 bool ok;
                 int val = compileOptions[key].toInt(&ok);
-                if (ok) {
+                if (ok && val>0) {
                     val = pOption->scale * val;
                     result += QString("%1%2").arg(pOption->setting).arg(val);
                 }
