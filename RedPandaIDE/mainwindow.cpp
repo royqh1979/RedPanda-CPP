@@ -2298,9 +2298,11 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
                     mCompileSuccessionTask->isExecutable = true;
                 }
                 if (!mCompileSuccessionTask->isExecutable) {
-                    Editor *editor = mEditorList->getOpenedEditorByFilename(mCompileSuccessionTask->execName);
-                    if (editor)
+                    QString targetFileName = QFileInfo(mCompileSuccessionTask->execName).absoluteFilePath();
+                    Editor *editor = mEditorList->getOpenedEditorByFilename(targetFileName);
+                    if (editor) {
                         mEditorList->closeEditor(editor,false,true);
+                    }
                 }
             }
             stretchMessagesPanel(true);
@@ -7333,6 +7335,10 @@ void MainWindow::on_actionView_Makefile_triggered()
 {
     if (!mProject)
         return;
+    Editor *editor = mEditorList->getOpenedEditorByFilename(mProject->makeFileName());
+    if (editor) {
+        mEditorList->closeEditor(editor, false, true);
+    }
     prepareProjectForCompile();
     mCompilerManager->buildProjectMakefile(mProject);
     openFile(mProject->makeFileName());

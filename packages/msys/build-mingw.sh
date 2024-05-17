@@ -2,6 +2,8 @@
 
 set -euxo pipefail
 
+ASTYLE_VERSION_TAG="3.4.15"
+
 function fn_print_help() {
   echo " Usage:
    packages/msys/build-mingw.sh [-m|--msystem <MSYSTEM>] [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
@@ -140,7 +142,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ASTYLE_VERSION_TAG="3.4.14"
 BUILD_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-build"
 ASTYLE_BUILD_DIR="${BUILD_DIR}/astyle"
 PACKAGE_DIR="${TEMP}/redpanda-mingw-${MSYSTEM}-pkg"
