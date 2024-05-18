@@ -5,6 +5,7 @@ Red Panda C++ Version 3.1
   - fix: Shouldn't warn "xxx.s is modifed" when "Generate assembly" is rerun.
   - fix: Shouldn't warn "Makefile is modifed" when "View Makefile" is rerun.
   - fix: In compiler options page, Can't save default stack size to 0MB.
+  - enhancement: Support national flag emojis.
 
 Red Panda C++ Version 3.0
 

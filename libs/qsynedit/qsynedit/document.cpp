@@ -839,9 +839,15 @@ QList<int> calcGlyphStartCharList(const QString &text)
                 //a Combining character
             } else if (ucs4>=0xE0100 && ucs4 <= 0xE01EF) {
                 //variation selector
+            } else if (ucs4>=0x1F3FB && ucs4 <= 0x1F3FF) {
+                //Emoji modifiers for skin tone
+            } else if (!consecutive) {
+                glyphStartCharList.append(i);
+                if (ucs4>=0x1F1E6 && ucs4<=0x1F1FF) // National Flags emoji
+                    consecutive = true;
+                else
+                    consecutive = false;
             } else {
-                if (!consecutive)
-                    glyphStartCharList.append(i);
                 consecutive = false;
             }
             i+=2;
