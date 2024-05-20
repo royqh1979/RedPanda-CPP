@@ -5265,6 +5265,8 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
 
 void MainWindow::disableDebugActions()
 {
+    if (mDebugger != nullptr)
+        ui->actionInterrupt->setVisible(mDebugger->useDebugServer());
     ui->actionInterrupt->setEnabled(false);
     ui->actionStep_Into->setEnabled(false);
     ui->actionStep_Over->setEnabled(false);
@@ -5281,6 +5283,7 @@ void MainWindow::disableDebugActions()
 
 void MainWindow::enableDebugActions()
 {
+    ui->actionInterrupt->setVisible(mDebugger->useDebugServer());
     ui->actionInterrupt->setEnabled(mDebugger->useDebugServer() && mDebugger->inferiorRunning());
     ui->actionStep_Into->setEnabled(!mDebugger->inferiorRunning());
     ui->actionStep_Over->setEnabled(!mDebugger->inferiorRunning());
