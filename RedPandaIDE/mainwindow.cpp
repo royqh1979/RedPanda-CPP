@@ -1078,8 +1078,7 @@ void MainWindow::applySettings()
                         && pSettings->executor().enableProblemSet());
 
     ui->cbProblemCaseValidateType->setCurrentIndex((int)(pSettings->executor().problemCaseValidateType()));
-    if (mDebugger != nullptr)
-        ui->actionInterrupt->setVisible(mDebugger->useDebugServer());
+    ui->actionInterrupt->setVisible(mDebugger && mDebugger->useDebugServer());
     //icon sets for editors
     updateEditorSettings();
     updateDebuggerSettings();
@@ -5265,8 +5264,7 @@ void MainWindow::onEditorTabContextMenu(QTabWidget* tabWidget, const QPoint &pos
 
 void MainWindow::disableDebugActions()
 {
-    if (mDebugger != nullptr)
-        ui->actionInterrupt->setVisible(mDebugger->useDebugServer());
+    ui->actionInterrupt->setVisible(mDebugger && mDebugger->useDebugServer());
     ui->actionInterrupt->setEnabled(false);
     ui->actionStep_Into->setEnabled(false);
     ui->actionStep_Over->setEnabled(false);

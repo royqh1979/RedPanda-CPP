@@ -270,13 +270,13 @@ QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
     case DataType::None:
         return configDir;
     case DataType::ColorScheme:
-        return includeTrailingPathDelimiter(configDir)+"scheme";
+        return QFileInfo{includeTrailingPathDelimiter(configDir)+"scheme"}.absoluteFilePath();
     case DataType::IconSet:
-        return includeTrailingPathDelimiter(configDir)+"iconsets";
+        return QFileInfo{includeTrailingPathDelimiter(configDir)+"iconsets"}.absoluteFilePath();
     case DataType::Theme:
-        return includeTrailingPathDelimiter(configDir)+"themes";
+        return QFileInfo{includeTrailingPathDelimiter(configDir)+"themes"}.absoluteFilePath();
     case DataType::Template:
-        return includeTrailingPathDelimiter(configDir) + "templates";
+        return QFileInfo{includeTrailingPathDelimiter(configDir) + "templates"}.absoluteFilePath();
     }
     return "";
 }
