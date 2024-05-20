@@ -1,5 +1,6 @@
 [
     {
+        "execUseUTF8": true,
         "header": "fmt/core.h",
         "links": "-lfmt"
     },
