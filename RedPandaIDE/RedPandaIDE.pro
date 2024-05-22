@@ -136,6 +136,7 @@ SOURCES += \
     parser/cpptokenizer.cpp \
     parser/parserutils.cpp \
     parser/statementmodel.cpp \
+    problems/competitivecompenionhandler.cpp \
     problems/freeprojectsetformat.cpp \
     problems/ojproblemset.cpp \
     problems/problemcasevalidator.cpp \
@@ -271,6 +272,7 @@ HEADERS += \
     parser/cpptokenizer.h \
     parser/parserutils.h \
     parser/statementmodel.h \
+    problems/competitivecompenionhandler.h \
     problems/freeprojectsetformat.h \
     problems/ojproblemset.h \
     problems/problemcasevalidator.h \

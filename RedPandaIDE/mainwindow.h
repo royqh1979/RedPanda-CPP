@@ -21,7 +21,6 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QFileSystemModel>
-#include <QTcpServer>
 #include <QElapsedTimer>
 #include <QSortFilterProxyModel>
 #include "common.h"
@@ -40,6 +39,7 @@
 #include "widgets/ojproblemsetmodel.h"
 #include "widgets/customfilesystemmodel.h"
 #include "customfileiconprovider.h"
+#include "problems/competitivecompenionhandler.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -374,7 +374,7 @@ private slots:
     void onProblemNameChanged(int index);
     void onProblemRunCurrentCase();
     void onProblemBatchSetCases();
-    void onNewProblemConnection();
+    void onNewProblemReceived(POJProblem newProblem);
     void updateProblemTitle();
     void onEditorClosed();
     void onToolsOutputClear();
@@ -941,7 +941,7 @@ private:
     bool mClosingAll;
     bool mOpenningFiles;
     bool mSystemTurnedOff;
-    QTcpServer mTcpServer;
+    CompetitiveCompanionHandler mCCHandler;
     QColor mErrorColor;
     CompileIssuesState mCompileIssuesState;
 

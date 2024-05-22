@@ -39,6 +39,7 @@
 #include "widgets/choosethemedialog.h"
 #include "thememanager.h"
 #include "utils/font.h"
+#include "problems/ojproblemset.h"
 
 #ifdef Q_OS_WIN
 #include <QTemporaryFile>
@@ -341,6 +342,7 @@ int main(int argc, char *argv[])
             app.installTranslator(&transQt);
         }
     }
+    qRegisterMetaType<POJProblem>("POJProblem");
     qRegisterMetaType<PCompileIssue>("PCompileIssue");
     qRegisterMetaType<PCompileIssue>("PCompileIssue&");
     qRegisterMetaType<QVector<int>>("QVector<int>");
