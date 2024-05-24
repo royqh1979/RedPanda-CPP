@@ -316,7 +316,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/alpine/01-in-docker.sh
+          podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/alpine/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v2
