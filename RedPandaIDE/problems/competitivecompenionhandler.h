@@ -17,9 +17,9 @@
 #ifndef COMPETITIVECOMPANIONHANDLER_H
 #define COMPETITIVECOMPANIONHANDLER_H
 #include <QObject>
-#include <QTcpServer>
 #include <memory>
 #include <QThread>
+#include <QSemaphore>
 
 class OJProblem;
 using POJProblem = std::shared_ptr<OJProblem>;
@@ -32,22 +32,23 @@ public:
     CompetitiveCompanionThread(const CompetitiveCompanionThread&) = delete;
     CompetitiveCompanionThread &operator=(const CompetitiveCompanionThread&) = delete;
     void stop();
-    bool listen();
+    bool waitStart();
 signals:
     void newProblemReceived(int num, int total, POJProblem newProblem);
     // void newBatchReceived(int total);
     // void batchFinished(int total);
 private slots:
-    void onNewProblemConnection();
+    void onNewProblemConnection(QTcpSocket* connection);
     // QThread interface
 protected:
     void run() override;
 private:
-    QTcpServer mTcpServer;
     bool mStop;
     QString mBatchId;
     int mBatchCount;
     int mBatchProblemsRecieved;
+    QSemaphore mStartSemaphore;
+    bool mStartOk;
 };
 
 

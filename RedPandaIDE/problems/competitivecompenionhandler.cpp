@@ -19,6 +19,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QTcpServer>
 #include <QTcpSocket>
 #include <QTextDocument>
 #include "ojproblemset.h"
@@ -38,14 +39,14 @@ void CompetitiveCompanionHandler::start()
     if (!pSettings->executor().enableCompetitiveCompanion())
         return;
     mThread = new CompetitiveCompanionThread(this);
-    if (!mThread->listen()) {
-        delete mThread;
-        mThread = nullptr;
-    } else {
-        connect(mThread,
+    connect(mThread,
                 &CompetitiveCompanionThread::newProblemReceived,
                 this, &CompetitiveCompanionHandler::onNewProblemReceived);
-        mThread->start();
+    mThread->start();
+    if (!mThread->waitStart()) {
+        qDebug()<<"Failed to listen!";
+        delete mThread;
+        mThread = nullptr;
     }
 }
 
@@ -64,12 +65,8 @@ void CompetitiveCompanionHandler::onNewProblemReceived(int num, int total, POJPr
     emit newProblemReceived(num, total, newProblem);
 }
 
-void CompetitiveCompanionThread::onNewProblemConnection()
+void CompetitiveCompanionThread::onNewProblemConnection(QTcpSocket* clientConnection)
 {
-    QTcpSocket* clientConnection = mTcpServer.nextPendingConnection();
-    connect(clientConnection, &QAbstractSocket::disconnected,
-            clientConnection, &QObject::deleteLater);
-
     QByteArray content;
     int unreadCount = 0;
     while (clientConnection->state() == QTcpSocket::ConnectedState) {
@@ -156,10 +153,10 @@ void CompetitiveCompanionThread::onNewProblemConnection()
 CompetitiveCompanionThread::CompetitiveCompanionThread(QObject *parent):
     QThread{parent},
     mStop{false},
-    mBatchProblemsRecieved{0}
+    mBatchProblemsRecieved{0},
+    mStartSemaphore{0},
+    mStartOk{false}
 {
-    connect(&mTcpServer,&QTcpServer::newConnection,
-            this, &CompetitiveCompanionThread::onNewProblemConnection);
 }
 
 void CompetitiveCompanionThread::stop()
@@ -167,18 +164,27 @@ void CompetitiveCompanionThread::stop()
     mStop = true;
 }
 
-bool CompetitiveCompanionThread::listen()
+bool CompetitiveCompanionThread::waitStart()
 {
-    if (mTcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort())) {
-        return true;
-    }
-    return false;
+    mStartSemaphore.acquire(1);
+    return mStartOk;
 }
 
 void CompetitiveCompanionThread::run()
 {
-    while(!mStop) {
-        QThread::msleep(100);
+    QTcpServer tcpServer;
+    mStartOk = tcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort());
+    if (!mStartOk) {
+        mStop=true;
     }
-    mTcpServer.close();
+    mStartSemaphore.release(1);
+    while(!mStop) {
+        tcpServer.waitForNewConnection(100);
+        while (tcpServer.hasPendingConnections()) {
+            QTcpSocket* clientConnection = tcpServer.nextPendingConnection();
+            onNewProblemConnection(clientConnection);
+            delete clientConnection;
+        }
+    }
+    tcpServer.close();
 }
