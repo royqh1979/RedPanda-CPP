@@ -15,7 +15,7 @@
  * @param pOuterR 外旋轮实际半径
  * @param pPointR 笔尖在滚动圆中实际位置
  */
-void updateRadius(int baseL, int outerL, int pointL, int *pBaseR, int *pOuterR, int *pPointR) {
+void updateRadius(float baseL, float outerL,float pointL, float *pBaseR, float *pOuterR, float *pPointR) {
 	int totalL=baseL+outerL;
 	if (pointL>outerL)
 		totalL+=pointL;
@@ -37,12 +37,12 @@ void updateRadius(int baseL, int outerL, int pointL, int *pBaseR, int *pOuterR, 
 
 
 int main() {
-	int baseL=2;	//默认基圆相对半径
-	int outerL=13;	//默认外旋轮相对半径
-	int pointL=3;	//默认笔尖在滚动圆中相对位置
-	int baseR,outerR,pointR;
+	float baseL=2;	//默认基圆相对半径
+	float outerL=13;	//默认外旋轮相对半径
+	float pointL=3;	//默认笔尖在滚动圆中相对位置
+	float baseR,outerR,pointR;
 	int cx=350,cy=350;
-	int speed = 1;
+	float speed = 1;
 	
 	Color trackColor = BLUE;
 	updateRadius(baseL, outerL, pointL, &baseR, &outerR, & pointR);
@@ -58,7 +58,8 @@ int main() {
 	int codepointsCount;
 	int *codepoints=LoadCodepoints(guichars,&codepointsCount);
 	// 读取仅含码点表中各字符的字体
-	Font font = LoadFontEx("c:\\windows\\fonts\\simhei.ttf",20,codepoints,codepointsCount);
+	// 注意：确保字体文件存在
+	Font font = LoadFontEx("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",20,codepoints,codepointsCount);
 	// 释放码点表
 	UnloadCodepoints(codepoints);
 	
@@ -84,12 +85,13 @@ int main() {
 	//主绘图循环
 	while(!WindowShouldClose()) { //窗口未被关闭
 		//使用raygui绘制控制面板
-		int newOuterL = GuiSliderBar((Rectangle){ 90, 20, 180, 30 },"外旋轮半径",TextFormat("%i", (int)outerL), outerL, 1, 50);
-		int newBaseL = GuiSliderBar((Rectangle){ 90, 60, 180, 30 },"基圆半径",TextFormat("%i", (int)baseL), baseL, 1, 50);
-		int newPointL = GuiSliderBar((Rectangle){ 90, 100, 180, 30 },"笔尖半径",TextFormat("%i", (int)pointL), pointL, 1, 50);
-		speed = GuiSliderBar((Rectangle){ 90, 150, 180, 30 },"速度",TextFormat("%i", (int)speed), speed, 1, 50);
+		float newOuterL = outerL, newBaseL = baseL, newPointL = pointL;
+		GuiSliderBar((Rectangle){ 90, 20, 180, 30 },"外旋轮半径",TextFormat("%i", (int)outerL), &newOuterL, 1, 50);
+		GuiSliderBar((Rectangle){ 90, 60, 180, 30 },"基圆半径",TextFormat("%i", (int)baseL), &newBaseL, 1, 50);
+		GuiSliderBar((Rectangle){ 90, 100, 180, 30 },"笔尖半径",TextFormat("%i", (int)pointL), &newPointL, 1, 50);
+		GuiSliderBar((Rectangle){ 90, 150, 180, 30 },"速度",TextFormat("%i", (int)speed), &speed, 1, 50);
 		GuiLabel((Rectangle){ 20, 220, 180, 30 },TextFormat("颜色: 0x%02X%02X%02X",(int)(trackColor.r), (int)(trackColor.g),(int)(trackColor.b)));
-		trackColor= GuiColorPicker((Rectangle){ 50, 250, 196, 192 }, NULL, trackColor);
+		GuiColorPicker((Rectangle){ 50, 250, 196, 192 }, NULL, &trackColor);
 		int doClear = GuiButton((Rectangle){ 120, 500, 80, 30 },"清除");
 		if (newOuterL!=outerL || newBaseL!=baseL || newPointL!=pointL) {
 			//圆参数有变化，清除轨迹图层
