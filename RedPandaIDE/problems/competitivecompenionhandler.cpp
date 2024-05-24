@@ -26,41 +26,50 @@
 #include "../mainwindow.h"
 
 CompetitiveCompanionHandler::CompetitiveCompanionHandler(QObject *parent):
-    QObject(parent)
+    QObject(parent),
+    mThread(nullptr)
 {
-    connect(&mTcpServer,&QTcpServer::newConnection,
-            this, &CompetitiveCompanionHandler::onNewProblemConnection);
 }
 
 void CompetitiveCompanionHandler::start()
 {
-    if (pSettings->executor().enableProblemSet()) {
-        if (pSettings->executor().enableCompetitiveCompanion()) {
-            if (!mTcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort())) {
-               // QMessageBox::critical(nullptr,
-               //                       tr("Listen failed"),
-               //                       tr("Can't listen to port %1 form Competitive Companion.").arg(pSettings->executor().competivieCompanionPort())
-               //                       + "<BR/>"
-               //                       +tr("You can turn off competitive companion support in the Problem Set options.")
-               //                       + "<BR/>"
-               //                       +tr("Or You can choose a different port number and try again."));
-            }
-        }
+    if (!pSettings->executor().enableProblemSet())
+        return;
+    if (!pSettings->executor().enableCompetitiveCompanion())
+        return;
+    mThread = new CompetitiveCompanionThread(this);
+    if (!mThread->listen()) {
+        delete mThread;
+        mThread = nullptr;
+    } else {
+        connect(mThread,
+                &CompetitiveCompanionThread::newProblemReceived,
+                this, &CompetitiveCompanionHandler::onNewProblemReceived);
+        mThread->start();
     }
-
 }
 
 void CompetitiveCompanionHandler::stop()
 {
-    mTcpServer.close();
+    if (!mThread)
+        return;
+    connect(mThread, &QThread::finished,
+            mThread, &QObject::deleteLater);
+    mThread->stop();
+    mThread=nullptr;
 }
 
-void CompetitiveCompanionHandler::onNewProblemConnection()
+void CompetitiveCompanionHandler::onNewProblemReceived(int num, int total, POJProblem newProblem)
+{
+    emit newProblemReceived(num, total, newProblem);
+}
+
+void CompetitiveCompanionThread::onNewProblemConnection()
 {
     QTcpSocket* clientConnection = mTcpServer.nextPendingConnection();
-
     connect(clientConnection, &QAbstractSocket::disconnected,
             clientConnection, &QObject::deleteLater);
+
     QByteArray content;
     int unreadCount = 0;
     while (clientConnection->state() == QTcpSocket::ConnectedState) {
@@ -94,11 +103,29 @@ void CompetitiveCompanionHandler::onNewProblemConnection()
         return;
     }
     QJsonObject obj=doc.object();
+    //qDebug()<<obj;
+    QJsonObject batchObj = obj["batch"].toObject();
+    QString batchId = batchObj["id"].toString();
+    if (mBatchId!=batchId) {
+        mBatchId = batchId;
+        mBatchCount = batchObj["size"].toInt();
+        mBatchProblemsRecieved = 0;
+        //emit newBatchReceived(mBatchCount);
+    }
+
     QString name = obj["name"].toString();
 
     POJProblem problem = std::make_shared<OJProblem>();
     problem->name = name;
     problem->url = obj["url"].toString();
+    if (obj.contains("timeLimit")) {
+        problem->timeLimit = obj["timeLimit"].toInt();
+        problem->timeLimitUnit = ProblemTimeLimitUnit::Milliseconds;
+    }
+    if (obj.contains("memoryLimit")) {
+        problem->memoryLimit = obj["memoryLimit"].toInt();
+        problem->memoryLimitUnit = ProblemMemoryLimitUnit::MB;
+    }
     QJsonArray caseArray = obj["tests"].toArray();
     foreach ( const QJsonValue& val, caseArray) {
         QJsonObject caseObj = val.toObject();
@@ -119,5 +146,39 @@ void CompetitiveCompanionHandler::onNewProblemConnection()
             problemCase->expected = caseObj["output"].toString();
         problem->cases.append(problemCase);
     }
-    emit newProblemReceived(problem);
+    mBatchProblemsRecieved++;
+    emit newProblemReceived(mBatchProblemsRecieved, mBatchCount, problem);
+    // if (mBatchProblemsRecieved == mBatchCount) {
+    //     emit batchFinished(mBatchCount);
+    // }
+}
+
+CompetitiveCompanionThread::CompetitiveCompanionThread(QObject *parent):
+    QThread{parent},
+    mStop{false},
+    mBatchProblemsRecieved{0}
+{
+    connect(&mTcpServer,&QTcpServer::newConnection,
+            this, &CompetitiveCompanionThread::onNewProblemConnection);
+}
+
+void CompetitiveCompanionThread::stop()
+{
+    mStop = true;
+}
+
+bool CompetitiveCompanionThread::listen()
+{
+    if (mTcpServer.listen(QHostAddress::LocalHost,pSettings->executor().competivieCompanionPort())) {
+        return true;
+    }
+    return false;
+}
+
+void CompetitiveCompanionThread::run()
+{
+    while(!mStop) {
+        QThread::msleep(100);
+    }
+    mTcpServer.close();
 }

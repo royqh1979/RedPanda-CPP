@@ -374,7 +374,7 @@ private slots:
     void onProblemNameChanged(int index);
     void onProblemRunCurrentCase();
     void onProblemBatchSetCases();
-    void onNewProblemReceived(POJProblem newProblem);
+    void onNewProblemReceived(int num, int total, POJProblem newProblem);
     void updateProblemTitle();
     void onEditorClosed();
     void onToolsOutputClear();

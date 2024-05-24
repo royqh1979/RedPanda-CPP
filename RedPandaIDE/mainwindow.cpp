@@ -4396,10 +4396,12 @@ void MainWindow::onProblemBatchSetCases()
     }
 }
 
-void MainWindow::onNewProblemReceived(POJProblem newProblem)
+void MainWindow::onNewProblemReceived(int num, int total, POJProblem newProblem)
 {
     if (mOJProblemSetModel.problemNameUsed(newProblem->name))
         return;
+    updateStatusbarMessage(tr("Problem '%1' received (%2/%3).")
+                              .arg(newProblem->name).arg(num).arg(total));
     mOJProblemSetModel.addProblem(newProblem);
     ui->tabExplorer->setCurrentWidget(ui->tabProblemSet);
     ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel.index(

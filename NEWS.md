@@ -7,6 +7,9 @@ Red Panda C++ Version 3.1
   - fix: In compiler options page, Can't save default stack size to 0MB.
   - enhancement: Support national flag emojis.
   - fix: Visibility for the interrupt action is not correctly updated.
+  - enhancement: Handle problems info from competitive-companion in background thread.
+  - enhancement: Handle time/memory limits in problems info from competitive-companion in background thread.
+  - enhancement: When problems info from competitive-companion received, show tips in the status bar.  
 
 Red Panda C++ Version 3.0
 

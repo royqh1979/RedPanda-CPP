@@ -14,7 +14,7 @@
         <translation>写入数据失败。</translation>
     </message>
     <message>
-        <location filename="qsynedit/syntaxer/asm.cpp" line="+368"/>
+        <location filename="qsynedit/syntaxer/asm.cpp" line="+369"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>byte swap.</source>
