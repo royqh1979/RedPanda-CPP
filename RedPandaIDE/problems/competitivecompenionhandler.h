@@ -33,6 +33,7 @@ public:
     CompetitiveCompanionThread &operator=(const CompetitiveCompanionThread&) = delete;
     void stop();
     bool waitStart();
+    void waitStop();
 signals:
     void newProblemReceived(int num, int total, POJProblem newProblem);
     // void newBatchReceived(int total);
@@ -48,6 +49,7 @@ private:
     int mBatchCount;
     int mBatchProblemsRecieved;
     QSemaphore mStartSemaphore;
+    QSemaphore mStopSemaphore;
     bool mStartOk;
 };
 

@@ -56,7 +56,7 @@ void CompetitiveCompanionHandler::stop()
         return;
     connect(mThread, &QThread::finished,
             mThread, &QObject::deleteLater);
-    mThread->stop();
+    mThread->waitStop();
     mThread=nullptr;
 }
 
@@ -155,6 +155,7 @@ CompetitiveCompanionThread::CompetitiveCompanionThread(QObject *parent):
     mStop{false},
     mBatchProblemsRecieved{0},
     mStartSemaphore{0},
+    mStopSemaphore{0},
     mStartOk{false}
 {
 }
@@ -170,6 +171,12 @@ bool CompetitiveCompanionThread::waitStart()
     return mStartOk;
 }
 
+void CompetitiveCompanionThread::waitStop()
+{
+    stop();
+    mStopSemaphore.acquire(1);
+}
+
 void CompetitiveCompanionThread::run()
 {
     QTcpServer tcpServer;
@@ -179,7 +186,7 @@ void CompetitiveCompanionThread::run()
     }
     mStartSemaphore.release(1);
     while(!mStop) {
-        tcpServer.waitForNewConnection(100);
+        tcpServer.waitForNewConnection(1000);
         while (tcpServer.hasPendingConnections()) {
             QTcpSocket* clientConnection = tcpServer.nextPendingConnection();
             onNewProblemConnection(clientConnection);
@@ -187,4 +194,5 @@ void CompetitiveCompanionThread::run()
         }
     }
     tcpServer.close();
+    mStopSemaphore.release(1);
 }
