@@ -16,6 +16,6 @@ TMP_FOLDER="$(mktemp -d)"
 podman run -it --rm -v "$PWD:/mnt" -w /mnt -v "$TMP_FOLDER:/out" quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0 packages/debian-static/01-in-docker.sh
 
 mkdir -p dist
-mkdir -p "$TMP_FOLDER/DEBIAN"
+mkdir -m 755 -p "$TMP_FOLDER/DEBIAN"
 sed "s/__VERSION__/$VERSION/" packages/debian-static/control.in >"$TMP_FOLDER/DEBIAN/control"
 dpkg-deb --build "$TMP_FOLDER" "dist/$DEB_FILE"
