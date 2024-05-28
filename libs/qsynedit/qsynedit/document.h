@@ -295,7 +295,7 @@ public:
      * @param line line index (starts from 0)
      * @return
      */
-    int parenthesisLevel(int line);
+    int parenthesisLevel(int line) const;
 
     /**
      * @brief get nesting level of brackets at the end of the specified line
@@ -305,7 +305,7 @@ public:
      * @param line line index (starts from 0)
      * @return
      */
-    int bracketLevel(int line);
+    int bracketLevel(int line) const;
 
     /**
      * @brief get nesting level of braces at the end of the specified line
@@ -315,7 +315,7 @@ public:
      * @param line line index (starts from 0)
      * @return
      */
-    int braceLevel(int line);
+    int braceLevel(int line) const;
 
     /**
      * @brief get width of the specified line
@@ -325,7 +325,7 @@ public:
      * @param line line index (starts frome 0)
      * @return
      */
-    int lineWidth(int line);
+    int lineWidth(int line) const;
 
     /**
      * @brief get width of the specified text / line
@@ -340,7 +340,7 @@ public:
      * @param newText the new text
      * @return
      */
-    int lineWidth(int line, const QString &newText);
+    int lineWidth(int line, const QString &newText) const;
 
     /**
      * @brief get block (indent) level of the specified line
@@ -350,21 +350,21 @@ public:
      * @param line line index (starts frome 0)
      * @return
      */
-    int blockLevel(int line);
+    int blockLevel(int line) const;
 
     /**
      * @brief get count of new blocks (indent) started on the specified line
      * @param line line index (starts frome 0)
      * @return
      */
-    int blockStarted(int line);
+    int blockStarted(int line) const;
 
     /**
      * @brief get count of blocks (indent) ended on the specified line
      * @param line line index (starts frome 0)
      * @return
      */
-    int blockEnded(int line);
+    int blockEnded(int line) const;
 
     /**
      * @brief get index of the longest line (has the max width)
@@ -373,7 +373,7 @@ public:
      *
      * @return
      */
-    int maxLineWidth();
+    int maxLineWidth() const;
 
     /**
      * @brief get line break of the current document
@@ -390,7 +390,7 @@ public:
      * @param line line index (starts frome 0)
      * @return
      */
-    SyntaxState getSyntaxState(int line);
+    SyntaxState getSyntaxState(int line) const;
 
     /**
      * @brief set state of the syntax highlighter after parsing the specified line.
@@ -410,7 +410,7 @@ public:
      * @param line line index (starts frome 0)
      * @return
      */
-    QString getLine(int line);
+    QString getLine(int line) const;
 
     /**
      * @brief get count of the glyphs on the specified line.
@@ -420,7 +420,7 @@ public:
      * @param line line index (starts frome 0)
      * @return
      */
-    int getLineGlyphsCount(int line);
+    int getLineGlyphsCount(int line) const;
 
     // /**
     //  * @brief get position list of the glyphs on the specified line.
@@ -440,7 +440,7 @@ public:
      *
      * @return
      */
-    int count();
+    int count() const;
 
     /**
      * @brief get all the text in the document.
@@ -450,7 +450,7 @@ public:
      *
      * @return
      */
-    QString text();
+    QString text() const;
 
     /**
      * @brief set the text of the document
@@ -478,7 +478,7 @@ public:
      *
      * @return
      */
-    QStringList contents();
+    QStringList contents() const;
 
     void putLine(int index, const QString& s, bool notify=true);
 
@@ -488,7 +488,7 @@ public:
     int addLine(const QString& s);
     void addLines(const QStringList& strings);
 
-    int getTextLength();
+    int getTextLength() const;
     void clear();
     void deleteAt(int index);
     void deleteLines(int index, int numLines);
@@ -500,17 +500,17 @@ public:
     void saveToFile(QFile& file, const QByteArray& encoding,
                     const QByteArray& defaultEncoding, QByteArray& realEncoding);
 
-    QString glyph(int line, int glyphIdx);
-    QString glyphAt(int line, int charPos);
+    QString glyph(int line, int glyphIdx) const;
+    QString glyphAt(int line, int charPos) const;
 
     int stringWidth(const QString &str, int left) const {
         return mGlyphCalculator.stringWidth(str, left);
     }
 
-    int charToGlyphStartChar(int line, int charPos);
+    int charToGlyphStartChar(int line, int charPos) const;
     //int columnToGlyphStartColumn(int line, int charPos);
 
-    int glyphCount(int line);
+    int glyphCount(int line) const;
     /**
      * @brief get start index of the chars representing the specified glyph in the specified line.
      *
@@ -520,7 +520,7 @@ public:
      * @param glyphIdx index of the glyph in the line (starting from 0)
      * @return char index in the line text (start from 0)
      */
-    int glyphStartChar(int line, int glyphIdx);
+    int glyphStartChar(int line, int glyphIdx) const;
 
     /**
      * @brief get count of the chars representing the specified glyph in the specified line.
@@ -531,7 +531,7 @@ public:
      * @param glyphIdx index of the glyph in the line (starting from 0)
      * @return
      */
-    int glyphLength(int line, int glyphIdx);
+    int glyphLength(int line, int glyphIdx) const;
 
     /**
      * @brief get start column of the specified glyph in the specified line.
@@ -542,7 +542,7 @@ public:
      * @param glyphIdx index of the glyph in the line (starting from 0)
      * @return the column (starting from 1)
      */
-    int glyphStartPostion(int line, int glyphIdx);
+    int glyphStartPostion(int line, int glyphIdx) const;
 
     /**
      * @brief get width (in columns) of the specified glyph in the specified line.
@@ -553,7 +553,7 @@ public:
      * @param glyphIdx index of the glyph in the line (starting from 0)
      * @return
      */
-    int glyphWidth(int line, int glyphIdx);
+    int glyphWidth(int line, int glyphIdx) const;
 
     int glyphWidth(const QString &glyph, int left) const {
         return mGlyphCalculator.glyphWidth(glyph,left);
@@ -568,7 +568,7 @@ public:
      * @param charIdx position of the char in the line text (starting from 0)
      * @return glyph index in the line (starting from 0)
      */
-    int charToGlyphIndex(int line, int charPos);
+    int charToGlyphIndex(int line, int charPos) const;
 
     /**
      * @brief get index of the glyph displayed on the specified column
@@ -579,20 +579,20 @@ public:
      * @param column the column (starting from 1)
      * @return glyph index in the line (starting from 0)
      */
-    int xposToGlyphIndex(int line, int xpos);
+    int xposToGlyphIndex(int line, int xpos) const;
 
-    int charToGlyphStartPosition(int line, int charPos);
-    int xposToGlyphStartChar(int line, int xpos);
-    int charToGlyphStartPosition(int line, const QString newStr, int charPos);
-    int xposToGlyphStartChar(int line, const QString newStr, int xpos);
+    int charToGlyphStartPosition(int line, int charPos) const;
+    int xposToGlyphStartChar(int line, int xpos) const;
+    int charToGlyphStartPosition(int line, const QString newStr, int charPos) const;
+    int xposToGlyphStartChar(int line, const QString newStr, int xpos) const;
 
-    bool getAppendNewLineAtEOF();
+    bool getAppendNewLineAtEOF() const;
     void setAppendNewLineAtEOF(bool appendNewLineAtEOF);
 
-    NewlineType getNewlineType();
+    NewlineType getNewlineType() const;
     void setNewlineType(const NewlineType &fileEndingType);
 
-    bool empty();
+    bool empty() const;
 
     int tabSize() const { return mGlyphCalculator.tabSize(); }
 
@@ -662,7 +662,7 @@ private:
 
     int mSetLineWidthLockCount;
     bool mMaxLineChangedInSetLinesWidth;
-    QRecursiveMutex mMutex;
+    mutable QRecursiveMutex mMutex;
 
     GlyphCalculator mGlyphCalculator;
 

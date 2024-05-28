@@ -56,38 +56,38 @@ public:
     void clearProjectFiles();
     QList<PStatement> getListOfFunctions(const QString& fileName,
                              const QString& phrase,
-                             int line);
-    PStatement findScopeStatement(const QString& filename, int line);
-    PParsedFileInfo findFileInfo(const QString &filename);
+                             int line) const;
+    PStatement findScopeStatement(const QString& filename, int line) const;
+    PParsedFileInfo findFileInfo(const QString &filename) const;
     QString findFirstTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
-                                     const PStatement& currentScope);
+                                     const PStatement& currentScope) const;
     QString findTemplateParamOf(const QString& fileName,
                                      const QString& phrase,
                                      int index,
-                                     const PStatement& currentScope);
+                                     const PStatement& currentScope) const;
     PStatement findFunctionAt(const QString& fileName,
-                            int line);
+                            int line) const;
     int findLastOperator(const QString& phrase) const;
-    PStatementList findNamespace(const QString& name); // return a list of PSTATEMENTS (of the namespace)
-    PStatement findStatement(const QString& fullname);
+    PStatementList findNamespace(const QString& name) const; // return a list of PSTATEMENTS (of the namespace)
+    PStatement findStatement(const QString& fullname) const;
     PStatement findStatementOf(const QString& fileName,
                                const QString& phrase,
-                               int line);
+                               int line) const;
     PStatement findStatementOf(const QString& fileName,
                                const QString& phrase,
                                const PStatement& currentScope,
-                               PStatement& parentScopeType);
+                               PStatement& parentScopeType) const;
 
     PStatement findStatementOf(const QString& fileName,
                                const QStringList& expression,
-                               const PStatement& currentScope);
+                               const PStatement& currentScope) const;
     PStatement findStatementOf(const QString& fileName,
                                const QStringList& expression,
-                               int line);
-    PStatement findAliasedStatement(const PStatement& statement);
+                               int line) const;
+    PStatement findAliasedStatement(const PStatement& statement) const;
 
-    QList<PStatement> listTypeStatements(const QString& fileName,int line);
+    QList<PStatement> listTypeStatements(const QString& fileName,int line) const;
 
     /**
      * @brief evaluate the expression
@@ -98,27 +98,27 @@ public:
      */
     PEvalStatement evalExpression(const QString& fileName,
                                QStringList& expression,
-                               const PStatement& currentScope);
+                               const PStatement& currentScope) const;
     PStatement findTypeDefinitionOf(const QString& fileName,
                                     const QString& aType,
-                                    const PStatement& currentClass);
+                                    const PStatement& currentClass) const;
     PStatement findTypeDef(const PStatement& statement,
-                          const QString& fileName);
+                          const QString& fileName) const;
     bool freeze();  // Freeze/Lock (stop reparse while searching)
     bool freeze(const QString& serialId);  // Freeze/Lock (stop reparse while searching)
-    QStringList getClassesList();
-    QStringList getFileDirectIncludes(const QString& filename);
-    QSet<QString> getIncludedFiles(const QString& filename);
-    QSet<QString> getFileUsings(const QString& filename);
+    QStringList getClassesList() const;
+    QStringList getFileDirectIncludes(const QString& filename) const;
+    QSet<QString> getIncludedFiles(const QString& filename) const;
+    QSet<QString> getFileUsings(const QString& filename) const;
 
-    QString getHeaderFileName(const QString& relativeTo, const QString& headerName, bool fromNext=false);// both
+    QString getHeaderFileName(const QString& relativeTo, const QString& headerName, bool fromNext=false) const;
 
     void invalidateFile(const QString& fileName);
-    bool isLineVisible(const QString& fileName, int line);
-    bool isIncludeLine(const QString &line);
-    bool isIncludeNextLine(const QString &line);
-    bool isProjectHeaderFile(const QString& fileName);
-    bool isSystemHeaderFile(const QString& fileName);
+    bool isLineVisible(const QString& fileName, int line) const;
+    bool isIncludeLine(const QString &line) const;
+    bool isIncludeNextLine(const QString &line) const;
+    bool isProjectHeaderFile(const QString& fileName) const;
+    bool isSystemHeaderFile(const QString& fileName) const;
     void parseFile(const QString& fileName, bool inProject,
                    bool onlyIfNotParsed = false, bool updateView = true,
                    std::shared_ptr<CppParser> parserPtr = nullptr);
@@ -127,11 +127,11 @@ public:
     bool parsing() const;
     void resetParser();
     void unFreeze(); // UnFree/UnLock (reparse while searching)
-    bool fileScanned(const QString& fileName);
+    bool fileScanned(const QString& fileName) const;
 
-    bool isFileParsed(const QString& filename);
+    bool isFileParsed(const QString& filename) const;
 
-    QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1);
+    QString prettyPrintStatement(const PStatement& statement, const QString& filename, int line = -1) const;
 
     bool enabled() const;
     void setEnabled(bool newEnabled);
@@ -742,7 +742,7 @@ private:
 #ifdef QT_DEBUG
     int mLastIndex;
 #endif
-    QRecursiveMutex mMutex;
+    mutable QRecursiveMutex mMutex;
     QMap<QString,KeywordType> mCppKeywords;
     QSet<QString> mCppTypeKeywords;
 

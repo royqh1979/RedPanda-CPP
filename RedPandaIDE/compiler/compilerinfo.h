@@ -4,7 +4,6 @@
 #include <QString>
 #include <QMap>
 #include <memory>
-#include <QMutex>
 #define COMPILER_CLANG "Clang"
 #define COMPILER_GCC "GCC"
 #define COMPILER_GCC_UTF8 "GCC_UTF8"

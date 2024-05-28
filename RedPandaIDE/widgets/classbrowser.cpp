@@ -463,7 +463,7 @@ bool ClassBrowserModel::isScopeStatement(const PStatement &statement)
     }
 }
 
-QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key)
+QModelIndex ClassBrowserModel::modelIndexForStatement(const QString &key) const
 {
     QMutexLocker locker(&mMutex);
     if (mUpdating)

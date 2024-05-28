@@ -183,7 +183,7 @@ private:
     QSet<QString> mAddedStatements;
     QString mMemberPhrase;
     QString mMemberOperator;
-    QRecursiveMutex mMutex;
+    mutable QRecursiveMutex mMutex;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
     CodeCompletionListItemDelegate* mDelegate;
 

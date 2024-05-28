@@ -62,7 +62,7 @@ public:
     ProjectClassBrowserType classBrowserType() const;
     void setClassBrowserType(ProjectClassBrowserType newClassBrowserType);
 
-    QModelIndex modelIndexForStatement(const QString& key);
+    QModelIndex modelIndexForStatement(const QString& key) const;
 signals:
     void refreshStarted();
     void refreshEnd();
@@ -86,7 +86,7 @@ private:
     PCppParser mParser;
     bool mUpdating;
     int mUpdateCount;
-    QRecursiveMutex mMutex;
+    mutable QRecursiveMutex mMutex;
     QString mCurrentFile;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mColors;
     ProjectClassBrowserType mClassBrowserType;

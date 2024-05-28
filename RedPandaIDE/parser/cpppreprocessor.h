@@ -121,7 +121,7 @@ public:
         return mScannedFiles;
     }
 
-    const QSet<QString> &projectIncludePaths() {
+    const QSet<QString> &projectIncludePaths() const {
         return mProjectIncludePaths;
     }
 
