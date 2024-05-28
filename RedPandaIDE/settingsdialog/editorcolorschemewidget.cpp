@@ -67,7 +67,6 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     connect(this, &SettingsWidget::settingsChanged,this,
             &EditorColorSchemeWidget::onSettingChanged);
     ui->editDemo->setUseCodeFolding(true);
-    qDebug()<<"1----";
     ui->editDemo->document()->setText(
             "#include <iostream>\n"
             "#include <conio.h>\n"
