@@ -49,6 +49,9 @@ FunctionTooltipWidget::FunctionTooltipWidget(QWidget *parent) :
     layout()->addWidget(mTotalLabel);
     layout()->addWidget(mDownButton);
     layout()->addWidget(mInfoLabel);
+    QSizePolicy policy=mInfoLabel->sizePolicy();
+    policy.setHorizontalPolicy(QSizePolicy::Expanding);
+    mInfoLabel->setSizePolicy(policy);
     connect(mUpButton,&QPushButton::clicked,
             this,&FunctionTooltipWidget::previousTip);
     connect(mDownButton,&QPushButton::clicked,
