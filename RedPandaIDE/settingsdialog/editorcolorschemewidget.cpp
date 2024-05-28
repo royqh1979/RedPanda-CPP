@@ -66,12 +66,15 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
             this, &EditorColorSchemeWidget::onItemSelectionChanged);
     connect(this, &SettingsWidget::settingsChanged,this,
             &EditorColorSchemeWidget::onSettingChanged);
+    ui->editDemo->setUseCodeFolding(true);
+    qDebug()<<"1----";
     ui->editDemo->document()->setText(
             "#include <iostream>\n"
             "#include <conio.h>\n"
             "\n"
-            "int x=10;\n"
-            "\n"
+            "int1 x=10;\n"
+            "int yyy=10;\n"
+            "//Demo text\n"
             "int main(int argc, char **argv)\n"
             "{\n"
             "    int numbers[20];\n"
@@ -87,7 +90,14 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
             "}\n"
                 );
     ui->editDemo->setReadOnly(true);
-    ui->editDemo->setStatementColors(mStatementColors);
+    ui->editDemo->toggleBreakpoint(9);
+    ui->editDemo->toggleBookmark(10);
+    ui->editDemo->addSyntaxIssues(4, 1, 5, CompileIssueType::Error, "Wrong type");
+    ui->editDemo->addSyntaxIssues(5, 5, 8, CompileIssueType::Warning, "Variable y defined but not used.");
+    ui->editDemo->setCaretY(10);
+    ui->editDemo->setActiveBreakpointFocus(11,false);
+    ui->editDemo->reparseDocument();
+    ui->editDemo->invalidate();
     onItemSelectionChanged();
 }
 
@@ -251,6 +261,7 @@ void EditorColorSchemeWidget::onSettingChanged()
 {
     pColorManager->updateStatementColors(mStatementColors,ui->cbScheme->currentText());
     ui->editDemo->applyColorScheme(ui->cbScheme->currentText());
+    ui->editDemo->setStatementColors(mStatementColors);
 }
 
 void EditorColorSchemeWidget::onForegroundChanged()

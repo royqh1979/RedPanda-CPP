@@ -11,6 +11,7 @@ Red Panda C++ Version 3.1
   - enhancement: Handle time/memory limits in problems info from competitive-companion in background thread.
   - enhancement: When problems info from competitive-companion received, show tips in the status bar.  
   - fix: Layout for function tips.
+  - enhancement: More elements in the demo of editor color theme optiont page.
 
 Red Panda C++ Version 3.0
 
