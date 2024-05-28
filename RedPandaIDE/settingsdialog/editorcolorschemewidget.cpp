@@ -71,30 +71,30 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
             "#include <iostream>\n"
             "#include <conio.h>\n"
             "\n"
-            "int1 x=10;\n"
-            "int yyy=10;\n"
-            "//Demo text\n"
+            "int x=10;\n"
+            "\n"
             "int main(int argc, char **argv)\n"
             "{\n"
-            "    int numbers[20];\n"
-            "    float average, total; //breakpoint\n"
-            "    for (int i = 0; i <= 19; i++)\n"
-            "    { // active breakpoint\n"
+            "    int numbers[20]; // warning line\n"
+            "    float average, total; // bookmark\n"
+            "    for (int i = 0; i <= 19; i++) // active breakpoint\n"
+            "    { // breakpoint\n"
             "        numbers[i] = i+x;\n"
             "        Total += i; // error line\n"
             "    }\n"
             "    average = total / 20; // comment\n"
-            "    cout << \"total: \" << total << \"\nAverage: \" << average;\n"
+            "    std::cout << \"total: \" << total <<\n"
+            "    \"\\nAverage: \" << average;\n"
             "    getch();\n"
             "}\n"
                 );
     ui->editDemo->setReadOnly(true);
-    ui->editDemo->toggleBreakpoint(9);
-    ui->editDemo->toggleBookmark(10);
-    ui->editDemo->addSyntaxIssues(4, 1, 5, CompileIssueType::Error, "Wrong type");
-    ui->editDemo->addSyntaxIssues(5, 5, 8, CompileIssueType::Warning, "Variable y defined but not used.");
-    ui->editDemo->setCaretY(10);
-    ui->editDemo->setActiveBreakpointFocus(11,false);
+    ui->editDemo->toggleBreakpoint(11);
+    ui->editDemo->toggleBookmark(9);
+    ui->editDemo->addSyntaxIssues(13, 9, 14, CompileIssueType::Error, "[Error] 'Total' was not declared in this scope; did you mean 'total'?");
+    ui->editDemo->addSyntaxIssues(8, 9, 16, CompileIssueType::Warning, "[Warning] variable 'numbers' set but not used [-Wunused-but-set-variable]");
+    ui->editDemo->setCaretY(9);
+    ui->editDemo->setActiveBreakpointFocus(10,false);
     ui->editDemo->reparseDocument();
     ui->editDemo->invalidate();
     onItemSelectionChanged();
