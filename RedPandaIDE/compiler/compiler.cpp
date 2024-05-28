@@ -713,6 +713,15 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
     bool compilerErrorUTF8=compilerSet()->isCompilerInfoUsingUTF8();
     bool outputUTF8=compilerSet()->forceUTF8();
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+#ifdef Q_OS_WIN
+    QStringList binDirs=compilerSet()->binDirs();
+    if (!cmdDir.isEmpty())
+        binDirs.insert(0, cmdDir);
+    QString windir = env.value("windir");
+    binDirs.append(windir+"\\system32");
+    binDirs.append(windir);
+    env.insert("PATH",binDirs.join(PATH_SEPARATOR));
+#else
     if (!cmdDir.isEmpty()) {
         QString path = env.value("PATH");
         if (path.isEmpty()) {
@@ -722,6 +731,7 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
         }
         env.insert("PATH",path);
     }
+#endif
     if (compilerSet() && compilerSet()->forceEnglishOutput())
         env.insert("LANG","en");
     //env.insert("LDFLAGS","-Wl,--stack,12582912");

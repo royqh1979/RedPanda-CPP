@@ -12,6 +12,7 @@ Red Panda C++ Version 3.1
   - enhancement: When problems info from competitive-companion received, show tips in the status bar.  
   - fix: Layout for function tips.
   - enhancement: More elements in the demo of editor color theme optiont page.
+  - fix: Mingw32-make doesn't work correctly if there are bash in the path.
 
 Red Panda C++ Version 3.0
 
