@@ -55,25 +55,17 @@ AboutDialog::AboutDialog(QWidget *parent) :
                  .arg(appArch()))
             .arg(osArch()));
 #elif defined(_MSC_VER)
-# if (_MSC_VER >= 1940)
-    QString name = tr("Next Generation Microsoft Visual C++");
-# elif (_MSC_VER >= 1930)
-    QString name = tr("Microsoft Visual C++ 2022");
-# elif (_MSC_VER >= 1920)
-    QString name = tr("Microsoft Visual C++ 2019");
-# elif (_MSC_VER >= 1910)
-    QString name = tr("Microsoft Visual C++ 2017");
-# else
-    QString name = tr("Legacy Microsoft Visual C++");
-# endif
     ui->lblQt->setText(ui->lblQt->text()
             .arg(qVersion())
-            .arg(name + " " + appArch())
+            .arg(QStringLiteral("MSVC %1.%2 %3")
+                .arg(_MSC_VER / 100)
+                .arg(_MSC_VER % 100)
+                .arg(appArch()))
             .arg(osArch()));
 #else
     ui->lblQt->setText(ui->lblQt->text()
             .arg(qVersion())
-            .arg(tr("Non-GCC Compiler"))
+            .arg(tr("unknown compiler"))
             .arg(osArch()));
 #endif
     ui->lblCompileTime->setText(ui->lblCompileTime->text()
