@@ -55,39 +55,14 @@
         <translation>Versão:</translation>
     </message>
     <message>
-        <location line="+46"/>
-        <source>Non-GCC Compiler</source>
-        <translation>Compilador não GCC</translation>
+        <location line="+38"/>
+        <source>unknown compiler</source>
+        <translation>compilador desconhecido</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Website: &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</source>
         <translation>Website: &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <location line="-27"/>
-        <source>Next Generation Microsoft Visual C++</source>
-        <translation>Microsoft Visual C++ de Próxima Geração</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Microsoft Visual C++ 2022</source>
-        <translation>Microsoft Visual C++ 2022</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Microsoft Visual C++ 2019</source>
-        <translation>Microsoft Visual C++ 2019</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Microsoft Visual C++ 2017</source>
-        <translation>Microsoft Visual C++ 2017</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Legacy Microsoft Visual C++</source>
-        <translation>Microsoft Visual C++ Legado</translation>
     </message>
     <message>
         <location filename="../widgets/aboutdialog.ui" line="-61"/>
@@ -498,7 +473,7 @@
 <context>
     <name>CompetitiveCompanionThread</name>
     <message>
-        <location filename="../problems/competitivecompenionhandler.cpp" line="+134"/>
+        <location filename="../problems/competitivecompenionhandler.cpp" line="+131"/>
         <source>Problem Case %1</source>
         <translation type="unfinished">Caso do problema %1</translation>
     </message>
@@ -563,7 +538,7 @@
         <translation>[Nota] </translation>
     </message>
     <message>
-        <location line="+578"/>
+        <location line="+588"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
         <translation>Falha ao iniciar a compilação para &apos;%1&apos;.</translation>
     </message>
@@ -598,7 +573,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-663"/>
+        <location line="-673"/>
         <source> - Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1814,7 +1789,7 @@
         <translation>Remover ...</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+327"/>
+        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+337"/>
         <location line="+53"/>
         <location line="+9"/>
         <location line="+13"/>
