@@ -138,7 +138,7 @@ class TokenAttribute;
 using PTokenAttribute = std::shared_ptr<TokenAttribute>;
 class Document;
 using PDocument = std::shared_ptr<Document>;
-class SyntaxState;
+struct SyntaxState;
 class Syntaxer;
 using PSyntaxer = std::shared_ptr<Syntaxer>;
 class UndoList;
