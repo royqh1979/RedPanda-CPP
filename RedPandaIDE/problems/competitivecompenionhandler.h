@@ -21,7 +21,7 @@
 #include <QThread>
 #include <QSemaphore>
 
-class OJProblem;
+struct OJProblem;
 using POJProblem = std::shared_ptr<OJProblem>;
 
 class QTcpSocket;

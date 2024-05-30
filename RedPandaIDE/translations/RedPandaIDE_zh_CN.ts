@@ -129,34 +129,9 @@ p, li { white-space: pre-wrap; }
         <translation>版本：</translation>
     </message>
     <message>
-        <location line="+29"/>
-        <source>Next Generation Microsoft Visual C++</source>
-        <translation>下一代 Microsoft Visual C++</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Microsoft Visual C++ 2022</source>
-        <translation>Microsoft Visual C++ 2022</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Microsoft Visual C++ 2019</source>
-        <translation>Microsoft Visual C++ 2019</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Microsoft Visual C++ 2017</source>
-        <translation>Microsoft Visual C++ 2017</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Legacy Microsoft Visual C++</source>
-        <translation>旧版 Microsoft Visual C++</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>Non-GCC Compiler</source>
-        <translation>非GCC编译器</translation>
+        <location line="+38"/>
+        <source>unknown compiler</source>
+        <translation>未知编译器</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -566,7 +541,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>CompetitiveCompanionThread</name>
     <message>
-        <location filename="../problems/competitivecompenionhandler.cpp" line="+134"/>
+        <location filename="../problems/competitivecompenionhandler.cpp" line="+131"/>
         <source>Problem Case %1</source>
         <translation>试题案例%1</translation>
     </message>
@@ -700,7 +675,7 @@ p, li { white-space: pre-wrap; }
         <translation>警告：</translation>
     </message>
     <message>
-        <location line="+550"/>
+        <location line="+560"/>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
         <translation>无法写入文件“%1”。</translation>
     </message>
@@ -2064,7 +2039,7 @@ p, li { white-space: pre-wrap; }
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+327"/>
+        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+337"/>
         <location line="+53"/>
         <location line="+9"/>
         <location line="+13"/>

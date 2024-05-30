@@ -88,6 +88,8 @@ target("RedPandaIDE")
         -- parser
         "parser/cppparser",
         "parser/statementmodel",
+        -- problems
+        "problems/competitivecompenionhandler",
         -- settings dialog
         "settingsdialog/settingswidget",
         -- widgets
