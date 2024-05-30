@@ -325,6 +325,7 @@ void EditorColorSchemeWidget::changeSchemeComboFont()
 void EditorColorSchemeWidget::doLoad()
 {
     ui->cbScheme->setCurrentText(pSettings->editor().colorScheme());
+    changeSchemeComboFont();
     ui->chkRainborParenthesis->setChecked(pSettings->editor().rainbowParenthesis());
 }
 
