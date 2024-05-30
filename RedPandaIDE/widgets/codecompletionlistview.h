@@ -19,7 +19,6 @@
 
 #include <QListView>
 #include <QKeyEvent>
-#include <QStyledItemDelegate>
 #include "../parser/parserutils.h"
 using KeyPressedCallback = std::function<bool (QKeyEvent *)>;
 using InputMethodCallback = std::function<bool (QInputMethodEvent*)>;

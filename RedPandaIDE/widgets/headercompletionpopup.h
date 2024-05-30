@@ -18,6 +18,7 @@
 #define HEADERCOMPLETIONPOPUP_H
 
 #include <QDir>
+#include <QStyledItemDelegate>
 #include <QWidget>
 #include "codecompletionlistview.h"
 #include "../parser/cppparser.h"

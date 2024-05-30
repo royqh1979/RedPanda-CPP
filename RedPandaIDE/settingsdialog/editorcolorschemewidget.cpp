@@ -34,6 +34,9 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     ui->setupUi(this);
     mStatementColors = std::make_shared<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> >>();
 
+    mItemDelegate = new ColorSchemeItemDelegate(this);
+    ui->cbScheme->setItemDelegate(mItemDelegate);
+
     mDefaultSchemeComboFont = ui->cbScheme->font();
     mModifiedSchemeComboFont = mDefaultSchemeComboFont;
     mModifiedSchemeComboFont.setBold(true);
@@ -45,12 +48,14 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
         ui->cbScheme->addItem(schemeName);
         if (scheme->customed())
             ui->cbScheme->setItemData(schemeCount,mModifiedSchemeComboFont,Qt::FontRole);
+        else
+            ui->cbScheme->setItemData(schemeCount,mDefaultSchemeComboFont,Qt::FontRole);
         schemeCount++;
     }
     QItemSelectionModel *m = ui->treeItems->selectionModel();
     ui->treeItems->setModel(&mDefinesModel);
     delete m;
-    mDefinesModel.setHorizontalHeaderLabels(QStringList());
+    mDefinesModel.setHorizontalHeaderLabels(QStringList());        
     for (QString defineName : pColorManager->getDefines()) {
         addDefine(defineName, pColorManager->getDefine(defineName));
     }
@@ -433,7 +438,7 @@ void EditorColorSchemeWidget::on_actionReset_Scheme_triggered()
         if (pColorManager->restoreToDefault(ui->cbScheme->currentText())) {
             ui->cbScheme->setItemData(
                         ui->cbScheme->currentIndex(),
-                        QVariant(),
+                        mDefaultSchemeComboFont,
                         Qt::FontRole);
             ui->cbScheme->setFont(mDefaultSchemeComboFont);
             //ui->cbScheme->view()->setFont(mDefaultSchemeComboFont);
@@ -482,3 +487,19 @@ void EditorColorSchemeWidget::on_actionDelete_Scheme_triggered()
 }
 
 
+
+ColorSchemeItemDelegate::ColorSchemeItemDelegate(QObject *parent):
+    QStyledItemDelegate{parent}
+{
+
+}
+
+void ColorSchemeItemDelegate::initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const
+{
+    QStyledItemDelegate::initStyleOption(option,index);
+    QVariant value = index.data(Qt::FontRole);
+    if (value.isValid() && !value.isNull()) {
+        option->font = qvariant_cast<QFont>(value);
+        option->fontMetrics = QFontMetrics(option->font);
+    }
+}

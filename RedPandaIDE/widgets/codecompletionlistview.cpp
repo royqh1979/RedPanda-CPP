@@ -23,7 +23,6 @@
 CodeCompletionListView::CodeCompletionListView(QWidget *parent) : QListView(parent)
 {
     setUniformItemSizes(true);
-//    setItemDelegate(&mDelegate);
 }
 
 void CodeCompletionListView::keyPressEvent(QKeyEvent *event)

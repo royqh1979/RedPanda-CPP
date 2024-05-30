@@ -13,6 +13,7 @@ Red Panda C++ Version 3.1
   - fix: Layout for function tips.
   - enhancement: More elements in the demo of editor color theme optiont page.
   - fix: Mingw32-make doesn't work correctly if there are bash in the path.
+  - fix: All color scheme names are incorrectly displayed as bold, if the current one is a customed one.
 
 Red Panda C++ Version 3.0
 

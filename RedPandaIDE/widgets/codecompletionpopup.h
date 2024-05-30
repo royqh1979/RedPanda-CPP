@@ -19,6 +19,7 @@
 
 #include <QListView>
 #include <QWidget>
+#include <QStyledItemDelegate>
 #include "parser/cppparser.h"
 #include "codecompletionlistview.h"
 

@@ -22,10 +22,22 @@
 
 #include <QMenu>
 #include <QStandardItemModel>
+#include <QStyledItemDelegate>
 
 namespace Ui {
 class EditorColorSchemeWidget;
 }
+
+class ColorSchemeItemDelegate : public QStyledItemDelegate {
+    Q_OBJECT
+public:
+    ColorSchemeItemDelegate(QObject *parent=nullptr);
+
+
+    // QStyledItemDelegate interface
+protected:
+    void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const override;
+};
 
 class EditorColorSchemeWidget : public SettingsWidget
 {
@@ -61,6 +73,7 @@ private:
     QFont mModifiedSchemeComboFont;
     QSet<QString> mModifiedSchemes;
     QMenu mMenu;
+    QStyledItemDelegate *mItemDelegate;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
 
     // SettingsWidget interface
