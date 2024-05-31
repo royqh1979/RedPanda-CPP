@@ -213,11 +213,11 @@ Editor::Editor(QWidget *parent, const QString& filename,
         updateCaption();
     }
 
-    if (mParentPageControl==nullptr) {
+    if (!inTab()) {
         setExtraKeystrokes();
     }
 
-    if (mParentPageControl) {
+    if (inTab()) {
         connect(&mFunctionTipTimer, &QTimer::timeout,
             this, &Editor::onFunctionTipsTimer);
         mAutoBackupTimer.setInterval(1);
@@ -285,7 +285,7 @@ void Editor::loadFile(QString filename) {
 
     //this->setModified(false);
     updateCaption();
-    if (mParentPageControl)
+    if (inTab())
         pMainWindow->updateForEncodingInfo(this);
     switch(getFileType(mFilename)) {
     case FileType::CppSource:
@@ -344,7 +344,7 @@ void Editor::saveFile(QString filename) {
             unit->setRealEncoding(mFileEncoding);
         }
     }
-    if (isVisible() && mParentPageControl)
+    if (isVisible() && inTab())
         pMainWindow->updateForEncodingInfo(this);
     emit fileSaved(filename, inProject());
 //    QFile::remove(backupFilename);
@@ -634,7 +634,7 @@ void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
                                   tr("Error Load File"),
                                   e.reason());
         }
-    } else if (mParentPageControl)
+    } else if (inTab())
         pMainWindow->updateForEncodingInfo(this);
     resolveAutoDetectEncodingOption();
     if (mProject) {
@@ -672,7 +672,7 @@ void Editor::setPageControl(QTabWidget *newPageControl)
 {
     if (mParentPageControl==newPageControl)
         return;
-    if (mParentPageControl) {
+    if (inTab()) {
         int index = findWidgetInPageControl(mParentPageControl,this);
         if (index>=0)
             mParentPageControl->removeTab(index);
@@ -766,7 +766,7 @@ void Editor::wheelEvent(QWheelEvent *event) {
 void Editor::focusInEvent(QFocusEvent *event)
 {
     QSynEdit::focusInEvent(event);
-    if (mParentPageControl) {
+    if (inTab()) {
         pMainWindow->updateClassBrowserForEditor(this);
         pMainWindow->updateAppTitle(this);
         pMainWindow->updateEditorActions(this);
@@ -1561,7 +1561,7 @@ void Editor::closeEvent(QCloseEvent *)
         mCompletionPopup->hide();
     if (pMainWindow->functionTip())
         pMainWindow->functionTip()->hide();
-    if (mParentPageControl) {
+    if (inTab()) {
         pMainWindow->updateForEncodingInfo(true);
         pMainWindow->updateStatusbarForLineCol(true);
         pMainWindow->updateForStatusbarModeInfo(true);
@@ -1585,7 +1585,7 @@ void Editor::showEvent(QShowEvent */*event*/)
         if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
             reparse(false);
     }
-    if (mParentPageControl) {
+    if (inTab()) {
         pMainWindow->debugger()->setIsForProject(inProject());
         pMainWindow->bookmarkModel()->setIsForProject(inProject());
         pMainWindow->todoModel()->setIsForProject(inProject());
@@ -1600,7 +1600,7 @@ void Editor::showEvent(QShowEvent */*event*/)
             reparseTodo();
         }
     }
-    if (mParentPageControl) {
+    if (inTab()) {
         pMainWindow->updateClassBrowserForEditor(this);
         pMainWindow->updateAppTitle(this);
         pMainWindow->updateEditorActions(this);
@@ -1854,7 +1854,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
     }
     if (changes.testFlag(QSynedit::StatusChange::Modified)) {
         mCurrentLineModified = true;
-        if (mParentPageControl)
+        if (inTab())
             mCanAutoSave = true;
     }
 
@@ -1967,7 +1967,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 
     pMainWindow->updateEditorActions();
 
-    if (changes.testFlag(QSynedit::StatusChange::CaretY) && mParentPageControl) {
+    if (changes.testFlag(QSynedit::StatusChange::CaretY) && inTab()) {
         pMainWindow->caretList().addCaret(this,caretY(),caretX());
         pMainWindow->updateCaretActions();
     }
@@ -2162,7 +2162,7 @@ void Editor::onTooltipTimer()
                 && !mHeaderCompletionPopup->isVisible()) {
             if (pMainWindow->debugger()->executing()
                     && (pSettings->editor().enableDebugTooltips())) {
-                if (mParentPageControl) {
+                if (inTab()) {
                     showDebugHint(s,p.line);
                 }
             } else if (pSettings->editor().enableIdentifierToolTips()) {
@@ -3217,7 +3217,7 @@ void Editor::reparse(bool resetParser)
 {
     if (!mInited)
         return;
-    if (!mParentPageControl)
+    if (!inTab())
         return;
     if (!pSettings->codeCompletion().enabled())
         return;
@@ -3253,7 +3253,7 @@ void Editor::reparseTodo()
 {
     if (!mInited)
         return;
-    if (!mParentPageControl)
+    if (!inTab())
         return;
     if (pSettings->editor().parseTodos())
         pMainWindow->todoParser()->parseFile(mFilename, inProject());
@@ -3711,7 +3711,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
 
 void Editor::initAutoBackup()
 {
-    if (!mParentPageControl)
+    if (!inTab())
         return;
     cleanAutoBackup();
     if (!pSettings->editor().enableEditTempBackup())
@@ -5164,7 +5164,7 @@ void Editor::checkSyntaxInBack()
 {
     if (!mInited)
         return;
-    if (!mParentPageControl)
+    if (!inTab())
         return;
     if (readOnly())
         return;
@@ -5207,10 +5207,12 @@ void Editor::toggleBreakpoint(int line)
 {
     if (hasBreakpoint(line)) {
         mBreakpointLines.remove(line);
-        pMainWindow->debugger()->removeBreakpoint(line,this);
+        if (inTab())
+            pMainWindow->debugger()->removeBreakpoint(line,this);
     } else {
         mBreakpointLines.insert(line);
-        pMainWindow->debugger()->addBreakpoint(line,this);
+        if (inTab())
+            pMainWindow->debugger()->addBreakpoint(line,this);
     }
 
     invalidateGutterLine(line);
@@ -5527,7 +5529,7 @@ void Editor::applyColorScheme(const QString& schemeName)
 }
 
 void Editor::updateCaption(const QString& newCaption) {
-    if (!mParentPageControl) {
+    if (!inTab()) {
         return;
     }
     int index = mParentPageControl->indexOf(this);

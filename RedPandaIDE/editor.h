@@ -249,6 +249,8 @@ public:
     void selectToFileStart() { processCommand(QSynedit::EditCommand::SelFileStart); }
     void selectToFileEnd() { processCommand(QSynedit::EditCommand::SelFileEnd); }
 
+    bool inTab() { return mParentPageControl!=nullptr; }
+
 signals:
     void renamed(const QString& oldName, const QString& newName, bool firstSave);
     void fileSaved(const QString& filename, bool inProject);
