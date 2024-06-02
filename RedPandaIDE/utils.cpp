@@ -6,6 +6,7 @@
 #include <QDesktopServices>
 #include <QSysInfo>
 #include <QVersionNumber>
+#include <QRandomGenerator>
 #include "editor.h"
 #include "editorlist.h"
 #include "settings.h"
@@ -753,6 +754,10 @@ std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandFor
                 QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
             }
             wrappedArgs.push_back(temproryFile->fileName());
+        } else if (patternItem == "$random_app_id") {
+            QString randomSuffix = QString::number(QRandomGenerator::global()->generate());
+            QString appId = "io.redpanda.term" + randomSuffix;
+            wrappedArgs.push_back(appId);
         } else
             wrappedArgs.push_back(patternItem);
     }
