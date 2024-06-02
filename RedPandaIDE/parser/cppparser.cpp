@@ -5127,6 +5127,24 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
 //                if (result->effectiveTypeStatement)
 //                    qDebug()<<"typeStatement"<<result->effectiveTypeStatement->fullName;
                 result->kind = EvalStatementKind::Variable;
+            } else if(result->kind == EvalStatementKind::Variable
+                      && result->effectiveTypeStatement
+                      && result->effectiveTypeStatement->kind == StatementKind::Class) {
+                //overload of operator ()
+                const StatementMap& statementMap = mStatementList.childrenStatements(result->effectiveTypeStatement);
+                if (statementMap.isEmpty())
+                    result = PEvalStatement();
+                else {
+                    PStatement operStatement = statementMap.value("operator()");
+                    if (operStatement) {
+                        doSkipInExpression(phraseExpression,pos,"(",")");
+                        PEvalStatement temp = doCreateEvalFunction(fileName,operStatement);
+                        result->effectiveTypeStatement = temp->effectiveTypeStatement;
+                        result->kind = EvalStatementKind::Variable;
+                    } else {
+                        result = PEvalStatement();
+                    }
+                }
             } else {
                 result = PEvalStatement();
             }

@@ -15,6 +15,7 @@ Red Panda C++ Version 3.1
   - fix: Mingw32-make doesn't work correctly if there are bash in the path.
   - fix: All color scheme names are incorrectly displayed as bold, if the current one is a customed one.
   - fix: Variables defined by using alias can't show completion info.
+  - enhancement: Support operator() overload.
 
 Red Panda C++ Version 3.0
 
