@@ -36,7 +36,7 @@
             {
                 "name": "ROXTerm",
                 "path": "roxterm",
-                "argsPattern": "$term -e \"$unix_command\""
+                "argsPattern": "$term --separate -e \"$unix_command\""
             },
             {
                 "name": "sakura",
@@ -56,7 +56,7 @@
             {
                 "name": "Tilix",
                 "path": "tilix",
-                "argsPattern": "$term -e $argv"
+                "argsPattern": "$term --new-process -e $argv"
             },
             {
                 "name": "Wayst",
@@ -69,14 +69,10 @@
         "group": "Desktop Default",
         "terminals": [
             {
-                "name": "Deepin Terminal",
-                "path": "deepin-terminal",
-                "argsPattern": "$term -e $argv"
-            },
-            {
                 "name": "Konsole (KDE)",
                 "path": "konsole",
-                "argsPattern": "$term -e $argv"
+                "argsPattern": "$term --separate -e $argv",
+                "comment": "`--separate` is not required by default, just in case someone enabled single process mode"
             },
             {
                 "name": "GNOME Terminal",
@@ -86,17 +82,17 @@
             {
                 "name": "GNOME Terminator",
                 "path": "terminator",
-                "argsPattern": "$term -x $argv"
+                "argsPattern": "$term --no-dbus -x $argv"
             },
             {
                 "name": "LXTerminal (LXDE)",
                 "path": "lxterminal",
-                "argsPattern": "$term -e $argv"
+                "argsPattern": "$term --no-remote -e $argv"
             },
             {
                 "name": "MATE Terminal",
                 "path": "mate-terminal",
-                "argsPattern": "$term -x $argv"
+                "argsPattern": "$term --disable-factory -x $argv"
             },
             {
                 "name": "QTerminal (LXQt)",
@@ -116,12 +112,12 @@
             {
                 "name": "Terminology (Enlightenment)",
                 "path": "terminology",
-                "argsPattern": "$term -e \"$unix_command\""
+                "argsPattern": "$term --no-dbus -e \"$unix_command\""
             },
             {
                 "name": "Xfce Terminal",
                 "path": "xfce4-terminal",
-                "argsPattern": "$term -x $argv"
+                "argsPattern": "$term --disable-server -x $argv"
             }
         ]
     },
@@ -142,7 +138,7 @@
             {
                 "name": "Elementary Terminal",
                 "path": "io.elementary.terminal",
-                "argsPattern": "$term -e \"$unix_command\"",
+                "argsPattern": "$term --gapplication-app-id $random_app_id -e \"$unix_command\"",
                 "comment": "confirm to quit"
             },
             {
@@ -154,7 +150,7 @@
             {
                 "name": "GNOME Console",
                 "path": "kgx",
-                "argsPattern": "$term -- $argv",
+                "argsPattern": "$term --gapplication-app-id $random_app_id -- $argv",
                 "comment": "confirm to quit"
             },
             {
