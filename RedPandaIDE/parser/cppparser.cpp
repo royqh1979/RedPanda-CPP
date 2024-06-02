@@ -5937,7 +5937,8 @@ PStatement CppParser::doParseEvalTypeInfo(
     PStatement effectiveTypeStatement = typeStatement;
     int level=0;
     while (effectiveTypeStatement && (effectiveTypeStatement->kind == StatementKind::Typedef
-           || effectiveTypeStatement->kind == StatementKind::Preprocessor)) {
+                                      || effectiveTypeStatement->kind == StatementKind::Alias
+                                      || effectiveTypeStatement->kind == StatementKind::Preprocessor)) {
         if (level >20) // prevent infinite loop
             break;
         level++;
