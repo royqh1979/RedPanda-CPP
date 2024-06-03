@@ -36,7 +36,7 @@ void ProjectFilesWidget::doLoad()
 {
     if (ui->cbEncoding->count()>0) {
         if (pMainWindow->project()->options().encoding==ENCODING_SYSTEM_DEFAULT) {
-            ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(tr("ANSI")));
+            ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(tr("System Default")));
         } else {
             ui->cbEncoding->setItemText(0,tr("Project(%1)").arg(QString(pMainWindow->project()->options().encoding)));
         }
@@ -269,7 +269,7 @@ void ProjectFilesWidget::init()
     } else {
         ui->cbEncoding->addItem(tr("Project(%1)").arg(QString(project->options().encoding)),ENCODING_PROJECT);
     }
-    ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("System Default(%1)").arg(QString(pCharsetInfoManager->getDefaultSystemEncoding())),ENCODING_SYSTEM_DEFAULT);
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
         ui->cbEncoding->addItem(langName,langName);

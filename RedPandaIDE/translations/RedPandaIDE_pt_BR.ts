@@ -876,9 +876,13 @@
         <translation>Compilador de recursos (windres)</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+68"/>
         <source>ANSI</source>
-        <translation>ANSI</translation>
+        <translation type="vanished">ANSI</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+68"/>
+        <source>System Default(%1)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1426,7 +1430,7 @@
         <translation>Impossível encontrar astyle em &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+163"/>
         <source>Break point condition</source>
         <translation>Condição de parada</translation>
     </message>
@@ -1441,7 +1445,7 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5414"/>
+        <location line="-5416"/>
         <location line="+505"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
@@ -1789,7 +1793,7 @@
         <translation>Remover ...</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+337"/>
+        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+343"/>
         <location line="+53"/>
         <location line="+9"/>
         <location line="+13"/>
@@ -2104,9 +2108,13 @@
         <translation>Arquivos C</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editormiscwidget.cpp" line="+102"/>
         <source>ANSI</source>
-        <translation>ANSI</translation>
+        <translation type="vanished">ANSI</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/editormiscwidget.cpp" line="+102"/>
+        <source>System Default(%1)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7779,12 +7787,11 @@
         <translation>Aplicar link às bibliotecas estáticas</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="+120"/>
         <source>ANSI</source>
-        <translation>ANSI</translation>
+        <translation type="vanished">ANSI</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="+121"/>
         <source>UTF-8</source>
         <translation>UTF-8</translation>
     </message>
@@ -7794,7 +7801,12 @@
         <translation>Definir codificação para o executável:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="+26"/>
+        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="-1"/>
+        <source>System Default(%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <location line="+9"/>
         <source>Wrong Compiler Type</source>
         <translation type="unfinished"></translation>
@@ -7930,10 +7942,18 @@
     </message>
     <message>
         <location filename="../settingsdialog/projectfileswidget.cpp" line="+39"/>
+        <source>System Default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+229"/>
-        <location line="+4"/>
         <source>ANSI</source>
         <translation>ANSI</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>System Default(%1)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8063,8 +8083,12 @@
     </message>
     <message>
         <location line="+41"/>
+        <source>System Default(%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>ANSI</source>
-        <translation type="unfinished">ANSI</translation>
+        <translation type="obsolete">ANSI</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -9028,7 +9052,7 @@
         <translation type="vanished">Índice %1 fora dos limites</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+524"/>
+        <location filename="../utils.cpp" line="+525"/>
         <source>bytes</source>
         <translation>bytes</translation>
     </message>

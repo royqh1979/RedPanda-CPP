@@ -221,7 +221,7 @@ void ProjectGeneralWidget::init()
 {
     ui->cbEncodingDetail->setVisible(false);
     ui->cbEncoding->clear();
-    ui->cbEncoding->addItem(tr("ANSI"),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("System Default(%1)").arg(QString(pCharsetInfoManager->getDefaultSystemEncoding())),ENCODING_SYSTEM_DEFAULT);
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
     ui->cbEncoding->addItem(tr("UTF-8 BOM"),ENCODING_UTF8_BOM);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {

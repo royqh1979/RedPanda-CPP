@@ -16,6 +16,7 @@ Red Panda C++ Version 3.1
   - fix: All color scheme names are incorrectly displayed as bold, if the current one is a customed one.
   - fix: Variables defined by using alias can't show completion info.
   - enhancement: Support operator() overload.
+  - change: rename all "ansi" encoding to "system default".
 
 Red Panda C++ Version 3.0
 

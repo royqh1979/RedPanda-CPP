@@ -1097,9 +1097,13 @@ p, li { white-space: pre-wrap; }
         <translation>小熊猫C++ 将会清除以前搜索到的编译器配置列表，然后在下列文件夹中搜索编译器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你确定要继续吗？</translation>
     </message>
     <message>
-        <location line="-234"/>
         <source>ANSI</source>
-        <translation>ANSI</translation>
+        <translation type="vanished">ANSI</translation>
+    </message>
+    <message>
+        <location line="-234"/>
+        <source>System Default(%1)</source>
+        <translation>系统默认(%1)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1688,7 +1692,7 @@ p, li { white-space: pre-wrap; }
         <translation>找不到astyle程序&quot;%1&quot;.</translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+163"/>
         <source>Break point condition</source>
         <translation>断点条件</translation>
     </message>
@@ -2039,7 +2043,7 @@ p, li { white-space: pre-wrap; }
         <translation>背景色</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+337"/>
+        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+343"/>
         <location line="+53"/>
         <location line="+9"/>
         <location line="+13"/>
@@ -2428,9 +2432,13 @@ p, li { white-space: pre-wrap; }
         <translation>C语言文件</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editormiscwidget.cpp" line="+102"/>
         <source>ANSI</source>
-        <translation>ANSI</translation>
+        <translation type="vanished">ANSI</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/editormiscwidget.cpp" line="+102"/>
+        <source>System Default(%1)</source>
+        <translation>系统默认(%1)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8471,9 +8479,13 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">在编译时加入字符集选项</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="+120"/>
         <source>ANSI</source>
-        <translation>ANSI</translation>
+        <translation type="vanished">ANSI</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="+120"/>
+        <source>System Default(%1)</source>
+        <translation>系统默认(%1)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8629,10 +8641,18 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="-231"/>
+        <source>System Default</source>
+        <translation>系统默认</translation>
+    </message>
+    <message>
         <location line="+229"/>
-        <location line="+4"/>
         <source>ANSI</source>
         <translation>ANSI</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>System Default(%1)</source>
+        <translation>系统默认(%1)</translation>
     </message>
     <message>
         <source>ANSI(System default)</source>
@@ -8758,8 +8778,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+41"/>
+        <source>System Default(%1)</source>
+        <translation>系统默认(%1)</translation>
+    </message>
+    <message>
         <source>ANSI</source>
-        <translation>ANSI</translation>
+        <translation type="vanished">ANSI</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -9620,7 +9644,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">下标&quot;%1&quot;越界</translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+524"/>
+        <location filename="../utils.cpp" line="+525"/>
         <source>bytes</source>
         <translation>字节</translation>
     </message>

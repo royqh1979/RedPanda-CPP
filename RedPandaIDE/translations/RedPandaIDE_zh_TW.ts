@@ -765,12 +765,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+68"/>
-        <source>ANSI</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+69"/>
         <source>UTF-8</source>
         <translation type="unfinished"></translation>
     </message>
@@ -903,7 +898,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-246"/>
+        <source>System Default(%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+247"/>
         <source>Abort</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1247,7 +1247,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+163"/>
         <source>Break point condition</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1262,7 +1262,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-5414"/>
+        <location line="-5416"/>
         <location line="+505"/>
         <source>Error Load File</source>
         <translation type="unfinished"></translation>
@@ -1590,7 +1590,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+337"/>
+        <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+343"/>
         <location line="+53"/>
         <location line="+9"/>
         <location line="+13"/>
@@ -1890,7 +1890,7 @@
     </message>
     <message>
         <location filename="../settingsdialog/editormiscwidget.cpp" line="+102"/>
-        <source>ANSI</source>
+        <source>System Default(%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -7308,12 +7308,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="+120"/>
-        <source>ANSI</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="+121"/>
         <source>UTF-8</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7323,7 +7318,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="+26"/>
+        <location filename="../settingsdialog/projectcompilerwidget.cpp" line="-1"/>
+        <source>System Default(%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <location line="+9"/>
         <source>Wrong Compiler Type</source>
         <translation type="unfinished"></translation>
@@ -7455,9 +7455,17 @@
     </message>
     <message>
         <location filename="../settingsdialog/projectfileswidget.cpp" line="+39"/>
+        <source>System Default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+229"/>
-        <location line="+4"/>
         <source>ANSI</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>System Default(%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -7568,7 +7576,7 @@
     </message>
     <message>
         <location line="+41"/>
-        <source>ANSI</source>
+        <source>System Default(%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8387,7 +8395,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../utils.cpp" line="+524"/>
+        <location filename="../utils.cpp" line="+525"/>
         <source>bytes</source>
         <translation type="unfinished"></translation>
     </message>
