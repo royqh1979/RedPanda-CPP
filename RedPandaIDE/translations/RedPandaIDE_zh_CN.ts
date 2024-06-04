@@ -11700,7 +11700,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+172"/>
         <source>Use UTF8 as the encoding</source>
-        <translation>使用UTF8文件编码</translation>
+        <translation>使用UTF8编码</translation>
     </message>
     <message>
         <location line="-196"/>
