@@ -754,9 +754,10 @@ std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandFor
                 QFile(temproryFile->fileName()).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
             }
             wrappedArgs.push_back(temproryFile->fileName());
-        } else if (patternItem == "$random_app_id") {
-            QString randomSuffix = QString::number(QRandomGenerator::global()->generate());
-            QString appId = "io.redpanda.term" + randomSuffix;
+        } else if (patternItem == "$sequential_app_id") {
+            static QString prefix = QStringLiteral("io.redpanda.term_%1_").arg(QCoreApplication::applicationPid());
+            static std::atomic<int> appIdCounter = 0;
+            QString appId = prefix + QString::number(++appIdCounter);
             wrappedArgs.push_back(appId);
         } else
             wrappedArgs.push_back(patternItem);
