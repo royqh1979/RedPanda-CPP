@@ -4134,7 +4134,7 @@ const QMap<QString, QString> Settings::Environment::mTerminalArgsPatternMagicVar
     {"dos_command", "$dos_command"},
     {"lpCommandLine", "$lpCommandLine"},
     {"tmpfile", "$tmpfile"},
-    {"random_app_id", "$random_app_id"},
+    {"sequential_app_id", "$sequential_app_id"},
 };
 
 Settings::Executor::Executor(Settings *settings):_Base(settings, SETTING_EXECUTOR)
