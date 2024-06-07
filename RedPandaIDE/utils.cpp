@@ -784,3 +784,13 @@ QByteArray reformatContentUsingAstyle(const QByteArray &content, const QStringLi
                                             env);
     return newContent;
 }
+
+ExternalResource::ExternalResource() {
+    Q_INIT_RESOURCE(qsynedit_qmake_qmake_qm_files);
+    Q_INIT_RESOURCE(redpanda_qt_utils_qmake_qmake_qm_files);
+}
+
+ExternalResource::~ExternalResource() {
+    Q_CLEANUP_RESOURCE(qsynedit_qmake_qmake_qm_files);
+    Q_CLEANUP_RESOURCE(redpanda_qt_utils_qmake_qmake_qm_files);
+}
