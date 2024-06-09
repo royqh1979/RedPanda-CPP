@@ -14,7 +14,7 @@ lua.subdir = libs/lua
 
 # Add the dependencies so that the RedPandaIDE project can add the depended programs
 # into the main app bundle
-RedPandaIDE.depends = consolepauser qsynedit
+RedPandaIDE.depends = consolepauser qsynedit lua
 qsynedit.depends = redpanda_qt_utils
 
 APP_NAME = RedPandaCPP
