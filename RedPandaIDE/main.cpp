@@ -280,6 +280,8 @@ int main(int argc, char *argv[])
 
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
+    ExternalResource resource;
+
     QLockFile lockFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");
     {
         bool firstRun;

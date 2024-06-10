@@ -75,35 +75,48 @@ rule("qt.ts")
         -- save lrelease
         target:data_set("qt.lrelease", lrelease)
     end)
-    on_buildcmd_file(function (target, batchcmds, sourcefile_ts, opt)
-        -- get tools
+    on_buildcmd_files(function (target, batchcmds, sourcebatch, opt)
         local lrelease = target:data("qt.lrelease")
-        local rcc = target:data("qt.rcc")
-        -- get qm file
-        local sourcefile_qm = path.join(target:autogendir(), "rules", "qt", "ts", path.basename(sourcefile_ts) .. ".qm")
-        local sourcefile_dir = path.directory(sourcefile_qm)
-        -- prepare qrc file
-        local sourcefile_qrc = path.join(target:autogendir(), "rules", "qt", "ts", path.basename(sourcefile_ts) .. ".qrc")
-        io.writefile(sourcefile_qrc, [[
+        local qrc_content = [[
             <RCC>
-            <qresource prefix="/i18n">
-                <file alias="]] .. path.filename(sourcefile_qm) .. [[">]] .. path.absolute(sourcefile_qm) .. [[</file>
-            </qresource>
+                <qresource prefix="/i18n">
+        ]]
+        for _, sourcefile_ts in ipairs(sourcebatch.sourcefiles) do
+            if is_host("windows") then
+                sourcefile_ts = sourcefile_ts:gsub("\\", "/")
+            end
+            -- get qm file
+            local sourcefile_qm = path.join(target:autogendir(), "rules", "qt", "ts", path.basename(sourcefile_ts) .. ".qm")
+            local sourcefile_dir = path.directory(sourcefile_qm)
+            -- build ts to qm file
+            batchcmds:show_progress(opt.progress, "${color.build.object}compiling.qt.ts %s", sourcefile_ts)
+            batchcmds:mkdir(sourcefile_dir)
+            batchcmds:vrunv(lrelease, {sourcefile_ts, "-qm", sourcefile_qm})
+
+            qrc_content = qrc_content .. [[
+                   <file alias="]] .. path.filename(sourcefile_qm) .. [[">]] .. path.absolute(sourcefile_qm) .. [[</file>
+            ]]
+        end
+        qrc_content = qrc_content .. [[
+                </qresource>
             </RCC>
-        ]])
+        ]]
+
+        local rcc = target:data("qt.rcc")
+        local name = target:name() .. "_qmake_qmake_qm_files"  -- same as qmake
+        local sourcefile_qrc = path.join(target:autogendir(), "rules", "qt", "ts", name .. ".qrc")
+        io.writefile(sourcefile_qrc, qrc_content)
         -- get c++ source file for qrc
-        local sourcefile_cpp = path.join(target:autogendir(), "rules", "qt", "ts", path.basename(sourcefile_ts) .. ".cpp")
+        local sourcefile_cpp = path.join(target:autogendir(), "rules", "qt", "ts", name .. ".cpp")
         -- add objectfile
         local objectfile = target:objectfile(sourcefile_cpp)
         table.insert(target:objectfiles(), objectfile)
         -- add commands
-        batchcmds:show_progress(opt.progress, "${color.build.object}compiling.qt.ts %s", sourcefile_ts)
-        batchcmds:mkdir(sourcefile_dir)
-        batchcmds:vrunv(lrelease, {sourcefile_ts, "-qm", sourcefile_qm})
-        batchcmds:vrunv(rcc, {"-name", path.basename(sourcefile_qrc), sourcefile_qrc, "-o", sourcefile_cpp})
+        batchcmds:show_progress(opt.progress, "${color.build.object}compiling.qt.ts %s", sourcefile_cpp)
+        batchcmds:vrunv(rcc, {"-name", name, sourcefile_qrc, "-o", sourcefile_cpp})
         batchcmds:compile(sourcefile_cpp, objectfile)
         -- add deps
-        batchcmds:add_depfiles(sourcefile_ts)
+        batchcmds:add_depfiles(sourcebatch.sourcefiles)
         batchcmds:set_depmtime(os.mtime(objectfile))
         batchcmds:set_depcache(target:dependfile(objectfile))
     end)
