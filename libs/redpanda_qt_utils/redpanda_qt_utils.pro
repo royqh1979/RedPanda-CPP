@@ -7,9 +7,6 @@ CONFIG += c++17
 CONFIG += nokey
 CONFIG += staticlib
 
-CONFIG += lrelease embed_translations
-QMAKE_RESOURCE_FLAGS += -name $(QMAKE_TARGET)_${QMAKE_FILE_BASE}
-
 win32: {
     DEFINES += _WIN32_WINNT=0x0501
 }

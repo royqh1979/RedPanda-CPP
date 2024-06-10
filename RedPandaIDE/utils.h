@@ -204,9 +204,4 @@ std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandFor
 
 std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0);
 
-struct ExternalResource {
-    ExternalResource();
-    ~ExternalResource();
-};
-
 #endif // UTILS_H
