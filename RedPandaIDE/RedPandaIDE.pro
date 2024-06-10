@@ -48,8 +48,10 @@ isEmpty(LIBEXECDIR) {
 
 win32: {
     DEFINES += _WIN32_WINNT=0x0501
+    LIBS += -ladvapi32  # registry APIs
     LIBS += -lpsapi  # GetModuleFileNameEx, GetProcessMemoryInfo
     LIBS += -lshlwapi  # SHDeleteKey
+    LIBS += -luser32  # window message APIs
 }
 
 DEFINES += PREFIX=\\\"$${PREFIX}\\\"
@@ -89,26 +91,18 @@ msvc {
 
 CONFIG(debug_and_release_target) {
     CONFIG(debug, debug|release) {
-        OBJ_OUT_PWD = debug/
+        OBJ_OUT_PWD = debug
     }
     CONFIG(release, debug|release) {
-        OBJ_OUT_PWD = release/
+        OBJ_OUT_PWD = release
     }
 }
 
 INCLUDEPATH += ../libs/qsynedit ../libs/redpanda_qt_utils ../libs/lua
 
-gcc | clang {
-LIBS += $$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD}libqsynedit.a \
-        $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}libredpanda_qt_utils.a \
-        $$OUT_PWD/../libs/lua/$${OBJ_OUT_PWD}liblua.a
-}
-msvc {
-LIBS += $$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD}qsynedit.lib \
-        $$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD}redpanda_qt_utils.lib \
-        $$OUT_PWD/../libs/lua/$${OBJ_OUT_PWD}lua.lib
-LIBS += advapi32.lib user32.lib
-}
+LIBS += -L$$OUT_PWD/../libs/qsynedit/$${OBJ_OUT_PWD} -lqsynedit \
+        -L$$OUT_PWD/../libs/redpanda_qt_utils/$${OBJ_OUT_PWD} -lredpanda_qt_utils \
+        -L$$OUT_PWD/../libs/lua/$${OBJ_OUT_PWD} -llua
 
 SOURCES += \
     autolinkmanager.cpp \
