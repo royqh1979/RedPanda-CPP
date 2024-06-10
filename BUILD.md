@@ -195,7 +195,7 @@ The package will be placed in `dist/`.
 ## Linux AppImage
 
 ```bash
-podman run --rm -v $PWD:/mnt -w /mnt quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0 ./packages/appimage/01-in-docker.sh
+podman run --rm -v $PWD:/mnt -w /mnt quay.io/redpanda-cpp/appimage-builder-x86_64:20240610.0 ./packages/appimage/01-in-docker.sh
 ```
 
 Dockerfiles are available in [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder). Available architectures: `x86_64`, `aarch64`, `riscv64`.
