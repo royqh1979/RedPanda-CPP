@@ -228,7 +228,11 @@ target("RedPandaIDE")
 
     -- libs
 
-    add_links("redpanda_qt_utils", "qsynedit")
+    if is_plat("windows") then
+        add_links("redpanda_qt_utils", "qsynedit")  -- xmake 2.8.6 workaround
+    else
+        add_linkgroups("redpanda_qt_utils", "qsynedit", {whole = true})
+    end
     if is_os("windows") then
         add_links("psapi", "shlwapi")
     end

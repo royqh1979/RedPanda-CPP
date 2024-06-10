@@ -39,8 +39,6 @@ target("qsynedit")
 
     add_ui_classes()
 
-    add_files("*.ts")
-
     add_includedirs(".", {interface = true})
 
     -- do not install
