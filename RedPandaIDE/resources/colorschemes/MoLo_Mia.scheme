@@ -107,7 +107,7 @@
         "underlined": false
     },
     "Gutter": {
-        "background": "#20404040",
+        "background": "#1c404040",
         "bold": false,
         "foreground": "#ff969696",
         "italic": false,
@@ -201,7 +201,7 @@
     },
     "Space": {
         "bold": false,
-        "foreground": "#ffbababa",
+        "foreground": "#8e838383",
         "italic": false,
         "strikeout": false,
         "underlined": false
