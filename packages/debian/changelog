@@ -1,3 +1,63 @@
+redpanda-cpp (3.1.2871-1) unstable; urgency=medium
+
+  * Update to 3.1.2871
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Tue, 11 Jun 2024 16:26:11 +0800
+
+redpanda-cpp (3.1.2849-1) unstable; urgency=medium
+
+  * Update to 3.1.2849
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Tue, 28 May 2024 20:30:05 +0800
+
+redpanda-cpp (3.1.2832-1) unstable; urgency=medium
+
+  * Update to 3.1.2832
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Mon, 20 May 2024 17:32:04 +0800
+
+redpanda-cpp (3.0.2795-1) unstable; urgency=medium
+
+  * Update to 3.0.2795
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Tue, 07 May 2024 19:26:03 +0800
+
+redpanda-cpp (3.0.2788-1) unstable; urgency=medium
+
+  * Update to 3.0.2788
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Sun, 05 May 2024 15:26:20 +0800
+
+redpanda-cpp (3.0.2754-1) unstable; urgency=medium
+
+  * Update to 3.0.2754
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Thu, 25 Apr 2024 17:09:34 +0800
+
+redpanda-cpp (3.0.2720-1) unstable; urgency=medium
+
+  * Update to 3.0.2720
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Sun, 14 Apr 2024 18:32:16 +0800
+
+redpanda-cpp (3.0.2707-1) unstable; urgency=medium
+
+  * Update to 3.0.2707
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Fri, 12 Apr 2024 20:25:23 +0800
+
+redpanda-cpp (3.0.2705-1) unstable; urgency=medium
+
+  * Update to 3.0.2705
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Fri, 12 Apr 2024 19:01:00 +0800
+
+redpanda-cpp (3.0.2671-1) unstable; urgency=medium
+
+  * Update to 3.0.2671
+
+ -- Roy Qu (瞿华) <royqh1979@gmail.com>  Sun, 07 Apr 2024 18:42:16 +0800
+
 redpanda-cpp (2.27.2540-1) unstable; urgency=medium
 
   * Update to 2.27.2540
