@@ -1,8 +1,7 @@
 {
     "Active Breakpoint": {
-        "background": "#ff00376f",
+        "background": "#500055ff",
         "bold": false,
-        "foreground": "#ffffffce",
         "italic": false,
         "strikeout": false,
         "underlined": false
@@ -22,7 +21,7 @@
         "underlined": false
     },
     "Breakpoint": {
-        "background": "#ff002535",
+        "background": "#2200aaff",
         "bold": false,
         "italic": false,
         "strikeout": false,
@@ -201,7 +200,7 @@
     },
     "Space": {
         "bold": false,
-        "foreground": "#ff505050",
+        "foreground": "#8e838383",
         "italic": false,
         "strikeout": false,
         "underlined": false
