@@ -1,3 +1,7 @@
+Red Panda C++ Version 3.2
+
+  - Change: The way to calcuate astyle path.
+
 Red Panda C++ Version 3.1
 
   - fix: Can't correctly select in column mode.

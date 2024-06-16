@@ -3810,8 +3810,7 @@ void Settings::Environment::doLoad()
                 break;
             }
         }
-        if (isGreenEdition())
-            mAStylePath = replacePrefix(mAStylePath, pSettings->dirs().appDir() , "%*APP_DIR*%");
+        mAStylePath = replacePrefix(mAStylePath, pSettings->dirs().appDir() , "%*APP_DIR*%");
     }
 
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
@@ -3881,19 +3880,17 @@ void Settings::Environment::setTerminalPath(const QString &terminalPath)
 QString Settings::Environment::AStylePath() const
 {
     QString path = mAStylePath;
-    if (isGreenEdition()) {
-        path = replacePrefix(path, "%*APP_DIR*%", pSettings->dirs().appDir());
-    }
     if (path.isEmpty())
         path = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
+    else
+        path = replacePrefix(path, "%*APP_DIR*%", pSettings->dirs().appDir());
     return path;
 }
 
 void Settings::Environment::setAStylePath(const QString &aStylePath)
 {
     mAStylePath = aStylePath;
-    if (isGreenEdition())
-        mAStylePath = replacePrefix(mAStylePath, pSettings->dirs().appDir() , "%*APP_DIR*%");
+    mAStylePath = replacePrefix(mAStylePath, pSettings->dirs().appDir() , "%*APP_DIR*%");
 }
 
 QString Settings::Environment::terminalArgumentsPattern() const
