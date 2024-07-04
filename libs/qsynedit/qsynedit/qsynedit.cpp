@@ -2960,33 +2960,10 @@ void QSynEdit::ensureCaretVisible()
 
 void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
 {
-    if (mDocument->maxLineWidth()<0) {
-        if (ForceToMiddle)
-            mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle, true);
-        else
-            mStateFlags.setFlag(StateFlag::EnsureCaretVisible, true);
-        return;
-    }
     incPaintLock();
     auto action = finally([this]{
         decPaintLock();
     });
-    // Make sure X is visible
-    int visibleX = displayX();
-    if (visibleX < leftPos()) {
-        if (viewWidth() / 3 >visibleX)
-            setLeftPos(0);
-        else if (viewWidth() > tabWidth() + mCharWidth)
-            setLeftPos(std::max(0,visibleX - tabWidth()));
-        else
-            setLeftPos(visibleX);
-    } else if (visibleX > viewWidth() + leftPos() - mCharWidth && viewWidth()>0)
-        if (viewWidth() >= 3*mCharWidth )
-            setLeftPos(visibleX - viewWidth() + 3*mCharWidth);
-        else
-            setLeftPos(visibleX - viewWidth() + mCharWidth);
-    else
-        setLeftPos(leftPos());
     // Make sure Y is visible
     int vCaretRow = displayY();
     if (ForceToMiddle) {
@@ -3003,6 +2980,29 @@ void QSynEdit::ensureCaretVisibleEx(bool ForceToMiddle)
         } else
             setTopPos(mTopPos);
     }
+    // Make sure X is visible
+    if (mDocument->maxLineWidth()<0) {
+        if (ForceToMiddle)
+            mStateFlags.setFlag(StateFlag::EnsureCaretVisibleForceMiddle, true);
+        else
+            mStateFlags.setFlag(StateFlag::EnsureCaretVisible, true);
+        return;
+    }
+    int visibleX = displayX();
+    if (visibleX < leftPos()) {
+        if (viewWidth() / 3 >visibleX)
+            setLeftPos(0);
+        else if (viewWidth() > tabWidth() + mCharWidth)
+            setLeftPos(std::max(0,visibleX - tabWidth()));
+        else
+            setLeftPos(visibleX);
+    } else if (visibleX > viewWidth() + leftPos() - mCharWidth && viewWidth()>0)
+        if (viewWidth() >= 3*mCharWidth )
+            setLeftPos(visibleX - viewWidth() + 3*mCharWidth);
+        else
+            setLeftPos(visibleX - viewWidth() + mCharWidth);
+    else
+        setLeftPos(leftPos());
 }
 
 void QSynEdit::scrollWindow(int dx, int dy)
@@ -4112,6 +4112,7 @@ void QSynEdit::doUndo()
             } while (keepGoing);
         }
     }
+    ensureCaretVisible();
     updateModifiedStatus();
     onChanged();
 }
@@ -4315,6 +4316,7 @@ void QSynEdit::doRedo()
         PUndoItem item = mRedoList->popItem();
         mUndoList->restoreChange(item);
     }
+    ensureCaretVisible();
     updateModifiedStatus();
     onChanged();
 }

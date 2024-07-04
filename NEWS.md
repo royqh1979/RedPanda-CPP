@@ -2,6 +2,7 @@ Red Panda C++ Version 3.2
 
   - Change: The way to calcuate astyle path.
   - fix: Scroll bar arrow size not correct in the dark themes.
+  - fix: Don't auto scroll to the caret after undo/redo.
 
 Red Panda C++ Version 3.1
 
