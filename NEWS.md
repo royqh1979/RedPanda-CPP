@@ -1,6 +1,7 @@
 Red Panda C++ Version 3.2
 
   - Change: The way to calcuate astyle path.
+  - fix: Scroll bar arrow size not correct in the dark themes.
 
 Red Panda C++ Version 3.1
 

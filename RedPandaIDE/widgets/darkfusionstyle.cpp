@@ -98,7 +98,7 @@ static qreal calcDpi() {
 }
 
 static qreal calcDpiScaled(qreal value, qreal dpi) {
-    return value*96/dpi;
+    return value*dpi/96;
 }
 
 }
