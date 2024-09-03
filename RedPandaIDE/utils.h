@@ -143,12 +143,18 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex=-1);
 
 int getNewFileNumber();
 
-QByteArray runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments,
+struct ProcessOutput
+{
+    QByteArray standardOutput;
+    QByteArray standardError;
+    QString errorMessage;
+};
+
+ProcessOutput runAndGetOutput(const QString& cmd, const QString& workingDir, const QStringList& arguments,
                            const QByteArray& inputContent = QByteArray(),
+                           bool separateStderr = false,
                            bool inheritEnvironment = false,
                            const QProcessEnvironment& env = QProcessEnvironment() );
-
-QByteArray reformatContentUsingAstyle(const QByteArray& content, const QStringList& arguments);
 
 void openFileFolderInExplorer(const QString& path);
 

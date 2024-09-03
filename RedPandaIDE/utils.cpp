@@ -369,12 +369,16 @@ bool isGreenEdition()
 }
 #endif
 
-QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments,
-                           const QByteArray &inputContent, bool inheritEnvironment,
+ProcessOutput runAndGetOutput(const QString &cmd, const QString& workingDir, const QStringList& arguments,
+                           const QByteArray &inputContent,
+                           bool separateStderr,
+                           bool inheritEnvironment,
                            const QProcessEnvironment& env)
 {
     QProcess process;
-    QByteArray result;
+    QByteArray standardOutput;
+    QByteArray standardError;
+    QString errorMessage;
     bool errorOccurred = false;
     if (env.isEmpty()) {
         if (inheritEnvironment) {
@@ -385,13 +389,21 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
     } else {
         process.setProcessEnvironment(env);
     }
-    process.setProcessChannelMode(QProcess::MergedChannels);
+    if (separateStderr)
+        process.setProcessChannelMode(QProcess::SeparateChannels);
+    else
+        process.setProcessChannelMode(QProcess::MergedChannels);
     process.setReadChannel(QProcess::StandardOutput);
     process.setWorkingDirectory(workingDir);
     process.connect(&process,&QProcess::readyReadStandardOutput,
                     [&](){
-        result.append(process.readAllStandardOutput());
+        standardOutput.append(process.readAllStandardOutput());
     });
+    if (separateStderr)
+        process.connect(&process, &QProcess::readyReadStandardError,
+                        [&]() {
+                            standardError.append(process.readAllStandardError());
+                        });
     process.connect(&process, &QProcess::errorOccurred,
                     [&](){
                         errorOccurred= true;
@@ -405,28 +417,27 @@ QByteArray runAndGetOutput(const QString &cmd, const QString& workingDir, const 
     if (errorOccurred) {
         switch(process.error()) {
         case QProcess::FailedToStart:
-            result += "Failed to start process!";
+            errorMessage += "Failed to start process!";
             break;
         case QProcess::Crashed:
-            result += "Process crashed!";
+            errorMessage += "Process crashed!";
             break;
         case QProcess::Timedout:
-            result += "Timeout!";
+            errorMessage += "Timeout!";
             break;
         case QProcess::ReadError:
-            result += "Read Error:";
+            errorMessage += "Read Error:";
             break;
         case QProcess::WriteError:
-            result += "Write Error:";
+            errorMessage += "Write Error:";
             break;
         case QProcess::UnknownError:
-            result += "Unknown Error:";
+            errorMessage += "Unknown Error:";
             break;
         }
-
-        //result += process.errorString().toLocal8Bit();
+        errorMessage += process.errorString();
     }
-    return result;
+    return {standardOutput, standardError, errorMessage};
 }
 
 void executeFile(const QString &fileName, const QStringList &params, const QString &workingDir, const QString &tempFile)
@@ -770,19 +781,6 @@ std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandFor
 std::tuple<QString, QStringList, PNonExclusiveTemporaryFileOwner> wrapCommandForTerminalEmulator(const QString &terminal, const QString &argsPattern, const QStringList &payloadArgsWithArgv0)
 {
     return wrapCommandForTerminalEmulator(terminal, parseArguments(argsPattern, Settings::Environment::terminalArgsPatternMagicVariables(), false), payloadArgsWithArgv0);
-}
-
-QByteArray reformatContentUsingAstyle(const QByteArray &content, const QStringList &arguments)
-{
-    QProcessEnvironment env;
-    env.insert("LANG","en");
-    QByteArray newContent = runAndGetOutput(pSettings->environment().AStylePath(),
-                                            extractFileDir(pSettings->environment().AStylePath()),
-                                            arguments,
-                                            content,
-                                            false,
-                                            env);
-    return newContent;
 }
 
 ExternalResource::ExternalResource() {

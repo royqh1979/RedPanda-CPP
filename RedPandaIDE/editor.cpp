@@ -56,6 +56,7 @@
 #include <QDebug>
 #include "project.h"
 #include <qt_utils/charsetinfo.h>
+#include "utils/escape.h"
 
 QHash<ParserLanguage,std::weak_ptr<CppParser>> Editor::mSharedParsers;
 
@@ -5115,17 +5116,34 @@ void Editor::reformat(bool doReparse)
 {
     if (readOnly())
         return;
-    if (!fileExists(pSettings->environment().AStylePath())) {
+    const QString &astyle = pSettings->environment().AStylePath();
+    if (!fileExists(astyle)) {
         QMessageBox::critical(this,
                               tr("astyle not found"),
-                              tr("Can't find astyle in \"%1\".").arg(pSettings->environment().AStylePath()));
+                              tr("Can't find astyle in \"%1\".").arg(astyle));
         return;
     }
     //we must remove all breakpoints and syntax issues
 //    onLinesDeleted(1,lineCount());
     QByteArray content = text().toUtf8();
     QStringList args = pSettings->codeFormatter().getArguments();
-    QByteArray newContent = reformatContentUsingAstyle(content,args);
+    QString command = escapeCommandForPlatformShell(extractFileName(astyle), args);
+    pMainWindow->logToolsOutput(tr("Reformatting content using astyle..."));
+    pMainWindow->logToolsOutput("------------------");
+    pMainWindow->logToolsOutput(tr("- Astyle: %1").arg(astyle));
+    pMainWindow->logToolsOutput(tr("- Command: %1").arg(command));
+    auto [newContent, astyleError, processError] =
+        runAndGetOutput(astyle, extractFileDir(astyle), args, content, true);
+    if (!astyleError.isEmpty()) {
+#ifdef Q_OS_WIN
+        QString msg = QString::fromLocal8Bit(astyleError);
+#else
+        QString msg = QString::fromUtf8(astyleError);
+#endif
+        pMainWindow->logToolsOutput(msg);
+    }
+    if (!processError.isEmpty())
+        pMainWindow->logToolsOutput(processError);
     if (newContent.isEmpty())
         return;
     replaceContent(QString::fromUtf8(newContent), doReparse);

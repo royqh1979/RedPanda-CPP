@@ -1218,6 +1218,7 @@ void MainWindow::executeTool(PToolItem item)
     Editor *e;
     QByteArray inputContent;
     QByteArray output;
+    QString errorMessage;
     clearToolsOutput();
     switch(item->inputOrigin) {
     case ToolItemInputOrigin::None:
@@ -1251,18 +1252,24 @@ void MainWindow::executeTool(PToolItem item)
             QString cmd="cmd";
             QStringList args{"/C",file.fileName()};
             command = escapeCommandForPlatformShell(cmd, args);
-            output = runAndGetOutput(cmd, workDir, args, inputContent);
+            auto [o, _, em] = runAndGetOutput(cmd, workDir, args, inputContent);
+            output = o;
+            errorMessage = em;
         }
     } else {
 #endif
         command = escapeCommandForPlatformShell(program, params);
-        output = runAndGetOutput(program, workDir, params, inputContent);
+        auto [o, _, em] = runAndGetOutput(program, workDir, params, inputContent);
+        output = o;
+        errorMessage = em;
 #ifdef Q_OS_WIN
     }
 #endif
     switch(item->outputTarget) {
     case ToolItemOutputTarget::RedirectToToolsOutputPanel:
         logToolsOutput(tr(" - Command: %1").arg(command));
+        if (!errorMessage.isEmpty())
+            logToolsOutput(errorMessage);
         logToolsOutput("");
         logToolsOutput(byteArrayToString(output, item->isUTF8));
         stretchMessagesPanel(true);
@@ -1273,12 +1280,12 @@ void MainWindow::executeTool(PToolItem item)
     case ToolItemOutputTarget::RepalceWholeDocument:
         e=mEditorList->getEditor();
         if (e)
-            e->replaceContent(byteArrayToString(output, item->isUTF8));
+            e->replaceContent(errorMessage + byteArrayToString(output, item->isUTF8));
         break;
     case ToolItemOutputTarget::ReplaceCurrentSelection:
         e=mEditorList->getEditor();
         if (e)
-            e->setSelText(byteArrayToString(output, item->isUTF8));
+            e->setSelText(errorMessage + byteArrayToString(output, item->isUTF8));
         break;
     }
 }
