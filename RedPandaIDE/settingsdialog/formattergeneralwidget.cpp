@@ -326,8 +326,9 @@ void FormatterGeneralWidget::on_chkBreakMaxCodeLength_stateChanged(int)
 
 void FormatterGeneralWidget::updateDemo()
 {
-    if (!fileExists(pSettings->environment().AStylePath())) {
-        ui->editDemo->document()->setText(Editor::tr("Can't find astyle in \"%1\".").arg(pSettings->environment().AStylePath()));
+    const QString &astyle = pSettings->environment().AStylePath();
+    if (!fileExists(astyle)) {
+        ui->editDemo->document()->setText(Editor::tr("Can't find astyle in \"%1\".").arg(astyle));
         return;
     }
     QFile file(":/codes/formatdemo.cpp");
@@ -337,8 +338,20 @@ void FormatterGeneralWidget::updateDemo()
 
     Settings::CodeFormatter formatter(nullptr);
     updateCodeFormatter(formatter);
-    QByteArray newContent = reformatContentUsingAstyle(content, formatter.getArguments());
-    ui->editDemo->document()->setText(newContent);
+    auto [newContent, astyleError, processError] =
+        runAndGetOutput(astyle, extractFileDir(astyle), formatter.getArguments(), content, true);
+    QString display;
+    if (!processError.isEmpty())
+        display += processError + '\n';
+    if (!astyleError.isEmpty()) {
+#ifdef Q_OS_WIN
+        display += QString::fromLocal8Bit(astyleError) + '\n';
+#else
+        display += QString::fromUtf8(astyleError) + '\n';
+#endif
+    }
+    display += newContent;
+    ui->editDemo->document()->setText(display);
 }
 
 void FormatterGeneralWidget::updateCodeFormatter(Settings::CodeFormatter &format)

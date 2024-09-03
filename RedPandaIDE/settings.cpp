@@ -2849,11 +2849,12 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     env.insert("LANG","en");
     QString path = binDir;
     env.insert("PATH",path);
-    QByteArray result = runAndGetOutput(
+    auto [result, _, errorMessage] = runAndGetOutput(
                 includeTrailingPathDelimiter(binDir)+binFile,
                 binDir,
                 arguments,
                 QByteArray(),
+                false,
                 false,
                 env);
     return result.trimmed();
