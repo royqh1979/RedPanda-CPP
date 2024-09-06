@@ -562,7 +562,7 @@ void openFileFolderInExplorer(const QString &path)
 #ifdef Q_OS_WIN
         QProcess process;
         QStringList args;
-        QString filepath=info.absoluteFilePath().replace("/","\\");
+        QString filepath=QDir::toNativeSeparators(info.absoluteFilePath());
         args.append("/n,");
         args.append("/select,");
         args.append(QString("%1").arg(filepath));

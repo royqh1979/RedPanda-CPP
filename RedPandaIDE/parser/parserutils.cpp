@@ -494,7 +494,8 @@ bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePat
     bool isFullName = false;
 
 #ifdef Q_OS_WIN
-    isFullName = fileName.startsWith("/") || (fileName.length()>2 && fileName[1]==':');
+    isFullName = fileName.startsWith("/") || (fileName.length()>2 && fileName[1]==':'
+            && fileName[0].isLetter());
 #else
     isFullName = fileName.startsWith("/");
 #endif
@@ -503,7 +504,7 @@ bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePat
         // If it's a full file name, check if its directory is an include path
         if (info.exists()) { // full file name
             QDir dir = info.dir();
-            QString absPath = includeTrailingPathDelimiter(dir.absolutePath());
+            QString absPath = dir.absolutePath();
             foreach (const QString& incPath, includePaths) {
                 if (absPath.startsWith(incPath))
                     return true;

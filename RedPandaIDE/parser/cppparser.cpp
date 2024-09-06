@@ -107,7 +107,7 @@ void CppParser::addHardDefineByLine(const QString &line)
 void CppParser::addIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
-    mPreprocessor.addIncludePath(includeTrailingPathDelimiter(value));
+    mPreprocessor.addIncludePath(value);
 }
 
 void CppParser::removeProjectFile(const QString &value)
@@ -121,7 +121,7 @@ void CppParser::removeProjectFile(const QString &value)
 void CppParser::addProjectIncludePath(const QString &value)
 {
     QMutexLocker  locker(&mMutex);
-    mPreprocessor.addProjectIncludePath(includeTrailingPathDelimiter(value));
+    mPreprocessor.addProjectIncludePath(value);
 }
 
 void CppParser::clearIncludePaths()
@@ -897,7 +897,7 @@ QSet<QString> CppParser::internalGetFileUsings(const QString &filename) const
 QString CppParser::getHeaderFileName(const QString &relativeTo, const QString &headerName, bool fromNext) const
 {
     QMutexLocker locker(&mMutex);
-    QString currentDir = includeTrailingPathDelimiter(extractFileDir(relativeTo));
+    QString currentDir = extractFileDir(relativeTo);
     QStringList includes;
     QStringList projectIncludes;
     bool found=false;
