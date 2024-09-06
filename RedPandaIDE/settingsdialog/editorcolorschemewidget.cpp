@@ -100,6 +100,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     ui->editDemo->addSyntaxIssues(8, 9, 16, CompileIssueType::Warning, "[Warning] variable 'numbers' set but not used [-Wunused-but-set-variable]");
     ui->editDemo->setCaretY(9);
     ui->editDemo->setActiveBreakpointFocus(10,false);
+    ui->editDemo->setCaretXY(QSynedit::BufferCoord{1,1});
     ui->editDemo->reparseDocument();
     ui->editDemo->invalidate();
     onItemSelectionChanged();
