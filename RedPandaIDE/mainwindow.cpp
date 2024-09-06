@@ -2560,7 +2560,7 @@ void MainWindow::debug()
             inferior=mProject->options().hostApplication;
             inferiorHasSymbols = false;
         }
-        inferior.replace('\\','/');
+        QDir::fromNativeSeparators(inferior);
         if (!mDebugger->startClient(
                     mProject->options().compilerSet,
                     inferior,
@@ -2657,7 +2657,7 @@ void MainWindow::debug()
                 }
 
                 prepareDebugger();
-                QString newFilePath = debugFile.filePath().replace('\\','/');
+                QString newFilePath =QDir::fromNativeSeparators(debugFile.filePath());
                 if (!mDebugger->startClient(
                             pSettings->compilerSets().defaultIndex(),
                             newFilePath,

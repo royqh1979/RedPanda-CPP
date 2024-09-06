@@ -21,6 +21,7 @@
 #include <QFileInfo>
 #include <QDebug>
 #include <QGlobalStatic>
+#include "../systemconsts.h"
 #include "../utils.h"
 
 QStringList CppDirectives;
@@ -506,7 +507,7 @@ bool isSystemHeaderFile(const QString &fileName, const QSet<QString> &includePat
             QDir dir = info.dir();
             QString absPath = dir.absolutePath();
             foreach (const QString& incPath, includePaths) {
-                if (absPath.startsWith(incPath))
+                if (absPath.startsWith(incPath, PATH_SENSITIVITY))
                     return true;
             }
         }
