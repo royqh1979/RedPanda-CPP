@@ -4327,6 +4327,9 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
             }
             mIndex=mTokenizer[mIndex]->matchIndex+1;
             addedVar.reset();
+            //If there are multiple var define in the same line, the next token should be ','
+            if (mIndex>=maxIndex || mTokenizer[mIndex]->text != ",")
+                return;
             break;
         default:
             if (isIdentChar(mTokenizer[mIndex]->text[0])) {
