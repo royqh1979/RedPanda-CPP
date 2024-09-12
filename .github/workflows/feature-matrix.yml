@@ -11,7 +11,7 @@ jobs:
         lua_addon: ["y", "n"]
         sdcc: ["y", "n"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -34,7 +34,7 @@ jobs:
           tar -cf "pkg/$name.tar" -C pkg "$name"
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Ubuntu 22.04 - lua-addon=${{ matrix.lua_addon }}, sdcc=${{ matrix.sdcc }}
           path: pkg/*.tar
@@ -47,7 +47,7 @@ jobs:
         lua_addon: ["y", "n"]
         sdcc: ["y", "n"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -76,7 +76,7 @@ jobs:
           rm $install_dir/vc_redist.x64.exe
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Windows MSVC x64 - lua-addon=${{ matrix.lua_addon }}, sdcc=${{ matrix.sdcc }}
           path: pkg/*

@@ -24,7 +24,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -44,7 +44,7 @@ jobs:
           popd
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Windows MSYS2 - msystem=${{ matrix.msystem }}
           path: pkg/
@@ -75,7 +75,7 @@ jobs:
       _QT_NAME: mingw141_${{ matrix.profile }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -96,7 +96,7 @@ jobs:
           ./packages/msys/build-xp.sh -p ${{ matrix.profile }} $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Windows NT 5.x - profile=${{ matrix.profile }}
           path: dist/*
@@ -106,7 +106,7 @@ jobs:
     runs-on: windows-2019
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -135,7 +135,7 @@ jobs:
           popd
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Windows MSVC x64
           path: pkg/
@@ -145,7 +145,7 @@ jobs:
     runs-on: windows-2019
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -174,7 +174,7 @@ jobs:
           popd
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Windows MSVC ARM64EC (do not use)
           path: pkg/
@@ -192,7 +192,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -201,7 +201,7 @@ jobs:
           podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/debian/01-in-docker.sh
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Debian ${{ matrix.version }} ${{ matrix.arch }}
           path: dist/*.deb
@@ -218,7 +218,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -227,7 +227,7 @@ jobs:
           podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/debian/01-in-docker.sh
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Ubuntu ${{ matrix.version }} amd64
           path: dist/*.deb
@@ -239,7 +239,7 @@ jobs:
       IMAGE: docker.io/amd64/archlinux:latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -248,7 +248,7 @@ jobs:
           podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/archlinux/01-in-docker.sh
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Arch Linux
           path: dist/*.pkg.tar.zst
@@ -264,7 +264,7 @@ jobs:
       IMAGE: docker.io/amd64/fedora:${{ matrix.version }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -273,7 +273,7 @@ jobs:
           podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/fedora/01-in-docker.sh
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Fedora ${{ matrix.version }} x86_64
           path: dist/*.rpm
@@ -289,7 +289,7 @@ jobs:
       IMAGE: docker.io/opensuse/${{ matrix.edition }}:latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -298,7 +298,7 @@ jobs:
           podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/opensuse/01-in-docker.sh
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: openSUSE ${{ matrix.edition }} x86_64
           path: dist/*.rpm
@@ -310,7 +310,7 @@ jobs:
       IMAGE: docker.io/amd64/alpine:latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -319,7 +319,7 @@ jobs:
           podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/alpine/01-in-docker.sh
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: musl-based Linux (latest Alpine)
           path: dist/*.apk
@@ -331,7 +331,7 @@ jobs:
       IMAGE: quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -340,7 +340,7 @@ jobs:
           podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/appimage/01-in-docker.sh
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Linux AppImage
           path: dist/*.AppImage
@@ -350,7 +350,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -359,7 +359,7 @@ jobs:
           packages/debian-static/builddeb.sh
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Static Deb
           path: dist/*.deb
@@ -369,7 +369,7 @@ jobs:
     runs-on: macos-12
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -396,7 +396,7 @@ jobs:
           tar -cJf RedPandaIDE.tar.xz RedPandaIDE.app
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: macOS x86_64
           path: pkg/bin/RedPandaIDE.tar.xz
