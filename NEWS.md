@@ -6,6 +6,7 @@ Red Panda C++ Version 3.2
   - fix: "bits/stdc++" is not openned in readonly mode.
   - fix: astyle path error when reformat.
   - fix: Slow when paste/replace bulk contents.
+  - fix: Crash in windows 7.
 
 Red Panda C++ Version 3.1
 
