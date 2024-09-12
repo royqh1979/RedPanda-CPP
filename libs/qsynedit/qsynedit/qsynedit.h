@@ -528,7 +528,7 @@ private:
     void updateCaret();
     void recalcCharExtent();
     void updateModifiedStatus();
-    int reparseLines(int startLine, int endLine);
+    int reparseLines(int startLine, int endLine, bool needRescanFolds = true,  bool toDocumentEnd = true);
     //void reparseLine(int line);
     void uncollapse(PCodeFoldingRange FoldRange);
     void collapse(PCodeFoldingRange FoldRange);

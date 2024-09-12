@@ -3246,12 +3246,15 @@ void QSynEdit::updateModifiedStatus()
         emit statusChanged(StatusChange::ModifyChanged);
 }
 
-int QSynEdit::reparseLines(int startLine, int endLine)
+int QSynEdit::reparseLines(int startLine, int endLine, bool needRescanFolds, bool toDocumentEnd)
 {
 
     SyntaxState state;
+    int maxLine = toDocumentEnd ? mDocument->count() : endLine+1;
     startLine = std::max(0,startLine);
     endLine = std::min(endLine, mDocument->count());
+    maxLine = std::min(maxLine, mDocument->count());
+
 
     if (startLine >= endLine)
         return startLine;
@@ -3271,7 +3274,7 @@ int QSynEdit::reparseLines(int startLine, int endLine)
         }
         mDocument->setSyntaxState(line,state);
         line++;
-    } while (line < mDocument->count());
+    } while (line < maxLine);
 
     //don't rescan folds if only currentLine is reparsed
     if (line-startLine==1)
@@ -3280,7 +3283,7 @@ int QSynEdit::reparseLines(int startLine, int endLine)
     if (mEditingCount>0)
         return line;
 
-    if (useCodeFolding())
+    if (needRescanFolds && useCodeFolding())
         rescanFolds();
     return line;
 }
@@ -5359,6 +5362,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
     QString sLeftSide;
     QString sRightSide;
     QString str;
+    QElapsedTimer timer;
     bool bChangeScroll;
 //    int SpaceCount;
     int result = 0;
@@ -5382,13 +5386,14 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             str = sLeftSide + s;
         } else
             str = sLeftSide + text[0];
-        properSetLine(caretY - 1, str);
+        properSetLine(caretY - 1, str, false);
         mDocument->insertLines(caretY, text.length()-1);
     } else {
         str = sLeftSide + text[0] + sRightSide;
-        properSetLine(caretY - 1, str);
+        properSetLine(caretY - 1, str, false);
     }
-    reparseLines(caretY-1,caretY);
+    reparseLines(caretY-1,caretY, false, false);
+    timer.start();
     // step2: insert remaining lines of Value
     for (int i=1;i<text.length();i++) {
         bool notInComment = true;
@@ -5409,9 +5414,11 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
             str = GetLeftSpacing(indentSpaces,true)+trimLeft(str);
         }
         properSetLine(caretY - 1, str,false);
-        reparseLines(caretY-1,caretY);
+        reparseLines(caretY-1,caretY, false, false);
         result++;
     }
+    if (useCodeFolding())
+        rescanFolds();
     bChangeScroll = !mOptions.testFlag(EditorOption::ScrollPastEol);
     mOptions.setFlag(EditorOption::ScrollPastEol);
     auto action = finally([&,this]{

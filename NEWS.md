@@ -5,6 +5,7 @@ Red Panda C++ Version 3.2
   - fix: Don't auto scroll to the caret after undo/redo.
   - fix: "bits/stdc++" is not openned in readonly mode.
   - fix: astyle path error when reformat.
+  - fix: Slow when paste/replace bulk contents.
 
 Red Panda C++ Version 3.1
 
