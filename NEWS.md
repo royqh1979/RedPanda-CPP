@@ -1,12 +1,13 @@
 Red Panda C++ Version 3.2
 
-  - Change: The way to calcuate astyle path.
+  - change: The way to calcuate astyle path.
   - fix: Scroll bar arrow size not correct in the dark themes.
   - fix: Don't auto scroll to the caret after undo/redo.
   - fix: "bits/stdc++" is not openned in readonly mode.
   - fix: astyle path error when reformat.
   - fix: Slow when paste/replace bulk contents.
   - fix: Crash in windows 7.
+  - fix: While Control is pressed, can't start Drag&Drop by mouse.
 
 Red Panda C++ Version 3.1
 

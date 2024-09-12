@@ -1169,7 +1169,7 @@ void Editor::keyReleaseEvent(QKeyEvent *event)
 
 void Editor::mouseMoveEvent(QMouseEvent *event)
 {
-    if(event->modifiers() == Qt::ControlModifier) {
+    if(event->modifiers() == Qt::ControlModifier && !selAvail()) {
         cancelHint();
 
         QSynedit::BufferCoord p;
@@ -1185,7 +1185,6 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
         }
         return;
     }
-
     QSynedit::QSynEdit::mouseMoveEvent(event);
 }
 
@@ -1486,24 +1485,22 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
 {
     // if ctrl+clicked
     if ((event->modifiers() == Qt::ControlModifier)
-            && (event->button() == Qt::LeftButton)) {
-        if (!selAvail() ) {
-            QSynedit::BufferCoord p;
-            if (mParser && pointToCharLine(event->pos(),p)) {
-                cancelHoverLink();
-                QString sLine = lineText(p.line);
-                if (mParser->isIncludeNextLine(sLine)) {
-                    QString filename = mParser->getHeaderFileName(mFilename,sLine, true);
-                    pMainWindow->openFile(filename);
-                    return;
-                } if (mParser->isIncludeLine(sLine)) {
-                    QString filename = mParser->getHeaderFileName(mFilename,sLine);
-                    pMainWindow->openFile(filename);
-                    return;
-                } else if (mParser->enabled()) {
-                    gotoDefinition(p);
-                    return;
-                }
+            && (event->button() == Qt::LeftButton) && !selAvail()) {
+        QSynedit::BufferCoord p;
+        if (mParser && pointToCharLine(event->pos(),p)) {
+            cancelHoverLink();
+            QString sLine = lineText(p.line);
+            if (mParser->isIncludeNextLine(sLine)) {
+                QString filename = mParser->getHeaderFileName(mFilename,sLine, true);
+                pMainWindow->openFile(filename);
+                return;
+            } if (mParser->isIncludeLine(sLine)) {
+                QString filename = mParser->getHeaderFileName(mFilename,sLine);
+                pMainWindow->openFile(filename);
+                return;
+            } else if (mParser->enabled()) {
+                gotoDefinition(p);
+                return;
             }
         }
     }
@@ -4616,16 +4613,6 @@ bool Editor::canAutoSave() const
 void Editor::setCanAutoSave(bool newCanAutoSave)
 {
     mCanAutoSave = newCanAutoSave;
-}
-
-void Editor::mousePressEvent(QMouseEvent *event)
-{
-    if ((event->modifiers() == Qt::ControlModifier)
-            && (event->button() == Qt::LeftButton)) {
-        event->accept();
-        return;
-    }
-    QSynedit::QSynEdit::mousePressEvent(event);
 }
 
 const QDateTime &Editor::hideTime() const

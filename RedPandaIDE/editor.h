@@ -387,26 +387,11 @@ private:
 
     static QHash<ParserLanguage,std::weak_ptr<CppParser>> mSharedParsers;
 
-    // QWidget interface
-protected:
-    void wheelEvent(QWheelEvent *event) override;
-    void focusInEvent(QFocusEvent *event) override;
-    void focusOutEvent(QFocusEvent *event) override;
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-
     // SynEdit interface
 protected:
     void onGutterPaint(QPainter &painter, int aLine, int X, int Y) override;
     void onGetEditingAreas(int Line, QSynedit::EditingAreaList &areaList) override;
-
-    // SynEdit interface
-protected:
     bool onGetSpecialLineColors(int Line, QColor &foreground, QColor &backgroundColor) override;
-
-    // SynEdit interface
-protected:
     void onPreparePaintHighlightToken(int line, int aChar, const QString &token, QSynedit::PTokenAttribute attr, QSynedit::FontStyles &style, QColor &foreground, QColor &background) override;
 
     // QObject interface
@@ -431,18 +416,18 @@ public:
     quint64 lastFocusOutTime() const;
 
 protected:
-    void mousePressEvent(QMouseEvent *event) override;
+    // QWidget interface
+    void wheelEvent(QWheelEvent *event) override;
+    void focusInEvent(QFocusEvent *event) override;
+    void focusOutEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void inputMethodEvent(QInputMethodEvent *) override;
     void closeEvent(QCloseEvent *event) override;
-
-    // QWidget interface
-protected:
     void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
-
-    // QWidget interface
-protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 };
 

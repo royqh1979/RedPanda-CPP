@@ -6051,7 +6051,6 @@ void QSynEdit::mousePressEvent(QMouseEvent *event)
 
     QAbstractScrollArea::mousePressEvent(event);
 
-
     BufferCoord oldCaret=caretXY();
     if (button == Qt::RightButton) {
         if (mOptions.testFlag(EditorOption::RightMouseMovesCursor) &&
