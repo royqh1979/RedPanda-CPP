@@ -3882,7 +3882,7 @@ QString Settings::Environment::AStylePath() const
 {
     QString path = mAStylePath;
     if (path.isEmpty())
-        path = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle";
+        path = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+ASTYLE_PROGRAM;
     else
         path = replacePrefix(path, "%*APP_DIR*%", pSettings->dirs().appDir());
     return path;

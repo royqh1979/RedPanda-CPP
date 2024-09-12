@@ -4,6 +4,7 @@ Red Panda C++ Version 3.2
   - fix: Scroll bar arrow size not correct in the dark themes.
   - fix: Don't auto scroll to the caret after undo/redo.
   - fix: "bits/stdc++" is not openned in readonly mode.
+  - fix: astyle path error when reformat.
 
 Red Panda C++ Version 3.1
 
