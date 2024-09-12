@@ -6068,8 +6068,7 @@ void CppParser::internalInvalidateFile(const QString &fileName)
     }
 
     //remove all statements from namespace cache
-    for (auto it=mNamespaces.begin();it!=mNamespaces.end();++it) {
-        QString key = it.key();
+    for (auto it=mNamespaces.begin();it!=mNamespaces.end();) {
         PStatementList statements = it.value();
         for (int i=statements->size()-1;i>=0;i--) {
             PStatement statement = statements->at(i);
@@ -6078,7 +6077,9 @@ void CppParser::internalInvalidateFile(const QString &fileName)
             }
         }
         if (statements->isEmpty()) {
-            mNamespaces.remove(key);
+            it = mNamespaces.erase(it);
+        } else {
+            ++it;
         }
     }
     // class inheritance
