@@ -1169,7 +1169,7 @@ void Editor::keyReleaseEvent(QKeyEvent *event)
 
 void Editor::mouseMoveEvent(QMouseEvent *event)
 {
-    if(event->modifiers() == Qt::ControlModifier && !selAvail()) {
+    if(event->modifiers() == Qt::ControlModifier) {
         cancelHint();
 
         QSynedit::BufferCoord p;
@@ -1485,7 +1485,7 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
 {
     // if ctrl+clicked
     if ((event->modifiers() == Qt::ControlModifier)
-            && (event->button() == Qt::LeftButton) && !selAvail()) {
+            && (event->button() == Qt::LeftButton)) {
         QSynedit::BufferCoord p;
         if (mParser && pointToCharLine(event->pos(),p)) {
             cancelHoverLink();
