@@ -35,7 +35,7 @@ See also [more build instructions for Windows](./docs/detailed-build-win.md).
 
 ## MSYS2 Qt Library with MinGW Toolchain (Recommended)
 
-Red Panda C++ should work with any MinGW toolchain from MSYS2, including GCCs and Clangs in three GNU-based environments (MINGW32, MINGW64 and UCRT64), and Clangs in three LLVM-based environments (CLANG32, CLANG64 and CLANGARM64; see also [MSYS2’s document](https://www.msys2.org/docs/environments/)), while the following toolchains are frequently tested:
+Red Panda C++ should work with any MinGW toolchain from MSYS2, including GCCs and Clangs in three GNU-based environments (MINGW32, MINGW64 and UCRT64), and Clangs in 64-bit LLVM-based environments (CLANG64 and CLANGARM64; see also [MSYS2’s document](https://www.msys2.org/docs/environments/)), while the following toolchains are frequently tested:
 - MINGW32 GCC,
 - MINGW64 GCC,
 - UCRT64 GCC (recommended for x64)
@@ -47,11 +47,19 @@ Prerequisites:
 
 0. Windows 10 x64 or later, or Windows 11 ARM64.
 1. Install MSYS2.
-2. In selected environment, install toolchain, Qt 5 library, and required utils:
+2. In selected environment, install toolchain, Qt 5 library, and required utils. For 64-bit:
    ```bash
    pacman -S \
-     $MINGW_PACKAGE_PREFIX-{toolchain,qt5-static,7zip,cmake} \
+     $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,7zip,cmake} \
      mingw-w64-i686-nsis \
+     git curl
+   ```
+   And for 32-bit:
+   ```bash
+   pacman -S \
+     $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,cmake} \
+     mingw-w64-i686-nsis \
+     mingw-w64-x86_64-7zip \
      git curl
    ```
 

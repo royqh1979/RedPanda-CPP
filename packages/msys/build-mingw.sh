@@ -10,7 +10,7 @@ function fn_print_help() {
  Options:
    -h, --help               Display this information.
    -m, --msystem <MSYSTEM>  Switch to other MSYS2 environment.
-                            (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64, CLANGARM64)
+                            (MINGW32, MINGW64, UCRT64, CLANG64, CLANGARM64)
                             MUST be used before other options.
    -c, --clean              Clean build and package directories.
    --mingw                  Alias for --mingw32 (x86 app) or --mingw64 (x64 app).
@@ -33,7 +33,7 @@ if [[ $# -gt 1 && ($1 == "-m" || $1 == "--msystem") ]]; then
   msystem=$2
   shift 2
   case "${msystem}" in
-    MINGW32|MINGW64|UCRT64|CLANG32|CLANG64|CLANGARM64)
+    MINGW32|MINGW64|UCRT64|CLANG64|CLANGARM64)
       export MSYSTEM="${msystem}"
       exec /bin/bash --login "$0" "$@"
       ;;
@@ -45,7 +45,10 @@ if [[ $# -gt 1 && ($1 == "-m" || $1 == "--msystem") ]]; then
 fi
 
 case "${MSYSTEM}" in
-  MINGW32|CLANG32)  # there is no UCRT32
+  MINGW32)
+    # there is no UCRT32
+    # CLANG32 qt5-static removed since 5.15.15
+    # https://github.com/msys2/MINGW-packages/commit/ab062c6e5d6e9fff86ee8f88c1d8e9601ea9ab5b
     NSIS_ARCH=x86
     PACKAGE_BASENAME="RedPanda.C++.${APP_VERSION}.win32"
     ;;
@@ -59,7 +62,7 @@ case "${MSYSTEM}" in
     ;;
   *)
     echo "This script must be run in one of the following MSYS2 shells:"
-    echo "  - MINGW32 / CLANG32"
+    echo "  - MINGW32"
     echo "  - MINGW64 / UCRT64 / CLANG64"
     echo "  - CLANGARM64"
     exit 1
@@ -113,7 +116,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --ucrt)
       case "${MSYSTEM}" in
-        CLANG32|UCRT64|CLANG64)
+        UCRT64|CLANG64)
           UCRT="$2"
           shift 2
           ;;
@@ -151,6 +154,19 @@ SOURCE_DIR="$(pwd)"
 ASSETS_DIR="${SOURCE_DIR}/assets"
 UCRT_DIR="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.${UCRT}.0/ucrt/DLLs/${NSIS_ARCH}"
 
+case "${MSYSTEM}" in
+  MINGW32)
+    # 32-bit 7zip removed since 24.05
+    # https://github.com/msys2/MINGW-packages/commit/de4ea25ca787035cbed50a158bdc200a3776254b
+    _7Z="/mingw64/bin/7z"
+    _7Z_PACKAGE_PREFIX="mingw-w64-x86_64"
+    ;;
+  MINGW64|UCRT64|CLANG64|CLANGARM64)
+    _7Z="7z"
+    _7Z_PACKAGE_PREFIX="${MINGW_PACKAGE_PREFIX}"
+    ;;
+esac
+
 MINGW32_FOLDER="mingw32"
 MINGW32_ARCHIVE="mingw32.7z"
 MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC 11.2"
@@ -175,19 +191,14 @@ function fn_print_progress() {
 ## check deps
 
 if [[ ${CHECK_DEPS} -eq 1 ]]; then
-  case "${MSYSTEM}" in
-    MINGW32|MINGW64|UCRT64)
-      compiler=gcc
-      ;;
-    CLANG32|CLANG64|CLANGARM64)
-      compiler=clang
-      ;;
-  esac
   deps=(
-    ${MINGW_PACKAGE_PREFIX}-{$compiler,make,qt5-static,7zip,cmake}
+    ${MINGW_PACKAGE_PREFIX}-{cc,make,qt5-static,cmake}
+    # always use x86 NSIS to display error message of mismatched architecture
     mingw-w64-i686-nsis
+    ${_7Z_PACKAGE_PREFIX}-7zip
     git
   )
+
   for dep in ${deps[@]}; do
     pacman -Q ${dep} &>/dev/null || {
       echo "Missing dependency: ${dep}"
@@ -286,14 +297,14 @@ nsis_flags=(
 if [[ ${COMPILER_MINGW32} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW32)
   if [[ ! -d "mingw32" ]]; then
-	[[ -f "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" ]] && 7z x "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" -o"${PACKAGE_DIR}"
+	[[ -f "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" ]] && "${_7Z}" x "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" -o"${PACKAGE_DIR}"
 	[[ -d "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" ]] && cp -a --dereference "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" "${PACKAGE_DIR}"
   fi 
 fi
 if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW64)
   if [[ ! -d "mingw64" ]]; then  
-	[[ -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" ]] && 7z x "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
+	[[ -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" ]] && "${_7Z}" x "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
 	[[ -d "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" ]] && cp -a --dereference "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" "${PACKAGE_DIR}"
   fi
 fi
@@ -307,8 +318,8 @@ fi
 "${NSIS}" "${nsis_flags[@]}" redpanda.nsi
 
 fn_print_progress "Making Portable Package..."
-7z x "${SETUP_NAME}" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
-7z a -mmt -mx9 -ms=on -mqs=on -mf=BCJ2 "${PORTABLE_NAME}" "RedPanda-CPP"
+"${_7Z}" x "${SETUP_NAME}" -o"RedPanda-CPP" -xr'!$PLUGINSDIR' -x"!uninstall.exe"
+"${_7Z}" a -mmt -mx9 -ms=on -mqs=on -mf=BCJ2 "${PORTABLE_NAME}" "RedPanda-CPP"
 rm -rf "RedPanda-CPP"
 
 mv "${SETUP_NAME}" "${TARGET_DIR}"

@@ -9,7 +9,7 @@ Usage:
 Options:
   -h, --help               Display this information.
   -m, --msystem <MSYSTEM>  Switch to other MSYS2 environment.
-                           (MINGW32, MINGW64, UCRT64, CLANG32, CLANG64, CLANGARM64)
+                           (MINGW32, MINGW64, UCRT64, CLANG64, CLANGARM64)
                            MUST be used before other options.
   -c, --clean              Clean build and package directories.
   -nd, --no-deps           Skip dependency check.
@@ -29,7 +29,7 @@ if [[ $# -gt 1 && ($1 == "-m" || $1 == "--msystem") ]]; then
   msystem=$2
   shift 2
   case "${msystem}" in
-    MINGW32|MINGW64|UCRT64|CLANG32|CLANG64|CLANGARM64)
+    MINGW32|MINGW64|UCRT64|CLANG64|CLANGARM64)
       export MSYSTEM="${msystem}"
       exec /bin/bash --login "$0" "$@"
       ;;
@@ -41,7 +41,10 @@ if [[ $# -gt 1 && ($1 == "-m" || $1 == "--msystem") ]]; then
 fi
 
 case $MSYSTEM in
-  MINGW32|CLANG32)
+  MINGW32)
+    # there is no UCRT32
+    # CLANG32 qt5-static removed since 5.15.15
+    # https://github.com/msys2/MINGW-packages/commit/ab062c6e5d6e9fff86ee8f88c1d8e9601ea9ab5b
     _NATIVE_ARCH=i686
     _DISPLAY_ARCH=x86
     ;;
@@ -55,7 +58,7 @@ case $MSYSTEM in
     ;;
   *)
     echo "This script must be run from one of following MSYS2 shells:"
-    echo "  - MINGW32/CLANG32"
+    echo "  - MINGW32"
     echo "  - MINGW64/UCRT64/CLANG64"
     echo "  - CLANGARM64"
     exit 1
@@ -113,16 +116,9 @@ done
 function check-deps() {
   # MSYS2’s `pacman -Q` is 100x slower than Arch Linux. Allow skipping the check.
   [[ $_SKIP_DEPS_CHECK -eq 1 ]] && return
-  case $MSYSTEM in
-    MINGW32|MINGW64|UCRT64)
-      local compiler=gcc
-      ;;
-    CLANG32|CLANG64|CLANGARM64)
-      local compiler=clang
-      ;;
-  esac
   local deps=(
-    $MINGW_PACKAGE_PREFIX-{$compiler,make,qt5-static}
+    $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static}
+    # always use x86 NSIS to display error message of mismatched architecture
     mingw-w64-i686-nsis
     git
   )
