@@ -10,14 +10,21 @@ jobs:
       matrix:
         msystem: [MINGW32, MINGW64, UCRT64, CLANG64]
         include:
+          - isUcrt: false
           - msystem: MINGW32
             packagePrefix: mingw-w64-i686
+            _7zPackagePrefix: mingw-w64-x86_64
           - msystem: MINGW64
             packagePrefix: mingw-w64-x86_64
+            _7zPackagePrefix: mingw-w64-x86_64
           - msystem: UCRT64
+            isUcrt: true
             packagePrefix: mingw-w64-ucrt-x86_64
+            _7zPackagePrefix: mingw-w64-ucrt-x86_64
           - msystem: CLANG64
+            isUcrt: true
             packagePrefix: mingw-w64-clang-x86_64
+            _7zPackagePrefix: mingw-w64-clang-x86_64
     runs-on: windows-latest
     defaults:
       run:
@@ -33,21 +40,33 @@ jobs:
         with:
           msystem: ${{ matrix.msystem }}
           update: true
-          install: ${{ matrix.packagePrefix }}-toolchain ${{ matrix.packagePrefix }}-qt5-static
+          install: |
+            ${{ matrix.packagePrefix }}-cc
+            ${{ matrix.packagePrefix }}-make
+            ${{ matrix.packagePrefix }}-qt5-static
+            ${{ matrix.packagePrefix }}-cmake
+            mingw-w64-i686-nsis
+            ${{ matrix._7zPackagePrefix }}-7zip
+            git
+
+      - name: Download MinGW toolchain
+        run: |
+          mkdir -p assets
+          curl -L https://github.com/redpanda-cpp/toolchain-win32-mingw-xp/releases/download/11.4.0-r0/mingw32-11.4.0-r0.7z -o assets/mingw32.7z
+          curl -L https://github.com/redpanda-cpp/toolchain-win32-mingw-xp/releases/download/11.4.0-r0/mingw64-11.4.0-r0.7z -o assets/mingw64.7z
 
       - name: Build
         run: |
-          mkdir build && pushd build
-          $MSYSTEM_PREFIX/qt5-static/bin/qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
-          mingw32-make -j$(nproc)
-          mingw32-make install
-          popd
+          ./packages/msys/build-mingw.sh \
+            $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
+          ./packages/msys/build-mingw.sh --mingw \
+            $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Windows MSYS2 - msystem=${{ matrix.msystem }}
-          path: pkg/
+          path: dist/
 
   windows_legacy:
     name: Windows NT 5.x

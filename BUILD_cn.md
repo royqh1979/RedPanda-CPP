@@ -35,7 +35,7 @@
 
 ## MSYS2 的 Qt 库 + MinGW 工具链（推荐）
 
-小熊猫C++ 应该能在 MSYS2 的 MinGW 工具链上构建，包括 3 个基于 GNU 的环境（MINGW32、MINGW64、UCRT64）中的 GCC 和 Clang，以及 3 个基于 LLVM 的环境（CLANG32、CLANG64、CLANGARM64）中的 Clang，关于环境的详情可参考 [MSYS2 的文档](https://www.msys2.org/docs/environments/)。以下几个工具链测试较充分：
+小熊猫C++ 应该能在 MSYS2 的 MinGW 工具链上构建，包括 3 个基于 GNU 的环境（MINGW32、MINGW64、UCRT64）中的 GCC 和 Clang，以及基于 LLVM 的 64 位环境（CLANG64、CLANGARM64）中的 Clang，关于环境的详情可参考 [MSYS2 的文档](https://www.msys2.org/docs/environments/)。以下几个工具链测试较充分：
 - MINGW32 GCC，
 - MINGW64 GCC，
 - UCRT64 GCC（x64 推荐），
@@ -47,11 +47,19 @@
 
 0. Windows 10 x64 或更高版本，或 Windows 11 ARM64。
 1. 安装 MSYS2。
-2. 在所选环境中安装工具链、Qt 5 库、其他所需工具：
+2. 在所选环境中安装工具链、Qt 5 库、其他所需工具，64 位：
    ```bash
    pacman -S \
-     $MINGW_PACKAGE_PREFIX-{toolchain,qt5-static,7zip,cmake} \
+     $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,7zip,cmake} \
      mingw-w64-i686-nsis \
+     git curl
+   ```
+   32 位：
+   ```bash
+   pacman -S \
+     $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,cmake} \
+     mingw-w64-i686-nsis \
+     mingw-w64-x86_64-7zip \
      git curl
    ```
 
