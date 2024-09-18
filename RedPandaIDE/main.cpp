@@ -29,6 +29,7 @@
 #include <QScreen>
 #include <QLockFile>
 #include <QFontDatabase>
+#include <QLibraryInfo>
 #include "common.h"
 #include "colorscheme.h"
 #include "iconsmanager.h"
@@ -349,7 +350,14 @@ int main(int argc, char *argv[])
         if (transUtils.load("qt_utils_"+language,":/i18n/")) {
             app.installTranslator(&transUtils);
         }
-        if (transQt.load("qt_"+language,":/translations")) {
+        QString translationsPath(QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+        if (
+            // since Qt 5.15.3, `qt_xx.qm` is a wrapper for `qtbase_xx.qm` and other (unused) `qm`s.
+            // first, try loading `qt_xx.qm` from standard location (dynamic build) so that it works on Debian 11 (with Qt 5.15.2),
+            transQt.load("qt_" + language, translationsPath) ||
+            // and then bundled `qtbase_xx.qm` (static build) for simplicity in qmake project.
+            transQt.load("qtbase_" + language, ":/translations")
+        ) {
             app.installTranslator(&transQt);
         }
     }

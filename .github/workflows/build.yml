@@ -366,7 +366,7 @@ jobs:
     name: Linux AppImage
     runs-on: ubuntu-latest
     env:
-      IMAGE: quay.io/redpanda-cpp/appimage-builder-x86_64:20240304.0
+      IMAGE: quay.io/redpanda-cpp/appimage-builder-x86_64:20240610.0
 
     steps:
       - uses: actions/checkout@v4
