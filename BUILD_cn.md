@@ -89,60 +89,27 @@
 
 `build-xp.sh` 脚本和 `build-mingw.sh` 类似，但是工具链由 Qt 库提供。
 
-前置条件：
+本机构建前置条件：
 
 0. Windows 10 x64 或更高版本。
 1. 安装 MSYS2。
-2. 安装所需工具：
-   ```bash
-   pacman -S \
-     mingw-w64-x86_64-{7zip,cmake} \
-     mingw-w64-i686-nsis \
-     git curl
-   ```
-3. 下载 [Windows XP 的 Qt 库](https://github.com/redpanda-cpp/qtbase-xp)并解压到 `C:/Qt`。
-   - 目录结构应该如下：
-     ```
-     C:
-     └─ Qt
-        └─ 5.15.13+redpanda1
-           ├─ mingw141_32-msvcrt
-           │  ├─ bin
-           │  │  ├─ gcc.exe
-           │  │  ├─ mingw32-make.exe
-           │  │  └─ qmake.exe
-           │  ├─ include
-           │  ├─ lib
-           │  └─ ...
-           └─ mingw141_64-msvcrt
-              ├─ bin
-              │  ├─ gcc.exe
-              │  ├─ mingw32-make.exe
-              │  └─ qmake.exe
-              ├─ include
-              ├─ lib
-              └─ ...
-     ```
-   - 也可以从源代码自行构建 Qt 并在构建时指定 `--qt` 参数。
 
-要构建此项目，启动 MSYS2 环境，然后运行
+要进行本机构建，启动 MSYS2 环境，然后运行
 ```bash
 ./packages/msys/build-xp.sh -p 32-msvcrt
 ```
 
-此脚本除了接受 `build-mingw.sh` 的参数外，还接受以下参数：
-- `-p|--profile <profile>`：（必需）MinGW Lite 和 Qt 库的编译配置。可用的配置有 `64-ucrt`、`32-ucrt`、`64-msvcrt`、`32-msvcrt`、`32-win2000`。
-- `--qt <dir>`：指定 Qt 库目录。例如 `--qt /d/myqt-32`。
+要进行交叉构建，运行
+```bash
+podman run -it --rm -v $PWD:/mnt -w /mnt docker.io/amd64/ubuntu:24.04
 
-  目录结构应该如下：
-  ```
-  D:
-  └─ myqt-32
-     ├─ bin
-     ├─ include
-     ├─ lib
-     └─ ...
-  ```
+# 在容器内
+export MIRROR=mirrors.ustc.edu.cn  # 根据需要设置镜像站
+./packages/xmingw/build-xp.sh -p 32-msvcrt
+```
+
+此脚本除了接受 `build-mingw.sh` 的参数外，还接受以下参数：
+- `-p|--profile <profile>`：（必需）MinGW Lite 和 Qt 库的编译配置。可用的配置有 `64-ucrt`、`32-ucrt`、`64-msvcrt`、`32-msvcrt`。
 
 # Linux
 

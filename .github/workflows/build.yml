@@ -68,8 +68,8 @@ jobs:
           name: Windows MSYS2 - msystem=${{ matrix.msystem }}
           path: dist/
 
-  windows_legacy:
-    name: Windows NT 5.x
+  windows_legacy_native:
+    name: Windows NT 5.x native
     strategy:
       fail-fast: false
       matrix:
@@ -78,46 +78,65 @@ jobs:
           - 32-ucrt
           - 64-msvcrt
           - 32-msvcrt
-          - 32-win2000
         include:
           - isUcrt: 0
           - profile: 64-ucrt
             isUcrt: 1
           - profile: 32-ucrt
             isUcrt: 1
-    runs-on: windows-2019
+    runs-on: windows-2022
     defaults:
       run:
         shell: msys2 {0}
-    env:
-      _REDPANDA_QT_BUILD: "5.15.13+redpanda1"
-      _QT_NAME: mingw141_${{ matrix.profile }}
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup
+      - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
           update: true
-          install: mingw-w64-x86_64-7zip mingw-w64-x86_64-cmake mingw-w64-i686-nsis curl git
-
-      - name: Setup Qt
-        run: |
-          curl -LO https://github.com/redpanda-cpp/qtbase-xp/releases/download/$_REDPANDA_QT_BUILD/$_QT_NAME.7z
-          /mingw64/bin/7z x $_QT_NAME.7z -oC:/Qt
 
       - name: Build
         run: |
-          ./packages/msys/build-xp.sh -p ${{ matrix.profile }} $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
+          ./packages/msys/build-xp.sh -p ${{ matrix.profile }} \
+            $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
+          ./packages/msys/build-xp.sh -p ${{ matrix.profile }} --mingw \
+            $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Windows NT 5.x - profile=${{ matrix.profile }}
+          name: Windows NT 5.x native - profile=${{ matrix.profile }}
+          path: dist/*
+
+  windows_legacy_cross:
+    name: Windows NT 5.x cross
+    strategy:
+      fail-fast: false
+      matrix:
+        profile:
+          - 64-msvcrt
+          - 32-msvcrt
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        run: |
+          sudo ./packages/xmingw/build-xp.sh -p ${{ matrix.profile }}
+          sudo ./packages/xmingw/build-xp.sh -p ${{ matrix.profile }} --mingw
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows NT 5.x cross - profile=${{ matrix.profile }}
           path: dist/*
 
   windows_msvc_x64:
