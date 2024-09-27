@@ -800,21 +800,19 @@ bool applicationHasUtf8Manifest(const wchar_t *path)
 {
     auto module = resourcePointer(LoadLibraryExW(path, nullptr, LOAD_LIBRARY_AS_DATAFILE), &FreeLibrary);
     if (!module)
-        return {};
+        return false;
     HRSRC resInfo = FindResourceW(
         module.get(),
         MAKEINTRESOURCEW(1) /* CREATEPROCESS_MANIFEST_RESOURCE_ID */,
         MAKEINTRESOURCEW(24) /* RT_MANIFEST */);
     if (!resInfo)
-        return {};
+        return false;
     auto res = resourcePointer(LoadResource(module.get(), resInfo), &FreeResource);
     if (!res)
-        return {};
+        return false;
     char *data = (char *)LockResource(res.get());
     DWORD size = SizeofResource(module.get(), resInfo);
     QByteArray manifest(data, size);
-    if (manifest.isEmpty())
-        return false;
     QDomDocument doc;
     if (!doc.setContent(manifest))
         return false;
