@@ -215,4 +215,16 @@ struct ExternalResource {
     ~ExternalResource();
 };
 
+template <typename T, typename D>
+std::unique_ptr<T, D> resourcePointer(T *pointer, D deleter)
+{
+    return {pointer, deleter};
+}
+
+#ifdef Q_OS_WINDOWS
+bool applicationHasUtf8Manifest(const wchar_t *path);
+bool osSupportsUtf8Manifest();
+bool applicationIsUtf8(const QString &path);
+#endif
+
 #endif // UTILS_H

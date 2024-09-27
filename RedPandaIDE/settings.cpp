@@ -2920,6 +2920,7 @@ bool Settings::CompilerSet::isOutputExecutable(CompilationStage stage)
     return stage == CompilationStage::GenerateExecutable;
 }
 
+#ifdef Q_OS_WINDOWS
 bool Settings::CompilerSet::isDebugInfoUsingUTF8() const
 {
     switch(mCompilerType) {
@@ -2927,30 +2928,10 @@ bool Settings::CompilerSet::isDebugInfoUsingUTF8() const
     case CompilerType::GCC_UTF8:
         return true;
     case CompilerType::GCC:
-#ifdef Q_OS_WIN
-        if (mainVersion()>=13) {
-            bool isOk;
-            int productVersion = QSysInfo::productVersion().toInt(&isOk);
-        //    qDebug()<<productVersion<<isOk;
-            if (!isOk) {
-                if (QSysInfo::productVersion().startsWith("7"))
-                    productVersion=7;
-                else if (QSysInfo::productVersion().startsWith("10"))
-                    productVersion=10;
-                else if (QSysInfo::productVersion().startsWith("11"))
-                    productVersion=11;
-                else
-                    productVersion=10;
-            }
-            return productVersion>=10;
-        }
-#else
-        break;
-#endif
+        return applicationIsUtf8(mCCompiler);
     default:
-        break;
+        return false;
     }
-    return false;
 }
 
 bool Settings::CompilerSet::forceUTF8() const
@@ -2962,6 +2943,7 @@ bool Settings::CompilerSet::isCompilerInfoUsingUTF8() const
 {
     return isDebugInfoUsingUTF8();
 }
+#endif
 
 const QString &Settings::CompilerSet::assemblingSuffix() const
 {

@@ -4,7 +4,7 @@ target("RedPandaIDE")
     add_rules("qt.widgetapp", "qt.ts")
 
     add_deps("redpanda_qt_utils", "qsynedit")
-    add_frameworks("QtNetwork", "QtPrintSupport", "QtSvg")
+    add_frameworks("QtNetwork", "QtPrintSupport", "QtSvg", "QtXml")
     add_includedirs(".")
 
     -- defines
