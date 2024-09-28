@@ -8,6 +8,7 @@ Red Panda C++ Version 3.2
   - fix: Slow when paste/replace bulk contents.
   - fix: Crash in windows 7. (by CyanoHao)
   - fix: While Control is pressed, can't start Drag&Drop by mouse.
+  - enhancement: Auto detect gdb ACP (by CyanoHao)
 
 Red Panda C++ Version 3.1
 
