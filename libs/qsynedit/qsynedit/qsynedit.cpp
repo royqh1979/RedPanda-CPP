@@ -5417,8 +5417,7 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
         reparseLines(caretY-1,caretY, false, false);
         result++;
     }
-    if (useCodeFolding())
-        rescanFolds();
+    reparseLines(caretY, caretY+1);
     bChangeScroll = !mOptions.testFlag(EditorOption::ScrollPastEol);
     mOptions.setFlag(EditorOption::ScrollPastEol);
     auto action = finally([&,this]{

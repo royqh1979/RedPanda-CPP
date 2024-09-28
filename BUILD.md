@@ -87,62 +87,29 @@ Extra arguments for `build-mingw.sh`:
 
 ## Windows NT 5.x Qt Library with MinGW Lite Toolchain
 
-The script `build-xp.sh` is alike `build-mingw.sh`, but the toolchain is provided by Qt library.
+The scripts `build-xp.sh` are alike `build-mingw.sh`, but the toolchain is provided by Qt library.
 
-Prerequisites:
+Prerequisites for native build:
 
 0. Windows 10 x64 or later.
 1. Install MSYS2.
-2. Install required utils:
-   ```bash
-   pacman -S \
-     mingw-w64-x86_64-{7zip,cmake} \
-     mingw-w64-i686-nsis \
-     git curl
-   ```
-3. Download [Windows XP Qt Library](https://github.com/redpanda-cpp/qtbase-xp) and extract to `C:/Qt`.
-   - The directory structure should be like
-     ```
-     C:
-     └─ Qt
-        └─ 5.15.13+redpanda1
-           ├─ mingw141_32-msvcrt
-           │  ├─ bin
-           │  │  ├─ gcc.exe
-           │  │  ├─ mingw32-make.exe
-           │  │  └─ qmake.exe
-           │  ├─ include
-           │  ├─ lib
-           │  └─ ...
-           └─ mingw141_64-msvcrt
-              ├─ bin
-              │  ├─ gcc.exe
-              │  ├─ mingw32-make.exe
-              │  └─ qmake.exe
-              ├─ include
-              ├─ lib
-              └─ ...
-     ```
-   - Or you can build from source and specify the path with `--qt` argument.
 
-To build, launch MSYS2 environment, run:
+For native build, launch MSYS2 environment, run:
 ```bash
 ./packages/msys/build-xp.sh -p 32-msvcrt
 ```
 
-This script accepts the same arguments as `build-mingw.sh`, plus:
-- `-p|--profile <profile>`: (REQUIRED) the profile of MinGW Lite as well as Qt library. Available profiles are `64-ucrt`, `64-msvcrt`, `32-ucrt`, `32-msvcrt`, `32-win2000`.
-- `--qt <dir>`: set Qt directory. e.g. `--qt /d/myqt-32`.
+For cross build, run:
+```bash
+podman run -it --rm -v $PWD:/mnt -w /mnt docker.io/amd64/ubuntu:24.04
 
-  The directory structure should be like
-  ```
-  D:
-  └─ myqt-32
-     ├─ bin
-     ├─ include
-     ├─ lib
-     └─ ...
-  ```
+# in container
+export MIRROR=mirrors.kernel.org  # optionally set mirror site
+./packages/xmingw/build-xp.sh -p 32-msvcrt
+```
+
+These scripts accepts the same arguments as `build-mingw.sh`, plus:
+- `-p|--profile <profile>`: (REQUIRED) the profile of MinGW Lite as well as Qt library. Available profiles are `64-ucrt`, `64-msvcrt`, `32-ucrt`, `32-msvcrt`.
 
 # Linux
 
