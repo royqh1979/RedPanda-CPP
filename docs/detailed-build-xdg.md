@@ -3,7 +3,7 @@
 ## Traditional Unix Way (`./configure`–`make`–`make install`)
 
 - Install recent version of GCC (≥ 7) or Clang (≥ 6) that supports C++17.
-- Install Qt 5.15 Base, SVG and Tools modules, including both libraries and development files.
+- Install Qt 5.15 or 6.7+ Base, SVG and Tools modules, including both libraries and development files.
 - Optionally install fcitx5-qt for building with static Qt library.
 - Install astyle for code formatting in Red Panda C++.
 

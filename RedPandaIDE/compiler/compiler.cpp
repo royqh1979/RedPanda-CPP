@@ -25,7 +25,6 @@
 #include <QFileInfo>
 #include <QProcess>
 #include <QString>
-#include <QTextCodec>
 #include <QTime>
 #include <QApplication>
 #include "../editor.h"

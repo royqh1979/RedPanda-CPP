@@ -20,7 +20,6 @@
 #include <QSet>
 #include <QString>
 #include <QStringList>
-#include <QTextCodec>
 
 SystemConsts* pSystemConsts;
 
@@ -44,28 +43,7 @@ SystemConsts::SystemConsts(): mDefaultFileFilters()
     mCodecNames.append(ENCODING_SYSTEM_DEFAULT);
     mCodecNames.append(ENCODING_UTF8);
     mCodecNames.append(ENCODING_UTF8_BOM);
-    QStringList codecNames;
-    QSet<QByteArray> codecAlias;
-    codecAlias.insert("system");
-    codecAlias.insert("utf-8");
-
-    foreach (const QByteArray& name, QTextCodec::availableCodecs()){
-        QByteArray lname = name.toLower();
-        if (lname.startsWith("cp"))
-            continue;
-        if (codecAlias.contains(lname))
-            continue;
-        codecNames.append(lname);
-        codecAlias.insert(lname);
-        QTextCodec* codec = QTextCodec::codecForName(name);
-        if (codec) {
-            foreach (const QByteArray& alias, codec->aliases()) {
-                codecAlias.insert(alias.toLower());
-            }
-        }
-    }
-    std::sort(codecNames.begin(),codecNames.end());
-    mCodecNames.append(codecNames);
+    mCodecNames.append(availableEncodings());
 
     mDefaultFileNameFilters.append("*.c");
     mDefaultFileNameFilters.append("*.cpp");

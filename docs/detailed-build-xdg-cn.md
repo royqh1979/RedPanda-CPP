@@ -3,7 +3,7 @@
 ## 传统 Unix 方式（`./configure`–`make`–`make install`）
 
 - 安装支持 C++17 的 GCC（≥ 7）或 Clang（≥ 6）。
-- 安装 Qt 5.15 Base、SVG、Tools 模块，包括库和开发文件。
+- 安装 Qt 5.15 或 6.7+ Base、SVG、Tools 模块，包括库和开发文件。
 - 如果使用静态版本的 Qt 编译，还要安装 fcitx5-qt。
 - 安装 astyle 以便在小熊猫 C++ 中对代码进行重新排版。
 

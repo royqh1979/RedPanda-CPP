@@ -23,7 +23,6 @@
 #include <QProcess>
 #include <QProcessEnvironment>
 #include <QString>
-#include <QTextCodec>
 #include <QtGlobal>
 #include <QDebug>
 #include <QStyleFactory>
@@ -33,6 +32,8 @@
 #include <QScreen>
 #include <QDirIterator>
 #include <QTextEdit>
+#include "charsetinfo.h"
+
 #ifdef Q_OS_WIN
 #include <QDirIterator>
 #include <QFont>
@@ -40,7 +41,12 @@
 #include <QMimeDatabase>
 #include <windows.h>
 #endif
-#include "charsetinfo.h"
+
+#if QT_VERSION_MAJOR >= 6
+# include <QStringConverter>
+#else
+# include <QTextCodec>
+#endif
 
 BaseError::BaseError(const QString &reason):
 mReason(reason)
@@ -64,7 +70,7 @@ FileError::FileError(const QString &reason): BaseError(reason)
 
 }
 
-const QByteArray guessTextEncoding(const QByteArray& text){
+QString guessTextEncoding(const QByteArray& text){
     bool allAscii;
     int ii;
     int size;
@@ -253,14 +259,16 @@ QByteArray toByteArray(const QString &s)
 
 QString fromByteArray(const QByteArray &s)
 {
-    QTextCodec* codec = QTextCodec::codecForName(ENCODING_UTF8);
-    QTextCodec::ConverterState state;
-    if (!codec)
-        return QString(s);
-    QString tmp = codec->toUnicode(s,s.length(),&state);
-    if (state.invalidChars>0)
-        tmp = QString::fromLocal8Bit(s);
-    return tmp;
+#ifdef Q_OS_WIN
+    TextDecoder decoder = TextDecoder::decoderForUtf8();
+    auto [ok, result] = decoder.decode(s);
+    if (ok)
+        return result;
+    else
+        return QString::fromLocal8Bit(s);
+#else
+    return QString::fromUtf8(s);
+#endif
 }
 
 QStringList readStreamToLines(QTextStream *stream)
@@ -282,37 +290,13 @@ void readStreamToLines(QTextStream *stream,
     }
 }
 
-QStringList readFileToLines(const QString& fileName, QTextCodec* codec)
-{
-    QFile file(fileName);
-    if (file.open(QFile::ReadOnly)) {
-        QTextStream stream(&file);
-        stream.setCodec(codec);
-        stream.setAutoDetectUnicode(false);
-        return readStreamToLines(&stream);
-    }
-    return QStringList();
-}
-
-void readFileToLines(const QString &fileName, QTextCodec *codec, LineProcessFunc lineFunc)
-{
-    QFile file(fileName);
-    if (file.open(QFile::ReadOnly)) {
-        QTextStream stream(&file);
-        stream.setCodec(codec);
-        stream.setAutoDetectUnicode(false);
-        readStreamToLines(&stream, lineFunc);
-    }
-}
-
 static QStringList tryLoadFileByEncoding(QByteArray encodingName, QFile& file, bool* isOk) {
     QStringList result;
-    *isOk=false;
-    QTextCodec* codec = QTextCodec::codecForName(encodingName);
-    if (!codec)
+    *isOk = false;
+    TextDecoder decoder(encodingName);
+    if (!decoder.isValid())
         return result;
     file.reset();
-    QTextCodec::ConverterState state;
     while (true) {
         if (file.atEnd()){
             break;
@@ -325,8 +309,8 @@ static QStringList tryLoadFileByEncoding(QByteArray encodingName, QFile& file, b
         } else if (line.endsWith("\n")){
             line.remove(line.length()-1,1);
         }
-        QString newLine = codec->toUnicode(line.constData(),line.length(),&state);
-        if (state.invalidChars>0) {
+        auto [ok, newLine] = decoder.decode(line);
+        if (!ok) {
             return QStringList();
         }
         result.append(newLine);
@@ -355,12 +339,12 @@ QStringList readFileToLines(const QString &fileName)
         }
         QList<PCharsetInfo> charsets = pCharsetInfoManager->findCharsetByLocale(pCharsetInfoManager->localeName());
         if (!charsets.isEmpty()) {
-            QSet<QByteArray> encodingSet;
+            QSet<QString> encodingSet;
             for (int i=0;i<charsets.size();i++) {
                 encodingSet.insert(charsets[i]->name);
             }
             encodingSet.remove(realEncoding);
-            foreach (const QByteArray& encodingName,encodingSet) {
+            foreach (const QString& encodingName,encodingSet) {
                 if (encodingName == ENCODING_UTF8)
                     continue;
                 result = tryLoadFileByEncoding("UTF-8",file,&ok);
@@ -764,4 +748,274 @@ const QChar *getNullTerminatedStringData(const QString &str)
         result = str.data();
     }
     return result;
+}
+
+TextEncoder::TextEncoder(const char *name)
+{
+#if QT_VERSION_MAJOR >= 6
+    mEncoder = QStringEncoder(name, QStringConverter::Flag::Stateless);
+#else
+    mCodec = QTextCodec::codecForName(name);
+#endif
+}
+
+TextEncoder::TextEncoder(const QByteArray &name) :
+    TextEncoder(name.data())
+{
+}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+TextEncoder::TextEncoder(QStringEncoder &&encoder)
+{
+    mEncoder = std::move(encoder);
+}
+#endif
+
+bool TextEncoder::isValid() const
+{
+#if QT_VERSION_MAJOR >= 6
+    return mEncoder.isValid();
+#else
+    return mCodec != nullptr;
+#endif
+}
+
+QByteArray TextEncoder::name() const
+{
+#if QT_VERSION_MAJOR >= 6
+    return mEncoder.name();
+#else
+    return mCodec->name();
+#endif
+}
+
+std::pair<bool, QByteArray> TextEncoder::encode(const QString &text)
+{
+    if (!isValid())
+        return {false, QByteArray()};
+    QByteArray result;
+#if QT_VERSION_MAJOR >= 6
+    result = mEncoder(text);
+    if (mEncoder.hasError()) {
+        mEncoder.resetState();
+        return {false, QByteArray()};
+    }
+#else
+    QTextCodec::ConverterState state;
+    result = mCodec->fromUnicode(text.constData(), text.length(), &state);
+    if (state.invalidChars > 0)
+        return {false, QByteArray()};
+#endif
+    return {true, result};
+}
+
+QByteArray TextEncoder::encodeUnchecked(const QString &text)
+{
+    if (!isValid())
+        return QByteArray();
+#if QT_VERSION_MAJOR >= 6
+    QByteArray result = mEncoder(text);
+    if (mEncoder.hasError())
+        mEncoder.resetState();
+    return result;
+#else
+    return mCodec->fromUnicode(text);
+#endif
+}
+
+TextEncoder TextEncoder::encoderForUtf8()
+{
+#if QT_VERSION_MAJOR >= 6
+    return QStringEncoder(QStringConverter::Utf8, QStringConverter::Flag::Stateless);
+#else
+    return TextEncoder(ENCODING_UTF8);
+#endif
+}
+
+TextEncoder TextEncoder::encoderForUtf16()
+{
+#if QT_VERSION_MAJOR >= 6
+    return QStringEncoder(QStringConverter::Utf16, QStringConverter::Flag::Stateless);
+#else
+    return TextEncoder(ENCODING_UTF16);
+#endif
+}
+
+TextEncoder TextEncoder::encoderForUtf32()
+{
+#if QT_VERSION_MAJOR >= 6
+    return QStringEncoder(QStringConverter::Utf32, QStringConverter::Flag::Stateless);
+#else
+    return TextEncoder(ENCODING_UTF32);
+#endif
+}
+
+TextEncoder TextEncoder::encoderForSystem()
+{
+#ifdef Q_OS_WIN
+# if QT_VERSION_MAJOR >= 6
+    return QStringEncoder(QStringConverter::System, QStringConverter::Flag::Stateless);
+# else
+    return TextEncoder(ENCODING_SYSTEM_DEFAULT);
+# endif
+#else
+    return encoderForUtf8();
+#endif
+}
+
+TextDecoder::TextDecoder(const char *name)
+{
+#if QT_VERSION_MAJOR >= 6
+    mDecoder = QStringDecoder(name, QStringConverter::Flag::Stateless);
+#else
+    mCodec = QTextCodec::codecForName(name);
+#endif
+}
+
+TextDecoder::TextDecoder(const QByteArray &name) :
+    TextDecoder(name.data())
+{
+}
+
+#if QT_VERSION_MAJOR >= 6
+TextDecoder::TextDecoder(QStringDecoder &&decoder)
+{
+    mDecoder = std::move(decoder);
+}
+#endif
+
+bool TextDecoder::isValid() const
+{
+#if QT_VERSION_MAJOR >= 6
+    return mDecoder.isValid();
+#else
+    return mCodec != nullptr;
+#endif
+}
+
+QByteArray TextDecoder::name() const
+{
+#if QT_VERSION_MAJOR >= 6
+    return mDecoder.name();
+#else
+    return mCodec->name();
+#endif
+}
+
+std::pair<bool, QString> TextDecoder::decode(const QByteArray &text)
+{
+    if (!isValid())
+        return {false, QString()};
+    QString result;
+#if QT_VERSION_MAJOR >= 6
+    result = mDecoder(text);
+    if (mDecoder.hasError()) {
+        mDecoder.resetState();
+        return {false, QString()};
+    }
+#else
+    QTextCodec::ConverterState state;
+    result = mCodec->toUnicode(text.constData(), text.length(), &state);
+    if (state.invalidChars > 0)
+        return {false, QString()};
+#endif
+    return {true, result};
+}
+
+QString TextDecoder::decodeUnchecked(const QByteArray &text)
+{
+    if (!isValid())
+        return QString();
+#if QT_VERSION_MAJOR >= 6
+    QString result = mDecoder(text);
+    if (mDecoder.hasError())
+        mDecoder.resetState();
+    return result;
+#else
+    return mCodec->toUnicode(text);
+#endif
+}
+
+TextDecoder TextDecoder::decoderForUtf8()
+{
+#if QT_VERSION_MAJOR >= 6
+    return QStringDecoder(QStringConverter::Utf8, QStringConverter::Flag::Stateless);
+#else
+    return TextDecoder(ENCODING_UTF8);
+#endif
+}
+
+TextDecoder TextDecoder::decoderForUtf16()
+{
+#if QT_VERSION_MAJOR >= 6
+    return QStringDecoder(QStringConverter::Utf16, QStringConverter::Flag::Stateless);
+#else
+    return TextDecoder(ENCODING_UTF16);
+#endif
+}
+
+TextDecoder TextDecoder::decoderForUtf32()
+{
+#if QT_VERSION_MAJOR >= 6
+    return QStringDecoder(QStringConverter::Utf32, QStringConverter::Flag::Stateless);
+#else
+    return TextDecoder(ENCODING_UTF32);
+#endif
+}
+
+TextDecoder TextDecoder::decoderForSystem()
+{
+#ifdef Q_OS_WIN
+# if QT_VERSION_MAJOR >= 6
+    return QStringDecoder(QStringConverter::System, QStringConverter::Flag::Stateless);
+# else
+    return TextDecoder(ENCODING_SYSTEM_DEFAULT);
+# endif
+#else
+    return decoderForUtf8();
+#endif
+}
+
+const QStringList &availableEncodings() {
+    static bool initialized = false;
+    static QStringList encodings;
+
+    if (initialized)
+        return encodings;
+
+#if QT_VERSION_MAJOR >= 6
+    for (const QString &name : QStringConverter::availableCodecs()) {
+        QString lname = name.toLower();
+        if (lname.startsWith("cp"))
+            continue;
+        if (lname == "locale" || lname == "utf-8")
+            continue;
+        encodings.append(name);
+    }
+#else
+    QSet<QByteArray> codecAlias = {"system", "utf-8"};
+    for (const QByteArray &name : QTextCodec::availableCodecs()) {
+        QByteArray lname = name.toLower();
+        if (lname.startsWith("cp"))
+            continue;
+        if (codecAlias.contains(lname))
+            continue;
+        encodings.append(name);
+        codecAlias.insert(lname);
+        QTextCodec *codec = QTextCodec::codecForName(name);
+        if (codec != nullptr) {
+            for (const QByteArray &alias : codec->aliases())
+                codecAlias.insert(alias.toLower());
+        }
+    }
+#endif
+    std::sort(encodings.begin(), encodings.end());
+    initialized = true;
+    return encodings;
+}
+
+bool isEncodingAvailable(const QByteArray &encoding)
+{
+    TextEncoder encoder(encoding);
+    return encoder.isValid();
 }

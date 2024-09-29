@@ -846,7 +846,7 @@ void GLSLSyntaxer::spaceProc()
 {
     mRun += 1;
     mTokenId = TokenId::Space;
-    while (mLine[mRun]>=1 && mLine[mRun]<=32)
+    while (isLexicalSpace(mLine[mRun]))
         mRun+=1;
     mRange.state = RangeState::rsUnknown;
     if (mRun>=mLineSize)

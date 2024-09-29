@@ -113,7 +113,7 @@ private:
     }
 
     static bool isBlankChar(const QChar& ch) {
-        return (ch<=32) && (ch>0);
+        return (ch.unicode() <= 32) && (ch.unicode() > 0);
     }
 
 //    static bool isOperatorChar(const QChar& ch) {

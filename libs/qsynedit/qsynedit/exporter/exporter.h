@@ -242,7 +242,7 @@ protected:
      */
     virtual void setTokenAttribute(PTokenAttribute attri);
 
-    QTextCodec *getCodec() const;
+    TextEncoder getEncoder() const;
 private:
     QString mText;
     bool mFirstAttribute;

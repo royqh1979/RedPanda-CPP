@@ -17,7 +17,6 @@
 #include "cpppreprocessor.h"
 
 #include <QFile>
-#include <QTextCodec>
 #include <QDebug>
 #include <QMessageBox>
 #include "../utils.h"

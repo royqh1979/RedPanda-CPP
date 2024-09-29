@@ -6,8 +6,8 @@ pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (developme
 arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64' 'riscv64')
 url="https://github.com/royqh1979/$_pkgname"
 license=('GPL3')
-depends=(qt5-base qt5-svg gcc gdb astyle)
-makedepends=(qt5-tools imagemagick librsvg)
+depends=(qt6-base qt6-svg gcc gdb astyle)
+makedepends=(qt6-tools imagemagick librsvg)
 optdepends=(
     'clang: C/C++ compiler (alternative)'
 )
@@ -29,7 +29,7 @@ prepare() {
 build() {
     mkdir redpanda-build
     cd redpanda-build
-    qmake \
+    qmake6 \
         PREFIX='/usr' \
         LIBEXECDIR='/usr/lib' \
         "$srcdir/$_pkgname/Red_Panda_CPP.pro"

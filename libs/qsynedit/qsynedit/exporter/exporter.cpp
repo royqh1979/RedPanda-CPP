@@ -21,7 +21,7 @@
 #include <QGuiApplication>
 #include <QMimeData>
 #include <QPalette>
-#include <QTextCodec>
+#include <qt_utils/utils.h>
 
 namespace QSynedit {
 
@@ -131,8 +131,9 @@ void Exporter::saveToFile(const QString &filename)
 
 void Exporter::writeToStream(QIODevice &stream)
 {
-    QTextCodec *codec=getCodec();
-    if (stream.write(codec->fromUnicode(mText))<0) {
+    TextEncoder encoder = getEncoder();
+    auto [ok, encoded] = encoder.encode(mText);
+    if (ok && stream.write(encoded) < 0) {
         throw FileError(QObject::tr("Failed to write data."));
     }
 }
@@ -274,12 +275,14 @@ int Exporter::getBufferSize() const
     return mText.size();
 }
 
-QTextCodec * Exporter::getCodec() const {
-    QTextCodec* codec = QTextCodec::codecForName(mCharset);
-    if (codec == nullptr)
-        codec = QTextCodec::codecForLocale();
-    return codec;
+TextEncoder Exporter::getEncoder() const {
+    TextEncoder encoder(mCharset);
+    if (encoder.isValid())
+        return encoder;
+    else
+        return TextEncoder::encoderForSystem();
 }
+
 void Exporter::insertData(int pos, const QString &text)
 {
     if (!text.isEmpty()) {
@@ -339,8 +342,9 @@ void Exporter::setTokenAttribute(PTokenAttribute attri)
 
 QByteArray Exporter::buffer() const
 {
-    QTextCodec* codec = getCodec();
-    return codec->fromUnicode(mText);
+    TextEncoder encoder = getEncoder();
+    auto [_, encoded] = encoder.encode(mText);
+    return encoded;
 }
 
 const QString &Exporter::text() const
