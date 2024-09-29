@@ -1163,6 +1163,7 @@ void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
     Editor *e = openFile(fileName, false);
     if (e!=nullptr) {
         e->setActiveBreakpointFocus(Line,setFocus);
+        e->activate(false);
         if (setFocus) {
             activateWindow();
         }

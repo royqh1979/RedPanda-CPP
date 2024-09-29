@@ -9,6 +9,8 @@ Red Panda C++ Version 3.2
   - fix: Crash in windows 7. (by CyanoHao)
   - fix: While Control is pressed, can't start Drag&Drop by mouse.
   - enhancement: Auto detect gdb ACP (by CyanoHao)
+  - fix:  When debugging project, the executing source file is not auto switched to. （#476）
+  
 
 Red Panda C++ Version 3.1
 

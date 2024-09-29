@@ -608,11 +608,12 @@ void Editor::setFilename(const QString &newName)
     return;
 }
 
-void Editor::activate()
+void Editor::activate(bool focus)
 {
     if (mParentPageControl)
         mParentPageControl->setCurrentWidget(this);
-    setFocus();
+    if (focus)
+        setFocus();
 }
 
 const QByteArray& Editor::encodingOption() const noexcept{

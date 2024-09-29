@@ -150,7 +150,7 @@ public:
     bool save(bool force=false, bool reparse=true);
     bool saveAs(const QString& name="", bool fromProject = false);
     void setFilename(const QString& newName);
-    void activate();
+    void activate(bool focus=true);
 
     QTabWidget* pageControl() noexcept;
     void setPageControl(QTabWidget* newPageControl);
