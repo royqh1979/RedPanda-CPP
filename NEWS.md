@@ -10,6 +10,7 @@ Red Panda C++ Version 3.2
   - fix: While Control is pressed, can't start Drag&Drop by mouse.
   - enhancement: Auto detect gdb ACP (by CyanoHao)
   - fix:  When debugging project, the executing source file is not auto switched to. （#476）
+  - enhancement: Support Raw string literal with LR/UR/uR/u8R prefix.
   
 
 Red Panda C++ Version 3.1

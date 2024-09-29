@@ -1628,6 +1628,14 @@ void CppSyntaxer::next()
                 mRun+=2;
                 mRange.state = RangeState::rsRawString;
                 procRawString();
+            } else if (mRun+2<mLineSize && (mLine[mRun] == 'L' || mLine[mRun] == 'u' || mLine[mRun]=='U')  && mLine[mRun+1] == 'R' && mLine[mRun+2]=='\"') {
+                mRun+=3;
+                mRange.state = RangeState::rsRawString;
+                procRawString();
+            } else if (mRun+3<mLineSize && mLine[mRun] == 'u' && mLine[mRun+1] == '8' && mLine[mRun+2] == 'R' && mLine[mRun+3]=='\"') {
+                mRun+=4;
+                mRange.state = RangeState::rsRawString;
+                procRawString();
             } else if (mRun+1<mLineSize && (mLine[mRun] == 'L' || mLine[mRun] == 'u' || mLine[mRun]=='U') && mLine[mRun+1]=='\"') {
                 //qDebug()<<"*d-0-0*";
                 mRun+=1;
