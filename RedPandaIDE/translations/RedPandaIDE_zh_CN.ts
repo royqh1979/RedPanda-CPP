@@ -9158,14 +9158,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>QFileSystemModel</name>
-    <message>
-        <location filename="../mainwindow.cpp" line="-6462"/>
-        <source>&lt;b&gt;The name &quot;%1&quot; cannot be used.&lt;/b&gt;&lt;p&gt;Try using another name, with fewer characters or no punctuation marks.</source>
-        <translation>&lt;b&gt;文件名 &quot;%1&quot; 无法被使用！&lt;/b&gt;&lt;p&gt;可能是重名、过长、为空或者是使用了不能出现在文件名里的符号。</translation>
-    </message>
-</context>
-<context>
     <name>QObject</name>
     <message>
         <location filename="../editorlist.cpp" line="+178"/>
