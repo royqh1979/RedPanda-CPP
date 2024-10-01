@@ -122,7 +122,7 @@ qmake 变量：
 3. 用 vcpkg 安装 Qt。
    ```ps1
    $TARGET = "x64-windows-static" # 或 "x86-windows-static"
-   vcpkg install qt5-base:$TARGET qt5-svg:$TARGET qt5-tools:$TARGET
+   vcpkg install qt5-base:$TARGET qt5-svg:$TARGET qt5-tools:$TARGET qt5-translations:$TARGET
    ```
 
 在 PowerShell (Core) 或 Windows PowerShell 中用 VS 2019 或更高版本构建：

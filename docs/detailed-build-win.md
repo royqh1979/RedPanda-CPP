@@ -124,7 +124,7 @@ Prerequisites:
 3. Install Qt with vcpkg.
    ```ps1
    $TARGET = "x64-windows-static" # or "x86-windows-static"
-   vcpkg install qt5-base:$TARGET qt5-svg:$TARGET qt5-tools:$TARGET
+   vcpkg install qt5-base:$TARGET qt5-svg:$TARGET qt5-tools:$TARGET qt5-translations:$TARGET
    ```
 
 To build with VS 2019 or later in PowerShell (Core) or Windows PowerShell:
