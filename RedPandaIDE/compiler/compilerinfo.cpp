@@ -179,9 +179,10 @@ void CompilerInfo::prepareCompilerOptions()
 
     // 32bit/64bit
     sl.clear();
-    sl.append(QPair<QString,QString>("32bit","32"));
-    sl.append(QPair<QString,QString>("64bit","64"));
-    addOption(CC_CMD_OPT_POINTER_SIZE, QObject::tr("Compile with the following pointer size (-mx)"), groupName, true, true, true, "-m", CompilerOptionType::Choice, sl);
+    sl.append(QPair<QString,QString>(QObject::tr("32-bit pointer, 32-bit instruction (-m32)"), "32"));
+    sl.append(QPair<QString,QString>(QObject::tr("32-bit pointer, 64-bit instruction (-mx32)"), "x32"));
+    sl.append(QPair<QString,QString>(QObject::tr("64-bit pointer, 64-bit instruction (-m64)"), "64"));
+    addOption(CC_CMD_OPT_POINTER_SIZE, QObject::tr("x86 multilib (-mx)"), groupName, true, true, true, "-m", CompilerOptionType::Choice, sl);
 
     addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
     addOption(CC_CMD_OPT_PROFILE_INFO, QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");

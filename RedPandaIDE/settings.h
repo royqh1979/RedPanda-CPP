@@ -1353,6 +1353,7 @@ public:
 
         // Initialization
         void setProperties(const QString& binDir, const QString& c_prog);
+        QStringList x86MultilibList(const QString &folder, const QString &c_prog) const;
 
         void resetCompileOptionts();
         bool setCompileOption(const QString& key, int valIndex);
@@ -1397,8 +1398,6 @@ public:
         void setDumpMachine(const QString& value);
         const QString& version() const;
         void setVersion(const QString& value);
-        const QString& type() const;
-        void setType(const QString& value);
         const QString& name() const;
         void setName(const QString& value);
         QStringList defines(bool isCpp);
@@ -1484,7 +1483,7 @@ public:
 
 
         QByteArray getCompilerOutput(const QString& binDir, const QString& binFile,
-                                     const QStringList& arguments);
+                                     const QStringList& arguments) const;
     private:
         bool mFullLoaded;
         // Executables, most are hardcoded
@@ -1505,12 +1504,11 @@ public:
         QStringList mDefaultCppIncludeDirs;
 
         // Misc. properties
-        QString mDumpMachine; // "x86_64-w64-mingw32", "mingw32" etc
-        QString mVersion; // "4.7.1"
-        QString mType; // "TDM-GCC", "MinGW"
-        QString mName; // "TDM-GCC 4.7.1 Release"
-        QString mTarget; // 'X86_64' / 'i686'
-        CompilerType mCompilerType; // 'Clang' / 'GCC'
+        QString mDumpMachine; // "x86_64-w64-mingw32", "x86_64-pc-linux-gnu", etc
+        QString mVersion; // "14.2.0", "14" (--with-gcc-major-version-only)
+        QString mName; // "MinGW-w64 GCC 14.2.0 Release"
+        QString mTarget; // "x86_64", "i686", etc
+        CompilerType mCompilerType;
 
         // User settings
         bool mUseCustomCompileParams;
