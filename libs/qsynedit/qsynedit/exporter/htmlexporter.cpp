@@ -169,9 +169,8 @@ QString HTMLExporter::getHeader()
                                     this, _1, _2, _3, _4),
                           {&styles});
 
-    QString HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
-            "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
-            "<html xmlns=\"http://www.w3.org/1999/xhtml\">" + lineBreak() +
+    QString HTMLAsTextHeader =
+            "<html" + lineBreak() +
             "<head>"+ lineBreak() +
             "<title>%1</title>" + lineBreak() +
             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%2\" />" + lineBreak() +
@@ -191,12 +190,9 @@ QString HTMLExporter::getHeader()
             .arg(colorToHTML(mBackgroundColor))
             .arg(styles);
     if (mCreateHTMLFragment) {
-        HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
-                    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
-                    "<html xmlns=\"http://www.w3.org/1999/xhtml\">" + lineBreak() +
+        HTMLAsTextHeader =
+                    "<html>" + lineBreak() +
                     "<head>"+ lineBreak() +
-                    "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%1\" />" + lineBreak() +
-                    "<meta name=\"generator\" content=\"SynEdit HTML exporter\" />" + lineBreak() +
                     "<style type=\"text/css\">"+ lineBreak() +
                     "<!--" + lineBreak() +
                     "body { color: %2; background-color: %3; }"+ lineBreak() +
