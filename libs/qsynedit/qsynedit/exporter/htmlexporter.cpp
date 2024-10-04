@@ -237,7 +237,7 @@ QString HTMLExporter::getStartLineNumberString(int startLine, int endLine)
             .arg(colorToHTML(mLineNumberBackgroundColor))
             +lineBreak();
     for (int i=startLine;i<=endLine;i++)
-        result+=QString("%1<br/>").arg(i)+lineBreak();
+        result+=QString("<span>%1</span><br/>").arg(i)+lineBreak();
     result+=QString("</td><td style=\"font: %1pt '%2';\">")
             .arg(pixelToPoint(mFont.pixelSize()))
             .arg(mFont.family())
