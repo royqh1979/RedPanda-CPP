@@ -42,6 +42,10 @@ EditorClipboardWidget::EditorClipboardWidget(const QString& name, const QString&
             &QCheckBox::stateChanged,
             this,
             &EditorClipboardWidget::onUseSchemeChanged);
+    connect(ui->chkCopyHTMLWithLineNumber,
+            &QCheckBox::stateChanged,
+            ui->chkCopyHTMLRecalcLineNumber,
+            &QCheckBox::setEnabled);
 }
 
 EditorClipboardWidget::~EditorClipboardWidget()
@@ -67,6 +71,9 @@ void EditorClipboardWidget::doLoad()
     ui->cbRTFColorScheme->setCurrentText(pSettings->editor().copyRTFColorScheme());
     ui->chkCopyHTMLUseBackground->setChecked(pSettings->editor().copyHTMLUseBackground());
     ui->chkCopyHTMLUseEditorColor->setChecked(pSettings->editor().copyHTMLUseEditorColor());
+    ui->chkCopyHTMLWithLineNumber->setChecked(pSettings->editor().copyHTMLWithLineNumber());
+    ui->chkCopyHTMLRecalcLineNumber->setEnabled(pSettings->editor().copyHTMLWithLineNumber());
+    ui->chkCopyHTMLRecalcLineNumber->setChecked(pSettings->editor().copyHTMLRecalcLineNumber());
     ui->cbHTMLColorScheme->setCurrentText(pSettings->editor().copyHTMLColorScheme());
     onUseSchemeChanged();
 }
@@ -83,6 +90,9 @@ void EditorClipboardWidget::doSave()
     pSettings->editor().setCopyHTMLUseBackground(ui->chkCopyHTMLUseBackground->isChecked());
     pSettings->editor().setCopyHTMLUseEditorColor(ui->chkCopyHTMLUseEditorColor->isChecked());
     pSettings->editor().setCopyHTMLColorScheme(ui->cbHTMLColorScheme->currentText());
+    pSettings->editor().setCopyHTMLWithLineNumber(ui->chkCopyHTMLWithLineNumber->isChecked());
+    if (ui->chkCopyHTMLRecalcLineNumber->isEnabled())
+        pSettings->editor().setCopyHTMLRecalcLineNumber(ui->chkCopyHTMLRecalcLineNumber->isChecked());
 
     pSettings->editor().save();
     pMainWindow->updateEditorSettings();

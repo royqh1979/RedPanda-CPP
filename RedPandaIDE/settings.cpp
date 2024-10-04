@@ -803,6 +803,26 @@ void Settings::Editor::setForceFixedFontWidth(bool newForceFixedWidth)
     mForceFixedFontWidth = newForceFixedWidth;
 }
 
+bool Settings::Editor::copyHTMLRecalcLineNumber() const
+{
+    return mCopyHTMLRecalcLineNumber;
+}
+
+void Settings::Editor::setCopyHTMLRecalcLineNumber(bool newCopyHTMLRecalcLineNumber)
+{
+    mCopyHTMLRecalcLineNumber = newCopyHTMLRecalcLineNumber;
+}
+
+bool Settings::Editor::copyHTMLWithLineNumber() const
+{
+    return mCopyHTMLWithLineNumber;
+}
+
+void Settings::Editor::setCopyHTMLWithLineNumber(bool newCopyHTMLWithLineNumber)
+{
+    mCopyHTMLWithLineNumber = newCopyHTMLWithLineNumber;
+}
+
 bool Settings::Editor::showTrailingSpaces() const
 {
     return mShowTrailingSpaces;
@@ -1319,6 +1339,9 @@ void Settings::Editor::doSave()
     saveValue("copy_rtf_color_scheme",mCopyRTFColorScheme);
     saveValue("copy_html_use_background",mCopyHTMLUseBackground);
     saveValue("copy_html_use_editor_color_scheme",mCopyHTMLUseEditorColor);
+    saveValue("copy_html_with_line_number",mCopyHTMLWithLineNumber);
+    saveValue("copy_html_recalc_line_number",mCopyHTMLRecalcLineNumber);
+
     saveValue("copy_html_color_scheme", mCopyHTMLColorScheme);
 
     //color scheme
@@ -1471,6 +1494,9 @@ void Settings::Editor::doLoad()
     mCopyRTFColorScheme = stringValue("copy_rtf_color_scheme","Intellij Classic");
     mCopyHTMLUseBackground = boolValue("copy_html_use_background",false);
     mCopyHTMLUseEditorColor = boolValue("copy_html_use_editor_color_scheme",false);
+    mCopyHTMLWithLineNumber = boolValue("copy_html_with_line_number", false);
+    mCopyHTMLRecalcLineNumber = boolValue("copy_html_recalc_line_number", true);
+
     mCopyHTMLColorScheme = stringValue("copy_html_color_scheme","Intellij Classic");
 
     //color

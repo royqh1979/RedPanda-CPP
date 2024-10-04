@@ -115,14 +115,29 @@ public:
     QByteArray buffer() const;
     const QString& text() const;
 
+    bool exportLineNumber() const;
+    void setExportLineNumber(bool newExportLineNumber);
+
+    bool recalcLineNumber() const;
+    void setRecalcLineNumber(bool newRecalcLineNumber);
+
+    bool lineNumberStartFromZero() const;
+    void setLineNumberStartFromZero(bool newLineNumberStartFromZero);
+
+    QColor lineNumberColor() const;
+    void setLineNumberColor(const QColor &newLineNumberColor);
+
+    QColor lineNumberBackgroundColor() const;
+    void setLineNumberBackgroundColor(const QColor &newLineNumberBackgroundColor);
+
 protected:
     int mTabSize;
     QByteArray mClipboardFormat;
     QByteArray mCharset;
+    QFont mFont;
     QColor mBackgroundColor;
     QColor mForegroundColor;
     QString mDefaultFilter;
-    QFont mFont;
     PSyntaxer mSyntaxer;
     QColor mLastBG;
     QColor mLastFG;
@@ -131,6 +146,11 @@ protected:
     QString mTitle;
     bool mUseBackground;
     NewlineType mFileEndingType;
+    bool mExportLineNumber;
+    bool mRecalcLineNumber;
+    bool mLineNumberStartFromZero;
+    QColor mLineNumberColor;
+    QColor mLineNumberBackgroundColor;
 
     QString lineBreak();
 
@@ -241,6 +261,11 @@ protected:
      * @param attri
      */
     virtual void setTokenAttribute(PTokenAttribute attri);
+
+    virtual QString getStartLineNumberString(int startLine, int endLine);
+    virtual QString getLineNumberString(int line);
+    virtual QString getEndLineNumberString(int startLine, int endLine);
+
 
     TextEncoder getEncoder() const;
 private:

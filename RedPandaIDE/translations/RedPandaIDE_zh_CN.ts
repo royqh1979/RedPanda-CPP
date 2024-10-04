@@ -1655,7 +1655,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">要剪切的内容超过了字符数限制！</translation>
     </message>
     <message>
-        <location line="+1731"/>
+        <location line="+1738"/>
         <source>hex: %1</source>
         <translation>16进制: %1</translation>
     </message>
@@ -1670,7 +1670,7 @@ p, li { white-space: pre-wrap; }
         <translation>打印文档</translation>
     </message>
     <message>
-        <location line="+743"/>
+        <location line="+750"/>
         <location line="+25"/>
         <location line="+46"/>
         <source>Ctrl+click for more info</source>
@@ -1837,19 +1837,29 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+9"/>
-        <location line="+67"/>
+        <location line="+81"/>
         <source>Use background color</source>
         <translation>使用背景色</translation>
     </message>
     <message>
-        <location line="-60"/>
-        <location line="+67"/>
+        <location line="-74"/>
+        <location line="+81"/>
         <source>Use editor&apos;s color scheme</source>
         <oldsource>Use editor&apos;s color schema</oldsource>
         <translation>使用编辑器的配色方案</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-74"/>
+        <source>Copy with line number</source>
+        <translation>复制行号</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Recalc line number</source>
+        <translation>重新计算行号</translation>
+    </message>
+    <message>
+        <location line="+22"/>
         <location line="+67"/>
         <source>Color scheme</source>
         <oldsource>Color schema</oldsource>
@@ -2650,7 +2660,7 @@ p, li { white-space: pre-wrap; }
         <translation>表单</translation>
     </message>
     <message>
-        <location line="+173"/>
+        <location line="+269"/>
         <source>Theme:</source>
         <translation>主题:</translation>
     </message>
@@ -2659,27 +2669,27 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">使用自定义主题</translation>
     </message>
     <message>
-        <location line="-167"/>
+        <location line="-127"/>
         <source>Icon Set:</source>
         <translation>图标集：</translation>
     </message>
     <message>
-        <location line="+199"/>
+        <location line="+25"/>
         <source>Use custom icon set</source>
         <translation>使用自定义图标</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="-32"/>
         <source>Icon Zoom:</source>
         <translation>图标缩放：</translation>
     </message>
     <message>
-        <location line="-225"/>
+        <location line="-116"/>
         <source>Font:</source>
         <translation>字体:</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+70"/>
         <source>Create a customized copy</source>
         <translation>自定义</translation>
     </message>
@@ -2699,23 +2709,62 @@ p, li { white-space: pre-wrap; }
         <translation>打开文件夹</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="+221"/>
+        <source>OpenType font variation</source>
+        <translation>OpenType字体变形</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Italic [ital]</source>
+        <translation>斜体[ital]</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Width [wdth]</source>
+        <translation>宽度[wdth]</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Weight [wght]</source>
+        <translation>粗细[wght]</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+49"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <source>Reset</source>
+        <translation>重置</translation>
+    </message>
+    <message>
+        <location line="-63"/>
+        <source>Slant [slnt]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Optical size [opsz]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-282"/>
         <location line="+3"/>
         <source>Remove custom theme</source>
         <translation>删除自定义主题</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+174"/>
         <source>Language:</source>
         <translation>语言:</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="-30"/>
         <source>*Needs restart</source>
         <translation>*需要重启之后生效</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-182"/>
         <source>Font Size:</source>
         <translation>大小:</translation>
     </message>
@@ -4672,7 +4721,7 @@ p, li { white-space: pre-wrap; }
     <name>MainWindow</name>
     <message>
         <location filename="../mainwindow.ui" line="+14"/>
-        <location filename="../mainwindow.cpp" line="+1330"/>
+        <location filename="../mainwindow.cpp" line="+1325"/>
         <source>Red Panda C++</source>
         <translation>小熊猫C++</translation>
     </message>
@@ -9139,7 +9188,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>QApplication</name>
     <message>
-        <location filename="../main.cpp" line="+467"/>
+        <location filename="../main.cpp" line="+475"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
@@ -9161,7 +9210,7 @@ p, li { white-space: pre-wrap; }
     <name>QObject</name>
     <message>
         <location filename="../editorlist.cpp" line="+178"/>
-        <location filename="../mainwindow.cpp" line="+3237"/>
+        <location filename="../mainwindow.cpp" line="-3225"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
@@ -9233,7 +9282,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../colorscheme.cpp" line="+584"/>
-        <location filename="../main.cpp" line="-234"/>
+        <location filename="../main.cpp" line="-241"/>
         <location line="+7"/>
         <source>Error</source>
         <translation>错误</translation>
@@ -9249,7 +9298,7 @@ p, li { white-space: pre-wrap; }
         <translation>无法写入配置文件夹&quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+178"/>
+        <location line="+185"/>
         <source>Can&apos;t load autolink settings</source>
         <translation>无法载入自动链接设置</translation>
     </message>
@@ -9352,7 +9401,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3363"/>
+        <location filename="../settings.cpp" line="+3389"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>

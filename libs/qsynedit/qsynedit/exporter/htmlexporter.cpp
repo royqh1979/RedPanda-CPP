@@ -54,7 +54,6 @@ QString HTMLExporter::attriToCSS(PTokenAttribute attri, const QString &uniqueAtt
         result += "background-color: " + colorToHTML(attri->background()) + "; ";
     if (attri->foreground().isValid())
         result += "color: " + colorToHTML(attri->foreground()) + "; ";
-
     if (attri->styles().testFlag(FontStyle::fsBold))
         result += "font-weight: bold; ";
     if (attri->styles().testFlag(FontStyle::fsItalic))
@@ -174,7 +173,7 @@ QString HTMLExporter::getHeader()
             "<head>"+ lineBreak() +
             "<title>%1</title>" + lineBreak() +
             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%2\" />" + lineBreak() +
-            "<meta name=\"generator\" content=\"SynEdit HTML exporter\" />" + lineBreak() +
+            "<meta name=\"generator\" content=\"QSynedit HTML exporter\" />" + lineBreak() +
             "<style type=\"text/css\">"+ lineBreak() +
             "<!--" + lineBreak() +
             "body { color: %3; background-color: %4; }"+ lineBreak() +
@@ -193,6 +192,8 @@ QString HTMLExporter::getHeader()
         HTMLAsTextHeader =
                     "<html>" + lineBreak() +
                     "<head>"+ lineBreak() +
+                    "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%1\" />" + lineBreak() +
+                    "<meta name=\"generator\" content=\"QSynedit HTML exporter\" />" + lineBreak() +
                     "<style type=\"text/css\">"+ lineBreak() +
                     "<!--" + lineBreak() +
                     "body { color: %2; background-color: %3; }"+ lineBreak() +
@@ -222,5 +223,32 @@ void HTMLExporter::setTokenAttribute(PTokenAttribute attri)
 {
     mLastAttri = attri;
     Exporter::setTokenAttribute(attri);
+}
+
+QString HTMLExporter::getStartLineNumberString(int startLine, int endLine)
+{
+    int maxLineNumbeWidth = (QString("%1").arg(endLine ).length()+1) * pixelToPoint(mFont.pixelSize());
+    QString result =
+            QString("<table style='width:100%; border:1px; cellspacing:1px;'><tr><td style=\"width: %1pt; font: %2pt '%3'; color: %4; background-color: %5; text-align: right; padding-right: 0.5em; \">")
+            .arg(maxLineNumbeWidth)
+            .arg(pixelToPoint(mFont.pixelSize()))
+            .arg(mFont.family())
+            .arg(colorToHTML(mLineNumberColor))
+            .arg(colorToHTML(mLineNumberBackgroundColor))
+            +lineBreak();
+    for (int i=startLine;i<=endLine;i++)
+        result+=QString("%1<br/>").arg(i)+lineBreak();
+    result+=QString("</td><td style=\"font: %1pt '%2';\">")
+            .arg(pixelToPoint(mFont.pixelSize()))
+            .arg(mFont.family())
+            +lineBreak();
+    return result;
+}
+
+QString HTMLExporter::getEndLineNumberString(int startLine, int endLine)
+{
+    Q_UNUSED(startLine)
+    Q_UNUSED(endLine)
+    return "</td></tr></table>"+lineBreak();
 }
 }

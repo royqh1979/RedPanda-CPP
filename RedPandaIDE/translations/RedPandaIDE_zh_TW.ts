@@ -1224,12 +1224,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2909"/>
+        <location line="+2916"/>
         <source>Print Document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+743"/>
+        <location line="+750"/>
         <location line="+25"/>
         <location line="+46"/>
         <source>Ctrl+click for more info</source>
@@ -1277,13 +1277,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-5421"/>
+        <location line="-5435"/>
         <location line="+506"/>
         <source>Error Load File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1553"/>
+        <location line="+1560"/>
         <source>hex: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1392,18 +1392,28 @@
     </message>
     <message>
         <location line="+9"/>
-        <location line="+67"/>
+        <location line="+81"/>
         <source>Use background color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-60"/>
-        <location line="+67"/>
+        <location line="-74"/>
+        <location line="+81"/>
         <source>Use editor&apos;s color scheme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-74"/>
+        <source>Copy with line number</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Recalc line number</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
         <location line="+67"/>
         <source>Color scheme</source>
         <translation type="unfinished"></translation>
@@ -2124,37 +2134,76 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+19"/>
         <source>Font:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+227"/>
         <source>*Needs restart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-80"/>
+        <location line="+23"/>
         <source>Theme:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+7"/>
         <source>Language:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="+57"/>
+        <source>OpenType font variation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Italic [ital]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Width [wdth]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Weight [wght]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+49"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <source>Reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-63"/>
+        <source>Slant [slnt]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Optical size [opsz]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-317"/>
         <source>Font Size:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-174"/>
+        <location line="+78"/>
         <source>Icon Set:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="-53"/>
         <source>Create a customized copy</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2205,7 +2254,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="+71"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="-32"/>
         <source>Icon Zoom:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4012,7 +4061,7 @@
     <name>MainWindow</name>
     <message>
         <location filename="../mainwindow.ui" line="+14"/>
-        <location filename="../mainwindow.cpp" line="+1330"/>
+        <location filename="../mainwindow.cpp" line="+1325"/>
         <source>Red Panda C++</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7900,7 +7949,7 @@
 <context>
     <name>QApplication</name>
     <message>
-        <location filename="../main.cpp" line="+467"/>
+        <location filename="../main.cpp" line="+475"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7911,7 +7960,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+3990"/>
+        <location filename="../settings.cpp" line="+4016"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-403"/>
         <location line="+63"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8159,7 +8208,7 @@
     </message>
     <message>
         <location line="+6"/>
-        <location filename="../main.cpp" line="-234"/>
+        <location filename="../main.cpp" line="-241"/>
         <location line="+7"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
@@ -8193,7 +8242,7 @@
     </message>
     <message>
         <location filename="../editorlist.cpp" line="+178"/>
-        <location filename="../mainwindow.cpp" line="+3237"/>
+        <location filename="../mainwindow.cpp" line="+2017"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8214,7 +8263,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+178"/>
+        <location line="+185"/>
         <source>Can&apos;t load autolink settings</source>
         <translation type="unfinished"></translation>
     </message>

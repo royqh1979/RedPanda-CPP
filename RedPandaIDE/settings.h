@@ -392,6 +392,12 @@ public:
         bool forceFixedFontWidth() const;
         void setForceFixedFontWidth(bool newForceFixedWidth);
 
+        bool copyHTMLWithLineNumber() const;
+        void setCopyHTMLWithLineNumber(bool newCopyHTMLWithLineNumber);
+
+        bool copyHTMLRecalcLineNumber() const;
+        void setCopyHTMLRecalcLineNumber(bool newCopyHTMLRecalcLineNumber);
+
     private:
         //General
         // indents
@@ -462,6 +468,8 @@ public:
         QString mCopyRTFColorScheme;
         bool mCopyHTMLUseBackground;
         bool mCopyHTMLUseEditorColor;
+        bool mCopyHTMLWithLineNumber;
+        bool mCopyHTMLRecalcLineNumber;
         QString mCopyHTMLColorScheme;
 
         //Color

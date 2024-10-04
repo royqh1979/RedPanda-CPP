@@ -4,7 +4,7 @@
 <context>
     <name>CharsetInfoManager</name>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="+116"/>
+        <location filename="qt_utils/charsetinfo.cpp" line="+114"/>
         <location line="+43"/>
         <location line="+64"/>
         <source>Arabic</source>
@@ -125,7 +125,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="qt_utils/utils.cpp" line="+57"/>
+        <location filename="qt_utils/utils.cpp" line="+63"/>
         <source>Index %1 out of range</source>
         <translation>下标%1越界</translation>
     </message>

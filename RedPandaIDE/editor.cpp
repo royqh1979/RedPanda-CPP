@@ -1684,6 +1684,13 @@ void Editor::copyAsHTML()
                                         ));
     exporter.setCreateHTMLFragment(true);
 
+    if (pSettings->editor().copyHTMLWithLineNumber()) {
+        exporter.setExportLineNumber(true);
+        exporter.setRecalcLineNumber(pSettings->editor().copyHTMLRecalcLineNumber());
+        exporter.setLineNumberStartFromZero(pSettings->editor().gutterLineNumbersStartZero());
+        exporter.setLineNumberColor(gutter().textColor());
+        exporter.setLineNumberBackgroundColor(gutter().color());
+    }
     exporter.exportRange(document(),blockBegin(),blockEnd());
 
     //clipboard takes the owner ship
@@ -3451,6 +3458,13 @@ void Editor::exportAsHTML(const QString &htmlFilename)
                                         std::placeholders::_4,
                                         std::placeholders::_5
                                         ));
+    if (pSettings->editor().copyHTMLWithLineNumber()) {
+        exporter.setExportLineNumber(true);
+        exporter.setRecalcLineNumber(false);
+        exporter.setLineNumberStartFromZero(pSettings->editor().gutterLineNumbersStartZero());
+        exporter.setLineNumberColor(gutter().textColor());
+        exporter.setLineNumberBackgroundColor(gutter().color());
+    }
     exporter.exportAll(document());
     exporter.saveToFile(htmlFilename);
 }

@@ -11,7 +11,10 @@ Red Panda C++ Version 3.2
   - enhancement: Auto detect gdb ACP (by CyanoHao)
   - fix:  When debugging project, the executing source file is not auto switched to. （#476）
   - enhancement: Support Raw string literal with LR/UR/uR/u8R prefix.
-  
+  - change: Copy/Export as html using less restrictive header.
+  - enhancement: Better gcc info detection (by CyanoHao)
+  - enhancement: Copy/Export as html with line numbers.
+
 
 Red Panda C++ Version 3.1
 

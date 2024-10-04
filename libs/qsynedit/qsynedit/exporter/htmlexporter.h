@@ -44,7 +44,7 @@ private:
     bool styleNameCallback(PSyntaxer syntaxer, PTokenAttribute  attri,
                            const QString& uniqueAttriName,  QList<void *> params);
 
-    // SynExporter interface
+    // Exporter interface
 protected:
     void formatAttributeDone(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles);
     void formatAttributeInit(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles);
@@ -55,6 +55,9 @@ protected:
     QString getFormatName();
     QString getHeader();
     void setTokenAttribute(PTokenAttribute Attri);
+protected:
+    QString getStartLineNumberString(int startLine, int endLine) override;
+    QString getEndLineNumberString(int startLine, int endLine) override;
 };
 }
 #endif // HTMLEXPORTER_H
