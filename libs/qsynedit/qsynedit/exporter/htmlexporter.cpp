@@ -170,7 +170,7 @@ QString HTMLExporter::getHeader()
                           {&styles});
 
     QString HTMLAsTextHeader =
-            "<html" + lineBreak() +
+            "<html>" + lineBreak() +
             "<head>"+ lineBreak() +
             "<title>%1</title>" + lineBreak() +
             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%2\" />" + lineBreak() +
