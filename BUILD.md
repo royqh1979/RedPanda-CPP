@@ -1,6 +1,6 @@
 # General Development Notes
 
-Red Panda C++ need Qt 5.15 or 6.7+ to build.
+Red Panda C++ need Qt 5.15 or 6.8+ to build.
 
 Recommended development environments:
 1. Visual Studio Code.
