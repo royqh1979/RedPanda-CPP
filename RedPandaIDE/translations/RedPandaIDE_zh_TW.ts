@@ -6,12 +6,12 @@
     <message>
         <location filename="../widgets/aboutdialog.ui" line="+14"/>
         <source>About</source>
-        <translation type="unfinished"></translation>
+        <translation>關於</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:xx-large; font-weight:600;&quot;&gt;Red Panda C++&lt;/span&gt;&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:xx-large; font-weight:600;&quot;&gt;小熊猫C++&lt;/span&gt;&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -21,17 +21,17 @@
     <message>
         <location line="+12"/>
         <source>Build time: %1 %2</source>
-        <translation type="unfinished"></translation>
+        <translation>構建時間：%1 %2</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Homepage: &lt;a href=&quot;Homepage: https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;官方網站: &lt;a href=&quot;Homepage: https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>GNU General Public License</source>
-        <translation type="unfinished"></translation>
+        <translation>GNU通用公共許可</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -40,12 +40,16 @@
     This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</source>
-        <translation type="unfinished"></translation>
+        <translation>本程式為自由軟體：在遵守自由軟體聯盟發佈的GNU通用公共授權合約第三版或之後版本的前提下，你可以對其進行再發佈及修改。
+
+我們發佈這款程式，希望它有用，但不承諾任何質保責任。詳情參見GNU通用公共許可協定。
+
+本程式附帶一份GNU通用公共授權合約的副本。 您也可以從GNU網站&lt;http://www.gnu.org/licenses/&gt;獲取。</translation>
     </message>
     <message>
         <location filename="../widgets/aboutdialog.cpp" line="+30"/>
         <source>Version: </source>
-        <translation type="unfinished"></translation>
+        <translation>版本：</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -55,12 +59,12 @@
     <message>
         <location line="+10"/>
         <source>Website: &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>網址：&lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../widgets/aboutdialog.ui" line="-37"/>
         <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</translation>
     </message>
 </context>
 <context>
@@ -68,17 +72,17 @@
     <message>
         <location filename="../thememanager.cpp" line="+199"/>
         <source>Theme file &apos;%1&apos; doesn&apos;t exist!</source>
-        <translation type="unfinished"></translation>
+        <translation>主題檔案&quot;%1&quot;不存在！</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON檔案&apos;%1&apos;:%2中存在錯誤：%3</translation>
     </message>
     <message>
         <location line="+55"/>
         <source>Can&apos;t open the theme file &apos;%1&apos; for read.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取主題檔案&quot;%1&quot;！</translation>
     </message>
 </context>
 <context>
@@ -86,27 +90,27 @@
     <message>
         <location filename="../settingsdialog/compilerautolinkwidget.cpp" line="+93"/>
         <source>Header</source>
-        <translation type="unfinished"></translation>
+        <translation>標頭檔</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Link options</source>
-        <translation type="unfinished"></translation>
+        <translation>連結參數</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>Header exists</source>
-        <translation type="unfinished"></translation>
+        <translation>標頭檔已存在</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Header already exists.</source>
-        <translation type="unfinished"></translation>
+        <translation>標頭檔已存在。</translation>
     </message>
     <message>
         <location line="-62"/>
         <source>UTF-8</source>
-        <translation type="unfinished"></translation>
+        <translation>UTF-8</translation>
     </message>
 </context>
 <context>
@@ -114,17 +118,17 @@
     <message>
         <location filename="../debugger/debugger.cpp" line="+1495"/>
         <source>Function</source>
-        <translation type="unfinished"></translation>
+        <translation>函數</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Filename</source>
-        <translation type="unfinished"></translation>
+        <translation>檔名</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Line</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
 </context>
 <context>
@@ -132,37 +136,37 @@
     <message>
         <location filename="../widgets/bookmarkmodel.cpp" line="+292"/>
         <source>Save file &apos;%1&apos; failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>保存檔案&apos;%1&apos;失敗。</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Can&apos;t open file &apos;%1&apos; for write.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入檔案&apos;%1&apos;.</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON檔案&apos;%1&apos;:%2中存在錯誤：%3</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取檔案&apos;%1&apos;.</translation>
     </message>
     <message>
         <location line="+206"/>
         <source>Description</source>
-        <translation type="unfinished"></translation>
+        <translation>描述</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Line</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Filename</source>
-        <translation type="unfinished"></translation>
+        <translation>檔名</translation>
     </message>
 </context>
 <context>
@@ -170,17 +174,17 @@
     <message>
         <location filename="../debugger/debugger.cpp" line="-237"/>
         <source>Filename</source>
-        <translation type="unfinished"></translation>
+        <translation>檔名</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Line</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Condition</source>
-        <translation type="unfinished"></translation>
+        <translation>條件</translation>
     </message>
 </context>
 <context>
@@ -188,39 +192,39 @@
     <message>
         <location filename="../widgets/cpudialog.ui" line="+14"/>
         <source>CPU Info</source>
-        <translation type="unfinished"></translation>
+        <translation>CPU資訊</translation>
     </message>
     <message>
         <location line="+58"/>
         <location line="+3"/>
         <source>Step over one machine instruction</source>
-        <translation type="unfinished"></translation>
+        <translation>單步執行一條機器指令</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+3"/>
         <source>Step into one machine instruction</source>
-        <translation type="unfinished"></translation>
+        <translation>單步進入一條機器指令</translation>
     </message>
     <message>
         <location line="+61"/>
         <source>AT&amp;&amp;T</source>
-        <translation type="unfinished"></translation>
+        <translation>AT&amp;&amp;T</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Intel</source>
-        <translation type="unfinished"></translation>
+        <translation>Intel</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Blend Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>混合模式</translation>
     </message>
     <message>
         <location line="-74"/>
         <source>Callstack</source>
-        <translation type="unfinished"></translation>
+        <translation>調用棧</translation>
     </message>
 </context>
 <context>
