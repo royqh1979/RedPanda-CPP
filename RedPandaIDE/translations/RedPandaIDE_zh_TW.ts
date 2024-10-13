@@ -6,12 +6,12 @@
     <message>
         <location filename="../widgets/aboutdialog.ui" line="+14"/>
         <source>About</source>
-        <translation type="unfinished"></translation>
+        <translation>關於</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:xx-large; font-weight:600;&quot;&gt;Red Panda C++&lt;/span&gt;&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:xx-large; font-weight:600;&quot;&gt;小熊猫C++&lt;/span&gt;&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -21,17 +21,17 @@
     <message>
         <location line="+12"/>
         <source>Build time: %1 %2</source>
-        <translation type="unfinished"></translation>
+        <translation>構建時間：%1 %2</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Homepage: &lt;a href=&quot;Homepage: https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;官方網站: &lt;a href=&quot;Homepage: https://sourceforge.net/projects/dev-cpp-2020/&quot;&gt;https://sourceforge.net/projects/dev-cpp-2020/&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>GNU General Public License</source>
-        <translation type="unfinished"></translation>
+        <translation>GNU通用公共許可</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -40,12 +40,16 @@
     This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</source>
-        <translation type="unfinished"></translation>
+        <translation>本程式為自由軟體：在遵守自由軟體聯盟發佈的GNU通用公共授權合約第三版或之後版本的前提下，你可以對其進行再發佈及修改。
+
+我們發佈這款程式，希望它有用，但不承諾任何質保責任。詳情參見GNU通用公共許可協定。
+
+本程式附帶一份GNU通用公共授權合約的副本。 您也可以從GNU網站&lt;http://www.gnu.org/licenses/&gt;獲取。</translation>
     </message>
     <message>
         <location filename="../widgets/aboutdialog.cpp" line="+30"/>
         <source>Version: </source>
-        <translation type="unfinished"></translation>
+        <translation>版本：</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -55,12 +59,12 @@
     <message>
         <location line="+10"/>
         <source>Website: &lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>網址：&lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../widgets/aboutdialog.ui" line="-37"/>
         <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</translation>
     </message>
 </context>
 <context>
@@ -68,17 +72,17 @@
     <message>
         <location filename="../thememanager.cpp" line="+199"/>
         <source>Theme file &apos;%1&apos; doesn&apos;t exist!</source>
-        <translation type="unfinished"></translation>
+        <translation>主題檔案&quot;%1&quot;不存在！</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON檔案&apos;%1&apos;:%2中存在錯誤：%3</translation>
     </message>
     <message>
         <location line="+55"/>
         <source>Can&apos;t open the theme file &apos;%1&apos; for read.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取主題檔案&quot;%1&quot;！</translation>
     </message>
 </context>
 <context>
@@ -86,27 +90,27 @@
     <message>
         <location filename="../settingsdialog/compilerautolinkwidget.cpp" line="+93"/>
         <source>Header</source>
-        <translation type="unfinished"></translation>
+        <translation>標頭檔</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Link options</source>
-        <translation type="unfinished"></translation>
+        <translation>連結參數</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>Header exists</source>
-        <translation type="unfinished"></translation>
+        <translation>標頭檔已存在</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Header already exists.</source>
-        <translation type="unfinished"></translation>
+        <translation>標頭檔已存在。</translation>
     </message>
     <message>
         <location line="-62"/>
         <source>UTF-8</source>
-        <translation type="unfinished"></translation>
+        <translation>UTF-8</translation>
     </message>
 </context>
 <context>
@@ -114,17 +118,17 @@
     <message>
         <location filename="../debugger/debugger.cpp" line="+1495"/>
         <source>Function</source>
-        <translation type="unfinished"></translation>
+        <translation>函數</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Filename</source>
-        <translation type="unfinished"></translation>
+        <translation>檔名</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Line</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
 </context>
 <context>
@@ -132,37 +136,37 @@
     <message>
         <location filename="../widgets/bookmarkmodel.cpp" line="+292"/>
         <source>Save file &apos;%1&apos; failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>保存檔案&apos;%1&apos;失敗。</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Can&apos;t open file &apos;%1&apos; for write.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入檔案&apos;%1&apos;.</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON檔案&apos;%1&apos;:%2中存在錯誤：%3</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取檔案&apos;%1&apos;.</translation>
     </message>
     <message>
         <location line="+206"/>
         <source>Description</source>
-        <translation type="unfinished"></translation>
+        <translation>描述</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Line</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Filename</source>
-        <translation type="unfinished"></translation>
+        <translation>檔名</translation>
     </message>
 </context>
 <context>
@@ -170,17 +174,17 @@
     <message>
         <location filename="../debugger/debugger.cpp" line="-237"/>
         <source>Filename</source>
-        <translation type="unfinished"></translation>
+        <translation>檔名</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Line</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Condition</source>
-        <translation type="unfinished"></translation>
+        <translation>條件</translation>
     </message>
 </context>
 <context>
@@ -188,39 +192,39 @@
     <message>
         <location filename="../widgets/cpudialog.ui" line="+14"/>
         <source>CPU Info</source>
-        <translation type="unfinished"></translation>
+        <translation>CPU資訊</translation>
     </message>
     <message>
         <location line="+58"/>
         <location line="+3"/>
         <source>Step over one machine instruction</source>
-        <translation type="unfinished"></translation>
+        <translation>單步執行一條機器指令</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+3"/>
         <source>Step into one machine instruction</source>
-        <translation type="unfinished"></translation>
+        <translation>單步進入一條機器指令</translation>
     </message>
     <message>
         <location line="+61"/>
         <source>AT&amp;&amp;T</source>
-        <translation type="unfinished"></translation>
+        <translation>AT&amp;&amp;T</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Intel</source>
-        <translation type="unfinished"></translation>
+        <translation>Intel</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Blend Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>混合模式</translation>
     </message>
     <message>
         <location line="-74"/>
         <source>Callstack</source>
-        <translation type="unfinished"></translation>
+        <translation>調用棧</translation>
     </message>
 </context>
 <context>
@@ -229,7 +233,7 @@
         <location filename="../widgets/choosethemedialog.ui" line="+14"/>
         <location line="+6"/>
         <source>Choose Theme</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇主題</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -244,22 +248,22 @@
     <message>
         <location line="+104"/>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
     <message>
         <location line="-84"/>
         <source>Default Language:</source>
-        <translation type="unfinished"></translation>
+        <translation>默認語言：</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>C</source>
-        <translation type="unfinished"></translation>
+        <translation>C</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>C++</source>
-        <translation type="unfinished"></translation>
+        <translation>C++</translation>
     </message>
     <message>
         <location line="-30"/>
@@ -273,65 +277,65 @@
         <location filename="../codesnippetsmanager.cpp" line="+57"/>
         <location line="+10"/>
         <source>Load default code snippets failed</source>
-        <translation type="unfinished"></translation>
+        <translation>載入默認程式碼範本失敗</translation>
     </message>
     <message>
         <location line="-9"/>
         <location line="+10"/>
         <source>Can&apos;t copy default code snippets &apos;%1&apos; to &apos;%2&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將默認程式碼範本&apos;%1&apos;複製到&apos;%2&apos;。</translation>
     </message>
     <message>
         <location line="+11"/>
         <location line="+13"/>
         <source>Read code snippets failed</source>
-        <translation type="unfinished"></translation>
+        <translation>讀取程式碼範本失敗</translation>
     </message>
     <message>
         <location line="-12"/>
         <source>Can&apos;t open code snippet file &apos;%1&apos; for read.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀入程式碼範本檔案&apos;%1&apos;</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Read code snippet file &apos;%1&apos; failed:%2</source>
-        <translation type="unfinished"></translation>
+        <translation>讀取程式碼範本檔案&apos;%1&apos;失敗：%2</translation>
     </message>
     <message>
         <location line="+25"/>
         <location line="+19"/>
         <source>Save code snippets failed</source>
-        <translation type="unfinished"></translation>
+        <translation>保存程式碼範本失敗</translation>
     </message>
     <message>
         <location line="-18"/>
         <source>Can&apos;t open code snippet file &apos;%1&apos; for write.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法打開程式碼段檔案&apos;%1&apos;進行寫入。</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Write to code snippet file &apos;%1&apos; failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>寫入程式碼片段檔案&apos;%1&apos;失敗。</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Load new file template failed</source>
-        <translation type="unfinished"></translation>
+        <translation>載入新檔案範本失敗</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Can&apos;t open new file template file &apos;%1&apos; for read.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取新檔案範本檔案&apos;%1&apos;。</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Save new file template failed</source>
-        <translation type="unfinished"></translation>
+        <translation>保存新檔案範本失敗</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Can&apos;t open new file template file &apos;%1&apos; for write.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入新檔案範本檔案&apos;%1&apos;。</translation>
     </message>
 </context>
 <context>
@@ -339,22 +343,22 @@
     <message>
         <location line="+145"/>
         <source>Caption</source>
-        <translation type="unfinished"></translation>
+        <translation>名稱</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Completion Prefix</source>
-        <translation type="unfinished"></translation>
+        <translation>程式碼補全首碼</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Description</source>
-        <translation type="unfinished"></translation>
+        <translation>描述</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Menu Section</source>
-        <translation type="unfinished"></translation>
+        <translation>選單節</translation>
     </message>
 </context>
 <context>
@@ -363,12 +367,12 @@
         <location filename="../widgets/coloredit.cpp" line="+73"/>
         <location line="+32"/>
         <source>NONE</source>
-        <translation type="unfinished"></translation>
+        <translation>無顏色</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Color</source>
-        <translation type="unfinished"></translation>
+        <translation>配色</translation>
     </message>
 </context>
 <context>
@@ -376,7 +380,7 @@
     <message>
         <location filename="../problems/competitivecompenionhandler.cpp" line="+131"/>
         <source>Problem Case %1</source>
-        <translation type="unfinished"></translation>
+        <translation>試題案例%1</translation>
     </message>
 </context>
 <context>
@@ -384,131 +388,131 @@
     <message>
         <location filename="../compiler/compiler.cpp" line="+62"/>
         <source>Clean before rebuild failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>重編譯前的清理準備工作失敗！</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Compile Result:</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯結果：</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>- Errors: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>- 錯誤數：%1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>- Warnings: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>- 警告數：%1</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>- Output Filename: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>- 輸出檔名：%1</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>- Output Size: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>- 輸出文件大小：%1</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>- Compilation Time: %1 secs</source>
-        <translation type="unfinished"></translation>
+        <translation>- 編譯時間：%1 秒</translation>
     </message>
     <message>
         <location line="+93"/>
         <location line="+13"/>
         <source>[Error] </source>
-        <translation type="unfinished"></translation>
+        <translation>[錯誤]</translation>
     </message>
     <message>
         <location line="-9"/>
         <location line="+14"/>
         <source>[Warning] </source>
-        <translation type="unfinished"></translation>
+        <translation>[警告]</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>[Info] </source>
-        <translation type="unfinished"></translation>
+        <translation>[資訊]</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>[Note] </source>
-        <translation type="unfinished"></translation>
+        <translation>[說明]</translation>
     </message>
     <message>
         <location line="+588"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法啟動編譯器行程&apos;%1&apos;。</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>The compiler process crashed after starting successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯行程啟動後崩潰。</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The last waitFor...() function timed out.</source>
-        <translation type="unfinished"></translation>
+        <translation>waitFor()函數等待超時。</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>An error occurred when attempting to write to the compiler process.</source>
-        <translation type="unfinished"></translation>
+        <translation>在向編譯行程輸入內容時出錯。</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>An error occurred when attempting to read from the compiler process.</source>
-        <translation type="unfinished"></translation>
+        <translation>在從編譯行程讀取內容時出錯。</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>An unknown error occurred.</source>
-        <translation type="unfinished"></translation>
+        <translation>發生了未知錯誤。</translation>
     </message>
     <message>
         <location line="-68"/>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入檔案“%1”。</translation>
     </message>
     <message>
         <location line="-673"/>
         <source> - Command: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>-命令：%1</translation>
     </message>
     <message>
         <location line="+2"/>
         <source> - Command: %1 &gt; %2</source>
-        <translation type="unfinished"></translation>
+        <translation>- 命令: %1 &gt; %2</translation>
     </message>
     <message>
         <location line="+123"/>
         <source>warning</source>
-        <translation type="unfinished"></translation>
+        <translation>警告</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>info</source>
-        <translation type="unfinished"></translation>
+        <translation>訊息</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>note</source>
-        <translation type="unfinished"></translation>
+        <translation>說明</translation>
     </message>
     <message>
         <location line="-28"/>
         <location line="+2"/>
         <source>error:</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤：</translation>
     </message>
     <message>
         <location line="+2"/>
         <location line="+2"/>
         <source>warning:</source>
-        <translation type="unfinished"></translation>
+        <translation>警告：</translation>
     </message>
 </context>
 <context>
@@ -516,29 +520,29 @@
     <message>
         <location filename="../settingsdialog/compilerautolinkwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enable auto link</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用自動連結</translation>
     </message>
     <message>
         <location line="+24"/>
         <location line="+3"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>添加</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+3"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilerautolinkwidget.cpp" line="-30"/>
         <source>Save failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>保存失敗。</translation>
     </message>
 </context>
 <context>
@@ -550,7 +554,7 @@
         <location line="+34"/>
         <location line="+19"/>
         <source>No compiler set</source>
-        <translation type="unfinished"></translation>
+        <translation>無編譯器設定</translation>
     </message>
     <message>
         <location line="-120"/>
@@ -559,7 +563,7 @@
         <location line="+34"/>
         <location line="+19"/>
         <source>No compiler set is configured.</source>
-        <translation type="unfinished"></translation>
+        <translation>沒有配寘編譯器設定。</translation>
     </message>
     <message>
         <location line="-121"/>
@@ -568,17 +572,17 @@
         <location line="+34"/>
         <location line="+19"/>
         <source>Can&apos;t start debugging.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法啟動調試器</translation>
     </message>
     <message>
         <location line="+91"/>
         <source>Can&apos;t find Console Pauser</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到Console Pauser程式</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Console Pauser &quot;%1&quot; doesn&apos;t exists!</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到Console Pauser程式&quot;%1&quot;！</translation>
     </message>
 </context>
 <context>
@@ -586,30 +590,30 @@
     <message>
         <location filename="../settingsdialog/compilersetdirectorieswidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+27"/>
         <location line="+3"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>添加</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+3"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+3"/>
         <source>Remove Invalid</source>
-        <translation type="unfinished"></translation>
+        <translation>删除非法資料夾</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetdirectorieswidget.cpp" line="+77"/>
         <source>Choose Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇資料夾</translation>
     </message>
 </context>
 <context>
@@ -617,92 +621,92 @@
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Compiler set to config</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯器配置方案</translation>
     </message>
     <message>
         <location line="+15"/>
         <location line="+3"/>
         <source>Auto Find Compilers</source>
-        <translation type="unfinished"></translation>
+        <translation>自動搜索編譯器</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+3"/>
         <source>Find Compiler in the Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>在指定資料夾中蒐索編譯器</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Add Compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>添加編譯器</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+3"/>
         <source>Add Blank Compiler Set</source>
-        <translation type="unfinished"></translation>
+        <translation>添加空白編譯器設定</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+3"/>
         <source>Rename</source>
-        <translation type="unfinished"></translation>
+        <translation>改名</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+3"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>General</source>
-        <translation type="unfinished"></translation>
+        <translation>基本選項</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Convert Executable&apos;s Charset as</source>
-        <translation type="unfinished"></translation>
+        <translation>將可執行文件中的字串轉碼為</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Statically link libraries</source>
-        <translation type="unfinished"></translation>
+        <translation>用靜態連結方式連結庫檔案</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Add the following arguments when calling the compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯時加入下列選項：</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Add the following arguments when calling the linker</source>
-        <translation type="unfinished"></translation>
+        <translation>連結時加入下列選項</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯/連結選項</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Directories</source>
-        <translation type="unfinished"></translation>
+        <translation>資料夾</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Programs</source>
-        <translation type="unfinished"></translation>
+        <translation>程式</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Choose make</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇make</translation>
     </message>
     <message>
         <location line="-27"/>
@@ -712,220 +716,220 @@
         <location line="+10"/>
         <location line="+26"/>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation>...</translation>
     </message>
     <message>
         <location line="-56"/>
         <source>C Compiler(gcc)</source>
-        <translation type="unfinished"></translation>
+        <translation>C編譯器(gcc)</translation>
     </message>
     <message>
         <location line="+63"/>
         <source>C++ Compiler(g++)</source>
-        <translation type="unfinished"></translation>
+        <translation>C++編譯器(g++)</translation>
     </message>
     <message>
         <location line="-46"/>
         <source>Choose C++ Compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇C++編譯器</translation>
     </message>
     <message>
         <location line="-10"/>
         <source>make</source>
-        <translation type="unfinished"></translation>
+        <translation>make</translation>
     </message>
     <message>
         <location line="-47"/>
         <source>Choose Debugger</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇調試器</translation>
     </message>
     <message>
         <location line="+67"/>
         <source>Choose C Compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇C編譯器</translation>
     </message>
     <message>
         <location line="+43"/>
         <source>gdb</source>
-        <translation type="unfinished"></translation>
+        <translation>gdb</translation>
     </message>
     <message>
         <location line="-17"/>
         <source>Choose Resource Compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇資源編譯器</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>gdb server</source>
-        <translation type="unfinished"></translation>
+        <translation>gdb server</translation>
     </message>
     <message>
         <location line="-63"/>
         <source>Resource Compiler（windres)</source>
-        <translation type="unfinished"></translation>
+        <translation>資源編輯器(winres)</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+69"/>
         <source>UTF-8</source>
-        <translation type="unfinished"></translation>
+        <translation>UTF-8</translation>
     </message>
     <message>
         <location line="+233"/>
         <source>Red Panda C++ will clear previously found compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Do you really want to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>小熊猫C++ 將會清除以前蒐索到的編譯器配寘清單，然後在下列資料夾中蒐索編譯器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你確定要繼續嗎？</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Red Panda C++ will clear previously found compiler list and search for compilers in the the PATH. &lt;br /&gt;Do you really want to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>小熊猫C++ 將會清除以前蒐索到的編譯器配寘清單，然後在PATH路徑中蒐索gcc編譯器.&lt;br /&gt;你確定要繼續嗎？</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirm</source>
-        <translation type="unfinished"></translation>
+        <translation>確認</translation>
     </message>
     <message>
         <location line="+19"/>
         <location line="+25"/>
         <source>Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>失敗</translation>
     </message>
     <message>
         <location line="-25"/>
         <location line="+25"/>
         <source>Can&apos;t find any compiler.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到編譯器</translation>
     </message>
     <message>
         <location line="-19"/>
         <location line="+28"/>
         <source>Compiler Set Name</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯器配寘名稱</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>名稱</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Compiler Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯器資料夾</translation>
     </message>
     <message>
         <location line="+156"/>
         <source>Compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯器</translation>
     </message>
     <message>
         <location line="-138"/>
         <source>New name</source>
-        <translation type="unfinished"></translation>
+        <translation>新名稱</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="+117"/>
         <source>Output</source>
-        <translation type="unfinished"></translation>
+        <translation>輸出</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>Compilation Stages</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯階段</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Stop after the preprocessing stage</source>
-        <translation type="unfinished"></translation>
+        <translation>在完成預處理後停止編譯</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Stop after the compilation proper stage</source>
-        <translation type="unfinished"></translation>
+        <translation>在生成彙編程式碼後停止。</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Link and generate the executable </source>
-        <translation type="unfinished"></translation>
+        <translation>連結得到可執行文件。</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Preprocessing output suffix</source>
-        <translation type="unfinished"></translation>
+        <translation>預處理輸出尾碼</translation>
     </message>
     <message>
         <location line="-50"/>
         <source>Compiling output suffix</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯（彙編程式碼）輸出尾碼</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Executable suffix</source>
-        <translation type="unfinished"></translation>
+        <translation>可執行文件尾碼</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+68"/>
         <source>Locate C Compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>定位C編譯器</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Locate C++ Compiler</source>
-        <translation type="unfinished"></translation>
+        <translation>定位C++編譯器</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Locate Make</source>
-        <translation type="unfinished"></translation>
+        <translation>定位make程式</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Locate GDB</source>
-        <translation type="unfinished"></translation>
+        <translation>定位gdb程式</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Locate GDB Server</source>
-        <translation type="unfinished"></translation>
+        <translation>定位gdb server程式</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Locate windres</source>
-        <translation type="unfinished"></translation>
+        <translation>定位windres程式</translation>
     </message>
     <message>
         <location line="-177"/>
         <source>Searching for compilers...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在蒐索編譯器……</translation>
     </message>
     <message>
         <location line="-246"/>
         <source>System Default(%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>系統默認(%1)</translation>
     </message>
     <message>
         <location line="+247"/>
         <source>Abort</source>
-        <translation type="unfinished"></translation>
+        <translation>中止</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Searching...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在查找…</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="+72"/>
         <source>Binary suffix</source>
-        <translation type="unfinished"></translation>
+        <translation>二進位檔案類型</translation>
     </message>
     <message>
         <location line="-330"/>
         <source>Survive auto-finds</source>
-        <translation type="unfinished"></translation>
+        <translation>自動搜索時保留此項</translation>
     </message>
     <message>
         <location line="-7"/>
         <source>Don&apos;t localize compiler output messages</source>
-        <translation type="unfinished"></translation>
+        <translation>強制編譯器使用英語輸出資訊</translation>
     </message>
 </context>
 <context>
@@ -936,28 +940,28 @@
         <location line="+192"/>
         <location line="+50"/>
         <source>Rename Symbol Error</source>
-        <translation type="unfinished"></translation>
+        <translation>重命名符號失敗</translation>
     </message>
     <message>
         <location line="-254"/>
         <source>Can&apos;t rename symbols not defined in this file.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法重命名不在本檔案中定義的符號</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>New symbol already exists!</source>
-        <translation type="unfinished"></translation>
+        <translation>新符號名稱已被使用！</translation>
     </message>
     <message>
         <location line="+31"/>
         <location line="+11"/>
         <source>Searching...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在查找…</translation>
     </message>
     <message>
         <location line="-10"/>
         <source>Abort</source>
-        <translation type="unfinished"></translation>
+        <translation>中止</translation>
     </message>
 </context>
 <context>
@@ -965,17 +969,17 @@
     <message>
         <location filename="../widgets/custommakefileinfodialog.ui" line="+14"/>
         <source>Information for custom makefile</source>
-        <translation type="unfinished"></translation>
+        <translation>關於自定義Makefile</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Red Panda C++&apos;s Makefile has two important targets:&lt;/p&gt;&lt;p&gt;- all (which builds the executable)&lt;/p&gt;&lt;p&gt;- clean (which cleans up object files)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;all&amp;quot; depends on 2 targets: all-before and all-after. All-before&lt;/p&gt;&lt;p&gt;gets called before the compilation process, and all-after gets&lt;/p&gt;&lt;p&gt;called after the compilation process.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;clean&amp;quot; depends on the target clean-custom, which gets called&lt;/p&gt;&lt;p&gt;before the cleaning process.&lt;br/&gt;&lt;/p&gt;&lt;p&gt;You can change the Makefile&apos;s behavior by defining the targets&lt;/p&gt;&lt;p&gt;that &amp;quot;all&amp;quot; and &amp;quot;clean&amp;quot; depend on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;小熊猫C++的Makefile包括兩個重要的目標（target）：&lt;/p&gt;&lt;p&gt;- all (用来构建可执行文件)&lt;/p&gt;&lt;p&gt;- clean (用来清理构建文件)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;all&amp;quot; 依賴於2個目標：all-before 和all-after. &lt;/p&gt;&lt;p&gt;構建前會調用all-before目標，構建後會調用all-after目標。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;clean&amp;quot; 依賴於目標clean-custom，它在執行清理前被調用。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;你可以通過自定義這些目標來改變構建行為。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -983,122 +987,122 @@
     <message>
         <location filename="../settingsdialog/debuggeneralwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+103"/>
         <source>Use GDB Server to debug</source>
-        <translation type="unfinished"></translation>
+        <translation>使用gdb server調試</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>GDB Server Port</source>
-        <translation type="unfinished"></translation>
+        <translation>gdb server TCP埠號</translation>
     </message>
     <message>
         <location line="+88"/>
         <source>Debug Console</source>
-        <translation type="unfinished"></translation>
+        <translation>調試主控台</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>Font:</source>
-        <translation type="unfinished"></translation>
+        <translation>字體:</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Show only monospaced fonts</source>
-        <translation type="unfinished"></translation>
+        <translation>只顯示等寬字體</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Size:</source>
-        <translation type="unfinished"></translation>
+        <translation>大小:</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Show detail debug logs</source>
-        <translation type="unfinished"></translation>
+        <translation>顯示詳細調試器日誌</translation>
     </message>
     <message>
         <location line="+99"/>
         <source>Show CPU Window when signal received</source>
-        <translation type="unfinished"></translation>
+        <translation>程式收到訊號停止時打開CPU視窗</translation>
     </message>
     <message>
         <location line="-18"/>
         <source>CPU Window</source>
-        <translation type="unfinished"></translation>
+        <translation>CPU資訊視窗</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>Disassembly Coding Style:</source>
-        <translation type="unfinished"></translation>
+        <translation>反彙編程式碼樣式</translation>
     </message>
     <message>
         <location line="+41"/>
         <source>Intel</source>
-        <translation type="unfinished"></translation>
+        <translation>Intel</translation>
     </message>
     <message>
         <location line="-10"/>
         <source>AT&amp;&amp;T</source>
-        <translation type="unfinished"></translation>
+        <translation>AT&amp;&amp;T</translation>
     </message>
     <message>
         <location line="-53"/>
         <source>Show disassembly code in blend mode</source>
-        <translation type="unfinished"></translation>
+        <translation>以混合模式顯示反彙編程式碼</translation>
     </message>
     <message>
         <location line="-96"/>
         <source>Memory View</source>
-        <translation type="unfinished"></translation>
+        <translation>記憶體視圖</translation>
     </message>
     <message>
         <location line="-330"/>
         <source>Autosave watches</source>
-        <translation type="unfinished"></translation>
+        <translation>自動保存監視</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Max number of array elements displayed</source>
-        <translation type="unfinished"></translation>
+        <translation>最多顯示多少個數組元素</translation>
     </message>
     <message>
         <location line="+129"/>
         <source>Skip header files when step into</source>
-        <translation type="unfinished"></translation>
+        <translation>在單步進入時跳過下列標頭檔</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>System library</source>
-        <translation type="unfinished"></translation>
+        <translation>系統庫</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Project library</source>
-        <translation type="unfinished"></translation>
+        <translation>項目庫</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Custom library</source>
-        <translation type="unfinished"></translation>
+        <translation>自定義庫</translation>
     </message>
     <message>
         <location line="+165"/>
         <source>Rows</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Columns</source>
-        <translation type="unfinished"></translation>
+        <translation>列</translation>
     </message>
     <message>
         <location line="-301"/>
         <source>Max  characters of a string displayed</source>
-        <translation type="unfinished"></translation>
+        <translation>字串最多顯示多少字元</translation>
     </message>
 </context>
 <context>
@@ -1106,102 +1110,102 @@
     <message>
         <location filename="../debugger/debugger.cpp" line="-1174"/>
         <source>No compiler set</source>
-        <translation type="unfinished"></translation>
+        <translation>無編譯器設定</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>No compiler set is configured.</source>
-        <translation type="unfinished"></translation>
+        <translation>沒有配寘編譯器設定。</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Can&apos;t start debugging.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法啟動調試器</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Debugger not exists</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到調試器</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>GDB Server path error</source>
-        <translation type="unfinished"></translation>
+        <translation>gdb server路徑錯誤</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>GDB Server&apos;s path &quot;%1&quot; contains non-ascii characters.</source>
-        <translation type="unfinished"></translation>
+        <translation>gdb server的路徑&quot;%1&quot;包含中文或者全型字元</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This prevents it from executing.</source>
-        <translation type="unfinished"></translation>
+        <translation>這會導致調試器無法啟動。</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>GDB Server not exists</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到gdb server</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Can&apos;&apos;t find gdb server in : &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法在&quot;%1&quot;找到gdb server</translation>
     </message>
     <message>
         <location line="+441"/>
         <source>Execute to evaluate</source>
-        <translation type="unfinished"></translation>
+        <translation>執行以求值</translation>
     </message>
     <message>
         <location line="+408"/>
         <source>Compile</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Source file is more recent than executable.</source>
-        <translation type="unfinished"></translation>
+        <translation>原始檔案比程式檔案新。</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Recompile?</source>
-        <translation type="unfinished"></translation>
+        <translation>重新編譯？</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>Signal &quot;%1&quot; Received: </source>
-        <translation type="unfinished"></translation>
+        <translation>收到訊號&quot;%1&quot;:</translation>
     </message>
     <message>
         <location line="-130"/>
         <source>Save file &apos;%1&apos; failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>保存檔案&apos;%1&apos;失敗。</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Can&apos;t open file &apos;%1&apos; for write.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入檔案&apos;%1&apos;.</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Error in json file &apos;%1&apos;:%2 : %3</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON檔案&apos;%1&apos;:%2中存在錯誤：%3</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取檔案&apos;%1&apos;.</translation>
     </message>
     <message>
         <location line="-840"/>
         <source>Can&apos;&apos;t find debugger (gdb) in : &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到gdb程式&quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>請檢查編譯器設定中的“程式”頁。</translation>
     </message>
 </context>
 <context>
@@ -1211,86 +1215,86 @@
         <location line="+70"/>
         <location line="+29"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤</translation>
     </message>
     <message>
         <location line="-63"/>
         <source>Save As</source>
-        <translation type="unfinished"></translation>
+        <translation>另存為</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>File %1 already opened!</source>
-        <translation type="unfinished"></translation>
+        <translation>檔案%1已經被打開！</translation>
     </message>
     <message>
         <location line="+2916"/>
         <source>Print Document</source>
-        <translation type="unfinished"></translation>
+        <translation>列印文檔</translation>
     </message>
     <message>
         <location line="+750"/>
         <location line="+25"/>
         <location line="+46"/>
         <source>Ctrl+click for more info</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+按一下以獲取更多資訊</translation>
     </message>
     <message>
         <location line="+929"/>
         <source>astyle not found</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到astyle程式</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../settingsdialog/formattergeneralwidget.cpp" line="+331"/>
         <source>Can&apos;t find astyle in &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到astyle程式&quot;%1&quot;.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Reformatting content using astyle...</source>
-        <translation type="unfinished"></translation>
+        <translation>astyle 重新排版程式碼…</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>- Astyle: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>- Astyle: %1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>- Command: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>- 命令：%1</translation>
     </message>
     <message>
         <location line="+168"/>
         <source>Break point condition</source>
-        <translation type="unfinished"></translation>
+        <translation>中斷點條件</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Enter the condition of the breakpoint:</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入當前中斷點的生效條件:</translation>
     </message>
     <message>
         <location line="+260"/>
         <source>Readonly</source>
-        <translation type="unfinished"></translation>
+        <translation>只讀</translation>
     </message>
     <message>
         <location line="-5435"/>
         <location line="+506"/>
         <source>Error Load File</source>
-        <translation type="unfinished"></translation>
+        <translation>載入檔案錯誤</translation>
     </message>
     <message>
         <location line="+1560"/>
         <source>hex: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>16進制：%1</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>dec: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>十進位：%1</translation>
     </message>
 </context>
 <context>
@@ -1298,79 +1302,79 @@
     <message>
         <location filename="../settingsdialog/editorautosavewidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Enable auto save</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用自動保存</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>Time interval:</source>
-        <translation type="unfinished"></translation>
+        <translation>時間間隔</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>分鐘</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Objects to save</source>
-        <translation type="unfinished"></translation>
+        <translation>保存對象</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Current File</source>
-        <translation type="unfinished"></translation>
+        <translation>當前檔案</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>All files opened</source>
-        <translation type="unfinished"></translation>
+        <translation>所有打開的檔案</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Project files</source>
-        <translation type="unfinished"></translation>
+        <translation>項目檔案</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Save strategy</source>
-        <translation type="unfinished"></translation>
+        <translation>保存策略</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Overwrite</source>
-        <translation type="unfinished"></translation>
+        <translation>自動覆蓋</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Append UNIX timestamp</source>
-        <translation type="unfinished"></translation>
+        <translation>添加Unix時間戳記</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Append formatted timestamp</source>
-        <translation type="unfinished"></translation>
+        <translation>添加格式化時間戳記</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Demo file name:</source>
-        <translation type="unfinished"></translation>
+        <translation>示例檔名</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editorautosavewidget.cpp" line="+38"/>
         <location line="+2"/>
         <location line="+4"/>
         <source>Demo file name: </source>
-        <translation type="unfinished"></translation>
+        <translation>示例檔名</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editorautosavewidget.ui" line="-127"/>
         <source>Auto backup editing contents</source>
-        <translation type="unfinished"></translation>
+        <translation>自動備份編輯內容</translation>
     </message>
 </context>
 <context>
@@ -1378,50 +1382,50 @@
     <message>
         <location filename="../settingsdialog/editorclipboardwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Copy with format as</source>
-        <translation type="unfinished"></translation>
+        <translation>帶格式複製為</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Copy &amp;&amp; Export As HTML</source>
-        <translation type="unfinished"></translation>
+        <translation>複製/匯出為HTML</translation>
     </message>
     <message>
         <location line="+9"/>
         <location line="+81"/>
         <source>Use background color</source>
-        <translation type="unfinished"></translation>
+        <translation>使用背景色</translation>
     </message>
     <message>
         <location line="-74"/>
         <location line="+81"/>
         <source>Use editor&apos;s color scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>使用編輯器的配色方案</translation>
     </message>
     <message>
         <location line="-74"/>
         <source>Copy with line number</source>
-        <translation type="unfinished"></translation>
+        <translation>複製行號</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Recalc line number</source>
-        <translation type="unfinished"></translation>
+        <translation>重新計算行號</translation>
     </message>
     <message>
         <location line="+22"/>
         <location line="+67"/>
         <source>Color scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>配色方案</translation>
     </message>
     <message>
         <location line="-38"/>
         <source>Export As RTF</source>
-        <translation type="unfinished"></translation>
+        <translation>匯出為RTF</translation>
     </message>
 </context>
 <context>
@@ -1429,102 +1433,102 @@
     <message>
         <location filename="../settingsdialog/editorcodecompletionwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Enable code competion</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用程式碼補全</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Minimum id length to show completion </source>
-        <translation type="unfinished"></translation>
+        <translation>顯示程式碼補全所需的識別字最短長度</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Clear all parsed symbols when editor is hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>清除不活動編輯器中的符號錶（大幅减少記憶體佔用）</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show completion suggestions while typing</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入時顯示補全提示</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Engine options</source>
-        <translation type="unfinished"></translation>
+        <translation>引擎選項</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Scan local header files</source>
-        <translation type="unfinished"></translation>
+        <translation>掃描本地標頭檔</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Scan system header files</source>
-        <translation type="unfinished"></translation>
+        <translation>掃描系統標頭檔</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Show keywords in suggestions</source>
-        <translation type="unfinished"></translation>
+        <translation>提示C/C++關鍵字</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Show code snippets in suggestions</source>
-        <translation type="unfinished"></translation>
+        <translation>提示用戶自定義程式碼段</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Append () when complete functions</source>
-        <translation type="unfinished"></translation>
+        <translation>補全函數時自動添加()</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Ignore case when search suggestions</source>
-        <translation type="unfinished"></translation>
+        <translation>查找提示時忽略大小寫</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Prefer local symbols</source>
-        <translation type="unfinished"></translation>
+        <translation>優先提示局部作用域中的符號</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Hide symbols start with underscore</source>
-        <translation type="unfinished"></translation>
+        <translation>隱藏以下劃線開頭的符號</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Hide symbols start with two underscores</source>
-        <translation type="unfinished"></translation>
+        <translation>隱藏以兩個底線開頭的符號</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Prefer symbols mostly used</source>
-        <translation type="unfinished"></translation>
+        <translation>優先提示經常使用的符號</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Clear usage data</source>
-        <translation type="unfinished"></translation>
+        <translation>清除使用數據</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Completion suggestion window width:</source>
-        <translation type="unfinished"></translation>
+        <translation>補全提示視窗寬度：</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Completion suggestion window height:</source>
-        <translation type="unfinished"></translation>
+        <translation>補全提示視窗高度：</translation>
     </message>
     <message>
         <location line="-183"/>
         <source>Editors share one code parser</source>
-        <translation type="unfinished"></translation>
+        <translation>編輯器共亯同一個代碼分析器</translation>
     </message>
 </context>
 <context>
@@ -1532,87 +1536,87 @@
     <message>
         <location filename="../settingsdialog/editorcolorschemewidget.ui" line="+20"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>Scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>配色方案</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation>...</translation>
     </message>
     <message>
         <location line="+134"/>
         <source>Background:</source>
-        <translation type="unfinished"></translation>
+        <translation>背景色</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Foreground:</source>
-        <translation type="unfinished"></translation>
+        <translation>前景色</translation>
     </message>
     <message>
         <location line="+70"/>
         <source>Font Styles</source>
-        <translation type="unfinished"></translation>
+        <translation>字體樣式</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Bold</source>
-        <translation type="unfinished"></translation>
+        <translation>加粗</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Italic</source>
-        <translation type="unfinished"></translation>
+        <translation>斜體</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Strikeout</source>
-        <translation type="unfinished"></translation>
+        <translation>删除線</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Underlined</source>
-        <translation type="unfinished"></translation>
+        <translation>底線</translation>
     </message>
     <message>
         <location line="+57"/>
         <source>Rainbow parenthesis</source>
-        <translation type="unfinished"></translation>
+        <translation>彩虹括弧</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Duplicate...</source>
-        <translation type="unfinished"></translation>
+        <translation>複製...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Rename...</source>
-        <translation type="unfinished"></translation>
+        <translation>重命名...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Restore to Default</source>
-        <translation type="unfinished"></translation>
+        <translation>删除自定義修改</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Import Scheme...</source>
-        <translation type="unfinished"></translation>
+        <translation>導入配色...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Export...</source>
-        <translation type="unfinished"></translation>
+        <translation>匯出...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Delete...</source>
-        <translation type="unfinished"></translation>
+        <translation>删除...</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+344"/>
@@ -1624,48 +1628,48 @@
         <location line="+15"/>
         <location line="+23"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤</translation>
     </message>
     <message>
         <location line="-101"/>
         <source>Open</source>
-        <translation type="unfinished"></translation>
+        <translation>打開</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+71"/>
         <source>Color Scheme Files (*.scheme)</source>
-        <translation type="unfinished"></translation>
+        <translation>配色方案檔案 (*.scheme)</translation>
     </message>
     <message>
         <location line="-60"/>
         <source>&apos;%1&apos; is not a valid name for color scheme file.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos;不是合法的配色方案檔名。</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>New scheme name</source>
-        <translation type="unfinished"></translation>
+        <translation>新方案名</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>&apos;%1&apos; is not a valid scheme name!</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos;不是合法的配色方案名！</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>保存</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Confirm Delete Scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>確認删除方案</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Scheme &apos;%1&apos; will be deleted!&lt;br /&gt;Do you really want to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>配色方案&apos;%1&apos;將會被删除！&lt;br /&gt;您確認要繼續嗎？</translation>
     </message>
 </context>
 <context>
@@ -1673,12 +1677,12 @@
     <message>
         <location filename="../widgets/editorfontdialog.ui" line="+14"/>
         <source>Choose Font</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇字體</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Show only monospaced fonts</source>
-        <translation type="unfinished"></translation>
+        <translation>只顯示等寬字體</translation>
     </message>
 </context>
 <context>
@@ -1686,166 +1690,166 @@
     <message>
         <location filename="../settingsdialog/editorfontwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+521"/>
         <source>Font:</source>
-        <translation type="unfinished"></translation>
+        <translation>字體:</translation>
     </message>
     <message>
         <location line="+95"/>
         <source>Show only monospaced fonts</source>
-        <translation type="unfinished"></translation>
+        <translation>只顯示等寬字體</translation>
     </message>
     <message>
         <location line="-440"/>
         <location line="+352"/>
         <source>Size:</source>
-        <translation type="unfinished"></translation>
+        <translation>大小:</translation>
     </message>
     <message>
         <location line="-522"/>
         <source>Font</source>
-        <translation type="unfinished"></translation>
+        <translation>字體</translation>
     </message>
     <message>
         <location line="+84"/>
         <location line="+3"/>
         <source>Move to top</source>
-        <translation type="unfinished"></translation>
+        <translation>移至頂部</translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+3"/>
         <source>Move to bottom</source>
-        <translation type="unfinished"></translation>
+        <translation>移至底部</translation>
     </message>
     <message>
         <location line="+205"/>
         <source>Gutter</source>
-        <translation type="unfinished"></translation>
+        <translation>裝訂線</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Gutter is visible</source>
-        <translation type="unfinished"></translation>
+        <translation>顯示裝訂線區域</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Left Offset</source>
-        <translation type="unfinished"></translation>
+        <translation>左側留白</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>Right Offset</source>
-        <translation type="unfinished"></translation>
+        <translation>右側留白</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>Show Line Numbers</source>
-        <translation type="unfinished"></translation>
+        <translation>顯示行號</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>Add leading zeros to line numbers</source>
-        <translation type="unfinished"></translation>
+        <translation>在行號前補齊前導零</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Line numbers starts at zero</source>
-        <translation type="unfinished"></translation>
+        <translation>第一行從0開始編號</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Auto calculate the digit count of line number</source>
-        <translation type="unfinished"></translation>
+        <translation>自動計算行號位數</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Digit count</source>
-        <translation type="unfinished"></translation>
+        <translation>行號位數</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>Use Custom Font</source>
-        <translation type="unfinished"></translation>
+        <translation>使用自定義字體</translation>
     </message>
     <message>
         <location line="-358"/>
         <source>Enable ligatures support</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用連字(ligratures)功能</translation>
     </message>
     <message>
         <location line="-112"/>
         <location line="+3"/>
         <source>Modify</source>
-        <translation type="unfinished"></translation>
+        <translation>修改</translation>
     </message>
     <message>
         <location line="+139"/>
         <source>Line Spacing:</source>
-        <translation type="unfinished"></translation>
+        <translation>行高：</translation>
     </message>
     <message>
         <location line="+102"/>
         <source>Show whitespaces</source>
-        <translation type="unfinished"></translation>
+        <translation>顯示空白字元</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Leading</source>
-        <translation type="unfinished"></translation>
+        <translation>行首</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Inner</source>
-        <translation type="unfinished"></translation>
+        <translation>中間</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Trailing</source>
-        <translation type="unfinished"></translation>
+        <translation>行尾</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Line break</source>
-        <translation type="unfinished"></translation>
+        <translation>分行符號</translation>
     </message>
     <message>
         <location line="-152"/>
         <source>Force fixed width</source>
-        <translation type="unfinished"></translation>
+        <translation>強制等寬顯示</translation>
     </message>
     <message>
         <location line="-99"/>
         <location line="+3"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>添加</translation>
     </message>
     <message>
         <location line="-33"/>
         <location line="+3"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location line="+60"/>
         <location line="+3"/>
         <source>Move up</source>
-        <translation type="unfinished"></translation>
+        <translation>上移</translation>
     </message>
     <message>
         <location line="-13"/>
         <location line="+3"/>
         <source>Move down</source>
-        <translation type="unfinished"></translation>
+        <translation>下移</translation>
     </message>
     <message>
         <location line="-36"/>
         <location line="+3"/>
         <source>Reset</source>
-        <translation type="unfinished"></translation>
+        <translation>恢復默認</translation>
     </message>
 </context>
 <context>
@@ -1853,22 +1857,22 @@
     <message>
         <location filename="../settingsdialog/editorgeneralwidget.cpp" line="+30"/>
         <source>Vertical Line</source>
-        <translation type="unfinished"></translation>
+        <translation>竪線</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Horizontal Line</source>
-        <translation type="unfinished"></translation>
+        <translation>橫線</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Half Block</source>
-        <translation type="unfinished"></translation>
+        <translation>半個方塊</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Block</source>
-        <translation type="unfinished"></translation>
+        <translation>方塊</translation>
     </message>
 </context>
 <context>
@@ -1876,82 +1880,82 @@
     <message>
         <location filename="../settingsdialog/editormiscwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Open system header files in read only mode</source>
-        <translation type="unfinished"></translation>
+        <translation>以只讀管道打開系統標頭檔</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Auto load files being open when Red Panda C++ last exited.</source>
-        <translation type="unfinished"></translation>
+        <translation>自動打開上次退出時打開的檔案</translation>
     </message>
     <message>
         <location line="+93"/>
         <source>Auto detect encoding when openning files</source>
-        <translation type="unfinished"></translation>
+        <translation>在打開文件時自動探測檔案編碼</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Default file encoding</source>
-        <translation type="unfinished"></translation>
+        <translation>默認檔案編碼</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Default file type</source>
-        <translation type="unfinished"></translation>
+        <translation>默認檔案類型</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>C++ files</source>
-        <translation type="unfinished"></translation>
+        <translation>C++語言檔案</translation>
     </message>
     <message>
         <location line="-7"/>
         <source>C files</source>
-        <translation type="unfinished"></translation>
+        <translation>C語言檔案</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editormiscwidget.cpp" line="+102"/>
         <source>System Default(%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>系統默認(%1)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>UTF-8</source>
-        <translation type="unfinished"></translation>
+        <translation>UTF-8</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>UTF-8 BOM</source>
-        <translation type="unfinished"></translation>
+        <translation>UTF-8 BOM</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editormiscwidget.ui" line="-127"/>
         <source>Parse TODOs</source>
-        <translation type="unfinished"></translation>
+        <translation>查找程式碼中的TODO注釋（含todo或者fixme的注釋）</translation>
     </message>
     <message>
         <location line="+43"/>
         <source>Action before saving files</source>
-        <translation type="unfinished"></translation>
+        <translation>保存前動作</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>無</translation>
     </message>
     <message>
         <location line="-14"/>
         <source>Reformat</source>
-        <translation type="unfinished"></translation>
+        <translation>重新排版</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Trim trailing spaces</source>
-        <translation type="unfinished"></translation>
+        <translation>删除行尾空格</translation>
     </message>
 </context>
 <context>
@@ -1959,37 +1963,37 @@
     <message>
         <location filename="../settingsdialog/editorsnippetwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Code Snippets</source>
-        <translation type="unfinished"></translation>
+        <translation>程式碼範本</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>添加</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>New C File Template</source>
-        <translation type="unfinished"></translation>
+        <translation>C檔案範本</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>New C++ File Template</source>
-        <translation type="unfinished"></translation>
+        <translation>C++檔案範本</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>New GAS File Template</source>
-        <translation type="unfinished"></translation>
+        <translation>GNU彙編檔案範本</translation>
     </message>
 </context>
 <context>
