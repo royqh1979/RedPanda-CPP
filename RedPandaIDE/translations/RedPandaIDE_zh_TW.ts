@@ -1165,7 +1165,7 @@
     <message>
         <location line="+1"/>
         <source>Source file is more recent than executable.</source>
-        <translation>原始檔案比程式檔案新。</translation>
+        <translation type="unfinished">原始碼檔比程式檔案新。</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -3453,92 +3453,92 @@
     <message>
         <location filename="../vcs/gitbranchdialog.ui" line="+14"/>
         <source>Branch/Switch</source>
-        <translation type="unfinished"></translation>
+        <translation>分支切換</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Switch To</source>
-        <translation type="unfinished"></translation>
+        <translation>切換到</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>分支</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Options</source>
-        <translation type="unfinished"></translation>
+        <translation>選項</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Overwrite working tree changed(force)</source>
-        <translation type="unfinished"></translation>
+        <translation>強制覆蓋工作樹（working tree）變化（--force）</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Track</source>
-        <translation type="unfinished"></translation>
+        <translation>跟踪（Track）</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Pass --track to git</source>
-        <translation type="unfinished"></translation>
+        <translation>指定--track選項</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Force Track</source>
-        <translation type="unfinished"></translation>
+        <translation>強制跟踪</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Pass --no-track to git</source>
-        <translation type="unfinished"></translation>
+        <translation>指定--no-track選項</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Force No Track</source>
-        <translation type="unfinished"></translation>
+        <translation>強制不跟踪</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Neither --track nor --no-track is passed to git</source>
-        <translation type="unfinished"></translation>
+        <translation>不指定--track和--no-track選項</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Not Specifiied</source>
-        <translation type="unfinished"></translation>
+        <translation>不指定</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Create New Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>創建新分支</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Merge between original branch, working tree contents and the branch to switch to</source>
-        <translation type="unfinished"></translation>
+        <translation>合併源分支、要切換的分支和當前工作樹內容</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Merge</source>
-        <translation type="unfinished"></translation>
+        <translation>合併（--merge）</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Force Creation (Reset branch if exists)</source>
-        <translation type="unfinished"></translation>
+        <translation>強制創建，如果指定分支已存在則將其重置（Reset）（--force-creation）</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>取消</translation>
     </message>
 </context>
 <context>
@@ -3546,7 +3546,7 @@
     <message>
         <location filename="../vcs/gitfetchdialog.ui" line="+13"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>對話框</translation>
     </message>
 </context>
 <context>
@@ -3554,52 +3554,52 @@
     <message>
         <location filename="../vcs/gitlogdialog.ui" line="+14"/>
         <source>Git Log</source>
-        <translation type="unfinished"></translation>
+        <translation>Git版本日誌</translation>
     </message>
     <message>
         <location line="+56"/>
         <source>Close</source>
-        <translation type="unfinished"></translation>
+        <translation>關閉</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Reset</source>
-        <translation type="unfinished"></translation>
+        <translation>回滾(Reset)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Revert</source>
-        <translation type="unfinished"></translation>
+        <translation>撤銷(Revert)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>branch</source>
-        <translation type="unfinished"></translation>
+        <translation>分支(branch)</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Tag</source>
-        <translation type="unfinished"></translation>
+        <translation>標籤(Tag)</translation>
     </message>
     <message>
         <location filename="../vcs/gitlogdialog.cpp" line="+134"/>
         <source>Reset &quot;%1&quot; to this...</source>
-        <translation type="unfinished"></translation>
+        <translation>將&quot;%1&quot;回滾(Reset)到這裡...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Revert &quot;%1&quot; to this...</source>
-        <translation type="unfinished"></translation>
+        <translation>將&quot;%1&quot;撤銷(Revert)到這裡...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Create Branch at this version...</source>
-        <translation type="unfinished"></translation>
+        <translation>在此版本創建分支(Branch)...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Create Tag at this version...</source>
-        <translation type="unfinished"></translation>
+        <translation>在此版本創建標籤(Tag)...</translation>
     </message>
 </context>
 <context>
@@ -3607,17 +3607,17 @@
     <message>
         <location line="-58"/>
         <source>Date</source>
-        <translation type="unfinished"></translation>
+        <translation>日期</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Author</source>
-        <translation type="unfinished"></translation>
+        <translation>作者</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Title</source>
-        <translation type="unfinished"></translation>
+        <translation>標題</translation>
     </message>
 </context>
 <context>
@@ -3625,7 +3625,7 @@
     <message>
         <location filename="../vcs/gitmanager.cpp" line="+18"/>
         <source>Folder &quot;%1&quot; already has a repository!</source>
-        <translation type="unfinished"></translation>
+        <translation>資料夾&quot;%1&quot;中已存在倉庫！</translation>
     </message>
 </context>
 <context>
@@ -3633,57 +3633,57 @@
     <message>
         <location filename="../vcs/gitmergedialog.ui" line="+14"/>
         <source>Merge</source>
-        <translation type="unfinished"></translation>
+        <translation>合併</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>From</source>
-        <translation type="unfinished"></translation>
+        <translation>從</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>分支</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Option</source>
-        <translation type="unfinished"></translation>
+        <translation>選項</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>No Commit</source>
-        <translation type="unfinished"></translation>
+        <translation>不提交(--no-commit)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Squash</source>
-        <translation type="unfinished"></translation>
+        <translation>粉碎(--squash)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>No Fast Forward</source>
-        <translation type="unfinished"></translation>
+        <translation>不快速前進(--no-fast-forward)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Fast Forward Only</source>
-        <translation type="unfinished"></translation>
+        <translation>只快速前進(--fast-forward-only)</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Merge Message</source>
-        <translation type="unfinished"></translation>
+        <translation>合併資訊</translation>
     </message>
     <message>
         <location line="+46"/>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>取消</translation>
     </message>
 </context>
 <context>
@@ -3691,7 +3691,7 @@
     <message>
         <location filename="../vcs/gitpulldialog.ui" line="+13"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>對話框</translation>
     </message>
 </context>
 <context>
@@ -3699,7 +3699,7 @@
     <message>
         <location filename="../vcs/gitpushdialog.ui" line="+13"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>對話框</translation>
     </message>
 </context>
 <context>
@@ -3707,12 +3707,12 @@
     <message>
         <location filename="../vcs/gitremotedialog.ui" line="+14"/>
         <source>Git Remote</source>
-        <translation type="unfinished"></translation>
+        <translation>Git遠程倉庫</translation>
     </message>
     <message>
         <location line="+79"/>
         <source>Add Remote</source>
-        <translation type="unfinished"></translation>
+        <translation>添加遠程倉庫</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3721,47 +3721,47 @@
         <location line="+16"/>
         <location line="+40"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>添加</translation>
     </message>
     <message>
         <location line="-110"/>
         <source>Remove Remote</source>
-        <translation type="unfinished"></translation>
+        <translation>删除遠程倉庫</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Detail</source>
-        <translation type="unfinished"></translation>
+        <translation>遠程倉庫詳情</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>名稱</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>URL</source>
-        <translation type="unfinished"></translation>
+        <translation>URL</translation>
     </message>
     <message>
         <location line="+96"/>
         <source>Close</source>
-        <translation type="unfinished"></translation>
+        <translation>關閉</translation>
     </message>
     <message>
         <location filename="../vcs/gitremotedialog.cpp" line="-99"/>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Update</source>
-        <translation type="unfinished"></translation>
+        <translation>更新</translation>
     </message>
 </context>
 <context>
@@ -3769,73 +3769,73 @@
     <message>
         <location filename="../vcs/gitresetdialog.ui" line="+14"/>
         <source>Reset</source>
-        <translation type="unfinished"></translation>
+        <translation>回滾(Reset)</translation>
     </message>
     <message>
         <location line="+6"/>
         <location filename="../vcs/gitresetdialog.cpp" line="+32"/>
         <source>Reset current branch &quot;%1&quot; to</source>
-        <translation type="unfinished"></translation>
+        <translation>將當前分支&quot;%1&quot;回滾到</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Branch</source>
-        <translation type="unfinished"></translation>
+        <translation>分支(branch)</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>Tag</source>
-        <translation type="unfinished"></translation>
+        <translation>標籤(Tag)</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Commit</source>
-        <translation type="unfinished"></translation>
+        <translation>提交(Commit)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Reset Type</source>
-        <translation type="unfinished"></translation>
+        <translation>回滾操作類型</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Leave working tree and index untouched&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保持當前工作區內容和索引不變&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reset working tree and index (discarding local changes)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;回滾工作區內容和索引(丢弃所有本地修改)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Soft</source>
-        <translation type="unfinished"></translation>
+        <translation>Soft</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Hard</source>
-        <translation type="unfinished"></translation>
+        <translation>Hard</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Leave working tree untouched, reset index</source>
-        <translation type="unfinished"></translation>
+        <translation>保持工作区内容不变，回滚索引</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Mixed</source>
-        <translation type="unfinished"></translation>
+        <translation>Mixed</translation>
     </message>
     <message>
         <location line="+57"/>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>取消</translation>
     </message>
 </context>
 <context>
@@ -3843,32 +3843,32 @@
     <message>
         <location filename="../vcs/gituserconfigdialog.ui" line="+14"/>
         <source>Fill User Info</source>
-        <translation type="unfinished"></translation>
+        <translation>填寫用戶資訊</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>User Email:</source>
-        <translation type="unfinished"></translation>
+        <translation>用戶郵箱</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>取消</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>User Name:</source>
-        <translation type="unfinished"></translation>
+        <translation>用戶姓名</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Git needs the following info to commit：</source>
-        <translation type="unfinished"></translation>
+        <translation>Git需要下列資訊進行提交：</translation>
     </message>
 </context>
 <context>
@@ -3876,12 +3876,12 @@
     <message>
         <location filename="../widgets/infomessagebox.ui" line="+14"/>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation>消息</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>Ok</source>
-        <translation type="unfinished"></translation>
+        <translation>確定</translation>
     </message>
 </context>
 <context>
@@ -3889,22 +3889,22 @@
     <message>
         <location filename="../widgets/issuestable.cpp" line="+259"/>
         <source>Filename</source>
-        <translation type="unfinished"></translation>
+        <translation>檔名</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Line</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Col</source>
-        <translation type="unfinished"></translation>
+        <translation>列</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Description</source>
-        <translation type="unfinished"></translation>
+        <translation>描述</translation>
     </message>
 </context>
 <context>
@@ -3912,22 +3912,22 @@
     <message>
         <location line="-202"/>
         <source>Filename</source>
-        <translation type="unfinished"></translation>
+        <translation>檔名</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Line</source>
-        <translation type="unfinished"></translation>
+        <translation>行</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Col</source>
-        <translation type="unfinished"></translation>
+        <translation>列</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Description</source>
-        <translation type="unfinished"></translation>
+        <translation>描述</translation>
     </message>
 </context>
 <context>
@@ -3935,37 +3935,37 @@
     <message>
         <location filename="../settingsdialog/languageasmgenerationwidget.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>表單</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Don&apos;t generate debug directives</source>
-        <translation type="unfinished"></translation>
+        <translation>不生成調試指令</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Don&apos;t generate SEH directives </source>
-        <translation type="unfinished"></translation>
+        <translation>不生成SEH異常處理指令</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>AT&amp;&amp;T</source>
-        <translation type="unfinished"></translation>
+        <translation>AT&amp;&amp;T</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Intel</source>
-        <translation type="unfinished"></translation>
+        <translation>Intel</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Instruction syntax:</source>
-        <translation type="unfinished"></translation>
+        <translation>彙編指令的語法：</translation>
     </message>
     <message>
         <location filename="../settingsdialog/languageasmgenerationwidget.cpp" line="+11"/>
         <source>Don&apos;t generate cli directives.</source>
-        <translation type="unfinished"></translation>
+        <translation>不生成cli指令。</translation>
     </message>
 </context>
 <context>
@@ -3973,92 +3973,92 @@
     <message>
         <location filename="../widgets/macroinfomodel.cpp" line="+21"/>
         <source>The default directory</source>
-        <translation type="unfinished"></translation>
+        <translation>默認資料夾</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Path to the Red Panda C++&apos;s executable file.</source>
-        <translation type="unfinished"></translation>
+        <translation>小熊猫C++可執行文件的完整路徑</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Version of the Red Panda C++</source>
-        <translation type="unfinished"></translation>
+        <translation>小熊猫C++的版本</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>PATH to the Red Panda C++&apos;s installation folder.</source>
-        <translation type="unfinished"></translation>
+        <translation>小熊猫C++的安裝資料夾</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Current date</source>
-        <translation type="unfinished"></translation>
+        <translation>當前日期</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Current date and time</source>
-        <translation type="unfinished"></translation>
+        <translation>當前時間和日期</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The first include directory of the working compiler set.</source>
-        <translation type="unfinished"></translation>
+        <translation>當前編譯器設定的第一個include目錄</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The first lib directory of the working compiler set.</source>
-        <translation type="unfinished"></translation>
+        <translation>當前編譯器設定的第一個lib目錄</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The compiled filename</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯得到的檔名</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Full path to the compiled file</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯得到的檔案的完整路徑</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Filename of the current source file</source>
-        <translation type="unfinished"></translation>
+        <translation>當前原始碼檔名</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Full path to the current source file</source>
-        <translation type="unfinished"></translation>
+        <translation>當前原始碼檔路徑</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Path to the current source file&apos;s parent folder</source>
-        <translation type="unfinished"></translation>
+        <translation>當前原始碼檔所在資料夾</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Word at the cursor in the active editor</source>
-        <translation type="unfinished"></translation>
+        <translation>當前編輯器中光標處的單詞</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Name of the current project</source>
-        <translation type="unfinished"></translation>
+        <translation>當前項目名稱</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Full path to the current project file</source>
-        <translation type="unfinished"></translation>
+        <translation>項目檔案完整路徑</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Name of the current project file</source>
-        <translation type="unfinished"></translation>
+        <translation>當前項目檔案的檔名</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Path to the current project&apos;s folder</source>
-        <translation type="unfinished"></translation>
+        <translation>項目資料夾</translation>
     </message>
 </context>
 <context>
