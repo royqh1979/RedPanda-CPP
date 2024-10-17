@@ -4268,6 +4268,16 @@ void Settings::Executor::setEnableVirualTerminalSequence(bool newEnableVirualTer
     mEnableVirualTerminalSequence = newEnableVirualTerminalSequence;
 }
 
+qint64 Settings::Executor::maxCaseInputFileSize() const
+{
+    return mMaxCaseInputFileSize;
+}
+
+void Settings::Executor::setMaxCaseInputFileSize(qint64 newMaxCaseInputFileSize)
+{
+    mMaxCaseInputFileSize = newMaxCaseInputFileSize;
+}
+
 bool Settings::Executor::convertHTMLToTextForInput() const
 {
     return mConvertHTMLToTextForInput;
@@ -4354,6 +4364,7 @@ void Settings::Executor::doSave()
     saveValue("case_memory_limit",mCaseMemoryLimit);
     remove("case_timeout");
     saveValue("enable_case_limit", mEnableCaseLimit);
+    saveValue("case_max_input_file_size",mMaxCaseInputFileSize);
 }
 
 bool Settings::Executor::pauseConsole() const
@@ -4401,6 +4412,8 @@ void Settings::Executor::doLoad()
     if (boolValue("enable_time_limit", true)) {
         mEnableCaseLimit=true;
     }
+
+    mMaxCaseInputFileSize = uintValue("case_max_input_file_size", 4); //4mb
 }
 
 

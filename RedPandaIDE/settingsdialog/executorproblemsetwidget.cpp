@@ -53,6 +53,7 @@ void ExecutorProblemSetWidget::doLoad()
 
     ui->spinCaseTimeout->setValue(pSettings->executor().caseTimeout());
     ui->spinMemoryLimit->setValue(pSettings->executor().caseMemoryLimit());
+    ui->spinMaxCaseInputFileSize->setValue(pSettings->executor().maxCaseInputFileSize());
 }
 
 void ExecutorProblemSetWidget::doSave()
@@ -70,7 +71,7 @@ void ExecutorProblemSetWidget::doSave()
     pSettings->executor().setEnableCaseLimit(ui->grpEnableTimeout->isChecked());
     pSettings->executor().setCaseTimeout(ui->spinCaseTimeout->value());
     pSettings->executor().setCaseMemoryLimit(ui->spinMemoryLimit->value());
-
+    pSettings->executor().setMaxCaseInputFileSize(ui->spinMaxCaseInputFileSize->value());
     pSettings->executor().save();
     pMainWindow->applySettings();
 }

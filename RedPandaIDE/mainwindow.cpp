@@ -4302,8 +4302,14 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     QModelIndex idx = current;
     if (previous.isValid()) {
         POJProblemCase problemCase = mOJProblemModel.getCase(previous.row());
-        problemCase->input = ui->txtProblemCaseInput->toPlainText();
-        problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
+        if (problemCase->inputFileName.isEmpty())
+            problemCase->input = ui->txtProblemCaseInput->toPlainText();
+        else
+            problemCase->input = QString();
+        if (problemCase->expectedOutputFileName.isEmpty())
+            problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
+        else
+            problemCase->expected = QString();
     }
     if (idx.isValid()) {
         POJProblemCase problemCase = mOJProblemModel.getCase(idx.row());
@@ -7596,9 +7602,19 @@ void MainWindow::newProjectUnitFile(const QString& suffix)
 void MainWindow::fillProblemCaseInputAndExpected(const POJProblemCase &problemCase)
 {
     ui->btnProblemCaseInputFileName->setEnabled(true);
-    if (fileExists(problemCase->inputFileName)) {
+    if (!problemCase->inputFileName.isEmpty()) {
         ui->txtProblemCaseInput->setReadOnly(true);
-        ui->txtProblemCaseInput->setPlainText(readFileToByteArray(problemCase->inputFileName));
+        if (fileExists(problemCase->inputFileName)) {
+            QFileInfo inputFileInfo{problemCase->inputFileName};
+            if (pSettings->executor().maxCaseInputFileSize() > 0
+                    && inputFileInfo.size() > pSettings->executor().maxCaseInputFileSize()*1024*1024) {
+                ui->txtProblemCaseInput->setPlainText(tr("Input Data File is too large to display!"));
+            } else {
+                ui->txtProblemCaseInput->setPlainText(readFileToByteArray(problemCase->inputFileName));
+            }
+        } else {
+            ui->txtProblemCaseInput->setPlainText(tr("File doesn't exist!"));
+        }
         ui->btnProblemCaseClearInputFileName->setVisible(true);
         ui->txtProblemCaseInputFileName->setText(extractFileName(problemCase->inputFileName));
         ui->txtProblemCaseInputFileName->setToolTip(problemCase->inputFileName);
@@ -7610,10 +7626,14 @@ void MainWindow::fillProblemCaseInputAndExpected(const POJProblemCase &problemCa
         ui->txtProblemCaseInputFileName->setToolTip("");
     }
     ui->btnProblemCaseExpectedOutputFileName->setEnabled(true);
-    if (fileExists(problemCase->expectedOutputFileName)) {
+    if (!problemCase->expectedOutputFileName.isEmpty()) {
         ui->txtProblemCaseExpected->setReadOnly(true);
         ui->txtProblemCaseExpected->clearAll();
-        ui->txtProblemCaseExpected->setPlainText(readFileToByteArray(problemCase->expectedOutputFileName));
+        if (fileExists(problemCase->expectedOutputFileName)) {
+            ui->txtProblemCaseExpected->setPlainText(readFileToByteArray(problemCase->expectedOutputFileName));
+        } else {
+            ui->txtProblemCaseInput->setPlainText(tr("File doesn't exist!"));
+        }
         ui->btnProblemCaseClearExpectedOutputFileName->setVisible(true);
         ui->txtProblemCaseExpectedOutputFileName->setText(extractFileName(problemCase->expectedOutputFileName));
         ui->txtProblemCaseExpectedOutputFileName->setToolTip(problemCase->inputFileName);

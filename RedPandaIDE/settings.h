@@ -956,6 +956,9 @@ public:
 
         bool enableVirualTerminalSequence() const;
         void setEnableVirualTerminalSequence(bool newEnableVirualTerminalSequence);
+        qint64 maxCaseInputFileSize() const;
+        void setMaxCaseInputFileSize(qint64 newMaxCaseInputFileSize);
+
     private:
         // general
         bool mPauseConsole;
@@ -981,6 +984,7 @@ public:
         bool mEnableCaseLimit;
         qulonglong mCaseTimeout; //ms
         qulonglong mCaseMemoryLimit; //kb
+        qint64 mMaxCaseInputFileSize; // mb
 
     protected:
         void doSave() override;

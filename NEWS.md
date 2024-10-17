@@ -14,6 +14,9 @@ Red Panda C++ Version 3.2
   - change: Copy/Export as html using less restrictive header.
   - enhancement: Better gcc info detection (by CyanoHao)
   - enhancement: Copy/Export as html with line numbers.
+  - enhancement: Ctrl+Drag/Drop to copy contents.
+  - enhancement: Don't display big input data file for problem cases. 
+  
 
 
 Red Panda C++ Version 3.1
