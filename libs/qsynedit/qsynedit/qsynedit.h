@@ -496,6 +496,7 @@ protected:
     void decPaintLock();
     SyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
     void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
+    bool dragging() const { return mDragging; }
 
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
@@ -641,7 +642,6 @@ private:
 
     QString getDisplayStringAtLine(int line) const;
 
-
 private slots:
     void onMaxLineWidthChanged();
     void updateHScrollBarLater();
@@ -751,6 +751,7 @@ private:
 
     PFormatter mFormatter;
     GlyphPostionsListCache mGlyphPostionCacheForInputMethod;
+    bool mDragging;
 
 friend class QSynEditPainter;
 
