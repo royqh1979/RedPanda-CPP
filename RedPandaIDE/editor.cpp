@@ -79,21 +79,22 @@ Editor::Editor(QWidget *parent, const QString& filename,
                   const QByteArray& encoding,
                   Project* pProject, bool isNew,
                   QTabWidget* parentPageControl):
-  QSynEdit{parent},
-  mInited{false},
-  mEncodingOption{encoding},
-  mFilename{filename},
-  mParentPageControl{parentPageControl},
-  mProject{pProject},
-  mIsNew{isNew},
-  mSyntaxErrorColor{Qt::red},
-  mSyntaxWarningColor{"orange"},
-  mLineCount{0},
-  mActiveBreakpointLine{-1},
-  mCurrentTipType{TipType::None},
-  mSaving{false},
-  mHoverModifiedLine{-1},
-  mWheelAccumulatedDelta{0}
+    QSynEdit{parent},
+    mInited{false},
+    mEncodingOption{encoding},
+    mFilename{filename},
+    mParentPageControl{parentPageControl},
+    mProject{pProject},
+    mIsNew{isNew},
+    mSyntaxErrorColor{Qt::red},
+    mSyntaxWarningColor{"orange"},
+    mLineCount{0},
+    mActiveBreakpointLine{-1},
+    mCurrentTipType{TipType::None},
+    mSaving{false},
+    mHoverModifiedLine{-1},
+    mWheelAccumulatedDelta{0},
+    mCtrlClicking{false}
 {
     mLastFocusOutTime = 0;
     mInited=false;
@@ -1168,9 +1169,7 @@ void Editor::keyReleaseEvent(QKeyEvent *event)
 
 void Editor::mouseMoveEvent(QMouseEvent *event)
 {
-    if(event->modifiers() == Qt::ControlModifier) {
-        cancelHint();
-
+    if(event->modifiers() == Qt::ControlModifier && event->buttons() == Qt::NoButton) {
         QSynedit::BufferCoord p;
         TipType reason = getTipType(event->pos(),p);
         if (reason == TipType::Preprocessor) {
@@ -1480,11 +1479,16 @@ bool Editor::event(QEvent *event)
     return QSynEdit::event(event);
 }
 
+static bool checkForCtrlClick(QMouseEvent *event, QCursor cursor) {
+    return ((event->modifiers() == Qt::ControlModifier)
+        && (event->button() == Qt::LeftButton)
+            && cursor == Qt::PointingHandCursor);
+}
 void Editor::mouseReleaseEvent(QMouseEvent *event)
 {
     // if ctrl+clicked
-    if ((event->modifiers() == Qt::ControlModifier)
-            && (event->button() == Qt::LeftButton)) {
+    if (mCtrlClicking
+        && checkForCtrlClick(event, cursor() )) {
         QSynedit::BufferCoord p;
         if (mParser && pointToCharLine(event->pos(),p)) {
             cancelHoverLink();
@@ -1504,6 +1508,13 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
         }
     }
     QSynedit::QSynEdit::mouseReleaseEvent(event);
+}
+
+void Editor::mousePressEvent(QMouseEvent *event)
+{
+    // if ctrl+clicked
+    mCtrlClicking = checkForCtrlClick(event, cursor());
+    QSynedit::QSynEdit::mousePressEvent(event);
 }
 
 void Editor::inputMethodEvent(QInputMethodEvent *event)
@@ -4088,9 +4099,9 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
         if (getTokenAttriAtRowCol(pos,s,attr)) {
             // Only allow Identifiers, Preprocessor directives, and selection
             if (attr) {
-                if (selAvail()) {
+                if (dragging()) {
                     // do not allow when dragging selection
-                    if (isPointInSelection(pos))
+                } else if (selAvail() && isPointInSelection(pos)) {
                         return TipType::Selection;
                 } else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
                     return TipType::Identifier;

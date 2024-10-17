@@ -382,6 +382,8 @@ private:
     QTimer mTooltipTimer;
     int mHoverModifiedLine;
     int mWheelAccumulatedDelta;
+    bool mCtrlClicking;
+
     QMap<QString,StatementKind> mIdentCache;
     qint64 mLastFocusOutTime;
 
@@ -424,6 +426,7 @@ protected:
     void keyReleaseEvent(QKeyEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
     void inputMethodEvent(QInputMethodEvent *) override;
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent *event) override;

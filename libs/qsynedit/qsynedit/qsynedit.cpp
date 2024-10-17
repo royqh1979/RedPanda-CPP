@@ -49,7 +49,8 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mEditingCount{0},
     mDropped{false},
     mWheelAccumulatedDeltaX{0},
-    mWheelAccumulatedDeltaY{0}
+    mWheelAccumulatedDeltaY{0},
+    mDragging{false}
 {
     mSyntaxer = std::make_shared<TextSyntaxer>();
     mCharWidth=1;
@@ -6285,6 +6286,7 @@ void QSynEdit::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->mimeData()->hasFormat("text/plain")) {
         event->acceptProposedAction();
+        mDragging = true;
         mDragCaretSave = caretXY();
         mDragSelBeginSave = blockBegin();
         mDragSelEndSave = blockEnd();
@@ -6390,6 +6392,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
     }
     endEditing();
     event->acceptProposedAction();
+    mDragging = false;
     mDropped = true;
     topPos = calcLineAlignedTopPos(topPos, false);
     setTopPos(topPos);
@@ -6421,6 +6424,7 @@ void QSynEdit::dragMoveEvent(QDragMoveEvent *event)
 
 void QSynEdit::dragLeaveEvent(QDragLeaveEvent *)
 {
+    mDragging = false;
     mDocument->deleteAt(mDocument->count()-1);
 //    setCaretXY(mDragCaretSave);
 //    setBlockBegin(mDragSelBeginSave);
