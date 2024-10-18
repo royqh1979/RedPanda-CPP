@@ -181,31 +181,19 @@ Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cp
 
 前置条件：
 
-0. macOS 10.13 或更高版本。
+0. 近期满足 [Qt 5](https://doc.qt.io/qt-5/macos.html) 或 [Qt 6](https://doc.qt.io/qt-6/macos.html) 要求的 macOS 版本。
 1. 安装 Xcode 命令行工具：
-   ```bash
+   ```zsh
    xcode-select --install
    ```
 2. 用 [Qt.io](https://www.qt.io/download-qt-installer-oss) 或[镜像站](https://mirrors.sjtug.sjtu.edu.cn/docs/qt)的在线安装器安装 Qt。
-   - 选中 Qt 库（“Qt” 组下的 “Qt 5.15.2” 小组，勾选 “macOS”）。
+   - 选中 Qt 库（“Qt” 组下的 “Qt 5.15.2” 或 “Qt 6.8.0” 小组，勾选 “macOS”）。
 
-构建：
+要构建此项目，执行下列命令之一：
 
-1. 设置相关变量：
-   ```bash
-   SRC_DIR="~/redpanda-src"
-   BUILD_DIR="~/redpanda-build"
-   INSTALL_DIR="~/redpanda-pkg"
-   ```
-2. 定位到构建目录：
-   ```bash
-   rm -rf "$BUILD_DIR" # 根据需要进行全新构建
-   mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
-   ```
-3. 配置、构建、安装：
-   ```bash
-   ~/Qt/5.15.2/clang_64/bin/qmake PREFIX="$INSTALL_DIR" "$SRC_DIR/Red_Panda_CPP.pro"
-   make -j$(sysctl -n hw.logicalcpu)
-   make install
-   ~/Qt/5.15.2/clang_64/bin/macdeployqt "$INSTALL_DIR/bin/RedPandaIDE.app"
-   ```
+```zsh
+./packages/macos/build.sh -a x86_64 --qt-version 5.15.2
+./packages/macos/build.sh -a x86_64 --qt-version 6.8.0
+./packages/macos/build.sh -a arm64 --qt-version 6.8.0
+./packages/macos/build.sh -a universal --qt-version 6.8.0
+```
