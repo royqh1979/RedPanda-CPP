@@ -1857,7 +1857,7 @@ void MainWindow::openProject(QString filename, bool openFiles)
 
 void MainWindow::changeOptions(const QString &widgetName, const QString &groupName)
 {
-    PSettingsDialog settingsDialog = SettingsDialog::optionDialog();
+    PSettingsDialog settingsDialog = SettingsDialog::optionDialog(this);
     if (!groupName.isEmpty()) {
         settingsDialog->setCurrentWidget(widgetName, groupName);
     }
@@ -1890,7 +1890,7 @@ void MainWindow::changeProjectOptions(const QString &widgetName, const QString &
         return;
 //    int oldCompilerSet = mProject->options().compilerSet;
     QString oldName = mProject->name();
-    PSettingsDialog dialog = SettingsDialog::projectOptionDialog();
+    PSettingsDialog dialog = SettingsDialog::projectOptionDialog(this);
     if (!groupName.isEmpty()) {
         dialog->setCurrentWidget(widgetName, groupName);
     }
@@ -7043,7 +7043,7 @@ void MainWindow::on_actionProject_options_triggered()
         return;
 //    int oldCompilerSet = mProject->options().compilerSet;
     QString oldName = mProject->name();
-    PSettingsDialog dialog = SettingsDialog::projectOptionDialog();
+    PSettingsDialog dialog = SettingsDialog::projectOptionDialog(this);
     dialog->exec();
     updateCompilerSet();
 //    if (oldCompilerSet != mProject->options().compilerSet)
