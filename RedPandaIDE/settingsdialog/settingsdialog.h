@@ -44,8 +44,8 @@ public:
 
     void selectFirstWidget();
 
-    static PSettingsDialog optionDialog();
-    static PSettingsDialog projectOptionDialog();
+    static PSettingsDialog optionDialog(QWidget *parent);
+    static PSettingsDialog projectOptionDialog(QWidget *parent);
 
     bool setCurrentWidget(const QString &widgetName, const QString &groupName);
 

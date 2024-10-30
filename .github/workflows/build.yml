@@ -249,7 +249,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["22.04", "23.10", "24.04", "devel"]
+        version: ["22.04", "24.04", "24.10", "devel"]
     env:
       IMAGE: docker.io/amd64/ubuntu:${{ matrix.version }}
 
@@ -402,9 +402,17 @@ jobs:
           name: Static Deb
           path: dist/*.deb
 
-  macos_x86_64:
-    name: macOS x86_64
-    runs-on: macos-12
+  macos:
+    name: macOS
+    strategy:
+      fail-fast: false
+      matrix:
+        qtVersion: ['5.15.2', '6.8.0']
+        arch: [x86_64, arm64, universal]
+        exclude:
+          - { qtVersion: '5.15.2', arch: arm64 }
+          - { qtVersion: '5.15.2', arch: universal }
+    runs-on: macos-14
 
     steps:
       - uses: actions/checkout@v4
@@ -412,29 +420,23 @@ jobs:
           fetch-depth: 0
 
       - name: Setup
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
-          version: '5.15.2'
+          version: ${{ matrix.qtVersion }}
           host: mac
           target: desktop
           arch: clang_64
-          archives: qtbase qtsvg qttools
-          tools: tools_qtcreator,qt.tools.qtcreator
+          archives: qtbase qtsvg qttools qttranslations
 
       - name: Build
         run: |
-          mkdir build && pushd build
-          qmake PREFIX=$GITHUB_WORKSPACE/pkg $GITHUB_WORKSPACE/Red_Panda_CPP.pro
-          make -j$(nproc)
-          make install
-          popd
-
-          pushd $GITHUB_WORKSPACE/pkg/bin
-          macdeployqt RedPandaIDE.app
-          tar -cJf RedPandaIDE.tar.xz RedPandaIDE.app
+          ./packages/macos/build.sh \
+            --arch ${{ matrix.arch }} \
+            --qt-install-dir $RUNNER_WORKSPACE/Qt \
+            --qt-version ${{ matrix.qtVersion }}
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: macOS x86_64
-          path: pkg/bin/RedPandaIDE.tar.xz
+          name: macOS Qt ${{ matrix.qtVersion }} ${{ matrix.arch }}
+          path: dist/*.tar.xz

@@ -83,7 +83,7 @@ local record env
         osArch: function (): string
 
         -- returns (1) stdout, (2) stderr and (3) exit status of the program
-        popen: function(prog: string, args: {string}, option: PopenOption | nil): string, string, PopenResult
+        popen: function(prog: string, args: {string}, option?: PopenOption): string, string, PopenResult
 
         -- returns supported application architectures by OS, name following `QSysInfo`
         -- e.g. {"i386", "x86_64", "arm64"}

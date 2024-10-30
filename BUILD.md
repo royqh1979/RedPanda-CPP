@@ -181,31 +181,19 @@ Dockerfiles are available in [redpanda-cpp/appimage-builder](https://github.com/
 
 Prerequisites:
 
-0. macOS 10.13 or later.
+0. Recent macOS that satisfies requirements of [Qt 5](https://doc.qt.io/qt-5/macos.html) or [Qt 6](https://doc.qt.io/qt-6/macos.html).
 1. Install Xcode Command Line Tools:
    ```zsh
    xcode-select --install
    ```
 2. Install Qt with online installer from [Qt.io](https://www.qt.io/download-qt-installer-oss).
-   - Select the library (in _Qt_ group, _Qt 5.15.2_ subgroup, check _macOS_).
+   - Select the library (in _Qt_ group, _Qt 5.15.2_ or _Qt 6.8.0_ subgroup, check _macOS_).
 
-Build:
+To build, run one of:
 
-1. Set related variables:
-   ```bash
-   SRC_DIR="~/redpanda-src"
-   BUILD_DIR="~/redpanda-build"
-   INSTALL_DIR="~/redpanda-pkg"
-   ```
-2. Navigate to build directory:
-   ```bash
-   rm -rf "$BUILD_DIR" # optional for clean build
-   mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
-   ```
-3. Configure, build and install:
-   ```bash
-   ~/Qt/5.15.2/clang_64/bin/qmake PREFIX="$INSTALL_DIR" "$SRC_DIR/Red_Panda_CPP.pro"
-   make -j$(sysctl -n hw.logicalcpu)
-   make install
-   ~/Qt/5.15.2/clang_64/bin/macdeployqt "$INSTALL_DIR/bin/RedPandaIDE.app"
-   ```
+```zsh
+./packages/macos/build.sh -a x86_64 --qt-version 5.15.2
+./packages/macos/build.sh -a x86_64 --qt-version 6.8.0
+./packages/macos/build.sh -a arm64 --qt-version 6.8.0
+./packages/macos/build.sh -a universal --qt-version 6.8.0
+```

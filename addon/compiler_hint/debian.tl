@@ -153,7 +153,6 @@ end
 
 global function main(): CompilerHint
     local arch = C_System.osArch()
-    local libexecDir = C_System.appLibexecDir()
     local lang = C_Desktop.language()
 
     local compilerList = {}

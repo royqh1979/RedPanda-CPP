@@ -135,9 +135,9 @@ void SettingsDialog::selectFirstWidget()
     showWidget(widgetIndex);
 }
 
-PSettingsDialog SettingsDialog::optionDialog()
+PSettingsDialog SettingsDialog::optionDialog(QWidget *parent)
 {
-    PSettingsDialog dialog = std::make_shared<SettingsDialog>();
+    PSettingsDialog dialog = std::make_shared<SettingsDialog>(parent);
 
     dialog->setWindowTitle(tr("Options"));
 
@@ -241,9 +241,9 @@ PSettingsDialog SettingsDialog::optionDialog()
     return dialog;
 }
 
-PSettingsDialog SettingsDialog::projectOptionDialog()
+PSettingsDialog SettingsDialog::projectOptionDialog(QWidget *parent)
 {
-    PSettingsDialog dialog = std::make_shared<SettingsDialog>();
+    PSettingsDialog dialog = std::make_shared<SettingsDialog>(parent);
 
 
     bool isMicroControllerProject=false;
