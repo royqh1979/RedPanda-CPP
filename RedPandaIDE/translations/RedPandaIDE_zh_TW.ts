@@ -11,7 +11,7 @@
     <message>
         <location line="+6"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:xx-large; font-weight:600;&quot;&gt;Red Panda C++&lt;/span&gt;&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:xx-large; font-weight:600;&quot;&gt;小熊猫C++&lt;/span&gt;&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h1 style=&quot; margin-top:18px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:xx-large; font-weight:600;&quot;&gt;小熊貓C++&lt;/span&gt;&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -63,8 +63,8 @@
     </message>
     <message>
         <location filename="../widgets/aboutdialog.ui" line="-37"/>
-        <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
-        <translation>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</translation>
+        <source>Copyright(C) 2021-2024 瞿華(royqh1979@gmail.com)</source>
+        <translation>Copyright(C) 2021-2024 瞿華(royqh1979@gmail.com)</translation>
     </message>
 </context>
 <context>
@@ -475,7 +475,7 @@
     <message>
         <location line="-68"/>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
-        <translation>無法寫入檔案“%1”。</translation>
+        <translation>無法寫入檔案「%1」。</translation>
     </message>
     <message>
         <location line="-673"/>
@@ -537,7 +537,7 @@
         <location line="+7"/>
         <location line="+3"/>
         <source>Remove</source>
-        <translation>删除</translation>
+        <translation>刪除</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilerautolinkwidget.cpp" line="-30"/>
@@ -602,13 +602,13 @@
         <location line="+10"/>
         <location line="+3"/>
         <source>Remove</source>
-        <translation>删除</translation>
+        <translation>刪除</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+3"/>
         <source>Remove Invalid</source>
-        <translation>删除非法資料夾</translation>
+        <translation>刪除非法資料夾</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetdirectorieswidget.cpp" line="+77"/>
@@ -661,7 +661,7 @@
         <location line="+7"/>
         <location line="+3"/>
         <source>Remove</source>
-        <translation>删除</translation>
+        <translation>刪除</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -776,12 +776,12 @@
     <message>
         <location line="+233"/>
         <source>Red Panda C++ will clear previously found compiler list and search for compilers in the following locations:&lt;br /&gt; &apos;%1&apos;&lt;br /&gt; &apos;%2&apos;&lt;br /&gt;Do you really want to continue?</source>
-        <translation>小熊猫C++ 將會清除以前蒐索到的編譯器配寘清單，然後在下列資料夾中蒐索編譯器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你確定要繼續嗎？</translation>
+        <translation>小熊貓C++ 將會清除以前蒐索到的編譯器配寘清單，然後在下列資料夾中蒐索編譯器:&lt;br/&gt; &apos;%1&apos;&lt;br/&gt; &apos;%2&apos;&lt;br /&gt;你確定要繼續嗎？</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Red Panda C++ will clear previously found compiler list and search for compilers in the the PATH. &lt;br /&gt;Do you really want to continue?</source>
-        <translation>小熊猫C++ 將會清除以前蒐索到的編譯器配寘清單，然後在PATH路徑中蒐索gcc編譯器.&lt;br /&gt;你確定要繼續嗎？</translation>
+        <translation>小熊貓C++ 將會清除以前蒐索到的編譯器配寘清單，然後在PATH路徑中蒐索gcc編譯器.&lt;br /&gt;你確定要繼續嗎？</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -929,7 +929,7 @@
     <message>
         <location line="-7"/>
         <source>Don&apos;t localize compiler output messages</source>
-        <translation>強制編譯器使用英語輸出資訊</translation>
+        <translation>強製編譯器使用英語輸出資訊</translation>
     </message>
 </context>
 <context>
@@ -979,7 +979,7 @@
     <message>
         <location line="+33"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Red Panda C++&apos;s Makefile has two important targets:&lt;/p&gt;&lt;p&gt;- all (which builds the executable)&lt;/p&gt;&lt;p&gt;- clean (which cleans up object files)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;all&amp;quot; depends on 2 targets: all-before and all-after. All-before&lt;/p&gt;&lt;p&gt;gets called before the compilation process, and all-after gets&lt;/p&gt;&lt;p&gt;called after the compilation process.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;clean&amp;quot; depends on the target clean-custom, which gets called&lt;/p&gt;&lt;p&gt;before the cleaning process.&lt;br/&gt;&lt;/p&gt;&lt;p&gt;You can change the Makefile&apos;s behavior by defining the targets&lt;/p&gt;&lt;p&gt;that &amp;quot;all&amp;quot; and &amp;quot;clean&amp;quot; depend on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;小熊猫C++的Makefile包括兩個重要的目標（target）：&lt;/p&gt;&lt;p&gt;- all (用来构建可执行文件)&lt;/p&gt;&lt;p&gt;- clean (用来清理构建文件)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;all&amp;quot; 依賴於2個目標：all-before 和all-after. &lt;/p&gt;&lt;p&gt;構建前會調用all-before目標，構建後會調用all-after目標。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;clean&amp;quot; 依賴於目標clean-custom，它在執行清理前被調用。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;你可以通過自定義這些目標來改變構建行為。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;小熊貓C++的Makefile包括兩個重要的目標（target）：&lt;/p&gt;&lt;p&gt;- all (用來構建可執行文件)&lt;/p&gt;&lt;p&gt;- clean (用來清理構建文件)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;all&amp;quot; 依賴於2個目標：all-before 和all-after. &lt;/p&gt;&lt;p&gt;構建前會調用all-before目標，構建後會調用all-after目標。&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&amp;quot;clean&amp;quot; 依賴於目標clean-custom，它在執行清理前被調用。&lt;br/&gt;&lt;/p&gt;&lt;p&gt;你可以通過自定義這些目標來改變構建行為。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -1002,7 +1002,7 @@
     <message>
         <location line="+88"/>
         <source>Debug Console</source>
-        <translation>調試主控台</translation>
+        <translation>調試主控臺</translation>
     </message>
     <message>
         <location line="+36"/>
@@ -1165,7 +1165,7 @@
     <message>
         <location line="+1"/>
         <source>Source file is more recent than executable.</source>
-        <translation type="unfinished">原始碼檔比程式檔案新。</translation>
+        <translation>原始碼檔比程式檔案新。</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1205,7 +1205,7 @@
     <message>
         <location line="+2"/>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
-        <translation>請檢查編譯器設定中的“程式”頁。</translation>
+        <translation>請檢查編譯器設定中的「程式」頁。</translation>
     </message>
 </context>
 <context>
@@ -1289,7 +1289,7 @@
     <message>
         <location line="+1570"/>
         <source>hex: %1</source>
-        <translation>16進制: %1</translation>
+        <translation>16進製: %1</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1448,7 +1448,7 @@
     <message>
         <location line="+40"/>
         <source>Clear all parsed symbols when editor is hidden</source>
-        <translation>清除不活動編輯器中的符號錶（大幅减少記憶體佔用）</translation>
+        <translation>清除不活動編輯器中的符號錶（大幅減少記憶體佔用）</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1528,7 +1528,7 @@
     <message>
         <location line="-183"/>
         <source>Editors share one code parser</source>
-        <translation>編輯器共亯同一個代碼分析器</translation>
+        <translation>編輯器共享同一個代碼分析器</translation>
     </message>
 </context>
 <context>
@@ -1576,7 +1576,7 @@
     <message>
         <location line="+7"/>
         <source>Strikeout</source>
-        <translation>删除線</translation>
+        <translation>刪除線</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1601,7 +1601,7 @@
     <message>
         <location line="+5"/>
         <source>Restore to Default</source>
-        <translation>删除自定義修改</translation>
+        <translation>刪除自定義修改</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1616,7 +1616,7 @@
     <message>
         <location line="+5"/>
         <source>Delete...</source>
-        <translation>删除...</translation>
+        <translation>刪除...</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editorcolorschemewidget.cpp" line="+344"/>
@@ -1664,12 +1664,12 @@
     <message>
         <location line="+16"/>
         <source>Confirm Delete Scheme</source>
-        <translation>確認删除方案</translation>
+        <translation>確認刪除方案</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Scheme &apos;%1&apos; will be deleted!&lt;br /&gt;Do you really want to continue?</source>
-        <translation>配色方案&apos;%1&apos;將會被删除！&lt;br /&gt;您確認要繼續嗎？</translation>
+        <translation>配色方案&apos;%1&apos;將會被刪除！&lt;br /&gt;您確認要繼續嗎？</translation>
     </message>
 </context>
 <context>
@@ -1819,7 +1819,7 @@
     <message>
         <location line="-152"/>
         <source>Force fixed width</source>
-        <translation>強制等寬顯示</translation>
+        <translation>強製等寬顯示</translation>
     </message>
     <message>
         <location line="-99"/>
@@ -1831,7 +1831,7 @@
         <location line="-33"/>
         <location line="+3"/>
         <source>Remove</source>
-        <translation>删除</translation>
+        <translation>刪除</translation>
     </message>
     <message>
         <location line="+60"/>
@@ -1935,7 +1935,7 @@
     <message>
         <location filename="../settingsdialog/editormiscwidget.ui" line="-127"/>
         <source>Parse TODOs</source>
-        <translation>查找程式碼中的TODO注釋（含todo或者fixme的注釋）</translation>
+        <translation>查找程式碼中的TODO註釋（含todo或者fixme的註釋）</translation>
     </message>
     <message>
         <location line="+43"/>
@@ -1955,7 +1955,7 @@
     <message>
         <location line="+7"/>
         <source>Trim trailing spaces</source>
-        <translation>删除行尾空格</translation>
+        <translation>刪除行尾空格</translation>
     </message>
 </context>
 <context>
@@ -1978,7 +1978,7 @@
     <message>
         <location line="+7"/>
         <source>Remove</source>
-        <translation>删除</translation>
+        <translation>刪除</translation>
     </message>
     <message>
         <location line="+36"/>
@@ -2031,7 +2031,7 @@
     <message>
         <location line="+7"/>
         <source>Complete Multiline Comments /**/</source>
-        <translation>補全ANSI C風格注釋/*和*/</translation>
+        <translation>補全ANSI C風格註釋/*和*/</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2056,7 +2056,7 @@
     <message>
         <location line="+13"/>
         <source>Remove symbol pairs when delete chars</source>
-        <translation>在删除字元時自動删除配對的符號</translation>
+        <translation>在刪除字元時自動刪除配對的符號</translation>
     </message>
 </context>
 <context>
@@ -2219,7 +2219,7 @@
         <location line="-13"/>
         <location line="+3"/>
         <source>Remove custom theme</source>
-        <translation>删除自定義主題</translation>
+        <translation>刪除自定義主題</translation>
     </message>
     <message>
         <location line="-218"/>
@@ -2239,7 +2239,7 @@
     <message>
         <location line="+1"/>
         <source>Simplified Chinese</source>
-        <translation>简体中文</translation>
+        <translation>簡體中文</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2267,12 +2267,12 @@
     <message>
         <location line="+6"/>
         <source>Independent Red Panda C++ applications</source>
-        <translation>獨立的小熊猫C++程式行程</translation>
+        <translation>獨立的小熊貓C++程式行程</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>The same Red Panda C++ application</source>
-        <translation>同一個小熊猫C++程式行程</translation>
+        <translation>同一個小熊貓C++程式行程</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2282,7 +2282,7 @@
     <message>
         <location line="+16"/>
         <source>Just check or uncheck for which file types Red Panda C++ wil be registered as the default application to open them ... </source>
-        <translation>選擇想要使用小熊猫C++打開的檔案類型（可能需要管理員許可權）</translation>
+        <translation>選擇想要使用小熊貓C++打開的檔案類型（可能需要管理員許可權）</translation>
     </message>
 </context>
 <context>
@@ -2309,7 +2309,7 @@
     <message>
         <location line="+23"/>
         <source>Remove all custom settings and exit</source>
-        <translation>删除所有的自定義設定並退出程式</translation>
+        <translation>刪除所有的自定義設定並退出程式</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -2319,7 +2319,7 @@
     <message>
         <location line="+14"/>
         <source>Custom theme folder:</source>
-        <translation>自定义主题文件夹</translation>
+        <translation>自定義主題文件夾</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2334,7 +2334,7 @@
     <message>
         <location line="+1"/>
         <source>Do you really want to delete all custom settings?</source>
-        <translation>你真的要删除所有自定義設定嗎？</translation>
+        <translation>你真的要刪除所有自定義設定嗎？</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2344,7 +2344,7 @@
     <message>
         <location line="+1"/>
         <source>Failed to delete custom settings.</source>
-        <translation>删除自定義設定失敗</translation>
+        <translation>刪除自定義設定失敗</translation>
     </message>
 </context>
 <context>
@@ -2357,7 +2357,7 @@
     <message>
         <location line="+6"/>
         <source>Reduce Memory Usage</source>
-        <translation>减少記憶體用量</translation>
+        <translation>減少記憶體用量</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2583,12 +2583,12 @@
     <message>
         <location line="+181"/>
         <source>Display problem case input file less than</source>
-        <translation type="unfinished"></translation>
+        <translation>僅顯示小於指定大小的案例輸入檔案內容</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>MB</source>
-        <translation type="unfinished"></translation>
+        <translation>MB</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -2618,17 +2618,17 @@
     <message>
         <location line="-19"/>
         <source>Case Valdation Limit</source>
-        <translation>測試案例驗證的資源限制</translation>
+        <translation>測試案例驗證的資源限製</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Time Limit</source>
-        <translation>時間限制</translation>
+        <translation>時間限製</translation>
     </message>
     <message>
         <location line="+39"/>
         <source>Memory Limit</source>
-        <translation>記憶體限制</translation>
+        <translation>記憶體限製</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2681,18 +2681,18 @@
     <message>
         <location filename="../settingsdialog/environmentfileassociationwidget.cpp" line="+128"/>
         <source>Register File Association Error</source>
-        <translation>注册檔案類型關聯失敗</translation>
+        <translation>註冊檔案類型關聯失敗</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+19"/>
         <source>Don&apos;t have privilege to register file types!</source>
-        <translation>沒有許可權進行檔案類型注册！</translation>
+        <translation>沒有許可權進行檔案類型註冊！</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Register File Type Error</source>
-        <translation>注册檔案類型失敗</translation>
+        <translation>註冊檔案類型失敗</translation>
     </message>
 </context>
 <context>
@@ -2717,7 +2717,7 @@
         <location line="+93"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
-        <translation>無法删除舊的可執行文件&quot;%1&quot;.</translation>
+        <translation>無法刪除舊的可執行文件&quot;%1&quot;.</translation>
     </message>
     <message>
         <location line="-62"/>
@@ -2742,7 +2742,7 @@
     <message>
         <location line="-5"/>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
-        <translation>請檢查編譯器設定中的“程式”頁。</translation>
+        <translation>請檢查編譯器設定中的「程式」頁。</translation>
     </message>
     <message>
         <location line="-121"/>
@@ -2765,7 +2765,7 @@
     <message>
         <location filename="../widgets/filepropertiesdialog.ui" line="+14"/>
         <source>File Properties</source>
-        <translation>檔案内容</translation>
+        <translation>檔案內容</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -2790,7 +2790,7 @@
     <message>
         <location line="+26"/>
         <source>Comment lines:</source>
-        <translation>注釋行數:</translation>
+        <translation>註釋行數:</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -2963,7 +2963,7 @@
     <message>
         <location line="-21"/>
         <source>Indent class access modifiers</source>
-        <translation>縮進類訪問限制符(&apos;public&apos;,&apos;private&apos;...)</translation>
+        <translation>縮進類訪問限製符(&apos;public&apos;,&apos;private&apos;...)</translation>
     </message>
     <message>
         <location line="-7"/>
@@ -2983,7 +2983,7 @@
     <message>
         <location line="-7"/>
         <source>Indent line comments that start in column one</source>
-        <translation>縮進在第一列開始的行注釋</translation>
+        <translation>縮進在第一列開始的行註釋</translation>
     </message>
     <message>
         <location line="+70"/>
@@ -3008,7 +3008,7 @@
     <message>
         <location line="+76"/>
         <source>Remove superfluous empty lines exceeding</source>
-        <translation>删除超過指定數量的多餘空行</translation>
+        <translation>刪除超過指定數量的多餘空行</translation>
     </message>
     <message>
         <location line="+30"/>
@@ -3063,7 +3063,7 @@
     <message>
         <location line="+90"/>
         <source>Remove all empty lines. It will NOT delete lines added by the padding options.</source>
-        <translation>删除所有空行。不影響填充選項自動插入的空行。</translation>
+        <translation>刪除所有空行。不影響填充選項自動插入的空行。</translation>
     </message>
     <message>
         <location line="-27"/>
@@ -3096,7 +3096,7 @@
     <message>
         <location line="-54"/>
         <source>Remove unnecessary space adding around parenthesis</source>
-        <translation>删除括弧周圍的多餘空格</translation>
+        <translation>刪除括弧周圍的多餘空格</translation>
     </message>
     <message>
         <location line="+101"/>
@@ -3132,7 +3132,7 @@
     <message>
         <location line="-7"/>
         <source>Remove braces from a braced one line conditional statements</source>
-        <translation>删除括起單行條件體語句的花括弧</translation>
+        <translation>刪除括起單行條件體語句的花括弧</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -3142,7 +3142,7 @@
     <message>
         <location line="-35"/>
         <source>Add braces to unbraced one line conditional statements</source>
-        <translation>對條件和條件體語句在同一行上的，删除括起條件體語句的花括弧</translation>
+        <translation>對條件和條件體語句在同一行上的，刪除括起條件體語句的花括弧</translation>
     </message>
     <message>
         <location line="+56"/>
@@ -3162,7 +3162,7 @@
     <message>
         <location line="-231"/>
         <source>Remove superfluous whitespace</source>
-        <translation>删除多餘的空格</translation>
+        <translation>刪除多餘的空格</translation>
     </message>
     <message>
         <location line="+224"/>
@@ -3202,7 +3202,7 @@
     <message>
         <location line="+45"/>
         <source>Remove the leading &apos;*&apos; prefix on multi-line comments and indent the comment text one line indent.</source>
-        <translation>删除多行注釋前的&apos;*&apos;並縮進注釋內容</translation>
+        <translation>刪除多行註釋前的&apos;*&apos;並縮進註釋內容</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3472,12 +3472,12 @@
     <message>
         <location line="+6"/>
         <source>Overwrite working tree changed(force)</source>
-        <translation>強制覆蓋工作樹（working tree）變化（--force）</translation>
+        <translation>強製覆蓋工作樹（working tree）變化（--force）</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Track</source>
-        <translation>跟踪（Track）</translation>
+        <translation>跟蹤（Track）</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3487,7 +3487,7 @@
     <message>
         <location line="+3"/>
         <source>Force Track</source>
-        <translation>強制跟踪</translation>
+        <translation>強製跟蹤</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3497,7 +3497,7 @@
     <message>
         <location line="+3"/>
         <source>Force No Track</source>
-        <translation>強制不跟踪</translation>
+        <translation>強製不跟蹤</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3527,7 +3527,7 @@
     <message>
         <location line="+10"/>
         <source>Force Creation (Reset branch if exists)</source>
-        <translation>強制創建，如果指定分支已存在則將其重置（Reset）（--force-creation）</translation>
+        <translation>強製創建，如果指定分支已存在則將其重置（Reset）（--force-creation）</translation>
     </message>
     <message>
         <location line="+39"/>
@@ -3725,12 +3725,12 @@
     <message>
         <location line="-110"/>
         <source>Remove Remote</source>
-        <translation>删除遠程倉庫</translation>
+        <translation>刪除遠程倉庫</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Remove</source>
-        <translation>删除</translation>
+        <translation>刪除</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -3804,7 +3804,7 @@
     <message>
         <location line="+10"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reset working tree and index (discarding local changes)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;回滾工作區內容和索引(丢弃所有本地修改)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;回滾工作區內容和索引(丟棄所有本地修改)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -3819,7 +3819,7 @@
     <message>
         <location line="+7"/>
         <source>Leave working tree untouched, reset index</source>
-        <translation>保持工作区内容不变，回滚索引</translation>
+        <translation>保持工作區內容不變，回滾索引</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -3977,17 +3977,17 @@
     <message>
         <location line="+1"/>
         <source>Path to the Red Panda C++&apos;s executable file.</source>
-        <translation>小熊猫C++可執行文件的完整路徑</translation>
+        <translation>小熊貓C++可執行文件的完整路徑</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Version of the Red Panda C++</source>
-        <translation>小熊猫C++的版本</translation>
+        <translation>小熊貓C++的版本</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>PATH to the Red Panda C++&apos;s installation folder.</source>
-        <translation>小熊猫C++的安裝資料夾</translation>
+        <translation>小熊貓C++的安裝資料夾</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4066,39 +4066,39 @@
         <location filename="../mainwindow.ui" line="+14"/>
         <location filename="../mainwindow.cpp" line="+1325"/>
         <source>Red Panda C++</source>
-        <translation type="unfinished"></translation>
+        <translation>小熊猫C++</translation>
     </message>
     <message>
         <location line="+499"/>
         <location line="+2252"/>
         <source>Files</source>
-        <translation type="unfinished"></translation>
+        <translation>文件</translation>
     </message>
     <message>
         <location line="-2499"/>
         <location line="+328"/>
         <location line="+2147"/>
         <source>Project</source>
-        <translation type="unfinished"></translation>
+        <translation>項目</translation>
     </message>
     <message>
         <location line="-2097"/>
         <location line="+2105"/>
         <source>Watch</source>
-        <translation type="unfinished"></translation>
+        <translation>監視</translation>
     </message>
     <message>
         <location line="-2064"/>
         <location line="+2072"/>
         <source>Structure</source>
-        <translation type="unfinished"></translation>
+        <translation>結構</translation>
     </message>
     <message>
         <location line="-2034"/>
         <location line="+27"/>
         <location line="+2023"/>
         <source>Problem Set</source>
-        <translation type="unfinished"></translation>
+        <translation>試題集</translation>
     </message>
     <message>
         <location line="-1998"/>
@@ -4106,21 +4106,21 @@
         <location filename="../mainwindow.cpp" line="+1477"/>
         <location line="+5847"/>
         <source>New Problem Set</source>
-        <translation type="unfinished"></translation>
+        <translation>新建試題集</translation>
     </message>
     <message>
         <location line="+12"/>
         <location line="+3"/>
         <location filename="../mainwindow.cpp" line="-5811"/>
         <source>Add Problem</source>
-        <translation type="unfinished"></translation>
+        <translation>添加試題</translation>
     </message>
     <message>
         <location line="+12"/>
         <location line="+3"/>
         <location filename="../mainwindow.cpp" line="+6"/>
         <source>Remove Problem</source>
-        <translation type="unfinished"></translation>
+        <translation>删除試題</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -4128,7 +4128,7 @@
         <location filename="../mainwindow.cpp" line="-30"/>
         <location line="+5896"/>
         <source>Save Problem Set</source>
-        <translation type="unfinished"></translation>
+        <translation>保存試題集</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -4136,7 +4136,7 @@
         <location filename="../mainwindow.cpp" line="-5890"/>
         <location line="+5926"/>
         <source>Load Problem Set</source>
-        <translation type="unfinished"></translation>
+        <translation>載入試題集</translation>
     </message>
     <message>
         <location line="+109"/>
@@ -4147,13 +4147,13 @@
         <location line="+3"/>
         <location line="+2303"/>
         <source>Issues</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯器</translation>
     </message>
     <message>
         <location line="-1785"/>
         <location line="+1793"/>
         <source>Tools Output</source>
-        <translation type="unfinished"></translation>
+        <translation>工具輸出</translation>
     </message>
     <message>
         <location line="-2356"/>
@@ -4168,43 +4168,43 @@
         <location line="+1"/>
         <location line="+7326"/>
         <source>Debug</source>
-        <translation type="unfinished"></translation>
+        <translation>調試</translation>
     </message>
     <message>
         <location line="-1717"/>
         <source>Evaluate:</source>
-        <translation type="unfinished"></translation>
+        <translation>求值</translation>
     </message>
     <message>
         <location line="+41"/>
         <location filename="../mainwindow.cpp" line="-5858"/>
         <source>Debug Console</source>
-        <translation type="unfinished">調試主控台</translation>
+        <translation>調試主控臺</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Call Stack</source>
-        <translation type="unfinished"></translation>
+        <translation>調用棧</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Breakpoints</source>
-        <translation type="unfinished"></translation>
+        <translation>中斷點</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Locals</source>
-        <translation type="unfinished"></translation>
+        <translation>局部變數</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>記憶體</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Address Expression:</source>
-        <translation type="unfinished"></translation>
+        <translation>地址運算式：</translation>
     </message>
     <message>
         <location line="-1039"/>
@@ -4212,44 +4212,44 @@
         <location line="+1505"/>
         <location filename="../mainwindow.cpp" line="+5855"/>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>查找</translation>
     </message>
     <message>
         <location line="-1466"/>
         <source>History:</source>
-        <translation type="unfinished"></translation>
+        <translation>歷史：</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Search Again</source>
-        <translation type="unfinished"></translation>
+        <translation>重新查找</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Replace with:</source>
-        <translation type="unfinished"></translation>
+        <translation>替換為：</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>Replace</source>
-        <translation type="unfinished"></translation>
+        <translation>替換</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Cancel</source>
-        <translation type="unfinished">取消</translation>
+        <translation>取消</translation>
     </message>
     <message>
         <location line="+31"/>
         <location line="+1330"/>
         <source>TODO</source>
-        <translation type="unfinished"></translation>
+        <translation>TODO</translation>
     </message>
     <message>
         <location line="-1304"/>
         <location line="+1312"/>
         <source>Bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>書簽</translation>
     </message>
     <message>
         <location line="-1274"/>
@@ -4259,56 +4259,56 @@
         <location line="+7"/>
         <location line="+7"/>
         <source>Problem</source>
-        <translation type="unfinished"></translation>
+        <translation>試題</translation>
     </message>
     <message>
         <location line="-1187"/>
         <location line="+3"/>
         <source>Add Probem Case</source>
-        <translation type="unfinished"></translation>
+        <translation>添加試題案例</translation>
     </message>
     <message>
         <location line="+11"/>
         <location line="+3"/>
         <location filename="../mainwindow.cpp" line="-35"/>
         <source>Remove Problem Case</source>
-        <translation type="unfinished"></translation>
+        <translation>删除試題案例</translation>
     </message>
     <message>
         <location line="+11"/>
         <location line="+3"/>
         <location filename="../mainwindow.cpp" line="+6"/>
         <source>Open Anwser Source File</source>
-        <translation type="unfinished"></translation>
+        <translation>打開答案原始碼檔</translation>
     </message>
     <message>
         <location line="+18"/>
         <location line="+3"/>
         <location filename="../mainwindow.cpp" line="+13"/>
         <source>Run All Cases</source>
-        <translation type="unfinished"></translation>
+        <translation>運行所有案例</translation>
     </message>
     <message>
         <location line="+11"/>
         <location filename="../mainwindow.cpp" line="-7"/>
         <source>Problem Cases Validation Options</source>
-        <translation type="unfinished"></translation>
+        <translation>測試案例驗證選項</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>%v/%m</source>
-        <translation type="unfinished"></translation>
+        <translation>%v/%m</translation>
     </message>
     <message>
         <location line="+103"/>
         <source>Input</source>
-        <translation type="unfinished">輸入</translation>
+        <translation>輸入</translation>
     </message>
     <message>
         <location line="-21"/>
         <location line="+3"/>
         <source>Choose Input File</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇輸入檔案</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -4323,33 +4323,33 @@
     <message>
         <location line="+36"/>
         <source>Output</source>
-        <translation type="unfinished">輸出</translation>
+        <translation>輸出</translation>
     </message>
     <message>
         <location line="-56"/>
         <source>Expected</source>
-        <translation type="unfinished"></translation>
+        <translation>期望輸出</translation>
     </message>
     <message>
         <location line="-1790"/>
         <source>File</source>
-        <translation type="unfinished"></translation>
+        <translation>文件</translation>
     </message>
     <message>
         <location line="+19"/>
         <location filename="../mainwindow.cpp" line="+342"/>
         <source>Tools</source>
-        <translation type="unfinished"></translation>
+        <translation>工具</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Execute</source>
-        <translation type="unfinished"></translation>
+        <translation>運行</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>編輯</translation>
     </message>
     <message>
         <location line="+55"/>
@@ -4360,145 +4360,145 @@
         <location line="+1"/>
         <location line="+1"/>
         <source>Code</source>
-        <translation type="unfinished"></translation>
+        <translation>代碼</translation>
     </message>
     <message>
         <location line="-142"/>
         <source>Window</source>
-        <translation type="unfinished"></translation>
+        <translation>視窗</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation>幫助</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Refactor</source>
-        <translation type="unfinished"></translation>
+        <translation>重構</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>View</source>
-        <translation type="unfinished"></translation>
+        <translation>視圖</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Tool Panels</source>
-        <translation type="unfinished"></translation>
+        <translation>工具面板</translation>
     </message>
     <message>
         <location line="+58"/>
         <source>Main</source>
-        <translation type="unfinished"></translation>
+        <translation>主工具列</translation>
     </message>
     <message>
         <location line="+37"/>
         <location line="+1689"/>
         <location line="+3"/>
         <source>Compile</source>
-        <translation type="unfinished">編譯</translation>
+        <translation>編譯</translation>
     </message>
     <message>
         <location line="-1643"/>
         <source>Compiler Set</source>
-        <translation type="unfinished"></translation>
+        <translation>編譯器配寘集</translation>
     </message>
     <message>
         <location line="+1568"/>
         <source>New Source File</source>
-        <translation type="unfinished"></translation>
+        <translation>新建原始碼檔</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+N</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+N</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Open...</source>
-        <translation type="unfinished"></translation>
+        <translation>打開...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+O</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+O</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Save</source>
-        <translation type="unfinished">保存</translation>
+        <translation>保存</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+S</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+S</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Save As...</source>
-        <translation type="unfinished"></translation>
+        <translation>另存為...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Save As</source>
-        <translation type="unfinished">另存為</translation>
+        <translation>另存為</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Save All</source>
-        <translation type="unfinished"></translation>
+        <translation>全部保存</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>Ctrl+Shift+S</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+Shift+S</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Options</source>
-        <translation type="unfinished">選項</translation>
+        <translation>選項</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>F9</source>
-        <translation type="unfinished"></translation>
+        <translation>F9</translation>
     </message>
     <message>
         <location line="+9"/>
         <location line="+3"/>
         <source>Run</source>
-        <translation type="unfinished"></translation>
+        <translation>運行</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Undo</source>
-        <translation type="unfinished"></translation>
+        <translation>撤銷</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+Z</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+Z</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Redo</source>
-        <translation type="unfinished"></translation>
+        <translation>重做</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+Y</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+Y</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Cut</source>
-        <translation type="unfinished"></translation>
+        <translation>剪切</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+X</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+X</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -4506,206 +4506,206 @@
         <location line="+28"/>
         <location line="+200"/>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation>複製</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+C</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+C</translation>
     </message>
     <message>
         <location line="+9"/>
         <location filename="../mainwindow.cpp" line="-221"/>
         <source>Paste</source>
-        <translation type="unfinished"></translation>
+        <translation>粘貼</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+V</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+V</translation>
     </message>
     <message>
         <location line="+5"/>
         <location filename="../mainwindow.cpp" line="+7"/>
         <location line="+220"/>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇全部</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+A</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+A</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Indent</source>
-        <translation type="unfinished"></translation>
+        <translation>縮進</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Tab</source>
-        <translation type="unfinished"></translation>
+        <translation>Tab</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>UnIndent</source>
-        <translation type="unfinished"></translation>
+        <translation>取消縮進</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Shift+Tab</source>
-        <translation type="unfinished"></translation>
+        <translation>Shift+Tab</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Toggle Comment</source>
-        <translation type="unfinished"></translation>
+        <translation>切換注釋</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+/</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+/</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Collapse All</source>
-        <translation type="unfinished"></translation>
+        <translation>全部收起</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Uncollapse All</source>
-        <translation type="unfinished"></translation>
+        <translation>全部展開</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Encode in ANSI</source>
-        <translation type="unfinished"></translation>
+        <translation>使用ANSI編碼</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Encode in UTF-8</source>
-        <translation type="unfinished"></translation>
+        <translation>使用UTF-8編碼</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Auto Detect</source>
-        <translation type="unfinished"></translation>
+        <translation>自動檢測</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Convert to ANSI</source>
-        <translation type="unfinished"></translation>
+        <translation>轉換為ANSI編碼</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Convert to UTF-8</source>
-        <translation type="unfinished"></translation>
+        <translation>轉換為UTF-8編碼</translation>
     </message>
     <message>
         <location line="+9"/>
         <location line="+3"/>
         <source>Rebuild All</source>
-        <translation type="unfinished"></translation>
+        <translation>全部重編譯</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>F12</source>
-        <translation type="unfinished"></translation>
+        <translation>F12</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Stop Execution</source>
-        <translation type="unfinished"></translation>
+        <translation>停止執行</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>F6</source>
-        <translation type="unfinished"></translation>
+        <translation>F6</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>F5</source>
-        <translation type="unfinished"></translation>
+        <translation>F5</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Step Over</source>
-        <translation type="unfinished"></translation>
+        <translation>单步跨过</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>F8</source>
-        <translation type="unfinished"></translation>
+        <translation>F8</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Step Into</source>
-        <translation type="unfinished"></translation>
+        <translation>單步進入</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>F7</source>
-        <translation type="unfinished"></translation>
+        <translation>F7</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Step Out</source>
-        <translation type="unfinished"></translation>
+        <translation>單步跳出</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+F8</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+F8</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Run To Cursor</source>
-        <translation type="unfinished"></translation>
+        <translation>執行到光標處</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+F5</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+F5</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Continue</source>
-        <translation type="unfinished"></translation>
+        <translation>繼續執行</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>F4</source>
-        <translation type="unfinished"></translation>
+        <translation>F4</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Add Watch...</source>
-        <translation type="unfinished"></translation>
+        <translation>添加監視</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>View CPU Window...</source>
-        <translation type="unfinished"></translation>
+        <translation>打開CPU資訊視窗...</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Exit</source>
-        <translation type="unfinished"></translation>
+        <translation>退出</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Find...</source>
-        <translation type="unfinished"></translation>
+        <translation>查找...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ctrl+F</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+F</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Find in Files...</source>
-        <translation type="unfinished"></translation>
+        <translation>在檔案中查找...</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4790,7 +4790,7 @@
     <message>
         <location line="+5"/>
         <source>Close</source>
-        <translation type="unfinished">關閉</translation>
+        <translation>關閉</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5238,7 +5238,7 @@
     <message>
         <location line="-9502"/>
         <source>New</source>
-        <translation type="unfinished"></translation>
+        <translation>新建</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -5445,7 +5445,7 @@
     <message>
         <location line="-1447"/>
         <source>Remove</source>
-        <translation type="unfinished">删除</translation>
+        <translation type="unfinished">刪除</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -6146,12 +6146,12 @@
     <message>
         <location line="-2490"/>
         <source>Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>管理器</translation>
     </message>
     <message>
         <location line="+437"/>
         <source>Messages</source>
-        <translation type="unfinished"></translation>
+        <translation>消息</translation>
     </message>
     <message>
         <location line="+2058"/>
@@ -6196,7 +6196,7 @@
     <message>
         <location line="-2654"/>
         <source>Selection</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇</translation>
     </message>
     <message>
         <location line="+2659"/>
@@ -6321,7 +6321,7 @@
         <location filename="../mainwindow.cpp" line="-261"/>
         <location line="+7081"/>
         <source>Import FPS Problem Set</source>
-        <translation type="unfinished"></translation>
+        <translation>導入FPS試題集</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="-7050"/>
@@ -6341,14 +6341,14 @@
     <message>
         <location filename="../mainwindow.ui" line="+2203"/>
         <source>Trim trailing spaces</source>
-        <translation type="unfinished">删除行尾空格</translation>
+        <translation type="unfinished">刪除行尾空格</translation>
     </message>
     <message>
         <location line="-2191"/>
         <location filename="../mainwindow.cpp" line="-7077"/>
         <location line="+7106"/>
         <source>Export FPS Problem Set</source>
-        <translation type="unfinished"></translation>
+        <translation>匯出FPS試題集</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="+2"/>
@@ -6368,7 +6368,7 @@
     <message>
         <location filename="../mainwindow.ui" line="+1083"/>
         <source>Choose Expected Output File</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇期望輸出檔案</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="+69"/>
@@ -6388,7 +6388,7 @@
     <message>
         <location filename="../mainwindow.ui" line="-1620"/>
         <source>Open file in editors</source>
-        <translation type="unfinished"></translation>
+        <translation>在編輯器中打開文件</translation>
     </message>
     <message>
         <location line="+1628"/>
@@ -6403,7 +6403,7 @@
     <message>
         <location line="-1046"/>
         <source>New C/C++ File</source>
-        <translation type="unfinished"></translation>
+        <translation>新建C/C++檔案</translation>
     </message>
     <message>
         <location line="+1054"/>
@@ -6508,7 +6508,7 @@
     <message>
         <location filename="../mainwindow.ui" line="-986"/>
         <source>F11</source>
-        <translation type="unfinished"></translation>
+        <translation>F11</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="-166"/>
@@ -6528,7 +6528,7 @@
     <message>
         <location filename="../mainwindow.ui" line="-39"/>
         <source>Ctrl+K, Ctrl+S</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+K, Ctrl+S</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="-3038"/>
@@ -6731,7 +6731,7 @@
     <message>
         <location filename="../mainwindow.ui" line="-3074"/>
         <source>Move Caret</source>
-        <translation type="unfinished"></translation>
+        <translation>移動光標</translation>
     </message>
 </context>
 <context>
@@ -7076,12 +7076,12 @@
     <message>
         <location line="-82"/>
         <source>Time Limit</source>
-        <translation type="unfinished">時間限制</translation>
+        <translation type="unfinished">時間限製</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Memory Limit</source>
-        <translation type="unfinished">記憶體限制</translation>
+        <translation type="unfinished">記憶體限製</translation>
     </message>
     <message>
         <location filename="../widgets/ojproblempropertywidget.cpp" line="+30"/>
@@ -7355,7 +7355,7 @@
     <message>
         <location line="+2"/>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
-        <translation type="unfinished">請檢查編譯器設定中的“程式”頁。</translation>
+        <translation type="unfinished">請檢查編譯器設定中的「程式」頁。</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -7605,7 +7605,7 @@
     <message>
         <location line="+64"/>
         <source>Remove</source>
-        <translation type="unfinished">删除</translation>
+        <translation type="unfinished">刪除</translation>
     </message>
     <message>
         <location line="-58"/>
@@ -8528,7 +8528,7 @@
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="+331"/>
         <source>Remove</source>
-        <translation type="unfinished">删除</translation>
+        <translation type="unfinished">刪除</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8677,7 +8677,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Failed to detect terminal arguments pattern for “%1”.</source>
+        <source>Failed to detect terminal arguments pattern for 「%1」.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -9037,7 +9037,7 @@
     <message>
         <location line="+2"/>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
-        <translation type="unfinished">請檢查編譯器設定中的“程式”頁。</translation>
+        <translation type="unfinished">請檢查編譯器設定中的「程式」頁。</translation>
     </message>
     <message>
         <location line="+43"/>
@@ -9053,7 +9053,7 @@
         <location line="+35"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
-        <translation type="unfinished">無法删除舊的可執行文件&quot;%1&quot;.</translation>
+        <translation type="unfinished">無法刪除舊的可執行文件&quot;%1&quot;.</translation>
     </message>
     <message>
         <location line="-33"/>
@@ -9101,7 +9101,7 @@
     <message>
         <location line="+2"/>
         <source>Please check the &quot;program&quot; page of compiler settings.</source>
-        <translation type="unfinished">請檢查編譯器設定中的“程式”頁。</translation>
+        <translation type="unfinished">請檢查編譯器設定中的「程式」頁。</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -9923,7 +9923,7 @@
     <message>
         <location line="+7"/>
         <source>Remove</source>
-        <translation type="unfinished">删除</translation>
+        <translation type="unfinished">刪除</translation>
     </message>
     <message>
         <location line="+123"/>
@@ -10176,7 +10176,7 @@
     <message>
         <location line="+7"/>
         <source>Remove</source>
-        <translation type="unfinished">删除</translation>
+        <translation type="unfinished">刪除</translation>
     </message>
     <message>
         <location line="+7"/>
