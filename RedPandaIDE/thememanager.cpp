@@ -241,7 +241,7 @@ AppTheme::AppTheme(const QString &filename, ThemeType type, ThemeCategory catego
         }
 #ifdef ENABLE_LUA_ADDON
         case ThemeType::Lua: {
-            obj = AddOn::ThemeExecutor{}(content, filename);
+            obj = AddOn::Lua::ThemeExecutor{}(content, filename);
             break;
         }
 #endif

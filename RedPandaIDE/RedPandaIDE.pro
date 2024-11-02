@@ -14,7 +14,7 @@ CONFIG += embed_translations
 CONFIG += ENABLE_SDCC
 
 # uncomment the following line to enable Lua-based add-on support
-# CONFIG += ENABLE_LUA_ADDON
+CONFIG += ENABLE_LUA_ADDON
 
 APP_NAME = RedPandaCPP
 
@@ -242,9 +242,9 @@ SOURCES += \
 
 HEADERS += \
     SimpleIni.h \
-    addon/api.h \
-    addon/executor.h \
-    addon/runtime.h \
+    addon/luaapi.h \
+    addon/luaexecutor.h \
+    addon/luaruntime.h \
     autolinkmanager.h \
     caretlist.h \
     codesnippetsmanager.h \
@@ -451,14 +451,14 @@ ENABLE_LUA_ADDON {
     DEFINES += ENABLE_LUA_ADDON
 
     SOURCES += \
-        addon/api.cpp \
-        addon/executor.cpp \
-        addon/runtime.cpp
+    addon/luaapi.cpp \
+    addon/luaexecutor.cpp \
+    addon/luaruntime.cpp
 
     HEADERS += \
-        addon/api.h \
-        addon/executor.h \
-        addon/runtime.h
+    addon/luaapi.h \
+    addon/luaexecutor.h \
+    addon/luaruntime.h
 }
 
 ENABLE_VCS {

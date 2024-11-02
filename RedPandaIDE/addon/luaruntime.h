@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef ADDON_RUNTIME_H
-#define ADDON_RUNTIME_H
+#ifndef ADDON_LUA_RUNTIME_H
+#define ADDON_LUA_RUNTIME_H
 
 #include <chrono>
 
@@ -128,4 +128,4 @@ private:
 
 }
 
-#endif // ADDON_RUNTIME_H
+#endif // ADDON_LUA_RUNTIME_H

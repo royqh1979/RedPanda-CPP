@@ -14,14 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "executor.h"
+#include "luaexecutor.h"
 
 #include <lua/lua.hpp>
 
-#include "api.h"
-#include "runtime.h"
+#include "luaapi.h"
+#include "luaruntime.h"
 
 namespace AddOn {
+
+namespace Lua {
 
 static QMap<QString, QMap<QString, lua_CFunction>> apiGroups{
     {"C_Debug",
@@ -177,4 +179,5 @@ QJsonObject CompilerHintExecutor::operator()(const QByteArray &script) {
         throw LuaError("Compiler hint script must return an object.");
 }
 
+} //namespace Lua
 } // namespace AddOn

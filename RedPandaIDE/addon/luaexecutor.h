@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef ADDON_EXECUTOR_H
-#define ADDON_EXECUTOR_H
+#ifndef ADDON_LUA_EXECUTOR_H
+#define ADDON_LUA_EXECUTOR_H
 
 #include <QJsonValue>
 #include <QJsonObject>
@@ -23,6 +23,7 @@
 #include <chrono>
 
 namespace AddOn {
+namespace Lua {
 
 // simple, stateless Lua executor
 class SimpleExecutor {
@@ -53,6 +54,7 @@ public:
     QJsonObject operator()(const QByteArray &script);
 };
 
-}
+} // Namespace Lua
+} // Namespace Addon
 
-#endif // ADDON_EXECUTOR_H
+#endif // ADDON_LUA_EXECUTOR_H

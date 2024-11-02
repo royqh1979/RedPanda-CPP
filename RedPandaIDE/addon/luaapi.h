@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef ADDON_API_H
-#define ADDON_API_H
+#ifndef ADDON_LUA_API_H
+#define ADDON_LUA_API_H
 
 struct lua_State;
 
@@ -45,4 +45,4 @@ extern "C" int luaApi_System_readRegistry(lua_State *L) noexcept;
 
 extern "C" int luaApi_Util_format(lua_State *L) noexcept;
 
-#endif // ADDON_API_H
+#endif // ADDON_LUA_API_H

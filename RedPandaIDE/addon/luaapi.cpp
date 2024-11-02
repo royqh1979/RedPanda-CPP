@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "api.h"
+#include "luaapi.h"
 
 #include <QtCore>
 #include <QApplication>
@@ -34,7 +34,7 @@
 #include "utils.h"
 #include "settings.h"
 #include "thememanager.h"
-#include "runtime.h"
+#include "luaruntime.h"
 
 #ifdef Q_OS_WINDOWS
 // added in Windows 11 21H2, declare our version to support old SDKs.
