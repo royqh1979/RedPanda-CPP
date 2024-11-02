@@ -76,8 +76,8 @@
 #include "widgets/newclassdialog.h"
 #include "widgets/newheaderdialog.h"
 #ifdef ENABLE_LUA_ADDON
-#include "addon/executor.h"
-#include "addon/runtime.h"
+#include "addon/luaexecutor.h"
+#include "addon/luaruntime.h"
 #endif
 #ifdef ENABLE_VCS
 #include "vcs/gitmanager.h"

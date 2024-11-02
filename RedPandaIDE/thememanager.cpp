@@ -29,8 +29,8 @@
 #include "systemconsts.h"
 
 #ifdef ENABLE_LUA_ADDON
-#include "addon/executor.h"
-#include "addon/runtime.h"
+#include "addon/luaexecutor.h"
+#include "addon/luaruntime.h"
 #endif
 
 ThemeManager::ThemeManager(QObject *parent) : QObject(parent)

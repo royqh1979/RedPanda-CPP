@@ -35,8 +35,8 @@
 #include <sys/sysinfo.h>
 #endif
 #ifdef ENABLE_LUA_ADDON
-# include "addon/executor.h"
-# include "addon/runtime.h"
+# include "addon/luaexecutor.h"
+# include "addon/luaruntime.h"
 #endif
 
 const char ValueToChar[28] = {'0', '1', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
@@ -3240,7 +3240,7 @@ void Settings::CompilerSets::findSets()
     ) {
         QByteArray script = scriptFile.readAll();
         try {
-            compilerHint = AddOn::CompilerHintExecutor{}(script);
+            compilerHint = AddOn::Lua::CompilerHintExecutor{}(script);
         } catch (const AddOn::LuaError &e) {
             QMessageBox::critical(nullptr,
                                   QObject::tr("Error executing platform compiler hint add-on"),
