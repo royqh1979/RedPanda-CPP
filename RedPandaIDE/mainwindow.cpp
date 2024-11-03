@@ -1704,6 +1704,9 @@ Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page)
         return nullptr;
 
     QFileInfo info=QFileInfo(filename);
+    if (info.isDir())
+        return nullptr;
+
     if (info.isAbsolute())
         filename = info.absoluteFilePath();
 

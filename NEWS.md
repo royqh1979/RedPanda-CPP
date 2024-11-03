@@ -17,6 +17,7 @@ Red Panda C++ Version 3.2
   - enhancement: Ctrl+Drag/Drop to copy contents.
   - enhancement: Don't display big input data file for problem cases. 
   - fix: Can't switch to RedPanda-Cpp  by clicking on the application title bar when the options dialog is open.
+  - fix: Drag&Drop folder to IDE should be prohibited.
   
 
 

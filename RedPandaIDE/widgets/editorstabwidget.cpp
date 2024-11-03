@@ -45,7 +45,16 @@ void EditorsTabWidget::dropEvent(QDropEvent *event)
 void EditorsTabWidget::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->mimeData()->hasUrls()){
-        event->acceptProposedAction();
+        foreach(const QUrl& url, event->mimeData()->urls()){
+            if (!url.isLocalFile())
+                continue;
+            QString file = url.toLocalFile();
+            QFileInfo info{file};
+            if (info.exists() && info.isFile()) {
+                event->acceptProposedAction();
+                return;
+            }
+        }
     }
 }
 
