@@ -59,6 +59,7 @@ private slots:
     void on_btnFindCompilers_clicked();
     void on_btnAddBlankCompilerSet_clicked();
     void on_btnAddCompilerSetByFolder_clicked();
+    void on_btnCopyCompilerSet_clicked();
     void on_btnRenameCompilerSet_clicked();
     void on_btnRemoveCompilerSet_clicked();
 

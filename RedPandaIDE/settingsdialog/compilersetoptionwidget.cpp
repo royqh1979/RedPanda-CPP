@@ -333,6 +333,9 @@ void CompilerSetOptionWidget::on_btnFindCompilers_clicked()
 void CompilerSetOptionWidget::on_btnAddBlankCompilerSet_clicked()
 {
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("Name"));
+    name = name.trimmed();
+    if (name.isEmpty())
+        return;
     Settings::PCompilerSet set = pSettings->compilerSets().addSet();
     pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().size()-1);
     set->setName(name);
@@ -355,6 +358,23 @@ void CompilerSetOptionWidget::on_btnAddCompilerSetByFolder_clicked()
     }
 }
 
+void CompilerSetOptionWidget::on_btnCopyCompilerSet_clicked()
+{
+    Settings::PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
+    if (!set)
+        return;
+    QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("New name"),QLineEdit::Normal,
+                                         tr("%1 Copy").arg(set->name()));
+    name = name.trimmed();
+    if (!name.isEmpty()) {
+        Settings::PCompilerSet newSet = pSettings->compilerSets().addSet(set);
+        newSet->setName(name);
+        set->setPersistInAutoFind(true);
+        pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().size()-1);
+        doLoad();
+    }
+}
+
 void CompilerSetOptionWidget::on_btnRenameCompilerSet_clicked()
 {
     Settings::PCompilerSet set=pSettings->compilerSets().getSet(ui->cbCompilerSet->currentIndex());
@@ -362,6 +382,7 @@ void CompilerSetOptionWidget::on_btnRenameCompilerSet_clicked()
         return;
     QString name = QInputDialog::getText(this,tr("Compiler Set Name"),tr("New name"),QLineEdit::Normal,
                                          set->name());
+    name = name.trimmed();
     if (!name.isEmpty())
         set->setName(name);
     doLoad();
@@ -387,6 +408,7 @@ void CompilerSetOptionWidget::updateIcons(const QSize& /*size*/)
     pIconsManager->setIcon(ui->btnFindCompilers, IconsManager::ACTION_EDIT_SEARCH);
     pIconsManager->setIcon(ui->btnAddCompilerSetByFolder, IconsManager::ACTION_FILE_OPEN_FOLDER);
     pIconsManager->setIcon(ui->btnAddCompilerSetByFile, IconsManager::ACTION_FILE_LOCATE);
+    pIconsManager->setIcon(ui->btnCopyCompilerSet, IconsManager::ACTION_EDIT_COPY);
     pIconsManager->setIcon(ui->btnAddBlankCompilerSet, IconsManager::ACTION_MISC_ADD);
     pIconsManager->setIcon(ui->btnRemoveCompilerSet, IconsManager::ACTION_MISC_REMOVE);
     pIconsManager->setIcon(ui->btnRenameCompilerSet, IconsManager::ACTION_MISC_RENAME);

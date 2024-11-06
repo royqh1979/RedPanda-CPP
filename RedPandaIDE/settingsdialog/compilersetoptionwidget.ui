@@ -51,8 +51,21 @@
       </item>
       <item>
        <widget class="QToolButton" name="btnAddCompilerSetByFile">
+        <property name="toolTip">
+         <string>Specify the compiler executable file</string>
+        </property>
         <property name="text">
          <string>Add Compiler</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnCopyCompilerSet">
+        <property name="toolTip">
+         <string>Copy current compiler set</string>
+        </property>
+        <property name="text">
+         <string>Copy compiler set</string>
         </property>
        </widget>
       </item>
