@@ -72,7 +72,7 @@ void ShrinkableTabWidget::setBeforeShrinkSize(const QSize &size)
     BeforeShrinkSizes.insert(this,size);
 }
 
-QSize ShrinkableTabWidget::beforeShrinkSize()
+QSize ShrinkableTabWidget::beforeShrinkSize() const
 {
     QSize size = BeforeShrinkSizes.value(this,QSize());
     if (!size.isValid() || size.isNull()) {
@@ -81,7 +81,7 @@ QSize ShrinkableTabWidget::beforeShrinkSize()
     return size;
 }
 
-QSize ShrinkableTabWidget::currentSize()
+QSize ShrinkableTabWidget::currentSize() const
 {
     if (isShrinked())
         return beforeShrinkSize();
@@ -89,7 +89,7 @@ QSize ShrinkableTabWidget::currentSize()
         return size();
 }
 
-int ShrinkableTabWidget::beforeShrinkWidthOrHeight()
+int ShrinkableTabWidget::beforeShrinkWidthOrHeight() const
 {
     if (shrinkOrientation()==Qt::Vertical)
         return beforeShrinkSize().height();
@@ -97,7 +97,7 @@ int ShrinkableTabWidget::beforeShrinkWidthOrHeight()
         return beforeShrinkSize().width();
 }
 
-Qt::Orientation ShrinkableTabWidget::shrinkOrientation()
+Qt::Orientation ShrinkableTabWidget::shrinkOrientation() const
 {
     switch(this->tabPosition()) {
     case QTabWidget::East:

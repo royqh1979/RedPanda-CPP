@@ -1168,11 +1168,10 @@ void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
     return;
 }
 
-void MainWindow::updateDPI(int oldDPI, int /*newDPI*/)
+void MainWindow::updateDPI(int oldDPI, int newDPI)
 {
-    //applySettings();
-    if (oldDPI<1)
-        oldDPI = 1;
+    Q_UNUSED(oldDPI)
+    Q_UNUSED(newDPI)
 }
 
 void MainWindow::onFileSaved(const QString &path, bool inProject)

@@ -30,15 +30,15 @@ public:
     bool isShrinked() const;
     void toggleShrined();
     void setBeforeShrinkSize(const QSize& size);
-    QSize beforeShrinkSize();
-    QSize currentSize();
-    int beforeShrinkWidthOrHeight();
-    Qt::Orientation shrinkOrientation();
+    QSize beforeShrinkSize() const;
+    QSize currentSize() const;
+    int beforeShrinkWidthOrHeight() const;
+    Qt::Orientation shrinkOrientation() const;
 
     // QWidget interface
 public:
-    QSize sizeHint() const;
-    QSize minimumSizeHint() const;
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
 private:
     bool mShrinked;
     static QHash<const ShrinkableTabWidget*,QSize> BeforeShrinkSizes;
