@@ -1288,7 +1288,8 @@ void MainWindow::executeTool(PToolItem item)
 
 int MainWindow::calIconSize(const QString &fontName, int fontPointSize)
 {
-    QFont font(fontName,fontPointSize);
+    QFont font(fontName);
+    font.setPixelSize(pointToPixel(fontPointSize));
     QFontMetrics metrics(font);
     return metrics.ascent();
 }
