@@ -1,4 +1,4 @@
-QT -= gui
+QT =    # non-Qt project
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
