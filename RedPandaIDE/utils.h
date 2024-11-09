@@ -188,7 +188,8 @@ QByteArray getHTTPBody(const QByteArray& content);
 QString getSizeString(int size);
 
 class QComboBox;
-void saveComboHistory(QComboBox* cb,const QString& text);
+void setComboTextAndHistory(QComboBox *cb, const QString& newText, QStringList &historyList);
+void updateComboHistory(QStringList &historyList, const QString &newKey);
 
 QColor alphaBlend(const QColor &lower, const QColor &upper);
 

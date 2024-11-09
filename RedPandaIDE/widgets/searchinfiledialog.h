@@ -63,6 +63,7 @@ private:
     QSynedit::SearchOptions mSearchOptions;
     QSynedit::PSynSearchBase mBasicSearchEngine;
     QSynedit::PSynSearchBase mRegexSearchEngine;
+    QStringList mSearchKeys;
 
     // QWidget interface
 protected:

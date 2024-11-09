@@ -22,7 +22,8 @@ Red Panda C++ Version 3.2
   - enhancement: Add copy compiler set tools button in the options dialog / compiler set panel.
   - fix: Functions in seperate editing files all displayed in the function prototype list.
   - enhancement: When debugging and the current stop position is not in source files, auto focus to the stack trace panel.
-  
+  - enhancement: Adjust margin of the Search/Replace Dialog.
+  - enhancement: When Search/Replace invoked, auto focus the find inputbox. 
 
 
 Red Panda C++ Version 3.1

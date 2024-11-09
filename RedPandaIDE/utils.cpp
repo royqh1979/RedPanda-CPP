@@ -545,18 +545,6 @@ QString getSizeString(int size)
     }
 }
 
-void saveComboHistory(QComboBox* cb,const QString& text) {
-    QString s = text;
-    if (s.isEmpty())
-        return;
-    int i = cb->findText(s);
-    if (i>=0) {
-        cb->removeItem(i);
-    }
-    cb->insertItem(0,s);
-    cb->setCurrentText(s);
-}
-
 void openFileFolderInExplorer(const QString &path)
 {
     QFileInfo info(path);
@@ -837,3 +825,27 @@ bool applicationIsUtf8(const QString &path)
     return osSupportsUtf8Manifest() && applicationHasUtf8Manifest((wchar_t *)path.constData());
 }
 #endif
+
+void updateComboHistory(QStringList &historyList, const QString &newKey)
+{
+    int idx = historyList.indexOf(newKey);
+    if (idx!=-1)
+        historyList.removeAt(idx);
+    if (!newKey.isEmpty())
+        historyList.insert(0,newKey);
+}
+
+void setComboTextAndHistory(QComboBox *cb, const QString &newText, QStringList &historyList)
+{
+    QString text;
+    if (!newText.isEmpty()) {
+        int idx = historyList.indexOf(newText);
+        if (idx == -1) {
+            historyList.insert(0, newText);
+        }
+        text = newText;
+    } else {
+        text = cb->currentText();
+    }
+    cb->setCurrentText(text);
+}

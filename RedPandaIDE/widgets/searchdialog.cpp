@@ -23,6 +23,7 @@ SearchDialog::SearchDialog(QWidget *parent) :
     mSearchTabIdx = mTabBar->addTab(tr("Search"));
     mReplaceTabIdx = mTabBar->addTab(tr("Replace"));
     ui->dialogLayout->insertWidget(0,mTabBar);
+    ui->dialogLayout->setMargin(10);
 
     mTabBar->setCurrentIndex(mSearchTabIdx);
     connect(mTabBar, &QTabBar::currentChanged, this,
@@ -42,20 +43,17 @@ SearchDialog::~SearchDialog()
 void SearchDialog::find(const QString &text)
 {
     mTabBar->setCurrentIndex(mSearchTabIdx);
-    if (!text.isEmpty())
-        ui->cbFind->setCurrentText(text);
-    ui->btnNext->setFocus();
+    setComboTextAndHistory(ui->cbFind,text,mSearchKeys);
+    ui->cbFind->setFocus();
     show();
 }
 
 void SearchDialog::replace(const QString &text)
 {
     mTabBar->setCurrentIndex(mReplaceTabIdx);
-    if (!text.isEmpty()) {
-        ui->cbFind->setCurrentText(text);
-        ui->cbReplace->setCurrentText(text);
-    }
-    ui->btnNext->setFocus();
+    setComboTextAndHistory(ui->cbFind,text,mSearchKeys);
+    setComboTextAndHistory(ui->cbReplace,text,mReplaceKeys);
+    ui->cbFind->setFocus();
     show();
 }
 
@@ -75,7 +73,7 @@ void SearchDialog::findPrevious()
 
 void SearchDialog::doSearch(bool backward)
 {
-    saveComboHistory(ui->cbFind,ui->cbFind->currentText());
+    updateComboHistory(mSearchKeys, ui->cbFind->currentText());
     prepareOptions(backward);
 
     Editor *editor = pMainWindow->editorList()->getEditor();
@@ -96,7 +94,7 @@ void SearchDialog::doSearch(bool backward)
         } else {
             searchEngine = mBasicSearchEngine;
         }
-        editor->searchReplace(
+        int foundCount = editor->searchReplace(
                     ui->cbFind->currentText(),
                     "",
                     mSearchOptions,
@@ -121,13 +119,25 @@ void SearchDialog::doSearch(bool backward)
                           QMessageBox::Yes|QMessageBox::No,
                           QMessageBox::Yes) == QMessageBox::Yes;
         });
+        if (foundCount==0) {
+            QWidget *p;
+            if (isVisible()) {
+                p=this;
+            } else {
+                p=pMainWindow;
+            }
+            QMessageBox::information(
+                p,
+                tr("Not Found"),
+                tr("Can't find '%1'").arg(ui->cbFind->currentText()));
+        }
     }
 }
 
 void SearchDialog::doReplace(bool replaceAll)
 {
-    saveComboHistory(ui->cbFind,ui->cbFind->currentText());
-    saveComboHistory(ui->cbReplace,ui->cbReplace->currentText());
+    updateComboHistory(mSearchKeys,ui->cbFind->currentText());
+    updateComboHistory(mReplaceKeys,ui->cbReplace->currentText());
     prepareOptions(false);
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {

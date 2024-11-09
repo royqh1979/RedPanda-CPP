@@ -49,6 +49,8 @@ private:
     QSynedit::SearchOptions mSearchOptions;
     QSynedit::PSynSearchBase mBasicSearchEngine;
     QSynedit::PSynSearchBase mRegexSearchEngine;
+    QStringList mSearchKeys;
+    QStringList mReplaceKeys;
 };
 
 #endif // SEARCHDIALOG_H
