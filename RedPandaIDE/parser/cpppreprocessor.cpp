@@ -353,28 +353,25 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     PParsedFile file = mIncludeStack.back();
     QString fileName;
     // Get full header file name
-    QString currentDir = includeTrailingPathDelimiter(extractFileDir(file->fileName));
+    QString currentDir = excludeTrailingPathDelimiter(extractFileDir(file->fileName));
     QStringList includes;
     QStringList projectIncludes;
     bool found=false;
     if (fromNext && mIncludePaths.contains(currentDir)) {
-        foreach(const QString& s, mIncludePathList) {
-            if (found) {
-                includes.append(s);
-                continue;
-            } else if (s == currentDir)
-                found = true;
-        }
+        int i = mIncludePathList.indexOf(currentDir);
+        includes = mIncludePathList.mid(i+1);
+        // foreach(const QString& s, mIncludePathList) {
+        //     if (found) {
+        //         includes.append(s);
+        //         continue;
+        //     } else if (s == currentDir)
+        //         found = true;
+        // }
         projectIncludes = mProjectIncludePathList;
     } else if (fromNext && mProjectIncludePaths.contains(currentDir)) {
         includes = mIncludePathList;
-        foreach(const QString& s, mProjectIncludePathList) {
-            if (found) {
-                includes.append(s);
-                continue;
-            } else if (s == currentDir)
-                found = true;
-        }
+        int i = mProjectIncludePathList.indexOf(currentDir);
+        projectIncludes = mProjectIncludePathList.mid(i+1);
     } else {
         includes = mIncludePathList;
         projectIncludes = mProjectIncludePathList;

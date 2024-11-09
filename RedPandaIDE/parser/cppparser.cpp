@@ -4512,8 +4512,8 @@ void CppParser::internalParse(const QString &fileName)
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-       // mStatementList.dumpAll(QString("z:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-       // mStatementList.dump(QString("z:\\stats-%1.txt").arg(extractFileName(fileName)));
+    //   mStatementList.dumpAll(QString("z:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+    //   mStatementList.dump(QString("z:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
