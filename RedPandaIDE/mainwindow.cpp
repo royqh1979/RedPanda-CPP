@@ -1163,6 +1163,10 @@ void MainWindow::setActiveBreakpoint(QString fileName, int Line, bool setFocus)
             activateWindow();
         }
     } else {
+        showHideMessagesTab(ui->tabDebug, true);
+        ui->debugViews->setCurrentWidget(ui->tabStackTrace);
+        ui->debugViews->setFocus();
+    // ui->tblStackTrace->selectRow(0);
     //   showCPUInfoDialog();
     }
     return;

@@ -21,6 +21,7 @@ Red Panda C++ Version 3.2
   - fix: After dragging IDE to another screen that don't have the same DPI with the previous one, icon size are not correct.
   - enhancement: Add copy compiler set tools button in the options dialog / compiler set panel.
   - fix: Functions in seperate editing files all displayed in the function prototype list.
+  - enhancement: When debugging and the current stop position is not in source files, auto focus to the stack trace panel.
   
 
 
