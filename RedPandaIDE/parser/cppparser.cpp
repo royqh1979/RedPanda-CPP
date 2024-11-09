@@ -4575,7 +4575,7 @@ QList<PStatement> CppParser::getListOfFunctions(const QString &fileName, int lin
         if (statement->command == child->command) {
             if (child->kind == StatementKind::Alias)
                 continue;
-            if (!includedFiles.contains(fileName))
+            if (!includedFiles.contains(child->fileName))
                 continue;
             if (line < child->line && (child->fileName == fileName))
                 continue;
