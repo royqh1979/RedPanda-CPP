@@ -168,7 +168,7 @@
       <item>
        <widget class="QGroupBox" name="grpEnableTimeout">
         <property name="title">
-         <string>Case Valdation Limit</string>
+         <string>Case Validation Limit</string>
         </property>
         <property name="checkable">
          <bool>true</bool>

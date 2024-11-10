@@ -3190,7 +3190,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="-78"/>
-        <source>Case Valdation Limit</source>
+        <source>Case Validation Limit</source>
         <translation>测试案例验证的资源限制</translation>
     </message>
     <message>

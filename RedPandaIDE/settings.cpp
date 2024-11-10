@@ -4408,10 +4408,6 @@ void Settings::Executor::doLoad()
     mCaseMemoryLimit = uintValue("case_memory_limit",0); // kb
 
     mEnableCaseLimit = boolValue("enable_case_limit", true);
-    //compatibility
-    if (boolValue("enable_time_limit", true)) {
-        mEnableCaseLimit=true;
-    }
 
     mMaxCaseInputFileSize = uintValue("case_max_input_file_size", 4); //4mb
 }

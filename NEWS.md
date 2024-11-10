@@ -24,6 +24,7 @@ Red Panda C++ Version 3.2
   - enhancement: When debugging and the current stop position is not in source files, auto focus to the stack trace panel.
   - enhancement: Adjust margin of the Search/Replace Dialog.
   - enhancement: When Search/Replace invoked, auto focus the find inputbox. 
+  - fix: Problem case limit settings not correctly loaded.
 
 
 Red Panda C++ Version 3.1
