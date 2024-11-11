@@ -25,7 +25,6 @@
 qmake variables:
 - `PREFIX`: default to `/usr/local`. It should be set to `/usr` when packaging.
 - `LIBEXECDIR`: directory for auxiliary executables, default to `$PREFIX/libexec`. Arch Linux uses `/usr/lib`.
-- `LINUX_STATIC_IME_PLUGIN=ON` (make phase): link to static ime plugin. Recommended for building with static version of Qt; **DO NOT** set for dynamic version of Qt.
 
 ### xmake-based Build Steps
 
