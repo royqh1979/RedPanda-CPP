@@ -3665,6 +3665,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     if (mCompletionPopup->search(word, autoComplete)) { //only one suggestion and it's not input while typing
         completionInsert(pSettings->codeCompletion().appendFunc());
     }
+    if (!hasFocus())
+        mCompletionPopup->hide();
 }
 
 void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
@@ -3729,6 +3731,9 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
     // Filter the whole statement list
     if (mHeaderCompletionPopup->search(word, autoComplete)) //only one suggestion and it's not input while typing
         headerCompletionInsert(); // if only have one suggestion, just use it
+
+    if (!hasFocus())
+        mHeaderCompletionPopup->hide();
 }
 
 void Editor::initAutoBackup()
@@ -4454,7 +4459,7 @@ void Editor::updateFunctionTip(bool showTip)
         p.setX(clientWidth()-w-2);
     pMainWindow->functionTip()->move(mapToGlobal(p));
     cancelHint();
-    if (showTip)
+    if (showTip && hasFocus() && !mCompletionPopup->isVisible() && !mHeaderCompletionPopup->isVisible())
         pMainWindow->functionTip()->show();
 }
 

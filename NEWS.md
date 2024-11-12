@@ -25,6 +25,7 @@ Red Panda C++ Version 3.2
   - enhancement: Adjust margin of the Search/Replace Dialog.
   - enhancement: When Search/Replace invoked, auto focus the find inputbox. 
   - fix: Problem case limit settings not correctly loaded.
+  - fix: Edit and switch editor out quickly may leave function tip wrongly appeared.
 
 
 Red Panda C++ Version 3.1

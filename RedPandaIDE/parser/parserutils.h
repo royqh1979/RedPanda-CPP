@@ -195,7 +195,7 @@ struct Statement {
     int definitionLine; // definition
     QString fileName; // declaration
     QString definitionFileName; // definition
-    StatementMap children; // functions can be overloaded,so we use list to save children with the same name
+    StatementMap children;
     QSet<QString> friends; // friend class / functions
     QString fullName; // fullname(including class and namespace), ClassA::foo
     QSet<QString> usingList; // using namespaces
