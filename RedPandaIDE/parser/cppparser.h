@@ -86,6 +86,7 @@ public:
                                const QStringList& expression,
                                int line) const;
     PStatement findAliasedStatement(const PStatement& statement) const;
+    QStringList getFunctionParameterNames(const PStatement& statement) const;
 
     QList<PStatement> listTypeStatements(const QString& fileName,int line) const;
 

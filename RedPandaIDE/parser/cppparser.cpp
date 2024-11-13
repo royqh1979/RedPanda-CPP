@@ -618,6 +618,32 @@ PStatement CppParser::findAliasedStatement(const PStatement &statement) const
     return doFindAliasedStatement(statement);
 }
 
+QStringList CppParser::getFunctionParameterNames(const PStatement &statement) const
+{
+    QStringList result;
+    if (!statement)
+        return result;
+    if (statement->kind != StatementKind::Function
+            && statement->kind != StatementKind::Constructor
+            && statement->kind != StatementKind::Destructor )
+        return result;
+    QSet<QString> parameters;
+    foreach (const PStatement &child , statement->children) {
+        if (child->kind == StatementKind::Parameter)
+            parameters.insert(child->command);
+    }
+    if (parameters.isEmpty())
+        return result;
+    QStringList lst = splitExpression(statement->args);
+    foreach (const QString& term, lst) {
+        if (parameters.contains(term)) {
+            result.append(term);
+            parameters.remove(term);
+        }
+    }
+    return result;
+}
+
 QList<PStatement> CppParser::listTypeStatements(const QString &fileName, int line) const
 {
     QMutexLocker locker(&mMutex);

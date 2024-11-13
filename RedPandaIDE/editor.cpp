@@ -844,13 +844,9 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     if (mParser)
                         function = mParser->findFunctionAt(mFilename,caretY()+1);
                     if (function) {
-                        QStringList params;
                         QString funcName = function->command;
                         bool isVoid = (function->type  == "void");
-                        foreach (const PStatement& child, function->children) {
-                            if (child->kind == StatementKind::Parameter)
-                                params.append(child->command);
-                        }
+                        QStringList params = mParser->getFunctionParameterNames(function);
                         insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
                         if (!params.isEmpty())
                             insertString.append(" * ");

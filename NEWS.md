@@ -26,6 +26,7 @@ Red Panda C++ Version 3.2
   - enhancement: When Search/Replace invoked, auto focus the find inputbox. 
   - fix: Problem case limit settings not correctly loaded.
   - fix: Edit and switch editor out quickly may leave function tip wrongly appeared.
+  - fix: The function parameters' order in the generated doxygen doclet is wrong.
 
 
 Red Panda C++ Version 3.1
