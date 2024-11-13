@@ -1914,8 +1914,13 @@ void MainWindow::updateCompilerSet(const Editor *e)
 {
     mCompilerSet->blockSignals(true);
     mCompilerSet->clear();
+    QIcon errorIcon = pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS);
     for (size_t i=0;i<pSettings->compilerSets().size();i++) {
-        mCompilerSet->addItem(pSettings->compilerSets().getSet(i)->name());
+        Settings::PCompilerSet set=pSettings->compilerSets().getSet(i);
+        if (set->findErrors().isEmpty())
+            mCompilerSet->addItem(set->name());
+        else
+            mCompilerSet->addItem(errorIcon, set->name());
     }
     int index=pSettings->compilerSets().defaultIndex();
     if (mProject) {
@@ -1980,6 +1985,12 @@ void MainWindow::updateActionIcons()
     }
     for (QToolButton* btn: ui->panelProblemCaseInfo->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
+    }
+
+    for(int i=0;i<mCompilerSet->count();i++) {
+        if (!mCompilerSet->itemIcon(i).isNull()) {
+            mCompilerSet->setItemIcon(i, pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+        }
     }
 
     ui->tabExplorer->setIconSize(iconSize);
@@ -5761,6 +5772,7 @@ void MainWindow::showEvent(QShowEvent *)
     ui->tabMessages->setCurrentIndex(settings.bottomPanelIndex());
     ui->tabExplorer->setCurrentIndex(settings.leftPanelIndex());
     ui->debugViews->setCurrentIndex(settings.debugPanelIndex());
+    validateCompilerSet(pSettings->compilerSets().defaultIndex());
 }
 
 void MainWindow::hideEvent(QHideEvent *)
@@ -5865,6 +5877,7 @@ void MainWindow::onCompilerSetChanged(int index)
     pSettings->compilerSets().saveDefaultIndex();
 
     reparseNonProjectEditors();
+    validateCompilerSet(index);
 }
 
 void MainWindow::logToolsOutput(const QString& msg)
@@ -7852,6 +7865,23 @@ void MainWindow::backupMenuForEditor(QMenu *menu, QList<QAction *> &backup)
             [menu] {
         menu->clear();
     });
+}
+
+void MainWindow::validateCompilerSet(int index)
+{
+    Settings::PCompilerSet set = pSettings->compilerSets().getSet(index);
+    if (set) {
+        QStringList errors = set->findErrors();
+        if (!errors.isEmpty()) {
+            mCompilerSet->setItemIcon(index, pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+            QMessageBox::warning(this,
+                                 tr("Error in Compiler Set"),
+                                 tr("Current Compiler set has the following critical error: \n\n")
+                                 +errors.join("\n"));
+        } else {
+            mCompilerSet->setItemIcon(index, QIcon());
+        }
+    }
 }
 
 void MainWindow::setupSlotsForProject()

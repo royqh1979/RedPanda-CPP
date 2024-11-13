@@ -3024,6 +3024,24 @@ void Settings::CompilerSet::setDebugServer(const QString &newDebugServer)
     mDebugServer = newDebugServer;
 }
 
+QStringList Settings::CompilerSet::findErrors()
+{
+    QStringList errors;
+    if (!mCCompiler.isEmpty() && !fileExists(mCCompiler)) {
+        errors.append(QObject::tr("C Compiler \"%1\" is missing!").arg(mCCompiler));
+    }
+    if (!mCppCompiler.isEmpty() && !fileExists(mCppCompiler)) {
+        errors.append(QObject::tr("C++ Compiler \"%1\" is missing!").arg(mCppCompiler));
+    }
+    if (!mDebugger.isEmpty() && !fileExists(mDebugger)) {
+        errors.append(QObject::tr("Debugger \"%1\" is missing!").arg(mDebugger));
+    }
+    if (!mMake.isEmpty() && !fileExists(mMake)) {
+        errors.append(QObject::tr("Make program \"%1\" is missing!").arg(mMake));
+    }
+    return errors;
+}
+
 void Settings::CompilerSet::setCompilerType(CompilerType newCompilerType)
 {
     mCompilerType = newCompilerType;

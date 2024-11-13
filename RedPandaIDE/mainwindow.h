@@ -337,6 +337,7 @@ private:
     void initEditorActions();
     void changeEditorActionParent(QAction *action, const QString& groupName);
     void backupMenuForEditor(QMenu* menu, QList<QAction *> &backup);
+    void validateCompilerSet(int index);
 
 private slots:
     void setupSlotsForProject();

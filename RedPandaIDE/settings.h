@@ -1398,6 +1398,8 @@ public:
         const QString &debugServer() const;
         void setDebugServer(const QString &newDebugServer);
 
+        QStringList findErrors();
+
         QStringList& binDirs();
         QStringList& CIncludeDirs();
         QStringList& CppIncludeDirs();

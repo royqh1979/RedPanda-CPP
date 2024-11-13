@@ -187,8 +187,13 @@ void CompilerSetOptionWidget::doLoad()
         ui->btnRemoveCompilerSet->setEnabled(true);
     }
     int index=pSettings->compilerSets().defaultIndex();
+    QIcon icon = pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS);
     for (size_t i=0;i<pSettings->compilerSets().size();i++) {
-        ui->cbCompilerSet->addItem(pSettings->compilerSets().getSet(i)->name());
+        Settings::PCompilerSet set = pSettings->compilerSets().getSet(i);
+        if (set->findErrors().isEmpty())
+            ui->cbCompilerSet->addItem(set->name());
+        else
+            ui->cbCompilerSet->addItem(icon, set->name());
     }
     if (index < 0 || index>=ui->cbCompilerSet->count()) {
         index = 0;
@@ -206,6 +211,15 @@ void CompilerSetOptionWidget::doSave()
     pSettings->compilerSets().setDefaultIndex(pSettings->compilerSets().defaultIndex());
     pSettings->compilerSets().saveSets();
     pMainWindow->updateCompilerSet();
+
+    Settings::PCompilerSet set = pSettings->compilerSets().defaultSet();
+    if (set) {
+        int idx = pSettings->compilerSets().defaultIndex();
+        if (set->findErrors().isEmpty())
+            ui->cbCompilerSet->setItemIcon(idx, QIcon());
+        else
+            ui->cbCompilerSet->setItemIcon(idx, pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+    }
 }
 
 void CompilerSetOptionWidget::on_cbCompilerSet_currentIndexChanged(int index)
@@ -419,6 +433,12 @@ void CompilerSetOptionWidget::updateIcons(const QSize& /*size*/)
     pIconsManager->setIcon(ui->btnChooseGDBServer, IconsManager::ACTION_FILE_LOCATE);
     pIconsManager->setIcon(ui->btnChooseMake, IconsManager::ACTION_FILE_LOCATE);
     pIconsManager->setIcon(ui->btnChooseResourceCompiler, IconsManager::ACTION_FILE_LOCATE);
+
+    for(int i=0;i<ui->cbCompilerSet->count();i++) {
+        if (!ui->cbCompilerSet->itemIcon(i).isNull()) {
+            ui->cbCompilerSet->setItemIcon(i, pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
+        }
+    }
 }
 
 void CompilerSetOptionWidget::on_cbEncoding_currentTextChanged(const QString &/*arg1*/)

@@ -27,6 +27,8 @@ Red Panda C++ Version 3.2
   - fix: Problem case limit settings not correctly loaded.
   - fix: Edit and switch editor out quickly may leave function tip wrongly appeared.
   - fix: The function parameters' order in the generated doxygen doclet is wrong.
+  - enhancement: If current compiler set's compiler / debugger / make path is wrong, show a warning message box.
+  - enhancement: Display a cross before compiler set that has errors in compiler / debugger / make path.
 
 
 Red Panda C++ Version 3.1
