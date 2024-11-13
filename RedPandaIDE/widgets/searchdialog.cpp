@@ -23,7 +23,7 @@ SearchDialog::SearchDialog(QWidget *parent) :
     mSearchTabIdx = mTabBar->addTab(tr("Search"));
     mReplaceTabIdx = mTabBar->addTab(tr("Replace"));
     ui->dialogLayout->insertWidget(0,mTabBar);
-    ui->dialogLayout->setMargin(10);
+    ui->dialogLayout->setContentsMargins(10, 10, 10, 10);
 
     mTabBar->setCurrentIndex(mSearchTabIdx);
     connect(mTabBar, &QTabBar::currentChanged, this,

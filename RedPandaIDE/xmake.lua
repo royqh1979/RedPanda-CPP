@@ -196,9 +196,9 @@ target("RedPandaIDE")
     if has_config("lua-addon") then
         add_deps("lua")
         add_files(
-            "addon/api.cpp",
-            "addon/executor.cpp",
-            "addon/runtime.cpp")
+            "addon/luaapi.cpp",
+            "addon/luaexecutor.cpp",
+            "addon/luaruntime.cpp")
         add_links("lua")
     end
 
