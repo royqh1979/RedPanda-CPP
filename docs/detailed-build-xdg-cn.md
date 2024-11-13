@@ -25,7 +25,6 @@
 qmake 变量:
 - `PREFIX`：默认值是 `/usr/local`。打包时应该定义为 `/usr`。
 - `LIBEXECDIR`：辅助程序的路径，默认值是 `$PREFIX/libexec`。Arch Linux 使用 `/usr/lib`。
-- `LINUX_STATIC_IME_PLUGIN=ON`（make 阶段）：静态链接输入法插件。推荐在使用静态版本的 Qt 编译时启用；**不要**在使用动态版本的 Qt 编译时启用。
 
 ### 基于 xmake 构建
 
