@@ -3412,6 +3412,14 @@ void Settings::CompilerSets::loadSets()
             return;
         }
         findSets();
+        if (size()==0) {
+            QMessageBox::warning(
+                nullptr,
+                QObject::tr("No Compiler Set"),
+                QObject::tr("Can't find a C/C++ compiler.")
+                    +"<br/>"
+                    +QObject::tr("You must have a compiler to compile and execute C/C++ files."));
+        }
         pCurrentSet = defaultSet();
         if (!pCurrentSet) {
             mList.clear();
@@ -3420,6 +3428,7 @@ void Settings::CompilerSets::loadSets()
             return;
         }
         saveSets();
+
     }
 
 }

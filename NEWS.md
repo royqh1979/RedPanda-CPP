@@ -29,7 +29,7 @@ Red Panda C++ Version 3.2
   - fix: The function parameters' order in the generated doxygen doclet is wrong.
   - enhancement: If current compiler set's compiler / debugger / make path is wrong, show a warning message box.
   - enhancement: Display a cross before compiler set that has errors in compiler / debugger / make path.
-
+  - enhancement: Display a warning message if no compiler set is found at the first time RedPanda C++ runs.
 
 Red Panda C++ Version 3.1
 
