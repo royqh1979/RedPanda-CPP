@@ -3355,10 +3355,6 @@ void Editor::insertCodeSnippet(const QString &code)
 
     QSynedit::BufferCoord cursorPos = caretXY();
     QString s = linesToText(newSl);
-//        if EndsStr(#13#10,s) then
-//          Delete(s,Length(s)-1,2)
-//        else if EndsStr(#10, s) then
-//          Delete(s,Length(s),1);
     setSelText(s);
     if (mUserCodeInTabStops.count()>0) {
         setCaretXY(cursorPos); //restore cursor pos before insert
