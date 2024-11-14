@@ -19,7 +19,7 @@ namespace QSynedit {
         QString getStringOption(const QString& name,const QString& defaultValue) const;
         int getIntOption(const QString& name,int defaultValue) const;
         virtual int calcIndentSpaces(int line, const QString& lineText, bool addIndent,
-                             QSynEdit *editor)=0;
+                             const QSynEdit *editor)=0;
         void initOptions();
     protected:
         virtual void doInitOptions() = 0;

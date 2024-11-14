@@ -13,13 +13,14 @@ public:
 public:
     ProgrammingLanguage supportLanguage() override;
     int calcIndentSpaces(int line, const QString &lineText, bool addIndent,
-                         QSynEdit *editor) override;
+                         const QSynEdit *editor) override;
 
 
     // IndentCalculator interface
 protected:
-    int findCommentStartLine(int searchStartLine, QSynEdit *editor);
+    int findCommentStartLine(int searchStartLine, const QSynEdit *editor);
     void doInitOptions() override;
+    int findLastParenthesis(int line, const QSynEdit *editor);
 };
 }
 
