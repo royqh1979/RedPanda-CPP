@@ -30,6 +30,7 @@ Red Panda C++ Version 3.2
   - enhancement: If current compiler set's compiler / debugger / make path is wrong, show a warning message box.
   - enhancement: Display a cross before compiler set that has errors in compiler / debugger / make path.
   - enhancement: Display a warning message if no compiler set is found at the first time RedPanda C++ runs.
+  - fix: Can't find the single word if the caret is inside it.
 
 Red Panda C++ Version 3.1
 

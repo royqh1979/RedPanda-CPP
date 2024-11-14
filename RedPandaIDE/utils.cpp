@@ -847,5 +847,7 @@ void setComboTextAndHistory(QComboBox *cb, const QString &newText, QStringList &
     } else {
         text = cb->currentText();
     }
+    cb->clear();
+    cb->addItems(historyList);
     cb->setCurrentText(text);
 }

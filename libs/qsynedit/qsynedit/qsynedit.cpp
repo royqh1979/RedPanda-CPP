@@ -5071,10 +5071,17 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
         ptEnd.line = mDocument->count();
         ptEnd.ch = mDocument->getLine(ptEnd.line - 1).length()+1;
         if (bFromCursor) {
-            if (bBackward)
-                ptEnd = caretXY();
-            else
-                ptStart = caretXY();
+            if (bBackward) {
+                if (ptEnd != wordEnd())
+                    ptEnd = wordEnd();
+                else
+                    ptEnd = caretXY();
+            } else {
+                if (ptStart != wordStart())
+                    ptStart = wordStart();
+                else
+                    ptStart = caretXY();
+            }
         }
         if (bBackward)
             ptCurrent = ptEnd;
