@@ -837,17 +837,17 @@ void updateComboHistory(QStringList &historyList, const QString &newKey)
 
 void setComboTextAndHistory(QComboBox *cb, const QString &newText, QStringList &historyList)
 {
-    QString text;
+    int idx;
     if (!newText.isEmpty()) {
-        int idx = historyList.indexOf(newText);
+        idx = historyList.indexOf(newText);
         if (idx == -1) {
             historyList.insert(0, newText);
+            idx = 0;
         }
-        text = newText;
     } else {
-        text = cb->currentText();
+        idx = cb->currentIndex();
     }
     cb->clear();
     cb->addItems(historyList);
-    cb->setCurrentText(text);
+    cb->setCurrentIndex(idx);
 }

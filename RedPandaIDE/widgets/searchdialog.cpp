@@ -46,6 +46,7 @@ void SearchDialog::find(const QString &text)
     setComboTextAndHistory(ui->cbFind,text,mSearchKeys);
     ui->cbFind->setFocus();
     show();
+    activateWindow();
 }
 
 void SearchDialog::replace(const QString &text)
@@ -55,6 +56,7 @@ void SearchDialog::replace(const QString &text)
     setComboTextAndHistory(ui->cbReplace,text,mReplaceKeys);
     ui->cbFind->setFocus();
     show();
+    activateWindow();
 }
 
 void SearchDialog::findNext()

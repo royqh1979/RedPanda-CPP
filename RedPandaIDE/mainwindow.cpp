@@ -6621,7 +6621,8 @@ void MainWindow::on_actionFind_triggered()
     Editor *e = mEditorList->getEditor();
     if (!e)
         return;
-    hideAllSearchDialogs();
+    if (mSearchInFilesDialog)
+        mSearchInFilesDialog->hide();
     prepareSearchDialog();
     if (e->selAvail())
         mSearchDialog->find(e->selText());
@@ -6631,7 +6632,8 @@ void MainWindow::on_actionFind_triggered()
 
 void MainWindow::on_actionFind_in_files_triggered()
 {
-    hideAllSearchDialogs();
+    if (mSearchDialog)
+        mSearchDialog->hide();
     prepareSearchInFilesDialog();
     Editor *e = mEditorList->getEditor();
     if (e) {
@@ -6650,7 +6652,8 @@ void MainWindow::on_actionReplace_triggered()
     if (!e)
         return;
 
-    hideAllSearchDialogs();
+    if (mSearchInFilesDialog)
+        mSearchInFilesDialog->hide();
     prepareSearchDialog();
     if (e->selAvail())
         mSearchDialog->replace(e->selText());

@@ -57,6 +57,7 @@ void SearchInFileDialog::findInFiles(const QString &text)
     setComboTextAndHistory(ui->cbFind,text,mSearchKeys);
     ui->cbFind->setFocus();
     show();
+    activateWindow();
 }
 
 void SearchInFileDialog::findInFiles(const QString &keyword, SearchFileScope scope, QSynedit::SearchOptions options, const QString& folder, const QString& filters, bool searchSubfolders)
@@ -86,6 +87,7 @@ void SearchInFileDialog::findInFiles(const QString &keyword, SearchFileScope sco
     ui->chkCaseSensetive->setChecked(options.testFlag(QSynedit::ssoMatchCase));
     ui->chkWholeWord->setChecked(options.testFlag(QSynedit::ssoWholeWord));
     show();
+    activateWindow();
 }
 
 void SearchInFileDialog::on_cbFind_currentTextChanged(const QString &value)
