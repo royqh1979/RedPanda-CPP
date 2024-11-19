@@ -358,8 +358,8 @@ jobs:
           name: openSUSE ${{ matrix.edition }} x86_64
           path: dist/*.rpm
 
-  musl:
-    name: musl-based Linux (latest Alpine)
+  alpine:
+    name: Alpine Linux
     runs-on: ubuntu-latest
     env:
       IMAGE: docker.io/amd64/alpine:latest
@@ -377,14 +377,23 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: musl-based Linux (latest Alpine)
+          name: Alpine Linux
           path: dist/*.apk
 
   appimage:
     name: Linux AppImage
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x86_64
+          - aarch64
+          - riscv64
+          - loong64
+          - i686
     env:
-      IMAGE: quay.io/redpanda-cpp/appimage-builder-x86_64:20240610.0
+      IMAGE: ghcr.io/redpanda-cpp/appimage-builder-${{ matrix.arch }}:20241120.0
       PLATFORM: linux/amd64
 
     steps:
@@ -399,7 +408,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Linux AppImage
+          name: Linux AppImage ${{ matrix.arch }}
           path: dist/*.AppImage
 
   static-deb:

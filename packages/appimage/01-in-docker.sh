@@ -2,6 +2,11 @@
 
 set -euxo pipefail
 
+if [[ ! -v ARCH || ! -v APPIMAGE_RUNTIME ]]; then
+  echo 'This script should be run in a given container.'
+  exit 1
+fi
+
 . version.inc
 
 SRC_DIR="$PWD"
@@ -12,15 +17,13 @@ else
   VERSION="$APP_VERSION.$TEST_VERSION"
 fi
 
-CARCH=$(gcc -dumpmachine | cut -d- -f1)
-APPIMAGE_FILE=RedPandaIDE-$VERSION-$CARCH.AppImage
-RUNTIME_FILE=/opt/appimage-runtime
-RUNTIME_SIZE=$(wc -c <$RUNTIME_FILE)
+APPIMAGE_FILE=RedPandaIDE-$VERSION-$ARCH.AppImage
+RUNTIME_SIZE=$(wc -c <$APPIMAGE_RUNTIME)
 
 # build RedPanda C++
 mkdir -p /build
 cd /build
-qmake PREFIX=/usr "$SRC_DIR/Red_Panda_CPP.pro"
+qmake PREFIX=/usr QMAKE_LFLAGS=-static "$SRC_DIR/Red_Panda_CPP.pro"
 make -j$(nproc)
 
 # install RedPanda C++ to AppDir
@@ -37,7 +40,7 @@ install -m644 "$SRC_DIR/platform/linux/redpandaide.png" .DirIcon
 # create AppImage
 cd /
 mksquashfs RedPandaIDE.AppDir $APPIMAGE_FILE -offset $RUNTIME_SIZE -comp zstd -root-owned -noappend -b 1M -mkfs-time 0
-dd if=$RUNTIME_FILE of=$APPIMAGE_FILE conv=notrunc
+dd if=$APPIMAGE_RUNTIME of=$APPIMAGE_FILE conv=notrunc
 chmod +x $APPIMAGE_FILE
 
 # copy back to host
