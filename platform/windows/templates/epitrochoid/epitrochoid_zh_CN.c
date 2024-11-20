@@ -123,7 +123,7 @@ int main() {
 		int y=round(outerCY - pointR * sin(theta));		
 		
 		//更新轨迹
-		ImageDrawLineEx(&trackImage,lastx,lasty,x,y,3,trackColor);
+		ImageDrawLineEx2(&trackImage,lastx,lasty,x,y,3,trackColor);
 		
 		frameCount++;
 		if (frameCount>=speed) {
@@ -132,8 +132,8 @@ int main() {
 			
 			ImageDrawCircleEx(&circlesImage,cx,cy,baseR,1,LIGHTRED);
 			ImageDrawCircleEx(&circlesImage,outerCX,outerCY,outerR,1,LIGHTSLATEGRAY);
-			ImageDrawLineEx(&circlesImage,cx,cy,outerCX,outerCY,1,LIGHTRED);
-			ImageDrawLineEx(&circlesImage,x,y,outerCX,outerCY,1,LIGHTSLATEGRAY);
+			ImageDrawLineEx2(&circlesImage,cx,cy,outerCX,outerCY,1,LIGHTRED);
+			ImageDrawLineEx2(&circlesImage,x,y,outerCX,outerCY,1,LIGHTSLATEGRAY);
 			ImageDrawPointEx(&circlesImage,x,y,7,RED);
 			
 			//将图层绘制到屏幕中（GPU绘图）
