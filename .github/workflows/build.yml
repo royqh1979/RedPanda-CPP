@@ -2,6 +2,15 @@ name: Build
 
 on: [push, pull_request]
 
+env:
+  CONTAINER_COMMAND: "podman run
+                        --platform $PLATFORM
+                        --rm
+                        --security-opt seccomp=unconfined
+                        --volume $PWD:/mnt
+                        --workdir /mnt
+                        $IMAGE"
+
 jobs:
   windows:
     name: Windows MSYS2
@@ -224,8 +233,12 @@ jobs:
       matrix:
         arch: [amd64, i386]
         version: ["11", "12"]
+        include:
+          - { arch: amd64, platform: linux/amd64 }
+          - { arch: i386, platform: linux/386 }
     env:
       IMAGE: docker.io/${{ matrix.arch }}/debian:${{ matrix.version }}
+      PLATFORM: ${{ matrix.platform }}
 
     runs-on: ubuntu-latest
 
@@ -236,7 +249,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/debian/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/debian/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -252,6 +265,7 @@ jobs:
         version: ["22.04", "24.04", "24.10", "devel"]
     env:
       IMAGE: docker.io/amd64/ubuntu:${{ matrix.version }}
+      PLATFORM: linux/amd64
 
     runs-on: ubuntu-latest
 
@@ -262,7 +276,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/debian/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/debian/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -275,6 +289,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE: docker.io/amd64/archlinux:latest
+      PLATFORM: linux/amd64
 
     steps:
       - uses: actions/checkout@v4
@@ -283,7 +298,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/archlinux/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/archlinux/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -300,6 +315,7 @@ jobs:
         version: ["latest", "rawhide"]
     env:
       IMAGE: docker.io/amd64/fedora:${{ matrix.version }}
+      PLATFORM: linux/amd64
 
     steps:
       - uses: actions/checkout@v4
@@ -308,7 +324,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/fedora/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/fedora/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -325,6 +341,7 @@ jobs:
         edition: ["leap", "tumbleweed"]
     env:
       IMAGE: docker.io/opensuse/${{ matrix.edition }}:latest
+      PLATFORM: linux/amd64
 
     steps:
       - uses: actions/checkout@v4
@@ -333,7 +350,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/opensuse/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/opensuse/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -346,6 +363,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE: docker.io/amd64/alpine:latest
+      PLATFORM: linux/amd64
 
     steps:
       - uses: actions/checkout@v4
@@ -354,7 +372,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --security-opt seccomp=unconfined --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/alpine/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/alpine/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -367,6 +385,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE: quay.io/redpanda-cpp/appimage-builder-x86_64:20240610.0
+      PLATFORM: linux/amd64
 
     steps:
       - uses: actions/checkout@v4
@@ -375,7 +394,7 @@ jobs:
 
       - name: Build
         run: |
-          podman run --rm -v $PWD:/mnt -w /mnt $IMAGE ./packages/appimage/01-in-docker.sh
+          ${{ env.CONTAINER_COMMAND }} ./packages/appimage/01-in-docker.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
