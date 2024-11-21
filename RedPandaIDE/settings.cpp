@@ -4947,6 +4947,8 @@ Settings::CodeFormatter::CodeFormatter(Settings *settings):
 QStringList Settings::CodeFormatter::getArguments()
 {
     QStringList result;
+    //force use english language
+    result.append("-I");
     switch(mBraceStyle) {
     case FormatterBraceStyle::fbsDefault:
         break;
