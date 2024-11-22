@@ -409,7 +409,9 @@ void CppSyntaxer::procBraceOpen()
             popIndents(IndentType::Statement);
         }
         pushIndents(IndentType::Block, lastLine);
-    } else
+    } else if (mRange.lastUnindent.type == IndentType::Parenthesis)
+        pushIndents(IndentType::Block, mRange.lastUnindent.line);
+    else
         pushIndents(IndentType::Block);
 }
 
@@ -1015,8 +1017,12 @@ void CppSyntaxer::procSemiColon()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    while (mRange.getLastIndentType() == IndentType::Statement) {
-        popIndents(IndentType::Statement);
+    if (mRange.getLastIndentType() == IndentType::Statement) {
+        while (mRange.getLastIndentType() == IndentType::Statement) {
+            popIndents(IndentType::Statement);
+        }
+    } else {
+        mRange.lastUnindent = IndentInfo{IndentType::None, 0};
     }
 }
 
