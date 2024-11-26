@@ -822,6 +822,9 @@ bool osSupportsUtf8Manifest()
 
 bool applicationIsUtf8(const QString &path)
 {
+    static bool systemIsUtf8 = GetACP() == CP_UTF8;
+    if (systemIsUtf8)
+        return true;
     return osSupportsUtf8Manifest() && applicationHasUtf8Manifest((wchar_t *)path.constData());
 }
 #endif

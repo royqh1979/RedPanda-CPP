@@ -1468,9 +1468,9 @@ public:
         bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
 
 #ifdef Q_OS_WINDOWS
-        bool isDebugInfoUsingUTF8() const;
+        bool isDebugInfoUsingUTF8();
         bool forceUTF8() const;
-        bool isCompilerInfoUsingUTF8() const;
+        bool isCompilerInfoUsingUTF8();
 #else
         constexpr bool isDebugInfoUsingUTF8() const { return true; }
         constexpr bool forceUTF8() const { return true; }
@@ -1544,6 +1544,12 @@ public:
 
         // Options
         QMap<QString,QString> mCompileOptions;
+
+#ifdef Q_OS_WINDOWS
+        // GCC ACP detection cache
+        bool mGccIsUtf8;
+        bool mGccIsUtf8Initialized;
+#endif
     };
 
     typedef std::shared_ptr<CompilerSet> PCompilerSet;
