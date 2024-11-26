@@ -17,23 +17,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        msystem: [MINGW32, MINGW64, UCRT64, CLANG64]
+        msystem: [MINGW64, UCRT64, CLANG64]
         include:
-          - isUcrt: false
-          - msystem: MINGW32
-            packagePrefix: mingw-w64-i686
-            _7zPackagePrefix: mingw-w64-x86_64
+          - isUcrt: 1
           - msystem: MINGW64
+            isUcrt: 0
             packagePrefix: mingw-w64-x86_64
-            _7zPackagePrefix: mingw-w64-x86_64
           - msystem: UCRT64
-            isUcrt: true
             packagePrefix: mingw-w64-ucrt-x86_64
-            _7zPackagePrefix: mingw-w64-ucrt-x86_64
           - msystem: CLANG64
-            isUcrt: true
             packagePrefix: mingw-w64-clang-x86_64
-            _7zPackagePrefix: mingw-w64-clang-x86_64
     runs-on: windows-latest
     defaults:
       run:
@@ -54,8 +47,8 @@ jobs:
             ${{ matrix.packagePrefix }}-make
             ${{ matrix.packagePrefix }}-qt5-static
             ${{ matrix.packagePrefix }}-cmake
+            ${{ matrix.packagePrefix }}-7zip
             mingw-w64-i686-nsis
-            ${{ matrix._7zPackagePrefix }}-7zip
             git
 
       - name: Download MinGW toolchain

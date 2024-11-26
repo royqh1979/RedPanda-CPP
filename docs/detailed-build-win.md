@@ -2,8 +2,8 @@
 
 | Library + Toolchain \ Target | x86 | x64 | ARM64 |
 | ---------------------------- | --- | --- | ----- |
-| MSYS2 + GNU-based MinGW | ✔️ | ✔️ | ❌ |
-| MSYS2 + LLVM-based MinGW | ✔️ | ✔️ | ✔️ |
+| MSYS2 + GNU-based MinGW | ❌ | ✔️ | ❌ |
+| MSYS2 + LLVM-based MinGW | ❌ | ✔️ | ✔️ |
 | [Windows XP](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW UCRT](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 | Qt.io + MinGW | ✔️ | ✔️ | ❌ |
 | Qt.io + MSVC | ✔️ | ✔️ | ❌ |

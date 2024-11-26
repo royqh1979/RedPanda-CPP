@@ -27,39 +27,30 @@ To setup development environment in Visual Studio Code:
 
 | Library + Toolchain \ Target | x86 | x64 | ARM64 |
 | ---------------------------- | --- | --- | ----- |
-| MSYS2 + GNU-based MinGW | ✔️ | ✔️ | ❌ |
-| MSYS2 + LLVM-based MinGW | ✔️ | ✔️ | ✔️ |
+| MSYS2 + GNU-based MinGW | ❌ | ✔️ | ❌ |
+| MSYS2 + LLVM-based MinGW | ❌ | ✔️ | ✔️ |
 | [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
 See also [more build instructions for Windows](./docs/detailed-build-win.md).
 
 ## MSYS2 Qt Library with MinGW Toolchain (Recommended)
 
-Red Panda C++ should work with any MinGW toolchain from MSYS2, including GCCs and Clangs in three GNU-based environments (MINGW32, MINGW64 and UCRT64), and Clangs in 64-bit LLVM-based environments (CLANG64 and CLANGARM64; see also [MSYS2’s document](https://www.msys2.org/docs/environments/)), while the following toolchains are frequently tested:
-- MINGW32 GCC,
+Red Panda C++ should work with any 64-bit MinGW toolchain from MSYS2, including GCCs and Clangs in GNU-based environments (MINGW64 and UCRT64), and Clangs in LLVM-based environments (CLANG64 and CLANGARM64; see also [MSYS2’s document](https://www.msys2.org/docs/environments/)), while the following toolchains are frequently tested:
 - MINGW64 GCC,
 - UCRT64 GCC (recommended for x64)
 - CLANGARM64 Clang (the only and recommended toolchain for ARM64).
 
-Official distributions of Red Panda C++ are built with MINGW32 GCC and MINGW64 GCC.
+Official distributions of Red Panda C++ are built with MINGW32 GCC (archived) and MINGW64 GCC.
 
 Prerequisites:
 
 0. Windows 10 x64 or later, or Windows 11 ARM64.
 1. Install MSYS2.
-2. In selected environment, install toolchain, Qt 5 library, and required utils. For 64-bit:
+2. In selected environment, install toolchain, Qt 5 library, and required utils:
    ```bash
    pacman -S \
      $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,7zip,cmake} \
      mingw-w64-i686-nsis \
-     git curl
-   ```
-   And for 32-bit:
-   ```bash
-   pacman -S \
-     $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,cmake} \
-     mingw-w64-i686-nsis \
-     mingw-w64-x86_64-7zip \
      git curl
    ```
 
@@ -82,7 +73,7 @@ Common arguments:
 Extra arguments for `build-mingw.sh`:
 - `--mingw32`: add `assets/mingw32.7z` to the package.
 - `--mingw64`: add `assets/mingw64.7z` to the package.
-- `--mingw`: alias for `--mingw32` (x86 app) or `--mingw64` (x64 app).
+- `--mingw`: alias for `--mingw64` (x64 app).
 - `--ucrt <build>`: add UCRT runtime from Windows SDK to the package. e.g. `--ucrt 22621` for Windows 11 SDK 22H2.
 
 ## Windows NT 5.x Qt Library with MinGW Lite Toolchain
