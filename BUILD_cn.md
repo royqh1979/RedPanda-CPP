@@ -27,39 +27,30 @@
 
 | 库 + 工具链 \ 目标 | x86 | x64 | ARM64 |
 | ------------------ | --- | --- | ----- |
-| MSYS2 + 基于 GNU 的 MinGW | ✔️ | ✔️ | ❌ |
-| MSYS2 + 基于 LLVM 的 MinGW | ✔️ | ✔️ | ✔️ |
+| MSYS2 + 基于 GNU 的 MinGW | ❌ | ✔️ | ❌ |
+| MSYS2 + 基于 LLVM 的 MinGW | ❌ | ✔️ | ✔️ |
 | [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
 另请参阅[详细构建指南——Windows](./docs/detailed-build-win-cn.md)。
 
 ## MSYS2 的 Qt 库 + MinGW 工具链（推荐）
 
-小熊猫C++ 应该能在 MSYS2 的 MinGW 工具链上构建，包括 3 个基于 GNU 的环境（MINGW32、MINGW64、UCRT64）中的 GCC 和 Clang，以及基于 LLVM 的 64 位环境（CLANG64、CLANGARM64）中的 Clang，关于环境的详情可参考 [MSYS2 的文档](https://www.msys2.org/docs/environments/)。以下几个工具链测试较充分：
-- MINGW32 GCC，
+小熊猫C++ 应该能在 MSYS2 的 64 位 MinGW 工具链上构建，包括基于 GNU 的环境（MINGW64、UCRT64）中的 GCC 和 Clang，以及基于 LLVM 的环境（CLANG64、CLANGARM64）中的 Clang，关于环境的详情可参考 [MSYS2 的文档](https://www.msys2.org/docs/environments/)。以下几个工具链测试较充分：
 - MINGW64 GCC，
 - UCRT64 GCC（x64 推荐），
 - CLANGARM64 Clang（ARM64 唯一可用且推荐的工具链）。
 
-小熊猫C++ 官方版本使用 MINGW32 GCC 和 MINGW64 GCC 构建。
+小熊猫C++ 官方版本使用 MINGW32 GCC（已归档）和 MINGW64 GCC 构建。
 
 前置条件：
 
 0. Windows 10 x64 或更高版本，或 Windows 11 ARM64。
 1. 安装 MSYS2。
-2. 在所选环境中安装工具链、Qt 5 库、其他所需工具，64 位：
+2. 在所选环境中安装工具链、Qt 5 库、其他所需工具：
    ```bash
    pacman -S \
      $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,7zip,cmake} \
      mingw-w64-i686-nsis \
-     git curl
-   ```
-   32 位：
-   ```bash
-   pacman -S \
-     $MINGW_PACKAGE_PREFIX-{cc,make,qt5-static,cmake} \
-     mingw-w64-i686-nsis \
-     mingw-w64-x86_64-7zip \
      git curl
    ```
 
@@ -82,7 +73,7 @@
 `build-mingw.sh` 的额外参数：
 - `--mingw32`：把 `assets/mingw32.7z` 添加到包中。
 - `--mingw64`：把 `assets/mingw64.7z` 添加到包中。
-- `--mingw`：`--mingw32`（x86 程序）或 `--mingw64`（x64 程序）的别名。
+- `--mingw`：`--mingw64`（x64 程序）的别名。
 - `--ucrt <build>`：把 Windows SDK 附带的 UCRT 运行时添加到包中。例如 `--ucrt 22621` 表示 Windows 11 SDK 22H2。
 
 ## 用于 Windows NT 5.x 的 Qt 库 + MinGW Lite 工具链

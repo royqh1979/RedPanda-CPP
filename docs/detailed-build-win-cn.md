@@ -2,8 +2,8 @@
 
 | 库 + 工具链 \ 目标 | x86 | x64 | ARM64 |
 | ------------------ | --- | --- | ----- |
-| MSYS2 + 基于 GNU 的 MinGW | ✔️ | ✔️ | ❌ |
-| MSYS2 + 基于 LLVM 的 MinGW | ✔️ | ✔️ | ✔️ |
+| MSYS2 + 基于 GNU 的 MinGW | ❌ | ✔️ | ❌ |
+| MSYS2 + 基于 LLVM 的 MinGW | ❌ | ✔️ | ✔️ |
 | [Windows XP](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW UCRT](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 | Qt.io + MinGW | ✔️ | ✔️ | ❌ |
 | Qt.io + MSVC | ✔️ | ✔️ | ❌ |
