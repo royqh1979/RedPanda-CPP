@@ -1,3 +1,6 @@
+Red Panda C++ Version 3.3
+  - enhancement: Auto indent contents in parenthesis.
+
 Red Panda C++ Version 3.2
 
   - change: The way to calcuate astyle path.
@@ -32,7 +35,6 @@ Red Panda C++ Version 3.2
   - enhancement: Display a warning message if no compiler set is found at the first time RedPanda C++ runs.
   - fix: Can't find the single word if the caret is inside it.
   - fix: Search Dialog always returns to center each time starting a search.
-  - enhancement: Auto indent contents in parenthesis.
 
 Red Panda C++ Version 3.1
 
