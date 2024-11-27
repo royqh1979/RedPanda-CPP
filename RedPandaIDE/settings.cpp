@@ -1652,6 +1652,9 @@ Settings::CompilerSet::CompilerSet():
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
     mExecutableSuffix{DEFAULT_EXECUTABLE_SUFFIX},
     mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable}
+#ifdef Q_OS_WINDOWS
+    , mGccIsUtf8Initialized(false)
+#endif
 {
 
 }
@@ -1668,6 +1671,9 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
     mExecutableSuffix{DEFAULT_EXECUTABLE_SUFFIX},
     mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable}
+#ifdef Q_OS_WINDOWS
+    , mGccIsUtf8Initialized(false)
+#endif
 {
     QDir dir(compilerFolder);
     if (dir.exists(c_prog)) {
@@ -1737,6 +1743,10 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mExecutableSuffix{set.mExecutableSuffix},
     mCompilationStage{set.mCompilationStage},
     mCompileOptions{set.mCompileOptions}
+#ifdef Q_OS_WINDOWS
+    , mGccIsUtf8(set.mGccIsUtf8)
+    , mGccIsUtf8Initialized(set.mGccIsUtf8Initialized)
+#endif
 {
 
 }
@@ -1780,6 +1790,9 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mExecutableSuffix{set["executableSuffix"].toString()},
     mCompilationStage{CompilationStage(set["compilationStage"].toInt())},
     mCompileOptions{} // handle later
+#ifdef Q_OS_WINDOWS
+    , mGccIsUtf8Initialized(false)
+#endif
 {
     for (const QJsonValue &dir : set["binDirs"].toArray())
         mBinDirs.append(dir.toString());
@@ -2039,6 +2052,9 @@ const QString &Settings::CompilerSet::CCompiler() const
 void Settings::CompilerSet::setCCompiler(const QString &name)
 {
     if (mCCompiler!=name) {
+#ifdef Q_OS_WIN
+        mGccIsUtf8Initialized = false;
+#endif
         mCCompiler = name;
         if (mCompilerType == CompilerType::Unknown) {
             QString temp=extractFileName(mCCompiler);
@@ -2935,14 +2951,18 @@ bool Settings::CompilerSet::isOutputExecutable(CompilationStage stage)
 }
 
 #ifdef Q_OS_WINDOWS
-bool Settings::CompilerSet::isDebugInfoUsingUTF8() const
+bool Settings::CompilerSet::isDebugInfoUsingUTF8()
 {
     switch(mCompilerType) {
     case CompilerType::Clang:
     case CompilerType::GCC_UTF8:
         return true;
     case CompilerType::GCC:
-        return applicationIsUtf8(mCCompiler);
+        if (!mGccIsUtf8Initialized) {
+            mGccIsUtf8 = applicationIsUtf8(mCCompiler);
+            mGccIsUtf8Initialized = true;
+        }
+        return mGccIsUtf8;
     default:
         return false;
     }
@@ -2953,7 +2973,7 @@ bool Settings::CompilerSet::forceUTF8() const
     return CompilerInfoManager::forceUTF8InDebugger(mCompilerType);
 }
 
-bool Settings::CompilerSet::isCompilerInfoUsingUTF8() const
+bool Settings::CompilerSet::isCompilerInfoUsingUTF8()
 {
     return isDebugInfoUsingUTF8();
 }
