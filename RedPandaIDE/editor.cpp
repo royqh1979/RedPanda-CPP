@@ -116,7 +116,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     } else {
         setUseCodeFolding(false);
     }
-
     if (mProject && mEncodingOption==ENCODING_PROJECT) {
         mEncodingOption=mProject->options().encoding;
     }

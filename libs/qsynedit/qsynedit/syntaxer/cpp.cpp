@@ -409,6 +409,8 @@ void CppSyntaxer::procBraceOpen()
             popIndents(IndentType::Statement);
         }
         pushIndents(IndentType::Block, lastLine);
+    } else if (mRange.lastUnindent.type == IndentType::Parenthesis) {
+        pushIndents(IndentType::Block, mRange.lastUnindent.line);
     } else
         pushIndents(IndentType::Block);
 }
@@ -1015,8 +1017,12 @@ void CppSyntaxer::procSemiColon()
 {
     mRun += 1;
     mTokenId = TokenId::Symbol;
-    while (mRange.getLastIndentType() == IndentType::Statement) {
-        popIndents(IndentType::Statement);
+    if (mRange.getLastIndentType() == IndentType::Statement) {
+        while (mRange.getLastIndentType() == IndentType::Statement) {
+            popIndents(IndentType::Statement);
+        }
+    } else {
+        mRange.lastUnindent = IndentInfo{IndentType::None, 0};
     }
 }
 
@@ -1662,7 +1668,6 @@ void CppSyntaxer::setLine(const QString &newLine, int lineNumber)
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
     mRange.blockEndedLastLine = 0;
-    mRange.lastUnindent=IndentInfo{IndentType::None,0};
     mRange.hasTrailingSpaces = false;
     next();
 }
@@ -1679,7 +1684,7 @@ void CppSyntaxer::setState(const SyntaxState& rangeState)
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
     mRange.blockEndedLastLine = 0;
-    mRange.lastUnindent=IndentInfo{IndentType::None,0};
+    mRange.lastUnindent=rangeState.lastUnindent;
     mRange.hasTrailingSpaces = false;
 }
 
