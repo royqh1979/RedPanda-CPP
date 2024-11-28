@@ -250,7 +250,7 @@ void CompilerManager::run(
             consoleFlag |= RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         if (consoleFlag!=0) {
             QString sharedMemoryId = QUuid::createUuid().toString();
-            QString consolePauserPath = includeTrailingPathDelimiter(pSettings->dirs().appDir()) + CONSOLE_PAUSER;
+            QString consolePauserPath = getFilePath(pSettings->dirs().appDir(), CONSOLE_PAUSER);
             QStringList execArgs = QStringList{
                 consolePauserPath,
                 QString::number(consoleFlag),
@@ -283,7 +283,7 @@ void CompilerManager::run(
         sharedMemoryId = sharedMemoryId.mid(0, PSHMNAMLEN);
 #endif
         if (consoleFlag!=0) {
-            QString consolePauserPath=includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"consolepauser";
+            QString consolePauserPath= getAbsolutePathForFile(, CONSOLE_PAUSER);
             if (!fileExists(consolePauserPath)) {
                 QMessageBox::critical(pMainWindow,
                                          tr("Can't find Console Pauser"),

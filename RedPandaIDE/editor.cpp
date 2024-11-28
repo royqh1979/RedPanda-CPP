@@ -3733,9 +3733,9 @@ void Editor::initAutoBackup()
         return;
     QFileInfo fileInfo(mFilename);
     if (fileInfo.isAbsolute()) {
-        mBackupFile=new QFile(extractFileDir(mFilename)
-                              +QDir::separator()
-                              +extractFileName(mFilename)+QString(".%1.editbackup").arg(QDateTime::currentSecsSinceEpoch()));
+        mBackupFile=new QFile(getFilePath(
+                                extractFileDir(mFilename),
+                                extractFileName(mFilename)+QString(".%1.editbackup").arg(QDateTime::currentSecsSinceEpoch())));
         if (mBackupFile->open(QFile::Truncate|QFile::WriteOnly)) {
             saveAutoBackup();
         } else {
@@ -3743,9 +3743,8 @@ void Editor::initAutoBackup()
         }
     } else {
         mBackupFile=new QFile(
-                    includeTrailingPathDelimiter(QDir::currentPath())
-                    +mFilename
-                    +QString(".%1.editbackup").arg(QDateTime::currentSecsSinceEpoch()));
+                    getFilePath(QDir::currentPath(),
+                        mFilename+QString(".%1.editbackup").arg(QDateTime::currentSecsSinceEpoch())));
         if (!mBackupFile->open(QFile::Truncate|QFile::WriteOnly)) {
             mBackupFile->setParent(nullptr);
             delete mBackupFile;

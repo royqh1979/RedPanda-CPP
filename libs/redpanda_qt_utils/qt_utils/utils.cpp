@@ -515,12 +515,12 @@ QString changeFileExt(const QString& filename, QString ext)
         ext = "."+ext;
     }
     if (fileInfo.path() != ".") {
-        path = includeTrailingPathDelimiter(fileInfo.path());
+        path = fileInfo.path();
     }
     if (suffix.isEmpty()) {
-        return path+name+ext;
+        return getFilePath( path, name+ext );
     } else {
-        return path+fileInfo.completeBaseName()+ext;
+        return getFilePath( path, fileInfo.completeBaseName()+ext );
     }
 }
 
@@ -541,6 +541,8 @@ QString extractRelativePath(const QString &base, const QString &dest)
 
 QString localizePath(const QString &path)
 {
+    if (QDir::separator() == "/")
+        return path;
     QString result = path;
     result.replace("/",QDir::separator());
     return result;
@@ -1018,4 +1020,25 @@ bool isEncodingAvailable(const QByteArray &encoding)
 {
     TextEncoder encoder(encoding);
     return encoder.isValid();
+}
+
+QString getFilePath(const QString &folder, const QString &filename)
+{
+    QDir dir{folder};
+    return dir.filePath(filename);
+}
+
+QString getAbsoluteFilePath(const QString &folder, const QString &filename)
+{
+    QDir dir{folder};
+    return QDir::cleanPath(dir.absoluteFilePath(filename));
+}
+
+QString generateSubfolderPath(const QString &parentFolder, std::vector<QString> subfoldernames)
+{
+    QDir dir{parentFolder};
+    for (const QString& n:subfoldernames) {
+        dir = QDir{dir.filePath(n)};
+    }
+    return dir.absolutePath();
 }

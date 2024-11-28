@@ -244,7 +244,7 @@ QString Settings::Dirs::projectDir() const
 QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
 {
     using DataType = Settings::Dirs::DataType;
-    QString dataDir = includeTrailingPathDelimiter(appDir())+"data";
+    QString dataDir = getFilePath(appDir(), +"data");
     switch (dataType) {
     case DataType::None:
         return dataDir;
@@ -255,7 +255,7 @@ QString Settings::Dirs::data(Settings::Dirs::DataType dataType) const
     case DataType::Theme:
         return ":/resources/themes";
     case DataType::Template:
-        return includeTrailingPathDelimiter(appResourceDir()) + "templates";
+        return getFilePath(appResourceDir(),"templates");
     }
     return "";
 }
@@ -269,13 +269,13 @@ QString Settings::Dirs::config(Settings::Dirs::DataType dataType) const
     case DataType::None:
         return configDir;
     case DataType::ColorScheme:
-        return QFileInfo{includeTrailingPathDelimiter(configDir)+"scheme"}.absoluteFilePath();
+        return getAbsoluteFilePath(configDir, "scheme");
     case DataType::IconSet:
-        return QFileInfo{includeTrailingPathDelimiter(configDir)+"iconsets"}.absoluteFilePath();
+        return getAbsoluteFilePath(configDir, "iconsets");
     case DataType::Theme:
-        return QFileInfo{includeTrailingPathDelimiter(configDir)+"themes"}.absoluteFilePath();
+        return getAbsoluteFilePath(configDir, "themes");
     case DataType::Template:
-        return QFileInfo{includeTrailingPathDelimiter(configDir) + "templates"}.absoluteFilePath();
+        return getAbsoluteFilePath(configDir, "templates");
     }
     return "";
 }
@@ -296,10 +296,11 @@ void Settings::Dirs::doLoad()
 {
     QString defaultProjectDir;
     if (isGreenEdition()) {
-        defaultProjectDir = includeTrailingPathDelimiter(appDir()) + "projects";
+        defaultProjectDir = getFilePath(appDir(), "projects");
     } else {
-        defaultProjectDir = includeTrailingPathDelimiter(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0])
-                         + "projects";
+        defaultProjectDir = getFilePath(
+                                QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0],
+                                "projects");
     }
     mProjectDir = stringValue("projectDir",defaultProjectDir);
 }
@@ -2351,13 +2352,13 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
     QString folder = tmpDir.path();
 
     // Add the default directories
-    addExistingDirectory(mBinDirs, includeTrailingPathDelimiter(folder) +  "bin");
+    addExistingDirectory(mBinDirs, getFilePath(folder,"bin"));
     if (!mDumpMachine.isEmpty()) {
         //mingw-w64 bin folder
         addExistingDirectory(mBinDirs,
-            includeTrailingPathDelimiter(folder) + "lib/"
-            "gcc/" + mDumpMachine
-            + "/" + mVersion);
+                            generateSubfolderPath(
+                                folder,
+                                    {"lib" , "gcc" , mDumpMachine, mVersion} ));
     }
 }
 
@@ -2675,57 +2676,6 @@ void Settings::CompilerSet::setGCCDirectories(const QString& binDir)
                 addExistingDirectory(mDefaultLibDirs,trimmedLine);
         }
     }
-
-    // Try to obtain our target/autoconf folder
-    if (!mDumpMachine.isEmpty()) {
-        //mingw-w64 bin folder
-        addExistingDirectory(mBinDirs,
-            includeTrailingPathDelimiter(folder) + "lib/"
-            "gcc/" + mDumpMachine
-            + "/" + mVersion);
-
-        // Regular include folder
-        addExistingDirectory(mDefaultCIncludeDirs, includeTrailingPathDelimiter(folder) + mDumpMachine + "/include");
-        addExistingDirectory(mDefaultCppIncludeDirs, includeTrailingPathDelimiter(folder)+ mDumpMachine + "/include");
-
-        // Other include folder?
-        addExistingDirectory(mDefaultCIncludeDirs,
-            includeTrailingPathDelimiter(folder) + "lib/gcc/"
-            + mDumpMachine + "/" + mVersion + "/include");
-        addExistingDirectory(mDefaultCppIncludeDirs,
-            includeTrailingPathDelimiter(folder) + "lib/gcc/"
-            + mDumpMachine + "/" + mVersion + "/include");
-
-        addExistingDirectory(mDefaultCIncludeDirs,
-            includeTrailingPathDelimiter(folder) + "lib/gcc/"
-             + mDumpMachine + "/" + mVersion + "/include-fixed");
-        addExistingDirectory(mDefaultCppIncludeDirs,
-            includeTrailingPathDelimiter(folder) + "lib/gcc/"
-                + mDumpMachine + "/" + mVersion + "/include-fixed");
-
-        // C++ only folder (mingw.org)
-        addExistingDirectory(mDefaultCppIncludeDirs,
-            includeTrailingPathDelimiter(folder)  + "lib/gcc/"
-                + mDumpMachine + "/" + mVersion + "/include/c++");
-        addExistingDirectory(mDefaultCppIncludeDirs,
-             includeTrailingPathDelimiter(folder)  + "lib/gcc/"
-                 + mDumpMachine + "/" + mVersion + "/include/c++/"
-                 + mDumpMachine);
-        addExistingDirectory(mDefaultCppIncludeDirs,
-             includeTrailingPathDelimiter(folder)  + "lib/gcc/"
-                 + mDumpMachine + "/" + mVersion + "/include/c++/backward");
-
-        // C++ only folder (Mingw-w64)
-        addExistingDirectory(mDefaultCppIncludeDirs,
-            includeTrailingPathDelimiter(folder)  + "include/c++/"
-            + mVersion );
-        addExistingDirectory(mDefaultCppIncludeDirs,
-            includeTrailingPathDelimiter(folder)  + "include/c++/"
-            + mVersion + "/backward");
-        addExistingDirectory(mDefaultCppIncludeDirs,
-            includeTrailingPathDelimiter(folder)  + "include/c++/"
-            + mVersion + "/" + mDumpMachine);
-    }
 }
 
 #ifdef ENABLE_SDCC
@@ -2854,7 +2804,7 @@ void Settings::CompilerSet::setUserInput()
 QString Settings::CompilerSet::findProgramInBinDirs(const QString name) const
 {
     for (const QString& dir : mBinDirs) {
-        QFileInfo f(includeTrailingPathDelimiter(dir) + name);
+        QFileInfo f(getAbsoluteFilePath(dir, name));
         if (f.exists() && f.isExecutable()) {
             return f.absoluteFilePath();
         }
@@ -2880,7 +2830,7 @@ QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const
     QString path = binDir;
     env.insert("PATH",path);
     auto [result, _, errorMessage] = runAndGetOutput(
-                includeTrailingPathDelimiter(binDir)+binFile,
+                getFilePath(binDir, binFile),
                 binDir,
                 arguments,
                 QByteArray(),
@@ -3419,8 +3369,8 @@ void Settings::CompilerSets::loadSets()
         QString msg = QObject::tr("Compiler set not configuared.")
                 +"<br /><br />"
                 +QObject::tr("Would you like Red Panda C++ to search for compilers in the following locations: <BR />'%1'<BR />'%2'? ")
-                .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "mingw32")
-                .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "mingw64");
+                .arg(getFilePath(pSettings->dirs().appDir(), "mingw32"))
+                .arg(getFilePath(pSettings->dirs().appDir(), + "mingw64"));
 #else
         QString msg = QObject::tr("Compiler set not configuared.")
                 +"<br /><br />"
@@ -3609,7 +3559,7 @@ QString Settings::CompilerSets::loadPath(const QString &name)
     QString s =  mSettings->mSettings.value(name).toString();
     QString prefix = "%AppPath%/";
     if (s.startsWith(prefix)) {
-        s = includeTrailingPathDelimiter(mSettings->mDirs.appDir()) + s.mid(prefix.length());
+        s = getFilePath(mSettings->mDirs.appDir(), s.mid(prefix.length()));
     }
     return QFileInfo(s).absoluteFilePath();
 }
@@ -3622,7 +3572,7 @@ void Settings::CompilerSets::loadPathList(const QString &name, QStringList& list
     QString prefix = "%AppPath%/";
     for (QString& s:sl) {
         if (s.startsWith(prefix)) {
-            s = includeTrailingPathDelimiter(mSettings->mDirs.appDir()) + s.mid(prefix.length());
+            s = getFilePath(mSettings->mDirs.appDir(), s.mid(prefix.length()));
         }
         list.append(QFileInfo(s).absoluteFilePath());
     }
@@ -3838,7 +3788,7 @@ void Settings::Environment::doLoad()
     mAStylePath = stringValue("astyle_path","");
     if (mAStylePath.isEmpty()
             /* compatibily for old configuration */
-            || ( mAStylePath == includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"astyle")
+        || ( mAStylePath == getFilePath(pSettings->dirs().appLibexecDir(), "astyle"))
             ) {
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
         QString path = env.value("PATH");
@@ -3927,7 +3877,7 @@ QString Settings::Environment::AStylePath() const
 {
     QString path = mAStylePath;
     if (path.isEmpty())
-        path = includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+ASTYLE_PROGRAM;
+        path = getFilePath(pSettings->dirs().appLibexecDir(),ASTYLE_PROGRAM);
     else
         path = replacePrefix(path, "%*APP_DIR*%", pSettings->dirs().appDir());
     return path;
