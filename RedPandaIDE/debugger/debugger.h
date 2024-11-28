@@ -401,6 +401,7 @@ signals:
     void evalValueReady(const QString& s);
     void memoryExamineReady(const QStringList& s);
     void localsReady(const QStringList& s);
+    void debugEnded();
 public slots:
     void stop();
     void refreshAll();

@@ -83,7 +83,7 @@ bool Debugger::startClient(int compilerSetIndex,
                            const QString& sourceFile)
 {
     QMutexLocker locker{&mClientMutex};
-    if (mClient)
+    if (mClient!=nullptr)
         return false;
     mCurrentSourceFile = sourceFile;
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
@@ -161,6 +161,8 @@ bool Debugger::startClient(int compilerSetIndex,
     mClient->addBinDirs(binDirs);
     mClient->addBinDir(pSettings->dirs().appDir());
     mClient->setDebuggerPath(debuggerPath);
+    connect(this, &Debugger::debugEnded, pMainWindow,
+            QOverload<>::of(&MainWindow::updateEditorActions));
     connect(mClient, &QThread::finished,this,&Debugger::cleanUp);
     connect(mClient, &QThread::finished,mMemoryModel.get(),&MemoryModel::reset);
     connect(mClient, &DebuggerClient::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
@@ -272,13 +274,12 @@ void Debugger::cleanUp()
 
         mBreakpointModel->invalidateAllBreakpointNumbers();
 
-        pMainWindow->updateEditorActions();
-
         //stop debugger
         mClient->stopDebug();
         mClient->deleteLater();
         mClient = nullptr;
     }
+    emit debugEnded();
 }
 
 void Debugger::updateRegisterNames(const QStringList &registerNames)
