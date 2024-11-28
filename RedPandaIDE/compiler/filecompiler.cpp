@@ -66,7 +66,7 @@ bool FileCompiler::prepareForCompile()
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
     log("");
     FileType fileType = getFileType(mFilename);
-    mArguments = QStringList{mFilename};
+    mArguments = QStringList{localizePath(mFilename)};
     if (!mOnlyCheckSyntax) {
         switch(compilerSet()->compilationStage()) {
         case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
@@ -91,7 +91,8 @@ bool FileCompiler::prepareForCompile()
             }
         }
 #endif
-        mArguments += {"-o", mOutputFile};
+        mOutputFile = localizePath(mOutputFile);
+        mArguments += {"-o",  mOutputFile};
 
 #if defined(ARCH_X86_64) || defined(ARCH_X86)
         if (mCompileType == CppCompileType::GenerateAssemblyOnly) {
