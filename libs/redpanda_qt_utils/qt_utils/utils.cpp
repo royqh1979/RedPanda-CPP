@@ -1034,11 +1034,11 @@ QString getAbsoluteFilePath(const QString &folder, const QString &filename)
     return QDir::cleanPath(dir.absoluteFilePath(filename));
 }
 
-QString generateSubfolderPath(const QString &parentFolder, std::vector<QString> subfoldernames)
-{
-    QDir dir{parentFolder};
-    for (const QString& n:subfoldernames) {
-        dir = QDir{dir.filePath(n)};
-    }
-    return dir.absolutePath();
-}
+// QString generateSubfolderPath(const QString &parentFolder, std::vector<QString> subfoldernames)
+// {
+//     QDir dir{parentFolder};
+//     for (const QString& n:subfoldernames) {
+//         dir = QDir{dir.filePath(n)};
+//     }
+//     return dir.absolutePath();
+// }

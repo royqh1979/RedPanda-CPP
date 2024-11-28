@@ -138,7 +138,7 @@ QString changeFileExt(const QString& filename, QString ext);
 QString getFilePath(const QString& folder, const QString& filename);
 QString getAbsoluteFilePath(const QString& folder, const QString& filename);
 QString localizePath(const QString& path);
-QString generateSubfolderPath(const QString& parentFolder, std::vector<QString> subfoldernames);
+//QString generateSubfolderPath(const QString& parentFolder, std::vector<QString> subfoldernames);
 
 QString extractRelativePath(const QString& base, const QString& dest);
 QStringList extractRelativePaths(const QString& base, const QStringList& destList);

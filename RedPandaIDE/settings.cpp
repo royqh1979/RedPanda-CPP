@@ -2353,13 +2353,13 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
 
     // Add the default directories
     addExistingDirectory(mBinDirs, getFilePath(folder,"bin"));
-    if (!mDumpMachine.isEmpty()) {
-        //mingw-w64 bin folder
-        addExistingDirectory(mBinDirs,
-                            generateSubfolderPath(
-                                folder,
-                                    {"lib" , "gcc" , mDumpMachine, mVersion} ));
-    }
+    // if (!mDumpMachine.isEmpty()) {
+    //     //mingw-w64 bin folder
+    //     addExistingDirectory(mBinDirs,
+    //                         generateSubfolderPath(
+    //                             folder,
+    //                                 {"lib" , "gcc" , mDumpMachine, mVersion} ));
+    // }
 }
 
 #ifdef ENABLE_SDCC
