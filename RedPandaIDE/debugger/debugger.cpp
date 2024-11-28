@@ -37,11 +37,12 @@
 #include <QApplication>
 #include <QRegularExpression>
 
-Debugger::Debugger(QObject *parent) : QObject(parent),
-    mForceUTF8(false),
-    mDebuggerType(DebuggerType::GDB),
-    mLastLoadtime(0),
-    mProjectLastLoadtime(0)
+Debugger::Debugger(QObject *parent) : QObject{parent},
+    mForceUTF8{false},
+    mDebuggerType{DebuggerType::GDB},
+    mLastLoadtime{0},
+    mProjectLastLoadtime{0},
+    mClientMutex{}
 {
     //models deleted in the destructor
     mBreakpointModel= std::make_shared<BreakpointModel>(this);
@@ -54,7 +55,6 @@ Debugger::Debugger(QObject *parent) : QObject(parent),
             this, &Debugger::setMemoryData);
     connect(mWatchModel.get(), &WatchModel::setWatchVarValue,
             this, &Debugger::setWatchVarValue);
-    mExecuting = false;
     mClient = nullptr;
     mTarget = nullptr;
     mCommandChanged = false;
@@ -82,6 +82,9 @@ bool Debugger::startClient(int compilerSetIndex,
                            const QStringList& binDirs,
                            const QString& sourceFile)
 {
+    QMutexLocker locker{&mClientMutex};
+    if (mClient)
+        return false;
     mCurrentSourceFile = sourceFile;
     Settings::PCompilerSet compilerSet = pSettings->compilerSets().getSet(compilerSetIndex);
     if (!compilerSet) {
@@ -101,7 +104,6 @@ bool Debugger::startClient(int compilerSetIndex,
         setDebuggerType(DebuggerType::GDB);
     // force to lldb-server if using lldb-mi, which creates new console but does not bind inferior’s stdio to the new console on Windows.
     setUseDebugServer(pSettings->debugger().useGDBServer() || mDebuggerType == DebuggerType::LLDB_MI);
-    mExecuting = true;
     QString debuggerPath = compilerSet->debugger();
     //QFile debuggerProgram(debuggerPath);
 //    if (!isTextAllAscii(debuggerPath)) {
@@ -115,7 +117,6 @@ bool Debugger::startClient(int compilerSetIndex,
 //        return false;
 //    }
     if (!fileExists(debuggerPath)) {
-        mExecuting = false;
         QMessageBox::critical(pMainWindow,
                               tr("Debugger not exists"),
                               tr("Can''t find debugger (gdb) in : \"%1\"").arg(debuggerPath)
@@ -125,7 +126,6 @@ bool Debugger::startClient(int compilerSetIndex,
     }
     if (useDebugServer()) {
         if (!isTextAllAscii(compilerSet->debugServer())) {
-            mExecuting = false;
             QMessageBox::critical(pMainWindow,
                                   tr("GDB Server path error"),
                                   tr("GDB Server's path \"%1\" contains non-ascii characters.")
@@ -135,7 +135,6 @@ bool Debugger::startClient(int compilerSetIndex,
             return false;
         }
         if (!fileExists(compilerSet->debugServer())) {
-            mExecuting = false;
             QMessageBox::critical(pMainWindow,
                                   tr("GDB Server not exists"),
                                   tr("Can''t find gdb server in : \"%1\"").arg(compilerSet->debugServer()));
@@ -229,33 +228,32 @@ bool Debugger::startClient(int compilerSetIndex,
 
 void Debugger::runInferior()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->runInferior(mInferiorHasBreakpoints);
 }
 
 void Debugger::stop() {
+    QMutexLocker locker{&mClientMutex};
     if (mExecuting) {
         if (mTarget)
             mTarget->stopDebug();
-        mClient->stopDebug();
+        if (mClient)
+            mClient->stopDebug();
     }
 }
 
 void Debugger::cleanUp()
 {
-    if (mExecuting) {
-        mExecuting = false;
-
+    QMutexLocker locker{&mClientMutex};
+    if (mClient) {
+        //stop gdb server (if runs)
         if (mTarget) {
             mTarget->stopDebug();
             mTarget->deleteLater();
             mTarget = nullptr;
         }
         mCurrentSourceFile="";
-        //stop debugger
-        mClient->stopDebug();
-        mClient->deleteLater();
-        mClient=nullptr;
 
         if (pMainWindow->cpuDialog()!=nullptr) {
             pMainWindow->cpuDialog()->close();
@@ -277,6 +275,11 @@ void Debugger::cleanUp()
         mBreakpointModel->invalidateAllBreakpointNumbers();
 
         pMainWindow->updateEditorActions();
+
+        //stop debugger
+        mClient->stopDebug();
+        mClient->deleteLater();
+        mClient = nullptr;
     }
 }
 
@@ -292,6 +295,7 @@ void Debugger::updateRegisterValues(const QHash<int, QString> &values)
 
 void Debugger::refreshAll()
 {
+    QMutexLocker locker{&mClientMutex};
     refreshWatchVars();
     if (mClient)
         mClient->refreshStackVariables();
@@ -316,6 +320,7 @@ std::shared_ptr<WatchModel> Debugger::watchModel() const
 
 bool Debugger::commandRunning()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient) {
         return mClient->commandRunning();
     }
@@ -324,6 +329,7 @@ bool Debugger::commandRunning()
 
 bool Debugger::inferiorRunning()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient) {
         return mClient->inferiorRunning();
     }
@@ -332,54 +338,63 @@ bool Debugger::inferiorRunning()
 
 void Debugger::interrupt()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->interrupt();
 }
 
 void Debugger::stepOver()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->stepOver();
 }
 
 void Debugger::stepInto()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->stepInto();
 }
 
 void Debugger::stepOut()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->stepOut();
 }
 
 void Debugger::runTo(const QString &filename, int line)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->runTo(filename, line);
 }
 
 void Debugger::resume()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->resume();
 }
 
 void Debugger::stepOverInstruction()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->stepOverInstruction();
 }
 
 void Debugger::stepIntoInstruction()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->stepIntoInstruction();
 }
 
 void Debugger::runClientCommand(const QString &command, const QString &params, DebugCommandSource source)
 {
+    QMutexLocker locker{&mClientMutex};
     if (!mClient)
         return;
     if (mClient->clientType()!=DebuggerType::GDB
@@ -396,7 +411,8 @@ bool Debugger::isForProject() const
 
 void Debugger::setIsForProject(bool newIsForProject)
 {
-    if (!executing()) {
+    QMutexLocker locker{&mClientMutex};
+    if (!mClient) {
         mBreakpointModel->setIsForProject(newIsForProject);
         mWatchModel->setIsForProject(newIsForProject);
     }
@@ -415,6 +431,7 @@ void Debugger::addBreakpoint(int line, const Editor* editor)
 
 void Debugger::addBreakpoint(int line, const QString &filename, bool forProject)
 {
+    QMutexLocker locker{&mClientMutex};
     PBreakpoint bp=std::make_shared<Breakpoint>();
     bp->number = -1;
     bp->line = line;
@@ -424,7 +441,7 @@ void Debugger::addBreakpoint(int line, const QString &filename, bool forProject)
     bp->breakpointType = BreakpointType::Breakpoint;
     bp->timestamp = QDateTime::currentMSecsSinceEpoch();
     mBreakpointModel->addBreakpoint(bp,forProject);
-    if (mExecuting) {
+    if (!mClient) {
         if (forProject && mBreakpointModel->isForProject()) {
             sendBreakpointCommand(bp);
         } else if (filename == mCurrentSourceFile) {
@@ -508,6 +525,7 @@ PBreakpoint Debugger::breakpointAt(int line, const Editor *editor, int *index)
 
 void Debugger::setBreakPointCondition(int index, const QString &condition, bool forProject)
 {
+    QMutexLocker locker{&mClientMutex};
     PBreakpoint breakpoint=mBreakpointModel->setBreakPointCondition(index,condition, forProject);
     if (mClient)
         mClient->setBreakpointCondition(breakpoint);
@@ -561,6 +579,7 @@ void Debugger::loadForProject(const QString &filename, const QString &projectFol
 
 void Debugger::addWatchpoint(const QString &expression)
 {
+    QMutexLocker locker{&mClientMutex};
     QString s=expression.trimmed();
     if (mClient) {
         mClient->addWatchpoint(expression);
@@ -594,7 +613,7 @@ void Debugger::modifyWatchVarExpression(const QString &oldExpr, const QString &n
 
     var = mWatchModel->findWatchVar(oldExpr);
     if (var) {
-        if (mExecuting && !var->expression.isEmpty())
+        if (executing() && !var->expression.isEmpty())
             sendRemoveWatchCommand(var);
         var->expression = newExpr;
         var->type.clear();
@@ -610,6 +629,7 @@ void Debugger::modifyWatchVarExpression(const QString &oldExpr, const QString &n
 
 void Debugger::refreshWatchVars()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient) {
         sendAllWatchVarsToDebugger();
         if (mDebuggerType==DebuggerType::LLDB_MI) {
@@ -625,6 +645,7 @@ void Debugger::refreshWatchVars()
 
 void Debugger::fetchVarChildren(const QString &varName)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient) {
         mClient->fetchWatchVarChildren(varName);
     }
@@ -721,24 +742,28 @@ PWatchVar Debugger::watchVarAt(const QModelIndex &index)
 
 void Debugger::readMemory(const QString &startAddress, int rows, int cols)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->readMemory(startAddress, rows, cols);
 }
 
 void Debugger::evalExpression(const QString &expression)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->evalExpression(expression);
 }
 
 void Debugger::selectFrame(PTrace trace)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->selectFrame(trace);
 }
 
 void Debugger::refreshFrame()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient) {
         mClient->refreshFrame();
     }
@@ -746,24 +771,28 @@ void Debugger::refreshFrame()
 
 void Debugger::refreshStackVariables()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->refreshStackVariables();
 }
 
 void Debugger::refreshRegisters()
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->refreshRegisters();
 }
 
 void Debugger::disassembleCurrentFrame(bool blendMode)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->disassembleCurrentFrame(blendMode);
 }
 
 void Debugger::setDisassemblyLanguage(bool isIntel)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->setDisassemblyLanguage(isIntel);
 }
@@ -784,18 +813,21 @@ std::shared_ptr<BreakpointModel> Debugger::breakpointModel()
 
 void Debugger::sendWatchCommand(PWatchVar var)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->addWatch(var->expression);
 }
 
 void Debugger::sendRemoveWatchCommand(PWatchVar var)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->removeWatch(var);
 }
 
 void Debugger::sendBreakpointCommand(PBreakpoint breakpoint)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->addBreakpoint(breakpoint);
 }
@@ -807,6 +839,7 @@ void Debugger::sendClearBreakpointCommand(int index, bool forProject)
 
 void Debugger::sendClearBreakpointCommand(PBreakpoint breakpoint)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->removeBreakpoint(breakpoint);
 }
@@ -1002,21 +1035,7 @@ void Debugger::syncFinishedParsing()
             for (const QString& line:mClient->fullOutput()) {
                 pMainWindow->addDebugOutput(line);
             }
-            //pMainWindow->addDebugOutput("(gdb)");
         } else {
-            // if (mClient->currentCmd() && mClient->currentCmd()->command == "disas") {
-
-            // } else {
-            //     for (const QString& line:mClient->consoleOutput()) {
-            //         pMainWindow->addDebugOutput(line);
-            //     }
-            //     if (
-            //             (mClient->currentCmd()
-            //              && mClient->currentCmd()->source== DebugCommandSource::Console)
-            //             || !mClient->consoleOutput().isEmpty() ) {
-            //         pMainWindow->addDebugOutput("(gdb)");
-            //     }
-            // }
             if (!mClient->consoleOutput().isEmpty()) {
                 for (const QString& line:mClient->consoleOutput()) {
                     pMainWindow->addDebugOutput(line);
@@ -1055,6 +1074,7 @@ void Debugger::syncFinishedParsing()
 
 void Debugger::setMemoryData(qulonglong address, unsigned char data)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->writeMemory(address, data);
     refreshAll();
@@ -1062,6 +1082,7 @@ void Debugger::setMemoryData(qulonglong address, unsigned char data)
 
 void Debugger::setWatchVarValue(const QString &name, const QString &value)
 {
+    QMutexLocker locker{&mClientMutex};
     if (mClient)
         mClient->writeWatchVar(name, value);
     refreshAll();
@@ -1101,9 +1122,10 @@ void Debugger::setLeftPageIndexBackup(int leftPageIndexBackup)
     mLeftPageIndexBackup = leftPageIndexBackup;
 }
 
-bool Debugger::executing() const
+bool Debugger::executing()
 {
-    return mExecuting;
+    QMutexLocker locker{&mClientMutex};
+    return (mClient!=nullptr);
 }
 
 DebuggerClient::DebuggerClient(Debugger* debugger, QObject *parent) : QThread(parent),

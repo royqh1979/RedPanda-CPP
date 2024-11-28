@@ -374,7 +374,7 @@ public:
 
     std::shared_ptr<BacktraceModel> backtraceModel();
     std::shared_ptr<BreakpointModel> breakpointModel();
-    bool executing() const;
+    bool executing();
 
     int leftPageIndexBackup() const;
     void setLeftPageIndexBackup(int leftPageIndexBackup);
@@ -445,6 +445,7 @@ private:
     qint64 mProjectLastLoadtime;
     QString mCurrentSourceFile;
     bool mInferiorHasBreakpoints;
+    QRecursiveMutex mClientMutex;
 };
 
 class DebugTarget: public QThread {
