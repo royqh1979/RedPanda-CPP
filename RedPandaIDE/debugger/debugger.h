@@ -427,7 +427,6 @@ private slots:
     void updateRegisterValues(const QHash<int,QString>& values);
     void fetchVarChildren(const QString& varName);
 private:
-    bool mExecuting;
     bool mCommandChanged;
     std::shared_ptr<BreakpointModel> mBreakpointModel;
     std::shared_ptr<BacktraceModel> mBacktraceModel;

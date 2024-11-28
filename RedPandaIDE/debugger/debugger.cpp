@@ -145,7 +145,6 @@ bool Debugger::startClient(int compilerSetIndex,
     mMemoryModel->reset();
     mWatchModel->resetAllVarInfos();
     if (useDebugServer()) {
-        //deleted when thread finished
         QStringList params;
         if (pSettings->executor().useParams())
             params = parseArgumentsWithoutVariables(pSettings->executor().params());
@@ -235,11 +234,10 @@ void Debugger::runInferior()
 
 void Debugger::stop() {
     QMutexLocker locker{&mClientMutex};
-    if (mExecuting) {
-        if (mTarget)
-            mTarget->stopDebug();
-        if (mClient)
-            mClient->stopDebug();
+    if (mTarget)
+        mTarget->stopDebug();
+    if (mClient) {
+        mClient->stopDebug();
     }
 }
 
