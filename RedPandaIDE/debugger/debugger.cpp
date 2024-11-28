@@ -153,14 +153,6 @@ bool Debugger::startClient(int compilerSetIndex,
         mTarget = new DebugTarget(inferior,compilerSet->debugServer(),pSettings->debugger().GDBServerPort(),params);
         if (pSettings->executor().redirectInput())
             mTarget->setInputFile(pSettings->executor().inputFilename());
-        connect(mTarget, &QThread::finished,[this](){
-            if (mExecuting) {
-                stop();
-            }
-            if (mTarget)
-                mTarget->deleteLater();
-            mTarget = nullptr;
-        });
         mTarget->addBinDirs(binDirs);
         mTarget->addBinDir(pSettings->dirs().appDir());
         mTarget->start();
@@ -171,7 +163,7 @@ bool Debugger::startClient(int compilerSetIndex,
     mClient->addBinDirs(binDirs);
     mClient->addBinDir(pSettings->dirs().appDir());
     mClient->setDebuggerPath(debuggerPath);
-    connect(mClient, &QThread::finished,this,&Debugger::cleanUpReader);
+    connect(mClient, &QThread::finished,this,&Debugger::cleanUp);
     connect(mClient, &QThread::finished,mMemoryModel.get(),&MemoryModel::reset);
     connect(mClient, &DebuggerClient::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
     connect(mClient, &DebuggerClient::changeDebugConsoleLastLine,this,&Debugger::onChangeDebugConsoleLastline);
@@ -243,20 +235,25 @@ void Debugger::runInferior()
 
 void Debugger::stop() {
     if (mExecuting) {
-        if (mTarget) {
+        if (mTarget)
             mTarget->stopDebug();
-            mTarget = nullptr;
-        }
         mClient->stopDebug();
     }
-    mCurrentSourceFile="";
 }
-void Debugger::cleanUpReader()
+
+void Debugger::cleanUp()
 {
     if (mExecuting) {
         mExecuting = false;
 
+        if (mTarget) {
+            mTarget->stopDebug();
+            mTarget->deleteLater();
+            mTarget = nullptr;
+        }
+        mCurrentSourceFile="";
         //stop debugger
+        mClient->stopDebug();
         mClient->deleteLater();
         mClient=nullptr;
 
