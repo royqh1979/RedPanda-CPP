@@ -1,6 +1,7 @@
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
   - fix: Use "/" instead of "\" in the path of compile target. 
+  - fix: crash when debug.
 
 Red Panda C++ Version 3.2
 

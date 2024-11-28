@@ -157,7 +157,8 @@ bool Debugger::startClient(int compilerSetIndex,
             if (mExecuting) {
                 stop();
             }
-            mTarget->deleteLater();
+            if (mTarget)
+                mTarget->deleteLater();
             mTarget = nullptr;
         });
         mTarget->addBinDirs(binDirs);
