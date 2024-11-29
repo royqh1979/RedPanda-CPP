@@ -61,7 +61,7 @@ void ShortcutManager::load()
     }
     mShortcuts.clear();
     QJsonArray array = doc.array();
-    foreach (const QJsonValue& value,array) {
+    for (const QJsonValue& value:array) {
         QJsonObject object = value.toObject();
         PEnvironmentShortcut shortcut = std::make_shared<EnvironmentShortcut>();
         shortcut->name = object["name"].toString();

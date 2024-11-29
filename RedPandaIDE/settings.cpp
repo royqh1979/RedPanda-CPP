@@ -3106,7 +3106,7 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
 }
 
 bool Settings::CompilerSets::addSets(const QString &folder, const QString& c_prog) {
-    foreach (const PCompilerSet& set, mList) {
+    for (const PCompilerSet& set:mList) {
         if (set->binDirs().contains(folder) && extractFileName(set->CCompiler())==c_prog)
             return false;
     }

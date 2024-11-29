@@ -57,7 +57,7 @@ void SymbolUsageManager::load()
 
     mUsages.clear();
     QJsonArray array = doc.array();
-    foreach (const QJsonValue& val, array) {
+    for(const QJsonValue& val:array) {
         QJsonObject obj = val.toObject();
         QString fullname = obj["symbol"].toString();
         int count = obj["count"].toInt();

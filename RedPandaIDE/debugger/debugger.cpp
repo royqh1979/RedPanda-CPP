@@ -55,6 +55,7 @@ Debugger::Debugger(QObject *parent) : QObject{parent},
             this, &Debugger::setMemoryData);
     connect(mWatchModel.get(), &WatchModel::setWatchVarValue,
             this, &Debugger::setWatchVarValue);
+
     mClient = nullptr;
     mTarget = nullptr;
     mCommandChanged = false;
@@ -68,11 +69,10 @@ Debugger::Debugger(QObject *parent) : QObject{parent},
 
 Debugger::~Debugger()
 {
-//    delete mBreakpointModel;
-//    delete mBacktraceModel;
-//    delete mWatchModel;
-//    delete mRegisterModel;
-//    delete mMemoryModel;
+    disconnect();
+    // QObject::disconnect(mClient, nullptr, this, nullptr);
+    // QObject::disconnect(mClient, nullptr, pMainWindow, nullptr);
+    cleanUp();
 }
 
 bool Debugger::startClient(int compilerSetIndex,
@@ -161,8 +161,6 @@ bool Debugger::startClient(int compilerSetIndex,
     mClient->addBinDirs(binDirs);
     mClient->addBinDir(pSettings->dirs().appDir());
     mClient->setDebuggerPath(debuggerPath);
-    connect(this, &Debugger::debugEnded, pMainWindow,
-            QOverload<>::of(&MainWindow::updateEditorActions));
     connect(mClient, &QThread::finished,this,&Debugger::cleanUp);
     connect(mClient, &QThread::finished,mMemoryModel.get(),&MemoryModel::reset);
     connect(mClient, &DebuggerClient::parseFinished,this,&Debugger::syncFinishedParsing,Qt::BlockingQueuedConnection);
@@ -253,33 +251,21 @@ void Debugger::cleanUp()
             mTarget->deleteLater();
             mTarget = nullptr;
         }
+
+        //stop debugger
+        mClient->stopDebug();
+        mClient->deleteLater();
+        mClient = nullptr;
+
         mCurrentSourceFile="";
-
-        if (pMainWindow->cpuDialog()!=nullptr) {
-            pMainWindow->cpuDialog()->close();
-        }
-
-        // Free resources
-        pMainWindow->removeActiveBreakpoints();
-
-        pMainWindow->txtLocals()->clear();
-
-        pMainWindow->updateAppTitle();
-
-        pMainWindow->updateDebugEval("");
 
         mBacktraceModel->clear();
 
         mWatchModel->clearAllVarInfos();
 
         mBreakpointModel->invalidateAllBreakpointNumbers();
-
-        //stop debugger
-        mClient->stopDebug();
-        mClient->deleteLater();
-        mClient = nullptr;
     }
-    emit debugEnded();
+    emit debugFinished();
 }
 
 void Debugger::updateRegisterNames(const QStringList &registerNames)

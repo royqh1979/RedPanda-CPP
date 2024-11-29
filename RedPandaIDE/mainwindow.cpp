@@ -195,8 +195,11 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onCompilerSetChanged);
     //updateCompilerSet();
 
-    mCompilerManager = std::make_shared<CompilerManager>();
-    mDebugger = std::make_shared<Debugger>();
+    mCompilerManager = new CompilerManager(this);
+    mDebugger = new Debugger(this);
+
+    connect(mDebugger, &Debugger::debugFinished, this,
+            &MainWindow::onDebugFinished);
 
     m=ui->tblBreakpoints->selectionModel();
     ui->tblBreakpoints->setModel(mDebugger->breakpointModel().get());
@@ -423,10 +426,10 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onDirChanged);
 
     mStatementColors = std::make_shared<QHash<StatementKind, PColorSchemeItem> >();
-    mCompletionPopup = std::make_shared<CodeCompletionPopup>();
+    mCompletionPopup = new CodeCompletionPopup(this);
     mCompletionPopup->setColors(mStatementColors);
-    mHeaderCompletionPopup = std::make_shared<HeaderCompletionPopup>();
-    mFunctionTip = std::make_shared<FunctionTooltipWidget>();
+    mHeaderCompletionPopup = new HeaderCompletionPopup(this);
+    mFunctionTip = new FunctionTooltipWidget(this);
 
     mClassBrowserModel.setColors(mStatementColors);
 
@@ -600,6 +603,8 @@ void MainWindow::updateEncodingActions(const Editor *e)
 
 void MainWindow::updateEditorActions(const Editor *e)
 {
+    //Core dump when debugged in qt 6
+    //No idea why
     ui->menuCode->menuAction()->setVisible(mEditorList->pageCount()>0);
     ui->menuEdit->menuAction()->setVisible(mEditorList->pageCount()>0);
     ui->menuSelection->menuAction()->setVisible(mEditorList->pageCount()>0);
@@ -850,6 +855,8 @@ void MainWindow::updateCompileActions(const Editor *e)
                             canRun = canCompile;
                             canDebug = set->canDebug();
                         }
+                        break;
+                    default:
                         break;
                     }
                 } else {
@@ -1206,6 +1213,24 @@ void MainWindow::onFileSaved(const QString &path, bool inProject)
     Q_UNUSED(inProject);
 #endif
     //updateForEncodingInfo();
+}
+
+void MainWindow::onDebugFinished()
+{
+    if (cpuDialog()!=nullptr) {
+        cpuDialog()->close();
+    }
+
+    // Free resources
+    removeActiveBreakpoints();
+
+    ui->txtLocals->clear();
+
+    updateAppTitle();
+
+    updateDebugEval("");
+
+    updateEditorActions();
 }
 
 void MainWindow::executeTool(PToolItem item)
@@ -1576,11 +1601,6 @@ void MainWindow::updateShortcuts()
     // foreach(QAction* action, listShortCutableActions())
     //     qDebug()<<action->text()<<action->objectName();
     manager.applyTo(listShortCutableActions());
-}
-
-QPlainTextEdit *MainWindow::txtLocals()
-{
-    return ui->txtLocals;
 }
 
 QMenuBar *MainWindow::menuBar() const
@@ -3397,7 +3417,7 @@ bool MainWindow::saveLastOpens()
                               QMessageBox::Ok);
         return true;
     }
-    if (file.write(doc.toJson())!=json.count()) {
+    if (file.write(doc.toJson())!=json.size()) {
         QMessageBox::critical(this,
                               tr("Save last open info error"),
                               tr("Can't save last open info file '%1'")
@@ -5534,17 +5554,17 @@ void MainWindow::onFilesViewPathChanged()
     ui->cbFilesPath->blockSignals(false);
 }
 
-const std::shared_ptr<HeaderCompletionPopup> &MainWindow::headerCompletionPopup() const
+HeaderCompletionPopup *MainWindow::headerCompletionPopup() const
 {
     return mHeaderCompletionPopup;
 }
 
-const std::shared_ptr<FunctionTooltipWidget> &MainWindow::functionTip() const
+FunctionTooltipWidget *MainWindow::functionTip() const
 {
     return mFunctionTip;
 }
 
-const std::shared_ptr<CodeCompletionPopup> &MainWindow::completionPopup() const
+CodeCompletionPopup *MainWindow::completionPopup() const
 {
     return mCompletionPopup;
 }
@@ -5566,7 +5586,7 @@ EditorList *MainWindow::editorList() const
 
 Debugger *MainWindow::debugger() const
 {
-    return mDebugger.get();
+    return mDebugger;
 }
 
 CPUDialog *MainWindow::cpuDialog() const
@@ -6536,7 +6556,7 @@ void MainWindow::onDebugEvaluateInput()
 {
     QString s=ui->cbEvaluate->currentText().trimmed();
     if (!s.isEmpty()) {
-        connect(mDebugger.get(), &Debugger::evalValueReady,
+        connect(mDebugger, &Debugger::evalValueReady,
                    this, &MainWindow::onEvalValueReady);
         mDebugger->evalExpression(s);
         pMainWindow->debugger()->refreshAll();
@@ -6603,7 +6623,7 @@ void MainWindow::onEndParsing(int total, int)
 void MainWindow::onEvalValueReady(const QString& value)
 {
     updateDebugEval(value);
-    disconnect(mDebugger.get(), &Debugger::evalValueReady,
+    disconnect(mDebugger, &Debugger::evalValueReady,
                this, &MainWindow::onEvalValueReady);
 }
 

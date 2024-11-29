@@ -287,9 +287,9 @@ int main(int argc, char *argv[])
 #endif
 
     QApplication app(argc, argv);
-
+#if QT_VERSION_MAJOR < 6
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
-
+#endif
     ExternalResource resource;
 
     QLockFile lockFile(QDir::tempPath()+QDir::separator()+"RedPandaDevCppStartUp.lock");

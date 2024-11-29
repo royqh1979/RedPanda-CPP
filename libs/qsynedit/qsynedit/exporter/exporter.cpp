@@ -355,16 +355,21 @@ void Exporter::setTokenAttribute(PTokenAttribute attri)
 
 QString Exporter::getStartLineNumberString(int startLine, int endLine)
 {
+    Q_UNUSED(startLine)
+    Q_UNUSED(endLine)
     return QString();
 }
 
 QString Exporter::getLineNumberString(int line)
 {
+    Q_UNUSED(line)
     return QString();
 }
 
 QString Exporter::getEndLineNumberString(int startLine, int endLine)
 {
+    Q_UNUSED(startLine);
+    Q_UNUSED(endLine);
     return QString();
 }
 

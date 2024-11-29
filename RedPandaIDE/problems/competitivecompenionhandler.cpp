@@ -124,7 +124,7 @@ void CompetitiveCompanionThread::onNewProblemConnection(QTcpSocket* clientConnec
         problem->memoryLimitUnit = ProblemMemoryLimitUnit::MB;
     }
     QJsonArray caseArray = obj["tests"].toArray();
-    foreach ( const QJsonValue& val, caseArray) {
+    for (const QJsonValue& val : caseArray) {
         QJsonObject caseObj = val.toObject();
         POJProblemCase problemCase = std::make_shared<OJProblemCase>();
         problemCase->testState = ProblemCaseTestState::NotTested;

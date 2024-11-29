@@ -97,7 +97,7 @@ void CodeSnippetsManager::loadSnippets()
     }
     mSnippets.clear();
     QJsonArray array = doc.array();
-    foreach (const QJsonValue& value,array) {
+    for(const QJsonValue& value:array) {
         QJsonObject object = value.toObject();
         PCodeSnippet snippet = std::make_shared<CodeSnippet>();
         snippet->caption = object["caption"].toString();

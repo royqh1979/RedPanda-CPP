@@ -90,7 +90,7 @@ void ToolsManager::load()
     }
     mTools.clear();
     QJsonArray array = doc.array();
-    foreach (const QJsonValue& value,array) {
+    for(const QJsonValue& value: array) {
         QJsonObject object = value.toObject();
         PToolItem item = std::make_shared<ToolItem>();
         if (!object.contains("id"))

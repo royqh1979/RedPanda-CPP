@@ -356,7 +356,6 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
     QString currentDir = excludeTrailingPathDelimiter(extractFileDir(file->fileName));
     QStringList includes;
     QStringList projectIncludes;
-    bool found=false;
     if (fromNext && mIncludePaths.contains(currentDir)) {
         int i = mIncludePathList.indexOf(currentDir);
         includes = mIncludePathList.mid(i+1);

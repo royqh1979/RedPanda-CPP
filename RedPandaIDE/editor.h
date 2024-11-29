@@ -354,8 +354,8 @@ private:
     QSet<int> mBookmarkLines;
     int mActiveBreakpointLine;
     PCppParser mParser;
-    std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
-    std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
+    CodeCompletionPopup *mCompletionPopup;
+    HeaderCompletionPopup *mHeaderCompletionPopup;
     bool mUseCppSyntax;
     QString mCurrentWord;
     QString mCurrentDebugTipWord;

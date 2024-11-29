@@ -179,8 +179,6 @@ public:
 
     void newEditor(const QString& suffix="");
 
-    QPlainTextEdit* txtLocals();
-
     QMenuBar* menuBar() const;
 
     CPUDialog *cpuDialog() const;
@@ -195,11 +193,11 @@ public:
 
     SearchResultModel* searchResultModel();
 
-    const std::shared_ptr<CodeCompletionPopup> &completionPopup() const;
+    CodeCompletionPopup *completionPopup() const;
 
-    const std::shared_ptr<HeaderCompletionPopup> &headerCompletionPopup() const;
+    HeaderCompletionPopup *headerCompletionPopup() const;
 
-    const std::shared_ptr<FunctionTooltipWidget> &functionTip() const;
+    FunctionTooltipWidget *functionTip() const;
 
     CaretList &caretList();
     void updateCaretActions();
@@ -277,6 +275,7 @@ public slots:
     void setActiveBreakpoint(QString FileName, int Line, bool setFocus);
     void updateDPI(int oldDPI, int newDPI);
     void onFileSaved(const QString& path, bool inProject);
+    void onDebugFinished();
 
 private:
     void executeTool(PToolItem item);
@@ -885,8 +884,8 @@ private:
     QList<QAction *> mMenuMoveCaretBackup;
 
     QComboBox *mCompilerSet;
-    std::shared_ptr<CompilerManager> mCompilerManager;
-    std::shared_ptr<Debugger> mDebugger;
+    CompilerManager *mCompilerManager;
+    Debugger *mDebugger;
     CPUDialog *mCPUDialog;
     SearchInFileDialog *mSearchInFilesDialog;
     SearchDialog *mSearchDialog;
@@ -896,12 +895,12 @@ private:
     bool mClosingProject;
     QElapsedTimer mParserTimer;
     QFileSystemWatcher mFileSystemWatcher;
-    std::shared_ptr<Project> mProject;
+    std::shared_ptr<Project> mProject; //mProject can be destoryed any time
     Qt::DockWidgetArea mMessagesDockLocation;
 
-    std::shared_ptr<CodeCompletionPopup> mCompletionPopup;
-    std::shared_ptr<HeaderCompletionPopup> mHeaderCompletionPopup;
-    std::shared_ptr<FunctionTooltipWidget> mFunctionTip;
+    CodeCompletionPopup *mCompletionPopup;
+    HeaderCompletionPopup *mHeaderCompletionPopup;
+    FunctionTooltipWidget *mFunctionTip;
 
     std::shared_ptr<VisitHistoryManager> mVisitHistoryManager;
 
