@@ -197,8 +197,10 @@ MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent
     //updateCompilerSet();
 
     mCompilerManager = new CompilerManager(this);
-    mDebugger = new Debugger(this);
+    connect(mCompilerManager, &CompilerManager::compileFinished,
+            this, &MainWindow::onCompileFinished);
 
+    mDebugger = new Debugger(this);
     connect(mDebugger, &Debugger::debugFinished, this,
             &MainWindow::onDebugFinished);
 
@@ -5771,12 +5773,16 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     mCCHandler.stop();
     mCompilerManager->stopAllRunners();
     mCompilerManager->stopCompile();
+    mCompilerManager->stopCheckSyntax();
     mCompilerManager->stopRun();
+    mDebugger->stop();
+
     if (!mShouldRemoveAllSettings)
         mSymbolUsageManager->save();
 
     if (mCPUDialog!=nullptr)
         cleanUpCPUDialog();
+
     event->accept();
     return;
 }

@@ -51,6 +51,14 @@ CompilerManager::CompilerManager(QObject *parent) : QObject(parent),
     mSyntaxCheckErrorCount = 0;
 }
 
+CompilerManager::~CompilerManager()
+{
+    stopAllRunners();
+    stopCompile();
+    stopCheckSyntax();
+    stopRun();
+}
+
 bool CompilerManager::compiling()
 {
     QMutexLocker locker(&mCompileMutex);
@@ -441,11 +449,12 @@ bool CompilerManager::canCompile(const QString &)
     return !compiling();
 }
 
-void CompilerManager::onCompileFinished(QString filename)
+void CompilerManager::onCompileFinished(const QString& filename)
 {
     QMutexLocker locker(&mCompileMutex);
     mCompiler=nullptr;
-    pMainWindow->onCompileFinished(filename,false);
+    emit compileFinished(filename, false);
+    //pMainWindow->onCompileFinished(filename,false);
 }
 
 void CompilerManager::onRunnerTerminated()
@@ -473,11 +482,11 @@ void CompilerManager::onCompileIssue(PCompileIssue issue)
     mCompileIssueCount++;
 }
 
-void CompilerManager::onSyntaxCheckFinished(QString filename)
+void CompilerManager::onSyntaxCheckFinished(const QString& filename)
 {
     QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
     mBackgroundSyntaxChecker=nullptr;
-    pMainWindow->onCompileFinished(filename, true);
+    emit compileFinished(filename, true);
 }
 
 void CompilerManager::onSyntaxCheckIssue(PCompileIssue issue)
