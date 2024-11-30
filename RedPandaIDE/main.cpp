@@ -431,22 +431,14 @@ int main(int argc, char *argv[])
         // qDebug()<<"Load font";
         QFontDatabase::addApplicationFont(":/fonts/asciicontrol.ttf");
 
-        MainWindow mainWindow;
+        QStringList filesToOpen = app.arguments();
+        filesToOpen.pop_front();
+        MainWindow mainWindow{filesToOpen};
         pMainWindow = &mainWindow;
         if (mainWindow.screen())
             setScreenDPI(mainWindow.screen()->logicalDotsPerInch());
+
         mainWindow.show();
-        if (app.arguments().count()>1) {
-            QStringList filesToOpen = app.arguments();
-            filesToOpen.pop_front();
-            pMainWindow->openFiles(filesToOpen);
-        } else {
-            if (pSettings->editor().autoLoadLastFiles())
-                pMainWindow->loadLastOpens();
-            if (pMainWindow->editorList()->pageCount()==0 && !pMainWindow->project()) {
-                pMainWindow->newEditor();
-            }
-        }
 
         //reset default open folder
         QDir::setCurrent(pSettings->environment().defaultOpenFolder());

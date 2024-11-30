@@ -117,8 +117,9 @@ static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
 
 MainWindow* pMainWindow;
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow{parent},
+MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent)
+    : mFilesToOpenAfterStart{filesToOpenAfterStart},
+      QMainWindow{parent},
       ui{new Ui::MainWindow},
       mFullInitialized{false},
       mSearchInFilesDialog{nullptr},
@@ -603,8 +604,6 @@ void MainWindow::updateEncodingActions(const Editor *e)
 
 void MainWindow::updateEditorActions(const Editor *e)
 {
-    //Core dump when debugged in qt 6
-    //No idea why
     ui->menuCode->menuAction()->setVisible(mEditorList->pageCount()>0);
     ui->menuEdit->menuAction()->setVisible(mEditorList->pageCount()>0);
     ui->menuSelection->menuAction()->setVisible(mEditorList->pageCount()>0);
@@ -5793,6 +5792,16 @@ void MainWindow::showEvent(QShowEvent *)
     ui->tabExplorer->setCurrentIndex(settings.leftPanelIndex());
     ui->debugViews->setCurrentIndex(settings.debugPanelIndex());
     validateCompilerSet(pSettings->compilerSets().defaultIndex());
+
+    if (!mFilesToOpenAfterStart.isEmpty()) {
+        openFiles(mFilesToOpenAfterStart);
+    } else {
+        if (pSettings->editor().autoLoadLastFiles())
+            loadLastOpens();
+        if (editorList()->pageCount()==0 && !project()) {
+            newEditor();
+        }
+    }
 }
 
 void MainWindow::hideEvent(QHideEvent *)
