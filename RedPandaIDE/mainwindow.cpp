@@ -151,9 +151,9 @@ MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent
     // status bar
 
     //statusBar takes the owner ships
-    mFileInfoStatus=new QLabel();
-    mFileEncodingStatus = new LabelWithMenu();
-    mFileModeStatus = new QLabel();
+    mFileInfoStatus=new QLabel(this);
+    mFileEncodingStatus = new LabelWithMenu(this);
+    mFileModeStatus = new QLabel(this);
 
     mFileInfoStatus->setStyleSheet("margin-left:5px; margin-right:5px");
     mFileEncodingStatus->setStyleSheet("margin-left:5px; margin-right:5px");
@@ -186,7 +186,7 @@ MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent
     mVisitHistoryManager->load();
 
     //toolbar takes the owner
-    mCompilerSet = new QComboBox();
+    mCompilerSet = new QComboBox(this);
     mCompilerSet->setMinimumWidth(200);
     mCompilerSet->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     ui->toolbarCompilerSet->insertWidget(ui->actionCompiler_Options, mCompilerSet);
