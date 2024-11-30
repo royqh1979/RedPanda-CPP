@@ -5785,6 +5785,7 @@ void MainWindow::showEvent(QShowEvent *)
 {
     if (mFullInitialized)
         return;
+    //lazy initialize
     mFullInitialized = true;
     applySettings();
     const Settings::UI& settings = pSettings->ui();
@@ -5802,6 +5803,9 @@ void MainWindow::showEvent(QShowEvent *)
             newEditor();
         }
     }
+
+    //reset default open folder
+    setFilesViewRoot(pSettings->environment().currentFolder());
 }
 
 void MainWindow::hideEvent(QHideEvent *)

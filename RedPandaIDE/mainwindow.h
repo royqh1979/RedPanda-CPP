@@ -78,8 +78,6 @@ class VisitHistoryManager;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
-
     enum class CompileIssuesState{
         CompilationResultFilled,
         Compiling,

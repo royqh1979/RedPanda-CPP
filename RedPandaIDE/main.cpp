@@ -431,6 +431,8 @@ int main(int argc, char *argv[])
         // qDebug()<<"Load font";
         QFontDatabase::addApplicationFont(":/fonts/asciicontrol.ttf");
 
+        QDir::setCurrent(pSettings->environment().defaultOpenFolder());
+
         QStringList filesToOpen = app.arguments();
         filesToOpen.pop_front();
         MainWindow mainWindow{filesToOpen};
@@ -439,11 +441,6 @@ int main(int argc, char *argv[])
             setScreenDPI(mainWindow.screen()->logicalDotsPerInch());
 
         mainWindow.show();
-
-        //reset default open folder
-        QDir::setCurrent(pSettings->environment().defaultOpenFolder());
-
-        pMainWindow->setFilesViewRoot(pSettings->environment().currentFolder());
 
 #ifdef Q_OS_WIN
         WindowLogoutEventFilter filter;
