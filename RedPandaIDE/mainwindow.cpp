@@ -118,8 +118,7 @@ static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
 MainWindow* pMainWindow;
 
 MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent)
-    : mFilesToOpenAfterStart{filesToOpenAfterStart},
-      QMainWindow{parent},
+    : QMainWindow{parent},
       ui{new Ui::MainWindow},
       mFullInitialized{false},
       mSearchInFilesDialog{nullptr},
@@ -134,8 +133,8 @@ MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent
       mClosingAll{false},
       mOpenningFiles{false},
       mSystemTurnedOff{false},
-      mCompileIssuesState{CompileIssuesState::None}
-
+      mCompileIssuesState{CompileIssuesState::None},
+      mFilesToOpenAfterStart{filesToOpenAfterStart}
 {
     ui->setupUi(this);
     ui->cbProblemCaseValidateType->blockSignals(true);
