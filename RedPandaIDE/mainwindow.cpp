@@ -163,11 +163,10 @@ MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent
     ui->statusbar->insertPermanentWidget(0,mFileModeStatus);
     ui->statusbar->insertPermanentWidget(0,mFileEncodingStatus);
     ui->statusbar->insertPermanentWidget(0,mFileInfoStatus);
-    //delete in the destructor
     mEditorList = new EditorList(ui->EditorTabsLeft,
                                  ui->EditorTabsRight,
                                  ui->splitterEditorPanel,
-                                 ui->EditorPanel);
+                                 ui->EditorPanel, this);
     connect(mEditorList, &EditorList::editorRenamed,
             this, &MainWindow::onEditorRenamed);
     connect(mEditorList, &EditorList::editorClosed,
