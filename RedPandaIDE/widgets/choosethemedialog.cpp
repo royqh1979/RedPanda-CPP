@@ -17,11 +17,33 @@
 #include "choosethemedialog.h"
 #include "ui_choosethemedialog.h"
 
+#include <QFontMetrics>
+#include <QScreen>
+
 ChooseThemeDialog::ChooseThemeDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ChooseThemeDialog)
 {
     ui->setupUi(this);
+#if defined(Q_OS_WIN) && QT_VERSION_MAJOR == 5
+        //first run, adjust size with dpi
+    int dpi = qApp->primaryScreen()->logicalDotsPerInch();
+//    int w = width()*dpi/96;
+//    int h = height()*dpi/96;
+//    ui->lblDark
+    double dpr = 96.0 / qApp->primaryScreen()->logicalDotsPerInch();
+    QPixmap p = ui->lblLight->pixmap(Qt::ReturnByValue);
+    p.setDevicePixelRatio(dpr);
+    ui->lblLight->setPixmap(p);
+    p = ui->lblDark->pixmap(Qt::ReturnByValue);
+    p.setDevicePixelRatio(dpr);
+    ui->lblDark->setPixmap(p);
+    QFontMetrics fm{font()};
+    QFont f{font()};
+
+    f.setPixelSize(fm.height()*dpi/96);
+    setFont(f);
+#endif
 #ifdef ENABLE_LUA_ADDON
     ui->rbAuto->setVisible(true);
 #else

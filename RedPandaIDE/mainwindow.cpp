@@ -1134,6 +1134,17 @@ void MainWindow::applyUISettings()
         ui->tabMessages->setShrinkedFlag(true);
     if (settings.shrinkExplorerTabs())
         ui->tabExplorer->setShrinkedFlag(true);
+#if defined(Q_OS_WIN) && QT_VERSION_MAJOR == 5
+    if (settings.mainWindowGeometry().isEmpty()) {
+        //first run, adjust size with dpi
+        int w = width()*screenDPI()/96;
+        int h = height()*screenDPI()/96;
+        resize(w,h);
+        ui->tabMessages->setBeforeShrinkSize(settings.messagesTabsSize()*screenDPI()/96);
+        ui->tabExplorer->setBeforeShrinkSize(settings.explorerTabsSize()*screenDPI()/96);
+    }
+
+#endif
 }
 
 QFileSystemWatcher *MainWindow::fileSystemWatcher()

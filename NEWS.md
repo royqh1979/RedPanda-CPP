@@ -1,7 +1,8 @@
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
   - fix: Use "/" instead of "\" in the path of compile target. 
-  - fix: crash when debug.
+  - fix: Qt 6 version crashed when debug.
+  - enhancement: Auto scale the main ui & choose theme dialog at the first run.
 
 Red Panda C++ Version 3.2
 
