@@ -3,6 +3,7 @@ Red Panda C++ Version 3.3
   - fix: Use "/" instead of "\" in the path of compile target. 
   - fix: Qt 6 version crashed when debug.
   - enhancement: Auto scale the main ui & choose theme dialog at the first run.
+  - fix: crash on statements like "x::a x;"
 
 Red Panda C++ Version 3.2
 

@@ -337,6 +337,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName,
                                       const PStatement& currentScope,
                                       PStatement &parentScopeType) const
 {
+    //Important: Don't use doEvalExpression, to prevent possible infinite loop
     PStatement result;
     parentScopeType = currentScope;
 
@@ -609,6 +610,7 @@ PStatement CppParser::doFindStatementOf(const QString &fileName, const QStringLi
     }
     return statement;
 }
+
 
 PStatement CppParser::findAliasedStatement(const PStatement &statement) const
 {
@@ -5331,6 +5333,10 @@ PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
                 freeScoped);
     while (pos<phraseExpression.length()) {
         if (phraseExpression[pos]=="::" ) {
+            // only identifiers can preceed ::
+            if (pos>0 && !isIdentifier(phraseExpression[pos-1]))
+                return PEvalStatement();
+
             pos++;
             if (!result) {
                 //global
@@ -5356,7 +5362,8 @@ PEvalStatement CppParser::doEvalScopeResolution(const QString &fileName,
                                     scope,
                                     result,
                                     false);
-            }
+            } else
+                result = PEvalStatement();
             if (!result)
                 break;
         } else
@@ -5979,8 +5986,7 @@ PStatement CppParser::doParseEvalTypeInfo(
         }
         position--;
     }
-    QStringList expression = splitExpression(baseType);
-    typeStatement = doFindStatementOf(fileName,expression,scope);
+    typeStatement = doFindStatementOf(fileName,baseType,scope);
     PStatement effectiveTypeStatement = typeStatement;
     int level=0;
     while (effectiveTypeStatement && (effectiveTypeStatement->kind == StatementKind::Typedef
