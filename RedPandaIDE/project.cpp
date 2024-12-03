@@ -162,7 +162,7 @@ QString Project::outputFilename() const
         exePath = directory();
     }
     QDir exeDir(exePath);
-    return exeDir.filePath(exeFileName);
+    return QDir::cleanPath(exeDir.filePath(exeFileName));
 }
 
 QString Project::makeFileName()

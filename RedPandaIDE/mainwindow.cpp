@@ -137,6 +137,15 @@ MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent
       mFilesToOpenAfterStart{filesToOpenAfterStart}
 {
     ui->setupUi(this);
+
+    /** Qt 6.8.0 fix: Crash when debug **/
+    QFont font(pSettings->environment().interfaceFont());
+    font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize()));
+    font.setStyleStrategy(QFont::PreferAntialias);
+    qApp->setFont(font);
+    this->setFont(font);
+    /** **/
+
     ui->cbProblemCaseValidateType->blockSignals(true);
     ui->cbProblemCaseValidateType->addItem(tr("Exact"));
     ui->cbProblemCaseValidateType->addItem(tr("Ignore leading/trailing spaces"));
