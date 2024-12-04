@@ -291,7 +291,7 @@ void CompilerManager::run(
         sharedMemoryId = sharedMemoryId.mid(0, PSHMNAMLEN);
 #endif
         if (consoleFlag!=0) {
-            QString consolePauserPath= getAbsolutePathForFile(, CONSOLE_PAUSER);
+            QString consolePauserPath= getFilePath(pSettings->dirs().appLibexecDir(), CONSOLE_PAUSER);
             if (!fileExists(consolePauserPath)) {
                 QMessageBox::critical(pMainWindow,
                                          tr("Can't find Console Pauser"),
