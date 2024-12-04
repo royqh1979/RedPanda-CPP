@@ -34,7 +34,6 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     QWidget(parent),
     mMutex()
 {
-    setWindowFlags(Qt::Popup);
     mListView = new CodeCompletionListView(this);
     mModel=new CodeCompletionListModel(&mCompletionStatementList);
     mDelegate = new CodeCompletionListItemDelegate(mModel,this);
@@ -58,6 +57,9 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
 
     mHideSymbolsStartWithTwoUnderline = false;
     mHideSymbolsStartWithUnderline = false;
+
+    // may trigger font change event, place it after member initialization
+    setWindowFlags(Qt::Popup);
 }
 
 CodeCompletionPopup::~CodeCompletionPopup()
