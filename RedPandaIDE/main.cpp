@@ -433,14 +433,27 @@ int main(int argc, char *argv[])
 
         QDir::setCurrent(pSettings->environment().defaultOpenFolder());
 
-        QStringList filesToOpen = app.arguments();
-        filesToOpen.pop_front();
-        MainWindow mainWindow{filesToOpen};
+        MainWindow mainWindow;
         pMainWindow = &mainWindow;
         if (mainWindow.screen())
             setScreenDPI(mainWindow.screen()->logicalDotsPerInch());
 
         mainWindow.show();
+
+        QStringList filesToOpen = app.arguments();
+        filesToOpen.pop_front();
+        if (!filesToOpen.isEmpty()) {
+            mainWindow.openFiles(filesToOpen);
+        } else {
+            if (pSettings->editor().autoLoadLastFiles())
+                mainWindow.loadLastOpens();
+        }
+        if (mainWindow.editorList()->pageCount()==0 && !mainWindow.project()) {
+            mainWindow.newEditor();
+        }
+
+        //reset default open folder
+        mainWindow.setFilesViewRoot(pSettings->environment().currentFolder());
 
 #ifdef Q_OS_WIN
         WindowLogoutEventFilter filter;

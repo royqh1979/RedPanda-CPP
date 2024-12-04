@@ -114,7 +114,7 @@ class MainWindow : public QMainWindow
     using PTabWidgetInfo = std::shared_ptr<TabWidgetInfo>;
 
 public:
-    MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
     void updateForEncodingInfo(bool clear=false);
@@ -1031,8 +1031,6 @@ private:
     QAction * mToolsOutput_Copy;
 
     QSortFilterProxyModel *mProjectProxyModel;
-
-    QStringList mFilesToOpenAfterStart;
     
     // QWidget interface
 protected:

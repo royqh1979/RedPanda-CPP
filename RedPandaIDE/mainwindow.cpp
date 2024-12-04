@@ -117,7 +117,7 @@ static int findTabIndex(QTabWidget* tabWidget , QWidget* w) {
 
 MainWindow* pMainWindow;
 
-MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent)
+MainWindow::MainWindow(QWidget *parent)
     : QMainWindow{parent},
       ui{new Ui::MainWindow},
       mFullInitialized{false},
@@ -133,8 +133,7 @@ MainWindow::MainWindow(const QStringList& filesToOpenAfterStart, QWidget *parent
       mClosingAll{false},
       mOpenningFiles{false},
       mSystemTurnedOff{false},
-      mCompileIssuesState{CompileIssuesState::None},
-      mFilesToOpenAfterStart{filesToOpenAfterStart}
+      mCompileIssuesState{CompileIssuesState::None}
 {
     ui->setupUi(this);
 
@@ -5817,19 +5816,6 @@ void MainWindow::showEvent(QShowEvent *)
     ui->tabExplorer->setCurrentIndex(settings.leftPanelIndex());
     ui->debugViews->setCurrentIndex(settings.debugPanelIndex());
     validateCompilerSet(pSettings->compilerSets().defaultIndex());
-
-    if (!mFilesToOpenAfterStart.isEmpty()) {
-        openFiles(mFilesToOpenAfterStart);
-    } else {
-        if (pSettings->editor().autoLoadLastFiles())
-            loadLastOpens();
-        if (editorList()->pageCount()==0 && !project()) {
-            newEditor();
-        }
-    }
-
-    //reset default open folder
-    setFilesViewRoot(pSettings->environment().currentFolder());
 }
 
 void MainWindow::hideEvent(QHideEvent *)
