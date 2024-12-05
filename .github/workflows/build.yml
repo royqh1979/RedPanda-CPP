@@ -386,7 +386,7 @@ jobs:
           - loong64
           - i686
     env:
-      IMAGE: ghcr.io/redpanda-cpp/appimage-builder-${{ matrix.arch }}:20241120.0
+      IMAGE: ghcr.io/redpanda-cpp/appimage-builder-${{ matrix.arch }}:20241204.0
       PLATFORM: linux/amd64
 
     steps:
