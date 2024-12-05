@@ -77,20 +77,21 @@ CppParser::CppParser(QObject *parent) : QObject(parent),
 CppParser::~CppParser()
 {
     //qDebug()<<"delete parser";
-    while (true) {
-        //wait for all methods finishes running
-        {
-            QMutexLocker locker(&mMutex);
-            if (!mParsing && (mLockCount == 0)) {
-              mParsing = true;
-              break;
-            }
-        }
-        //qDebug()<<"waiting for parse finished";
-        QThread::msleep(50);
-        QCoreApplication* app = QApplication::instance();
-        app->processEvents();
-    }
+//    while (true) {
+//        //wait for all methods finishes running
+//        {
+//            QMutexLocker locker(&mMutex);
+//            if (!mParsing && (mLockCount == 0)) {
+//              mParsing = true;
+//              break;
+//            }
+//        }
+//        //qDebug()<<"waiting for parse finished";
+//        QThread::msleep(50);
+//        QCoreApplication* app = QApplication::instance();
+//        app->processEvents();
+//    }
+    resetParser();
     //qDebug()<<"-------- parser deleted ------------";
 }
 

@@ -243,7 +243,6 @@ void ClassBrowserModel::fillStatements()
             return;
         if (!mParser->freeze())
             return;
-        QString mParserSerialId = mParser->serialId();
         addMembers();
         mParser->unFreeze();
     }
