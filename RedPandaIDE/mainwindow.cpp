@@ -7891,7 +7891,7 @@ void MainWindow::backupMenuForEditor(QMenu *menu, QList<QAction *> &backup)
         if (!action->objectName().isEmpty())
             changeEditorActionParent(action, menu->title());
         if (action->isSeparator()) {
-            action = new QAction();
+            action = new QAction(this);
             action->setSeparator(true);
         }
         backup.append(action);
