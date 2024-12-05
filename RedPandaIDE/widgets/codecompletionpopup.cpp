@@ -32,8 +32,11 @@
 
 CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
     QWidget(parent),
+    mListView(nullptr),
     mMutex()
 {
+    setWindowFlags(Qt::Popup);
+
     mListView = new CodeCompletionListView(this);
     mModel=new CodeCompletionListModel(&mCompletionStatementList);
     mDelegate = new CodeCompletionListItemDelegate(mModel,this);
@@ -57,9 +60,6 @@ CodeCompletionPopup::CodeCompletionPopup(QWidget *parent) :
 
     mHideSymbolsStartWithTwoUnderline = false;
     mHideSymbolsStartWithUnderline = false;
-
-    // may trigger font change event, place it after member initialization
-    setWindowFlags(Qt::Popup);
 }
 
 CodeCompletionPopup::~CodeCompletionPopup()
@@ -1262,8 +1262,10 @@ bool CodeCompletionPopup::event(QEvent *event)
 {
     bool result = QWidget::event(event);
     if (event->type() == QEvent::FontChange) {
-        mListView->setFont(font());
-        mDelegate->setFont(font());
+        if (mListView) {
+            mListView->setFont(font());
+            mDelegate->setFont(font());
+        }
     }
     return result;
 }
