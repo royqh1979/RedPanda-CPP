@@ -29,7 +29,6 @@
 
 HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget(parent)
 {
-    setWindowFlags(Qt::Popup);
     mListView = new CodeCompletionListView(this);
     mModel=new HeaderCompletionListModel(&mCompletionList, 0);
     QItemSelectionModel *m=mListView->selectionModel();
@@ -47,6 +46,9 @@ HeaderCompletionPopup::HeaderCompletionPopup(QWidget* parent):QWidget(parent)
     mCurrentFile = "";
     mPhrase = "";
     mIgnoreCase = false;
+
+    // may trigger font change event, place it after member initialization
+    setWindowFlags(Qt::Popup);
 }
 
 HeaderCompletionPopup::~HeaderCompletionPopup()
