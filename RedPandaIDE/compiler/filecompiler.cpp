@@ -53,7 +53,7 @@ bool FileCompiler::prepareForCompile()
             compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_OFF);
         break;
     default:
-        stage = oldStage;
+        break;
     }
     compilerSet()->setCompilationStage(stage);
     if (mOnlyCheckSyntax) {

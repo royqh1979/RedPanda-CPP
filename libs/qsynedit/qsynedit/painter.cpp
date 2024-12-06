@@ -473,7 +473,6 @@ void QSynEditPainter::paintToken(
                                 mLineTokens.append(tokenInfo);
                             }
                         }
-                        drawed = true;
                     }
                     nX += glyphWidth;
                 }

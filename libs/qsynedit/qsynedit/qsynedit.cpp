@@ -1830,7 +1830,7 @@ void QSynEdit::doDeleteLastChar()
 void QSynEdit::doDeleteCurrentChar()
 {
     QStringList helper;
-    BufferCoord newCaret;
+    BufferCoord newCaret{0,0};
     if (mReadOnly) {
         return;
     }

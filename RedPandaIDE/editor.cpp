@@ -4964,7 +4964,7 @@ QString getWordAtPosition(QSynedit::QSynEdit *editor, const QSynedit::BufferCoor
             paramEnd = paramBegin;
             if ((paramBegin==0)
                     && findComplement(result, '(', ')', paramEnd, 1)
-                    && (paramEnd = result.length()-1) ) {
+                    && (paramEnd == result.length()-1) ) {
                 //remove the enclosing parenthese pair
                 result = result.mid(1,result.length()-2);
                 continue;

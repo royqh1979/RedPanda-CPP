@@ -49,7 +49,6 @@ CompilerSetOptionWidget::CompilerSetOptionWidget(const QString& name, const QStr
     connect(ui->chkUseCustomLinkParams, &QCheckBox::stateChanged,
              ui->txtCustomLinkParams, &QPlainTextEdit::setEnabled);
 
-    updateIcons(pIconsManager->actionIconSize());
 #ifdef Q_OS_WIN
     ui->txtExecutableSuffix->setReadOnly(true);
 #endif

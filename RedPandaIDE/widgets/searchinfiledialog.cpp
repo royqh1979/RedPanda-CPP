@@ -127,7 +127,7 @@ void SearchInFileDialog::doSearch(bool replace)
 
     close();
 
-    int findCount=0;
+    // int findCount=0;
     int fileSearched = 0;
     int fileHitted = 0;
     QString keyword = ui->cbFind->currentText();
@@ -147,7 +147,7 @@ void SearchInFileDialog::doSearch(bool replace)
                             e->filename(),
                             keyword);
                 int t = parentItem->results.size();
-                findCount+=t;
+                //findCount+=t;
                 if (t>0) {
                     fileHitted++;
                     results->results.append(parentItem);
@@ -217,7 +217,7 @@ void SearchInFileDialog::doSearch(bool replace)
                             e->filename(),
                             keyword);
                 int t = parentItem->results.size();
-                findCount+=t;
+                //findCount+=t;
                 if (t>0) {
                     fileHitted++;
                     results->results.append(parentItem);
@@ -238,7 +238,7 @@ void SearchInFileDialog::doSearch(bool replace)
                             curFilename,
                             keyword);
                 int t = parentItem->results.size();
-                findCount+=t;
+                //findCount+=t;
                 if (t>0) {
                     fileHitted++;
                     results->results.append(parentItem);
@@ -260,7 +260,7 @@ void SearchInFileDialog::doSearch(bool replace)
                         e->filename(),
                         keyword);
             int t = parentItem->results.size();
-            findCount+=t;
+            //findCount+=t;
             if (t>0) {
                 fileHitted++;
                 results->results.append(parentItem);
@@ -301,7 +301,7 @@ void SearchInFileDialog::doSearch(bool replace)
                             e->filename(),
                             keyword);
                 int t = parentItem->results.size();
-                findCount+=t;
+                //findCount+=t;
                 if (t>0) {
                     fileHitted++;
                     results->results.append(parentItem);
@@ -325,7 +325,7 @@ void SearchInFileDialog::doSearch(bool replace)
                             curFilename,
                             keyword);
                 int t = parentItem->results.size();
-                findCount+=t;
+                //findCount+=t;
                 if (t>0) {
                     fileHitted++;
                     results->results.append(parentItem);
