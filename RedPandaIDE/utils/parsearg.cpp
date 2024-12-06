@@ -117,7 +117,6 @@ QString variableExpansion(const QString &command, int &pos, const QMap<QString, 
     if (command[pos] == '{') {
         // case 1, read to closing brace
         QString varName;
-        QString result;
         ++pos; // eat opening brace
         while (pos < command.length() && command[pos] != '}') {
             varName.push_back(command[pos]);
@@ -301,7 +300,6 @@ QString variableExpansion(const QString &command, int &pos, const QMap<QString, 
 QString devCppExpansion(const QString &command, int &pos, const QMap<QString, QString> &variables)
 {
     QString varName;
-    QString result;
     while (pos < command.length() && command[pos] != '>') {
         varName.push_back(command[pos]);
         ++pos;

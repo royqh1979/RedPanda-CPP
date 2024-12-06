@@ -1246,8 +1246,6 @@ void DarkFusionStyle::drawControl(ControlElement element, const QStyleOption *op
             int tabOverlap = pixelMetric(PM_TabBarTabOverlap, option, widget);
             rect = option->rect.adjusted(0, 0, (onlyOne || lastTab) ? 0 : tabOverlap, 0);
 
-            QRect r2(rect);
-
             painter->setPen(calcInnerContrastLine());
 
             QTransform rotMatrix;

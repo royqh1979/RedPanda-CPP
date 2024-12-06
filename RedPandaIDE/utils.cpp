@@ -292,7 +292,7 @@ void resetCppParser(std::shared_ptr<CppParser> parser, int compilerSetIndex)
             parser->addIncludePath(file);
         }
         // Set defines
-        for (QString define:compilerSet->defines(parser->language()==ParserLanguage::CPlusPlus)) {
+        foreach (const QString &define, compilerSet->defines(parser->language()==ParserLanguage::CPlusPlus)) {
             parser->addHardDefineByLine(define);
         }
 //        // add a Red Pand C++ 's own macro

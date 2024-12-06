@@ -55,8 +55,8 @@ void ShortcutManager::load()
         QMessageBox::critical(nullptr,
                               tr("Read shortcut config failed"),
                               tr("Read shortcut config file '%1' failed:%2")
-                              .arg(filename)
-                              .arg(error.errorString()));
+                              .arg(filename,
+                                   error.errorString()));
         return;
     }
     mShortcuts.clear();

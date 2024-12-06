@@ -104,7 +104,7 @@ void CPUDialog::updateDPI(float dpi)
     font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize(),dpi));
     font.setStyleStrategy(QFont::PreferAntialias);
     setFont(font);
-    for (QWidget* p:findChildren<QWidget*>()) {
+    foreach (QWidget* p, findChildren<QWidget*>()) {
         if (p!=ui->txtCode)
             p->setFont(font);
     }

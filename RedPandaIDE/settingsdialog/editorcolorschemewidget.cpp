@@ -19,6 +19,7 @@
 #include "../settings.h"
 #include "../colorscheme.h"
 #include "../mainwindow.h"
+#include "../systemconsts.h"
 
 #include <QAction>
 #include <QMessageBox>
@@ -389,7 +390,7 @@ void EditorColorSchemeWidget::on_actionImport_Scheme_triggered()
     QFileInfo fileInfo(filename);
     QString name = fileInfo.fileName();
     QString suffix = EXT_COLOR_SCHEME;
-    if (!name.toLower().endsWith(suffix))
+    if (!name.endsWith(suffix, PATH_SENSITIVITY))
         return;
     name.remove(name.length()-suffix.length(),suffix.length());
     name.replace('_',' ');

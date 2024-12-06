@@ -38,7 +38,6 @@ QMap<QString, QString> CompileArgumentsWidget::arguments( bool includeUnset) con
     QMap<QString, QString> args;
     const QTabWidget* pTab = this;
     for (int i=0;i<pTab->count();i++) {
-        QString section = pTab->tabText(i);
         QWidget* pWidget = pTab->widget(i);
         QGridLayout* pLayout = static_cast<QGridLayout*>(pWidget->layout());
         if (pLayout != nullptr) {

@@ -302,7 +302,6 @@ QList<PBookmark> BookmarkModel::load(const QString& filename, qint64 criteriaTim
 {
     //clear(forProject);
     QList<PBookmark> bookmarks;
-    QFileInfo fileInfo(filename);
     QFile file(filename);
     if (!file.exists())
         return bookmarks;

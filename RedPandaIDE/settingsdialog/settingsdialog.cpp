@@ -95,7 +95,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
 SettingsDialog::~SettingsDialog()
 {
-    for (SettingsWidget* p:mSettingWidgets) {
+    foreach (SettingsWidget* p, mSettingWidgets) {
         p->setParent(nullptr);
         delete p;
     }

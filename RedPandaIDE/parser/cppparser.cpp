@@ -6090,7 +6090,7 @@ void CppParser::internalInvalidateFile(const QString &fileName)
         }
 
         //invalidate all handledInheritances
-        for (std::weak_ptr<ClassInheritanceInfo> pWeakInfo: p->handledInheritances()) {
+        foreach (const std::weak_ptr<ClassInheritanceInfo> &pWeakInfo, p->handledInheritances()) {
             PClassInheritanceInfo info = pWeakInfo.lock();
             if (info) {
                 info->handled = false;

@@ -314,8 +314,8 @@ void CompilerSetOptionWidget::on_btnFindCompilers_clicked()
 #ifdef Q_OS_WIN
         QString msg = tr("Red Panda C++ will clear previously found compiler list and search"
                       " for compilers in the following locations:<br /> '%1'<br /> '%2'<br />Do you really want to continue?")
-                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW32")
-                                 .arg(includeTrailingPathDelimiter(pSettings->dirs().appDir()) + "MinGW64");
+                                 .arg(getFilePath(pSettings->dirs().appDir(), "MinGW32"),
+                                      getFilePath(pSettings->dirs().appDir(), "MinGW64"));
 #else
         QString msg = tr("Red Panda C++ will clear previously found compiler list and search"
                       " for compilers in the the PATH. <br />Do you really want to continue?");

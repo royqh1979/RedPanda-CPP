@@ -258,8 +258,8 @@ PClassBrowserNode ClassBrowserModel::addChild(ClassBrowserNode *node, const PSta
     mNodes.append(newNode);
     mNodeIndex.insert(
                 QString("%1+%2+%3")
-                .arg(statement->fullName)
-                .arg(statement->noNameArgs)
+                .arg(statement->fullName,
+                     statement->noNameArgs)
                 .arg((int)statement->kind),newNode);
     mProcessedStatements.insert(statement.get());
     if (isScopeStatement(statement)) {

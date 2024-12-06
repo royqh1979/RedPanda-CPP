@@ -126,7 +126,7 @@ void SyntaxerManager::applyColorScheme(QSynedit::PSyntaxer syntaxer, const QStri
     if (!syntaxer)
         return;
 
-    for (QString name: syntaxer->attributes().keys()) {
+    foreach (const QString &name, syntaxer->attributes().keys()) {
         PColorSchemeItem item = pColorManager->getItem(schemeName,name);
         if (item) {
             QSynedit::PTokenAttribute attr = syntaxer->attributes()[name];
