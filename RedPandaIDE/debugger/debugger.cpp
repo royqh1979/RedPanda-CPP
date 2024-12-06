@@ -39,9 +39,12 @@
 
 Debugger::Debugger(QObject *parent) : QObject{parent},
     mForceUTF8{false},
+    mDebugInfosUsingUTF8{false},
+    mUseDebugServer{false},
     mDebuggerType{DebuggerType::GDB},
     mLastLoadtime{0},
     mProjectLastLoadtime{0},
+    mInferiorHasBreakpoints{false},
     mClientMutex{}
 {
     //models deleted in the destructor
@@ -58,7 +61,6 @@ Debugger::Debugger(QObject *parent) : QObject{parent},
 
     mClient = nullptr;
     mTarget = nullptr;
-    mCommandChanged = false;
     mLeftPageIndexBackup = -1;
 
     connect(mWatchModel.get(), &WatchModel::fetchChildren,
