@@ -290,8 +290,8 @@ extern "C" int luaApi_System_osArch(lua_State *L) noexcept {
 
 void luaApiImpl_System_popen(lua_State *L) {
     using namespace std::chrono;
-    QMetaEnum exitStatusEnum = QMetaEnum::fromType<process::ExitStatus>();
-    QMetaEnum processErrorEnum = QMetaEnum::fromType<process::ProcessError>();
+    QMetaEnum exitStatusEnum = QMetaEnum::fromType<QProcess::ExitStatus>();
+    QMetaEnum processErrorEnum = QMetaEnum::fromType<QProcess::ProcessError>();
 
     QString prog = AddOn::RaiiLuaState::fetchString(L, 1);
     QStringList args;
@@ -325,13 +325,13 @@ void luaApiImpl_System_popen(lua_State *L) {
         timeout = duration_cast<microseconds>(deadline - system_clock::now());
     }
 
-    process process;
+    QProcess process;
     process.setProgram(prog);
     process.setArguments(args);
     process.start(QIODevice::ReadOnly);
     if (!process.waitForStarted(duration_cast<milliseconds>(timeout).count())) {
         QJsonObject result{
-            {"exitStatus", exitStatusEnum.valueToKey(process::CrashExit)},
+            {"exitStatus", exitStatusEnum.valueToKey(QProcess::CrashExit)},
             {"error", processErrorEnum.valueToKey(process.error())},
         };
         AddOn::RaiiLuaState::push(L, "");
@@ -348,8 +348,8 @@ void luaApiImpl_System_popen(lua_State *L) {
     QByteArray stderrData = process.readAllStandardError();
 
     if (
-        process::ExitStatus exitStatus = process.exitStatus();
-        exitStatus == process::NormalExit
+        QProcess::ExitStatus exitStatus = process.exitStatus();
+        exitStatus == QProcess::NormalExit
     ) {
         QJsonObject result{
             {"exitStatus", exitStatusEnum.valueToKey(exitStatus)},
