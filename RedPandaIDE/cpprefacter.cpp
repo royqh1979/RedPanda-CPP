@@ -92,6 +92,11 @@ bool CppRefacter::findOccurence(const QString &statementFullname, SearchFileScop
         // definition of the symbol not found
         if (!statement)
             return false;
+        if (statement->scope == StatementScope::Local) {
+            editor = pMainWindow->editorList()->getEditor();
+            if (!editor)
+                return false;
+        }
 
         if (statement->scope == StatementScope::Local || scope == SearchFileScope::currentFile) {
             doFindOccurenceInEditor(statement, editor,parser);

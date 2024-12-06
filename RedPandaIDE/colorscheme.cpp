@@ -35,7 +35,7 @@ PColorScheme ColorScheme::fromJson(const QJsonObject &json)
 {
     PColorScheme scheme = std::make_shared<ColorScheme>();
     scheme->mItems.clear();
-    for (QString key:json.keys()) {
+    foreach (const QString &key, json.keys()) {
         if (json[key].isObject()) {
             scheme->mItems[key]=ColorSchemeItem::fromJson(json[key].toObject());
         }
@@ -51,7 +51,7 @@ PColorScheme ColorScheme::fromJson(const QJsonObject &json)
 
 void ColorScheme::toJson(QJsonObject &json)
 {
-    for (QString key:mItems.keys()) {
+    foreach (const QString &key, mItems.keys()) {
         PColorSchemeItem item = mItems[key];
         if (item) {
             QJsonObject itemObject;
@@ -296,7 +296,7 @@ QStringList ColorManager::getSchemes(const QString &themeType)
         return mSchemes.keys();
     }
     QStringList lst;
-    for (QString name:mSchemes.keys()) {
+    for (const QString &name:mSchemes.keys()) {
         PColorScheme scheme = mSchemes[name];
         if (scheme && scheme->preferThemeType() == themeType) {
             lst.append(name);
@@ -606,13 +606,13 @@ bool ColorManager::rename(const QString &oldName, const QString &newName)
         QString fullpath = generateFullPathname(newName,false,true);
         QFile oldFile(oldfullPath);
         if (oldFile.exists() && !oldFile.rename(fullpath))
-            throw FileError(QObject::tr("Rename file '%1' to '%2' failed!").arg(oldfullPath).arg(fullpath));
+            throw FileError(QObject::tr("Rename file '%1' to '%2' failed!").arg(oldfullPath, fullpath));
     }
     QString oldfullPath = generateFullPathname(oldName,false,false);
     QString fullpath = generateFullPathname(newName,false,false);
     QFile oldFile(oldfullPath);
     if (oldFile.exists() && !oldFile.rename(fullpath))
-        throw FileError(QObject::tr("Rename file '%1' to '%2' failed!").arg(oldfullPath).arg(fullpath));
+        throw FileError(QObject::tr("Rename file '%1' to '%2' failed!").arg(oldfullPath, fullpath));
     mSchemes.remove(oldName);
     mSchemes[newName] = scheme;
     return true;

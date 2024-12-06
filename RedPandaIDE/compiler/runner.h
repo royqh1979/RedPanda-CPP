@@ -34,7 +34,6 @@ public:
     void setWaitForFinishTime(int newWaitForFinishTime);
 
 signals:
-    void started();
     void terminated();
     void runErrorOccurred(const QString& reason);
     void pausingForFinish(); // finish but pausing

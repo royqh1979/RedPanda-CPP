@@ -167,7 +167,7 @@ bool FileAssociationModel::checkAssociation(const QString &extension, const QStr
     if (result != ERROR_SUCCESS )
         return false;
 
-    QString keyString = QString("%1\\Shell\\%2\\Command").arg(filetype).arg(verb);
+    QString keyString = QString("%1\\Shell\\%2\\Command").arg(filetype, verb);
     QString value1,value2;
     if (!readRegistry(HKEY_CLASSES_ROOT, keyString, "", value1))
         return false;
@@ -249,7 +249,7 @@ bool FileAssociationModel::registerFileType(const QString &filetype, const QStri
     QString value = QString("%1,%2").arg(serverApp).arg(icon);
     if (!writeRegistry(HKEY_CLASSES_ROOT, keyString, value))
         return false;
-    keyString = QString("%1\\Shell\\%2\\Command").arg(filetype).arg(verb);
+    keyString = QString("%1\\Shell\\%2\\Command").arg(filetype, verb);
     value = serverApp+" \"%1\"";
     if (!writeRegistry(HKEY_CLASSES_ROOT, keyString, value))
         return false;
@@ -268,7 +268,7 @@ QVariant FileAssociationModel::data(const QModelIndex &index, int role) const
     }
     PFileAssociationItem item = mItems[index.row()];
     if (role == Qt::DisplayRole) {
-        return QString("%1 (*.%2)").arg(item->name).arg(item->suffix);
+        return QString("%1 (*.%2)").arg(item->name, item->suffix);
     } else if (role == Qt::CheckStateRole) {
         return (item->selected)? Qt::Checked : Qt::Unchecked;
     }

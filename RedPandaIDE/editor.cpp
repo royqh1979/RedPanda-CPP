@@ -106,7 +106,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     if (mFilename.isEmpty()) {
         mFilename = QString("untitled%1").arg(getNewFileNumber());
     }
-    QFileInfo fileInfo(mFilename);
     QSynedit::PSyntaxer syntaxer;
     syntaxer = syntaxerManager.getSyntaxer(mFilename);
     if (syntaxer) {
@@ -429,7 +428,8 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         if (dialog.exec()!=QFileDialog::Accepted) {
             return false;
         }
-        newName = dialog.selectedFiles()[0];
+        QStringList selectedFiles=dialog.selectedFiles();
+        newName = selectedFiles.first();
         QFileInfo fileInfo(newName);
         if (fileInfo.suffix().isEmpty()) {
             QString filter = dialog.selectedNameFilter();
@@ -843,7 +843,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     if (mParser)
                         function = mParser->findFunctionAt(mFilename,caretY()+1);
                     if (function) {
-                        QString funcName = function->command;
                         bool isVoid = (function->type  == "void");
                         QStringList params = mParser->getFunctionParameterNames(function);
                         insertString.append(QString(" * @brief ")+USER_CODE_IN_INSERT_POS);
@@ -1193,7 +1192,7 @@ void Editor::onGutterPaint(QPainter &painter, int aLine, int X, int Y)
         PSyntaxIssueList lst = getSyntaxIssuesAtLine(aLine);
         if (lst) {
             bool hasError=false;
-            for (const PSyntaxIssue& issue : *lst) {
+            foreach (const PSyntaxIssue& issue, *lst) {
                 if (issue->issueType == CompileIssueType::Error) {
                     hasError = true;
                     break;;

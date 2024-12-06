@@ -38,7 +38,6 @@ Exporter::Exporter(int tabSize, const QByteArray charset):
     mRecalcLineNumber(true),
     mLineNumberStartFromZero(false)
 {
-    clear();
     setTitle("");
 }
 
@@ -69,7 +68,7 @@ void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord 
     if ((start.line == stop.line) && (start.ch >= stop.ch))
         return;
     // initialization
-    mText.clear();
+    clear();
     // export all the lines into fBuffer
     mFirstAttribute = true;
 

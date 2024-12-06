@@ -41,7 +41,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     mModifiedSchemeComboFont = mDefaultSchemeComboFont;
     mModifiedSchemeComboFont.setBold(true);
     int schemeCount=0;
-    for (QString schemeName: pColorManager->getSchemes()) {
+    foreach (const QString &schemeName, pColorManager->getSchemes()) {
         PColorScheme scheme = pColorManager->get(schemeName);
         if (!scheme)
             return;
@@ -56,7 +56,7 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     ui->treeItems->setModel(&mDefinesModel);
     delete m;
     mDefinesModel.setHorizontalHeaderLabels(QStringList());        
-    for (QString defineName : pColorManager->getDefines()) {
+    foreach (const QString &defineName, pColorManager->getDefines()) {
         addDefine(defineName, pColorManager->getDefine(defineName));
     }
     ui->treeItems->expandAll();
@@ -333,7 +333,7 @@ void EditorColorSchemeWidget::doLoad()
 void EditorColorSchemeWidget::doSave()
 {
     try {
-        for (QString name:mModifiedSchemes) {
+        foreach (const QString &name, mModifiedSchemes) {
             pColorManager->saveScheme(name);
         }
         pSettings->editor().setColorScheme(ui->cbScheme->currentText());

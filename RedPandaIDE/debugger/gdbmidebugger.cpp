@@ -564,7 +564,7 @@ void GDBMIDebuggerClient::handleDisassembly(const QList<GDBMIResultParser::Parse
             bool ok;
             QString addr = obj["address"].value();
             QString inst = obj["inst"].value();
-            QString offset = obj["offset"].value();
+            //QString offset = obj["offset"].value();
             qulonglong addrVal = addr.toULongLong(&ok, 16);
             if (addrVal == mCurrentAddress) {
                 line = "=> "+addr+ " " + inst;

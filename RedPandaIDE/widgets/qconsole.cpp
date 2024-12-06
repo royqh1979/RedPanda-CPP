@@ -1021,7 +1021,7 @@ void ConsoleLines::layout()
     emit layoutStarted();
     mRows = 0;
     bool forceUpdate = (mOldTabSize!=mConsole->tabSize());
-    for (PConsoleLine consoleLine: mLines) {
+    foreach (const PConsoleLine &consoleLine, mLines) {
         if (forceUpdate || consoleLine->maxColumns > mConsole->columnsPerRow()) {
             consoleLine->maxColumns = breakLine(consoleLine->text,consoleLine->fragments);
         }
@@ -1133,8 +1133,8 @@ QStringList ConsoleLines::getRows(int startRow, int endRow)
         return QStringList();
     QStringList lst;
     int row = 0;
-    for (PConsoleLine line:mLines) {
-        for (const QString& s:line->fragments) {
+    foreach (const PConsoleLine &line, mLines) {
+        foreach (const QString& s, line->fragments) {
             row+=1;
             if (row>endRow) {
                 return lst;

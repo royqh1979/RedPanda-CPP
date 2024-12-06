@@ -1042,7 +1042,7 @@ void MainWindow::applySettings()
     font.setStyleStrategy(QFont::PreferAntialias);
     qApp->setFont(font);
     this->setFont(font);
-    for (QWidget* p:findChildren<QWidget*>()) {
+    foreach (QWidget* p, findChildren<QWidget*>()) {
         if (mCPUDialog && (p==mCPUDialog || mCPUDialog->isAncestorOf(p)))
             continue;
         p->setFont(font);
@@ -1438,7 +1438,7 @@ void MainWindow::updateAppTitle(const Editor *e)
                                     .arg(str,appName));
         }
     } else if (mProject) {
-        QString str,str2;
+        QString str;
         if (mProject->modified())
             str = mProject->name() + " [*]";
         else
@@ -1936,7 +1936,6 @@ void MainWindow::changeProjectOptions(const QString &widgetName, const QString &
     if (!mProject)
         return;
 //    int oldCompilerSet = mProject->options().compilerSet;
-    QString oldName = mProject->name();
     PSettingsDialog dialog = SettingsDialog::projectOptionDialog(this);
     if (!groupName.isEmpty()) {
         dialog->setCurrentWidget(widgetName, groupName);
@@ -2014,16 +2013,16 @@ void MainWindow::updateActionIcons()
     ui->toolbarCompile->setIconSize(iconSize);
     ui->toolbarDebug->setIconSize(iconSize);
     ui->toolbarCompilerSet->setIconSize(iconSize);
-    for (QToolButton* btn: mClassBrowserToolbar->findChildren<QToolButton *>()) {
+    foreach (QToolButton* btn, mClassBrowserToolbar->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
     }
-    for (QToolButton* btn: ui->panelFiles->findChildren<QToolButton *>()) {
+    foreach (QToolButton* btn, ui->panelFiles->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
     }
-    for (QToolButton* btn: ui->tabProblemSet->findChildren<QToolButton *>()) {
+    foreach (QToolButton* btn, ui->tabProblemSet->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
     }
-    for (QToolButton* btn: ui->panelProblemCaseInfo->findChildren<QToolButton *>()) {
+    foreach (QToolButton* btn, ui->panelProblemCaseInfo->findChildren<QToolButton *>()) {
         btn->setIconSize(iconSize);
     }
 
@@ -2834,9 +2833,9 @@ void MainWindow::doAutoSave(Editor *e)
             QDateTime time = QDateTime::currentDateTime();
             filename = parent.filePath(
                         QString("%1.%2.%3")
-                        .arg(baseName)
-                        .arg(time.toString("yyyy.MM.dd.hh.mm.ss"))
-                        .arg(suffix));
+                        .arg(baseName,
+                             time.toString("yyyy.MM.dd.hh.mm.ss"),
+                             suffix));
         }
         }
         if (e->isNew()) {
@@ -3708,7 +3707,7 @@ void MainWindow::buildEncodingMenu()
         QMenu* menuLang = new QMenu();
         menuLang->setTitle(langName);
         menuCharsets->addMenu(menuLang);
-        QList<PCharsetInfo> charInfos = pCharsetInfoManager->findCharsetsByLanguageName(langName);
+        //QList<PCharsetInfo> charInfos = pCharsetInfoManager->findCharsetsByLanguageName(langName);
         connect(menuLang,&QMenu::aboutToShow,
                 [langName,menuLang,this]() {
             menuLang->clear();
@@ -4960,8 +4959,7 @@ void MainWindow::onClassBrowserRefreshStart()
         return;
     }
     mClassBrowserCurrentStatement=QString("%1+%2+%3")
-            .arg(statement->fullName)
-            .arg(statement->noNameArgs)
+            .arg(statement->fullName, statement->noNameArgs)
             .arg((int)statement->kind);
 }
 
@@ -7110,7 +7108,7 @@ void MainWindow::on_actionProject_options_triggered()
     if (!mProject)
         return;
 //    int oldCompilerSet = mProject->options().compilerSet;
-    QString oldName = mProject->name();
+    //QString oldName = mProject->name();
     PSettingsDialog dialog = SettingsDialog::projectOptionDialog(this);
     dialog->exec();
     updateCompilerSet();
@@ -7656,8 +7654,8 @@ void MainWindow::newProjectUnitFile(const QString& suffix)
     Editor * editor = mProject->openUnit(newUnit, false);
     if (editor)
         editor->activate();
-    QString branch;
 #ifdef ENABLE_VCS
+    QString branch;
     if (pSettings->vcs().gitOk() && mProject->model()->iconProvider()->VCSRepository()->hasRepository(branch)) {
         QString output;
         mProject->model()->iconProvider()->VCSRepository()->add(newFileName,output);
@@ -8355,7 +8353,6 @@ void MainWindow::doCompileRun(RunType runType)
 void MainWindow::doGenerateAssembly()
 {
     CompileTarget target =getCompileTarget();
-    QString execName;
     if (target!= CompileTarget::File
             && target != CompileTarget::Project) {
         return;
@@ -8804,7 +8801,8 @@ void MainWindow::onSaveProblemSet()
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setAcceptMode(QFileDialog::AcceptSave);
     if (dialog.exec() == QDialog::Accepted) {
-        QString fileName=dialog.selectedFiles()[0];
+        QStringList selectedFiles = dialog.selectedFiles();
+        QString fileName = selectedFiles.first();
         QFileInfo fileInfo(fileName);
         if (fileInfo.suffix().isEmpty()) {
             fileName.append(".pbs");
@@ -9769,14 +9767,14 @@ void MainWindow::on_txtProblemCaseOutput_cursorPositionChanged()
 
 void MainWindow::on_txtProblemCaseExpected_cursorPositionChanged()
 {
-    QTextCursor cursor = ui->txtProblemCaseExpected->textCursor();
+    //QTextCursor cursor = ui->txtProblemCaseExpected->textCursor();
     //ui->lblProblemCaseExpected->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
 }
 
 
 void MainWindow::on_txtProblemCaseInput_cursorPositionChanged()
 {
-    QTextCursor cursor = ui->txtProblemCaseInput->textCursor();
+    //QTextCursor cursor = ui->txtProblemCaseInput->textCursor();
     //ui->lblProblemCaseInput->setText(tr("Line %1").arg(cursor.block().firstLineNumber()+1));
 }
 

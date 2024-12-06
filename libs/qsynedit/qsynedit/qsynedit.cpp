@@ -1627,7 +1627,6 @@ void QSynEdit::doToggleComment()
 
 void QSynEdit::doToggleBlockComment()
 {
-    QString s;
     if (mReadOnly)
         return;
     if (mSyntaxer->blockCommentBeginSymbol().isEmpty())
@@ -2196,8 +2195,6 @@ void QSynEdit::insertLine(bool moveCaret)
         }
     }
 
-    QString Temp2 = temp;
-    QString Temp3;
     PTokenAttribute Attr;
 
     // This is sloppy, but the Right Thing would be to track the column of markers
@@ -3159,7 +3156,7 @@ void QSynEdit::recalcCharExtent()
     bool hasStyles[] = {false,false,false,false};
     int size = 4;
     if (mSyntaxer->attributes().count()>0) {
-        for (const PTokenAttribute& attribute: mSyntaxer->attributes()) {
+        foreach (const PTokenAttribute& attribute, mSyntaxer->attributes()) {
             for (int i=0;i<size;i++) {
                 if (attribute->styles().testFlag(styles[i]))
                     hasStyles[i] = true;
@@ -4524,7 +4521,7 @@ QString QSynEdit::selText() const
               int l = xposToGlyphStartChar(i,xFrom);
               int r = xposToGlyphStartChar(i,xTo);
               QString s = mDocument->getLine(i-1);
-              result += s.mid(l-1,r-l);
+              result += s.midRef(l-1,r-l);
               if (i<lastLine)
                   result+=lineBreak();
             }
@@ -5287,7 +5284,6 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
             std::swap(xFrom, xTo);
         if (firstLine > lastLine)
             std::swap(firstLine,lastLine);
-        QString result;
         for (int i = firstLine; i <= lastLine; i++) {
             int l = xposToGlyphStartChar(i,xFrom);
             int r = xposToGlyphStartChar(i,xTo);

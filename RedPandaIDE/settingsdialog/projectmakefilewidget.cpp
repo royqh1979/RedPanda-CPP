@@ -67,7 +67,7 @@ void ProjectMakefileWidget::on_btnBrowse_clicked()
                 tr("Custom makefile"),
                 currentFile,
                 tr("All files (%1)").arg(ALL_FILE_WILDCARD));
-    if (!fileName.isEmpty() && QFileInfo(fileName).exists()) {
+    if (!fileName.isEmpty() && fileExists(fileName)) {
         ui->txtCustomMakefile->setText(fileName);
     }
 }

@@ -196,7 +196,7 @@ QString CppTokenizer::getNextToken(TokenType *pTokenType)
                 int delimPos = result.lastIndexOf(':');
                 if (delimPos >= 0) {
                     bool ok;
-                    mCurrentLine = QStringView(result.begin() + delimPos + 1, result.end()).toInt(&ok)-1; // fCurrLine is 0 based
+                    mCurrentLine = QStringView(result.constBegin() + delimPos + 1, result.constEnd()).toInt(&ok)-1; // fCurrLine is 0 based
                 }
             }
             done = (result != "");

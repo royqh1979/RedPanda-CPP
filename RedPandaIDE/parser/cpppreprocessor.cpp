@@ -658,7 +658,7 @@ void CppPreprocessor::expandMacro(QString &newLine, const QString &word, int &i,
                     for (int i=argLineStart+1;i<argLineEnd;i++) {
                         args += mBuffer[i];
                     }
-                    args += mBuffer[argLineEnd].left(argEnd);
+                    args += mBuffer[argLineEnd].leftRef(argEnd);
                 }
                 QString formattedValue = expandFunction(define,args);
                 usedMacros.insert(word);

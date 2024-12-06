@@ -60,10 +60,10 @@ QString IssuesTable::toHtml()
     QString result;
     result.append(
                 QString("<table><thead><th>%1</th><th>%2</th><th>%3</th><th>%4</th></thead>")
-                .arg(tr("Filename"))
-                .arg(tr("Line"))
-                .arg(tr("Col"))
-                .arg(tr("Description")));
+                .arg(tr("Filename"),
+                     tr("Line"),
+                     tr("Col"),
+                     tr("Description")));
     foreach (const PCompileIssue& issue, mModel->issues()) {
         result.append(QString("<tr><td>%1</td><td>%2</td><td>%3</td><td>%4</td></tr>\n")
                       .arg(issue->filename)

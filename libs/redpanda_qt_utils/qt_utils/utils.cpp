@@ -393,7 +393,7 @@ bool fileExists(const QString &file)
 {
     if (file.isEmpty())
         return false;
-    return QFile(file).exists();
+    return QFile::exists(file);
 }
 
 bool fileExists(const QString &dir, const QString &fileName)
@@ -996,7 +996,7 @@ const QStringList &availableEncodings() {
     }
 #else
     QSet<QByteArray> codecAlias = {"system", "utf-8"};
-    for (const QByteArray &name : QTextCodec::availableCodecs()) {
+    foreach (const QByteArray &name, QTextCodec::availableCodecs()) {
         QByteArray lname = name.toLower();
         if (lname.startsWith("cp"))
             continue;
@@ -1006,7 +1006,7 @@ const QStringList &availableEncodings() {
         codecAlias.insert(lname);
         QTextCodec *codec = QTextCodec::codecForName(name);
         if (codec != nullptr) {
-            for (const QByteArray &alias : codec->aliases())
+            foreach (const QByteArray &alias, codec->aliases())
                 codecAlias.insert(alias.toLower());
         }
     }

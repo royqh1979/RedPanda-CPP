@@ -219,7 +219,8 @@ QString getSettingFilename(const QString& filepath, bool& firstRun) {
             filename = includeTrailingPathDelimiter(QApplication::applicationDirPath()) +
                     "config/"  + APP_SETTSINGS_FILENAME;
         } else {
-            filename =includeTrailingPathDelimiter(QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0])
+            QStringList appLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+            filename =includeTrailingPathDelimiter(appLocations.first())
                  + APP_SETTSINGS_FILENAME;
         }
     } else {
@@ -332,7 +333,8 @@ int main(int argc, char *argv[])
     bool firstRun;
     QString settingFilename = getSettingFilename(QString(), firstRun);
     if (!isGreenEdition()) {
-        QDir::setCurrent(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0]);
+        QStringList documentLocations = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
+        QDir::setCurrent(documentLocations.first());
     }
     if (settingFilename.isEmpty()) {
         lockFile.unlock();

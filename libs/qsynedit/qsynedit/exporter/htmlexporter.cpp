@@ -183,11 +183,11 @@ QString HTMLExporter::getHeader()
             "</head>" + lineBreak() +
             "<body>" + lineBreak();
     QString header = HTMLAsTextHeader
-            .arg(mTitle)
-            .arg(QString(mCharset))
-            .arg(colorToHTML(mForegroundColor))
-            .arg(colorToHTML(mBackgroundColor))
-            .arg(styles);
+            .arg(mTitle,
+                 QString(mCharset),
+                 colorToHTML(mForegroundColor),
+                 colorToHTML(mBackgroundColor),
+                 styles);
     if (mCreateHTMLFragment) {
         HTMLAsTextHeader =
                     "<html>" + lineBreak() +
@@ -203,10 +203,10 @@ QString HTMLExporter::getHeader()
                     "</head>" + lineBreak() +
                     "<body>" + lineBreak();
         header = HTMLAsTextHeader
-                    .arg(QString(mCharset))
-                    .arg(colorToHTML(mForegroundColor))
-                    .arg(colorToHTML(mBackgroundColor))
-                    .arg(styles);
+                    .arg(QString(mCharset),
+                         colorToHTML(mForegroundColor),
+                         colorToHTML(mBackgroundColor),
+                         styles);
     }
     QString result = header;
     if (mCreateHTMLFragment) {
@@ -232,9 +232,9 @@ QString HTMLExporter::getStartLineNumberString(int startLine, int endLine)
             QString("<table style='width:100%; border:1px; cellspacing:1px;'><tr><td style=\"width: %1pt; font: %2pt '%3'; color: %4; background-color: %5; text-align: right; padding-right: 0.5em; \">")
             .arg(maxLineNumbeWidth)
             .arg(pixelToPoint(mFont.pixelSize()))
-            .arg(mFont.family())
-            .arg(colorToHTML(mLineNumberColor))
-            .arg(colorToHTML(mLineNumberBackgroundColor))
+            .arg(mFont.family(),
+                 colorToHTML(mLineNumberColor),
+                 colorToHTML(mLineNumberBackgroundColor))
             +lineBreak();
     for (int i=startLine;i<=endLine;i++)
         result+=QString("<span>%1</span><br/>").arg(i)+lineBreak();

@@ -53,7 +53,6 @@ private:
     QString mShareMemoryId;
     bool mRedirectInput;
     bool mStartConsole;
-    std::shared_ptr<QProcess> mProcess;
     QSemaphore mQuitSemaphore;
     QStringList mBinDirs;
 

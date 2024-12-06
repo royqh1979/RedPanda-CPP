@@ -55,7 +55,7 @@ static bool internalEnumTokenAttributes(PSyntaxer syntaxer,
         syntaxerList.append(syntaxer);
     }
     if (syntaxer) {
-        for (PTokenAttribute pAttr: syntaxer->attributes()){
+        foreach (const PTokenAttribute &pAttr, syntaxer->attributes()){
             QString UniqueAttriName = syntaxer->languageName()
                     +  QString("%1").arg(syntaxerList.indexOf(syntaxer)) + '.'
                     + pAttr->name();

@@ -99,20 +99,22 @@ void ExecutableRunner::setRedirectInputFilename(const QString &newDataFile)
 
 void ExecutableRunner::run()
 {
-    emit started();
-    auto action = finally([this]{
-        mProcess.reset();
-        setPausing(false);
-        emit terminated();
-    });
+
+
     mStop = false;
     bool errorOccurred = false;
 
-    mProcess = std::make_shared<QProcess>();
-    mProcess->setProgram(mFilename);
-    mProcess->setArguments(mArguments);
+    QProcess process;
+    process.setProgram(mFilename);
+    process.setArguments(mArguments);
     //qDebug()<<splitProcessCommand(mArguments);
-    mProcess->setWorkingDirectory(mWorkDir);
+    process.setWorkingDirectory(mWorkDir);
+
+    auto action = finally([this]{
+        setPausing(false);
+        emit terminated();
+    });
+
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathAdded = mBinDirs;
@@ -122,14 +124,14 @@ void ExecutableRunner::run()
         path = pathAdded.join(PATH_SEPARATOR);
     }
     env.insert("PATH",path);
-    mProcess->setProcessEnvironment(env);
+    process.setProcessEnvironment(env);
     connect(
-                mProcess.get(), &QProcess::errorOccurred,
+                &process, &QProcess::errorOccurred,
                 [&errorOccurred](){
         errorOccurred= true;
     });
 #ifdef Q_OS_WIN
-    mProcess->setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
+    process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
         if (mStartConsole) {
             args->flags |=  CREATE_NEW_CONSOLE;
             args->flags &= ~CREATE_NO_WINDOW;
@@ -183,32 +185,32 @@ void ExecutableRunner::run()
 //    if (!redirectInput()) {
 //        process.closeWriteChannel();
 //    }
-    mProcess->start();
-    mProcess->waitForStarted(5000);
-    if (mProcess->state()==QProcess::Running && redirectInput()) {
-        mProcess->write(readFileToByteArray(redirectInputFilename()));
-        mProcess->waitForFinished(0);
+    process.start();
+    process.waitForStarted(5000);
+    if (process.state()==QProcess::Running && redirectInput()) {
+        process.write(readFileToByteArray(redirectInputFilename()));
+        process.waitForFinished(0);
     }
     bool writeChannelClosed = false;
     while (true) {
-        if (mProcess->bytesToWrite()==0 && redirectInput() && !writeChannelClosed) {
+        if (process.bytesToWrite()==0 && redirectInput() && !writeChannelClosed) {
             writeChannelClosed=true;
-            mProcess->closeWriteChannel();
+            process.closeWriteChannel();
         }
-        mProcess->waitForFinished(mWaitForFinishTime);
-        if (mProcess->state()!=QProcess::Running) {
+        process.waitForFinished(mWaitForFinishTime);
+        if (process.state()!=QProcess::Running) {
             break;
         }
         if (errorOccurred)
             break;
         if (mStop) {
-            mProcess->terminate();
-            if (mProcess->waitForFinished(1000)) {
+            process.terminate();
+            if (process.waitForFinished(1000)) {
                 break;
             }
             for (int i=0;i<10;i++) {
-                mProcess->kill();
-                if (mProcess->waitForFinished(500)) {
+                process.kill();
+                if (process.waitForFinished(500)) {
                     break;
                 }
             }
@@ -255,7 +257,7 @@ void ExecutableRunner::run()
 #endif
     if (errorOccurred) {
         //qDebug()<<"process error:"<<process.error();
-        switch (mProcess->error()) {
+        switch (process.error()) {
         case QProcess::FailedToStart:
             emit runErrorOccurred(tr("The runner process '%1' failed to start.").arg(mFilename));
             break;

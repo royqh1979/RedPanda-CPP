@@ -100,7 +100,7 @@ void CompilerSetDirectoriesWidget::on_btnDelete_pressed()
 void CompilerSetDirectoriesWidget::on_btnRemoveInvalid_pressed()
 {
     QStringList lst;
-    for (const QString& folder : dirList() ) {
+    foreach (const QString& folder, dirList() ) {
         QFileInfo info(folder);
         if (info.exists() && info.isDir() ) {
             lst.append(folder.trimmed());

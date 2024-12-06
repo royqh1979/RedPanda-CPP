@@ -470,7 +470,6 @@ private:
     QString mGDBServer;
     int mPort;
     bool mStop;
-    std::shared_ptr<QProcess> mProcess;
     QSemaphore mStartSemaphore;
     bool mErrorOccured;
     QString mInputFile;

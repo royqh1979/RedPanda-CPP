@@ -56,8 +56,7 @@ void CodeSnippetsManager::loadSnippets()
             QMessageBox::critical(nullptr,
                                   tr("Load default code snippets failed"),
                                   tr("Can't copy default code snippets '%1' to '%2'.")
-                                  .arg(preFileName)
-                                  .arg(filename));
+                                  .arg(preFileName, filename));
             return;
         }
         QByteArray content=preFile.readAll();
@@ -66,8 +65,7 @@ void CodeSnippetsManager::loadSnippets()
             QMessageBox::critical(nullptr,
                                   tr("Load default code snippets failed"),
                                   tr("Can't copy default code snippets '%1' to '%2'.")
-                                  .arg(preFileName)
-                                  .arg(filename));
+                                  .arg(preFileName, filename));
             return;
         }
         file.write(content);
@@ -91,8 +89,7 @@ void CodeSnippetsManager::loadSnippets()
         QMessageBox::critical(nullptr,
                               tr("Read code snippets failed"),
                               tr("Read code snippet file '%1' failed:%2")
-                              .arg(filename)
-                              .arg(error.errorString()));
+                              .arg(filename, error.errorString()));
         return;
     }
     mSnippets.clear();

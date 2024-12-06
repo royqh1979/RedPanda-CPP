@@ -223,8 +223,6 @@ void NewProjectDialog::updateView()
 
 void NewProjectDialog::updateProjectLocation()
 {
-    QString newLocation = ui->txtLocation->text();
-
     QListWidgetItem * current = ui->lstTemplates->currentItem();
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
                 current && !ui->txtProjectName->text().isEmpty()

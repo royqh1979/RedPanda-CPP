@@ -681,7 +681,6 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement, QSet<S
 {
     if (!statement)
         return PStatement();
-    QString alias = statement->type;
     int pos = statement->type.lastIndexOf("::");
     if (pos<0)
         return PStatement();
@@ -2058,10 +2057,10 @@ int CppParser::evaluateLiteralNumber(int endIndex, bool &ok)
     }
     if (mTokenizer[mIndex]->text.startsWith("0x")
           || mTokenizer[mIndex]->text.startsWith("0X"))
-        result = mTokenizer[mIndex]->text.mid(2).toInt(&ok,16);
+        result = mTokenizer[mIndex]->text.midRef(2).toInt(&ok,16);
     else if (mTokenizer[mIndex]->text.startsWith("0b")
           || mTokenizer[mIndex]->text.startsWith("0B"))
-        result = mTokenizer[mIndex]->text.mid(2).toInt(&ok,2);
+        result = mTokenizer[mIndex]->text.midRef(2).toInt(&ok,2);
     else if (mTokenizer[mIndex]->text.startsWith("0"))
         result = mTokenizer[mIndex]->text.toInt(&ok,8);
     else
@@ -2796,7 +2795,6 @@ void CppParser::handleEnum(bool isTypedef, int maxIndex)
         //Ad-hoc var definition
         // Skip to the closing brace
         int i = indexOfMatchingBrace(mIndex)+1;
-        QString typeSuffix="";
         while (i<maxIndex) {
             QString name=mTokenizer[i]->text;
             if (isIdentifierOrPointer(name)) {
@@ -3478,7 +3476,7 @@ void CppParser::handlePreprocessor()
 
             // Mention progress to user if we enter a NEW file
             bool ok;
-            int line = QStringView(s.begin() + delimPos + 1, s.end()).toInt(&ok);
+            int line = QStringView(s.constBegin() + delimPos + 1, s.constEnd()).toInt(&ok);
             if (line == 1) {
                 mFilesScannedCount++;
                 mFilesToScanCount++;
@@ -3545,7 +3543,6 @@ void CppParser::handleAccessibilitySpecifiers(KeywordType keywordType, int maxIn
 
 bool CppParser::handleStatement(int maxIndex)
 {
-    QString funcType,funcName;
 //    int idx=getCurrentBlockEndSkip();
 //    int idx2=getCurrentBlockBeginSkip();
     int idx3=getCurrentInlineNamespaceEndSkip(maxIndex);

@@ -30,7 +30,7 @@ EditorClipboardWidget::EditorClipboardWidget(const QString& name, const QString&
     ui->cbCopyWithFormatAs->addItem("HTML");
 #endif
 
-    for (QString name: pColorManager->getSchemes()) {
+    foreach (const QString &name, pColorManager->getSchemes()) {
         ui->cbHTMLColorScheme->addItem(name);
         ui->cbRTFColorScheme->addItem(name);
     }
@@ -63,7 +63,6 @@ void EditorClipboardWidget::doLoad()
 {
     //pSettings->editor().load();
     //copy
-    QString mCopyHTMLColorScheme;
     ui->cbCopyWithFormatAs->setCurrentIndex(std::max(0,std::min(ui->cbCopyWithFormatAs->count(),
                                                                 pSettings->editor().copyWithFormatAs())) );
     ui->chkCopyRTFUseBackground->setChecked(pSettings->editor().copyRTFUseBackground());

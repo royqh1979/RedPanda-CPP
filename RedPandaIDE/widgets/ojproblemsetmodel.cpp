@@ -180,8 +180,8 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
         QJsonDocument doc(QJsonDocument::fromJson(content,&error));
         if (error.error!=QJsonParseError::NoError) {
             throw FileError(QObject::tr("Can't parse problem set file '%1':%2")
-                            .arg(fileName)
-                            .arg(error.errorString()));
+                            .arg(fileName,
+                                 error.errorString()));
         }
         beginResetModel();
         QJsonObject obj = doc.object();

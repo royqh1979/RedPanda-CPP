@@ -23,7 +23,7 @@
 
 ShortcutInputEdit::ShortcutInputEdit(QWidget* parent):QLineEdit(parent)
 {
-    QList<QAction *> acts = actions();
+//    QList<QAction *> acts = actions();
 //    foreach (const QAction* action, acts) {
 //        qDebug()<<action->shortcut()[0];
 //    }

@@ -305,7 +305,7 @@ QString CompilerSetOptionWidget::getBinDir()
     if (!pSet->binDirs().isEmpty())
         return pSet->binDirs().front();
     if (!mBinDirWidget->dirList().isEmpty())
-        return mBinDirWidget->dirList().front();
+        return mBinDirWidget->dirList().first();
     return QDir().absolutePath();
 }
 

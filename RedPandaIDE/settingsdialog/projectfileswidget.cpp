@@ -61,7 +61,7 @@ void ProjectFilesWidget::doSave()
     pMainWindow->project()->saveUnits();
     copyUnits();
     ui->treeProject->expandAll();
-    ui->treeProject->clicked(ui->treeProject->currentIndex());
+    emit ui->treeProject->clicked(ui->treeProject->currentIndex());
 }
 
 void ProjectFilesWidget::onLoaded()

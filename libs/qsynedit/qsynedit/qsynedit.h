@@ -468,7 +468,7 @@ signals:
     void linesInserted(int FirstLine, int Count);
     void changed();
     void gutterClicked(Qt::MouseButton button, int x, int y, int line);
-    void statusChanged(StatusChanges changes);
+    void statusChanged(QSynedit::StatusChanges changes);
     void fontChanged();
     void tabSizeChanged();
 protected:

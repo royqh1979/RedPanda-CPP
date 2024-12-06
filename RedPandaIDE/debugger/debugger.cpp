@@ -520,7 +520,7 @@ void Debugger::setBreakPointCondition(int index, const QString &condition, bool 
 
 void Debugger::sendAllBreakpointsToDebugger()
 {
-    for (PBreakpoint breakpoint:mBreakpointModel->breakpoints(mBreakpointModel->isForProject())) {
+    for (const PBreakpoint &breakpoint:mBreakpointModel->breakpoints(mBreakpointModel->isForProject())) {
         if (mBreakpointModel->isForProject()) {
             sendBreakpointCommand(breakpoint);
         } else if (breakpoint->filename == mCurrentSourceFile) {
@@ -567,7 +567,6 @@ void Debugger::loadForProject(const QString &filename, const QString &projectFol
 void Debugger::addWatchpoint(const QString &expression)
 {
     QMutexLocker locker{&mClientMutex};
-    QString s=expression.trimmed();
     if (mClient) {
         mClient->addWatchpoint(expression);
     }
@@ -620,7 +619,7 @@ void Debugger::refreshWatchVars()
     if (mClient) {
         sendAllWatchVarsToDebugger();
         if (mDebuggerType==DebuggerType::LLDB_MI) {
-            for (PWatchVar var:mWatchModel->watchVars()) {
+            for (const PWatchVar &var:mWatchModel->watchVars()) {
                 if (!var->name.isEmpty())
                     mClient->refreshWatch(var);
             }
@@ -711,7 +710,7 @@ void Debugger::removeWatchVar(const QModelIndex &index)
 
 void Debugger::sendAllWatchVarsToDebugger()
 {
-    for (PWatchVar var:mWatchModel->watchVars()) {
+    for (const PWatchVar &var:mWatchModel->watchVars()) {
         if (var->name.isEmpty())
             sendWatchCommand(var);
     }
@@ -867,7 +866,6 @@ void BreakpointModel::setBreakpoints(const QList<PBreakpoint> &list, bool forPro
 void Debugger::save(const QString &filename, const QString& projectFolder)
 {
     bool forProject=!projectFolder.isEmpty();
-    QList<PBreakpoint> breakpoints;
     QList<PWatchVar> watchVars=mWatchModel->watchVars(forProject);
     QSet<QString> breakpointCompareSet;
     QSet<QString> watchVarCompareSet;
@@ -1637,7 +1635,7 @@ int WatchModel::columnCount(const QModelIndex&) const
 void WatchModel::addWatchVar(PWatchVar watchVar, bool forProject)
 {
     QList<PWatchVar> &vars=(forProject?mProjectWatchVars:mWatchVars);
-    for (PWatchVar var:vars) {
+    for (const PWatchVar &var:vars) {
         if (watchVar->expression == var->expression) {
             return;
         }
@@ -2309,7 +2307,6 @@ DebugTarget::DebugTarget(
     mStartSemaphore(0),
     mErrorOccured(false)
 {
-    mProcess = nullptr;
 }
 
 void DebugTarget::setInputFile(const QString &inputFile)
@@ -2385,13 +2382,10 @@ void DebugTarget::run()
 #endif
     QString workingDir = QFileInfo(mInferior).path();
 
-    mProcess = std::make_shared<QProcess>();
-    auto action = finally([&]{
-        mProcess.reset();
-    });
-    mProcess->setProgram(cmd);
-    mProcess->setArguments(arguments);
-    mProcess->setProcessChannelMode(QProcess::MergedChannels);
+    QProcess process;
+    process.setProgram(cmd);
+    process.setArguments(arguments);
+    process.setProcessChannelMode(QProcess::MergedChannels);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString path = env.value("PATH");
     QStringList pathAdded = mBinDirs;
@@ -2405,11 +2399,11 @@ void DebugTarget::run()
         path = cmdDir + PATH_SEPARATOR + path;
     }
     env.insert("PATH",path);
-    mProcess->setProcessEnvironment(env);
-    mProcess->setWorkingDirectory(workingDir);
+    process.setProcessEnvironment(env);
+    process.setWorkingDirectory(workingDir);
 
 #ifdef Q_OS_WIN
-    mProcess->setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
+    process.setCreateProcessArgumentsModifier([this](QProcess::CreateProcessArguments * args){
         if (programHasConsole(mInferior)) {
             args->flags |=  CREATE_NEW_CONSOLE;
             args->flags &= ~CREATE_NO_WINDOW;
@@ -2424,30 +2418,30 @@ void DebugTarget::run()
     });
 #endif
 
-    connect(mProcess.get(), &QProcess::errorOccurred,
+    connect(&process, &QProcess::errorOccurred,
                     [&](){
                         mErrorOccured= true;
                     });
-    mProcess->start();
-    mProcess->waitForStarted(5000);
+    process.start();
+    process.waitForStarted(5000);
     mStartSemaphore.release(1);
-    if (mProcess->state()==QProcess::Running && !mInputFile.isEmpty()) {
-        mProcess->write(readFileToByteArray(mInputFile));
-        mProcess->waitForFinished(0);
+    if (process.state()==QProcess::Running && !mInputFile.isEmpty()) {
+        process.write(readFileToByteArray(mInputFile));
+        process.waitForFinished(0);
     }
     bool writeChannelClosed = false;
     while (true) {
-        if (mProcess->bytesToWrite()==0 && !writeChannelClosed) {
+        if (process.bytesToWrite()==0 && !writeChannelClosed) {
             writeChannelClosed = true;
-            mProcess->closeWriteChannel();
+            process.closeWriteChannel();
         }
-        mProcess->waitForFinished(1);
-        if (mProcess->state()!=QProcess::Running) {
+        process.waitForFinished(1);
+        if (process.state()!=QProcess::Running) {
             break;
         }
         if (mStop) {
-            mProcess->terminate();
-            mProcess->kill();
+            process.terminate();
+            process.kill();
             break;
         }
         if (mErrorOccured)
@@ -2455,7 +2449,7 @@ void DebugTarget::run()
         msleep(1);
     }
     if (mErrorOccured) {
-        emit processFailed(mProcess->error());
+        emit processFailed(process.error());
     }
 }
 
@@ -2549,7 +2543,7 @@ QVariant MemoryModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         if (col==line->datas.count()) {
             QString s;
-            for (char ch : line->datas) {
+            foreach (unsigned char ch , line->datas) {
                 s += isAsciiPrint(ch) ? ch : '.';
             }
             return s;

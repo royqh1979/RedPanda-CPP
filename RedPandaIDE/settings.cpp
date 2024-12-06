@@ -298,8 +298,9 @@ void Settings::Dirs::doLoad()
     if (isGreenEdition()) {
         defaultProjectDir = getFilePath(appDir(), "projects");
     } else {
+        QStringList docLocations = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
         defaultProjectDir = getFilePath(
-                                QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)[0],
+                                docLocations.first(),
                                 "projects");
     }
     mProjectDir = stringValue("projectDir",defaultProjectDir);
@@ -1795,19 +1796,19 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     , mGccIsUtf8Initialized(false)
 #endif
 {
-    for (const QJsonValue &dir : set["binDirs"].toArray())
+    foreach (const QJsonValue &dir, set["binDirs"].toArray())
         mBinDirs.append(dir.toString());
-    for (const QJsonValue &dir : set["cIncludeDirs"].toArray())
+    foreach (const QJsonValue &dir, set["cIncludeDirs"].toArray())
         mCIncludeDirs.append(dir.toString());
-    for (const QJsonValue &dir : set["cxxIncludeDirs"].toArray())
+    foreach (const QJsonValue &dir, set["cxxIncludeDirs"].toArray())
         mCppIncludeDirs.append(dir.toString());
-    for (const QJsonValue &dir : set["libDirs"].toArray())
+    foreach (const QJsonValue &dir, set["libDirs"].toArray())
         mLibDirs.append(dir.toString());
-    for (const QJsonValue &dir : set["defaultLibDirs"].toArray())
+    foreach (const QJsonValue &dir, set["defaultLibDirs"].toArray())
         mDefaultLibDirs.append(dir.toString());
-    for (const QJsonValue &dir : set["defaultCIncludeDirs"].toArray())
+    foreach (const QJsonValue &dir, set["defaultCIncludeDirs"].toArray())
         mDefaultCIncludeDirs.append(dir.toString());
-    for (const QJsonValue &dir : set["defaultCxxIncludeDirs"].toArray())
+    foreach (const QJsonValue &dir, set["defaultCxxIncludeDirs"].toArray())
         mDefaultCppIncludeDirs.append(dir.toString());
 
     QString compilerType = set["compilerType"].toString();
@@ -1829,11 +1830,11 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     }
 
     QStringList compileParams;
-    for (const QJsonValue &param : set["customCompileParams"].toArray())
+    foreach (const QJsonValue &param, set["customCompileParams"].toArray())
         compileParams << param.toString();
     mCustomCompileParams = escapeArgumentsForInputField(compileParams);
     QStringList linkParams;
-    for (const QJsonValue &param : set["customLinkParams"].toArray())
+    foreach (const QJsonValue &param, set["customLinkParams"].toArray())
         linkParams << param.toString();
     mCustomLinkParams = escapeArgumentsForInputField(linkParams);
 
@@ -1868,7 +1869,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
                                                      {LINK_CMD_OPT_NO_CONSOLE, "linkCmdOptNoConsole"},
                                                      {LINK_CMD_OPT_STRIP_EXE, "linkCmdOptStripExe"},
                                                      };
-    for (const QString &key : optionMap.keys()) {
+    foreach (const QString &key, optionMap.keys()) {
         const QString &jsonKey = optionMap[key];
         QString value = set[jsonKey].toString();
         if (!value.isEmpty())
@@ -2328,7 +2329,7 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
         if (auto m = ntPosixPattern.match(mDumpMachine); m.hasMatch()) {
             mCompilerType = CompilerType::GCC_UTF8;
             if (mName.isEmpty()) {
-                if (m.capturedTexts()[3] == "msys")
+                if (m.captured(3) == "msys")
                     mName = "MSYS2 GCC " + mVersion;
                 else
                     mName = "Cygwin GCC " + mVersion;
@@ -2400,7 +2401,7 @@ QStringList Settings::CompilerSet::x86MultilibList(const QString &folder, const 
 {
     QByteArray multilibOutput = getCompilerOutput(folder, c_prog, {"-print-multi-lib"});
     QStringList result;
-    for (QByteArray rawLine : multilibOutput.split('\n')) {
+    foreach (const QByteArray& rawLine, multilibOutput.split('\n')) {
         // man gcc:
         //   -print-multi-lib
         //     Print the mapping from multilib directory names to compiler switches that enable them.
@@ -2589,7 +2590,6 @@ void Settings::CompilerSet::setDirectories(const QString& binDir)
 
 void Settings::CompilerSet::setGCCDirectories(const QString& binDir)
 {
-    QString folder = QFileInfo(binDir).absolutePath();
     QString c_prog;
     if (mCompilerType==CompilerType::Clang)
         c_prog = CLANG_PROGRAM;
@@ -2681,7 +2681,6 @@ void Settings::CompilerSet::setGCCDirectories(const QString& binDir)
 #ifdef ENABLE_SDCC
 void Settings::CompilerSet::setSDCCDirectories(const QString& binDir)
 {
-    QString folder = QFileInfo(binDir).absolutePath();
     QString c_prog = SDCC_PROGRAM;
     // Find default directories
     // C include dirs
@@ -2748,7 +2747,7 @@ int Settings::CompilerSet::mainVersion() const
     if (i<0)
         return -1;
     bool ok;
-    int num = mVersion.left(i).toInt(&ok);
+    int num = mVersion.leftRef(i).toInt(&ok);
     if (!ok)
         return -1;
     return num;
@@ -3333,7 +3332,6 @@ void Settings::CompilerSets::loadSets()
     }
     PCompilerSet pCurrentSet = defaultSet();
     if (pCurrentSet) {
-        QString msg;
 //        if (!pCurrentSet->dirsValid(msg)) {
 //            if (QMessageBox::warning(nullptr,QObject::tr("Confirm"),
 //                       QObject::tr("The following problems were found during validation of compiler set \"%1\":")
@@ -3516,7 +3514,7 @@ void Settings::CompilerSets::saveSet(int index)
         mSettings->mSettings.remove(option->key);
     }
     // Save option string
-    for (const QString& optionKey : pSet->compileOptions().keys()) {
+    foreach (const QString& optionKey, pSet->compileOptions().keys()) {
         mSettings->mSettings.setValue(optionKey, pSet->compileOptions().value(optionKey));
     }
 
@@ -3942,7 +3940,7 @@ void Settings::Environment::setIconZoomFactor(double newIconZoomFactor)
 QString Settings::Environment::queryPredefinedTerminalArgumentsPattern(const QString &executable) const
 {
     QString execName = extractFileName(executable);
-    for (const TerminalItem& item: loadTerminalList()) {
+    foreach (const TerminalItem& item, loadTerminalList()) {
         QString termName = extractFileName(item.terminal);
         if (termName.compare(execName,PATH_SENSITIVITY)==0) return item.param;
     }
@@ -4017,9 +4015,9 @@ QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalLi
 
     QList<Settings::Environment::TerminalItem> result;
     // determing terminal (if not set yet) and build predefined arguments pattern map from our list
-    for (const auto &terminalGroup: terminalListDocument.array()) {
+    foreach (const auto &terminalGroup, terminalListDocument.array()) {
         const QJsonArray &terminals = terminalGroup.toObject()["terminals"].toArray();
-        for (const auto &terminal_: terminals) {
+        foreach (const auto &terminal_, terminals) {
             const QJsonObject& terminal = terminal_.toObject();
             QString path = terminal["path"].toString();
             QString termExecutable = QFileInfo(path).fileName();

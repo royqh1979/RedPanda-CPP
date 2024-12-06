@@ -113,8 +113,6 @@ QString QtSupportedHtmlExporter::getFormatName()
 QString QtSupportedHtmlExporter::getHeader()
 {
     using namespace std::placeholders;
-    QString styles;
-
 
     QString HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
             "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
@@ -126,8 +124,8 @@ QString QtSupportedHtmlExporter::getHeader()
             "</head>" + lineBreak() +
             "<body>" + lineBreak();
     QString header = HTMLAsTextHeader
-            .arg(mTitle)
-            .arg(QString(mCharset));
+            .arg(mTitle,
+                 QString(mCharset));
     if (mCreateHTMLFragment) {
         HTMLAsTextHeader = "<?xml version=\"1.0\" encoding=\"%2\"?>"+lineBreak() +
                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + lineBreak() +
@@ -146,8 +144,8 @@ QString QtSupportedHtmlExporter::getHeader()
     }
     if (mUseBackground) {
         result += QString("<div style=\"color: %1; background-color: %2; font: %3pt %4;\">")
-            .arg(colorToHTML(mForegroundColor))
-            .arg(colorToHTML(mBackgroundColor))
+            .arg(colorToHTML(mForegroundColor),
+                 colorToHTML(mBackgroundColor))
             .arg(pixelToPoint(mFont.pixelSize()))
             .arg(mFont.family())+lineBreak();
     } else {

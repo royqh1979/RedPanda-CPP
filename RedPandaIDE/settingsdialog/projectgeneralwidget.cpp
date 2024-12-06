@@ -124,7 +124,6 @@ void ProjectGeneralWidget::doLoad()
     ui->cbDefaultCpp->setChecked(project->options().isCpp);
     ui->cbSupportXPTheme->setChecked(project->options().supportXPThemes);
     mIconPath = project->options().icon;
-    QPixmap icon(mIconPath);
     refreshIcon();
 }
 

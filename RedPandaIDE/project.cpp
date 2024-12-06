@@ -480,7 +480,6 @@ void Project::rebuildNodes()
     case ProjectModelType::Custom:
         createFolderNodes();
         foreach (PProjectUnit pUnit, mUnits) {
-            QFileInfo fileInfo(pUnit->fileName());
             pUnit->setNode(
                         makeNewFileNode(
                             pUnit,
@@ -494,7 +493,6 @@ void Project::rebuildNodes()
         createFileSystemFolderNodes();
 
         foreach (PProjectUnit pUnit, mUnits) {
-            QFileInfo fileInfo(pUnit->fileName());
             pUnit->setNode(
                         makeNewFileNode(
                             pUnit,

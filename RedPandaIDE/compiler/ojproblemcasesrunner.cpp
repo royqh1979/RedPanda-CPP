@@ -220,7 +220,6 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
 
 void OJProblemCasesRunner::run()
 {
-    emit started();
     auto action = finally([this]{
         emit terminated();
     });
