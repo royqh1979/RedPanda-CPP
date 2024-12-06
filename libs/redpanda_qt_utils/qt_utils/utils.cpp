@@ -541,7 +541,7 @@ QString extractRelativePath(const QString &base, const QString &dest)
 
 QString localizePath(const QString &path)
 {
-    if (QDir::separator() == "/")
+    if (QDir::separator() == '/')
         return path;
     QString result = path;
     result.replace("/",QDir::separator());

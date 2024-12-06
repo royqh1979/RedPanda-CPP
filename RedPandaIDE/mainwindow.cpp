@@ -137,12 +137,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    /** Qt 6.8.0 fix: Crash when debug **/
-    QFont font(pSettings->environment().interfaceFont());
-    font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize()));
-    font.setStyleStrategy(QFont::PreferAntialias);
-    qApp->setFont(font);
-    this->setFont(font);
+    /** Msys2 MinGW 64 Qt 6.8.0 fix: Crash when debug **/
+#if defined(QT_DEBUG) && defined(Q_OS_WINDOWS) && QT_VERSION_MAJOR == 6
+   QFont font(pSettings->environment().interfaceFont());
+   font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize()));
+   font.setStyleStrategy(QFont::PreferAntialias);
+   qApp->setFont(font);
+   this->setFont(font);
+#endif
     /** **/
 
     ui->cbProblemCaseValidateType->blockSignals(true);

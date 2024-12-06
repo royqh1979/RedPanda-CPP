@@ -21,40 +21,40 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
         switch (xml.tokenType()) {
         case QXmlStreamReader::TokenType::StartElement:
             currentEleName = xml.name().toString();
-            if (xml.name()=="item") {
+            if (xml.name() == QLatin1String("item")) {
                 currentProblem=std::make_shared<OJProblem>();
             } else if (currentProblem &&
-                       (xml.name()=="test_input")) {
+                       (xml.name() == QLatin1String("test_input"))) {
                 currentCase = std::make_shared<OJProblemCase>();
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
-                    if (attr.name() == "name") {
+                    if (attr.name() == QLatin1String("name")) {
                         currentCase->name = attr.value().toString().trimmed();
                         break;
                     }
                 }
                 currentCase->name = QObject::tr("Problem Case %1").arg(currentProblem->cases.count()+1);
             } else if (currentProblem &&
-                       xml.name()=="time_limit") {
+                       xml.name()==QLatin1String("time_limit")) {
                 currentEleName = xml.name().toString();
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
-                    if (attr.name() == "unit") {
-                        if (attr.value()=="ms")
+                    if (attr.name() == QLatin1String("unit")) {
+                        if (attr.value()==QLatin1String("ms"))
                             currentProblem->timeLimitUnit = ProblemTimeLimitUnit::Milliseconds;
-                        else if (attr.value()=="s")
+                        else if (attr.value()==QLatin1String("s"))
                             currentProblem->timeLimitUnit = ProblemTimeLimitUnit::Seconds;
                         break;
                     }
                 }
             } else if (currentProblem &&
-                       xml.name()=="memory_limit") {
+                       xml.name()==QLatin1String("memory_limit")) {
                 currentEleName = xml.name().toString();
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
-                    if (attr.name() == "unit") {
-                        if (attr.value()=="mb")
+                    if (attr.name() == QLatin1String("unit")) {
+                        if (attr.value()==QLatin1String("mb"))
                             currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::MB;
-                        else if (attr.value()=="kb")
+                        else if (attr.value()==QLatin1String("kb"))
                             currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::KB;
-                        else if (attr.value()=="gb")
+                        else if (attr.value()==QLatin1String("gb"))
                             currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::GB;
                         break;
                     }
@@ -63,7 +63,7 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
             break;
         case QXmlStreamReader::TokenType::EndElement:
             currentEleName.clear();
-            if (currentProblem && xml.name()=="item") {
+            if (currentProblem && xml.name()==QLatin1String("item")) {
                 problems.append(currentProblem);
                 currentProblem.reset();
             }
