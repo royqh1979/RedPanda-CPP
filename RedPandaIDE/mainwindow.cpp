@@ -139,12 +139,12 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     /** Msys2 MinGW 64 Qt 6.8.0 fix: Crash when debug **/
-#if defined(QT_DEBUG) && defined(Q_OS_WINDOWS) && QT_VERSION_MAJOR == 6
-    // QFont font(pSettings->environment().interfaceFont());
-    // font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize()));
-    // font.setStyleStrategy(QFont::PreferAntialias);
-    // qApp->setFont(font);
-    // this->setFont(font);
+#if defined(QT_DEBUG) && QT_VERSION_MAJOR == 6 && QT_VERSION_MINOR == 8
+    QFont font(pSettings->environment().interfaceFont());
+    font.setPixelSize(pointToPixel(pSettings->environment().interfaceFontSize()));
+    font.setStyleStrategy(QFont::PreferAntialias);
+    qApp->setFont(font);
+    this->setFont(font);
 #endif
     /** **/
 
@@ -3540,7 +3540,6 @@ void MainWindow::loadLastOpens()
     }
 
     if (mEditorList->pageCount()>0) {
-        bug();
         updateEditorActions();
         //updateForEncodingInfo();
     }
