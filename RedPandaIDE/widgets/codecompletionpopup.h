@@ -45,7 +45,8 @@ enum class CodeCompletionType {
     Namespaces,
     Types,
     Macros,
-    KeywordsOnly
+    KeywordsOnly,
+    LiteralOperators
 };
 
 class CodeCompletionListItemDelegate: public QStyledItemDelegate {
@@ -169,6 +170,8 @@ private:
                                         int line);
     void getCompletionListForTypes(const QString &preWord,
                                         const QString& fileName,
+                                        int line);
+    void getCompletionListForLiteralOperators(const QString& fileName,
                                         int line);
     void addKeyword(const QString& keyword);
     bool isIncluded(const QString& fileName);

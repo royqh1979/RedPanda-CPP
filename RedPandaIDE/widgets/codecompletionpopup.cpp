@@ -115,6 +115,10 @@ void CodeCompletionPopup::prepareSearch(
         mIncludedFiles = mParser->getIncludedFiles(filename);
         getMacroCompletionList(filename, line);
         break;
+    case CodeCompletionType::LiteralOperators:
+        mIncludedFiles = mParser->getIncludedFiles(filename);
+        getCompletionListForLiteralOperators(filename,line);
+        break;
     default:
         mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionFor(ownerExpression,memberOperator,memberExpression, filename,line, customKeywords);
@@ -296,7 +300,10 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
             || statement->kind == StatementKind::Destructor
             || statement->kind == StatementKind::Block
             || statement->kind == StatementKind::Lambda
-            || statement->properties.testFlag(StatementProperty::OperatorOverloading)
+            || (
+                statement->properties.testFlag(StatementProperty::OperatorOverloading)
+                && statement->kind != StatementKind::LiteralOperator
+                )
             || statement->properties.testFlag(StatementProperty::DummyStatement)
             )
         return;
@@ -1082,6 +1089,27 @@ void CodeCompletionPopup::getCompletionListForTypes(const QString &preWord, cons
             mParser->unFreeze();
         });
         QList<PStatement> statements = mParser->listTypeStatements(fileName,line);
+        foreach(const PStatement& statement, statements) {
+            if (isIncluded(statement->fileName)
+                    || isIncluded(statement->definitionFileName)) {
+                addStatement(statement,fileName,line);
+            }
+        }
+    }
+}
+
+void CodeCompletionPopup::getCompletionListForLiteralOperators(const QString &fileName, int line)
+{
+    if (!mParser->enabled())
+        return;
+
+    if (!mParser->freeze())
+        return;
+    {
+        auto action = finally([this]{
+            mParser->unFreeze();
+        });
+        QList<PStatement> statements = mParser->listLiteralOperators(fileName,line);
         foreach(const PStatement& statement, statements) {
             if (isIncluded(statement->fileName)
                     || isIncluded(statement->definitionFileName)) {

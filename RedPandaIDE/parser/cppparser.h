@@ -89,6 +89,7 @@ public:
     QStringList getFunctionParameterNames(const PStatement& statement) const;
 
     QList<PStatement> listTypeStatements(const QString& fileName,int line) const;
+    QList<PStatement> listLiteralOperators(const QString& fileName,int line) const;
 
     /**
      * @brief evaluate the expression
@@ -282,7 +283,7 @@ private:
     PStatement doFindAliasedStatement(const PStatement& statement) const;
     PStatement doFindNoTemplateSpecializationClass(const PStatement& statement) const;
 
-    QList<PStatement> doListTypeStatements(const QString& fileName,int line) const;
+    QList<PStatement> doListStatements(const QString& fileName,int line, const QSet<StatementKind> &kinds) const;
 
     PStatement doFindTypeDefinitionOf(const QString& fileName,
                                     const QString& aType,

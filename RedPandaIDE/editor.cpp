@@ -949,16 +949,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 } else {
-                    bool hasTypeQualifier;
-                    QString lastWord = getPreviousWordAtPositionForSuggestion(ws, hasTypeQualifier);
-                    if (mParser && (!lastWord.isEmpty() || hasTypeQualifier)) {
-                        if (lastWord.isEmpty()) {
-                            Q_ASSERT(hasTypeQualifier);
+                    QSynedit::TokenType tokenType;
+                    QString lastWord = getPreviousWordAtPositionForSuggestion(ws, tokenType);
+                    if (mParser && (tokenType == QSynedit::TokenType::Keyword
+                                    || tokenType == QSynedit::TokenType::Identifier)) {
+                        if (CppTypeQualifiers.contains(lastWord)) {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false, CodeCompletionType::Types);
                             handled=true;
                             return;
-                        } else if ( lastWord == "typedef" ) {
+                        } else if (lastWord == "typedef" ) {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false, CodeCompletionType::Types);
                             handled=true;
@@ -1030,6 +1030,15 @@ void Editor::keyPressEvent(QKeyEvent *event)
                             //last word is a typedef/class/struct, this is a var or param define, and dont show suggestion
                             return;
                         }
+                    } else  if (mParser && (tokenType == QSynedit::TokenType::String
+                                            || tokenType == QSynedit::TokenType::Character
+                                            || tokenType == QSynedit::TokenType::Number
+                                            )) {
+                        processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                        showCompletion(lastWord,false, CodeCompletionType::LiteralOperators);
+                        handled=true;
+                        return;
+                        return;
                     }
                     lastWord = getPreviousWordAtPositionForCompleteFunctionDefinition(ws);
                     if (mParser && !lastWord.isEmpty()) {
@@ -1525,9 +1534,10 @@ void Editor::inputMethodEvent(QInputMethodEvent *event)
             int idCharPressed=caretX()-ws.ch;
             idCharPressed += s.length();
             if (idCharPressed>=pSettings->codeCompletion().minCharRequired()) {
-                bool hasTypeQualifier;
-                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY(), hasTypeQualifier);
-                if (mParser && !lastWord.isEmpty()) {
+                QSynedit::TokenType wordType;
+                QString lastWord = getPreviousWordAtPositionForSuggestion(caretXY(), wordType);
+                if (mParser && (wordType == QSynedit::TokenType::Keyword
+                                || wordType == QSynedit::TokenType::Identifier)) {
                     if (CppTypeKeywords.contains(lastWord)) {
                         return;
                     }
@@ -4381,10 +4391,11 @@ void Editor::updateFunctionTip(bool showTip)
     //handle class initializer
     if (x >= 0 && hasPreviousWord) {
         QSynedit::BufferCoord pos = pWordBegin;
-        bool hasTypeQualifier;
+        QSynedit::TokenType wordType;
         pos.ch = pWordBegin.ch;
-        QString previousWord = getPreviousWordAtPositionForSuggestion(pos, hasTypeQualifier);
-
+        QString previousWord = getPreviousWordAtPositionForSuggestion(pos, wordType);
+        if (wordType != QSynedit::TokenType::Identifier)
+            return;
         PStatement statement = mParser->findStatementOf(
                     mFilename,
                     previousWord,
@@ -4986,74 +4997,84 @@ QString getWordAtPosition(QSynedit::QSynEdit *editor, const QSynedit::BufferCoor
     return result;
 }
 
-QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord &p, bool &hasTypeQualifier)
+QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoord &p, QSynedit::TokenType &wordType)
 {
-    hasTypeQualifier = false;
+    wordType = QSynedit::TokenType::Default;
     QString result;
     if ((p.line<1) || (p.line>lineCount())) {
         return "";
     }
     bool inFunc = testInFunc(p);
 
-    QString s = lineText(p.line);
-    int wordBegin;
-    int wordEnd = p.ch-2;
-    if (wordEnd >= s.length())
-        wordEnd = s.length()-1;
-    while (true) {
-        int bracketLevel=0;
-        bool skipNextWord=false;
-        while (wordEnd > 0) {
-          if (s[wordEnd] == '>'
-                 || s[wordEnd] == ']') {
-              bracketLevel++;
-          } else if (s[wordEnd] == '<'
-                     || s[wordEnd] == '[') {
-              if (bracketLevel>0)
-                  bracketLevel--;
-              else
-                  return "";
-          } else if (bracketLevel==0) {
-              //Differentiate multiple definition and function parameter define here
-              if (s[wordEnd] == ',') {
-                  if (inFunc) // in func, dont skip ','
-                      break;
-                  else
-                      skipNextWord=true;
-              } else if (s[wordEnd] != ' '
-                         && s[wordEnd] != '\t') {
-                  break;
-              }
-          }
-          wordEnd--;
-        }
-        if (wordEnd<0)
-            return "";
-        if (bracketLevel > 0)
-            return "";
-        if (!isIdentChar(s[wordEnd]))
-            return "";
-
-        wordBegin = wordEnd;
-        while ((wordBegin >= 0) && (isIdentChar(s[wordBegin]) || s[wordBegin]==':') ) {
-            wordBegin--;
-        }
-        if (wordBegin<0 || s[wordBegin]!='#')
-            wordBegin++;
-
-        if (s[wordBegin]>='0' && s[wordBegin]<='9') // not valid word
-            return "";
-
-        result = s.mid(wordBegin, wordEnd - wordBegin+1);
-        if (CppTypeQualifiers.contains(result))
-            hasTypeQualifier = true;
-        else if (!skipNextWord)
-            break;
-        // if ((result != "const") && !skipNextWord)
-        //     break;
-        wordEnd = wordBegin-1;
+    int line = p.line;
+    int ch = p.ch;
+    QString sLine = lineText(line);
+    QSynedit::CppSyntaxer syntaxer;
+    if (line>=lineCount() || line<0)
+        return "";
+    if (line==0) {
+        syntaxer.resetState();
+    } else {
+        syntaxer.setState(document()->getSyntaxState(line-1));
     }
-    return result;
+    syntaxer.setLine(sLine,line-1);
+    QStringList tokenList;
+    QList<QSynedit::TokenType> tokenTypeList;
+    while (!syntaxer.eol()) {
+        QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
+        QSynedit::TokenType tokenType = attr->tokenType();
+        int start = syntaxer.getTokenPos();
+        QString token = syntaxer.getToken();
+        if (start>=ch)
+            break;
+        if (tokenType != QSynedit::TokenType::Comment
+                && tokenType != QSynedit::TokenType::Space) {
+            tokenList.append(token);
+            tokenTypeList.append(tokenType);
+        }
+        syntaxer.next();
+    }
+    if (tokenList.isEmpty())
+        return "";
+
+    int bracketLevel=0;
+    bool skipNextWord=false;
+    int i;
+    for (i=tokenList.size()-1;i>=0;i--) {
+        if (tokenTypeList[i] == QSynedit::TokenType::Operator
+                && (tokenList[i] == ">"
+                    || tokenList[i] == "]")) {
+            bracketLevel++;
+        } else if (tokenTypeList[i] == QSynedit::TokenType::Operator
+                && (tokenList[i] == "<"
+                    || tokenList[i] == "[")) {
+                       bracketLevel--;
+            if (bracketLevel>0)
+               bracketLevel--;
+            else
+               return "";
+        } else if (bracketLevel==0) {
+            //Differentiate multiple definition and function parameter define here
+            if (tokenTypeList[i] == QSynedit::TokenType::Operator
+                            && (tokenList[i] == ",")) {
+                if (inFunc) // in func, dont skip ','
+                    break;
+                else
+                    skipNextWord=true;
+            } else if (skipNextWord) {
+                skipNextWord = false;
+            } else {
+                wordType = tokenTypeList[i];
+                // if (tokenListType[i] == QSynedit::TokenType::Keyword)
+                //     &&(CppTypeQualifiers.contains(tokenList[i])) {
+                //     hasTypeQualifier = true;
+                //     return "";
+                // } else
+                return tokenList[i];
+            }
+        }
+    }
+    return "";
 }
 
 QString Editor::getPreviousWordAtPositionForCompleteFunctionDefinition(const QSynedit::BufferCoord &p)

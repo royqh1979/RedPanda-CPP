@@ -654,7 +654,24 @@ QList<PStatement> CppParser::listTypeStatements(const QString &fileName, int lin
     QMutexLocker locker(&mMutex);
     if (mParsing)
         return QList<PStatement>();
-    return doListTypeStatements(fileName,line);
+    QSet<StatementKind> kinds {
+                StatementKind::Class,
+                StatementKind::EnumClassType,
+                StatementKind::EnumType,
+                StatementKind::Typedef
+    };
+    return doListStatements(fileName,line, kinds);
+}
+
+QList<PStatement> CppParser::listLiteralOperators(const QString &fileName, int line) const
+{
+    QMutexLocker locker(&mMutex);
+    if (mParsing)
+        return QList<PStatement>();
+    QSet<StatementKind> kinds {
+                StatementKind::LiteralOperator
+    };
+    return doListStatements(fileName,line, kinds);
 }
 
 PStatement CppParser::doFindAliasedStatement(const PStatement &statement) const {
@@ -727,7 +744,7 @@ PStatement CppParser::doFindAliasedStatement(const PStatement &statement, QSet<S
     return result;
 }
 
-QList<PStatement> CppParser::doListTypeStatements(const QString &fileName, int line) const
+QList<PStatement> CppParser::doListStatements(const QString &fileName, int line, const QSet<StatementKind> &kinds) const
 {
     QList<PStatement> result;
     QSet<QString> usedNamespaces;
@@ -735,7 +752,7 @@ QList<PStatement> CppParser::doListTypeStatements(const QString &fileName, int l
     while (true) {
         const StatementMap& statementMap = mStatementList.childrenStatements(scopeStatement);
         foreach (const PStatement statement, statementMap.values()) {
-            if (isTypeStatement(statement->kind))
+            if (kinds.contains(statement->kind))
                 result.append(statement);
         }
         if (!scopeStatement)
@@ -749,7 +766,7 @@ QList<PStatement> CppParser::doListTypeStatements(const QString &fileName, int l
         foreach (const PStatement& namespaceStatement,*namespaceStatementsList) {
             const StatementMap& statementMap = mStatementList.childrenStatements(namespaceStatement);
             foreach (const PStatement statement, statementMap.values()) {
-                if (isTypeStatement(statement->kind))
+                if (kinds.contains(statement->kind))
                     result.append(statement);
             }
         }
