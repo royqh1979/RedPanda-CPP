@@ -4521,7 +4521,7 @@ QString QSynEdit::selText() const
               int l = xposToGlyphStartChar(i,xFrom);
               int r = xposToGlyphStartChar(i,xTo);
               QString s = mDocument->getLine(i-1);
-              result += s.midRef(l-1,r-l);
+              result += s.mid(l-1,r-l);
               if (i<lastLine)
                   result+=lineBreak();
             }

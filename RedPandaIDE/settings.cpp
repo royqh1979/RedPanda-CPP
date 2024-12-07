@@ -2747,7 +2747,7 @@ int Settings::CompilerSet::mainVersion() const
     if (i<0)
         return -1;
     bool ok;
-    int num = mVersion.leftRef(i).toInt(&ok);
+    int num = mVersion.left(i).toInt(&ok);
     if (!ok)
         return -1;
     return num;
