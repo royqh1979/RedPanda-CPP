@@ -52,8 +52,7 @@ enum class StatusChange {
     ModifyChanged = 0x0040,
     Selection = 0x0080,
     ReadOnly = 0x0100,
-    OpenFile = 0x0200,
-    Modified = 0x0400
+    Modified = 0x0200
 };
 
 Q_DECLARE_FLAGS(StatusChanges, StatusChange)

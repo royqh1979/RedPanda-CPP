@@ -161,8 +161,6 @@ Editor::Editor(QWidget *parent, const QString& filename,
     if (mParentPageControl)
         connect(this,&QSynEdit::gutterClicked,this,&Editor::onGutterClicked);
 
-    onStatusChanged(QSynedit::StatusChange::OpenFile);
-
     setAttribute(Qt::WA_Hover,true);
 
     connect(this,&QSynEdit::linesDeleted,
@@ -1845,12 +1843,10 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             && !changes.testFlag(QSynedit::StatusChange::ReadOnly)
             && changes.testFlag(QSynedit::StatusChange::CaretY))) {
         mCurrentLineModified = false;
-        if (!changes.testFlag(QSynedit::StatusChange::OpenFile)) {
-            reparse(false);
-            if (pSettings->editor().syntaxCheckWhenLineChanged())
-                checkSyntaxInBack();
-            reparseTodo();
-        }
+        reparse(false);
+        if (pSettings->editor().syntaxCheckWhenLineChanged())
+            checkSyntaxInBack();
+        reparseTodo();
 //        if (pSettings->codeCompletion().clearWhenEditorHidden()
 //                && changes.testFlag(SynStatusChange::scOpenFile)) {
 //        } else{
@@ -1974,7 +1970,9 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
     if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnly))
         pMainWindow->updateForStatusbarModeInfo();
 
-    pMainWindow->updateEditorActions();
+    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)) {
+        pMainWindow->updateEditorActions();
+    }
 
     if (changes.testFlag(QSynedit::StatusChange::CaretY) && inTab()) {
         pMainWindow->caretList().addCaret(this,caretY(),caretX());

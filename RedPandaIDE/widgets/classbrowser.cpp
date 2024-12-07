@@ -229,8 +229,8 @@ void ClassBrowserModel::fillStatements()
         mUpdating = true;
     }
     emit refreshStarted();
-    beginResetModel();
     clear();
+    beginResetModel();
     {
         auto action = finally([this]{
             endResetModel();
