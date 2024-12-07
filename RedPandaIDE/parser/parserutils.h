@@ -104,6 +104,8 @@ enum class StatementKind  {
     Constructor,
     Destructor,
     Function,
+    OverloadedOperator,
+    LiteralOperator,
     Variable,
     GlobalVariable,
     LocalVariable,

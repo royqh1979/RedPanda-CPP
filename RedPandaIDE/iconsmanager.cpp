@@ -383,6 +383,8 @@ QPixmap IconsManager::getPixmapForStatement(const QMap<IconName, PPixmap> &iconP
     case StatementKind::Function:
     case StatementKind::Constructor:
     case StatementKind::Destructor:
+    case StatementKind::OverloadedOperator:
+    case StatementKind::LiteralOperator:
         if (statement->scope == StatementScope::Global)
             return *(getPixmap(iconPixmaps, IconsManager::PARSER_GLOBAL_METHOD));
         if (statement->isInherited()) {

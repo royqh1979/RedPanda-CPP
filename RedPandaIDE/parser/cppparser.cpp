@@ -627,6 +627,8 @@ QStringList CppParser::getFunctionParameterNames(const PStatement &statement) co
     if (!statement)
         return result;
     if (statement->kind != StatementKind::Function
+            && statement->kind != StatementKind::OverloadedOperator
+            && statement->kind != StatementKind::LiteralOperator
             && statement->kind != StatementKind::Constructor
             && statement->kind != StatementKind::Destructor )
         return result;
@@ -1299,6 +1301,22 @@ QString CppParser::prettyPrintStatement(const PStatement& statement, const QStri
         result += statement->fullName; // A::B::C::Bar
         result += statement->args; // (int a)
         break;
+    case StatementKind::OverloadedOperator:
+        if (statement->scope!= StatementScope::Local)
+            result = getScopePrefix(statement)+ ' '; // public
+        result += statement->type + ' '; // void
+        result += "operator ";
+        result += statement->fullName; // A::B::C::Bar
+        result += statement->args; // (int a)
+        break;
+    case StatementKind::LiteralOperator:
+        if (statement->scope!= StatementScope::Local)
+            result = getScopePrefix(statement)+ ' '; // public
+        result += statement->type + ' '; // void
+        result += "operator \"\"";
+        result += statement->fullName; // A::B::C::Bar
+        result += statement->args; // (int a)
+        break;
     case StatementKind::Namespace:
         result = statement->fullName; // Bar
         break;
@@ -1458,6 +1476,8 @@ PStatement CppParser::addStatement(const PStatement& parent,
 //    }
     if (kind == StatementKind::Constructor
             || kind == StatementKind::Function
+            || kind == StatementKind::OverloadedOperator
+            || kind == StatementKind::LiteralOperator
             || kind == StatementKind::Destructor
             || kind == StatementKind::Variable
             ) {
@@ -2293,7 +2313,7 @@ void CppParser::checkAndHandleMethodOrVar(KeywordType keywordType, int maxIndex)
     } else if (mTokenizer[mIndex]->text == "*"
                || mTokenizer[mIndex]->text == "&"
                || mTokenizer[mIndex]->text=="::"
-               || tokenIsIdentifier(mTokenizer[mIndex]->text)
+               || isIdentifier(mTokenizer[mIndex]->text)
                    ) {
         // it should be function/var
 
@@ -2838,7 +2858,7 @@ void CppParser::handleEnum(bool isTypedef, int maxIndex)
     bool canCalcValue=true;
     while ((mIndex < maxIndex) &&
                      mTokenizer[mIndex]->text!='}') {
-        if (tokenIsIdentifier(mTokenizer[mIndex]->text)) {
+        if (isIdentifier(mTokenizer[mIndex]->text)) {
             cmd = mTokenizer[mIndex]->text;
             args = "";
             if (mIndex+1<maxIndex &&
@@ -3014,8 +3034,17 @@ void CppParser::handleOperatorOverloading(const QString &sType,
                                           int operatorTokenIndex, bool isStatic, int maxIndex)
 {
     //operatorTokenIndex is the token index of "operator"
+    StatementKind operatorKind = StatementKind::OverloadedOperator;
     int index=operatorTokenIndex+1;
     QString op="";
+    if (index>=maxIndex) {
+        mIndex=index;
+        return;
+    }
+    if (mTokenizer[index]->text=="\"\"") {
+        operatorKind = StatementKind::LiteralOperator;
+        index++;
+    }
     if (index>=maxIndex) {
         mIndex=index;
         return;
@@ -3025,13 +3054,13 @@ void CppParser::handleOperatorOverloading(const QString &sType,
         index=mTokenizer[index]->matchIndex+1;
     } else if (mTokenizer[index]->text=="new"
                || mTokenizer[index]->text=="delete") {
-            op=mTokenizer[index]->text;
+        op=mTokenizer[index]->text;
+        index++;
+        if (index<maxIndex
+                && mTokenizer[index]->text=="[]") {
+            op+="[]";
             index++;
-            if (index<maxIndex
-                    && mTokenizer[index]->text=="[]") {
-                op+="[]";
-                index++;
-            }
+        }
     } else {
         op=mTokenizer[index]->text;
         index++;
@@ -3048,19 +3077,28 @@ void CppParser::handleOperatorOverloading(const QString &sType,
         return;
     }
     Q_ASSERT(!op.isEmpty());
-    if (isIdentChar(op.front())) {
-        handleMethod(StatementKind::Function,
-                     sType+" "+op,
-                     "operator("+op+")",
+    if (operatorKind==StatementKind::LiteralOperator) {
+        handleMethod(StatementKind::LiteralOperator,
+                     sType,
+                     op,
+                     index,
+                     isStatic,
+                     false,
+                     true,
+                     maxIndex);
+    } else if (isIdentChar(op.front())) {
+        handleMethod(StatementKind::OverloadedOperator,
+                     sType,
+                     op,
                      index,
                      isStatic,
                      false,
                      true,
                      maxIndex);
     } else {
-        handleMethod(StatementKind::Function,
+        handleMethod(StatementKind::OverloadedOperator,
                  sType,
-                 "operator"+op,
+                 op,
                  index,
                  isStatic,
                  false,
@@ -3296,6 +3334,8 @@ void CppParser::handleNamespace(KeywordType skipType, int maxIndex)
         // Skip to '{'
         while ((mIndex<maxIndex) && (mTokenizer[mIndex]->text != '{'))
             mIndex++;
+        if (mIndex>=maxIndex)
+            return;
         int i =indexOfMatchingBrace(mIndex); //skip '}'
         if (i==mIndex)
             mInlineNamespaceEndSkips.append(maxIndex);
@@ -4501,7 +4541,7 @@ void CppParser::internalParse(const QString &fileName)
 
     QStringList preprocessResult = mPreprocessor.result();
 #ifdef QT_DEBUG
-       // stringsToFile(mPreprocessor.result(),QString("z:\\preprocess-%1.txt").arg(extractFileName(fileName)));
+       // stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
        // mPreprocessor.dumpDefinesTo("z:\\defines.txt");
        // mPreprocessor.dumpIncludesListTo("z:\\includes.txt");
 #endif
@@ -4520,7 +4560,7 @@ void CppParser::internalParse(const QString &fileName)
     if (mTokenizer.tokenCount() == 0)
         return;
 #ifdef QT_DEBUG
-       // mTokenizer.dumpTokens(QString("z:\\tokens-%1.txt").arg(extractFileName(fileName)));
+    // mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -4533,13 +4573,13 @@ void CppParser::internalParse(const QString &fileName)
             break;
     }
 #ifdef QT_DEBUG
-       // mTokenizer.dumpTokens(QString("z:\\tokens-after-%1.txt").arg(extractFileName(fileName)));
+    // mTokenizer.dumpTokens(QString("r:\\tokens-after-%1.txt").arg(extractFileName(fileName)));
 #endif
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
 #ifdef QT_DEBUG
-    //   mStatementList.dumpAll(QString("z:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-    //   mStatementList.dump(QString("z:\\stats-%1.txt").arg(extractFileName(fileName)));
+    // mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
+    // mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();
@@ -5465,7 +5505,9 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
                 case StatementKind::Typedef:
                     result = doCreateEvalType(fileName,statement);
                     break;
-                case StatementKind::Function: {
+                case StatementKind::Function:
+                case StatementKind::OverloadedOperator:
+                {
                     if (statement->type=="auto") {
                         PStatement scopeStatement = statement->parentScope.lock();
                         if (scopeStatement) {
@@ -6451,12 +6493,16 @@ bool CppParser::isNotFuncArgs(int startIndex)
     return false;
 }
 
-bool CppParser::isNamedScope(StatementKind kind) const
+constexpr bool CppParser::isNamedScope(StatementKind kind)
 {
     switch(kind) {
     case StatementKind::Class:
     case StatementKind::Namespace:
+    case StatementKind::Constructor:
+    case StatementKind::Destructor:
     case StatementKind::Function:
+    case StatementKind::OverloadedOperator:
+    case StatementKind::LiteralOperator:
         return true;
     default:
         return false;

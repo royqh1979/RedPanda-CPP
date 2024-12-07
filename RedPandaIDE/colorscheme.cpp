@@ -694,9 +694,11 @@ void ColorManager::updateStatementColors(std::shared_ptr<QHash<StatementKind, st
     PColorSchemeItem item;
     item = getItem(schemeName, SYNS_AttrFunction);
     if (item) {
-        statementColors->insert(StatementKind::Function,item);
         statementColors->insert(StatementKind::Constructor,item);
         statementColors->insert(StatementKind::Destructor,item);
+        statementColors->insert(StatementKind::Function,item);
+        statementColors->insert(StatementKind::OverloadedOperator,item);
+        statementColors->insert(StatementKind::LiteralOperator,item);
     }
     item = getItem(schemeName, SYNS_AttrClass);
     if (item) {

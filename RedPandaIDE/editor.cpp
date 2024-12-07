@@ -4523,6 +4523,8 @@ void Editor::onExportedFormatToken(QSynedit::PSyntaxer syntaxer, int Line, int c
         case StatementKind::Function:
         case StatementKind::Constructor:
         case StatementKind::Destructor:
+        case StatementKind::OverloadedOperator:
+        case StatementKind::LiteralOperator:
             attr = cppSyntaxer->functionAttribute();
             break;
         case StatementKind::Class:

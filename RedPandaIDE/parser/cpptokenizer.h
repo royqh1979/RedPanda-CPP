@@ -24,6 +24,7 @@ class CppTokenizer
 {
     enum class TokenType {
         Normal,
+        Identifier,
         LeftBrace,
         RightBrace,
         LeftParenthesis,
@@ -31,7 +32,8 @@ class CppTokenizer
         LeftBracket,
         RightBracket,
         Assignment,
-        LambdaCaptures
+        LambdaCaptures,
+        None
     };
 
 public:
@@ -151,6 +153,7 @@ private:
     const QChar* mLineCount;
     int mCurrentLine;
     QString mLastToken;
+    TokenType mLastTokenType;
     TokenList mTokenList;
     QList<int> mLambdas;
     QVector<int> mUnmatchedBraces; // stack of indices for unmatched '{'

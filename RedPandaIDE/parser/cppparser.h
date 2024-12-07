@@ -164,6 +164,12 @@ public:
 
     QList<QString> namespaces();
 
+    static bool isIdentifier(const QString& token){
+        return (!token.isEmpty() && isIdentChar(token.front()));
+        // return (!token.isEmpty() && isIdentChar(token.front())
+        //         && !token.contains("\""));
+    }
+
 signals:
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
@@ -411,12 +417,8 @@ private:
     void  doSkipInExpression(const QStringList& expression, int&pos, const QString& startSymbol, const QString& endSymbol) const;
 
     QString findFunctionPointerName(int startIdx);
-    bool isIdentifier(const QString& token) const {
-        return (!token.isEmpty() && isIdentChar(token.front())
-                && !token.contains('\"'));
-    }
 
-    bool isIdentifierOrPointer(const QString& term) const {
+    static bool isIdentifierOrPointer(const QString& term){
         switch(term[0].unicode()) {
         case '*':
             return true;
@@ -429,25 +431,25 @@ private:
     }
 
 
-    bool isIntegerLiteral(const QString& token) const {
+    static bool isIntegerLiteral(const QString& token){
         if (token.isEmpty())
             return false;
         QChar ch = token.front();
         return (ch>='0' && ch<='9' && !token.contains(".") && !token.contains("e"));
     }
-    bool isFloatLiteral(const QString& token) const {
+    static bool isFloatLiteral(const QString& token){
         if (token.isEmpty())
             return false;
         QChar ch = token.front();
         return (ch>='0' && ch<='9' && (token.contains(".") || token.contains("e")));
     }
-    bool isStringLiteral(const QString& token) const {
+    static bool isStringLiteral(const QString& token){
         if (token.isEmpty())
             return false;
         return (!token.startsWith('\'') && token.contains('"'));
     }
 
-    bool isCharLiteral(const QString& token) const{
+    static bool isCharLiteral(const QString& token){
         if (token.isEmpty())
             return false;
         return (token.startsWith('\''));
@@ -457,13 +459,8 @@ private:
         return mCppKeywords.contains(token);
     }
 
-    bool tokenIsIdentifier(const QString& token) const {
-        //token won't be empty
-        return isIdentChar(token[0]);
-    }
-
     bool tokenIsTypeOrNonKeyword(const QString& token) const {
-        return tokenIsIdentifier(token) &&
+        return isIdentifier(token) &&
                 (mCppTypeKeywords.contains(token)
                  || !mCppKeywords.contains(token)
                  || token=="const");
@@ -564,35 +561,34 @@ private:
 
     bool splitLastMember(const QString& token, QString& lastMember, QString& remaining);
 
-    bool isSpaceChar(const QChar& ch) const {
+    static constexpr bool isSpaceChar(const QChar& ch) {
         return ch==' ' || ch =='\t';
     }
 
-    bool isWordChar(const QChar& ch) const {
+    static constexpr  bool isWordChar(const QChar& ch){
         return ch.isLetter()
                 || ch == '_'
                 || ch == '*'
                 || ch == '&';
     }    
 
-    bool isIdentifier(const QChar& ch) const {
+    static constexpr bool isIdentifier(const QChar& ch){
         return ch.isLetter()
                 || ch == '_'
                 || ch == '~'
                 ;
     }
 
-    bool isIdentChar(const QChar& ch) const {
+    static constexpr  bool isIdentChar(const QChar& ch){
         return ch.isLetter()
                 || ch == '_';
     }
 
-    bool isDigitChar(const QChar& ch) const {
+    static constexpr bool isDigitChar(const QChar& ch){
         return (ch>='0' && ch<='9');
     }
 
-    bool isInvalidFunctionArgsSuffixChar(const QChar& ch) const {
-
+    static constexpr bool isInvalidFunctionArgsSuffixChar(const QChar& ch) {
         // &&
         switch(ch.unicode()){
         case '.':
@@ -610,7 +606,7 @@ private:
     }
 
     /*'(', ';', ':', '{', '}', '#' */
-    bool isSeperator(const QChar& ch) const {
+    static constexpr bool isSeperator(const QChar& ch){
         switch(ch.unicode()){
         case '(':
         case ';':
@@ -625,7 +621,7 @@ private:
     }
 
     /*';', '{', '}'*/
-    bool isblockChar(const QChar& ch) const {
+    static constexpr bool isblockChar(const QChar& ch){
         switch(ch.unicode()){
         case ';':
         case '{':
@@ -637,7 +633,7 @@ private:
     }
 
     /* '#', ',', ';', ':', '{', '}', '!', '/', '+', '-', '<', '>' */
-    bool isInvalidVarPrefixChar(const QChar& ch) const {
+    static constexpr bool isInvalidVarPrefixChar(const QChar& ch){
         switch (ch.unicode()) {
         case '#':
         case ',':
@@ -658,11 +654,11 @@ private:
     }
 
     /*'{', '}' */
-    bool isBraceChar(const QChar& ch) const {
+    static constexpr bool isBraceChar(const QChar& ch){
         return ch == '{' || ch =='}';
     }
 
-    bool isLineChar(const QChar& ch) const {
+    static constexpr bool isLineChar(const QChar& ch){
         return ch=='\n' || ch=='\r';
     }
 
@@ -673,7 +669,7 @@ private:
      * @param kind
      * @return
      */
-    bool isNamedScope(StatementKind kind) const;
+    static constexpr bool isNamedScope(StatementKind kind);
 
     /**
      * @brief Test if a statement is a class/struct/union/enum/enum class/typedef
