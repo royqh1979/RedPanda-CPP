@@ -413,7 +413,7 @@ void SearchResultListModel::onResultModelChanged()
  *
  * see https://stackoverflow.com/questions/1956542/how-to-make-item-view-render-rich-html-text-in-qt/66412883#66412883
  */
-SearchResultTreeViewDelegate::SearchResultTreeViewDelegate(PSearchResultTreeModel model, QObject *parent):
+SearchResultTreeViewDelegate::SearchResultTreeViewDelegate(SearchResultTreeModel *model, QObject *parent):
     QStyledItemDelegate(parent),
     mModel(model)
 {

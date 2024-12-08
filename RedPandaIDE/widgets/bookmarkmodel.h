@@ -85,6 +85,4 @@ public:
     void sort(int column, Qt::SortOrder order) override;
 };
 
-using PBookmarkModel = std::shared_ptr<BookmarkModel>;
-
 #endif // BOOKMARKMODEL_H

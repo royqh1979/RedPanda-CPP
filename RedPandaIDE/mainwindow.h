@@ -204,17 +204,17 @@ public:
 
     const std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > &statementColors() const;
 
-    PSymbolUsageManager &symbolUsageManager();
+    SymbolUsageManager *symbolUsageManager() const;
 
-    PCodeSnippetManager &codeSnippetManager();
+    CodeSnippetsManager *codeSnippetManager() const;
 
     const PTodoParser &todoParser() const;
 
-    const PToolsManager &toolsManager() const;
+    ToolsManager *toolsManager() const;
 
     bool shouldRemoveAllSettings() const;
 
-    const PBookmarkModel &bookmarkModel() const;
+    BookmarkModel *bookmarkModel() const;
 
     TodoModel* todoModel();
 
@@ -902,22 +902,22 @@ private:
 
     std::shared_ptr<VisitHistoryManager> mVisitHistoryManager;
 
-    TodoModel mTodoModel;
-    SearchResultModel mSearchResultModel;
-    PBookmarkModel mBookmarkModel;
-    PSearchResultListModel mSearchResultListModel;
-    PSearchResultTreeModel mSearchResultTreeModel;
-    PSearchResultTreeViewDelegate mSearchViewDelegate;
-    ClassBrowserModel mClassBrowserModel;
+    TodoModel *mTodoModel;
+    SearchResultModel *mSearchResultModel;
+    BookmarkModel *mBookmarkModel;
+    SearchResultListModel *mSearchResultListModel;
+    SearchResultTreeModel *mSearchResultTreeModel;
+    SearchResultTreeViewDelegate *mSearchViewDelegate;
+    ClassBrowserModel *mClassBrowserModel;
     std::shared_ptr<QHash<StatementKind, std::shared_ptr<ColorSchemeItem> > > mStatementColors;
-    PSymbolUsageManager mSymbolUsageManager;
-    PCodeSnippetManager mCodeSnippetManager;
+    SymbolUsageManager *mSymbolUsageManager;
+    CodeSnippetsManager *mCodeSnippetManager;
     PTodoParser mTodoParser;
-    PToolsManager mToolsManager;
-    CustomFileSystemModel mFileSystemModel;
+    ToolsManager *mToolsManager;
+    CustomFileSystemModel *mFileSystemModel;
     CustomFileIconProvider mFileSystemModelIconProvider;
-    OJProblemSetModel mOJProblemSetModel;
-    OJProblemModel mOJProblemModel;
+    OJProblemSetModel *mOJProblemSetModel;
+    OJProblemModel *mOJProblemModel;
     int mOJProblemSetNameCounter;
 
     QString mClassBrowserCurrentStatement;

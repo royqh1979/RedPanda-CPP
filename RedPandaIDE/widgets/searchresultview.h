@@ -100,8 +100,6 @@ private:
     SearchResultModel *mSearchResultModel;
 };
 
-using PSearchResultListModel = std::shared_ptr<SearchResultListModel>;
-
 class SearchResultTreeModel : public QAbstractItemModel {
 Q_OBJECT
     // QAbstractItemModel interface
@@ -142,7 +140,7 @@ class SearchResultTreeViewDelegate: public QStyledItemDelegate{
 Q_OBJECT
     // QAbstractItemDelegate interface
 public:
-    explicit SearchResultTreeViewDelegate(PSearchResultTreeModel model,
+    explicit SearchResultTreeViewDelegate(SearchResultTreeModel *model,
                                           QObject* parent=nullptr);
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 private:
