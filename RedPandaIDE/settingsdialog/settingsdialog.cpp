@@ -37,6 +37,7 @@
 #include "environmentfolderswidget.h"
 #include "environmentperformancewidget.h"
 #include "environmentprogramswidget.h"
+#include "environmentdatasizewidget.h"
 #include "executorgeneralwidget.h"
 #include "executorproblemsetwidget.h"
 #include "debuggeneralwidget.h"
@@ -164,6 +165,9 @@ PSettingsDialog SettingsDialog::optionDialog(QWidget *parent)
             &EnvironmentFoldersWidget::shouldQuitApp,
             dialog.get(),
             &SettingsDialog::closeAndQuit);
+    dialog->addWidget(widget);
+
+    widget = new EnvironmentDataSizeWidget(tr("Data Size Unit"), tr("Environment"));
     dialog->addWidget(widget);
 
     widget = new CompilerSetOptionWidget(tr("Compiler Set"),tr("Compiler"));

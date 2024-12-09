@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EnvironmentDataSizeWidget</class>
+ <widget class="QWidget" name="EnvironmentDataSizeWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="grpDataSize">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="2" column="0">
+       <widget class="QRadioButton" name="rbIecBinary">
+        <property name="text">
+         <string>IEC binary</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QRadioButton" name="rbJedecBinary">
+        <property name="text">
+         <string>JEDEC binary extrapolated</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QTextBrowser" name="tbScalePreview"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="rbSiDecimal">
+        <property name="text">
+         <string>SI decimal</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>grpDataSize</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

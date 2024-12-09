@@ -85,7 +85,8 @@ void Compiler::run()
         if (!mOutputFile.isEmpty()) {
             log(tr("- Output Filename: %1").arg(mOutputFile));
             QLocale locale = QLocale::system();
-            log(tr("- Output Size: %1").arg(locale.formattedDataSize(QFileInfo(mOutputFile).size())));
+            QLocale::DataSizeFormats dialect = pSettings->environment().qtDataSizeDialect();
+            log(tr("- Output Size: %1").arg(locale.formattedDataSize(QFileInfo(mOutputFile).size(), 2, dialect)));
         }
         log(tr("- Compilation Time: %1 secs").arg(timer.elapsed() / 1000.0));
     } catch (CompileError e) {

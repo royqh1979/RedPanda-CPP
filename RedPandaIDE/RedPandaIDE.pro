@@ -153,6 +153,7 @@ SOURCES += \
     settingsdialog/environmentperformancewidget.cpp \
     settingsdialog/environmentprogramswidget.cpp \
     settingsdialog/environmentshortcutwidget.cpp \
+    settingsdialog/environmentdatasizewidget.cpp \
     settingsdialog/executorproblemsetwidget.cpp \
     settingsdialog/formattergeneralwidget.cpp \
     settingsdialog/formatterpathwidget.cpp \
@@ -289,6 +290,7 @@ HEADERS += \
     settingsdialog/environmentperformancewidget.h \
     settingsdialog/environmentprogramswidget.h \
     settingsdialog/environmentshortcutwidget.h \
+    settingsdialog/environmentdatasizewidget.h \
     settingsdialog/executorproblemsetwidget.h \
     settingsdialog/formattergeneralwidget.h \
     settingsdialog/formatterpathwidget.h \
@@ -389,6 +391,7 @@ FORMS += \
     settingsdialog/environmentperformancewidget.ui \
     settingsdialog/environmentprogramswidget.ui \
     settingsdialog/environmentshortcutwidget.ui \
+    settingsdialog/environmentdatasizewidget.ui \
     settingsdialog/executorproblemsetwidget.ui \
     settingsdialog/formattergeneralwidget.ui \
     settingsdialog/formatterpathwidget.ui \
