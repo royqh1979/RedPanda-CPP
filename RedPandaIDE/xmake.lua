@@ -139,6 +139,7 @@ target("RedPandaIDE")
         "settingsdialog/editorsyntaxcheckwidget",
         "settingsdialog/editortooltipswidget",
         "settingsdialog/environmentappearancewidget",
+        "settingsdialog/environmentdatasizewidget",
         "settingsdialog/environmentfolderswidget",
         "settingsdialog/environmentperformancewidget",
         "settingsdialog/environmentprogramswidget",

@@ -3809,6 +3809,7 @@ void Settings::Environment::doLoad()
 
     mHideNonSupportFilesInFileView=boolValue("hide_non_support_files_file_view",true);
     mOpenFilesInSingleInstance = boolValue("open_files_in_single_instance",false);
+    mDataSizeDialect = (DataSizeDialect)intValue("data_size_dialect", (int)DataSizeDialect::IecBinary);
 }
 
 int Settings::Environment::interfaceFontSize() const
@@ -3999,6 +4000,35 @@ QMap<QString, QString> Settings::Environment::terminalArgsPatternMagicVariables(
     return mTerminalArgsPatternMagicVariables;
 }
 
+Settings::Environment::DataSizeDialect Settings::Environment::dataSizeDialect() const
+{
+    return mDataSizeDialect;
+}
+
+void Settings::Environment::setDataSizeDialect(Settings::Environment::DataSizeDialect dataSizeDialect)
+{
+    mDataSizeDialect = dataSizeDialect;
+}
+
+QLocale::DataSizeFormats Settings::Environment::qtDataSizeDialect(DataSizeDialect dataSizeDialect)
+{
+    switch (dataSizeDialect) {
+    case DataSizeDialect::SiDecimal:
+        return QLocale::DataSizeSIFormat;
+    case DataSizeDialect::IecBinary:
+        return QLocale::DataSizeIecFormat;
+    case DataSizeDialect::JedecBinary:
+        return QLocale::DataSizeTraditionalFormat;
+    default:
+        return QLocale::DataSizeIecFormat;
+    }
+}
+
+QLocale::DataSizeFormats Settings::Environment::qtDataSizeDialect() const
+{
+    return qtDataSizeDialect(mDataSizeDialect);
+}
+
 QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalList() const
 {
 #ifdef Q_OS_WINDOWS
@@ -4094,6 +4124,8 @@ void Settings::Environment::doSave()
 
     saveValue("hide_non_support_files_file_view",mHideNonSupportFilesInFileView);
     saveValue("open_files_in_single_instance",mOpenFilesInSingleInstance);
+
+    saveValue("data_size_dialect", (int)mDataSizeDialect);
 }
 
 QString Settings::Environment::interfaceFont() const

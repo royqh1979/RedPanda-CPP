@@ -540,6 +540,13 @@ public:
             QString param;
         };
 
+        enum class DataSizeDialect {
+            /* UseKdeConfig = 0, */
+            SiDecimal = 1,
+            IecBinary = 2,
+            JedecBinary = 3,
+        };
+
         explicit Environment(Settings * settings);
         QString theme() const;
         void setTheme(const QString &theme);
@@ -595,6 +602,12 @@ public:
 
         static QMap<QString, QString> terminalArgsPatternMagicVariables();
 
+        DataSizeDialect dataSizeDialect() const;
+        void setDataSizeDialect(DataSizeDialect dataSizeDialect);
+
+        static QLocale::DataSizeFormats qtDataSizeDialect(DataSizeDialect dataSizeDialect);
+        QLocale::DataSizeFormats qtDataSizeDialect() const;
+
     private:
         bool isTerminalValid();
         void checkAndSetTerminal();
@@ -617,6 +630,7 @@ public:
         bool mUseCustomTerminal;
         bool mHideNonSupportFilesInFileView;
         bool mOpenFilesInSingleInstance;
+        DataSizeDialect mDataSizeDialect;
 
         static const QMap<QString, QString> mTerminalArgsPatternMagicVariables;
         // _Base interface
