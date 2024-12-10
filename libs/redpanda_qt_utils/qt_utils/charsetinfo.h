@@ -45,6 +45,7 @@ public:
     CharsetInfoManager& operator=(CharsetInfoManager&) = delete;
 
     QByteArray getDefaultSystemEncoding();
+    QByteArray getDefaultConsoleEncoding();
     PCharsetInfo findCharsetByCodepage(int codepage);
     QStringList languageNames();
     QList<PCharsetInfo> findCharsetsByLanguageName(const QString& languageName);

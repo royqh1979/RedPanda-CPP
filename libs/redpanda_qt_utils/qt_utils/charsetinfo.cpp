@@ -39,6 +39,20 @@ QByteArray CharsetInfoManager::getDefaultSystemEncoding()
 #endif
 }
 
+QByteArray CharsetInfoManager::getDefaultConsoleEncoding()
+{
+#ifdef Q_OS_WIN
+    DWORD acp = GetOEMCP();
+    PCharsetInfo info = findCharsetByCodepage(acp);
+    if (info) {
+        return info->name;
+    }
+    return "unknown";
+#else
+    return "UTF-8";
+#endif
+}
+
 PCharsetInfo CharsetInfoManager::findCharsetByCodepage(int codepage)
 {
     foreach (const PCharsetInfo& info, mCodePages) {

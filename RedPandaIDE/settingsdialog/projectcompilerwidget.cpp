@@ -117,7 +117,7 @@ void ProjectCompilerWidget::init()
     ui->cbCompilerSet->blockSignals(false);
     ui->cbEncodingDetails->setVisible(false);
     ui->cbEncoding->clear();
-    ui->cbEncoding->addItem(tr("System Default(%1)").arg(QString(pCharsetInfoManager->getDefaultSystemEncoding())),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("System Default(%1)").arg(QString(pCharsetInfoManager->getDefaultConsoleEncoding())),ENCODING_SYSTEM_DEFAULT);
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
         ui->cbEncoding->addItem(langName,langName);

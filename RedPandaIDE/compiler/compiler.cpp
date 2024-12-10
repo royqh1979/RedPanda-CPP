@@ -378,7 +378,7 @@ QStringList Compiler::getCharsetArgument(const QByteArray& encoding,FileType fil
         QString encodingName;
         QString execEncodingName;
         QString compilerSetExecCharset = compilerSet()->execCharset();
-        QString systemEncodingName=pCharsetInfoManager->getDefaultSystemEncoding();
+        QString systemEncodingName = pCharsetInfoManager->getDefaultSystemEncoding();
         if (encoding == ENCODING_SYSTEM_DEFAULT) {
             encodingName = systemEncodingName;
         } else if (encoding == ENCODING_UTF8_BOM) {
@@ -393,7 +393,7 @@ QStringList Compiler::getCharsetArgument(const QByteArray& encoding,FileType fil
         if (forceExecUTF8) {
             execEncodingName = "UTF-8";
         } else if (compilerSetExecCharset == ENCODING_SYSTEM_DEFAULT || compilerSetExecCharset.isEmpty()) {
-            execEncodingName = systemEncodingName;
+            execEncodingName = pCharsetInfoManager->getDefaultConsoleEncoding();
         } else {
             execEncodingName = compilerSetExecCharset;
         }

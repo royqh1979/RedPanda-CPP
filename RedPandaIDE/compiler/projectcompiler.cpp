@@ -437,12 +437,12 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         } else {
             QString encodingStr;
             if (compilerSet()->compilerType() != CompilerType::Clang && mProject->options().addCharset) {
-                QByteArray defaultSystemEncoding=pCharsetInfoManager->getDefaultSystemEncoding();
+                QByteArray defaultSystemEncoding = pCharsetInfoManager->getDefaultSystemEncoding();
                 QByteArray encoding = mProject->options().execEncoding;
                 QByteArray targetEncoding;
                 QByteArray sourceEncoding;
                 if ( encoding == ENCODING_SYSTEM_DEFAULT || encoding.isEmpty()) {
-                    targetEncoding = defaultSystemEncoding;
+                    targetEncoding = pCharsetInfoManager->getDefaultConsoleEncoding();
                 } else if (encoding == ENCODING_UTF8_BOM) {
                     targetEncoding = "UTF-8";
                 } else if (encoding == ENCODING_UTF16_BOM) {
