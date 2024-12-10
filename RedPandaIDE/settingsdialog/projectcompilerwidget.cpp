@@ -62,7 +62,7 @@ void ProjectCompilerWidget::refreshOptions()
         ui->cbEncoding->setCurrentText(language);
         ui->cbEncodingDetails->setVisible(true);
         ui->cbEncodingDetails->clear();
-        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(language, true);
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(language);
         foreach (const PCharsetInfo& info, infos) {
             ui->cbEncodingDetails->addItem(info->name);
         }
@@ -198,7 +198,7 @@ void ProjectCompilerWidget::on_cbEncoding_currentTextChanged(const QString &/*ar
     } else {
         ui->cbEncodingDetails->setVisible(true);
         ui->cbEncodingDetails->clear();
-        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(userData, true);
+        QList<PCharsetInfo> infos = pCharsetInfoManager->findCharsetsByLanguageName(userData);
         foreach (const PCharsetInfo& info, infos) {
             ui->cbEncodingDetails->addItem(info->name);
         }

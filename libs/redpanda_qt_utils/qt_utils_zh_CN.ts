@@ -97,7 +97,7 @@
         <location line="-113"/>
         <location line="+110"/>
         <source>Korean</source>
-        <translation>汉语</translation>
+        <translation>韩文</translation>
     </message>
     <message>
         <location line="-96"/>
