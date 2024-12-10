@@ -6,6 +6,7 @@ Red Panda C++ Version 3.3
   - fix: crash on statements like "x::a x;"
   - enhancement: support literal operators.
   - fix: Use oem code page instead of ANSI code page for compiling.
+  - enhancement: Show oem codpages in compiler setting's encoding combobox.
 
 Red Panda C++ Version 3.2
 
