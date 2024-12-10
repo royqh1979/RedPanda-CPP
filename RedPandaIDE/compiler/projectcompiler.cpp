@@ -442,6 +442,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 QByteArray targetEncoding;
                 QByteArray sourceEncoding;
                 if ( encoding == ENCODING_SYSTEM_DEFAULT || encoding.isEmpty()) {
+                    targetEncoding = defaultSystemEncoding;
+                } else if (encoding == ENCODING_OEM_DEFAULT) {
                     targetEncoding = pCharsetInfoManager->getDefaultConsoleEncoding();
                 } else if (encoding == ENCODING_UTF8_BOM) {
                     targetEncoding = "UTF-8";

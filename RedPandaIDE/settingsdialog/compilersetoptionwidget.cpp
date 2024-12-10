@@ -64,7 +64,10 @@ void CompilerSetOptionWidget::init()
 {
     ui->cbEncodingDetails->setVisible(false);
     ui->cbEncoding->clear();
-    ui->cbEncoding->addItem(tr("System Default(%1)").arg(QString(pCharsetInfoManager->getDefaultConsoleEncoding())),ENCODING_SYSTEM_DEFAULT);
+    ui->cbEncoding->addItem(tr("System Default(%1)").arg(QString(pCharsetInfoManager->getDefaultSystemEncoding())),ENCODING_SYSTEM_DEFAULT);
+#ifdef Q_OS_WIN
+    ui->cbEncoding->addItem(tr("OEM(%1)").arg(QString(pCharsetInfoManager->getDefaultConsoleEncoding())),ENCODING_OEM_DEFAULT);
+#endif
     ui->cbEncoding->addItem(tr("UTF-8"),ENCODING_UTF8);
     foreach (const QString& langName, pCharsetInfoManager->languageNames()) {
         ui->cbEncoding->addItem(langName,langName);
@@ -109,6 +112,7 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
 
     if (pSet->execCharset() == ENCODING_AUTO_DETECT
             || pSet->execCharset() == ENCODING_SYSTEM_DEFAULT
+            || pSet->execCharset() == ENCODING_OEM_DEFAULT
             || pSet->execCharset() == ENCODING_UTF8) {
         int index =ui->cbEncoding->findData(pSet->execCharset());
         ui->cbEncoding->setCurrentIndex(index);
@@ -445,6 +449,7 @@ void CompilerSetOptionWidget::on_cbEncoding_currentTextChanged(const QString &/*
     QString userData = ui->cbEncoding->currentData().toString();
     if (userData == ENCODING_AUTO_DETECT
             || userData == ENCODING_SYSTEM_DEFAULT
+            || userData == ENCODING_OEM_DEFAULT
             || userData == ENCODING_UTF8) {
         ui->cbEncodingDetails->setVisible(false);
         ui->cbEncodingDetails->clear();
