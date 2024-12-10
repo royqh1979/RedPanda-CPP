@@ -5,6 +5,7 @@ Red Panda C++ Version 3.3
   - enhancement: Auto scale the main ui & choose theme dialog at the first run.
   - fix: crash on statements like "x::a x;"
   - enhancement: support literal operators.
+  - fix: Use oem code page instead of ANSI code page for compiling.
 
 Red Panda C++ Version 3.2
 
