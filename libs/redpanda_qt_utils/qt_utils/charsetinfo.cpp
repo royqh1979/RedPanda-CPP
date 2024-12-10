@@ -124,9 +124,9 @@ CharsetInfoManager::CharsetInfoManager(const QString& localeName):
     mLocaleName(localeName)
 {
     mCodePages.append(std::make_shared<CharsetInfo>(37,"IBM037","","",false));
-    mCodePages.append(std::make_shared<CharsetInfo>(437,"IBM437","","",true,true));
+    mCodePages.append(std::make_shared<CharsetInfo>(437,"IBM437","OEM","",true,true));
     mCodePages.append(std::make_shared<CharsetInfo>(500,"IBM500","","",false));
-    mCodePages.append(std::make_shared<CharsetInfo>(708,"ASMO-708","","",true,true));
+    mCodePages.append(std::make_shared<CharsetInfo>(708,"ASMO-708",tr("Arabic"),"",true,true));
     mCodePages.append(std::make_shared<CharsetInfo>(709,"","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(710,"","","",false));
     mCodePages.append(std::make_shared<CharsetInfo>(720,"DOS-720",tr("Arabic"),"",true,true));
@@ -141,7 +141,7 @@ CharsetInfoManager::CharsetInfoManager(const QString& localeName):
     mCodePages.append(std::make_shared<CharsetInfo>(861,"ibm861",tr("Northern Europe"),"",true,true));
     mCodePages.append(std::make_shared<CharsetInfo>(862,"DOS-862",tr("Hebrew"),"",true,true));
     mCodePages.append(std::make_shared<CharsetInfo>(863,"IBM863",tr("Western Europe"),"",true,true));
-    mCodePages.append(std::make_shared<CharsetInfo>(864,"IBM864","","",true,true));
+    mCodePages.append(std::make_shared<CharsetInfo>(864,"IBM864",tr("Arabic"),"",true,true));
     mCodePages.append(std::make_shared<CharsetInfo>(865,"IBM865",tr("Northern Europe"),"",true,true));
     mCodePages.append(std::make_shared<CharsetInfo>(866,"cp866",tr("Cyrillic"),"",true,true));
     mCodePages.append(std::make_shared<CharsetInfo>(869,"ibm869",tr("Greek"),"",true,true));
