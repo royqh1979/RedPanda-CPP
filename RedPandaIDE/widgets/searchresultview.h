@@ -144,7 +144,7 @@ public:
                                           QObject* parent=nullptr);
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 private:
-    PSearchResultTreeModel mModel;
+    SearchResultTreeModel *mModel;
 };
 
 using PSearchResultTreeViewDelegate = std::shared_ptr<SearchResultTreeViewDelegate>;
