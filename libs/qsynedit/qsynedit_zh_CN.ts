@@ -4,7 +4,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="qsynedit/exporter/exporter.cpp" line="+141"/>
+        <location filename="qsynedit/exporter/exporter.cpp" line="+140"/>
         <source>Can&apos;t open file &apos;%1&apos; to write!</source>
         <translation>无法写入文件&quot;%1&quot;!</translation>
     </message>

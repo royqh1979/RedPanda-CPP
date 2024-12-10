@@ -4,8 +4,10 @@
 <context>
     <name>CharsetInfoManager</name>
     <message>
-        <location filename="qt_utils/charsetinfo.cpp" line="+114"/>
-        <location line="+43"/>
+        <location filename="qt_utils/charsetinfo.cpp" line="+127"/>
+        <location line="+3"/>
+        <location line="+12"/>
+        <location line="+31"/>
         <location line="+64"/>
         <source>Arabic</source>
         <translation>阿拉伯语</translation>
