@@ -374,7 +374,7 @@ QStringList Compiler::getCharsetArgument(const QByteArray& encoding,FileType fil
         }
     }
     if ((forceExecUTF8 || compilerSet()->autoAddCharsetParams()) && encoding != ENCODING_ASCII
-            && compilerSet()->compilerType()!=CompilerType::Clang) {
+            && compilerSet()->supportConvertingCharset()) {
         QString encodingName;
         QString execEncodingName;
         QString compilerSetExecCharset = compilerSet()->execCharset();

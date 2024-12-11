@@ -1477,6 +1477,8 @@ public:
         constexpr bool isCompilerInfoUsingUTF8() const { return true; }
 #endif
 
+        bool supportConvertingCharset();
+
         bool persistInAutoFind() const;
         void setPersistInAutoFind(bool newPersistInAutoFind);
 
@@ -1549,6 +1551,8 @@ public:
         // GCC ACP detection cache
         bool mGccIsUtf8;
         bool mGccIsUtf8Initialized;
+        bool mGccSupportConvertingCharset;
+        bool mGccSupportConvertingCharsetInitialized;
 #endif
     };
 
