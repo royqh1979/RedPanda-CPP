@@ -1656,6 +1656,7 @@ Settings::CompilerSet::CompilerSet():
     mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable}
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8Initialized(false)
+    , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
 
@@ -1675,6 +1676,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable}
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8Initialized(false)
+    , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
     QDir dir(compilerFolder);
@@ -1748,6 +1750,8 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8(set.mGccIsUtf8)
     , mGccIsUtf8Initialized(set.mGccIsUtf8Initialized)
+    , mGccSupportConvertingCharset(set.mGccSupportConvertingCharset)
+    , mGccSupportConvertingCharsetInitialized(set.mGccSupportConvertingCharsetInitialized)
 #endif
 {
 
@@ -1794,6 +1798,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mCompileOptions{} // handle later
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8Initialized(false)
+    , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
     foreach (const QJsonValue &dir, set["binDirs"].toArray())
@@ -2927,6 +2932,33 @@ bool Settings::CompilerSet::isCompilerInfoUsingUTF8()
     return isDebugInfoUsingUTF8();
 }
 #endif
+
+bool Settings::CompilerSet::supportConvertingCharset()
+{
+#ifdef Q_OS_WIN
+    if (mCompilerType != CompilerType::GCC && mCompilerType != CompilerType::GCC_UTF8)
+        return false;
+    if (!mGccSupportConvertingCharsetInitialized) {
+        mGccSupportConvertingCharset = [this] () {
+            QByteArray verboseOut = getCompilerOutput(QFileInfo(mCCompiler).dir().path(), mCCompiler, {"-v"});
+            QByteArray targetStr = "Configured with: ";
+            int configurationPos = verboseOut.indexOf(targetStr);
+            if (configurationPos < 0)
+                return false;
+            int endPos = verboseOut.indexOf('\n', configurationPos);
+            if (endPos < 0)
+                return false;
+            QByteArray configuration = verboseOut.mid(configurationPos + targetStr.size(), endPos - configurationPos - targetStr.size());
+            return configuration.contains("--with-libiconv") && !configuration.contains("--with-libiconv=no");
+        } ();
+        mGccSupportConvertingCharsetInitialized = true;
+    }
+    return mGccSupportConvertingCharset;
+#else
+    // Unix: iconv is a part of POSIX standard.
+    return mCompilerType == CompilerType::GCC || mCompilerType == CompilerType::GCC_UTF8;
+#endif
+}
 
 const QString &Settings::CompilerSet::assemblingSuffix() const
 {

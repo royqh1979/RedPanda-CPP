@@ -279,14 +279,6 @@ QList<PCompilerOption> CompilerInfoManager::getCompilerOptions(CompilerType comp
     return pInfo->compilerOptions();
 }
 
-bool CompilerInfoManager::supportCovertingCharset(CompilerType compilerType)
-{
-    PCompilerInfo pInfo = getInfo(compilerType);
-    if (!pInfo)
-        return false;
-    return pInfo->supportConvertingCharset();
-}
-
 bool CompilerInfoManager::supportStaticLink(CompilerType compilerType)
 {
     PCompilerInfo pInfo = getInfo(compilerType);
@@ -330,11 +322,6 @@ ClangCompilerInfo::ClangCompilerInfo():CompilerInfo(COMPILER_CLANG)
 {
 }
 
-bool ClangCompilerInfo::supportConvertingCharset()
-{
-    return false;
-}
-
 bool ClangCompilerInfo::forceUTF8InDebugger()
 {
     return true;
@@ -352,11 +339,6 @@ bool ClangCompilerInfo::supportStaticLink()
 
 GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
 {
-}
-
-bool GCCCompilerInfo::supportConvertingCharset()
-{
-    return true;
 }
 
 bool GCCCompilerInfo::forceUTF8InDebugger()
@@ -378,11 +360,6 @@ GCCUTF8CompilerInfo::GCCUTF8CompilerInfo():CompilerInfo(COMPILER_GCC_UTF8)
 {
 }
 
-bool GCCUTF8CompilerInfo::supportConvertingCharset()
-{
-    return true;
-}
-
 bool GCCUTF8CompilerInfo::forceUTF8InDebugger()
 {
     return true;
@@ -402,11 +379,6 @@ bool GCCUTF8CompilerInfo::supportStaticLink()
 SDCCCompilerInfo::SDCCCompilerInfo():CompilerInfo(COMPILER_SDCC)
 {
 
-}
-
-bool SDCCCompilerInfo::supportConvertingCharset()
-{
-    return false;
 }
 
 bool SDCCCompilerInfo::forceUTF8InDebugger()
