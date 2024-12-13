@@ -108,12 +108,14 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("ISO C++17","c++17"));
     sl.append(QPair<QString,QString>("ISO C++20","c++2a"));
     sl.append(QPair<QString,QString>("ISO C++23","c++2b"));
+    sl.append(QPair<QString,QString>("ISO C++26","c++2c"));
     sl.append(QPair<QString,QString>("GNU C++","gnu++98"));
     sl.append(QPair<QString,QString>("GNU C++11","gnu++11"));
     sl.append(QPair<QString,QString>("GNU C++14","gnu++14"));
     sl.append(QPair<QString,QString>("GNU C++17","gnu++17"));
     sl.append(QPair<QString,QString>("GNU C++20","gnu++2a"));
     sl.append(QPair<QString,QString>("GNU C++23","gnu++2b"));
+    sl.append(QPair<QString,QString>("GNU C++26","gnu++2c"));
     addOption(CC_CMD_OPT_STD, QObject::tr("C++ Language standard (-std)"), groupName, false, true, false, "-std=",CompilerOptionType::Choice, sl);
 
     sl.clear();
@@ -121,10 +123,14 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("ISO C99","c99"));
     sl.append(QPair<QString,QString>("ISO C11","c11"));
     sl.append(QPair<QString,QString>("ISO C17","c17"));
+    sl.append(QPair<QString,QString>("ISO C23","c2x"));
+    sl.append(QPair<QString,QString>("ISO C2Y","c2y"));
     sl.append(QPair<QString,QString>("GNU C90","gnu90"));
     sl.append(QPair<QString,QString>("GNU C99","gnu99"));
     sl.append(QPair<QString,QString>("GNU C11","gnu11"));
     sl.append(QPair<QString,QString>("GNU C17","gnu17"));
+    sl.append(QPair<QString,QString>("GNU C23","gnu2x"));
+    sl.append(QPair<QString,QString>("GNU C2Y","gnu2y"));
     addOption(C_CMD_OPT_STD, QObject::tr("C Language standard (-std)"), groupName, true, false, false, "-std=", CompilerOptionType::Choice, sl);
 
     // Optimization for cpu type
@@ -187,6 +193,7 @@ void CompilerInfo::prepareCompilerOptions()
     addOption(CC_CMD_OPT_DEBUG_INFO, QObject::tr("Generate debugging information (-g3)"), groupName, true, true, false, "-g3");
     addOption(CC_CMD_OPT_PROFILE_INFO, QObject::tr("Generate profiling info for analysis (-pg)"), groupName, true, true, true, "-pg");
     addOption(CC_CMD_OPT_SYNTAX_ONLY, QObject::tr("Only check the code for syntax errors (-fsyntax-only)"), groupName, true, true, false, "-fsyntax-only");
+    addOption(CC_CMD_OPT_ENABLE_GCC_IMPORT_STD, QObject::tr("Enable experimental support for GCC standard library modules (-fmodules)"), groupName, false, true, false, "-fmodules");
 
     // Warnings
     groupName = QObject::tr("Warnings");

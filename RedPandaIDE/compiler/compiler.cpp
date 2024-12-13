@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "compiler.h"
+#include "compiler/compilerinfo.h"
 #include "utils.h"
 #include "utils/escape.h"
 #include "utils/parsearg.h"
@@ -407,6 +408,20 @@ QStringList Compiler::getCharsetArgument(const QByteArray& encoding,FileType fil
                 "-finput-charset=" + encodingName,
                 "-fexec-charset=" + execEncodingName,
             };
+        }
+    }
+    return result;
+}
+
+QStringList Compiler::getCppGccImportStdSources(bool checkSyntax)
+{
+    QStringList result;
+    if (!checkSyntax && compilerSet()->getCompileOptionValue(CC_CMD_OPT_ENABLE_GCC_IMPORT_STD) == COMPILER_OPTION_ON) {
+        // libstdc++ extends `import std` to C++20
+        // FIXME: use robust method to check C++ standard version
+        const QString &std = compilerSet()->getCompileOptionValue(CC_CMD_OPT_STD);
+        if (std.startsWith("c++2") || std.startsWith("gnu++2")) {
+            result += {"-fsearch-include-path", "bits/std.cc", "bits/std.compat.cc"};
         }
     }
     return result;

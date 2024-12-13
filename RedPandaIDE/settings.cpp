@@ -17,6 +17,7 @@
 #include "settings.h"
 #include <QApplication>
 #include <algorithm>
+#include "compiler/compilerinfo.h"
 #include "utils.h"
 #include "utils/escape.h"
 #include "utils/font.h"
@@ -1859,6 +1860,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
                                                      {CC_CMD_OPT_DEBUG_INFO, "ccCmdOptDebugInfo"},
                                                      {CC_CMD_OPT_PROFILE_INFO, "ccCmdOptProfileInfo"},
                                                      {CC_CMD_OPT_SYNTAX_ONLY, "ccCmdOptSyntaxOnly"},
+                                                     {CC_CMD_OPT_ENABLE_GCC_IMPORT_STD, "ccCmdOptEnableGccImportStd"},
 
                                                      {CC_CMD_OPT_INHIBIT_ALL_WARNING, "ccCmdOptInhibitAllWarning"},
                                                      {CC_CMD_OPT_WARNING_ALL, "ccCmdOptWarningAll"},
@@ -2485,6 +2487,10 @@ QStringList Settings::CompilerSet::defines(bool isCpp) {
         if (pOption) {
             if (!mCompileOptions[key].isEmpty())
                 arguments.append(pOption->setting + mCompileOptions[key]);
+        }
+        pOption = CompilerInfoManager::getCompilerOption(compilerType(), CC_CMD_OPT_ENABLE_GCC_IMPORT_STD);
+        if (pOption && mCompileOptions.contains(CC_CMD_OPT_ENABLE_GCC_IMPORT_STD)) {
+            arguments.append(pOption->setting);
         }
         pOption = CompilerInfoManager::getCompilerOption(compilerType(), CC_CMD_OPT_DEBUG_INFO);
         if (pOption && mCompileOptions.contains(CC_CMD_OPT_DEBUG_INFO)) {
@@ -3711,6 +3717,7 @@ void Settings::CompilerSets::prepareCompatibleIndex()
     mCompilerCompatibleIndex.append(CC_CMD_OPT_SYNTAX_ONLY);
     mCompilerCompatibleIndex.append(CC_CMD_OPT_WARNING_AS_ERROR);
     mCompilerCompatibleIndex.append(CC_CMD_OPT_ABORT_ON_ERROR);
+    mCompilerCompatibleIndex.append(CC_CMD_OPT_ENABLE_GCC_IMPORT_STD);
 
     mCompilerCompatibleIndex.append(CC_CMD_OPT_PROFILE_INFO);
 
