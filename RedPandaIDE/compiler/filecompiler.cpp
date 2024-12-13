@@ -65,8 +65,17 @@ bool FileCompiler::prepareForCompile()
     log(tr("- Filename: %1").arg(mFilename));
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
     log("");
+
     FileType fileType = getFileType(mFilename);
-    mArguments = QStringList{localizePath(mFilename)};
+    CompilerType compilerType = compilerSet()->compilerType();
+
+    // GCC `import std;` sources should be added before the main file to generate GCM cache
+    if (fileType == FileType::CppSource &&
+        (compilerType == CompilerType::GCC || compilerType == CompilerType::GCC_UTF8)) {
+        mArguments += getCppGccImportStdSources(mOnlyCheckSyntax);
+    }
+
+    mArguments += QStringList{localizePath(mFilename)};
     if (!mOnlyCheckSyntax) {
         switch(compilerSet()->compilationStage()) {
         case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
