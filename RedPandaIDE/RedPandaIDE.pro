@@ -542,6 +542,7 @@ linux: {
 TRANSLATIONS += \
     translations/RedPandaIDE_zh_CN.ts \
     translations/RedPandaIDE_zh_TW.ts \
+    translations/RedPandaIDE_ru_RU.ts \
     translations/RedPandaIDE_pt_BR.ts
 
 win32: {
@@ -581,6 +582,7 @@ qtConfig(static) {
     qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/qtbase_pt_BR.qm
     qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/qtbase_zh_CN.qm
     qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/qtbase_zh_TW.qm
+    qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/qtbase_ru_RU.qm
     qt_translation_files.base = $$[QT_INSTALL_TRANSLATIONS]
     qt_translation_files.prefix = /translations
 
