@@ -77,7 +77,7 @@ void CompilerSetOptionWidget::init()
 
 
 static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSetOptionWidget* ui) {
-    bool supportCharset = CompilerInfoManager::supportCovertingCharset(pSet->compilerType());
+    bool supportCharset = pSet->supportConvertingCharset();
     ui->chkAutoAddCharset->setEnabled(supportCharset);
     ui->cbEncoding->setEnabled(supportCharset);
     ui->cbEncodingDetails->setEnabled(supportCharset);
