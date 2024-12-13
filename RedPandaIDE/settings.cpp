@@ -2908,7 +2908,7 @@ bool Settings::CompilerSet::isDebugInfoUsingUTF8()
         return true;
     case CompilerType::GCC:
         if (!mGccIsUtf8Initialized) {
-            mGccIsUtf8 = applicationIsUtf8(mCCompiler);
+            mGccIsUtf8 = applicationIsUtf8(mDebugger);
             mGccIsUtf8Initialized = true;
         }
         return mGccIsUtf8;
