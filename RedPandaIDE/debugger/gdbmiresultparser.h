@@ -79,7 +79,6 @@ public:
         qulonglong hexValue(bool &ok) const;
 
         QString pathValue() const;
-        QString utf8PathValue() const;
         ParseValueType type() const;
         bool isValid() const;
         ParseValue& operator=(const QByteArray& value);
