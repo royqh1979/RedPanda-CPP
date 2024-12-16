@@ -542,6 +542,7 @@ linux: {
 TRANSLATIONS += \
     translations/RedPandaIDE_zh_CN.ts \
     translations/RedPandaIDE_zh_TW.ts \
+    translations/RedPandaIDE_ru_RU.ts \
     translations/RedPandaIDE_pt_BR.ts
 
 win32: {
