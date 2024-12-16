@@ -846,7 +846,7 @@
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="69"/>
         <source>System OEM(%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Системная OEM(%1)</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.cpp" line="71"/>
@@ -7415,7 +7415,7 @@
     <message>
         <location filename="../settingsdialog/projectcompilerwidget.cpp" line="123"/>
         <source>System OEM(%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Системная OEM(%1)</translation>
     </message>
     <message>
         <location filename="../settingsdialog/projectcompilerwidget.cpp" line="125"/>
@@ -8345,7 +8345,7 @@
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="196"/>
         <source>Enable experimental support for GCC standard library modules (-fmodules)</source>
-        <translation type="unfinished"></translation>
+        <translation>Включить экспериментальную поддержку модулей стандартной библиотеки GCC (-fmodules)</translation>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="199"/>
