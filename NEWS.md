@@ -7,6 +7,7 @@ Red Panda C++ Version 3.3
   - enhancement: support literal operators.
   - enhancement: Auto detect windows OEM code page in options / compiler / compiler set auto convert encoding option combobox.
   - enhancement: Show oem codpages in compiler setting's encoding combobox.
+  - enhancement: niXman version MinGW GCC 14.2 compatibility
 
 Red Panda C++ Version 3.2
 
