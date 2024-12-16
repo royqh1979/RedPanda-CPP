@@ -549,7 +549,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>Compiler</name>
     <message>
-        <location filename="../compiler/compiler.cpp" line="+62"/>
+        <location filename="../compiler/compiler.cpp" line="+63"/>
         <source>Clean before rebuild failed.</source>
         <translation>重编译前的清理准备工作失败！</translation>
     </message>
@@ -675,7 +675,7 @@ p, li { white-space: pre-wrap; }
         <translation>警告：</translation>
     </message>
     <message>
-        <location line="+562"/>
+        <location line="+576"/>
         <source>Can&apos;t open file &quot;%1&quot; for write!</source>
         <translation>无法写入文件“%1”。</translation>
     </message>
@@ -2797,6 +2797,11 @@ p, li { white-space: pre-wrap; }
         <translation>繁体中文</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Russian</source>
+        <translation>俄语</translation>
+    </message>
+    <message>
         <source>Confirm Overwrite</source>
         <translation type="vanished">确认覆盖</translation>
     </message>
@@ -3326,7 +3331,7 @@ p, li { white-space: pre-wrap; }
         <translation>- 编译器配置: %1</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+52"/>
         <location line="+93"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
@@ -9406,7 +9411,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+350"/>
+        <location line="+329"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
@@ -9419,17 +9424,17 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location line="-264"/>
+        <location line="-237"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>启用特定指令集(-mx)</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-83"/>
         <source>Optimization level (-Ox)</source>
         <translation>优化级别(-Ox)</translation>
     </message>
     <message>
-        <location line="+360"/>
+        <location line="+339"/>
         <source>Processor (-m)</source>
         <translation>处理器类型(-m)</translation>
     </message>
@@ -9442,12 +9447,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">性能分析</translation>
     </message>
     <message>
-        <location line="-274"/>
+        <location line="-247"/>
         <source>Generate debugging information (-g3)</source>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3375"/>
+        <location filename="../settings.cpp" line="+3413"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -9457,7 +9462,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成性能分析信息(-pg)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Warnings</source>
         <translation>代码警告</translation>
     </message>
@@ -9466,12 +9471,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">当前CPU</translation>
     </message>
     <message>
-        <location line="-75"/>
+        <location line="-80"/>
         <source>C++ Language standard (-std)</source>
         <translation>C++语言标准 (-std)</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+15"/>
         <source>C Language standard (-std)</source>
         <translation>C语言标准 (-std)</translation>
     </message>
@@ -9480,7 +9485,7 @@ p, li { white-space: pre-wrap; }
         <translation type="obsolete">启用</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Check for stack smashing attacks (-fstack-protector)</source>
         <translation>检查栈溢出(stack smashing)错误 (-fstack-protector)</translation>
     </message>
@@ -9495,7 +9500,7 @@ p, li { white-space: pre-wrap; }
         <translation>忽略所有警告信息(-w)</translation>
     </message>
     <message>
-        <location line="-11"/>
+        <location line="-12"/>
         <source>32-bit pointer, 32-bit instruction (-m32)</source>
         <translation>32 位指针，32 位指令 (-m32)</translation>
     </message>
@@ -9515,7 +9520,12 @@ p, li { white-space: pre-wrap; }
         <translation>x86 multilib (-mx)</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
+        <source>Enable experimental support for GCC standard library modules (-fmodules)</source>
+        <translation>启用实验性module支持(-fmodules)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Show most warnings (-Wall)</source>
         <translation>启用常见问题警告(-Wall)</translation>
     </message>
@@ -9535,7 +9545,7 @@ p, li { white-space: pre-wrap; }
         <translation>栈空间大小</translation>
     </message>
     <message>
-        <location line="+253"/>
+        <location line="+225"/>
         <source>Language standard (--std)</source>
         <translation>C语言标准(--std)</translation>
     </message>
@@ -9619,12 +9629,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location line="-311"/>
+        <location line="-284"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation>将警告作为错误处理(-Werror)</translation>
     </message>
@@ -10114,7 +10124,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+622"/>
+        <location filename="../settings.cpp" line="+623"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-403"/>
         <location line="+63"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -10169,7 +10179,7 @@ p, li { white-space: pre-wrap; }
         <translation>无法检测适用于 “%1” 的终端参数模式。</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="-778"/>
+        <location filename="../settings.cpp" line="-779"/>
         <source>Error executing platform compiler hint add-on</source>
         <translation>执行平台编译器提示附加组件错误</translation>
     </message>
@@ -11183,7 +11193,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="+760"/>
+        <location filename="../settings.cpp" line="+761"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>

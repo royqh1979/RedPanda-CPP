@@ -481,7 +481,7 @@
 <context>
     <name>Compiler</name>
     <message>
-        <location filename="../compiler/compiler.cpp" line="+62"/>
+        <location filename="../compiler/compiler.cpp" line="+63"/>
         <source>Clean before rebuild failed.</source>
         <translation>Falha ao limpar antes de remontar.</translation>
     </message>
@@ -538,7 +538,7 @@
         <translation>[Nota] </translation>
     </message>
     <message>
-        <location line="+590"/>
+        <location line="+604"/>
         <source>The compiler process for &apos;%1&apos; failed to start.</source>
         <translation>Falha ao iniciar a compilação para &apos;%1&apos;.</translation>
     </message>
@@ -573,7 +573,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-675"/>
+        <location line="-689"/>
         <source> - Command: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2485,6 +2485,11 @@
         <translation>Chinês tradicional</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Russian</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../settingsdialog/environmentappearancewidget.ui" line="+251"/>
         <source>Icon Zoom:</source>
         <translation type="unfinished"></translation>
@@ -2967,7 +2972,7 @@
         <translation>Compilador: %1</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+52"/>
         <location line="+93"/>
         <source>Can&apos;t delete the old executable file &quot;%1&quot;.
 </source>
@@ -3003,12 +3008,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-122"/>
+        <location line="-131"/>
         <source>Checking single file...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+71"/>
         <source>GNU Assembler</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8530,7 +8535,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+4011"/>
+        <location filename="../settings.cpp" line="+4050"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-403"/>
         <location line="+63"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8924,7 +8929,7 @@
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+350"/>
+        <location line="+329"/>
         <source>Code Generation</source>
         <translation>Geração de código</translation>
     </message>
@@ -8937,12 +8942,12 @@
         <translation type="vanished">Otimizar menor, porém mantendo completa compatibilidade (-tune)</translation>
     </message>
     <message>
-        <location line="-264"/>
+        <location line="-237"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>Habilitar uso de instruções específicar (-mx)</translation>
     </message>
     <message>
-        <location line="-77"/>
+        <location line="-83"/>
         <source>Optimization level (-Ox)</source>
         <translation>Nível de otimização (-Ox)</translation>
     </message>
@@ -8951,7 +8956,7 @@
         <translation type="vanished">Linguagem padrão (-std)</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+98"/>
         <source>Warnings</source>
         <translation>Avisos</translation>
     </message>
@@ -8975,12 +8980,12 @@
         <translation type="vanished">Verificar conformidade ISO C/C++/C++0x (-pedantic)</translation>
     </message>
     <message>
-        <location line="-6"/>
+        <location line="-7"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>Verificar no código apenas erros de sintaxe (-fsyntax-only)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Make all warnings into errors (-Werror)</source>
         <translation>Tornar em erros todos os avisos (-Werror)</translation>
     </message>
@@ -8990,12 +8995,12 @@
         <translation>Abortar compilação no primeiro erro (-Wfatal-errors)</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-11"/>
         <source>Generate profiling info for analysis (-pg)</source>
         <translation>Gerar informação de perfil para análises (-pg)</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>Linker</source>
         <translation>Linker</translation>
     </message>
@@ -9019,7 +9024,7 @@
         <translation>Não gerar executável (-s)</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-43"/>
         <source>Generate debugging information (-g3)</source>
         <translation>Gerar informação para depuração (-g3)</translation>
     </message>
@@ -9036,12 +9041,12 @@
         <translation type="vanished">Não montar, compilar e gerar código em assembly (-S)</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+39"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>Usar pipes em lugar de arquivos temporários durante compilação (-pipe)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="-634"/>
+        <location filename="../settings.cpp" line="-635"/>
         <source>Confirm</source>
         <translation>Confirmar</translation>
     </message>
@@ -9222,12 +9227,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="-108"/>
+        <location filename="../compiler/compilerinfo.cpp" line="-113"/>
         <source>C++ Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+15"/>
         <source>C Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9277,7 +9282,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="+76"/>
+        <location filename="../compiler/compilerinfo.cpp" line="+77"/>
         <source>Check for stack smashing attacks (-fstack-protector)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9292,7 +9297,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+250"/>
+        <location line="+222"/>
         <source>Processor (-m)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9312,7 +9317,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-303"/>
+        <location line="-276"/>
         <source>32-bit pointer, 32-bit instruction (-m32)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9332,12 +9337,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+5"/>
+        <source>Enable experimental support for GCC standard library modules (-fmodules)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
         <source>Stack Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+264"/>
+        <location line="+236"/>
         <source>Use movc instead of movx to read from external ram</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10366,7 +10376,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="+760"/>
+        <location filename="../settings.cpp" line="+761"/>
         <source>Error</source>
         <translation type="unfinished">Erro</translation>
     </message>

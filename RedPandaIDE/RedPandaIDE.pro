@@ -40,8 +40,13 @@ macos: {
     ICON = ../macos/RedPandaIDE.icns
 }
 
-win32: VERSION = $${APP_VERSION}.0
-else: VERSION = $${APP_VERSION}
+win32 {
+    isEmpty(TEST_VERSION) {
+        VERSION = $${APP_VERSION}.0
+    } else {
+        VERSION = $${APP_VERSION}.$${TEST_VERSION}
+    }
+} else: VERSION = $${APP_VERSION}
 
 isEmpty(PREFIX) {
     PREFIX = /usr/local
