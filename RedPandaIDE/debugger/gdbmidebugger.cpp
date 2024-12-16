@@ -343,10 +343,7 @@ void GDBMIDebuggerClient::handleBreakpoint(const GDBMIResultParser::ParseObject&
 {
     QString filename;
     // gdb use system encoding for file path
-    if (debugger()->forceUTF8() || debugger()->debugInfosUsingUTF8())
-        filename = breakpoint["fullname"].utf8PathValue();
-    else
-        filename = breakpoint["fullname"].pathValue();
+    filename = breakpoint["fullname"].pathValue();
     int line = breakpoint["line"].intValue();
     int number = breakpoint["number"].intValue();
     emit breakpointInfoGetted(filename, line , number);
@@ -361,11 +358,7 @@ void GDBMIDebuggerClient::handleFrame(const GDBMIResultParser::ParseValue &frame
         if (!ok)
             mCurrentAddress=0;
         mCurrentLine = frameObj["line"].intValue();
-        if (debugger()->forceUTF8()
-                || debugger()->debugInfosUsingUTF8())
-            mCurrentFile = frameObj["fullname"].utf8PathValue();
-        else
-            mCurrentFile = frameObj["fullname"].pathValue();
+        mCurrentFile = frameObj["fullname"].pathValue();
         mCurrentFunc = frameObj["func"].value();
     }
 }
@@ -377,10 +370,7 @@ void GDBMIDebuggerClient::handleStack(const QList<GDBMIResultParser::ParseValue>
         GDBMIResultParser::ParseObject frameObject = frameValue.object();
         PTrace trace = std::make_shared<Trace>();
         trace->funcname = frameObject["func"].value();
-        if (debugger()->forceUTF8() || debugger()->debugInfosUsingUTF8())
-            trace->filename = frameObject["fullname"].utf8PathValue();
-        else
-            trace->filename = frameObject["fullname"].pathValue();
+        trace->filename = frameObject["fullname"].pathValue();
         trace->line = frameObject["line"].intValue();
         trace->level = frameObject["level"].intValue(0);
         trace->address = frameObject["addr"].value();

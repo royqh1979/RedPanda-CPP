@@ -19,6 +19,8 @@
 #include <QFileInfo>
 #include <QList>
 #include <QDebug>
+#include <qt_utils/utils.h>
+
 
 GDBMIResultParser::GDBMIResultParser()
 {
@@ -369,10 +371,9 @@ qulonglong GDBMIResultParser::ParseValue::hexValue(bool &ok) const
     return value;
 }
 
-QString GDBMIResultParser::ParseValue::pathValue() const
+static QString parsePathValue(QByteArray value)
 {
     //Q_ASSERT(mType == ParseValueType::Value);
-    QByteArray value=mValue;
 #ifdef Q_OS_WIN
     if (value.startsWith("/") && !value.startsWith("//"))
         value=value.mid(1);
@@ -380,14 +381,22 @@ QString GDBMIResultParser::ParseValue::pathValue() const
     return QFileInfo(QString::fromLocal8Bit(value)).absoluteFilePath();
 }
 
-QString GDBMIResultParser::ParseValue::utf8PathValue() const
+static QString parseUtf8PathValue(QByteArray value)
 {
-    QByteArray value=mValue;
 #ifdef Q_OS_WIN
     if (value.startsWith("/") && !value.startsWith("//"))
         value=value.mid(1);
 #endif
     return QFileInfo(QString::fromUtf8(value)).absoluteFilePath();
+}
+
+QString GDBMIResultParser::ParseValue::pathValue() const
+{
+    //Q_ASSERT(mType == ParseValueType::Value);
+    QString result = parsePathValue(mValue);
+    if (!fileExists(result))
+        result = parseUtf8PathValue(mValue);
+    return result;
 }
 
 GDBMIResultParser::ParseValueType GDBMIResultParser::ParseValue::type() const
