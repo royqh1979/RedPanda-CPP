@@ -52,7 +52,7 @@ isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
 isEmpty(LIBEXECDIR) {
-    LIBEXECDIR = $${PREFIX}/libexec
+    LIBEXECDIR = libexec
 }
 
 win32: {
@@ -63,7 +63,6 @@ win32: {
     LIBS += -luser32  # window message APIs
 }
 
-DEFINES += PREFIX=\\\"$${PREFIX}\\\"
 DEFINES += LIBEXECDIR=\\\"$${LIBEXECDIR}\\\"
 DEFINES += APP_NAME=\\\"$${APP_NAME}\\\"
 

@@ -233,12 +233,6 @@ target("RedPandaIDE")
         add_links("psapi", "shlwapi")
     end
 
-    -- install
-
-    if is_xdg() then
-        on_install(install_bin)
-    end
-
 target("test-escape")
     set_kind("binary")
     add_rules("qt.console")

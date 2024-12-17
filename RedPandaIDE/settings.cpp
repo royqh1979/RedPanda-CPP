@@ -230,10 +230,8 @@ QString Settings::Dirs::appLibexecDir() const
 #elif defined(Q_OS_MACOS)
     return QApplication::instance()->applicationDirPath();
 #else // XDG desktop
-    // in AppImage or tarball LIBEXECDIR is not true, resolve from relative path
-    const static QString relativeLibExecDir(QDir(PREFIX "/bin").relativeFilePath(LIBEXECDIR "/" APP_NAME));
-    const static QString absoluteLibExecDir(QDir(appDir()).absoluteFilePath(relativeLibExecDir));
-    return absoluteLibExecDir;
+    const static QString libExecDir(QDir(appDir()).absoluteFilePath("../" LIBEXECDIR "/" APP_NAME));
+    return libExecDir;
 #endif
 }
 

@@ -29,16 +29,11 @@ option("prefix")
         set_showmenu(false)
         set_default("")
     end
-    add_defines('PREFIX="$(prefix)"')
 
 option("libexecdir")
-    add_deps("prefix")
     if is_xdg() then
-        set_default("$prefix/libexec")  -- dummy
+        set_default("libexec")
         set_showmenu(true)
-        before_check(function (option)
-            option:set_value(option:dep("prefix"):value() .. "/libexec")
-        end)
     else
         set_default("")
         set_showmenu(false)
@@ -182,16 +177,8 @@ function add_ui_classes(...)
     end
 end
 
--- imitate `make DESTDIR=... install` on XDG platforms
-
 function install_libexec(target)
     local installdir = target:installdir() .. "/$(libexecdir)/$(app-name)"
-    print("installing", target:name(), "to", installdir, "..")
-    os.cp(target:targetfile(), installdir .. "/" .. target:filename())
-end
-
-function install_bin(target)
-    local installdir = target:installdir() .. "/$(prefix)/bin"
     print("installing", target:name(), "to", installdir, "..")
     os.cp(target:targetfile(), installdir .. "/" .. target:filename())
 end
@@ -217,7 +204,7 @@ target("resources")
     -- templates
 
     if is_xdg() then
-        add_installfiles("platform/linux/templates/(**.*)", {prefixdir = "$(prefix)/share/$(app-name)/templates"})
+        add_installfiles("platform/linux/templates/(**.*)", {prefixdir = "share/$(app-name)/templates"})
     elseif is_os("windows") then
         add_installfiles("platform/windows/templates/(**.*)", {prefixdir = "bin/templates"})
         if is_arch("x86_64") then
@@ -228,7 +215,7 @@ target("resources")
     -- docs
 
     if is_xdg() then
-        add_installfiles("README.md", "NEWS.md", "LICENSE", {prefixdir = "$(prefix)/share/doc/$(app-name)"})
+        add_installfiles("README.md", "NEWS.md", "LICENSE", {prefixdir = "share/doc/$(app-name)"})
     else
         add_installfiles("README.md", "NEWS.md", "LICENSE", {prefixdir = "bin"})
     end
@@ -236,7 +223,7 @@ target("resources")
     -- icon
 
     if is_xdg() then
-        add_installfiles("platform/linux/redpandaide.svg", {prefixdir = "$(prefix)/share/icons/hicolor/scalable/apps"})
+        add_installfiles("platform/linux/redpandaide.svg", {prefixdir = "share/icons/hicolor/scalable/apps"})
     end
 
     -- desktop entry
@@ -248,13 +235,13 @@ target("resources")
                 PREFIX = get_config("prefix"),
             },
         })
-        add_installfiles("$(buildir)/RedPandaIDE.desktop", {prefixdir = "$(prefix)/share/applications"})
+        add_installfiles("$(buildir)/RedPandaIDE.desktop", {prefixdir = "share/applications"})
     end
 
     -- mime type
 
     if is_xdg() then
-        add_installfiles("platform/linux/redpandaide.xml", {prefixdir = "$(prefix)/share/mime/packages"})
+        add_installfiles("platform/linux/redpandaide.xml", {prefixdir = "share/mime/packages"})
     end
 
     -- qt.conf

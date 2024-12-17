@@ -23,14 +23,17 @@
    ```
 
 qmake variables:
-- `PREFIX`: default to `/usr/local`. It should be set to `/usr` when packaging.
-- `LIBEXECDIR`: directory for auxiliary executables, default to `$PREFIX/libexec`. Arch Linux uses `/usr/lib`.
+- `PREFIX`: where `$MAKE install` installs files to.
+  - Red Panda C++ itself is not affected by `PREFIX`, because it internally uses relative path.
+  - `.desktop` file is affected by `PREFIX`.
+- `LIBEXECDIR`: directory for auxiliary executables, RELATIVE TO `PREFIX`.
+  - Arch Linux uses `lib`.
 
 ### xmake-based Build Steps
 
 1. Configure:
    ```bash
-   xmake f -p linux -a x86_64 -m release --qt=/usr --prefix=/usr/local
+   xmake f -p linux -a x86_64 -m release --qt=/usr
    ```
 2. Build:
    ```bash
@@ -38,7 +41,7 @@ qmake variables:
    ```
 3. Install:
    ```bash
-   sudo xmake install --root -o /  # `-o ...` imitates `DESTDIR=...` in `make install`
+   sudo xmake install --root -o /usr/local
    ```
 
 Hint: `xmake f --help` for more options.
