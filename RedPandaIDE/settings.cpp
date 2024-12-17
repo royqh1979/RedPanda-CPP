@@ -2308,7 +2308,11 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
         mDumpMachine = "i386-pc-mingw32";
     }
     mTarget = mDumpMachine.mid(0, mDumpMachine.indexOf('-'));
-    QByteArray version = getCompilerOutput(binDir, c_prog, {"-dumpfullversion"});
+    QByteArray version = getCompilerOutput(binDir, c_prog, {"-dumpversion"}).trimmed();
+    QRegularExpression versionPattern = QRegularExpression("^[\\d]+\\.[\\d]+.*$");
+    if (auto m = versionPattern.match(version); !m.hasMatch()) {
+        version = getCompilerOutput(binDir, c_prog, {"-dumpfullversion"}).trimmed();
+    }
     mVersion = QString(version).trimmed();
 
     // Obtain compiler distro
