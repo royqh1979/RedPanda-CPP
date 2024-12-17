@@ -82,7 +82,8 @@ void CompetitiveCompanionThread::onNewProblemConnection(QTcpSocket* clientConnec
         content += readed;
     }
     content += clientConnection->readAll();
-    clientConnection->write("HTTP/1.1 200 OK");
+    clientConnection->write("HTTP/1.1 200 OK\n");
+    clientConnection->write("Connection: close\n");
     clientConnection->disconnectFromHost();
 //    qDebug()<<"---------";
 //    qDebug()<<content;
