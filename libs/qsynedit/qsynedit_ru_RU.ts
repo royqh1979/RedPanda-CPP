@@ -6,25 +6,25 @@
     <message>
         <location filename="qsynedit/exporter/exporter.cpp" line="140"/>
         <source>Can&apos;t open file &apos;%1&apos; to write!</source>
-        <translation type="unfinished"></translation>
+        <translation>Невозможно открыть файл &apos;%1&apos; для записи!</translation>
     </message>
     <message>
         <location filename="qsynedit/exporter/exporter.cpp" line="149"/>
         <source>Failed to write data.</source>
-        <translation type="unfinished"></translation>
+        <translation>Запись данных не удалась.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="369"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="370"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="371"/>
         <source>byte swap.</source>
-        <translation type="unfinished"></translation>
+        <translation>обмен байтов.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="372"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="373"/>
         <source>convert %1 to %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>преобразование %1 в %2.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="372"/>
@@ -70,7 +70,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="771"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="776"/>
         <source>byte</source>
-        <translation type="unfinished"></translation>
+        <translation>byte</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="372"/>
@@ -129,7 +129,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="772"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="777"/>
         <source>word</source>
-        <translation type="unfinished"></translation>
+        <translation>word</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="374"/>
@@ -143,7 +143,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="420"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="421"/>
         <source>convert %1 in %2 to %3 in %4.</source>
-        <translation type="unfinished"></translation>
+        <translation>преобразование %1 (%2) в %3 (%4).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="374"/>
@@ -204,7 +204,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="778"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="932"/>
         <source>double word</source>
-        <translation type="unfinished"></translation>
+        <translation>double word</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="374"/>
@@ -261,7 +261,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="774"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="779"/>
         <source>quad word</source>
-        <translation type="unfinished"></translation>
+        <translation>quad word</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="379"/>
@@ -295,237 +295,237 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="411"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="412"/>
         <source>Conditional move %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Условная пересылка %1</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="379"/>
         <source>if equal</source>
-        <translation type="unfinished"></translation>
+        <translation>если равно</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="380"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="651"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="703"/>
         <source>if zero.</source>
-        <translation type="unfinished"></translation>
+        <translation>если нулевое.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="381"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="652"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="704"/>
         <source>if not equal.</source>
-        <translation type="unfinished"></translation>
+        <translation>если не равно.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="382"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="653"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="705"/>
         <source>if not zero.</source>
-        <translation type="unfinished"></translation>
+        <translation>если не ноль.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="384"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="655"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="707"/>
         <source>if sign (negative).</source>
-        <translation type="unfinished"></translation>
+        <translation>если знаковый (отрицательный).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="385"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="656"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="708"/>
         <source>if not sign (non-negative).</source>
-        <translation type="unfinished"></translation>
+        <translation>если беззнаковый (не отрицательный).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="387"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="658"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="710"/>
         <source>if greater(signed &gt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если больше (знаковое &gt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="388"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="659"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="711"/>
         <source>if not less or equal(signed &gt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не меньше или равно(знаковое &gt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="389"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="660"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="712"/>
         <source>if greater or equal(signed &gt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если больше или равно (знаковое &gt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="390"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="661"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="713"/>
         <source>if not less(signed &gt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не меньше(знаковое &gt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="391"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="714"/>
         <source>if less(signed &lt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если меньше(знаковое &lt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="392"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="715"/>
         <source>if not greater or equal(signed &lt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не больше или равно (знаковое &lt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="393"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="716"/>
         <source>if less or equal(signed &lt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если меньше или равно(знаковое &lt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="394"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="717"/>
         <source>if not greater(signed &lt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не больше(знаковое &lt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="396"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="667"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="719"/>
         <source>if above(unsigned &gt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если выше (беззнаковое &gt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="397"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="668"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="720"/>
         <source>if not below or equal(unsigned &gt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не ниже или равно (беззнаковое &gt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="398"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="669"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="721"/>
         <source>if above or equal(unsigned &gt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если выше или равно (беззнаковое &gt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="399"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="670"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="722"/>
         <source>if not below(unsigned &gt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не ниже (беззнаковое &gt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="400"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="671"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="723"/>
         <source>if below(unsigned &lt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если ниже(беззнаковое &lt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="401"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="672"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="724"/>
         <source>if not above or equal(unsigned &lt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не выше или равно (беззнакове &lt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="402"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="673"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="725"/>
         <source>if below or equal(unsigned &lt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если ниже или равно (беззнаковое &lt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="403"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="674"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="726"/>
         <source>if not above(unsigned &lt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не выше (беззнаковое &lt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="405"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="676"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="728"/>
         <source>if carry.</source>
-        <translation type="unfinished"></translation>
+        <translation>если перенос.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="406"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="677"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="731"/>
         <source>if not carry.</source>
-        <translation type="unfinished"></translation>
+        <translation>если не перенос.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="407"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="680"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="734"/>
         <source>if overflow.</source>
-        <translation type="unfinished"></translation>
+        <translation>если переполнение.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="408"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="678"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="732"/>
         <source>if not overflow.</source>
-        <translation type="unfinished"></translation>
+        <translation>если не переполнение.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="409"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="681"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="735"/>
         <source>if parity.</source>
-        <translation type="unfinished"></translation>
+        <translation>если четность.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="410"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="682"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="736"/>
         <source>if parity even.</source>
-        <translation type="unfinished"></translation>
+        <translation>если четное.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="411"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="679"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="733"/>
         <source>if not parity.</source>
-        <translation type="unfinished"></translation>
+        <translation>если нечетность.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="412"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="683"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="737"/>
         <source>if parity odd.</source>
-        <translation type="unfinished"></translation>
+        <translation>если нечетное.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="414"/>
         <source>Compare and exchange.</source>
-        <translation type="unfinished"></translation>
+        <translation>Сравнить и обменять.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="415"/>
         <source>Compare and exchange 8 bytes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Сравнить и обменять 8 байт.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="416"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="417"/>
         <source>oct word</source>
-        <translation type="unfinished"></translation>
+        <translation>oct word</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="422"/>
         <source>move data between immediate values, general purpose registers, segment registers, and memory.</source>
-        <translation type="unfinished"></translation>
+        <translation>перемещение данных между непосредственными значениями, регистрами общего назначения, регистрами сегментов и памятью.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="423"/>
         <source>move %1 data between immediate values, general purpose registers, segment registers, and memory.</source>
-        <translation type="unfinished"></translation>
+        <translation>перемещение данных %1 между непосредственными значениями, регистрами общего назначения, регистрами сегментов и памятью.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="424"/>
@@ -533,7 +533,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="426"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="932"/>
         <source>Move %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Перемещение %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="427"/>
@@ -837,7 +837,7 @@
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="553"/>
         <source>bitwise logical AND.</source>
-        <translation type="unfinished"></translation>
+        <translation>побитовое логическое И.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="554"/>
@@ -845,12 +845,12 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="556"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="557"/>
         <source>bitwise logical AND on %1 values.</source>
-        <translation type="unfinished"></translation>
+        <translation>побитовое логическое И для значений %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="558"/>
         <source>bitwise logical NOT.</source>
-        <translation type="unfinished"></translation>
+        <translation>побитовое логическое НЕ.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="559"/>
@@ -858,12 +858,12 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="561"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="562"/>
         <source>bitwise logical NOT on %1 value.</source>
-        <translation type="unfinished"></translation>
+        <translation>побитовое логическое НЕ для значений %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="563"/>
         <source>bitwise logical OR.</source>
-        <translation type="unfinished"></translation>
+        <translation>побитовое логическое ИЛИ.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="564"/>
@@ -871,12 +871,12 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="566"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="567"/>
         <source>bitwise logical OR on %1 values.</source>
-        <translation type="unfinished"></translation>
+        <translation>побитовое логическое ИЛИ для значений %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="568"/>
         <source>bitwise logical XOR.</source>
-        <translation type="unfinished"></translation>
+        <translation>побитовое логическое ИСКЛЮЧАЮЩЕЕ ИЛИ.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="569"/>
@@ -884,7 +884,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="571"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="572"/>
         <source>bitwise logical XOR on %1 values.</source>
-        <translation type="unfinished"></translation>
+        <translation>побитовое логическое ИСКЛЮЧАЮЩЕЕ ИЛИ для значений %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="574"/>
@@ -929,7 +929,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="597"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="598"/>
         <source>shift %1 arithmetic left.</source>
-        <translation type="unfinished"></translation>
+        <translation>арифметический сдвиг влево %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="599"/>
@@ -938,7 +938,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="602"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="603"/>
         <source>shift %1 arithmetic right.</source>
-        <translation type="unfinished"></translation>
+        <translation>арифметический сдвиг вправо %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="604"/>
@@ -947,7 +947,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="607"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="608"/>
         <source>shift %1 logical left.</source>
-        <translation type="unfinished"></translation>
+        <translation>логический сдвиг влево %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="609"/>
@@ -956,7 +956,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="612"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="613"/>
         <source>shift %1 logical right.</source>
-        <translation type="unfinished"></translation>
+        <translation>логический сдвиг вправо %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="614"/>
@@ -1080,38 +1080,38 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="682"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="683"/>
         <source>set byte %1</source>
-        <translation type="unfinished"></translation>
+        <translation>установить байт %1</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="650"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="702"/>
         <source>if equal.</source>
-        <translation type="unfinished"></translation>
+        <translation>если равно.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="662"/>
         <source>if less(siged &lt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если меньше (знак &lt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="663"/>
         <source>if not greater or equal(siged &lt;).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не больше или равно(знак &lt;).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="664"/>
         <source>if less or equal(siged &lt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если меньше или равно(знак &lt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="665"/>
         <source>if not greater(siged &lt;=).</source>
-        <translation type="unfinished"></translation>
+        <translation>если не больше (знак &lt;=).</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="685"/>
         <source>logical compare.</source>
-        <translation type="unfinished"></translation>
+        <translation>логическое сравнение.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="686"/>
@@ -1119,7 +1119,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="688"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="689"/>
         <source>logical compare %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>логическое сравнение %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="692"/>
@@ -1160,7 +1160,7 @@
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="701"/>
         <source>jump.</source>
-        <translation type="unfinished"></translation>
+        <translation>безусловный переход.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="702"/>
@@ -1196,7 +1196,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="736"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="737"/>
         <source>jump %1</source>
-        <translation type="unfinished"></translation>
+        <translation>переход %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="729"/>
@@ -4285,28 +4285,28 @@
     <message>
         <location filename="qsynedit/document.cpp" line="592"/>
         <source>Can&apos;t open file &apos;%1&apos; for read!</source>
-        <translation type="unfinished"></translation>
+        <translation>Невозможно открыть файл &apos;%1&apos; для чтения!</translation>
     </message>
     <message>
         <location filename="qsynedit/document.cpp" line="630"/>
         <location filename="qsynedit/document.cpp" line="756"/>
         <source>Can&apos;t load codec &apos;%1&apos;!</source>
-        <translation type="unfinished"></translation>
+        <translation>Невозможно загрузить кодек &apos;%1&apos;!</translation>
     </message>
     <message>
         <location filename="qsynedit/document.cpp" line="649"/>
         <source>&apos;%1&apos; is a binaray File!</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos; это двоичный файл!</translation>
     </message>
     <message>
         <location filename="qsynedit/document.cpp" line="759"/>
         <source>Can&apos;t open file &apos;%1&apos; for save!</source>
-        <translation type="unfinished"></translation>
+        <translation>Невозможно открыть файл &apos;%1&apos; для сохранения!</translation>
     </message>
     <message>
         <location filename="qsynedit/document.cpp" line="782"/>
         <source>Data not correctly writed to file &apos;%1&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Запись данных в файл &apos;%1&apos; произведена некорректно.</translation>
     </message>
 </context>
 </TS>
