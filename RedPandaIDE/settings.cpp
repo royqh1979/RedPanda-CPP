@@ -2308,7 +2308,7 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
         mDumpMachine = "i386-pc-mingw32";
     }
     mTarget = mDumpMachine.mid(0, mDumpMachine.indexOf('-'));
-    QByteArray version = getCompilerOutput(binDir, c_prog, {"-dumpversion"});
+    QByteArray version = getCompilerOutput(binDir, c_prog, {"-dumpfullversion"});
     mVersion = QString(version).trimmed();
 
     // Obtain compiler distro
@@ -2752,18 +2752,18 @@ void Settings::CompilerSet::setSDCCDirectories(const QString& binDir)
 }
 #endif
 
-int Settings::CompilerSet::mainVersion() const
-{
-    int i = mVersion.indexOf('.');
-    if (i<0)
-        return -1;
-    bool ok;
-    int num = mVersion.left(i).toInt(&ok);
-    if (!ok)
-        return -1;
-    return num;
+// int Settings::CompilerSet::mainVersion() const
+// {
+//     int i = mVersion.indexOf('.');
+//     if (i<0)
+//         return -1;
+//     bool ok;
+//     int num = mVersion.left(i).toInt(&ok);
+//     if (!ok)
+//         return -1;
+//     return num;
 
-}
+// }
 
 bool Settings::CompilerSet::canCompileC() const
 {

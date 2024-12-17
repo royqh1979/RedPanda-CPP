@@ -1375,7 +1375,7 @@ public:
 
         QString getCompileOptionValue(const QString& key) const;
 
-        int mainVersion() const;
+        // int mainVersion() const;
         QString findProgramInBinDirs(const QString name) const;
 
         bool canCompileC() const;
