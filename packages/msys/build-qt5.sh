@@ -282,16 +282,17 @@ nsis_flags=(
   -DREQUIRED_WINDOWS_NAME="Windows 7"
   -DUSE_MODERN_FONT
 )
+
 if [[ ${COMPILER_MINGW32} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW32)
   if [[ ! -d "mingw32" ]]; then
-	cp -a --dereference "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" "${PACKAGE_DIR}"
+	mklink /j "${PACKAGE_DIR}" "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" 
   fi 
 fi
 if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW64)
   if [[ ! -d "mingw64" ]]; then  
-	cp -a --dereference "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" "${PACKAGE_DIR}"
+	mklink /j "${PACKAGE_DIR}" "${SOURCE_DIR}/assets/${MINGW64_FOLDER}"
   fi
 fi
 "${NSIS}" "${nsis_flags[@]}" redpanda.nsi
