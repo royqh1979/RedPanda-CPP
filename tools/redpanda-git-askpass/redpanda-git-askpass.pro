@@ -25,10 +25,10 @@ isEmpty(PREFIX) {
     PREFIX = /usr/local
 }
 isEmpty(LIBEXECDIR) {
-    LIBEXECDIR = $${PREFIX}/libexec
+    LIBEXECDIR = libexec
 }
 
 # Default rules for deployment.
-qnx: target.path = $${LIBEXECDIR}/$${APP_NAME}
-else: unix:!android: target.path = $${LIBEXECDIR}/$${APP_NAME}
+qnx: target.path = $${PREFIX}/$${LIBEXECDIR}/$${APP_NAME}
+else: unix:!android: target.path = $${PREFIX}/$${LIBEXECDIR}/$${APP_NAME}
 !isEmpty(target.path): INSTALLS += target

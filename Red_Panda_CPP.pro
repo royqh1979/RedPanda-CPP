@@ -43,7 +43,7 @@ unix:!macos: {
         PREFIX = /usr/local
     }
     isEmpty(LIBEXECDIR) {
-        LIBEXECDIR = $${PREFIX}/libexec
+        LIBEXECDIR = libexec
     }
 
     QMAKE_SUBSTITUTES += platform/linux/RedPandaIDE.desktop.in

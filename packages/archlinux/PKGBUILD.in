@@ -31,7 +31,7 @@ build() {
     cd redpanda-build
     qmake6 \
         PREFIX='/usr' \
-        LIBEXECDIR='/usr/lib' \
+        LIBEXECDIR='lib' \
         "$srcdir/$_pkgname/Red_Panda_CPP.pro"
     make
 }

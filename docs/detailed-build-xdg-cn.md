@@ -23,14 +23,17 @@
    ```
 
 qmake 变量:
-- `PREFIX`：默认值是 `/usr/local`。打包时应该定义为 `/usr`。
-- `LIBEXECDIR`：辅助程序的路径，默认值是 `$PREFIX/libexec`。Arch Linux 使用 `/usr/lib`。
+- `PREFIX`：`$MAKE install` 的安装路径。
+  - 小熊猫C++ 内部使用相对路径，不受影响。
+  - `.desktop` 文件受影响。
+- `LIBEXECDIR`：辅助程序的路径，**相对于 `PREFIX`**。
+  - Arch Linux 使用 `lib`。
 
 ### 基于 xmake 构建
 
 1. 配置：
    ```bash
-   xmake f -p linux -a x86_64 -m release --qt=/usr --prefix=/usr/local
+   xmake f -p linux -a x86_64 -m release --qt=/usr
    ```
 2. 构建：
    ```bash
@@ -38,7 +41,7 @@ qmake 变量:
    ```
 3. 安装：
    ```bash
-   sudo xmake install --root -o /  # -o ... 模拟了 make install 的 DESTDIR=...
+   sudo xmake install --root -o /usr/local
    ```
 
 提示：`xmake f --help` 可以查看更多选项。
