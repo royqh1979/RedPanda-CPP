@@ -32,4 +32,5 @@ HEADERS += qt_utils/utils.h \
 	qt_utils/charsetinfo.h
 
 TRANSLATIONS += \
-    qt_utils_zh_CN.ts
+    qt_utils_zh_CN.ts \
+    qt_utils_ru_RU.ts

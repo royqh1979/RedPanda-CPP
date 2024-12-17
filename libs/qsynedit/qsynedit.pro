@@ -87,4 +87,5 @@ HEADERS += \
 INCLUDEPATH += ../redpanda_qt_utils
 
 TRANSLATIONS += \
-    qsynedit_zh_CN.ts
+    qsynedit_zh_CN.ts \
+    qsynedit_ru_RU.ts
