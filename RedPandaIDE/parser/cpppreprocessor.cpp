@@ -391,7 +391,8 @@ void CppPreprocessor::handleInclude(const QString &line, bool fromNext)
         return;
     QString s=line.mid(i);
     QSet<QString> usedMacros;
-    s = expandMacros(s, usedMacros);
+    if (!s.startsWith('<') && !s.startsWith('\"'))
+        s = expandMacros(s, usedMacros);
 
     fileName = getHeaderFilename(
                 file->fileName,
