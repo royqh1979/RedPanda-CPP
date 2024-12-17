@@ -2309,10 +2309,10 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
     }
     mTarget = mDumpMachine.mid(0, mDumpMachine.indexOf('-'));
     QByteArray version = getCompilerOutput(binDir, c_prog, {"-dumpversion"}).trimmed();
-    QRegularExpression versionPattern = QRegularExpression("^[\\d]+\\.[\\d]+.*$");
-    if (auto m = versionPattern.match(version); !m.hasMatch()) {
-        version = getCompilerOutput(binDir, c_prog, {"-dumpfullversion"}).trimmed();
-    }
+    // QRegularExpression versionPattern = QRegularExpression("^[\\d]+\\.[\\d]+.*$");
+    // if (auto m = versionPattern.match(version); !m.hasMatch()) {
+    //     version = getCompilerOutput(binDir, c_prog, {"-dumpfullversion"}).trimmed();
+    // }
     mVersion = QString(version).trimmed();
 
     // Obtain compiler distro
