@@ -127,29 +127,14 @@ ASSETS_DIR="${SOURCE_DIR}/assets"
 _7Z="/mingw64/bin/7z"
 MINGW32_FOLDER="mingw32"
 MINGW32_ARCHIVE="mingw32.7z"
-MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC 11.5"
-MINGW32_PACKAGE_SUFFIX="MinGW32_11.5"
 
 MINGW64_FOLDER="mingw64"
 MINGW64_ARCHIVE="mingw64.7z"
-MINGW64_COMPILER_NAME="MinGW-w64 X86_64 GCC 11.4"
-MINGW64_PACKAGE_SUFFIX="MinGW64_11.4"
 COMPILER_MINGW32=0
 COMPILER_MINGW64=0 
 CMAKE="/mingw64/bin/cmake"
 CMAKE_MAKE_PROGRAM="${MAKE}"
 CMAKE_CXX_COMPILER="${MINGW_DIR}/bin/g++.exe"
-if [[ INTEGRATE_MINGW -eq 0 ]]; then
-  PACKAGE_BASENAME="${PACKAGE_BASENAME}.NoCompiler"
-else
-  if [[ "${MSYSTEM}" == "MINGW32" ]]; then
-    COMPILER_MINGW32=1
-    PACKAGE_BASENAME="${PACKAGE_BASENAME}.${MINGW32_PACKAGE_SUFFIX}"
-  else
-    COMPILER_MINGW64=1
-    PACKAGE_BASENAME="${PACKAGE_BASENAME}.${MINGW64_PACKAGE_SUFFIX}"
-  fi
-fi
 
 function fn_print_progress() {
   echo -e "\e[1;32;44m$1\e[0m"
@@ -286,13 +271,13 @@ nsis_flags=(
 if [[ ${COMPILER_MINGW32} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW32)
   if [[ ! -d "mingw32" ]]; then
-	mklink /j "${PACKAGE_DIR}" "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" 
+	cp -a --dereference "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" "${PACKAGE_DIR}"
   fi 
 fi
 if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW64)
   if [[ ! -d "mingw64" ]]; then  
-	mklink /j "${PACKAGE_DIR}" "${SOURCE_DIR}/assets/${MINGW64_FOLDER}"
+	cp -a --dereference "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" "${PACKAGE_DIR}"
   fi
 fi
 "${NSIS}" "${nsis_flags[@]}" redpanda.nsi
