@@ -173,13 +173,37 @@ if [[ ${CHECK_DEPS} -eq 1 ]]; then
   done
 fi
 
-if [[ ${COMPILER_MINGW32} -eq 1 && ! -f "${ASSETS_DIR}/${MINGW32_ARCHIVE}" && ! -d "${ASSETS_DIR}/${MINGW32_FOLDER}" ]]; then
-  echo "Missing MinGW archive: ${ASSETS_DIR}/${MINGW32_ARCHIVE} or MinGW folder: ${ASSETS_DIR}/${MINGW32_FOLDER}"
+if [[ ${COMPILER_MINGW32} -eq 1 && ! -d "${ASSETS_DIR}/${MINGW32_FOLDER}" ]]; then
+  echo "Missing integrated MinGW folder: ${ASSETS_DIR}/${MINGW32_FOLDER}"
   exit 1
 fi
-if [[ ${COMPILER_MINGW64} -eq 1 && ! -f "${ASSETS_DIR}/${MINGW64_ARCHIVE}" && ! -d "${ASSETS_DIR}/${MINGW64_FOLDER}" ]]; then
-  echo "Missing MinGW archive: ${ASSETS_DIR}/${MINGW64_ARCHIVE} or MinGW folder: ${ASSETS_DIR}/${MINGW64_FOLDER}"
+if [[ ${COMPILER_MINGW64} -eq 1 && ! -d "${ASSETS_DIR}/${MINGW64_FOLDER}" ]]; then
+  echo "Missing integrated MinGW folder: ${ASSETS_DIR}/${MINGW64_FOLDER}"
   exit 1
+fi
+
+GCC_VERSION=""
+if [[ ${COMPILER_MINGW32} -eq 1 && ! -d "${ASSETS_DIR}/${MINGW32_FOLDER}" ]]; then
+  GCC_VERSION=$( "${ASSETS_DIR}/${MINGW32_FOLDER}/bin/gcc" "-dumpversion" )
+else
+  GCC_VERSION=$( "${ASSETS_DIR}/${MINGW64_FOLDER}/bin/gcc" "-dumpversion")
+fi
+
+MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC ${GCC_VERSION}"
+MINGW32_PACKAGE_SUFFIX="MinGW32_${GCC_VERSION}"
+
+MINGW64_COMPILER_NAME="MinGW-w64 X86_64 GCC ${GCC_VERSION}"
+MINGW64_PACKAGE_SUFFIX="MinGW64_${GCC_VERSION}"
+if [[ INTEGRATE_MINGW -eq 0 ]]; then
+  PACKAGE_BASENAME="${PACKAGE_BASENAME}.NoCompiler"
+else
+  if [[ "${MSYSTEM}" == "MINGW32" ]]; then
+    COMPILER_MINGW32=1
+    PACKAGE_BASENAME="${PACKAGE_BASENAME}.${MINGW32_PACKAGE_SUFFIX}"
+  else
+    COMPILER_MINGW64=1
+    PACKAGE_BASENAME="${PACKAGE_BASENAME}.${MINGW64_PACKAGE_SUFFIX}"
+  fi
 fi
 
 ## prepare dirs
@@ -261,15 +285,13 @@ nsis_flags=(
 if [[ ${COMPILER_MINGW32} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW32)
   if [[ ! -d "mingw32" ]]; then
-	[[ -f "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" ]] && "${_7Z}" x "${SOURCE_DIR}/assets/${MINGW32_ARCHIVE}" -o"${PACKAGE_DIR}"
-	[[ -d "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" ]] && cp -a --dereference "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" "${PACKAGE_DIR}"
+	cp -a --dereference "${SOURCE_DIR}/assets/${MINGW32_FOLDER}" "${PACKAGE_DIR}"
   fi 
 fi
 if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW64)
   if [[ ! -d "mingw64" ]]; then  
-	[[ -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" ]] && "${_7Z}" x "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
-	[[ -d "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" ]] && cp -a --dereference "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" "${PACKAGE_DIR}"
+	cp -a --dereference "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" "${PACKAGE_DIR}"
   fi
 fi
 "${NSIS}" "${nsis_flags[@]}" redpanda.nsi
