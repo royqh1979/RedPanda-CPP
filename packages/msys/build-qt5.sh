@@ -169,9 +169,9 @@ fi
 
 GCC_VERSION=""
 if [[ ${COMPILER_MINGW32} -eq 1 && ! -d "${ASSETS_DIR}/${MINGW32_FOLDER}" ]]; then
-  GCC_VERSION=$( "${ASSETS_DIR}/${MINGW32_FOLDER}/bin/gcc" "-dumpversion" )
+  GCC_VERSION=$( "${ASSETS_DIR}/${MINGW32_FOLDER}/bin/gcc" "-dumpfullversion" )
 else
-  GCC_VERSION=$( "${ASSETS_DIR}/${MINGW64_FOLDER}/bin/gcc" "-dumpversion")
+  GCC_VERSION=$( "${ASSETS_DIR}/${MINGW64_FOLDER}/bin/gcc" "-dumpfullversion")
 fi
 
 MINGW32_COMPILER_NAME="MinGW-w64 i686 GCC ${GCC_VERSION}"
