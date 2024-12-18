@@ -28,7 +28,7 @@ jobs:
       - name: Build
         run: |
           name="redpanda-cpp-${{ matrix.lua_addon }}-${{ matrix.sdcc }}"
-          xmake f --qt=/usr --prefix=/ --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }}
+          xmake f --qt=/usr --lua-addon=${{ matrix.lua_addon }} --sdcc=${{ matrix.sdcc }}
           xmake b
           xmake i -o "pkg/$name"
           tar -cf "pkg/$name.tar" -C pkg "$name"
