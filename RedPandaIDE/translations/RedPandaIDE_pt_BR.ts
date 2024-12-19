@@ -9343,7 +9343,7 @@
     </message>
     <message>
         <location line="+33"/>
-        <source>Stack Size</source>
+        <source>PE Stack Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

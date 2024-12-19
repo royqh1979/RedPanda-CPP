@@ -225,9 +225,7 @@ void CompilerInfo::prepareCompilerOptions()
 
     // Linker
     groupName = QObject::tr("Linker");
-#ifdef Q_OS_WIN
-    addNumberOption(LINK_CMD_OPT_STACK_SIZE, QObject::tr("Stack Size"), groupName, false, false, true, "-Wl,--stack,","MB",1024*1024,12,0,99999);
-#endif
+    addNumberOption(LINK_CMD_OPT_STACK_SIZE, QObject::tr("PE Stack Size"), groupName, false, false, true, "-Wl,--stack,","MB",1024*1024,0,0,99999);
 
     addOption(CC_CMD_OPT_USE_PIPE, QObject::tr("Use pipes instead of temporary files during compilation (-pipe)"), groupName, true, true, false, "-pipe");
     //addOption(LINK_CMD_OPT_LINK_OBJC, QObject::tr("Link an Objective C program (-lobjc)"), groupName, false, false, true, "-lobjc");
