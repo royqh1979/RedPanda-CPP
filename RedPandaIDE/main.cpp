@@ -461,6 +461,9 @@ int main(int argc, char *argv[])
         WindowLogoutEventFilter filter;
         app.installNativeEventFilter(&filter);
 #endif
+        //Event filter to prevent QCombobox receive wheel event;
+        app.installEventFilter(pMainWindow);
+
         if (lockFile.isLocked()) {
             lockFile.unlock();
         }

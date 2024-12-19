@@ -11,8 +11,9 @@ Red Panda C++ Version 3.3
   - fix: Can't show definitions in iconv.h in the completion list.
   - fix: Color scheme's "Indent Guide Line" item is not used by the editor.
   - fix: "Indent Guide Line" item doesn't show in the option / editor / color scheme page.
-  - fix: Remove not used option "indent guide line" in the option / editor / general page . 
-
+  - fix: Remove not used option "indent guide line" in the option / editor / general page. 
+  - change: Prevent mouse wheel change combobox's current selection.
+  
 Red Panda C++ Version 3.2
 
   - change: The way to calcuate astyle path.

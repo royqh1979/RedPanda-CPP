@@ -5844,6 +5844,17 @@ bool MainWindow::event(QEvent *event)
     return QMainWindow::event(event);
 }
 
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    //Prevent QComboBox wheel event
+    if (event->type() == QEvent::Wheel) {
+        QComboBox *p=qobject_cast<QComboBox*>(watched);
+        if (p && !(p->view() && p->view()->isVisible()))
+            return true;
+    }
+    return false;
+}
+
 //void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 //{
 //    if (event->mimeData()->hasUrls()){
