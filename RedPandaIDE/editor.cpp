@@ -5489,6 +5489,8 @@ void Editor::applyColorScheme(const QString& schemeName)
                     pSettings->editor().rainbowParenthesis()
                     && syntaxer()->supportBraceLevel());
     setOptions(options);
+    codeFolding().rainbowIndentGuides = pSettings->editor().rainbowIndentGuides();
+    codeFolding().rainbowIndents = pSettings->editor().rainbowIndents();
     syntaxerManager.applyColorScheme(syntaxer(),schemeName);
     if (pSettings->editor().rainbowParenthesis()) {
         QSynedit::PTokenAttribute attr0 =createRainbowAttribute(SYNS_AttrSymbol,

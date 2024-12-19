@@ -341,6 +341,8 @@ void EditorColorSchemeWidget::doSave()
         }
         pSettings->editor().setColorScheme(ui->cbScheme->currentText());
         pSettings->editor().setRainbowParenthesis(ui->chkRainborParenthesis->isChecked());
+        pSettings->editor().setRainbowIndentGuides(ui->chkRainbowIndentGuides->isChecked());
+        pSettings->editor().setRainbowIndents(ui->chkRainbowIndents->isChecked());
         pSettings->editor().save();
         pMainWindow->updateEditorColorSchemes();
     } catch (FileError e) {
