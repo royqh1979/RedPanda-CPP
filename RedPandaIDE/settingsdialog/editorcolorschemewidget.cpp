@@ -329,6 +329,8 @@ void EditorColorSchemeWidget::doLoad()
     ui->cbScheme->setCurrentText(pSettings->editor().colorScheme());
     changeSchemeComboFont();
     ui->chkRainborParenthesis->setChecked(pSettings->editor().rainbowParenthesis());
+    ui->chkRainbowIndentGuides->setChecked(pSettings->editor().rainbowIndentGuides());
+    ui->chkRainbowIndents->setChecked(pSettings->editor().rainbowIndents());
 }
 
 void EditorColorSchemeWidget::doSave()

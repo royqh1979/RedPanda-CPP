@@ -395,6 +395,12 @@ public:
         bool copyHTMLRecalcLineNumber() const;
         void setCopyHTMLRecalcLineNumber(bool newCopyHTMLRecalcLineNumber);
 
+        bool rainbowIndentGuides() const;
+        void setRainbowIndentGuides(bool newIndentLineUsingRainbowColor);
+
+        bool rainbowIndents() const;
+        void setRainbowIndents(bool newFillIndentsUsingRainbowColor);
+
     private:
         //General
         // indents
@@ -402,7 +408,9 @@ public:
         bool mTabToSpaces;
         int mTabWidth;
         bool mShowIndentLines;
-        bool mfillIndents;
+        bool mFillIndents;
+        bool mRainbowIndentGuides;
+        bool mRainbowIndents;
         // caret
         bool mEnhanceHomeKey;
         bool mEnhanceEndKey;
@@ -523,6 +531,8 @@ public:
         bool mShowFunctionTips;
 
         // _Base interface
+        Q_PROPERTY(bool rainbowIndents READ rainbowIndents WRITE setRainbowIndents NOTIFY fillIndentsUsingRainbowColorChanged)
+
     protected:
         void doSave() override;
         void doLoad() override;

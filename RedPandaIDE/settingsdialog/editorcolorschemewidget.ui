@@ -344,10 +344,30 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="chkRainborParenthesis">
-     <property name="text">
-      <string>Rainbow parenthesis</string>
-     </property>
+    <widget class="QWidget" name="widget_6" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QCheckBox" name="chkRainborParenthesis">
+        <property name="text">
+         <string>Rainbow parenthesis</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkRainbowIndentGuides">
+        <property name="text">
+         <string>Rainbow Indent Guides</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkRainbowIndents">
+        <property name="text">
+         <string>Rainbow Indents</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>
@@ -411,7 +431,6 @@
   <tabstop>cbItalic</tabstop>
   <tabstop>cbStrikeout</tabstop>
   <tabstop>cbUnderlined</tabstop>
-  <tabstop>chkRainborParenthesis</tabstop>
  </tabstops>
  <resources/>
  <connections/>

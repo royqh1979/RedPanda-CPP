@@ -21,11 +21,13 @@
 namespace QSynedit {
 
 CodeFoldingOptions::CodeFoldingOptions():
-    indentGuides(true),
-    fillIndents(false),
-    showCollapsedLine(true),
-    collapsedLineColor(QColor("black")),
-    folderBarLinesColor(QColor("black")),
+    indentGuides{true},
+    fillIndents{false},
+    rainbowIndentGuides{true},
+    rainbowIndents{true},
+    showCollapsedLine{true},
+    collapsedLineColor{"black"},
+    folderBarLinesColor{"black"},
     indentGuidesColor("gray")
 {
 

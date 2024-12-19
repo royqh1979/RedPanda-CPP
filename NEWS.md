@@ -13,6 +13,7 @@ Red Panda C++ Version 3.3
   - fix: "Indent Guide Line" item doesn't show in the option / editor / color scheme page.
   - fix: Remove not used option "indent guide line" in the option / editor / general page. 
   - change: Prevent mouse wheel change combobox's current selection.
+  - enhancement: Add "Rainbow indents"/"Rainbow indent guides" options in the option / editor / color scheme page.
   
 Red Panda C++ Version 3.2
 

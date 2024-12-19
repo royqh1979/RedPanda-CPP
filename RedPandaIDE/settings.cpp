@@ -631,12 +631,12 @@ void Settings::Editor::setShowFunctionTips(bool newShowFunctionTips)
 
 bool Settings::Editor::fillIndents() const
 {
-    return mfillIndents;
+    return mFillIndents;
 }
 
 void Settings::Editor::setFillIndents(bool newFillIndents)
 {
-    mfillIndents = newFillIndents;
+    mFillIndents = newFillIndents;
 }
 
 int Settings::Editor::mouseWheelScrollSpeed() const
@@ -812,6 +812,26 @@ bool Settings::Editor::copyHTMLRecalcLineNumber() const
 void Settings::Editor::setCopyHTMLRecalcLineNumber(bool newCopyHTMLRecalcLineNumber)
 {
     mCopyHTMLRecalcLineNumber = newCopyHTMLRecalcLineNumber;
+}
+
+bool Settings::Editor::rainbowIndents() const
+{
+    return mRainbowIndents;
+}
+
+void Settings::Editor::setRainbowIndents(bool newFillIndentsUsingRainbowColor)
+{
+    mRainbowIndents = newFillIndentsUsingRainbowColor;
+}
+
+bool Settings::Editor::rainbowIndentGuides() const
+{
+    return mRainbowIndentGuides;
+}
+
+void Settings::Editor::setRainbowIndentGuides(bool newIndentLineUsingRainbowColor)
+{
+    mRainbowIndentGuides = newIndentLineUsingRainbowColor;
 }
 
 bool Settings::Editor::copyHTMLWithLineNumber() const
@@ -1277,7 +1297,10 @@ void Settings::Editor::doSave()
     saveValue("tab_to_spaces", mTabToSpaces);
     saveValue("tab_width", mTabWidth);
     saveValue("show_indent_lines", mShowIndentLines);
-    saveValue("fill_indents",mfillIndents);
+    saveValue("fill_indents",mFillIndents);
+    saveValue("rainbow_indent_guides",mRainbowIndentGuides);
+    saveValue("rainbow_indents",mRainbowIndents);
+
 
     // caret
     saveValue("enhance_home_key",mEnhanceHomeKey);
@@ -1406,7 +1429,10 @@ void Settings::Editor::doLoad()
     mTabToSpaces = boolValue("tab_to_spaces",false);
     mTabWidth = intValue("tab_width",4);
     mShowIndentLines = boolValue("show_indent_lines",true);
-    mfillIndents = boolValue("fill_indents", false);
+    mFillIndents = boolValue("fill_indents", false);
+    mRainbowIndentGuides = boolValue("rainbow_indent_guides", true);
+    mRainbowIndents = boolValue("rainbow_indents", true);
+
     // caret
     mEnhanceHomeKey = boolValue("enhance_home_key", true);
     mEnhanceEndKey = boolValue("enhance_end_key",true);

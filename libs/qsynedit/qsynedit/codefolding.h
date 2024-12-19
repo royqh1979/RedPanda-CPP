@@ -25,6 +25,8 @@ namespace QSynedit {
 struct CodeFoldingOptions {
       bool indentGuides;
       bool fillIndents;
+      bool rainbowIndentGuides;
+      bool rainbowIndents;
       bool showCollapsedLine;
       QColor collapsedLineColor;
       QColor folderBarLinesColor;

@@ -5394,6 +5394,8 @@ void Editor::applySettings()
 
     codeFolding().indentGuides = pSettings->editor().showIndentLines();
     codeFolding().fillIndents = pSettings->editor().fillIndents();
+    codeFolding().rainbowIndentGuides = pSettings->editor().rainbowIndentGuides();
+    codeFolding().rainbowIndents = pSettings->editor().rainbowIndents();
 
     QFont f=QFont();
     f.setFamily(pSettings->editor().fontName());

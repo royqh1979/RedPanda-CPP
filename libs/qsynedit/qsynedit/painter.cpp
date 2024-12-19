@@ -862,14 +862,14 @@ void QSynEditPainter::paintFoldAttributes()
                 X = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                 tabSteps+=mEdit->tabSize();
                 indentLevel++ ;
-//                if (mEdit->mCodeFolding.indentGuides) {
-//                    PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
-//                    getBraceColorAttr(indentLevel,attr);
-//                    paintColor = attr->foreground();
-//                }
-                if (mEdit->mCodeFolding.fillIndents) {
+                if (mEdit->mCodeFolding.rainbowIndentGuides) {
                     PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
-                    getBraceColorAttr(indentLevel,attr);
+                    getRainbowColorAttr(indentLevel,attr);
+                    paintColor = attr->foreground();
+                }
+                if (mEdit->mCodeFolding.rainbowIndents) {
+                    PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
+                    getRainbowColorAttr(indentLevel,attr);
                     gradientStart=attr->foreground();
                     attr = mEdit->mSyntaxer->symbolAttribute();
                     getBraceColorAttr(indentLevel+1,attr);
@@ -920,10 +920,8 @@ void QSynEditPainter::paintFoldAttributes()
 
 }
 
-void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
+void QSynEditPainter::getRainbowColorAttr(int level, PTokenAttribute &attr)
 {
-    if (!mEdit->mOptions.testFlag(EditorOption::ShowRainbowColor))
-        return;
     if (attr->tokenType() != TokenType::Operator)
         return;
     PTokenAttribute oldAttr = attr;
@@ -943,6 +941,13 @@ void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
     }
     if (!attr)
         attr = oldAttr;
+}
+
+void QSynEditPainter::getBraceColorAttr(int level, PTokenAttribute &attr)
+{
+    if (!mEdit->mOptions.testFlag(EditorOption::ShowRainbowColor))
+        return;
+    return getRainbowColorAttr(level, attr);
 }
 
 void QSynEditPainter::paintLines()

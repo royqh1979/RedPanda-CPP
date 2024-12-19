@@ -104,6 +104,7 @@ private:
             );
 
     void paintFoldAttributes();
+    void getRainbowColorAttr(int level, PTokenAttribute &attr);
     void getBraceColorAttr(int level, PTokenAttribute &attr);
     void paintLines();
 
