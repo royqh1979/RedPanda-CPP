@@ -41,7 +41,6 @@ protected:
     void doSave() override;
 private slots:
     void on_chkCaretUseTextColor_stateChanged(int arg1);
-    void on_chkShowIndentLines_stateChanged(int arg1);
 };
 
 #endif // EDITORGENERALWIDGET_H

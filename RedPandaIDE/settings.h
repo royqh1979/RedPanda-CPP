@@ -135,9 +135,6 @@ public:
         bool showIndentLines() const;
         void setShowIndentLines(bool showIndentLines);
 
-        QColor indentLineColor() const;
-        void setIndentLineColor(const QColor &indentLineColor);
-
         bool enhanceHomeKey() const;
         void setEnhanceHomeKey(bool enhanceHomeKey);
 
@@ -405,7 +402,6 @@ public:
         bool mTabToSpaces;
         int mTabWidth;
         bool mShowIndentLines;
-        QColor mIndentLineColor;
         bool mfillIndents;
         // caret
         bool mEnhanceHomeKey;

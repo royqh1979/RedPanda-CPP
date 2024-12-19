@@ -1277,7 +1277,6 @@ void Settings::Editor::doSave()
     saveValue("tab_to_spaces", mTabToSpaces);
     saveValue("tab_width", mTabWidth);
     saveValue("show_indent_lines", mShowIndentLines);
-    saveValue("indent_line_color",mIndentLineColor);
     saveValue("fill_indents",mfillIndents);
 
     // caret
@@ -1407,7 +1406,6 @@ void Settings::Editor::doLoad()
     mTabToSpaces = boolValue("tab_to_spaces",false);
     mTabWidth = intValue("tab_width",4);
     mShowIndentLines = boolValue("show_indent_lines",true);
-    mIndentLineColor = colorValue("indent_line_color",Qt::lightGray);
     mfillIndents = boolValue("fill_indents", false);
     // caret
     mEnhanceHomeKey = boolValue("enhance_home_key", true);
@@ -1598,16 +1596,6 @@ bool Settings::Editor::enhanceHomeKey() const
 void Settings::Editor::setEnhanceHomeKey(bool enhanceHomeKey)
 {
     mEnhanceHomeKey = enhanceHomeKey;
-}
-
-QColor Settings::Editor::indentLineColor() const
-{
-    return mIndentLineColor;
-}
-
-void Settings::Editor::setIndentLineColor(const QColor &indentLineColor)
-{
-    mIndentLineColor = indentLineColor;
 }
 
 bool Settings::Editor::showIndentLines() const

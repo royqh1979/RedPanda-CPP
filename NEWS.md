@@ -7,8 +7,11 @@ Red Panda C++ Version 3.3
   - enhancement: support literal operators.
   - enhancement: Auto detect windows OEM code page in options / compiler / compiler set auto convert encoding option combobox.
   - enhancement: Show oem codpages in compiler setting's encoding combobox.
-  - enhancement: niXman version MinGW GCC 14.2 compatibility
+  - enhancement: niXman version MinGW GCC 14.2 compatibility.
   - fix: Can't show definitions in iconv.h in the completion list.
+  - fix: Color scheme's "Indent Guide Line" item is not used by the editor.
+  - fix: "Indent Guide Line" item doesn't show in the option / editor / color scheme page.
+  - fix: Remove not used option "indent guide line" in the option / editor / general page . 
 
 Red Panda C++ Version 3.2
 

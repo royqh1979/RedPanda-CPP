@@ -382,7 +382,7 @@
 <context>
     <name>CompetitiveCompanionThread</name>
     <message>
-        <location filename="../problems/competitivecompenionhandler.cpp" line="+131"/>
+        <location filename="../problems/competitivecompenionhandler.cpp" line="+132"/>
         <source>Problem Case %1</source>
         <translation>試題案例%1</translation>
     </message>
@@ -1307,12 +1307,12 @@
         <translation>輸入當前中斷點的生效條件:</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+259"/>
         <source>Readonly</source>
         <translation>只讀</translation>
     </message>
     <message>
-        <location line="-5457"/>
+        <location line="-5456"/>
         <location line="+505"/>
         <source>Error Load File</source>
         <translation>載入檔案錯誤</translation>
@@ -8031,7 +8031,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+4050"/>
+        <location filename="../settings.cpp" line="+4040"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-403"/>
         <location line="+63"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8234,11 +8234,12 @@
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
+        <location line="+5"/>
         <source>Editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-41"/>
         <source>Gutter Active Line</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8260,6 +8261,11 @@
     <message>
         <location line="+5"/>
         <source>Fold Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Indent Guide Line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8593,7 +8599,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="-269"/>
+        <location filename="../colorscheme.cpp" line="-274"/>
         <source>Reserve Word for Types</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10334,12 +10340,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
-        <source>Indent Line Color</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+33"/>
+        <location line="+7"/>
         <source>Fill Indents</source>
         <translation type="unfinished"></translation>
     </message>

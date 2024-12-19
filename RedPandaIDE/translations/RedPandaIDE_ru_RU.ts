@@ -378,7 +378,7 @@
 <context>
     <name>CompetitiveCompanionThread</name>
     <message>
-        <location filename="../problems/competitivecompenionhandler.cpp" line="131"/>
+        <location filename="../problems/competitivecompenionhandler.cpp" line="132"/>
         <source>Problem Case %1</source>
         <translation>Проблемный случай %1</translation>
     </message>
@@ -1319,7 +1319,7 @@
         <translation>Введите условие для точки останова:</translation>
     </message>
     <message>
-        <location filename="../editor.cpp" line="5584"/>
+        <location filename="../editor.cpp" line="5583"/>
         <source>Readonly</source>
         <translation>Только чтение</translation>
     </message>
@@ -7996,7 +7996,7 @@
         <location filename="../autolinkmanager.cpp" line="54"/>
         <location filename="../autolinkmanager.cpp" line="70"/>
         <location filename="../autolinkmanager.cpp" line="91"/>
-        <location filename="../settings.cpp" line="4050"/>
+        <location filename="../settings.cpp" line="4040"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="167"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="230"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8204,6 +8204,7 @@
         <location filename="../colorscheme.cpp" line="569"/>
         <location filename="../colorscheme.cpp" line="574"/>
         <location filename="../colorscheme.cpp" line="579"/>
+        <location filename="../colorscheme.cpp" line="584"/>
         <source>Editor</source>
         <translation>Редактор</translation>
     </message>
@@ -8234,50 +8235,55 @@
     </message>
     <message>
         <location filename="../colorscheme.cpp" line="568"/>
+        <source>Indent Guide Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../colorscheme.cpp" line="573"/>
         <source>Selection</source>
         <translation>Выделение</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="573"/>
+        <location filename="../colorscheme.cpp" line="578"/>
         <source>Editor Text</source>
         <translation>Текст редактора</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="578"/>
+        <location filename="../colorscheme.cpp" line="583"/>
         <source>Current Highlighted Word</source>
         <translation>Текущее подсвеченное слово</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="584"/>
+        <location filename="../colorscheme.cpp" line="589"/>
         <location filename="../main.cpp" line="235"/>
         <location filename="../main.cpp" line="242"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="585"/>
-        <location filename="../colorscheme.cpp" line="589"/>
+        <location filename="../colorscheme.cpp" line="590"/>
+        <location filename="../colorscheme.cpp" line="594"/>
         <source>Syntax Check</source>
         <translation>Проверка синтаксиса</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="588"/>
+        <location filename="../colorscheme.cpp" line="593"/>
         <source>Warning</source>
         <translation>Предупреждение</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="609"/>
-        <location filename="../colorscheme.cpp" line="615"/>
+        <location filename="../colorscheme.cpp" line="614"/>
+        <location filename="../colorscheme.cpp" line="620"/>
         <source>Rename file &apos;%1&apos; to &apos;%2&apos; failed!</source>
         <translation>Переименование файла &apos;%1&apos; в &apos;%2&apos; не удалось!</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="624"/>
+        <location filename="../colorscheme.cpp" line="629"/>
         <source>Scheme &apos;%1&apos; already exists!</source>
         <translation>Схема &apos;%1&apos; уже существует!</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="764"/>
+        <location filename="../colorscheme.cpp" line="769"/>
         <source>default</source>
         <translation>по умолчанию</translation>
     </message>
@@ -8565,64 +8571,64 @@
         <translation>Ошибка записи файла &quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3038"/>
+        <location filename="../settings.cpp" line="3028"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation>Компилятор Си &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3041"/>
+        <location filename="../settings.cpp" line="3031"/>
         <source>C++ Compiler &quot;%1&quot; is missing!</source>
         <translation>Компилятор Си++ &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3044"/>
+        <location filename="../settings.cpp" line="3034"/>
         <source>Debugger &quot;%1&quot; is missing!</source>
         <translation>Отладчик &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3047"/>
+        <location filename="../settings.cpp" line="3037"/>
         <source>Make program &quot;%1&quot; is missing!</source>
         <translation>Программа сборки &quot;%1&quot; утрачена!</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3271"/>
+        <location filename="../settings.cpp" line="3261"/>
         <source>Error executing platform compiler hint add-on</source>
         <translatorcomment>Сомнительный перевод, надо переделать</translatorcomment>
         <translation>Ошибка при запуске дополнения с подсказкой компилятора платформы</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3405"/>
-        <location filename="../settings.cpp" line="3411"/>
+        <location filename="../settings.cpp" line="3395"/>
+        <location filename="../settings.cpp" line="3401"/>
         <source>Compiler set not configuared.</source>
         <translation>Набор компиляторов не настроен.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3407"/>
+        <location filename="../settings.cpp" line="3397"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>Вы хотели бы, чтобы Красная Панда Си++ поискала компиляторы в следующих местах: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3413"/>
+        <location filename="../settings.cpp" line="3403"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>Вы хотели бы, чтобы Красная Панда Си++ поискала компиляторы в PATH?</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3415"/>
+        <location filename="../settings.cpp" line="3405"/>
         <source>Confirm</source>
         <translation>Подтверждение</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3424"/>
+        <location filename="../settings.cpp" line="3414"/>
         <source>No Compiler Set</source>
         <translation>Нет набора компиляторов</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3425"/>
+        <location filename="../settings.cpp" line="3415"/>
         <source>Can&apos;t find a C/C++ compiler.</source>
         <translation>Не могу найти компилятор Си/Си++.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3427"/>
+        <location filename="../settings.cpp" line="3417"/>
         <source>You must have a compiler to compile and execute C/C++ files.</source>
         <translation>Вы должны иметь компилятор, чтобы компилировать файлы Си/Си++.</translation>
     </message>
@@ -9503,12 +9509,12 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="4032"/>
+        <location filename="../settings.cpp" line="4022"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="4033"/>
+        <location filename="../settings.cpp" line="4023"/>
         <source>Can&apos;t find terminal program!</source>
         <translation>Не найдена программа-терминал!</translation>
     </message>
@@ -10300,117 +10306,116 @@
         <translation>Показывать линии отступов</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="128"/>
         <source>Indent Line Color</source>
-        <translation>Цвет отступа строки</translation>
+        <translation type="vanished">Цвет отступа строки</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="161"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="113"/>
         <source>Fill Indents</source>
         <translation>Закрашивать отступы</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="171"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="123"/>
         <source>Caret</source>
         <translation>Курсор</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="192"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="144"/>
         <source>Move caret to the first non-space char in the current line when press HOME key</source>
         <translation>Переместить курсор к первому непробельному символу текущей строки при нажатии клавиши HOME</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="199"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="151"/>
         <source>Move caret to the last non-space char in the current line when press END key</source>
         <translation>Переместить курсор к последнему непробельному символу текущей строки при нажатии клавиши END</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="206"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="158"/>
         <source>Keep X position of the caret when moving vertically</source>
         <translation>При вертикальном перемещении курсора сохранять позицию X</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="231"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="183"/>
         <source>Caret for overwriting mode</source>
         <translation>Курсор для режима замены</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="248"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="200"/>
         <source>Caret Color</source>
         <translation>Цвет курсора</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="258"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="210"/>
         <source>Caret for inserting mode</source>
         <translation>Курсор для режима вставки</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="281"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="233"/>
         <source>Use text color as caret color</source>
         <translation>Использовать цвет текста как цвет курсора</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="294"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="246"/>
         <source>Highlight</source>
         <translation>Подсветка</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="315"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="267"/>
         <source>Highlight matching braces</source>
         <translation>Подсвечивать связанные скобки</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="322"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="274"/>
         <source>Highlight current word</source>
         <translation>Подсветка текущего слова</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="332"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="284"/>
         <source>Scroll</source>
         <translation>Прокрутка</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="338"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="290"/>
         <source>Auto hide scroll bars</source>
         <translation>Автоматическое скрытие полос прокрутки</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="345"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="297"/>
         <source>Can scroll the last char to the left edge of the editor</source>
         <translation>Возможна прокрутка последнего символа до левого края окна редактора</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="352"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="304"/>
         <source>Can scroll the last line to the top edge of the editor</source>
         <translation>Возможна прокрутка последней строки до верхнего края окна редактора</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="359"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="311"/>
         <source>Page Up/Down scrolls half a page</source>
         <translation>Клавиши Page Up/Down приводят к прокрутке половины страницы</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="381"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="333"/>
         <source>Mouse Wheel Scroll Speed</source>
         <translation>Скорость прокрутки колеса мыши</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="429"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="381"/>
         <source>Mouse Selection/Dragging Scroll Speed</source>
         <translation>Скорость прокрутки при выделении мышью или перетаскивании</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="465"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="417"/>
         <source>Show right edge line</source>
         <translation>Показывать линию правой границы</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="504"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="456"/>
         <source>Right egde width</source>
         <translation>Ширина правой границы</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/editorgeneralwidget.ui" line="555"/>
+        <location filename="../settingsdialog/editorgeneralwidget.ui" line="507"/>
         <source>Right edge line color</source>
         <translation>Цвет линии правой границы</translation>
     </message>

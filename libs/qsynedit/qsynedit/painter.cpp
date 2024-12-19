@@ -828,6 +828,8 @@ void QSynEditPainter::paintFoldAttributes()
         if (mEdit->mCodeFolding.indentGuidesColor.isValid()) {
             paintColor = mEdit->mCodeFolding.indentGuidesColor;
         } else  {
+            PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
+            paintColor = attr->foreground();
             paintColor = mEdit->palette().color(QPalette::Text);
         }
         QColor gradientStart = paintColor;
@@ -860,11 +862,11 @@ void QSynEditPainter::paintFoldAttributes()
                 X = tabSteps * mEdit->mDocument->spaceWidth() + mEdit->textOffset() - 1;
                 tabSteps+=mEdit->tabSize();
                 indentLevel++ ;
-                if (mEdit->mCodeFolding.indentGuides) {
-                    PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
-                    getBraceColorAttr(indentLevel,attr);
-                    paintColor = attr->foreground();
-                }
+//                if (mEdit->mCodeFolding.indentGuides) {
+//                    PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
+//                    getBraceColorAttr(indentLevel,attr);
+//                    paintColor = attr->foreground();
+//                }
                 if (mEdit->mCodeFolding.fillIndents) {
                     PTokenAttribute attr = mEdit->mSyntaxer->symbolAttribute();
                     getBraceColorAttr(indentLevel,attr);

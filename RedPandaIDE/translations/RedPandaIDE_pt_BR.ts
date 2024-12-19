@@ -473,7 +473,7 @@
 <context>
     <name>CompetitiveCompanionThread</name>
     <message>
-        <location filename="../problems/competitivecompenionhandler.cpp" line="+131"/>
+        <location filename="../problems/competitivecompenionhandler.cpp" line="+132"/>
         <source>Problem Case %1</source>
         <translation type="unfinished">Caso do problema %1</translation>
     </message>
@@ -1482,12 +1482,12 @@
         <translation>Inserir a condição de parada:</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+259"/>
         <source>Readonly</source>
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5457"/>
+        <location line="-5456"/>
         <location line="+505"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
@@ -8535,7 +8535,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+4050"/>
+        <location filename="../settings.cpp" line="+4040"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-403"/>
         <location line="+63"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
@@ -8741,11 +8741,12 @@
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
+        <location line="+5"/>
         <source>Editor</source>
         <translation>Editor</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-41"/>
         <source>Gutter Active Line</source>
         <translation>Espaço para linha ativa</translation>
     </message>
@@ -8768,6 +8769,11 @@
         <location line="+5"/>
         <source>Fold Line</source>
         <translation>Dobrar linha</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Indent Guide Line</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
@@ -9216,7 +9222,7 @@
         <translation type="vanished">Deixar essas pastas resultará em problemas durante a compilação.</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="-305"/>
+        <location filename="../colorscheme.cpp" line="-310"/>
         <source>Gloabal Variable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11262,12 +11268,11 @@
         <translation>Mostrar linhas indentadas</translation>
     </message>
     <message>
-        <location line="+22"/>
         <source>Indent Line Color</source>
-        <translation>Cor da linha indentada</translation>
+        <translation type="vanished">Cor da linha indentada</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+7"/>
         <source>Fill Indents</source>
         <translation>Preencher indentações</translation>
     </message>

@@ -541,7 +541,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>CompetitiveCompanionThread</name>
     <message>
-        <location filename="../problems/competitivecompenionhandler.cpp" line="+131"/>
+        <location filename="../problems/competitivecompenionhandler.cpp" line="+132"/>
         <source>Problem Case %1</source>
         <translation>试题案例%1</translation>
     </message>
@@ -1744,7 +1744,7 @@ p, li { white-space: pre-wrap; }
         <translation>输入当前断点的生效条件:</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+259"/>
         <source>Readonly</source>
         <translation>只读</translation>
     </message>
@@ -9332,7 +9332,7 @@ p, li { white-space: pre-wrap; }
         <translation>所有文件</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="+584"/>
+        <location filename="../colorscheme.cpp" line="+589"/>
         <location filename="../main.cpp" line="-244"/>
         <location line="+7"/>
         <source>Error</source>
@@ -9452,7 +9452,7 @@ p, li { white-space: pre-wrap; }
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3413"/>
+        <location filename="../settings.cpp" line="+3403"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -9826,7 +9826,7 @@ p, li { white-space: pre-wrap; }
         <translation>GB</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="-516"/>
+        <location filename="../colorscheme.cpp" line="-521"/>
         <source>Can&apos;t open file &apos;%1&apos; for read</source>
         <translation>无法打开文件&quot;%1&quot;进行读取</translation>
     </message>
@@ -10028,11 +10028,12 @@ p, li { white-space: pre-wrap; }
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
+        <location line="+5"/>
         <source>Editor</source>
         <translation>编辑器</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-41"/>
         <source>Gutter Active Line</source>
         <translation>当前行侧边栏</translation>
     </message>
@@ -10055,6 +10056,11 @@ p, li { white-space: pre-wrap; }
         <location line="+5"/>
         <source>Fold Line</source>
         <translation>代码折叠线</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Indent Guide Line</source>
+        <translation>缩进提示线</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -12250,12 +12256,11 @@ p, li { white-space: pre-wrap; }
         <translation>显示缩进提示线</translation>
     </message>
     <message>
-        <location line="+22"/>
         <source>Indent Line Color</source>
-        <translation>缩进提示线颜色</translation>
+        <translation type="vanished">缩进提示线颜色</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+7"/>
         <source>Fill Indents</source>
         <translation>填充缩进区域</translation>
     </message>

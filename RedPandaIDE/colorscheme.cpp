@@ -564,6 +564,11 @@ void ColorManager::initItemDefines()
               QObject::tr("Editor"),
               true,false,false);
 
+    addDefine(COLOR_SCHEME_INDENT_GUIDE_LINE,
+              QObject::tr("Indent Guide Line"),
+              QObject::tr("Editor"),
+              true,false,false);
+
     addDefine(COLOR_SCHEME_SELECTION,
               QObject::tr("Selection"),
               QObject::tr("Editor"),

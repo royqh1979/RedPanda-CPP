@@ -58,7 +58,6 @@ void EditorGeneralWidget::doLoad()
     ui->chkTabToSpaces->setChecked(pSettings->editor().tabToSpaces());
     ui->spTabWidth->setValue(pSettings->editor().tabWidth());
     ui->chkShowIndentLines->setChecked(pSettings->editor().showIndentLines());
-    ui->colorIndentLine->setColor(pSettings->editor().indentLineColor());
     ui->chkFillIndents->setChecked(pSettings->editor().fillIndents());
     //carets
     ui->chkEnhanceHome->setChecked(pSettings->editor().enhanceHomeKey());
@@ -92,7 +91,6 @@ void EditorGeneralWidget::doSave()
     pSettings->editor().setTabToSpaces(ui->chkTabToSpaces->isChecked());
     pSettings->editor().setTabWidth(ui->spTabWidth->value());
     pSettings->editor().setShowIndentLines(ui->chkShowIndentLines->isChecked());
-    pSettings->editor().setIndentLineColor(ui->colorIndentLine->color());
     pSettings->editor().setFillIndents(ui->chkFillIndents->isChecked());
 
     //carets
@@ -127,11 +125,3 @@ void EditorGeneralWidget::on_chkCaretUseTextColor_stateChanged(int )
     ui->lbCaretColor->setVisible(!ui->chkCaretUseTextColor->isChecked());
     ui->colorCaret->setVisible(!ui->chkCaretUseTextColor->isChecked());
 }
-
-
-void EditorGeneralWidget::on_chkShowIndentLines_stateChanged(int)
-{
-    ui->lbIndentLineColor->setVisible(ui->chkShowIndentLines->isChecked());
-    ui->colorIndentLine->setVisible(ui->chkShowIndentLines->isChecked());
-}
-
