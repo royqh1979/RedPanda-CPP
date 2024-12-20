@@ -15,8 +15,9 @@ Red Panda C++ Version 3.3
   - change: Prevent mouse wheel change combobox's current selection.
   - enhancement: Add "Rainbow indents"/"Rainbow indent guides" options in the option / editor / color scheme page.
   - enhancement: Manually select file type.
-  - enhancement: When ctrl+click to open a header file not suffixed with .h/.hpp, auto set its type to C/C++ header.
+  - enhancement: When ctrl+click to open a C/C++ header file not suffixed with .h/.hh/.hpp etc., auto set its type to C/C++ header.
   - enhancement: Add the option "Clear symbols in hidden source files" in option / environment / performance. (Turned on by default)
+  - enhancement: Treat .tcc file as C/C++ header file.
   
 Red Panda C++ Version 3.2
 
