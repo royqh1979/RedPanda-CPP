@@ -38,8 +38,8 @@ static QString calcFullname(const QString& parentName, const QString& name) {
     return s;
 }
 
-CppParser::CppParser(QObject *parent) : QObject(parent),
-    mMutex()
+CppParser::CppParser() : QObject{nullptr},
+    mMutex{}
 {
     mParserId = cppParserCount.fetchAndAddRelaxed(1);
     mLanguage = ParserLanguage::CPlusPlus;
@@ -93,6 +93,13 @@ CppParser::~CppParser()
 //    }
     resetParser();
     //qDebug()<<"-------- parser deleted ------------";
+}
+
+std::shared_ptr<CppParser> CppParser::createParser()
+{
+    std::shared_ptr<CppParser> p=std::make_shared<CppParser>();
+    p->setSPThis(p);
+    return p;
 }
 
 void CppParser::addHardDefineByLine(const QString &line)
@@ -1036,7 +1043,7 @@ bool CppParser::isSystemHeaderFile(const QString &fileName) const
     return ::isSystemHeaderFile(fileName,mPreprocessor.includePaths());
 }
 
-void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNotParsed, bool updateView, std::shared_ptr<CppParser> parserPtr)
+void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNotParsed, bool updateView)
 {
     if (!mEnabled)
         return;
@@ -1048,7 +1055,6 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
             mLastParseFileCommand->inProject = inProject;
             mLastParseFileCommand->onlyIfNotParsed = onlyIfNotParsed;
             mLastParseFileCommand->updateView = updateView;
-            mLastParseFileCommand->parserPtr = parserPtr;
             return;
         }
         if (mLockCount>0)
@@ -1066,14 +1072,25 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
                 emit onEndParsing(mFilesScannedCount,1);
             else
                 emit onEndParsing(mFilesScannedCount,0);
-
             if (mLastParseFileCommand) {
-                ::parseFile(mLastParseFileCommand->parserPtr,
-                            mLastParseFileCommand->fileName,
-                            mLastParseFileCommand->inProject,
-                            mLastParseFileCommand->onlyIfNotParsed,
-                            mLastParseFileCommand->updateView);
+                QString fileName =      mLastParseFileCommand->fileName;
+                bool inProject =        mLastParseFileCommand->inProject;
+                bool onlyIfNotParsed =  mLastParseFileCommand->onlyIfNotParsed;
+                bool updateView =       mLastParseFileCommand->updateView;
                 mLastParseFileCommand = nullptr;
+                std::shared_ptr<CppParser> pThis = mSPThis.lock();
+                if (pThis) {
+                    ::parseFile(pThis,
+                                fileName,
+                                inProject,
+                                onlyIfNotParsed,
+                                updateView);
+                }
+#ifdef QT_DEBUG
+                else {
+                    qDebug()<<"CppParser's mSPThis weak pointer is empty or expired.";
+                }
+#endif
             }
             mParsing = false;
         });
@@ -6969,7 +6986,7 @@ CppFileParserThread::CppFileParserThread(
 void CppFileParserThread::run()
 {
     if (mParser) {
-        mParser->parseFile(mFileName,mInProject,mOnlyIfNotParsed,mUpdateView,mParser);
+        mParser->parseFile(mFileName,mInProject,mOnlyIfNotParsed,mUpdateView);
     }
 }
 

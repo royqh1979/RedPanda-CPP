@@ -3167,7 +3167,7 @@ void Editor::initParser()
         if (pSettings->codeCompletion().shareParser()) {
             mParser = sharedParser(calcParserLanguage());
         } else {
-            mParser = std::make_shared<CppParser>();
+            mParser = CppParser::createParser();
             mParser->setLanguage(calcParserLanguage());
             mParser->setOnGetFileStream(
                         std::bind(
@@ -4616,7 +4616,7 @@ PCppParser Editor::sharedParser(ParserLanguage language)
         parser=mSharedParsers[language].lock();
     }
     if (!parser) {
-        parser=std::make_shared<CppParser>();
+        parser=CppParser::createParser();
         parser->setLanguage(language);
         parser->setOnGetFileStream(
                     std::bind(

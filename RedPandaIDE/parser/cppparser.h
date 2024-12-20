@@ -28,23 +28,23 @@
 class CppParser : public QObject
 {
     Q_OBJECT
-
 public:
-
     struct ParseFileCommand {
         QString fileName;
         bool inProject;
         bool onlyIfNotParsed;
         bool updateView;
-        std::shared_ptr<CppParser> parserPtr;
     };
-
     using PParseFileCommand = std::unique_ptr<ParseFileCommand>;
-    explicit CppParser(QObject *parent = nullptr);
+
+    explicit CppParser();
+    void setSPThis(std::shared_ptr<CppParser> spThis) { mSPThis = spThis;}
     CppParser(const CppParser&)=delete;
     CppParser& operator=(const CppParser)=delete;
 
     ~CppParser();
+
+    static std::shared_ptr<CppParser> createParser();
 
     void addHardDefineByLine(const QString& line);
     void addProjectFile(const QString &fileName, bool needScan);
@@ -122,8 +122,8 @@ public:
     bool isProjectHeaderFile(const QString& fileName) const;
     bool isSystemHeaderFile(const QString& fileName) const;
     void parseFile(const QString& fileName, bool inProject,
-                   bool onlyIfNotParsed = false, bool updateView = true,
-                   std::shared_ptr<CppParser> parserPtr = nullptr);
+                   bool onlyIfNotParsed = false, bool updateView = true
+                   );
     void parseFileList(bool updateView = true);
     void parseHardDefines();
     bool parsing() const;
@@ -745,6 +745,7 @@ private:
     QSet<QString> mCppTypeKeywords;
 
     PParseFileCommand mLastParseFileCommand;
+    std::weak_ptr<CppParser> mSPThis;
 };
 using PCppParser = std::shared_ptr<CppParser>;
 
