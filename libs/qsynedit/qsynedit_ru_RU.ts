@@ -593,40 +593,40 @@
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="450"/>
         <source>Pop stack.</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь из стека.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="451"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="452"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="453"/>
         <source>Pop %1 off stack.</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь %1 из стека.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="454"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="455"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="456"/>
         <source>Pop general-purpose registers from stack.</source>
-        <translation type="unfinished"></translation>
+        <translation>Извлечь из стека регистры общего назначения.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="457"/>
         <source>Push stack.</source>
-        <translation type="unfinished"></translation>
+        <translation>Поместить в стек.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="458"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="459"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="460"/>
         <source>Push %1 onto stack.</source>
-        <translation type="unfinished"></translation>
+        <translation>Поместить %1 в стек.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="461"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="462"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="463"/>
         <source>Push general-purpose registers onto stack.</source>
-        <translation type="unfinished"></translation>
+        <translation>Поместить регистры общего назначения в стек.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="464"/>
@@ -635,7 +635,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="467"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="468"/>
         <source>Exchange and add %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Обменять и прибавить %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="469"/>
@@ -644,12 +644,12 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="472"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="473"/>
         <source>Exchange %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Обменять %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="475"/>
         <source>add unsigned %1 with carry.</source>
-        <translation type="unfinished"></translation>
+        <translation>прибавить беззнаковый %1 с переносом.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="475"/>
@@ -678,7 +678,7 @@
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="480"/>
         <source>add unsigned %1 with overflow.</source>
-        <translation type="unfinished"></translation>
+        <translation>прибавить беззнаковый %1 с переполнением.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="485"/>
@@ -687,7 +687,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="488"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="489"/>
         <source>add %1 with carry.</source>
-        <translation type="unfinished"></translation>
+        <translation>прибавить %1 с переносом.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="490"/>
@@ -696,12 +696,12 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="493"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="494"/>
         <source>add %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>прибавить %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="495"/>
         <source>compare.</source>
-        <translation type="unfinished"></translation>
+        <translation>сравнить.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="496"/>
@@ -709,12 +709,12 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="498"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="499"/>
         <source>compare %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>сравнить %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="500"/>
         <source>decrement by 1.</source>
-        <translation type="unfinished"></translation>
+        <translation>уменьшить на 1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="501"/>
@@ -722,7 +722,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="503"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="504"/>
         <source>decrement %1 by 1.</source>
-        <translation type="unfinished"></translation>
+        <translation>уменьшить %1 на 1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="505"/>
@@ -731,7 +731,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="508"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="509"/>
         <source>unsigned %1 divide.</source>
-        <translation type="unfinished"></translation>
+        <translation>деление беззнакового %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="510"/>
@@ -740,7 +740,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="513"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="514"/>
         <source>signed %1 divide.</source>
-        <translation type="unfinished"></translation>
+        <translation>деление знакового %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="515"/>
@@ -749,12 +749,12 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="518"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="519"/>
         <source>signed %1 multiply.</source>
-        <translation type="unfinished"></translation>
+        <translation>умножение знакового %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="520"/>
         <source>increment by 1.</source>
-        <translation type="unfinished"></translation>
+        <translation>увеличить на 1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="521"/>
@@ -762,7 +762,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="523"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="524"/>
         <source>increment %1 by 1.</source>
-        <translation type="unfinished"></translation>
+        <translation>увеличить %1 на 1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="525"/>
@@ -771,7 +771,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="528"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="529"/>
         <source>unsigned %1 multiply.</source>
-        <translation type="unfinished"></translation>
+        <translation>умножение беззнакового %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="530"/>
@@ -793,7 +793,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="538"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="539"/>
         <source>subtract %1 with borrow.</source>
-        <translation type="unfinished"></translation>
+        <translation>вычитание %1 с займом.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="540"/>
@@ -802,7 +802,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="543"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="544"/>
         <source>subtract %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>вычитание %1.</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="546"/>
@@ -1196,7 +1196,7 @@
         <location filename="qsynedit/syntaxer/asm.cpp" line="736"/>
         <location filename="qsynedit/syntaxer/asm.cpp" line="737"/>
         <source>jump %1</source>
-        <translation>переход %1.</translation>
+        <translation>переход %1</translation>
     </message>
     <message>
         <location filename="qsynedit/syntaxer/asm.cpp" line="729"/>
