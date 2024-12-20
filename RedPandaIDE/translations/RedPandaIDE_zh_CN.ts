@@ -5669,7 +5669,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+5"/>
         <source>AT&amp;&amp;T ASM</source>
-        <translation>AT&amp;&amp;T 汇编</translation>
+        <translation type="unfinished">AT&amp;&amp;T汇编</translation>
     </message>
     <message>
         <location line="+5"/>
