@@ -99,6 +99,9 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".hxx",PATH_SENSITIVITY)) {
         return FileType::CCppHeader;
     }
+    if (filename.endsWith(".tcc",PATH_SENSITIVITY)) {
+        return FileType::CCppHeader;
+    }
     if (filename.endsWith(".inl",PATH_SENSITIVITY)) {
         return FileType::CCppHeader;
     }
