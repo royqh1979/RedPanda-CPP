@@ -25,6 +25,8 @@
 #include "cpptokenizer.h"
 #include "cpppreprocessor.h"
 
+class CppParser;
+using PCppParser = std::shared_ptr<CppParser>;
 class CppParser : public QObject
 {
     Q_OBJECT
@@ -121,10 +123,6 @@ public:
     bool isIncludeNextLine(const QString &line) const;
     bool isProjectHeaderFile(const QString& fileName) const;
     bool isSystemHeaderFile(const QString& fileName) const;
-    void parseFile(const QString& fileName, bool inProject,
-                   bool onlyIfNotParsed = false, bool updateView = true
-                   );
-    void parseFileList(bool updateView = true);
     void parseHardDefines();
     bool parsing() const;
     void resetParser();
@@ -177,6 +175,11 @@ signals:
     void onStartParsing();
     void onEndParsing(int total, int updateView);
 private:
+    void parseFile(const QString& fileName, bool inProject,
+                   bool onlyIfNotParsed = false, bool updateView = true
+                   );
+    void parseFileList(bool updateView = true);
+
     PStatement addInheritedStatement(
             const PStatement& derived,
             const PStatement& inherit,
@@ -746,8 +749,17 @@ private:
 
     PParseFileCommand mLastParseFileCommand;
     std::weak_ptr<CppParser> mSPThis;
+
+    friend class CppFileListParserThread;
+    friend class CppFileParserThread;
+
+    friend void parseFileBlocking(
+        PCppParser parser,
+        const QString& fileName,
+        bool inProject,
+        bool onlyIfNotParsed,
+        bool updateView);
 };
-using PCppParser = std::shared_ptr<CppParser>;
 
 class CppFileParserThread : public QThread {
     Q_OBJECT
@@ -788,14 +800,21 @@ protected:
     void run() override;
 };
 
-void parseFile(
+void parseFileNonBlocking(
     PCppParser parser,
     const QString& fileName,
     bool inProject,
     bool onlyIfNotParsed = false,
     bool updateView = true);
 
-void parseFileList(
+void parseFileBlocking(
+    PCppParser parser,
+    const QString& fileName,
+    bool inProject,
+    bool onlyIfNotParsed = false,
+    bool updateView = true);
+
+void parseFileListNonBlocking(
         PCppParser parser,
         bool updateView = true);
 

@@ -3263,7 +3263,7 @@ void Editor::reparse(bool resetParser)
             }
         }
     }
-    parseFile(mParser,mFilename, inProject());
+    parseFileNonBlocking(mParser,mFilename, inProject());
 }
 
 void Editor::reparseTodo()

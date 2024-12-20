@@ -1080,7 +1080,7 @@ void CppParser::parseFile(const QString &fileName, bool inProject, bool onlyIfNo
                 mLastParseFileCommand = nullptr;
                 std::shared_ptr<CppParser> pThis = mSPThis.lock();
                 if (pThis) {
-                    ::parseFile(pThis,
+                    ::parseFileNonBlocking(pThis,
                                 fileName,
                                 inProject,
                                 onlyIfNotParsed,
@@ -7007,7 +7007,7 @@ void CppFileListParserThread::run()
     }
 }
 
-void parseFile(PCppParser parser, const QString& fileName, bool inProject, bool onlyIfNotParsed, bool updateView)
+void parseFileNonBlocking(PCppParser parser, const QString& fileName, bool inProject, bool onlyIfNotParsed, bool updateView)
 {
     if (!parser)
         return;
@@ -7023,7 +7023,7 @@ void parseFile(PCppParser parser, const QString& fileName, bool inProject, bool 
     thread->start();
 }
 
-void parseFileList(PCppParser parser, bool updateView)
+void parseFileListNonBlocking(PCppParser parser, bool updateView)
 {
     if (!parser)
         return;
@@ -7036,4 +7036,19 @@ void parseFileList(PCppParser parser, bool updateView)
                     thread,
                     &QThread::deleteLater);
     thread->start();
+}
+
+void parseFileBlocking(PCppParser parser, const QString &fileName, bool inProject, bool onlyIfNotParsed, bool updateView)
+{
+    if (!parser)
+        return;
+    if (!parser->enabled())
+        return;
+    while (parser->parsing()) {
+        QThread::msleep(100);
+        QApplication *app=dynamic_cast<QApplication*>(
+                    QApplication::instance());
+        app->processEvents();
+    }
+    parser->parseFile(fileName, inProject, onlyIfNotParsed, updateView);
 }
