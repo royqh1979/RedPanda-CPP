@@ -16,6 +16,7 @@ Red Panda C++ Version 3.3
   - enhancement: Add "Rainbow indents"/"Rainbow indent guides" options in the option / editor / color scheme page.
   - enhancement: Manually select file type.
   - enhancement: When ctrl+click to open a header file not suffixed with .h/.hpp, auto set its type to C/C++ header.
+  - enhancement: Add the option "Clear symbols in hidden source files" in option / environment / performance. (Turned on by default)
   
 Red Panda C++ Version 3.2
 

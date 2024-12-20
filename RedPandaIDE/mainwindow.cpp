@@ -8278,7 +8278,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
             Editor * e=(*mEditorList)[i];
             if (e->modified())  {
                 //here we must reparse the file in sync, or rename may fail
-                parseFileBlocking(mProject->cppParser(), editor->filename(), editor->inProject(), false, false);
+                parseFileBlocking(mProject->cppParser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
             }
         }
 
@@ -8334,7 +8334,7 @@ void MainWindow::on_actionRename_Symbol_triggered()
 
     if (!editor->inProject() && editor->modified() ) {
         //here we must reparse the file in sync, or rename may fail
-        parseFileBlocking(editor->parser(), editor->filename(), editor->inProject(), false, false);
+        parseFileBlocking(editor->parser(), editor->filename(), editor->inProject(), editor->contextFile(), false, false);
     }
     CppRefacter refactor;
 

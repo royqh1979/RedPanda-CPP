@@ -712,7 +712,7 @@ void Project::renameUnit(PProjectUnit& unit, const QString &newFileName)
         copyFile(unit->fileName(),newFileName,true);
     }
     if (mParser)
-        parseFileNonBlocking(mParser,newFileName,true);
+        parseFileNonBlocking(mParser,newFileName,true, editor->contextFile());
 
     internalRemoveUnit(unit,false,true);
 

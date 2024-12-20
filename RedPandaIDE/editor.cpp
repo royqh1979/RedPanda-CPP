@@ -1421,21 +1421,11 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             QString sLine = lineText(p.line);
             if (mParser->isIncludeNextLine(sLine)) {
                 QString filename = mParser->getHeaderFileName(mFilename,sLine, true);
-                Editor *e=pMainWindow->openFile(filename);
-                if (e) {
-                    if (!isC_CPPHeaderFile(e->fileType())
-                            && !isC_CPPSourceFile(e->fileType()))
-                        e->setFileType(FileType::CCppHeader);
-                }
+                openFileInContext(filename);
                 return;
             } if (mParser->isIncludeLine(sLine)) {
                 QString filename = mParser->getHeaderFileName(mFilename,sLine);
-                Editor *e=pMainWindow->openFile(filename);
-                if (e) {
-                    if (!isC_CPPHeaderFile(e->fileType())
-                            && !isC_CPPSourceFile(e->fileType()))
-                        e->setFileType(FileType::CCppHeader);
-                }
+                openFileInContext(filename);
                 return;
             } else if (mParser->enabled()) {
                 gotoDefinition(p);
@@ -1515,10 +1505,13 @@ void Editor::closeEvent(QCloseEvent *)
 
 void Editor::showEvent(QShowEvent */*event*/)
 {
-//    if (pSettings->codeCompletion().clearWhenEditorHidden()
-//            && !inProject()) {
-////        initParser();
-//    }
+    if (mParser && pSettings->codeCompletion().clearWhenEditorHidden()
+            && pSettings->codeCompletion().shareParser()
+            && !inProject()
+            && isC_CPPSourceFile(mFileType) ) {
+        //qDebug()<<mFilename;
+        resetCppParser(mParser);
+    }
     if (mParser && !pMainWindow->isClosingAll()
             && !pMainWindow->isQuitting()
             && !mParser->isFileParsed(mFilename)
@@ -3093,7 +3086,7 @@ bool Editor::handleCodeCompletion(QChar key)
 void Editor::initParser()
 {
     if (pSettings->codeCompletion().enabled()
-        && (isCFile(mFilename) || isHFile(mFilename))) {
+        && (isC_CPPHeaderFile(mFileType) || isC_CPPSourceFile(mFileType))) {
         if (pSettings->codeCompletion().shareParser()) {
             mParser = sharedParser(calcParserLanguage());
         } else {
@@ -3193,7 +3186,7 @@ void Editor::reparse(bool resetParser)
             }
         }
     }
-    parseFileNonBlocking(mParser,mFilename, inProject());
+    parseFileNonBlocking(mParser,mFilename, inProject(), mContextFile);
 }
 
 void Editor::reparseTodo()
@@ -4582,6 +4575,42 @@ void Editor::doSetFileType(FileType newFileType)
     setSyntaxer(syntaxer);
 }
 
+Editor* Editor::openFileInContext(const QString &filename)
+{
+    Editor *e=pMainWindow->openFile(filename);
+    if (e) {
+        if (!isC_CPPHeaderFile(e->fileType())
+                && !isC_CPPSourceFile(e->fileType()))
+            e->setFileType(FileType::CCppHeader);
+        if (isC_CPPHeaderFile(e->fileType())) {
+            if (isC_CPPSourceFile(mFileType)) {
+                e->setContextFile(mFilename);
+            } else if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
+                e->setContextFile(mContextFile);
+            }
+        }
+    }
+    return e;
+}
+
+const QString &Editor::contextFile() const
+{
+    return mContextFile;
+}
+
+void Editor::setContextFile(const QString &newContextFile)
+{
+    if (!isC_CPPHeaderFile(mFileType))
+        return;
+    QString s = newContextFile.trimmed();
+    if (mContextFile == s)
+        return;
+    mContextFile = s;
+    if (!mContextFile.isEmpty()) {
+        reparse(false);
+    }
+}
+
 quint64 Editor::lastFocusOutTime() const
 {
     return mLastFocusOutTime;
@@ -4696,12 +4725,9 @@ void Editor::gotoDeclaration(const QSynedit::BufferCoord &pos)
         filename = statement->fileName;
         line = statement->line;
     }
-    Editor *e = pMainWindow->openFile(filename);
+    Editor *e = openFileInContext(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);
-        if (!isC_CPPSourceFile(e->fileType())
-                && !isC_CPPHeaderFile(e->fileType()))
-            e->setFileType(FileType::CCppHeader);
     }
 }
 
@@ -4730,14 +4756,9 @@ void Editor::gotoDefinition(const QSynedit::BufferCoord &pos)
         filename = statement->definitionFileName;
         line = statement->definitionLine;
     }
-    Editor *e = pMainWindow->editorList()->getOpenedEditorByFilename(filename);
-    if (!e)
-        e = pMainWindow->openFile(filename);
+    Editor *e = openFileInContext(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);
-        if (!isC_CPPSourceFile(e->fileType())
-                && !isC_CPPHeaderFile(e->fileType()))
-            e->setFileType(FileType::CCppHeader);
     }
 }
 

@@ -329,6 +329,8 @@ private:
     QSize calcCompletionPopupSize();
     void doSetFileType(FileType newFileType);
 
+    Editor* openFileInContext(const QString& filename);
+
 private:
     bool mInited;
     QDateTime mBackupTime;
@@ -385,6 +387,7 @@ private:
     int mWheelAccumulatedDelta;
     bool mCtrlClicking;
     FileType mFileType;
+    QString mContextFile;
 
     QMap<QString,StatementKind> mIdentCache;
     qint64 mLastFocusOutTime;
@@ -421,6 +424,9 @@ public:
 
     FileType fileType() const;
     void setFileType(FileType newFileType);
+    const QString &contextFile() const;
+    void setContextFile(const QString &newContextFile);
+
 protected:
     // QWidget interface
     void wheelEvent(QWheelEvent *event) override;

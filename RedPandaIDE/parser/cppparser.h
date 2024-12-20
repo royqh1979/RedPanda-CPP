@@ -34,6 +34,7 @@ public:
     struct ParseFileCommand {
         QString fileName;
         bool inProject;
+        QString contextFilename;
         bool onlyIfNotParsed;
         bool updateView;
     };
@@ -176,6 +177,7 @@ signals:
     void onEndParsing(int total, int updateView);
 private:
     void parseFile(const QString& fileName, bool inProject,
+                   const QString& contextFilename,
                    bool onlyIfNotParsed = false, bool updateView = true
                    );
     void parseFileList(bool updateView = true);
@@ -755,8 +757,9 @@ private:
 
     friend void parseFileBlocking(
         PCppParser parser,
-        const QString& fileName,
+        const QString &fileName,
         bool inProject,
+        const QString &contextFilename,
         bool onlyIfNotParsed,
         bool updateView);
 };
@@ -766,8 +769,9 @@ class CppFileParserThread : public QThread {
 public:
     explicit CppFileParserThread(
             PCppParser parser,
-            QString fileName,
+            const QString &fileName,
             bool inProject,
+            const QString &contextFilename,
             bool onlyIfNotParsed = false,
             bool updateView = true,
             QObject *parent = nullptr);
@@ -776,6 +780,7 @@ private:
     PCppParser mParser;
     QString mFileName;
     bool mInProject;
+    QString mContextFilename;
     bool mOnlyIfNotParsed;
     bool mUpdateView;
 
@@ -802,15 +807,17 @@ protected:
 
 void parseFileNonBlocking(
     PCppParser parser,
-    const QString& fileName,
+    const QString &fileName,
     bool inProject,
+    const QString &contextFilename,
     bool onlyIfNotParsed = false,
     bool updateView = true);
 
 void parseFileBlocking(
     PCppParser parser,
-    const QString& fileName,
+    const QString &fileName,
     bool inProject,
+    const QString &contextFilename,
     bool onlyIfNotParsed = false,
     bool updateView = true);
 
