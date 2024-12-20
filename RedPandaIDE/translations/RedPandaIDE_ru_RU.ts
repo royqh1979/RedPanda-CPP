@@ -701,7 +701,7 @@
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="179"/>
         <source>Survive auto-finds</source>
-        <translation>Сохраненять при автопоиске</translation>
+        <translation>Сохранять при автопоиске</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="186"/>
