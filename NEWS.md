@@ -14,6 +14,8 @@ Red Panda C++ Version 3.3
   - fix: Remove not used option "indent guide line" in the option / editor / general page. 
   - change: Prevent mouse wheel change combobox's current selection.
   - enhancement: Add "Rainbow indents"/"Rainbow indent guides" options in the option / editor / color scheme page.
+  - enhancement: Manually select file type.
+  - enhancement: When ctrl+click to open a header file not suffixed with .h/.hpp, auto set its type to C/C++ header.
   
 Red Panda C++ Version 3.2
 

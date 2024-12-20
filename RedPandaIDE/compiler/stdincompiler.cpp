@@ -52,7 +52,8 @@ bool StdinCompiler::prepareForCompile()
         strFileType = "C";
         mCompiler = compilerSet()->CCompiler();
         break;
-    case FileType::GAS:
+    case FileType::ATTASM:
+    case FileType::INTELASM:
         mArguments += {"-x", "assembler", "-"};
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
@@ -61,8 +62,7 @@ bool StdinCompiler::prepareForCompile()
         mCompiler = compilerSet()->CCompiler();
         break;
     case FileType::CppSource:
-    case FileType::CppHeader:
-    case FileType::CHeader:
+    case FileType::CCppHeader:
         mArguments += {"-x", "c++", "-"};
         mArguments += getCppCompileArguments(mOnlyCheckSyntax);
         mArguments += getCppIncludeArguments();

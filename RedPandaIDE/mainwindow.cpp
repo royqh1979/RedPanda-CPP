@@ -709,6 +709,18 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionFind_references->setEnabled(false);
 
         ui->actionMove_To_Other_View->setEnabled(false);
+        ui->actionC_C_Header->setChecked(false);
+        ui->actionC_C_Header->setEnabled(false);
+        ui->actionC_File->setChecked(false);
+        ui->actionC_File->setEnabled(false);
+        ui->actionCPP_File->setChecked(false);
+        ui->actionCPP_File->setEnabled(false);
+        ui->actionATT_ASM->setChecked(false);
+        ui->actionATT_ASM->setEnabled(false);
+        ui->actionIntel_ASM->setChecked(false);
+        ui->actionIntel_ASM->setEnabled(false);
+        ui->actionText_File->setChecked(false);
+        ui->actionText_File->setEnabled(false);
     } else {
         ui->actionCopy->setEnabled(true);
         ui->actionCut->setEnabled(true);
@@ -790,6 +802,35 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionGoto_Definition->setEnabled(e->parser()!=nullptr);
         ui->actionFind_references->setEnabled(e->parser()!=nullptr);
         ui->actionMove_To_Other_View->setEnabled(editorList()->pageCount()>1);
+
+        ui->actionC_C_Header->setEnabled(true);
+        ui->actionC_File->setEnabled(true);
+        ui->actionCPP_File->setEnabled(true);
+        ui->actionATT_ASM->setEnabled(true);
+        ui->actionIntel_ASM->setEnabled(true);
+        ui->actionText_File->setEnabled(true);
+        switch(e->fileType()) {
+        case FileType::CCppHeader:
+            ui->actionC_C_Header->setChecked(true);
+            break;
+        case FileType::CSource:
+            ui->actionC_File->setChecked(true);
+            break;
+        case FileType::CppSource:
+            ui->actionCPP_File->setChecked(true);
+            break;
+        case FileType::ATTASM:
+            ui->actionATT_ASM->setChecked(true);
+            break;
+        case FileType::INTELASM:
+            ui->actionIntel_ASM->setChecked(true);
+            break;
+        case FileType::Text:
+            ui->actionText_File->setChecked(true);
+            break;
+        default:
+            break;
+        }
     }
 
     updateEncodingActions(e);
@@ -864,7 +905,8 @@ void MainWindow::updateCompileActions(const Editor *e)
                         canRun = canCompile;
                         canDebug = set->canDebug();
                         break;
-                    case FileType::GAS:
+                    case FileType::ATTASM:
+                    case FileType::INTELASM:
                         if (set->compilerType()==CompilerType::GCC
                                 || set->compilerType()==CompilerType::GCC_UTF8) {
                             canCompile = true;
@@ -2223,12 +2265,9 @@ void MainWindow::checkSyntaxInBack(Editor *e)
     }
 
     //not c or cpp file
-    FileType fileType = getFileType(e->filename());
-    if (fileType != FileType::CSource
-            && fileType != FileType::CppSource
-            && fileType != FileType::CHeader
-            && fileType != FileType::CppHeader
-            && fileType != FileType::GAS
+    FileType fileType = e->fileType();
+    if (!isC_CPP_ASMSourceFile(fileType)
+            && !isC_CPPHeaderFile(fileType)
             )
         return;
     if (mCompilerManager->backgroundSyntaxChecking())
@@ -5143,12 +5182,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
     if (!editor)
         return;
     FileType fileType=getFileType(editor->filename());
-    bool canDebug = (fileType==FileType::CSource
-            || fileType==FileType::CHeader
-            || fileType==FileType::CppSource
-            || fileType==FileType::CppHeader
-            || fileType==FileType::GAS
-            );
+    bool canDebug = isC_CPP_ASMSourceFile(fileType);
     QMenu menu(this);
     QSynedit::BufferCoord p;
     int line;
@@ -7801,8 +7835,7 @@ void MainWindow::reparseNonProjectEditors()
 QString MainWindow::switchHeaderSourceTarget(Editor *editor)
 {
     QString filename=editor->filename();
-    if (getFileType(filename)==FileType::CHeader
-            || getFileType(filename)==FileType::CppHeader) {
+    if (isC_CPPHeaderFile(getFileType(filename))) {
         QStringList lst;
         lst.push_back("c");
         lst.push_back("cc");
@@ -10372,6 +10405,59 @@ void MainWindow::on_actionCode_Completion_triggered()
     Editor* editor = mEditorList->getEditor();
     if (editor) {
         editor->showCodeCompletion();
+    }
+}
+
+
+void MainWindow::on_actionC_C_Header_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        editor->setFileType(FileType::CCppHeader);
+    }
+}
+
+void MainWindow::on_actionText_File_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        editor->setFileType(FileType::Text);
+    }
+}
+
+
+void MainWindow::on_actionC_File_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        editor->setFileType(FileType::CSource);
+    }
+}
+
+
+void MainWindow::on_actionCPP_File_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        editor->setFileType(FileType::CppSource);
+    }
+}
+
+
+void MainWindow::on_actionATT_ASM_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        editor->setFileType(FileType::ATTASM);
+    }
+}
+
+
+void MainWindow::on_actionIntel_ASM_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        editor->setFileType(FileType::INTELASM);
     }
 }
 

@@ -858,6 +858,18 @@ private slots:
 
     void on_actionCode_Completion_triggered();
 
+    void on_actionC_C_Header_triggered();
+
+    void on_actionText_File_triggered();
+
+    void on_actionC_File_triggered();
+
+    void on_actionCPP_File_triggered();
+
+    void on_actionATT_ASM_triggered();
+
+    void on_actionIntel_ASM_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;

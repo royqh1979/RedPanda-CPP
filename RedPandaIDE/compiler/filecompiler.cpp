@@ -124,7 +124,8 @@ bool FileCompiler::prepareForCompile()
     mArguments += getCharsetArgument(mEncoding, fileType, mOnlyCheckSyntax);
     QString strFileType;
     switch(fileType) {
-    case FileType::GAS:
+    case FileType::ATTASM:
+    case FileType::INTELASM:
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
         mArguments += getProjectIncludeArguments();
@@ -151,7 +152,7 @@ bool FileCompiler::prepareForCompile()
     if (!mOnlyCheckSyntax)
         mArguments += getLibraryArguments(fileType);
 
-    if (fileType==FileType::GAS) {
+    if (isASMSourceFile(fileType)) {
         bool hasStart=false;
         QStringList lines=readFileToLines(mFilename);
         QSynedit::ASMSyntaxer syntaxer;

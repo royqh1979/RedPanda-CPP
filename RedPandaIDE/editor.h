@@ -327,6 +327,7 @@ private:
     void cancelHoverLink();
 
     QSize calcCompletionPopupSize();
+    void doSetFileType(FileType newFileType);
 
 private:
     bool mInited;
@@ -383,6 +384,7 @@ private:
     int mHoverModifiedLine;
     int mWheelAccumulatedDelta;
     bool mCtrlClicking;
+    FileType mFileType;
 
     QMap<QString,StatementKind> mIdentCache;
     qint64 mLastFocusOutTime;
@@ -417,6 +419,8 @@ public:
 
     quint64 lastFocusOutTime() const;
 
+    FileType fileType() const;
+    void setFileType(FileType newFileType);
 protected:
     // QWidget interface
     void wheelEvent(QWheelEvent *event) override;

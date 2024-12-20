@@ -48,11 +48,17 @@ NonExclusiveTemporaryFileOwner::~NonExclusiveTemporaryFileOwner()
 
 FileType getFileType(const QString &filename)
 {
+    if (filename.startsWith("makefile", PATH_SENSITIVITY)) {
+        return FileType::MakeFile;
+    }
     if (filename.endsWith(".s",PATH_SENSITIVITY)) {
-        return FileType::GAS;
+        return FileType::ATTASM;
     }
     if (filename.endsWith(".S",PATH_SENSITIVITY)) {
-        return FileType::GAS;
+        return FileType::ATTASM;
+    }
+    if (filename.endsWith(".asm",PATH_SENSITIVITY)) {
+        return FileType::INTELASM;
     }
     if (filename.endsWith(".dev",PATH_SENSITIVITY)) {
         return FileType::Project;
@@ -79,22 +85,22 @@ FileType getFileType(const QString &filename)
         return FileType::CppSource;
     }
     if (filename.endsWith(".H")) {
-        return FileType::CHeader;
+        return FileType::CCppHeader;
     }
     if (filename.endsWith(".h",PATH_SENSITIVITY)) {
-        return FileType::CHeader;
+        return FileType::CCppHeader;
     }
     if (filename.endsWith(".hpp",PATH_SENSITIVITY)) {
-        return FileType::CppHeader;
+        return FileType::CCppHeader;
     }
     if (filename.endsWith(".hh",PATH_SENSITIVITY)) {
-        return FileType::CppHeader;
+        return FileType::CCppHeader;
     }
     if (filename.endsWith(".hxx",PATH_SENSITIVITY)) {
-        return FileType::CppHeader;
+        return FileType::CCppHeader;
     }
     if (filename.endsWith(".inl",PATH_SENSITIVITY)) {
-        return FileType::CppHeader;
+        return FileType::CCppHeader;
     }
     if (filename.endsWith(".rc",PATH_SENSITIVITY)) {
         return FileType::WindowsResourceSource;

@@ -18,6 +18,7 @@
 #define SYNTAXERMANAGER_H
 #include "qsynedit/syntaxer/syntaxer.h"
 #include "qsynedit/formatter/formatter.h"
+#include "utils.h"
 
 class SyntaxerManager
 {
@@ -25,10 +26,14 @@ public:
     SyntaxerManager();
 
     QSynedit::PSyntaxer getSyntaxer(QSynedit::ProgrammingLanguage language) const;
-    QSynedit::PSyntaxer getSyntaxer(const QString& filename) const;
+    QSynedit::PSyntaxer getSyntaxer(FileType fileType) const {
+        return getSyntaxer(getLanguage(fileType));
+    }
     QSynedit::PFormatter getFormatter(QSynedit::ProgrammingLanguage language) const;
-    QSynedit::PFormatter getFormatter(const QString& filename) const;
-    QSynedit::ProgrammingLanguage getLanguage(const QString& filename) const;
+    QSynedit::PFormatter getFormatter(FileType fileType) const {
+        return getFormatter(getLanguage(fileType));
+    }
+    QSynedit::ProgrammingLanguage getLanguage(FileType fileType) const;
     QSynedit::PSyntaxer copy(QSynedit::PSyntaxer syntaxer) const;
     void applyColorScheme(QSynedit::PSyntaxer syntaxer, const QString& schemeName) const;
 };

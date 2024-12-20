@@ -118,8 +118,7 @@ void SDCCProjectCompiler::writeMakeDefines(QFile &file)
         QString RelativeName = extractRelativePath(mProject->directory(), unit->fileName());
         FileType fileType = getFileType(RelativeName);
 
-        if (fileType == FileType::CSource || fileType == FileType::CppSource
-                || fileType==FileType::GAS) {
+        if (isC_CPP_ASMSourceFile(fileType)) {
             if (!mProject->options().folderForObjFiles.isEmpty()) {
                 // ofile = C:\MyProgram\obj\main.o
                 QString fullObjFile = includeTrailingPathDelimiter(mProject->options().folderForObjFiles)
@@ -210,8 +209,7 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
             continue;
         FileType fileType = getFileType(unit->fileName());
         // Only process source files
-        if (fileType!=FileType::CSource && fileType!=FileType::CppSource
-                && fileType!=FileType::GAS)
+        if (!isC_CPP_ASMSourceFile(fileType))
             continue;
 
         QString shortFileName = extractRelativePath(mProject->makeFileName(),unit->fileName());
@@ -232,7 +230,7 @@ void SDCCProjectCompiler::writeMakeObjFilesRules(QFile &file)
         } else {
             foreach(const PProjectUnit &unit2, projectUnits) {
                 FileType fileType = getFileType(unit2->fileName());
-                if (fileType == FileType::CHeader || fileType==FileType::CppHeader) {
+                if (isC_CPPHeaderFile(fileType)) {
                     QString header = extractRelativePath(mProject->makeFileName(),unit2->fileName());
                     objStr = objStr + ' ' + escapeFilenameForMakefilePrerequisite(header);
                 }

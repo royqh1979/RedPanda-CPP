@@ -64,11 +64,6 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage l
     }
 }
 
-QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(const QString &filename) const
-{
-    return getSyntaxer(getLanguage(filename));
-}
-
 QSynedit::PFormatter SyntaxerManager::getFormatter(QSynedit::ProgrammingLanguage language) const
 {
     switch(language) {
@@ -79,39 +74,57 @@ QSynedit::PFormatter SyntaxerManager::getFormatter(QSynedit::ProgrammingLanguage
     }
 }
 
-QSynedit::PFormatter SyntaxerManager::getFormatter(const QString &filename) const
-{
-    return getFormatter(getLanguage(filename));
-}
+//QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(const QString &filename) const
+//{
+//    QFileInfo info(filename);
+//    QString suffix = info.suffix();
+//    QString basename = info.baseName();
+//    if (suffix == "c" || suffix == "cpp" || suffix == "cxx"
+//            || suffix == "cc" || suffix == "h" || suffix == "hpp"
+//            || suffix == "hxx" || suffix == "hh" || suffix == "C"
+//            || suffix == "CPP" || suffix =="H" || suffix == "c++"
+//            || suffix == "h++") {
+//        return QSynedit::ProgrammingLanguage::CPP;
+//    } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
+//        return QSynedit::ProgrammingLanguage::GLSL;
+//    } else if (suffix == "asm") {
+//        return QSynedit::ProgrammingLanguage::Assembly;
+//    } else if (suffix == "s" || suffix == "S") {
+//        return QSynedit::ProgrammingLanguage::ATTAssembly;
+//    } else if (suffix == "lua") {
+//        if (basename=="xmake") {
+//            return QSynedit::ProgrammingLanguage::XMAKE;
+//        } else
+//            return QSynedit::ProgrammingLanguage::LUA;
+//    } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
+//        return QSynedit::ProgrammingLanguage::Makefile;
+//    } else if (suffix.isEmpty()) {
+//        return QSynedit::ProgrammingLanguage::CPP;
+//    }
+//    return QSynedit::ProgrammingLanguage::Textfile;
+//}
 
-QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(const QString &filename) const
+QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(FileType fileType) const
 {
-    QFileInfo info(filename);
-    QString suffix = info.suffix();
-    QString basename = info.baseName();
-    if (suffix == "c" || suffix == "cpp" || suffix == "cxx"
-            || suffix == "cc" || suffix == "h" || suffix == "hpp"
-            || suffix == "hxx" || suffix == "hh" || suffix == "C"
-            || suffix == "CPP" || suffix =="H" || suffix == "c++"
-            || suffix == "h++") {
-        return QSynedit::ProgrammingLanguage::CPP;
-    } else if (suffix == "vs" || suffix == "fs" || suffix == "frag") {
-        return QSynedit::ProgrammingLanguage::GLSL;
-    } else if (suffix == "asm") {
-        return QSynedit::ProgrammingLanguage::Assembly;
-    } else if (suffix == "s" || suffix == "S") {
+    switch(fileType) {
+    case FileType::ATTASM:
         return QSynedit::ProgrammingLanguage::ATTAssembly;
-    } else if (suffix == "lua") {
-        if (basename=="xmake") {
-            return QSynedit::ProgrammingLanguage::XMAKE;
-        } else
-            return QSynedit::ProgrammingLanguage::LUA;
-    } else if (basename.compare("makefile", Qt::CaseInsensitive)==0) {
-        return QSynedit::ProgrammingLanguage::Makefile;
-    } else if (suffix.isEmpty()) {
+    case FileType::INTELASM:
+        return QSynedit::ProgrammingLanguage::Assembly;
+    case FileType::CCppHeader:
+    case FileType::CSource:
+    case FileType::CppSource:
         return QSynedit::ProgrammingLanguage::CPP;
+    case FileType::LUA:
+        return QSynedit::ProgrammingLanguage::LUA;
+    case FileType::MakeFile:
+        return QSynedit::ProgrammingLanguage::Makefile;
+    case FileType::FragmentShader:
+    case FileType::VerticeShader:
+        return QSynedit::ProgrammingLanguage::GLSL;
+    default:
+        return QSynedit::ProgrammingLanguage::Textfile;
     }
-    return QSynedit::ProgrammingLanguage::Textfile;
 }
 
 QSynedit::PSyntaxer SyntaxerManager::copy(QSynedit::PSyntaxer syntaxer) const

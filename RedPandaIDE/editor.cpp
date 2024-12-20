@@ -71,7 +71,7 @@ static QSet<QString> CppTypeQualifiers {
 };
 
 Editor::Editor(QWidget *parent):
-    Editor(parent,"untitled",ENCODING_AUTO_DETECT,nullptr,true,nullptr)
+    Editor{parent,"untitled",ENCODING_AUTO_DETECT,nullptr,true,nullptr}
 {
 }
 
@@ -94,7 +94,8 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mSaving{false},
     mHoverModifiedLine{-1},
     mWheelAccumulatedDelta{0},
-    mCtrlClicking{false}
+    mCtrlClicking{false},
+    mFileType{FileType::None}
 {
     mLastFocusOutTime = 0;
     mInited=false;
@@ -106,15 +107,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     if (mFilename.isEmpty()) {
         mFilename = QString("untitled%1").arg(getNewFileNumber());
     }
-    QSynedit::PSyntaxer syntaxer;
-    syntaxer = syntaxerManager.getSyntaxer(mFilename);
-    if (syntaxer) {
-        setSyntaxer(syntaxer);
-        setFormatter(syntaxerManager.getFormatter(syntaxer->language()));
-        setUseCodeFolding(true);
-    } else {
-        setUseCodeFolding(false);
-    }
+    doSetFileType(getFileType(mFilename));
     if (mProject && mEncodingOption==ENCODING_PROJECT) {
         mEncodingOption=mProject->options().encoding;
     }
@@ -131,7 +124,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     resolveAutoDetectEncodingOption();
 
     if (mProject) {
-        if (syntaxer && syntaxer->language() == QSynedit::ProgrammingLanguage::CPP)
+        if (syntaxer() && syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP)
             mParser = mProject->cppParser();
     } else {
         initParser();
@@ -176,16 +169,15 @@ Editor::Editor(QWidget *parent, const QString& filename,
 
     mCanAutoSave = false;
     if (isNew && parentPageControl!=nullptr ) {
-        FileType fileType = getFileType(filename);
         QString fileTemplate;
-        switch (fileType) {
+        switch (mFileType) {
         case FileType::CSource:
             fileTemplate = pMainWindow->codeSnippetManager()->newCFileTemplate();
             break;
         case FileType::CppSource:
             fileTemplate = pMainWindow->codeSnippetManager()->newCppFileTemplate();
             break;
-        case FileType::GAS:
+        case FileType::ATTASM:
             fileTemplate = pMainWindow->codeSnippetManager()->newGASFileTemplate();
             break;
         default:
@@ -283,21 +275,17 @@ void Editor::loadFile(QString filename) {
     updateCaption();
     if (inTab())
         pMainWindow->updateForEncodingInfo(this);
-    switch(getFileType(mFilename)) {
-    case FileType::CppSource:
-        mUseCppSyntax = true;
-        break;
-    case FileType::CSource:
-        mUseCppSyntax = false;
-        break;
-    default:
-        mUseCppSyntax = pSettings->editor().defaultFileCpp();
+    doSetFileType(getFileType(mFilename));
+    applyColorScheme(pSettings->editor().colorScheme());
+    if (!inProject()) {
+        initParser();
+        reparse(false);
     }
-    reparse(true);
+    reparseTodo();
     if (pSettings->editor().syntaxCheckWhenLineChanged()) {
         checkSyntaxInBack();
     }
-    reparseTodo();
+
     saveAutoBackup();
 }
 
@@ -487,43 +475,12 @@ bool Editor::saveAs(const QString &name, bool fromProject){
         mProject->associateEditor(this);
     }
     pMainWindow->fileSystemWatcher()->addPath(mFilename);
-    switch(getFileType(mFilename)) {
-    case FileType::CppSource:
-        mUseCppSyntax = true;
-        break;
-    case FileType::CSource:
-        mUseCppSyntax = false;
-        break;
-    default:
-        mUseCppSyntax = pSettings->editor().defaultFileCpp();
-    }
-
-    //update (reassign syntaxer)
-    QSynedit::PSyntaxer newSyntaxer = syntaxerManager.getSyntaxer(mFilename);
-    if (newSyntaxer) {
-        setUseCodeFolding(true);
-        setFormatter(syntaxerManager.getFormatter(newSyntaxer->language()));
-    } else {
-        setUseCodeFolding(false);
-        setFormatter(syntaxerManager.getFormatter(QSynedit::ProgrammingLanguage::Unknown));
-    }
-    setSyntaxer(newSyntaxer);
-
-    if (!newSyntaxer || newSyntaxer->language() != QSynedit::ProgrammingLanguage::CPP) {
+    setFileType(getFileType(mFilename));
+    if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
     }
-    applyColorScheme(pSettings->editor().colorScheme());
-
-    if (!inProject()) {
-        initParser();
-        reparse(false);
-        reparseTodo();
-    }
-
     if (pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
-
-
     if (!shouldOpenInReadonly()) {
         setReadOnly(false);
     }
@@ -562,44 +519,12 @@ void Editor::setFilename(const QString &newName)
         mProject->associateEditor(this);
     }
     pMainWindow->fileSystemWatcher()->addPath(mFilename);
-    switch(getFileType(mFilename)) {
-    case FileType::CppSource:
-        mUseCppSyntax = true;
-        break;
-    case FileType::CSource:
-        mUseCppSyntax = false;
-        break;
-    default:
-        mUseCppSyntax = pSettings->editor().defaultFileCpp();
-    }
-
-    //update (reassign syntaxer)
-    QSynedit::PSyntaxer newSyntaxer = syntaxerManager.getSyntaxer(mFilename);
-    if (newSyntaxer) {
-        setUseCodeFolding(true);
-        setFormatter(syntaxerManager.getFormatter(newSyntaxer->language()));
-    } else {
-        setUseCodeFolding(false);
-        setFormatter(syntaxerManager.getFormatter(QSynedit::ProgrammingLanguage::Unknown));
-    }
-    setSyntaxer(newSyntaxer);
-
-    if (!newSyntaxer || newSyntaxer->language() != QSynedit::ProgrammingLanguage::CPP) {
+    setFileType(getFileType(mFilename));
+    if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
     }
-    applyColorScheme(pSettings->editor().colorScheme());
-
-    if (!inProject()) {
-        initParser();
-        reparse(false);
-        reparseTodo();
-    }
-
     if (pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
-
-    updateCaption();
-
     emit renamed(oldName, newName , true);
 
     initAutoBackup();
@@ -1496,11 +1421,21 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
             QString sLine = lineText(p.line);
             if (mParser->isIncludeNextLine(sLine)) {
                 QString filename = mParser->getHeaderFileName(mFilename,sLine, true);
-                pMainWindow->openFile(filename);
+                Editor *e=pMainWindow->openFile(filename);
+                if (e) {
+                    if (!isC_CPPHeaderFile(e->fileType())
+                            && !isC_CPPSourceFile(e->fileType()))
+                        e->setFileType(FileType::CCppHeader);
+                }
                 return;
             } if (mParser->isIncludeLine(sLine)) {
                 QString filename = mParser->getHeaderFileName(mFilename,sLine);
-                pMainWindow->openFile(filename);
+                Editor *e=pMainWindow->openFile(filename);
+                if (e) {
+                    if (!isC_CPPHeaderFile(e->fileType())
+                            && !isC_CPPSourceFile(e->fileType()))
+                        e->setFileType(FileType::CCppHeader);
+                }
                 return;
             } else if (mParser->enabled()) {
                 gotoDefinition(p);
@@ -1998,13 +1933,8 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
 {
     if (button == Qt::LeftButton) {
-        FileType fileType=getFileType(mFilename);
-        if (fileType==FileType::CSource
-                || fileType==FileType::CHeader
-                || fileType==FileType::CppSource
-                || fileType==FileType::CppHeader
-                || fileType==FileType::GAS
-                )
+        if (isC_CPPSourceFile(mFileType)
+                || isC_CPPHeaderFile(mFileType))
             toggleBreakpoint(line);
     }
     mGutterClickedLine = line;
@@ -4604,6 +4534,54 @@ QSize Editor::calcCompletionPopupSize()
     return QSize{popWidth, popHeight};
 }
 
+FileType Editor::fileType() const
+{
+    return mFileType;
+}
+
+void Editor::setFileType(FileType newFileType)
+{
+    if (mFileType==newFileType)
+        return;
+    doSetFileType(newFileType);
+    applyColorScheme(pSettings->editor().colorScheme());
+    if (!inProject()) {
+        initParser();
+        reparse(false);
+    }
+    reparseTodo();
+    updateCaption();
+}
+
+void Editor::doSetFileType(FileType newFileType)
+{
+    if (mFileType==newFileType)
+        return;
+    mFileType = newFileType;
+
+    switch(mFileType) {
+    case FileType::CppSource:
+        mUseCppSyntax = true;
+        break;
+    case FileType::CSource:
+        mUseCppSyntax = false;
+        break;
+    default:
+        mUseCppSyntax = pSettings->editor().defaultFileCpp();
+    }
+
+    QSynedit::PSyntaxer syntaxer{syntaxerManager.getSyntaxer(mFileType)};
+    if (syntaxer) {
+        setSyntaxer(syntaxer);
+        setFormatter(syntaxerManager.getFormatter(syntaxer->language()));
+        setUseCodeFolding(true);
+    } else {
+        setUseCodeFolding(false);
+    }
+
+    setSyntaxer(syntaxer);
+}
+
 quint64 Editor::lastFocusOutTime() const
 {
     return mLastFocusOutTime;
@@ -4721,6 +4699,9 @@ void Editor::gotoDeclaration(const QSynedit::BufferCoord &pos)
     Editor *e = pMainWindow->openFile(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);
+        if (!isC_CPPSourceFile(e->fileType())
+                && !isC_CPPHeaderFile(e->fileType()))
+            e->setFileType(FileType::CCppHeader);
     }
 }
 
@@ -4754,6 +4735,9 @@ void Editor::gotoDefinition(const QSynedit::BufferCoord &pos)
         e = pMainWindow->openFile(filename);
     if (e) {
         e->setCaretPositionAndActivate(line,1);
+        if (!isC_CPPSourceFile(e->fileType())
+                && !isC_CPPHeaderFile(e->fileType()))
+            e->setFileType(FileType::CCppHeader);
     }
 }
 

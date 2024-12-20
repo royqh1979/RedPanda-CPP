@@ -765,9 +765,8 @@ bool Project::saveUnits()
                             unit->fileName())));
         count++;
         switch(getFileType(unit->fileName())) {
-        case FileType::CHeader:
+        case FileType::CCppHeader:
         case FileType::CSource:
-        case FileType::CppHeader:
         case FileType::CppSource:
             ini.SetLongValue(groupName,"CompileCpp", unit->compileCpp());
             break;
@@ -979,8 +978,8 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 }
 
                 FileType fileType=getFileType(unit->fileName());
-                if ( fileType==FileType::GAS
-                        || isCFile(unit->fileName()) || isHFile(unit->fileName())) {
+                if ( isC_CPP_ASMSourceFile(fileType)
+                        || isC_CPPHeaderFile(fileType)) {
                     Editor * editor = mEditorList->newEditor(
                                 unit->fileName(),
                                 unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
@@ -1120,8 +1119,7 @@ bool Project::saveAsTemplate(const QString &templateFolder,
             ini->SetValue(section,"Cpp", unitName.toUtf8());
             ini->SetValue(section,"CppName", unitName.toUtf8());
             break;
-        case FileType::CHeader:
-        case FileType::CppHeader:
+        case FileType::CCppHeader:
             ini->SetValue(section,"C", unitName.toUtf8());
             ini->SetValue(section,"CName", unitName.toUtf8());
             ini->SetValue(section,"Cpp", unitName.toUtf8());
@@ -1307,7 +1305,8 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
 
   // Determine compilation flags
     switch(getFileType(inFileName)) {
-    case FileType::GAS:
+    case FileType::ATTASM:
+    case FileType::INTELASM:
         newUnit->setCompile(true);
         newUnit->setCompileCpp(false);
         newUnit->setLink(true);

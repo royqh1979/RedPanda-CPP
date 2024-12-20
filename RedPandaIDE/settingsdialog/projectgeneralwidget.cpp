@@ -82,8 +82,7 @@ void ProjectGeneralWidget::doLoad()
         case FileType::CppSource:
             srcCount++;
             break;
-        case FileType::CppHeader:
-        case FileType::CHeader:
+        case FileType::CCppHeader:
             headerCount++;
             break;
         case FileType::WindowsResourceSource:

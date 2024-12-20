@@ -136,8 +136,7 @@ void NewClassCandidatesModel::fillClasses()
                 && !s->command.startsWith("_")
                 && !s->command.contains("<")
                 && !mClassNames.contains(s->fullName)) {
-            if (getFileType(s->fileName)==FileType::CHeader
-                    || getFileType(s->fileName)==FileType::CppHeader) {
+            if (isC_CPPHeaderFile(getFileType(s->fileName))){
                 mCandidates.append(s);
                 mClassNames.insert(s->fullName);
             }
@@ -162,8 +161,7 @@ void NewClassCandidatesModel::fillClassesInNamespace(PStatement ns)
                 && !s->command.startsWith("_")
                 && !s->command.contains("<")
                 && !mClassNames.contains(s->fullName)) {
-            if (getFileType(s->fileName)==FileType::CHeader
-                    || getFileType(s->fileName)==FileType::CppHeader) {
+            if (isC_CPPHeaderFile(getFileType(s->fileName))) {
                 mCandidates.append(s);
                 mClassNames.insert(s->fullName);
             }

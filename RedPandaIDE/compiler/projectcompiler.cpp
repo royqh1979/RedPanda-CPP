@@ -184,8 +184,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
         // Only process source files
         FileType fileType = getFileType(unit->fileName());
 
-        if (fileType == FileType::CSource || fileType == FileType::CppSource
-                || fileType==FileType::GAS) {
+        if (isC_CPP_ASMSourceFile(fileType)) {
             QString relativeName = extractRelativePath(mProject->directory(), unit->fileName());
             if (!mProject->options().folderForObjFiles.isEmpty()) {
                 // ofile = C:\MyProgram\obj\main.o
@@ -377,8 +376,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             continue;
         FileType fileType = getFileType(unit->fileName());
         // Only process source files
-        if (fileType!=FileType::CSource && fileType!=FileType::CppSource
-                && fileType!=FileType::GAS)
+        if (!isC_CPP_ASMSourceFile(fileType))
             continue;
 
         QString shortFileName = extractRelativePath(mProject->makeFileName(),unit->fileName());
@@ -404,7 +402,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
         } else {
             foreach(const PProjectUnit &unit2, projectUnits) {
                 FileType fileType = getFileType(unit2->fileName());
-                if (fileType == FileType::CHeader || fileType==FileType::CppHeader) {
+                if (isC_CPPHeaderFile(fileType)) {
                     QString prereq = extractRelativePath(mProject->makeFileName(), unit2->fileName());
                     objStr = objStr + ' ' + escapeFilenameForMakefilePrerequisite(prereq);
                 }
@@ -488,12 +486,12 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                 }
             }
 
-            if (fileType==FileType::CSource || fileType==FileType::CppSource) {
+            if (isC_CPPSourceFile(fileType)) {
                 if (unit->compileCpp())
                     writeln(file, "\t$(CXX) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CXXFLAGS) " + encodingStr);
                 else
                     writeln(file, "\t$(CC) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CFLAGS) " + encodingStr);
-            } else if (fileType==FileType::GAS) {
+            } else if (isASMSourceFile(fileType)) {
                 writeln(file, "\t$(CC) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CFLAGS) " + encodingStr);
             }
         }

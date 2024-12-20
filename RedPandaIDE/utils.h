@@ -37,19 +37,21 @@ using SimpleIni = CSimpleIniA;
 using PSimpleIni = std::shared_ptr<SimpleIni>;
 
 enum class FileType{
-    GAS, // GNU assembler source file (.s)
+    None,
+    ATTASM, // AT&T assembler source file (.s)
+    INTELASM, // Intel assembler source file (.s)
     LUA, // lua file (.lua)
     CSource, // c source file (.c)
     CppSource, // c++ source file (.cpp)
-    CHeader, // c header (.h)
-    CppHeader, // c++ header (.hpp)
+    CCppHeader, // c header (.h)
     WindowsResourceSource, // resource source (.res)
     Project, //Red Panda C++ Project (.dev)
     Text, // text file
     FragmentShader,
     VerticeShader,
     ModuleDef, // Windows Module Definition
-    Other // any others
+    MakeFile,
+    Other, // any others
 };
 
 enum class SearchFileScope {
@@ -131,6 +133,19 @@ struct NonExclusiveTemporaryFileOwner {
 using PNonExclusiveTemporaryFileOwner = std::unique_ptr<NonExclusiveTemporaryFileOwner>;
 
 FileType getFileType(const QString& filename);
+constexpr bool isASMSourceFile(FileType fileType) {
+    return fileType == FileType::ATTASM || fileType == FileType::INTELASM;
+}
+constexpr bool isC_CPPSourceFile(FileType fileType) {
+    return fileType == FileType::CSource || fileType == FileType::CppSource;
+}
+constexpr bool isC_CPPHeaderFile(FileType fileType) {
+    return fileType == FileType::CCppHeader;
+}
+constexpr bool isC_CPP_ASMSourceFile(FileType fileType) {
+    return fileType == FileType::CSource || fileType == FileType::CppSource
+            || fileType == FileType::ATTASM || fileType == FileType::INTELASM;
+}
 
 bool programHasConsole(const QString& filename);
 
