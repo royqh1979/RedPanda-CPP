@@ -90,7 +90,7 @@
     <message>
         <location filename="../settingsdialog/compilerautolinkwidget.cpp" line="93"/>
         <source>Header</source>
-        <translation>Заголовочный файл</translation>
+        <translation>Заголовок</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilerautolinkwidget.cpp" line="95"/>
@@ -701,7 +701,7 @@
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="179"/>
         <source>Survive auto-finds</source>
-        <translation>Автопоиск путей выживания</translation>
+        <translation>Сохранять при автопоиске</translation>
     </message>
     <message>
         <location filename="../settingsdialog/compilersetoptionwidget.ui" line="186"/>
@@ -1618,12 +1618,12 @@
     <message>
         <location filename="../settingsdialog/editorcolorschemewidget.ui" line="359"/>
         <source>Rainbow Indent Guides</source>
-        <translation type="unfinished"></translation>
+        <translation>Радужные линии отступа</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editorcolorschemewidget.ui" line="366"/>
         <source>Rainbow Indents</source>
-        <translation type="unfinished"></translation>
+        <translation>Радужные отступы</translation>
     </message>
     <message>
         <location filename="../settingsdialog/editorcolorschemewidget.ui" line="376"/>
@@ -2657,7 +2657,7 @@
     <message>
         <location filename="../settingsdialog/executorproblemsetwidget.ui" line="278"/>
         <source>Case Editor Font</source>
-        <translation>Шрифт редактор ситуации</translation>
+        <translation>Шрифт редактора ситуаций</translation>
     </message>
     <message>
         <location filename="../settingsdialog/executorproblemsetwidget.ui" line="296"/>
@@ -4112,7 +4112,7 @@
     <message>
         <location filename="../mainwindow.ui" line="189"/>
         <source>File Type</source>
-        <translation type="unfinished"></translation>
+        <translation>Тип файла</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="229"/>
@@ -4382,7 +4382,7 @@
         <location filename="../mainwindow.ui" line="1496"/>
         <location filename="../mainwindow.ui" line="2799"/>
         <source>Bookmark</source>
-        <translation>Закладка</translation>
+        <translation>Закладки</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1534"/>
@@ -4392,7 +4392,7 @@
         <location filename="../mainwindow.cpp" line="3016"/>
         <location filename="../mainwindow.cpp" line="3023"/>
         <source>Problem</source>
-        <translation>Проблема</translation>
+        <translation>Проблемы</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1626"/>
@@ -5434,12 +5434,12 @@
     <message>
         <location filename="../mainwindow.ui" line="3090"/>
         <source>Page Up</source>
-        <translation>Page Up</translation>
+        <translation>На страницу вверх</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3098"/>
         <source>Page Down</source>
-        <translation>Page Down</translation>
+        <translation>На страницу вниз</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3106"/>
@@ -5549,32 +5549,32 @@
     <message>
         <location filename="../mainwindow.ui" line="3264"/>
         <source>C/C++ Header</source>
-        <translation type="unfinished"></translation>
+        <translation>Заголовок Си/Си++</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3269"/>
         <source>AT&amp;&amp;T ASM</source>
-        <translation type="unfinished"></translation>
+        <translation>Ассемблер AT&amp;&amp;T</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3274"/>
         <source>Text File</source>
-        <translation type="unfinished"></translation>
+        <translation>Тектовый файл</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3279"/>
         <source>C File</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл Си</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3284"/>
         <source>C++ File</source>
-        <translation type="unfinished"></translation>
+        <translation>Файл Си++</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3289"/>
         <source>Intel ASM</source>
-        <translation type="unfinished"></translation>
+        <translation>Ассемблер Intel</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="152"/>
@@ -8281,7 +8281,7 @@
     <message>
         <location filename="../colorscheme.cpp" line="568"/>
         <source>Indent Guide Line</source>
-        <translation type="unfinished"></translation>
+        <translation>Линия отступа</translation>
     </message>
     <message>
         <location filename="../colorscheme.cpp" line="573"/>
