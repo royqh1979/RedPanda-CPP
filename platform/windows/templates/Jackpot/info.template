@@ -4,8 +4,11 @@ Name=Jackpot
 Icon=Games.ico
 Description=A number guessing game
 Description[zh_CN]=一个数字猜测游戏
+Name[ru_RU]=Джекпот
+Description[ru_RU]=Игра в угадывание числа
 Category=Console
 Category[zh_CN]=控制台
+Category[ru_RU]=Консольные
 
 [Unit0]
 CppName=main.cpp

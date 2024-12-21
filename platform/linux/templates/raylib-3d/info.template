@@ -7,6 +7,8 @@ Description=A simple 3D program using raylib ( https://raylib.com )
 Description[zh_CN]=简单的raylib 3D程序 ( https://raylib.com )
 Category=3D
 Category[zh_CN]=3D
+Name[ru_RU]=raylib 3D
+Description[ru_RU]=Простая 3D-програма, использующая raylib ( https://raylib.com )
 
 [Unit0]
 CName=main.c

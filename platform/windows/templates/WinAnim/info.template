@@ -5,6 +5,8 @@ Name[zh_CN]=动画示例
 Icon=Windows.ico
 Description=A Win32 painting example
 Description[zh_CN]=一个Win32绘图示例
+Name[ru_RU]=Пример анимации
+Description[ru_RU]=Пример рисования в Win32
 Category=Win32
 
 [Unit0]

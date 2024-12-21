@@ -6,6 +6,8 @@ Category = Game
 Category[zh_CN] = 游戏
 Description = Classic sweepminer game by raylib
 Description[zh_CN] = 使用raylib编写的经典扫雷游戏
+Name[ru_RU]=Минёр
+Description[ru_RU]=Классическая игра Минёр с использованием raylib
 Icon = app.ico
 
 

@@ -5,6 +5,7 @@
     <comment xml:lang="pt_BR">Projeto do Red Panda C++</comment>
     <comment xml:lang="zh_CN">小熊猫C++ 项目</comment>
     <comment xml:lang="zh_TW">小熊貓C++ 專案</comment>
+    <comment xml:lang="ru_RU">Проекты Red Panda C++</comment>
     <sub-class-of type="text/plain"/>
     <glob pattern="*.dev"/>
   </mime-type>

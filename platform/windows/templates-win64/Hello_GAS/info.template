@@ -6,6 +6,9 @@ Description = A simple GNU assembly program
 Name[zh_CN] = GAS你好
 Category[zh_CN] = 汇编
 Description[zh_CN] = 简单的GNU汇编程序示例
+Name[ru_RU] = Привет, GAS
+Description[ru_RU] = Простая программа на Ассемблере GNU
+Category[ru_RU] = Ассемблер
 Icon = app.ico
 
 

@@ -6,6 +6,9 @@ Description = C and GAS mixing programming demo
 Name[zh_CN] = GAS与C
 Category[zh_CN] = 汇编
 Description[zh_CN] = C和GAS汇编混合编程示例
+Name[ru_RU] = GAS & C
+Description[ru_RU] = Пример смешивания Си и Ассемблера GNU в одной программе
+Category[ru_RU] = Ассемблер
 Icon = app.ico
 
 

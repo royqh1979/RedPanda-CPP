@@ -5,8 +5,11 @@ Name[zh_CN]=TinyFileDialogs
 Icon=tinyfiledialogs.ico
 Description=Demo app for tinyfiledialogs
 Description[zh_CN]=tinyfiledialogs示例程序
+Name[ru_RU]=TinyFileDialogs
+Description[ru_RU]=Демо-приложение с использованием TinyFileDialogs
 Category=UI
 Category[zh_CN]=UI
+Category[ru_RU]=Интерфейс
 
 [Unit0]
 CName=main.c

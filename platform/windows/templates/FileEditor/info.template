@@ -2,6 +2,8 @@
 ver=2
 Name=File Editor
 Name[zh_CN]=文件编辑器
+Name[ru_RU]=Редактор файлов
+Description[ru_RU]=Простой редактор файлов для Win32
 Icon=Editor.ico
 Description=A simple Win32 file editor
 Description[zh_CN]=一个简单的Win32文件编辑器

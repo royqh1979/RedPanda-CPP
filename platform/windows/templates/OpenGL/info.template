@@ -4,6 +4,8 @@ Name=OpenGL
 Icon=Pizza.ico
 Description=A basic OpenGL program
 Description[zh_CN]=一个基本的OpenGL程序
+Name[ru_RU]=OpenGL
+Description[ru_RU]=Простая OpenGL-программа
 Category=3D
 Category[zh_CN]=3D
 

@@ -1,12 +1,15 @@
 [Template]
 ver=2
-Name=snake
+Name=Life
 Name[zh_CN]=生命游戏
 Icon=raylib-lifegame.ico
-Description=snake game using raylib ( https://raylib.com )
+Description=Life game using raylib ( https://raylib.com )
 Description[zh_CN]=基于raylib的生命游戏( https://raylib.com )
+Name[ru_RU]=Жизнь
+Description[ru_RU]=Игра Жизнь с использованием  raylib ( https://raylib.com )
 Category=Game
 Category[zh_CN]=游戏
+Category[ru_RU]=Игры
 
 [Unit0]
 CName=main.cpp

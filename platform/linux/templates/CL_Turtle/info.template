@@ -7,6 +7,9 @@ Description=A simple program using Turtle Graphics
 Description[zh_CN]=简单的海龟作图程序 (https://github.com/royqh1979/raylib-drawing)
 Category=Multimedia
 Category[zh_CN]=多媒体
+Name[ru_RU]=Черепашка
+Description[ru_RU]=Простая программа, использующая Turtle Graphics
+Category[ru_RU]=Мультимедиа
 
 [Unit0]
 CName=main.c

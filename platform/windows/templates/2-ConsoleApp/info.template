@@ -2,11 +2,14 @@
 ver=2
 Name=Console Application
 Name[zh_CN]=控制台程序
+Name[ru_RU]=Консольное приложение
 Icon=ConsoleToo.ico
 Description=A console application (MS-DOS window)
 Description[zh_CN]=控制台应用程序
+Description[ru_RU]=Консольное приложение (окно MS-DOS)
 Category=Basic
 Category[zh_CN]=基础
+Category[ru_RU]=Основные
 
 [Unit0]
 CName=main.c

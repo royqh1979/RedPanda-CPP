@@ -7,6 +7,9 @@ Description=A simple epitrochoid drawing app
 Description[zh_CN]=外旋轮线绘制程序
 Category=Game
 Category[zh_CN]=游戏
+Name[ru_RU]=Эпитрохоида
+Description[ru_RU]=Приложение, рисующее простую эпитрохоиду
+Category[ru_RU]=Игры
 
 [Unit0]
 CName=main.c

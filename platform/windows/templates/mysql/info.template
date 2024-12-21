@@ -2,10 +2,13 @@
 ver=2
 Name=MySQL(MyriaDB)
 Icon=mysql.ico
-Description=A Sqlite3 API Example
+Description=A MySQL API Example
 Description[zh_CN]=MySQL数据库示例程序
+Name[ru_RU]=MySQL(MyriaDB)
+Description[ru_RU]=Пример работы с MySQL API
 Category=Database
 Category[zh_CN]=数据库
+Category[ru_RU]=Базы данных
 
 [Unit0]
 CName=main.c
