@@ -41,13 +41,10 @@ public:
     using PParseFileCommand = std::unique_ptr<ParseFileCommand>;
 
     explicit CppParser();
-    void setSPThis(std::shared_ptr<CppParser> spThis) { mSPThis = spThis;}
     CppParser(const CppParser&)=delete;
     CppParser& operator=(const CppParser)=delete;
 
     ~CppParser();
-
-    static std::shared_ptr<CppParser> createParser();
 
     void addHardDefineByLine(const QString& line);
     void addProjectFile(const QString &fileName, bool needScan);
@@ -176,11 +173,12 @@ signals:
     void onStartParsing();
     void onEndParsing(int total, int updateView);
 private:
-    void parseFile(const QString& fileName, bool inProject,
+    bool parseFile(const QString& fileName, bool inProject,
                    const QString& contextFilename,
                    bool onlyIfNotParsed = false, bool updateView = true
                    );
     void parseFileList(bool updateView = true);
+    PParseFileCommand retrievePendingParseFileCommand();
 
     PStatement addInheritedStatement(
             const PStatement& derived,
@@ -750,7 +748,6 @@ private:
     QSet<QString> mCppTypeKeywords;
 
     PParseFileCommand mLastParseFileCommand;
-    std::weak_ptr<CppParser> mSPThis;
 
     friend class CppFileListParserThread;
     friend class CppFileParserThread;
@@ -775,7 +772,7 @@ public:
             bool onlyIfNotParsed = false,
             bool updateView = true,
             QObject *parent = nullptr);
-
+    ~CppFileParserThread();
 private:
     PCppParser mParser;
     QString mFileName;
@@ -783,6 +780,7 @@ private:
     QString mContextFilename;
     bool mOnlyIfNotParsed;
     bool mUpdateView;
+    int mId;
 
     // QThread interface
 protected:
