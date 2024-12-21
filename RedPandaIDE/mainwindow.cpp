@@ -1116,7 +1116,6 @@ void MainWindow::applySettings()
     ui->lblProblemCaseOutput->setFont(caseEditorFont);
     ui->txtProblemCaseExpected->setFont(caseEditorFont);
     ui->lblProblemCaseExpected->setFont(caseEditorFont);
-    ui->txtToolsOutput->setFont(caseEditorFont);
 
     mCCHandler.stop();
     mCCHandler.start();
