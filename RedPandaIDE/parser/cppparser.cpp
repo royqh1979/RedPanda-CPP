@@ -1081,20 +1081,12 @@ void CppParser::parseFile(const QString &fileName, bool inProject,
                 bool onlyIfNotParsed =  mLastParseFileCommand->onlyIfNotParsed;
                 bool updateView =       mLastParseFileCommand->updateView;
                 mLastParseFileCommand = nullptr;
-                std::shared_ptr<CppParser> pThis = mSPThis.lock();
-                if (pThis) {
-                    ::parseFileNonBlocking(pThis,
-                                fileName,
-                                inProject,
-                                contextFilename,
-                                onlyIfNotParsed,
-                                updateView);
-                }
-#ifdef QT_DEBUG
-                else {
-                    qDebug()<<"CppParser's mSPThis weak pointer is empty or expired.";
-                }
-#endif
+                ::parseFileNonBlocking(mSPThis.lock(),
+                            fileName,
+                            inProject,
+                            contextFilename,
+                            onlyIfNotParsed,
+                            updateView);
             }
             mParsing = false;
         });
