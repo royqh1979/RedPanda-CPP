@@ -266,6 +266,7 @@ private slots:
     void onEndParsing();
 
 private:
+    void loadContent();
     void resolveAutoDetectEncodingOption();
     bool isBraceChar(QChar ch);
     bool shouldOpenInReadonly();
@@ -327,7 +328,7 @@ private:
     void cancelHoverLink();
 
     QSize calcCompletionPopupSize();
-    void doSetFileType(FileType newFileType);
+    void doSetFileType(FileType newFileType, bool force=false);
 
     Editor* openFileInContext(const QString& filename);
 

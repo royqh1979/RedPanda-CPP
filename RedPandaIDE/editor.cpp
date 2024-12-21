@@ -114,7 +114,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mFileEncoding = ENCODING_ASCII;
     if (!isNew) {
         try {
-            loadFile();
+            loadContent();
         } catch (FileError& e) {
             QMessageBox::critical(nullptr,
                                   tr("Error Load File"),
@@ -258,25 +258,15 @@ void Editor::loadFile(QString filename) {
 //        }
     } else {
         filename = QFileInfo(filename).absoluteFilePath();
+        doSetFileType(getFileType(filename));
     }
 
     //FileError should by catched by the caller of loadFile();
-
-    this->document()->loadFromFile(filename,mEncodingOption,mFileEncoding);
-
-    if (mProject) {
-        PProjectUnit unit = mProject->findUnit(this);
-        if (unit) {
-            unit->setRealEncoding(mFileEncoding);
-        }
-    }
-
-    //this->setModified(false);
+    mFilename = filename;
+    loadContent();
     updateCaption();
-    if (inTab())
-        pMainWindow->updateForEncodingInfo(this);
-    doSetFileType(getFileType(mFilename));
-    applyColorScheme(pSettings->editor().colorScheme());
+
+//    applyColorScheme(pSettings->editor().colorScheme());
     if (!inProject()) {
         initParser();
         reparse(false);
@@ -285,8 +275,6 @@ void Editor::loadFile(QString filename) {
     if (pSettings->editor().syntaxCheckWhenLineChanged()) {
         checkSyntaxInBack();
     }
-
-    saveAutoBackup();
 }
 
 void Editor::saveFile(QString filename) {
@@ -543,6 +531,8 @@ const QByteArray& Editor::encodingOption() const noexcept{
     return mEncodingOption;
 }
 void Editor::setEncodingOption(const QByteArray& encoding) noexcept{
+    if (encoding.isEmpty())
+        return;
     QByteArray newEncoding=encoding;
     if (mProject && encoding==ENCODING_PROJECT)
         newEncoding=mProject->options().encoding;
@@ -1505,23 +1495,26 @@ void Editor::closeEvent(QCloseEvent *)
 
 void Editor::showEvent(QShowEvent */*event*/)
 {
-    if (mParser && pSettings->codeCompletion().clearWhenEditorHidden()
-            && pSettings->codeCompletion().shareParser()
-            && !inProject()
-            && isC_CPPSourceFile(mFileType) ) {
-        //qDebug()<<mFilename;
-        resetCppParser(mParser);
-    }
     if (mParser && !pMainWindow->isClosingAll()
-            && !pMainWindow->isQuitting()
-            && !mParser->isFileParsed(mFilename)
-            ) {
-        connect(mParser.get(),
-                &CppParser::onEndParsing,
-                this,
-                &Editor::onEndParsing);
-        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
-            reparse(false);
+            && !pMainWindow->isQuitting()) {
+        if (pSettings->codeCompletion().clearWhenEditorHidden()
+            && pSettings->codeCompletion().shareParser()
+            && !inProject()) {
+            if (isC_CPPHeaderFile(mFileType)
+                    && !mContextFile.isEmpty()
+                    && !mParser->isFileParsed(mContextFile))
+                resetCppParser(mParser);
+            else if (!mParser->isFileParsed(mFilename))
+                resetCppParser(mParser);
+        }
+        if (!mParser->isFileParsed(mFilename)) {
+            connect(mParser.get(),
+                    &CppParser::onEndParsing,
+                    this,
+                    &Editor::onEndParsing);
+            if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
+                reparse(false);
+        }
     }
     if (inTab()) {
         pMainWindow->debugger()->setIsForProject(inProject());
@@ -2163,6 +2156,24 @@ void Editor::onEndParsing()
     mIdentCache.clear();
     document()->invalidateAllNonTempLineWidth();
     invalidate();
+}
+
+void Editor::loadContent()
+{
+    this->document()->loadFromFile(mFilename,mEncodingOption,mFileEncoding);
+    applyColorScheme(pSettings->editor().colorScheme());
+    if (mProject) {
+        PProjectUnit unit = mProject->findUnit(this);
+        if (unit) {
+            unit->setRealEncoding(mFileEncoding);
+        }
+    }
+    //this->setModified(false);
+
+    if (inTab())
+        pMainWindow->updateForEncodingInfo(this);
+
+    saveAutoBackup();
 }
 
 void Editor::resolveAutoDetectEncodingOption()
@@ -4537,18 +4548,18 @@ void Editor::setFileType(FileType newFileType)
     if (mFileType==newFileType)
         return;
     doSetFileType(newFileType);
-    applyColorScheme(pSettings->editor().colorScheme());
     if (!inProject()) {
         initParser();
         reparse(false);
     }
     reparseTodo();
     updateCaption();
+    pMainWindow->updateEditorActions(this);
 }
 
-void Editor::doSetFileType(FileType newFileType)
+void Editor::doSetFileType(FileType newFileType, bool force)
 {
-    if (mFileType==newFileType)
+    if (mFileType==newFileType && !force)
         return;
     mFileType = newFileType;
 
@@ -4558,6 +4569,17 @@ void Editor::doSetFileType(FileType newFileType)
         break;
     case FileType::CSource:
         mUseCppSyntax = false;
+        break;
+    case FileType::CCppHeader:
+    {
+        FileType contextFileType = getFileType(mContextFile);
+        if (contextFileType==FileType::CppSource)
+            mUseCppSyntax = true;
+        else if (contextFileType == FileType::CSource)
+            mUseCppSyntax = false;
+        else
+            mUseCppSyntax = pSettings->editor().defaultFileCpp();
+    }
         break;
     default:
         mUseCppSyntax = pSettings->editor().defaultFileCpp();
@@ -4573,6 +4595,7 @@ void Editor::doSetFileType(FileType newFileType)
     }
 
     setSyntaxer(syntaxer);
+    applyColorScheme(pSettings->editor().colorScheme());
 }
 
 Editor* Editor::openFileInContext(const QString &filename)
@@ -4600,13 +4623,13 @@ const QString &Editor::contextFile() const
 
 void Editor::setContextFile(const QString &newContextFile)
 {
-    if (!isC_CPPHeaderFile(mFileType))
-        return;
     QString s = newContextFile.trimmed();
     if (mContextFile == s)
         return;
     mContextFile = s;
-    if (!mContextFile.isEmpty()) {
+    if (isC_CPPHeaderFile(mFileType)) {
+        doSetFileType(mFileType, true);
+        applyColorScheme(pSettings->editor().colorScheme());
         reparse(false);
     }
 }

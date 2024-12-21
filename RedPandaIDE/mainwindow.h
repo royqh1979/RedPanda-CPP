@@ -135,6 +135,7 @@ public:
     void updateCompileActions();
     void updateCompileActions(const Editor* e);
     void updateEditorColorSchemes();
+    void updateFileTypeActions(const Editor *e);
     void updateCompilerSet();
     void updateCompilerSet(const Editor* e);
     void updateDebuggerSettings();

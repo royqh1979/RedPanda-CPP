@@ -709,17 +709,11 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionFind_references->setEnabled(false);
 
         ui->actionMove_To_Other_View->setEnabled(false);
-        ui->actionC_C_Header->setChecked(false);
         ui->actionC_C_Header->setEnabled(false);
-        ui->actionC_File->setChecked(false);
         ui->actionC_File->setEnabled(false);
-        ui->actionCPP_File->setChecked(false);
         ui->actionCPP_File->setEnabled(false);
-        ui->actionATT_ASM->setChecked(false);
         ui->actionATT_ASM->setEnabled(false);
-        ui->actionIntel_ASM->setChecked(false);
         ui->actionIntel_ASM->setEnabled(false);
-        ui->actionText_File->setChecked(false);
         ui->actionText_File->setEnabled(false);
     } else {
         ui->actionCopy->setEnabled(true);
@@ -809,30 +803,9 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionATT_ASM->setEnabled(true);
         ui->actionIntel_ASM->setEnabled(true);
         ui->actionText_File->setEnabled(true);
-        switch(e->fileType()) {
-        case FileType::CCppHeader:
-            ui->actionC_C_Header->setChecked(true);
-            break;
-        case FileType::CSource:
-            ui->actionC_File->setChecked(true);
-            break;
-        case FileType::CppSource:
-            ui->actionCPP_File->setChecked(true);
-            break;
-        case FileType::ATTASM:
-            ui->actionATT_ASM->setChecked(true);
-            break;
-        case FileType::INTELASM:
-            ui->actionIntel_ASM->setChecked(true);
-            break;
-        case FileType::Text:
-            ui->actionText_File->setChecked(true);
-            break;
-        default:
-            break;
-        }
     }
 
+    updateFileTypeActions(e);
     updateEncodingActions(e);
     updateCompileActions(e);
     updateCompilerSet(e);
@@ -1049,6 +1022,41 @@ void MainWindow::updateEditorColorSchemes()
                                                projectHeaderColor,
                                                systemHeaderColor,
                                                headerFolderColor);
+}
+
+void MainWindow::updateFileTypeActions(const Editor* e)
+{
+    ui->actionC_C_Header->setChecked(false);
+    ui->actionC_File->setChecked(false);
+    ui->actionCPP_File->setChecked(false);
+    ui->actionATT_ASM->setChecked(false);
+    ui->actionIntel_ASM->setChecked(false);
+    ui->actionText_File->setChecked(false);
+    if (!e)
+        return;
+    switch(e->fileType()) {
+    case FileType::CCppHeader:
+        ui->actionC_C_Header->setChecked(true);
+        break;
+    case FileType::CSource:
+        ui->actionC_File->setChecked(true);
+        break;
+    case FileType::CppSource:
+        ui->actionCPP_File->setChecked(true);
+        break;
+    case FileType::ATTASM:
+        ui->actionATT_ASM->setChecked(true);
+        break;
+    case FileType::INTELASM:
+        ui->actionIntel_ASM->setChecked(true);
+        break;
+    case FileType::Text:
+        ui->actionText_File->setChecked(true);
+        break;
+    default:
+        break;
+    }
+
 }
 
 void MainWindow::applySettings()
@@ -3468,6 +3476,9 @@ bool MainWindow::saveLastOpens()
       fileObj["caretY"] = editor->caretY();
       fileObj["top"] = editor->topPos();
       fileObj["left"] = editor->leftPos();
+      fileObj["fileType"] =  fileTypeToName(editor->fileType());
+      fileObj["encodingOption"] = QLatin1String(editor->encodingOption());
+      fileObj["contextFile"] = editor->contextFile();
       filesArray.append(fileObj);
     }
     rootObj["files"]=filesArray;
@@ -3574,6 +3585,13 @@ void MainWindow::loadLastOpens()
         editor->setLeftPos(
                     fileObj["left"].toInt(1)
                     );
+        if (fileObj.contains("contextFile"))
+            editor->setContextFile(fileObj["contextFile"].toString());
+        if (fileObj.contains("fileType")) {
+            editor->setFileType(nameToFileType(fileObj["fileType"].toString()));
+        }
+        if (fileObj.contains("encodingOption"))
+            editor->setEncodingOption(fileObj["encodingOption"].toString().toLatin1());
         if (fileObj["focused"].toBool(false))
             focusedEditor = editor;
         //mVisitHistoryManager->removeFile(editorFilename);

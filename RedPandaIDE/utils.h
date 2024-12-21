@@ -133,6 +133,8 @@ struct NonExclusiveTemporaryFileOwner {
 using PNonExclusiveTemporaryFileOwner = std::unique_ptr<NonExclusiveTemporaryFileOwner>;
 
 FileType getFileType(const QString& filename);
+QString fileTypeToName(FileType fileType);
+FileType nameToFileType(const QString& name);
 constexpr bool isASMSourceFile(FileType fileType) {
     return fileType == FileType::ATTASM || fileType == FileType::INTELASM;
 }

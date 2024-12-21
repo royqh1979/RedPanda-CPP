@@ -102,8 +102,9 @@ EditorColorSchemeWidget::EditorColorSchemeWidget(const QString& name, const QStr
     ui->editDemo->setCaretY(9);
     ui->editDemo->setActiveBreakpointFocus(10,false);
     ui->editDemo->setCaretXY(QSynedit::BufferCoord{1,1});
-    ui->editDemo->reparseDocument();
-    ui->editDemo->invalidate();
+    ui->editDemo->setFileType(FileType::CppSource);
+    //ui->editDemo->reparseDocument();
+    //ui->editDemo->invalidate();
     onItemSelectionChanged();
 }
 

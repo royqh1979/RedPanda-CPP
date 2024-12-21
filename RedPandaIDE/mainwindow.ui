@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1166</width>
+    <width>2063</width>
     <height>628</height>
    </rect>
   </property>
@@ -64,6 +64,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
          <property name="handleWidth">
           <number>1</number>
          </property>
@@ -113,7 +116,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1166</width>
+     <width>2063</width>
      <height>25</height>
     </rect>
    </property>
@@ -205,10 +208,10 @@
     <addaction name="actionIndent"/>
     <addaction name="actionUnIndent"/>
     <addaction name="separator"/>
-    <addaction name="menuFile_Type"/>
-    <addaction name="separator"/>
     <addaction name="actionToggleComment"/>
     <addaction name="actionToggle_Block_Comment"/>
+    <addaction name="separator"/>
+    <addaction name="menuFile_Type"/>
     <addaction name="separator"/>
     <addaction name="actionFoldAll"/>
     <addaction name="actionUnfoldAll"/>
@@ -874,6 +877,9 @@
          </item>
          <item>
           <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
@@ -1050,6 +1056,9 @@
       </property>
       <item>
        <widget class="QSplitter" name="splitterDebug">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
         <property name="handleWidth">
          <number>3</number>
         </property>
@@ -1370,6 +1379,9 @@
          </item>
          <item>
           <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
@@ -1445,6 +1457,9 @@
          </item>
          <item>
           <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
@@ -1548,6 +1563,9 @@
       </property>
       <item>
        <widget class="QSplitter" name="splitterProblem">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
         <widget class="QWidget" name="panelProblemCaseInfo" native="true">
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <property name="spacing">
@@ -1696,6 +1714,9 @@
              </item>
              <item>
               <spacer name="horizontalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>40</width>
@@ -1958,6 +1979,9 @@
              </item>
              <item>
               <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>40</width>
@@ -3260,31 +3284,49 @@
    </property>
   </action>
   <action name="actionC_C_Header">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>C/C++ Header</string>
    </property>
   </action>
   <action name="actionATT_ASM">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>AT&amp;&amp;T ASM</string>
    </property>
   </action>
   <action name="actionText_File">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Text File</string>
    </property>
   </action>
   <action name="actionC_File">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>C File</string>
    </property>
   </action>
   <action name="actionCPP_File">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>C++ File</string>
    </property>
   </action>
   <action name="actionIntel_ASM">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Intel ASM</string>
    </property>
