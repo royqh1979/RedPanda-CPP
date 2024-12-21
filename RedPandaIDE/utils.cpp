@@ -48,6 +48,8 @@ NonExclusiveTemporaryFileOwner::~NonExclusiveTemporaryFileOwner()
 
 FileType getFileType(const QString &filename)
 {
+    if (filename.isEmpty())
+        return FileType::None;
     if (filename.startsWith("makefile", PATH_SENSITIVITY)) {
         return FileType::MakeFile;
     }
@@ -864,4 +866,36 @@ void setComboTextAndHistory(QComboBox *cb, const QString &newText, QStringList &
     cb->clear();
     cb->addItems(historyList);
     cb->setCurrentIndex(idx);
+}
+
+static const QMap<QString,FileType> FileTypeMapping{
+    {"None", FileType::None},
+    {"ATTASM", FileType::ATTASM},
+    {"INTELASM", FileType::INTELASM},
+    {"LUA", FileType::LUA},
+    {"CSource", FileType::CSource}, // c source file (.c)
+    {"CppSource", FileType::CppSource}, // c++ source file (.cpp)
+    {"CCppHeader", FileType::CCppHeader}, // c header (.h)
+    {"WindowsResourceSource", FileType::WindowsResourceSource}, // resource source (.res)
+    {"Project", FileType::Project}, //Red Panda C++ Project (.dev)
+    {"Text", FileType::Text}, // text file
+    {"FragmentShader", FileType::FragmentShader},
+    {"VerticeShader", FileType::VerticeShader},
+    {"ModuleDef", FileType::ModuleDef}, // Windows Module Definition
+    {"MakeFile", FileType::MakeFile},
+    {"Other", FileType::Other},  // Any others
+};
+
+QString fileTypeToName(FileType fileType)
+{
+    for(auto i=FileTypeMapping.constBegin();i!=FileTypeMapping.constEnd();++i) {
+        if (i.value()==fileType)
+            return i.key();
+    }
+    return "None";
+}
+
+FileType nameToFileType(const QString &name)
+{
+    return FileTypeMapping.value(name, FileType::None);
 }
