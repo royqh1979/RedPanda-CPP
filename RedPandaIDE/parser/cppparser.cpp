@@ -7019,7 +7019,6 @@ void parseFileNonBlocking(PCppParser parser, const QString &fileName, bool inPro
         return;
     if (!parser->enabled())
         return;
-    qDebug()<<"parsing "<<fileName;
     CppFileParserThread* thread = new CppFileParserThread(parser,fileName,inProject,contextFilename,onlyIfNotParsed,updateView);
     thread->start();
 }
