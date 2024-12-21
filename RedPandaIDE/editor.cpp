@@ -225,9 +225,11 @@ Editor::Editor(QWidget *parent, const QString& filename,
     //show event is trigged when this is added to the qtabwidget
     if (!pMainWindow->openingFiles()
             && !pMainWindow->openingProject()) {
-        reparse(false);
-        checkSyntaxInBack();
-        reparseTodo();
+        if (inProject()) {
+            reparse(false);
+            reparseTodo();
+        }
+        //checkSyntaxInBack();
     }
 }
 
