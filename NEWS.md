@@ -19,6 +19,7 @@ Red Panda C++ Version 3.3
   - enhancement: Add the option "Clear symbols in hidden source files" in option / environment / performance. (Turned on by default)
   - enhancement: Treat .tcc file as C/C++ header file.
   - enhancement: Save encoding / filetype /context file infos of last openned files.
+  - fix: Class browser is empty when ctrl+click to open a file.
   
 Red Panda C++ Version 3.2
 

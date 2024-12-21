@@ -1502,17 +1502,13 @@ void Editor::showEvent(QShowEvent */*event*/)
                 this,
                 &Editor::onEndParsing);
         if (!pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
-            bool needReparse=((isC_CPPHeaderFile(mFileType)
-                               && !mContextFile.isEmpty()
-                               && !mParser->isFileParsed(mContextFile))
-                                || (!mParser->isFileParsed(mFilename)));
             if (pSettings->codeCompletion().clearWhenEditorHidden()
                 && pSettings->codeCompletion().shareParser()
                 && !inProject()) {
-                if (needReparse)
+                if (needReparse())
                     resetCppParser(mParser);
             }
-            if (needReparse) {
+            if (needReparse()) {
                 reparse(false);
             }
         }
@@ -4613,8 +4609,18 @@ Editor* Editor::openFileInContext(const QString &filename)
                 e->setContextFile(mContextFile);
             }
         }
+        if (e->isVisible())
+            pMainWindow->updateClassBrowserForEditor(e);
     }
     return e;
+}
+
+bool Editor::needReparse()
+{
+    return mParser && ((isC_CPPHeaderFile(mFileType)
+                        && !mContextFile.isEmpty()
+                        && !mParser->isFileParsed(mContextFile))
+                       || (!mParser->isFileParsed(mFilename)));
 }
 
 const QString &Editor::contextFile() const

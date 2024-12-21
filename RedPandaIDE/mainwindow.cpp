@@ -1627,7 +1627,6 @@ void MainWindow::updateClassBrowserForEditor(Editor *editor)
             return;
         }
 
-
         mClassBrowserModel->beginUpdate();
         mClassBrowserModel->setParser(editor->parser());
         if (editor->inProject()) {

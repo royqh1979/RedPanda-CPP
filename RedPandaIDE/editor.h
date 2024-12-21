@@ -331,6 +331,7 @@ private:
     void doSetFileType(FileType newFileType, bool force=false);
 
     Editor* openFileInContext(const QString& filename);
+    bool needReparse();
 
 private:
     bool mInited;
