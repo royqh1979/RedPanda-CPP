@@ -1497,23 +1497,24 @@ void Editor::showEvent(QShowEvent */*event*/)
 {
     if (mParser && !pMainWindow->isClosingAll()
             && !pMainWindow->isQuitting()) {
-        if (pSettings->codeCompletion().clearWhenEditorHidden()
-            && pSettings->codeCompletion().shareParser()
-            && !inProject()) {
-            if (isC_CPPHeaderFile(mFileType)
-                    && !mContextFile.isEmpty()
-                    && !mParser->isFileParsed(mContextFile))
-                resetCppParser(mParser);
-            else if (!mParser->isFileParsed(mFilename))
-                resetCppParser(mParser);
-        }
-        if (!mParser->isFileParsed(mFilename)) {
-            connect(mParser.get(),
-                    &CppParser::onEndParsing,
-                    this,
-                    &Editor::onEndParsing);
-            if (!pMainWindow->openingFiles() && !pMainWindow->openingProject())
+        connect(mParser.get(),
+                &CppParser::onEndParsing,
+                this,
+                &Editor::onEndParsing);
+        if (!pMainWindow->openingFiles() && !pMainWindow->openingProject()) {
+            bool needReparse=((isC_CPPHeaderFile(mFileType)
+                               && !mContextFile.isEmpty()
+                               && !mParser->isFileParsed(mContextFile))
+                                || (!mParser->isFileParsed(mFilename)));
+            if (pSettings->codeCompletion().clearWhenEditorHidden()
+                && pSettings->codeCompletion().shareParser()
+                && !inProject()) {
+                if (needReparse)
+                    resetCppParser(mParser);
+            }
+            if (needReparse) {
                 reparse(false);
+            }
         }
     }
     if (inTab()) {

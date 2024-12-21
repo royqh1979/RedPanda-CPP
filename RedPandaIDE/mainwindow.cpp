@@ -4557,6 +4557,9 @@ void MainWindow::onEditorClosed()
         return;
     updateEditorActions();
     updateAppTitle();
+    if (mEditorList->pageCount()==0) {
+
+    }
 }
 
 void MainWindow::onToolsOutputClear()

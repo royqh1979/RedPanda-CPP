@@ -5258,7 +5258,8 @@ PEvalStatement CppParser::doEvalMemberAccess(const QString &fileName,
             if (result->kind == EvalStatementKind::Type) {
                 doSkipInExpression(phraseExpression,pos,"{","}");
                 result->kind = EvalStatementKind::Variable;
-            }
+            } else
+                return PEvalStatement();
         } else if (phraseExpression[pos] == "[") {
             //Array subscripting
             //skip to "]"
