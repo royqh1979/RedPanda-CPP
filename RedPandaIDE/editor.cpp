@@ -260,7 +260,6 @@ void Editor::loadFile(QString filename) {
 //        }
     } else {
         filename = QFileInfo(filename).absoluteFilePath();
-        doSetFileType(getFileType(filename));
     }
 
     //FileError should by catched by the caller of loadFile();
