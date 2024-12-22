@@ -997,7 +997,6 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                     s = templateUnit->CText;
                     unit = newUnit(mRootNode,templateUnit->CName);
                 }
-                qDebug()<<templateUnit->CppName<<templateUnit->CName<<unit->fileName();
                 Editor * editor = mEditorList->newEditor(
                             unit->fileName(),
                             unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
