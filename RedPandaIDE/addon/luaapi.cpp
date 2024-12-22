@@ -411,8 +411,6 @@ extern "C" int luaApi_System_supportedAppArchList(lua_State *L) noexcept {
             arches.insert("i386");
         if (pGetMachineTypeAttributes(IMAGE_FILE_MACHINE_AMD64, &result) == 0 && result & win32_flag_UserEnabled)
             arches.insert("x86_64");
-        if (pGetMachineTypeAttributes(IMAGE_FILE_MACHINE_ARMNT, &result) == 0 && result & win32_flag_UserEnabled)
-            arches.insert("arm");
         if (pGetMachineTypeAttributes(IMAGE_FILE_MACHINE_ARM64, &result) == 0 && result & win32_flag_UserEnabled)
             arches.insert("arm64");
     } else {
@@ -441,8 +439,6 @@ extern "C" int luaApi_System_supportedAppArchList(lua_State *L) noexcept {
             BOOL wow64SupportResult;
             if (pIsWow64GuestMachineSupported(IMAGE_FILE_MACHINE_I386, &wow64SupportResult) == S_OK && wow64SupportResult)
                 arches.insert("i386");
-            if (pIsWow64GuestMachineSupported(IMAGE_FILE_MACHINE_ARMNT, &wow64SupportResult) == S_OK && wow64SupportResult)
-                arches.insert("arm");
         } else {
             // legacy Windows, hardcode
             SYSTEM_INFO si;
