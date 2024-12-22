@@ -638,11 +638,7 @@ QStringList platformCommandForTerminalArgsPreview()
 
 QString appArch()
 {
-#ifdef _M_ARM64EC
-    return "arm64ec";
-#else
     return QSysInfo::buildCpuArchitecture();
-#endif
 }
 
 QString osArch()
