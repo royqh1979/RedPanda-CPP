@@ -5,8 +5,11 @@ Name[zh_CN]=输入循环
 Icon=ConsoleToo.ico
 Description=A console with an input loop
 Description[zh_CN]=一个带输入循环的控制台程序
+Name[ru_RU]=Цикл ввода
+Description[ru_RU]=Консольное приложение, использующее цикл ввода
 Category=Console
 Category[zh_CN]=控制台
+Category[ru_RU]=Консольные
 
 [Unit0]
 CName=main.c

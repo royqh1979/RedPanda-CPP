@@ -5,8 +5,11 @@ Name[zh_CN]=世界，你好！
 Icon=Communication.ico
 Description=A classic Hello World program
 Description[zh_CN]=一个经典的“世界，你好！”程序
+Name[ru_RU]=Привет, мир
+Description[ru_RU]=Классическая программа “Привет мир”
 Category=Console
 Category[zh_CN]=控制台
+Category[ru_RU]=Консольные
 
 [Unit0]
 CName=main.c

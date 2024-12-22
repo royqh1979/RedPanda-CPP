@@ -5,6 +5,8 @@ Name[zh_CN]=raylib 3D 着色器
 Icon=raylib.ico
 Description=A 3D Shader program using raylib ( https://raylib.com )
 Description[zh_CN]=带着色器的raylib 3D程序 ( https://raylib.com )
+Name[ru_RU]=raylib 3D-шейдер
+Description[ru_RU]=Программа 3D-шейдер с использованием raylib ( https://raylib.com )
 Category=3D
 Category[zh_CN]=3D
 

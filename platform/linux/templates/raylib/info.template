@@ -7,6 +7,9 @@ Description=A simple interactive animation using raylib ( https://raylib.com )
 Description[zh_CN]=简单的raylib交互动画 ( https://raylib.com )
 Category=Multimedia
 Category[zh_CN]=多媒体
+Name[ru_RU]=raylib
+Description[ru_RU]=Простая интерактивная анимация с использованием raylib ( https://raylib.com )
+Category[ru_RU]=Мультимедиа
 
 [Unit0]
 CName=main.c

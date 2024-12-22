@@ -7,6 +7,9 @@ Description=Demo for raylib & rdrawing color constants, and raygui scroll panel
 Description[zh_CN]=演示raylib/rdrawing色彩常量和raygui滚动面板使用的示例程序
 Category=Multimedia
 Category[zh_CN]=多媒体
+Name[ru_RU]=Цвета
+Description[ru_RU]=Демонстрация констант цвета с использованием raylib & rdrawing, а также панели прокрутки raygui
+Category[ru_RU]=Мультимедиа
 
 [Unit0]
 CName=main.c

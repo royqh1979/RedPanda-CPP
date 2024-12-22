@@ -4,8 +4,11 @@ Name=Sqlite3
 Icon=sqlite.ico
 Description=A Sqlite3 API Example
 Description[zh_CN]=Sqlite3 示例程序
+Name[ru_RU]=Sqlite3
+Description[ru_RU]=Пример работы с Sqlite3 API
 Category=Database
 Category[zh_CN]=数据库
+Category[ru_RU]=Базы данных
 
 [Unit0]
 CName=main.c

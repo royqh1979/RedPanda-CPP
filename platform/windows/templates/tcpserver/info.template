@@ -5,8 +5,11 @@ Name[zh_CN]=TCP服务器
 Icon=tcpserver.ico
 Description=A winsock2 tcp server demo
 Description[zh_CN]=基于Winsock2的TCP服务器程序示例
+Name[ru_RU]=TCP-сервер
+Description[ru_RU]=Пример TCP-сервера на WinSock2
 Category=Network
 Category[zh_CN]=网络
+Category[ru_RU]=Сеть
 
 [Unit0]
 CName=main.c

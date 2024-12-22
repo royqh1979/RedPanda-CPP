@@ -6,6 +6,9 @@ Description = A simple c program with inline assembly instructions
 Name[zh_CN] = 内联汇编
 Category[zh_CN] = 汇编
 Description[zh_CN] = 简单的C内联汇编程序示例
+Name[ru_RU]=Встраиваемый ассемблер
+Description[ru_RU]=Простая Си-программа с встраиваемыми ассемблерными инструкциями
+Category[ru_RU]=Ассемблер
 Icon = app.ico
 
 

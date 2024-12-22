@@ -5,6 +5,8 @@ Name[zh_CN]=单对话框程序
 Icon=Single Dialog Application.ico
 Description=An Appliction use a dialog as the main UI
 Description[zh_CN]=使用一个对话框作为主用户界面简单程序
+Name[ru_RU]=Приложение с одним диалоговым окном
+Description[ru_RU]=Приложение использует диалог в качестве основного пользовательского интерфейса
 Category=Win32
 
 [Unit0]

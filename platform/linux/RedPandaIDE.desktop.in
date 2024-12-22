@@ -1,6 +1,7 @@
 [Desktop Entry]
 Comment=A lightweighted QT-based C/C++ IDE
 Comment[zh_CN]=基于QT的轻量级C/C++集成开发环境
+Comment[ru_RU]=Легковеская Си/Си++ среда разработки на Qt
 Exec=RedPandaIDE %F
 GenericName=Red Panda C++
 GenericName[zh_CN]=小熊猫C++

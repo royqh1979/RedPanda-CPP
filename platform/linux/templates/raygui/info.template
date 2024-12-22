@@ -7,6 +7,9 @@ Description=raygui demo
 Description[zh_CN]=Raygui演示
 Category=Multimedia
 Category[zh_CN]=多媒体
+Name[ru_RU]=raygui
+Description[ru_RU]=Демонстрация возможностей raygui
+Category[ru_RU]=Мультимедиа
 
 [Unit0]
 CName=main.c

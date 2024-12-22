@@ -7,6 +7,9 @@ Description=arkanoid game using raylib ( https://raylib.com )
 Description[zh_CN]=经典的打砖块游戏(基于raylib) ( https://raylib.com )
 Category=Game
 Category[zh_CN]=游戏
+Name[ru_RU]=Арканоид
+Description[ru_RU]=Игра Арканоид с использованием raylib ( https://raylib.com )
+Category[ru_RU]=Игры
 
 [Unit0]
 CName=main.c

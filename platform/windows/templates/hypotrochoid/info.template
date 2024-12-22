@@ -5,8 +5,11 @@ Name[zh_CN]=内旋轮线
 Icon=hypotrochoid.ico
 Description=A simple hypotrochoid drawing app
 Description[zh_CN]=内旋轮线绘制程序
+Name[ru_RU]=Гипотрохоида
+Description[ru_RU]=Приложение, рисующее простую гипотрохоиду
 Category=Game
 Category[zh_CN]=游戏
+Category[ru_RU]=Игры
 
 [Unit0]
 CName=main.c

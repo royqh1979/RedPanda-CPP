@@ -4,8 +4,11 @@ Name=OpenMP
 Icon=File Management.ico
 Description=A OpenMP multithreading example
 Description[zh_CN]=一个OpenMP多线程示例
+Name[ru_RU]=OpenMP
+Description[ru_RU]=Многопоточный пример работы с OpenMP
 Category=Console
 Category[zh_CN]=控制台
+Category[ru_RU]=Консольные
 
 [Unit0]
 CName=main.c

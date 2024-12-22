@@ -7,6 +7,9 @@ Description=A simple doraemon app using rdrawing (https://github.com/royqh1979/r
 Description[zh_CN]=使用rdrawing制作的哆啦A梦 (https://github.com/royqh1979/raylib-drawing)
 Category=Game
 Category[zh_CN]=游戏
+Name[ru_RU]=Дораэмон
+Description[ru_RU]=Простое приложение Дораэмон с использованием rdrawing (https://github.com/royqh1979/raylib-drawing)
+Category[ru_RU]=Игры
 
 [Unit0]
 CName=main.c

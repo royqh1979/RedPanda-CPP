@@ -4,8 +4,11 @@ Name=std::thread
 Icon=Software.ico
 Description=A C++ multithreading example
 Description[zh_CN]=一个C++多线程示例
+Name[ru_RU]=std::thread
+Description[ru_RU]=Пример многопоточной программы Си++
 Category=Console
 Category[zh_CN]=控制台
+Category[ru_RU]=Консольные
 
 [Unit0]
 CName=main.c
