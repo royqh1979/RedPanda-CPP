@@ -33,6 +33,7 @@
 #include <QDirIterator>
 #include <QTextEdit>
 #include "charsetinfo.h"
+#include <qt_utils/utils.h>
 
 #ifdef Q_OS_WIN
 #include <QDirIterator>
@@ -507,21 +508,13 @@ QString excludeTrailingPathDelimiter(const QString &path)
 
 QString changeFileExt(const QString& filename, QString ext)
 {
-    QFileInfo fileInfo(filename);
-    QString suffix = fileInfo.suffix();
-    QString name  = fileInfo.fileName();
-    QString path;
     if (!ext.isEmpty() && !ext.startsWith(".")) {
         ext = "."+ext;
     }
-    if (fileInfo.path() != ".") {
-        path = fileInfo.path();
-    }
-    if (suffix.isEmpty()) {
-        return getFilePath( path, name+ext );
-    } else {
-        return getFilePath( path, fileInfo.completeBaseName()+ext );
-    }
+    int npos = filename.lastIndexOf(QChar('.'));
+    if (npos<0)
+        return filename + ext;
+    return filename.left(npos)+ext;
 }
 
 QString extractRelativePath(const QString &base, const QString &dest)
