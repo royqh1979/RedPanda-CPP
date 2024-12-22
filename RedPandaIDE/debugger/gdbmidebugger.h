@@ -39,6 +39,8 @@ class GDBMIDebuggerClient: public DebuggerClient {
     Q_OBJECT
 public:
     explicit GDBMIDebuggerClient(Debugger* debugger, DebuggerType clientType, QObject *parent = nullptr);
+    GDBMIDebuggerClient(const GDBMIDebuggerClient&) = delete;
+    GDBMIDebuggerClient& operator=(const GDBMIDebuggerClient &) = delete;
 
     // DebuggerClient interface
 public:

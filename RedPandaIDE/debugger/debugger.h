@@ -301,6 +301,8 @@ class Debugger : public QObject
 public:
     explicit Debugger(QObject *parent = nullptr);
     ~Debugger();
+    Debugger(const Debugger&) = delete;
+    Debugger& operator= (const Debugger&) = delete;
     // Play/pause
     bool startClient(
             int compilerSetIndex,

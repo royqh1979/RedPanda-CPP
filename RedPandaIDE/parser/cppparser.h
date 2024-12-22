@@ -42,7 +42,7 @@ public:
 
     explicit CppParser();
     CppParser(const CppParser&)=delete;
-    CppParser& operator=(const CppParser)=delete;
+    CppParser& operator=(const CppParser&)=delete;
 
     ~CppParser();
 
