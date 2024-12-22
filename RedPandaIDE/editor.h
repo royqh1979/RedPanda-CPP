@@ -266,7 +266,7 @@ private slots:
     void onEndParsing();
 
 private:
-    void loadContent();
+    void loadContent(const QString& filename);
     void resolveAutoDetectEncodingOption();
     bool isBraceChar(QChar ch);
     bool shouldOpenInReadonly();

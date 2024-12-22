@@ -114,7 +114,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mFileEncoding = ENCODING_ASCII;
     if (!isNew) {
         try {
-            loadContent();
+            loadContent(mFilename);
         } catch (FileError& e) {
             QMessageBox::critical(nullptr,
                                   tr("Error Load File"),
@@ -264,8 +264,7 @@ void Editor::loadFile(QString filename) {
     }
 
     //FileError should by catched by the caller of loadFile();
-    mFilename = filename;
-    loadContent();
+    loadContent(filename);
     updateCaption();
 
 //    applyColorScheme(pSettings->editor().colorScheme());
@@ -2157,9 +2156,9 @@ void Editor::onEndParsing()
     invalidate();
 }
 
-void Editor::loadContent()
+void Editor::loadContent(const QString& filename)
 {
-    this->document()->loadFromFile(mFilename,mEncodingOption,mFileEncoding);
+    this->document()->loadFromFile(filename,mEncodingOption,mFileEncoding);
     applyColorScheme(pSettings->editor().colorScheme());
     if (mProject) {
         PProjectUnit unit = mProject->findUnit(this);
