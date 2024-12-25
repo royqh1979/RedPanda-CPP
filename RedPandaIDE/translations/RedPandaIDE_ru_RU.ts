@@ -575,14 +575,39 @@
         <translation>Нельзя запустить отладку.</translation>
     </message>
     <message>
-        <location filename="../compiler/compilermanager.cpp" line="297"/>
+        <location filename="../compiler/compilermanager.cpp" line="276"/>
         <source>Can&apos;t find Console Pauser</source>
         <translation>Не найден Остановщик Консоли</translation>
     </message>
     <message>
-        <location filename="../compiler/compilermanager.cpp" line="298"/>
+        <location filename="../compiler/compilermanager.cpp" line="277"/>
         <source>Console Pauser &quot;%1&quot; doesn&apos;t exists!</source>
         <translation>Остановщик Консоли &quot;%1&quot; не существует!</translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilermanager.cpp" line="283"/>
+        <source>Press ANY key to exit...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilermanager.cpp" line="284"/>
+        <source>Process exited after</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilermanager.cpp" line="285"/>
+        <source>Return value</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilermanager.cpp" line="286"/>
+        <source>CPU time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilermanager.cpp" line="287"/>
+        <source>Memory</source>
+        <translation type="unfinished">Память</translation>
     </message>
 </context>
 <context>
@@ -2488,32 +2513,22 @@
 <context>
     <name>ExecutableRunner</name>
     <message>
-        <location filename="../compiler/executablerunner.cpp" line="127"/>
-        <source>Process exited after %.4f seconds with return value %lu (%.4f ms cpu time, %lld KB mem used).</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../compiler/executablerunner.cpp" line="128"/>
-        <source>Press ANY key to exit...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../compiler/executablerunner.cpp" line="264"/>
+        <location filename="../compiler/executablerunner.cpp" line="262"/>
         <source>The runner process &apos;%1&apos; failed to start.</source>
         <translation>Запуск процесса запуска &apos;%1&apos; не удался.</translation>
     </message>
     <message>
-        <location filename="../compiler/executablerunner.cpp" line="271"/>
+        <location filename="../compiler/executablerunner.cpp" line="269"/>
         <source>The last waitFor...() function timed out.</source>
         <translation>Время ожидания последней функции waitFor...() истекло.</translation>
     </message>
     <message>
-        <location filename="../compiler/executablerunner.cpp" line="274"/>
+        <location filename="../compiler/executablerunner.cpp" line="272"/>
         <source>An error occurred when attempting to write to the runner process.</source>
         <translation>При попытке записи в процесс запуска произошла ошибка.</translation>
     </message>
     <message>
-        <location filename="../compiler/executablerunner.cpp" line="277"/>
+        <location filename="../compiler/executablerunner.cpp" line="275"/>
         <source>An error occurred when attempting to read from the runner process.</source>
         <translation>При попытке чтения из процесса запуска произошла ошибка.</translation>
     </message>

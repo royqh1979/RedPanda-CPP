@@ -16,16 +16,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+// C++
+#include <chrono>
 #include <string>
-using std::wstring;
+
+// CRT
+#include <conio.h>
 #include <stdio.h>
+
+// Win32
 #include <windows.h>
 #include <psapi.h>
 #include <processthreadsapi.h>
-#include <conio.h>
-#include <stdbool.h>
 #include <versionhelpers.h>
 #include <stdlib.h>
+
+// ours
+#include "argparser.hpp"
+
+namespace chrono = std::chrono;
+using std::chrono::high_resolution_clock;
+using std::vector;
+using std::wstring;
+using std::wstring_view;
+
+using hundred_nano = std::ratio<100, 1'000'000'000>;
+using win32_filetime_duration = chrono::duration<int64_t, hundred_nano>;
 
 #ifndef WINBOOL
 #define WINBOOL BOOL
@@ -46,17 +62,11 @@ using std::wstring;
 #define EXIT_CREATE_PROCESS_FAILED     -5
 #define EXIT_ASSGIN_PROCESS_JOB_FAILED -6
 
-
-enum RunProgramFlag {
-    RPF_PAUSE_CONSOLE =     0x0001,
-    RPF_REDIRECT_INPUT =    0x0002,
-    RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-};
-
 HANDLE hJob;
 bool enableJobControl = IsWindowsXPOrGreater();
 
-bool pauseBeforeExit = false;
+using AP = ArgParser<wchar_t>;
+#define _(KEY) AP::GetText(L"" #KEY, AP::TextItem::KEY).data()
 
 LONGLONG GetClockTick() {
     LARGE_INTEGER dummy;
@@ -117,22 +127,6 @@ void PrintSplitLineToStderr()
     PrintSplitLine(GetStdHandle(STD_ERROR_HANDLE));
 }
 
-const wchar_t* getMessageFromEnv(const char* name, const wchar_t* defaultValue) {
-    constexpr size_t buffer_size = 64 * 1024;
-    static wchar_t buffer[buffer_size];
-    const char* msg = getenv(name);
-    if (msg != NULL) {
-        size_t msg_len = strlen(msg);
-        size_t newsize = MultiByteToWideChar(CP_ACP,0,msg,msg_len,NULL,0);
-        if (newsize>0) {
-            int wstrlen = MultiByteToWideChar(CP_ACP,0,msg,msg_len,buffer,newsize);
-            buffer[wstrlen]=(wchar_t)0;
-            return buffer;
-        }
-    }
-    return defaultValue;
-}
-
 wstring GetErrorMessage(DWORD errorCode) {
     wstring result(MAX_ERROR_LENGTH, 0);
     FormatMessageW(
@@ -152,7 +146,7 @@ void PrintWin32ApiError(const wchar_t *function)
 }
 
 void PauseExit(int exitcode, bool reInp) {
-    if (pauseBeforeExit) {
+    if (AP::gArgs.pauseConsole) {
         HANDLE hInp=NULL;
         INPUT_RECORD irec;
         DWORD cc;
@@ -168,9 +162,8 @@ void PauseExit(int exitcode, bool reInp) {
             hInp = GetStdHandle(STD_INPUT_HANDLE);
         }
         FlushConsoleInputBuffer(hInp);
-        const wchar_t* pause_msg = getMessageFromEnv("RCP_EXIT_MSG",L"Press ANY key to exit...");
         PrintToStdout(L"\n");
-        PrintToStdout(pause_msg);
+        PrintToStdout(L"%ls", _(EXIT));
         for(;;)
         {
             ReadConsoleInput(hInp, &irec, 1, &cc );
@@ -187,14 +180,14 @@ void PauseExit(int exitcode, bool reInp) {
     exit(exitcode);
 }
 
-wstring EscapeArgument(const wstring &arg)
+wstring EscapeArgument(wstring_view arg)
 {
     // reduced version of `escapeArgumentImplWindowsCreateProcess` in `RedPandaIDE/utils/escape.cpp`
     // see also https://learn.microsoft.com/en-gb/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way .
 
     if (!arg.empty() &&
         arg.find_first_of(L" \t\n\v\"") == wstring::npos)
-        return arg;
+        return wstring{arg.data(), arg.size()};
 
     wstring result = L"\"";
     for (auto it = arg.begin(); ; ++it) {
@@ -220,19 +213,11 @@ wstring EscapeArgument(const wstring &arg)
     return result;
 }
 
-wstring GetCommand(int argc,wchar_t** argv,bool &reInp, bool &enableVisualTerminalSeq) {
-    wstring result;
-    int flags = _wtoi(argv[1]);
-    reInp = flags & RPF_REDIRECT_INPUT;
-    pauseBeforeExit = flags & RPF_PAUSE_CONSOLE;
-    enableVisualTerminalSeq = flags & RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    for(int i = 3;i < argc;i++) {
-        result += EscapeArgument(argv[i]);
-
-        // Add a space except for the last argument
-        if(i != (argc-1)) {
-            result.push_back(L' ');
-        }
+wstring GetCommand(wstring_view prog, const vector<wstring_view> &args, bool reInp) {
+    wstring result = EscapeArgument(prog);
+    for (wstring_view arg : args) {
+        result.push_back(' ');
+        result.append(EscapeArgument(arg));
     }
 
     if(result.length() > MAX_COMMAND_LENGTH) {
@@ -244,7 +229,18 @@ wstring GetCommand(int argc,wchar_t** argv,bool &reInp, bool &enableVisualTermin
     return result;
 }
 
-DWORD ExecuteCommand(wstring& command,bool reInp, LONGLONG &peakMemory, LONGLONG &execTime) {
+win32_filetime_duration FiletimeToDuration(const FILETIME &ft)
+{
+    return win32_filetime_duration(((int64_t)ft.dwHighDateTime << 32) + ft.dwLowDateTime);
+}
+
+template <typename Duration>
+double DurationToSeconds(const Duration &d)
+{
+    return 1.0 * d.count() * Duration::period::num / Duration::period::den;
+}
+
+DWORD ExecuteCommand(wstring& command,bool reInp, LONGLONG &peakMemory, double &cpuMilliSeconds) {
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
 
@@ -282,11 +278,9 @@ DWORD ExecuteCommand(wstring& command,bool reInp, LONGLONG &peakMemory, LONGLONG
     FILETIME exitTime;
     FILETIME kernelTime;
     FILETIME userTime;
-    execTime=0;
     if (GetProcessTimes(pi.hProcess,&creationTime,&exitTime,&kernelTime,&userTime)) {
-        execTime=((LONGLONG)kernelTime.dwHighDateTime<<32)
-                +((LONGLONG)userTime.dwHighDateTime<<32)
-                +(kernelTime.dwLowDateTime)+(userTime.dwLowDateTime);
+        auto cpuDuration = FiletimeToDuration(kernelTime) + FiletimeToDuration(userTime);
+        cpuMilliSeconds = DurationToSeconds(cpuDuration) * 1000;
     }
     DWORD result = 0;
     GetExitCodeProcess(pi.hProcess, &result);
@@ -306,29 +300,31 @@ void EnableVtSequence() {
 
 int wmain(int argc, wchar_t** argv) {
 
-    const wchar_t *sharedMemoryId;
-    // First make sure we aren't going to read nonexistent arrays
-    if(argc < 4) {
+    try {
+        AP::gArgs = ArgParser<wchar_t>::ParseArgs(argv);
+    } catch (wstring &s) {
+        PrintToStderr(L"Parse argument error: %ls\n", s.c_str());
         PrintSplitLineToStderr();
-        PrintToStderr(L"Usage: consolepauser.exe <0|1> <shared_memory_id> <filename> <parameters>\n\n");
-        PrintToStderr(L"  1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
-        PauseExit(EXIT_WRONG_ARGUMENTS,false);
+        PrintToStderr(L"%s", ArgParser<wchar_t>::HelpMessage().c_str());
+        PauseExit(EXIT_WRONG_ARGUMENTS, true);
+    }
+
+    bool reInp = !AP::gArgs.redirectInput.empty();
+    if (!AP::gArgs.redirectInput.empty() && AP::gArgs.redirectInput != L"-") {
+        PrintToStderr(L"Sorry, not implemented: stdin redirected to file.");
+        PauseExit(EXIT_WRONG_ARGUMENTS, true);
     }
 
     // Make us look like the paused program
-    SetConsoleTitleW(argv[3]);
-
-    sharedMemoryId = argv[2];
+    SetConsoleTitleW(AP::gArgs.program.data());
 
     SECURITY_ATTRIBUTES sa;
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = FALSE;
 
-    bool reInp;
-    bool enableVisualTerminalSeq;
     // Then build the to-run application command
-    wstring command = GetCommand(argc, argv, reInp, enableVisualTerminalSeq);
+    wstring command = GetCommand(AP::gArgs.program, AP::gArgs.args, reInp);
 
     if (enableJobControl) {
         hJob= CreateJobObject( &sa, NULL );
@@ -364,41 +360,42 @@ int wmain(int argc, wchar_t** argv) {
     } else {
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
     }
-    if (enableVisualTerminalSeq) {
+    if (AP::gArgs.enableVirtualTerminalSeq) {
         EnableVtSequence();
     }
 
     HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
     int BUF_SIZE=1024;
     char* pBuf=nullptr;
-    hSharedMemory = OpenFileMappingW(
-        FILE_MAP_ALL_ACCESS,
-        FALSE,
-        sharedMemoryId
-        );
-    if (hSharedMemory != NULL)
-    {
-        pBuf = (char*) MapViewOfFile(hSharedMemory,   // handle to map object
-            FILE_MAP_ALL_ACCESS, // read/write permission
-            0,
-            0,
-            BUF_SIZE);
-    } else {
-        PrintWin32ApiError(L"OpenFileMappingW");
+    if (!AP::gArgs.sharedMemory.empty()) {
+        hSharedMemory = OpenFileMappingW(
+            FILE_MAP_ALL_ACCESS,
+            FALSE,
+            AP::gArgs.sharedMemory.c_str()
+            );
+        if (hSharedMemory != NULL)
+        {
+            pBuf = (char*) MapViewOfFile(hSharedMemory,   // handle to map object
+                FILE_MAP_ALL_ACCESS, // read/write permission
+                0,
+                0,
+                BUF_SIZE);
+        } else {
+            PrintWin32ApiError(L"OpenFileMappingW");
+        }
     }
 
     // Save starting timestamp
     LONGLONG starttime = GetClockTick();
 
     LONGLONG peakMemory=0;
-    LONGLONG execTime=0;
+    double cpuMilliSeconds = 0;
     // Then execute said command
-    DWORD returnvalue = ExecuteCommand(command,reInp,peakMemory,execTime);
+    DWORD returnvalue = ExecuteCommand(command,reInp,peakMemory,cpuMilliSeconds);
 
     // Get ending timestamp
     LONGLONG endtime = GetClockTick();
     double seconds = (endtime - starttime) / (double)GetClockFrequency();
-    double execSeconds = (double)execTime/10000;
 
     if (pBuf) {
         strcpy(pBuf,"FINISHED");
@@ -410,9 +407,10 @@ int wmain(int argc, wchar_t** argv) {
 
     // Done? Print return value of executed program
     PrintSplitLineToStdout();
-    const wchar_t* usage_msg = getMessageFromEnv("RCP_USAGE_MSG",
-                                                 L"Process exited after %.4f seconds with return value %lu (%.4f ms cpu time, %lld KB mem used).\n");
-    PrintToStdout(usage_msg,seconds,returnvalue, execSeconds, peakMemory);
+    PrintToStdout(L"%ls %.4f s. ", _(USAGE_HEADER), seconds);
+    PrintToStdout(L"%ls: %lu; ", _(USAGE_RETURN_VALUE), returnvalue);
+    PrintToStdout(L"%ls: %.4f ms; ", _(USAGE_CPU_TIME), cpuMilliSeconds);
+    PrintToStdout(L"%ls: %lld KB.\n", _(USAGE_MEMORY), peakMemory);
     PrintToStdout(L"\n");
     PauseExit(returnvalue,reInp);
     return 0;

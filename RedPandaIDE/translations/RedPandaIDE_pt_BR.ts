@@ -670,7 +670,7 @@
         <translation>Impossível iniciar a depuração.</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+70"/>
         <source>Can&apos;t find Console Pauser</source>
         <translation>Impossível encontrar como fazer pausa na console.</translation>
     </message>
@@ -678,6 +678,31 @@
         <location line="+1"/>
         <source>Console Pauser &quot;%1&quot; doesn&apos;t exists!</source>
         <translation>Não há como fazer pausa na console com &quot;%1&quot;!</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Press ANY key to exit...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Process exited after</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Return value</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CPU time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Memory</source>
+        <translation type="unfinished">Memória</translation>
     </message>
 </context>
 <context>
@@ -2735,17 +2760,7 @@
 <context>
     <name>ExecutableRunner</name>
     <message>
-        <location filename="../compiler/executablerunner.cpp" line="+127"/>
-        <source>Process exited after %.4f seconds with return value %lu (%.4f ms cpu time, %lld KB mem used).</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Press ANY key to exit...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+136"/>
+        <location filename="../compiler/executablerunner.cpp" line="+262"/>
         <source>The runner process &apos;%1&apos; failed to start.</source>
         <translation>Falha ao executar o processo &apos;%1&apos;.</translation>
     </message>

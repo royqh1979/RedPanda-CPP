@@ -246,96 +246,75 @@ void CompilerManager::run(
         redirectInput =true;
         redirectInputFilename = pSettings->executor().inputFilename();
     }
+    bool useCustomTerminal = pSettings->environment().useCustomTerminal();
     ExecutableRunner * execRunner;
     if (programHasConsole(filename)) {
-        int consoleFlag=0;
-        if (redirectInput)
-            consoleFlag |= RPF_REDIRECT_INPUT;
+        QString consolePauserPath = getFilePath(pSettings->dirs().appLibexecDir(), CONSOLE_PAUSER);
+        QStringList execArgs = {consolePauserPath};
+        if (redirectInput) {
+            if (useCustomTerminal)
+                execArgs << "--redirect-input" << redirectInputFilename;
+            else
+                execArgs << "--redirect-input" << "-";
+        }
         if (pSettings->executor().pauseConsole())
-            consoleFlag |= RPF_PAUSE_CONSOLE;
+            execArgs << "--pause-console";
 #ifdef Q_OS_WIN
         if (pSettings->executor().enableVirualTerminalSequence())
-            consoleFlag |= RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        if (consoleFlag!=0) {
-            QString sharedMemoryId = QUuid::createUuid().toString();
-            QString consolePauserPath = getFilePath(pSettings->dirs().appDir(), CONSOLE_PAUSER);
-            QStringList execArgs = QStringList{
-                consolePauserPath,
-                QString::number(consoleFlag),
-                sharedMemoryId,
-                localizePath(filename)
-            } + parseArgumentsWithoutVariables(arguments);
-            if (pSettings->environment().useCustomTerminal()) {
-                auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
-                    pSettings->environment().terminalPath(),
-                    pSettings->environment().terminalArgumentsPattern(),
-                    execArgs
-                );
-                //delete when thread finished
-                execRunner = new ExecutableRunner(filename, args, workDir);
-                execRunner->setShareMemoryId(sharedMemoryId);
-                mTempFileOwner = std::move(fileOwner);
-            } else {
-                //delete when thread finished
-                execRunner = new ExecutableRunner(execArgs[0], execArgs.mid(1), workDir);
-                execRunner->setShareMemoryId(sharedMemoryId);
-            }
-        } else {
-            //delete when thread finished
-            execRunner = new ExecutableRunner(filename, parseArgumentsWithoutVariables(arguments), workDir);
-        }
+            execArgs << "--enable-virtual-terminal-sequence";
+        QString sharedMemoryId = QUuid::createUuid().toString();
 #else
-        QStringList execArgs;
-        QString sharedMemoryId = "/r"+QUuid::createUuid().toString(QUuid::StringFormat::Id128);
+        QString sharedMemoryId = "/r" + QUuid::createUuid().toString(QUuid::StringFormat::Id128);
 #ifdef Q_OS_MACOS
         sharedMemoryId = sharedMemoryId.mid(0, PSHMNAMLEN);
 #endif
-        if (consoleFlag!=0) {
-            QString consolePauserPath= getFilePath(pSettings->dirs().appLibexecDir(), CONSOLE_PAUSER);
+#endif
+        bool requireConsolePauser = execArgs.length() > 1;
+        if (requireConsolePauser) {
             if (!fileExists(consolePauserPath)) {
                 QMessageBox::critical(pMainWindow,
                                          tr("Can't find Console Pauser"),
                                          tr("Console Pauser \"%1\" doesn't exists!")
                                          .arg(consolePauserPath));
                 return;
+            }
+            execArgs << "--shared-memory" << sharedMemoryId;
 
-            }
-            if (redirectInput) {
-                execArgs = QStringList{
-                    consolePauserPath,
-                    QString::number(consoleFlag),
-                    sharedMemoryId,
-                    redirectInputFilename,
-                    localizePath(filename),
-                } + parseArgumentsWithoutVariables(arguments);
-            } else {
-                execArgs = QStringList{
-                    consolePauserPath,
-                    QString::number(consoleFlag),
-                    sharedMemoryId,
-                    localizePath(filename),
-                } + parseArgumentsWithoutVariables(arguments);
-            }
+            // translation items: please keep sync with `tools/consolepauser/argparser.hpp`
+            execArgs << "--add-translation" << "EXIT=" + tr("Press ANY key to exit...");
+            execArgs << "--add-translation" << "USAGE_HEADER=" + tr("Process exited after");
+            execArgs << "--add-translation" << "USAGE_RETURN_VALUE=" + tr("Return value");
+            execArgs << "--add-translation" << "USAGE_CPU_TIME=" + tr("CPU time");
+            execArgs << "--add-translation" << "USAGE_MEMORY=" + tr("Memory");
+
+            // end of console pauser args
+            execArgs << "--";
         } else {
-            execArgs = QStringList{
-                localizePath(filename),
-            } + parseArgumentsWithoutVariables(arguments);
+            execArgs.clear();
         }
-        auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
-            pSettings->environment().terminalPath(),
-            pSettings->environment().terminalArgumentsPattern(),
-            execArgs
-        );
-        execRunner = new ExecutableRunner(filename, args, workDir);
-        execRunner->setShareMemoryId(sharedMemoryId);
-        mTempFileOwner = std::move(fileOwner);
-#endif
+        execArgs << localizePath(filename);
+        execArgs += parseArgumentsWithoutVariables(arguments);
+        if (useCustomTerminal) {
+            auto [filename, args, fileOwner] = wrapCommandForTerminalEmulator(
+                pSettings->environment().terminalPath(),
+                pSettings->environment().terminalArgumentsPattern(),
+                execArgs
+            );
+            //delete when thread finished
+            execRunner = new ExecutableRunner(filename, args, workDir);
+            mTempFileOwner = std::move(fileOwner);
+        } else {
+            //delete when thread finished
+            execRunner = new ExecutableRunner(execArgs[0], execArgs.mid(1), workDir);
+        }
         execRunner->setStartConsole(true);
+        if (requireConsolePauser)
+            execRunner->setShareMemoryId(sharedMemoryId);
     } else {
         //delete when thread finished
         execRunner = new ExecutableRunner(filename, parseArgumentsWithoutVariables(arguments), workDir);
     }
-    if (redirectInput) {
+    if (redirectInput && !useCustomTerminal) {
         execRunner->setRedirectInput(true);
         execRunner->setRedirectInputFilename(redirectInputFilename);
     }
