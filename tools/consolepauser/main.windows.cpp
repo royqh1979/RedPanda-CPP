@@ -17,7 +17,7 @@
  */
 
 #include <string>
-using std::string;
+using std::wstring;
 #include <stdio.h>
 #include <windows.h>
 #include <psapi.h>
@@ -69,17 +69,66 @@ LONGLONG GetClockFrequency() {
     return dummy.QuadPart;
 }
 
+template <typename... Ts>
+void PrintToStream(HANDLE hStream, const wchar_t *fmt, Ts &&...args)
+{
+    constexpr size_t buffer_size = 64 * 1024;
+    static wchar_t buffer[buffer_size];
+    size_t length = _snwprintf(buffer, buffer_size, fmt, std::forward<Ts>(args)...);
+    WriteConsoleW(hStream, buffer, length, NULL, NULL);
+}
 
-string GetErrorMessage() {
-    string result(MAX_ERROR_LENGTH,0);
-    FormatMessageA(
+template <typename... Ts>
+void PrintToStdout(const wchar_t *fmt, Ts &&...args)
+{
+    PrintToStream(GetStdHandle(STD_OUTPUT_HANDLE), fmt, std::forward<Ts>(args)...);
+}
+
+template <typename... Ts>
+void PrintToStderr(const wchar_t *fmt, Ts &&...args)
+{
+    PrintToStream(GetStdHandle(STD_ERROR_HANDLE), fmt, std::forward<Ts>(args)...);
+}
+
+void PrintSplitLine(HANDLE hStream)
+{
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    int width = 80;
+    if (GetConsoleScreenBufferInfo(hStream, &info))
+        width = info.dwSize.X;
+    wstring content;
+    content.push_back(L'\n');
+    content.append(width, L'-');
+    content.push_back(L'\n');
+    WriteConsoleW(hStream, content.c_str(), content.size(), NULL, NULL);
+}
+
+void PrintSplitLineToStdout()
+{
+    PrintSplitLine(GetStdHandle(STD_OUTPUT_HANDLE));
+}
+
+void PrintSplitLineToStderr()
+{
+    PrintSplitLine(GetStdHandle(STD_ERROR_HANDLE));
+}
+
+wstring GetErrorMessage(DWORD errorCode) {
+    wstring result(MAX_ERROR_LENGTH, 0);
+    FormatMessageW(
         FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,GetLastError(),MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),&result[0],result.size(),NULL);
+        NULL, errorCode, LANG_USER_DEFAULT, result.data(), result.size(), NULL);
 
-    // Clear newlines at end of string
-    while (!result.empty() && (result.back() == 0 || isspace(result.back())))
+    // Clear newlines at end of wstring
+    while (!result.empty() && (result.back() == 0 || iswspace(result.back())))
         result.pop_back();
     return result;
+}
+
+void PrintWin32ApiError(const wchar_t *function)
+{
+    DWORD errorCode = GetLastError();
+    PrintToStderr(L"%ls failed with error code %lu: %ls\n", function, errorCode, GetErrorMessage(errorCode).c_str());
 }
 
 void PauseExit(int exitcode, bool reInp) {
@@ -91,17 +140,16 @@ void PauseExit(int exitcode, bool reInp) {
             sa.lpSecurityDescriptor = NULL;
             sa.bInheritHandle = TRUE;
 
-            HANDLE hInp = CreateFileA("CONIN$", GENERIC_WRITE | GENERIC_READ,
+            hInp = CreateFileA("CONIN$", GENERIC_WRITE | GENERIC_READ,
                 FILE_SHARE_READ , &sa, OPEN_EXISTING, /*FILE_ATTRIBUTE_NORMAL*/0, NULL);
-                //si.hStdInput = hInp;
-            SetStdHandle(STD_INPUT_HANDLE,hInp);
-            freopen("CONIN$","r",stdin);
+        } else {
+            hInp = GetStdHandle(STD_INPUT_HANDLE);
         }
-        FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-        fflush(stdin);
-        printf("\n");
-        printf("Press ANY key to exit...");
-        getch();
+        FlushConsoleInputBuffer(hInp);
+        PrintToStdout(L"\nPress ANY key to exit...");
+        wchar_t buffer[2];
+        DWORD nRead;
+        ReadConsoleW(hInp, buffer, 1, &nRead, NULL);
         if (reInp) {
             CloseHandle(hInp);
         }
@@ -109,42 +157,42 @@ void PauseExit(int exitcode, bool reInp) {
     exit(exitcode);
 }
 
-string EscapeArgument(const string &arg)
+wstring EscapeArgument(const wstring &arg)
 {
     // reduced version of `escapeArgumentImplWindowsCreateProcess` in `RedPandaIDE/utils/escape.cpp`
     // see also https://learn.microsoft.com/en-gb/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way .
 
     if (!arg.empty() &&
-        arg.find_first_of(" \t\n\v\"") == string::npos)
+        arg.find_first_of(L" \t\n\v\"") == wstring::npos)
         return arg;
 
-    string result = "\"";
+    wstring result = L"\"";
     for (auto it = arg.begin(); ; ++it) {
         int nBackSlash = 0;
-        while (it != arg.end() && *it == '\\') {
+        while (it != arg.end() && *it == L'\\') {
             ++it;
             ++nBackSlash;
         }
         if (it == arg.end()) {
             // escape all backslashes, but leave the terminating double quote unescaped
-            result.append(nBackSlash * 2, '\\');
+            result.append(nBackSlash * 2, L'\\');
             break;
         } else if (*it == '"') {
             // escape all backslashes and the following double quote
-            result.append(nBackSlash * 2 + 1, '\\');
+            result.append(nBackSlash * 2 + 1, L'\\');
             result.push_back(*it);
         } else {
             // backslashes aren't special here
-            result.append(nBackSlash, '\\');
+            result.append(nBackSlash, L'\\');
             result.push_back(*it);
         }
     }
     return result;
 }
 
-string GetCommand(int argc,char** argv,bool &reInp, bool &enableVisualTerminalSeq) {
-    string result;
-    int flags = atoi(argv[1]);
+wstring GetCommand(int argc,wchar_t** argv,bool &reInp, bool &enableVisualTerminalSeq) {
+    wstring result;
+    int flags = _wtoi(argv[1]);
     reInp = flags & RPF_REDIRECT_INPUT;
     pauseBeforeExit = flags & RPF_PAUSE_CONSOLE;
     enableVisualTerminalSeq = flags & RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
@@ -153,21 +201,21 @@ string GetCommand(int argc,char** argv,bool &reInp, bool &enableVisualTerminalSe
 
         // Add a space except for the last argument
         if(i != (argc-1)) {
-            result += string(" ");
+            result.push_back(L' ');
         }
     }
 
     if(result.length() > MAX_COMMAND_LENGTH) {
-        printf("\n--------------------------------");
-        printf("\nError: Length of command line string is over %d characters\n",MAX_COMMAND_LENGTH);
+        PrintSplitLineToStderr();
+        PrintToStderr(L"Error: Length of command line string is over %d characters\n",MAX_COMMAND_LENGTH);
         PauseExit(EXIT_COMMAND_TOO_LONG,reInp);
     }
 
     return result;
 }
 
-DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG &execTime) {
-    STARTUPINFOA si;
+DWORD ExecuteCommand(wstring& command,bool reInp, LONGLONG &peakMemory, LONGLONG &execTime) {
+    STARTUPINFOW si;
     PROCESS_INFORMATION pi;
 
     memset(&si,0,sizeof(si));
@@ -177,16 +225,16 @@ DWORD ExecuteCommand(string& command,bool reInp, LONGLONG &peakMemory, LONGLONG 
     DWORD dwCreationFlags = CREATE_BREAKAWAY_FROM_JOB;
 
 
-    if(!CreateProcessA(NULL, (LPSTR)command.c_str(), NULL, NULL, true, dwCreationFlags, NULL, NULL, &si, &pi)) {
-        printf("\n--------------------------------");
-        printf("\nFailed to execute \"%s\":",command.c_str());
-        printf("\nError %lu: %s\n",GetLastError(),GetErrorMessage().c_str());
+    if(!CreateProcessW(NULL, command.data(), NULL, NULL, true, dwCreationFlags, NULL, NULL, &si, &pi)) {
+        PrintSplitLineToStderr();
+        PrintToStderr(L"Failed to execute \"%ls\":\n", command.c_str());
+        PrintWin32ApiError(L"CreateProcessW");
         PauseExit(EXIT_CREATE_PROCESS_FAILED,reInp);
     }
     if (enableJobControl) {
         WINBOOL bSuccess = AssignProcessToJobObject( hJob, pi.hProcess );
         if ( bSuccess == FALSE ) {
-            printf( "AssignProcessToJobObject failed: error %lu\n", GetLastError() );
+            PrintWin32ApiError(L"AssignProcessToJobObject");
             PauseExit(EXIT_ASSGIN_PROCESS_JOB_FAILED,reInp);
         }
     }
@@ -226,19 +274,19 @@ void EnableVtSequence() {
         SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT);
 }
 
-int main(int argc, char** argv) {
+int wmain(int argc, wchar_t** argv) {
 
-    const char *sharedMemoryId;
+    const wchar_t *sharedMemoryId;
     // First make sure we aren't going to read nonexistent arrays
     if(argc < 4) {
-        printf("\n--------------------------------");
-        printf("\nUsage: consolepauser.exe <0|1> <shared_memory_id> <filename> <parameters>\n");
-        printf("\n 1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
+        PrintSplitLineToStderr();
+        PrintToStderr(L"Usage: consolepauser.exe <0|1> <shared_memory_id> <filename> <parameters>\n\n");
+        PrintToStderr(L"  1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
         PauseExit(EXIT_WRONG_ARGUMENTS,false);
     }
 
     // Make us look like the paused program
-    SetConsoleTitleA(argv[3]);
+    SetConsoleTitleW(argv[3]);
 
     sharedMemoryId = argv[2];
 
@@ -250,13 +298,13 @@ int main(int argc, char** argv) {
     bool reInp;
     bool enableVisualTerminalSeq;
     // Then build the to-run application command
-    string command = GetCommand(argc, argv, reInp, enableVisualTerminalSeq);
+    wstring command = GetCommand(argc, argv, reInp, enableVisualTerminalSeq);
 
     if (enableJobControl) {
         hJob= CreateJobObject( &sa, NULL );
 
         if ( hJob == NULL ) {
-            printf( "CreateJobObject failed: error %lu\n", GetLastError() );
+            PrintWin32ApiError(L"CreateJobObject");
             PauseExit(EXIT_CREATE_JOB_OBJ_FAILED,reInp);
         }
 
@@ -265,7 +313,7 @@ int main(int argc, char** argv) {
         info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
         WINBOOL bSuccess = SetInformationJobObject( hJob, JobObjectExtendedLimitInformation, &info, sizeof( info ) );
         if ( bSuccess == FALSE ) {
-            printf( "SetInformationJobObject failed: error %lu\n", GetLastError() );
+            PrintWin32ApiError(L"SetInformationJobObject");
             PauseExit(EXIT_SET_JOB_OBJ_INFO_FAILED,reInp);
         }
     }
@@ -293,7 +341,7 @@ int main(int argc, char** argv) {
     HANDLE hSharedMemory=INVALID_HANDLE_VALUE;
     int BUF_SIZE=1024;
     char* pBuf=nullptr;
-    hSharedMemory = OpenFileMappingA(
+    hSharedMemory = OpenFileMappingW(
         FILE_MAP_ALL_ACCESS,
         FALSE,
         sharedMemoryId
@@ -305,8 +353,8 @@ int main(int argc, char** argv) {
             0,
             0,
             BUF_SIZE);
-//    } else {
-//        printf("can't open shared memory!\n");
+    } else {
+        PrintWin32ApiError(L"OpenFileMappingW");
     }
 
     // Save starting timestamp
@@ -331,8 +379,8 @@ int main(int argc, char** argv) {
     }
 
     // Done? Print return value of executed program
-    printf("\n--------------------------------");
-    printf("\nProcess exited after %.4g seconds with return value %lu (%.4g ms cpu time, %lld KB mem used).\n",seconds,returnvalue, execSeconds, peakMemory);
+    PrintSplitLineToStdout();
+    PrintToStdout(L"Process exited after %.4g seconds with return value %lu (%.4g ms cpu time, %lld KB mem used).\n",seconds,returnvalue, execSeconds, peakMemory);
     PauseExit(returnvalue,reInp);
     return 0;
 }

@@ -5,6 +5,9 @@ target("consolepauser")
 
     if is_os("windows") then
         add_files("main.windows.cpp")
+        if is_plat("mingw") then
+            add_ldflags("-municode", {force = true})
+        end
     else
         add_files("main.unix.cpp")
     end
