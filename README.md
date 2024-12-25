@@ -43,3 +43,7 @@ Code Intellisense Improvements:
 * Support C++ lambdas
 
 And many other improvements and bug fixes. See NEWS.md for full information.
+
+## Acknowledgement
+
+[Lua](https://www.lua.org/) 5.4.6 ([source mirror](https://github.com/lua/lua/tree/v5.4.6)) is used as add-on runtime.

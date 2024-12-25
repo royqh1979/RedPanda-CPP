@@ -44,29 +44,6 @@
 
 以及许多其他改进和错误修复。有关详细信息，请参阅NEWS.md。
 
-UI Improvements:
-* Full high-dpi support, including fonts and icons
-* Better dark theme support
-* Better editor color scheme support
-* Redesigned Find/Replace in Files UI
-* Redesigned bookmark UI
+## 致谢
 
-Editing Improvements:
-* Enhanced auto indent 
-* Enhanced code completion
-* Better code folding support
-
-Debugging Improvements:
-* Use gdb/mi interface
-* Enhanced watch
-* gdbserver mode
-
-Code Intellisense Improvements:
-* Better support identifiers for complex expressions
-* Support UTF-8 identifiers
-* Support C++ 14 using type alias
-* Support C-Style enum variable definitions
-* Support MACRO with arguments
-* Support C++ lambdas
-
-And many other improvements and bug fixes. See NEWS.md for full information.
+[Lua](https://www.lua.org/) 5.4.6 ([源代码镜像](https://github.com/lua/lua/tree/v5.4.6)) 用作附加组件运行环境。
