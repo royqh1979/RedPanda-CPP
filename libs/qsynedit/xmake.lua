@@ -41,7 +41,7 @@ target("qsynedit")
 
     add_files("*.ts")
 
-    add_includedirs(".", {interface = true})
+    add_includedirs(".", {public = true})
 
     -- do not install
     on_install(function (target) end)
