@@ -32,6 +32,7 @@ using std::vector;
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
+#include <termios.h>
 #define MAX_COMMAND_LENGTH 32768
 #define MAX_ERROR_LENGTH 2048
 
@@ -40,15 +41,36 @@ enum RunProgramFlag {
     RPF_REDIRECT_INPUT =    0x0002
 };
 
+void ClearStdinBuffer()
+{
+    tcflush(fileno(stdin), TCIFLUSH);
+}
 
 void PauseExit(int exitcode, bool reInp) {
     if (reInp) {
         freopen("/dev/tty","r",stdin);
     }
-    fflush(stdin);
+    ClearStdinBuffer();
+
     printf("\n");
     printf("Press ANY key to exit...");
+    fflush(stdout);
+
+    // set console to raw mode so we can read a single key
+    struct termios termios, saved;
+    int getResult;
+    if ((getResult = tcgetattr(fileno(stdin), &termios)) == 0) {
+        saved = termios;
+        cfmakeraw(&termios);
+        tcsetattr(fileno(stdin), TCSANOW, &termios);
+    }
+
     getchar();
+
+    // restore console mode, in case someone run it in existing terminal
+    if (getResult == 0)
+        tcsetattr(fileno(stdin), TCSANOW, &saved);
+
     exit(exitcode);
 }
 
@@ -175,7 +197,7 @@ int main(int argc, char** argv) {
         freopen("/dev/tty","w+",stdout);
         freopen("/dev/tty","w+",stderr);
     } else {
-        fflush(stdin);
+        ClearStdinBuffer();
     }
 
     int BUF_SIZE=1024;
