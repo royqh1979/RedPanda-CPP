@@ -154,6 +154,8 @@ void PrintWin32ApiError(const wchar_t *function)
 void PauseExit(int exitcode, bool reInp) {
     if (pauseBeforeExit) {
         HANDLE hInp=NULL;
+        INPUT_RECORD irec;
+        DWORD cc;
         if (reInp) {
             SECURITY_ATTRIBUTES sa;
             sa.nLength = sizeof(sa);
@@ -169,9 +171,15 @@ void PauseExit(int exitcode, bool reInp) {
         const wchar_t* pause_msg = getMessageFromEnv("RCP_EXIT_MSG",L"Press ANY key to exit...");
         PrintToStdout(L"\n");
         PrintToStdout(pause_msg);
-        wchar_t buffer[2];
-        DWORD nRead;
-        ReadConsoleW(hInp, buffer, 1, &nRead, NULL);
+        for(;;)
+        {
+            ReadConsoleInput(hInp, &irec, 1, &cc );
+            if( irec.EventType == KEY_EVENT
+                    &&  ((KEY_EVENT_RECORD&)irec.Event).bKeyDown
+                ) {
+                break;
+            }
+        }
         if (reInp) {
             CloseHandle(hInp);
         }
