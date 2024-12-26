@@ -40,6 +40,7 @@ public:
                         QWidget* panel, QObject* parent = nullptr);
 
     Editor* newEditor(const QString& filename, const QByteArray& encoding,
+                      FileType fileType, const QString& contextFile,
                      Project *pProject, bool newFile,
                      QTabWidget* page=nullptr);
 

@@ -71,14 +71,14 @@ static QSet<QString> CppTypeQualifiers {
 };
 
 Editor::Editor(QWidget *parent):
-    Editor{parent,"untitled",ENCODING_AUTO_DETECT,nullptr,true,nullptr}
+    Editor{parent,"untitled",ENCODING_AUTO_DETECT, FileType::None, QString(), nullptr,true,nullptr}
 {
 }
 
 Editor::Editor(QWidget *parent, const QString& filename,
-                  const QByteArray& encoding,
-                  Project* pProject, bool isNew,
-                  QTabWidget* parentPageControl):
+               const QByteArray& encoding, FileType fileType,
+               const QString& contextFile, Project* pProject,
+               bool isNew, QTabWidget* parentPageControl):
     QSynEdit{parent},
     mInited{false},
     mEncodingOption{encoding},
@@ -95,7 +95,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mHoverModifiedLine{-1},
     mWheelAccumulatedDelta{0},
     mCtrlClicking{false},
-    mFileType{FileType::None}
+    mContextFile{contextFile}
 {
     mLastFocusOutTime = 0;
     mInited=false;
@@ -107,7 +107,9 @@ Editor::Editor(QWidget *parent, const QString& filename,
     if (mFilename.isEmpty()) {
         mFilename = QString("untitled%1").arg(getNewFileNumber());
     }
-    doSetFileType(getFileType(mFilename));
+    if (fileType == FileType::None)
+        fileType = getFileType(mFilename);
+    doSetFileType(fileType);
     if (mProject && mEncodingOption==ENCODING_PROJECT) {
         mEncodingOption=mProject->options().encoding;
     }
@@ -4542,9 +4544,12 @@ FileType Editor::fileType() const
 
 void Editor::setFileType(FileType newFileType)
 {
+    if (newFileType == FileType::None)
+        newFileType = getFileType(mFilename);
     if (mFileType==newFileType)
         return;
     doSetFileType(newFileType);
+    applyColorScheme(pSettings->editor().colorScheme());
     if (!inProject()) {
         initParser();
         reparse(false);
@@ -4583,16 +4588,13 @@ void Editor::doSetFileType(FileType newFileType, bool force)
     }
 
     QSynedit::PSyntaxer syntaxer{syntaxerManager.getSyntaxer(mFileType)};
+    setSyntaxer(syntaxer);
     if (syntaxer) {
-        setSyntaxer(syntaxer);
         setFormatter(syntaxerManager.getFormatter(syntaxer->language()));
         setUseCodeFolding(true);
     } else {
         setUseCodeFolding(false);
     }
-
-    setSyntaxer(syntaxer);
-    applyColorScheme(pSettings->editor().colorScheme());
 }
 
 Editor* Editor::openFileInContext(const QString &filename)

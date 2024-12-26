@@ -1798,7 +1798,7 @@ void MainWindow::openFiles(const QStringList &files)
     }
 }
 
-Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page)
+Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page, FileType fileType, const QString& contextFile)
 {
     if (!fileExists(filename))
         return nullptr;
@@ -1812,6 +1812,8 @@ Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page)
 
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
+        editor->setContextFile(contextFile);
+        editor->setFileType(fileType);
         if (activate) {
             editor->activate();
         }
@@ -1837,7 +1839,8 @@ Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page)
         if (pProject && encoding==ENCODING_PROJECT)
             encoding=pProject->options().encoding;
         editor = mEditorList->newEditor(filename,encoding,
-                                    pProject, false, page);
+                                        fileType, contextFile,
+                                        pProject, false, page);
 //        if (mProject) {
 //            mProject->associateEditorToUnit(editor,unit);
 //        }
@@ -3549,6 +3552,18 @@ void MainWindow::loadLastOpens()
         if (!fileExists(editorFilename))
             continue;
         bool onLeft = fileObj["onLeft"].toBool();
+        QSynedit::BufferCoord pos;
+        pos.ch = fileObj["caretX"].toInt(1);
+        pos.line = fileObj["caretY"].toInt(1);
+        QByteArray encoding;
+        if (fileObj.contains("encodingOption"))
+            encoding = fileObj["encodingOption"].toString().toLatin1();
+        QString contextFile;
+        if (fileObj.contains("contextFile"))
+            contextFile = fileObj["contextFile"].toString();
+        FileType fileType{FileType::None};
+        if (fileObj.contains("fileType"))
+            fileType = nameToFileType(fileObj["fileType"].toString());
         QTabWidget* page;
         if (onLeft)
             page = mEditorList->leftPageWidget();
@@ -3559,12 +3574,14 @@ void MainWindow::loadLastOpens()
             unit = mProject->findUnit(editorFilename);
         }
         bool inProject = (mProject && unit);
-        QByteArray encoding = unit ? unit->encoding() :
-                                     (pSettings->editor().autoDetectFileEncoding()? QByteArray(ENCODING_AUTO_DETECT) : pSettings->editor().defaultEncoding());
+        if (encoding.isEmpty()) {
+            encoding = unit ? unit->encoding() :
+                                         (pSettings->editor().autoDetectFileEncoding()? QByteArray(ENCODING_AUTO_DETECT) : pSettings->editor().defaultEncoding());
+        }
         Project* pProject = (inProject?mProject.get():nullptr);
         if (pProject && encoding==ENCODING_PROJECT)
             encoding=pProject->options().encoding;
-        Editor * editor = mEditorList->newEditor(editorFilename, encoding, pProject,false,page);
+        Editor * editor = mEditorList->newEditor(editorFilename, encoding, fileType, contextFile, pProject,false,page);
 
         if (inProject && editor) {
             mProject->loadUnitLayout(editor);
@@ -3574,9 +3591,6 @@ void MainWindow::loadLastOpens()
 //        }
         if (!editor)
             continue;
-        QSynedit::BufferCoord pos;
-        pos.ch = fileObj["caretX"].toInt(1);
-        pos.line = fileObj["caretY"].toInt(1);
         editor->setCaretXY(pos);
         editor->setTopPos(
                     fileObj["top"].toInt(1)
@@ -3584,13 +3598,6 @@ void MainWindow::loadLastOpens()
         editor->setLeftPos(
                     fileObj["left"].toInt(1)
                     );
-        if (fileObj.contains("contextFile"))
-            editor->setContextFile(fileObj["contextFile"].toString());
-        if (fileObj.contains("fileType")) {
-            editor->setFileType(nameToFileType(fileObj["fileType"].toString()));
-        }
-        if (fileObj.contains("encodingOption"))
-            editor->setEncodingOption(fileObj["encodingOption"].toString().toLatin1());
         if (fileObj["focused"].toBool(false))
             focusedEditor = editor;
         //mVisitHistoryManager->removeFile(editorFilename);
@@ -3670,6 +3677,7 @@ void MainWindow::newEditor(const QString& suffix)
         } while(mEditorList->hasFilename(filename));
         Editor * editor=mEditorList->newEditor(filename,
                                                pSettings->editor().defaultEncoding(),
+                                               FileType::None, QString(),
                                                nullptr,true);
         editor->activate();
         //updateForEncodingInfo();

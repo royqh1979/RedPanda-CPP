@@ -43,8 +43,9 @@ EditorList::EditorList(QTabWidget* leftPageWidget,
 }
 
 Editor* EditorList::newEditor(const QString& filename, const QByteArray& encoding,
-                 Project *pProject, bool newFile,
-                 QTabWidget* page) {
+                              FileType fileType, const QString& contextFile,
+                              Project *pProject, bool newFile,
+                              QTabWidget* page) {
     QTabWidget * parentPageControl = nullptr;
     if (page == nullptr)
         parentPageControl = getNewEditorPageControl();
@@ -55,7 +56,7 @@ Editor* EditorList::newEditor(const QString& filename, const QByteArray& encodin
     }
 
     // parentPageControl takes the owner ship
-    Editor * e = new Editor(parentPageControl,filename,encoding,pProject,newFile,parentPageControl);
+    Editor * e = new Editor(parentPageControl, filename, encoding, fileType, contextFile, pProject, newFile, parentPageControl);
     connect(e, &Editor::renamed, this, &EditorList::onEditorRenamed);
     updateLayout();
     connect(e,&Editor::fileSaved,

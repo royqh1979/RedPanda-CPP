@@ -219,7 +219,7 @@ public:
 
     TodoModel* todoModel();
 
-    Editor* openFile(QString filename, bool activate=true, QTabWidget* page=nullptr);
+    Editor* openFile(QString filename, bool activate=true, QTabWidget* page=nullptr, FileType fileType=FileType::None, const QString& contextFile = QString());
     void openProject(QString filename, bool openFiles = true);
     void changeOptions(const QString& widgetName=QString(), const QString& groupName=QString());
     void changeProjectOptions(const QString& widgetName=QString(), const QString& groupName=QString());

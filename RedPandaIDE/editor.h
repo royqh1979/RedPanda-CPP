@@ -126,6 +126,8 @@ public:
 
     explicit Editor(QWidget *parent, const QString& filename,
                     const QByteArray& encoding,
+                    FileType fileType,
+                    const QString& contextFile,
                     Project* pProject, bool isNew,QTabWidget* parentPageControl);
 
     ~Editor();

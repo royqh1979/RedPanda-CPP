@@ -391,7 +391,7 @@ Editor* Project::openUnit(PProjectUnit& unit, bool forceOpen) {
         if (encoding==ENCODING_PROJECT)
             encoding=options().encoding;
 
-        editor = mEditorList->newEditor(unit->fileName(), encoding, this, false);
+        editor = mEditorList->newEditor(unit->fileName(), encoding, FileType::None, QString(), this, false);
         if (editor) {
             //editor->setProject(this);
             //unit->setEncoding(encoding);
@@ -420,7 +420,7 @@ Editor *Project::openUnit(PProjectUnit &unit, const PProjectEditorLayout &layout
         encoding = unit->encoding();
         if (encoding==ENCODING_PROJECT)
             encoding=options().encoding;
-        editor = mEditorList->newEditor(unit->fileName(), encoding, this, false);
+        editor = mEditorList->newEditor(unit->fileName(), encoding, FileType::None, QString(), this, false);
         if (editor) {
             //editor->setInProject(true);
             editor->setCaretY(layout->caretY);
@@ -983,6 +983,8 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                     Editor * editor = mEditorList->newEditor(
                                 unit->fileName(),
                                 unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
+                                FileType::None,
+                                QString(),
                                 this,
                                 false);
                     editor->activate();
@@ -1000,6 +1002,8 @@ bool Project::assignTemplate(const std::shared_ptr<ProjectTemplate> aTemplate, b
                 Editor * editor = mEditorList->newEditor(
                             unit->fileName(),
                             unit->encoding()==ENCODING_PROJECT?options().encoding:unit->encoding(),
+                            FileType::None,
+                            QString(),
                             this,
                             true);
 
