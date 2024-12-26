@@ -3100,16 +3100,26 @@ void Editor::initParser()
         if (pSettings->codeCompletion().shareParser()) {
             mParser = sharedParser(calcParserLanguage());
         } else {
-            mParser = std::make_shared<CppParser>();
-            mParser->setLanguage(calcParserLanguage());
-            mParser->setOnGetFileStream(
-                        std::bind(
-                            &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
-                            std::placeholders::_1, std::placeholders::_2));
-            resetCppParser(mParser);
-            mParser->setEnabled(
-                        pSettings->codeCompletion().enabled() &&
-                        (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP));
+            bool parserGot = false;
+            if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
+                Editor * e = pMainWindow->editorList()->getOpenedEditorByFilename(mContextFile);
+                if (e) {
+                    mParser = e->parser();
+                    parserGot=true;
+                }
+            }
+            if (!parserGot) {
+                mParser = std::make_shared<CppParser>();
+                mParser->setLanguage(calcParserLanguage());
+                mParser->setOnGetFileStream(
+                            std::bind(
+                                &EditorList::getContentFromOpenedEditor,pMainWindow->editorList(),
+                                std::placeholders::_1, std::placeholders::_2));
+                resetCppParser(mParser);
+                mParser->setEnabled(
+                            pSettings->codeCompletion().enabled() &&
+                            (syntaxer()->language() == QSynedit::ProgrammingLanguage::CPP));
+            }
         }
     } else {
         mParser = nullptr;
@@ -4599,18 +4609,21 @@ void Editor::doSetFileType(FileType newFileType, bool force)
 
 Editor* Editor::openFileInContext(const QString &filename)
 {
-    Editor *e=pMainWindow->openFile(filename);
-    if (e) {
-        if (!isC_CPPHeaderFile(e->fileType())
-                && !isC_CPPSourceFile(e->fileType()))
-            e->setFileType(FileType::CCppHeader);
-        if (isC_CPPHeaderFile(e->fileType())) {
-            if (isC_CPPSourceFile(mFileType)) {
-                e->setContextFile(mFilename);
-            } else if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
-                e->setContextFile(mContextFile);
-            }
+    FileType fileType = getFileType(filename);
+    QString contextFile;
+    if (!isC_CPPHeaderFile(fileType)
+            && !isC_CPPSourceFile(fileType))
+        fileType = FileType::CCppHeader;
+    if (isC_CPPHeaderFile(fileType)) {
+        if (isC_CPPSourceFile(mFileType)) {
+            contextFile = mFilename;
+        } else if (isC_CPPHeaderFile(mFileType) && !mContextFile.isEmpty()) {
+            contextFile = mContextFile;
         }
+    }
+
+    Editor *e=pMainWindow->openFile(filename, true, nullptr, fileType, contextFile);
+    if (e) {
         if (e->isVisible())
             pMainWindow->updateClassBrowserForEditor(e);
     }
@@ -4639,6 +4652,13 @@ void Editor::setContextFile(const QString &newContextFile)
     if (isC_CPPHeaderFile(mFileType)) {
         doSetFileType(mFileType, true);
         applyColorScheme(pSettings->editor().colorScheme());
+        if (pSettings->codeCompletion().enabled()
+                && !pSettings->codeCompletion().shareParser()
+                && !mContextFile.isEmpty()) {
+            Editor * e = pMainWindow->editorList()->getOpenedEditorByFilename(mContextFile);
+            if (e)
+                mParser = e->parser();
+        }
         reparse(false);
     }
 }
