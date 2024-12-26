@@ -1,6 +1,6 @@
 QT =    # non-Qt project
 
-CONFIG += c++11 console
+CONFIG += c++17 console
 CONFIG -= app_bundle
 
 isEmpty(APP_NAME) {
@@ -30,6 +30,8 @@ LIBS+= \
 win32: {
     DEFINES += _WIN32_WINNT=0x0501
     LIBS += -lpsapi  # GetProcessMemoryInfo
+
+    gcc|clang: QMAKE_LFLAGS += -municode
 }
 
 CONFIG += lrelease
