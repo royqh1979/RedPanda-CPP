@@ -20,6 +20,9 @@ Red Panda C++ Version 3.3
   - enhancement: Treat .tcc file as C/C++ header file.
   - enhancement: Save encoding / filetype /context file infos of last openned files.
   - fix: Class browser is empty when ctrl+click to open a file.
+  - fix: Only press space key can exit consolepauser in linux. (by CyanoHao)
+  - fix: command line parameter escaping for consolepauser in windows. (by CyanoHao)
+  - enhancement: Localization for consolepauser.
   
 Red Panda C++ Version 3.2
 

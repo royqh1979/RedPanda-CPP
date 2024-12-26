@@ -70,14 +70,11 @@ LONGLONG GetClockFrequency() {
     return dummy.QuadPart;
 }
 
-void PrintToStream(HANDLE hStream, const wchar_t *fmt, ...)
+void PrintToStream(HANDLE hStream, const wchar_t *fmt, va_list args)
 {
     constexpr size_t buffer_size = 64 * 1024;
     static wchar_t buffer[buffer_size];
-    va_list args;
-    va_start(args, fmt);
-    size_t length = _snwprintf(buffer, buffer_size, fmt, args);
-    va_end(args);
+    size_t length = _vswprintf(buffer, fmt, args);
     WriteConsoleW(hStream, buffer, length, NULL, NULL);
 }
 
@@ -120,6 +117,22 @@ void PrintSplitLineToStderr()
     PrintSplitLine(GetStdHandle(STD_ERROR_HANDLE));
 }
 
+const wchar_t* getMessageFromEnv(const char* name, const wchar_t* defaultValue) {
+    constexpr size_t buffer_size = 64 * 1024;
+    static wchar_t buffer[buffer_size];
+    const char* msg = getenv(name);
+    if (msg != NULL) {
+        size_t msg_len = strlen(msg);
+        size_t newsize = MultiByteToWideChar(CP_ACP,0,msg,msg_len,NULL,0);
+        if (newsize>0) {
+            int wstrlen = MultiByteToWideChar(CP_ACP,0,msg,msg_len,buffer,newsize);
+            buffer[wstrlen]=(wchar_t)0;
+            return buffer;
+        }
+    }
+    return defaultValue;
+}
+
 wstring GetErrorMessage(DWORD errorCode) {
     wstring result(MAX_ERROR_LENGTH, 0);
     FormatMessageW(
@@ -153,7 +166,9 @@ void PauseExit(int exitcode, bool reInp) {
             hInp = GetStdHandle(STD_INPUT_HANDLE);
         }
         FlushConsoleInputBuffer(hInp);
-        PrintToStdout(L"\nPress ANY key to exit...");
+        const wchar_t* pause_msg = getMessageFromEnv("RCP_EXIT_MSG",L"Press ANY key to exit...");
+        PrintToStdout(L"\n");
+        PrintToStdout(pause_msg);
         wchar_t buffer[2];
         DWORD nRead;
         ReadConsoleW(hInp, buffer, 1, &nRead, NULL);
@@ -387,25 +402,10 @@ int wmain(int argc, wchar_t** argv) {
 
     // Done? Print return value of executed program
     PrintSplitLineToStdout();
-    const char* usage_msg = getenv("RCP_USAGE_MSG");
-    if (usage_msg != NULL) {
-        size_t usage_msg_len = strlen(usage_msg);
-        size_t newsize = MultiByteToWideChar(CP_ACP,0,usage_msg,usage_msg_len,NULL,0);
-        if (newsize>0) {
-            wchar_t * wstr = new  wchar_t[newsize];
-            int wstrlen = MultiByteToWideChar(CP_ACP,0,usage_msg,usage_msg_len,wstr,newsize);
-            wstr[wstrlen]=(wchar_t)0;
-            PrintToStdout(wstr,seconds,1100, execSeconds, peakMemory);
-            PrintToStdout(L"\n");
-            PrintToStdout(wstr,seconds,1100, execSeconds, peakMemory);
-            PrintToStdout(L"\n");
-            PrintToStdout(wstr,seconds,1100, execSeconds, peakMemory);
-            PrintToStdout(L"\n");
-            delete[] wstr;
-            PrintToStdout(L"\n");
-        }
-    }
-    PrintToStdout(L"Process exited after %.4f seconds with return value %lu (%.4f ms cpu time, %lld KB mem used).\n",seconds,returnvalue, execSeconds, peakMemory);
+    const wchar_t* usage_msg = getMessageFromEnv("RCP_USAGE_MSG",
+                                                 L"Process exited after %.4f seconds with return value %lu (%.4f ms cpu time, %lld KB mem used).\n");
+    PrintToStdout(usage_msg,seconds,returnvalue, execSeconds, peakMemory);
+    PrintToStdout(L"\n");
     PauseExit(returnvalue,reInp);
     return 0;
 }
