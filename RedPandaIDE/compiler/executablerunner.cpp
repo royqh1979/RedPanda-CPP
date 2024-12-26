@@ -124,6 +124,8 @@ void ExecutableRunner::run()
         path = pathAdded.join(PATH_SEPARATOR);
     }
     env.insert("PATH",path);
+    env.insert("RCP_USAGE_MSG", tr("Process exited after %.4f seconds with return value %lu (%.4f ms cpu time, %lld KB mem used)."));
+    env.insert("RCP_EXIT_MSG", tr("Press ANY key to exit..."));
     process.setProcessEnvironment(env);
     connect(
                 &process, &QProcess::errorOccurred,

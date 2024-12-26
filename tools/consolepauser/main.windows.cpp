@@ -25,6 +25,7 @@ using std::wstring;
 #include <conio.h>
 #include <stdbool.h>
 #include <versionhelpers.h>
+#include <stdlib.h>
 
 #ifndef WINBOOL
 #define WINBOOL BOOL
@@ -69,25 +70,31 @@ LONGLONG GetClockFrequency() {
     return dummy.QuadPart;
 }
 
-template <typename... Ts>
-void PrintToStream(HANDLE hStream, const wchar_t *fmt, Ts &&...args)
+void PrintToStream(HANDLE hStream, const wchar_t *fmt, ...)
 {
     constexpr size_t buffer_size = 64 * 1024;
     static wchar_t buffer[buffer_size];
-    size_t length = _snwprintf(buffer, buffer_size, fmt, std::forward<Ts>(args)...);
+    va_list args;
+    va_start(args, fmt);
+    size_t length = _snwprintf(buffer, buffer_size, fmt, args);
+    va_end(args);
     WriteConsoleW(hStream, buffer, length, NULL, NULL);
 }
 
-template <typename... Ts>
-void PrintToStdout(const wchar_t *fmt, Ts &&...args)
+void PrintToStdout(const wchar_t *fmt, ...)
 {
-    PrintToStream(GetStdHandle(STD_OUTPUT_HANDLE), fmt, std::forward<Ts>(args)...);
+    va_list args;
+    va_start(args, fmt);
+    PrintToStream(GetStdHandle(STD_OUTPUT_HANDLE), fmt, args);
+    va_end(args);
 }
 
-template <typename... Ts>
-void PrintToStderr(const wchar_t *fmt, Ts &&...args)
+void PrintToStderr(const wchar_t *fmt, ...)
 {
-    PrintToStream(GetStdHandle(STD_ERROR_HANDLE), fmt, std::forward<Ts>(args)...);
+    va_list args;
+    va_start(args, fmt);
+    PrintToStream(GetStdHandle(STD_ERROR_HANDLE), fmt, args);
+    va_end(args);
 }
 
 void PrintSplitLine(HANDLE hStream)
@@ -380,7 +387,25 @@ int wmain(int argc, wchar_t** argv) {
 
     // Done? Print return value of executed program
     PrintSplitLineToStdout();
-    PrintToStdout(L"Process exited after %.4g seconds with return value %lu (%.4g ms cpu time, %lld KB mem used).\n",seconds,returnvalue, execSeconds, peakMemory);
+    const char* usage_msg = getenv("RCP_USAGE_MSG");
+    if (usage_msg != NULL) {
+        size_t usage_msg_len = strlen(usage_msg);
+        size_t newsize = MultiByteToWideChar(CP_ACP,0,usage_msg,usage_msg_len,NULL,0);
+        if (newsize>0) {
+            wchar_t * wstr = new  wchar_t[newsize];
+            int wstrlen = MultiByteToWideChar(CP_ACP,0,usage_msg,usage_msg_len,wstr,newsize);
+            wstr[wstrlen]=(wchar_t)0;
+            PrintToStdout(wstr,seconds,1100, execSeconds, peakMemory);
+            PrintToStdout(L"\n");
+            PrintToStdout(wstr,seconds,1100, execSeconds, peakMemory);
+            PrintToStdout(L"\n");
+            PrintToStdout(wstr,seconds,1100, execSeconds, peakMemory);
+            PrintToStdout(L"\n");
+            delete[] wstr;
+            PrintToStdout(L"\n");
+        }
+    }
+    PrintToStdout(L"Process exited after %.4f seconds with return value %lu (%.4f ms cpu time, %lld KB mem used).\n",seconds,returnvalue, execSeconds, peakMemory);
     PauseExit(returnvalue,reInp);
     return 0;
 }
