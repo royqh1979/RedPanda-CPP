@@ -31,8 +31,8 @@ jobs:
           export QT_ASSUME_STDERR_HAS_CONSOLE=1
           xmake r test-escape
 
-  teal_lua_consistency:
-    name: Teal–Lua consistency
+  generated_code_consistency_addon:
+    name: "Generated code consistency: add-on"
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -54,3 +54,31 @@ jobs:
       - name: Check
         run: |
           git diff --color --exit-code
+
+  imported_code_consistency_lua:
+    name: "Imported code consistency: Lua"
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch Lua
+        uses: actions/checkout@v4
+        with:
+          repository: lua/lua
+          ref: v5.4.6
+          path: lua
+          fetch-depth: 1
+
+      - name: Check
+        run: |
+          cd lua
+          find .                                         \
+            -regextype egrep                             \
+            '(' -regex '.*\.(c|h|hpp)$' -a               \
+              -not -path './testes/*' -a                 \
+              -not -name 'ltests.*' -a                   \
+              -not -name onelua.c ')'                    \
+            -exec echo checking {} ';'                   \
+            -exec diff --color {} ../libs/lua/lua/{} ';'
