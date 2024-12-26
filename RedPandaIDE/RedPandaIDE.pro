@@ -37,7 +37,7 @@ contains(QMAKE_HOST.arch, x86_64):{
 macos: {
     QT += gui-private
 
-    ICON = ../macos/RedPandaIDE.icns
+    ICON = ../platform/macos/RedPandaIDE.icns
 }
 
 win32 {
