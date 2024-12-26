@@ -14,64 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "mainwindow.h"
-#include "settings.h"
-#include "systemconsts.h"
-#include "utils.h"
-#include <QApplication>
-#include <QDir>
-#include <QTranslator>
-#include <QStandardPaths>
-#include <QMessageBox>
-#include <QStringList>
-#include <QAbstractNativeEventFilter>
-#include <QDir>
-#include <QScreen>
-#include <QLockFile>
-#include <QFontDatabase>
-#include <QLibraryInfo>
-#include "common.h"
-#include "colorscheme.h"
-#include "iconsmanager.h"
-#include "autolinkmanager.h"
-#include <qt_utils/charsetinfo.h>
-#include "parser/parserutils.h"
-#include "editorlist.h"
-#include "widgets/choosethemedialog.h"
-#include "thememanager.h"
-#include "utils/font.h"
-#include "problems/ojproblemset.h"
+#include "main.h"
 
 #ifdef Q_OS_WIN
-#include <QTemporaryFile>
-#include <windows.h>
-#include <psapi.h>
-#include <QSharedMemory>
-#include <QBuffer>
-#include <winuser.h>
-#include <QFontDatabase>
-
-#include "widgets/cpudialog.h"
-#endif
-
-QString getSettingFilename(const QString& filepath, bool& firstRun);
-#ifdef Q_OS_WIN
-class WindowLogoutEventFilter : public QAbstractNativeEventFilter {
-
-    // QAbstractNativeEventFilter interface
-public:
-#if QT_VERSION_MAJOR >= 6
-    bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) override;
-#else
-    bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) override;
-#endif
-};
-
-#ifndef WM_DPICHANGED
-# define WM_DPICHANGED 0x02e0
-#endif
-
-#define WM_APP_OPEN_FILE (WM_APP + 6736 /* “OPEN” on dial pad */)
 static_assert(WM_APP_OPEN_FILE < 0xc000);
 
 HWND prevAppInstance = NULL;
@@ -211,6 +156,23 @@ bool sendFilesToInstance() {
     return false;
 }
 #endif
+
+BlockWheelEventFiler::BlockWheelEventFiler(QObject* parent):QObject(parent) {}
+
+BlockWheelEventFiler::~BlockWheelEventFiler()
+{
+
+} ;
+bool BlockWheelEventFiler::eventFilter(QObject *watched, QEvent *event)
+{
+    //Prevent QComboBox wheel event
+    if (event->type() == QEvent::Wheel) {
+        QComboBox *p=qobject_cast<QComboBox*>(watched);
+        if (p && !(p->view() && p->view()->isVisible()))
+            return true;
+    }
+    return false;
+}
 
 QString getSettingFilename(const QString& filepath, bool& firstRun) {
     QString filename;
@@ -462,7 +424,8 @@ int main(int argc, char *argv[])
         app.installNativeEventFilter(&filter);
 #endif
         //Event filter to prevent QCombobox receive wheel event;
-        app.installEventFilter(pMainWindow);
+        BlockWheelEventFiler *blockWheelFilter=new BlockWheelEventFiler(&app);
+        app.installEventFilter(blockWheelFilter);
 
         if (lockFile.isLocked()) {
             lockFile.unlock();

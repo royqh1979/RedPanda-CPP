@@ -1055,7 +1055,6 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event) override;
-    bool eventFilter(QObject *watched, QEvent *event) override;
 
     bool isClosingAll() const;
     bool isQuitting() const;

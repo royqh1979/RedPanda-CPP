@@ -325,6 +325,7 @@ HEADERS += \
     editor.h \
     editorlist.h \
     iconsmanager.h \
+    main.h \
     mainwindow.h \
     settingsdialog/compilersetdirectorieswidget.h \
     settingsdialog/compilersetoptionwidget.h \
