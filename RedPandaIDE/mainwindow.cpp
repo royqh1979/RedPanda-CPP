@@ -137,7 +137,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-
     /** Msys2 MinGW 64 Qt 6.8.0 fix: Crash when debug **/
 // #if defined(QT_DEBUG) && QT_VERSION_MAJOR == 6 && QT_VERSION_MINOR == 8
 //     QFont font(pSettings->environment().interfaceFont());
@@ -147,6 +146,7 @@ MainWindow::MainWindow(QWidget *parent)
 //     this->setFont(font);
 // #endif
     /** **/
+    resize(960, 628);
 
     ui->cbProblemCaseValidateType->blockSignals(true);
     ui->cbProblemCaseValidateType->addItem(tr("Exact"));
