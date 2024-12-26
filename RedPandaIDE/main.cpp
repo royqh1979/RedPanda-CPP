@@ -166,7 +166,8 @@ BlockWheelEventFiler::~BlockWheelEventFiler()
 bool BlockWheelEventFiler::eventFilter(QObject *watched, QEvent *event)
 {
     //Prevent QComboBox wheel event
-    if (event->type() == QEvent::Wheel) {
+    if (event->type() == QEvent::Wheel
+            && !pSettings->environment().comboboxWheel()) {
         QComboBox *p=qobject_cast<QComboBox*>(watched);
         if (p && !(p->view() && p->view()->isVisible()))
             return true;

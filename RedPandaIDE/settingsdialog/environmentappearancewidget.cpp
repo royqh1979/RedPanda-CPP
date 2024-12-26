@@ -62,6 +62,7 @@ void EnvironmentAppearanceWidget::doLoad()
             break;
         }
     }
+    ui->chkComboboxWheel->setChecked(pSettings->environment().comboboxWheel());
 }
 
 void EnvironmentAppearanceWidget::doSave()
@@ -83,6 +84,7 @@ void EnvironmentAppearanceWidget::doSave()
     pSettings->environment().setIconZoomFactor(ui->spinZoomFactor->value());
 
     pSettings->environment().setUseCustomIconSet(ui->chkUseCustomIconSet->isChecked());
+    pSettings->environment().setComboboxWheel(ui->chkComboboxWheel->isChecked());
 
     pSettings->environment().save();
     pMainWindow->applySettings();

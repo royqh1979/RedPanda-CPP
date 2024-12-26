@@ -12,7 +12,7 @@ Red Panda C++ Version 3.3
   - fix: Color scheme's "Indent Guide Line" item is not used by the editor.
   - fix: "Indent Guide Line" item doesn't show in the option / editor / color scheme page.
   - fix: Remove not used option "indent guide line" in the option / editor / general page. 
-  - change: Prevent mouse wheel change combobox's current selection.
+  - enhancement: New option in "Environment" / "Appearance". To prevent mouse wheel change combobox's current selection.
   - enhancement: Add "Rainbow indents"/"Rainbow indent guides" options in the option / editor / color scheme page.
   - enhancement: Manually select file type.
   - enhancement: When ctrl+click to open a C/C++ header file not suffixed with .h/.hh/.hpp etc., auto set its type to C/C++ header.

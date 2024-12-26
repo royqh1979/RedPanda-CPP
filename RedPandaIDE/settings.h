@@ -601,6 +601,9 @@ public:
 
         static QMap<QString, QString> terminalArgsPatternMagicVariables();
 
+        bool comboboxWheel() const;
+        void setComboboxWheel(bool newComboboxWheel);
+
     private:
         bool isTerminalValid();
         void checkAndSetTerminal();
@@ -615,6 +618,7 @@ public:
         QString mIconSet;
         bool mUseCustomIconSet;
         bool mUseCustomTheme;
+        bool mComboboxWheel;
 
         QString mDefaultOpenFolder;
         QString mTerminalPath;

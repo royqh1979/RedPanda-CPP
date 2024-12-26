@@ -3808,7 +3808,8 @@ void Settings::Environment::doLoad()
     mIconZoomFactor = doubleValue("icon_zoom_factor",1.0);
     mLanguage = stringValue("language", QLocale::system().name());
     mIconSet = stringValue("icon_set","contrast");
-    mUseCustomIconSet = boolValue("use_custom_icon_set", false);
+    mUseCustomIconSet = boolValue("use_custom_icon_set", false);    
+    mComboboxWheel = boolValue("enable_combobox_wheel", false);
 
     mCurrentFolder = stringValue("current_folder",QDir::currentPath());
     if (!fileExists(mCurrentFolder)) {
@@ -4046,12 +4047,22 @@ void Settings::Environment::checkAndSetTerminal()
     QMessageBox::critical(
                 nullptr,
                 QCoreApplication::translate("Settings","Error"),
-        QCoreApplication::translate("Settings","Can't find terminal program!"));
+                QCoreApplication::translate("Settings","Can't find terminal program!"));
 }
 
 QMap<QString, QString> Settings::Environment::terminalArgsPatternMagicVariables()
 {
     return mTerminalArgsPatternMagicVariables;
+}
+
+bool Settings::Environment::comboboxWheel() const
+{
+    return mComboboxWheel;
+}
+
+void Settings::Environment::setComboboxWheel(bool newComboboxWheel)
+{
+    mComboboxWheel=newComboboxWheel;
 }
 
 QList<Settings::Environment::TerminalItem> Settings::Environment::loadTerminalList() const
@@ -4128,6 +4139,7 @@ void Settings::Environment::doSave()
     saveValue("icon_set",mIconSet);
     saveValue("use_custom_icon_set", mUseCustomIconSet);
     saveValue("use_custom_theme", mUseCustomTheme);
+    saveValue("enable_combobox_wheel", mComboboxWheel);
 
     saveValue("current_folder",mCurrentFolder);
     saveValue("default_open_folder",mDefaultOpenFolder);
