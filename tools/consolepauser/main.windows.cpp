@@ -109,6 +109,39 @@ void PauseExit(int exitcode, bool reInp) {
     exit(exitcode);
 }
 
+string EscapeArgument(const string &arg)
+{
+    // reduced version of `escapeArgumentImplWindowsCreateProcess` in `RedPandaIDE/utils/escape.cpp`
+    // see also https://learn.microsoft.com/en-gb/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way .
+
+    if (!arg.empty() &&
+        arg.find_first_of(" \t\n\v\"") == string::npos)
+        return arg;
+
+    string result = "\"";
+    for (auto it = arg.begin(); ; ++it) {
+        int nBackSlash = 0;
+        while (it != arg.end() && *it == '\\') {
+            ++it;
+            ++nBackSlash;
+        }
+        if (it == arg.end()) {
+            // escape all backslashes, but leave the terminating double quote unescaped
+            result.append(nBackSlash * 2, '\\');
+            break;
+        } else if (*it == '"') {
+            // escape all backslashes and the following double quote
+            result.append(nBackSlash * 2 + 1, '\\');
+            result.push_back(*it);
+        } else {
+            // backslashes aren't special here
+            result.append(nBackSlash, '\\');
+            result.push_back(*it);
+        }
+    }
+    return result;
+}
+
 string GetCommand(int argc,char** argv,bool &reInp, bool &enableVisualTerminalSeq) {
     string result;
     int flags = atoi(argv[1]);
@@ -116,8 +149,7 @@ string GetCommand(int argc,char** argv,bool &reInp, bool &enableVisualTerminalSe
     pauseBeforeExit = flags & RPF_PAUSE_CONSOLE;
     enableVisualTerminalSeq = flags & RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     for(int i = 3;i < argc;i++) {
-        // Quote the argument in case the path name contains spaces
-        result += string("\"") + string(argv[i]) + string("\"");
+        result += EscapeArgument(argv[i]);
 
         // Add a space except for the last argument
         if(i != (argc-1)) {
