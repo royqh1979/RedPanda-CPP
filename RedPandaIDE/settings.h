@@ -1488,6 +1488,7 @@ public:
 #endif
 
         bool supportConvertingCharset();
+        bool supportNLS();
 
         bool persistInAutoFind() const;
         void setPersistInAutoFind(bool newPersistInAutoFind);
@@ -1557,6 +1558,8 @@ public:
         // Options
         QMap<QString,QString> mCompileOptions;
 
+        bool mGccSupportNLS;
+        bool mGccSupportNLSInitialized;
 #ifdef Q_OS_WINDOWS
         // GCC ACP detection cache
         bool mGccIsUtf8;

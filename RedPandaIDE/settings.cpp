@@ -1666,10 +1666,12 @@ Settings::CompilerSet::CompilerSet():
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
     mExecutableSuffix{DEFAULT_EXECUTABLE_SUFFIX},
-    mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable}
+    mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable},
+    mGccSupportNLS{false},
+    mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
-    , mGccIsUtf8Initialized(false)
-    , mGccSupportConvertingCharsetInitialized(false)
+    , mGccIsUtf8Initialized{false}
+    , mGccSupportConvertingCharsetInitialized{false}
 #endif
 {
 
@@ -1686,7 +1688,9 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
     mExecutableSuffix{DEFAULT_EXECUTABLE_SUFFIX},
-    mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable}
+    mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable},
+    mGccSupportNLS{false},
+    mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8Initialized(false)
     , mGccSupportConvertingCharsetInitialized(false)
@@ -1759,7 +1763,9 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mAssemblingSuffix{set.mAssemblingSuffix},
     mExecutableSuffix{set.mExecutableSuffix},
     mCompilationStage{set.mCompilationStage},
-    mCompileOptions{set.mCompileOptions}
+    mCompileOptions{set.mCompileOptions},
+    mGccSupportNLS{set.mGccSupportNLS},
+    mGccSupportNLSInitialized{set.mGccSupportNLSInitialized}
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8(set.mGccIsUtf8)
     , mGccIsUtf8Initialized(set.mGccIsUtf8Initialized)
@@ -1808,7 +1814,9 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mAssemblingSuffix{set["assemblingSuffix"].toString()},
     mExecutableSuffix{set["executableSuffix"].toString()},
     mCompilationStage{CompilationStage(set["compilationStage"].toInt())},
-    mCompileOptions{} // handle later
+    mCompileOptions{}, // handle later
+    mGccSupportNLS{false},
+    mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8Initialized(false)
     , mGccSupportConvertingCharsetInitialized(false)
@@ -2980,6 +2988,29 @@ bool Settings::CompilerSet::supportConvertingCharset()
     // Unix: iconv is a part of POSIX standard.
     return mCompilerType == CompilerType::GCC || mCompilerType == CompilerType::GCC_UTF8;
 #endif
+}
+
+bool Settings::CompilerSet::supportNLS()
+{
+    if (mCompilerType != CompilerType::GCC && mCompilerType != CompilerType::GCC_UTF8)
+        return false;
+    if (!mGccSupportNLSInitialized) {
+        mGccSupportNLS = [this] () {
+            QByteArray verboseOut = getCompilerOutput(QFileInfo(mCCompiler).dir().path(), mCCompiler, {"-v"});
+            QByteArray targetStr = "Configured with: ";
+            int configurationPos = verboseOut.indexOf(targetStr);
+            if (configurationPos < 0)
+                return false;
+            int endPos = verboseOut.indexOf('\n', configurationPos);
+            if (endPos < 0)
+                return false;
+            QByteArray configuration = verboseOut.mid(configurationPos + targetStr.size(), endPos - configurationPos - targetStr.size());
+            return configuration.contains("--enable-nls") && !configuration.contains("--disable-nls");
+        } ();
+        mGccSupportNLSInitialized = true;
+    }
+    return mGccSupportNLS;
+
 }
 
 const QString &Settings::CompilerSet::assemblingSuffix() const

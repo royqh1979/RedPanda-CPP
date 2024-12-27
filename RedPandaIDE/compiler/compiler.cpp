@@ -748,7 +748,7 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
         env.insert("PATH",path);
     }
 #endif
-    if (compilerSet() && compilerSet()->forceEnglishOutput())
+    if (compilerSet() && compilerSet()->supportNLS() && compilerSet()->forceEnglishOutput())
         env.insert("LANG","en");
     //env.insert("LDFLAGS","-Wl,--stack,12582912");
     env.insert("LDFLAGS","");

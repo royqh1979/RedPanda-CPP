@@ -78,12 +78,16 @@ void CompilerSetOptionWidget::init()
 
 static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSetOptionWidget* ui) {
     bool supportCharset = pSet->supportConvertingCharset();
+    bool supportNLS = pSet->supportNLS();
     ui->chkAutoAddCharset->setEnabled(supportCharset);
     ui->cbEncoding->setEnabled(supportCharset);
     ui->cbEncodingDetails->setEnabled(supportCharset);
     ui->panelCharset->setVisible(supportCharset);
     ui->chkAutoAddCharset->setEnabled(supportCharset);
     ui->chkAutoAddCharset->setVisible(supportCharset);
+
+    ui->chkForceEnglishOutput->setEnabled(supportNLS);
+    ui->chkForceEnglishOutput->setVisible(supportNLS);
 
     bool supportStaticLink = CompilerInfoManager::supportStaticLink(pSet->compilerType());
     ui->chkStaticLink->setEnabled(supportStaticLink);
