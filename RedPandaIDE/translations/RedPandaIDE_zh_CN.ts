@@ -782,6 +782,31 @@ p, li { white-space: pre-wrap; }
         <translation>无法启动调试器</translation>
     </message>
     <message>
+        <location line="+77"/>
+        <source>Press ANY key to exit...</source>
+        <translation>按任意键退出...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Process exited after</source>
+        <translation>进程退出, 总耗时</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Return value</source>
+        <translation>返回值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CPU time</source>
+        <translation>CPU 时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Memory</source>
+        <translation>内存</translation>
+    </message>
+    <message>
         <source>Encoding not support</source>
         <translation type="vanished">不支持字符编码</translation>
     </message>
@@ -794,7 +819,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">程序中的文字内容可能无法被正确处理和显示。</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="-11"/>
         <source>Can&apos;t find Console Pauser</source>
         <translation>找不到Console Pauser程序</translation>
     </message>
@@ -3064,7 +3089,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ExecutableRunner</name>
     <message>
-        <location filename="../compiler/executablerunner.cpp" line="+264"/>
+        <location filename="../compiler/executablerunner.cpp" line="+262"/>
         <source>The runner process &apos;%1&apos; failed to start.</source>
         <oldsource>The runner process failed to start.</oldsource>
         <translation>无法启动程序运行进程&apos;%1&apos;。</translation>
@@ -3074,17 +3099,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">程序运行进程启动后崩溃。</translation>
     </message>
     <message>
-        <location line="-137"/>
-        <source>Process exited after %.4f seconds with return value %lu (%.4f ms cpu time, %lld KB mem used).</source>
-        <translation>进程在 %.4f 秒后以返回值 %lu 退出。(使用了 %.4f ms cpu时间, %lld KB内存).</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Press ANY key to exit...</source>
-        <translation>按任意键退出...</translation>
-    </message>
-    <message>
-        <location line="+143"/>
+        <location line="+7"/>
         <source>The last waitFor...() function timed out.</source>
         <translation>waitFor()函数等待超时。</translation>
     </message>

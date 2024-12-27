@@ -23,12 +23,6 @@
 #include "../utils.h"
 #include "../common.h"
 
-enum RunProgramFlag {
-    RPF_PAUSE_CONSOLE =     0x0001,
-    RPF_REDIRECT_INPUT =    0x0002,
-    RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-};
-
 class Runner;
 class Project;
 class Compiler;
