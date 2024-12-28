@@ -928,9 +928,9 @@ void GDBMIDebuggerClient::processDebugOutput(const QByteArray& debugOutput)
          case '+': // status async output
          case '=': // notify async output
              break;
-         case '(':
-             if (line.startsWith("(gdb)"))
-                 mConsoleOutput.append(line);
+         case '(': // Prompt (gdb)
+//             if (line.startsWith("(gdb)"))
+//                 mConsoleOutput.append(line);
              break;
          }
     }
