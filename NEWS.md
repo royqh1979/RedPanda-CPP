@@ -23,6 +23,7 @@ Red Panda C++ Version 3.3
   - fix: Only press space key can exit consolepauser in linux. (by CyanoHao)
   - fix: command line parameter escaping for consolepauser in windows. (by CyanoHao)
   - enhancement: Localization for consolepauser.
+  - fix: Debugger not responding when debugging with gdb > 14.
   
 Red Panda C++ Version 3.2
 

@@ -150,7 +150,7 @@ void GDBMIDebuggerClient::run()
         readed = mProcess->readAll();
         buffer += readed;
 
-        if (readed.endsWith("\n")&& outputTerminated(buffer)) {
+        if (readed.endsWith("\n")) {
             processDebugOutput(buffer);
             buffer.clear();
             // mCmdRunning = false;
@@ -329,15 +329,15 @@ QStringList GDBMIDebuggerClient::tokenize(const QString &s) const
     return result;
 }
 
-bool GDBMIDebuggerClient::outputTerminated(const QByteArray &text) const
-{
-    QStringList lines = textToLines(QString::fromUtf8(text));
-    foreach (const QString& line,lines) {
-        if (line.trimmed() == "(gdb)")
-            return true;
-    }
-    return false;
-}
+//bool GDBMIDebuggerClient::outputTerminated(const QByteArray &text) const
+//{
+//    QStringList lines = textToLines(QString::fromUtf8(text));
+//    foreach (const QString& line,lines) {
+//        if (line.trimmed() == "(gdb)")
+//            return true;
+//    }
+//    return false;
+//}
 
 void GDBMIDebuggerClient::handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint)
 {
@@ -927,6 +927,10 @@ void GDBMIDebuggerClient::processDebugOutput(const QByteArray& debugOutput)
              break;
          case '+': // status async output
          case '=': // notify async output
+             break;
+         case '(':
+             if (line.startsWith("(gdb)"))
+                 mConsoleOutput.append(line);
              break;
          }
     }

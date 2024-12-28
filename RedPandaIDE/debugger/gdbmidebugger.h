@@ -97,7 +97,7 @@ protected:
     void runNextCmd();
 private:
     QStringList tokenize(const QString& s) const;
-    bool outputTerminated(const QByteArray& text) const;
+    //bool outputTerminated(const QByteArray& text) const;
     void handleBreakpoint(const GDBMIResultParser::ParseObject& breakpoint);
     void handleCreateVar(const GDBMIResultParser::ParseObject &multiVars);
     void handleFrame(const GDBMIResultParser::ParseValue &frame);
