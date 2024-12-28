@@ -374,6 +374,8 @@ qulonglong GDBMIResultParser::ParseValue::hexValue(bool &ok) const
 static QString parsePathValue(QByteArray value)
 {
     //Q_ASSERT(mType == ParseValueType::Value);
+    value = value.trimmed();
+    if (value.isEmpty()) return QString();
 #ifdef Q_OS_WIN
     if (value.startsWith("/") && !value.startsWith("//"))
         value=value.mid(1);
@@ -383,6 +385,8 @@ static QString parsePathValue(QByteArray value)
 
 static QString parseUtf8PathValue(QByteArray value)
 {
+    value = value.trimmed();
+    if (value.isEmpty()) return QString();
 #ifdef Q_OS_WIN
     if (value.startsWith("/") && !value.startsWith("//"))
         value=value.mid(1);
