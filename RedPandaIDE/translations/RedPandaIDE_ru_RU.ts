@@ -587,27 +587,27 @@
     <message>
         <location filename="../compiler/compilermanager.cpp" line="283"/>
         <source>Press ANY key to exit...</source>
-        <translation type="unfinished"></translation>
+        <translation>Нажмите ЛЮБУЮ клавишу для выхода...</translation>
     </message>
     <message>
         <location filename="../compiler/compilermanager.cpp" line="284"/>
         <source>Process exited after</source>
-        <translation type="unfinished"></translation>
+        <translation>Процесс завершился за</translation>
     </message>
     <message>
         <location filename="../compiler/compilermanager.cpp" line="285"/>
         <source>Return value</source>
-        <translation type="unfinished"></translation>
+        <translation>Возвращённое значение</translation>
     </message>
     <message>
         <location filename="../compiler/compilermanager.cpp" line="286"/>
         <source>CPU time</source>
-        <translation type="unfinished"></translation>
+        <translation>Время процессора</translation>
     </message>
     <message>
         <location filename="../compiler/compilermanager.cpp" line="287"/>
         <source>Memory</source>
-        <translation type="unfinished">Память</translation>
+        <translation>Память</translation>
     </message>
 </context>
 <context>
@@ -2268,7 +2268,7 @@
     <message>
         <location filename="../settingsdialog/environmentappearancewidget.ui" line="347"/>
         <source>Change combobox&apos;s current selection by turning mouse wheel on it</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменение текущего выбора поля со списком путем поворота колесика мыши на нем</translation>
     </message>
     <message>
         <location filename="../settingsdialog/environmentappearancewidget.cpp" line="108"/>
@@ -4328,13 +4328,13 @@
         <location filename="../mainwindow.cpp" line="6078"/>
         <location filename="../mainwindow.cpp" line="8400"/>
         <source>Issues</source>
-        <translation>Предложения</translation>
+        <translation>Ошибки</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1004"/>
         <location filename="../mainwindow.ui" line="2791"/>
         <source>Tools Output</source>
-        <translation>Вывод инструментов</translation>
+        <translation>Вывод компилятора</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1085"/>
