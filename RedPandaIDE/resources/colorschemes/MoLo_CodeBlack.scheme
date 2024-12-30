@@ -143,7 +143,7 @@
     },
     "Indent Guide Line": {
         "bold": false,
-        "foreground": "#ffc0c0c0",
+        "foreground": "#8e838383",
         "italic": false,
         "strikeout": false,
         "underlined": false
