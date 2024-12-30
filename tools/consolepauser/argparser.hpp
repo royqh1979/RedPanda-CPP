@@ -71,6 +71,7 @@ struct ArgParser
         String redirectInput;
         bool pauseConsole = false;
         bool enableVirtualTerminalSeq = false;
+        bool runInWsl = false;
     };
 
     inline static Args gArgs;
@@ -136,6 +137,8 @@ struct ArgParser
                 result.pauseConsole = true;
             } else if (MatchFlag(arg, "--enable-virtual-terminal-sequence")) {
                 result.enableVirtualTerminalSeq = true;
+            } else if (MatchFlag(arg, "--run-in-wsl")) {
+                result.runInWsl = true;
             } else if (MatchOption(arg, "--shared-memory", valuePos)) {
                 if (valuePos) {
                     result.sharedMemory = valuePos;
@@ -212,6 +215,7 @@ Internal options:
   --add-translation <key>=<text>
   --enable-virtual-terminal-sequence
   --redirect-input <file>
+  --run-in-wsl
   --shared-memory <name>
 )"
         );

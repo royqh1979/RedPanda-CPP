@@ -23,13 +23,14 @@
 // CRT
 #include <conio.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // Win32
 #include <windows.h>
 #include <psapi.h>
 #include <processthreadsapi.h>
 #include <versionhelpers.h>
-#include <stdlib.h>
+#include <winerror.h>
 
 // ours
 #include "argparser.hpp"
@@ -61,6 +62,42 @@ using win32_filetime_duration = chrono::duration<int64_t, hundred_nano>;
 #define EXIT_SET_JOB_OBJ_INFO_FAILED   -4
 #define EXIT_CREATE_PROCESS_FAILED     -5
 #define EXIT_ASSGIN_PROCESS_JOB_FAILED -6
+
+namespace WslApi
+{
+    BOOL (*pWslIsDistributionRegistered)(
+        PCWSTR distributionName
+    ) = nullptr;
+    HRESULT (*pWslRegisterDistribution)(
+        _In_ PCWSTR distributionName,
+        _In_ PCWSTR tarGzFilename
+    ) = nullptr;
+    HRESULT (*pWslLaunch)(
+        _In_ PCWSTR distributionName,
+        _In_opt_ PCWSTR command,
+        _In_ BOOL useCurrentWorkingDirectory,
+        _In_ HANDLE stdIn,
+        _In_ HANDLE stdOut,
+        _In_ HANDLE stdErr,
+        _Out_ HANDLE *process
+    ) = nullptr;
+
+    bool Init()
+    {
+        // Microsoft say we should detect API set availability before dynamic loading,
+        // but we are targetting desktop only, simply load it, avoid dynamic loading too many APIs.
+        // (yes, API set detection API `IsApiSetImplemented` requires dynamic loading.)
+        HMODULE hModule = LoadLibraryW(L"api-ms-win-wsl-api-l1-1-0.dll");
+        if (!hModule)
+            return false;
+
+        // if an API set exists, the APIs are all available. further check is not necessary.
+        pWslIsDistributionRegistered = (decltype(pWslIsDistributionRegistered))GetProcAddress(hModule, "WslIsDistributionRegistered");
+        pWslRegisterDistribution = (decltype(pWslRegisterDistribution))GetProcAddress(hModule, "WslRegisterDistribution");
+        pWslLaunch = (decltype(pWslLaunch))GetProcAddress(hModule, "WslLaunch");
+        return true;
+    }
+};
 
 HANDLE hJob;
 bool enableJobControl = IsWindowsXPOrGreater();
@@ -229,6 +266,54 @@ wstring GetCommand(wstring_view prog, const vector<wstring_view> &args, bool reI
     return result;
 }
 
+wstring DosToWsl(wstring_view path, bool reInp)
+{
+    if (path.length() < 2 || path[1] != ':') {
+        PrintToStderr(L"Error: program path must be absolute DOS path\n");
+        PauseExit(EXIT_WRONG_ARGUMENTS, reInp);
+    }
+    wchar_t drive = towlower(path[0]);
+    if (drive < 'a' || drive > 'z') {
+        PrintToStderr(L"Error: program path must be absolute DOS path\n");
+        PauseExit(EXIT_WRONG_ARGUMENTS, reInp);
+    }
+    wstring result = { '/', 'm', 'n', 't', '/', drive };
+    for (wchar_t ch : path.substr(2)) {
+        if (ch == '\\')
+            result.push_back('/');
+        else
+            result.push_back(ch);
+    }
+    return result;
+}
+
+wstring EscapeWslArgument(wstring_view arg)
+{
+    wstring result = {'\''};
+    for (wchar_t ch : arg) {
+        if (ch == '\'') {
+            result.push_back('\'');  // terminate single quoting
+            result.push_back('\\');  // escape next single quote
+            result.push_back('\'');  // the single quote itself
+            result.push_back('\'');  // re-start single quoting
+        } else {
+            result.push_back(ch);
+        }
+    }
+    result.push_back('\'');
+    return result;
+}
+
+wstring GetWslCommand(wstring_view prog, const vector<wstring_view> &args, bool reInp)
+{
+    wstring result = EscapeWslArgument(DosToWsl(prog, reInp));
+    for (wstring_view arg : args) {
+        result.push_back(' ');
+        result.append(EscapeWslArgument(arg));
+    }
+    return result;
+}
+
 win32_filetime_duration FiletimeToDuration(const FILETIME &ft)
 {
     return win32_filetime_duration(((int64_t)ft.dwHighDateTime << 32) + ft.dwLowDateTime);
@@ -287,6 +372,75 @@ DWORD ExecuteCommand(wstring& command,bool reInp, LONGLONG &peakMemory, double &
     return result;
 }
 
+DWORD ExecuteWslCommand(wstring &command, bool reInp, LONGLONG &peakMemory, double &cpuMilliSeconds)
+{
+    const wchar_t *wslDistro = L"redpanda-cpp-linux-runner-v0";
+    const wchar_t *wslDistroName = L"Red Panda C++ Linux Runner V0";
+    const wstring_view wslRootfsArchive = L"alpine-minirootfs.tar";
+
+    if (!WslApi::Init()) {
+        PrintToStderr(L"Error: WSL is not supported on this system\n");
+        PauseExit(EXIT_CREATE_PROCESS_FAILED, reInp);
+    }
+
+    HRESULT hr;
+
+    if (!WslApi::pWslIsDistributionRegistered(wslDistro)) {
+        PrintToStderr(L"Info: %ls not found\n", wslDistroName);
+        wchar_t buffer[MAX_PATH];
+        DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
+        if (len == 0) {
+            PrintWin32ApiError(L"GetModuleFileNameW");
+            PauseExit(EXIT_CREATE_PROCESS_FAILED, reInp);
+        }
+        wstring path(buffer, len);
+        while (path.back() != '\\')
+            path.pop_back();
+        for (wchar_t ch : wslRootfsArchive)
+            path.push_back(ch);
+
+        PrintToStderr(L"Info: Try importing from archive: %ls\n", path.c_str());
+        hr = WslApi::pWslRegisterDistribution(wslDistro, path.c_str());
+        if (FAILED(hr)) {
+            PrintSplitLineToStderr();
+            PrintToStderr(L"WslRegisterDistribution failed with error 0x%08lx\n", hr);
+            PrintToStderr(L"Did you enable WSL? Search \"Turn Windows features on or off\" in Start Menu and enable \"Windows Subsystem for Linux\".");
+            PauseExit(EXIT_CREATE_PROCESS_FAILED, reInp);
+        }
+    }
+
+    HANDLE hProcess;
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hStderr = GetStdHandle(STD_ERROR_HANDLE);
+
+    hr = WslApi::pWslLaunch(wslDistro, command.c_str(), 1, hStdin, hStdout, hStderr, &hProcess);
+    if (FAILED(hr)) {
+        PrintToStderr(L"WslLaunch failed with error 0x%08lx\n", hr);
+        PauseExit(EXIT_CREATE_PROCESS_FAILED, reInp);
+    }
+    WaitForSingleObject(hProcess, INFINITE); // Wait for it to finish
+
+    peakMemory = 0;
+    PROCESS_MEMORY_COUNTERS counter;
+    counter.cb = sizeof(counter);
+    if (GetProcessMemoryInfo(hProcess,&counter,
+                                 sizeof(counter))){
+        peakMemory = counter.PeakPagefileUsage/1024;
+    }
+    FILETIME creationTime;
+    FILETIME exitTime;
+    FILETIME kernelTime;
+    FILETIME userTime;
+    if (GetProcessTimes(hProcess,&creationTime,&exitTime,&kernelTime,&userTime)) {
+        auto cpuDuration = FiletimeToDuration(kernelTime) + FiletimeToDuration(userTime);
+        cpuMilliSeconds = DurationToSeconds(cpuDuration) * 1000;
+    }
+    DWORD result = 0;
+    GetExitCodeProcess(hProcess, &result);
+    return result;
+}
+
 void EnableVtSequence() {
     DWORD mode;
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -324,7 +478,11 @@ int wmain(int argc, wchar_t** argv) {
     sa.bInheritHandle = FALSE;
 
     // Then build the to-run application command
-    wstring command = GetCommand(AP::gArgs.program, AP::gArgs.args, reInp);
+    wstring command;
+    if (AP::gArgs.runInWsl)
+        command = GetWslCommand(AP::gArgs.program, AP::gArgs.args, reInp);
+    else
+        command = GetCommand(AP::gArgs.program, AP::gArgs.args, reInp);
 
     if (enableJobControl) {
         hJob= CreateJobObject( &sa, NULL );
@@ -391,7 +549,11 @@ int wmain(int argc, wchar_t** argv) {
     LONGLONG peakMemory=0;
     double cpuMilliSeconds = 0;
     // Then execute said command
-    DWORD returnvalue = ExecuteCommand(command,reInp,peakMemory,cpuMilliSeconds);
+    DWORD returnvalue;
+    if (AP::gArgs.runInWsl)
+        returnvalue = ExecuteWslCommand(command,reInp,peakMemory,cpuMilliSeconds);
+    else
+        returnvalue = ExecuteCommand(command,reInp,peakMemory,cpuMilliSeconds);
 
     // Get ending timestamp
     LONGLONG endtime = GetClockTick();

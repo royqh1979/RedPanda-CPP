@@ -147,30 +147,49 @@ FileType getFileType(const QString &filename)
     return FileType::Other;
 }
 
-bool programHasConsole(const QString & filename)
+bool programIsWin32GuiApp(const QString & filename)
 {
 #ifdef Q_OS_WIN
     bool result = false;
     HANDLE handle = CreateFileW(filename.toStdWString().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     if (handle != INVALID_HANDLE_VALUE) {
-        IMAGE_DOS_HEADER dos_header;
-        DWORD signature;
-        DWORD bytesread;
-        IMAGE_FILE_HEADER pe_header;
-        IMAGE_OPTIONAL_HEADER opt_header;
+        result = [handle] {
+            IMAGE_DOS_HEADER dos_header;
+            DWORD signature;
+            DWORD bytesread;
+            IMAGE_FILE_HEADER pe_header;
+            IMAGE_OPTIONAL_HEADER opt_header;
 
-        ReadFile(handle, &dos_header, sizeof(dos_header), &bytesread, NULL);
-        SetFilePointer(handle, dos_header.e_lfanew, NULL, 0);
-        ReadFile(handle, &signature, sizeof(signature), &bytesread, NULL);
-        ReadFile(handle, &pe_header, sizeof(pe_header), &bytesread, NULL);
-        ReadFile(handle, &opt_header, sizeof(opt_header), &bytesread, NULL);
+            ReadFile(handle, &dos_header, sizeof(dos_header), &bytesread, NULL);
+            if (bytesread != sizeof(dos_header))
+                return false;
+            if (dos_header.e_magic != IMAGE_DOS_SIGNATURE)
+                return false;
 
-        result = (opt_header.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI);
+            SetFilePointer(handle, dos_header.e_lfanew, NULL, 0);
+            ReadFile(handle, &signature, sizeof(signature), &bytesread, NULL);
+            if (bytesread != sizeof(signature))
+                return false;
+            if (signature != IMAGE_NT_SIGNATURE)
+                return false;
+
+            ReadFile(handle, &pe_header, sizeof(pe_header), &bytesread, NULL);
+            if (bytesread != sizeof(pe_header))
+                return false;
+
+            ReadFile(handle, &opt_header, sizeof(opt_header), &bytesread, NULL);
+            if (bytesread != sizeof(opt_header))
+                return false;
+            if (opt_header.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC && opt_header.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+                return false;
+
+            return opt_header.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI;
+        } ();
     }
     CloseHandle(handle);
     return result;
 #else
-    return true;
+    return false;
 #endif
 }
 
