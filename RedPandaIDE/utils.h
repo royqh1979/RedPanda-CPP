@@ -149,7 +149,7 @@ constexpr bool isC_CPP_ASMSourceFile(FileType fileType) {
             || fileType == FileType::ATTASM || fileType == FileType::INTELASM;
 }
 
-bool programHasConsole(const QString& filename);
+bool programIsWin32GuiApp(const QString& filename);
 
 QString parseMacros(const QString& s);
 QString parseMacros(const QString& s, const QMap<QString, QString>& variables);

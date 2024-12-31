@@ -248,7 +248,7 @@ void CompilerManager::run(
     }
     bool useCustomTerminal = pSettings->environment().useCustomTerminal();
     ExecutableRunner * execRunner;
-    if (programHasConsole(filename)) {
+    if (!programIsWin32GuiApp(filename)) {
         QString consolePauserPath = getFilePath(pSettings->dirs().appLibexecDir(), CONSOLE_PAUSER);
         QStringList execArgs = {consolePauserPath};
         if (redirectInput) {
@@ -262,6 +262,9 @@ void CompilerManager::run(
 #ifdef Q_OS_WIN
         if (pSettings->executor().enableVirualTerminalSequence())
             execArgs << "--enable-virtual-terminal-sequence";
+        QString triplet = pSettings->compilerSets().defaultSet()->dumpMachine();
+        if (triplet.contains("-linux-"))
+            execArgs << "--run-in-wsl";
         QString sharedMemoryId = QUuid::createUuid().toString();
 #else
         QString sharedMemoryId = "/r" + QUuid::createUuid().toString(QUuid::StringFormat::Id128);
