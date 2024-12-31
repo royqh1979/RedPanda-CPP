@@ -2336,6 +2336,7 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
     mVersion = QString(version).trimmed();
 
     // Obtain compiler distro
+    bool outputFormatIsPe = false;
     QByteArray verboseOut = getCompilerOutput(binDir, c_prog, {"-v"});
     QByteArray targetStr = "clang version ";
     int clangVersionPos = verboseOut.indexOf(targetStr);
@@ -2343,14 +2344,17 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
         mCompilerType = CompilerType::Clang;
         QRegularExpression ntPosixPattern = QRegularExpression("^(.*)-pc-windows-msys$");
         QRegularExpression mingwW64Pattern = QRegularExpression("^(.*)-w64-windows-gnu$");
-        if (mName.isEmpty()) {
-            if (auto m = ntPosixPattern.match(mDumpMachine); m.hasMatch()) {
+        if (auto m = ntPosixPattern.match(mDumpMachine); m.hasMatch()) {
+            outputFormatIsPe = true;
+            if (mName.isEmpty())
                 mName = "MSYS2 Clang " + mVersion;
-            } else if (m = mingwW64Pattern.match(mDumpMachine); m.hasMatch()) {
+        } else if (m = mingwW64Pattern.match(mDumpMachine); m.hasMatch()) {
+            outputFormatIsPe = true;
+            if (mName.isEmpty())
                 mName = "MinGW-w64 Clang " + mVersion;
-            } else {
+        } else {
+            if (mName.isEmpty())
                 mName = "Clang " + mVersion;
-            }
         }
     } else {
         mCompilerType = CompilerType::GCC;
@@ -2359,24 +2363,28 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
         QRegularExpression mingwOrgPattern("^(.*)-(.*)-mingw32$");
         if (auto m = ntPosixPattern.match(mDumpMachine); m.hasMatch()) {
             mCompilerType = CompilerType::GCC_UTF8;
+            outputFormatIsPe = true;
             if (mName.isEmpty()) {
                 if (m.captured(3) == "msys")
                     mName = "MSYS2 GCC " + mVersion;
                 else
                     mName = "Cygwin GCC " + mVersion;
             }
-        }
-        // Assemble user friendly name if we don't have one yet
-        if (mName.isEmpty()) {
-            if (auto m = mingwW64Pattern.match(mDumpMachine); m.hasMatch()) {
+        } else if (m = mingwW64Pattern.match(mDumpMachine); m.hasMatch()) {
+            outputFormatIsPe = true;
+            if (mName.isEmpty())
                 mName = "MinGW-w64 GCC " + mVersion;
-            } else if (m = mingwOrgPattern.match(mDumpMachine); m.hasMatch()) {
+        } else if (m = mingwOrgPattern.match(mDumpMachine); m.hasMatch()) {
+            outputFormatIsPe = true;
+            if (mName.isEmpty())
                 mName = "MinGW.org GCC " + mVersion;
-            } else {
+        } else {
+            if (mName.isEmpty())
                 mName = "GCC " + mVersion;
-            }
         }
     }
+    if (outputFormatIsPe)
+        setCompileOption(LINK_CMD_OPT_STACK_SIZE, "12");
 
     // Set compiler folder
     QDir tmpDir(binDir);

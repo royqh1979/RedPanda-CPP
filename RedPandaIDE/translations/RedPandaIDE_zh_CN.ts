@@ -9616,8 +9616,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+26"/>
-        <source>Stack Size</source>
-        <translation>栈空间大小</translation>
+        <source>PE Stack Size</source>
+        <translation>PE 栈空间大小</translation>
     </message>
     <message>
         <location line="+225"/>

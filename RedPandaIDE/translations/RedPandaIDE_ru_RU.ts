@@ -8480,8 +8480,8 @@
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="229"/>
-        <source>Stack Size</source>
-        <translation>Размер стека</translation>
+        <source>PE Stack Size</source>
+        <translation>Размер стека PE</translation>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="232"/>
