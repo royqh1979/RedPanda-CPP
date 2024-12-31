@@ -3,6 +3,7 @@
 ## Translations
 
 - Portuguese : crcpucmg@github
+- Russian : melkorbsd@github
 
 ## Icons
 
@@ -23,39 +24,51 @@ author: Alan-CRL
 
 ## Themes
 
-### Theme Contrast
+### Contrast
 
 author: Alan-CRL
 
-### Theme One Dark
+### One Dark
 
-author: ÌìÒÀÀ¶(MZZW@github)
+author: å¤©ä¾è“(MZZW@github) Ltabsyy(Ltabsyy@github)
 
-### Theme Ä«Âä
+### MoLo
 
-author: Ä«Âä³É°× Ltabsyy(Ltabsyy@github)
+author: Ltabsyy(Ltabsyy@github) å¢¨è½æˆç™½
 
 ## Color Schemes
 
 ### Monokai
 
-author: Ğ¡ÁúDev(XiaoLoong@github)
+author: å°é¾™Dev(XiaoLoong@github)
 
 ### Sea Lite
 
 author: PerryDing
 
-### Ochre_Butter
+### Ochre Butter
 
 author: PerryDing
 
+### MoLo CodeBlack
+
+author: Ltabsyy(Ltabsyy@github) å¢¨è½æˆç™½
+
+### MoLo CBLight
+
+author: Ltabsyy(Ltabsyy@github)
+
+### MoLo Mia
+
+author: Ltabsyy(Ltabsyy@github)
+
 ### One Dark
 
-author: ÌìÒÀÀ¶(MZZW@github)
+author: Ltabsyy(Ltabsyy@github) å¤©ä¾è“(MZZW@github)
 
 ## Fonts
 
 ### Red Panda Control
 
-author:  cynao.CN(CyanoHao@github)
+author:  cyano.CN(CyanoHao@github)
 
