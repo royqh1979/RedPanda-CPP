@@ -115,6 +115,8 @@ QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(FileType fileType) co
     case FileType::CSource:
     case FileType::CppSource:
         return QSynedit::ProgrammingLanguage::CPP;
+    case FileType::GIMPLE:
+        return QSynedit::ProgrammingLanguage::CPP;
     case FileType::LUA:
         return QSynedit::ProgrammingLanguage::LUA;
     case FileType::MakeFile:

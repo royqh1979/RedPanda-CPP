@@ -2389,6 +2389,9 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
                     case CppCompileType::GenerateAssemblyOnly:
                         stage = Settings::CompilerSet::CompilationStage::CompilationProperOnly;
                         break;
+                    case CppCompileType::GenerateGimpleOnly:
+                        stage = Settings::CompilerSet::CompilationStage::GenerateGimple;
+                        break;
                     case CppCompileType::PreprocessOnly:
                         stage = Settings::CompilerSet::CompilationStage::PreprocessingOnly;
                         break;
@@ -8433,6 +8436,19 @@ void MainWindow::doGenerateAssembly()
     compile(false,CppCompileType::GenerateAssemblyOnly);
 }
 
+void MainWindow::doGenerateGimple()
+{
+    CompileTarget target =getCompileTarget();
+    if (target!= CompileTarget::File
+            && target != CompileTarget::Project) {
+        return;
+    }
+    mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
+    //mCompileSuccessionTask->binDirs="";
+    mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+    compile(false,CppCompileType::GenerateGimpleOnly);
+}
+
 void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 {
     if (problemCase->testState == ProblemCaseTestState::Failed) {
@@ -10476,5 +10492,11 @@ void MainWindow::on_actionIntel_ASM_triggered()
     if (editor) {
         editor->setFileType(FileType::INTELASM);
     }
+}
+
+
+void MainWindow::on_actionGenerate_GIMPLE_triggered()
+{
+    doGenerateGimple();
 }
 

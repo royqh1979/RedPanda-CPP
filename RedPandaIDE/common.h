@@ -23,7 +23,8 @@
 enum class CppCompileType {
     Normal,
     PreprocessOnly,
-    GenerateAssemblyOnly
+    GenerateAssemblyOnly,
+    GenerateGimpleOnly,
 };
 
 enum class CompileIssueType {

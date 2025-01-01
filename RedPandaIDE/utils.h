@@ -44,6 +44,7 @@ enum class FileType{
     CSource, // c source file (.c)
     CppSource, // c++ source file (.cpp)
     CCppHeader, // c header (.h)
+    GIMPLE, // gcc gimple file (.gimple)
     WindowsResourceSource, // resource source (.res)
     Project, //Red Panda C++ Project (.dev)
     Text, // text file

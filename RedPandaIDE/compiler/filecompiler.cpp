@@ -52,6 +52,9 @@ bool FileCompiler::prepareForCompile()
         if (pSettings->languages().noDebugDirectivesWhenGenerateASM())
             compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,COMPILER_OPTION_OFF);
         break;
+    case CppCompileType::GenerateGimpleOnly:
+        stage = Settings::CompilerSet::CompilationStage::GenerateGimple;
+        break;
     default:
         break;
     }
@@ -85,6 +88,10 @@ bool FileCompiler::prepareForCompile()
         case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->compilationProperSuffix());
             mArguments += {"-S", "-fverbose-asm"};
+            break;
+        case Settings::CompilerSet::CompilationStage::GenerateGimple:
+            mOutputFile=changeFileExt(mFilename,compilerSet()->compilationProperSuffix());
+            mArguments += {"-S", QString("-fdump-tree-gimple=%1").arg(changeFileExt(mFilename,"gimple"))};
             break;
         case Settings::CompilerSet::CompilationStage::AssemblingOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->assemblingSuffix());

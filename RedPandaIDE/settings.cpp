@@ -2924,6 +2924,8 @@ QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename, 
         return changeFileExt(sourceFilename, preprocessingSuffix());
     case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
         return changeFileExt(sourceFilename, compilationProperSuffix());
+    case Settings::CompilerSet::CompilationStage::GenerateGimple:
+        return changeFileExt(sourceFilename, "gimple");
     case Settings::CompilerSet::CompilationStage::AssemblingOnly:
         return changeFileExt(sourceFilename, assemblingSuffix());
     case Settings::CompilerSet::CompilationStage::GenerateExecutable:

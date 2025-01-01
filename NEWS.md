@@ -24,6 +24,8 @@ Red Panda C++ Version 3.3
   - fix: command line parameter escaping for consolepauser in windows. (by CyanoHao)
   - enhancement: Localization for consolepauser.
   - fix: Debugger not responding when debugging with gdb > 14.
+  - enhancement: Run programs in WSL.
+  - enhancement: Generate GIMPLE.
   
 Red Panda C++ Version 3.2
 

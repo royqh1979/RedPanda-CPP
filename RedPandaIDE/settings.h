@@ -1362,7 +1362,8 @@ public:
             PreprocessingOnly,
             CompilationProperOnly,
             AssemblingOnly,
-            GenerateExecutable
+            GenerateGimple,
+            GenerateExecutable,
         };
 
         explicit CompilerSet();

@@ -314,6 +314,7 @@ private:
     void clearIssues();
     void doCompileRun(RunType runType);
     void doGenerateAssembly();
+    void doGenerateGimple();
     void updateProblemCaseOutput(POJProblemCase problemCase);
     void applyCurrentProblemCaseChanges();
     void showHideInfosTab(QWidget *widget, bool show);
@@ -870,6 +871,8 @@ private slots:
     void on_actionATT_ASM_triggered();
 
     void on_actionIntel_ASM_triggered();
+
+    void on_actionGenerate_GIMPLE_triggered();
 
 private:
     Ui::MainWindow *ui;

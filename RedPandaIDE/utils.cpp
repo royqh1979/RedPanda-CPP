@@ -107,6 +107,9 @@ FileType getFileType(const QString &filename)
     if (filename.endsWith(".inl",PATH_SENSITIVITY)) {
         return FileType::CCppHeader;
     }
+    if (filename.endsWith(".gimple",PATH_SENSITIVITY)) {
+        return FileType::GIMPLE;
+    }
     if (filename.endsWith(".rc",PATH_SENSITIVITY)) {
         return FileType::WindowsResourceSource;
     }
