@@ -3340,7 +3340,7 @@
     <string>Generate GIMPLE</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+F11</string>
+    <string>Ctrl+Shift+F12</string>
    </property>
   </action>
  </widget>
