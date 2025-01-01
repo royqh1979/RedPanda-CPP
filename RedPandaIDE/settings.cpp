@@ -3350,6 +3350,11 @@ void Settings::CompilerSets::findSets()
         mSettings->dirs().appDir() + "/clang64/bin",
         mSettings->dirs().appDir() + "/mingw64/bin",
         mSettings->dirs().appDir() + "/mingw32/bin",
+
+        // cross toolchain targeting Linux
+        // directory names follow dynamic linker (ld-linux-x86-64.so -> gcc-linux-x86-64)
+        mSettings->dirs().appDir() + "/gcc-linux-x86-64/bin",
+        mSettings->dirs().appDir() + "/gcc-linux-aarch64/bin",
     } + pathList;
 #endif
     QString folder, canonicalFolder;

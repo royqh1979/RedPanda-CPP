@@ -16,6 +16,8 @@ function fn_print_help() {
    --mingw                  Alias for --mingw32 (x86 app) or --mingw64 (x64 app).
    --mingw32                Build mingw32 integrated compiler.
    --mingw64                Build mingw64 integrated compiler.
+   --gcc-linux-x86-64       Build x86_64-linux-gnu integrated compiler.
+   --gcc-linux-aarch64      Build aarch64-linux-gnu integrated compiler.
    --ucrt <build>           Include UCRT in the package. Windows SDK required.
                             e.g. '--ucrt 22621' for Windows 11 SDK 22H2.
    -nd, --no-deps           Skip dependency check.
@@ -74,6 +76,10 @@ CHECK_DEPS=1
 compilers=()
 COMPILER_MINGW32=0
 COMPILER_MINGW64=0
+COMPILER_GCC_LINUX_X8664=0
+COMPILER_GCC_LINUX_AARCH64=0
+REQUIRED_WINDOWS_BUILD=7600
+REQUIRED_WINDOWS_NAME="Windows 7"
 TARGET_DIR="$(pwd)/dist"
 UCRT=""
 while [[ $# -gt 0 ]]; do
@@ -113,6 +119,36 @@ while [[ $# -gt 0 ]]; do
       compilers+=("mingw64")
       COMPILER_MINGW64=1
       shift
+      ;;
+    --gcc-linux-x86-64)
+      case "${NSIS_ARCH}" in
+        x64)
+          compilers+=("gcc-linux-x86-64")
+          COMPILER_GCC_LINUX_X8664=1
+          REQUIRED_WINDOWS_BUILD=17763
+          REQUIRED_WINDOWS_NAME="Windows 10 v1809"
+          shift
+          ;;
+        *)
+          echo "architecture mismatch, --gcc-linux-x86-64 is only supported on x64"
+          exit 1
+          ;;
+      esac
+      ;;
+    --gcc-linux-aarch64)
+      case "${NSIS_ARCH}" in
+        arm64)
+          compilers+=("gcc-linux-aarch64")
+          COMPILER_GCC_LINUX_AARCH64=1
+          REQUIRED_WINDOWS_BUILD=22000
+          REQUIRED_WINDOWS_NAME="Windows 11"
+          shift
+          ;;
+        *)
+          echo "architecture mismatch, --gcc-linux-aarch64 is only supported on arm64"
+          exit 1
+          ;;
+      esac
       ;;
     --ucrt)
       case "${MSYSTEM}" in
@@ -177,11 +213,18 @@ MINGW64_ARCHIVE="mingw64.7z"
 MINGW64_COMPILER_NAME="MinGW-w64 X86_64 GCC 11.4"
 MINGW64_PACKAGE_SUFFIX="MinGW64_11.4"
 
+GCC_LINUX_X8664_ARCHIVE="gcc-linux-x86-64.7z"
+ALPINE_X8664_ARCHIVE="alpine-minirootfs-x86_64.tar"
+
+GCC_LINUX_AARCH64_ARCHIVE="gcc-linux-aarch64.7z"
+ALPINE_AARCH64_ARCHIVE="alpine-minirootfs-aarch64.tar"
+
 if [[ ${#compilers[@]} -eq 0 ]]; then
   PACKAGE_BASENAME="${PACKAGE_BASENAME}.NoCompiler"
 else
   [[ ${COMPILER_MINGW32} -eq 1 ]] && PACKAGE_BASENAME="${PACKAGE_BASENAME}.${MINGW32_PACKAGE_SUFFIX}"
   [[ ${COMPILER_MINGW64} -eq 1 ]] && PACKAGE_BASENAME="${PACKAGE_BASENAME}.${MINGW64_PACKAGE_SUFFIX}"
+  [[ ${COMPILER_GCC_LINUX_X8664} -eq 1 || ${COMPILER_GCC_LINUX_AARCH64} -eq 1 ]] && PACKAGE_BASENAME="${PACKAGE_BASENAME}.Linux_GCC"
 fi
 
 function fn_print_progress() {
@@ -214,6 +257,22 @@ fi
 if [[ ${COMPILER_MINGW64} -eq 1 && ! -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" && ! -d "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" ]]; then
   echo "Missing MinGW archive: assets/${MINGW64_ARCHIVE} or MinGW folder: assets/${MINGW64_FOLDER}"
   exit 1
+fi
+if [[ ${COMPILER_GCC_LINUX_X8664} -eq 1 ]]; then
+  if [[ ! -f "${SOURCE_DIR}/assets/${GCC_LINUX_X8664_ARCHIVE}" ]]; then
+    echo "Missing GCC archive: assets/${GCC_LINUX_X8664_ARCHIVE}"
+  fi
+  if [[ ! -f "${SOURCE_DIR}/assets/${ALPINE_X8664_ARCHIVE}" ]]; then
+    echo "Missing Alpine rootfs: assets/${ALPINE_X8664_ARCHIVE}"
+  fi
+fi
+if [[ ${COMPILER_GCC_LINUX_AARCH64} -eq 1 ]]; then
+  if [[ ! -f "${SOURCE_DIR}/assets/${GCC_LINUX_AARCH64_ARCHIVE}" ]]; then
+    echo "Missing GCC archive: assets/${GCC_LINUX_AARCH64_ARCHIVE}"
+  fi
+  if [[ ! -f "${SOURCE_DIR}/assets/${ALPINE_AARCH64_ARCHIVE}" ]]; then
+    echo "Missing Alpine rootfs: assets/${ALPINE_AARCH64_ARCHIVE}"
+  fi
 fi
 if [[ -n "${UCRT}" && ! -f "${UCRT_DIR}/ucrtbase.dll" ]]; then
   echo "Missing Windows SDK, UCRT cannot be included."
@@ -290,8 +349,8 @@ nsis_flags=(
   -DFINALNAME="${SETUP_NAME}"
   -DMINGW32_COMPILER_NAME="${MINGW32_COMPILER_NAME}"
   -DMINGW64_COMPILER_NAME="${MINGW64_COMPILER_NAME}"
-  -DREQUIRED_WINDOWS_BUILD=7600
-  -DREQUIRED_WINDOWS_NAME="Windows 7"
+  -DREQUIRED_WINDOWS_BUILD="${REQUIRED_WINDOWS_BUILD}"
+  -DREQUIRED_WINDOWS_NAME="${REQUIRED_WINDOWS_NAME}"
   -DUSE_MODERN_FONT
 )
 if [[ ${COMPILER_MINGW32} -eq 1 ]]; then
@@ -306,6 +365,24 @@ if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   if [[ ! -d "mingw64" ]]; then  
 	[[ -f "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" ]] && "${_7Z}" x "${SOURCE_DIR}/assets/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
 	[[ -d "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" ]] && cp -a --dereference "${SOURCE_DIR}/assets/${MINGW64_FOLDER}" "${PACKAGE_DIR}"
+  fi
+fi
+if [[ ${COMPILER_GCC_LINUX_X8664} -eq 1 ]]; then
+  nsis_flags+=(-DHAVE_GCC_LINUX_X8664 -DSTRICT_ARCH_CHECK)
+  if [[ ! -d "gcc-linux-x86_64" ]]; then
+    "${_7Z}" x "${SOURCE_DIR}/assets/${GCC_LINUX_X8664_ARCHIVE}" -o"${PACKAGE_DIR}"
+  fi
+  if [[ ! -d "alpine-minirootfs.tar" ]]; then
+    cp "${SOURCE_DIR}/assets/${ALPINE_X8664_ARCHIVE}" alpine-minirootfs.tar
+  fi
+fi
+if [[ ${COMPILER_GCC_LINUX_AARCH64} -eq 1 ]]; then
+  nsis_flags+=(-DHAVE_GCC_LINUX_AARCH64 -DSTRICT_ARCH_CHECK)
+  if [[ ! -d "gcc-linux-aarch64" ]]; then
+    "${_7Z}" x "${SOURCE_DIR}/assets/${GCC_LINUX_AARCH64_ARCHIVE}" -o"${PACKAGE_DIR}"
+  fi
+  if [[ ! -d "alpine-minirootfs.tar" ]]; then
+    cp "${SOURCE_DIR}/assets/${ALPINE_AARCH64_ARCHIVE}" alpine-minirootfs.tar
   fi
 fi
 if [[ -n "${UCRT}" ]]; then
