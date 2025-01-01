@@ -91,7 +91,7 @@ bool FileCompiler::prepareForCompile()
             break;
         case Settings::CompilerSet::CompilationStage::GenerateGimple:
             mOutputFile=changeFileExt(mFilename,compilerSet()->compilationProperSuffix());
-            mArguments += {"-S", QString("-fdump-tree-gimple=%1").arg(changeFileExt(mFilename,"gimple"))};
+            mArguments += {"-S", QString("-fdump-tree-gimple=%1").arg(localizePath(changeFileExt(mFilename,"gimple")))};
             break;
         case Settings::CompilerSet::CompilationStage::AssemblingOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->assemblingSuffix());
