@@ -74,6 +74,8 @@ Extra arguments for `build-mingw.sh`:
 - `--mingw32`: add `assets/mingw32.7z` to the package.
 - `--mingw64`: add `assets/mingw64.7z` to the package.
 - `--mingw`: alias for `--mingw64` (x64 app).
+- `--gcc-linux-x86-64`: add `assets/gcc-linux-x86-64.7z` and `assets/alpine-minirootfs-x86_64.tar` to the package.
+- `--gcc-linux-aarch64`: add `assets/gcc-linux-aarch64.7z` and `assets/alpine-minirootfs-aarch64.tar` to the package.
 - `--ucrt <build>`: add UCRT runtime from Windows SDK to the package. e.g. `--ucrt 22621` for Windows 11 SDK 22H2.
 
 ## Windows NT 5.x Qt Library with MinGW Lite Toolchain

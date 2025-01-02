@@ -173,6 +173,26 @@ SectionEnd
   SectionEnd
 !endif
 
+!ifdef HAVE_GCC_LINUX_X8664
+  Section "$(SectionGccLinuxX8664Name)" SectionGccLinuxX8664
+    SectionIn 1 3
+    SetOutPath $INSTDIR
+
+    File "alpine-minirootfs.tar"
+    File /nonfatal /r "gcc-linux-x86-64"
+  SectionEnd
+!endif
+
+!ifdef HAVE_GCC_LINUX_AARCH64
+  Section "$(SectionGccLinuxAarch64Name)" SectionGccLinuxAarch64
+    SectionIn 1 3
+    SetOutPath $INSTDIR
+
+    File "alpine-minirootfs.tar"
+    File /nonfatal /r "gcc-linux-aarch64"
+  SectionEnd
+!endif
+
 ####################################################################
 # File association
 SectionGroup "$(SectionAssocsName)" SectionAssocs
