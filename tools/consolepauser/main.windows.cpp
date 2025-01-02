@@ -144,9 +144,9 @@ void PrintToStderr(const wchar_t *fmt, ...)
 void PrintSplitLine(HANDLE hStream)
 {
     CONSOLE_SCREEN_BUFFER_INFO info;
-    int width = 80;
-    if (GetConsoleScreenBufferInfo(hStream, &info))
-        width = info.dwSize.X;
+    int width = 20;
+//    if (GetConsoleScreenBufferInfo(hStream, &info))
+//        width = info.dwSize.X;
     wstring content;
     content.push_back(L'\n');
     content.append(width, L'-');
