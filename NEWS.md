@@ -26,6 +26,7 @@ Red Panda C++ Version 3.3
   - fix: Debugger not responding when debugging with gdb > 14.
   - enhancement: Run programs in WSL.
   - enhancement: Generate GIMPLE.
+  - enhancement: Russian Translation ( by melkorbsd@github)
   
 Red Panda C++ Version 3.2
 
