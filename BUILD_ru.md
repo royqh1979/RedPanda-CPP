@@ -32,7 +32,7 @@ Red Panda C++ требует для сборки Qt 5.15 или 6.8+.
 | MSYS2 + LLVM-based MinGW | ❌ | ✔️ | ✔️ |
 | [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
-Смотри также [другие инструкции сборки для Windows](./docs/detailed-build-win.md).
+Смотри также [другие инструкции сборки для Windows](./docs/detailed-build-win-ru.md).
 
 ## MSYS2 Библиотека Qt с набором инструментов MinGW (Рекомендуется)
 
