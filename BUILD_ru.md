@@ -109,7 +109,7 @@ export MIRROR=mirrors.kernel.org  # дополнительно можно уст
 
 # Linux
 
-Смотри также [другие инструкции сборки для настольных систем freedesktop.org-conforming (XDG)](./docs/detailed-build-xdg.md).
+Смотри также [другие инструкции сборки для настольных систем freedesktop.org-conforming (XDG)](./docs/detailed-build-xdg-ru.md).
 
 ## Alpine Linux, Arch Linux, Debian и их производные, Fedora, openSUSE
 
