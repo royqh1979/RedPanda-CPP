@@ -85,7 +85,8 @@ void EnvironmentShortcutModel::reload()
             else
                 item->fullPath = QString("%1 > %2").arg(tr("action"),action->text());
             item->action = action;
-            item->shortcut = action->shortcut().toString().trimmed();
+            //item->shortcut = action->shortcut().toString().trimmed();
+            item->shortcut = QKeySequence::listToString(action->shortcuts()).replace(';',',');
             item->isAction = true;
             mShortcuts.append(item);
         }
@@ -198,7 +199,8 @@ void EnvironmentShortcutModel::loadShortCutsOfMenu(const QMenu *menu, QList<QAct
             item->name = action->objectName();
             item->fullPath = QString("%1 > %2").arg(menu->title(),action->text());
             item->action = action;
-            item->shortcut = action->shortcut().toString().trimmed();
+            //item->shortcut = action->shortcut().toString().trimmed();
+            item->shortcut = QKeySequence::listToString(action->shortcuts()).replace(';',',');
             item->isAction = true;
             mShortcuts.append(item);
         }
