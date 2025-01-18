@@ -127,15 +127,10 @@ void ShortcutManager::applyTo(QAction *action)
 {
     PEnvironmentShortcut item = mShortcuts.value(action->objectName(), PEnvironmentShortcut());
     if (item && item->isAction) {
-        //action->setShortcut(QKeySequence::fromString(item->shortcut));
-        QStringList SL = item->shortcut.split(',');
-        QList<QKeySequence> KL;
-        for (int i=0;i<SL.size();i++) KL.append(QKeySequence::fromString(SL[i]));
-        action->setShortcuts(KL);
+        action->setShortcuts(QKeySequence::listFromString(item->shortcut));
     }
     if (!action->shortcut().isEmpty()){
-        //action->setToolTip(action->text()+QString("(%1)").arg(action->shortcut().toString()));
-        action->setToolTip(action->text()+QString("(%1)").arg(QKeySequence::listToString(action->shortcuts()).replace(';',',')));
+        action->setToolTip(action->text()+QString("(%1)").arg(QKeySequence::listToString(action->shortcuts())));
     } else {
         action->setToolTip(action->text());
     }
