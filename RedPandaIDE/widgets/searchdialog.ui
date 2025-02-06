@@ -95,9 +95,6 @@
               <property name="insertPolicy">
                <enum>QComboBox::InsertAtTop</enum>
               </property>
-              <property name="sizeAdjustPolicy">
-               <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
-              </property>
              </widget>
             </item>
             <item row="1" column="1">
@@ -115,7 +112,7 @@
                <enum>QComboBox::InsertAtTop</enum>
               </property>
               <property name="sizeAdjustPolicy">
-               <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+               <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
               </property>
              </widget>
             </item>
