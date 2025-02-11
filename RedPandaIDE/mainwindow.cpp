@@ -821,7 +821,7 @@ void MainWindow::updateProjectActions()
     ui->actionView_Makefile->setEnabled(hasProject);
     ui->actionProject_New_File->setEnabled(hasProject);
     ui->actionAdd_to_project->setEnabled(hasProject);
-    ui->actionRemove_from_project->setEnabled(hasProject && ui->projectView->selectionModel()->selectedIndexes().count()>0);
+    ui->actionRemove_from_project->setEnabled(hasProject && ui->projectView->selectionModel()->hasSelection());
     ui->actionMakeClean->setEnabled(hasProject);
     ui->actionProject_options->setEnabled(hasProject);
     ui->actionClose_Project->setEnabled(hasProject);

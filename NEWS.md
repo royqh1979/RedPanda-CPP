@@ -27,6 +27,7 @@ Red Panda C++ Version 3.3
   - enhancement: Run programs in WSL.
   - enhancement: Generate GIMPLE.
   - enhancement: Russian Translation (by melkorbsd@github)
+  - fix: Can't select/delete files in the project panel.
   
 Red Panda C++ Version 3.2
 
