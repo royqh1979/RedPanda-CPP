@@ -28,6 +28,7 @@ Red Panda C++ Version 3.3
   - enhancement: Generate GIMPLE.
   - enhancement: Russian Translation (by melkorbsd@github)
   - fix: Can't select/delete files in the project panel.
+  - fix: Erroneous PageDown/PageUp when "Can scroll to the last line of teh top edge of the editor" is disabled
   
 Red Panda C++ Version 3.2
 

@@ -6827,7 +6827,7 @@ int QSynEdit::topPos() const
 
 void QSynEdit::setTopPos(int value)
 {
-    //value = std::min(value,maxScrollHeight());
+    value = std::min(value,maxScrollHeight());
     value = std::max(value, 0);
     if (value != mTopPos) {
         setStatusChanged(StatusChange::TopPos);
