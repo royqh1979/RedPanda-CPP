@@ -42,20 +42,24 @@ SearchDialog::~SearchDialog()
 
 void SearchDialog::find(const QString &text)
 {
+    //Call show() first, to ensure cbFind has the default width.
+    show();
+
     mTabBar->setCurrentIndex(mSearchTabIdx);
     setComboTextAndHistory(ui->cbFind,text,mSearchKeys);
     ui->cbFind->setFocus();
-    show();
     activateWindow();
 }
 
 void SearchDialog::replace(const QString &text)
 {
+    //Call show() first, to ensure cbFind has the default width.
+    show();
+
     mTabBar->setCurrentIndex(mReplaceTabIdx);
     setComboTextAndHistory(ui->cbFind,text,mSearchKeys);
     setComboTextAndHistory(ui->cbReplace,text,mReplaceKeys);
     ui->cbFind->setFocus();
-    show();
     activateWindow();
 }
 

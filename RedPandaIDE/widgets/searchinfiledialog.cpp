@@ -54,9 +54,11 @@ SearchInFileDialog::~SearchInFileDialog()
 
 void SearchInFileDialog::findInFiles(const QString &text)
 {
+    //Call show() first, to ensure cbFind has the default width.
+    show();
+
     setComboTextAndHistory(ui->cbFind,text,mSearchKeys);
     ui->cbFind->setFocus();
-    show();
     activateWindow();
 }
 
