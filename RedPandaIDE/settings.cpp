@@ -1666,7 +1666,6 @@ Settings::CompilerSet::CompilerSet():
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
     mExecutableSuffix{DEFAULT_EXECUTABLE_SUFFIX},
-    mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable},
     mGccSupportNLS{false},
     mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
@@ -1688,7 +1687,6 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mCompilationProperSuffix{DEFAULT_COMPILATION_SUFFIX},
     mAssemblingSuffix{DEFAULT_ASSEMBLING_SUFFIX},
     mExecutableSuffix{DEFAULT_EXECUTABLE_SUFFIX},
-    mCompilationStage{Settings::CompilerSet::CompilationStage::GenerateExecutable},
     mGccSupportNLS{false},
     mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
@@ -1762,7 +1760,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mCompilationProperSuffix{set.mCompilationProperSuffix},
     mAssemblingSuffix{set.mAssemblingSuffix},
     mExecutableSuffix{set.mExecutableSuffix},
-    mCompilationStage{set.mCompilationStage},
     mCompileOptions{set.mCompileOptions},
     mGccSupportNLS{set.mGccSupportNLS},
     mGccSupportNLSInitialized{set.mGccSupportNLSInitialized}
@@ -1813,7 +1810,6 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mCompilationProperSuffix{set["compilationProperSuffix"].toString()},
     mAssemblingSuffix{set["assemblingSuffix"].toString()},
     mExecutableSuffix{set["executableSuffix"].toString()},
-    mCompilationStage{CompilationStage(set["compilationStage"].toInt())},
     mCompileOptions{}, // handle later
     mGccSupportNLS{false},
     mGccSupportNLSInitialized{false}
@@ -2902,19 +2898,9 @@ void Settings::CompilerSet::setPersistInAutoFind(bool newPersistInAutoFind)
     mPersistInAutoFind = newPersistInAutoFind;
 }
 
-Settings::CompilerSet::CompilationStage Settings::CompilerSet::compilationStage() const
-{
-    return mCompilationStage;
-}
-
-void Settings::CompilerSet::setCompilationStage(CompilationStage newCompilationStage)
-{
-    mCompilationStage = newCompilationStage;
-}
-
 QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename)
 {
-    return getOutputFilename(sourceFilename, compilationStage());
+    return getOutputFilename(sourceFilename, CompilationStage::GenerateExecutable);
 }
 
 QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename, CompilationStage stage)
@@ -2936,7 +2922,7 @@ QString Settings::CompilerSet::getOutputFilename(const QString &sourceFilename, 
 
 bool Settings::CompilerSet::isOutputExecutable()
 {
-    return isOutputExecutable(mCompilationStage);
+    return isOutputExecutable(CompilationStage::GenerateExecutable);
 }
 
 bool Settings::CompilerSet::isOutputExecutable(CompilationStage stage)
@@ -3633,7 +3619,6 @@ void Settings::CompilerSets::saveSet(int index)
     mSettings->mSettings.setValue("compilationProperSuffix", pSet->compilationProperSuffix());
     mSettings->mSettings.setValue("assemblingSuffix", pSet->assemblingSuffix());
     mSettings->mSettings.setValue("executableSuffix", pSet->executableSuffix());
-    mSettings->mSettings.setValue("compilationStage", (int)pSet->compilationStage());
 
     // Misc. properties
     mSettings->mSettings.setValue("DumpMachine", pSet->dumpMachine());
@@ -3727,9 +3712,6 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     pSet->setCompilationProperSuffix(mSettings->mSettings.value("compilationProperSuffix",DEFAULT_COMPILATION_SUFFIX).toString());
     pSet->setAssemblingSuffix(mSettings->mSettings.value("assemblingSuffix", DEFAULT_ASSEMBLING_SUFFIX).toString());
     pSet->setExecutableSuffix(mSettings->mSettings.value("executableSuffix", DEFAULT_EXECUTABLE_SUFFIX).toString());
-    pSet->setCompilationStage((Settings::CompilerSet::CompilationStage)mSettings->mSettings.value(
-                                  "compilationStage",
-                                  (int)Settings::CompilerSet::CompilationStage::GenerateExecutable).toInt());
 
     // Load options
     QByteArray iniOptions = mSettings->mSettings.value("Options","").toByteArray();

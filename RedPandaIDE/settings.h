@@ -1470,9 +1470,6 @@ public:
         const QString &assemblingSuffix() const;
         void setAssemblingSuffix(const QString &newAssemblingSuffix);
 
-        CompilationStage compilationStage() const;
-        void setCompilationStage(CompilationStage newCompilationStage);
-
         QString getOutputFilename(const QString& sourceFilename);
         QString getOutputFilename(const QString& sourceFilename,Settings::CompilerSet::CompilationStage stage);
         bool isOutputExecutable();

@@ -2398,7 +2398,7 @@ bool MainWindow::compile(bool rebuild, CppCompileType compileType)
                         stage = Settings::CompilerSet::CompilationStage::PreprocessingOnly;
                         break;
                     default:
-                        stage = compilerSet->compilationStage();
+                        stage = Settings::CompilerSet::CompilationStage::GenerateExecutable;
                         break;
                     }
                     mCompileSuccessionTask->execName = compilerSet->getOutputFilename(editor->filename(),stage);
