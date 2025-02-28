@@ -74,6 +74,8 @@
 - `--mingw32`：把 `assets/mingw32.7z` 添加到包中。
 - `--mingw64`：把 `assets/mingw64.7z` 添加到包中。
 - `--mingw`：`--mingw64`（x64 程序）的别名。
+- `--gcc-linux-x86-64`：把 `assets/gcc-linux-x86-64.7z` 和 `assets/alpine-minirootfs-x86_64.tar` 添加到包中。
+- `--gcc-linux-aarch64`：把 `assets/gcc-linux-aarch64.7z` 和 `assets/alpine-minirootfs-aarch64.tar` 添加到包中。
 - `--ucrt <build>`：把 Windows SDK 附带的 UCRT 运行时添加到包中。例如 `--ucrt 22621` 表示 Windows 11 SDK 22H2。
 
 ## 用于 Windows NT 5.x 的 Qt 库 + MinGW Lite 工具链

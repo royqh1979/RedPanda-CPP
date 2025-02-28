@@ -36,13 +36,11 @@ FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,
 
 bool FileCompiler::prepareForCompile()
 {
-    Settings::CompilerSet::CompilationStage oldStage = compilerSet()->compilationStage();
     QString oldDebugOptionValue = compilerSet()->getCompileOptionValue(CC_CMD_OPT_DEBUG_INFO);
-    auto action = finally([this,oldStage,oldDebugOptionValue]{
-       compilerSet()->setCompilationStage(oldStage);
+    auto action = finally([this, oldDebugOptionValue]{
        compilerSet()->setCompileOption(CC_CMD_OPT_DEBUG_INFO,oldDebugOptionValue);
     });
-    Settings::CompilerSet::CompilationStage stage = oldStage;
+    Settings::CompilerSet::CompilationStage stage = Settings::CompilerSet::CompilationStage::GenerateExecutable;
     switch(mCompileType) {
     case CppCompileType::PreprocessOnly:
         stage = Settings::CompilerSet::CompilationStage::PreprocessingOnly;
@@ -58,7 +56,6 @@ bool FileCompiler::prepareForCompile()
     default:
         break;
     }
-    compilerSet()->setCompilationStage(stage);
     if (mOnlyCheckSyntax) {
         log(tr("Checking single file..."));
     } else {
@@ -80,7 +77,7 @@ bool FileCompiler::prepareForCompile()
 
     mArguments += QStringList{localizePath(mFilename)};
     if (!mOnlyCheckSyntax) {
-        switch(compilerSet()->compilationStage()) {
+        switch(stage) {
         case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
             mOutputFile=changeFileExt(mFilename,compilerSet()->preprocessingSuffix());
             mArguments << "-E";

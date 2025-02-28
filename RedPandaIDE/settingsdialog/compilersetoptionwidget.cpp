@@ -138,19 +138,8 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
     ui->txtPreprocessingSuffix->setText(pSet->preprocessingSuffix());
     ui->txtCompilationSuffix->setText(pSet->compilationProperSuffix());
     ui->txtExecutableSuffix->setText(pSet->executableSuffix());
-    switch(pSet->compilationStage()) {
-    case Settings::CompilerSet::CompilationStage::PreprocessingOnly:
-        ui->rbPreprocessingOnly->setChecked(true);
-        break;
-    case Settings::CompilerSet::CompilationStage::CompilationProperOnly:
-        ui->rbCompilationProperOnly->setChecked(true);
-        break;
-    default:
-        ui->rbGenerateExecutable->setChecked(true);
-    }
 #ifdef ENABLE_SDCC
     bool isSDCC = (pSet->compilerType()==CompilerType::SDCC);
-    ui->grpCompilationStages->setVisible(!isSDCC);
     ui->lbPreprocessingSuffix->setVisible(!isSDCC);
     ui->txtPreprocessingSuffix->setVisible(!isSDCC);
     ui->lbCompilingSuffix->setVisible(!isSDCC);
@@ -287,13 +276,6 @@ void CompilerSetOptionWidget::saveCurrentCompilerSet()
     //read values in the options widget
     pSet->setCompileOptions(ui->optionTabs->arguments(false));
 
-    if (ui->rbPreprocessingOnly->isChecked()) {
-        pSet->setCompilationStage(Settings::CompilerSet::CompilationStage::PreprocessingOnly);
-    } else if (ui->rbCompilationProperOnly->isChecked()) {
-        pSet->setCompilationStage(Settings::CompilerSet::CompilationStage::CompilationProperOnly);
-    } else if (ui->rbGenerateExecutable->isChecked()) {
-        pSet->setCompilationStage(Settings::CompilerSet::CompilationStage::GenerateExecutable);
-    }
     pSet->setPreprocessingSuffix(ui->txtPreprocessingSuffix->text());
     pSet->setCompilationProperSuffix(ui->txtCompilationSuffix->text());
 #ifdef ENABLE_SDCC

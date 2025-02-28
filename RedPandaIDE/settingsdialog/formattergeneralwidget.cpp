@@ -28,6 +28,7 @@ FormatterGeneralWidget::FormatterGeneralWidget(const QString& name, const QStrin
     connect(ui->cbBraceStyle, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &FormatterGeneralWidget::onBraceStyleChanged);
     ui->editDemo->setReadOnly(true);
+    ui->editDemo->setFileType(FileType::CppSource);
     connect(this, &SettingsWidget::settingsChanged,
                this, &FormatterGeneralWidget::updateDemo);
 

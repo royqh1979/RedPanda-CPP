@@ -203,6 +203,7 @@ function package() {
     -DUSE_MODERN_FONT
     -DHAVE_LLVM
     -DHAVE_OPENCONSOLE
+    -DSTRICT_ARCH_CHECK  # required by OpenConsole
     -DHAVE_COMPILER_HINT
   )
   "$_NSIS" "${nsis_flags[@]}" redpanda.nsi

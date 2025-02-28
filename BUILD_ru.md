@@ -32,7 +32,7 @@ Red Panda C++ требует для сборки Qt 5.15 или 6.8+.
 | MSYS2 + LLVM-based MinGW | ❌ | ✔️ | ✔️ |
 | [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
-Смотри также [другие инструкции сборки для Windows](./docs/detailed-build-win.md).
+Смотри также [другие инструкции сборки для Windows](./docs/detailed-build-win-ru.md).
 
 ## MSYS2 Библиотека Qt с набором инструментов MinGW (Рекомендуется)
 
@@ -77,6 +77,8 @@ Red Panda C++ должна работать с любым 64-битным наб
 - `--mingw32`: и `assets/mingw32.7z` для сборки пакета.
 - `--mingw64`: и `assets/mingw64.7z` для сборки пакета.
 - `--mingw`: псевдоним для  `--mingw64` (x64-приложение).
+- `--gcc-linux-x86-64`: добавить `assets/gcc-linux-x86-64.7z` и `assets/alpine-minirootfs-x86_64.tar` в пакет.
+- `--gcc-linux-aarch64`: добавить `assets/gcc-linux-aarch64.7z` и `assets/alpine-minirootfs-aarch64.tar` в пакет.
 - `--ucrt <build>`: добавить UCRT runtime из Windows SDK в пакет. Например, `--ucrt 22621` для Windows 11 SDK 22H2.
 
 ## Windows NT 5.x с библиотекой Qt с набором инструментов MinGW Lite
@@ -107,7 +109,7 @@ export MIRROR=mirrors.kernel.org  # дополнительно можно уст
 
 # Linux
 
-Смотри также [другие инструкции сборки для настольных систем freedesktop.org-conforming (XDG)](./docs/detailed-build-xdg.md).
+Смотри также [другие инструкции сборки для настольных систем freedesktop.org-conforming (XDG)](./docs/detailed-build-xdg-ru.md).
 
 ## Alpine Linux, Arch Linux, Debian и их производные, Fedora, openSUSE
 

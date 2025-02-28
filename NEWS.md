@@ -26,6 +26,10 @@ Red Panda C++ Version 3.3
   - fix: Debugger not responding when debugging with gdb > 14.
   - enhancement: Run programs in WSL.
   - enhancement: Generate GIMPLE.
+  - enhancement: Russian Translation (by melkorbsd@github)
+  - fix: Can't select/delete files in the project panel.
+  - fix: Erroneous PageDown/PageUp when "Can scroll to the last line of teh top edge of the editor" is disabled
+  - fix: fix: Selecting too long causes the search dialog too wide for the screen to display (by VEXLife@github)
   
 Red Panda C++ Version 3.2
 
