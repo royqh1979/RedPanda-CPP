@@ -227,6 +227,10 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
     parentItem->parent = nullptr;
     QStringList buffer;
     Editor editor(nullptr);
+    FileType fileType = getFileType(filename);
+    if (!isC_CPPSourceFile(fileType))
+        fileType = FileType::CCppHeader;
+    editor.setFileType(fileType);
     if (pMainWindow->editorList()->getContentFromOpenedEditor(
                 filename,buffer)){
         editor.document()->setContents(buffer);
@@ -266,7 +270,7 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
                     //same name symbol , test if the same statement;
                     QSynedit::BufferCoord p;
                     p.line = posY+1;
-                    p.ch = start+1;
+                    p.ch = start;
 
                     QStringList expression = editor.getExpressionAtPosition(p);
                     PStatement tokenStatement = parser->findStatementOf(
