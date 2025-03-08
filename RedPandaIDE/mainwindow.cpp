@@ -3569,6 +3569,9 @@ void MainWindow::loadLastOpens()
         FileType fileType{FileType::None};
         if (fileObj.contains("fileType"))
             fileType = nameToFileType(fileObj["fileType"].toString());
+        else
+            fileType = getFileType(editorFilename);
+        qDebug()<<(int)fileType;
         QTabWidget* page;
         if (onLeft)
             page = mEditorList->leftPageWidget();
