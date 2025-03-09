@@ -65,49 +65,6 @@ bool CppRefacter::findOccurence(Editor *editor, const QSynedit::BufferCoord &pos
     return true;
 }
 
-bool CppRefacter::findOccurence(const QString &statementFullname, SearchFileScope scope)
-{
-    PCppParser parser;
-    Editor * editor=nullptr;
-    std::shared_ptr<Project> project;
-    if (scope == SearchFileScope::currentFile) {
-        editor = pMainWindow->editorList()->getEditor();
-        if (!editor)
-            return false;
-        parser = editor->parser();
-    } else if (scope == SearchFileScope::wholeProject) {
-        project = pMainWindow->project();
-        if (!project)
-            return false;
-        parser = project->cppParser();
-    }
-    if (!parser)
-        return false;
-    {
-        parser->freeze();
-        auto action = finally([&parser]{
-            parser->unFreeze();
-        });
-        PStatement statement = parser->findStatement(statementFullname);
-        // definition of the symbol not found
-        if (!statement)
-            return false;
-        if (statement->scope == StatementScope::Local) {
-            editor = pMainWindow->editorList()->getEditor();
-            if (!editor)
-                return false;
-        }
-
-        if (statement->scope == StatementScope::Local || scope == SearchFileScope::currentFile) {
-            doFindOccurenceInEditor(statement, editor,parser);
-        } else if (scope == SearchFileScope::wholeProject) {
-            doFindOccurenceInProject(statement,project,parser);
-        }
-        pMainWindow->searchResultModel()->notifySearchResultsUpdated();
-        return true;
-    }
-}
-
 static QString fullParentName(PStatement statement) {
     PStatement parent = statement->parentScope.lock();
     if (parent) {
