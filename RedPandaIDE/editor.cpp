@@ -110,7 +110,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     if (fileType == FileType::None)
         fileType = getFileType(mFilename);
-    doSetFileType(fileType, true);
+    doSetFileType(fileType);
     if (mProject && mEncodingOption==ENCODING_PROJECT) {
         mEncodingOption=mProject->options().encoding;
     }
@@ -4570,10 +4570,8 @@ void Editor::setFileType(FileType newFileType)
     pMainWindow->updateEditorActions(this);
 }
 
-void Editor::doSetFileType(FileType newFileType, bool force)
+void Editor::doSetFileType(FileType newFileType)
 {
-    if (mFileType==newFileType && !force)
-        return;
     mFileType = newFileType;
 
     switch(mFileType) {
@@ -4651,7 +4649,7 @@ void Editor::setContextFile(const QString &newContextFile)
         return;
     mContextFile = s;
     if (isC_CPPHeaderFile(mFileType)) {
-        doSetFileType(mFileType, true);
+        doSetFileType(mFileType);
         applyColorScheme(pSettings->editor().colorScheme());
         if (pSettings->codeCompletion().enabled()
                 && !pSettings->codeCompletion().shareParser()

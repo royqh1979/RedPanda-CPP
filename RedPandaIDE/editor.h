@@ -330,7 +330,7 @@ private:
     void cancelHoverLink();
 
     QSize calcCompletionPopupSize();
-    void doSetFileType(FileType newFileType, bool force=false);
+    void doSetFileType(FileType newFileType);
 
     Editor* openFileInContext(const QString& filename);
     bool needReparse();
