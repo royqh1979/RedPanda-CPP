@@ -109,7 +109,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     }
     if (fileType == FileType::None)
         fileType = getFileType(mFilename);
-    doSetFileType(fileType);
+    doSetFileType(fileType, true);
     if (mProject && mEncodingOption==ENCODING_PROJECT) {
         mEncodingOption=mProject->options().encoding;
     }
