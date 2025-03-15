@@ -95,6 +95,7 @@ Editor::Editor(QWidget *parent, const QString& filename,
     mHoverModifiedLine{-1},
     mWheelAccumulatedDelta{0},
     mCtrlClicking{false},
+    mFileType{FileType::None},
     mContextFile{contextFile}
 {
     mLastFocusOutTime = 0;
