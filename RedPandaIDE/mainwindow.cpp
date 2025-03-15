@@ -1815,7 +1815,8 @@ Editor* MainWindow::openFile(QString filename, bool activate, QTabWidget* page, 
     Editor* editor = mEditorList->getOpenedEditorByFilename(filename);
     if (editor!=nullptr) {
         editor->setContextFile(contextFile);
-        editor->setFileType(fileType);
+        if (fileType != FileType::None)
+            editor->setFileType(fileType);
         if (activate) {
             editor->activate();
         }
