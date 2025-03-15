@@ -3570,6 +3570,8 @@ void MainWindow::loadLastOpens()
         FileType fileType{FileType::None};
         if (fileObj.contains("fileType"))
             fileType = nameToFileType(fileObj["fileType"].toString());
+        else
+            fileType = getFileType(editorFilename);
         QTabWidget* page;
         if (onLeft)
             page = mEditorList->leftPageWidget();
@@ -6814,6 +6816,8 @@ void MainWindow::on_cbSearchHistory_currentIndexChanged(int index)
                 && results->scope==SearchFileScope::wholeProject
                 && pMainWindow->project()==nullptr)
             ui->btnSearchAgain->setEnabled(false);
+        else if (results->searchType == SearchType::FindOccurences)
+            ui->btnSearchAgain->setEnabled(false);
         else
             ui->btnSearchAgain->setEnabled(true);
     } else {
@@ -6838,9 +6842,6 @@ void MainWindow::on_btnSearchAgain_clicked()
                     results->folder,
                     results->filters,
                     results->searchSubfolders);
-    } else if (results->searchType == SearchType::FindOccurences) {
-        CppRefacter refactor;
-        refactor.findOccurence(results->statementFullname,results->scope);
     }
 }
 

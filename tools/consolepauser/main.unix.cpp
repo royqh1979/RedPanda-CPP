@@ -55,10 +55,10 @@ using AP = ArgParser<char>;
 
 void PrintSplitLine(FILE *stream)
 {
-    int width = 80;
-    struct winsize ws;
-    if (ioctl(fileno(stream), TIOCGWINSZ, &ws) == 0)
-        width = ws.ws_col;
+    int width = 20;
+//    struct winsize ws;
+//    if (ioctl(fileno(stream), TIOCGWINSZ, &ws) == 0)
+//        width = ws.ws_col;
     fputc('\n', stream);
     for (int i = 0; i < width; i++)
         fputc('-', stream);

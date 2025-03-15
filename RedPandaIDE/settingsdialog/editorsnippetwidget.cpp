@@ -65,6 +65,9 @@ EditorSnippetWidget::EditorSnippetWidget(const QString& name, const QString& gro
             this, &SettingsWidget::setSettingsChanged);
     connect(ui->editGASFileTemplate,&Editor::changed,
             this, &SettingsWidget::setSettingsChanged);
+    ui->editCppFileTemplate->setFileType(FileType::CppSource);
+    ui->editCFileTemplate->setFileType(FileType::CSource);
+    ui->editGASFileTemplate->setFileType(FileType::ATTASM);
     ui->editGASFileTemplate->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::ATTAssembly));
 }
 
