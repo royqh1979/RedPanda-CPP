@@ -470,6 +470,7 @@ bool Editor::saveAs(const QString &name, bool fromProject){
     if (!syntaxer() || syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP) {
         mSyntaxIssues.clear();
     }
+    reparse(false);
     if (pSettings->editor().syntaxCheckWhenSave())
         checkSyntaxInBack();
     if (!shouldOpenInReadonly()) {
@@ -3189,7 +3190,7 @@ void Editor::reparse(bool resetParser)
         return;
     if (!mParser->enabled())
         return;
-    //qDebug()<<"reparse "<<mFilename;
+//    qDebug()<<"reparse "<<mFilename;
     //mParser->setEnabled(pSettings->codeCompletion().enabled());
     if (!inProject()) {
         ParserLanguage language = calcParserLanguage();
