@@ -3601,8 +3601,8 @@ void MainWindow::loadLastOpens()
         if (!editor)
             continue;
         bool isReadOnly = fileObj["readonly"].toBool();
-        if (isReadOnly) {
-            editor->setReadOnly(true);
+        if (isReadOnly!=editor->readOnly()) {
+            editor->setReadOnly(isReadOnly);
         }
         editor->setCaretXY(pos);
         editor->setTopPos(
