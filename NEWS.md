@@ -30,6 +30,8 @@ Red Panda C++ Version 3.3
   - fix: Can't select/delete files in the project panel.
   - fix: Erroneous PageDown/PageUp when "Can scroll to the last line of teh top edge of the editor" is disabled
   - fix: fix: Selecting too long causes the search dialog too wide for the screen to display (by VEXLife@github)
+  - enhancement: Generate Preprocessed file.
+  - enhancement: Save readonly state for files openned in last session.
   
 Red Panda C++ Version 3.2
 

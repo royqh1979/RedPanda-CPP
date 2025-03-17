@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1983</width>
+    <width>2054</width>
     <height>628</height>
    </rect>
   </property>
@@ -116,8 +116,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1983</width>
-     <height>21</height>
+     <width>2054</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -154,6 +154,7 @@
     <addaction name="actionRebuild"/>
     <addaction name="actionGenerate_Assembly"/>
     <addaction name="actionGenerate_GIMPLE"/>
+    <addaction name="actionPreprocess"/>
     <addaction name="separator"/>
     <addaction name="actionRun_Parameters"/>
     <addaction name="actionCompiler_Options"/>
@@ -3341,6 +3342,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+F12</string>
+   </property>
+  </action>
+  <action name="actionPreprocess">
+   <property name="text">
+    <string>Preprocess</string>
    </property>
   </action>
  </widget>

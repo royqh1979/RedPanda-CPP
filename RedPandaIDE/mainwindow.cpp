@@ -3487,6 +3487,7 @@ bool MainWindow::saveLastOpens()
       fileObj["fileType"] =  fileTypeToName(editor->fileType());
       fileObj["encodingOption"] = QLatin1String(editor->encodingOption());
       fileObj["contextFile"] = editor->contextFile();
+      fileObj["readonly"] = editor->readOnly();
       filesArray.append(fileObj);
     }
     rootObj["files"]=filesArray;
@@ -3599,6 +3600,10 @@ void MainWindow::loadLastOpens()
 //        }
         if (!editor)
             continue;
+        bool isReadOnly = fileObj["readonly"].toBool();
+        if (isReadOnly) {
+            editor->setReadOnly(true);
+        }
         editor->setCaretXY(pos);
         editor->setTopPos(
                     fileObj["top"].toInt(1)
@@ -3616,14 +3621,12 @@ void MainWindow::loadLastOpens()
         updateEditorBreakpoints();
     }
 
-    if (mEditorList->pageCount()>0) {
-        updateEditorActions();
-        //updateForEncodingInfo();
-    }
     if (!focusedEditor) {
         focusedEditor = mEditorList->getEditor();
     }
     if (focusedEditor) {
+        updateEditorActions();
+        updateForEncodingInfo();
         focusedEditor->reparse(false);
         focusedEditor->checkSyntaxInBack();
         focusedEditor->reparseTodo();
@@ -6146,6 +6149,8 @@ void MainWindow::onCompileFinished(QString filename, bool isCheckSyntax)
                 case MainWindow::CompileSuccessionTaskType::RunNormal:
                     editor = openFile(mCompileSuccessionTask->execName);
                     if (e && editor) {
+                        editor->setReadOnly(true);
+                        updateEditorActions(editor);
                         int line = e->caretY();
                         int startLine = 1;
                         QString s = "# "+e->filename()+":";
@@ -8453,6 +8458,18 @@ void MainWindow::doGenerateGimple()
     compile(false,CppCompileType::GenerateGimpleOnly);
 }
 
+void MainWindow::doGeneratePreprocessed()
+{
+    CompileTarget target =getCompileTarget();
+    if (target!= CompileTarget::File) {
+        return;
+    }
+    mCompileSuccessionTask = std::make_shared<CompileSuccessionTask>();
+    //mCompileSuccessionTask->binDirs="";
+    mCompileSuccessionTask->type = CompileSuccessionTaskType::RunNormal;
+    compile(false,CppCompileType::PreprocessOnly);
+}
+
 void MainWindow::updateProblemCaseOutput(POJProblemCase problemCase)
 {
     if (problemCase->testState == ProblemCaseTestState::Failed) {
@@ -10127,7 +10144,6 @@ void MainWindow::on_actionToggle_Readonly_triggered()
     Editor * editor = mEditorList->getEditor();
     if (editor && !editor->modified()) {
         editor->setReadOnly(!editor->readOnly());
-        editor->updateCaption();
         updateEditorActions(editor);
         updateForStatusbarModeInfo(editor);
     }
@@ -10502,5 +10518,11 @@ void MainWindow::on_actionIntel_ASM_triggered()
 void MainWindow::on_actionGenerate_GIMPLE_triggered()
 {
     doGenerateGimple();
+}
+
+
+void MainWindow::on_actionPreprocess_triggered()
+{
+    doGeneratePreprocessed();
 }
 

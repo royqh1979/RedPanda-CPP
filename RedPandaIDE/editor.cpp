@@ -1766,13 +1766,13 @@ Editor::PSyntaxIssue Editor::getSyntaxIssueAtPosition(const QSynedit::BufferCoor
 
 void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 {
-    if ((!changes.testFlag(QSynedit::StatusChange::ReadOnly)
+    if ((!changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
             && !changes.testFlag(QSynedit::StatusChange::InsertMode)
             && (lineCount()!=mLineCount)
             && (lineCount()!=0) && ((mLineCount>0) || (lineCount()>1)))
             ||
         (mCurrentLineModified
-            && !changes.testFlag(QSynedit::StatusChange::ReadOnly)
+            && !changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)
             && changes.testFlag(QSynedit::StatusChange::CaretY))) {
         mCurrentLineModified = false;
         reparse(false);
@@ -1786,7 +1786,8 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 //        }
     }
     mLineCount = lineCount();
-    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)) {
+    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)
+            || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
         updateCaption();
     }
     if (changes.testFlag(QSynedit::StatusChange::Modified)) {
@@ -1899,7 +1900,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         }
     }
 
-    if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnly))
+    if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged))
         pMainWindow->updateForStatusbarModeInfo();
 
     if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)) {
@@ -1911,7 +1912,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         pMainWindow->updateCaretActions();
     }
 
-    if (changes.testFlag(QSynedit::StatusChange::ReadOnly)) {
+    if (changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
         if (!readOnly())
             initAutoBackup();
     }

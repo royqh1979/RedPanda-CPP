@@ -3943,7 +3943,7 @@ void QSynEdit::setReadOnly(bool readOnly)
 {
     if (mReadOnly != readOnly) {
         mReadOnly = readOnly;
-        emit statusChanged(StatusChange::ReadOnly);
+        emit statusChanged(StatusChange::ReadOnlyChanged);
     }
 }
 

@@ -51,7 +51,7 @@ enum class StatusChange {
     InsertMode = 0x0020,
     ModifyChanged = 0x0040,
     Selection = 0x0080,
-    ReadOnly = 0x0100,
+    ReadOnlyChanged = 0x0100,
     Modified = 0x0200
 };
 
