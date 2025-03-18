@@ -158,7 +158,6 @@ static void loadCompilerSetSettings(Settings::PCompilerSet pSet, Ui::CompilerSet
         ui->txtExecutableSuffix->setText(pSet->executableSuffix());
     }
 #else
-    ui->grpCompilationStages->setVisible(true);
     ui->lbPreprocessingSuffix->setVisible(true);
     ui->txtPreprocessingSuffix->setVisible(true);
     ui->lbCompilingSuffix->setVisible(true);
