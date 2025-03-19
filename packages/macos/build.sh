@@ -11,7 +11,7 @@ Options:
   -a, --arch <arch>        Set target architecture. Available options: x86_64, arm64, universal.
   -c, --clean              Clean build and package directories.
   --qt-install-dir <dir>   Set Qt installation directory. Default: $HOME/Qt.
-  --qt-version <version>   Set Qt version. Default: 6.8.0.
+  --qt-version <version>   Set Qt version. Default: 6.8.1.
 EOF
 }
 
@@ -26,7 +26,7 @@ fi
 _ARCH="universal"
 _CLEAN=0
 _QT_INSTALL_DIR="$HOME/Qt"
-_QT_VERSION="6.8.0"
+_QT_VERSION="6.8.1"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -a|--arch)
@@ -76,11 +76,8 @@ case "$_QT_VERSION" in
   6.*.*)
     _QT_DIR="$_QT_INSTALL_DIR/$_QT_VERSION/macos"
     ;;
-  5.15.*)
-    _QT_DIR="$_QT_INSTALL_DIR/$_QT_VERSION/clang_64"
-    ;;
   *)
-    echo "Invalid Qt version schemes: $_QT_VERSION. Available schemes: 6.x.y, 5.15.y."
+    echo "Invalid Qt version schemes: $_QT_VERSION. Available schemes: 6.x.y."
     exit 1
     ;;
 esac

@@ -291,10 +291,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        edition: ["leap", "tumbleweed"]
     env:
-      IMAGE: docker.io/opensuse/${{ matrix.edition }}:latest
+      IMAGE: docker.io/opensuse/tumbleweed:latest
       PLATFORM: linux/amd64
 
     steps:
@@ -309,7 +307,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: openSUSE ${{ matrix.edition }} x86_64
+          name: openSUSE Tumbleweed x86_64
           path: dist/*.rpm
 
   alpine:
@@ -389,11 +387,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        qtVersion: ['5.15.2', '6.8.0']
         arch: [x86_64, arm64, universal]
-        exclude:
-          - { qtVersion: '5.15.2', arch: arm64 }
-          - { qtVersion: '5.15.2', arch: universal }
     runs-on: macos-14
 
     steps:
@@ -404,7 +398,7 @@ jobs:
       - name: Setup
         uses: jurplel/install-qt-action@v4
         with:
-          version: ${{ matrix.qtVersion }}
+          version: '6.8.1'
           host: mac
           target: desktop
           arch: clang_64
@@ -415,10 +409,10 @@ jobs:
           ./packages/macos/build.sh \
             --arch ${{ matrix.arch }} \
             --qt-install-dir $RUNNER_WORKSPACE/Qt \
-            --qt-version ${{ matrix.qtVersion }}
+            --qt-version 6.8.1
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: macOS Qt ${{ matrix.qtVersion }} ${{ matrix.arch }}
+          name: macOS ${{ matrix.arch }}
           path: dist/*.tar.xz
