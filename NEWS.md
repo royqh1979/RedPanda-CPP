@@ -35,6 +35,8 @@ Red Panda C++ Version 3.3
   - fix: Redo/Undo actions are not correctly enabled in some cases.
   - fix: Can't paste content after switching off ReadOnly mode.
   - fix: Find next doesn't work.
+  - fix: Don't show actions non-shortcut-table in options/environment/shortcut page.
+  - fix: make "Open File in the containing folder" shortcut-able.
   
 Red Panda C++ Version 3.2
 
