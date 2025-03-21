@@ -7957,7 +7957,7 @@ void MainWindow::initEditorActions()
     changeEditorActionParent(ui->actionLocate_in_Files_View, tr("Code"));
     changeEditorActionParent(ui->actionSwitchHeaderSource, tr("Code"));
 
-    //changeEditorActionParent(ui->actionOpen_Containing_Folder, tr("File"));
+    changeEditorActionParent(ui->actionOpen_Containing_Folder, tr("File"));
     changeEditorActionParent(ui->actionOpen_Terminal, tr("File"));
     changeEditorActionParent(ui->actionLocate_in_Files_View, tr("File"));
 }
