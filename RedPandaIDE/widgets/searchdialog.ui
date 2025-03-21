@@ -198,9 +198,9 @@
                 <number>7</number>
                </property>
                <item>
-                <widget class="QRadioButton" name="rbFromCursor">
+                <widget class="QRadioButton" name="rbFromCaret">
                  <property name="text">
-                  <string>From cursor</string>
+                  <string>From caret</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -448,7 +448,7 @@
   <tabstop>chkRegExp</tabstop>
   <tabstop>chkWrapAround</tabstop>
   <tabstop>chkCloseAfterSearch</tabstop>
-  <tabstop>rbFromCursor</tabstop>
+  <tabstop>rbFromCaret</tabstop>
   <tabstop>rbEntireScope</tabstop>
   <tabstop>rbGlobal</tabstop>
   <tabstop>rbSelection</tabstop>

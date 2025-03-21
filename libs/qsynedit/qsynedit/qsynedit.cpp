@@ -5068,16 +5068,23 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
         ptEnd.line = mDocument->count();
         ptEnd.ch = mDocument->getLine(ptEnd.line - 1).length()+1;
         if (bFromCursor) {
-            if (bBackward) {
-                if (caretXY() != wordStart() && caretXY() != wordEnd())
-                    ptEnd = wordEnd();
-                else
-                    ptEnd = caretXY();
+            Qt::CaseSensitivity caseSensitivity = sOptions.testFlag(ssoMatchCase)?Qt::CaseSensitive:Qt::CaseInsensitive;
+            if (selAvail()
+                    && ((bBackward && blockEnd() == caretXY())
+                        || (!bBackward && blockBegin() == caretXY()))
+                    && selCount() == sSearch.length()
+                    && QString::compare(sSearch,selText(), caseSensitivity)==0 ) {
+                if (bBackward) {
+                    ptEnd = blockBegin();
+                } else {
+                    ptStart = blockEnd();
+                }
             } else {
-                if (caretXY() != wordStart() && caretXY() != wordEnd())
-                    ptStart = wordStart();
-                else
+                if (bBackward) {
+                    ptEnd = caretXY();
+                } else {
                     ptStart = caretXY();
+                }
             }
         }
         if (bBackward)

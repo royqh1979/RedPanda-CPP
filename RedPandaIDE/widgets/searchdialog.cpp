@@ -79,21 +79,13 @@ void SearchDialog::findPrevious()
 
 void SearchDialog::doSearch(bool backward)
 {
+    if (ui->cbFind->currentText().isEmpty())
+        return;
     updateComboHistory(mSearchKeys, ui->cbFind->currentText());
     prepareOptions(backward);
 
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {
-        // Modify the caret when using 'from cursor' and when the selection is ignored
-        if (!mSearchOptions.testFlag(QSynedit::ssoEntireScope) && !mSearchOptions.testFlag(QSynedit::ssoSelectedOnly)
-                && editor->selAvail()) {
-            // start at end of selection
-            if (mSearchOptions.testFlag(QSynedit::ssoBackwards)) {
-                editor->setCaretXY(editor->blockBegin());
-            } else {
-                editor->setCaretXY(editor->blockEnd());
-            }
-        }
         QSynedit::PSynSearchBase searchEngine;
         if (mSearchOptions.testFlag(QSynedit::ssoRegExp)) {
             searchEngine = mRegexSearchEngine;

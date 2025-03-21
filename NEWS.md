@@ -34,6 +34,7 @@ Red Panda C++ Version 3.3
   - enhancement: Save readonly state for files openned in last session.
   - fix: Redo/Undo actions are not correctly enabled in some cases.
   - fix: Can't paste content after switching off ReadOnly mode.
+  - fix: Find next doesn't work.
   
 Red Panda C++ Version 3.2
 
