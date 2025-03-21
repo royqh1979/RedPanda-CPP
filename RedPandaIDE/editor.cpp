@@ -726,7 +726,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     Qt::NoButton,
                     Qt::NoButton,
                     Qt::ControlModifier};
-        mouseMoveEvent( &mouseEvent );
+        mouseMoveEvent(&mouseEvent);
         return;
     }
     if (readOnly())
@@ -1101,6 +1101,7 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
         } else {
             cancelHoverLink();
         }
+        event->accept();
         return;
     }
     QSynedit::QSynEdit::mouseMoveEvent(event);
@@ -1900,11 +1901,12 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
         }
     }
 
-    if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged))
-        pMainWindow->updateForStatusbarModeInfo();
+    if (changes.testFlag(QSynedit::StatusChange::InsertMode) || changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
+        pMainWindow->updateForStatusbarModeInfo(this);
+    }
 
-    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged)) {
-        pMainWindow->updateEditorActions();
+    if (changes.testFlag(QSynedit::StatusChange::ModifyChanged) || changes.testFlag(QSynedit::StatusChange::Modified)) {
+        pMainWindow->updateEditorActions(this);
     }
 
     if (changes.testFlag(QSynedit::StatusChange::CaretY) && inTab()) {
@@ -1915,6 +1917,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
     if (changes.testFlag(QSynedit::StatusChange::ReadOnlyChanged)) {
         if (!readOnly())
             initAutoBackup();
+        pMainWindow->updateEditorActions(this);
     }
 }
 
@@ -5252,7 +5255,7 @@ void Editor::replaceContent(const QString &newContent, bool doReparse)
         reparse(true);
         checkSyntaxInBack();
         reparseTodo();
-        pMainWindow->updateEditorActions();
+        pMainWindow->updateEditorActions(this);
     }
 
 }
