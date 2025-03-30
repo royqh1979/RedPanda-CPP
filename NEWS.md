@@ -32,6 +32,7 @@ Red Panda C++ Version 3.3
   - fix: fix: Selecting too long causes the search dialog too wide for the screen to display (by VEXLife@github)
   - enhancement: Generate Preprocessed file.
   - enhancement: Save readonly state for files openned in last session.
+  - fix: auto indent calculation dosen't correct if there are multiple parenthesis in one line.
   
 Red Panda C++ Version 3.2
 

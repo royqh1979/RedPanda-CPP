@@ -1000,8 +1000,10 @@ void CppSyntaxer::procRoundClose()
     mRun += 1;
     mTokenId = TokenId::Symbol;
     mRange.parenthesisLevel--;
-    if (mRange.parenthesisLevel<0)
+    if (mRange.parenthesisLevel<0) {
+        qDebug()<<"CppSyntaxer::procRoundClose() : parenthesis level < 0 ";
         mRange.parenthesisLevel=0;
+    }
     popIndents(IndentType::Parenthesis);
 }
 
