@@ -32,6 +32,11 @@ Red Panda C++ Version 3.3
   - fix: fix: Selecting too long causes the search dialog too wide for the screen to display (by VEXLife@github)
   - enhancement: Generate Preprocessed file.
   - enhancement: Save readonly state for files openned in last session.
+  - fix: Redo/Undo actions are not correctly enabled in some cases.
+  - fix: Can't paste content after switching off ReadOnly mode.
+  - fix: Find next doesn't work.
+  - fix: Don't show actions non-shortcut-table in options/environment/shortcut page.
+  - fix: make "Open File in the containing folder" shortcut-able.
   - fix: auto indent calculation dosen't correct if there are multiple parenthesis in one line.
   
 Red Panda C++ Version 3.2

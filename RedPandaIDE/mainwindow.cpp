@@ -7956,6 +7956,10 @@ void MainWindow::initEditorActions()
     changeEditorActionParent(ui->actionFile_Properties, tr("Code"));
     changeEditorActionParent(ui->actionLocate_in_Files_View, tr("Code"));
     changeEditorActionParent(ui->actionSwitchHeaderSource, tr("Code"));
+
+    changeEditorActionParent(ui->actionOpen_Containing_Folder, tr("File"));
+    changeEditorActionParent(ui->actionOpen_Terminal, tr("File"));
+    changeEditorActionParent(ui->actionLocate_in_Files_View, tr("File"));
 }
 
 void MainWindow::changeEditorActionParent(QAction *action, const QString& groupName)
@@ -9035,7 +9039,14 @@ QList<QAction *> MainWindow::listShortCutableActions()
 {
     QList<QAction*> actions = findChildren<QAction *>(QString(), Qt::FindDirectChildrenOnly);
     actions += ui->EditorPanel->actions();
-    return actions;
+    QList<QAction*> result;
+    foreach(QAction* action, actions) {
+        if (action->shortcutContext() == Qt::WidgetShortcut
+                && action->parentWidget() == this)
+            continue;
+        result.append(action);
+    }
+    return result;
 }
 
 void MainWindow::switchCurrentStackTrace(int idx)

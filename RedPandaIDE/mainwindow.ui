@@ -2578,6 +2578,9 @@
    <property name="text">
     <string>Open a terminal here</string>
    </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
   </action>
   <action name="actionFile_Properties">
    <property name="text">
