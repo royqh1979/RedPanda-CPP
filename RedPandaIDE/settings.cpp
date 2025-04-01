@@ -3638,9 +3638,13 @@ void Settings::CompilerSets::saveSet(int index)
 
 QString Settings::CompilerSets::loadPath(const QString &name)
 {
-    // always do substitution for backward compatibility
     QString s =  mSettings->mSettings.value(name).toString();
-    QString prefix = "%AppPath%/";
+    // replace libexec dir for forward compatibility
+    QString prefix = "%*APP_LIBEXEC_DIR*%/";
+    if (s.startsWith(prefix)) {
+        s = getFilePath(mSettings->mDirs.appLibexecDir(), s.mid(prefix.length()));
+    }
+    prefix = "%AppPath%/";
     if (s.startsWith(prefix)) {
         s = getFilePath(mSettings->mDirs.appDir(), s.mid(prefix.length()));
     }
@@ -3649,10 +3653,17 @@ QString Settings::CompilerSets::loadPath(const QString &name)
 
 void Settings::CompilerSets::loadPathList(const QString &name, QStringList& list)
 {
-    // always do substitution for backward compatibility
     list.clear();
     QStringList sl = mSettings->mSettings.value(name).toStringList();
-    QString prefix = "%AppPath%/";
+    // replace libexec dir for forward compatibility
+    QString prefix = "%*APP_LIBEXEC_DIR*%/";
+    for (QString& s:sl) {
+        if (s.startsWith(prefix)) {
+            s = getFilePath(mSettings->mDirs.appLibexecDir(), s.mid(prefix.length()));
+        }
+        list.append(QFileInfo(s).absoluteFilePath());
+    }
+    prefix = "%AppPath%/";
     for (QString& s:sl) {
         if (s.startsWith(prefix)) {
             s = getFilePath(mSettings->mDirs.appDir(), s.mid(prefix.length()));
@@ -3861,7 +3872,8 @@ void Settings::Environment::doLoad()
 
     // check saved terminal path
     mTerminalPath = stringValue("terminal_path", "");
-    // always do substitution for backward compatibility
+    // replace libexec dir for forward compatibility
+    mTerminalPath = replacePrefix(mTerminalPath, "%*APP_LIBEXEC_DIR*%", pSettings->dirs().appLibexecDir());
     mTerminalPath = replacePrefix(mTerminalPath, "%*APP_DIR*%", pSettings->dirs().appDir());
     mTerminalArgumentsPattern = stringValue("terminal_arguments_pattern", "");
 
@@ -3960,8 +3972,11 @@ QString Settings::Environment::AStylePath() const
     QString path = mAStylePath;
     if (path.isEmpty())
         path = getFilePath(pSettings->dirs().appLibexecDir(),ASTYLE_PROGRAM);
-    else
+    else {
+        // replace libexec dir for forward compatibility
+        path = replacePrefix(path, "%*APP_LIBEXEC_DIR*%", pSettings->dirs().appLibexecDir());
         path = replacePrefix(path, "%*APP_DIR*%", pSettings->dirs().appDir());
+    }
     return path;
 }
 
