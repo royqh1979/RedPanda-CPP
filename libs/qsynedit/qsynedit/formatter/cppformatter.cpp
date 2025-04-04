@@ -174,13 +174,20 @@ namespace QSynedit {
         QString lineText = editor->lineText(line);
         int leading = editor->leftSpaces(lineText);
         editor->syntaxer()->setLine(lineText.trimmed(),line);
-        int pos = 0;
+        QList<int> posList;
         while (!editor->syntaxer()->eol()) {
-            if (editor->syntaxer()->getTokenAttribute() == editor->syntaxer()->symbolAttribute()
-                && editor->syntaxer()->getToken() == "(")
-                pos = editor->syntaxer()->getTokenPos();
+            if (editor->syntaxer()->getTokenAttribute() == editor->syntaxer()->symbolAttribute()) {
+                if (editor->syntaxer()->getToken() == "(") {
+                    posList.push_back(editor->syntaxer()->getTokenPos());
+                } else if (editor->syntaxer()->getToken() == ")") {
+                    posList.pop_back();
+                }
+            }
             editor->syntaxer()->next();
         }
-        return leading+pos;
+        if (posList.isEmpty())
+            return leading;
+        else
+            return leading+posList.last();
     }
 }

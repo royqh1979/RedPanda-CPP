@@ -37,6 +37,7 @@ Red Panda C++ Version 3.3
   - fix: Find next doesn't work.
   - fix: Don't show actions non-shortcut-table in options/environment/shortcut page.
   - fix: make "Open File in the containing folder" shortcut-able.
+  - fix: auto indent calculation dosen't correct if there are multiple parenthesis in one line.
   - fix: Auto indent calculation for multi-line string is not correct
   
 Red Panda C++ Version 3.2
