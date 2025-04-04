@@ -22,6 +22,13 @@ namespace QSynedit {
         line = std::min(line, editor->lineCount()+1);
         if (line<=1)
             return 0;
+        // test if last line is non-end string
+        int lastLine = line-1;
+        if (lastLine>=1) {
+            SyntaxState rangeLastLine = editor->document()->getSyntaxState(lastLine-1);
+            if (rangeLastLine.state == CppSyntaxer::RangeState::rsStringNextLine)
+                return editor->leftSpaces(lineText);
+        }
         // find the first non-empty preceeding line
         int startLine = line-1;
         QString startLineText;
