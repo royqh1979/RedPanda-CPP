@@ -184,34 +184,33 @@ void PrintWin32ApiError(const wchar_t *function)
 
 void PauseExit(int exitcode, bool reInp) {
     if (AP::gArgs.pauseConsole) {
-        HANDLE hInp=NULL;
-        INPUT_RECORD irec;
-        DWORD cc;
+        // clean input buffer
         if (reInp) {
-            SECURITY_ATTRIBUTES sa;
-            sa.nLength = sizeof(sa);
-            sa.lpSecurityDescriptor = NULL;
-            sa.bInheritHandle = TRUE;
-
-            hInp = CreateFileA("CONIN$", GENERIC_WRITE | GENERIC_READ,
-                FILE_SHARE_READ , &sa, OPEN_EXISTING, /*FILE_ATTRIBUTE_NORMAL*/0, NULL);
+            // redirected. stdin does not point to console input, open it explicitly.
+            // here we use the same definition as UCRT.
+            // UCRT's reference source can be found at Windows SDK, for example:
+            // C:\Program Files (x86)\Windows Kits\10\Source\10.0.26100.0\ucrt\conio\initconin.cpp
+            HANDLE hInp = CreateFileW(
+                L"CONIN$",
+                GENERIC_READ | GENERIC_WRITE,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                nullptr,
+                OPEN_EXISTING,
+                0,
+                nullptr);
+            FlushConsoleInputBuffer(hInp);
+            CloseHandle(hInp);
         } else {
-            hInp = GetStdHandle(STD_INPUT_HANDLE);
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
         }
-        FlushConsoleInputBuffer(hInp);
+
         PrintToStdout(L"\n");
         PrintToStdout(L"%ls", _(EXIT));
-        for(;;)
-        {
-            ReadConsoleInput(hInp, &irec, 1, &cc );
-            if( irec.EventType == KEY_EVENT
-                    &&  ((KEY_EVENT_RECORD&)irec.Event).bKeyDown
-                ) {
-                break;
-            }
-        }
-        if (reInp) {
-            CloseHandle(hInp);
+
+        wint_t ch = _getwch();
+        if (ch == 0 || ch == 0xE0) {
+            // function key or arrow key, the document says should call it twice.
+            // however, `system("pause")` doesn't, so we don't do it here.
         }
     }
     exit(exitcode);
