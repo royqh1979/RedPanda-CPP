@@ -5070,16 +5070,20 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
         if (bFromCursor) {
             Qt::CaseSensitivity caseSensitivity = sOptions.testFlag(ssoMatchCase)?Qt::CaseSensitive:Qt::CaseInsensitive;
             if (selAvail()
-                    && ((bBackward && blockEnd() == caretXY())
-                        || (!bBackward && blockBegin() == caretXY()))
+                    && matchedCallback // we are replacing
+                    && QString::compare(sSearch,sReplace, Qt::CaseSensitive)!=0
+                    && ((bBackward && blockBegin() == caretXY())
+                        || (!bBackward && blockEnd() == caretXY()))
                     && selCount() == sSearch.length()
                     && QString::compare(sSearch,selText(), caseSensitivity)==0 ) {
                 if (bBackward) {
-                    ptEnd = blockBegin();
+                    ptEnd = blockEnd();
                 } else {
-                    ptStart = blockEnd();
+                    ptStart = blockBegin();
                 }
+                qDebug()<<"????";
             } else {
+                qDebug()<<"lalala";
                 if (bBackward) {
                     ptEnd = caretXY();
                 } else {
@@ -5154,12 +5158,14 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 // handler or as the search result.
                 ptCurrent.ch = nFound;
                 setBlockBegin(ptCurrent);
-
-                //Be sure to use the Ex version of CursorPos so that it appears in the middle if necessary
-                internalSetCaretXY(BufferCoord{ptCurrent.ch, ptCurrent.line}, false);
-                ensureCaretVisibleEx(true);
                 ptCurrent.ch += nSearchLen;
                 setBlockEnd(ptCurrent);
+
+                if (bBackward)
+                    internalSetCaretXY(blockBegin(), false);
+                else
+                    internalSetCaretXY(blockEnd(), false);
+                ensureCaretVisibleEx(true);
 
                 QString replaceText = searchEngine->replace(selText(), sReplace);
                 if (searchAction==SearchAction::ReplaceAndExit) {
