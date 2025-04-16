@@ -5479,7 +5479,6 @@ PEvalStatement CppParser::doEvalTerm(const QString &fileName,
             result = doCreateEvalType(phraseExpression[pos]);
             pos++;
         } else if (isIdentifier(phraseExpression[pos])) {
-            qDebug()<<phraseExpression[pos]<<isIdentifier(phraseExpression[pos]);
             PStatement statement;
             if (freeScoped) {
                 if (!previousResult) {
