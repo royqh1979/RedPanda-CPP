@@ -39,6 +39,7 @@ Red Panda C++ Version 3.3
   - fix: make "Open File in the containing folder" shortcut-able.
   - fix: auto indent calculation dosen't correct if there are multiple parenthesis in one line.
   - fix: Auto indent calculation for multi-line string is not correct
+  - fix: Crash when parsing "a::x" and a is not correcly defined.
   
 Red Panda C++ Version 3.2
 
