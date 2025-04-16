@@ -246,6 +246,7 @@ wstring EscapeArgument(wstring_view arg)
             result.push_back(*it);
         }
     }
+    result.push_back('"');
     return result;
 }
 
