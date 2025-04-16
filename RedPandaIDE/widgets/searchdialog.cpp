@@ -128,6 +128,10 @@ void SearchDialog::doSearch(bool backward)
                 p,
                 tr("Not Found"),
                 tr("Can't find '%1'").arg(ui->cbFind->currentText()));
+        } else {
+            if (ui->rbEntireScope->isChecked()) {
+                ui->rbFromCaret->setChecked(true);
+            }
         }
     }
 }
@@ -136,6 +140,9 @@ void SearchDialog::doReplace(bool replaceAll)
 {
     updateComboHistory(mSearchKeys,ui->cbFind->currentText());
     updateComboHistory(mReplaceKeys,ui->cbReplace->currentText());
+    if (ui->rbEntireScope->isChecked()) {
+        ui->rbFromCaret->setChecked(true);
+    }
     prepareOptions(false);
     Editor *editor = pMainWindow->editorList()->getEditor();
     if (editor) {
