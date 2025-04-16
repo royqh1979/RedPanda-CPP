@@ -1186,7 +1186,7 @@ void GDBMIDebuggerClient::evalExpression(const QString &expression)
     QString escaped;
     foreach(const QChar& ch, expression) {
         if (ch.unicode()<32) {
-            escaped+=QString("\\%1").arg(ch.unicode(),0,8);
+            escaped+=QString("\\%1").arg(int(ch.unicode()),0,8);
         } else
             escaped+=ch;
     }
