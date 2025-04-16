@@ -5081,9 +5081,7 @@ int QSynEdit::searchReplace(const QString &sSearch, const QString &sReplace, Sea
                 } else {
                     ptStart = blockBegin();
                 }
-                qDebug()<<"????";
             } else {
-                qDebug()<<"lalala";
                 if (bBackward) {
                     ptEnd = caretXY();
                 } else {
