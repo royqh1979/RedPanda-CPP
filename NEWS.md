@@ -40,6 +40,7 @@ Red Panda C++ Version 3.3
   - fix: auto indent calculation dosen't correct if there are multiple parenthesis in one line.
   - fix: Auto indent calculation for multi-line string is not correct
   - fix: Crash when parsing "a::x" and a is not correcly defined.
+  - Change: Auto check "Start from the cursor" after search "start from entire scope"
   
 Red Panda C++ Version 3.2
 
