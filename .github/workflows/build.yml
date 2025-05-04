@@ -1,6 +1,21 @@
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - ".github/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - "**.md"
+      - "LICENSE"
+  pull_request:
+    paths-ignore:
+      - ".github/**"
+      - ".gitignore"
+      - ".gitattributes"
+      - "**.md"
+      - "LICENSE"
+  workflow_dispatch:
 
 env:
   CONTAINER_COMMAND: "podman run
