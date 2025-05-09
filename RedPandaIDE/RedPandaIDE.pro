@@ -584,16 +584,21 @@ RESOURCES += theme_files
 RESOURCES += colorscheme_files
 
 qtConfig(static) {
-    qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/qtbase_pt_BR.qm
-    qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/qtbase_zh_CN.qm
-    qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/qtbase_zh_TW.qm
-    exists($$[QT_INSTALL_TRANSLATIONS]/qtbase_ru_RU.qm) {
-        qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/qtbase_ru_RU.qm
+    QTBASE_TRANSFILES = qtbase_bt_BR.qm \
+                        qtbase_zh_CN.qm \
+                        qtbase_zh_TW.qm \
+                        qtbase_ru_RU.qm
+    for (TRANS_FILE, QTBASE_TRANSFILES) {
+        exists($$[QT_INSTALL_TRANSLATIONS]/$${TRANS_FILE}) {
+            qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/$${TRANS_FILE}
+        }
     }
-    qt_translation_files.base = $$[QT_INSTALL_TRANSLATIONS]
-    qt_translation_files.prefix = /translations
+    !isEmpty(qt_translation_files.files) {
+        qt_translation_files.base = $$[QT_INSTALL_TRANSLATIONS]
+        qt_translation_files.prefix = /translations
 
-    RESOURCES += qt_translation_files
+        RESOURCES += qt_translation_files
+    }
 }
 
 macos: {
