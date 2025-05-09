@@ -6857,7 +6857,6 @@ void MainWindow::on_btnSearchAgain_clicked()
 
         if (!editor)
             return;
-        qDebug()<<editor->filename();
         refactor.findOccurence(editor, results->statementFullname, results->scope);
     }
 }
