@@ -34,7 +34,7 @@ public:
     explicit CppRefacter(QObject *parent = nullptr);
 
     bool findOccurence(Editor * editor, const QSynedit::BufferCoord& pos);
-    bool findOccurence(const QString& statementFullname, SearchFileScope scope);
+    bool findOccurence(Editor * editor, const QString& statementFullname, SearchFileScope scope);
 
     void renameSymbol(Editor* editor, const QSynedit::BufferCoord& pos, const QString& newWord);
 private:

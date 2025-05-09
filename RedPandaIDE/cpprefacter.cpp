@@ -65,6 +65,33 @@ bool CppRefacter::findOccurence(Editor *editor, const QSynedit::BufferCoord &pos
     return true;
 }
 
+bool CppRefacter::findOccurence(Editor * editor, const QString &statementFullname, SearchFileScope scope)
+{
+    if (!editor->parser())
+        return false;
+    if (!editor->parser()->freeze())
+        return false;
+    auto action = finally([&editor]{
+        editor->parser()->unFreeze();
+    });
+    PStatement statement = editor->parser()->findStatement(statementFullname);
+    if (!statement)
+        return false;
+
+    if (statement->scope == StatementScope::Local) {
+        doFindOccurenceInEditor(statement,editor,editor->parser());
+    } else {
+        std::shared_ptr<Project> project = pMainWindow->project();
+        if (editor->inProject() && project) {
+            doFindOccurenceInProject(statement,project,editor->parser());
+        } else {
+            doFindOccurenceInEditor(statement,editor,editor->parser());
+        }
+    }
+    pMainWindow->searchResultModel()->notifySearchResultsUpdated();
+    return true;
+}
+
 static QString fullParentName(PStatement statement) {
     PStatement parent = statement->parentScope.lock();
     if (parent) {

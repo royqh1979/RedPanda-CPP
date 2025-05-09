@@ -6821,9 +6821,9 @@ void MainWindow::on_cbSearchHistory_currentIndexChanged(int index)
                 && results->scope==SearchFileScope::wholeProject
                 && pMainWindow->project()==nullptr)
             ui->btnSearchAgain->setEnabled(false);
-        else if (results->searchType == SearchType::FindOccurences)
-            ui->btnSearchAgain->setEnabled(false);
-        else
+        else if (results->searchType == SearchType::FindOccurences) {
+            ui->btnSearchAgain->setEnabled(true);
+        } else
             ui->btnSearchAgain->setEnabled(true);
     } else {
         ui->btnSearchAgain->setEnabled(false);
@@ -6847,6 +6847,18 @@ void MainWindow::on_btnSearchAgain_clicked()
                     results->folder,
                     results->filters,
                     results->searchSubfolders);
+    } else if (results->searchType == SearchType::FindOccurences) {
+        if (results->scope==SearchFileScope::wholeProject
+                && pMainWindow->project()==nullptr)
+            return;
+        CppRefacter refactor;
+        Editor* editor;
+        editor = mEditorList->getEditor();
+
+        if (!editor)
+            return;
+        qDebug()<<editor->filename();
+        refactor.findOccurence(editor, results->statementFullname, results->scope);
     }
 }
 
