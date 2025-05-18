@@ -3656,17 +3656,13 @@ void Settings::CompilerSets::loadPathList(const QString &name, QStringList& list
     list.clear();
     QStringList sl = mSettings->mSettings.value(name).toStringList();
     // replace libexec dir for forward compatibility
-    QString prefix = "%*APP_LIBEXEC_DIR*%/";
+    QString prefix1 = "%*APP_LIBEXEC_DIR*%/";
+    QString prefix2 = "%AppPath%/";
     for (QString& s:sl) {
-        if (s.startsWith(prefix)) {
-            s = getFilePath(mSettings->mDirs.appLibexecDir(), s.mid(prefix.length()));
-        }
-        list.append(QFileInfo(s).absoluteFilePath());
-    }
-    prefix = "%AppPath%/";
-    for (QString& s:sl) {
-        if (s.startsWith(prefix)) {
-            s = getFilePath(mSettings->mDirs.appDir(), s.mid(prefix.length()));
+        if (s.startsWith(prefix1)) {
+            s = getFilePath(mSettings->mDirs.appLibexecDir(), s.mid(prefix1.length()));
+        } else if (s.startsWith(prefix2)) {
+            s = getFilePath(mSettings->mDirs.appDir(), s.mid(prefix2.length()));
         }
         list.append(QFileInfo(s).absoluteFilePath());
     }
