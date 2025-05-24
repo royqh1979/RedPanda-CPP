@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-ASTYLE_VERSION_TAG="3.6.4"
+ASTYLE_VERSION_TAG="3.6.9"
 
 function fn_print_help() {
   echo " Usage:
