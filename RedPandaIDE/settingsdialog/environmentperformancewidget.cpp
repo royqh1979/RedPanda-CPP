@@ -35,6 +35,7 @@ void EnvironmentPerformanceWidget::doLoad()
 {
     ui->chkClearWhenEditorHidden->setChecked(pSettings->codeCompletion().clearWhenEditorHidden());
     ui->chkEditorsShareParser->setChecked(pSettings->codeCompletion().shareParser());
+    on_chkEditorsShareParser_stateChanged(false);
 }
 
 void EnvironmentPerformanceWidget::doSave()
@@ -45,3 +46,10 @@ void EnvironmentPerformanceWidget::doSave()
     pSettings->codeCompletion().save();
     pSettings->editor().save();
 }
+
+void EnvironmentPerformanceWidget::on_chkEditorsShareParser_stateChanged(int arg1)
+{
+    Q_UNUSED(arg1)
+    ui->chkClearWhenEditorHidden->setVisible(ui->chkEditorsShareParser->isChecked());
+}
+

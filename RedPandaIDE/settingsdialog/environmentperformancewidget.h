@@ -35,6 +35,9 @@ public:
     void doLoad() override;
     void doSave() override;
 
+private slots:
+    void on_chkEditorsShareParser_stateChanged(int arg1);
+
 private:
     Ui::EnvironmentPerformanceWidget *ui;
 };
