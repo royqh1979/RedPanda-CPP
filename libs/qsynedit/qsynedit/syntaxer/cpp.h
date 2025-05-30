@@ -156,6 +156,7 @@ private:
     void processChar();
     void popIndents(IndentType indentType);
     void pushIndents(IndentType indentType, int line=-1, const QString& keyword = QString());
+    void popStatementIndents();
 
 private:
     SyntaxState mRange;
