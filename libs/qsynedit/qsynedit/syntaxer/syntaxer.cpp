@@ -205,7 +205,7 @@ SyntaxState::SyntaxState():
 
 bool IndentInfo::operator==(const IndentInfo &i2) const
 {
-    return type==i2.type && line==i2.line;
+    return type==i2.type && line==i2.line && keyword == i2.keyword;
 }
 
 }

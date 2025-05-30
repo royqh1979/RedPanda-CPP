@@ -40,6 +40,7 @@ enum class IndentType {
 struct IndentInfo {
     IndentType type;
     int line;
+    QString keyword;
     bool operator==(const IndentInfo &i2) const;
 };
 
