@@ -42,6 +42,7 @@ struct IndentInfo {
     int line;
     QString keyword;
     bool operator==(const IndentInfo &i2) const;
+    bool operator!=(const IndentInfo &i2) const { return !((*this)==i2); }
 };
 
 struct SyntaxState {

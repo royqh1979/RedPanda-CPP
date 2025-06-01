@@ -25,6 +25,7 @@
 #define DATA_KEY_INITIAL_DCHAR_SEQ "initialDCharSeq"
 #define DATA_KEY_IN_ATTRIBUTE "inAttribute"
 #define DATA_KEY_LAST_FINISHED_IFS "lastFinishedIfs"
+#define DATA_KEY_PARENT_OF_POPED_IFS "ancestor_for_if"
 
 namespace QSynedit {
 
@@ -600,26 +601,29 @@ void CppSyntaxer::procIdentifier()
             if (word == "else") {
                 QVariant var = mRange.extraData.value(DATA_KEY_LAST_FINISHED_IFS);
                 if (var.isValid()) {
-                    QList<int> lastPopedIfs = var.value<QList<int>>();
-                    if (!lastPopedIfs.isEmpty()) {
-                        int line = lastPopedIfs.first();
-                        lastPopedIfs.pop_front();
-                        if (lastPopedIfs.isEmpty()) {
-                            mRange.extraData.remove(DATA_KEY_LAST_FINISHED_IFS);
-                        } else {
-                            var.setValue<QList<int>>(lastPopedIfs);
-                            mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,var);
+                    int lastPopedIfs = var.toInt();
+                    if (lastPopedIfs!=0) {
+                        QList<int> ifParents;
+                        //int line = lastPopedIfs.first();
+                        lastPopedIfs--;
+                        var = mRange.extraData.value(DATA_KEY_PARENT_OF_POPED_IFS);
+                        if (var.isValid()) {
+                            ifParents = var.value<QList<int>>();
+                            pushIndents(IndentType::Statement, ifParents.first(), "");
+                            ifParents.pop_front();
                         }
-                        pushIndents(IndentType::Statement, line);
-                    } else {
-                        pushIndents(IndentType::Statement);
+                        if (lastPopedIfs==0) {
+                            mRange.extraData.remove(DATA_KEY_LAST_FINISHED_IFS);
+                            mRange.extraData.remove(DATA_KEY_PARENT_OF_POPED_IFS);
+                        } else {
+                            mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
+                            var.setValue<QList<int>>(ifParents);
+                            mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS,var);
+                        }
                     }
-                } else {
-                    pushIndents(IndentType::Statement);
                 }
-            } else {
-                pushIndents(IndentType::Statement, -1, word);
             }
+            pushIndents(IndentType::Statement, -1, word);
         }
     } else if (isInAttribute(mRange) && StandardAttributes.contains(word)) {
         mTokenId = TokenId::Key;
@@ -1465,19 +1469,28 @@ void CppSyntaxer::pushIndents(IndentType indentType, int line, const QString& ke
 
 void CppSyntaxer::popStatementIndents()
 {
-    QList<int> lastPopedIfs;
+    int lastPopedIfs = 0;
     IndentInfo lastUnindent = mRange.lastUnindent;
+    QList<int> ifParents;
     while (mRange.getLastIndentType() == IndentType::Statement) {
         popIndents(IndentType::Statement);
-        if ( !(lastUnindent == mRange.lastUnindent) ) {
+        if ( lastUnindent != mRange.lastUnindent ) {
             lastUnindent = mRange.lastUnindent;
-            if (lastUnindent.type == IndentType::Statement && lastUnindent.keyword == "if")
-                lastPopedIfs.append(lastUnindent.line);
+            if (lastUnindent.type == IndentType::Statement && lastUnindent.keyword == "if") {
+                lastPopedIfs++;
+                if (mRange.indents.isEmpty())
+                    ifParents.append(-1);
+                else
+                    ifParents.append(mRange.indents.last().line);
+            }
         }
     }
-    QVariant var;
-    var.setValue<QList<int>>(lastPopedIfs);
-    mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS, var);
+    mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
+    if (lastPopedIfs!=0) {
+        QVariant var;
+        var.setValue<QList<int>>(ifParents);
+        mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS, var);
+    }
 }
 
 const QSet<QString> &CppSyntaxer::customTypeKeywords() const
