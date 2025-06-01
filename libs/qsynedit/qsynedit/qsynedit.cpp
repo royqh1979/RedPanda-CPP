@@ -2212,6 +2212,7 @@ void QSynEdit::insertLine(bool moveCaret)
         mSyntaxer->setState(mDocument->getSyntaxState(mCaretY-2));
     }
     QString trimmedleftLineText=trimLeft(leftLineText);
+    qDebug()<<"1-----";
     mSyntaxer->setLine(trimmedleftLineText, mCaretY-1);
     int indentSpaces = 0;
     if (mOptions.testFlag(EditorOption::AutoIndent)
@@ -2221,8 +2222,11 @@ void QSynEdit::insertLine(bool moveCaret)
                                         );
         QString indentSpacesForLeftLineText = GetLeftSpacing(indentSpaces,true);
         leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
+        qDebug()<<"1.1---";
         properSetLine(mCaretY-1,indentSpacesForLeftLineText + trimmedleftLineText);
+        qDebug()<<"1.2---";
     }
+    qDebug()<<"2-----";
     //update range stated for line mCaretY
     if (mCaretY==1) {
         mSyntaxer->resetState();

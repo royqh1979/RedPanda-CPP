@@ -141,7 +141,6 @@ namespace QSynedit {
                     IndentInfo matchingIndents = rangePreceeding.getLastIndent();
                     indentSpaces = editor->leftSpaces(editor->lineText(matchingIndents.line+1))+editor->tabSize();
                 } else {
-                    qDebug()<<line<<lineText<<(int)rangePreceeding.getLastIndentType();
                     indentSpaces = 0;
                 }
             }

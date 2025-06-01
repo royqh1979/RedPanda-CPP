@@ -599,10 +599,13 @@ void CppSyntaxer::procIdentifier()
         mTokenId = TokenId::Key;
         if (CppStatementKeyWords.contains(word)) {
             if (word == "else") {
+                qDebug()<<mLineNumber<<mLine;
                 QVariant var = mRange.extraData.value(DATA_KEY_LAST_FINISHED_IFS);
                 if (var.isValid()) {
                     int lastPopedIfs = var.toInt();
+                    qDebug()<<"yes -- "<<lastPopedIfs;
                     if (lastPopedIfs!=0) {
+                        qDebug()<<"yes1";
                         QList<int> ifParents;
                         //int line = lastPopedIfs.first();
                         lastPopedIfs--;
@@ -1473,6 +1476,8 @@ void CppSyntaxer::popStatementIndents()
     IndentInfo lastUnindent = mRange.lastUnindent;
     QList<int> ifParents;
     while (mRange.getLastIndentType() == IndentType::Statement) {
+        qDebug()<<"--- popping --";
+        qDebug()<<"poping"<<mRange.getLastIndent().line<<mRange.getLastIndent().keyword;
         popIndents(IndentType::Statement);
         if ( lastUnindent != mRange.lastUnindent ) {
             lastUnindent = mRange.lastUnindent;
@@ -1485,8 +1490,8 @@ void CppSyntaxer::popStatementIndents()
             }
         }
     }
-    mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
     if (lastPopedIfs!=0) {
+        mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
         QVariant var;
         var.setValue<QList<int>>(ifParents);
         mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS, var);
