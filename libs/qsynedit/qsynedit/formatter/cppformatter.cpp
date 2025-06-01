@@ -66,6 +66,7 @@ namespace QSynedit {
     //            QString trimmedS = s.trimmed();
                 QString trimmedLineText = lineText.trimmed();
                 editor->syntaxer()->setState(rangePreceeding);
+                qDebug()<<"format set line 1";
                 editor->syntaxer()->setLine(trimmedLineText,line-1);
                 SyntaxState rangeAfterFirstToken = editor->syntaxer()->getState();
                 QString firstToken = editor->syntaxer()->getToken();

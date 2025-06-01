@@ -171,6 +171,8 @@ private:
     int mLeftBraces;
     int mRightBraces;
 
+    QString mLastKeyword;
+
     QSet<QString> mCustomTypeKeywords;
 
     PTokenAttribute mPreprocessorAttribute;
