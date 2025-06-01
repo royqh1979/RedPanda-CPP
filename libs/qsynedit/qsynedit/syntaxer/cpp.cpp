@@ -20,9 +20,12 @@
 
 #include <QFont>
 #include <QDebug>
+#include <QVariant>
 
 #define DATA_KEY_INITIAL_DCHAR_SEQ "initialDCharSeq"
 #define DATA_KEY_IN_ATTRIBUTE "inAttribute"
+#define DATA_KEY_LAST_FINISHED_IFS "lastFinishedIfs"
+#define DATA_KEY_PARENT_OF_POPED_IFS "ancestor_for_if"
 
 namespace QSynedit {
 
@@ -405,9 +408,7 @@ void CppSyntaxer::procBraceOpen()
         } else {
             lastLine=0;
         }
-        while (mRange.getLastIndentType() == IndentType::Statement) {
-            popIndents(IndentType::Statement);
-        }
+        popStatementIndents();
         pushIndents(IndentType::Block, lastLine);
     } else if (mRange.lastUnindent.type == IndentType::Parenthesis) {
         pushIndents(IndentType::Block, mRange.lastUnindent.line);
@@ -597,7 +598,38 @@ void CppSyntaxer::procIdentifier()
     if (isKeyword(word)) {
         mTokenId = TokenId::Key;
         if (CppStatementKeyWords.contains(word)) {
-            pushIndents(IndentType::Statement);
+            if (word == "else") {
+                QVariant var = mRange.extraData.value(DATA_KEY_LAST_FINISHED_IFS);
+                if (var.isValid()) {
+                    int lastPopedIfs = var.toInt();
+                    if (lastPopedIfs!=0) {
+                        QList<int> ifParents;
+                        //int line = lastPopedIfs.first();
+                        lastPopedIfs--;
+                        var = mRange.extraData.value(DATA_KEY_PARENT_OF_POPED_IFS);
+                        if (var.isValid()) {
+                            ifParents = var.value<QList<int>>();
+//                            qDebug()<<ifParents<<mLineNumber<<mLine<<mRun;
+                            if (ifParents.first() != -1)
+                                pushIndents(IndentType::Statement, ifParents.first(), "");
+                            ifParents.pop_front();
+                        }
+                        if (lastPopedIfs==0) {
+                            mRange.extraData.remove(DATA_KEY_LAST_FINISHED_IFS);
+                            mRange.extraData.remove(DATA_KEY_PARENT_OF_POPED_IFS);
+                        } else {
+                            mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
+                            var.setValue<QList<int>>(ifParents);
+                            mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS,var);
+                        }
+                    }
+                }
+                pushIndents(IndentType::Statement, -1, word);
+            } else if (word == "if" && mLastKeyword == "else") {
+                mRange.indents.last().keyword = "if";
+            } else  {
+                pushIndents(IndentType::Statement, -1, word);
+            }
         }
     } else if (isInAttribute(mRange) && StandardAttributes.contains(word)) {
         mTokenId = TokenId::Key;
@@ -1020,11 +1052,9 @@ void CppSyntaxer::procSemiColon()
     mRun += 1;
     mTokenId = TokenId::Symbol;
     if (mRange.getLastIndentType() == IndentType::Statement) {
-        while (mRange.getLastIndentType() == IndentType::Statement) {
-            popIndents(IndentType::Statement);
-        }
+        popStatementIndents();
     } else {
-        mRange.lastUnindent = IndentInfo{IndentType::None, 0};
+        mRange.lastUnindent = IndentInfo{IndentType::None, 0, ""};
     }
 }
 
@@ -1432,15 +1462,46 @@ void CppSyntaxer::popIndents(IndentType indentType)
         mRange.lastUnindent=mRange.indents.back();
         mRange.indents.pop_back();
     } else {
-        mRange.lastUnindent=IndentInfo{indentType,0};
+        mRange.lastUnindent=IndentInfo{indentType,0, ""};
     }
 }
 
-void CppSyntaxer::pushIndents(IndentType indentType, int line)
+void CppSyntaxer::pushIndents(IndentType indentType, int line, const QString& keyword)
 {
     if (line==-1)
         line = mLineNumber;
-    mRange.indents.push_back(IndentInfo{indentType,line});
+    mRange.indents.push_back(IndentInfo{indentType,line, keyword});
+}
+
+void CppSyntaxer::popStatementIndents()
+{
+    int lastPopedIfs = 0;
+    IndentInfo lastUnindent = mRange.lastUnindent;
+    QList<int> ifParents;
+//    qDebug()<<"pop statement indetns"<<mLineNumber;
+    while (mRange.getLastIndentType() == IndentType::Statement) {
+//        qDebug()<<"-----"<<mRange.indents.count();
+//        qDebug()<<"child"<<mRange.indents.last().line<<mRange.indents.last().keyword;
+        popIndents(IndentType::Statement);
+//        qDebug()<<"parent"<<mRange.indents.last().line<<mRange.indents.last().keyword;
+        if ( lastUnindent != mRange.lastUnindent ) {
+            lastUnindent = mRange.lastUnindent;
+            if (lastUnindent.type == IndentType::Statement && lastUnindent.keyword == "if") {
+                lastPopedIfs++;
+                if (mRange.indents.isEmpty()
+                        || mRange.indents.last().type != IndentType::Statement)
+                    ifParents.append(-1);
+                else
+                    ifParents.append(mRange.indents.last().line);
+            }
+        }
+    }
+    if (lastPopedIfs!=0) {
+        mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
+        QVariant var;
+        var.setValue<QList<int>>(ifParents);
+        mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS, var);
+    }
 }
 
 const QSet<QString> &CppSyntaxer::customTypeKeywords() const
@@ -1658,6 +1719,10 @@ void CppSyntaxer::next()
             }
         }
     } while (mTokenId!=TokenId::Null && mRun<=mTokenPos);
+    if (mTokenId == TokenId::Key)
+        mLastKeyword = getToken();
+    else if (mTokenId != TokenId::Space)
+        mLastKeyword = "";
     //qDebug()<<"1-1-1";
 }
 
@@ -1671,6 +1736,7 @@ void CppSyntaxer::setLine(const QString &newLine, int lineNumber)
     mRange.blockEnded = 0;
     mRange.blockEndedLastLine = 0;
     mRange.hasTrailingSpaces = false;
+    mLastKeyword="";
     next();
 }
 
@@ -1701,7 +1767,7 @@ void CppSyntaxer::resetState()
     mRange.blockEnded = 0;
     mRange.blockEndedLastLine = 0;
     mRange.indents.clear();
-    mRange.lastUnindent=IndentInfo{IndentType::None,0};
+    mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
 }
 

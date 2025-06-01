@@ -66,6 +66,7 @@ namespace QSynedit {
     //            QString trimmedS = s.trimmed();
                 QString trimmedLineText = lineText.trimmed();
                 editor->syntaxer()->setState(rangePreceeding);
+                qDebug()<<"format set line 1";
                 editor->syntaxer()->setLine(trimmedLineText,line-1);
                 SyntaxState rangeAfterFirstToken = editor->syntaxer()->getState();
                 QString firstToken = editor->syntaxer()->getToken();
@@ -131,6 +132,12 @@ namespace QSynedit {
                         indentSpaces = editor->leftSpaces(editor->lineText(info.line+1))+editor->tabSize();
                     } else
                         indentSpaces = 0;
+                } else if (firstToken=="else") {
+                    IndentInfo matchingIndents = rangeAfterFirstToken.getLastIndent();
+                    if (matchingIndents.line ==line-1 && rangeAfterFirstToken.indents.count()>=2){
+                        IndentInfo info =  rangeAfterFirstToken.indents[rangeAfterFirstToken.indents.count()-2];
+                        indentSpaces = editor->leftSpaces(editor->lineText(info.line+1))+editor->tabSize();
+                    }
                 } else if (rangePreceeding.getLastIndentType()!=IndentType::None) {
                     IndentInfo matchingIndents = rangePreceeding.getLastIndent();
                     indentSpaces = editor->leftSpaces(editor->lineText(matchingIndents.line+1))+editor->tabSize();

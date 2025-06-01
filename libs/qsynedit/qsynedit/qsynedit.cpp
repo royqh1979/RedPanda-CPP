@@ -318,6 +318,7 @@ bool QSynEdit::getTokenAttriAtRowCol(
         } else {
             mSyntaxer->setState(mDocument->getSyntaxState(posY-1));
         }
+        qDebug()<<"getTokenAttriAtRowCol set line";
         mSyntaxer->setLine(line, posY);
         posX = pos.ch;
         if ((posX > 0) && (posX <= line.length())) {
@@ -2206,22 +2207,39 @@ void QSynEdit::insertLine(bool moveCaret)
         mUndoList->addChange(ChangeReason::LineBreak, caretXY(), caretXY(), QStringList(rightLineText),
               SelectionMode::Normal);
     bool notInComment=true;
-    properSetLine(mCaretY-1,leftLineText);
+    if (mCaretY==1) {
+        mSyntaxer->resetState();
+    } else {
+        mSyntaxer->setState(mDocument->getSyntaxState(mCaretY-2));
+    }
+    QString trimmedleftLineText=trimLeft(leftLineText);
+    mSyntaxer->setLine(trimmedleftLineText, mCaretY-1);
+    int indentSpaces = 0;
+    if (mOptions.testFlag(EditorOption::AutoIndent)
+            && mSyntaxer->getToken()=="else") {
+        indentSpaces = calcIndentSpaces(mCaretY,
+                                        trimmedleftLineText,mOptions.testFlag(EditorOption::AutoIndent)
+                                        );
+        QString indentSpacesForLeftLineText = GetLeftSpacing(indentSpaces,true);
+        leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
+    }
+    properSetLine(mCaretY-1, leftLineText);
     //update range stated for line mCaretY
     if (mCaretY==1) {
         mSyntaxer->resetState();
     } else {
         mSyntaxer->setState(mDocument->getSyntaxState(mCaretY-2));
     }
-    mSyntaxer->setLine(leftLineText, mCaretY-1);
+    mSyntaxer->setLine(trimmedleftLineText, mCaretY-1);
     mSyntaxer->nextToEol();
     mDocument->setSyntaxState(mCaretY-1,mSyntaxer->getState());
+
     notInComment = !mSyntaxer->isCommentNotFinished(
                 mSyntaxer->getState().state)
             && !mSyntaxer->isStringNotFinished(
                 mSyntaxer->getState().state);
 
-    int indentSpaces = 0;
+    indentSpaces = 0;
     if (mOptions.testFlag(EditorOption::AutoIndent)) {
         rightLineText=trimLeft(rightLineText);
         indentSpaces = calcIndentSpaces(mCaretY+1,

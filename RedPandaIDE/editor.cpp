@@ -2345,7 +2345,7 @@ QStringList Editor::getExpressionAtPosition(
             syntaxer.setState(document()->getSyntaxState(line-1));
         }
         QString sLine = document()->getLine(line);
-        syntaxer.setLine(sLine,line-1);
+        syntaxer.setLine(sLine,line);
         while (!syntaxer.eol()) {
             int start = syntaxer.getTokenPos();
             QString token = syntaxer.getToken();

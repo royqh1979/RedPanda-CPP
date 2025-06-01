@@ -1226,7 +1226,7 @@ void GLSLSyntaxer::popIndents(IndentType indentType)
         mRange.lastUnindent=mRange.indents.back();
         mRange.indents.pop_back();
     } else {
-        mRange.lastUnindent=IndentInfo{indentType,0};
+        mRange.lastUnindent=IndentInfo{indentType,0, ""};
     }
 }
 
@@ -1234,7 +1234,7 @@ void GLSLSyntaxer::pushIndents(IndentType indentType, int line)
 {
     if (line==-1)
         line = mLineNumber;
-    mRange.indents.push_back(IndentInfo{indentType,line});
+    mRange.indents.push_back(IndentInfo{indentType,line, ""});
 }
 
 bool GLSLSyntaxer::isCommentNotFinished(int state) const
@@ -1367,7 +1367,7 @@ void GLSLSyntaxer::setLine(const QString &newLine, int lineNumber)
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
     mRange.blockEndedLastLine = 0;
-    mRange.lastUnindent=IndentInfo{IndentType::None,0};
+    mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
     next();
 }
@@ -1381,7 +1381,7 @@ void GLSLSyntaxer::setState(const SyntaxState& rangeState)
 {
     mRange = rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
-    mRange.lastUnindent=IndentInfo{IndentType::None,0};
+    mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
 }
 
@@ -1396,7 +1396,7 @@ void GLSLSyntaxer::resetState()
     mRange.blockEnded = 0;
     mRange.blockEndedLastLine = 0;
     mRange.indents.clear();
-    mRange.lastUnindent=IndentInfo{IndentType::None,0};
+    mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
 }
 
