@@ -619,7 +619,7 @@ void CppSyntaxer::procIdentifier()
                             mRange.extraData.remove(DATA_KEY_PARENT_OF_POPED_IFS);
                         } else {
                             mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
-                            var.setValue<QList<int>>(ifParents);
+                            var = QVariant::fromValue(ifParents);
                             mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS,var);
                         }
                     }
@@ -1499,7 +1499,7 @@ void CppSyntaxer::popStatementIndents()
     if (lastPopedIfs!=0) {
         mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
         QVariant var;
-        var.setValue<QList<int>>(ifParents);
+        var = QVariant::fromValue(ifParents);
         mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS, var);
     }
 }
