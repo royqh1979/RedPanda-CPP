@@ -238,13 +238,14 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
             continue;
         }
 
-        if (posY == 0) {
-            editor.syntaxer()->resetState();
-        } else {
-            editor.syntaxer()->setState(
-                        editor.document()->getSyntaxState(posY-1));
-        }
-        editor.syntaxer()->setLine(line,posY);
+        editor.prepareSyntaxerState(*(editor.syntaxer()), posY, line);
+//        if (posY == 0) {
+//            editor.syntaxer()->resetState();
+//        } else {
+//            editor.syntaxer()->setState(
+//                        editor.document()->getSyntaxState(posY-1));
+//        }
+//        editor.syntaxer()->setLine(line,posY);
         while (!editor.syntaxer()->eol()) {
             int start = editor.syntaxer()->getTokenPos() + 1;
             QString token = editor.syntaxer()->getToken();
@@ -294,13 +295,14 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         oldEditor->beginEditing();
         while (posY < oldEditor->lineCount()) {
             QString line = oldEditor->document()->getLine(posY);
-            if (posY == 0) {
-                syntaxer->resetState();
-            } else {
-                syntaxer->setState(
-                            oldEditor->document()->getSyntaxState(posY-1));
-            }
-            syntaxer->setLine(line,posY);
+            oldEditor->prepareSyntaxerState(*syntaxer, posY, line);
+//            if (posY == 0) {
+//                syntaxer->resetState();
+//            } else {
+//                syntaxer->setState(
+//                            oldEditor->document()->getSyntaxState(posY-1));
+//            }
+//            syntaxer->setLine(line,posY);
             QString newLine;
             while (!syntaxer->eol()) {
                 int start = syntaxer->getTokenPos() + 1;
@@ -346,13 +348,14 @@ void CppRefacter::renameSymbolInFile(const QString &filename, const PStatement &
         int posY = 0;
         while (posY < editor.lineCount()) {
             QString line = editor.document()->getLine(posY);
-            if (posY == 0) {
-                editor.syntaxer()->resetState();
-            } else {
-                editor.syntaxer()->setState(
-                            editor.document()->getSyntaxState(posY-1));
-            }
-            editor.syntaxer()->setLine(line,posY);
+            editor.prepareSyntaxerState(*(editor.syntaxer()), posY, line);
+//            if (posY == 0) {
+//                editor.syntaxer()->resetState();
+//            } else {
+//                editor.syntaxer()->setState(
+//                            editor.document()->getSyntaxState(posY-1));
+//            }
+//            editor.syntaxer()->setLine(line,posY);
             QString newLine;
             while (!editor.syntaxer()->eol()) {
                 int start = editor.syntaxer()->getTokenPos() + 1;

@@ -304,6 +304,7 @@ public:
 
     virtual BufferCoord getMatchingBracket();
     virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
+    void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText) const;
 
     QStringList contents();
     QString text();

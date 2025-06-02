@@ -3740,11 +3740,12 @@ bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
     int x=pos.ch;
     if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
         return false;
-    if (y==0)
-        syntaxer()->resetState();
-    else
-        syntaxer()->setState(document()->getSyntaxState(y-1));
-    syntaxer()->setLine(document()->getLine(y),y);
+    prepareSyntaxerState(*(syntaxer()), y, document()->getLine(y));
+//    if (y==0)
+//        syntaxer()->resetState();
+//    else
+//        syntaxer()->setState(document()->getSyntaxState(y-1));
+//    syntaxer()->setLine(document()->getLine(y),y);
     QSynedit::SyntaxState state = syntaxer()->getState();
     while(!syntaxer()->eol()) {
         int start = syntaxer()->getTokenPos();
@@ -4223,12 +4224,13 @@ void Editor::updateFunctionTip(bool showTip)
             currentChar = line.length();
         QStringList tokens;
         QList<int> positions;
-        if (currentLine==0)
-            syntaxer()->resetState();
-        else
-            syntaxer()->setState(
-                            document()->getSyntaxState(currentLine-1));
-        syntaxer()->setLine(line,currentLine);
+        prepareSyntaxerState(*(syntaxer()), currentLine, line);
+//        if (currentLine==0)
+//            syntaxer()->resetState();
+//        else
+//            syntaxer()->setState(
+//                            document()->getSyntaxState(currentLine-1));
+//        syntaxer()->setLine(line,currentLine);
         while(!syntaxer()->eol()) {
             int start = syntaxer()->getTokenPos();
             QString token = syntaxer()->getToken();
