@@ -635,6 +635,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionFoldAll->setEnabled(false);
         ui->actionIndent->setEnabled(false);
         ui->actionPaste->setEnabled(false);
+        ui->actionPaste_indentation->setEnabled(false);
         ui->actionRedo->setEnabled(false);
         ui->actionSave->setEnabled(false);
         ui->actionSaveAs->setEnabled(false);
@@ -721,6 +722,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionFoldAll->setEnabled(e->lineCount()>0);
         ui->actionIndent->setEnabled(!e->readOnly());
         ui->actionPaste->setEnabled(!e->readOnly());
+        ui->actionPaste_indentation->setEnabled(!e->readOnly());
         ui->actionRedo->setEnabled(e->canRedo());
         ui->actionUndo->setEnabled(e->canUndo());
         ui->actionSave->setEnabled(!e->readOnly());
@@ -5255,6 +5257,7 @@ void MainWindow::onEditorContextMenu(const QPoint& pos)
         menu.addAction(ui->actionCut);
         menu.addAction(ui->actionCopy);
         menu.addAction(ui->actionPaste);
+        menu.addAction(ui->actionPaste_indentation);
         menu.addAction(ui->actionSelectAll);
         menu.addSeparator();
         if (canDebug) {
@@ -10546,5 +10549,17 @@ void MainWindow::on_actionGenerate_GIMPLE_triggered()
 void MainWindow::on_actionPreprocess_triggered()
 {
     doGeneratePreprocessed();
+}
+
+
+void MainWindow::on_actionPaste_indentation_triggered()
+{
+    Editor * editor = mEditorList->getEditor();
+    if (!editor)
+        return ;
+    bool oldAutoIndent = editor->autoIndent();
+    editor->setAutoIndent(false);
+    on_actionPaste_triggered();
+    editor->setAutoIndent(oldAutoIndent);
 }
 

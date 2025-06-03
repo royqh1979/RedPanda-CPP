@@ -5633,6 +5633,19 @@ void Editor::applyColorScheme(const QString& schemeName)
     invalidate();
 }
 
+void Editor::setAutoIndent(bool indent)
+{
+    QSynedit::EditorOptions opts = getOptions();
+    opts.setFlag(QSynedit::EditorOption::AutoIndent,indent);
+    setOptions(opts);
+}
+
+bool Editor::autoIndent()
+{
+    QSynedit::EditorOptions opts = getOptions();
+    return opts.testFlag(QSynedit::EditorOption::AutoIndent);
+}
+
 void Editor::updateCaption(const QString& newCaption) {
     if (!inTab()) {
         return;

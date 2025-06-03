@@ -160,6 +160,8 @@ public:
     void updateCaption(const QString& newCaption=QString());
     void applySettings();
     void applyColorScheme(const QString& schemeName);
+    void setAutoIndent(bool indent);
+    bool autoIndent();
 
     void copyToClipboard() override;
     void cutToClipboard() override;
