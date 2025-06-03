@@ -133,9 +133,13 @@ namespace QSynedit {
                         indentSpaces = 0;
                 } else if (firstToken=="else") {
                     IndentInfo matchingIndents = rangeAfterFirstToken.getLastIndent();
-                    if (matchingIndents.line ==line-1 && rangeAfterFirstToken.indents.count()>=2){
-                        IndentInfo info =  rangeAfterFirstToken.indents[rangeAfterFirstToken.indents.count()-2];
-                        indentSpaces = editor->leftSpaces(editor->lineText(info.line+1))+editor->tabSize();
+                    if (matchingIndents.line == line-1) {
+                        if (rangeAfterFirstToken.indents.count()>=2){
+                            IndentInfo info =  rangeAfterFirstToken.indents[rangeAfterFirstToken.indents.count()-2];
+                            indentSpaces = editor->leftSpaces(editor->lineText(info.line+1))+editor->tabSize();
+                        } else {
+                            indentSpaces = 0;
+                        }
                     }
                 } else if (rangePreceeding.getLastIndentType()!=IndentType::None) {
                     IndentInfo matchingIndents = rangePreceeding.getLastIndent();
