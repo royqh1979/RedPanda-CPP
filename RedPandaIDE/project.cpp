@@ -1291,6 +1291,10 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
     if (mOptions.modelType == ProjectModelType::FileSystem) {
         // in file system mode, parentNode is determined by file's path
         parentNode = getParentFileSystemFolderNode(inFileName);
+    } else {
+        while (parentNode && (parentNode != rootNode()) && parentNode->isUnit) {
+            parentNode = parentNode->parent.lock();
+        }
     }
     PProjectUnit newUnit = std::make_shared<ProjectUnit>(this);
 
