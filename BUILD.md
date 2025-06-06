@@ -1,35 +1,22 @@
 # General Development Notes
 
-Red Panda C++ need Qt 5.15 or 6.8+ to build.
+Prerequisites:
 
-Recommended development environments:
-1. Visual Studio Code.
-   * Better performance.
-2. Qt Creator.
-   * (Almost) zero configuration.
-   * Built-in UI designer.
-   * Debugger integration with Qt.
-
-To setup development environment in Visual Studio Code:
-0. (Windows only) Enable Developer Mode in Windows Settings, and enable `core.symlinks` in Git (`git config core.symlinks true`).
-1. Install [xmake](https://xmake.io/) and [XMake extension](https://marketplace.visualstudio.com/items?itemName=tboox.xmake-vscode).
-2. Install [C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) for language and debugging support.
-3. Optionally install [clangd](https://clangd.llvm.org/) and [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) for better analysis.
-4. Config workspace:
-   - Compile commands: `.vscode/compile_commands.json` (“C/C++: Edit Configurations (UI)” from the Command Palette);
-   - “Clangd: Arguments”: `--compile-commands-dir=.vscode`;
-   - “Xmake: Additional Config Arguments”: `--qt=/usr` for example.
-5. Run “XMake: UpdateIntellisense” (Command Palette) to generate compilation database.
-
-\* Note: xmake was introduced for compilation database generation and feature matrix test. It is not fully functional yet.
+- Qt 6.8+ or 5.15.
+- C++ development environment that support CMake and/or xmake. Recommended:
+  - Visual Studio Code -- better performance, better AI integration.
+  - Qt Creator -- Built-in UI designer, debugger integration with Qt.
+    - `lupdate`: Add an external tool in “Edit > Preferences > Environment > External Tools” – Executable: `cmake`; Arguments: `--build . --target update_translations`; Working directory: Choose global variable `ActiveProject:BuildConfig:Path`.
 
 # Windows
 
 | Library + Toolchain \ Target | x86 | x64 | ARM64 |
 | ---------------------------- | --- | --- | ----- |
+| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
+
+<!--
 | MSYS2 + GNU-based MinGW | ❌ | ✔️ | ❌ |
 | MSYS2 + LLVM-based MinGW | ❌ | ✔️ | ✔️ |
-| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
 See also [more build instructions for Windows](./docs/detailed-build-win.md).
 
@@ -39,8 +26,6 @@ Red Panda C++ should work with any 64-bit MinGW toolchain from MSYS2, including 
 - MINGW64 GCC,
 - UCRT64 GCC (recommended for x64)
 - CLANGARM64 Clang (the only and recommended toolchain for ARM64).
-
-Official distributions of Red Panda C++ are built with MINGW32 GCC (archived) and MINGW64 GCC.
 
 Prerequisites:
 
@@ -77,6 +62,7 @@ Extra arguments for `build-mingw.sh`:
 - `--gcc-linux-x86-64`: add `assets/gcc-linux-x86-64.7z` and `assets/alpine-minirootfs-x86_64.tar` to the package.
 - `--gcc-linux-aarch64`: add `assets/gcc-linux-aarch64.7z` and `assets/alpine-minirootfs-aarch64.tar` to the package.
 - `--ucrt`: include UCRT installer (VC_redist) in the package.
+-->
 
 ## Windows NT 5.x Qt Library with MinGW Lite Toolchain
 
@@ -89,16 +75,7 @@ Prerequisites for native build:
 
 For native build, launch MSYS2 environment, run:
 ```bash
-./packages/msys/build-xp.sh -p 32-msvcrt
-```
-
-For cross build, run:
-```bash
-podman run -it --rm -v $PWD:/mnt -w /mnt docker.io/amd64/ubuntu:24.04
-
-# in container
-export MIRROR=mirrors.kernel.org  # optionally set mirror site
-./packages/xmingw/build-xp.sh -p 32-msvcrt
+./packages/mingw/build-xp.sh -p 32-msvcrt
 ```
 
 These scripts accepts the same arguments as `build-mingw.sh`, plus:
@@ -144,6 +121,7 @@ podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archl
 
 The package will be placed in `dist/`.
 
+<!--
 ## Statically Linked Binary for Ubuntu 20.04 x86_64 (NOI Linux 2.0)
 
 The package `redpanda-cpp-bin` is roughly “AppImage repack”. The binary is actually built in a container. Thus the build host is not necessarily Ubuntu 20.04; any Linux distribution with Podman and dpkg should work.
@@ -167,7 +145,9 @@ podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_6
 ```
 
 Dockerfiles are available in [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder). Available architectures: `x86_64`, `aarch64`, `riscv64`, `loong64`, `i686`.
+-->
 
+<!--
 # macOS
 
 ## Qt.io Qt Library
@@ -190,3 +170,4 @@ To build, run one of:
 ./packages/macos/build.sh -a arm64 --qt-version 6.8.0
 ./packages/macos/build.sh -a universal --qt-version 6.8.0
 ```
+-->

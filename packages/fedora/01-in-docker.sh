@@ -8,4 +8,4 @@ rpmdev-setuptree
 ./packages/fedora/buildrpm.sh
 
 mkdir -p dist
-cp ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-git-*.rpm dist/
+cp ~/rpmbuild/RPMS/$(uname -m)/redpanda-cpp-*.rpm dist/

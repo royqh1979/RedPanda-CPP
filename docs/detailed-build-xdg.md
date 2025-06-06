@@ -2,16 +2,19 @@
 
 ## Traditional Unix Way (`./configure`–`make`–`make install`)
 
-- Install recent version of GCC (≥ 7) or Clang (≥ 6) that supports C++17.
-- Install Qt 5.15 or 6.8+ Base, SVG and Tools modules, including both libraries and development files.
+- Install recent version of GCC or Clang that supports C++17.
+- Install Qt 6.8+ Base, SVG and Tools modules, including both libraries and development files.
 - Optionally install fcitx5-qt for building with static Qt library.
 - Install astyle for code formatting in Red Panda C++.
 
-### qmake-based Build Steps
+### CMake-based Build Steps
 
 1. Configure:
    ```bash
-   qmake PREFIX=/usr/local /path/to/src/Red_Panda_CPP.pro
+   cmake -S /path/to/src -B /path/to/build \
+     -G "Unix Makefiles" \
+     -DCMAKE_BUILD_TYPE=Release \
+     -DCMAKE_INSTALL_PREFIX=/usr/local
    ```
 2. Build:
    ```bash
@@ -22,11 +25,11 @@
    sudo make install
    ```
 
-qmake variables:
-- `PREFIX`: where `$MAKE install` installs files to.
-  - Red Panda C++ itself is not affected by `PREFIX`, because it internally uses relative path.
-  - `.desktop` file is affected by `PREFIX`.
-- `LIBEXECDIR`: directory for auxiliary executables, RELATIVE TO `PREFIX`.
+CMake options:
+- `CMAKE_INSTALL_PREFIX`: where `$MAKE install` installs files to.
+  - Red Panda C++ itself is not affected by `CMAKE_INSTALL_PREFIX`, because it internally uses relative path.
+  - `.desktop` file is affected by `CMAKE_INSTALL_PREFIX`.
+- `LIBEXECDIR`: directory for auxiliary executables, RELATIVE TO `CMAKE_INSTALL_PREFIX`.
   - Arch Linux uses `lib`.
 
 ### xmake-based Build Steps
@@ -46,6 +49,7 @@ qmake variables:
 
 Hint: `xmake f --help` for more options.
 
+<!--
 ### Copy ’n’ Paste Instructions for Debian/Ubuntu
 
 ```bash
@@ -63,22 +67,7 @@ sudo make install                                           # install
 # run
 RedPandaIDE
 ```
-
-## Debian Packages for Multiple Architectures and Versions
-
-These packages can be built in containers. Both Linux host and Windows host are supported.
-
-```bash
-podman run --rm -v $PWD:/mnt -w /mnt --platform linux/amd64 docker.io/debian:12 ./packages/debian/01-in-docker.sh
-```
-
-Platform can be `linux/amd64`, `linux/386`, `linux/arm64/v8`, `linux/arm/v7`, `linux/riscv64`, etc.
-
-Image can be `docker.io/debian:12`, `docker.io/debian:11`, `docker.io/ubuntu:24.04`, `docker.io/ubuntu:23.10`, `docker.io/ubuntu:22.04`, etc.
-
-Optional environment variables:
-- `-e MIRROR=mirrors.kernel.org`: mirror for APT.
-- `-e JOBS=4`: number of parallel jobs for make.
+-->
 
 ## Emulated Native Build for Foreign Architectures
 

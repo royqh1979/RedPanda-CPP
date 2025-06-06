@@ -1,10 +1,29 @@
-/.vs
-/.vscode
-/assets
-/dist
-/packages/appimage/*/*.AppImage
-.xmake/
-build/
+# Backup file
 *.bak
+*~
+
+# Build directory
+.xmake
+assets
+build
+dist
+
+# CLion
+.idea
+
+# KDevelop
+.kdev4
+*.kdev4
+
+# Qt Creator
+.qtcreator
 *.pro.user
+*.txt.user
+
+# Visual Studio
+.vs
 *.vcxproj
+
+# Visual Studio Code
+.vscode
+.cache

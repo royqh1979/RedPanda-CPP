@@ -18,11 +18,6 @@ RedPandaIDE.depends = consolepauser qsynedit lua
 qsynedit.depends = redpanda_qt_utils
 
 APP_NAME = RedPandaCPP
-include(version.inc)
-
-!isEmpty(APP_VERSION_SUFFIX): {
-    APP_VERSION = "$${APP_VERSION}$${APP_VERSION_SUFFIX}"
-}
 
 # win32: {
 # SUBDIRS += \

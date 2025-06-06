@@ -3,6 +3,30 @@ name: Unit
 on: [push, pull_request]
 
 jobs:
+  cmake_test:
+    name: CMake test targets
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Qt
+        uses: ConorMacBride/install-package@v1
+        with:
+          apt: libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev qttools5-dev-tools
+
+      - name: Build
+        run: |
+          mkdir -p build && cd build
+          cmake .. -G "Unix Makefiles"
+          make all-test-targets -j$(nproc)
+
+      - name: Test
+        run: |
+          cd build
+          QT_QPA_PLATFORM=offscreen make test -j$(nproc)
+
   ubuntu_makefile_escape:
     name: Unix makefile escape
     runs-on: ubuntu-22.04
@@ -19,7 +43,7 @@ jobs:
       - name: Setup Qt
         uses: ConorMacBride/install-package@v1
         with:
-          apt: libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev-tools
+          apt: libqt5svg5-dev qtbase5-dev qtbase5-dev-tools qttools5-dev qttools5-dev-tools
 
       - name: Build
         run: |

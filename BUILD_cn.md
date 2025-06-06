@@ -1,35 +1,23 @@
 ﻿# 通用开发说明
 
-小熊猫C++ 需要 Qt 5.15 或 6.8+。
+前置条件：
 
-推荐开发环境：
-1. Visual Studio Code。
-   * 性能更好。
-2. Qt Creator。
-   * （几乎）无需配置。
-   * 内建 UI 设计器。
-   * 调试器的 Qt 集成。
-
-设置 Visual Studio Code 开发环境的步骤：
-0. 在 Windows 设置中，启用 “开发人员模式”。启用 Git 的 `core.symlinks` 选项（`git config core.symlinks true`）。
-1. 安装 [xmake](https://xmake.io/) 和 [XMake 扩展](https://marketplace.visualstudio.com/items?itemName=tboox.xmake-vscode)。
-2. 安装 [C/C++ 扩展](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) 以支持语言和调试功能。
-3. 根据需要安装 [clangd](https://clangd.llvm.org/) 和 [clangd 扩展](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)以获得更好的代码分析能力。
-4. 配置工作区：
-   - 编译命令：`.vscode/compile_commands.json`（命令面板中的 “C/C++: 编辑配置(UI)”）；
-   - “Clangd: Arguments”：`--compile-commands-dir=.vscode`；
-   - “Xmake: Additional Config Arguments”：如 `--qt=/usr`。
-5. 在命令面板中执行 “XMake: UpdateIntellisense” 以生成编译数据库。
-
-\* 提示：xmake 的引入是为了支持编译数据库的生成和功能测试矩阵，目前并不完备。
+- Qt 6.8+ 或 5.15。
+  - 可以使用 Qt 5.15，但不支持 `make update_translations`。
+- 支持 CMake 或 xmake 的 C++ 开发环境，推荐：
+  - Visual Studio Code -- 性能更好，与 AI 紧密集成。
+  - Qt Creator -- 内建 UI 设计器，调试器的 Qt 集成。
+    - `lupdate`：在 “编辑 > Preferences > 环境 > 外部工具” 中添加一个外部工具——执行档：`cmake`；参数：`--build . --target update_translations`；工作目录：选择 Global variables 下的 `ActiveProject:BuildConfig:Path`。
 
 # Windows
 
 | 库 + 工具链 \ 目标 | x86 | x64 | ARM64 |
 | ------------------ | --- | --- | ----- |
+| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
+
+<!--
 | MSYS2 + 基于 GNU 的 MinGW | ❌ | ✔️ | ❌ |
 | MSYS2 + 基于 LLVM 的 MinGW | ❌ | ✔️ | ✔️ |
-| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
 另请参阅[详细构建指南——Windows](./docs/detailed-build-win-cn.md)。
 
@@ -39,8 +27,6 @@
 - MINGW64 GCC，
 - UCRT64 GCC（x64 推荐），
 - CLANGARM64 Clang（ARM64 唯一可用且推荐的工具链）。
-
-小熊猫C++ 官方版本使用 MINGW32 GCC（已归档）和 MINGW64 GCC 构建。
 
 前置条件：
 
@@ -77,6 +63,7 @@
 - `--gcc-linux-x86-64`：把 `assets/gcc-linux-x86-64.7z` 和 `assets/alpine-minirootfs-x86_64.tar` 添加到包中。
 - `--gcc-linux-aarch64`：把 `assets/gcc-linux-aarch64.7z` 和 `assets/alpine-minirootfs-aarch64.tar` 添加到包中。
 - `--ucrt`：把 UCRT 安装程序添加到包中。
+-->
 
 ## 用于 Windows NT 5.x 的 Qt 库 + MinGW Lite 工具链
 
@@ -89,16 +76,7 @@
 
 要进行本机构建，启动 MSYS2 环境，然后运行
 ```bash
-./packages/msys/build-xp.sh -p 32-msvcrt
-```
-
-要进行交叉构建，运行
-```bash
-podman run -it --rm -v $PWD:/mnt -w /mnt docker.io/amd64/ubuntu:24.04
-
-# 在容器内
-export MIRROR=mirrors.ustc.edu.cn  # 根据需要设置镜像站
-./packages/xmingw/build-xp.sh -p 32-msvcrt
+./packages/mingw/build-xp.sh -p 32-msvcrt
 ```
 
 此脚本除了接受 `build-mingw.sh` 的参数外，还接受以下参数：
@@ -144,6 +122,7 @@ podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archl
 
 软件包位于 `dist/` 目录下。
 
+<!--
 ## Ubuntu 20.04 x86_64（NOI Linux 2.0）静态链接包
 
 `redpanda-cpp-bin` 包大体上就是 “AppImage 重新打包”。真正的构建过程在容器中进行，因此构建主机不一定要 Ubuntu 20.04，任何 Linux 发行版只要有 Podman 和 dpkg 就行。
@@ -167,7 +146,9 @@ podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_6
 ```
 
 Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder)。可用架构：`x86_64`、`aarch64`、`riscv64`、`loong64`、`i686`。
+-->
 
+<!--
 # macOS
 
 ## Qt.io 的 Qt 库
@@ -190,3 +171,4 @@ Dockerfile 位于 [redpanda-cpp/appimage-builder](https://github.com/redpanda-cp
 ./packages/macos/build.sh -a arm64 --qt-version 6.8.0
 ./packages/macos/build.sh -a universal --qt-version 6.8.0
 ```
+-->

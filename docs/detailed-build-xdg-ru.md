@@ -2,16 +2,19 @@
 
 ## Традиционный путь Unix (`./configure`–`make`–`make install`)
 
-- Установить последнюю версию GCC (≥ 7) или Clang (≥ 6), поддерживающую C++17.
-- Установить Qt 5.15 или 6.8+ Base, SVG и Tools modules, включающие все библиотеки и файлы для разработки.
+- Установить последнюю версию GCC или Clang, поддерживающую C++17.
+- Установить Qt 6.8+ Base, SVG и Tools modules, включающие все библиотеки и файлы для разработки.
 - По желанию устанвоить fcitx5-qt для статической сборки с Библиотекой Qt.
 - Установить astyle для форматирования кода в Red Panda C++.
 
-### Шаги сборки с qmake
+### Шаги сборки с CMake
 
 1. Настройка:
    ```bash
-   qmake PREFIX=/usr/local /path/to/src/Red_Panda_CPP.pro
+   cmake -S /path/to/src -B /path/to/build \
+     -G "Unix Makefiles" \
+     -DCMAKE_BUILD_TYPE=Release \
+     -DCMAKE_INSTALL_PREFIX=/usr/local
    ```
 2. Сборка:
    ```bash
@@ -22,11 +25,11 @@
    sudo make install
    ```
 
-Переменные qmake:
-- `PREFIX`: куда `$MAKE install` будет устанавливать файлы.
-  - На саму среду Red Panda C++ `PREFIX` не влияет, поскольку она использует относительные пути.
-  - На файл `.desktop` влияет `PREFIX`.
-- `LIBEXECDIR`: каталог для вспомогательных исполнимых файлов, УКАЗЫВАЕТСЯ ОТНОСИТЕЛЬНО `PREFIX`.
+Переменные CMake:
+- `CMAKE_INSTALL_PREFIX`: куда `$MAKE install` будет устанавливать файлы.
+  - На саму среду Red Panda C++ `CMAKE_INSTALL_PREFIX` не влияет, поскольку она использует относительные пути.
+  - На файл `.desktop` влияет `CMAKE_INSTALL_PREFIX`.
+- `LIBEXECDIR`: каталог для вспомогательных исполнимых файлов, УКАЗЫВАЕТСЯ ОТНОСИТЕЛЬНО `CMAKE_INSTALL_PREFIX`.
   - Arch Linux использует `lib`.
 
 ### Шаги сборки с xmake
@@ -46,6 +49,7 @@
 
 Примечание: для информации о других параметрах выполните `xmake f --help`.
 
+<!--
 ### Инструкции сборки для Debian/Ubuntu (просто скопируй и вставь)
 
 ```bash
@@ -63,23 +67,7 @@ sudo make install                                           # установка
 # запуск
 RedPandaIDE
 ```
-
-## Пакеты Debian для различных архитектур и версий
-
-These packages can be built in containers. Both Linux host and Windows host are supported.
-Эти пакеты могут быть собраны в контейнерах. Поддерживаются как системы с Linux, так и с Windows.
-
-```bash
-podman run --rm -v $PWD:/mnt -w /mnt --platform linux/amd64 docker.io/debian:12 ./packages/debian/01-in-docker.sh
-```
-
-Платформа может быть `linux/amd64`, `linux/386`, `linux/arm64/v8`, `linux/arm/v7`, `linux/riscv64`, и т.д.
-
-Образ может быть `docker.io/debian:12`, `docker.io/debian:11`, `docker.io/ubuntu:24.04`, `docker.io/ubuntu:23.10`, `docker.io/ubuntu:22.04`, и т.д.
-
-Дополнительные переменные окружения:
-- `-e MIRROR=mirrors.kernel.org`: зеркало для APT.
-- `-e JOBS=4`: число параллельных процессов для make.
+-->
 
 ## Эмуляция родной сборки для прочих архитектур
 

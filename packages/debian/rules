@@ -1,8 +1,10 @@
 #!/usr/bin/make -f
 #DH_VERBOSE = 1
 
-export QT_SELECT=qt5
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
-	dh ${@} --buildsystem qmake
+	dh ${@} --buildsystem cmake
+
+override_dh_auto_test:
+	QT_QPA_PLATFORM=offscreen dh_auto_test

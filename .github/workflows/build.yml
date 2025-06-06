@@ -29,6 +29,7 @@ env:
 jobs:
   windows:
     name: Windows MSYS2
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -75,16 +76,14 @@ jobs:
           name: Windows MSYS2 - msystem=${{ matrix.msystem }}
           path: dist/
 
-  windows_legacy_native:
-    name: Windows NT 5.x native
+  windows_legacy:
+    name: Windows NT 5.x
     strategy:
       fail-fast: false
       matrix:
         profile:
           - 64-ucrt
           - 32-ucrt
-          - 64-msvcrt
-          - 32-msvcrt
     runs-on: windows-2022
     defaults:
       run:
@@ -103,43 +102,51 @@ jobs:
 
       - name: Build
         run: |
-          ./packages/msys/build-xp.sh -p ${{ matrix.profile }}
-          ./packages/msys/build-xp.sh -p ${{ matrix.profile }} --mingw
+          ./packages/mingw/build-xp.sh -p ${{ matrix.profile }}
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Windows NT 5.x native - profile=${{ matrix.profile }}
+          name: Windows NT 5.x - profile=${{ matrix.profile }}
           path: dist/*
 
-  windows_legacy_cross:
-    name: Windows NT 5.x cross
+  windows_legacy_qmake:
+    name: Windows NT 5.x (qmake)
     strategy:
       fail-fast: false
       matrix:
         profile:
-          - 64-msvcrt
-          - 32-msvcrt
-    runs-on: ubuntu-24.04
+          - 64-ucrt
+          - 32-ucrt
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+
       - name: Build
         run: |
-          sudo ./packages/xmingw/build-xp.sh -p ${{ matrix.profile }}
-          sudo ./packages/xmingw/build-xp.sh -p ${{ matrix.profile }} --mingw
+          ./packages/mingw/build-xp-qmake.sh -p ${{ matrix.profile }}
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Windows NT 5.x cross - profile=${{ matrix.profile }}
+          name: Windows NT 5.x (qmake) - profile=${{ matrix.profile }}
           path: dist/*
 
   windows_msvc_x64:
     name: Windows MSVC x64
+    if: false
     runs-on: windows-2022
 
     steps:
@@ -187,12 +194,11 @@ jobs:
       fail-fast: false
       matrix:
         arch: [amd64, i386]
-        version: ["11", "12"]
         include:
           - { arch: amd64, platform: linux/amd64 }
           - { arch: i386, platform: linux/386 }
     env:
-      IMAGE: docker.io/${{ matrix.arch }}/debian:${{ matrix.version }}
+      IMAGE: docker.io/${{ matrix.arch }}/debian:sid
       PLATFORM: ${{ matrix.platform }}
 
     runs-on: ubuntu-latest
@@ -209,17 +215,13 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Debian ${{ matrix.version }} ${{ matrix.arch }}
+          name: Debian sid ${{ matrix.arch }}
           path: dist/*.deb
 
   ubuntu:
     name: Ubuntu
-    strategy:
-      fail-fast: false
-      matrix:
-        version: ["22.04", "24.04", "devel"]
     env:
-      IMAGE: docker.io/amd64/ubuntu:${{ matrix.version }}
+      IMAGE: docker.io/amd64/ubuntu:devel
       PLATFORM: linux/amd64
 
     runs-on: ubuntu-latest
@@ -236,7 +238,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Ubuntu ${{ matrix.version }} amd64
+          name: Ubuntu devel amd64
           path: dist/*.deb
 
   archlinux:
@@ -312,8 +314,6 @@ jobs:
   opensuse:
     name: openSUSE
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     env:
       IMAGE: docker.io/opensuse/tumbleweed:latest
       PLATFORM: linux/amd64
@@ -337,7 +337,7 @@ jobs:
     name: Alpine Linux
     runs-on: ubuntu-latest
     env:
-      IMAGE: docker.io/amd64/alpine:latest
+      IMAGE: docker.io/amd64/alpine:edge
       PLATFORM: linux/amd64
 
     steps:
@@ -357,6 +357,7 @@ jobs:
 
   appimage:
     name: Linux AppImage
+    if: false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -388,6 +389,7 @@ jobs:
 
   static-deb:
     name: Static Deb
+    if: false
     runs-on: ubuntu-latest
 
     steps:
@@ -407,6 +409,7 @@ jobs:
 
   macos:
     name: macOS
+    if: false
     strategy:
       fail-fast: false
       matrix:

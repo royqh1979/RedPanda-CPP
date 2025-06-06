@@ -1,36 +1,24 @@
 # Основые замечания по вопросу разработки
 
-Red Panda C++ требует для сборки Qt 5.15 или 6.8+.
+Prerequisites:
 
-Рекомендуемые окружения разработчика:
-1. Visual Studio Code.
-   * Лучшая производительность.
-2. Qt Creator.
-   * (Обычно) не требует настройки.
-   * Встроенный дизайнер пользовательского интерфейса (UI designer).
-   * Интеграция отладчика с Qt.
-
-Для установки окружения разработки в Visual Studio Code:
-0. (Только для Windows) Включить Режим разработчика (Developer Mode) в настройках Windows, включить параметр `core.symlinks` в Git (`git config core.symlinks true`).
-1. Установить [xmake](https://xmake.io/) и [XMake extension](https://marketplace.visualstudio.com/items?itemName=tboox.xmake-vscode).
-2. Установить [C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) для поддержки языка и отладки.
-3. По возможности установить [clangd](https://clangd.llvm.org/) и [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) для лучшего анализа.
-4. Настройка рабочего окружения:
-   - Compile commands: `.vscode/compile_commands.json` (“C/C++: Edit Configurations (UI)” из Палитры комманд);
-   - “Clangd: Arguments”: `--compile-commands-dir=.vscode`;
-   - “Xmake: Additional Config Arguments”: например, `--qt=/usr`.
-5. Запустить “XMake: UpdateIntellisense” (из Палитры комманд) для создания базы данных компиляции.
-
-\* Примечание: xmake был упомянут для создания базы данных компиляции и тестирования матрицы возможностей. Он еще не полностью функционален.
+- Qt 6.8+ или 5.15.
+  - Building with Qt 5.15 is possible, but the `update_translations` target is missing.
+- C++ development environment that support CMake and/or xmake. Рекомендуемые:
+  - Visual Studio Code -- лучшая производительность, better AI integration.
+  - Qt Creator -- встроенный дизайнер пользовательского интерфейса (UI designer), интеграция отладчика с Qt.
+    - `lupdate`: Add an external tool in “Edit > Preferences > Environment > External Tools” – Executable: `cmake`; Arguments: `--build . --target update_translations`; Working directory: Choose global variable `ActiveProject:BuildConfig:Path`.
 
 # Windows
 
 
 | Библиотека+Инструмент \ Цель | x86 | x64 | ARM64 |
 | ---------------------------- | --- | --- | ----- |
+| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
+
+<!--
 | MSYS2 + GNU-based MinGW | ❌ | ✔️ | ❌ |
 | MSYS2 + LLVM-based MinGW | ❌ | ✔️ | ✔️ |
-| [Windows NT 5.x](https://github.com/redpanda-cpp/qtbase-xp) + [MinGW Lite](https://github.com/redpanda-cpp/mingw-lite) | ✔️ | ✔️ | ❌ |
 
 Смотри также [другие инструкции сборки для Windows](./docs/detailed-build-win-ru.md).
 
@@ -40,8 +28,6 @@ Red Panda C++ должна работать с любым 64-битным наб
 - MINGW64 GCC,
 - UCRT64 GCC (рекомендуется для x64)
 - CLANGARM64 Clang (единственный и рекомендуемый набор инструментов для ARM64).
-
-Официальные дистрибутивы Red Panda C++ построены с MINGW32 GCC (в архиве) и MINGW64 GCC.
 
 Подготовительный этап:
 
@@ -80,6 +66,7 @@ Red Panda C++ должна работать с любым 64-битным наб
 - `--gcc-linux-x86-64`: добавить `assets/gcc-linux-x86-64.7z` и `assets/alpine-minirootfs-x86_64.tar` в пакет.
 - `--gcc-linux-aarch64`: добавить `assets/gcc-linux-aarch64.7z` и `assets/alpine-minirootfs-aarch64.tar` в пакет.
 - `--ucrt`: include UCRT installer (VC_redist) in the package.
+-->
 
 ## Windows NT 5.x с библиотекой Qt с набором инструментов MinGW Lite
 
@@ -92,16 +79,7 @@ Red Panda C++ должна работать с любым 64-битным наб
 
 Для сборки в естественной среде в запущенном окружении MSYS2 выполните:
 ```bash
-./packages/msys/build-xp.sh -p 32-msvcrt
-```
-
-Для кроссплатформенной сборки выполните:
-```bash
-podman run -it --rm -v $PWD:/mnt -w /mnt docker.io/amd64/ubuntu:24.04
-
-# в контейнере
-export MIRROR=mirrors.kernel.org  # дополнительно можно установить сайт зеркала
-./packages/xmingw/build-xp.sh -p 32-msvcrt
+./packages/mingw/build-xp.sh -p 32-msvcrt
 ```
 
 Эти скрипты принимают такие же аргументы, как `build-mingw.sh`, дополнительно к этому:
@@ -148,6 +126,7 @@ podman run --rm -v $PWD:/mnt -w /mnt docker.io/archlinux:latest ./packages/archl
 
 Пакет будет помещен в `dist/`.
 
+<!--
 ## Статическая сборка двоичных файлов для Ubuntu 20.04 x86_64 (NOI Linux 2.0)
 
 Пакет `redpanda-cpp-bin` подобен “AppImage repack”. Двоичный файл фактически собран в контейнере. Таким образом, хост сборки - это не обязательно Ubuntu 20.04; должен работать любой дистрибутив Linux с Podman и dpkg.
@@ -171,7 +150,9 @@ podman run --rm -v $PWD:/mnt -w /mnt ghcr.io/redpanda-cpp/appimage-builder-x86_6
 ```
 
 Dockerfiles доступны в [redpanda-cpp/appimage-builder](https://github.com/redpanda-cpp/appimage-builder). Доступные архитектуры: `x86_64`, `aarch64`, `riscv64`, `loong64`, `i686`.
+-->
 
+<!--
 # macOS
 
 ## Qt.io библиотека Qt
@@ -194,3 +175,4 @@ Dockerfiles доступны в [redpanda-cpp/appimage-builder](https://github.c
 ./packages/macos/build.sh -a arm64 --qt-version 6.8.0
 ./packages/macos/build.sh -a universal --qt-version 6.8.0
 ```
+-->

@@ -1,5 +1,5 @@
 _pkgname=RedPanda-CPP
-pkgname=${_pkgname,,}-git
+pkgname=redpanda-cpp
 pkgver=__VERSION__
 pkgrel=1
 pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (development version)'
@@ -7,12 +7,14 @@ arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv6h' 'armv7h' 'aarch64' 'riscv64')
 url="https://github.com/royqh1979/$_pkgname"
 license=('GPL3')
 depends=(qt6-base qt6-svg gcc gdb astyle)
-makedepends=(qt6-tools imagemagick librsvg)
+makedepends=(
+    qt6-tools cmake
+    # for test suite
+    noto-fonts noto-fonts-cjk noto-fonts-emoji
+)
 optdepends=(
     'clang: C/C++ compiler (alternative)'
 )
-conflicts=("${_pkgname,,}")
-provides=("${_pkgname,,}")
 source=(
     "$_pkgname.tar.gz"
     'compiler_hint.lua'
@@ -22,18 +24,20 @@ sha256sums=(
     'SKIP'
 )
 
-prepare() {
-    sed -i '/CONFIG += ENABLE_LUA_ADDON/ { s/^#\s*// }' RedPanda-CPP/RedPandaIDE/RedPandaIDE.pro
-}
-
 build() {
     mkdir redpanda-build
     cd redpanda-build
-    qmake6 \
-        PREFIX='/usr' \
-        LIBEXECDIR='lib' \
-        "$srcdir/$_pkgname/Red_Panda_CPP.pro"
+    cmake -S "$srcdir/$_pkgname" -B . \
+        -G "Unix Makefiles" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_INSTALL_LIBEXECDIR=lib
     make
+}
+
+check() {
+    cd redpanda-build
+    QT_QPA_PLATFORM=offscreen make test
 }
 
 package() {
@@ -41,14 +45,5 @@ package() {
     install -Dm644 "compiler_hint.lua" "$_libexecdir/compiler_hint.lua"
 
     cd redpanda-build
-    make INSTALL_ROOT="$pkgdir" install
-
-    for size in 16 22 24 32 36 48 64 72 96 128 192 256 512; do
-        mkdir -p "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps"
-        magick convert \
-            -background none \
-            "$pkgdir/usr/share/icons/hicolor/scalable/apps/redpandaide.svg" \
-            -resize ${size}x${size} \
-            "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/redpandaide.png"
-    done
+    make DESTDIR="$pkgdir" install
 }

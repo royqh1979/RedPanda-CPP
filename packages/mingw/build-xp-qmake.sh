@@ -2,24 +2,12 @@
 
 set -euxo pipefail
 
-function fn_print_help() {
-  cat <<EOF
-Usage:
-  packages/msys/build-xp.sh -p|--profile <profile> [-c|--clean] [-nd|--no-deps] [-t|--target-dir <dir>]
-Options:
-  -h, --help               Display this information.
-  -p, --profile <profile>  MinGW Lite profile.
-                           MUST be used before other options.
-  -c, --clean              Clean build and package directories.
-  --mingw                  Alias for --mingw32 (x86 app) or --mingw64 (x64 app).
-  --mingw32                Build mingw32 integrated compiler.
-  --mingw64                Build mingw64 integrated compiler.
-  -t, --target-dir <dir>   Set target directory for the packages.
-EOF
-}
+SCRIPT_DIR=$( dirname ${BASH_SOURCE[0]} )
+source "${SCRIPT_DIR}/config.sh"
 
-source version.inc
-[[ -n "${APP_VERSION_SUFFIX}" ]] && APP_VERSION="${APP_VERSION}${APP_VERSION_SUFFIX}"
+function fn_print_help() {
+  echo "INTERNAL USE, FOR CI BUILD ONLY. USE CMAKE-BASED 'build-xp.sh' INSTEAD."
+}
 
 if [[ $# -lt 2 || ($1 != "-p" && $1 != "--profile") ]]; then
   echo "Missing profile argument."
