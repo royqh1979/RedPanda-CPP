@@ -158,12 +158,16 @@ jobs:
 
   windows_msvc_x64:
     name: Windows MSVC x64
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install MSVC 2019
+        run: |
+          choco install visualstudio2019enterprise --package-parameters "--add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended" -y
 
       - name: Setup
         uses: jurplel/install-qt-action@v3
