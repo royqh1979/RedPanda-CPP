@@ -5013,7 +5013,9 @@ PEvalStatement CppParser::doEvalTypeCast(const QString &fileName,
                         && STLIterators.contains(result->typeStatement->command)
                 ) {
                     PStatement parentScope = result->typeStatement->parentScope.lock();
-                    if (STLContainers.contains(parentScope->fullName)) {
+                    if (!parentScope) {
+                        result = PEvalStatement();
+                    } else if (STLContainers.contains(parentScope->fullName)) {
                         QString typeName=doFindFirstTemplateParamOf(fileName,result->templateParams, parentScope);
     //                        qDebug()<<"typeName"<<typeName<<lastResult->baseStatement->type<<lastResult->baseStatement->command;
                         PStatement typeStatement=doFindTypeDefinitionOf(fileName, typeName,parentScope);
