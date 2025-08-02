@@ -1095,6 +1095,8 @@ void MainWindow::applySettings()
     mFileEncodingStatus->setPalette(appTheme->palette());
     mFileModeStatus->setPalette(appTheme->palette());
     mFileInfoStatus->setPalette(appTheme->palette());
+    ui->EditorTabsLeft->tabBar()->setPalette(appTheme->palette());
+    ui->EditorTabsRight->tabBar()->setPalette(appTheme->palette());
 
     updateEditorColorSchemes();
 
