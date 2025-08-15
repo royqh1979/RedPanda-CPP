@@ -1,15 +1,40 @@
 set_languages("cxx17")
 
+target("RedPandaIDE_main_glibc_hwcaps")
+    if has_config("glibc-hwcaps") then
+        set_enabled(true)
+    else
+        set_enabled(false)
+    end
+    set_kind("binary")
+    set_basename("RedPandaIDE")
+
+    add_deps('RedPandaIDE')
+
+    add_files("main_glibc_hwcaps.c")
+
 target("RedPandaIDE")
-    add_rules("qt.widgetapp", "qt.ts")
+    if has_config("glibc-hwcaps") then
+        add_rules("qt.shared")
+        set_symbols("hidden")
+    else
+        add_rules("qt.widgetapp")
+    end
+    add_rules("qt.ts")
 
     add_deps("redpanda_qt_utils", "qsynedit")
-    add_frameworks("QtNetwork", "QtPrintSupport", "QtSvg", "QtXml")
+    add_frameworks(
+        "QtGui",
+        "QtNetwork",
+        "QtPrintSupport",
+        "QtSvg",
+        "QtWidgets",
+        "QtXml")
     add_includedirs(".")
 
     -- defines
 
-    add_options("app-name", "prefix", "libexecdir")
+    add_options("app-name", "prefix", "libexecdir", "glibc-hwcaps")
     add_options("lua-addon", "sdcc", "vcs")
 
     if APP_VERSION_SUFFIX ~= "" then

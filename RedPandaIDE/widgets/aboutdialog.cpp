@@ -29,6 +29,19 @@ AboutDialog::AboutDialog(QWidget *parent) :
     ui->setupUi(this);
     ui->lblTitle->setText(ui->lblTitle->text() + tr("Version: ") + REDPANDA_CPP_VERSION);
 
+    QString buildArch = appArch();
+#if defined(__x86_64__) && defined(ENABLE_GLIBC_HWCAPS)
+# if defined(__AVX512__)
+    buildArch += tr(", μarch level v4");
+# elif defined(__AVX2__)
+    buildArch += tr(", μarch level v3");
+# elif defined(__SSE4_2__)
+    buildArch += tr(", μarch level v2");
+# else
+    buildArch += tr(", baseline");
+# endif
+#endif
+
 #if defined(__clang__) // Clang always pretends to be GCC/MSVC. Check it first.
 # if defined(_MSC_VER)
     QString templ = "Clang %1.%2.%3 %4 MSVC ABI";
@@ -43,7 +56,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
                             .arg(__clang_major__)
                             .arg(__clang_minor__)
                             .arg(__clang_patchlevel__)
-                            .arg(appArch()))
+                            .arg(buildArch))
                        .arg(osArch()));
 #elif defined(__GNUC__)
     ui->lblQt->setText(ui->lblQt->text()
@@ -52,7 +65,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
                  .arg(__GNUC__)
                  .arg(__GNUC_MINOR__)
                  .arg(__GNUC_PATCHLEVEL__)
-                 .arg(appArch()))
+                 .arg(buildArch))
             .arg(osArch()));
 #elif defined(_MSC_VER)
     ui->lblQt->setText(ui->lblQt->text()
@@ -60,7 +73,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
             .arg(QStringLiteral("MSVC %1.%2 %3")
                 .arg(_MSC_VER / 100)
                 .arg(_MSC_VER % 100)
-                .arg(appArch()))
+                .arg(buildArch))
             .arg(osArch()));
 #else
     ui->lblQt->setText(ui->lblQt->text()
