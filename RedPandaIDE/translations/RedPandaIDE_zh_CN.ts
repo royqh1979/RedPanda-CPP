@@ -129,7 +129,27 @@ p, li { white-space: pre-wrap; }
         <translation>版本：</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+5"/>
+        <source>, μarch level v4</source>
+        <translation>，微架构级别 v4</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>, μarch level v3</source>
+        <translation>，微架构级别 v3</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>, μarch level v2</source>
+        <translation>，微架构级别 v2</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>, baseline</source>
+        <translation>，基线</translation>
+    </message>
+    <message>
+        <location line="+40"/>
         <source>unknown compiler</source>
         <translation>未知编译器</translation>
     </message>

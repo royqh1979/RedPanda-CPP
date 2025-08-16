@@ -225,7 +225,11 @@ void setTheme(const QString& theme) {
 
 }
 
+#ifdef ENABLE_GLIBC_HWCAPS
+extern "C" int Q_DECL_EXPORT RedPandaIDE_main(int argc, char *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
 //#ifdef Q_OS_WINDOWS
 //    // Make title bar and palette follow system-wide dark mode setting on recent Windows releases.

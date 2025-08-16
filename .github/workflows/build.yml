@@ -279,6 +279,28 @@ jobs:
           name: Arch Linux
           path: dist/*.pkg.tar.zst
 
+  archlinux_hwcaps:
+    name: Arch Linux (glibc hwcaps)
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: docker.io/amd64/archlinux:latest
+      PLATFORM: linux/amd64
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        run: |
+          ${{ env.CONTAINER_COMMAND }} ./packages/archlinux-hwcaps/01-in-docker.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arch Linux (glibc hwcaps)
+          path: dist/*.pkg.tar.zst
+
   fedora:
     name: Fedora
     runs-on: ubuntu-latest

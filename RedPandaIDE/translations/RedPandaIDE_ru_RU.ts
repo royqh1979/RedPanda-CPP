@@ -57,7 +57,27 @@
         <translation>Версия: </translation>
     </message>
     <message>
-        <location filename="../widgets/aboutdialog.cpp" line="68"/>
+        <location filename="../widgets/aboutdialog.cpp" line="35"/>
+        <source>, μarch level v4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../widgets/aboutdialog.cpp" line="37"/>
+        <source>, μarch level v3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../widgets/aboutdialog.cpp" line="39"/>
+        <source>, μarch level v2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../widgets/aboutdialog.cpp" line="41"/>
+        <source>, baseline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../widgets/aboutdialog.cpp" line="81"/>
         <source>unknown compiler</source>
         <translation>неизвестный компилятор</translation>
     </message>

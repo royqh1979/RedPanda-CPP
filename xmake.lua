@@ -40,6 +40,15 @@ option("libexecdir")
     end
     add_defines('LIBEXECDIR="$(libexecdir)"')
 
+option("glibc-hwcaps")
+    if is_os("linux") then
+        set_showmenu(true)
+    else
+        set_showmenu(false)
+    end
+    set_default(false)
+    add_defines('ENABLE_GLIBC_HWCAPS')
+
 -- feature flags
 
 option("lua-addon")

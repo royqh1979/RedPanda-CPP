@@ -1,0 +1,72 @@
+_pkgname=RedPanda-CPP
+pkgname=${_pkgname,,}-hwcaps
+pkgver=__VERSION__
+pkgrel=1
+pkgdesc='A fast, lightweight, open source, and cross platform C++ IDE (with glibc-hwcaps)'
+arch=('x86_64')
+url="https://github.com/royqh1979/$_pkgname"
+license=('GPL3')
+depends=(qt6-base qt6-svg gcc gdb astyle)
+makedepends=(qt6-tools xmake imagemagick librsvg)
+optdepends=(
+    'clang: C/C++ compiler (alternative)'
+)
+conflicts=("${_pkgname,,}")
+provides=("${_pkgname,,}")
+source=(
+    "$_pkgname.tar.gz"
+    'compiler_hint.lua'
+)
+sha256sums=(
+    'SKIP'
+    'SKIP'
+)
+
+prepare() {
+    sed -i '/^TEST_VERSION = / s/^.*$/TEST_VERSION = ""/' $_pkgname/xmake.lua
+}
+
+build() {
+    cd $_pkgname
+
+    xmake_flags=(
+        '--mode=release'
+        '--policies=build.optimization.lto'
+        '--qt=/usr'
+        '--qt_sdkver=6'
+        '--glibc-hwcaps=y'
+        '--prefix=/usr'
+        '--libexecdir=lib'
+    )
+
+    xmake f --cxflags=-march=x86-64 "${xmake_flags[@]}"
+    xmake b
+    xmake i -o pkg-v1
+
+    for uarch in v2 v3 v4; do
+        xmake f --cxflags=-march=x86-64-$uarch "${xmake_flags[@]}"
+        xmake b RedPandaIDE
+        xmake i -o pkg-$uarch RedPandaIDE
+    done
+}
+
+package() {
+    install -Dm644 "compiler_hint.lua" "$pkgdir/usr/lib/RedPandaCPP/compiler_hint.lua"
+
+    cd $_pkgname
+    cp -r pkg-v1/* "$pkgdir/usr/"
+
+    local hwcaps_dir="$pkgdir/usr/lib/glibc-hwcaps"
+    for uarch in v2 v3 v4; do
+        install -D -t "$hwcaps_dir/x86-64-$uarch" "pkg-$uarch/lib/libRedPandaIDE.so"
+    done
+
+    for size in 16 22 24 32 36 48 64 72 96 128 192 256 512; do
+        mkdir -p "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps"
+        magick convert \
+            -background none \
+            "$pkgdir/usr/share/icons/hicolor/scalable/apps/redpandaide.svg" \
+            -resize ${size}x${size} \
+            "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/redpandaide.png"
+    done
+}

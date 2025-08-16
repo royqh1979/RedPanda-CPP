@@ -55,7 +55,27 @@
         <translation>Versão:</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+5"/>
+        <source>, μarch level v4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>, μarch level v3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>, μarch level v2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>, baseline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+40"/>
         <source>unknown compiler</source>
         <translation>compilador desconhecido</translation>
     </message>
