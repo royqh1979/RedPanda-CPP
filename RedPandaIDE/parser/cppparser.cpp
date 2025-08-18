@@ -3297,21 +3297,23 @@ void CppParser::handleNamespace(KeywordType skipType, int maxIndex)
         mIndex++; //skip 'inline'
     }
 
-    mIndex++; //skip 'namespace'
+    mIndex++;
 
-//    if (!tokenIsIdentifier(mTokenizer[mIndex]->text))
-//        //wrong namespace define, stop handling
-//        return;
     QString command = mTokenizer[mIndex]->text;
 
-    QString fullName = getFullStatementName(command,getCurrentScope());
-    if (isInline) {
-        mInlineNamespaces.insert(fullName);
-    } else if (mInlineNamespaces.contains(fullName)) {
-        isInline = true;
+    if(command != "{"){
+        QString fullName = getFullStatementName(command,getCurrentScope());
+        if (isInline) {
+            mInlineNamespaces.insert(fullName);
+        } else if (mInlineNamespaces.contains(fullName)) {
+            isInline = true;
+        }
+    } else {
+        QString anonymous = "anonymous";
+        mInlineNamespaces.insert(anonymous);
+        mIndex--;
     }
-//    if (command.startsWith("__")) // hack for inline namespaces
-//      isInline = true;
+
     mIndex++;
     if (mIndex>=maxIndex)
         return;
@@ -3328,10 +3330,9 @@ void CppParser::handleNamespace(KeywordType skipType, int maxIndex)
             aliasName+=mTokenizer[mIndex+1]->text;
             mIndex+=2;
         }
-        //qDebug()<<command<<aliasName;
         //namespace alias
         if (aliasName != command
-                && aliasName != getFullStatementName(command, getCurrentScope())) {
+            && aliasName != getFullStatementName(command, getCurrentScope())) {
             addStatement(
                 getCurrentScope(),
                 mCurrentFile,
@@ -3365,18 +3366,18 @@ void CppParser::handleNamespace(KeywordType skipType, int maxIndex)
             mIndex++; //skip '{'
     } else {
         PStatement namespaceStatement = addStatement(
-                    getCurrentScope(),
-                    mCurrentFile,
-                    "", // type
-                    command, // command
-                    "", // args
-                    "", // noname args
-                    "", // values
-                    startLine,
-                    StatementKind::Namespace,
-                    getScope(),
-                    mCurrentMemberAccessibility,
-                    StatementProperty::HasDefinition);
+            getCurrentScope(),
+            mCurrentFile,
+            "", // type
+            command, // command
+            "", // args
+            "", // noname args
+            "", // values
+            startLine,
+            StatementKind::Namespace,
+            getScope(),
+            mCurrentMemberAccessibility,
+            StatementProperty::HasDefinition);
 
         // find next '{' or ';'
         mIndex = indexOfNextSemicolonOrLeftBrace(mIndex, maxIndex);

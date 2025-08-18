@@ -169,6 +169,9 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
                 else
                     return node->statement->command;
             }
+            if (node->statement->command == "{") {
+                return "anonymous";
+            }
             return node->statement->command + node->statement->args;
         }
     } else if (role == Qt::ForegroundRole) {
