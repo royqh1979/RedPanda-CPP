@@ -121,7 +121,6 @@ void CppPreprocessor::getDefineParts(const QString &input, QString &name, QStrin
         } else if (isFunction && (level == 0)) {
             break;
         } else if (isSpaceChar(s[i]) && (level == 0)) {
-            qDebug()<<"!!!!";
             break;
         }
         i++;
