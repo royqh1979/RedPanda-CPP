@@ -3084,6 +3084,12 @@ void CppParser::handleOperatorOverloading(const QString &sType,
     } else {
         op=mTokenizer[index]->text;
         index++;
+        if (!isIdentifier(op))   {
+            while (index<maxIndex && mTokenizer[index]->text != "(" && !isIdentifier(mTokenizer[index]->text)) {
+                op+=mTokenizer[index]->text;
+                index++;
+            }
+        }
         while (index<maxIndex
                && mTokenizer[index]->text != "(")
             index++;
