@@ -118,7 +118,10 @@ void CppPreprocessor::getDefineParts(const QString &input, QString &name, QStrin
             }
         } else if (s[i]==')') {
             level--;
+        } else if (isFunction && (level == 0)) {
+            break;
         } else if (isSpaceChar(s[i]) && (level == 0)) {
+            qDebug()<<"!!!!";
             break;
         }
         i++;
@@ -131,7 +134,7 @@ void CppPreprocessor::getDefineParts(const QString &input, QString &name, QStrin
         name = s.mid(0,i);
         args = "";
     }
-    value = removeGCCAttributes(s.mid(i+1).trimmed());
+    value = removeGCCAttributes(s.mid(i).trimmed());
     name.squeeze();
     value.squeeze();
     args.squeeze();

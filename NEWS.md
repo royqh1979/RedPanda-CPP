@@ -5,6 +5,7 @@ Red Panda C++ Version 3.4
   - fix: Autoindent not correct for else clause.
   - enhancement: "Paste indentation" in edit menu.
   - fix: In project panel's Custom View mode, file may be wrongly displayed as folder after add new unit.
+  - fix: Can't correctly parse function-like macro defines not sperated with spaces.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
