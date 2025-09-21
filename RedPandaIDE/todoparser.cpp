@@ -85,6 +85,7 @@ void TodoParser::parseFiles(const QStringList &files)
 
 bool TodoParser::parsing() const
 {
+    QMutexLocker locker(&mMutex);
     return (mThread!=nullptr);
 }
 

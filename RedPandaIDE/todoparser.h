@@ -100,7 +100,7 @@ public:
 
 private:
     TodoThread* mThread;
-    QRecursiveMutex mMutex;
+    mutable QRecursiveMutex mMutex;
 };
 
 using PTodoParser = std::shared_ptr<TodoParser>;

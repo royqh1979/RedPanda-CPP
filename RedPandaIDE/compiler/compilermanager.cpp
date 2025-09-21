@@ -59,19 +59,19 @@ CompilerManager::~CompilerManager()
     stopRun();
 }
 
-bool CompilerManager::compiling()
+bool CompilerManager::compiling() const
 {
     QMutexLocker locker(&mCompileMutex);
     return mCompiler!=nullptr;
 }
 
-bool CompilerManager::backgroundSyntaxChecking()
+bool CompilerManager::backgroundSyntaxChecking() const
 {
     QMutexLocker locker(&mBackgroundSyntaxCheckMutex);
     return mBackgroundSyntaxChecker!=nullptr;
 }
 
-bool CompilerManager::running()
+bool CompilerManager::running() const
 {
     QMutexLocker locker(&mRunnerMutex);
     return (mRunner!=nullptr && !mRunner->pausing());
@@ -426,7 +426,7 @@ void CompilerManager::stopCheckSyntax()
         mBackgroundSyntaxChecker->stopCompile();
 }
 
-bool CompilerManager::canCompile(const QString &)
+bool CompilerManager::canCompile(const QString &) const
 {
     return !compiling();
 }

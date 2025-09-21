@@ -40,9 +40,9 @@ public:
     CompilerManager& operator=(const CompilerManager&)=delete;
     ~CompilerManager();
 
-    bool compiling();
-    bool backgroundSyntaxChecking();
-    bool running();
+    bool compiling() const;
+    bool backgroundSyntaxChecking() const;
+    bool running() const;
 
     void compile(const QString& filename, const QByteArray& encoding, bool rebuild, CppCompileType compileType);
     void compileProject(std::shared_ptr<Project> project, bool rebuild);
@@ -66,7 +66,7 @@ public:
     void stopPausing();
     void stopCompile();
     void stopCheckSyntax();
-    bool canCompile(const QString& filename);
+    bool canCompile(const QString& filename) const;
     int compileErrorCount() const;
 
     int syntaxCheckErrorCount() const;
@@ -100,9 +100,9 @@ private:
     Compiler* mBackgroundSyntaxChecker;
     Runner* mRunner;
     PNonExclusiveTemporaryFileOwner mTempFileOwner;
-    QRecursiveMutex mCompileMutex;
-    QRecursiveMutex mBackgroundSyntaxCheckMutex;
-    QRecursiveMutex mRunnerMutex;
+    mutable QRecursiveMutex mCompileMutex;
+    mutable QRecursiveMutex mBackgroundSyntaxCheckMutex;
+    mutable QRecursiveMutex mRunnerMutex;
 };
 
 class CompileError : public BaseError {

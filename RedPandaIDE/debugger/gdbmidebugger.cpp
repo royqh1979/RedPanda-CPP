@@ -1268,7 +1268,7 @@ void GDBMIDebuggerClient::clearCmdQueue()
     mCmdQueue.clear();
 }
 
-bool GDBMIDebuggerClient::commandRunning()
+bool GDBMIDebuggerClient::commandRunning() const
 {
     return !mCmdQueue.isEmpty();
 }

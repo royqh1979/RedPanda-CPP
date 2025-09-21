@@ -305,7 +305,7 @@ std::shared_ptr<WatchModel> Debugger::watchModel() const
     return mWatchModel;
 }
 
-bool Debugger::commandRunning()
+bool Debugger::commandRunning() const
 {
     QMutexLocker locker{&mClientMutex};
     if (mClient) {
