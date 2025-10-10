@@ -879,6 +879,8 @@ private slots:
 
     void on_actionPaste_indentation_triggered();
 
+    void on_actionNASM_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool mFullInitialized;

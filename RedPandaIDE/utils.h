@@ -40,6 +40,7 @@ enum class FileType{
     None,
     ATTASM, // AT&T assembler source file (.s)
     INTELASM, // Intel assembler source file (.s)
+    NASM,
     LUA, // lua file (.lua)
     CSource, // c source file (.c)
     CppSource, // c++ source file (.cpp)

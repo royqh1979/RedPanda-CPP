@@ -33,6 +33,7 @@ enum class ProgrammingLanguage {
     ATTAssembly,
     MixedAssembly,
     MixedATTAssembly,
+    NetwideAssembly,
     CPP,
     GLSL,
     Makefile,

@@ -117,7 +117,7 @@
      <x>0</x>
      <y>0</y>
      <width>2054</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -198,6 +198,7 @@
      <addaction name="actionCPP_File"/>
      <addaction name="actionATT_ASM"/>
      <addaction name="actionIntel_ASM"/>
+     <addaction name="actionNASM"/>
      <addaction name="actionText_File"/>
     </widget>
     <addaction name="actionUndo"/>
@@ -3356,6 +3357,14 @@
   <action name="actionPaste_indentation">
    <property name="text">
     <string>Paste indentation</string>
+   </property>
+  </action>
+  <action name="actionNASM">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>NASM</string>
    </property>
   </action>
  </widget>

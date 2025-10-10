@@ -10565,3 +10565,12 @@ void MainWindow::on_actionPaste_indentation_triggered()
     editor->setAutoIndent(oldAutoIndent);
 }
 
+
+void MainWindow::on_actionNASM_triggered()
+{
+    Editor* editor = mEditorList->getEditor();
+    if (editor) {
+        editor->setFileType(FileType::NASM);
+    }
+}
+

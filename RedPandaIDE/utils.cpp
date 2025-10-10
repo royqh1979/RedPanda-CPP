@@ -60,7 +60,7 @@ FileType getFileType(const QString &filename)
         return FileType::ATTASM;
     }
     if (filename.endsWith(".asm",PATH_SENSITIVITY)) {
-        return FileType::INTELASM;
+        return FileType::NASM;
     }
     if (filename.endsWith(".dev",PATH_SENSITIVITY)) {
         return FileType::Project;

@@ -1730,6 +1730,7 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mDebugger{set.mDebugger},
     mResourceCompiler{set.mResourceCompiler},
     mDebugServer{set.mDebugServer},
+    mNASM{set.mNASM},
 
     mBinDirs{set.mBinDirs},
     mCIncludeDirs{set.mCIncludeDirs},
@@ -1781,6 +1782,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mDebugger{set["debugger"].toString()},
     mResourceCompiler{set["resourceCompiler"].toString()},
     mDebugServer{set["debugServer"].toString()},
+    mNASM{set["NASM"].toString()},
 
     mBinDirs{},               // handle later
     mCIncludeDirs{},          // handle later
@@ -2120,6 +2122,16 @@ const QString &Settings::CompilerSet::debugger() const
 void Settings::CompilerSet::setDebugger(const QString &name)
 {
     mDebugger = name;
+}
+
+const QString &Settings::CompilerSet::NASM() const
+{
+    return mNASM;
+}
+
+void Settings::CompilerSet::setNASM(const QString &name)
+{
+    mNASM = name;
 }
 
 const QString &Settings::CompilerSet::resourceCompiler() const
@@ -2609,6 +2621,7 @@ void Settings::CompilerSet::setExecutables()
         mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
     }
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
+    mNASM = findProgramInBinDirs(NASM_PROGRAM);
 #ifdef Q_OS_WIN
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
 #endif
@@ -2819,6 +2832,11 @@ bool Settings::CompilerSet::canDebug() const
         return false;
 #endif
     return fileExists(mDebugger);
+}
+
+bool Settings::CompilerSet::NASMExists() const
+{
+    return fileExists(mNASM);
 }
 
 void Settings::CompilerSet::setUserInput()

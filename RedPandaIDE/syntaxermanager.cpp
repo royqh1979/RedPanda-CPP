@@ -19,6 +19,7 @@
 #include <QObject>
 #include "qsynedit/syntaxer/cpp.h"
 #include "qsynedit/syntaxer/asm.h"
+#include "qsynedit/syntaxer/nasm.h"
 #include "qsynedit/syntaxer/glsl.h"
 #include "qsynedit/syntaxer/lua.h"
 #include "qsynedit/syntaxer/makefile.h"
@@ -47,6 +48,8 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage l
         return std::make_shared<QSynedit::ASMSyntaxer>(false, true);
     case QSynedit::ProgrammingLanguage::MixedATTAssembly:
         return std::make_shared<QSynedit::ASMSyntaxer>(true, true);
+    case QSynedit::ProgrammingLanguage::NetwideAssembly:
+        return std::make_shared<QSynedit::NASMSyntaxer>(true);
     case QSynedit::ProgrammingLanguage::Makefile:
         return std::make_shared<QSynedit::MakefileSyntaxer>();
     case QSynedit::ProgrammingLanguage::GLSL:
@@ -111,6 +114,8 @@ QSynedit::ProgrammingLanguage SyntaxerManager::getLanguage(FileType fileType) co
         return QSynedit::ProgrammingLanguage::ATTAssembly;
     case FileType::INTELASM:
         return QSynedit::ProgrammingLanguage::Assembly;
+    case FileType::NASM:
+        return QSynedit::ProgrammingLanguage::NetwideAssembly;
     case FileType::CCppHeader:
     case FileType::CSource:
     case FileType::CppSource:

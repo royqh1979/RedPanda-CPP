@@ -118,6 +118,7 @@ SOURCES += \
     codesnippetsmanager.cpp \
     colorscheme.cpp \
     compiler/compilerinfo.cpp \
+    compiler/nasmfilecompiler.cpp \
     compiler/ojproblemcasesrunner.cpp \
     compiler/projectcompiler.cpp \
     compiler/runner.cpp \
@@ -258,6 +259,7 @@ HEADERS += \
     compiler/compilermanager.h \
     compiler/executablerunner.h \
     compiler/filecompiler.h \
+    compiler/nasmfilecompiler.h \
     compiler/ojproblemcasesrunner.h \
     compiler/projectcompiler.h \
     compiler/runner.h \
