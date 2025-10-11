@@ -21,6 +21,7 @@
 #include "sdccfilecompiler.h"
 #include "sdccprojectcompiler.h"
 #endif
+#include "nasmfilecompiler.h"
 #include "stdincompiler.h"
 #include "../mainwindow.h"
 #include "executablerunner.h"
@@ -77,7 +78,7 @@ bool CompilerManager::running() const
     return (mRunner!=nullptr && !mRunner->pausing());
 }
 
-void CompilerManager::compile(const QString& filename, const QByteArray& encoding, bool rebuild, CppCompileType compileType)
+void CompilerManager::compile(const QString& filename, FileType fileType, const QByteArray& encoding, bool rebuild, CppCompileType compileType)
 {
     if (!pSettings->compilerSets().defaultSet()) {
         QMessageBox::critical(pMainWindow,
@@ -98,7 +99,11 @@ void CompilerManager::compile(const QString& filename, const QByteArray& encodin
             mCompiler = new SDCCFileCompiler(filename,encoding,compileType,false);
         } else
 #endif
+        if (fileType == FileType::NASM){
+            mCompiler = new NASMFileCompiler(filename);
+        } else  {
             mCompiler = new FileCompiler(filename,encoding,compileType,false);
+        }
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);
         connect(mCompiler, &Compiler::compileFinished, this, &CompilerManager::onCompileFinished);

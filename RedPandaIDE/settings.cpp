@@ -57,6 +57,7 @@ Settings::Settings(const QString &filename):
     mDebugger(this),
     mCodeCompletion(this),
     mCodeFormatter(this),
+    mCompile(this),
     mUI(this),
 #ifdef ENABLE_VCS
     mVCS(this),
@@ -122,6 +123,7 @@ void Settings::load()
     mDebugger.load();
     mCodeCompletion.load();
     mCodeFormatter.load();
+    mCompile.load();
     mUI.load();
     mDirs.load();
 #ifdef ENABLE_VCS
@@ -179,6 +181,11 @@ Settings::CodeCompletion& Settings::codeCompletion()
 Settings::CodeFormatter &Settings::codeFormatter()
 {
     return mCodeFormatter;
+}
+
+Settings::Compile &Settings::compile()
+{
+    return mCompile;
 }
 
 Settings::UI &Settings::ui()
@@ -1730,7 +1737,6 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
     mDebugger{set.mDebugger},
     mResourceCompiler{set.mResourceCompiler},
     mDebugServer{set.mDebugServer},
-    mNASM{set.mNASM},
 
     mBinDirs{set.mBinDirs},
     mCIncludeDirs{set.mCIncludeDirs},
@@ -1782,7 +1788,6 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mDebugger{set["debugger"].toString()},
     mResourceCompiler{set["resourceCompiler"].toString()},
     mDebugServer{set["debugServer"].toString()},
-    mNASM{set["NASM"].toString()},
 
     mBinDirs{},               // handle later
     mCIncludeDirs{},          // handle later
@@ -2122,16 +2127,6 @@ const QString &Settings::CompilerSet::debugger() const
 void Settings::CompilerSet::setDebugger(const QString &name)
 {
     mDebugger = name;
-}
-
-const QString &Settings::CompilerSet::NASM() const
-{
-    return mNASM;
-}
-
-void Settings::CompilerSet::setNASM(const QString &name)
-{
-    mNASM = name;
 }
 
 const QString &Settings::CompilerSet::resourceCompiler() const
@@ -2621,7 +2616,6 @@ void Settings::CompilerSet::setExecutables()
         mDebugServer = findProgramInBinDirs(GDB_SERVER_PROGRAM);
     }
     mMake = findProgramInBinDirs(MAKE_PROGRAM);
-    mNASM = findProgramInBinDirs(NASM_PROGRAM);
 #ifdef Q_OS_WIN
     mResourceCompiler = findProgramInBinDirs(WINDRES_PROGRAM);
 #endif
@@ -2832,11 +2826,6 @@ bool Settings::CompilerSet::canDebug() const
         return false;
 #endif
     return fileExists(mDebugger);
-}
-
-bool Settings::CompilerSet::NASMExists() const
-{
-    return fileExists(mNASM);
 }
 
 void Settings::CompilerSet::setUserInput()
@@ -4763,6 +4752,56 @@ void Settings::Debugger::doLoad()
     mMemoryViewColumns = intValue("memory_view_columns",16);
     mArrayElements = intValue("array_elements",100);
     mCharacters = intValue("string_characters",300);
+}
+
+Settings::Compile::Compile(Settings *settings):_Base(settings, SETTING_COMPILE)
+{
+
+}
+
+const QString &Settings::Compile::NASMPath() const
+{
+    return mNASMPath;
+}
+
+void Settings::Compile::setNASMPath(const QString &newNASMPath)
+{
+    mNASMPath = newNASMPath;
+}
+
+bool Settings::Compile::GASLinkCStandardLib() const
+{
+    return mGASLinkCStandardLib;
+}
+
+void Settings::Compile::setGASLinkCStandardLib(bool newGASLinkCStandardLib)
+{
+    mGASLinkCStandardLib = newGASLinkCStandardLib;
+}
+
+bool Settings::Compile::NASMLinkCStandardLib() const
+{
+    return mNASMLinkCStandardLib;
+}
+
+void Settings::Compile::setNASMLinkCStandardLib(bool newLinkCStandardLib)
+{
+    mNASMLinkCStandardLib = newLinkCStandardLib;
+}
+
+void Settings::Compile::doSave()
+{
+    saveValue("NASM", mNASMPath);
+    saveValue("NASM_Link_C_STANDARD_LIB", mNASMLinkCStandardLib);
+    saveValue("GAS_Link_C_STANDARD_LIB", mGASLinkCStandardLib);
+}
+
+
+void Settings::Compile::doLoad()
+{
+    mNASMPath = stringValue("NASM", "");
+    mNASMLinkCStandardLib = boolValue("NASM_Link_C_STANDARD_LIB", true);
+    mGASLinkCStandardLib = boolValue("GAS_Link_C_STANDARD_LIB", true);
 }
 
 Settings::CodeCompletion::CodeCompletion(Settings *settings):_Base(settings, SETTING_CODE_COMPLETION)

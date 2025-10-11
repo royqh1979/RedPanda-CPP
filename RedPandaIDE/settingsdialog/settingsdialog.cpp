@@ -20,6 +20,8 @@
 #include "settingswidget.h"
 #include "compilersetoptionwidget.h"
 #include "compilerautolinkwidget.h"
+#include "compilernasmwidget.h"
+#include "compilergaswidget.h"
 #include "editorgeneralwidget.h"
 #include "editorfontwidget.h"
 #include "editorclipboardwidget.h"
@@ -170,6 +172,12 @@ PSettingsDialog SettingsDialog::optionDialog(QWidget *parent)
     dialog->addWidget(widget);
 
     widget = new CompilerAutolinkWidget(tr("Auto Link"),tr("Compiler"));
+    dialog->addWidget(widget);
+
+    widget = new CompilerGASWidget(tr("GNU Assembler"),tr("Compiler"));
+    dialog->addWidget(widget);
+
+    widget = new CompilerNASMWidget(tr("NASM"),tr("Compiler"));
     dialog->addWidget(widget);
 
     widget = new EditorGeneralWidget(tr("General"),tr("Editor"));

@@ -42,6 +42,7 @@
 #define SETTING_UI "UI"
 #define SETTING_VCS "VCS"
 #define SETTING_LANGUAGES "Languages"
+#define SETTING_COMPILE "Compile"
 #define SETTING_CODE_COMPLETION "CodeCompletion"
 #define SETTING_CODE_FORMATTER "CodeFormatter"
 #define SETTING_COMPILTER_SETS "CompilerSets"
@@ -624,6 +625,7 @@ public:
         QString mTerminalPath;
         QString mAStylePath;
         QString mTerminalArgumentsPattern;
+
         bool mUseCustomTerminal;
         bool mHideNonSupportFilesInFileView;
         bool mOpenFilesInSingleInstance;
@@ -634,6 +636,29 @@ public:
         void doSave() override;
         void doLoad() override;
     };
+
+    class Compile: public _Base {
+    public:
+        explicit Compile(Settings *settings);
+        const QString &NASMPath() const;
+        void setNASMPath(const QString &newNASMPath);
+        bool NASMLinkCStandardLib() const;
+        void setNASMLinkCStandardLib(bool newLinkCStandardLib);
+
+        bool GASLinkCStandardLib() const;
+        void setGASLinkCStandardLib(bool newGASLinkCStandardLib);
+
+    private:
+        QString mNASMPath;
+        bool mNASMLinkCStandardLib;
+        bool mGASLinkCStandardLib;
+        // _Base interface
+    protected:
+        void doSave() override;
+        void doLoad() override;
+
+    };
+
 
     class CodeCompletion: public _Base {
     public:
@@ -1393,7 +1418,6 @@ public:
         bool canCompileCPP() const;
         bool canMake() const;
         bool canDebug() const;
-        bool NASMExists() const;
 //        bool dirsValid(QString& msg);
 //        bool validateExes(QString& msg);
         //properties
@@ -1409,9 +1433,6 @@ public:
         void setResourceCompiler(const QString& name);
         const QString &debugServer() const;
         void setDebugServer(const QString &newDebugServer);
-        const QString &NASM() const;
-        void setNASM(const QString &newNASM);
-
 
         QStringList findErrors();
 
@@ -1522,7 +1543,6 @@ public:
         QString mDebugger;
         QString mResourceCompiler;
         QString mDebugServer;
-        QString mNASM;
 
         // Directories, mostly hardcoded too
         QStringList mBinDirs;
@@ -1643,6 +1663,7 @@ public:
     Debugger& debugger();
     CodeCompletion &codeCompletion();
     CodeFormatter &codeFormatter();
+    Compile &compile();
     UI &ui();
 #ifdef ENABLE_VCS
     VCS &vcs();
@@ -1661,6 +1682,7 @@ private:
     Debugger mDebugger;
     CodeCompletion mCodeCompletion;
     CodeFormatter mCodeFormatter;
+    Compile mCompile;
     UI mUI;
 #ifdef ENABLE_VCS
     VCS mVCS;

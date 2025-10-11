@@ -8,6 +8,8 @@ Red Panda C++ Version 3.4
   - fix: crash when parsing deferenced vector iterators. (#622 by KEDIT2007@github.com)
   - fix: Can't correctly parse function-like macro defines not sperated with spaces.
   - fix: Can't correctly parse some operator overloading such as ++ and --.
+  - enhancement: Support NASM.
+  - enhancement: Option Page for GNU Assembler(gas).
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

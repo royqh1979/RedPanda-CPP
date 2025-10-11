@@ -44,7 +44,7 @@ public:
     bool backgroundSyntaxChecking() const;
     bool running() const;
 
-    void compile(const QString& filename, const QByteArray& encoding, bool rebuild, CppCompileType compileType);
+    void compile(const QString& filename, FileType fileType, const QByteArray& encoding, bool rebuild, CppCompileType compileType);
     void compileProject(std::shared_ptr<Project> project, bool rebuild);
     void cleanProject(std::shared_ptr<Project> project);
     void buildProjectMakefile(std::shared_ptr<Project> project);

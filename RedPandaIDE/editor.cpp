@@ -40,6 +40,7 @@
 #include <qsynedit/document.h>
 #include <qsynedit/syntaxer/cpp.h>
 #include <qsynedit/syntaxer/asm.h>
+#include <qsynedit/syntaxer/nasm.h>
 #include <qsynedit/exporter/rtfexporter.h>
 #include <qsynedit/exporter/htmlexporter.h>
 #include <qsynedit/exporter/qtsupportedhtmlexporter.h>
@@ -3468,6 +3469,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
         } else if (type==CodeCompletionType::KeywordsOnly ) {
             if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly)
                 word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
+            else if (fileType() == FileType::NASM && attr->tokenType() == QSynedit::TokenType::Preprocessor)
+                word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
             else
                 word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpKeywords);
         } else if (
@@ -3491,6 +3494,12 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                 keywords = QSynedit::ASMSyntaxer::ATTRegisters;
             else {
                 keywords = QSynedit::ASMSyntaxer::InstructionNames;
+            }
+        } else if (fileType() == FileType::NASM) {
+            if (attr->tokenType() == QSynedit::TokenType::Preprocessor)
+                keywords = QSynedit::NASMSyntaxer::PreprocessorDirectives;
+            else {
+                keywords = syntaxer()->keywords();
             }
         } else {
             int pos = word.lastIndexOf(".");

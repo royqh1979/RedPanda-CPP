@@ -49,7 +49,7 @@ QSynedit::PSyntaxer SyntaxerManager::getSyntaxer(QSynedit::ProgrammingLanguage l
     case QSynedit::ProgrammingLanguage::MixedATTAssembly:
         return std::make_shared<QSynedit::ASMSyntaxer>(true, true);
     case QSynedit::ProgrammingLanguage::NetwideAssembly:
-        return std::make_shared<QSynedit::NASMSyntaxer>(true);
+        return std::make_shared<QSynedit::NASMSyntaxer>();
     case QSynedit::ProgrammingLanguage::Makefile:
         return std::make_shared<QSynedit::MakefileSyntaxer>();
     case QSynedit::ProgrammingLanguage::GLSL:

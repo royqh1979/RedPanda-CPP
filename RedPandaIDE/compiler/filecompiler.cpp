@@ -133,6 +133,11 @@ bool FileCompiler::prepareForCompile()
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
         mArguments += getProjectIncludeArguments();
+        if (pSettings->compile().GASLinkCStandardLib()) {
+            mArguments.removeAll("-nostdlib");
+        } else {
+            mArguments += "-nostdlib";
+        }
         strFileType = tr("GNU Assembler");
         mCompiler = compilerSet()->CCompiler();
         break;

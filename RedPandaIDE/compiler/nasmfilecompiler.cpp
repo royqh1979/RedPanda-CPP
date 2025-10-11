@@ -44,20 +44,23 @@ bool NASMFileCompiler::prepareForCompile()
     log("");
 
     QString strFileType = "C";
-    mCompiler = compilerSet()->NASM();
+    mCompiler = pSettings->compile().NASMPath();
+
     QStringList arguments = getCCompileArguments(false);
+#ifdef Q_OS_WIN
+    if (arguments.contains("-m32") || QString("i686").compare(compilerSet()->target(), Qt::CaseInsensitive)==0
+            || QString("i386").compare(compilerSet()->target(), Qt::CaseInsensitive)==0) {
+        mArguments += {"-f","elf32"};
+    } else if (arguments.contains("-m64")) {
+        mArguments += {"-f","elf64"};
+    } else {
+        mArguments += {"-f","elf64"};
+    }
+#endif
     if (arguments.contains("-g3")) {
         mArguments += "-g";
-#ifdef Q_OS_WIN
-        if (arguments.contains("-m32") || QString("i686").compare(compilerSet()->target(), Qt::CaseInsensitive)==0) {
-            mArguments += "-felf";
-        } else if (arguments.contains("-m64")) {
-            mArguments += "-felf64";
-        } else {
-            mArguments += "-felf64";
-        }
-#endif
     }
+
 
     if (!fileExists(mCompiler)) {
         throw CompileError(
@@ -67,45 +70,19 @@ bool NASMFileCompiler::prepareForCompile()
     }
 
     mOutputFile=changeFileExt(mFilename, compilerSet()->executableSuffix());
-    mIhxFilename = changeFileExt(mFilename,SDCC_IHX_SUFFIX);
+    mObjFilename= changeFileExt(mFilename, DEFAULT_ASSEMBLING_SUFFIX );
 
-    QString val = compilerSet()->compileOptions().value(SDCC_OPT_NOSTARTUP);
-    mNoStartup = (val==COMPILER_OPTION_ON);
-    if (mNoStartup) {
-        mRelFilename = changeFileExt(mFilename,SDCC_REL_SUFFIX);
-        mArguments += {"-c", mFilename};
-        mExtraCompilersList << mCompiler;
-        QStringList args = getLibraryArguments(FileType::CSource);
-        args += {"-o", mIhxFilename, mRelFilename};
-        mExtraArgumentsList << args;
-        mExtraOutputFilesList << "";
+    mArguments += {mFilename, "-o", mObjFilename};
+    mExtraCompilersList << compilerSet()->CCompiler();
+    QStringList args = getLibraryArguments(FileType::CSource);
+    if (pSettings->compile().NASMLinkCStandardLib()) {
+        args.removeAll("-nostdlib");
     } else {
-        mArguments += getLibraryArguments(FileType::CSource);
-        mArguments += {mFilename, "-o", mIhxFilename};
+        args += "-nostdlib";
     }
-
-    if (compilerSet()->executableSuffix() == SDCC_HEX_SUFFIX) {
-        QString packihx = compilerSet()->findProgramInBinDirs(PACKIHX_PROGRAM);
-        if (packihx.isEmpty()) {
-            error(tr("Can't find \"%1\".\n").arg(PACKIHX_PROGRAM));
-            return false;
-        }
-        mExtraCompilersList.append(packihx);
-        QStringList args{mIhxFilename};
-        mExtraArgumentsList << args;
-        mExtraOutputFilesList << mOutputFile;
-    } else if (compilerSet()->executableSuffix() == SDCC_BIN_SUFFIX) {
-        QString makebin = compilerSet()->findProgramInBinDirs(MAKEBIN_PROGRAM);
-        if (makebin.isEmpty()) {
-            error(tr("Can't find \"%1\".\n").arg(PACKIHX_PROGRAM));
-            return false;
-        }
-        mExtraCompilersList << makebin;
-        QStringList args{mIhxFilename, mOutputFile};
-        mExtraArgumentsList << args;
-        mExtraOutputFilesList << "";
-    }
-
+    args += {mObjFilename, "-o", mOutputFile};
+    mExtraArgumentsList << args;
+    mExtraOutputFilesList << QString();
     log(tr("Processing %1 source file:").arg(strFileType));
     log("------------------");
     log(tr("- %1 Compiler: %2").arg(strFileType, mCompiler));
@@ -116,26 +93,16 @@ bool NASMFileCompiler::prepareForCompile()
     return true;
 }
 
-bool SDCCFileCompiler::beforeRunExtraCommand(int idx)
+bool NASMFileCompiler::beforeRunExtraCommand(int idx)
 {
-    if (mNoStartup) {
-        if (idx==0) {
-            QFileInfo file(mRelFilename);
-            return file.exists() && (file.lastModified()>mStartCompileTime);
-        } else if (idx==1) {
-            QFileInfo file(mIhxFilename);
-            return file.exists() && (file.lastModified()>mStartCompileTime);
-        }
-    } else {
-        if (idx==0) {
-            QFileInfo file(mIhxFilename);
-            return file.exists() && (file.lastModified()>mStartCompileTime);
-        }
+    if (idx==0) {
+        QFileInfo file(mObjFilename);
+        return file.exists() && (file.lastModified()>mStartCompileTime);
     }
     return true;
 }
 
-bool SDCCFileCompiler::prepareForRebuild()
+bool NASMFileCompiler::prepareForRebuild()
 {
     QString exeName=compilerSet()->getOutputFilename(mFilename);
 
@@ -144,6 +111,13 @@ bool SDCCFileCompiler::prepareForRebuild()
     if (file.exists() && !file.remove()) {
         QFileInfo info(exeName);
         throw CompileError(tr("Can't delete the old executable file \"%1\".\n").arg(info.absoluteFilePath()));
+    }
+
+    QString objFileName = changeFileExt(mFilename, DEFAULT_ASSEMBLING_SUFFIX);
+    QFile objFile = QFile(objFileName);
+    if (objFile.exists() && !objFile.remove()) {
+        QFileInfo info(objFileName);
+        throw CompileError(tr("Can't delete the old object file \"%1\".\n").arg(info.absoluteFilePath()));
     }
     return true;
 }
