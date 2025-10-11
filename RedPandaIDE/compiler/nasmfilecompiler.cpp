@@ -66,7 +66,7 @@ bool NASMFileCompiler::prepareForCompile()
         throw CompileError(
                     tr("The NASM '%1' doesn't exists!").arg(mCompiler)
                     +"<br />"
-                    +tr("Please check the \"program\" page of compiler settings."));
+                    +tr("Please check NASM settings."));
     }
 
     mOutputFile=changeFileExt(mFilename, compilerSet()->executableSuffix());
