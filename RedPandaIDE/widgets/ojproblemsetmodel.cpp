@@ -138,20 +138,20 @@ void OJProblemSetModel::saveToFile(const QString &fileName, int currentIndex)
             QJsonArray cases;
             foreach (const POJProblemCase& problemCase, problem->cases) {
                 QJsonObject caseObj;
-                caseObj["name"]=problemCase->name;
-                caseObj["input"]=problemCase->input;
-                QString path = problemCase->inputFileName;
+                caseObj["name"]=problemCase->name();
+                caseObj["input"]=problemCase->input();
+                QString path = problemCase->inputFileName();
                 QString prefix = includeTrailingPathDelimiter(extractFileDir(fileName));
                 if (path.startsWith(prefix, PATH_SENSITIVITY)) {
                     path = "%ProblemSetPath%/"+ path.mid(prefix.length());
                 }
                 caseObj["input_filename"]=path;
-                path = problemCase->expectedOutputFileName;
+                path = problemCase->expectedOutputFileName();
                 if (path.startsWith(prefix, PATH_SENSITIVITY)) {
                     path = "%ProblemSetPath%/"+ path.mid(prefix.length());
                 }
                 caseObj["expected_output_filename"]=path;
-                caseObj["expected"]=problemCase->expected;
+                caseObj["expected"]=problemCase->expected();
                 cases.append(caseObj);
             }
             problemObj["cases"]=cases;
@@ -205,21 +205,21 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
             for(const QJsonValue& caseVal:casesArray) {
                 QJsonObject caseObj = caseVal.toObject();
                 POJProblemCase problemCase = std::make_shared<OJProblemCase>();
-                problemCase->name = caseObj["name"].toString();
-                problemCase->input = caseObj["input"].toString();
-                problemCase->expected = caseObj["expected"].toString();
+                problemCase->setName( caseObj["name"].toString());
+                problemCase->setInput( caseObj["input"].toString());
+                problemCase->setExpected( caseObj["expected"].toString());
                 QString path = caseObj["input_filename"].toString();
                 if (path.startsWith("%ProblemSetPath%/")) {
                     path = includeTrailingPathDelimiter(extractFileDir(fileName))+
                             path.mid(QLatin1String("%ProblemSetPath%/").size());
                 }
-                problemCase->inputFileName=path;
+                problemCase->setInputFileName(path);
                 path = caseObj["expected_output_filename"].toString();
                 if (path.startsWith("%ProblemSetPath%/")) {
                     path = includeTrailingPathDelimiter(extractFileDir(fileName))+
                             path.mid(QLatin1String("%ProblemSetPath%/").size());
                 }
-                problemCase->expectedOutputFileName=path;
+                problemCase->setExpectedOutputFileName(path);
                 problemCase->testState = ProblemCaseTestState::NotTested;
                 problem->cases.append(problemCase);
             }
@@ -349,8 +349,14 @@ const POJProblem &OJProblemModel::problem() const
 void OJProblemModel::setProblem(const POJProblem &newProblem)
 {
     if (newProblem!=mProblem) {
+        foreach(const POJProblemCase &problemCase, mProblem->cases) {
+            disconnect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
+        }
         beginResetModel();
         mProblem = newProblem;
+        foreach(const POJProblemCase &problemCase, mProblem->cases) {
+            connect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
+        }
         endResetModel();
     }
 }
@@ -362,6 +368,7 @@ void OJProblemModel::addCase(POJProblemCase problemCase)
     beginInsertRows(QModelIndex(),mProblem->cases.count(),mProblem->cases.count());
     mProblem->cases.append(problemCase);
     endInsertRows();
+    connect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
 }
 
 void OJProblemModel::removeCase(int index)
@@ -369,6 +376,7 @@ void OJProblemModel::removeCase(int index)
     if (mProblem==nullptr)
         return;
     Q_ASSERT(index >= 0 && index < mProblem->cases.count());
+    disconnect(mProblem->cases[index].get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
     beginRemoveRows(QModelIndex(),index,index);
     mProblem->cases.removeAt(index);
     endRemoveRows();
@@ -376,6 +384,9 @@ void OJProblemModel::removeCase(int index)
 
 void OJProblemModel::removeCases()
 {
+    foreach(const POJProblemCase &problemCase, mProblem->cases) {
+        disconnect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
+    }
     beginRemoveRows(QModelIndex(),0,mProblem->cases.count());
     mProblem->cases.clear();
     endRemoveRows();
@@ -461,6 +472,16 @@ QString OJProblemModel::getTooltip()
     return s;
 }
 
+void OJProblemModel::onProblemCaseChanged(const QString& id)
+{
+    for (int i=0;i<mProblem->cases.count();i++) {
+        if (id == mProblem->cases[i]->getId()) {
+            QModelIndex idx = index(i,0);
+            emit dataChanged(idx,idx);
+        }
+    }
+}
+
 int OJProblemModel::rowCount(const QModelIndex &) const
 {
     if (mProblem==nullptr)
@@ -476,9 +497,16 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
         return QVariant();
     switch (index.column()) {
     case 0:
-        if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        if (role == Qt::DisplayRole) {
             POJProblemCase problemCase = mProblem->cases[index.row()];
-            return problemCase->name;
+            QString name =  problemCase->name();
+            if (problemCase->isModified()) {
+                name += "[*]";
+            }
+            return name;
+        } else if (role == Qt::EditRole) {
+            POJProblemCase problemCase = mProblem->cases[index.row()];
+            return problemCase->name();
         } else if (role == Qt::DecorationRole) {
             switch (mProblem->cases[index.row()]->testState) {
             case ProblemCaseTestState::Failed:
@@ -530,7 +558,7 @@ bool OJProblemModel::setData(const QModelIndex &index, const QVariant &value, in
     if (role == Qt::EditRole ) {
         QString s = value.toString();
         if (!s.isEmpty()) {
-            mProblem->cases[index.row()]->name = s;
+            mProblem->cases[index.row()]->setName(s);
             return true;
         }
     }

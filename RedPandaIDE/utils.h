@@ -38,8 +38,8 @@ using PSimpleIni = std::shared_ptr<SimpleIni>;
 
 enum class FileType{
     None,
-    ATTASM, // AT&T assembler source file (.s)
-    INTELASM, // Intel assembler source file (.s)
+    ATTASM, // AT&T Style GNU assembler source file (.s)
+    INTELASM, // Intel Style GNU assembler source file (.s)
     LUA, // lua file (.lua)
     CSource, // c source file (.c)
     CppSource, // c++ source file (.cpp)

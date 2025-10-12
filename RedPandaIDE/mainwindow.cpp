@@ -4461,14 +4461,14 @@ void MainWindow::onProblemCaseIndexChanged(const QModelIndex &current, const QMo
     QModelIndex idx = current;
     if (previous.isValid()) {
         POJProblemCase problemCase = mOJProblemModel->getCase(previous.row());
-        if (problemCase->inputFileName.isEmpty())
-            problemCase->input = ui->txtProblemCaseInput->toPlainText();
+        if (problemCase->inputFileName().isEmpty())
+            problemCase->setInput( ui->txtProblemCaseInput->toPlainText());
         else
-            problemCase->input = QString();
-        if (problemCase->expectedOutputFileName.isEmpty())
-            problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
+            problemCase->setInput( QString());
+        if (problemCase->expectedOutputFileName().isEmpty())
+            problemCase->setExpected( ui->txtProblemCaseExpected->toPlainText());
         else
-            problemCase->expected = QString();
+            problemCase->setExpected(QString());
     }
     if (idx.isValid()) {
         POJProblemCase problemCase = mOJProblemModel->getCase(idx.row());
@@ -4548,17 +4548,17 @@ void MainWindow::onProblemBatchSetCases()
     mOJProblemModel->removeCases();
     foreach (const QString& filename, files) {
         POJProblemCase problemCase = std::make_shared<OJProblemCase>();
-        problemCase->name = QFileInfo(filename).baseName();
+        problemCase->setName( QFileInfo(filename).baseName());
+        problemCase->setInputFileName(filename);
         problemCase->testState = ProblemCaseTestState::NotTested;
-        problemCase->inputFileName = filename;
         QString expectedFileName;
         expectedFileName = filename.mid(0,filename.length()-2)+"ans";
         if (fileExists(expectedFileName)) {
-            problemCase->expectedOutputFileName = expectedFileName;
+            problemCase->setExpectedOutputFileName( expectedFileName );
         } else {
             expectedFileName = filename.mid(0,filename.length()-2)+"out";
             if (fileExists(expectedFileName))
-                problemCase->expectedOutputFileName = expectedFileName;
+                problemCase->setExpectedOutputFileName( expectedFileName );
         }
         mOJProblemModel->addCase(problemCase);
     }
@@ -7781,45 +7781,45 @@ void MainWindow::newProjectUnitFile(const QString& suffix)
 void MainWindow::fillProblemCaseInputAndExpected(const POJProblemCase &problemCase)
 {
     ui->btnProblemCaseInputFileName->setEnabled(true);
-    if (!problemCase->inputFileName.isEmpty()) {
+    if (!problemCase->inputFileName().isEmpty()) {
         ui->txtProblemCaseInput->setReadOnly(true);
-        if (fileExists(problemCase->inputFileName)) {
-            QFileInfo inputFileInfo{problemCase->inputFileName};
+        if (fileExists(problemCase->inputFileName())) {
+            QFileInfo inputFileInfo{problemCase->inputFileName()};
             if (pSettings->executor().maxCaseInputFileSize() > 0
                     && inputFileInfo.size() > pSettings->executor().maxCaseInputFileSize()*1024*1024) {
                 ui->txtProblemCaseInput->setPlainText(tr("Input Data File is too large to display!"));
             } else {
-                ui->txtProblemCaseInput->setPlainText(readFileToByteArray(problemCase->inputFileName));
+                ui->txtProblemCaseInput->setPlainText(readFileToByteArray(problemCase->inputFileName()));
             }
         } else {
             ui->txtProblemCaseInput->setPlainText(tr("File doesn't exist!"));
         }
         ui->btnProblemCaseClearInputFileName->setVisible(true);
-        ui->txtProblemCaseInputFileName->setText(extractFileName(problemCase->inputFileName));
-        ui->txtProblemCaseInputFileName->setToolTip(problemCase->inputFileName);
+        ui->txtProblemCaseInputFileName->setText(extractFileName(problemCase->inputFileName()));
+        ui->txtProblemCaseInputFileName->setToolTip(problemCase->inputFileName());
     } else {
         ui->txtProblemCaseInput->setReadOnly(false);
-        ui->txtProblemCaseInput->setPlainText(problemCase->input);
+        ui->txtProblemCaseInput->setPlainText(problemCase->input());
         ui->btnProblemCaseClearInputFileName->setVisible(false);
         ui->txtProblemCaseInputFileName->clear();
         ui->txtProblemCaseInputFileName->setToolTip("");
     }
     ui->btnProblemCaseExpectedOutputFileName->setEnabled(true);
-    if (!problemCase->expectedOutputFileName.isEmpty()) {
+    if (!problemCase->expectedOutputFileName().isEmpty()) {
         ui->txtProblemCaseExpected->setReadOnly(true);
         ui->txtProblemCaseExpected->clearAll();
-        if (fileExists(problemCase->expectedOutputFileName)) {
-            ui->txtProblemCaseExpected->setPlainText(readFileToByteArray(problemCase->expectedOutputFileName));
+        if (fileExists(problemCase->expectedOutputFileName())) {
+            ui->txtProblemCaseExpected->setPlainText(readFileToByteArray(problemCase->expectedOutputFileName()));
         } else {
             ui->txtProblemCaseInput->setPlainText(tr("File doesn't exist!"));
         }
         ui->btnProblemCaseClearExpectedOutputFileName->setVisible(true);
-        ui->txtProblemCaseExpectedOutputFileName->setText(extractFileName(problemCase->expectedOutputFileName));
-        ui->txtProblemCaseExpectedOutputFileName->setToolTip(problemCase->inputFileName);
+        ui->txtProblemCaseExpectedOutputFileName->setText(extractFileName(problemCase->expectedOutputFileName()));
+        ui->txtProblemCaseExpectedOutputFileName->setToolTip(problemCase->inputFileName());
     } else {
         ui->txtProblemCaseExpected->setReadOnly(false);
         ui->txtProblemCaseExpected->clearAll();
-        ui->txtProblemCaseExpected->setPlainText(problemCase->expected);
+        ui->txtProblemCaseExpected->setPlainText(problemCase->expected());
         ui->btnProblemCaseClearExpectedOutputFileName->setVisible(false);
         ui->txtProblemCaseExpectedOutputFileName->clear();
         ui->txtProblemCaseExpectedOutputFileName->setToolTip("");
@@ -8540,9 +8540,9 @@ void MainWindow::applyCurrentProblemCaseChanges()
     if (idx.isValid()) {
         POJProblemCase problemCase = mOJProblemModel->getCase(idx.row());
         if (problemCase) {
-            if (!fileExists(problemCase->inputFileName))
-                problemCase->input = ui->txtProblemCaseInput->toPlainText();
-            problemCase->expected = ui->txtProblemCaseExpected->toPlainText();
+            if (!fileExists(problemCase->inputFileName()))
+                problemCase->setInput( ui->txtProblemCaseInput->toPlainText());
+            problemCase->setExpected( ui->txtProblemCaseExpected->toPlainText());
         }
     }
 }
@@ -9002,7 +9002,7 @@ void MainWindow::onAddProblemCase()
             break;
     }
     POJProblemCase problemCase = std::make_shared<OJProblemCase>();
-    problemCase->name = name;
+    problemCase->setName(name);
     problemCase->testState = ProblemCaseTestState::NotTested;
     mOJProblemModel->addCase(problemCase);
     ui->tblProblemCases->setCurrentIndex(mOJProblemModel->index(mOJProblemModel->count()-1,0));
@@ -9834,20 +9834,20 @@ void MainWindow::on_btnProblemCaseInputFileName_clicked()
         POJProblemCase problemCase = mOJProblemModel->getCase(idx.row());
         if (!problemCase)
             return;
-        if (problemCase->inputFileName == fileName)
+        if (problemCase->inputFileName() == fileName)
             return;
-        problemCase->inputFileName = fileName;
-        if (problemCase->expectedOutputFileName.isEmpty()
-                && problemCase->expected.isEmpty()
+        problemCase->setInputFileName(fileName);
+        if (problemCase->expectedOutputFileName().isEmpty()
+                && problemCase->expected().isEmpty()
                 && QFileInfo(fileName).suffix()=="in") {
             QString expectedFileName;
             expectedFileName = fileName.mid(0,fileName.length()-2)+"ans";
             if (fileExists(expectedFileName)) {
-                problemCase->expectedOutputFileName = expectedFileName;
+                problemCase->setExpectedOutputFileName(expectedFileName);
             } else {
                 expectedFileName = fileName.mid(0,fileName.length()-2)+"out";
                 if (fileExists(expectedFileName))
-                    problemCase->expectedOutputFileName = expectedFileName;
+                    problemCase->setExpectedOutputFileName(expectedFileName);
             }
         }
         fillProblemCaseInputAndExpected(problemCase);
@@ -9861,7 +9861,7 @@ void MainWindow::on_btnProblemCaseClearExpectedOutputFileName_clicked()
     POJProblemCase problemCase = mOJProblemModel->getCase(idx.row());
     if (!problemCase)
         return;
-    problemCase->expectedOutputFileName = "";
+    problemCase->setExpectedOutputFileName( "");
     fillProblemCaseInputAndExpected(problemCase);
 }
 
@@ -9872,7 +9872,7 @@ void MainWindow::on_btnProblemCaseClearInputFileName_clicked()
     POJProblemCase problemCase = mOJProblemModel->getCase(idx.row());
     if (!problemCase)
         return;
-    problemCase->inputFileName = "";
+    problemCase->setInputFileName("");
     fillProblemCaseInputAndExpected(problemCase);
 }
 
@@ -9889,9 +9889,9 @@ void MainWindow::on_btnProblemCaseExpectedOutputFileName_clicked()
         POJProblemCase problemCase = mOJProblemModel->getCase(idx.row());
         if (!problemCase)
             return;
-        if (problemCase->expectedOutputFileName == fileName)
+        if (problemCase->expectedOutputFileName() == fileName)
             return;
-        problemCase->expectedOutputFileName = fileName;
+        problemCase->setExpectedOutputFileName(fileName);
         fillProblemCaseInputAndExpected(problemCase);
     }
 }

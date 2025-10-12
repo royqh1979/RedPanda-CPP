@@ -84,7 +84,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     env.insert("PATH",path);
     process.setProcessEnvironment(env);
     if (pSettings->executor().redirectStderrToToolLog()) {
-        emit logStderrOutput("\n"+tr("--- stderr from %1 ---").arg(problemCase->name)+"\n");
+        emit logStderrOutput("\n"+tr("--- stderr from %1 ---").arg(problemCase->name()+"\n"));
     } else {
         process.setProcessChannelMode(QProcess::MergedChannels);
         process.setReadChannel(QProcess::StandardOutput);
@@ -104,10 +104,10 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
     }
 #endif
     if (process.state()==QProcess::Running) {
-        if (fileExists(problemCase->inputFileName))
-            process.write(readFileToByteArray(problemCase->inputFileName));
+        if (fileExists(problemCase->inputFileName()))
+            process.write(readFileToByteArray(problemCase->inputFileName()));
         else
-            process.write(problemCase->input.toLocal8Bit());
+            process.write(problemCase->input().toLocal8Bit());
         process.waitForFinished(0);
     }
 

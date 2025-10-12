@@ -20,7 +20,7 @@
 #include <memory>
 #include <QVector>
 #include <QList>
-
+#include <QObject>
 enum class ProblemCaseTestState {
     NotTested,
     Testing,
@@ -39,26 +39,45 @@ enum class ProblemMemoryLimitUnit {
     GB
 };
 
-struct OJProblemCase {
-    QString name;
-    QString input;
-    QString expected;
-    QString inputFileName;
-    QString expectedOutputFileName;
+class  OJProblemCase : public QObject{
+    Q_OBJECT
+public:
+    explicit OJProblemCase(QObject* parent = nullptr);
+    OJProblemCase(const OJProblemCase &) = delete;
+    const QString &getId() const;
+
+    const QString &name() const;
+    void setName(const QString &newName);
+    const QString &input() const;
+    void setInput(const QString &newInput);
+    const QString &expected() const;
+    void setExpected(const QString &newExpected);
+    const QString &inputFileName() const;
+    void setInputFileName(const QString &newInputFileName);
+    const QString &expectedOutputFileName() const;
+    void setExpectedOutputFileName(const QString &newExpectedOutputFileName);
+
+    bool isModified();
+    void setModified(bool newModified);
+signals:
+    void modifiedChanged(const QString& id);
+
+private:
+    QString mName;
+    QString mInput;
+    QString mExpected;
+    QString mInputFileName;
+    QString mExpectedOutputFileName;
+    QString mId;
+    bool mModified;
+public:
     ProblemCaseTestState testState; // no persistence
     QString output; // no persistence
     qulonglong runningTime; // no persistence
     qulonglong runningMemory; // no persistence;
+    int outputLineCounts; // no persistence;
+    int expectedLineCounts; // no persistence;
     int firstDiffLine; // no persistence
-    int outputLineCounts; // no persistence
-    int expectedLineCounts;
-    OJProblemCase();
-
-public:
-    const QString &getId() const;
-
-private:
-    QString id;
 };
 
 using POJProblemCase = std::shared_ptr<OJProblemCase>;

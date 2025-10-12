@@ -18,19 +18,98 @@
 
 #include <QUuid>
 
-OJProblemCase::OJProblemCase():
-    testState(ProblemCaseTestState::NotTested),
-    firstDiffLine(-1),
-    outputLineCounts(0),
-    expectedLineCounts(0)
+OJProblemCase::OJProblemCase(QObject *parent):
+    QObject{parent},
+    mModified{false},
+    testState{ProblemCaseTestState::NotTested},
+    firstDiffLine{-1}
 {
     QUuid uid = QUuid::createUuid();
-    id = uid.toString();
+    mId = uid.toString();
+}
+
+const QString &OJProblemCase::name() const
+{
+    return mName;
+}
+
+void OJProblemCase::setName(const QString &newName)
+{
+    if (mName != newName) {
+        mName = newName;
+        setModified(true);
+    }
+}
+
+const QString &OJProblemCase::input() const
+{
+    return mInput;
+}
+
+void OJProblemCase::setInput(const QString &newInput)
+{
+    if (mInput != newInput) {
+        mInput = newInput;
+        setModified(true);
+    }
+}
+
+const QString &OJProblemCase::expected() const
+{
+    return mExpected;
+}
+
+void OJProblemCase::setExpected(const QString &newExpected)
+{
+    if (mExpected!=newExpected) {
+        mExpected = newExpected;
+        setModified(true);
+    }
+}
+
+const QString &OJProblemCase::inputFileName() const
+{
+    return mInputFileName;
+}
+
+void OJProblemCase::setInputFileName(const QString &newInputFileName)
+{
+    if (mInputFileName!=newInputFileName) {
+        mInputFileName = newInputFileName;
+        setModified(true);
+    }
+}
+
+const QString &OJProblemCase::expectedOutputFileName() const
+{
+    return mExpectedOutputFileName;
+}
+
+void OJProblemCase::setExpectedOutputFileName(const QString &newExpectedOutputFileName)
+{
+    if (mExpectedOutputFileName != newExpectedOutputFileName) {
+        mExpectedOutputFileName = newExpectedOutputFileName;
+        setModified(true);
+    }
+}
+
+bool OJProblemCase::isModified()
+{
+    return mModified;
+}
+
+
+void OJProblemCase::setModified(bool newModified)
+{
+    if (mModified == newModified)
+        return;
+    mModified = newModified;
+    emit modifiedChanged(getId());
 }
 
 const QString &OJProblemCase::getId() const
 {
-    return id;
+    return mId;
 }
 
 size_t OJProblem::getTimeLimit()

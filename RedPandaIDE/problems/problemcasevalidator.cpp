@@ -27,13 +27,13 @@ bool ProblemCaseValidator::validate(POJProblemCase problemCase, ProblemCaseValid
         return false;
     QStringList output = textToLines(problemCase->output);
     QStringList expected;
-    if (fileExists(problemCase->expectedOutputFileName))
-        expected = readFileToLines(problemCase->expectedOutputFileName);
+    if (fileExists(problemCase->expectedOutputFileName()))
+        expected = readFileToLines(problemCase->expectedOutputFileName());
     else
-        expected = textToLines(problemCase->expected);
+        expected = textToLines(problemCase->expected());
     problemCase->outputLineCounts = output.count();
     problemCase->expectedLineCounts = expected.count();
-    if (problemCase->expectedLineCounts>5000) {
+    if (expected.count() > 5000) {
         if (output.count()<expected.count()) {
             problemCase->firstDiffLine=output.count();
             return false;

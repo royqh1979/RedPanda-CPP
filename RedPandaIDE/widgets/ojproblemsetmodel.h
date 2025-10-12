@@ -38,7 +38,8 @@ public:
     void update(int row);
     QString getTitle();
     QString getTooltip();
-
+private slots:
+    void onProblemCaseChanged(const QString& id);
 private:
     POJProblem mProblem;
     int mMoveTargetRow;

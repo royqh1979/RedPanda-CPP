@@ -28,11 +28,11 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
                 currentCase = std::make_shared<OJProblemCase>();
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
                     if (attr.name() == QLatin1String("name")) {
-                        currentCase->name = attr.value().toString().trimmed();
+                        currentCase->setName(attr.value().toString().trimmed());
                         break;
                     }
                 }
-                currentCase->name = QObject::tr("Problem Case %1").arg(currentProblem->cases.count()+1);
+                currentCase->setName(QObject::tr("Problem Case %1").arg(currentProblem->cases.count()+1));
             } else if (currentProblem &&
                        xml.name()==QLatin1String("time_limit")) {
                 currentEleName = xml.name().toString();
@@ -70,9 +70,9 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
             break;
         case QXmlStreamReader::TokenType::Characters:
             if (currentCase && currentProblem && currentEleName=="test_input") {
-                    currentCase->input = xml.text().toString();
+                    currentCase->setInput(xml.text().toString());
             } else if (currentCase && currentProblem && currentEleName=="test_output" ) {
-                currentCase->expected = xml.text().toString();
+                currentCase->setExpected(xml.text().toString());
                 currentProblem->cases.append(currentCase);
                 currentCase.reset();
             } else if (currentProblem &&  currentEleName=="description") {
@@ -167,11 +167,11 @@ void exportFreeProblemSet(const QList<POJProblem> &problems, const QString &file
             }
             foreach(const POJProblemCase& pCase, problem->cases) {
                 writer.writeStartElement("test_input");
-                writer.writeAttribute("name",pCase->name);
-                writer.writeCDATA(pCase->input);
+                writer.writeAttribute("name",pCase->name());
+                writer.writeCDATA(pCase->input());
                 writer.writeEndElement(); //test_input
                 writer.writeStartElement("test_output");
-                writer.writeCDATA(pCase->expected);
+                writer.writeCDATA(pCase->expected());
                 writer.writeEndElement(); //test_output
             }
             {

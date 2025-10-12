@@ -129,19 +129,19 @@ void CompetitiveCompanionThread::onNewProblemConnection(QTcpSocket* clientConnec
         QJsonObject caseObj = val.toObject();
         POJProblemCase problemCase = std::make_shared<OJProblemCase>();
         problemCase->testState = ProblemCaseTestState::NotTested;
-        problemCase->name = tr("Problem Case %1").arg(problem->cases.count()+1);
+        problemCase->setName( tr("Problem Case %1").arg(problem->cases.count()+1) );
         if (pSettings->executor().convertHTMLToTextForInput()) {
             QTextDocument doc;
             doc.setHtml(caseObj["input"].toString());
-            problemCase->input = doc.toPlainText();
+            problemCase->setInput( doc.toPlainText() );
         } else
-            problemCase->input = caseObj["input"].toString();
+            problemCase->setInput( caseObj["input"].toString() );
         if (pSettings->executor().convertHTMLToTextForExpected()) {
             QTextDocument doc;
             doc.setHtml(caseObj["output"].toString());
-            problemCase->expected = doc.toPlainText();
+            problemCase->setExpected(doc.toPlainText());
         } else
-            problemCase->expected = caseObj["output"].toString();
+            problemCase->setExpected(caseObj["output"].toString());
         problem->cases.append(problemCase);
     }
     mBatchProblemsRecieved++;
