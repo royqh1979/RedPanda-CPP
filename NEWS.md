@@ -10,6 +10,9 @@ Red Panda C++ Version 3.4
   - fix: Can't correctly parse some operator overloading such as ++ and --.
   - enhancement: Support NASM.
   - enhancement: Option Page for GNU Assembler(gas).
+  - enhancement: Save problem set to last file.
+  - enhancement: Show filename in problem set's title.
+  - enhancement: Show modified sign in problem set's title. 
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

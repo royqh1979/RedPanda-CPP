@@ -116,12 +116,16 @@ void OJProblemSetModel::removeAllProblems()
     clear();
 }
 
-void OJProblemSetModel::saveToFile(const QString &fileName, int currentIndex)
+void OJProblemSetModel::saveToFile(const QString &filePath,bool keepFilePath,int currentIndex)
 {
-    QFile file(fileName);
+    if (keepFilePath) {
+        mFilePath = filePath;
+        emit problemSetNameChanged();
+    }
+    QFile file(filePath);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QJsonObject obj;
-        mProblemSet.setExportFilename(fileName);
+        mProblemSet.setExportFilename(filePath);
         obj["name"]=mProblemSet.name();
         QJsonArray problemsArray;
         foreach (const POJProblem& problem, mProblemSet.problems()) {
@@ -141,7 +145,7 @@ void OJProblemSetModel::saveToFile(const QString &fileName, int currentIndex)
                 caseObj["name"]=problemCase->name();
                 caseObj["input"]=problemCase->input();
                 QString path = problemCase->inputFileName();
-                QString prefix = includeTrailingPathDelimiter(extractFileDir(fileName));
+                QString prefix = includeTrailingPathDelimiter(extractFileDir(filePath));
                 if (path.startsWith(prefix, PATH_SENSITIVITY)) {
                     path = "%ProblemSetPath%/"+ path.mid(prefix.length());
                 }
@@ -167,14 +171,18 @@ void OJProblemSetModel::saveToFile(const QString &fileName, int currentIndex)
         file.write(doc.toJson());
         file.close();
     } else {
-        throw FileError(QObject::tr("Can't open file '%1' for read.")
-                        .arg(fileName));
+        throw FileError(QObject::tr("Can't open file '%1' for write.")
+                        .arg(filePath));
     }
 }
 
-void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
+void OJProblemSetModel::loadFromFile(const QString &filePath,bool keepFilePath,int& currentIndex)
 {
-    QFile file(fileName);
+    if (keepFilePath) {
+        mFilePath = filePath;
+        emit problemSetNameChanged();
+    }
+    QFile file(filePath);
     if (file.open(QFile::ReadOnly)) {
         QByteArray content = file.readAll().trimmed();
         if (content.isEmpty())
@@ -183,7 +191,7 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
         QJsonDocument doc(QJsonDocument::fromJson(content,&error));
         if (error.error!=QJsonParseError::NoError) {
             throw FileError(QObject::tr("Can't parse problem set file '%1':%2")
-                            .arg(fileName,
+                            .arg(filePath,
                                  error.errorString()));
         }
         beginResetModel();
@@ -213,13 +221,13 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
                 problemCase->setExpected( caseObj["expected"].toString());
                 QString path = caseObj["input_filename"].toString();
                 if (path.startsWith("%ProblemSetPath%/")) {
-                    path = includeTrailingPathDelimiter(extractFileDir(fileName))+
+                    path = includeTrailingPathDelimiter(extractFileDir(filePath))+
                             path.mid(QLatin1String("%ProblemSetPath%/").size());
                 }
                 problemCase->setInputFileName(path);
                 path = caseObj["expected_output_filename"].toString();
                 if (path.startsWith("%ProblemSetPath%/")) {
-                    path = includeTrailingPathDelimiter(extractFileDir(fileName))+
+                    path = includeTrailingPathDelimiter(extractFileDir(filePath))+
                             path.mid(QLatin1String("%ProblemSetPath%/").size());
                 }
                 problemCase->setExpectedOutputFileName(path);
@@ -234,23 +242,8 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
         endResetModel();
     } else {
         throw FileError(QObject::tr("Can't open file '%1' for read.")
-                        .arg(fileName));
+                        .arg(filePath));
     }
-}
-
-void OJProblemSetModel::load(int &currentIndex)
-{
-    QDir dir(pSettings->dirs().config());
-    QString filename=dir.filePath(DEV_PROBLEM_SET_FILE);
-    if (fileExists(filename))
-        loadFromFile(filename,currentIndex);
-}
-
-void OJProblemSetModel::save(int currentIndex)
-{
-    QDir dir(pSettings->dirs().config());
-    QString filename=dir.filePath(DEV_PROBLEM_SET_FILE);
-    saveToFile(filename,currentIndex);
 }
 
 void OJProblemSetModel::updateProblemAnswerFilename(const QString &oldFilename, const QString &newFilename)
@@ -280,6 +273,11 @@ void OJProblemSetModel::onProblemModified(const QString &id)
             break;
         }
     }
+}
+
+const QString &OJProblemSetModel::filePath() const
+{
+    return mFilePath;
 }
 
 int OJProblemSetModel::rowCount(const QModelIndex &) const

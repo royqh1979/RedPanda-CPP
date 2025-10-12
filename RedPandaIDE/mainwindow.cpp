@@ -391,7 +391,10 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::updateProblemTitle);
     try {
         int currentIndex=-1;
-        mOJProblemSetModel->load(currentIndex);
+        QDir dir(pSettings->dirs().config());
+        QString filename=dir.filePath(DEV_PROBLEM_SET_FILE);
+        if (fileExists(filename))
+            mOJProblemSetModel->loadFromFile(filename,false,currentIndex);
         if (currentIndex>=0) {
             QModelIndex index = mOJProblemSetModel->index(currentIndex,0);
             ui->lstProblemSet->setCurrentIndex(index);
@@ -2232,7 +2235,8 @@ void MainWindow::updateActionIcons()
     mProblemSet_New->setIcon(pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_SET));
     mProblemSet_AddProblem->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_ADD));
     mProblemSet_RemoveProblem->setIcon(pIconsManager->getIcon(IconsManager::ACTION_MISC_CROSS));
-    mProblemSet_Save->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS));
+    mProblemSet_Save->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE));
+    mProblemSet_SaveAs->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_SAVE_AS));
     mProblemSet_Load->setIcon(pIconsManager->getIcon(IconsManager::ACTION_FILE_OPEN_FOLDER));
     mProblemSet_ImportFPS->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_BACK));
     mProblemSet_ExportFPS->setIcon(pIconsManager->getIcon(IconsManager::ACTION_CODE_FORWARD));
@@ -2959,6 +2963,12 @@ void MainWindow::createCustomActions()
     connect(mProblemSet_Save,&QAction::triggered,
             this, &MainWindow::onSaveProblemSet);
 
+    mProblemSet_SaveAs = createAction(
+                tr("Save Problem Set As"),
+                ui->tabProblemSet);
+    connect(mProblemSet_SaveAs,&QAction::triggered,
+            this, &MainWindow::onSaveProblemSetAs);
+
     mProblemSet_Load = createAction(
                 tr("Load Problem Set"),
                 ui->tabProblemSet);
@@ -3336,6 +3346,7 @@ void MainWindow::initToolButtons()
     //problem set toolbuttons
     ui->btnNewProblemSet->setDefaultAction(mProblemSet_New);
     ui->btnSaveProblemSet->setDefaultAction(mProblemSet_Save);
+    ui->btnSaveProblemSetAs->setDefaultAction(mProblemSet_SaveAs);
     ui->btnLoadProblemSet->setDefaultAction(mProblemSet_Load);
     ui->btnImportFPS->setDefaultAction(mProblemSet_ImportFPS);
     ui->btnExportFPS->setDefaultAction(mProblemSet_ExportFPS);
@@ -4325,6 +4336,7 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
     menu.addAction(mProblemSet_New);
     menu.addAction(mProblemSet_Load);
     menu.addAction(mProblemSet_Save);
+    menu.addAction(mProblemSet_SaveAs);
     menu.addAction(mProblemSet_ImportFPS);
     menu.addAction(mProblemSet_ExportFPS);
     menu.addAction(mProblemSet_AddProblem);
@@ -5841,7 +5853,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
             int currentIndex=-1;
             if (ui->lstProblemSet->currentIndex().isValid())
                 currentIndex = ui->lstProblemSet->currentIndex().row();
-            mOJProblemSetModel->save(currentIndex);
+            QDir dir(pSettings->dirs().config());
+            QString filename=dir.filePath(DEV_PROBLEM_SET_FILE);
+            mOJProblemSetModel->saveToFile(filename, false, currentIndex);
         } catch (FileError& e) {
             QMessageBox::warning(nullptr,
                              tr("Save Error"),
@@ -8054,9 +8068,26 @@ void MainWindow::updateProblemSetName()
 {
     QString name = mOJProblemSetModel->name();
     if (mOJProblemSetModel->problemSet()->isModified()) {
-        name += "*";
+        name += "[*]";
+    }
+    if (!mOJProblemSetModel->filePath().isEmpty()) {
+        name += QString("(%1)").arg(QFileInfo(mOJProblemSetModel->filePath()).fileName());
     }
     ui->lblProblemSet->setText(name);
+}
+
+void MainWindow::saveProblemSet(const QString &filePath)
+{
+    try {
+        applyCurrentProblemCaseChanges();
+        int currentIndex=-1;
+        if (ui->lstProblemSet->currentIndex().isValid())
+            currentIndex = ui->lstProblemSet->currentIndex().row();
+        mOJProblemSetModel->saveToFile(filePath, true, currentIndex);
+    } catch (FileError& error) {
+        QMessageBox::critical(this,tr("Save Error"),
+                              error.reason());
+    }
 }
 
 void MainWindow::setupSlotsForProject()
@@ -8887,7 +8918,7 @@ void MainWindow::onNewProblemSet()
                              +"<br />"
                              +tr("Do you want to save it?"),
                              QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes) {
-            onSaveProblemSet();
+            onSaveProblemSetAs();
         }
     }
     mOJProblemSetNameCounter++;
@@ -8939,8 +8970,17 @@ void MainWindow::onRemoveProblem()
     }
 }
 
-
 void MainWindow::onSaveProblemSet()
+{
+    if (mOJProblemSetModel->filePath().isEmpty())
+        onSaveProblemSetAs();
+    else {
+        saveProblemSet(mOJProblemSetModel->filePath());
+    }
+}
+
+
+void MainWindow::onSaveProblemSetAs()
 {
     QFileDialog dialog(this);
     dialog.setWindowTitle(tr("Save Problem Set"));
@@ -8962,16 +9002,7 @@ void MainWindow::onSaveProblemSet()
             fileName.append(".pbs");
         }
         QDir::setCurrent(extractFileDir(fileName));
-        try {
-            applyCurrentProblemCaseChanges();
-            int currentIndex=-1;
-            if (ui->lstProblemSet->currentIndex().isValid())
-                currentIndex = ui->lstProblemSet->currentIndex().row();
-            mOJProblemSetModel->saveToFile(fileName,currentIndex);
-        } catch (FileError& error) {
-            QMessageBox::critical(this,tr("Save Error"),
-                                  error.reason());
-        }
+        saveProblemSet(fileName);
     }
 }
 
@@ -8987,7 +9018,7 @@ void MainWindow::onLoadProblemSet()
         QDir::setCurrent(extractFileDir(fileName));
         try {
             int currentIndex;
-            mOJProblemSetModel->loadFromFile(fileName,currentIndex);
+            mOJProblemSetModel->loadFromFile(fileName,true,currentIndex);
             if (currentIndex>=0) {
                 if (currentIndex>=0) {
                     QModelIndex index = mOJProblemSetModel->index(currentIndex,0);

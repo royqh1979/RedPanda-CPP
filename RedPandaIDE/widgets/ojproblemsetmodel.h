@@ -85,10 +85,8 @@ public:
     void removeProblem(int index);
     bool problemNameUsed(const QString& name);
     void removeAllProblems();
-    void saveToFile(const QString& fileName, int currentIndex=-1);
-    void loadFromFile(const QString& fileName, int& currentIndex);
-    void load(int& currentIndex);
-    void save(int currentIndex);
+    void saveToFile(const QString& filePath, bool keepFilePath,int currentIndex=-1);
+    void loadFromFile(const QString& filePath, bool keepFilePath, int& currentIndex);
     void updateProblemAnswerFilename(const QString& oldFilename, const QString& newFilename);
     const OJProblemSet *problemSet() const;
 signals:
@@ -101,6 +99,7 @@ private slots:
 
 private:
     OJProblemSet mProblemSet;
+    QString mFilePath;
 
     // QAbstractItemModel interface
 public:
@@ -113,6 +112,7 @@ public:
 public:
     Qt::DropActions supportedDropActions() const override;
     bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild) override;
+    const QString &filePath() const;
 };
 
 #endif // OJPROBLEMSETMODEL_H
