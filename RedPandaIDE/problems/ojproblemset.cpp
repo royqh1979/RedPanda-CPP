@@ -104,41 +104,316 @@ void OJProblemCase::setModified(bool newModified)
     if (mModified == newModified)
         return;
     mModified = newModified;
-    emit modifiedChanged(getId());
+    emit modifiedChanged(id());
 }
 
-const QString &OJProblemCase::getId() const
+const QString &OJProblemCase::id() const
 {
     return mId;
 }
 
-size_t OJProblem::getTimeLimit()
+size_t OJProblem::getTimeLimitInMilliseconds()
 {
-    switch(timeLimitUnit) {
+    switch(mTimeLimitUnit) {
     case ProblemTimeLimitUnit::Seconds:
-        return timeLimit*1000;
+        return mTimeLimit*1000;
     default:
-        return timeLimit;
+        return mTimeLimit;
     }
 }
 
-size_t OJProblem::getMemoryLimit()
+size_t OJProblem::getMemoryLimitInBytes()
 {
-    switch(memoryLimitUnit) {
+    switch(mMemoryLimitUnit) {
     case ProblemMemoryLimitUnit::KB:
-        return memoryLimit*1024;
+        return mMemoryLimit*1024;
     case ProblemMemoryLimitUnit::MB:
-        return memoryLimit*1024*1024;
+        return mMemoryLimit*1024*1024;
     default:
-        return memoryLimit*1024*1024*1024;
+        return mMemoryLimit*1024*1024*1024;
     }
 }
 
-OJProblem::OJProblem() :
-    timeLimit(0),
-    memoryLimit(0),
-    timeLimitUnit(ProblemTimeLimitUnit::Seconds),
-    memoryLimitUnit(ProblemMemoryLimitUnit::MB)
+const QString &OJProblem::name() const
+{
+    return mName;
+}
+
+void OJProblem::setName(const QString &newName)
+{
+    if (mName != newName) {
+        mName = newName;
+        setModified(true);
+    }
+}
+
+const QString &OJProblem::url() const
+{
+    return mUrl;
+}
+
+void OJProblem::setUrl(const QString &newUrl)
+{
+    if (mUrl != newUrl) {
+        mUrl = newUrl;
+        setModified(true);
+    }
+}
+
+const QString &OJProblem::description() const
+{
+    return mDescription;
+}
+
+void OJProblem::setDescription(const QString &newDescription)
+{
+    if (mDescription != newDescription) {
+        mDescription = newDescription;
+        setModified(true);
+    }
+}
+
+const QString &OJProblem::hint() const
+{
+    return mHint;
+}
+
+void OJProblem::setHint(const QString &newHint)
+{
+    if (mHint != newHint) {
+        mHint = newHint;
+        setModified(true);
+    }
+}
+
+const QString &OJProblem::answerProgram() const
+{
+    return mAnswerProgram;
+}
+
+void OJProblem::setAnswerProgram(const QString &newAnswerProgram)
+{
+    if (mAnswerProgram != newAnswerProgram) {
+        mAnswerProgram = newAnswerProgram;
+        setModified(true);
+    }
+}
+
+void OJProblem::setTimeLimit(size_t newTimeLimit)
+{
+    if (mTimeLimit != newTimeLimit) {
+        mTimeLimit = newTimeLimit;
+        setModified(true);
+    }
+}
+
+void OJProblem::setMemoryLimit(size_t newMemoryLimit)
+{
+    if (mMemoryLimit != newMemoryLimit) {
+        mMemoryLimit = newMemoryLimit;
+        setModified(true);
+    }
+}
+
+ProblemTimeLimitUnit OJProblem::timeLimitUnit() const
+{
+    return mTimeLimitUnit;
+}
+
+void OJProblem::setTimeLimitUnit(ProblemTimeLimitUnit newTimeLimitUnit)
+{
+    mTimeLimitUnit = newTimeLimitUnit;
+}
+
+ProblemMemoryLimitUnit OJProblem::memoryLimitUnit() const
+{
+    return mMemoryLimitUnit;
+}
+
+void OJProblem::setMemoryLimitUnit(ProblemMemoryLimitUnit newMemoryLimitUnit)
+{
+    if (mMemoryLimitUnit != newMemoryLimitUnit) {
+        mMemoryLimitUnit = newMemoryLimitUnit;
+        setModified(true);
+    }
+}
+
+const QVector<POJProblemCase> &OJProblem::cases() const
+{
+    return mCases;
+}
+
+void OJProblem::addCase(POJProblemCase &problemCase)
+{
+    connect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblem::onProblemCaseModified);
+    mCases.append(problemCase);
+    setModified(true);
+}
+
+void OJProblem::removeCase(int idx)
+{
+    if(idx<0 || idx>=mCases.count())
+        return;
+    disconnect(mCases[idx].get());
+    mCases.removeAt(idx);
+    setModified(true);
+}
+
+void OJProblem::moveCase(int fromIdx, int toIdx)
+{
+    mCases.move(fromIdx, toIdx);
+    setModified(true);
+}
+
+void OJProblem::clearCases()
+{
+    foreach(const POJProblemCase &problemCase, mCases) {
+        disconnect(problemCase.get());
+    }
+    mCases.clear();
+    setModified(true);
+}
+
+void OJProblem::onProblemCaseModified(const QString &caseId)
+{
+    emit problemCaseModified(caseId);
+    foreach(const POJProblemCase &problemCase, mCases) {
+        if (problemCase->id() == caseId && problemCase->isModified()) {
+            setModified(true);
+            break;
+        }
+    }
+}
+
+size_t OJProblem::memoryLimit() const
+{
+    return mMemoryLimit;
+}
+
+size_t OJProblem::timeLimit() const
+{
+    return mTimeLimit;
+}
+
+
+bool OJProblem::isModified() const
+{
+    return mModified;
+}
+
+void OJProblem::setModified(bool newModified)
+{
+    if (mModified == newModified)
+        return;
+    mModified = newModified;
+    emit modifiedChanged(id());
+}
+
+OJProblem::OJProblem(QObject *parent) :
+    QObject(parent),
+    mTimeLimit(0),
+    mMemoryLimit(0),
+    mTimeLimitUnit(ProblemTimeLimitUnit::Seconds),
+    mMemoryLimitUnit(ProblemMemoryLimitUnit::MB),
+    mModified{false}
+{
+    QUuid uid = QUuid::createUuid();
+    mId = uid.toString();
+}
+
+const QString &OJProblem::id() const
+{
+    return mId;
+}
+
+OJProblemSet::OJProblemSet(QObject *parent):QObject{parent},
+    mModified{false}
 {
 
+}
+
+bool OJProblemSet::isModified() const
+{
+    return mModified;
+}
+
+void OJProblemSet::setModified(bool newModified)
+{
+    if (mModified == newModified)
+        return;
+    mModified = newModified;
+    emit modifiedChanged();
+}
+
+const QString &OJProblemSet::name() const
+{
+    return mName;
+}
+
+void OJProblemSet::setName(const QString &newName)
+{
+    if (mName != newName) {
+        mName = newName;
+        setModified(true);
+    }
+}
+
+const QList<POJProblem> &OJProblemSet::problems() const
+{
+    return mProblems;
+}
+
+const QString &OJProblemSet::exportFilename() const
+{
+    return mExportFilename;
+}
+
+void OJProblemSet::setExportFilename(const QString &newExportFilename)
+{
+    if (mExportFilename != newExportFilename) {
+        mExportFilename = newExportFilename;
+        setModified(true);
+    }
+}
+
+void OJProblemSet::addProblem(const POJProblem &problem)
+{
+    connect(problem.get(), &OJProblem::modifiedChanged, this, &OJProblemSet::onProblemModified);
+    mProblems.append(problem);
+    setModified(true);
+}
+
+void OJProblemSet::removeProblem(int idx)
+{
+    if (idx<0 || idx>=mProblems.count())
+        return;
+    disconnect(mProblems[idx].get());
+    mProblems.removeAt(idx);
+    setModified(true);
+}
+
+void OJProblemSet::clearProblems()
+{
+    foreach( const POJProblem &problem, mProblems) {
+        disconnect(problem.get());
+    }
+    mProblems.clear();
+    setModified(true);
+}
+
+void OJProblemSet::moveProblem(int fromIdx, int toIdx)
+{
+    mProblems.move(fromIdx, toIdx);
+    setModified(true);
+}
+
+void OJProblemSet::onProblemModified(const QString &id)
+{
+    emit problemModified(id);
+    foreach( const POJProblem &problem, mProblems) {
+        if (problem->id() == id && problem->isModified()) {
+            setModified(true);
+            break;
+        }
+    }
 }

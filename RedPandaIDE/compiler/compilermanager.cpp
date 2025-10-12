@@ -370,8 +370,8 @@ void CompilerManager::doRunProblem(const QString &filename, const QString &argum
         execRunner->setExecTimeout(pSettings->executor().caseTimeout());
         execRunner->setMemoryLimit(pSettings->executor().caseMemoryLimit()*1024); //convert kb to bytes
     }
-    size_t timeLimit = problem->getTimeLimit();
-    size_t memoryLimit = problem->getMemoryLimit();
+    size_t timeLimit = problem->getTimeLimitInMilliseconds();
+    size_t memoryLimit = problem->getMemoryLimitInBytes();
     if (timeLimit>0)
         execRunner->setExecTimeout(timeLimit);
     if (memoryLimit)

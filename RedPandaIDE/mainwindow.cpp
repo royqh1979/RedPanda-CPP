@@ -379,11 +379,15 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onProblemCaseIndexChanged);
     connect(mOJProblemSetModel, &OJProblemSetModel::problemNameChanged,
             this , &MainWindow::onProblemNameChanged);
+    connect(mOJProblemSetModel, &OJProblemSetModel::problemSetNameChanged,
+            this , &MainWindow::updateProblemSetName);
     ui->pbProblemCases->setVisible(false);
     connect(&mCCHandler, &CompetitiveCompanionHandler::newProblemReceived,
             this, &MainWindow::onNewProblemReceived);
 
     connect(mOJProblemModel, &OJProblemModel::dataChanged,
+            this, &MainWindow::updateProblemTitle);
+    connect(mOJProblemModel, &OJProblemModel::problemModified,
             this, &MainWindow::updateProblemTitle);
     try {
         int currentIndex=-1;
@@ -2483,7 +2487,7 @@ void MainWindow::runExecutable(
         POJProblem problem = mOJProblemModel->problem();
         if (problem) {
             mCompilerManager->runProblem(exeName,params,QFileInfo(exeName).absolutePath(),
-                                         problem->cases,
+                                         problem->cases(),
                                          problem);
             stretchMessagesPanel(true);
             ui->tabMessages->setCurrentWidget(ui->tabProblem);
@@ -4341,14 +4345,14 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
             action->setCheckable(true);
             action->setActionGroup(actionGroup);
 
-            if (filename.compare(problem->answerProgram, PATH_SENSITIVITY)==0) {
+            if (filename.compare(problem->answerProgram(), PATH_SENSITIVITY)==0) {
                 action->setChecked(true);
                 answerFound = true;
             }
             menuSetAnswer->addAction(action);
         }
-        if (!answerFound && !problem->answerProgram.isEmpty()) {
-            QAction* action = new QAction(problem->answerProgram,menuSetAnswer);
+        if (!answerFound && !problem->answerProgram().isEmpty()) {
+            QAction* action = new QAction(problem->answerProgram(),menuSetAnswer);
             action->setCheckable(true);
             action->setChecked(true);
             action->setActionGroup(actionGroup);
@@ -4356,13 +4360,13 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
         }
         connect(actionGroup, &QActionGroup::triggered,
                 [problem,this](QAction* action) {
-            if (action->text().compare(problem->answerProgram, PATH_SENSITIVITY)
+            if (action->text().compare(problem->answerProgram(), PATH_SENSITIVITY)
                     !=0)
-                problem->answerProgram = action->text();
+                problem->setAnswerProgram(action->text());
             else
-                problem->answerProgram = "";
+                problem->setAnswerProgram("");
             if (problem == mOJProblemModel->problem()) {
-                ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram.isEmpty());
+                ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram().isEmpty());
             }
         });
         QAction * action = new QAction(tr("select other file..."),menuSetAnswer);
@@ -4376,16 +4380,16 @@ void MainWindow::onLstProblemSetContextMenu(const QPoint &pos)
                         nullptr);
             if (!filename.isEmpty()) {
                 QDir::setCurrent(extractFileDir(filename));
-                problem->answerProgram = filename;
+                problem->setAnswerProgram(filename);
                 if (problem == mOJProblemModel->problem()) {
-                    ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram.isEmpty());
+                    ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram().isEmpty());
                 }
             }
         });
         menuSetAnswer->addAction(action);
         menu.addMenu(menuSetAnswer);
-        mProblem_GotoUrl->setEnabled(!problem->url.isEmpty());
-        mProblem_OpenSource->setEnabled(!problem->answerProgram.isEmpty());
+        mProblem_GotoUrl->setEnabled(!problem->url().isEmpty());
+        mProblem_OpenSource->setEnabled(!problem->answerProgram().isEmpty());
     } else {
         mProblem_GotoUrl->setEnabled(false);
         mProblem_OpenSource->setEnabled(false);
@@ -4438,8 +4442,8 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         mProblemSet_RemoveProblem->setEnabled(true);
         POJProblem problem = mOJProblemSetModel->problem(idx.row());
         if (mFullInitialized) {
-            if (problem && !problem->answerProgram.isEmpty()) {
-                openFile(problem->answerProgram);
+            if (problem && !problem->answerProgram().isEmpty()) {
+                openFile(problem->answerProgram());
             }
         }
         mOJProblemModel->setProblem(problem);
@@ -4452,7 +4456,7 @@ void MainWindow::onProblemSetIndexChanged(const QModelIndex &current, const QMod
         stretchMessagesPanel(true);
         ui->tabMessages->setCurrentWidget(ui->tabProblem);
         ui->tabProblem->setEnabled(true);
-        ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram.isEmpty());
+        ui->btnOpenProblemAnswer->setEnabled(!problem->answerProgram().isEmpty());
     }
 }
 
@@ -4566,10 +4570,10 @@ void MainWindow::onProblemBatchSetCases()
 
 void MainWindow::onNewProblemReceived(int num, int total, POJProblem newProblem)
 {
-    if (mOJProblemSetModel->problemNameUsed(newProblem->name))
+    if (mOJProblemSetModel->problemNameUsed(newProblem->name()))
         return;
     updateStatusbarMessage(tr("Problem '%1' received (%2/%3).")
-                              .arg(newProblem->name).arg(num).arg(total));
+                              .arg(newProblem->name()).arg(num).arg(total));
     mOJProblemSetModel->addProblem(newProblem);
     ui->tabExplorer->setCurrentWidget(ui->tabProblemSet);
     ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel->index(
@@ -4808,8 +4812,8 @@ void MainWindow::onProblemOpenSource()
     POJProblem problem=mOJProblemSetModel->problem(idx.row());
     if (!problem)
         return;
-    if (!problem->answerProgram.isEmpty()) {
-        openFile(problem->answerProgram);
+    if (!problem->answerProgram().isEmpty()) {
+        openFile(problem->answerProgram());
     }
 }
 
@@ -4829,8 +4833,8 @@ void MainWindow::onProblemGotoUrl()
     POJProblem problem=mOJProblemSetModel->problem(idx.row());
     if (!problem)
         return;
-    if (!problem->url.isEmpty()) {
-        QDesktopServices::openUrl(problem->url);
+    if (!problem->url().isEmpty()) {
+        QDesktopServices::openUrl(problem->url());
     }
 }
 
@@ -4845,7 +4849,7 @@ void MainWindow::onRenameProblemSet()
     newName = newName.trimmed();
     if (!newName.isEmpty()){
         mOJProblemSetModel->rename(newName);
-        ui->lblProblemSet->setText(mOJProblemSetModel->name());
+        //updateProblemSetName();
     }
 }
 
@@ -8046,6 +8050,15 @@ void MainWindow::validateCompilerSet(int index)
     }
 }
 
+void MainWindow::updateProblemSetName()
+{
+    QString name = mOJProblemSetModel->name();
+    if (mOJProblemSetModel->problemSet()->isModified()) {
+        name += "*";
+    }
+    ui->lblProblemSet->setText(name);
+}
+
 void MainWindow::setupSlotsForProject()
 {
     connect(mProject.get(), &Project::unitAdded,
@@ -8879,7 +8892,7 @@ void MainWindow::onNewProblemSet()
     }
     mOJProblemSetNameCounter++;
     mOJProblemSetModel->create(tr("Problem Set %1").arg(mOJProblemSetNameCounter));
-    ui->lblProblemSet->setText(mOJProblemSetModel->name());
+    //updateProblemSetName();
     onProblemSetIndexChanged(QModelIndex(),QModelIndex());
 }
 
@@ -8894,7 +8907,7 @@ void MainWindow::onAddProblem()
             break;
     }
     POJProblem problem = std::make_shared<OJProblem>();
-    problem->name = name;
+    problem->setName(name);
     mOJProblemSetModel->addProblem(problem);
     ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel->index(mOJProblemSetModel->count()-1));
     mProblem_Properties->trigger();
@@ -8987,7 +9000,7 @@ void MainWindow::onLoadProblemSet()
                                   error.reason());
         }
     }
-    ui->lblProblemSet->setText(mOJProblemSetModel->name());
+    //updateProblemSetName();
     ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel->index(0,0));
 }
 
@@ -9052,9 +9065,9 @@ void MainWindow::onRemoveProblemCases()
 void MainWindow::onOpenProblemAnswerFile()
 {
     POJProblem problem = mOJProblemModel->problem();
-    if (!problem || problem->answerProgram.isEmpty())
+    if (!problem || problem->answerProgram().isEmpty())
         return;
-    Editor *e = openFile(problem->answerProgram);
+    Editor *e = openFile(problem->answerProgram());
     if (e) {
         e->activate();
     }
@@ -10154,7 +10167,7 @@ void MainWindow::onImportFPSProblemSet()
         try {
             QList<POJProblem> problems = importFreeProblemSet(fileName);
             mOJProblemSetModel->addProblems(problems);
-            ui->lblProblemSet->setText(mOJProblemSetModel->name());
+            //updateProblemSetName();
             ui->lstProblemSet->setCurrentIndex(mOJProblemSetModel->index(0,0));
         } catch (FileError& error) {
             QMessageBox::critical(this,tr("Load Error"),

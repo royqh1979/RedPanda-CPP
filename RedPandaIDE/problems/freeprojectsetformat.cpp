@@ -32,16 +32,16 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
                         break;
                     }
                 }
-                currentCase->setName(QObject::tr("Problem Case %1").arg(currentProblem->cases.count()+1));
+                currentCase->setName(QObject::tr("Problem Case %1").arg(currentProblem->cases().count()+1));
             } else if (currentProblem &&
                        xml.name()==QLatin1String("time_limit")) {
                 currentEleName = xml.name().toString();
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
                     if (attr.name() == QLatin1String("unit")) {
                         if (attr.value()==QLatin1String("ms"))
-                            currentProblem->timeLimitUnit = ProblemTimeLimitUnit::Milliseconds;
+                            currentProblem->setTimeLimitUnit(ProblemTimeLimitUnit::Milliseconds);
                         else if (attr.value()==QLatin1String("s"))
-                            currentProblem->timeLimitUnit = ProblemTimeLimitUnit::Seconds;
+                            currentProblem->setTimeLimitUnit(ProblemTimeLimitUnit::Seconds);
                         break;
                     }
                 }
@@ -51,11 +51,11 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
                 foreach (const QXmlStreamAttribute& attr, xml.attributes()) {
                     if (attr.name() == QLatin1String("unit")) {
                         if (attr.value()==QLatin1String("mb"))
-                            currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::MB;
+                            currentProblem->setMemoryLimitUnit(ProblemMemoryLimitUnit::MB);
                         else if (attr.value()==QLatin1String("kb"))
-                            currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::KB;
+                            currentProblem->setMemoryLimitUnit(ProblemMemoryLimitUnit::KB);
                         else if (attr.value()==QLatin1String("gb"))
-                            currentProblem->memoryLimitUnit = ProblemMemoryLimitUnit::GB;
+                            currentProblem->setMemoryLimitUnit( ProblemMemoryLimitUnit::GB);
                         break;
                     }
                 }
@@ -64,6 +64,7 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
         case QXmlStreamReader::TokenType::EndElement:
             currentEleName.clear();
             if (currentProblem && xml.name()==QLatin1String("item")) {
+                currentProblem->setModified(false);
                 problems.append(currentProblem);
                 currentProblem.reset();
             }
@@ -73,20 +74,21 @@ QList<POJProblem> importFreeProblemSet(const QString &filename)
                     currentCase->setInput(xml.text().toString());
             } else if (currentCase && currentProblem && currentEleName=="test_output" ) {
                 currentCase->setExpected(xml.text().toString());
-                currentProblem->cases.append(currentCase);
+                currentCase->setModified(false);
+                currentProblem->addCase(currentCase);
                 currentCase.reset();
             } else if (currentProblem &&  currentEleName=="description") {
-                currentProblem->description = xml.text().toString();
+                currentProblem->setDescription(xml.text().toString());
             } else if (currentProblem &&  currentEleName=="hint") {
-                currentProblem->hint = xml.text().toString();
+                currentProblem->setHint( xml.text().toString() );
             } else if (currentProblem &&  currentEleName=="title") {
-                currentProblem->name = xml.text().toString().trimmed().replace("&nbsp;"," ");
+                currentProblem->setName(xml.text().toString().trimmed().replace("&nbsp;"," "));
             } else if (currentProblem &&  currentEleName=="url") {
-                currentProblem->url = xml.text().toString().trimmed();
+                currentProblem->setUrl(xml.text().toString().trimmed());
             } else if (currentProblem &&  currentEleName=="time_limit") {
-                currentProblem->timeLimit = xml.text().toInt();
+                currentProblem->setTimeLimit(xml.text().toInt());
             } else if (currentProblem &&  currentEleName=="memory_limit") {
-                currentProblem->memoryLimit = xml.text().toInt();
+                currentProblem->setMemoryLimit(xml.text().toInt());
             }
         default:
             break;
@@ -119,17 +121,17 @@ void exportFreeProblemSet(const QList<POJProblem> &problems, const QString &file
             writer.writeStartElement("item");
             {
                 writer.writeStartElement("title");
-                writer.writeCDATA(problem->name);
+                writer.writeCDATA(problem->name());
                 writer.writeEndElement(); //title
             }
             {
                 writer.writeStartElement("url");
-                writer.writeCDATA(problem->url);
+                writer.writeCDATA(problem->url());
                 writer.writeEndElement();//url
             }
             {
                 QString unit;
-                switch(problem->timeLimitUnit) {
+                switch(problem->timeLimitUnit()) {
                 case ProblemTimeLimitUnit::Milliseconds:
                     unit = "ms";
                     break;
@@ -139,12 +141,12 @@ void exportFreeProblemSet(const QList<POJProblem> &problems, const QString &file
                 }
                 writer.writeStartElement("time_limit");
                 writer.writeAttribute("unit",unit);
-                writer.writeCDATA(QString("%1").arg(problem->timeLimit));
+                writer.writeCDATA(QString("%1").arg(problem->timeLimit()));
                 writer.writeEndElement(); //time_limit
             }
             {
                 QString unit;
-                switch(problem->memoryLimitUnit) {
+                switch(problem->memoryLimitUnit()) {
                 case ProblemMemoryLimitUnit::MB:
                     unit = "mb";
                     break;
@@ -157,15 +159,15 @@ void exportFreeProblemSet(const QList<POJProblem> &problems, const QString &file
                 }
                 writer.writeStartElement("memory_limit");
                 writer.writeAttribute("unit",unit);
-                writer.writeCDATA(QString("%1").arg(problem->memoryLimit));
+                writer.writeCDATA(QString("%1").arg(problem->memoryLimit()));
                 writer.writeEndElement(); //memory_limit
             }
             {
                 writer.writeStartElement("description");
-                writer.writeCDATA(problem->description);
+                writer.writeCDATA(problem->description());
                 writer.writeEndElement(); //description
             }
-            foreach(const POJProblemCase& pCase, problem->cases) {
+            foreach(const POJProblemCase& pCase, problem->cases()) {
                 writer.writeStartElement("test_input");
                 writer.writeAttribute("name",pCase->name());
                 writer.writeCDATA(pCase->input());
@@ -176,7 +178,7 @@ void exportFreeProblemSet(const QList<POJProblem> &problems, const QString &file
             }
             {
                 writer.writeStartElement("hint");
-                writer.writeCDATA(problem->hint);
+                writer.writeCDATA(problem->hint());
                 writer.writeEndElement(); //hint
             }
             writer.writeEndElement(); //item

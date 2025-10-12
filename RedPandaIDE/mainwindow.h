@@ -339,6 +339,8 @@ private:
     void backupMenuForEditor(QMenu* menu, QList<QAction *> &backup);
     void validateCompilerSet(int index);
 
+    void updateProblemSetName();
+
 private slots:
     void setupSlotsForProject();
     void onProjectUnitAdded(const QString &filename);

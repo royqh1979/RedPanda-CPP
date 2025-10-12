@@ -51,9 +51,9 @@ OJProblemCasesRunner::OJProblemCasesRunner(const QString& filename, const QStrin
 
 void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
 {
-    emit caseStarted(problemCase->getId(),index, mProblemCases.count());
+    emit caseStarted(problemCase->id(),index, mProblemCases.count());
     auto action = finally([this,&index, &problemCase]{
-        emit caseFinished(problemCase->getId(), index, mProblemCases.count());
+        emit caseFinished(problemCase->id(), index, mProblemCases.count());
     });
     QProcess process;
     bool errorOccurred = false;
@@ -143,7 +143,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         buffer += readed;
         if (buffer.length()>=mBufferSize || noOutputTime > mOutputRefreshTime) {
             if (!buffer.isEmpty()) {
-                emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
+                emit newOutputGetted(problemCase->id(),QString::fromLocal8Bit(buffer));
                 output.append(buffer);
                 buffer.clear();
             }
@@ -176,10 +176,10 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
 #endif
     if (execTimeouted) {
         problemCase->output = tr("Time limit exceeded!");
-        emit resetOutput(problemCase->getId(), problemCase->output);
+        emit resetOutput(problemCase->id(), problemCase->output);
     } else if (mMemoryLimit>0 && problemCase->runningMemory>mMemoryLimit) {
         problemCase->output = tr("Memory limit exceeded!");
-        emit resetOutput(problemCase->getId(), problemCase->output);
+        emit resetOutput(problemCase->id(), problemCase->output);
     } else {
         if (pSettings->executor().redirectStderrToToolLog()) {
             QString s = QString::fromLocal8Bit(process.readAllStandardError());
@@ -188,7 +188,7 @@ void OJProblemCasesRunner::runCase(int index,POJProblemCase problemCase)
         }
         if (process.state() == QProcess::ProcessState::NotRunning)
             buffer += process.readAll();
-        emit newOutputGetted(problemCase->getId(),QString::fromLocal8Bit(buffer));
+        emit newOutputGetted(problemCase->id(),QString::fromLocal8Bit(buffer));
         output.append(buffer);
         problemCase->output = QString::fromLocal8Bit(output);
 

@@ -29,48 +29,48 @@
 
 OJProblemSetModel::OJProblemSetModel(QObject *parent) : QAbstractListModel(parent)
 {
-
+    connect(&mProblemSet, &OJProblemSet::modifiedChanged, this, &OJProblemSetModel::onProblemSetModified);
+    connect(&mProblemSet, &OJProblemSet::problemModified, this, &OJProblemSetModel::onProblemModified);
 }
 
 void OJProblemSetModel::clear()
 {
     beginResetModel();
-    mProblemSet.problems.clear();
-    mProblemSet.exportFilename.clear();
+    mProblemSet.clearProblems();
+    mProblemSet.setExportFilename("");
     endResetModel();
 }
 
 int OJProblemSetModel::count()
 {
-    return mProblemSet.problems.count();
+    return mProblemSet.problems().count();
 }
 
 void OJProblemSetModel::create(const QString& name)
 {
-    mProblemSet.name = name;
     clear();
+    mProblemSet.setName(name);
 }
 
 void OJProblemSetModel::rename(const QString &newName)
 {
-    if (mProblemSet.name!=newName)
-        mProblemSet.name = newName;
+    mProblemSet.setName(newName);
 }
 
 QString OJProblemSetModel::name() const
 {
-    return mProblemSet.name;
+    return mProblemSet.name();
 }
 
 QString OJProblemSetModel::exportFilename() const
 {
-    return mProblemSet.exportFilename;
+    return mProblemSet.exportFilename();
 }
 
 void OJProblemSetModel::addProblem(const POJProblem& problem)
 {
-    beginInsertRows(QModelIndex(), mProblemSet.problems.count(), mProblemSet.problems.count());
-    mProblemSet.problems.append(problem);
+    beginInsertRows(QModelIndex(), mProblemSet.problems().count(), mProblemSet.problems().count());
+    mProblemSet.addProblem(problem);
     endInsertRows();
 }
 
@@ -78,34 +78,34 @@ void OJProblemSetModel::addProblems(const QList<POJProblem> &problems)
 {
     if (problems.isEmpty())
         return;
-    beginInsertRows(QModelIndex(), mProblemSet.problems.count(), mProblemSet.problems.count()+problems.count()-1);
+    beginInsertRows(QModelIndex(), mProblemSet.problems().count(), mProblemSet.problems().count()+problems.count()-1);
     foreach( const POJProblem& p, problems)
-        mProblemSet.problems.append(p);
+        mProblemSet.addProblem(p);
     endInsertRows();
 }
 
 const QList<POJProblem> &OJProblemSetModel::problems() const
 {
-    return mProblemSet.problems;
+    return mProblemSet.problems();
 }
 
 POJProblem OJProblemSetModel::problem(int index) const
 {
-    return mProblemSet.problems[index];
+    return mProblemSet.problems()[index];
 }
 
 void OJProblemSetModel::removeProblem(int index)
 {
-    Q_ASSERT(index>=0 && index < mProblemSet.problems.count());
+    Q_ASSERT(index>=0 && index < mProblemSet.problems().count());
     beginRemoveRows(QModelIndex(),index,index);
-    mProblemSet.problems.removeAt(index);
+    mProblemSet.removeProblem(index);
     endRemoveRows();
 }
 
 bool OJProblemSetModel::problemNameUsed(const QString &name)
 {
-    foreach (const POJProblem& problem, mProblemSet.problems) {
-        if (name == problem->name)
+    foreach (const POJProblem& problem, mProblemSet.problems()) {
+        if (name == problem->name())
             return true;
     }
     return false;
@@ -121,22 +121,22 @@ void OJProblemSetModel::saveToFile(const QString &fileName, int currentIndex)
     QFile file(fileName);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QJsonObject obj;
-        mProblemSet.exportFilename=fileName;
-        obj["name"]=mProblemSet.name;
+        mProblemSet.setExportFilename(fileName);
+        obj["name"]=mProblemSet.name();
         QJsonArray problemsArray;
-        foreach (const POJProblem& problem, mProblemSet.problems) {
+        foreach (const POJProblem& problem, mProblemSet.problems()) {
             QJsonObject problemObj;
-            problemObj["name"]=problem->name;
-            problemObj["url"]=problem->url;
-            problemObj["description"]=problem->description;
-            problemObj["time_limit"]=(int)problem->timeLimit;
-            problemObj["memory_limit"]=(int)problem->memoryLimit;
-            problemObj["time_limit_unit"]=(int)problem->timeLimitUnit;
-            problemObj["memory_limit_unit"]=(int)problem->memoryLimitUnit;
-            if (fileExists(problem->answerProgram))
-                problemObj["answer_program"] = problem->answerProgram;
+            problemObj["name"]=problem->name();
+            problemObj["url"]=problem->url();
+            problemObj["description"]=problem->description();
+            problemObj["time_limit"]=(int)problem->timeLimit();
+            problemObj["memory_limit"]=(int)problem->memoryLimit();
+            problemObj["time_limit_unit"]=(int)problem->timeLimitUnit();
+            problemObj["memory_limit_unit"]=(int)problem->memoryLimitUnit();
+            if (fileExists(problem->answerProgram()))
+                problemObj["answer_program"] = problem->answerProgram();
             QJsonArray cases;
-            foreach (const POJProblemCase& problemCase, problem->cases) {
+            foreach (const POJProblemCase& problemCase, problem->cases()) {
                 QJsonObject caseObj;
                 caseObj["name"]=problemCase->name();
                 caseObj["input"]=problemCase->input();
@@ -153,14 +153,17 @@ void OJProblemSetModel::saveToFile(const QString &fileName, int currentIndex)
                 caseObj["expected_output_filename"]=path;
                 caseObj["expected"]=problemCase->expected();
                 cases.append(caseObj);
+                problemCase->setModified(false);
             }
             problemObj["cases"]=cases;
             problemsArray.append(problemObj);
+            problem->setModified(false);
         }
         obj["problems"]=problemsArray;
         obj["current_index"]=currentIndex;
         QJsonDocument doc;
         doc.setObject(obj);
+        mProblemSet.setModified(false);
         file.write(doc.toJson());
         file.close();
     } else {
@@ -185,22 +188,22 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
         }
         beginResetModel();
         QJsonObject obj = doc.object();
-        mProblemSet.name = obj["name"].toString();
+        mProblemSet.setName(obj["name"].toString());
         currentIndex = obj["current_index"].toInt(-1);
-        mProblemSet.problems.clear();
+        mProblemSet.clearProblems();
         QJsonArray problemsArray = obj["problems"].toArray();
         for (const QJsonValue& problemVal:problemsArray) {
             QJsonObject problemObj = problemVal.toObject();
             POJProblem problem = std::make_shared<OJProblem>();
-            problem->name = problemObj["name"].toString();
-            problem->url = problemObj["url"].toString();
-            problem->timeLimit = problemObj["time_limit"].toInt();
-            problem->memoryLimit = problemObj["memory_limit"].toInt();
-            problem->timeLimitUnit = (ProblemTimeLimitUnit)problemObj["time_limit_unit"].toInt();
-            problem->memoryLimitUnit = (ProblemMemoryLimitUnit)problemObj["memory_limit_unit"].toInt();
+            problem->setName(problemObj["name"].toString());
+            problem->setUrl(problemObj["url"].toString());
+            problem->setTimeLimit(problemObj["time_limit"].toInt());
+            problem->setMemoryLimit(problemObj["memory_limit"].toInt());
+            problem->setTimeLimitUnit((ProblemTimeLimitUnit)problemObj["time_limit_unit"].toInt());
+            problem->setMemoryLimitUnit((ProblemMemoryLimitUnit)problemObj["memory_limit_unit"].toInt());
 
-            problem->description = problemObj["description"].toString();
-            problem->answerProgram = problemObj["answer_program"].toString();
+            problem->setDescription(problemObj["description"].toString());
+            problem->setAnswerProgram(problemObj["answer_program"].toString());
             QJsonArray casesArray = problemObj["cases"].toArray();
             for(const QJsonValue& caseVal:casesArray) {
                 QJsonObject caseObj = caseVal.toObject();
@@ -221,10 +224,13 @@ void OJProblemSetModel::loadFromFile(const QString &fileName, int& currentIndex)
                 }
                 problemCase->setExpectedOutputFileName(path);
                 problemCase->testState = ProblemCaseTestState::NotTested;
-                problem->cases.append(problemCase);
+                problemCase->setModified(false);
+                problem->addCase(problemCase);
             }
-            mProblemSet.problems.append(problem);
+            problem->setModified(false);
+            mProblemSet.addProblem(problem);
         }
+        mProblemSet.setModified(false);
         endResetModel();
     } else {
         throw FileError(QObject::tr("Can't open file '%1' for read.")
@@ -249,31 +255,57 @@ void OJProblemSetModel::save(int currentIndex)
 
 void OJProblemSetModel::updateProblemAnswerFilename(const QString &oldFilename, const QString &newFilename)
 {
-    foreach (POJProblem problem, mProblemSet.problems) {
-        if (QString::compare(problem->answerProgram,oldFilename,PATH_SENSITIVITY)==0) {
-            problem->answerProgram = newFilename;
+    foreach (POJProblem problem, mProblemSet.problems()) {
+        if (QString::compare(problem->answerProgram(),oldFilename,PATH_SENSITIVITY)==0) {
+            problem->setAnswerProgram( newFilename);
+        }
+    }
+}
+
+const OJProblemSet *OJProblemSetModel::problemSet() const
+{
+    return &mProblemSet;
+}
+
+void OJProblemSetModel::onProblemSetModified()
+{
+    emit problemSetNameChanged();
+}
+
+void OJProblemSetModel::onProblemModified(const QString &id)
+{
+    for(int i=0;i<mProblemSet.problems().count();i++) {
+        if (mProblemSet.problems()[i]->id() == id) {
+            emit problemNameChanged(i);
+            break;
         }
     }
 }
 
 int OJProblemSetModel::rowCount(const QModelIndex &) const
 {
-    return mProblemSet.problems.count();
+    return mProblemSet.problems().count();
 }
 
 QVariant OJProblemSetModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        return mProblemSet.problems[index.row()]->name;
+    if (role == Qt::EditRole) {
+        return mProblemSet.problems()[index.row()]->name();
+    } else if (role == Qt::DisplayRole) {
+        POJProblem problem = mProblemSet.problems()[index.row()];
+        QString name = problem->name();
+        if (problem->isModified())
+            name += "[*]";
+        return name;
     } else if (role == Qt::ToolTipRole) {
-        POJProblem problem = mProblemSet.problems[index.row()];
+        POJProblem problem = mProblemSet.problems()[index.row()];
 
         QString s;
-        s=QString("<h3>%1</h3>").arg(problem->name);
-        if (!problem->description.isEmpty())
-            s+=problem->description;
+        s=QString("<h3>%1</h3>").arg(problem->name());
+        if (!problem->description().isEmpty())
+            s+=problem->description();
 
         return s;
     }
@@ -287,7 +319,7 @@ bool OJProblemSetModel::setData(const QModelIndex &index, const QVariant &value,
     if (role == Qt::EditRole) {
         QString s = value.toString();
         if (!s.isEmpty()) {
-            mProblemSet.problems[index.row()]->name = s;
+            mProblemSet.problems()[index.row()]->setName(s);
             emit problemNameChanged(index.row());
             return true;
         }
@@ -315,9 +347,9 @@ Qt::DropActions OJProblemSetModel::supportedDropActions() const
 bool OJProblemSetModel::moveRows(const QModelIndex &/*sourceParent*/, int sourceRow, int count, const QModelIndex &/*destinationParent*/, int destinationChild)
 {
     if (sourceRow < 0
-        || sourceRow + count - 1 >= mProblemSet.problems.count()
+        || sourceRow + count - 1 >= mProblemSet.problems().count()
         || destinationChild < 0
-        || destinationChild > mProblemSet.problems.count()
+        || destinationChild > mProblemSet.problems().count()
         || sourceRow == destinationChild
         || count <= 0) {
         return false;
@@ -331,7 +363,7 @@ bool OJProblemSetModel::moveRows(const QModelIndex &/*sourceParent*/, int source
     else
         destinationChild--;
     while (count--)
-        mProblemSet.problems.move(fromRow, destinationChild);
+        mProblemSet.moveProblem(fromRow, destinationChild);
     endMoveRows();
     return true;
 }
@@ -349,13 +381,15 @@ const POJProblem &OJProblemModel::problem() const
 void OJProblemModel::setProblem(const POJProblem &newProblem)
 {
     if (newProblem!=mProblem) {
-        foreach(const POJProblemCase &problemCase, mProblem->cases) {
-            disconnect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
+        if (mProblem) {
+            disconnect(mProblem.get(), &OJProblem::problemCaseModified, this, &OJProblemModel::onProblemCaseModified);
+            disconnect(mProblem.get(), &OJProblem::modifiedChanged, this, &OJProblemModel::onProblemModified);
         }
         beginResetModel();
         mProblem = newProblem;
-        foreach(const POJProblemCase &problemCase, mProblem->cases) {
-            connect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
+        if (mProblem) {
+            connect(mProblem.get(), &OJProblem::problemCaseModified, this, &OJProblemModel::onProblemCaseModified);
+            connect(mProblem.get(), &OJProblem::modifiedChanged, this, &OJProblemModel::onProblemModified);
         }
         endResetModel();
     }
@@ -365,30 +399,25 @@ void OJProblemModel::addCase(POJProblemCase problemCase)
 {
     if (mProblem==nullptr)
         return;
-    beginInsertRows(QModelIndex(),mProblem->cases.count(),mProblem->cases.count());
-    mProblem->cases.append(problemCase);
+    beginInsertRows(QModelIndex(),mProblem->cases().count(),mProblem->cases().count());
+    mProblem->addCase(problemCase);
     endInsertRows();
-    connect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
 }
 
 void OJProblemModel::removeCase(int index)
 {
     if (mProblem==nullptr)
         return;
-    Q_ASSERT(index >= 0 && index < mProblem->cases.count());
-    disconnect(mProblem->cases[index].get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
+    Q_ASSERT(index >= 0 && index < mProblem->cases().count());
     beginRemoveRows(QModelIndex(),index,index);
-    mProblem->cases.removeAt(index);
+    mProblem->removeCase(index);
     endRemoveRows();
 }
 
 void OJProblemModel::removeCases()
 {
-    foreach(const POJProblemCase &problemCase, mProblem->cases) {
-        disconnect(problemCase.get(), &OJProblemCase::modifiedChanged, this, &OJProblemModel::onProblemCaseChanged);
-    }
-    beginRemoveRows(QModelIndex(),0,mProblem->cases.count());
-    mProblem->cases.clear();
+    beginRemoveRows(QModelIndex(),0,mProblem->cases().count());
+    mProblem->clearCases();
     endRemoveRows();
 }
 
@@ -396,15 +425,15 @@ POJProblemCase OJProblemModel::getCase(int index)
 {
     if (mProblem==nullptr)
         return POJProblemCase();
-    return mProblem->cases[index];
+    return mProblem->cases()[index];
 }
 
 POJProblemCase OJProblemModel::getCaseById(const QString& id)
 {
     if (mProblem==nullptr)
         return POJProblemCase();
-    foreach (const POJProblemCase& problemCase, mProblem->cases){
-        if (problemCase->getId() == id)
+    foreach (const POJProblemCase& problemCase, mProblem->cases()){
+        if (problemCase->id() == id)
             return problemCase;
     }
     return POJProblemCase();
@@ -414,9 +443,9 @@ int OJProblemModel::getCaseIndexById(const QString &id)
 {
     if (mProblem==nullptr)
         return -1;
-    for (int i=0;i<mProblem->cases.size();i++) {
-        const POJProblemCase& problemCase = mProblem->cases[i];
-        if (problemCase->getId() == id)
+    for(int i=0;i<mProblem->cases().count();i++) {
+        const POJProblemCase& problemCase = mProblem->cases()[i];
+        if (problemCase->id() == id)
             return i;
     }
     return -1;
@@ -427,7 +456,7 @@ void OJProblemModel::clear()
     if (mProblem==nullptr)
         return;
     beginResetModel();
-    mProblem->cases.clear();
+    mProblem->clearCases();
     endResetModel();
 }
 
@@ -435,7 +464,7 @@ int OJProblemModel::count()
 {
     if (mProblem == nullptr)
         return 0;
-    return mProblem->cases.count();
+    return mProblem->cases().count();
 }
 
 void OJProblemModel::update(int row)
@@ -447,16 +476,19 @@ QString OJProblemModel::getTitle()
 {
     if (!mProblem)
         return "";
-    int total = mProblem->cases.count();
+    int total = mProblem->cases().count();
     int passed = 0;
-    foreach (const POJProblemCase& problemCase, mProblem->cases) {
+    foreach (const POJProblemCase& problemCase, mProblem->cases()) {
         if (problemCase->testState == ProblemCaseTestState::Passed)
             passed ++ ;
     }
-    QString title = QString("%1 (%2/%3)").arg(mProblem->name)
+    QString name = mProblem->name();
+    if (mProblem->isModified())
+        name += "[*]";
+    QString title = QString("%1 (%2/%3)").arg(name)
             .arg(passed).arg(total);
-    if (!mProblem->url.isEmpty()) {
-        title = QString("<a href=\"%1\">%2</a>").arg(mProblem->url,title);
+    if (!mProblem->url().isEmpty()) {
+        title = QString("<a href=\"%1\">%2</a>").arg(mProblem->url(),title);
     }
     return title;
 }
@@ -466,18 +498,25 @@ QString OJProblemModel::getTooltip()
     if (!mProblem)
         return "";
     QString s;
-    s=QString("<h3>%1</h3>").arg(mProblem->name);
-    if (!mProblem->description.isEmpty())
-        s+=mProblem->description;
+    s=QString("<h3>%1</h3>").arg(mProblem->name());
+    if (!mProblem->description().isEmpty())
+        s+=mProblem->description();
     return s;
 }
 
-void OJProblemModel::onProblemCaseChanged(const QString& id)
+void OJProblemModel::onProblemModified(const QString& id)
 {
-    for (int i=0;i<mProblem->cases.count();i++) {
-        if (id == mProblem->cases[i]->getId()) {
+    Q_UNUSED(id);
+    emit problemModified();
+}
+
+void OJProblemModel::onProblemCaseModified(const QString& id)
+{
+    for (int i=0;i<mProblem->cases().count();i++) {
+        if (id == mProblem->cases()[i]->id()) {
             QModelIndex idx = index(i,0);
             emit dataChanged(idx,idx);
+            break;
         }
     }
 }
@@ -486,7 +525,7 @@ int OJProblemModel::rowCount(const QModelIndex &) const
 {
     if (mProblem==nullptr)
         return 0;
-    return mProblem->cases.count();
+    return mProblem->cases().count();
 }
 
 QVariant OJProblemModel::data(const QModelIndex &index, int role) const
@@ -498,17 +537,17 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
     switch (index.column()) {
     case 0:
         if (role == Qt::DisplayRole) {
-            POJProblemCase problemCase = mProblem->cases[index.row()];
+            POJProblemCase problemCase = mProblem->cases()[index.row()];
             QString name =  problemCase->name();
             if (problemCase->isModified()) {
                 name += "[*]";
             }
             return name;
         } else if (role == Qt::EditRole) {
-            POJProblemCase problemCase = mProblem->cases[index.row()];
+            POJProblemCase problemCase = mProblem->cases()[index.row()];
             return problemCase->name();
         } else if (role == Qt::DecorationRole) {
-            switch (mProblem->cases[index.row()]->testState) {
+            switch (mProblem->cases()[index.row()]->testState) {
             case ProblemCaseTestState::Failed:
                 return pIconsManager->getIcon(IconsManager::ACTION_PROBLEM_FALIED);
             case ProblemCaseTestState::Passed:
@@ -522,7 +561,7 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
         break;
     case 1:
         if (role == Qt::DisplayRole) {
-             POJProblemCase problemCase = mProblem->cases[index.row()];
+             POJProblemCase problemCase = mProblem->cases()[index.row()];
              if (problemCase->testState == ProblemCaseTestState::Passed
                      || problemCase->testState == ProblemCaseTestState::Failed)
                  return problemCase->runningTime;
@@ -533,7 +572,7 @@ QVariant OJProblemModel::data(const QModelIndex &index, int role) const
 #ifdef Q_OS_WIN
     case 2:
         if (role == Qt::DisplayRole) {
-             POJProblemCase problemCase = mProblem->cases[index.row()];
+             POJProblemCase problemCase = mProblem->cases()[index.row()];
              if (problemCase->testState == ProblemCaseTestState::Passed
                      || problemCase->testState == ProblemCaseTestState::Failed)
                  return problemCase->runningMemory/1024;
@@ -558,7 +597,7 @@ bool OJProblemModel::setData(const QModelIndex &index, const QVariant &value, in
     if (role == Qt::EditRole ) {
         QString s = value.toString();
         if (!s.isEmpty()) {
-            mProblem->cases[index.row()]->setName(s);
+            mProblem->cases()[index.row()]->setName(s);
             return true;
         }
     }
@@ -611,7 +650,7 @@ bool OJProblemModel::dropMimeData(const QMimeData *data, Qt::DropAction action, 
 {
     mMoveTargetRow=row;
     if (mMoveTargetRow==-1)
-        mMoveTargetRow=mProblem->cases.length();
+        mMoveTargetRow=mProblem->cases().count();
     return  QAbstractTableModel::dropMimeData(data,action,row,0,parent);
 }
 
@@ -626,9 +665,9 @@ bool OJProblemModel::removeRows(int row, int count, const QModelIndex &/*parent*
     int destinationChild = mMoveTargetRow;
     mMoveTargetRow=-1;
     if (sourceRow < 0
-        || sourceRow + count - 1 >= mProblem->cases.count()
+        || sourceRow + count - 1 >= mProblem->cases().count()
         || destinationChild < 0
-        || destinationChild > mProblem->cases.count()
+        || destinationChild > mProblem->cases().count()
         || sourceRow == destinationChild
         || count <= 0) {
         return false;
@@ -642,7 +681,7 @@ bool OJProblemModel::removeRows(int row, int count, const QModelIndex &/*parent*
     else
         destinationChild--;
     while (count--)
-        mProblem->cases.move(fromRow, destinationChild);
+        mProblem->moveCase(fromRow, destinationChild);
     endMoveRows();
     return true;
 }

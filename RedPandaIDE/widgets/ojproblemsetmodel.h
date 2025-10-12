@@ -38,8 +38,11 @@ public:
     void update(int row);
     QString getTitle();
     QString getTooltip();
+signals:
+    void problemModified();
 private slots:
-    void onProblemCaseChanged(const QString& id);
+    void onProblemModified(const QString& id);
+    void onProblemCaseModified(const QString& id);
 private:
     POJProblem mProblem;
     int mMoveTargetRow;
@@ -87,9 +90,14 @@ public:
     void load(int& currentIndex);
     void save(int currentIndex);
     void updateProblemAnswerFilename(const QString& oldFilename, const QString& newFilename);
-
+    const OJProblemSet *problemSet() const;
 signals:
     void problemNameChanged(int index);
+    void problemSetNameChanged();
+
+private slots:
+    void onProblemSetModified();
+    void onProblemModified(const QString& id);
 
 private:
     OJProblemSet mProblemSet;

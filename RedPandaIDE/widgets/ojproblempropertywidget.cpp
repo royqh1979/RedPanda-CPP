@@ -44,12 +44,12 @@ void OJProblemPropertyWidget::loadFromProblem(POJProblem problem)
 {
     if (!problem)
         return;
-    ui->lbName->setText(problem->name);
-    ui->txtURL->setText(problem->url);
-    ui->txtDescription->setHtml(problem->description);
-    ui->spinMemoryLimit->setValue(problem->memoryLimit);
-    ui->spinTimeLimit->setValue(problem->timeLimit);
-    switch(problem->timeLimitUnit) {
+    ui->lbName->setText(problem->name());
+    ui->txtURL->setText(problem->url());
+    ui->txtDescription->setHtml(problem->description());
+    ui->spinMemoryLimit->setValue(problem->memoryLimit());
+    ui->spinTimeLimit->setValue(problem->timeLimit());
+    switch(problem->timeLimitUnit()) {
     case ProblemTimeLimitUnit::Seconds:
         ui->cbTimeLimitUnit->setCurrentText(tr("sec"));
         break;
@@ -57,7 +57,7 @@ void OJProblemPropertyWidget::loadFromProblem(POJProblem problem)
         ui->cbTimeLimitUnit->setCurrentText(tr("ms"));
         break;
     }
-    switch(problem->memoryLimitUnit) {
+    switch(problem->memoryLimitUnit()) {
     case ProblemMemoryLimitUnit::KB:
         ui->cbMemoryLimitUnit->setCurrentText(tr("KB"));
         break;
@@ -74,21 +74,21 @@ void OJProblemPropertyWidget::saveToProblem(POJProblem problem)
 {
     if (!problem)
         return;
-    problem->name = ui->lbName->text();
-    problem->url = ui->txtURL->text();
-    problem->description = ui->txtDescription->toHtml();
-    problem->memoryLimit = ui->spinMemoryLimit->value();
-    problem->timeLimit = ui->spinTimeLimit->value();
+    problem->setName(ui->lbName->text());
+    problem->setUrl(ui->txtURL->text());
+    problem->setDescription(ui->txtDescription->toHtml());
+    problem->setMemoryLimit(ui->spinMemoryLimit->value());
+    problem->setTimeLimit(ui->spinTimeLimit->value());
     if (ui->cbTimeLimitUnit->currentText()==tr("sec"))
-        problem->timeLimitUnit = ProblemTimeLimitUnit::Seconds;
+        problem->setTimeLimitUnit(ProblemTimeLimitUnit::Seconds);
     else
-        problem->timeLimitUnit = ProblemTimeLimitUnit::Milliseconds;
+        problem->setTimeLimitUnit(ProblemTimeLimitUnit::Milliseconds);
     if (ui->cbMemoryLimitUnit->currentText()==tr("KB"))
-        problem->memoryLimitUnit = ProblemMemoryLimitUnit::KB;
+        problem->setMemoryLimitUnit(ProblemMemoryLimitUnit::KB);
     else if (ui->cbMemoryLimitUnit->currentText()==tr("MB"))
-        problem->memoryLimitUnit = ProblemMemoryLimitUnit::MB;
+        problem->setMemoryLimitUnit(ProblemMemoryLimitUnit::MB);
     else
-        problem->memoryLimitUnit = ProblemMemoryLimitUnit::GB;
+        problem->setMemoryLimitUnit(ProblemMemoryLimitUnit::GB);
 }
 
 void OJProblemPropertyWidget::on_btnOk_clicked()
