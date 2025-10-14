@@ -1094,7 +1094,7 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
     if(event->modifiers() == Qt::ControlModifier && event->buttons() == Qt::NoButton) {
         QSynedit::BufferCoord p;
         TipType reason = getTipType(event->pos(),p);
-        if (reason == TipType::Preprocessor) {
+        if (reason == TipType::Include) {
             QString sLine = lineText(p.line);
             if (mParser->isIncludeNextLine(sLine) || mParser->isIncludeLine(sLine))
                 updateHoverLink(p.line);
@@ -1270,6 +1270,16 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                             p.line);
                 while (statement && statement->kind == StatementKind::Alias)
                     statement = mParser->findAliasedStatement(statement);
+                if (statement && statement->kind == StatementKind::Constructor) {
+                    QString s=document()->getLine(line-1);
+                    int pos  = aChar+token.length()-1;
+                    while(pos<s.length() && CppParser::isSpaceChar(s[pos])) {
+                        pos++;
+                    }
+                    if (pos >= s.length() || s[pos]!='(' || s[pos]!='{') {
+                        statement = statement->parentScope.lock();
+                    }
+                }
                 kind = getKindOfStatement(statement);
                 mIdentCache.insert(QString("%1 %2").arg(aChar).arg(token),kind);
             }
@@ -2016,21 +2026,13 @@ void Editor::onTooltipTimer()
 
 
     // Get subject
-    bool isIncludeLine = false;
-    bool isIncludeNextLine = false;
     QSynedit::BufferCoord pBeginPos,pEndPos;
     QString s;
     QStringList expression;
     switch (reason) {
-    case TipType::Preprocessor:
-        // When hovering above a preprocessor line, determine if we want to show an include or a identifier hint
+    case TipType::Include:
         if (mParser) {
             s = lineText(p.line);
-            isIncludeNextLine = mParser->isIncludeNextLine(s);
-            if (!isIncludeNextLine)
-                isIncludeLine = mParser->isIncludeLine(s);
-            if (!isIncludeNextLine &&!isIncludeLine)
-                s = wordAtRowCol(p);
         }
         break;
     case TipType::Identifier:
@@ -2085,16 +2087,13 @@ void Editor::onTooltipTimer()
     // Determine what to do with subject
     QString hint = "";
     switch (reason) {
-    case TipType::Preprocessor:
-        if (isIncludeNextLine || isIncludeLine) {
-            if (pSettings->editor().enableHeaderToolTips())
-                hint = getFileHint(s, isIncludeNextLine);
-        } else if (//devEditor.ParserHints and
-                 !mCompletionPopup->isVisible()
-                 && !mHeaderCompletionPopup->isVisible()) {
-            if (pSettings->editor().enableIdentifierToolTips())
-                hint = getParserHint(QStringList(),s,p.line);
-        }
+    case TipType::Include:
+        if (pSettings->editor().enableHeaderToolTips()
+                && mParser)
+            hint = getHeaderFileHint(s, mParser->isIncludeNextLine(s));
+        break;
+        if (pSettings->editor().enableHeaderToolTips())
+            hint = getHeaderFileHint(s, true);
         break;
     case TipType::Identifier:
     case TipType::Selection:
@@ -2106,7 +2105,7 @@ void Editor::onTooltipTimer()
                     showDebugHint(s,p.line);
                 }
             } else if (pSettings->editor().enableIdentifierToolTips()) {
-                hint = getParserHint(expression, s, p.line);
+                hint = getParserHint(expression, p.line);
             }
         }
         break;
@@ -4053,12 +4052,12 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
             if (attr) {
                 if (dragging()) {
                     // do not allow when dragging selection
+                } else if (mParser && mParser->isIncludeLine(lineText(pos.line))) {
+                    return TipType::Include;
                 } else if (selAvail() && isPointInSelection(pos)) {
                         return TipType::Selection;
                 } else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
                     return TipType::Identifier;
-                } else if (mParser && mParser->isIncludeLine(lineText(pos.line))) {
-                    return TipType::Preprocessor;
                 } else if (attr->tokenType() == QSynedit::TokenType::Number) {
                     return TipType::Number;
                 } else if (attr->tokenType() == QSynedit::TokenType::Keyword) {
@@ -4078,7 +4077,7 @@ void Editor::cancelHint()
     mCurrentTipType=TipType::None;
 }
 
-QString Editor::getFileHint(const QString &s, bool fromNext)
+QString Editor::getHeaderFileHint(const QString &s, bool fromNext)
 {
     QString fileName = mParser->getHeaderFileName(mFilename, s, fromNext);
     if (fileExists(fileName)) {
@@ -4087,7 +4086,7 @@ QString Editor::getFileHint(const QString &s, bool fromNext)
     return "";
 }
 
-QString Editor::getParserHint(const QStringList& expression,const QString &/*s*/, int line)
+QString Editor::getParserHint(const QStringList& expression,int line)
 {
     if (!mParser)
         return "";

@@ -101,7 +101,7 @@ public:
     };
 
     enum class TipType {
-      Preprocessor, // cursor hovers above preprocessor line
+      Include, // cursor hovers above include
       Identifier, // cursor hovers above identifier
       Selection, // cursor hovers above selection
       Keyword,
@@ -315,8 +315,8 @@ private:
 
     TipType getTipType(QPoint point, QSynedit::BufferCoord& pos);
     void cancelHint();
-    QString getFileHint(const QString& s, bool fromNext);
-    QString getParserHint(const QStringList& expression,const QString& s, int line);
+    QString getHeaderFileHint(const QString& s, bool fromNext);
+    QString getParserHint(const QStringList& expression,int line);
     void showDebugHint(const QString& s,int line);
     QString getErrorHint(const PSyntaxIssue& issue);
     QString getHintForFunction(const PStatement& statement,

@@ -167,6 +167,11 @@ public:
         //         && !token.contains("\""));
     }
 
+    static constexpr bool isSpaceChar(const QChar& ch) {
+        return ch==' ' || ch =='\t';
+    }
+
+
 signals:
     void onProgress(const QString& fileName, int total, int current);
     void onBusy();
@@ -565,9 +570,6 @@ private:
 
     bool splitLastMember(const QString& token, QString& lastMember, QString& remaining);
 
-    static constexpr bool isSpaceChar(const QChar& ch) {
-        return ch==' ' || ch =='\t';
-    }
 
     static constexpr  bool isIdentifierOrPointerOrReferenceStart(const QChar& ch){
         return ch.isLetter()
