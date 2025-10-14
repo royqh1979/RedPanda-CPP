@@ -23,6 +23,7 @@ namespace QSynedit {
 
 class ASMSyntaxer : public Syntaxer
 {
+protected:
     enum class TokenId {
         Comment,
         Identifier,
@@ -35,16 +36,12 @@ class ASMSyntaxer : public Syntaxer
         Space,
         String,
         Symbol,
+        PreprocessorDirective,
         Unknown
-    };
-    enum class IdentPrefix {
-        None,
-        Period,
-        Percent
     };
 
 public:
-    explicit ASMSyntaxer(bool isATT=false, bool isCppMixed=false);
+    explicit ASMSyntaxer();
     ASMSyntaxer(const ASMSyntaxer&)=delete;
     ASMSyntaxer& operator=(const ASMSyntaxer&)=delete;
 
@@ -56,10 +53,9 @@ public:
     static QMap<QString,QString> Instructions;
     static QSet<QString> InstructionNames;
     static const QSet<QString> Registers;
-    static const QSet<QString> ATTRegisters;
-    static const QSet<QString> Directives;
-    static const QSet<QString> ATTDirectives;
-private:
+    static QSet<QString> PrefixedRegisters;
+
+protected:
     const QChar* mLine;
     QString mLineString;
     int mLineNumber;
@@ -73,28 +69,32 @@ private:
     PTokenAttribute mDirectiveAttribute;
     PTokenAttribute mRegisterAttribute;
     PTokenAttribute mLabelAttribute;
-    bool mATT;
-    bool mCppMixed;
-    QSet<QString> mKeywordsCache;
+    PTokenAttribute mPreprocessDirectiveAttribute;
 
 private:
-    void CommentProc();
-    void CRProc();
-    void GreaterProc();
-    void IdentProc(IdentPrefix prefix);
-    void LFProc();
-    void LowerProc();
-    void NullProc();
-    void NumberProc();
-    void SingleQuoteStringProc();
-    void SlashProc();
-    void SpaceProc();
-    void StringProc();
-    void SymbolProc();
-    void UnknownProc();
+    void procComment();
+    void procCR();
+    void procGreaterThan();
+    void procIdent(const QString& prefix);
+    void procLF();
+    void proceLowerThan();
+    void procNull();
+    void procNumber();
+    void procSingleQuoteString();
+    void procSlash();
+    void procSpace();
+    void procString();
+    void procSymbol();
+    void procUnknown();
     bool isIdentStartChar(const QChar& ch) const override;
+    bool isIdentChar(const QChar& ch) const override;
     static void initData();
-
+    TokenId getIdentType(const QString& ident,  QChar nextChar);
+protected:
+    virtual bool isDirective(const QString& ident);
+    virtual bool isPreprocessDirective(const QString& ident);
+    virtual void handleDirective(int line, const QString& directive);
+    virtual void handleIdent(int line, const QString& ident);
     // SynHighlighter interface
 public:
     bool eol() const override;
@@ -117,11 +117,10 @@ public:
     bool needsLineState() override;
     QSet<QString> keywords() override;
 
-    bool isATT() const;
-    void setATT(bool newATT);
     QString commentSymbol() override;
     QString blockCommentBeginSymbol() override;
     QString blockCommentEndSymbol() override;
+    const PTokenAttribute &preprocessDirectiveAttribute() const;
 };
 
 }

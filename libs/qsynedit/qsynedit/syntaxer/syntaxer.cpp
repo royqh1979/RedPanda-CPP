@@ -57,6 +57,19 @@ QSet<QString> Syntaxer::keywords()
     return QSet<QString>();
 }
 
+QSet<QString> Syntaxer::keywords(const QString &prefix)
+{
+    if (mFilteredKeywordsCache.contains(prefix))
+        return mFilteredKeywordsCache[prefix];
+    QSet<QString> result;
+    foreach(const QString& w, keywords()) {
+        if (w.startsWith(prefix))
+            result.insert(w);
+    }
+    mFilteredKeywordsCache.insert(prefix, result);
+    return result;
+}
+
 QMap<QString, QSet<QString> > Syntaxer::scopedKeywords()
 {
     return QMap<QString, QSet<QString> >();

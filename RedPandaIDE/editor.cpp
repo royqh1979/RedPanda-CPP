@@ -39,7 +39,7 @@
 #include <QTemporaryFile>
 #include <qsynedit/document.h>
 #include <qsynedit/syntaxer/cpp.h>
-#include <qsynedit/syntaxer/asm.h>
+#include <qsynedit/syntaxer/gas.h>
 #include <qsynedit/syntaxer/nasm.h>
 #include <qsynedit/exporter/rtfexporter.h>
 #include <qsynedit/exporter/htmlexporter.h>
@@ -1020,14 +1020,15 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     handled=true;
                     return;
                 }
-            } else if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+            } else if (syntaxer()->language()==QSynedit::ProgrammingLanguage::GNU_Assembly) {
                 if ((idCharPressed==0) && (ch=='.')) {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::KeywordsOnly);
                     handled=true;
                     return;
                 }
-                if ((idCharPressed==0) && (ch=='%')) {
+                if ((idCharPressed==0) && (ch=='%')
+                        && std::dynamic_pointer_cast<QSynedit::GASSyntaxer>(syntaxer())->prefixRegisterNames()) {
                     processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                     showCompletion("",false,CodeCompletionType::KeywordsOnly);
                     handled=true;
@@ -3467,7 +3468,8 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
                    (attr->tokenType() != QSynedit::TokenType::Character)) {
             return;
         } else if (type==CodeCompletionType::KeywordsOnly ) {
-            if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly)
+            if (syntaxer()->language()==QSynedit::ProgrammingLanguage::GNU_Assembly
+                    && std::dynamic_pointer_cast<QSynedit::GASSyntaxer>(syntaxer())->prefixRegisterNames() )
                 word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
             else if (fileType() == FileType::NASM && attr->tokenType() == QSynedit::TokenType::Preprocessor)
                 word = getWordAtPosition(this,caretXY(),pBeginPos,pEndPos, WordPurpose::wpATTASMKeywords);
@@ -3487,19 +3489,13 @@ void Editor::showCompletion(const QString& preWord,bool autoComplete, CodeComple
     QSet<QString> keywords;
 
     if (syntaxer()->language() != QSynedit::ProgrammingLanguage::CPP ) {
-        if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
-            if (word.startsWith("."))
-                keywords = QSynedit::ASMSyntaxer::ATTDirectives;
-            else if (word.startsWith("%"))
-                keywords = QSynedit::ASMSyntaxer::ATTRegisters;
-            else {
-                keywords = QSynedit::ASMSyntaxer::InstructionNames;
-            }
-        } else if (fileType() == FileType::NASM) {
-            if (attr->tokenType() == QSynedit::TokenType::Preprocessor)
-                keywords = QSynedit::NASMSyntaxer::PreprocessorDirectives;
-            else {
-                keywords = syntaxer()->keywords();
+        if (QSynedit::isAssemblyLanguage(syntaxer()->language())) {
+            if (word.startsWith(".")) {
+                keywords = syntaxer()->keywords(".");
+            } else if (word.startsWith("%")) {
+                keywords = syntaxer()->keywords("%");
+            } else {
+                keywords = syntaxer()->keywords("");
             }
         } else {
             int pos = word.lastIndexOf(".");
@@ -3789,7 +3785,7 @@ void Editor::completionInsert(bool appendFunc)
 // delete the part of the word that's already been typed ...
     QSynedit::BufferCoord p = wordEnd();
     QSynedit::BufferCoord pStart = wordStart();
-    if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+    if (QSynedit::isAssemblyLanguage( syntaxer()->language())) {
         if (statement->command.startsWith(".")
                 || statement->command.startsWith("%"))
             pStart.ch--;
@@ -3901,7 +3897,7 @@ bool Editor::onCompletionKeyPressed(QKeyEvent *event)
         return false;
     QString oldPhrase = mCompletionPopup->memberPhrase();
     WordPurpose purpose = WordPurpose::wpCompletion;
-    if (syntaxer()->language()==QSynedit::ProgrammingLanguage::ATTAssembly) {
+    if (QSynedit::isAssemblyLanguage(syntaxer()->language())) {
         purpose = WordPurpose::wpATTASMKeywords;
     } else if (oldPhrase.startsWith('#')) {
         purpose = WordPurpose::wpDirective;

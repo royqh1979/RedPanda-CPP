@@ -52,8 +52,7 @@ bool StdinCompiler::prepareForCompile()
         strFileType = "C";
         mCompiler = compilerSet()->CCompiler();
         break;
-    case FileType::ATTASM:
-    case FileType::INTELASM:
+    case FileType::GAS:
         mArguments += {"-x", "assembler", "-"};
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();

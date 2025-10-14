@@ -720,8 +720,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionC_C_Header->setEnabled(false);
         ui->actionC_File->setEnabled(false);
         ui->actionCPP_File->setEnabled(false);
-        ui->actionATT_ASM->setEnabled(false);
-        ui->actionIntel_ASM->setEnabled(false);
+        ui->actionGAS->setEnabled(false);
         ui->actionText_File->setEnabled(false);
         ui->actionNASM->setEnabled(false);
     } else {
@@ -810,8 +809,7 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionC_C_Header->setEnabled(true);
         ui->actionC_File->setEnabled(true);
         ui->actionCPP_File->setEnabled(true);
-        ui->actionATT_ASM->setEnabled(true);
-        ui->actionIntel_ASM->setEnabled(true);
+        ui->actionGAS->setEnabled(true);
         ui->actionText_File->setEnabled(true);
         ui->actionNASM->setEnabled(true);
     }
@@ -890,8 +888,7 @@ void MainWindow::updateCompileActions(const Editor *e)
                         canRun = canCompile;
                         canDebug = set->canDebug();
                         break;
-                    case FileType::ATTASM:
-                    case FileType::INTELASM:
+                    case FileType::GAS:
                         if (set->compilerType()==CompilerType::GCC
                                 || set->compilerType()==CompilerType::GCC_UTF8) {
                             canCompile = true;
@@ -1049,8 +1046,7 @@ void MainWindow::updateFileTypeActions(const Editor* e)
     ui->actionC_C_Header->setChecked(false);
     ui->actionC_File->setChecked(false);
     ui->actionCPP_File->setChecked(false);
-    ui->actionATT_ASM->setChecked(false);
-    ui->actionIntel_ASM->setChecked(false);
+    ui->actionGAS->setChecked(false);
     ui->actionText_File->setChecked(false);
     ui->actionNASM->setChecked(false);
 
@@ -1066,14 +1062,11 @@ void MainWindow::updateFileTypeActions(const Editor* e)
     case FileType::CppSource:
         ui->actionCPP_File->setChecked(true);
         break;
-    case FileType::ATTASM:
-        ui->actionATT_ASM->setChecked(true);
-        break;
-    case FileType::INTELASM:
-        ui->actionIntel_ASM->setChecked(true);
+    case FileType::GAS:
+        ui->actionGAS->setChecked(true);
         break;
     case FileType::NASM:
-        ui->actionIntel_ASM->setChecked(true);
+        ui->actionNASM->setChecked(true);
         break;
     case FileType::Text:
         ui->actionText_File->setChecked(true);
@@ -10023,8 +10016,7 @@ void MainWindow::on_actionCompiler_Options_triggered()
                    SettingsDialog::tr("NASM"),
                    SettingsDialog::tr("Compiler")
                    );
-    } else if (editor && (editor->fileType() == FileType::ATTASM
-                          || editor->fileType() == FileType::INTELASM)
+    } else if (editor && (editor->fileType() == FileType::GAS)
                ) {
             changeOptions(
                        SettingsDialog::tr("GNU Assembler"),
@@ -10593,21 +10585,11 @@ void MainWindow::on_actionCPP_File_triggered()
     }
 }
 
-
-void MainWindow::on_actionATT_ASM_triggered()
+void MainWindow::on_actionGAS_triggered()
 {
     Editor* editor = mEditorList->getEditor();
     if (editor) {
-        editor->setFileType(FileType::ATTASM);
-    }
-}
-
-
-void MainWindow::on_actionIntel_ASM_triggered()
-{
-    Editor* editor = mEditorList->getEditor();
-    if (editor) {
-        editor->setFileType(FileType::INTELASM);
+        editor->setFileType(FileType::GAS);
     }
 }
 

@@ -38,8 +38,8 @@ using PSimpleIni = std::shared_ptr<SimpleIni>;
 
 enum class FileType{
     None,
-    ATTASM, // AT&T Style GNU assembler source file (.s)
-    INTELASM, // Intel Style GNU assembler source file (.s)
+    ATTASM, // deprecated: AT&T Style GNU assembler source file (.s)
+    INTELASM, // deprecated: Intel Style GNU assembler source file (.s)
     LUA, // lua file (.lua)
     CSource, // c source file (.c)
     CppSource, // c++ source file (.cpp)
@@ -55,6 +55,7 @@ enum class FileType{
     MakeFile,
     Other, // any others
     NASM, // NASM Files
+    GAS, //GAS Files
 };
 
 enum class SearchFileScope {

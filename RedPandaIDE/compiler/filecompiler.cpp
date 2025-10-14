@@ -128,8 +128,7 @@ bool FileCompiler::prepareForCompile()
     mArguments += getCharsetArgument(mEncoding, fileType, mOnlyCheckSyntax);
     QString strFileType;
     switch(fileType) {
-    case FileType::ATTASM:
-    case FileType::INTELASM:
+    case FileType::GAS:
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
         mArguments += getProjectIncludeArguments();

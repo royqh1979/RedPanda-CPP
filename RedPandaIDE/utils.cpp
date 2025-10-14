@@ -891,8 +891,8 @@ void setComboTextAndHistory(QComboBox *cb, const QString &newText, QStringList &
 
 static const QMap<QString,FileType> FileTypeMapping{
     {"None", FileType::None},
-    {"ATTASM", FileType::ATTASM},
-    {"INTELASM", FileType::INTELASM},
+    {"ATTASM", FileType::GAS},
+    {"INTELASM", FileType::GAS},
     {"LUA", FileType::LUA},
     {"CSource", FileType::CSource}, // c source file (.c)
     {"CppSource", FileType::CppSource}, // c++ source file (.cpp)
@@ -905,6 +905,8 @@ static const QMap<QString,FileType> FileTypeMapping{
     {"ModuleDef", FileType::ModuleDef}, // Windows Module Definition
     {"MakeFile", FileType::MakeFile},
     {"Other", FileType::Other},  // Any others
+    {"NASM", FileType::NASM},  // Any others
+    {"GAS", FileType::GAS},  // Any others
 };
 
 QString fileTypeToName(FileType fileType)

@@ -97,7 +97,6 @@ public:
         wpJavadoc, //javadoc
         wpInformation, // walk backwards over words, array, functions, parents, forwards over words
         wpATTASMKeywords,
-        wpNASMPreprocessDirective,
         wpKeywords
     };
 

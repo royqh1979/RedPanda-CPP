@@ -160,17 +160,7 @@ void CPUDialog::sendSyntaxCommand()
 
 void CPUDialog::updateSyntaxer()
 {
-    if (pSettings->debugger().blendMode() && pMainWindow->debugger()->supportDisassemlyBlendMode()) {
-        if (pSettings->debugger().useIntelStyle())
-            ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::MixedAssembly));
-        else
-            ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::MixedATTAssembly));
-    } else {
-        if (pSettings->debugger().useIntelStyle())
-            ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::Assembly));
-        else
-            ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::ATTAssembly));
-    }
+    ui->txtCode->setSyntaxer(syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::Assembly));
     syntaxerManager.applyColorScheme(ui->txtCode->syntaxer(),
                                         pSettings->editor().colorScheme());
 }

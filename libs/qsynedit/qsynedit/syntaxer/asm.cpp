@@ -55,102 +55,9 @@ const QSet<QString> ASMSyntaxer::Registers {
 #endif
 };
 
-const QSet<QString> ASMSyntaxer::ATTRegisters {
-#if defined(ARCH_X86_64) || defined(ARCH_X86)
-    "%ah","%al","%ax","%eax",
-    "%bh","%bl","%bx","%ebx",
-    "%ch","%cl","%cx","%ecx",
-    "%dh","%dl","%dx","%edx",
-    "%spl","%sp","%esp",
-    "%bpl","%bp","%ebp",
-    "%sil","%si","%esi",
-    "%dil","%di","%edi",
-    "%r8b","%r8w","%r8d",
-    "%r9b","%r9w","%r9d",
-    "%r10b","%r10w","%r10d",
-    "%r11b","%r11w","%r11d",
-    "%r12b","%r12w","%r12d",
-    "%r13b","%r13w","%r13d",
-    "%r14b","%r14w","%r14d",
-    "%r15b","%r15w","%r15d",
-    "%rax","%rbx","%rcx","%rdx","%rsp","%rbp","%rsi","%rdi",
-    "%r8","%r9","%r10","%r11","%r12","%r13","%r14","%r15",
-    "%ip","%eip","%rip",
-    "%flags","%eflags","%rflags",
-    "%cs","%ds","%ss","%es","%fs","%gs",
-    "%st0","%st1","%st2","%st3","%st4","%st5","%st6","%st7",
-    "%xmm0","%xmm1","%xmm2","%xmm3",
-    "%xmm4","%xmm5","%xmm6","%xmm7",
-    "%xmm8","%xmm9","%xmm10","%xmm11",
-    "%xmm12","%xmm13","%xmm14","%xmm15",
-#endif
-};
+QSet<QString> ASMSyntaxer::PrefixedRegisters;
 
-const QSet<QString> ASMSyntaxer::Directives {
-#if defined(ARCH_X86_64) || defined(ARCH_X86)
-    "section","global","extern","segment",
-    "db","dw","dd","dq","dt","do","dy","dz",
-    "resb","resw","resd","resq","rest","reso","resy","resz",
-    "equ","times","byte","word","dword","qword","tword",
-    "xmmword","ymmword","zmmword","fword","tbyte","oword","ptr",
-#endif
-};
-
-const QSet<QString> ASMSyntaxer::ATTDirectives {
-#if defined(ARCH_X86_64) || defined(ARCH_X86)
-    ".lcomm",".largecomm","value"
-    ".intel_style",".att_syntax",
-    ".intel_mnemonic",".att_mnemonic",
-    ".tfloat",".hfloat",".bfloat16",
-#endif
-#ifdef Q_OS_WIN
-    ".seh_proc",".seh_endprologue",".seh_handler",
-    ".seh_eh",".seh_32",".seh_no32",".seh_endproc",
-    ".seh_setframe",".seh_stackalloc",".seh_pushreg",
-    ".seh_savereg",".seh_savemm",".seh_savexmm",
-    ".seh_pushframe",".seh_scope",
-#else // Unix
-    ".cfi_sections",".cfi_startproc",".cfi_endproc",
-    ".cfi_personality",".cfi_personality_id",".cfi_fde_data",
-    ".cfi_lsda",".cfi_inline_lsda",".cfi_def_cfa",
-    ".cfi_def_cfa_register",".cfi_def_cfa_offset",".cfi_adjust_cfa_offset",
-    ".cfi_offset",".cfi_val_offset",".cfi_rel_offset",
-    ".cfi_register",".cfi_restore",".cfi_undefined",
-    ".cfi_same_value",".cfi_remember_state",".cfi_restore_state",
-    ".cfi_return_column",".cfi_signal_frame",".cfi_window_save",
-    ".cfi_escape",".cfi_val_encoded_addr",
-#endif
-    ".abort",".align",".altmacro",".ascii",
-    ".asciz",".attach",".balign",".bss",
-    ".bundle",".byte",".comm",".data",
-    ".dc",".dcb",".ds",".def", ".desc",
-    ".dim","double",".eject",".else",
-    ".elseif",".end",".endef","endfunc",
-    ".endif",".equ",".equiv",".eqy",
-    ".err",".error",".exitm",".extern",
-    ".fail",".file",".fill", ".float",
-    ".func",".globl",".global",".gnu",".hidden",
-    ".hword",".ident",".if", ".incbin",
-    ".inclue", ".int", ".internal", ".intel_syntax",".irp",
-    ".irpc",".lcomm",".lflags",".line",".linkonce",
-    ".list", ".ln", ".loc",".local",".macro",
-    ".mri",".noaltmacro",".nolist",".nop",".nops",
-    ".octa",".offset",".org",".p2align",".popsection",
-    ".previous",".print",".protected",".psize",
-    ".purgem",".pushsection",".quad",".reloc",
-    ".rept", ".sbttl", ".scl", ".section",
-    ".set", ".short", ".single", ".size",
-    ".skip", ".sleb128", ".space_size", ".stabd",
-    ".stabn", ".stabs", ".string", ".string8", ".string16",
-    ".struct", ".subsection", ".symver", ".tag", ".text",
-    ".title", ".tls", ".type", ".uleb128", ".val",".version",
-    ".vtable", ".warning",".weak",".weakref",".word",
-    ".zero",".2byte",".4byte",".8byte"
-};
-
-ASMSyntaxer::ASMSyntaxer(bool isATT, bool isCppMixed):
-    mATT{isATT},
-    mCppMixed{isCppMixed}
+ASMSyntaxer::ASMSyntaxer()
 {
     initData();
     mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber, TokenType::Number);
@@ -161,6 +68,10 @@ ASMSyntaxer::ASMSyntaxer(bool isATT, bool isCppMixed):
     addAttribute(mLabelAttribute);
     mRegisterAttribute = std::make_shared<TokenAttribute>(SYNS_AttrClass, TokenType::Keyword);
     addAttribute(mRegisterAttribute);
+    mPreprocessDirectiveAttribute = std::make_shared<TokenAttribute>(SYNS_AttrPreprocessor,
+                                                                    TokenType::Preprocessor);
+    addAttribute(mPreprocessDirectiveAttribute);
+
 }
 
 const PTokenAttribute &ASMSyntaxer::numberAttribute() const
@@ -173,20 +84,12 @@ const PTokenAttribute &ASMSyntaxer::registerAttribute() const
     return mRegisterAttribute;
 }
 
-bool ASMSyntaxer::isATT() const
+const PTokenAttribute &ASMSyntaxer::preprocessDirectiveAttribute() const
 {
-    return mATT;
+    return mPreprocessDirectiveAttribute;
 }
 
-void ASMSyntaxer::setATT(bool newATT)
-{
-    if (mATT!=newATT) {
-        mATT = newATT;
-        mKeywordsCache.clear();
-    }
-}
-
-void ASMSyntaxer::CommentProc()
+void ASMSyntaxer::procComment()
 {
     mTokenID = TokenId::Comment;
     do {
@@ -194,7 +97,7 @@ void ASMSyntaxer::CommentProc()
     } while (! (mLine[mRun]==0 || mLine[mRun] == '\r' || mLine[mRun]=='\n'));
 }
 
-void ASMSyntaxer::CRProc()
+void ASMSyntaxer::procCR()
 {
     mTokenID = TokenId::Space;
     mRun++;
@@ -202,7 +105,7 @@ void ASMSyntaxer::CRProc()
         mRun++;
 }
 
-void ASMSyntaxer::GreaterProc()
+void ASMSyntaxer::procGreaterThan()
 {
     mRun++;
     mTokenID = TokenId::Symbol;
@@ -210,44 +113,23 @@ void ASMSyntaxer::GreaterProc()
         mRun++;
 }
 
-void ASMSyntaxer::IdentProc(IdentPrefix prefix)
+void ASMSyntaxer::procIdent(const QString& prefix)
 {
     int start = mRun;
     while (isIdentChar(mLine[mRun])) {
         mRun++;
     }
     QString s = mLineString.mid(start,mRun-start).toLower();
-    switch(prefix) {
-    case IdentPrefix::Percent:
-        mTokenID = TokenId::Register;
-        break;
-    case IdentPrefix::Period:
-        if (mLine[mRun]==':')
-            mTokenID = TokenId::Label;
-        else
-            mTokenID = TokenId::Directive;
-        break;
-    default:
-        if (Instructions.contains(s))
-            mTokenID = TokenId::Instruction;
-        else if (Registers.contains(s))
-            mTokenID = TokenId::Register;
-        else if (Directives.contains(s))
-            mTokenID = TokenId::Directive;
-        else if (mLine[mRun]==':')
-            mTokenID = TokenId::Label;
-        else
-            mTokenID = TokenId::Identifier;
-    }
+    mTokenID = getIdentType(prefix+s, mLine[mRun]);
 }
 
-void ASMSyntaxer::LFProc()
+void ASMSyntaxer::procLF()
 {
     mTokenID = TokenId::Space;
     mRun++;
 }
 
-void ASMSyntaxer::LowerProc()
+void ASMSyntaxer::proceLowerThan()
 {
     mRun++;
     mTokenID = TokenId::Symbol;
@@ -255,12 +137,12 @@ void ASMSyntaxer::LowerProc()
         mRun++;
 }
 
-void ASMSyntaxer::NullProc()
+void ASMSyntaxer::procNull()
 {
     mTokenID = TokenId::Null;
 }
 
-void ASMSyntaxer::NumberProc()
+void ASMSyntaxer::procNumber()
 {
     mRun++;
     mTokenID = TokenId::Number;
@@ -274,7 +156,7 @@ void ASMSyntaxer::NumberProc()
     }
 }
 
-void ASMSyntaxer::SingleQuoteStringProc()
+void ASMSyntaxer::procSingleQuoteString()
 {
     mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\'') && (mLine[mRun + 2] == '\''))
@@ -288,7 +170,7 @@ void ASMSyntaxer::SingleQuoteStringProc()
         mRun++;
 }
 
-void ASMSyntaxer::SlashProc()
+void ASMSyntaxer::procSlash()
 {
     mRun++;
     if (mLine[mRun] == '/') {
@@ -302,7 +184,7 @@ void ASMSyntaxer::SlashProc()
         mTokenID = TokenId::Symbol;
 }
 
-void ASMSyntaxer::SpaceProc()
+void ASMSyntaxer::procSpace()
 {
     mTokenID = TokenId::Space;
     while (true) {
@@ -316,7 +198,7 @@ void ASMSyntaxer::SpaceProc()
         mHasTrailingSpaces = true;
 }
 
-void ASMSyntaxer::StringProc()
+void ASMSyntaxer::procString()
 {
     mTokenID = TokenId::String;
     if ((mRun+2 < mLineString.size()) && (mLine[mRun + 1] == '\"') && (mLine[mRun + 2] == '\"'))
@@ -334,13 +216,13 @@ void ASMSyntaxer::StringProc()
         mRun++;
 }
 
-void ASMSyntaxer::SymbolProc()
+void ASMSyntaxer::procSymbol()
 {
     mRun++;
     mTokenID = TokenId::Symbol;
 }
 
-void ASMSyntaxer::UnknownProc()
+void ASMSyntaxer::procUnknown()
 {
     mRun++;
     mTokenID = TokenId::Unknown;
@@ -348,21 +230,25 @@ void ASMSyntaxer::UnknownProc()
 
 bool ASMSyntaxer::isIdentStartChar(const QChar &ch) const
 {
-    if (ch == '_') {
-        return true;
-    }
-    if ((ch>='a') && (ch <= 'z')) {
-        return true;
-    }
-    if ((ch>='A') && (ch <= 'Z')) {
-        return true;
-    }
-    return false;
+    return (ch == '_') ||  (ch == '.') ||  (ch == '$')
+            || ((ch>='a') && (ch <= 'z'))
+            || ((ch>='A') && (ch <= 'Z'));
+}
+
+bool ASMSyntaxer::isIdentChar(const QChar &ch) const
+{
+    return (ch == '_') ||  (ch == '.') ||  (ch == '$')
+        || ((ch>='0') && (ch <= '9'))
+        || ((ch>='a') && (ch <= 'z'))
+           || ((ch>='A') && (ch <= 'Z'));
 }
 
 void ASMSyntaxer::initData()
 {
-    if (Instructions.isEmpty()) {
+    if (PrefixedRegisters.isEmpty()) {
+        foreach (const QString& registerName, Registers) {
+            PrefixedRegisters.insert("%"+registerName);
+        }
         // https://docs.oracle.com/cd/E19120-01/open.solaris/817-5477/ennbz/index.html
         //Data Transfer Instruction
 #if defined(ARCH_X86_64) || defined(ARCH_X86)
@@ -1570,6 +1456,50 @@ void ASMSyntaxer::initData()
     }
 }
 
+ASMSyntaxer::TokenId ASMSyntaxer::getIdentType(const QString &ident, QChar nextChar)
+{
+    if (nextChar == ':')
+        return TokenId::Label;
+    if (Instructions.contains(ident))
+        return TokenId::Instruction;
+    else if (Registers.contains(ident))
+        return TokenId::Register;
+    else if (Registers.contains(ident))
+        return TokenId::Register;
+    else if (isDirective(ident)) {
+        handleDirective(mLineNumber,ident);
+        return TokenId::Directive;
+    } else if (isPreprocessDirective(ident))
+        return TokenId::PreprocessorDirective;
+    else {
+        return TokenId::Identifier;
+    }
+}
+
+bool ASMSyntaxer::isDirective(const QString& ident)
+{
+    Q_UNUSED(ident);
+    return false;
+}
+
+bool ASMSyntaxer::isPreprocessDirective(const QString& ident)
+{
+    Q_UNUSED(ident);
+    return false;
+}
+
+void ASMSyntaxer::handleDirective(int line, const QString &directive)
+{
+    Q_UNUSED(line);
+    Q_UNUSED(directive);
+}
+
+void ASMSyntaxer::handleIdent(int line, const QString &ident)
+{
+    Q_UNUSED(line);
+    Q_UNUSED(ident);
+}
+
 bool ASMSyntaxer::eol() const
 {
     return mTokenID == TokenId::Null;
@@ -1582,8 +1512,6 @@ QString ASMSyntaxer::languageName()
 
 ProgrammingLanguage ASMSyntaxer::language()
 {
-    if (isATT())
-        return ProgrammingLanguage::ATTAssembly;
     return ProgrammingLanguage::Assembly;
 }
 
@@ -1615,6 +1543,8 @@ const PTokenAttribute &ASMSyntaxer::getTokenAttribute() const
         return mStringAttribute;
     case TokenId::Symbol:
         return mSymbolAttribute;
+    case TokenId::PreprocessorDirective:
+        return mPreprocessDirectiveAttribute;
     case TokenId::Unknown:
         return mIdentifierAttribute;
     default:
@@ -1632,51 +1562,48 @@ void ASMSyntaxer::next()
     mTokenPos = mRun;
     switch(mLine[mRun].unicode()) {
     case 0:
-        NullProc();
+        procNull();
         break;
     case '\n':
-        LFProc();
+        procLF();
         break;
     case '\r':
-        CRProc();
+        procCR();
         break;
     case '\"':
-        StringProc();
+        procString();
         break;
     case '\'':
-        SingleQuoteStringProc();
+        procSingleQuoteString();
         break;
     case '>':
-        GreaterProc();
+        procGreaterThan();
         break;
     case '<':
-        LowerProc();
+        proceLowerThan();
         break;
     case '/':
-        SlashProc();
+        procSlash();
         break;
     case ';':
-        if (mATT || mCppMixed) {
-            SymbolProc();
-        } else
-            CommentProc();
+        procSymbol();
         break;
     case '#':
-        CommentProc();
+        procComment();
         break;
     case '.':
         if (isIdentStartChar(mLine[mRun+1])) {
             mRun++;
-            IdentProc(IdentPrefix::Period);
+            procIdent(".");
         } else
-            SymbolProc();
+            procSymbol();
         break;
     case '%':
         if (isIdentStartChar(mLine[mRun+1])) {
             mRun++;
-            IdentProc(IdentPrefix::Percent);
+            procIdent("%");
         } else
-            UnknownProc();
+            procUnknown();
         break;
     case ':':
     case '&':
@@ -1689,17 +1616,17 @@ void ASMSyntaxer::next()
     case '(':
     case ')':
     case '*':
-        SymbolProc();
+        procSymbol();
         break;
     default:
         if (mLine[mRun]>='0' && mLine[mRun]<='9') {
-            NumberProc();
+            procNumber();
         } else if (isIdentStartChar(mLine[mRun])) {
-            IdentProc(IdentPrefix::None);
+            procIdent("");
         } else if (isLexicalSpace(mLine[mRun])) {
-            SpaceProc();
+            procSpace();
         } else {
-            UnknownProc();
+            procUnknown();
         }
     }
 }
@@ -1752,17 +1679,7 @@ bool ASMSyntaxer::needsLineState()
 
 QSet<QString> ASMSyntaxer::keywords()
 {
-    if (mKeywordsCache.isEmpty()) {
-        mKeywordsCache=InstructionNames;
-        if (!isATT()) {
-            mKeywordsCache.unite(Directives);
-            mKeywordsCache.unite(Registers);
-        } else {
-            mKeywordsCache.unite(ATTDirectives);
-            mKeywordsCache.unite(ATTRegisters);
-        }
-    }
-    return mKeywordsCache;
+    return InstructionNames;
 }
 
 const PTokenAttribute &ASMSyntaxer::directiveAttribute() const
@@ -1777,27 +1694,18 @@ const PTokenAttribute &ASMSyntaxer::labelAttribute() const
 
 QString ASMSyntaxer::commentSymbol()
 {
-    if (mATT)
-        return "#";
-    else
-        return ";";
+    return "#";
 }
 
 
 QString ASMSyntaxer::blockCommentBeginSymbol()
 {
-    if (mATT)
-        return "/*";
-    else
-        return "";
+    return "/*";
 }
 
 QString ASMSyntaxer::blockCommentEndSymbol()
 {
-    if (mATT)
-        return "*/";
-    else
-        return "";
+    return "*/";
 }
 
 }

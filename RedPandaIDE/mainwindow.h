@@ -873,9 +873,7 @@ private slots:
 
     void on_actionCPP_File_triggered();
 
-    void on_actionATT_ASM_triggered();
-
-    void on_actionIntel_ASM_triggered();
+    void on_actionGAS_triggered();
 
     void on_actionGenerate_GIMPLE_triggered();
 

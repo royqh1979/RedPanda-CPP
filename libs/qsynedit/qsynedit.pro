@@ -49,6 +49,7 @@ SOURCES += qsynedit/codefolding.cpp \
     qsynedit/searcher/basicsearcher.cpp \
     qsynedit/searcher/regexsearcher.cpp \
     qsynedit/syntaxer/asm.cpp \
+    qsynedit/syntaxer/gas.cpp \
     qsynedit/syntaxer/nasm.cpp \
     qsynedit/syntaxer/cpp.cpp \
     qsynedit/syntaxer/glsl.cpp \
@@ -78,6 +79,7 @@ HEADERS += \
     qsynedit/searcher/basicsearcher.h \
     qsynedit/searcher/regexsearcher.h \
     qsynedit/syntaxer/asm.h \
+    qsynedit/syntaxer/gas.h \
     qsynedit/syntaxer/nasm.h \
     qsynedit/syntaxer/cpp.h \
     qsynedit/syntaxer/glsl.h \

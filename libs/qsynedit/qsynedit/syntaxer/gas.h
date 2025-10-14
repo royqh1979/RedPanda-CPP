@@ -14,35 +14,45 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef QSYNEDIT_NASM_SYNTAXER_H
-#define QSYNEDIT_NASM_SYNTAXER_H
+#ifndef QSYNEDIT_GAS_SYNTAXER_H
+#define QSYNEDIT_GAS_SYNTAXER_H
 
-#include "syntaxer.h"
 #include "asm.h"
+#include "syntaxer.h"
 
 namespace QSynedit {
 
-class NASMSyntaxer : public ASMSyntaxer
+class GASSyntaxer : public ASMSyntaxer
 {
 public:
-    explicit NASMSyntaxer();
-    NASMSyntaxer(const NASMSyntaxer&)=delete;
-    NASMSyntaxer& operator=(const NASMSyntaxer&)=delete;
+    enum class SyntaxMode {
+        ATT,
+        Intel
+    };
+    explicit GASSyntaxer();
+    GASSyntaxer(const GASSyntaxer&)=delete;
+    GASSyntaxer& operator=(const GASSyntaxer&)=delete;
 
     static const QSet<QString> Directives;
-    static const QSet<QString> PreprocessorDirectives;
 private:
-    QSet<QString> mKeywordCache;
+    int mDirectiveSyntaxLine;
+    SyntaxMode mSyntaxMode;
+    bool mPrefixRegisterNames;
+    QSet<QString> mNonprefixedKeywordCache;
+    QSet<QString> mPrefixedKeywordCache;
 protected:
     bool isDirective(const QString& ident) override;
-    bool isPreprocessDirective(const QString& ident) override;
+    void handleDirective(int line, const QString& directive);
+    void handleIdent(int line, const QString& ident);
 public:
     QString languageName() override;
     ProgrammingLanguage language() override;
     QSet<QString> keywords() override;
-
+    bool prefixRegisterNames() const;
+    SyntaxMode syntaxMode() const;
+    void setSyntaxMode(SyntaxMode newSyntaxMode);
 };
 
 }
 
-#endif // QSYNEDIT_NASM_SYNTAXER_H
+#endif // QSYNEDIT_GAS_SYNTAXER_H
