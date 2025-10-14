@@ -228,21 +228,6 @@ void ASMSyntaxer::procUnknown()
     mTokenID = TokenId::Unknown;
 }
 
-bool ASMSyntaxer::isIdentStartChar(const QChar &ch) const
-{
-    return (ch == '_') ||  (ch == '.') ||  (ch == '$')
-            || ((ch>='a') && (ch <= 'z'))
-            || ((ch>='A') && (ch <= 'Z'));
-}
-
-bool ASMSyntaxer::isIdentChar(const QChar &ch) const
-{
-    return (ch == '_') ||  (ch == '.') ||  (ch == '$')
-        || ((ch>='0') && (ch <= '9'))
-        || ((ch>='a') && (ch <= 'z'))
-           || ((ch>='A') && (ch <= 'Z'));
-}
-
 void ASMSyntaxer::initData()
 {
     if (PrefixedRegisters.isEmpty()) {
@@ -1464,7 +1449,7 @@ ASMSyntaxer::TokenId ASMSyntaxer::getIdentType(const QString &ident, QChar nextC
         return TokenId::Instruction;
     else if (Registers.contains(ident))
         return TokenId::Register;
-    else if (Registers.contains(ident))
+    else if (PrefixedRegisters.contains(ident))
         return TokenId::Register;
     else if (isDirective(ident)) {
         handleDirective(mLineNumber,ident);
@@ -1592,18 +1577,14 @@ void ASMSyntaxer::next()
         procComment();
         break;
     case '.':
+    case '%':
+    case '$':
         if (isIdentStartChar(mLine[mRun+1])) {
+            QChar prefix = mLine[mRun];
             mRun++;
-            procIdent(".");
+            procIdent(prefix);
         } else
             procSymbol();
-        break;
-    case '%':
-        if (isIdentStartChar(mLine[mRun+1])) {
-            mRun++;
-            procIdent("%");
-        } else
-            procUnknown();
         break;
     case ':':
     case '&':

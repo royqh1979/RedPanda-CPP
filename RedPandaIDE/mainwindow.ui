@@ -3362,7 +3362,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>GAS</string>
+    <string>GNU Assembly</string>
    </property>
   </action>
  </widget>

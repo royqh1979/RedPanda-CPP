@@ -54,10 +54,10 @@ FileType getFileType(const QString &filename)
         return FileType::MakeFile;
     }
     if (filename.endsWith(".s",PATH_SENSITIVITY)) {
-        return FileType::ATTASM;
+        return FileType::GAS;
     }
     if (filename.endsWith(".S",PATH_SENSITIVITY)) {
-        return FileType::ATTASM;
+        return FileType::GAS;
     }
     if (filename.endsWith(".asm",PATH_SENSITIVITY)) {
         return FileType::NASM;

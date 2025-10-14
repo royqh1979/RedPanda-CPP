@@ -86,8 +86,6 @@ private:
     void procString();
     void procSymbol();
     void procUnknown();
-    bool isIdentStartChar(const QChar& ch) const override;
-    bool isIdentChar(const QChar& ch) const override;
     static void initData();
     TokenId getIdentType(const QString& ident,  QChar nextChar);
 protected:

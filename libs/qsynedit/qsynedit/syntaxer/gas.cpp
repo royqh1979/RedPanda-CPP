@@ -113,7 +113,7 @@ void GASSyntaxer::handleDirective(int line, const QString &directive)
         mDirectiveSyntaxLine = line;
     } else if (QString::compare(directive, ".att_syntax", Qt::CaseInsensitive) == 0) {
         mSyntaxMode = SyntaxMode::ATT;
-        mPrefixRegisterNames = false;
+        mPrefixRegisterNames = true;
         mDirectiveSyntaxLine = line;
     }
 }
@@ -123,7 +123,7 @@ void GASSyntaxer::handleIdent(int line, const QString &ident)
     if (mDirectiveSyntaxLine == line) {
         if (QString::compare(ident, "prefix", Qt::CaseInsensitive) == 0) {
             mPrefixRegisterNames = true;
-        } else if (QString::compare(ident, ".intel_syntax", Qt::CaseInsensitive) == 0) {
+        } else if (QString::compare(ident, "noprefix", Qt::CaseInsensitive) == 0) {
             mPrefixRegisterNames = false;
         }
     }
