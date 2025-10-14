@@ -12,7 +12,7 @@ Red Panda C++ Version 3.4
   - enhancement: Option Page for GNU Assembler(gas).
   - enhancement: Save problem set to last file.
   - enhancement: Show filename in problem set's title.
-  - enhancement: Show modified sign in problem set's title. \
+  - enhancement: Show modified sign in problem set's title. 
   - fix: When hovering on #include header names, tips doesn't show.
   - fix: Class name is wrongly syntaxed colored in its definition when it has a constructor.
   
