@@ -51,6 +51,7 @@ void CompilerNASMWidget::on_btnBrowserNASM_clicked()
                 tr("All files (%1)").arg(ALL_FILE_WILDCARD));
     if (!filename.isEmpty() && fileExists(filename)) {
         ui->txtNASMPath->setText(filename);
+        on_btnTestNASM_clicked();
     }
 }
 
