@@ -1936,7 +1936,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
 void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
 {
     if (button == Qt::LeftButton) {
-        if (isC_CPPSourceFile(mFileType)
+        if (isC_CPP_ASMSourceFile(mFileType)
                 || isC_CPPHeaderFile(mFileType))
             toggleBreakpoint(line);
     }

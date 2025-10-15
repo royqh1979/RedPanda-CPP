@@ -140,7 +140,7 @@ FileType getFileType(const QString& filename);
 QString fileTypeToName(FileType fileType);
 FileType nameToFileType(const QString& name);
 constexpr bool isASMSourceFile(FileType fileType) {
-    return fileType == FileType::ATTASM || fileType == FileType::INTELASM;
+    return fileType == FileType::NASM || fileType == FileType::GAS;
 }
 constexpr bool isC_CPPSourceFile(FileType fileType) {
     return fileType == FileType::CSource || fileType == FileType::CppSource;
@@ -150,7 +150,7 @@ constexpr bool isC_CPPHeaderFile(FileType fileType) {
 }
 constexpr bool isC_CPP_ASMSourceFile(FileType fileType) {
     return fileType == FileType::CSource || fileType == FileType::CppSource
-            || fileType == FileType::ATTASM || fileType == FileType::INTELASM;
+            || fileType == FileType::NASM || fileType == FileType::GAS;
 }
 
 bool programIsWin32GuiApp(const QString& filename);

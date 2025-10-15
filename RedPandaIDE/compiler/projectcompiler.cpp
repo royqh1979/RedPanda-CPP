@@ -491,7 +491,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     writeln(file, "\t$(CXX) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CXXFLAGS) " + encodingStr);
                 else
                     writeln(file, "\t$(CC) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CFLAGS) " + encodingStr);
-            } else if (isASMSourceFile(fileType)) {
+            } else if (fileType == FileType::GAS) {
                 writeln(file, "\t$(CC) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CFLAGS) " + encodingStr);
             }
         }

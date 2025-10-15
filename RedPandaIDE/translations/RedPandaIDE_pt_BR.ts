@@ -1524,19 +1524,19 @@
         <translation type="vanished">O texto a ser removido excede o limite de caracteres!</translation>
     </message>
     <message>
-        <location line="+2898"/>
+        <location line="+2897"/>
         <source>Print Document</source>
         <translation>Imprimir documento</translation>
     </message>
     <message>
         <location line="+753"/>
-        <location line="+25"/>
+        <location line="+26"/>
         <location line="+46"/>
         <source>Ctrl+click for more info</source>
         <translation>Ctrl+clik para mais informações</translation>
     </message>
     <message>
-        <location line="+1055"/>
+        <location line="+1078"/>
         <source>astyle not found</source>
         <translation>astyle não encontrado</translation>
     </message>
@@ -1577,13 +1577,13 @@
         <translation>Apenas leitura</translation>
     </message>
     <message>
-        <location line="-5544"/>
+        <location line="-5567"/>
         <location line="+428"/>
         <source>Error Load File</source>
         <translation type="unfinished">Erro ao carregar arquivo</translation>
     </message>
     <message>
-        <location line="+1578"/>
+        <location line="+1577"/>
         <source>hex: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4448,7 +4448,7 @@
     <name>MainWindow</name>
     <message>
         <location filename="../mainwindow.ui" line="+14"/>
-        <location filename="../mainwindow.cpp" line="+1451"/>
+        <location filename="../mainwindow.cpp" line="+1453"/>
         <source>Red Panda C++</source>
         <translation>Red Panda C++</translation>
     </message>
@@ -5283,7 +5283,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-50"/>
+        <location line="+5"/>
+        <source>New NASM File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-55"/>
         <source>Text File</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5771,13 +5776,13 @@
         <translation>Ctrl+Shift+Down</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-8643"/>
-        <location line="+62"/>
+        <location filename="../mainwindow.cpp" line="-8645"/>
+        <location line="+63"/>
         <location line="+9"/>
         <location line="+8"/>
         <location line="+9"/>
         <location line="+72"/>
-        <location line="+1473"/>
+        <location line="+1474"/>
         <location line="+1844"/>
         <location line="+117"/>
         <location line="+1797"/>
@@ -5789,12 +5794,12 @@
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-9755"/>
+        <location line="-9757"/>
         <source>New</source>
         <translation>Novo</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>Export</source>
         <translation>Exportar</translation>
     </message>
@@ -5815,7 +5820,7 @@
     </message>
     <message>
         <location line="+82"/>
-        <location line="+8554"/>
+        <location line="+8555"/>
         <source>Problem Set %1</source>
         <translation>Conjunto de problemas %1</translation>
     </message>
@@ -6318,19 +6323,19 @@
     <message>
         <location line="+41"/>
         <location line="+3917"/>
-        <location line="+1725"/>
+        <location line="+1740"/>
         <source>Bookmark Description</source>
         <translation>Marcar descrição</translation>
     </message>
     <message>
-        <location line="-5641"/>
+        <location line="-5656"/>
         <location line="+3917"/>
-        <location line="+1725"/>
+        <location line="+1740"/>
         <source>Description:</source>
         <translation>Descrição:</translation>
     </message>
     <message>
-        <location line="-5390"/>
+        <location line="-5405"/>
         <location line="+3"/>
         <source>New folder</source>
         <translation>Nova pasta</translation>
@@ -6395,19 +6400,21 @@
     <message>
         <location line="+86"/>
         <location line="+4532"/>
+        <location line="+15"/>
         <location line="+68"/>
         <source>New Project File?</source>
         <translation>Novo arquivo de projeto?</translation>
     </message>
     <message>
-        <location line="-4599"/>
+        <location line="-4614"/>
         <location line="+4532"/>
+        <location line="+15"/>
         <location line="+68"/>
         <source>Do you want to add the new file to the project?</source>
         <translation>Quer acrescentar novo arquivo ao projeto?</translation>
     </message>
     <message>
-        <location line="-4552"/>
+        <location line="-4567"/>
         <source>Open</source>
         <translation>Abrir</translation>
     </message>
@@ -7113,7 +7120,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4848"/>
+        <location line="+4863"/>
         <source>Watchpoint variable name</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7123,7 +7130,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-4852"/>
+        <location line="-4867"/>
         <source>Watchpoint hitted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7341,7 +7348,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="-5270"/>
+        <location filename="../mainwindow.cpp" line="-5272"/>
         <source>Exact</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7356,7 +7363,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7145"/>
+        <location line="+7147"/>
         <source>Folder Not Empty</source>
         <translation type="unfinished"></translation>
     </message>

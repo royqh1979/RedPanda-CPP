@@ -251,6 +251,9 @@ MainWindow::MainWindow(QWidget *parent)
     mMenuNew->setTitle(tr("New"));
     mMenuNew->addAction(ui->actionNew);
     mMenuNew->addAction(ui->actionNew_GAS_File);
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
+    mMenuNew->addAction(ui->actionNew_NASM_File);
+#endif
     mMenuNew->addAction(ui->actionNew_Text_File);
     mMenuNew->addAction(ui->actionNew_Project);
     mMenuNew->addSeparator();
@@ -497,6 +500,9 @@ MainWindow::MainWindow(QWidget *parent)
     //set action group name (show in the option / environment / shortcuts)
     ui->actionNew->setData(mMenuNew->title());
     ui->actionNew_GAS_File->setData(mMenuNew->title());
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
+    ui->actionNew_NASM_File->setData(mMenuNew->title());
+#endif
     ui->actionNew_Text_File->setData(mMenuNew->title());
     ui->actionNew_Project->setData(mMenuNew->title());
 
@@ -10268,6 +10274,21 @@ void MainWindow::on_actionNew_GAS_File_triggered()
         }
     }
     newEditor("s");
+}
+
+void MainWindow::on_actionNew_NASM_File_triggered()
+{
+    if (mProject) {
+        if (QMessageBox::question(this,
+                                  tr("New Project File?"),
+                                  tr("Do you want to add the new file to the project?"),
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::Yes) == QMessageBox::Yes) {
+            newProjectUnitFile("s");
+            return;
+        }
+    }
+    newEditor("asm");
 }
 
 void MainWindow::on_actionGNU_Assembler_Manual_triggered()
