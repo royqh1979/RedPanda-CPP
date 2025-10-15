@@ -1276,7 +1276,7 @@ void Editor::onPreparePaintHighlightToken(int line, int aChar, const QString &to
                     while(pos<s.length() && CppParser::isSpaceChar(s[pos])) {
                         pos++;
                     }
-                    if (pos >= s.length() || s[pos]!='(' || s[pos]!='{') {
+                    if (pos >= s.length() || (s[pos]!='(' && s[pos]!='{')) {
                         statement = statement->parentScope.lock();
                     }
                 }
