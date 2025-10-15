@@ -13,7 +13,7 @@ English Website: [https://sourceforge.net/projects/redpanda-cpp](https://sourcef
 * Cross Platform (Windows/Linux/MacOS)
 * Problem Set (run and test program against predefined input / expected output data)
 * Competitive Companion support ( It's an chrome/firefox extension that can fetch problems from OJ websites)
-* Edit/compile/run/debug GNU Assembly language programs.
+* Edit/compile/run/debug Assembly language programs ( GNU Assember / NASM ).
 * Find symbol occurrences
 * Memory View for debugging
 * TODO View

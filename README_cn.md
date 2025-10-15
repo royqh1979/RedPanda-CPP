@@ -9,20 +9,20 @@
 
 新特性 (相对于上一版本：Red Panda Dev-C++ 6):
 * 跨平台 (Windows/Linux/MacOS)
-* 题库Program Set(根据预定义的输入/预期输出数据运行和测试程序run and test program against predefined input / expected output data)
-* 伙伴支持。Competitive Companion support (可以作为chrome/firefox浏览器的扩展，从OJ网站上获取问题。 It's an chrome/firefox extension that can fetch problems from OJ websites)
-* 编辑、编译、运行、调试的GNU汇编语言程序。 Edit/compile/run/debug GNU Assembly language programs.
-* 查找符号引用。Find symbol occurrences
-* 调试时的内存查看功能。Memory View for debugging
-* TODO标签的代码查看功能。TODO View
-* 支持SDCC编译器。Support SDCC Compiler
+* 编辑、管理和使用试题集来测试程序(根据预定义的输入运行程序，比较实际输出和预期结果）。
+* 支持Competitive Companion(chrome/firefox浏览器的插件），从OJ网站上下载试题集。
+* 编辑、编译、运行、调试汇编语言程序（GNU汇编器 / NASM）.
+* 查找符号引用。
+* 在调试时查看内存查看功能。
+* TODO标签管理
+* 支持SDCC编译器
 
 交互界面改进：
 * 完整的高dpi支持，包括对字体和图标的支持
 * 更好的支持深色主题
 * 更好的支持编辑器配色方案
-* 重新设计后的“在文件中查找/替换”UI
-* 重新设计后的书签交互界面
+* 重新设计的“在文件中查找/替换”UI
+* 重新设计的书签交互界面
 
 编辑器改进：
 * 增强的自动缩进功能
