@@ -62,6 +62,10 @@ ASMSyntaxer::ASMSyntaxer()
     initData();
     mNumberAttribute = std::make_shared<TokenAttribute>(SYNS_AttrNumber, TokenType::Number);
     addAttribute(mNumberAttribute);
+    mOctAttribute = std::make_shared<TokenAttribute>(SYNS_AttrOctal, TokenType::Number);
+    addAttribute(mOctAttribute);
+    mHexAttribute = std::make_shared<TokenAttribute>(SYNS_AttrHexadecimal, TokenType::Number);
+    addAttribute(mHexAttribute);
     mDirectiveAttribute = std::make_shared<TokenAttribute>(SYNS_AttrVariable, TokenType::Keyword);
     addAttribute(mDirectiveAttribute);
     mLabelAttribute = std::make_shared<TokenAttribute>(SYNS_AttrFunction, TokenType::Keyword);
@@ -82,6 +86,16 @@ const PTokenAttribute &ASMSyntaxer::numberAttribute() const
 const PTokenAttribute &ASMSyntaxer::registerAttribute() const
 {
     return mRegisterAttribute;
+}
+
+const PTokenAttribute &ASMSyntaxer::octAttribute() const
+{
+    return mOctAttribute;
+}
+
+const PTokenAttribute &ASMSyntaxer::hexAttribute() const
+{
+    return mHexAttribute;
 }
 
 const PTokenAttribute &ASMSyntaxer::preprocessDirectiveAttribute() const
@@ -144,15 +158,51 @@ void ASMSyntaxer::procNull()
 
 void ASMSyntaxer::procNumber()
 {
-    mRun++;
-    mTokenID = TokenId::Number;
+    mTokenID = TokenId::DecInteger;
+    if (mLine[mRun] == '0') {
+        mRun++;
+        procNumberType();
+    } else
+        mRun++;
     while (true) {
         QChar ch = mLine[mRun];
-        if (!((ch>='0' && ch<='9') || (ch=='.') || (ch >= 'a' && ch<='f')
-              || (ch=='h') || (ch >= 'A' && ch<='F') || (ch == 'H')
-              || (ch == 'x')))
+        if (!((ch>='0' && ch<='9') || (ch=='.') || (ch=='_') || (ch >= 'a' && ch<='f')
+              || (ch >= 'A' && ch<='F')))
             break;
         mRun++;
+    }
+    procNumberType();
+}
+
+void ASMSyntaxer::procNumberType()
+{
+    switch(mLine[mRun].unicode()) {
+    case 'h':
+    case 'H':
+    case 'x':
+    case 'X':
+        mTokenID = TokenId::HexInteger;
+        mRun++;
+        break;
+    case 'd':
+    case 'D':
+    case 't':
+    case 'T':
+        mTokenID = TokenId::DecInteger;
+        mRun++;
+        break;
+    case 'b':
+    case 'B':
+    case 'y':
+    case 'Y':
+        mTokenID = TokenId::BinInteger;
+        mRun++;
+        break;
+    case 'q':
+    case 'Q':
+        mTokenID = TokenId::OctInteger;
+        mRun++;
+        break;
     }
 }
 
@@ -1520,8 +1570,14 @@ const PTokenAttribute &ASMSyntaxer::getTokenAttribute() const
         return mLabelAttribute;
     case TokenId::Register:
         return mRegisterAttribute;
-    case TokenId::Number:
+    case TokenId::DecInteger:
         return mNumberAttribute;
+    case TokenId::BinInteger:
+        return mOctAttribute;
+    case TokenId::OctInteger:
+        return mOctAttribute;
+    case TokenId::HexInteger:
+        return mHexAttribute;
     case TokenId::Space:
         return mWhitespaceAttribute;
     case TokenId::String:

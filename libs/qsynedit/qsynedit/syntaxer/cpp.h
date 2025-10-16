@@ -30,7 +30,10 @@ public:
         Identifier,
         Key,
         Null,
-        Number,
+        BinInteger,
+        DecInteger,
+        OctInteger,
+        HexInteger,
         Space,
         String,
         StringEscapeSeq,
@@ -38,10 +41,7 @@ public:
         Unknown,
         Char,
         Float,
-        Hex,
         HexFloat,
-        Octal,
-        Binary,
         RawString
     };
 

@@ -712,29 +712,29 @@ void CppSyntaxer::procNumber(bool isFloat)
         mTokenId = TokenId::Float;
         mRun++;
     } else {
-        mTokenId = TokenId::Number;
+        mTokenId = TokenId::DecInteger;
         if (mRun+1<mLineSize && mLine[mRun]=='0') {
             if (mLine[mRun+1]=='x' || mLine[mRun+1]=='X') {
-                mTokenId=TokenId::Hex;
+                mTokenId=TokenId::HexInteger;
                 mRun+=2;
             } else if (mLine[mRun+1]=='b' || mLine[mRun+1]=='B') {
-                    mTokenId=TokenId::Binary;
+                    mTokenId=TokenId::BinInteger;
                     mRun+=2;
             } else if (mLine[mRun+1]>='0' && mLine[mRun+1]<='7') {
-                mTokenId=TokenId::Octal;
+                mTokenId=TokenId::OctInteger;
                 mRun+=2;
             }
         } else
             mRun+=1;
     }
     switch(mTokenId) {
-    case TokenId::Hex:
+    case TokenId::HexInteger:
         procHexNumber();
         break;
-    case TokenId::Octal:
+    case TokenId::OctInteger:
         procOctNumber();
         break;
-    case TokenId::Binary:
+    case TokenId::BinInteger:
         procBinNumber();
         break;
     default:
@@ -748,7 +748,7 @@ void CppSyntaxer::procDecNumber()
     while (mRun<mLineSize) {
         switch(mLine[mRun].unicode()) {
         case '.':
-            if (mTokenId != TokenId::Number) {
+            if (mTokenId != TokenId::DecInteger) {
                 mTokenId = TokenId::Unknown;
                 return;
             }
@@ -788,7 +788,7 @@ void CppSyntaxer::procHexNumber()
     while (mRun<mLineSize) {
         switch(mLine[mRun].unicode()) {
         case '.':
-            if (mTokenId != TokenId::Hex) {
+            if (mTokenId != TokenId::HexInteger) {
                 mTokenId = TokenId::Unknown;
                 return;
             }
@@ -1583,16 +1583,16 @@ const PTokenAttribute &CppSyntaxer::getTokenAttribute() const
         return mIdentifierAttribute;
     case TokenId::Key:
         return mKeywordAttribute;
-    case TokenId::Number:
+    case TokenId::DecInteger:
         return mNumberAttribute;
     case TokenId::Float:
     case TokenId::HexFloat:
         return mFloatAttribute;
-    case TokenId::Hex:
+    case TokenId::HexInteger:
         return mHexAttribute;
-    case TokenId::Octal:
+    case TokenId::OctInteger:
         return mOctAttribute;
-    case TokenId::Binary:
+    case TokenId::BinInteger:
         return mOctAttribute;
     case TokenId::Space:
         return mWhitespaceAttribute;
