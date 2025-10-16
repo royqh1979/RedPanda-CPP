@@ -193,6 +193,7 @@ protected:
     void addAttribute(PTokenAttribute attribute) { mAttributes[attribute->name()]=attribute; }
     void clearAttributes() { mAttributes.clear(); }
     virtual int attributesCount() const { return mAttributes.size(); }
+    void resetKeywordsCache() { mFilteredKeywordsCache.clear(); };
 
 private:
     QMap<QString,PTokenAttribute> mAttributes;

@@ -81,8 +81,20 @@ const QSet<QString> GASSyntaxer::Directives {
 GASSyntaxer::GASSyntaxer(): ASMSyntaxer(),
     mDirectiveSyntaxLine{-1},
     mSyntaxMode{SyntaxMode::ATT},
-    mPrefixRegisterNames{true}
+    mPrefixRegisterNames{true},
+    mThisLineHasSyntaxDirective{false}
 {
+}
+
+void GASSyntaxer::procNull()
+{
+    if ( (mLineNumber == mThisLineHasSyntaxDirective)
+            && !mThisLineHasSyntaxDirective) {
+        mSyntaxMode = SyntaxMode::ATT;
+        setPrefixRegisterNames(true);
+        mDirectiveSyntaxLine = -1;
+    }
+    ASMSyntaxer::procNull();
 }
 
 GASSyntaxer::SyntaxMode GASSyntaxer::syntaxMode() const
@@ -107,13 +119,16 @@ bool GASSyntaxer::isDirective(const QString &ident)
 
 void GASSyntaxer::handleDirective(int line, const QString &directive)
 {
-    if (QString::compare(directive, ".intel_syntax", Qt::CaseInsensitive) == 0) {
+    //directive is already in lower case
+    if (directive == ".intel_syntax") {
+        mThisLineHasSyntaxDirective = true;
         mSyntaxMode = SyntaxMode::Intel;
-        mPrefixRegisterNames = false;
+        setPrefixRegisterNames(false);
         mDirectiveSyntaxLine = line;
-    } else if (QString::compare(directive, ".att_syntax", Qt::CaseInsensitive) == 0) {
+    } else if (directive == ".att_syntax") {
+        mThisLineHasSyntaxDirective = true;
         mSyntaxMode = SyntaxMode::ATT;
-        mPrefixRegisterNames = true;
+        setPrefixRegisterNames(true);
         mDirectiveSyntaxLine = line;
     }
 }
@@ -121,12 +136,26 @@ void GASSyntaxer::handleDirective(int line, const QString &directive)
 void GASSyntaxer::handleIdent(int line, const QString &ident)
 {
     if (mDirectiveSyntaxLine == line) {
-        if (QString::compare(ident, "prefix", Qt::CaseInsensitive) == 0) {
-            mPrefixRegisterNames = true;
-        } else if (QString::compare(ident, "noprefix", Qt::CaseInsensitive) == 0) {
-            mPrefixRegisterNames = false;
+        if (ident == "prefix") {
+            setPrefixRegisterNames(true);
+        } else if (ident == "noprefix") {
+            setPrefixRegisterNames(false);
         }
     }
+}
+
+void GASSyntaxer::setPrefixRegisterNames(bool prefix)
+{
+    if (prefix != mPrefixRegisterNames) {
+        mPrefixRegisterNames = prefix;
+        resetKeywordsCache();
+    }
+}
+
+void GASSyntaxer::setLine(const QString &newLine, int lineNumber)
+{
+    mThisLineHasSyntaxDirective = false;
+    ASMSyntaxer::setLine(newLine, lineNumber);
 }
 
 QString GASSyntaxer::languageName()

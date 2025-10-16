@@ -83,7 +83,6 @@ private:
     void procIdent(const QString& prefix);
     void procLF();
     void proceLowerThan();
-    void procNull();
     void procNumber();
     void procNumberType();
     void procSingleQuoteString();
@@ -95,6 +94,7 @@ private:
     static void initData();
     TokenId getIdentType(const QString& ident,  QChar nextChar);
 protected:
+    virtual void procNull();
     virtual bool isDirective(const QString& ident);
     virtual bool isPreprocessDirective(const QString& ident);
     virtual void handleDirective(int line, const QString& directive);

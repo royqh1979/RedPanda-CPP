@@ -38,13 +38,17 @@ private:
     int mDirectiveSyntaxLine;
     SyntaxMode mSyntaxMode;
     bool mPrefixRegisterNames;
+    bool mThisLineHasSyntaxDirective;
     QSet<QString> mNonprefixedKeywordCache;
     QSet<QString> mPrefixedKeywordCache;
 protected:
+    void procNull() override;
     bool isDirective(const QString& ident) override;
     void handleDirective(int line, const QString& directive);
     void handleIdent(int line, const QString& ident);
+    void setPrefixRegisterNames(bool prefix);
 public:
+    void setLine(const QString &newLine, int lineNumber) override;
     QString languageName() override;
     ProgrammingLanguage language() override;
     QSet<QString> keywords() override;
