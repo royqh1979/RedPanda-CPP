@@ -316,7 +316,7 @@ private:
     TipType getTipType(QPoint point, QSynedit::BufferCoord& pos);
     void cancelHint();
     QString getHeaderFileHint(const QString& s, bool fromNext);
-    QString getParserHint(const QStringList& expression,int line, int ch);
+    QString getParserHint(const QStringList& expression, const QSynedit::BufferCoord& p);
     void showDebugHint(const QString& s,int line);
     QString getErrorHint(const PSyntaxIssue& issue);
     QString getHintForFunction(const PStatement& statement,
@@ -337,7 +337,7 @@ private:
     Editor* openFileInContext(const QString& filename);
     bool needReparse();
 
-    PStatement constructorToClass(PStatement constuctorStatement, int line, int ch);
+    PStatement constructorToClass(PStatement constuctorStatement, const QSynedit::BufferCoord& p);
 
 private:
     bool mInited;

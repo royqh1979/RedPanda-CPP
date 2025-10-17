@@ -212,36 +212,36 @@ int QSynEdit::caretY() const
     return mCaretY;
 }
 
-void QSynEdit::setCaretX(int value)
+void QSynEdit::setCaretX(int ch)
 {
-    setCaretXY({value,mCaretY});
+    setCaretXY({ch,mCaretY});
 }
 
-void QSynEdit::setCaretY(int value)
+void QSynEdit::setCaretY(int line)
 {
-    setCaretXY({mCaretX,value});
+    setCaretXY({mCaretX,line});
 }
 
-void QSynEdit::setCaretXY(const BufferCoord &value)
+void QSynEdit::setCaretXY(const BufferCoord &pos)
 {
     incPaintLock();
     auto action = finally([this](){
         decPaintLock();
     });
-    setBlockBegin(value);
-    setBlockEnd(value);
-    internalSetCaretXY(value, true);
+    setBlockBegin(pos);
+    setBlockEnd(pos);
+    internalSetCaretXY(pos, true);
 }
 
-void QSynEdit::setCaretXYCentered(const BufferCoord &value)
+void QSynEdit::setCaretXYCentered(const BufferCoord &pos)
 {
     incPaintLock();
     auto action = finally([this] {
         decPaintLock();
     });
-    setBlockBegin(value);
-    setBlockEnd(value);
-    internalSetCaretXY(value, false);
+    setBlockBegin(pos);
+    setBlockEnd(pos);
+    internalSetCaretXY(pos, false);
     ensureCaretVisibleEx(true); // but here after block has been set
 }
 
@@ -308,25 +308,25 @@ bool QSynEdit::getTokenAttriAtRowCol(
         const BufferCoord &pos, QString &token,
         PTokenAttribute &attri, SyntaxState &syntaxState)
 {
-    int posX, posY, endPos, start;
+    int charIdx, lineIdx, endPos, start;
     QString lineText;
-    posY = pos.line - 1;
-    if ((posY >= 0) && (posY < mDocument->count())) {
-        lineText = mDocument->getLine(posY);
-        prepareSyntaxerState(*mSyntaxer, posY, lineText);
+    lineIdx = pos.line - 1;
+    if ((lineIdx >= 0) && (lineIdx < mDocument->count())) {
+        lineText = mDocument->getLine(lineIdx);
+        prepareSyntaxerState(*mSyntaxer, lineIdx, lineText);
 //        if (posY == 0) {
 //            mSyntaxer->resetState();
 //        } else {
 //            mSyntaxer->setState(mDocument->getSyntaxState(posY-1));
 //        }
 //        mSyntaxer->setLine(lineText, posY);
-        posX = pos.ch;
-        if ((posX > 0) && (posX <= lineText.length())) {
+        charIdx = pos.ch;
+        if ((charIdx > 0) && (charIdx <= lineText.length())) {
             while (!mSyntaxer->eol()) {
                 start = mSyntaxer->getTokenPos() + 1;
                 token = mSyntaxer->getToken();
                 endPos = start + token.length()-1;
-                if ((posX >= start) && (posX <= endPos)) {
+                if ((charIdx >= start) && (charIdx <= endPos)) {
                     attri = mSyntaxer->getTokenAttribute();
                     syntaxState = mSyntaxer->getState();
                     return true;
@@ -342,25 +342,25 @@ bool QSynEdit::getTokenAttriAtRowCol(
 
 bool QSynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, int &start, PTokenAttribute &attri)
 {
-    int posX, posY, endPos;
+    int chIdx, lineIdx, endPos;
     QString lineText;
-    posY = pos.line - 1;
-    if ((posY >= 0) && (posY < mDocument->count())) {
-        lineText = mDocument->getLine(posY);
-        prepareSyntaxerState(*mSyntaxer, posY, lineText);
+    lineIdx = pos.line - 1;
+    if ((lineIdx >= 0) && (lineIdx < mDocument->count())) {
+        lineText = mDocument->getLine(lineIdx);
+        prepareSyntaxerState(*mSyntaxer, lineIdx, lineText);
 //        if (posY == 0) {
 //            mSyntaxer->resetState();
 //        } else {
 //            mSyntaxer->setState(mDocument->getSyntaxState(posY-1));
 //        }
 //        mSyntaxer->setLine(lineText, posY);
-        posX = pos.ch;
-        if ((posX > 0) && (posX <= lineText.length())) {
+        chIdx = pos.ch;
+        if ((chIdx > 0) && (chIdx <= lineText.length())) {
             while (!mSyntaxer->eol()) {
                 start = mSyntaxer->getTokenPos() + 1;
                 token = mSyntaxer->getToken();
                 endPos = start + token.length()-1;
-                if ((posX >= start) && (posX <= endPos)) {
+                if ((chIdx >= start) && (chIdx <= endPos)) {
                     attri = mSyntaxer->getTokenAttribute();
                     return true;
                 }
@@ -1107,13 +1107,13 @@ QChar QSynEdit::lastNonSpaceChar(int line, int ch)
     return QChar();
 }
 
-void QSynEdit::setCaretAndSelection(const BufferCoord &ptCaret, const BufferCoord &ptSelBegin, const BufferCoord &ptSelEnd)
+void QSynEdit::setCaretAndSelection(const BufferCoord &posCaret, const BufferCoord &posSelBegin, const BufferCoord &posSelEnd)
 {
     incPaintLock();
-    internalSetCaretXY(ptCaret);
+    internalSetCaretXY(posCaret);
     setActiveSelectionMode(SelectionMode::Normal);
-    setBlockBegin(ptSelBegin);
-    setBlockEnd(ptSelEnd);
+    setBlockBegin(posSelBegin);
+    setBlockEnd(posSelEnd);
     decPaintLock();
 }
 
@@ -1255,154 +1255,154 @@ void QSynEdit::hideCaret()
     }
 }
 
-bool QSynEdit::isPointInSelection(const BufferCoord &Value) const
+bool QSynEdit::isPointInSelection(const BufferCoord &pos) const
 {
     BufferCoord ptBegin = blockBegin();
     BufferCoord ptEnd = blockEnd();
-    if ((Value.line >= ptBegin.line) && (Value.line <= ptEnd.line) &&
+    if ((pos.line >= ptBegin.line) && (pos.line <= ptEnd.line) &&
             ((ptBegin.line != ptEnd.line) || (ptBegin.ch != ptEnd.ch))) {
         if (mActiveSelectionMode == SelectionMode::Column) {
             if (ptBegin.ch > ptEnd.ch)
-                return (Value.ch >= ptEnd.ch) && (Value.ch < ptBegin.ch);
+                return (pos.ch >= ptEnd.ch) && (pos.ch < ptBegin.ch);
             else if (ptBegin.ch < ptEnd.ch)
-                return (Value.ch >= ptBegin.ch) && (Value.ch < ptEnd.ch);
+                return (pos.ch >= ptBegin.ch) && (pos.ch < ptEnd.ch);
             else
                 return false;
         } else
-            return ((Value.line > ptBegin.line) || (Value.ch >= ptBegin.ch)) &&
-      ((Value.line < ptEnd.line) || (Value.ch < ptEnd.ch));
+            return ((pos.line > ptBegin.line) || (pos.ch >= ptBegin.ch)) &&
+      ((pos.line < ptEnd.line) || (pos.ch < ptEnd.ch));
     } else
         return false;
 }
 
 BufferCoord QSynEdit::nextWordPos()
 {
-    return nextWordPosEx(caretXY());
+    return nextWordPos(caretXY());
 }
 
-BufferCoord QSynEdit::nextWordPosEx(const BufferCoord &XY)
+BufferCoord QSynEdit::nextWordPos(const BufferCoord &pos)
 {
-    int CX = XY.ch;
-    int CY = XY.line;
+    int ch = pos.ch;
+    int line = pos.line;
     // valid line?
-    if ((CY >= 1) && (CY <= mDocument->count())) {
-        QString Line = mDocument->getLine(CY - 1);
-        int LineLen = Line.length();
-        if (CX >= LineLen) {
+    if ((line >= 1) && (line <= mDocument->count())) {
+        QString lineText = mDocument->getLine(line - 1);
+        int lineLen = lineText.length();
+        if (ch >= lineLen) {
             // find first IdentChar or multibyte char in the next line
-            if (CY < mDocument->count()) {
-                Line = mDocument->getLine(CY);
-                CY++;
-                CX=findWordChar(Line,1);
-                if (CX==0)
-                    CX=1;
+            if (line < mDocument->count()) {
+                lineText = mDocument->getLine(line);
+                line++;
+                ch=findWordChar(lineText,1);
+                if (ch==0)
+                    ch=1;
             }
         } else {
             // find next "whitespace" if current char is an IdentChar
-            if (!Line[CX-1].isSpace())
-                CX = findNonWordChar(Line,CX);
+            if (!lineText[ch-1].isSpace())
+                ch = findNonWordChar(lineText,ch);
             // if "whitespace" found, find the next IdentChar
-            if (CX > 0)
-                CX = findWordChar(Line, CX);
+            if (ch > 0)
+                ch = findWordChar(lineText, ch);
             // if one of those failed position at the begin of next line
-            if (CX == 0) {
-                if (CY < mDocument->count()) {
-                    Line = mDocument->getLine(CY);
-                    CY++;
-                    CX=findWordChar(Line,1);
-                    if (CX==0)
-                        CX=1;
+            if (ch == 0) {
+                if (line < mDocument->count()) {
+                    lineText = mDocument->getLine(line);
+                    line++;
+                    ch=findWordChar(lineText,1);
+                    if (ch==0)
+                        ch=1;
                 } else {
-                    CX=Line.length()+1;
+                    ch=lineText.length()+1;
                 }
             }
         }
     }
-    return BufferCoord{CX,CY};
+    return BufferCoord{ch,line};
 }
 
 BufferCoord QSynEdit::wordStart()
 {
-    return wordStartEx(caretXY());
+    return wordStart(caretXY());
 }
 
-BufferCoord QSynEdit::wordStartEx(const BufferCoord &XY)
+BufferCoord QSynEdit::wordStart(const BufferCoord &pos)
 {
-    int CX = XY.ch;
-    int CY = XY.line;
+    int ch = pos.ch;
+    int line = pos.line;
     // valid line?
-    if ((CY >= 1) && (CY <= mDocument->count())) {
-        QString Line = mDocument->getLine(CY - 1);
-        CX = std::min(CX, Line.length()+1);
-        if (CX > 1) {
-            if (isWordChar(Line[CX - 2]))
-                CX = findLastNonWordChar(Line, CX - 1) + 1;
+    if ((line >= 1) && (line <= mDocument->count())) {
+        QString lineText = mDocument->getLine(line - 1);
+        ch = std::min(ch, lineText.length()+1);
+        if (ch > 1) {
+            if (isWordChar(lineText[ch - 2]))
+                ch = findLastNonWordChar(lineText, ch - 1) + 1;
         }
     }
-    return BufferCoord{CX,CY};
+    return BufferCoord{ch,line};
 }
 
 BufferCoord QSynEdit::wordEnd()
 {
-    return wordEndEx(caretXY());
+    return wordEnd(caretXY());
 }
 
-BufferCoord QSynEdit::wordEndEx(const BufferCoord &XY)
+BufferCoord QSynEdit::wordEnd(const BufferCoord &pos)
 {
-    int CX = XY.ch;
-    int CY = XY.line;
+    int ch = pos.ch;
+    int line = pos.line;
     // valid line?
-    if ((CY >= 1) && (CY <= mDocument->count())) {
-        QString Line = mDocument->getLine(CY - 1);
-        if (CX <= Line.length() && CX-1>=0) {
-            if (isWordChar(Line[CX - 1]))
-                CX = findNonWordChar(Line, CX);
-            if (CX == 0)
-                CX = Line.length() + 1;
+    if ((line >= 1) && (line <= mDocument->count())) {
+        QString lineText = mDocument->getLine(line - 1);
+        if (ch <= lineText.length() && ch-1>=0) {
+            if (isWordChar(lineText[ch - 1]))
+                ch = findNonWordChar(lineText, ch);
+            if (ch == 0)
+                ch = lineText.length() + 1;
         }
     }
-    return BufferCoord{CX,CY};
+    return BufferCoord{ch,line};
 }
 
 BufferCoord QSynEdit::prevWordPos()
 {
-    return prevWordPosEx(caretXY());
+    return prevWordPos(caretXY());
 }
 
-BufferCoord QSynEdit::prevWordPosEx(const BufferCoord &XY)
+BufferCoord QSynEdit::prevWordPos(const BufferCoord &pos)
 {
-    int CX = XY.ch;
-    int CY = XY.line;
+    int ch = pos.ch;
+    int line = pos.line;
     // valid line?
-    if ((CY >= 1) && (CY <= mDocument->count())) {
-        QString Line = mDocument->getLine(CY - 1);
-        CX = std::min(CX, Line.length());
-        if (CX <= 1) {
+    if ((line >= 1) && (line <= mDocument->count())) {
+        QString lineText = mDocument->getLine(line - 1);
+        ch = std::min(ch, lineText.length());
+        if (ch <= 1) {
             // find last IdentChar in the previous line
-            if (CY > 1) {
-                CY -- ;
-                Line = mDocument->getLine(CY - 1);
-                CX = findLastWordChar(Line, Line.length())+1;
+            if (line > 1) {
+                line -- ;
+                lineText = mDocument->getLine(line - 1);
+                ch = findLastWordChar(lineText, lineText.length())+1;
             }
         } else {
             // if previous char is a "whitespace" search for the last IdentChar
-            if (!isWordChar(Line[CX - 2]))
-                CX = findLastWordChar(Line, CX - 1);
-            if (CX > 0) // search for the first IdentChar of this "word"
-                CX = findLastNonWordChar(Line, CX - 1)+1;
-            if (CX == 0) {
+            if (!isWordChar(lineText[ch - 2]))
+                ch = findLastWordChar(lineText, ch - 1);
+            if (ch > 0) // search for the first IdentChar of this "word"
+                ch = findLastNonWordChar(lineText, ch - 1)+1;
+            if (ch == 0) {
                 // find last IdentChar in the previous line
-                if (CY > 1) {
-                    CY -- ;
-                    Line = mDocument->getLine(CY - 1);
-                    CX = findLastWordChar(Line, Line.length())+1;
+                if (line > 1) {
+                    line -- ;
+                    lineText = mDocument->getLine(line - 1);
+                    ch = findLastWordChar(lineText, lineText.length())+1;
                 } else {
-                    CX = 1;
+                    ch = 1;
                 }
             }
         }
     }
-    return BufferCoord{CX,CY};
+    return BufferCoord{ch,line};
 }
 
 void QSynEdit::setSelWord()
@@ -1425,8 +1425,8 @@ void QSynEdit::setWordBlock(BufferCoord value)
         return;
     }
 
-    BufferCoord vWordStart = wordStartEx(value);
-    BufferCoord vWordEnd = wordEndEx(value);
+    BufferCoord vWordStart = wordStart(value);
+    BufferCoord vWordEnd = wordEnd(value);
     if ((vWordStart.line == vWordEnd.line) && (vWordStart.ch < vWordEnd.ch))
         setCaretAndSelection(vWordEnd, vWordStart, vWordEnd);
 }
@@ -1945,7 +1945,7 @@ void QSynEdit::doDeleteToWordEnd()
     BufferCoord start = caretXY();
     BufferCoord end = wordEnd();
     if (start == end) {
-        end = wordEndEx(nextWordPos());
+        end = wordEnd(nextWordPos());
     }
     deleteFromTo(start,end);
 }
@@ -6715,24 +6715,24 @@ void QSynEdit::setBlockEnd(BufferCoord value)
     }
 }
 
-void QSynEdit::setSelLength(int Value)
+void QSynEdit::setSelLength(int len)
 {
     if (mBlockBegin.line>mDocument->count() || mBlockBegin.line<=0)
         return;
 
-    if (Value >= 0) {
+    if (len >= 0) {
         int y = mBlockBegin.line;
         int ch = mBlockBegin.ch;
-        int x = ch + Value;
-        QString line;
+        int x = ch + len;
+        QString lineText;
         while (y<=mDocument->count()) {
-            line = mDocument->getLine(y-1);
-            if (x <= line.length()+2) {
-                if (x==line.length()+2)
-                    x = line.length()+1;
+            lineText = mDocument->getLine(y-1);
+            if (x <= lineText.length()+2) {
+                if (x==lineText.length()+2)
+                    x = lineText.length()+1;
                 break;
             }
-            x -= line.length()+2;
+            x -= lineText.length()+2;
             y ++;
         }
         if (y>mDocument->count()) {
@@ -6744,7 +6744,7 @@ void QSynEdit::setSelLength(int Value)
     } else {
         int y = mBlockBegin.line;
         int ch = mBlockBegin.ch;
-        int x = ch + Value;
+        int x = ch + len;
         QString line;
         while (y>=1) {
             if (x>=0) {

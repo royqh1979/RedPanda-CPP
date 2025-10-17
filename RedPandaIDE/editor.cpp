@@ -2105,7 +2105,7 @@ void Editor::onTooltipTimer()
                     showDebugHint(s,p.line);
                 }
             } else if (pSettings->editor().enableIdentifierToolTips()) {
-                hint = getParserHint(expression, p.line, p.ch);
+                hint = getParserHint(expression, p);
             }
         }
         break;
@@ -4086,7 +4086,7 @@ QString Editor::getHeaderFileHint(const QString &s, bool fromNext)
     return "";
 }
 
-QString Editor::getParserHint(const QStringList& expression,int line, int ch)
+QString Editor::getParserHint(const QStringList& expression, const QSynedit::BufferCoord& p)
 {
     if (!mParser)
         return "";
@@ -4095,17 +4095,17 @@ QString Editor::getParserHint(const QStringList& expression,int line, int ch)
     // Exit early, don't bother creating a stream (which is slow)
     PStatement statement = mParser->findStatementOf(
                 mFilename,expression,
-                line);
-    statement = constructorToClass(statement, line , ch);
+                p.line);
+    statement = constructorToClass(statement, p);
     if (!statement)
         return result;
     if (statement->kind == StatementKind::Function
             || statement->kind == StatementKind::Constructor
             || statement->kind == StatementKind::Destructor) {
-          result = getHintForFunction(statement,mFilename,line);
+          result = getHintForFunction(statement,mFilename,p.line);
     } else if (statement->line>0) {
         QFileInfo fileInfo(statement->fileName);
-        result = mParser->prettyPrintStatement(statement,mFilename, line) + " - "
+        result = mParser->prettyPrintStatement(statement,mFilename, p.line) + " - "
                 + QString("%1(%2) ").arg(fileInfo.fileName()).arg(statement->line)
                 + tr("Ctrl+click for more info");
     } else {  // hard defines
@@ -4649,17 +4649,14 @@ bool Editor::needReparse()
                        || (!mParser->isFileParsed(mFilename)));
 }
 
-PStatement Editor::constructorToClass(PStatement statement, int line, int ch)
+PStatement Editor::constructorToClass(PStatement statement, const QSynedit::BufferCoord& p)
 {
     if (statement && statement->kind == StatementKind::Constructor) {
-        QSynedit::BufferCoord p;
         QString token;
         int start;
         QSynedit::PTokenAttribute attri;
-        p.line = line+1;
-        p.ch = ch+1;
         if (getTokenAttriAtRowColEx(p,token,start,attri)) {
-            QString s = document()->getLine(line);
+            QString s = lineText(p.line);
             int pos = start+token.length()-1;
             while (pos<s.length() && CppParser::isSpaceChar(s[pos]))
                 pos++;
@@ -4797,7 +4794,7 @@ void Editor::gotoDeclaration(const QSynedit::BufferCoord &pos)
                 filename(),
                 expression,
                 pos.line);
-    statement = constructorToClass(statement, pos.line, pos.ch);
+    statement = constructorToClass(statement, pos);
 
     if (!statement) {
         return;
@@ -4828,7 +4825,7 @@ void Editor::gotoDefinition(const QSynedit::BufferCoord &pos)
                 filename(),
                 expression,
                 pos.line);
-    statement = constructorToClass(statement, pos.line, pos.ch);
+    statement = constructorToClass(statement, pos);
     if (!statement) {
         // pMainWindow->updateStatusbarMessage(tr("Symbol '%1' not found!").arg(phrase));
         return;
