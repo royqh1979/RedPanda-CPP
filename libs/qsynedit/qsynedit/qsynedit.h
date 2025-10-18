@@ -23,6 +23,7 @@
 #include <QFrame>
 #include <QStringList>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QWidget>
 #include "gutter.h"
 #include "codefolding.h"
