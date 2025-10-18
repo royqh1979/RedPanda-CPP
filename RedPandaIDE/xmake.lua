@@ -115,6 +115,7 @@ target("RedPandaIDE")
         "parser/statementmodel",
         -- problems
         "problems/competitivecompenionhandler",
+        "problems/ojproblemset",
         -- settings dialog
         "settingsdialog/settingswidget",
         -- widgets

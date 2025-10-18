@@ -23,6 +23,8 @@ include(../version.inc)
 # TEST_VERSION = beta2
 system(git rev-list HEAD --count): TEST_VERSION = $$system(git rev-list HEAD --count)
 
+message("Host Arch: $${QMAKE_HOST.arch}")
+
 contains(QMAKE_HOST.arch, x86_64):{
     DEFINES += ARCH_X86_64=1
 } else: {
@@ -33,15 +35,6 @@ contains(QMAKE_HOST.arch, x86_64):{
         DEFINES += ARCH_X86=1
     }
 }
-
-contains(DEFINES, _WIN64) {
-    DEFINES += ARCH_X86_64=1
-}
-
-contains(DEFINES, _WIN32) {
-    DEFINES += ARCH_X86=1
-}
-
 
 macos: {
     QT += gui-private
