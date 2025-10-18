@@ -34,6 +34,15 @@ contains(QMAKE_HOST.arch, x86_64):{
     }
 }
 
+contains(DEFINES, _WIN64) {
+    DEFINES += ARCH_X86_64=1
+}
+
+contains(DEFINES, _WIN32) {
+    DEFINES += ARCH_X86=1
+}
+
+
 macos: {
     QT += gui-private
 
