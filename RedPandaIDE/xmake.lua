@@ -151,6 +151,8 @@ target("RedPandaIDE")
         "settingsdialog/compilerautolinkwidget",
         "settingsdialog/compilersetdirectorieswidget",
         "settingsdialog/compilersetoptionwidget",
+        "settingsdialog/compilergaswidget",
+        "settingsdialog/compilernasmwidget",
         "settingsdialog/debuggeneralwidget",
         "settingsdialog/editorautosavewidget",
         "settingsdialog/editorclipboardwidget",
