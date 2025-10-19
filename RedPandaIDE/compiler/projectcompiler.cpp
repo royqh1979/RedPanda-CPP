@@ -248,6 +248,24 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
     cIncludeArguments += getProjectIncludeArguments();
     QStringList cxxIncludeArguments = getCppIncludeArguments();
     cxxIncludeArguments += getProjectIncludeArguments();
+
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
+    QStringList nasmArguments ;
+#ifdef Q_OS_WIN
+    if (cCompileArguments.contains("-m32") || QString("i686").compare(compilerSet()->target(), Qt::CaseInsensitive)==0
+            || QString("i386").compare(compilerSet()->target(), Qt::CaseInsensitive)==0) {
+        nasmArguments += {"-f","elf32"};
+    } else if (cCompileArguments.contains("-m64")) {
+        nasmArguments += {"-f","elf64"};
+    } else {
+        nasmArguments += {"-f","elf64"};
+    }
+#endif
+    if (cCompileArguments.contains("-g3")) {
+        nasmArguments += "-g";
+    }
+#endif
+
 #ifdef Q_OS_WIN
     QStringList resourceArguments = parseArguments(mProject->options().resourceCmd, devCppMacroVariables(), true);
 #endif
@@ -260,6 +278,11 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
     // programs
     writeln(file, "CXX      = " + escapeArgumentForMakefileVariableValue(cxx, true));
     writeln(file, "CC       = " + escapeArgumentForMakefileVariableValue(cc, true));
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
+    if (fileExists(pSettings->compile().NASMPath())) {
+        writeln(file, "NASM       = " + escapeArgumentForMakefileVariableValue(pSettings->compile().NASMPath(), true));
+    }
+#endif
 #ifdef Q_OS_WIN
     writeln(file, "WINDRES  = " + escapeArgumentForMakefileVariableValue(windres, true));
 #endif
@@ -272,6 +295,7 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
     writeln(file, "CXXINCS  = " + escapeArgumentsForMakefileVariableValue(cxxIncludeArguments));
     writeln(file, "CXXFLAGS = $(CXXINCS) " + escapeArgumentsForMakefileVariableValue(cxxCompileArguments));
     writeln(file, "CFLAGS   = $(INCS) " + escapeArgumentsForMakefileVariableValue(cCompileArguments));
+    writeln(file, "NASM_FLAGS   =  " + escapeArgumentsForMakefileVariableValue(nasmArguments));
 #ifdef Q_OS_WIN
     writeln(file, "WINDRESFLAGS = " + escapeArgumentsForMakefileVariableValue(resourceArguments));
 #endif
@@ -493,6 +517,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                     writeln(file, "\t$(CC) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CFLAGS) " + encodingStr);
             } else if (fileType == FileType::GAS) {
                 writeln(file, "\t$(CC) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CFLAGS) " + encodingStr);
+            } else if (fileType == FileType::NASM) {
+                writeln(file, "\t$(NASM) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(NASM_FLAGS) " );
             }
         }
     }

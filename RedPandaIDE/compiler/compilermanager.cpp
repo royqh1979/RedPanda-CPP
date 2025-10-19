@@ -102,7 +102,7 @@ void CompilerManager::compile(const QString& filename, FileType fileType, const 
         if (fileType == FileType::NASM){
             mCompiler = new NASMFileCompiler(filename);
         } else  {
-            mCompiler = new FileCompiler(filename,encoding,compileType,false);
+            mCompiler = new FileCompiler(filename,encoding,fileType,compileType,false);
         }
         mCompiler->setRebuild(rebuild);
         connect(mCompiler, &Compiler::finished, mCompiler, &QObject::deleteLater);

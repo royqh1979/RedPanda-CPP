@@ -26,10 +26,12 @@
 
 
 FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,
+                           FileType fileType,
                            CppCompileType compileType, bool onlyCheckSyntax):
-    Compiler(filename, onlyCheckSyntax),
-    mEncoding(encoding),
-    mCompileType(compileType)
+    Compiler{filename, onlyCheckSyntax},
+    mEncoding{encoding},
+    mFileType{fileType},
+    mCompileType{compileType}
 {
 
 }
@@ -66,11 +68,10 @@ bool FileCompiler::prepareForCompile()
     log(tr("- Compiler Set Name: %1").arg(compilerSet()->name()));
     log("");
 
-    FileType fileType = getFileType(mFilename);
     CompilerType compilerType = compilerSet()->compilerType();
 
     // GCC `import std;` sources should be added before the main file to generate GCM cache
-    if (fileType == FileType::CppSource &&
+    if (mFileType == FileType::CppSource &&
         (compilerType == CompilerType::GCC || compilerType == CompilerType::GCC_UTF8)) {
         mArguments += getCppGccImportStdSources(mOnlyCheckSyntax);
     }
@@ -125,9 +126,9 @@ bool FileCompiler::prepareForCompile()
         }
     }
 
-    mArguments += getCharsetArgument(mEncoding, fileType, mOnlyCheckSyntax);
+    mArguments += getCharsetArgument(mEncoding, mFileType, mOnlyCheckSyntax);
     QString strFileType;
-    switch(fileType) {
+    switch(mFileType) {
     case FileType::GAS:
         mArguments += getCCompileArguments(mOnlyCheckSyntax);
         mArguments += getCIncludeArguments();
@@ -158,7 +159,7 @@ bool FileCompiler::prepareForCompile()
         throw CompileError(tr("Can't find the compiler for file %1").arg(mFilename));
     }
     if (!mOnlyCheckSyntax)
-        mArguments += getLibraryArguments(fileType);
+        mArguments += getLibraryArguments(mFileType);
 
 //    if (isASMSourceFile(fileType)) {
 //        bool hasStart=false;
