@@ -295,7 +295,10 @@ void ProjectCompiler::writeMakeDefines(QFile &file, bool &genModuleDef)
     writeln(file, "CXXINCS  = " + escapeArgumentsForMakefileVariableValue(cxxIncludeArguments));
     writeln(file, "CXXFLAGS = $(CXXINCS) " + escapeArgumentsForMakefileVariableValue(cxxCompileArguments));
     writeln(file, "CFLAGS   = $(INCS) " + escapeArgumentsForMakefileVariableValue(cCompileArguments));
+
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
     writeln(file, "NASM_FLAGS   =  " + escapeArgumentsForMakefileVariableValue(nasmArguments));
+#endif
 #ifdef Q_OS_WIN
     writeln(file, "WINDRESFLAGS = " + escapeArgumentsForMakefileVariableValue(resourceArguments));
 #endif
@@ -425,8 +428,8 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             }
         } else {
             foreach(const PProjectUnit &unit2, projectUnits) {
-                FileType fileType = getFileType(unit2->fileName());
-                if (isC_CPPHeaderFile(fileType)) {
+                FileType fileType2 = getFileType(unit2->fileName());
+                if (isC_CPPHeaderFile(fileType2)) {
                     QString prereq = extractRelativePath(mProject->makeFileName(), unit2->fileName());
                     objStr = objStr + ' ' + escapeFilenameForMakefilePrerequisite(prereq);
                 }

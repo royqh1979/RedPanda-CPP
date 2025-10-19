@@ -3,6 +3,12 @@ target("qsynedit")
     add_rules("qt.ts")
     add_frameworks("QtGui", "QtWidgets")
     add_deps("redpanda_qt_utils")
+    
+    if is_arch("x86_64","x64") then
+        add_defines("ARCH_X86_64=1")
+    elseif is_arch("i[3456]86") then
+        add_defines("ARCH_X86=1")
+    end    
 
     add_files(
         "qsynedit/codefolding.cpp",

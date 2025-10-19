@@ -47,7 +47,7 @@ target("RedPandaIDE")
         add_defines('REDPANDA_CPP_VERSION="' .. APP_VERSION .. '"')
     end
 
-    if is_arch("x86_64") then
+    if is_arch("x86_64","x64") then
         add_defines("ARCH_X86_64=1")
     elseif is_arch("i[3456]86") then
         add_defines("ARCH_X86=1")
