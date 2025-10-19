@@ -17,6 +17,7 @@ Red Panda C++ Version 3.4
   - fix: Class name is wrongly syntaxed colored in its definition when it has a constructor.
   - fix: Mouse tip of class displays its constructor info in its definition.
   - fix: Goto defintion/declaration will jump to constructor instead of the class in the class definition.
+  - fix: Wrong error message when delete a customed bundled syntax color scheme.
   - fix: Infinite loop when generating new problem set name.
   
 Red Panda C++ Version 3.3
