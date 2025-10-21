@@ -79,7 +79,7 @@ Red Panda C++ должна работать с любым 64-битным наб
 - `--mingw`: псевдоним для  `--mingw64` (x64-приложение).
 - `--gcc-linux-x86-64`: добавить `assets/gcc-linux-x86-64.7z` и `assets/alpine-minirootfs-x86_64.tar` в пакет.
 - `--gcc-linux-aarch64`: добавить `assets/gcc-linux-aarch64.7z` и `assets/alpine-minirootfs-aarch64.tar` в пакет.
-- `--ucrt <build>`: добавить UCRT runtime из Windows SDK в пакет. Например, `--ucrt 22621` для Windows 11 SDK 22H2.
+- `--ucrt <build>`: include UCRT installer (VC_redist) in the package. `<arch>` can be x86 or x64. This option can be specified multiple times.
 
 ## Windows NT 5.x с библиотекой Qt с набором инструментов MinGW Lite
 

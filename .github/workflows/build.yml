@@ -33,10 +33,6 @@ jobs:
       fail-fast: false
       matrix:
         msystem: [MINGW64, UCRT64, CLANG64]
-        include:
-          - isUcrt: 1
-          - msystem: MINGW64
-            isUcrt: 0
     runs-on: windows-latest
     defaults:
       run:
@@ -70,10 +66,8 @@ jobs:
 
       - name: Build
         run: |
-          ./packages/msys/build-mingw.sh \
-            $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
-          ./packages/msys/build-mingw.sh --mingw \
-            $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
+          ./packages/msys/build-mingw.sh --ucrt x64 --ucrt x86
+          ./packages/msys/build-mingw.sh --mingw --ucrt x64 --ucrt x86
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -91,12 +85,6 @@ jobs:
           - 32-ucrt
           - 64-msvcrt
           - 32-msvcrt
-        include:
-          - isUcrt: 0
-          - profile: 64-ucrt
-            isUcrt: 1
-          - profile: 32-ucrt
-            isUcrt: 1
     runs-on: windows-2022
     defaults:
       run:
@@ -115,10 +103,8 @@ jobs:
 
       - name: Build
         run: |
-          ./packages/msys/build-xp.sh -p ${{ matrix.profile }} \
-            $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
-          ./packages/msys/build-xp.sh -p ${{ matrix.profile }} --mingw \
-            $( [[ ${{ matrix.isUcrt }} -eq 1 ]] && echo --ucrt 22621 )
+          ./packages/msys/build-xp.sh -p ${{ matrix.profile }}
+          ./packages/msys/build-xp.sh -p ${{ matrix.profile }} --mingw
 
       - name: Upload
         uses: actions/upload-artifact@v4

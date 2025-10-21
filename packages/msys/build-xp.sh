@@ -14,8 +14,6 @@ Options:
   --mingw                  Alias for --mingw32 (x86 app) or --mingw64 (x64 app).
   --mingw32                Build mingw32 integrated compiler.
   --mingw64                Build mingw64 integrated compiler.
-  --ucrt <build>           Include UCRT in the package. Windows SDK required.
-                           e.g. '--ucrt 22621' for Windows 11 SDK 22H2.
   -t, --target-dir <dir>   Set target directory for the packages.
 EOF
 }
@@ -62,7 +60,6 @@ compilers=()
 COMPILER_MINGW32=0
 COMPILER_MINGW64=0
 TARGET_DIR="$(pwd)/dist"
-UCRT=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
@@ -97,18 +94,6 @@ while [[ $# -gt 0 ]]; do
       COMPILER_MINGW64=1
       shift
       ;;
-    --ucrt)
-      case "${PROFILE}" in
-        64-ucrt|32-ucrt)
-          UCRT="$2"
-          shift 2
-          ;;
-        *)
-          echo "Error: Red Panda C++ is not built against UCRT."
-          exit 1
-          ;;
-      esac
-      ;;
     -t|--target-dir)
       TARGET_DIR="$2"
       shift 2
@@ -129,7 +114,6 @@ _7Z="/mingw64/bin/7z"
 CMAKE="/mingw64/bin/cmake"
 SOURCE_DIR="$(pwd)"
 ASSETS_DIR="${SOURCE_DIR}/assets"
-UCRT_DIR="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.${UCRT}.0/ucrt/DLLs/${NSIS_ARCH}"
 
 QT_ARCHIVE="qt-$QT_VERSION-$PROFILE.tar.zst"
 QT_DIR="/c/Qt/${QT_VERSION}/${PROFILE}"
@@ -153,13 +137,6 @@ fi
 function fn_print_progress() {
   echo -e "\e[1;32;44m$1\e[0m"
 }
-
-## check deps
-
-if [[ -n "${UCRT}" && ! -f "${UCRT_DIR}/ucrtbase.dll" ]]; then
-  echo "Missing Windows SDK, UCRT cannot be included."
-  exit 1
-fi
 
 ## prepare dirs
 
@@ -281,13 +258,6 @@ fi
 if [[ ${COMPILER_MINGW64} -eq 1 ]]; then
   nsis_flags+=(-DHAVE_MINGW64)
   [[ -d "mingw64" ]] || "${_7Z}" x "$ASSETS_DIR/${MINGW64_ARCHIVE}" -o"${PACKAGE_DIR}"
-fi
-if [[ -n "${UCRT}" ]]; then
-  nsis_flags+=(-DHAVE_UCRT)
-  if [[ ! -f ucrt/ucrtbase.dll ]]; then
-    mkdir -p ucrt
-    cp "${UCRT_DIR}"/*.dll ucrt
-  fi
 fi
 "${NSIS}" "${nsis_flags[@]}" redpanda.nsi
 
