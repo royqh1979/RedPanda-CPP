@@ -37,11 +37,6 @@ jobs:
           - isUcrt: 1
           - msystem: MINGW64
             isUcrt: 0
-            packagePrefix: mingw-w64-x86_64
-#          - msystem: UCRT64
-#            packagePrefix: mingw-w64-ucrt-x86_64
-#          - msystem: CLANG64
-#            packagePrefix: mingw-w64-clang-x86_64
     runs-on: windows-latest
     defaults:
       run:
@@ -57,12 +52,13 @@ jobs:
         with:
           msystem: ${{ matrix.msystem }}
           update: true
+          pacboy: |
+            cc:p
+            make:p
+            qt5-static:p
+            cmake:p
+            7zip:p
           install: |
-            ${{ matrix.packagePrefix }}-cc
-            ${{ matrix.packagePrefix }}-make
-            ${{ matrix.packagePrefix }}-qt5-static
-            ${{ matrix.packagePrefix }}-cmake
-            ${{ matrix.packagePrefix }}-7zip
             mingw-w64-i686-nsis
             git
 
