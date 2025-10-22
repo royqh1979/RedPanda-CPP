@@ -217,7 +217,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["22.04", "24.04", "24.10", "devel"]
+        version: ["22.04", "24.04", "devel"]
     env:
       IMAGE: docker.io/amd64/ubuntu:${{ matrix.version }}
       PLATFORM: linux/amd64
