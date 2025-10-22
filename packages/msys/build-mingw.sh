@@ -18,8 +18,9 @@ function fn_print_help() {
    --mingw64                Build mingw64 integrated compiler.
    --gcc-linux-x86-64       Build x86_64-linux-gnu integrated compiler.
    --gcc-linux-aarch64      Build aarch64-linux-gnu integrated compiler.
-   --ucrt <build>           Include UCRT in the package. Windows SDK required.
-                            e.g. '--ucrt 22621' for Windows 11 SDK 22H2.
+   --ucrt <arch>            Include UCRT installer (VC_redist) in the package.
+                            <arch> can be x86 or x64.
+                            This option can be specified multiple times.
    -nd, --no-deps           Skip dependency check.
    -t, --target-dir <dir>   Set target directory for the packages."
 }
@@ -81,7 +82,8 @@ COMPILER_GCC_LINUX_AARCH64=0
 REQUIRED_WINDOWS_BUILD=7600
 REQUIRED_WINDOWS_NAME="Windows 7"
 TARGET_DIR="$(pwd)/dist"
-UCRT=""
+UCRT_X86=0
+UCRT_X64=0
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
@@ -151,17 +153,21 @@ while [[ $# -gt 0 ]]; do
       esac
       ;;
     --ucrt)
-      case "${MSYSTEM}" in
-        UCRT64|CLANG64)
-          UCRT="$2"
+      case "$2" in
+        x86)
+          UCRT_X86=1
           shift 2
           ;;
-        MINGW32|MINGW64)
-          echo "Error: Red Panda C++ is not built against UCRT."
+        x64)
+          UCRT_X64=1
+          shift 2
+          ;;
+        arm64)
+          echo "UCRT is always a system component on arm64."
           exit 1
           ;;
-        CLANGARM64)
-          echo "Error: UCRT is a system component on arm64, local deployment is not supported."
+        *)
+          echo "Invalid UCRT architecture: $2"
           exit 1
           ;;
       esac
@@ -188,7 +194,11 @@ QMAKE="${MINGW_PREFIX}/qt5-static/bin/qmake"
 NSIS="/mingw32/bin/makensis"
 SOURCE_DIR="$(pwd)"
 ASSETS_DIR="${SOURCE_DIR}/assets"
-UCRT_DIR="/c/Program Files (x86)/Windows Kits/10/Redist/10.0.${UCRT}.0/ucrt/DLLs/${NSIS_ARCH}"
+
+# Visual C++ Redistributable for Visual Studio 2019, version 16.7 (14.27)
+# This is the last version that supports all Windows versions (on which UCRT is supported).
+UCRT_X86_URL="https://download.visualstudio.microsoft.com/download/pr/c168313d-1754-40d4-8928-18632c2e2a71/D305BAA965C9CD1B44EBCD53635EE9ECC6D85B54210E2764C8836F4E9DEFA345/VC_redist.x86.exe"
+UCRT_X64_URL="https://download.visualstudio.microsoft.com/download/pr/722d59e4-0671-477e-b9b1-b8da7d4bd60b/591CBE3A269AFBCC025681B968A29CD191DF3C6204712CBDC9BA1CB632BA6068/VC_redist.x64.exe"
 
 case "${MSYSTEM}" in
   MINGW32)
@@ -274,9 +284,16 @@ if [[ ${COMPILER_GCC_LINUX_AARCH64} -eq 1 ]]; then
     echo "Missing Alpine rootfs: assets/${ALPINE_AARCH64_ARCHIVE}"
   fi
 fi
-if [[ -n "${UCRT}" && ! -f "${UCRT_DIR}/ucrtbase.dll" ]]; then
-  echo "Missing Windows SDK, UCRT cannot be included."
-  exit 1
+
+if [[ ${UCRT_X86} -eq 1 ]] ; then
+  if [[ ! -f "${SOURCE_DIR}/assets/VC_redist.x86.exe" ]]; then
+    curl -L -o "${SOURCE_DIR}/assets/VC_redist.x86.exe" "${UCRT_X86_URL}"
+  fi
+fi
+if [[ ${UCRT_X64} -eq 1 ]] ; then
+  if [[ ! -f "${SOURCE_DIR}/assets/VC_redist.x64.exe" ]]; then
+    curl -L -o "${SOURCE_DIR}/assets/VC_redist.x64.exe" "${UCRT_X64_URL}"
+  fi
 fi
 
 ## prepare dirs
@@ -385,12 +402,13 @@ if [[ ${COMPILER_GCC_LINUX_AARCH64} -eq 1 ]]; then
     cp "${SOURCE_DIR}/assets/${ALPINE_AARCH64_ARCHIVE}" alpine-minirootfs.tar
   fi
 fi
-if [[ -n "${UCRT}" ]]; then
-  nsis_flags+=(-DHAVE_UCRT)
-  if [[ ! -f ucrt/ucrtbase.dll ]]; then
-    mkdir -p ucrt
-    cp "${UCRT_DIR}"/*.dll ucrt
-  fi
+if [[ ${UCRT_X86} -eq 1 ]]; then
+  nsis_flags+=(-DHAVE_UCRT_X86)
+  cp "${SOURCE_DIR}/assets/VC_redist.x86.exe" VC_redist.x86.exe
+fi
+if [[ ${UCRT_X64} -eq 1 ]]; then
+  nsis_flags+=(-DHAVE_UCRT_X64)
+  cp "${SOURCE_DIR}/assets/VC_redist.x64.exe" VC_redist.x64.exe
 fi
 "${NSIS}" "${nsis_flags[@]}" redpanda.nsi
 
