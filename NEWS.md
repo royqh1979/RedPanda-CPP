@@ -19,6 +19,8 @@ Red Panda C++ Version 3.4
   - fix: Goto defintion/declaration will jump to constructor instead of the class in the class definition.
   - fix: Wrong error message when delete a customed bundled syntax color scheme.
   - fix: Infinite loop when generating new problem set name.
+  - enhancement: Completion suggestion for goto labels;
+  - fix: Wrong suggestion for complex words.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

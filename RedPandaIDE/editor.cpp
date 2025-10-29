@@ -870,6 +870,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     return;
                 } else {
                     QSynedit::TokenType tokenType;
+                    QSynedit::TokenType currentTokenType;
                     QString lastWord = getPreviousWordAtPositionForSuggestion(ws, tokenType);
                     if (mParser && (tokenType == QSynedit::TokenType::Keyword
                                     || tokenType == QSynedit::TokenType::Identifier)) {
@@ -886,6 +887,11 @@ void Editor::keyPressEvent(QKeyEvent *event)
                         } else if (lastWord == "using") {
                             processCommand(QSynedit::EditCommand::Char,ch,nullptr);
                             showCompletion(lastWord,false, CodeCompletionType::ComplexKeyword);
+                            handled=true;
+                            return;
+                        } else if (lastWord == "goto") {
+                            processCommand(QSynedit::EditCommand::Char,ch,nullptr);
+                            showCompletion(lastWord,false, CodeCompletionType::Labels);
                             handled=true;
                             return;
                         } else if (lastWord == "namespace") {
@@ -5112,13 +5118,22 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
         QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
         QSynedit::TokenType tokenType = attr->tokenType();
         int start = syntaxer.getTokenPos();
+        int end = start + syntaxer.getToken().length();
         QString token = syntaxer.getToken();
-        if (start>=ch)
+        if (start>=ch ) {
             break;
+        }
         if (tokenType != QSynedit::TokenType::Comment
                 && tokenType != QSynedit::TokenType::Space) {
             tokenList.append(token);
             tokenTypeList.append(tokenType);
+        }
+        if (end+1>=ch) {
+            if (tokenType == QSynedit::TokenType::Identifier
+                    || tokenType == QSynedit::TokenType::Keyword) {
+                tokenList.pop_back();
+                tokenTypeList.pop_back();
+            }
         }
         syntaxer.next();
     }

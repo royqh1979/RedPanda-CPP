@@ -3716,6 +3716,10 @@ bool CppParser::handleStatement(int maxIndex)
                 }
             }
             keywordType = KeywordType::None;
+        } else if (keywordType == KeywordType::NotKeyword
+                   && mIndex+1<maxIndex && mTokenizer[mIndex+1]->text==":") {
+            handleLabel();
+            goto _exit;
         }
         // it should be method/constructor/var
         checkAndHandleMethodOrVar(keywordType, maxIndex);
@@ -4510,6 +4514,30 @@ void CppParser::handleInheritances()
         handleInheritance(derivedStatement, inheritanceInfo);
     }
     //mClassInheritances.clear();
+}
+
+void CppParser::handleLabel()
+{
+    PStatement scope = getCurrentScope();
+    if (scope && (scope->kind == StatementKind::Function
+            || scope->kind == StatementKind::Constructor
+            || scope->kind == StatementKind::Destructor
+            || scope->kind == StatementKind::Lambda)) {
+        addStatement(
+                    scope,
+                    mCurrentFile,
+                    "", // type
+                    mTokenizer[mIndex]->text, // command
+                    "", // args
+                    "", // noname args
+                    "", // values
+                    mTokenizer[mIndex]->line,
+                    StatementKind::Label,
+                    StatementScope::Local,
+                    StatementAccessibility::None,
+                    StatementProperty::None);
+    }
+    mIndex+=2;
 }
 
 void CppParser::skipRequires(int maxIndex)

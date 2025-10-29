@@ -545,6 +545,7 @@ private:
     void handleVar(const QString& typePrefix,bool isExtern,bool isStatic, int maxIndex);
     void handleInheritance(PStatement derivedClass, PClassInheritanceInfo pInfo);
     void handleInheritances();
+    void handleLabel();
     void skipRequires(int maxIndex);
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;
