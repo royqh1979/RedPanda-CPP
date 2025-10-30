@@ -172,7 +172,7 @@ public:
     static PCompilerInfo getInfo(CompilerType compilerType);
     static bool hasCompilerOption(CompilerType compilerType, const QString& optKey);
     static PCompilerOption getCompilerOption(CompilerType compilerType, const QString& optKey);
-    static QList<PCompilerOption> getCompilerOptions(CompilerType compilerType);
+    static const QList<PCompilerOption> &getCompilerOptions(CompilerType compilerType);
     static bool supportStaticLink(CompilerType compilerType);
     static bool supportSyntaxCheck(CompilerType compilerType);
     static bool forceUTF8InDebugger(CompilerType compilerType);

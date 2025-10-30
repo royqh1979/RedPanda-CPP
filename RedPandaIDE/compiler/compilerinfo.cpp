@@ -276,11 +276,12 @@ PCompilerOption CompilerInfoManager::getCompilerOption(CompilerType compilerType
     return pInfo->getCompilerOption(optKey);
 }
 
-QList<PCompilerOption> CompilerInfoManager::getCompilerOptions(CompilerType compilerType)
+const QList<PCompilerOption> &CompilerInfoManager::getCompilerOptions(CompilerType compilerType)
 {
+    static QList<PCompilerOption> EmptyList;
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
-        return QList<PCompilerOption>();
+        return EmptyList;
     return pInfo->compilerOptions();
 }
 

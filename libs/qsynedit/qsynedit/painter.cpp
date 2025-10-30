@@ -699,7 +699,7 @@ void QSynEditPainter::addHighlightToken(
         const QString& lineText,
         const QString& token, int tokenLeft,
         int line, PTokenAttribute attri, bool showGlyphs,
-        const QList<int> glyphStartCharList,
+        const QList<int> &glyphStartCharList,
         int tokenStartChar,
         int tokenEndChar,
         bool calcGlyphPosition,
