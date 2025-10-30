@@ -148,7 +148,7 @@ void CppRefacter::renameSymbol(Editor *editor, const QSynedit::BufferCoord &pos,
     renameSymbolInFile(editor->filename(),oldStatement,newWord, editor->parser());
 }
 
-void CppRefacter::doFindOccurenceInEditor(PStatement statement , Editor *editor, const PCppParser &parser)
+void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *editor, const PCppParser &parser)
 {
     PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
                 statement->command,
@@ -165,7 +165,7 @@ void CppRefacter::doFindOccurenceInEditor(PStatement statement , Editor *editor,
     }
 }
 
-void CppRefacter::doFindOccurenceInProject(PStatement statement, std::shared_ptr<Project> project, const PCppParser &parser)
+void CppRefacter::doFindOccurenceInProject(const PStatement &statement, std::shared_ptr<Project> project, const PCppParser &parser)
 {
     PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
                 statement->command,
