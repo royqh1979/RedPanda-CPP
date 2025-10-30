@@ -6984,7 +6984,7 @@ void MainWindow::updateCaretActions()
 
 void MainWindow::on_actionBack_triggered()
 {
-    PEditorCaret caret = mCaretList.gotoAndGetPrevious();
+    const PEditorCaret &caret = mCaretList.gotoAndGetPrevious();
     mCaretList.pause();
     if (caret) {
         caret->editor->setCaretPositionAndActivate(caret->line,caret->aChar);
@@ -6996,7 +6996,7 @@ void MainWindow::on_actionBack_triggered()
 
 void MainWindow::on_actionForward_triggered()
 {
-    PEditorCaret caret = mCaretList.gotoAndGetNext();
+    const PEditorCaret &caret = mCaretList.gotoAndGetNext();
     mCaretList.pause();
     if (caret) {
         caret->editor->setCaretPositionAndActivate(caret->line,caret->aChar);

@@ -17,6 +17,8 @@
 #include "caretlist.h"
 #include <QDebug>
 
+const PEditorCaret CaretList::NullCaret;
+
 CaretList::CaretList(QObject* parent):
     QObject(parent),
     mIndex(-1),
@@ -29,14 +31,14 @@ void CaretList::addCaret(Editor *editor, int line, int aChar)
 {
     if (mPauseAdd)
         return;
-    for (int i=mList.count()-1;i>mIndex;i--) {
+    for (int i=mList.size()-1;i>mIndex;i--) {
         removeCaret(i);
     }
-    PEditorCaret caret = std::make_shared<EditorCaret>();
+    PEditorCaret caret = std::make_unique<EditorCaret>();
     caret->editor = editor;
     caret->line = line;
     caret->aChar = aChar;
-    mList.append(caret);
+    mList.push_back(std::move(caret));
     mIndex++;
     //qDebug()<<"add caret:"<<mIndex<<":"<<mList.count();
 }
@@ -50,34 +52,34 @@ bool CaretList::hasPrevious() const
 bool CaretList::hasNext() const
 {
     //qDebug()<<"has next:"<<mIndex<<":"<<mList.count();
-    return mIndex<mList.count()-1;
+    return mIndex<(int)mList.size()-1;
 }
 
-PEditorCaret CaretList::gotoAndGetPrevious()
+const PEditorCaret &CaretList::gotoAndGetPrevious()
 {
     if (!hasPrevious())
-        return PEditorCaret();
+        return NullCaret;
     mIndex--;
     //qDebug()<<"move previous:"<<mIndex<<":"<<mList.count();
-    if (mIndex<mList.count())
+    if (mIndex<(int)mList.size())
         return mList[mIndex];
-    return PEditorCaret();
+    return NullCaret;
 }
 
-PEditorCaret CaretList::gotoAndGetNext()
+const PEditorCaret &CaretList::gotoAndGetNext()
 {
     if (!hasNext())
-        return PEditorCaret();
+        return NullCaret;
     mIndex++;
     //qDebug()<<"move next:"<<mIndex<<":"<<mList.count();
     if (mIndex>=0)
         return mList[mIndex];
-    return PEditorCaret();
+    return NullCaret;
 }
 
 void CaretList::removeEditor(const Editor *editor)
 {
-    for (int i = mList.count()-1;i>=0;i--) {
+    for (int i = mList.size()-1;i>=0;i--) {
         if (mList[i]->editor == editor)
             removeCaret(i);
     }
@@ -102,7 +104,7 @@ void CaretList::unPause()
 void CaretList::linesDeleted(const Editor *editor, int firstLine, int count)
 {
     //qDebug()<<"deleted:"<<mIndex<<":"<<mList.count();
-    for (int i=mList.count()-1;i>=0;i--) {
+    for (int i=mList.size()-1;i>=0;i--) {
         if (mList[i]->editor == editor
                 && mList[i]->line>=firstLine) {
             if (mList[i]->line < (firstLine+count))
@@ -125,9 +127,9 @@ void CaretList::linesInserted(const Editor *editor, int firstLine, int count)
 
 void CaretList::removeCaret(int index)
 {
-    if (index<0 || index>=mList.count())
+    if (index<0 || index>=(int)mList.size())
         return;
-    mList.removeAt(index);
+    mList.erase(mList.begin()+index);
     if (mIndex>=index)
         mIndex--;
 }
