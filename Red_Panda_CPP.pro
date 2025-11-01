@@ -1,11 +1,13 @@
 TEMPLATE = subdirs
 
-SUBDIRS += \
-    RedPandaIDE \
-    consolepauser \
+SUBDIRS +=            \
+    RedPandaIDE       \
+    consolepauser     \
     redpanda_qt_utils \
-    qsynedit \
-    lua
+    qsynedit          \
+    lua               \
+    tests             \
+
 
 consolepauser.subdir = tools/consolepauser
 redpanda_qt_utils.subdir = libs/redpanda_qt_utils
@@ -16,6 +18,7 @@ lua.subdir = libs/lua
 # into the main app bundle
 RedPandaIDE.depends = consolepauser qsynedit lua
 qsynedit.depends = redpanda_qt_utils
+tests.depends = RedPandaIDE consolepauser qsynedit lua
 
 APP_NAME = RedPandaCPP
 include(version.inc)
