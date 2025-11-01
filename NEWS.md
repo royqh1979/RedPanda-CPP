@@ -21,6 +21,7 @@ Red Panda C++ Version 3.4
   - fix: Infinite loop when generating new problem set name.
   - enhancement: Completion suggestion for goto labels;
   - fix: Wrong suggestion for complex words.
+  - fix: Close an editor which is parsing may crash.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

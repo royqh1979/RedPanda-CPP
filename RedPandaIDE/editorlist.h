@@ -20,6 +20,7 @@
 #include <QTabWidget>
 #include <QSplitter>
 #include <QWidget>
+#include <QRecursiveMutex>
 #include "utils.h"
 
 class Project;
@@ -103,6 +104,7 @@ private:
     QSplitter *mSplitter;
     QWidget *mPanel;
     int mUpdateCount;
+    mutable QRecursiveMutex mMutex;
 };
 
 #endif // EDITORLIST_H
