@@ -30,8 +30,8 @@ FileCompiler::FileCompiler(const QString &filename, const QByteArray &encoding,
                            CppCompileType compileType, bool onlyCheckSyntax):
     Compiler{filename, onlyCheckSyntax},
     mEncoding{encoding},
-    mFileType{fileType},
-    mCompileType{compileType}
+    mCompileType{compileType},
+    mFileType{fileType}
 {
 
 }
