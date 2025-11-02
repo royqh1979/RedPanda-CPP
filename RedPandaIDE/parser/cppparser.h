@@ -520,6 +520,7 @@ private:
     void handleEnum(bool isTypedef, int maxIndex);
     void handleForBlock(int maxIndex);
     void handleKeyword(KeywordType skipType, int maxIndex);
+    void handleIf(int maxIndex);
     void handleLambda(int index, int maxIndex);
     void handleOperatorOverloading(
             const QString& sType,

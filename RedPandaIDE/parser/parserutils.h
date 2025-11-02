@@ -86,6 +86,7 @@ enum class KeywordType {
     DeclType, // decltype
     Operator, //operator
     Concept, //concept
+    If, //If
     Requires, //requires
     None, // It's a keyword but don't process here
     Extern,

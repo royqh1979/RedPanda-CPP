@@ -123,7 +123,7 @@ void initParser()
     CppKeywords.insert("__attribute",KeywordType::SkipNextParenthesis);
     CppKeywords.insert("alignas",KeywordType::SkipNextParenthesis);  // not right
     CppKeywords.insert("alignof",KeywordType::SkipNextParenthesis);  // not right
-    CppKeywords.insert("if",KeywordType::SkipNextParenthesis);
+    CppKeywords.insert("if",KeywordType::If);
     CppKeywords.insert("sizeof",KeywordType::SkipNextParenthesis);
     CppKeywords.insert("switch",KeywordType::SkipNextParenthesis);
     CppKeywords.insert("typeid",KeywordType::SkipNextParenthesis);
