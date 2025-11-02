@@ -384,13 +384,19 @@ void ClassBrowserModel::filterChildren(ClassBrowserNode *node, const StatementMa
             continue;
 
         if (pSettings->codeCompletion().hideSymbolsStartsWithTwoUnderLine()
-                && statement->command.startsWith("__"))
-            continue;
+            && statement->command.startsWith("__")
+            && statement->fileName != mCurrentFile
+                && statement->definitionFileName != mCurrentFile
+                )
+        continue;
 
         if (pSettings->codeCompletion().hideSymbolsStartsWithUnderLine()
+                && statement->kind != StatementKind::LiteralOperator
                 && statement->command.startsWith('_')
-                && statement->kind != StatementKind::LiteralOperator)
-            continue;
+                && statement->fileName != mCurrentFile
+                && statement->definitionFileName != mCurrentFile
+                )
+        continue;
 
         ClassBrowserNode *parentNode=node;
         // we only test and handle orphan statements in the top level (node->statement is null)

@@ -3423,34 +3423,52 @@ void CppParser::handleOtherTypedefs(int maxIndex)
 
     QString oldType;
     QString tempType;
-    // Walk up to first new word (before first comma or ;)
-    while(true) {
-        if (oldType.endsWith("::"))
-            oldType += mTokenizer[mIndex]->text;
-        else if (mTokenizer[mIndex]->text=="::")
-            oldType += "::";
-        else if (mTokenizer[mIndex]->text=="*"
-                 || mTokenizer[mIndex]->text=="&")
-            tempType += mTokenizer[mIndex]->text;
-        else {
-            oldType += tempType + ' ' + mTokenizer[mIndex]->text;
-            tempType="";
-        }
-        mIndex++;
-        if (mIndex+1>=maxIndex) {
-            //not valid, just exit
+    if (mIndex+1<maxIndex
+            && mTokenizer[mIndex]->text == "decltype"
+            && mTokenizer[mIndex+1]->text == "(") {
+        mIndex+=2;
+        int endIdx = indexOfNextRightParenthesis(mIndex,maxIndex);
+        if (endIdx >= maxIndex) {
             return;
         }
-        if  (mTokenizer[mIndex]->text=='(') {
-            break;
+//        QStringList typeExpression;
+        oldType = "decltype(";
+        for (int i=mIndex;i<endIdx;i++) {
+            oldType += mTokenizer[i]->text;
         }
-        if (mTokenizer[mIndex + 1]->text.front() == ','
-                  || mTokenizer[mIndex + 1]->text == ';')
-            break;
-        //typedef function pointer
+        oldType += ")";
+        mIndex=endIdx+1;
+    } else {
+        // Walk up to first new word (before first comma or ;)
+        while(true) {
+            if (oldType.endsWith("::"))
+                oldType += mTokenizer[mIndex]->text;
+            else if (mTokenizer[mIndex]->text=="::")
+                oldType += "::";
+            else if (mTokenizer[mIndex]->text=="*"
+                     || mTokenizer[mIndex]->text=="&")
+                tempType += mTokenizer[mIndex]->text;
+            else {
+                oldType += tempType + ' ' + mTokenizer[mIndex]->text;
+                tempType="";
+            }
+            mIndex++;
+            if (mIndex+1>=maxIndex) {
+                //not valid, just exit
+                return;
+            }
+            if  (mTokenizer[mIndex]->text=='(') {
+                break;
+            }
+            if (mTokenizer[mIndex + 1]->text.front() == ','
+                      || mTokenizer[mIndex + 1]->text == ';')
+                break;
+            //typedef function pointer
 
+        }
+        oldType = oldType.trimmed();
     }
-    oldType = oldType.trimmed();
+
     if (oldType.isEmpty()) {
         //skip over next ;
         mIndex=indexOfNextSemicolon(mIndex, maxIndex)+1;

@@ -22,7 +22,8 @@ Red Panda C++ Version 3.4
   - enhancement: Completion suggestion for goto labels;
   - fix: Wrong suggestion for complex words.
   - fix: Close an editor which is parsing may crash.
-  - fix: Can't correctly parse consteval if. 
+  - enhancement: Support parsing consteval if. 
+  - enhancement: Support decltype in typedef.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
