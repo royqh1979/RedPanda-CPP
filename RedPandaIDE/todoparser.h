@@ -76,7 +76,7 @@ signals:
 private:
     void parseFile();
     void parseFiles();
-    void doParseFile(const QString& filename, QSynedit::PSyntaxer syntaxer);
+    void doParseFile(const QString& filename);
 private:
     QString mFilename;
     QStringList mFiles;

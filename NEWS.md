@@ -25,6 +25,7 @@ Red Panda C++ Version 3.4
   - enhancement: Support parsing consteval if. 
   - enhancement: Support decltype in typedef.
   - change: Show symbols defined in current file no matter it starts with underscore or not.
+  - fix: Cpp Syntaxer is wrongly used to parse todo infos for everyfile.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

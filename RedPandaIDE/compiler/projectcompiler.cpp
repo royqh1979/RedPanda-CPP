@@ -512,7 +512,6 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
                                  QString(targetEncoding));
                 }
             }
-
             if (isC_CPPSourceFile(fileType)) {
                 if (unit->compileCpp())
                     writeln(file, "\t$(CXX) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CXXFLAGS) " + encodingStr);
@@ -521,7 +520,7 @@ void ProjectCompiler::writeMakeObjFilesRules(QFile &file)
             } else if (fileType == FileType::GAS) {
                 writeln(file, "\t$(CC) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(CFLAGS) " + encodingStr);
             } else if (fileType == FileType::NASM) {
-                writeln(file, "\t$(NASM) -c " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(NASM_FLAGS) " );
+                writeln(file, "\t$(NASM) " + escapeArgumentForMakefileRecipe(shortFileName, false) + " -o " + objFileNameCommand + " $(NASM_FLAGS) " );
             }
         }
     }
