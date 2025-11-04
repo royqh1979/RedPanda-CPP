@@ -861,6 +861,7 @@ void MainWindow::updateCompileActions(const Editor *e)
         ui->actionRebuild->setEnabled(false);
         ui->actionGenerate_Assembly->setEnabled(false);
         ui->actionGenerate_GIMPLE->setEnabled(false);
+        ui->actionPreprocess->setEnabled(false);
         ui->actionDebug->setEnabled(false);
         mProblem_RunAllCases->setEnabled(false);
     } else {
@@ -937,6 +938,7 @@ void MainWindow::updateCompileActions(const Editor *e)
         ui->actionRebuild->setEnabled(canCompile);
         ui->actionGenerate_Assembly->setEnabled(canGenerateAssembly);
         ui->actionGenerate_GIMPLE->setEnabled(canGenerateAssembly);
+        ui->actionPreprocess->setEnabled(canGenerateAssembly);
         ui->actionDebug->setEnabled(canDebug);
         mProblem_RunAllCases->setEnabled(canRun && mOJProblemModel->count()>0);
     }
