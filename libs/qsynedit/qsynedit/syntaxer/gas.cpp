@@ -86,6 +86,11 @@ GASSyntaxer::GASSyntaxer(): ASMSyntaxer(),
 {
 }
 
+bool GASSyntaxer::isCommentStartChar(QChar ch)
+{
+    return (ch == "#");
+}
+
 void GASSyntaxer::procNull()
 {
     if ( (mLineNumber == mThisLineHasSyntaxDirective)

@@ -34,6 +34,7 @@ public:
 private:
     QSet<QString> mKeywordCache;
 protected:
+    bool isCommentStartChar(QChar ch) override;
     bool isDirective(const QString& ident) override;
     bool isPreprocessDirective(const QString& ident) override;
 public:

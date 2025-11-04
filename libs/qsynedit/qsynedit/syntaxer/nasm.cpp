@@ -59,6 +59,11 @@ NASMSyntaxer::NASMSyntaxer():ASMSyntaxer()
 {
 }
 
+bool NASMSyntaxer::isCommentStartChar(QChar ch)
+{
+    return (ch==';');
+}
+
 bool NASMSyntaxer::isDirective(const QString &ident)
 {
     return Directives.contains(ident);

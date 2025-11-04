@@ -94,6 +94,7 @@ private:
     static void initData();
     TokenId getIdentType(const QString& ident,  QChar nextChar);
 protected:
+    virtual bool isCommentStartChar(QChar ch);
     virtual void procNull();
     virtual bool isDirective(const QString& ident);
     virtual bool isPreprocessDirective(const QString& ident);
