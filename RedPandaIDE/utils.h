@@ -149,8 +149,7 @@ constexpr bool isC_CPPHeaderFile(FileType fileType) {
     return fileType == FileType::CCppHeader;
 }
 constexpr bool isC_CPP_ASMSourceFile(FileType fileType) {
-    return fileType == FileType::CSource || fileType == FileType::CppSource
-            || fileType == FileType::NASM || fileType == FileType::GAS;
+    return isC_CPPSourceFile(fileType) || isASMSourceFile(fileType);
 }
 
 bool programIsWin32GuiApp(const QString& filename);
