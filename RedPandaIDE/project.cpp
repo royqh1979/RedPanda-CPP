@@ -1317,6 +1317,11 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
         newUnit->setCompileCpp(false);
         newUnit->setLink(true);
         break;
+    case FileType::NASM:
+        newUnit->setCompile(true);
+        newUnit->setCompileCpp(false);
+        newUnit->setLink(true);
+        break;
     case FileType::CSource:
         newUnit->setCompile(true);
         newUnit->setCompileCpp(false);
