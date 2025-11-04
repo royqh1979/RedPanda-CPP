@@ -946,8 +946,6 @@ void MainWindow::updateCompileActions(const Editor *e)
         disableDebugActions();
     }
     ui->actionStop_Execution->setEnabled(mCompilerManager->running() || mDebugger->executing());
-
-
 }
 
 void MainWindow::updateEditorColorSchemes()

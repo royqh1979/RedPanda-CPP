@@ -2365,9 +2365,8 @@ bool QSynEdit::canDoBlockIndent()
     BufferCoord BE;
 
     if (selAvail()) {
-//        BB = blockBegin();
-//        BE = blockEnd();
-        return true;
+        BB = blockBegin();
+        BE = blockEnd();
     } else {
         BB = caretXY();
         BE = caretXY();
@@ -2379,8 +2378,11 @@ bool QSynEdit::canDoBlockIndent()
     }
 
     if (mActiveSelectionMode == SelectionMode::Normal) {
-        QString s = mDocument->getLine(BB.line-1).mid(0,BB.ch-1);
-        if (!s.trimmed().isEmpty())
+        QString s1 = lineText(BB.line).left(BB.ch);
+        QString s2 = lineText(BE.line).right(BE.ch);
+        if (!s1.trimmed().isEmpty())
+            return false;
+        if (!s2.trimmed().isEmpty())
             return false;
         if (BE.ch>1) {
             QString s1=mDocument->getLine(BE.line-1).mid(BE.ch-1);
