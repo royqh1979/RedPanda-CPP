@@ -2311,7 +2311,7 @@ void QSynEdit::doShiftTabKey()
 }
 
 
-bool QSynEdit::canDoBlockIndent()
+bool QSynEdit::canDoBlockIndent() const
 {
     if (!selAvail()) {
         if (caretY() > mDocument->count()) {
@@ -2321,6 +2321,9 @@ bool QSynEdit::canDoBlockIndent()
         return (s.trimmed().isEmpty());
     }
 
+    if (mActiveSelectionMode == SelectionMode::Column)
+        return true;
+
     BufferCoord BB = blockBegin();
     BufferCoord BE = blockEnd();
 
@@ -2328,9 +2331,12 @@ bool QSynEdit::canDoBlockIndent()
         return false;
     }
 
-    QString s1 = mDocument->getLine(BB.line-1).left(BB.ch-1);
-    QString s2 = mDocument->getLine(BE.line-1).mid(BE.ch-1);
-    return (s1.trimmed().isEmpty() && s2.trimmed().isEmpty());
+    if (BB.line == BE.line) {
+        QString s1 = mDocument->getLine(BB.line-1).left(BB.ch-1);
+        QString s2 = mDocument->getLine(BE.line-1).mid(BE.ch-1);
+        return (s1.trimmed().isEmpty() && s2.trimmed().isEmpty());
+    }
+    return true;
 }
 
 QRect QSynEdit::calculateCaretRect() const
@@ -2515,8 +2521,8 @@ void QSynEdit::doBlockIndent()
 
 void QSynEdit::doBlockUnindent()
 {
-    int lastIndent = 0;
-    int firstIndent = 0;
+    int lastLineIndent = 0;
+    int firstLineIndent = 0;
 
     BufferCoord BB,BE;
     // keep current selection detail
@@ -2528,35 +2534,37 @@ void QSynEdit::doBlockUnindent()
         BE = caretXY();
     }
     BufferCoord oldCaretPos = caretXY();
-    int x = 0;
+    int caretLineIndent = 0;
     beginEditing();
     mUndoList->addChange(ChangeReason::Caret, oldCaretPos, oldCaretPos,QStringList(), activeSelectionMode());
     mUndoList->addChange(ChangeReason::Selection,mBlockBegin,mBlockEnd,QStringList(), activeSelectionMode());
 
-    int e = BE.line;
+    int endLine = BE.line;
     // convert selection to complete lines
     if (BE.ch == 1)
-        e = BE.line - 1;
+        endLine = BE.line - 1;
     // build string to delete
-    for (int i = BB.line; i<= e;i++) {
+    for (int i = BB.line; i<= endLine;i++) {
         QString line = mDocument->getLine(i - 1);
         if (line.isEmpty())
             continue;
-        if (line[0]!=' ' && line[0]!='\t')
-            continue;
         int charsToDelete = 0;
-        while (charsToDelete < tabSize() &&
-               charsToDelete < line.length() &&
-               line[charsToDelete] == ' ')
-            charsToDelete++;
-        if (charsToDelete == 0)
+        if (line[0]=='\t') {
             charsToDelete = 1;
+        } else {
+            while (charsToDelete < tabSize() &&
+                   charsToDelete < line.length() &&
+                   line[charsToDelete] == ' ')
+                charsToDelete++;
+        }
+        if (charsToDelete == 0)
+            continue;
         if (i==BB.line)
-            firstIndent = charsToDelete;
-        if (i==e)
-            lastIndent = charsToDelete;
+            firstLineIndent = charsToDelete;
+        if (i==endLine)
+            lastLineIndent = charsToDelete;
         if (i==oldCaretPos.line)
-            x = charsToDelete;
+            caretLineIndent = charsToDelete;
         QString tempString = line.mid(charsToDelete);
         mDocument->putLine(i-1,tempString);
         mUndoList->addChange(ChangeReason::Delete,
@@ -2568,9 +2576,9 @@ void QSynEdit::doBlockUnindent()
   // restore selection
   //adjust the x position of orgcaretpos appropriately
 
-    oldCaretPos.ch -= x;
-    BB.ch -= firstIndent;
-    BE.ch -= lastIndent;
+    oldCaretPos.ch = std::max(1, oldCaretPos.ch-caretLineIndent);
+    BB.ch = std::max(1, BB.ch-firstLineIndent);
+    BE.ch = std::max(1, BE.ch-lastLineIndent);
     setCaretAndSelection(oldCaretPos, BB, BE);
     endEditing();
 }

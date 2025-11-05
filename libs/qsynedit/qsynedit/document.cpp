@@ -942,7 +942,6 @@ int Document::charToGlyphIndex(int line, int charIdx) const
 
 int Document::charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charIdx) const
 {
-    Q_ASSERT(charIdx>=0);
     return searchForSegmentIdx(glyphStartCharList, 0, str.length(), charIdx);
     // if (charIdx>=str.length())
     //     return glyphStartCharList.length();

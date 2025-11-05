@@ -609,7 +609,7 @@ private:
 
     void clearUndo();
     BufferCoord getPreviousLeftBrace(int x,int y);
-    bool canDoBlockIndent();
+    bool canDoBlockIndent() const;
 
     QRect calculateCaretRect() const;
     QRect calculateInputCaretRect() const;
