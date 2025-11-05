@@ -159,12 +159,24 @@ public:
      * @brief displayX
      * @return
      */
-    DisplayCoord displayXY() const;
-    int displayX() const;
-    int displayY() const;
-    BufferCoord caretXY() const;
-    int caretX() const;
-    int caretY() const;
+    DisplayCoord displayXY() const {
+        return bufferToDisplayPos(caretXY());
+    }
+    int displayX() const {
+        return displayXY().x;
+    }
+    int displayY() const {
+        return displayXY().row;
+    }
+    BufferCoord caretXY() const {
+        return BufferCoord{caretX(),caretY()};
+    }
+    int caretX() const {
+        return mCaretX;
+    }
+    int caretY() const {
+        return mCaretY;
+    }
 
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
@@ -210,12 +222,12 @@ public:
     void invalidate();
     bool selAvail() const;
     bool colSelAvail() const;
-    QString wordAtCursor();
-    QString wordAtRowCol(const BufferCoord& XY);
+    QString wordAtCursor() const;
+    QString wordAtRowCol(const BufferCoord& XY) const;
 
-    QChar charAt(const BufferCoord& pos);
-    QChar nextNonSpaceChar(int line, int ch);
-    QChar lastNonSpaceChar(int line, int ch);
+    QChar charAt(const BufferCoord& pos) const;
+    QChar nextNonSpaceChar(int line, int ch) const;
+    QChar lastNonSpaceChar(int line, int ch) const;
 
     bool isPointInSelection(const BufferCoord& pos) const;
     BufferCoord nextWordPos();
@@ -230,15 +242,21 @@ public:
     //Caret
     void showCaret();
     void hideCaret();
-    void setCaretX(int ch);
-    void setCaretY(int line);
+    void setCaretX(int ch) {
+        setCaretXY({ch,mCaretY});
+    }
+    void setCaretY(int line) {
+        setCaretXY({mCaretX,line});
+    }
     void setCaretXY(const BufferCoord& pos);
     void setCaretXYCentered(const BufferCoord& pos);
     void setCaretAndSelection(const BufferCoord& posCaret,
                               const BufferCoord& posSelBegin,
                               const BufferCoord& posSelEnd);
 
-    bool inputMethodOn();
+    bool inputMethodOn() const {
+        return !mInputPreeditString.isEmpty();
+    }
 
     void collapseAll();
     void unCollpaseAll();
@@ -303,12 +321,12 @@ public:
     QStringList contents();
     QString text();
 
-    bool getPositionOfMouse(BufferCoord& aPos);
-    bool getLineOfMouse(int& line);
-    bool pointToCharLine(const QPoint& point, BufferCoord& coord);
-    bool pointToLine(const QPoint& point, int& line);
-    bool isIdentChar(const QChar& ch);
-    bool isIdentStartChar(const QChar& ch);
+    bool getPositionOfMouse(BufferCoord& aPos) const;
+    bool getLineOfMouse(int& line) const;
+    bool pointToCharLine(const QPoint& point, BufferCoord& coord) const;
+    bool pointToLine(const QPoint& point, int& line) const;
+    bool isIdentChar(const QChar& ch) const;
+    bool isIdentStartChar(const QChar& ch) const;
 
     void setRainbowAttrs(const PTokenAttribute &attr0,
                          const PTokenAttribute &attr1,

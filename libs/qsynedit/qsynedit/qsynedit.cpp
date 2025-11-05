@@ -179,49 +179,6 @@ int QSynEdit::displayLineCount() const
     return lineToRow(mDocument->count());
 }
 
-DisplayCoord QSynEdit::displayXY() const
-{
-    return bufferToDisplayPos(caretXY());
-}
-
-int QSynEdit::displayX() const
-{
-    return displayXY().x;
-}
-
-int QSynEdit::displayY() const
-{
-    return displayXY().row;
-}
-
-BufferCoord QSynEdit::caretXY() const
-{
-    BufferCoord result;
-    result.ch = caretX();
-    result.line = caretY();
-    return result;
-}
-
-int QSynEdit::caretX() const
-{
-    return mCaretX;
-}
-
-int QSynEdit::caretY() const
-{
-    return mCaretY;
-}
-
-void QSynEdit::setCaretX(int ch)
-{
-    setCaretXY({ch,mCaretY});
-}
-
-void QSynEdit::setCaretY(int line)
-{
-    setCaretXY({mCaretX,line});
-}
-
 void QSynEdit::setCaretXY(const BufferCoord &pos)
 {
     incPaintLock();
@@ -563,21 +520,21 @@ QString QSynEdit::text()
     return document()->text();
 }
 
-bool QSynEdit::getPositionOfMouse(BufferCoord &aPos)
+bool QSynEdit::getPositionOfMouse(BufferCoord &aPos) const
 {
     QPoint point = QCursor::pos();
     point = mapFromGlobal(point);
     return pointToCharLine(point,aPos);
 }
 
-bool QSynEdit::getLineOfMouse(int &line)
+bool QSynEdit::getLineOfMouse(int &line) const
 {
     QPoint point = QCursor::pos();
     point = mapFromGlobal(point);
     return pointToLine(point,line);
 }
 
-bool QSynEdit::pointToCharLine(const QPoint &point, BufferCoord &coord)
+bool QSynEdit::pointToCharLine(const QPoint &point, BufferCoord &coord) const
 {
     // Make sure it fits within the SynEdit bounds (and on the gutter)
     if ((point.x() < gutterWidth() + clientLeft())
@@ -591,7 +548,7 @@ bool QSynEdit::pointToCharLine(const QPoint &point, BufferCoord &coord)
     return true;
 }
 
-bool QSynEdit::pointToLine(const QPoint &point, int &line)
+bool QSynEdit::pointToLine(const QPoint &point, int &line) const
 {
     if ((point.y() < clientTop())
             || (point.y() > clientTop()+clientHeight())) {
@@ -1022,12 +979,12 @@ bool QSynEdit::colSelAvail() const
     return coordBegin.x!=coordEnd.x;
 }
 
-QString QSynEdit::wordAtCursor()
+QString QSynEdit::wordAtCursor() const
 {
     return wordAtRowCol(caretXY());
 }
 
-QString QSynEdit::wordAtRowCol(const BufferCoord &pos)
+QString QSynEdit::wordAtRowCol(const BufferCoord &pos) const
 {
     if ((pos.line >= 1) && (pos.line <= mDocument->count())) {
         QString line = mDocument->getLine(pos.line - 1);
@@ -1054,7 +1011,7 @@ QString QSynEdit::wordAtRowCol(const BufferCoord &pos)
     return "";
 }
 
-QChar QSynEdit::charAt(const BufferCoord &pos)
+QChar QSynEdit::charAt(const BufferCoord &pos) const
 {
     if ((pos.line >= 1) && (pos.line <= mDocument->count())) {
         QString line = mDocument->getLine(pos.line-1);
@@ -1068,7 +1025,7 @@ QChar QSynEdit::charAt(const BufferCoord &pos)
     return QChar(0);
 }
 
-QChar QSynEdit::nextNonSpaceChar(int line, int ch)
+QChar QSynEdit::nextNonSpaceChar(int line, int ch) const
 {
     if (ch<0)
         return QChar();
@@ -1085,7 +1042,7 @@ QChar QSynEdit::nextNonSpaceChar(int line, int ch)
     return QChar();
 }
 
-QChar QSynEdit::lastNonSpaceChar(int line, int ch)
+QChar QSynEdit::lastNonSpaceChar(int line, int ch) const
 {
     if (line>=mDocument->count())
         return QChar();
@@ -1115,11 +1072,6 @@ void QSynEdit::setCaretAndSelection(const BufferCoord &posCaret, const BufferCoo
     setBlockBegin(posSelBegin);
     setBlockEnd(posSelEnd);
     decPaintLock();
-}
-
-bool QSynEdit::inputMethodOn()
-{
-    return !mInputPreeditString.isEmpty();
 }
 
 void QSynEdit::collapseAll()
@@ -2361,14 +2313,12 @@ void QSynEdit::doShiftTabKey()
 
 bool QSynEdit::canDoBlockIndent()
 {
-
     if (!selAvail()) {
-        BufferCoord xy=caretXY();
-        if (xy.line > mDocument->count()) {
+        if (caretY() > mDocument->count()) {
             return false;
         }
-        QString s1 = lineText(xy.line).left(xy.ch);
-        return (s1.trimmed().isEmpty());
+        QString s = lineText(caretY()).left(caretX()-1);
+        return (s.trimmed().isEmpty());
     }
 
     BufferCoord BB = blockBegin();
@@ -2378,27 +2328,9 @@ bool QSynEdit::canDoBlockIndent()
         return false;
     }
 
-    if (mActiveSelectionMode == SelectionMode::Normal) {
-        QString s1 = lineText(BB.line).left(BB.ch-1);
-        QString s2 = lineText(BE.line).mid(BE.ch-1);
-        if (!s1.trimmed().isEmpty() || !s2.trimmed().isEmpty())
-            return false;
-    } else if (mActiveSelectionMode == SelectionMode::Column) {
-        int startPos = charToGlyphLeft(BB.line,BB.ch);
-        int endPos = charToGlyphLeft(BE.line,BE.ch);
-        for (int i = BB.line; i<=BE.line;i++) {
-            QString line = mDocument->getLine(i-1);
-            int startChar = xposToGlyphStartChar(i,startPos);
-            QString s = line.mid(0,startChar-1);
-            if (!s.trimmed().isEmpty())
-                return false;
-            int endChar = xposToGlyphStartChar(i,endPos);
-            s=line.mid(endChar-1);
-            if (!s.trimmed().isEmpty())
-                return false;
-        }
-    }
-    return true;
+    QString s1 = lineText(BB.line).left(BB.ch-1);
+    QString s2 = lineText(BE.line).mid(BE.ch-1);
+    return (s1.trimmed().isEmpty() && s2.trimmed().isEmpty());
 }
 
 QRect QSynEdit::calculateCaretRect() const
@@ -5871,12 +5803,12 @@ void QSynEdit::endEditingWithoutUndo()
         reparseDocument();
 }
 
-bool QSynEdit::isIdentChar(const QChar &ch)
+bool QSynEdit::isIdentChar(const QChar &ch) const
 {
     return mSyntaxer->isIdentChar(ch);
 }
 
-bool QSynEdit::isIdentStartChar(const QChar &ch)
+bool QSynEdit::isIdentStartChar(const QChar &ch) const
 {
     return mSyntaxer->isIdentStartChar(ch);
 }
