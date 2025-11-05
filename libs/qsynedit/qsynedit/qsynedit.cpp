@@ -2361,37 +2361,29 @@ void QSynEdit::doShiftTabKey()
 
 bool QSynEdit::canDoBlockIndent()
 {
-    BufferCoord BB;
-    BufferCoord BE;
 
-    if (selAvail()) {
-        BB = blockBegin();
-        BE = blockEnd();
-    } else {
-        BB = caretXY();
-        BE = caretXY();
+    if (!selAvail()) {
+        BufferCoord xy=caretXY();
+        if (xy.line > mDocument->count()) {
+            return false;
+        }
+        QString s1 = lineText(xy.line).left(xy.ch);
+        return (s1.trimmed().isEmpty());
     }
 
+    BufferCoord BB = blockBegin();
+    BufferCoord BE = blockEnd();
 
     if (BB.line > mDocument->count() || BE.line > mDocument->count()) {
         return false;
     }
 
     if (mActiveSelectionMode == SelectionMode::Normal) {
-        QString s1 = lineText(BB.line).left(BB.ch);
-        QString s2 = lineText(BE.line).right(BE.ch);
-        if (!s1.trimmed().isEmpty())
+        QString s1 = lineText(BB.line).left(BB.ch-1);
+        QString s2 = lineText(BE.line).mid(BE.ch-1);
+        if (!s1.trimmed().isEmpty() || !s2.trimmed().isEmpty())
             return false;
-        if (!s2.trimmed().isEmpty())
-            return false;
-        if (BE.ch>1) {
-            QString s1=mDocument->getLine(BE.line-1).mid(BE.ch-1);
-            QString s2=mDocument->getLine(BE.line-1).mid(0,BE.ch-1);
-            if (!s1.trimmed().isEmpty() && !s2.trimmed().isEmpty())
-                return false;
-        }
-    }
-    if (mActiveSelectionMode == SelectionMode::Column) {
+    } else if (mActiveSelectionMode == SelectionMode::Column) {
         int startPos = charToGlyphLeft(BB.line,BB.ch);
         int endPos = charToGlyphLeft(BE.line,BE.ch);
         for (int i = BB.line; i<=BE.line;i++) {
@@ -2400,7 +2392,6 @@ bool QSynEdit::canDoBlockIndent()
             QString s = line.mid(0,startChar-1);
             if (!s.trimmed().isEmpty())
                 return false;
-
             int endChar = xposToGlyphStartChar(i,endPos);
             s=line.mid(endChar-1);
             if (!s.trimmed().isEmpty())
