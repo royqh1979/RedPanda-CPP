@@ -2317,7 +2317,7 @@ bool QSynEdit::canDoBlockIndent()
         if (caretY() > mDocument->count()) {
             return false;
         }
-        QString s = lineText(caretY()).left(caretX()-1);
+        QString s = mDocument->getLine(caretY()-1).left(caretX()-1);
         return (s.trimmed().isEmpty());
     }
 
@@ -2328,8 +2328,8 @@ bool QSynEdit::canDoBlockIndent()
         return false;
     }
 
-    QString s1 = lineText(BB.line).left(BB.ch-1);
-    QString s2 = lineText(BE.line).mid(BE.ch-1);
+    QString s1 = mDocument->getLine(BB.line-1).left(BB.ch-1);
+    QString s2 = mDocument->getLine(BE.line-1).mid(BE.ch-1);
     return (s1.trimmed().isEmpty() && s2.trimmed().isEmpty());
 }
 
