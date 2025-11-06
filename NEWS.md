@@ -27,6 +27,7 @@ Red Panda C++ Version 3.4
   - change: Show symbols defined in current file no matter it starts with underscore or not.
   - fix: Cpp Syntaxer is wrongly used to parse todo infos for everyfile.
   - fix: Wrongly indent when press tab in the middle of the line.
+  - Change: warn user when reload file with unsaved modifications.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
