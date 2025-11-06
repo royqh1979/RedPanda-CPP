@@ -582,11 +582,11 @@ private:
     void doGotoEditorEnd(bool isSelection);
     void setSelectedTextEmpty();
     void setSelTextPrimitive(const QStringList& text);
-    void setSelTextPrimitiveEx(SelectionMode PasteMode,
+    void setSelTextPrimitiveEx(SelectionMode mode,
                                const QStringList& text);
-    void doLinesDeleted(int FirstLine, int Count);
-    void doLinesInserted(int FirstLine, int Count);
-    void properSetLine(int ALine, const QString& ALineText, bool notify = true);
+    void doLinesDeleted(int firstLine, int count);
+    void doLinesInserted(int firstLine, int count);
+    void properSetLine(int line, const QString& sLineText, bool notify = true);
 
     //primitive edit operations
     void doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode);

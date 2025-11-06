@@ -2270,73 +2270,23 @@ void QSynEdit::doTabKey()
 void QSynEdit::doShiftTabKey()
 {
     // Provide Visual Studio like block indenting
-    if (mOptions.testFlag(EditorOption::TabIndent) && canDoBlockIndent()) {
-      doBlockUnindent();
-      return;
-    }
-
-    //Don't un-tab if caret is not on line or is beyond line end
-    if (mCaretY > mDocument->count() || mCaretX > lineText().length()+1)
+    if (!mOptions.testFlag(EditorOption::TabIndent))
         return;
-    //Don't un-tab if no chars before the Caret
-    if (mCaretX==1)
-        return;
-    QString s = lineText().mid(0,mCaretX-1);
-    //Only un-tab if caret is at the begin of the line
-    if (!s.trimmed().isEmpty())
-        return;
-
-    int NewX = 0;
-    if (s[s.length()-1] == '\t') {
-        NewX= mCaretX-1;
-    } else {
-        int spacesBefore = leftSpaces(lineText());
-        int spacesToRemove = spacesBefore % tabSize();
-        if (spacesToRemove == 0)
-            spacesToRemove = tabSize();
-        if (spacesToRemove > spacesBefore )
-            spacesToRemove = spacesBefore;
-        NewX = mCaretX;
-        while (spacesToRemove > 0 && s[NewX-2] == ' ' ) {
-            NewX--;
-            spacesToRemove--;
-        }
-    }
-    // perform un-tab
-
-    if (NewX != mCaretX) {
-        doDeleteText(BufferCoord{NewX, mCaretY},caretXY(),mActiveSelectionMode);
-        internalSetCaretX(NewX);
-    }
+    doBlockUnindent();
 }
 
 
 bool QSynEdit::canDoBlockIndent() const
 {
-    if (!selAvail()) {
-        if (caretY() > mDocument->count()) {
-            return false;
-        }
-        QString s = mDocument->getLine(caretY()-1).left(caretX()-1);
-        return (s.trimmed().isEmpty());
-    }
-
-    if (mActiveSelectionMode == SelectionMode::Column)
+    if (selAvail())
         return true;
 
-    BufferCoord BB = blockBegin();
-    BufferCoord BE = blockEnd();
-
-    if (BB.line > mDocument->count() || BE.line > mDocument->count()) {
+    if (caretY()<1 || caretY() > mDocument->count()) {
         return false;
     }
 
-    if (BB.line == BE.line) {
-        QString s1 = mDocument->getLine(BB.line-1).left(BB.ch-1);
-        QString s2 = mDocument->getLine(BE.line-1).mid(BE.ch-1);
-        return (s1.trimmed().isEmpty() && s2.trimmed().isEmpty());
-    }
-    return true;
+    QString s = mDocument->getLine(caretY()-1).left(caretX()-1);
+    return (s.trimmed().isEmpty());
 }
 
 QRect QSynEdit::calculateCaretRect() const
@@ -2576,9 +2526,9 @@ void QSynEdit::doBlockUnindent()
   // restore selection
   //adjust the x position of orgcaretpos appropriately
 
-    oldCaretPos.ch = std::max(1, oldCaretPos.ch-caretLineIndent);
-    BB.ch = std::max(1, BB.ch-firstLineIndent);
-    BE.ch = std::max(1, BE.ch-lastLineIndent);
+    oldCaretPos.ch -= caretLineIndent;
+    BB.ch -= firstLineIndent;
+    BE.ch -= lastLineIndent;
     setCaretAndSelection(oldCaretPos, BB, BE);
     endEditing();
 }
@@ -5209,9 +5159,9 @@ void QSynEdit::doLinesInserted(int firstLine, int count)
     emit linesInserted(firstLine, count);
 }
 
-void QSynEdit::properSetLine(int ALine, const QString &ALineText, bool notify)
+void QSynEdit::properSetLine(int line, const QString &sLineText, bool notify)
 {
-    mDocument->putLine(ALine,ALineText,notify);
+    mDocument->putLine(line,sLineText,notify);
 }
 
 void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode)
@@ -6625,9 +6575,8 @@ void QSynEdit::setBlockEnd(BufferCoord value)
           value.ch = std::min(value.ch, getDisplayStringAtLine(value.line).length() + 1);
       else
           value.ch = 1;
-    } else {
-        value.ch = std::max(value.ch, 1);
     }
+    value.ch = std::max(value.ch, 1);
     if (value.ch != mBlockEnd.ch || value.line != mBlockEnd.line) {
         if (mActiveSelectionMode == SelectionMode::Column && value.ch != mBlockEnd.ch) {
             BufferCoord oldBlockEnd = mBlockEnd;
@@ -6733,13 +6682,12 @@ void QSynEdit::setBlockBegin(BufferCoord value)
     bool SelChanged;
     value.line = minMax(value.line, 1, mDocument->count());
     if (mActiveSelectionMode == SelectionMode::Normal) {
-        if (value.line >= 1 && value.line <= mDocument->count())
+        if (value.line >= 1 && value.line <= mDocument->count()) {
             value.ch = std::min(value.ch, getDisplayStringAtLine(value.line).length() + 1);
-        else
+        } else
             value.ch = 1;
-    } else {
-        value.ch = std::max(value.ch, 1);
     }
+    value.ch = std::max(value.ch, 1);
     if (selAvail()) {
         if (mBlockBegin.line < mBlockEnd.line) {
             nInval1 = std::min(value.line, mBlockBegin.line);
