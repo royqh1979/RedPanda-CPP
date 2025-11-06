@@ -1591,8 +1591,9 @@ void QSynEdit::doToggleBlockComment()
     int endLen = endSymbol.length();
 
     QString text=selText().trimmed();
-    if (text.length()>beginLen+endLen && text.startsWith(beginSymbol) && text.endsWith(endSymbol)) {
-        QString newText=selText();
+    QString trimmedText = text.trimmed();
+    if (trimmedText.length()>beginLen+endLen && trimmedText.startsWith(beginSymbol) && trimmedText.endsWith(endSymbol)) {
+        QString newText=text;
         int pos = newText.indexOf(beginSymbol);
         if (pos>=0) {
             newText.remove(pos,beginLen);
@@ -1603,7 +1604,7 @@ void QSynEdit::doToggleBlockComment()
         }
         setSelText(newText);
     } else {
-        QString newText=beginSymbol+selText()+endSymbol;
+        QString newText=QString("%1 %2 %3").arg(beginSymbol,selText(),endSymbol);
         setSelText(newText);
     }
 
@@ -3138,14 +3139,10 @@ void QSynEdit::recalcCharExtent()
     setLeftPos(currentLeftCol * mCharWidth);
 }
 
-void QSynEdit::updateModifiedStatus()
+void QSynEdit::updateModifiedStatusForUndoRedo()
 {
-    bool oldModified = mModified;
-    mModified = !mUndoList->initialState();
-    setModified(mModified);
+    setModified(!mUndoList->initialState(), true);
 //    qDebug()<<mModified<<oldModified;
-    if (oldModified!=mModified)
-        emit statusChanged(StatusChange::ModifyChanged);
 }
 
 int QSynEdit::reparseLines(int startLine, int endLine, bool needRescanFolds, bool toDocumentEnd)
@@ -4018,7 +4015,7 @@ void QSynEdit::doUndo()
         }
     }
     ensureCaretVisible();
-    updateModifiedStatus();
+    updateModifiedStatusForUndoRedo();
     onChanged();
 }
 
@@ -4222,7 +4219,7 @@ void QSynEdit::doRedo()
         mUndoList->restoreChange(item);
     }
     ensureCaretVisible();
-    updateModifiedStatus();
+    updateModifiedStatusForUndoRedo();
     onChanged();
 }
 
@@ -5308,8 +5305,9 @@ int QSynEdit::doInsertTextByNormalMode(const BufferCoord& pos, const QStringList
     // step1: insert the first line of Value into current line
     if (text.length()>1) {
         if (!mUndoing && mSyntaxer->language()==ProgrammingLanguage::CPP && mOptions.testFlag(EditorOption::AutoIndent)) {
-            QString s = trimLeft(text[0]);
+            QString s = text[0];
             if (sLeftSide.isEmpty()) {
+                s=s.trimmed();
                 sLeftSide = GetLeftSpacing(calcIndentSpaces(caretY,s,true),true);
             }
             str = sLeftSide + s;
@@ -6373,7 +6371,7 @@ bool QSynEdit::modified() const
     return mModified;
 }
 
-void QSynEdit::setModified(bool value)
+void QSynEdit::setModified(bool value, bool skipUndo)
 {
     if (value) {
         mLastModifyTime = QDateTime::currentDateTime();
@@ -6382,14 +6380,16 @@ void QSynEdit::setModified(bool value)
     if (value != mModified) {
         mModified = value;
 
-        if (value) {
-            mUndoList->clear();
-            mRedoList->clear();
-        } else {
-            if (mOptions.testFlag(EditorOption::GroupUndo)) {
-                mUndoList->addGroupBreak();
+        if (!skipUndo) {
+            if (value) {
+                mUndoList->clear();
+                mRedoList->clear();
+            } else {
+                if (mOptions.testFlag(EditorOption::GroupUndo)) {
+                    mUndoList->addGroupBreak();
+                }
+                mUndoList->setInitialState();
             }
-            mUndoList->setInitialState();
         }
         emit statusChanged(StatusChange::ModifyChanged);
     }
@@ -6494,7 +6494,7 @@ void QSynEdit::onLinesPutted(int line)
 
 void QSynEdit::onUndoAdded()
 {
-    updateModifiedStatus();
+    updateModifiedStatusForUndoRedo();
 
     // we have to clear the redo information, since adding undo info removes
     // the necessary context to undo earlier edit actions

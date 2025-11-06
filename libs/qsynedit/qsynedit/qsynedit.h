@@ -370,7 +370,7 @@ public:
     void setGutterWidth(int value);
 
     bool modified() const;
-    void setModified(bool Value);
+    void setModified(bool Value, bool skipUndo=false);
 
     PSyntaxer syntaxer() const;
     void setSyntaxer(const PSyntaxer &syntaxer);
@@ -540,7 +540,7 @@ private:
     void doUpdateVScrollbar();
     void updateCaret();
     void recalcCharExtent();
-    void updateModifiedStatus();
+    void updateModifiedStatusForUndoRedo();
     int reparseLines(int startLine, int endLine, bool needRescanFolds = true,  bool toDocumentEnd = true);
     //void reparseLine(int line);
     void uncollapse(PCodeFoldingRange FoldRange);

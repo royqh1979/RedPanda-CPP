@@ -28,6 +28,8 @@ Red Panda C++ Version 3.4
   - fix: Cpp Syntaxer is wrongly used to parse todo infos for everyfile.
   - fix: Wrongly indent when press tab in the middle of the line.
   - Change: warn user when reload file with unsaved modifications.
+  - fix: Status of Toggle Block Comment not correctly updated.
+  - fix: Leading spaces is wrongly removed when paste contents in the middle of lines.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

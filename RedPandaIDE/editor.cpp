@@ -1914,7 +1914,7 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             mOldHighlightedWord = mCurrentHighlightedWord;
         }
         pMainWindow->updateStatusbarForLineCol(this);
-
+        pMainWindow->updateEditorActions(this);
         // Update the function tip
         if (pSettings->editor().showFunctionTips()) {
             updateFunctionTip(false);
