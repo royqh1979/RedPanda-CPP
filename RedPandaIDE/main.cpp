@@ -123,6 +123,9 @@ bool WindowLogoutEventFilter::nativeEventFilter(const QByteArray & /*eventType*/
             if (pMainWindow->isMinimized()) {
                 pMainWindow->showNormal();
             }
+            pMainWindow->raise(); // for mac OS?
+            pMainWindow->activateWindow();
+
             pMainWindow->openFiles(files);
             sharedMemory.detach();
         }
