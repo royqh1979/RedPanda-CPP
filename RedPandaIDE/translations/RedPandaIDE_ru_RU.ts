@@ -25,7 +25,7 @@
     </message>
     <message>
         <location filename="../widgets/aboutdialog.ui" line="59"/>
-        <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
+        <source>Copyright(C) 2021-2025 瞿华(royqh1979@gmail.com)</source>
         <translation>Copyright(C) 2021-2024 Ку Хуа (royqh1979@gmail.com)</translation>
     </message>
     <message>

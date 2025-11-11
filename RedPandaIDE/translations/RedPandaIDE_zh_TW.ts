@@ -25,7 +25,7 @@
     </message>
     <message>
         <location line="+12"/>
-        <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
+        <source>Copyright(C) 2021-2025 瞿华(royqh1979@gmail.com)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -87,8 +87,8 @@
         <translation>網址：&lt;a href=&quot;%1&quot;&gt;%1&lt;/a&gt;</translation>
     </message>
     <message>
-        <source>Copyright(C) 2021-2024 瞿華(royqh1979@gmail.com)</source>
-        <translation type="vanished">Copyright(C) 2021-2024 瞿華(royqh1979@gmail.com)</translation>
+        <source>Copyright(C) 2021-2025 瞿華(royqh1979@gmail.com)</source>
+        <translation type="vanished">Copyright(C) 2021-2025 瞿華(royqh1979@gmail.com)</translation>
     </message>
 </context>
 <context>

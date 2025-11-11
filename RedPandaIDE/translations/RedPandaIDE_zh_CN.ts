@@ -73,7 +73,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+12"/>
         <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
-        <translation>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</translation>
+        <translation>Copyright(C) 2021-2025 瞿华(royqh1979@gmail.com)</translation>
     </message>
     <message>
         <source>Copyright(C) 2021-2022 瞿华(royqh1979@gmail.com)</source>

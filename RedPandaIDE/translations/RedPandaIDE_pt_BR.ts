@@ -91,7 +91,7 @@
     </message>
     <message>
         <location line="+24"/>
-        <source>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</source>
+        <source>Copyright(C) 2021-2025 瞿华(royqh1979@gmail.com)</source>
         <translation type="unfinished">Copyright(C) 2021-2022 瞿华(royqh1979@gmail.com) {2021-2024 ?} {1979@?}</translation>
     </message>
 </context>
