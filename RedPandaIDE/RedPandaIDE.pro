@@ -595,7 +595,7 @@ qtConfig(static) {
     QTBASE_TRANSFILES = qtbase_bt_BR.qm \
                         qtbase_zh_CN.qm \
                         qtbase_zh_TW.qm \
-                        qtbase_ru_RU.qm
+                        qtbase_ru.qm
     for (TRANS_FILE, QTBASE_TRANSFILES) {
         exists($$[QT_INSTALL_TRANSLATIONS]/$${TRANS_FILE}) {
             qt_translation_files.files += $$[QT_INSTALL_TRANSLATIONS]/$${TRANS_FILE}
