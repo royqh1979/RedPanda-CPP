@@ -32,6 +32,7 @@ Red Panda C++ Version 3.4
   - fix: Leading spaces is wrongly removed when paste contents in the middle of lines.
   - change: Press Home/End to jump to Line begin/end when completion popup is shown.
   - fix: Double click a file in windows explore won't bring the app to front.
+  - enhancement: rename undefined local symbols.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
