@@ -8416,14 +8416,21 @@ void MainWindow::on_actionRename_Symbol_triggered()
             return;
         }
     }
+    QString word;
     //not in project
     PStatement oldStatement = editor->parser()->findStatementOf(
                     editor->filename(),
                     expression,
                     oldCaretXY.line);
-    if (!oldStatement)
-        return;
-    QString word = oldStatement->command;
+    bool isUndefinedLocalVar = false;
+    if (!oldStatement) {
+        if (expression.length()!=1)
+            return;
+        word = expression[0];
+        isUndefinedLocalVar = true;
+    } else {
+        word = oldStatement->command;
+    }
     if (word.isEmpty())
         return;
     if (isCppKeyword(word)) {
@@ -8447,7 +8454,11 @@ void MainWindow::on_actionRename_Symbol_triggered()
     }
     CppRefacter refactor;
 
-    refactor.renameSymbol(editor,oldCaretXY,newWord);
+    if (isUndefinedLocalVar) {
+        refactor.renameUndefinedLocalVariable(editor,oldCaretXY,newWord);
+    } else {
+        refactor.renameSymbol(editor,oldCaretXY,newWord);
+    }
     editor->reparse(true);
     editor->checkSyntaxInBack();
     editor->reparseTodo();

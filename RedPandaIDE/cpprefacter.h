@@ -37,6 +37,7 @@ public:
     bool findOccurence(Editor * editor, const QString& statementFullname, SearchFileScope scope);
 
     void renameSymbol(Editor* editor, const QSynedit::BufferCoord& pos, const QString& newWord);
+    void renameUndefinedLocalVariable(Editor* editor, const QSynedit::BufferCoord& pos, const QString& newWord);
 private:
     void doFindOccurenceInEditor(const PStatement &statement, Editor* editor, const PCppParser& parser);
     void doFindOccurenceInProject(const PStatement &statement, std::shared_ptr<Project> project, const PCppParser& parser);
