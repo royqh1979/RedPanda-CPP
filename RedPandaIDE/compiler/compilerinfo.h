@@ -28,6 +28,7 @@
 #define CC_CMD_OPT_WARNING_ALL "cc_cmd_opt_warning_all"
 #define CC_CMD_OPT_WARNING_EXTRA "cc_cmd_opt_warning_extra"
 #define CC_CMD_OPT_CHECK_ISO_CONFORMANCE "cc_cmd_opt_check_iso_conformance"
+#define CC_CMD_OPT_NO_MS_EXTENSIONS "cc_cmd_opt_no_ms_extensions"
 #define CC_CMD_OPT_SYNTAX_ONLY "cc_cmd_opt_syntax_only"
 #define CC_CMD_OPT_WARNING_AS_ERROR "cc_cmd_opt_warning_as_error"
 #define CC_CMD_OPT_ABORT_ON_ERROR "cc_cmd_opt_abort_on_error"

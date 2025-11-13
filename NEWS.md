@@ -33,6 +33,7 @@ Red Panda C++ Version 3.4
   - change: Press Home/End to jump to Line begin/end when completion popup is shown.
   - fix: Double click a file in windows explore won't bring the app to front.
   - enhancement: rename undefined local symbols.
+  - enhancement: Add new compile option (-fno-ms-extentions) and enabled by default.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
