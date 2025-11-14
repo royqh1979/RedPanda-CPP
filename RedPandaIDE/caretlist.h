@@ -28,7 +28,7 @@ struct EditorCaret{
     int line;
     int aChar;
 };
-using PEditorCaret = std::shared_ptr<EditorCaret>;
+using PEditorCaret = std::unique_ptr<EditorCaret>;
 
 class CaretList:public QObject
 {
@@ -39,8 +39,8 @@ public:
     void addCaret(Editor *editor, int line, int aChar);
     bool hasPrevious() const;
     bool hasNext() const;
-    PEditorCaret gotoAndGetPrevious();
-    PEditorCaret gotoAndGetNext();
+    const PEditorCaret &gotoAndGetPrevious();
+    const PEditorCaret &gotoAndGetNext();
     void removeEditor(const Editor* editor);
     void reset();
     void pause();
@@ -51,9 +51,10 @@ public slots:
 private:
     void removeCaret(int index);
 private:
-    QVector<PEditorCaret> mList;
+    std::vector<PEditorCaret> mList;
     int mIndex;
     bool mPauseAdd;
+    static const PEditorCaret NullCaret;
 };
 
 #endif // CARETLIST_H

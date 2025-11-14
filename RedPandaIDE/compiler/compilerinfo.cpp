@@ -201,6 +201,7 @@ void CompilerInfo::prepareCompilerOptions()
     addOption(CC_CMD_OPT_WARNING_ALL,QObject::tr("Show most warnings (-Wall)"), groupName, true, true, false, "-Wall");
     addOption(CC_CMD_OPT_WARNING_EXTRA,QObject::tr("Show some more warnings (-Wextra)"), groupName, true, true, false, "-Wextra");
     addOption(CC_CMD_OPT_CHECK_ISO_CONFORMANCE, QObject::tr("Check ISO C/C++ conformance (-pedantic)"), groupName, true, true, false, "-pedantic");
+    addOption(CC_CMD_OPT_NO_MS_EXTENSIONS, QObject::tr("Don't accept MSVC non-standard syntax (-fno-ms-extentions)"), groupName, true, true, false, "-fno-ms-extensions");
     addOption(CC_CMD_OPT_WARNING_AS_ERROR, QObject::tr("Make all warnings into errors (-Werror)"), groupName, true, true, false, "-Werror");
     addOption(CC_CMD_OPT_ABORT_ON_ERROR , QObject::tr("Abort compilation on first error (-Wfatal-errors)"), groupName, true, true, false, "-Wfatal-errors");
     sl.clear();
@@ -276,11 +277,12 @@ PCompilerOption CompilerInfoManager::getCompilerOption(CompilerType compilerType
     return pInfo->getCompilerOption(optKey);
 }
 
-QList<PCompilerOption> CompilerInfoManager::getCompilerOptions(CompilerType compilerType)
+const QList<PCompilerOption> &CompilerInfoManager::getCompilerOptions(CompilerType compilerType)
 {
+    static QList<PCompilerOption> EmptyList;
     PCompilerInfo pInfo = getInfo(compilerType);
     if (!pInfo)
-        return QList<PCompilerOption>();
+        return EmptyList;
     return pInfo->compilerOptions();
 }
 

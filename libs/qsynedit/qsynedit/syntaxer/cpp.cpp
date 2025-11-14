@@ -1033,7 +1033,7 @@ void CppSyntaxer::procRoundClose()
     mTokenId = TokenId::Symbol;
     mRange.parenthesisLevel--;
     if (mRange.parenthesisLevel<0) {
-        qDebug()<<"CppSyntaxer::procRoundClose() : parenthesis level < 0 ";
+        qDebug()<<mLineNumber<<mLine<<"CppSyntaxer::procRoundClose() : parenthesis level < 0 ";
         mRange.parenthesisLevel=0;
     }
     popIndents(IndentType::Parenthesis);

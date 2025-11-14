@@ -103,25 +103,27 @@ TodoThread::TodoThread(const QStringList &files, QObject *parent): QThread(paren
 
 void TodoThread::parseFile()
 {
-    QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     emit parseStarted();
-    doParseFile(mFilename,syntaxer);
+    doParseFile(mFilename);
     emit parseFinished();
 }
 
 void TodoThread::parseFiles()
 {
-    QSynedit::PSyntaxer highlighter = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
     emit parseStarted();
     foreach(const QString& filename,mFiles) {
-        doParseFile(filename,highlighter);
+        doParseFile(filename);
     }
     emit parseFinished();
 }
 
-void TodoThread::doParseFile(const QString &filename, QSynedit::PSyntaxer syntaxer)
+void TodoThread::doParseFile(const QString &filename)
 {
     emit parsingFile(filename);
+    FileType fileType = getFileType(filename);
+    QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(fileType);
+    if (!syntaxer || syntaxer->language() == QSynedit::ProgrammingLanguage::Textfile)
+        return;
     QStringList lines;
     if (!pMainWindow->editorList()->getContentFromOpenedEditor(filename,lines)) {
         lines = readFileToLines(filename);

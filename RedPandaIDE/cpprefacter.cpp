@@ -148,7 +148,103 @@ void CppRefacter::renameSymbol(Editor *editor, const QSynedit::BufferCoord &pos,
     renameSymbolInFile(editor->filename(),oldStatement,newWord, editor->parser());
 }
 
-void CppRefacter::doFindOccurenceInEditor(PStatement statement , Editor *editor, const PCppParser &parser)
+void CppRefacter::renameUndefinedLocalVariable(Editor *editor, const QSynedit::BufferCoord &pos, const QString &newWord)
+{
+    if (!editor)
+        return;
+    if (!editor->parser()->freeze())
+        return;
+    auto action = finally([&editor]{
+        editor->parser()->unFreeze();
+    });
+    PStatement scope = editor->parser()->findScopeStatement(editor->filename(), pos.line);
+    if (!scope)
+        return;
+    if (scope->kind != StatementKind::Function
+            && scope->kind != StatementKind::Constructor
+            && scope->kind != StatementKind::Destructor
+            && scope->kind != StatementKind::Lambda)
+        return;
+    if (scope->definitionFileName!=editor->filename())
+        return;
+
+    // get full phrase (such as s.name instead of name)
+    QStringList expression;
+    QChar s=editor->charAt(pos);
+    if (!editor->isIdentStartChar(s)) {
+        expression = editor->getExpressionAtPosition(QSynedit::BufferCoord{pos.ch-1,pos.line});
+    } else {
+        expression = editor->getExpressionAtPosition(pos);
+    }
+
+    if (expression.length()!=1)
+        return;
+    QString oldVarName = expression[0];
+    // Find it's definition
+    PStatement oldStatement = editor->parser()->findStatementOf(
+                editor->filename(),
+                expression,
+                pos.line);
+    if (oldStatement)
+        return;
+
+    QStringList newExpression = {newWord};
+    PStatement newStatement = editor->parser()->findStatementOf(
+                editor->filename(),
+                newExpression,
+                pos.line);
+    QSynedit::PSyntaxer syntaxer = syntaxerManager.getSyntaxer(QSynedit::ProgrammingLanguage::CPP);
+    int posY = scope->definitionLine;
+    editor->clearSelection();
+    editor->addGroupBreak();
+    editor->beginEditing();
+    while (posY < editor->lineCount()) {
+        //check if still in the scope
+        bool inScope = false;
+        PStatement currentScope = editor->parser()->findScopeStatement(editor->filename(),posY+1);
+        while (currentScope != nullptr) {
+            if (currentScope == scope) {
+                inScope = true;
+                break;
+            }
+            currentScope = currentScope->parentScope.lock();
+        }
+        if (!inScope)
+            break;
+
+        QString line = editor->document()->getLine(posY);
+        editor->prepareSyntaxerState(*syntaxer, posY, line);
+        QString newLine;
+        while (!syntaxer->eol()) {
+            int start = syntaxer->getTokenPos() + 1;
+            QString token = syntaxer->getToken();
+            if (token == oldVarName) {
+                //same name symbol , test if the same statement;
+                QSynedit::BufferCoord p;
+                p.line = posY+1;
+                p.ch = start;
+
+                QStringList expression = editor->getExpressionAtPosition(p);
+                if (expression.length() == 1) {
+                    PStatement tokenStatement = editor->parser()->findStatementOf(
+                                editor->filename(),
+                                expression, p.line);
+                    if (!tokenStatement) {
+                        token = newWord;
+                    }
+                }
+            }
+            newLine += token;
+            syntaxer->next();
+        }
+        if (newLine!=line)
+            editor->replaceLine(posY+1,newLine);
+        posY++;
+    }
+    editor->endEditing();
+}
+
+void CppRefacter::doFindOccurenceInEditor(const PStatement &statement , Editor *editor, const PCppParser &parser)
 {
     PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
                 statement->command,
@@ -165,7 +261,7 @@ void CppRefacter::doFindOccurenceInEditor(PStatement statement , Editor *editor,
     }
 }
 
-void CppRefacter::doFindOccurenceInProject(PStatement statement, std::shared_ptr<Project> project, const PCppParser &parser)
+void CppRefacter::doFindOccurenceInProject(const PStatement &statement, std::shared_ptr<Project> project, const PCppParser &parser)
 {
     PSearchResults results = pMainWindow->searchResultModel()->addSearchResults(
                 statement->command,

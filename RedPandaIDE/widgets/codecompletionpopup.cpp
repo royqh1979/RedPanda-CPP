@@ -95,6 +95,9 @@ void CodeCompletionPopup::prepareSearch(
     case CodeCompletionType::ComplexKeyword:
         getCompletionListForComplexKeyword(preWord);
         break;
+    case CodeCompletionType::Labels:
+        getCompletionListForLabels(filename,line);
+        break;
     case CodeCompletionType::Types:
         mIncludedFiles = mParser->getIncludedFiles(filename);
         getCompletionListForTypes(preWord,filename,line);
@@ -298,6 +301,7 @@ void CodeCompletionPopup::addStatement(const PStatement& statement, const QStrin
         return;
     if (statement->kind == StatementKind::Constructor
             || statement->kind == StatementKind::Destructor
+            || statement->kind == StatementKind::Label
             || statement->kind == StatementKind::Block
             || statement->kind == StatementKind::Lambda
             || (
@@ -1008,6 +1012,31 @@ void CodeCompletionPopup::getCompletionForFunctionWithoutDefinition(const QStrin
             } else if (ownerStatement->effectiveTypeStatement->kind == StatementKind::Class) {
                 addKeyword("operator");
                 addFunctionWithoutDefinitionChildren(ownerStatement->effectiveTypeStatement, fileName, line);
+            }
+        }
+    }
+}
+
+void CodeCompletionPopup::getCompletionListForLabels(const QString &fileName, int line)
+{
+    if (!mParser->enabled())
+        return;
+
+    if (!mParser->freeze())
+        return;
+    {
+        auto action = finally([this]{
+            mParser->unFreeze();
+        });
+        PStatement scopeStatement = mParser->findScopeStatement(fileName,line);
+        if (scopeStatement && scopeStatement->kind == StatementKind::Function
+                || scopeStatement->kind == StatementKind::Constructor
+                || scopeStatement->kind == StatementKind::Destructor
+                || scopeStatement->kind == StatementKind::Lambda
+                )
+        foreach(const PStatement &child, scopeStatement->children) {
+            if (child->kind == StatementKind::Label) {
+                mFullCompletionStatementList.append(child);
             }
         }
     }

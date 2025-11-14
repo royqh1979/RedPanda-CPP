@@ -208,6 +208,10 @@ void CppPreprocessor::dumpIncludesListTo(const QString &fileName) const
         QTextStream stream(&file);
         for (const PParsedFileInfo& fileInfo:mFileInfos) {
             stream<<fileInfo->fileName()<<" : "<<Qt::endl;
+            stream<<"\t**direct-includes:**"<<Qt::endl;
+            foreach (const QString& s,fileInfo->directIncludes()) {
+                stream<<"\t--"+s<<Qt::endl;
+            }
             stream<<"\t**includes:**"<<Qt::endl;
             foreach (const QString& s,fileInfo->includes()) {
                 stream<<"\t--"+s<<Qt::endl;

@@ -18,6 +18,23 @@ Red Panda C++ Version 3.4
   - fix: Mouse tip of class displays its constructor info in its definition.
   - fix: Goto defintion/declaration will jump to constructor instead of the class in the class definition.
   - fix: Delete a customed bundled color scheme and save, will get wrong save error message.
+  - fix: Wrong error message when delete a customed bundled syntax color scheme.
+  - fix: Infinite loop when generating new problem set name.
+  - enhancement: Completion suggestion for goto labels;
+  - fix: Wrong suggestion for complex words.
+  - fix: Close an editor which is parsing may crash.
+  - enhancement: Support parsing consteval if. 
+  - enhancement: Support decltype in typedef.
+  - change: Show symbols defined in current file no matter it starts with underscore or not.
+  - fix: Cpp Syntaxer is wrongly used to parse todo infos for everyfile.
+  - fix: Wrongly indent when press tab in the middle of the line.
+  - Change: warn user when reload file with unsaved modifications.
+  - fix: Status of Toggle Block Comment not correctly updated.
+  - fix: Leading spaces is wrongly removed when paste contents in the middle of lines.
+  - change: Press Home/End to jump to Line begin/end when completion popup is shown.
+  - fix: Double click a file in windows explore won't bring the app to front.
+  - enhancement: rename undefined local symbols.
+  - enhancement: Add new compile option (-fno-ms-extentions) and enabled by default.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

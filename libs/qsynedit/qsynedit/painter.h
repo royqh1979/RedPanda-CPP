@@ -95,7 +95,7 @@ private:
             const QString& lineText,
             const QString& token, int tokenLeft,
             int line, PTokenAttribute p_Attri, bool showGlyphs,
-            const QList<int> glyphStartCharList,
+            const QList<int> &glyphStartCharList,
             int tokenStartChar,
             int tokenEndChar,
             bool calcGlyphPosition,

@@ -123,7 +123,7 @@ void CompileArgumentsWidget::resetUI(Settings::PCompilerSet pSet, const QMap<QSt
         return;
     mCompilerType = pSet->compilerType();
 
-    foreach (PCompilerOption pOption, CompilerInfoManager::getCompilerOptions(mCompilerType)) {
+    foreach (const PCompilerOption &pOption, CompilerInfoManager::getCompilerOptions(mCompilerType)) {
         QWidget* pWidget = nullptr;
         for (int i=0;i<pTab->count();i++) {
             if (pOption->section == pTab->tabText(i)) {

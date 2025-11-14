@@ -520,6 +520,7 @@ private:
     void handleEnum(bool isTypedef, int maxIndex);
     void handleForBlock(int maxIndex);
     void handleKeyword(KeywordType skipType, int maxIndex);
+    void handleIf(int maxIndex);
     void handleLambda(int index, int maxIndex);
     void handleOperatorOverloading(
             const QString& sType,
@@ -545,6 +546,7 @@ private:
     void handleVar(const QString& typePrefix,bool isExtern,bool isStatic, int maxIndex);
     void handleInheritance(PStatement derivedClass, PClassInheritanceInfo pInfo);
     void handleInheritances();
+    void handleLabel();
     void skipRequires(int maxIndex);
     void internalParse(const QString& fileName);
 //    function FindMacroDefine(const Command: AnsiString): PStatement;

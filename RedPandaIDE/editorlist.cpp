@@ -169,6 +169,7 @@ Editor* EditorList::getEditor(int index, QTabWidget* tabsWidget) const {
 }
 
 bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
+    QMutexLocker locker(&mMutex);
     if (editor == nullptr)
         return false;
     if (force) {
@@ -226,6 +227,7 @@ bool EditorList::closeEditor(Editor* editor, bool transferFocus, bool force) {
 
 bool EditorList::swapEditor(Editor *editor)
 {
+    QMutexLocker locker(&mMutex);
     Q_ASSERT(editor!=nullptr);
     beginUpdate();
     auto action = finally([this](){
@@ -436,6 +438,7 @@ bool EditorList::closeOthers(Editor *editor)
 
 void EditorList::forceCloseEditor(Editor *editor)
 {
+    QMutexLocker locker(&mMutex);
     beginUpdate();
     doRemoveEditor(editor);
     // Force layout update when creating, destroying or moving editors
@@ -469,6 +472,7 @@ Editor* EditorList::getOpenedEditorByFilename(QString filename) const
 
 bool EditorList::getContentFromOpenedEditor(const QString &filename, QStringList &buffer) const
 {
+    QMutexLocker locker(&mMutex);
     if (pMainWindow->isQuitting())
         return false;
     Editor * e= getOpenedEditorByFilename(filename);

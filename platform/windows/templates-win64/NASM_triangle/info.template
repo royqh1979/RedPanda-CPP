@@ -1,0 +1,23 @@
+[Template]
+Ver = 3
+Name = Triangle(NASM)
+Category = Assembly
+Description = Display a triangle using NASM
+Name[zh_CN] = 三角形(NASM)
+Category[zh_CN] = 汇编
+Description[zh_CN] = 显示一个三角形（使用NASM编写）
+Category[ru_RU] = Ассемблер
+Icon = app.ico
+
+
+[Project]
+Type = 1
+IsCpp = true
+Encoding = UTF-8
+ClassBrowserType = 0
+UnitCount = 1
+
+
+[Unit0]
+Source = triangle.asm
+Target = triangle.asm

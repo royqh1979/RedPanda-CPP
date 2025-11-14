@@ -24,7 +24,7 @@ namespace Ui {
 class OJProblemPropertyWidget;
 }
 
-struct OJProblem;
+class OJProblem;
 using POJProblem = std::shared_ptr<OJProblem>;
 class OJProblemPropertyWidget : public QDialog
 {

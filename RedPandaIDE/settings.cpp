@@ -1889,6 +1889,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
                                                      {CC_CMD_OPT_WARNING_ALL, "ccCmdOptWarningAll"},
                                                      {CC_CMD_OPT_WARNING_EXTRA, "ccCmdOptWarningExtra"},
                                                      {CC_CMD_OPT_CHECK_ISO_CONFORMANCE, "ccCmdOptCheckIsoConformance"},
+                                                     {CC_CMD_OPT_NO_MS_EXTENSIONS, "ccCmdOptNoMSExtensions"},
                                                      {CC_CMD_OPT_WARNING_AS_ERROR, "ccCmdOptWarningAsError"},
                                                      {CC_CMD_OPT_ABORT_ON_ERROR, "ccCmdOptAbortOnError"},
                                                      {CC_CMD_OPT_STACK_PROTECTOR, "ccCmdOptStackProtector"},
@@ -3176,6 +3177,7 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
     //pSet->setCompileOption(CC_CMD_OPT_OPTIMIZE,"g");
     pSet->setCompileOption(CC_CMD_OPT_DEBUG_INFO, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_WARNING_ALL, COMPILER_OPTION_ON);
+    pSet->setCompileOption(CC_CMD_OPT_NO_MS_EXTENSIONS, COMPILER_OPTION_ON);
     //pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
 

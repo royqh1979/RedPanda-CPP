@@ -1317,6 +1317,11 @@ PProjectUnit Project::internalAddUnit(const QString &inFileName, PProjectModelNo
         newUnit->setCompileCpp(false);
         newUnit->setLink(true);
         break;
+    case FileType::NASM:
+        newUnit->setCompile(true);
+        newUnit->setCompileCpp(false);
+        newUnit->setLink(true);
+        break;
     case FileType::CSource:
         newUnit->setCompile(true);
         newUnit->setCompileCpp(false);
@@ -1894,9 +1899,10 @@ PProjectModelNode Project::getParentFileSystemFolderNode(const QString &filename
 {
     QFileInfo fileInfo(filename);
     ProjectModelNodeType folderNodeType;
-    if (isHFile(fileInfo.fileName()) && !fileInfo.suffix().isEmpty()) {
+    FileType fileType = getFileType(filename);
+    if (isC_CPPHeaderFile(fileType) && !fileInfo.suffix().isEmpty()) {
         folderNodeType = ProjectModelNodeType::DUMMY_HEADERS_FOLDER;
-    } else if (isCFile(fileInfo.fileName())) {
+    } else if (isC_CPP_ASMSourceFile(fileType)) {
         folderNodeType = ProjectModelNodeType::DUMMY_SOURCES_FOLDER;
     } else {
         folderNodeType = ProjectModelNodeType::DUMMY_OTHERS_FOLDER;

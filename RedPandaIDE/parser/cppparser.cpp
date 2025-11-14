@@ -27,6 +27,12 @@
 #include <QThread>
 #include <QTime>
 
+//Enable debug log
+//#define PARSER_DEBUG_LOG
+#ifdef PARSER_DEBUG_LOG
+const QString DebugLogFolder{"r:/"};
+#endif
+
 static QAtomicInt cppParserCount(0);
 
 static QString calcFullname(const QString& parentName, const QString& name) {
@@ -2112,28 +2118,14 @@ bool CppParser::checkForKeyword(KeywordType& keywordType)
 {
     keywordType = mCppKeywords.value(mTokenizer[mIndex]->text,KeywordType::NotKeyword);
     switch(keywordType) {
-    case KeywordType::Catch:
-    case KeywordType::For:
-    case KeywordType::Public:
-    case KeywordType::Private:
-    case KeywordType::Protected:
-    case KeywordType::Struct:
-    case KeywordType::Enum:
-    case KeywordType::Inline:
-    case KeywordType::Namespace:
-    case KeywordType::Typedef:
-    case KeywordType::Using:
-    case KeywordType::Friend:
-    case KeywordType::None:
-    case KeywordType::NotKeyword:
-    case KeywordType::DeclType:
-    case KeywordType::Operator:
-    case KeywordType::Requires:
-    case KeywordType::Concept:
-    case KeywordType::Extern:
-        return false;
-    default:
+    case KeywordType::SkipItself:  // skip itself
+    case KeywordType::SkipNextSemicolon: // move to ; and skip it
+    case KeywordType::SkipNextColon: // move to : and skip it
+    case KeywordType::SkipNextParenthesis: // move to ) and skip it
+    case KeywordType::MoveToLeftBrace: // move to {
         return true;
+    default:
+        return false;
     }
 }
 
@@ -3003,6 +2995,18 @@ void CppParser::handleKeyword(KeywordType skipType, int maxIndex)
     }
 }
 
+void CppParser::handleIf(int maxIndex)
+{
+    if (mIndex+2 < maxIndex && mTokenizer[mIndex+1]->text == "!"
+            && mTokenizer[mIndex+2]->text == "consteval") { // !consteval
+        mIndex+=3;
+    } else if (mIndex+1 < maxIndex && mTokenizer[mIndex+1]->text == "consteval") { // consteval
+        mIndex+=2;
+    } else {
+        skipParenthesis(mIndex,maxIndex);
+    }
+}
+
 void CppParser::handleLambda(int index, int maxIndex)
 {
     Q_ASSERT(mTokenizer[index]->text.startsWith('['));
@@ -3419,34 +3423,52 @@ void CppParser::handleOtherTypedefs(int maxIndex)
 
     QString oldType;
     QString tempType;
-    // Walk up to first new word (before first comma or ;)
-    while(true) {
-        if (oldType.endsWith("::"))
-            oldType += mTokenizer[mIndex]->text;
-        else if (mTokenizer[mIndex]->text=="::")
-            oldType += "::";
-        else if (mTokenizer[mIndex]->text=="*"
-                 || mTokenizer[mIndex]->text=="&")
-            tempType += mTokenizer[mIndex]->text;
-        else {
-            oldType += tempType + ' ' + mTokenizer[mIndex]->text;
-            tempType="";
-        }
-        mIndex++;
-        if (mIndex+1>=maxIndex) {
-            //not valid, just exit
+    if (mIndex+1<maxIndex
+            && mTokenizer[mIndex]->text == "decltype"
+            && mTokenizer[mIndex+1]->text == "(") {
+        mIndex+=2;
+        int endIdx = indexOfNextRightParenthesis(mIndex,maxIndex);
+        if (endIdx >= maxIndex) {
             return;
         }
-        if  (mTokenizer[mIndex]->text=='(') {
-            break;
+//        QStringList typeExpression;
+        oldType = "decltype(";
+        for (int i=mIndex;i<endIdx;i++) {
+            oldType += mTokenizer[i]->text;
         }
-        if (mTokenizer[mIndex + 1]->text.front() == ','
-                  || mTokenizer[mIndex + 1]->text == ';')
-            break;
-        //typedef function pointer
+        oldType += ")";
+        mIndex=endIdx+1;
+    } else {
+        // Walk up to first new word (before first comma or ;)
+        while(true) {
+            if (oldType.endsWith("::"))
+                oldType += mTokenizer[mIndex]->text;
+            else if (mTokenizer[mIndex]->text=="::")
+                oldType += "::";
+            else if (mTokenizer[mIndex]->text=="*"
+                     || mTokenizer[mIndex]->text=="&")
+                tempType += mTokenizer[mIndex]->text;
+            else {
+                oldType += tempType + ' ' + mTokenizer[mIndex]->text;
+                tempType="";
+            }
+            mIndex++;
+            if (mIndex+1>=maxIndex) {
+                //not valid, just exit
+                return;
+            }
+            if  (mTokenizer[mIndex]->text=='(') {
+                break;
+            }
+            if (mTokenizer[mIndex + 1]->text.front() == ','
+                      || mTokenizer[mIndex + 1]->text == ';')
+                break;
+            //typedef function pointer
 
+        }
+        oldType = oldType.trimmed();
     }
-    oldType = oldType.trimmed();
+
     if (oldType.isEmpty()) {
         //skip over next ;
         mIndex=indexOfNextSemicolon(mIndex, maxIndex)+1;
@@ -3675,6 +3697,8 @@ bool CppParser::handleStatement(int maxIndex)
         mIndex=moveToEndOfStatement(mIndex,true, maxIndex);
     } else if (checkForKeyword(keywordType)) { // includes template now
         handleKeyword(keywordType, maxIndex);
+    } else if (keywordType==KeywordType::If) {
+        handleIf(maxIndex);
     } else if (keywordType==KeywordType::Concept) {
         handleConcept(maxIndex);
     } else if (keywordType==KeywordType::Requires) {
@@ -3716,6 +3740,10 @@ bool CppParser::handleStatement(int maxIndex)
                 }
             }
             keywordType = KeywordType::None;
+        } else if (keywordType == KeywordType::NotKeyword
+                   && mIndex+1<maxIndex && mTokenizer[mIndex+1]->text==":") {
+            handleLabel();
+            goto _exit;
         }
         // it should be method/constructor/var
         checkAndHandleMethodOrVar(keywordType, maxIndex);
@@ -4512,6 +4540,30 @@ void CppParser::handleInheritances()
     //mClassInheritances.clear();
 }
 
+void CppParser::handleLabel()
+{
+    PStatement scope = getCurrentScope();
+    if (scope && (scope->kind == StatementKind::Function
+            || scope->kind == StatementKind::Constructor
+            || scope->kind == StatementKind::Destructor
+            || scope->kind == StatementKind::Lambda)) {
+        addStatement(
+                    scope,
+                    mCurrentFile,
+                    "", // type
+                    mTokenizer[mIndex]->text, // command
+                    "", // args
+                    "", // noname args
+                    "", // values
+                    mTokenizer[mIndex]->line,
+                    StatementKind::Label,
+                    StatementScope::Local,
+                    StatementAccessibility::None,
+                    StatementProperty::None);
+    }
+    mIndex+=2;
+}
+
 void CppParser::skipRequires(int maxIndex)
 {
     mIndex++; //skip 'requires';
@@ -4569,10 +4621,10 @@ void CppParser::internalParse(const QString &fileName)
     mPreprocessor.preprocess(fileName);
 
     QStringList preprocessResult = mPreprocessor.result();
-#ifdef QT_DEBUG
-       // stringsToFile(mPreprocessor.result(),QString("r:\\preprocess-%1.txt").arg(extractFileName(fileName)));
-       // mPreprocessor.dumpDefinesTo("z:\\defines.txt");
-       // mPreprocessor.dumpIncludesListTo("z:\\includes.txt");
+#ifdef PARSER_DEBUG_LOG
+        stringsToFile(mPreprocessor.result(),DebugLogFolder+QString("/preprocess-%1.txt").arg(extractFileName(fileName)));
+        mPreprocessor.dumpDefinesTo(DebugLogFolder+"/defines.txt");
+        mPreprocessor.dumpIncludesListTo(DebugLogFolder+"/includes.txt");
 #endif
     //qDebug()<<"preprocess"<<timer.elapsed();
     //reduce memory usage
@@ -4588,8 +4640,8 @@ void CppParser::internalParse(const QString &fileName)
     //qDebug()<<"tokenize"<<timer.elapsed();
     if (mTokenizer.tokenCount() == 0)
         return;
-#ifdef QT_DEBUG
-    // mTokenizer.dumpTokens(QString("r:\\tokens-%1.txt").arg(extractFileName(fileName)));
+#ifdef PARSER_DEBUG_LOG
+     mTokenizer.dumpTokens(QString(DebugLogFolder+"/tokens-%1.txt").arg(extractFileName(fileName)));
 #endif
 #ifdef QT_DEBUG
         mLastIndex = -1;
@@ -4601,14 +4653,14 @@ void CppParser::internalParse(const QString &fileName)
         if (!handleStatement(endIndex))
             break;
     }
-#ifdef QT_DEBUG
-    // mTokenizer.dumpTokens(QString("r:\\tokens-after-%1.txt").arg(extractFileName(fileName)));
+#ifdef PARSER_DEBUG_LOG
+     mTokenizer.dumpTokens(QString(DebugLogFolder+"/tokens-after-%1.txt").arg(extractFileName(fileName)));
 #endif
     handleInheritances();
     //    qDebug()<<"parse"<<timer.elapsed();
-#ifdef QT_DEBUG
-    // mStatementList.dumpAll(QString("r:\\all-stats-%1.txt").arg(extractFileName(fileName)));
-    // mStatementList.dump(QString("r:\\stats-%1.txt").arg(extractFileName(fileName)));
+#ifdef PARSER_DEBUG_LOG
+     mStatementList.dumpAll(QString(DebugLogFolder+"/all-stats-%1.txt").arg(extractFileName(fileName)));
+     mStatementList.dump(QString(DebugLogFolder+"/stats-%1.txt").arg(extractFileName(fileName)));
 #endif
     //reduce memory usage
     internalClear();

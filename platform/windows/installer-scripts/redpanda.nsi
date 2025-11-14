@@ -132,11 +132,21 @@ Section "$(SectionMainName)" SectionMain
   !ifdef HAVE_COMPILER_HINT
     File "compiler_hint.lua"
   !endif
-  !ifdef HAVE_UCRT
+
+  # UCRT installers are for target platform. host switches does not apply.
+  # to avoid too many switches, we just install all versions (if applicable).
+  !ifdef HAVE_UCRT_X86
+    File "VC_redist.x86.exe"
     ${IfNot} ${AtLeastWin10}
-      File "ucrt\ucrtbase.dll"
-      File "ucrt\api-ms-win-core-*.dll"
-      File "ucrt\api-ms-win-crt-*.dll"
+      ExecWait '"$INSTDIR\VC_redist.x86.exe" /quiet /norestart'
+    ${EndIf}
+  !endif
+  !ifdef HAVE_UCRT_X64
+    File "VC_redist.x64.exe"
+    ${IfNot} ${AtLeastWin10}
+      ${IfNot} $osArch == "x86"
+        ExecWait '"$INSTDIR\VC_redist.x64.exe" /quiet /norestart'
+      ${EndIf}
     ${EndIf}
   !endif
 
@@ -473,9 +483,8 @@ Section "Uninstall"
   Delete "$INSTDIR\qt.conf"
   Delete "$INSTDIR\OpenConsole.exe"
   Delete "$INSTDIR\compiler_hint.lua"
-  Delete "$INSTDIR\ucrtbase.dll"
-  Delete "$INSTDIR\api-ms-win-core-*.dll"
-  Delete "$INSTDIR\api-ms-win-crt-*.dll"
+  Delete "$INSTDIR\VC_redist.x86.exe"
+  Delete "$INSTDIR\VC_redist.x64.exe"
 
   RMDir /r "$INSTDIR\templates"
   RMDir /r "$INSTDIR\mingw32"

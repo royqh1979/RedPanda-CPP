@@ -86,6 +86,7 @@ enum class KeywordType {
     DeclType, // decltype
     Operator, //operator
     Concept, //concept
+    If, //If
     Requires, //requires
     None, // It's a keyword but don't process here
     Extern,
@@ -114,6 +115,7 @@ enum class StatementKind  {
     Parameter,
     Block,
     Lambda,
+    Label,
     UserCodeSnippet,  // user code template
     Keyword, // keywords
     KeywordType, //keywords for type (for color management)

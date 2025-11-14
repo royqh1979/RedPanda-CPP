@@ -42,10 +42,11 @@ private:
     QSet<QString> mNonprefixedKeywordCache;
     QSet<QString> mPrefixedKeywordCache;
 protected:
+    bool isCommentStartChar(QChar ch) override;
     void procNull() override;
     bool isDirective(const QString& ident) override;
-    void handleDirective(int line, const QString& directive);
-    void handleIdent(int line, const QString& ident);
+    void handleDirective(int line, const QString& directive) override;
+    void handleIdent(int line, const QString& ident)  override;
     void setPrefixRegisterNames(bool prefix);
 public:
     void setLine(const QString &newLine, int lineNumber) override;

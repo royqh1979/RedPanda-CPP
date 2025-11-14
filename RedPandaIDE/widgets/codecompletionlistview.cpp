@@ -32,8 +32,8 @@ void CodeCompletionListView::keyPressEvent(QKeyEvent *event)
             || event->key() == Qt::Key_Down
             || event->key() == Qt::Key_PageDown
             || event->key() == Qt::Key_PageUp
-            || event->key() == Qt::Key_Home
-            || event->key() == Qt::Key_End
+//            || event->key() == Qt::Key_Home
+//            || event->key() == Qt::Key_End
             || event->key() == Qt::Key_CapsLock
             ) {
         QListView::keyPressEvent(event);

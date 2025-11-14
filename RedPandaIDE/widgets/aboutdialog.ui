@@ -28,6 +28,7 @@
     <widget class="QLabel" name="lblQt">
      <property name="font">
       <font>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -40,6 +41,7 @@
     <widget class="QLabel" name="lblCompileTime">
      <property name="font">
       <font>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -52,11 +54,12 @@
     <widget class="QLabel" name="label">
      <property name="font">
       <font>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="text">
-      <string>Copyright(C) 2021-2024 瞿华(royqh1979@gmail.com)</string>
+      <string notr="true">Copyright(C) 2021-2025 瞿华(royqh1979@gmail.com)</string>
      </property>
     </widget>
    </item>
@@ -64,6 +67,7 @@
     <widget class="QLabel" name="lblHomepage">
      <property name="font">
       <font>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>

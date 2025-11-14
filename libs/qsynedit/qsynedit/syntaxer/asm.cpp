@@ -1511,6 +1511,11 @@ ASMSyntaxer::TokenId ASMSyntaxer::getIdentType(const QString &ident, QChar nextC
     }
 }
 
+bool ASMSyntaxer::isCommentStartChar(QChar ch)
+{
+    return false;
+}
+
 bool ASMSyntaxer::isDirective(const QString& ident)
 {
     Q_UNUSED(ident);
@@ -1627,10 +1632,11 @@ void ASMSyntaxer::next()
         procSlash();
         break;
     case ';':
-        procSymbol();
-        break;
     case '#':
-        procComment();
+        if (isCommentStartChar(mLine[mRun]))
+            procComment();
+        else
+            procSymbol();
         break;
     case '.':
     case '%':

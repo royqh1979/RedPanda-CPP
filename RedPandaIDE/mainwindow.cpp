@@ -801,7 +801,8 @@ void MainWindow::updateEditorActions(const Editor *e)
         ui->actionTrim_trailing_spaces->setEnabled(true);
         mMenuInsertCodeSnippet->setEnabled(true);
 
-        ui->actionRename_Symbol->setEnabled(true);
+        //rename symbol needs parser
+        ui->actionRename_Symbol->setEnabled(e->parser() != nullptr);
 
         ui->actionLocate_in_Files_View->setEnabled(!e->isNew());
         ui->actionToggle_Readonly->setEnabled(!e->modified());
@@ -861,6 +862,7 @@ void MainWindow::updateCompileActions(const Editor *e)
         ui->actionRebuild->setEnabled(false);
         ui->actionGenerate_Assembly->setEnabled(false);
         ui->actionGenerate_GIMPLE->setEnabled(false);
+        ui->actionPreprocess->setEnabled(false);
         ui->actionDebug->setEnabled(false);
         mProblem_RunAllCases->setEnabled(false);
     } else {
@@ -937,6 +939,7 @@ void MainWindow::updateCompileActions(const Editor *e)
         ui->actionRebuild->setEnabled(canCompile);
         ui->actionGenerate_Assembly->setEnabled(canGenerateAssembly);
         ui->actionGenerate_GIMPLE->setEnabled(canGenerateAssembly);
+        ui->actionPreprocess->setEnabled(canGenerateAssembly);
         ui->actionDebug->setEnabled(canDebug);
         mProblem_RunAllCases->setEnabled(canRun && mOJProblemModel->count()>0);
     }
@@ -944,8 +947,6 @@ void MainWindow::updateCompileActions(const Editor *e)
         disableDebugActions();
     }
     ui->actionStop_Execution->setEnabled(mCompilerManager->running() || mDebugger->executing());
-
-
 }
 
 void MainWindow::updateEditorColorSchemes()
@@ -6293,9 +6294,11 @@ void MainWindow::onRunFinished()
 {
     updateCompileActions();
     if (pSettings->executor().minimizeOnRun()) {
-        showNormal();
+        showNormal();        
     }
     updateAppTitle();
+    raise(); // for mac OS?
+    activateWindow();
 }
 
 void MainWindow::onRunPausingForFinish()
@@ -6984,7 +6987,7 @@ void MainWindow::updateCaretActions()
 
 void MainWindow::on_actionBack_triggered()
 {
-    PEditorCaret caret = mCaretList.gotoAndGetPrevious();
+    const PEditorCaret &caret = mCaretList.gotoAndGetPrevious();
     mCaretList.pause();
     if (caret) {
         caret->editor->setCaretPositionAndActivate(caret->line,caret->aChar);
@@ -6996,7 +6999,7 @@ void MainWindow::on_actionBack_triggered()
 
 void MainWindow::on_actionForward_triggered()
 {
-    PEditorCaret caret = mCaretList.gotoAndGetNext();
+    const PEditorCaret &caret = mCaretList.gotoAndGetNext();
     mCaretList.pause();
     if (caret) {
         caret->editor->setCaretPositionAndActivate(caret->line,caret->aChar);
@@ -8413,14 +8416,21 @@ void MainWindow::on_actionRename_Symbol_triggered()
             return;
         }
     }
+    QString word;
     //not in project
     PStatement oldStatement = editor->parser()->findStatementOf(
                     editor->filename(),
                     expression,
                     oldCaretXY.line);
-    if (!oldStatement)
-        return;
-    QString word = oldStatement->command;
+    bool isUndefinedLocalVar = false;
+    if (!oldStatement) {
+        if (expression.length()!=1)
+            return;
+        word = expression[0];
+        isUndefinedLocalVar = true;
+    } else {
+        word = oldStatement->command;
+    }
     if (word.isEmpty())
         return;
     if (isCppKeyword(word)) {
@@ -8444,7 +8454,11 @@ void MainWindow::on_actionRename_Symbol_triggered()
     }
     CppRefacter refactor;
 
-    refactor.renameSymbol(editor,oldCaretXY,newWord);
+    if (isUndefinedLocalVar) {
+        refactor.renameUndefinedLocalVariable(editor,oldCaretXY,newWord);
+    } else {
+        refactor.renameSymbol(editor,oldCaretXY,newWord);
+    }
     editor->reparse(true);
     editor->checkSyntaxInBack();
     editor->reparseTodo();
@@ -8935,6 +8949,7 @@ void MainWindow::onAddProblem()
         name = tr("Problem %1").arg(startCount+1);
         if (!mOJProblemSetModel->problemNameUsed(name))
             break;
+        startCount++;
     }
     POJProblem problem = std::make_shared<OJProblem>();
     problem->setName(name);
@@ -10276,6 +10291,7 @@ void MainWindow::on_actionNew_GAS_File_triggered()
     newEditor("s");
 }
 
+#if defined(ARCH_X86_64) || defined(ARCH_X86)
 void MainWindow::on_actionNew_NASM_File_triggered()
 {
     if (mProject) {
@@ -10290,6 +10306,7 @@ void MainWindow::on_actionNew_NASM_File_triggered()
     }
     newEditor("asm");
 }
+#endif
 
 void MainWindow::on_actionGNU_Assembler_Manual_triggered()
 {

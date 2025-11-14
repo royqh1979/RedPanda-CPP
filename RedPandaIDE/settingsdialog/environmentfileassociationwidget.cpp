@@ -250,7 +250,7 @@ bool FileAssociationModel::registerFileType(const QString &filetype, const QStri
     if (!writeRegistry(HKEY_CLASSES_ROOT, keyString, value))
         return false;
     keyString = QString("%1\\Shell\\%2\\Command").arg(filetype, verb);
-    value = serverApp+" \"%1\"";
+    value = QString("\"%1\"").arg(serverApp)+" \"%1\"";
     if (!writeRegistry(HKEY_CLASSES_ROOT, keyString, value))
         return false;
     return true;
