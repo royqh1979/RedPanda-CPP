@@ -46,15 +46,15 @@ private:
 
     // Exporter interface
 protected:
-    void formatAttributeDone(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles);
-    void formatAttributeInit(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles);
-    void formatAfterLastAttribute();
-    void formatBeforeFirstAttribute(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles);
-    void formatNewLine();
-    QString getFooter();
-    QString getFormatName();
-    QString getHeader();
-    void setTokenAttribute(PTokenAttribute Attri);
+    void formatAttributeDone(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles) override;
+    void formatAttributeInit(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles) override;
+    void formatAfterLastAttribute() override;
+    void formatBeforeFirstAttribute(bool backgroundChanged, bool foregroundChanged, FontStyles fontStyles) override;
+    void formatNewLine() override;
+    QString getFooter() override;
+    QString getFormatName() override;
+    QString getHeader() override;
+    void setTokenAttribute(PTokenAttribute Attri) override;
 protected:
     QString getStartLineNumberString(int startLine, int endLine) override;
     QString getEndLineNumberString(int startLine, int endLine) override;
