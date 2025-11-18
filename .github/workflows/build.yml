@@ -66,8 +66,8 @@ jobs:
 
       - name: Build
         run: |
-          ./packages/msys/build-mingw.sh --ucrt x64 --ucrt x86
-          ./packages/msys/build-mingw.sh --mingw --ucrt x64 --ucrt x86
+          ./packages/msys/build-mingw.sh --ucrt
+          ./packages/msys/build-mingw.sh --mingw --ucrt
 
       - name: Upload
         uses: actions/upload-artifact@v4

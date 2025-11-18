@@ -76,7 +76,7 @@ Extra arguments for `build-mingw.sh`:
 - `--mingw`: alias for `--mingw64` (x64 app).
 - `--gcc-linux-x86-64`: add `assets/gcc-linux-x86-64.7z` and `assets/alpine-minirootfs-x86_64.tar` to the package.
 - `--gcc-linux-aarch64`: add `assets/gcc-linux-aarch64.7z` and `assets/alpine-minirootfs-aarch64.tar` to the package.
-- `--ucrt <build>`: include UCRT installer (VC_redist) in the package. `<arch>` can be x86 or x64. This option can be specified multiple times.
+- `--ucrt`: include UCRT installer (VC_redist) in the package.
 
 ## Windows NT 5.x Qt Library with MinGW Lite Toolchain
 
