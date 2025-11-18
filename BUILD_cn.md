@@ -76,7 +76,7 @@
 - `--mingw`：`--mingw64`（x64 程序）的别名。
 - `--gcc-linux-x86-64`：把 `assets/gcc-linux-x86-64.7z` 和 `assets/alpine-minirootfs-x86_64.tar` 添加到包中。
 - `--gcc-linux-aarch64`：把 `assets/gcc-linux-aarch64.7z` 和 `assets/alpine-minirootfs-aarch64.tar` 添加到包中。
-- `--ucrt <arch>`：把 UCRT 安装程序添加到包中。`<arch>` 可选 `x86` 或 `x64`。此选项可以添加多次。
+- `--ucrt`：把 UCRT 安装程序添加到包中。
 
 ## 用于 Windows NT 5.x 的 Qt 库 + MinGW Lite 工具链
 
