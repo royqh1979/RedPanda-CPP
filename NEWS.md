@@ -35,6 +35,7 @@ Red Panda C++ Version 3.4
   - fix: Double click a file in windows explore won't bring the app to front.
   - enhancement: rename undefined local symbols.
   - enhancement: Add new compile option (-fno-ms-extentions) and enabled by default.
+  - fix: Background color not correct handled in CPU dialog. (by CyanoHao)
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
