@@ -3046,11 +3046,14 @@ void CppParser::handleLambda(int index, int maxIndex)
     if (argEnd > argStart)
         scanMethodArgs(lambdaBlock,argStart);
     addSoloScopeLevel(lambdaBlock,mTokenizer[bodyStart]->line);
-    int oldIndex = mIndex;
-    mIndex = bodyStart+1;
-    while (handleStatement(bodyEnd));
-    Q_ASSERT(mIndex == bodyEnd);
-    mIndex = oldIndex;
+    if (bodyStart+1 < maxIndex && mTokenizer[bodyStart+1]->text!="}") {
+        int oldIndex = mIndex;
+        mIndex = bodyStart+1;
+        if (mIndex < maxIndex  && mTokenizer[mIndex])
+        while (handleStatement(bodyEnd));
+        Q_ASSERT(mIndex == bodyEnd);
+        mIndex = oldIndex;
+    }
     removeScopeLevel(mTokenizer[bodyEnd]->line, maxIndex);
 }
 
