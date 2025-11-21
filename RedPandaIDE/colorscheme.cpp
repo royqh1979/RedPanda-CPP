@@ -689,6 +689,9 @@ bool ColorManager::saveScheme(const QString &name)
     PColorScheme scheme = get(name);
     if (!scheme)
         return false;
+    //bundled scheme no need to save
+    if (scheme->bundled() && !scheme->customed())
+        return true;
     QString newFilepath = generateFullPathname(name,scheme->bundled(),scheme->customed());
     scheme->save(newFilepath);
     return true;

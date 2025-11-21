@@ -134,19 +134,11 @@ Section "$(SectionMainName)" SectionMain
   !endif
 
   # UCRT installers are for target platform. host switches does not apply.
-  # to avoid too many switches, we just install all versions (if applicable).
-  !ifdef HAVE_UCRT_X86
+  # to avoid too many switches, we just install it.
+  !ifdef HAVE_UCRT
     File "VC_redist.x86.exe"
     ${IfNot} ${AtLeastWin10}
       ExecWait '"$INSTDIR\VC_redist.x86.exe" /quiet /norestart'
-    ${EndIf}
-  !endif
-  !ifdef HAVE_UCRT_X64
-    File "VC_redist.x64.exe"
-    ${IfNot} ${AtLeastWin10}
-      ${IfNot} $osArch == "x86"
-        ExecWait '"$INSTDIR\VC_redist.x64.exe" /quiet /norestart'
-      ${EndIf}
     ${EndIf}
   !endif
 

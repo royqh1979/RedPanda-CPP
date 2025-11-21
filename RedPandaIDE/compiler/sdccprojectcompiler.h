@@ -29,7 +29,7 @@ public:
     SDCCProjectCompiler(std::shared_ptr<Project> project);
     SDCCProjectCompiler(const SDCCProjectCompiler&)=delete;
     SDCCProjectCompiler& operator=(const SDCCProjectCompiler&)=delete;
-    void buildMakeFile();
+    void buildMakeFile() override;
 
 private:
     void createStandardMakeFile();

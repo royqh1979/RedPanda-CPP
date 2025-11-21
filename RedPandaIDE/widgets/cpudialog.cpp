@@ -55,7 +55,7 @@ CPUDialog::CPUDialog(QWidget *parent) :
     item = pColorManager->getItem(pSettings->editor().colorScheme(),COLOR_SCHEME_TEXT);
     if (item) {
         ui->txtCode->setForegroundColor(item->foreground());
-        ui->txtCode->setBackgroundColor(item->background());
+        ui->txtCode->setBackgroundColor(alphaBlend(palette().color(QPalette::Base), item->background()));
     } else {
         ui->txtCode->setForegroundColor(palette().color(QPalette::Text));
         ui->txtCode->setBackgroundColor(palette().color(QPalette::Base));

@@ -17,6 +17,7 @@ Red Panda C++ Version 3.4
   - fix: Class name is wrongly syntaxed colored in its definition when it has a constructor.
   - fix: Mouse tip of class displays its constructor info in its definition.
   - fix: Goto defintion/declaration will jump to constructor instead of the class in the class definition.
+  - fix: Delete a customed bundled color scheme and save, will get wrong save error message.
   - fix: Wrong error message when delete a customed bundled syntax color scheme.
   - fix: Infinite loop when generating new problem set name.
   - enhancement: Completion suggestion for goto labels;
@@ -34,6 +35,7 @@ Red Panda C++ Version 3.4
   - fix: Double click a file in windows explore won't bring the app to front.
   - enhancement: rename undefined local symbols.
   - enhancement: Add new compile option (-fno-ms-extentions) and enabled by default.
+  - fix: Background color not correct handled in CPU dialog. (by CyanoHao)
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
