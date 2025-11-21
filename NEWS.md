@@ -38,6 +38,8 @@ Red Panda C++ Version 3.4
   - fix: Background color not correct handled in CPU dialog. (by CyanoHao)
   - fix: check color validity before apply it to suggestion list popup.
   - fix: crashing when parsing statements like "[] {}".
+  - fix: spaces prevent '\' at the end of cpp style comments  to ignore newline.
+  - fix: '\' at the end of cpp style comments are not handled by the parser.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

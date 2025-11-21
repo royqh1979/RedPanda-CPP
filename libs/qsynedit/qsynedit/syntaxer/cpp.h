@@ -48,7 +48,7 @@ public:
     enum RangeState {
         rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment,
         rsString, rsStringNextLine, rsStringUnfinished,
-        rsMultiLineString, rsMultiLineDirective, rsCppComment,
+        rsMultiLineString, rsMultiLineDirective, rsCppComment, rsCppCommentRemaining,
         rsDocstring,
         rsStringEscapeSeq,
         rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,

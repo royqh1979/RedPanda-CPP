@@ -1018,11 +1018,22 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
     for (const QString& line:text) {
         QString s;
         int pos = 0;
-        bool stopProcess=false;
         int lineLen=line.length();
         s.reserve(line.length());
         while (pos<lineLen) {
             QChar ch =line[pos];
+            if (currentType == ContentType::CppComment) {
+                bool endWithSlash=false;
+                while (pos<lineLen) {
+                    ch = line[pos];
+                    if (!isSpaceChar(ch)) {
+                        endWithSlash = (ch=='\\');
+                    }
+                    pos++;
+                }
+                currentType = (endWithSlash?ContentType::CppComment:ContentType::Other);
+                break;
+            }
             if (currentType == ContentType::AnsiCComment) {
                 if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
                     pos+=2;
@@ -1095,8 +1106,9 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
             case '/':
                 if (currentType == ContentType::Other) {
                     if (pos+1<lineLen && line[pos+1]=='/') {
-                        // line comment , skip all remainings of the current line
-                        stopProcess = true;
+                        // line comment
+                        pos++;
+                        currentType = ContentType::CppComment;
                         break;
                     } else if (pos+1<lineLen && line[pos+1]=='*') {
                         /* ansi c comment */
@@ -1125,8 +1137,6 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
             default:
                 s+=ch;
             }
-            if (stopProcess)
-                break;
             pos++;
         }
         result.append(s.trimmed());

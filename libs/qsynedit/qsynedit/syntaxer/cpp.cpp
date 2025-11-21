@@ -254,10 +254,12 @@ void CppSyntaxer::procCppStyleComment()
     }
     mTokenId = TokenId::Comment;
     bool isWord = isIdentChar(mLine[mRun]);
+    bool multiLineStatement=false;
     while (mRun<mLineSize) {
         if (isSpaceChar(mLine[mRun])) {
             break;
         } else {
+            multiLineStatement = (mLine[mRun]=='\\');
             if (isWord) {
                 if (!isIdentChar(mLine[mRun]))
                     break;
@@ -268,9 +270,9 @@ void CppSyntaxer::procCppStyleComment()
         }
         mRun++;
     }
-    if (mRun<mLineSize) {
-        mRange.state = RangeState::rsCppComment;
-    } else if (mRun-1>=0 && mLine[mRun-1] == '\\' ) { // continues on next line
+    if (multiLineStatement) { // continues on next line
+        mRange.state = RangeState::rsCppCommentRemaining;
+    } else if (mRun<mLineSize) {
         mRange.state = RangeState::rsCppComment;
     } else
         mRange.state = RangeState::rsUnknown;
@@ -1655,6 +1657,7 @@ void CppSyntaxer::next()
             procString();
             break;
         case RangeState::rsCppComment:
+        case RangeState::rsCppCommentRemaining:
             //qDebug()<<"*2-0-0*";
             procCppStyleComment();
             break;
