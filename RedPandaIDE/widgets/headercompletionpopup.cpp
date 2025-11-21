@@ -96,12 +96,12 @@ bool HeaderCompletionPopup::search(const QString &phrase, bool autoHideOnSingleR
     if (!mCompletionList.isEmpty()) {
         QString schemaName = pSettings->editor().colorScheme();
         PColorSchemeItem item = pColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
-        if (item)
+        if (item && item->background().isValid())
             mDelegate->setCurrentSelectionBackColor(item->background());
         else
             mDelegate->setCurrentSelectionBackColor(palette().highlight().color());
         item = pColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
-        if (item)
+        if (item && item->foreground().isValid())
             mDelegate->setMatchedColor(item->foreground());
         else
             mDelegate->setMatchedColor(palette().color(QPalette::HighlightedText));
