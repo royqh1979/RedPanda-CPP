@@ -28,7 +28,10 @@
 #include <QTime>
 
 //Enable debug log
-#define PARSER_DEBUG_LOG
+#ifdef QT_DEBUG
+//#define PARSER_DEBUG_LOG
+#endif
+
 #ifdef PARSER_DEBUG_LOG
 const QString DebugLogFolder{"r:/"};
 #endif
