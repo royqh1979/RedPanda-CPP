@@ -1009,6 +1009,21 @@ QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
     return tokens;
 }
 
+void CppPreprocessor::skipCppCommentLine(const int &lineLen, const QString& line,
+                        int &pos, ContentType &currentType) {
+    currentType = ContentType::Other;
+    bool endWithSlash=false;
+    while (pos<lineLen) {
+        QChar ch = line[pos];
+        if (!CppPreprocessor::isSpaceChar(ch)) {
+            endWithSlash = (ch=='\\');
+        }
+        pos++;
+    }
+    if (endWithSlash)
+        currentType = ContentType::CppComment;
+}
+
 QStringList CppPreprocessor::removeComments(const QStringList &text)
 {
     QStringList result;
@@ -1020,22 +1035,15 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
         int lineLen=line.length();
         QString s;
         if (currentType == ContentType::CppComment) {
-            currentType = ContentType::Other;
-            bool endWithSlash=false;
-            while (pos<lineLen) {
-                QChar ch = line[pos];
-                if (!isSpaceChar(ch)) {
-                    endWithSlash = (ch=='\\');
-                }
-                pos++;
-            }
-            if (endWithSlash)
-                currentType = ContentType::CppComment;
+            skipCppCommentLine(lineLen,line,pos,currentType);
         } else {
             s.reserve(line.length());
             while (pos<lineLen) {
                 QChar ch =line[pos];
-                if (currentType == ContentType::AnsiCComment) {
+                if (currentType == ContentType::CppComment) {
+                    skipCppCommentLine(lineLen,line,pos,currentType);
+                    break;
+                } else if (currentType == ContentType::AnsiCComment) {
                     if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
                         pos+=2;
                         currentType = ContentType::Other;

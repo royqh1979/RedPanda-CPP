@@ -58,7 +58,6 @@ class CppPreprocessor
         RawString,
         Other
     };
-
 public:
 
     explicit CppPreprocessor();
@@ -203,7 +202,10 @@ private:
 
     void parseArgs(PDefine define);
 
+
     QStringList removeComments(const QStringList& text);
+    void skipCppCommentLine(const int &lineLen, const QString& line,
+                            int &pos, ContentType &currentType);
     /*
      * '_','a'..'z','A'..'Z','0'..'9'
      */
