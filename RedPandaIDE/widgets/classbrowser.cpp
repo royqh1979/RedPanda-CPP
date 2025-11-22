@@ -145,10 +145,17 @@ QVariant ClassBrowserModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         if (node->statement) {
             if (!(node->statement->type.isEmpty())) {
-                if ((node->statement->kind == StatementKind::Function)
-                     || (node->statement->kind == StatementKind::Variable)
-                     || (node->statement->kind == StatementKind::Typedef)
-                     ) {
+                if ( (node->statement->kind == StatementKind::Variable)
+                     || (node->statement->kind == StatementKind::Typedef) ) {
+                    if (node->statement->args.isEmpty())
+                        return node->statement->command + " : " + node->statement->type;
+                    else if (node->statement->args.startsWith("("))
+                        return QString("%1 : %2 (*)%3").arg(node->statement->command,
+                                                            node->statement->type,
+                                                            node->statement->args);
+                    else
+                        return node->statement->command + " : " + node->statement->type + node->statement->args;
+                } else if (node->statement->kind == StatementKind::Function) {
                     return node->statement->command + node->statement->args + " : " + node->statement->type;
                 } else if (node->statement->kind == StatementKind::OverloadedOperator) {
                     if (!CppParser::isIdentifier(node->statement->command)) {

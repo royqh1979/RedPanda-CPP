@@ -28,7 +28,7 @@
 #include <QTime>
 
 //Enable debug log
-//#define PARSER_DEBUG_LOG
+#define PARSER_DEBUG_LOG
 #ifdef PARSER_DEBUG_LOG
 const QString DebugLogFolder{"r:/"};
 #endif
@@ -1324,7 +1324,11 @@ QString CppParser::prettyPrintStatement(const PStatement& statement, const QStri
         if (statement->scope!= StatementScope::Local)
             result = getScopePrefix(statement)+ ' '; // public
         result += statement->type + ' '; // void
-        result += statement->fullName; // A::B::C::Bar
+        if (statement->kind == StatementKind::Variable
+                && statement->args.startsWith("("))
+            result += "(*"+statement->fullName+")";
+        else
+            result += statement->fullName; // A::B::C::Bar
         result += statement->args; // (int a)
         break;
     case StatementKind::OverloadedOperator:
@@ -4404,7 +4408,6 @@ void CppParser::handleVar(const QString& typePrefix,bool isExtern,bool isStatic,
                 mIndex=indexOfNextPeriodOrSemicolon(argEnd+1, maxIndex);
                 break;
             }
-            //not function pointer, fall through
             [[fallthrough]];
         case '{':
             tempType="";
