@@ -1602,9 +1602,9 @@ void QSynEdit::doToggleBlockComment()
         if (pos>=0) {
             newText.remove(pos,endLen);
         }
-        setSelText(newText);
+        setSelText(newText.trimmed());
     } else {
-        QString newText=QString("%1 %2 %3").arg(beginSymbol,selText(),endSymbol);
+        QString newText=QString("%1%2%3").arg(beginSymbol,selText(),endSymbol);
         setSelText(newText);
     }
 
