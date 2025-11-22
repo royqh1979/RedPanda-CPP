@@ -61,5 +61,9 @@
     {
         "header": "winsock2.h",
         "links": "-lws2_32"
+    },
+    {
+        "header": "winsock.h",
+        "links": "-lws2_32"
     }
 ]

@@ -40,6 +40,7 @@ Red Panda C++ Version 3.4
   - fix: crashing when parsing statements like "[] {}".
   - fix: spaces prevent '\' at the end of cpp style comments  to ignore newline.
   - fix: '\' at the end of cpp style comments are not handled by the parser.
+  - enhancement: add winsock.h to auto link default settings.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.
