@@ -1627,11 +1627,18 @@ void CppSyntaxer::next()
         case RangeState::rsString:
         case RangeState::rsChar:
             mRange.state = RangeState::rsUnknown;
+            break;
+        case RangeState::rsCppCommentRemaining:
+            mRange.state = RangeState::rsCppComment;
         }
     }
     mTokenPos = mRun;
-    if (mLineSize == 0 && mRange.state == RangeState::rsString)
-        mRange.state=RangeState::rsUnknown;
+    if (mLineSize == 0) {
+        if ((mRange.state == RangeState::rsString)
+                || (mRange.state == RangeState::rsCppComment)
+                || (mRange.state == RangeState::rsMultiLineDirective) )
+            mRange.state=RangeState::rsUnknown;
+    }
     do {
         if (mRun>=mLineSize) {
             procNull();

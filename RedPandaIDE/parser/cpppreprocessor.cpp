@@ -1016,128 +1016,130 @@ QStringList CppPreprocessor::removeComments(const QStringList &text)
     QString delimiter;
 
     for (const QString& line:text) {
-        QString s;
         int pos = 0;
         int lineLen=line.length();
-        s.reserve(line.length());
-        while (pos<lineLen) {
-            QChar ch =line[pos];
-            if (currentType == ContentType::CppComment) {
-                bool endWithSlash=false;
-                while (pos<lineLen) {
-                    ch = line[pos];
-                    if (!isSpaceChar(ch)) {
-                        endWithSlash = (ch=='\\');
-                    }
-                    pos++;
+        QString s;
+        if (currentType == ContentType::CppComment) {
+            currentType = ContentType::Other;
+            bool endWithSlash=false;
+            while (pos<lineLen) {
+                QChar ch = line[pos];
+                if (!isSpaceChar(ch)) {
+                    endWithSlash = (ch=='\\');
                 }
-                currentType = (endWithSlash?ContentType::CppComment:ContentType::Other);
-                break;
+                pos++;
             }
-            if (currentType == ContentType::AnsiCComment) {
-                if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
-                    pos+=2;
-                    currentType = ContentType::Other;
-                } else {
-                    pos+=1;
-                }
-                continue;
-            }
-            switch (ch.unicode()) {
-            case '"':
-                switch (currentType) {
-                case ContentType::String:
-                    currentType=ContentType::Other;
-                    break;
-                case ContentType::RawString:
-                    if (QStringView(line.constData(), pos).endsWith(')'+delimiter))
+            if (endWithSlash)
+                currentType = ContentType::CppComment;
+        } else {
+            s.reserve(line.length());
+            while (pos<lineLen) {
+                QChar ch =line[pos];
+                if (currentType == ContentType::AnsiCComment) {
+                    if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
+                        pos+=2;
                         currentType = ContentType::Other;
-                    break;
-                case ContentType::Other:
-                    currentType=ContentType::String;
-                    break;
-                case ContentType::RawStringPrefix:
-                    delimiter+=ch;
-                    break;
-                default:
-                    break;
+                    } else {
+                        pos+=1;
+                    }
+                    continue;
                 }
-                s+=ch;
-                break;
-            case '\'':
-                switch (currentType) {
-                case ContentType::Character:
-                    currentType=ContentType::Other;
-                    break;
-                case ContentType::Other:
-                    currentType=ContentType::Character;
-                    break;
-                case ContentType::RawStringPrefix:
-                    delimiter+=ch;
-                    break;
-                default:
-                    break;
-                }
-                s+=ch;
-                break;
-            case 'R':
-                if (currentType == ContentType::Other && pos+1<lineLen && line[pos+1]=='"') {
-                    s+=ch;
-                    pos++;
-                    ch = line[pos];
-                    currentType=ContentType::RawStringPrefix;
-                    delimiter = "";
-                }
-                if (currentType == ContentType::RawStringPrefix ) {
-                    delimiter += ch;
-                }
-                s+=ch;
-                break;
-            case '(':
-                switch(currentType) {
-                case ContentType::RawStringPrefix:
-                    currentType = ContentType::RawString;
-                    break;
-                default:
-                    break;
-                }
-                s+=ch;
-                break;
-            case '/':
-                if (currentType == ContentType::Other) {
-                    if (pos+1<lineLen && line[pos+1]=='/') {
-                        // line comment
-                        pos++;
-                        currentType = ContentType::CppComment;
+                switch (ch.unicode()) {
+                case '"':
+                    switch (currentType) {
+                    case ContentType::String:
+                        currentType=ContentType::Other;
                         break;
-                    } else if (pos+1<lineLen && line[pos+1]=='*') {
-                        /* ansi c comment */
-                        pos++;
-                        currentType = ContentType::AnsiCComment;
+                    case ContentType::RawString:
+                        if (QStringView(line.constData(), pos).endsWith(')'+delimiter))
+                            currentType = ContentType::Other;
+                        break;
+                    case ContentType::Other:
+                        currentType=ContentType::String;
+                        break;
+                    case ContentType::RawStringPrefix:
+                        delimiter+=ch;
+                        break;
+                    default:
                         break;
                     }
-                }
-                s+=ch;
-                break;
-            case '\\':
-                switch (currentType) {
-                case ContentType::String:
-                case ContentType::Character:
-                    pos++;
                     s+=ch;
-                    if (pos<lineLen) {
+                    break;
+                case '\'':
+                    switch (currentType) {
+                    case ContentType::Character:
+                        currentType=ContentType::Other;
+                        break;
+                    case ContentType::Other:
+                        currentType=ContentType::Character;
+                        break;
+                    case ContentType::RawStringPrefix:
+                        delimiter+=ch;
+                        break;
+                    default:
+                        break;
+                    }
+                    s+=ch;
+                    break;
+                case 'R':
+                    if (currentType == ContentType::Other && pos+1<lineLen && line[pos+1]=='"') {
+                        s+=ch;
+                        pos++;
                         ch = line[pos];
+                        currentType=ContentType::RawStringPrefix;
+                        delimiter = "";
+                    }
+                    if (currentType == ContentType::RawStringPrefix ) {
+                        delimiter += ch;
+                    }
+                    s+=ch;
+                    break;
+                case '(':
+                    switch(currentType) {
+                    case ContentType::RawStringPrefix:
+                        currentType = ContentType::RawString;
+                        break;
+                    default:
+                        break;
+                    }
+                    s+=ch;
+                    break;
+                case '/':
+                    if (currentType == ContentType::Other) {
+                        if (pos+1<lineLen && line[pos+1]=='/') {
+                            // line comment
+                            pos++;
+                            currentType = ContentType::CppComment;
+                            break;
+                        } else if (pos+1<lineLen && line[pos+1]=='*') {
+                            /* ansi c comment */
+                            pos++;
+                            currentType = ContentType::AnsiCComment;
+                            break;
+                        }
+                    }
+                    s+=ch;
+                    break;
+                case '\\':
+                    switch (currentType) {
+                    case ContentType::String:
+                    case ContentType::Character:
+                        pos++;
+                        s+=ch;
+                        if (pos<lineLen) {
+                            ch = line[pos];
+                            s+=ch;
+                        }
+                        break;
+                    default:
                         s+=ch;
                     }
                     break;
                 default:
                     s+=ch;
                 }
-                break;
-            default:
-                s+=ch;
+                pos++;
             }
-            pos++;
         }
         result.append(s.trimmed());
     }
