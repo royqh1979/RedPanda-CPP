@@ -8807,7 +8807,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+4125"/>
+        <location filename="../settings.cpp" line="+4135"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-391"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
         <translation>Impossível ler o arquivo &apos;%1&apos;.</translation>
@@ -9092,7 +9092,7 @@
         <translation>Esquema &apos;%1&apos; existente!</translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+143"/>
         <source>default</source>
         <translation>padrão</translation>
     </message>
@@ -9128,7 +9128,7 @@
         <translation>Impossível carregar configurações para autolink</translation>
     </message>
     <message>
-        <location filename="../parser/cppparser.cpp" line="+1351"/>
+        <location filename="../parser/cppparser.cpp" line="+1358"/>
         <source>constructor</source>
         <translation>constructor</translation>
     </message>
@@ -9207,7 +9207,7 @@
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+329"/>
+        <location line="+334"/>
         <source>Code Generation</source>
         <translation>Geração de código</translation>
     </message>
@@ -9220,7 +9220,7 @@
         <translation type="vanished">Otimizar menor, porém mantendo completa compatibilidade (-tune)</translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-242"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>Habilitar uso de instruções específicar (-mx)</translation>
     </message>
@@ -9278,7 +9278,7 @@
         <translation>Gerar informação de perfil para análises (-pg)</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+39"/>
         <source>Linker</source>
         <translation>Linker</translation>
     </message>
@@ -9302,7 +9302,7 @@
         <translation>Não gerar executável (-s)</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-47"/>
         <source>Generate debugging information (-g3)</source>
         <translation>Gerar informação para depuração (-g3)</translation>
     </message>
@@ -9319,7 +9319,7 @@
         <translation type="vanished">Não montar, compilar e gerar código em assembly (-S)</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+43"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>Usar pipes em lugar de arquivos temporários durante compilação (-pipe)</translation>
     </message>
@@ -9341,7 +9341,7 @@
         <translation type="vanished">Compilador não configurado.</translation>
     </message>
     <message>
-        <location line="-383"/>
+        <location line="-390"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9361,7 +9361,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+366"/>
+        <location line="+373"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>Gostaria que o Red Panda C++ procurasse por compiladores nos seguintes locais: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </translation>
     </message>
@@ -9494,7 +9494,7 @@
         <translation type="vanished">Deixar essas pastas resultará em problemas durante a compilação.</translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="-310"/>
+        <location filename="../colorscheme.cpp" line="-313"/>
         <source>Gloabal Variable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9505,7 +9505,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="-112"/>
+        <location filename="../compiler/compilerinfo.cpp" line="-117"/>
         <source>C++ Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9580,7 +9580,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+221"/>
+        <location line="+226"/>
         <source>Processor (-m)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9600,7 +9600,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-276"/>
+        <location line="-281"/>
         <source>32-bit pointer, 32-bit instruction (-m32)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9625,7 +9625,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+26"/>
+        <source>Errors</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Function without return type (return-type)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Variable lenght array (vla)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>PE Stack Size</source>
         <translation type="unfinished"></translation>
     </message>

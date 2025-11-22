@@ -42,6 +42,7 @@ Red Panda C++ Version 3.4
   - fix: '\' at the end of cpp style comments are not handled by the parser.
   - enhancement: add winsock.h to auto link default settings.
   - enhancement: beautify description of function pointers.
+  - enhancement: New compiler errors options.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

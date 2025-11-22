@@ -218,6 +218,11 @@ void CompilerInfo::prepareCompilerOptions()
     sl.append(QPair<QString,QString>("Undefined","undefined"));
     addOption(CC_CMD_OPT_ADDRESS_SANITIZER , QObject::tr("Enable Sanitizer (-fsanitize=)"), groupName, true, true, true, "-fsanitize=",CompilerOptionType::Choice,sl);
 
+    // Errors
+    groupName = QObject::tr("Errors");
+    addOption(CC_CMD_OPT_ERROR_RETURN_TYPE, QObject::tr("Function without return type (return-type)"), groupName, true, true, false, "-Werror=return-type");
+    addOption(CC_CMD_OPT_ERROR_VLA,QObject::tr("Variable lenght array (vla)"), groupName, true, true, false, "-Werror=vla");
+
     // Output
     //groupName = QObject::tr("Output");
     //addOption(CC_CMD_OPT_VERBOSE_ASM, QObject::tr("Put comments in generated assembly code (-fverbose-asm)"), groupName, true, true, false, "-fverbose-asm");

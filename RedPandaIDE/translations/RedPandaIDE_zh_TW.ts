@@ -8311,7 +8311,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+4125"/>
+        <location filename="../settings.cpp" line="+4135"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-391"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
         <translation type="unfinished">無法讀取檔案&apos;%1&apos;.</translation>
@@ -8593,7 +8593,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+143"/>
         <source>default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8625,7 +8625,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../parser/cppparser.cpp" line="+1351"/>
+        <location filename="../parser/cppparser.cpp" line="+1358"/>
         <source>constructor</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8636,12 +8636,12 @@
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+329"/>
+        <location line="+334"/>
         <source>Code Generation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-242"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8696,7 +8696,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+29"/>
         <source>Linker</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8716,12 +8716,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-47"/>
         <source>Generate debugging information (-g3)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+43"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8737,7 +8737,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-379"/>
+        <location line="-386"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8757,7 +8757,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+366"/>
+        <location line="+373"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation type="unfinished"></translation>
     </message>
@@ -8874,7 +8874,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="-112"/>
+        <location filename="../compiler/compilerinfo.cpp" line="-117"/>
         <source>C++ Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8884,7 +8884,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../colorscheme.cpp" line="-274"/>
+        <location filename="../colorscheme.cpp" line="-277"/>
         <source>Reserve Word for Types</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8944,7 +8944,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+221"/>
+        <location line="+226"/>
         <source>Processor (-m)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8964,7 +8964,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-276"/>
+        <location line="-281"/>
         <source>32-bit pointer, 32-bit instruction (-m32)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8989,7 +8989,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+26"/>
+        <source>Errors</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Function without return type (return-type)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Variable lenght array (vla)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>PE Stack Size</source>
         <translation type="unfinished"></translation>
     </message>

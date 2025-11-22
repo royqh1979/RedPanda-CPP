@@ -1895,6 +1895,9 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
                                                      {CC_CMD_OPT_STACK_PROTECTOR, "ccCmdOptStackProtector"},
                                                      {CC_CMD_OPT_ADDRESS_SANITIZER, "ccCmdOptAddressSanitizer"},
 
+                                                     {CC_CMD_OPT_ERROR_RETURN_TYPE, "ccCmdOptErrorReturnType"},
+                                                     {CC_CMD_OPT_ERROR_VLA, "ccCmdOptErrorVLA"},
+
                                                      {CC_CMD_OPT_USE_PIPE, "ccCmdOptUsePipe"},
                                                      {LINK_CMD_OPT_NO_LINK_STDLIB, "linkCmdOptNoLinkStdlib"},
                                                      {LINK_CMD_OPT_NO_CONSOLE, "linkCmdOptNoConsole"},
@@ -3170,6 +3173,10 @@ static void setReleaseOptions(Settings::PCompilerSet pSet) {
     pSet->setCompileOption(CC_CMD_OPT_OPTIMIZE,"2");
     pSet->setCompileOption(LINK_CMD_OPT_STRIP_EXE, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
+
+    pSet->setCompileOption(CC_CMD_OPT_NO_MS_EXTENSIONS, COMPILER_OPTION_ON);
+    pSet->setCompileOption(CC_CMD_OPT_ERROR_RETURN_TYPE, COMPILER_OPTION_ON);
+    pSet->setCompileOption(CC_CMD_OPT_ERROR_VLA, COMPILER_OPTION_ON);
     pSet->setStaticLink(true);
 }
 
@@ -3180,6 +3187,9 @@ static void setDebugOptions(Settings::PCompilerSet pSet, bool enableAsan = false
     pSet->setCompileOption(CC_CMD_OPT_NO_MS_EXTENSIONS, COMPILER_OPTION_ON);
     //pSet->setCompileOption(CC_CMD_OPT_WARNING_EXTRA, COMPILER_OPTION_ON);
     pSet->setCompileOption(CC_CMD_OPT_USE_PIPE, COMPILER_OPTION_ON);
+
+    pSet->setCompileOption(CC_CMD_OPT_ERROR_RETURN_TYPE, COMPILER_OPTION_ON);
+    pSet->setCompileOption(CC_CMD_OPT_ERROR_VLA, COMPILER_OPTION_ON);
 
     if (enableAsan) {
 #ifdef __aarch64__

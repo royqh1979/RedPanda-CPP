@@ -34,6 +34,9 @@
 #define CC_CMD_OPT_ABORT_ON_ERROR "cc_cmd_opt_abort_on_error"
 #define CC_CMD_OPT_ENABLE_GCC_IMPORT_STD "cc_opt_enable_gcc_import_std"
 
+#define CC_CMD_OPT_ERROR_RETURN_TYPE "cc_opt_error_return_type"
+#define CC_CMD_OPT_ERROR_VLA "cc_opt_error_vla"
+
 #define CC_CMD_OPT_PROFILE_INFO "cc_cmd_opt_profile_info"
 
 #define LINK_CMD_OPT_LINK_OBJC "link_cmd_opt_link_objc"

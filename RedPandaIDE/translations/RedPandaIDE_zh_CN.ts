@@ -9707,7 +9707,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+329"/>
+        <location line="+334"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
@@ -9720,7 +9720,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-242"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>启用特定指令集(-mx)</translation>
     </message>
@@ -9730,7 +9730,11 @@ p, li { white-space: pre-wrap; }
         <translation>优化级别(-Ox)</translation>
     </message>
     <message>
-        <location line="+339"/>
+        <source>Prohibit no return type function (return-type)</source>
+        <translation type="obsolete">无返回值类型的函数(return-type)</translation>
+    </message>
+    <message>
+        <location line="+344"/>
         <source>Processor (-m)</source>
         <translation>处理器类型(-m)</translation>
     </message>
@@ -9743,12 +9747,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">性能分析</translation>
     </message>
     <message>
-        <location line="-247"/>
+        <location line="-252"/>
         <source>Generate debugging information (-g3)</source>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3470"/>
+        <location filename="../settings.cpp" line="+3480"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -9840,7 +9844,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">禁止兼容MSVC头文件中使用的非标准语法(-fno-ms-extentions)</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+31"/>
         <source>PE Stack Size</source>
         <translation>PE 栈空间大小</translation>
     </message>
@@ -9929,14 +9933,14 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location line="-284"/>
+        <location line="-289"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Don&apos;t accept MSVC non-standard syntax (-fno-ms-extentions)</source>
-        <translation type="unfinished">禁止兼容MSVC非标准语法(-fno-ms-extentions)</translation>
+        <translation>禁止兼容MSVC非标准语法(-fno-ms-extentions)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -9949,7 +9953,22 @@ p, li { white-space: pre-wrap; }
         <translation>遇到第一个错误后立即中止编译(-Wfatal-errors)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+16"/>
+        <source>Errors</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Function without return type (return-type)</source>
+        <translation>无返回值类型的函数(return-type)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Variable lenght array (vla)</source>
+        <translation>变长数组(vla)</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Linker</source>
         <translation>链接器</translation>
     </message>
@@ -10019,7 +10038,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location line="-383"/>
+        <location line="-390"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation>缺少C编译器程序%1</translation>
     </message>
@@ -10039,7 +10058,7 @@ p, li { white-space: pre-wrap; }
         <translation>缺少Make程序%1</translation>
     </message>
     <message>
-        <location line="+364"/>
+        <location line="+371"/>
         <location line="+6"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
@@ -10405,7 +10424,7 @@ p, li { white-space: pre-wrap; }
         <translation>配置文件&apos;%1&apos;已经存在！</translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+143"/>
         <source>default</source>
         <translation>默认</translation>
     </message>
@@ -10422,7 +10441,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">无标题</translation>
     </message>
     <message>
-        <location filename="../parser/cppparser.cpp" line="+1351"/>
+        <location filename="../parser/cppparser.cpp" line="+1358"/>
         <source>constructor</source>
         <translation>构造函数</translation>
     </message>
