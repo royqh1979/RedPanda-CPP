@@ -9964,13 +9964,17 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location line="+1"/>
+        <source>Declaration does not specify a type (implicit-int)</source>
+        <translation>没有指定声明的类型(implicit-int)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Variable lenght array (vla)</source>
         <translation>变长数组(vla)</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Function parameter without type specifier (missing-parameter-type)</source>
-        <translation>未指定函数参数类型(missing-parameter-type)</translation>
+        <translation type="vanished">未指定函数参数类型(missing-parameter-type)</translation>
     </message>
     <message>
         <location line="+9"/>

@@ -9636,12 +9636,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Variable lenght array (vla)</source>
+        <source>Declaration does not specify a type (implicit-int)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Function parameter without type specifier (missing-parameter-type)</source>
+        <source>Variable lenght array (vla)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

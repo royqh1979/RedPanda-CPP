@@ -8715,12 +8715,12 @@
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="224"/>
-        <source>Variable lenght array (vla)</source>
+        <source>Declaration does not specify a type (implicit-int)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="225"/>
-        <source>Function parameter without type specifier (missing-parameter-type)</source>
+        <source>Variable lenght array (vla)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
