@@ -140,6 +140,21 @@
         <property name="text">
          <string>Customize</string>
         </property>
+        <property name="icon">
+         <iconset resource="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc">
+          <normaloff>:/resources/iconsets/bluesky/actions/00Misc-11Rename.svg</normaloff>:/resources/iconsets/bluesky/actions/00Misc-11Rename.svg</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="btnReload">
+        <property name="text">
+         <string>Reload</string>
+        </property>
+        <property name="icon">
+         <iconset resource="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc">
+          <normaloff>:/resources/iconsets/bluesky/actions/00Misc-16Reset.svg</normaloff>:/resources/iconsets/bluesky/actions/00Misc-16Reset.svg</iconset>
+        </property>
        </widget>
       </item>
       <item>
@@ -150,6 +165,10 @@
         <property name="text">
          <string>Remove custom theme</string>
         </property>
+        <property name="icon">
+         <iconset resource="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc">
+          <normaloff>:/resources/iconsets/bluesky/actions/01File-07CloseAll.svg</normaloff>:/resources/iconsets/bluesky/actions/01File-07CloseAll.svg</iconset>
+        </property>
        </widget>
       </item>
       <item>
@@ -159,6 +178,10 @@
         </property>
         <property name="text">
          <string>Open Folder</string>
+        </property>
+        <property name="icon">
+         <iconset resource="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc">
+          <normaloff>:/resources/iconsets/bluesky/actions/06View-03Files.svg</normaloff>:/resources/iconsets/bluesky/actions/06View-03Files.svg</iconset>
         </property>
        </widget>
       </item>
@@ -360,6 +383,8 @@
   <tabstop>spinZoomFactor</tabstop>
   <tabstop>cbLanguage</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="R:/Qt5-Static/RedPandaIDE/release/qmake_iconsets_files.qrc"/>
+ </resources>
  <connections/>
 </ui>

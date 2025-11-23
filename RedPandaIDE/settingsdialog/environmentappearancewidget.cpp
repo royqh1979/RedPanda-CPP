@@ -96,6 +96,7 @@ void EnvironmentAppearanceWidget::updateIcons(const QSize & size)
     pIconsManager->setIcon(ui->btnCustomize, IconsManager::ACTION_EDIT_COPY);
     pIconsManager->setIcon(ui->btnOpenCustomThemeFolder, IconsManager::ACTION_MISC_FOLDER);
     pIconsManager->setIcon(ui->btnRemoveCustomTheme, IconsManager::ACTION_MISC_REMOVE);
+    pIconsManager->setIcon(ui->btnReload, IconsManager::ACTION_MISC_RESET);
 }
 
 void EnvironmentAppearanceWidget::init()
@@ -124,6 +125,8 @@ void EnvironmentAppearanceWidget::on_cbTheme_currentIndexChanged(int /* index */
     ui->btnCustomize->setVisible(appTheme->category() == AppTheme::ThemeCategory::BuiltIn);
     ui->btnOpenCustomThemeFolder->setVisible(appTheme->category() == AppTheme::ThemeCategory::Custom);
     ui->btnRemoveCustomTheme->setVisible(appTheme->category() == AppTheme::ThemeCategory::Custom);
+    ui->btnReload->setVisible(appTheme->category() == AppTheme::ThemeCategory::Custom
+                              && ui->cbTheme->currentData().toString() == pSettings->environment().theme());
     if(!appTheme->defaultIconSet().isEmpty()) {
         for (int i=0; i<ui->cbIconSet->count();i++) {
             if (ui->cbIconSet->itemData(i) == appTheme->defaultIconSet()) {
@@ -177,5 +180,13 @@ void EnvironmentAppearanceWidget::on_btnRemoveCustomTheme_clicked()
         return;
     QFile::remove(appTheme->filename());
     refreshThemeList(appTheme->name());
+}
+
+
+void EnvironmentAppearanceWidget::on_btnReload_clicked()
+{
+    if (ui->cbTheme->currentData().toString() != pSettings->environment().theme())
+        return;
+    pMainWindow->applySettings();
 }
 

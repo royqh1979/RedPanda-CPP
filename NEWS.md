@@ -43,6 +43,7 @@ Red Panda C++ Version 3.4
   - enhancement: add winsock.h to auto link default settings.
   - enhancement: beautify description of function pointers.
   - enhancement: New compiler errors options.
+  - enhancement: Add "Reload" button for environment->appearance->theme.
   
 Red Panda C++ Version 3.3
   - enhancement: Auto indent contents in parenthesis.

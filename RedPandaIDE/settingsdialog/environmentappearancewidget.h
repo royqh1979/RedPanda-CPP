@@ -50,6 +50,8 @@ private slots:
     void on_btnOpenCustomThemeFolder_clicked();
     void on_btnRemoveCustomTheme_clicked();
 
+    void on_btnReload_clicked();
+
 private:
     void refreshThemeList(const QString& currentThemeName);
 
