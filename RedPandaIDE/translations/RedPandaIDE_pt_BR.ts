@@ -2505,17 +2505,17 @@
         <translation>Configuração</translation>
     </message>
     <message>
-        <location line="+265"/>
+        <location line="+288"/>
         <source>Font:</source>
         <translation>Fonte:</translation>
     </message>
     <message>
-        <location line="-138"/>
+        <location line="-161"/>
         <source>Customize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+36"/>
         <source>Open custom themes folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2529,13 +2529,13 @@
         <translation type="obsolete">Reset</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-17"/>
         <location line="+3"/>
         <source>Remove custom theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-113"/>
+        <location line="-128"/>
         <source>*Needs restart</source>
         <translation>*Necessário reiniciar</translation>
     </message>
@@ -2550,7 +2550,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+148"/>
+        <location line="+14"/>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+157"/>
         <source>Language:</source>
         <translation>Idioma:</translation>
     </message>
@@ -2560,7 +2565,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-234"/>
+        <location line="-257"/>
         <source>Font Size:</source>
         <translation>Tamanho da fonte:</translation>
     </message>
@@ -2574,12 +2579,12 @@
         <translation>Conjunto de ícones:</translation>
     </message>
     <message>
-        <location line="+243"/>
+        <location line="+266"/>
         <source>Use custom icon set</source>
         <translation>Usar conjunto de ícones personalizado</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+108"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+109"/>
         <source>English</source>
         <translation>Inglês</translation>
     </message>

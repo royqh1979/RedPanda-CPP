@@ -2826,7 +2826,7 @@ p, li { white-space: pre-wrap; }
         <translation>图标集：</translation>
     </message>
     <message>
-        <location line="+243"/>
+        <location line="+266"/>
         <source>Use custom icon set</source>
         <translation>使用自定义图标</translation>
     </message>
@@ -2841,7 +2841,7 @@ p, li { white-space: pre-wrap; }
         <translation>字体:</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-164"/>
         <source>Create a customized copy</source>
         <translation>自定义</translation>
     </message>
@@ -2851,7 +2851,12 @@ p, li { white-space: pre-wrap; }
         <translation>自定义</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+11"/>
+        <source>Reload</source>
+        <translation>刷新</translation>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>Open custom themes folder</source>
         <translation>打开自定义主题文件夹</translation>
     </message>
@@ -2861,7 +2866,7 @@ p, li { white-space: pre-wrap; }
         <translation>打开文件夹</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+190"/>
         <source>Change combobox&apos;s current selection by turning mouse wheel on it</source>
         <translation>可通过转动鼠标滚轮来切换下拉框的当前选项</translation>
     </message>
@@ -2886,18 +2891,18 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">重置</translation>
     </message>
     <message>
-        <location line="-199"/>
+        <location line="-207"/>
         <location line="+3"/>
         <source>Remove custom theme</source>
         <translation>删除自定义主题</translation>
     </message>
     <message>
-        <location line="+135"/>
+        <location line="+143"/>
         <source>Language:</source>
         <translation>语言:</translation>
     </message>
     <message>
-        <location line="-248"/>
+        <location line="-271"/>
         <source>*Needs restart</source>
         <translation>*需要重启之后生效</translation>
     </message>
@@ -2907,7 +2912,7 @@ p, li { white-space: pre-wrap; }
         <translation>大小:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+108"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+109"/>
         <source>English</source>
         <translation>英语</translation>
     </message>

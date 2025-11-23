@@ -2290,7 +2290,7 @@
         <translation>Форма</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="311"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="334"/>
         <source>Use custom icon set</source>
         <translation>Использовать пользовательский набор значков</translation>
     </message>
@@ -2300,7 +2300,7 @@
         <translation>*Необходим перезапуск</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="286"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="309"/>
         <source>Language:</source>
         <translation>Язык:</translation>
     </message>
@@ -2315,7 +2315,7 @@
         <translation>Набор значков:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="279"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="302"/>
         <source>Font:</source>
         <translation>Шрифт:</translation>
     </message>
@@ -2335,53 +2335,58 @@
         <translation>Настройка</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="148"/>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="151"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="152"/>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="163"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="166"/>
         <source>Remove custom theme</source>
         <translation>Удалить пользовательскую тему</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="158"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="177"/>
         <source>Open custom themes folder</source>
         <translation>Открыть пользовательский каталог с темами</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="161"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="180"/>
         <source>Open Folder</source>
         <translation>Открыть каталог</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="184"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="207"/>
         <source>Icon Zoom:</source>
         <translation>Масштаб значков:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.ui" line="347"/>
+        <location filename="../settingsdialog/environmentappearancewidget.ui" line="370"/>
         <source>Change combobox&apos;s current selection by turning mouse wheel on it</source>
         <translation>Изменение текущего выбора поля со списком путем поворота колесика мыши на нем</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="108"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="109"/>
         <source>English</source>
         <translation>Английский</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="109"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="110"/>
         <source>Portuguese</source>
         <translation>Португальский</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="110"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="111"/>
         <source>Simplified Chinese</source>
         <translation>Упрощенный Китайский</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="111"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="112"/>
         <source>Traditional Chinese</source>
         <translation>Традиционный Китайский</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="112"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="113"/>
         <source>Russian</source>
         <translation>Русский</translation>
     </message>

@@ -2282,12 +2282,12 @@
         <translation>表單</translation>
     </message>
     <message>
-        <location line="+265"/>
+        <location line="+288"/>
         <source>Font:</source>
         <translation>字體：</translation>
     </message>
     <message>
-        <location line="-241"/>
+        <location line="-264"/>
         <source>*Needs restart</source>
         <translation>*需要重啓之後生效</translation>
     </message>
@@ -2297,7 +2297,7 @@
         <translation>主題：</translation>
     </message>
     <message>
-        <location line="+225"/>
+        <location line="+248"/>
         <source>Language:</source>
         <translation>語言：</translation>
     </message>
@@ -2330,7 +2330,7 @@
         <translation type="vanished">視圖尺寸[opsz]</translation>
     </message>
     <message>
-        <location line="-173"/>
+        <location line="-196"/>
         <source>Font Size:</source>
         <translation>大小：</translation>
     </message>
@@ -2350,7 +2350,12 @@
         <translation>自定義</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+11"/>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>Open custom themes folder</source>
         <translation>打開自定義主題資料夾</translation>
     </message>
@@ -2360,23 +2365,23 @@
         <translation>打開資料夾</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+190"/>
         <source>Change combobox&apos;s current selection by turning mouse wheel on it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-199"/>
+        <location line="-207"/>
         <location line="+3"/>
         <source>Remove custom theme</source>
         <translation>刪除自定義主題</translation>
     </message>
     <message>
-        <location line="+160"/>
+        <location line="+168"/>
         <source>Use custom icon set</source>
         <translation>使用自定義圖標</translation>
     </message>
     <message>
-        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+108"/>
+        <location filename="../settingsdialog/environmentappearancewidget.cpp" line="+109"/>
         <source>English</source>
         <translation>English</translation>
     </message>
