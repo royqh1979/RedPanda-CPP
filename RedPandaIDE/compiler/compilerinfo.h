@@ -36,6 +36,7 @@
 
 #define CC_CMD_OPT_ERROR_RETURN_TYPE "cc_opt_error_return_type"
 #define CC_CMD_OPT_ERROR_VLA "cc_opt_error_vla"
+#define CC_CMD_OPT_ERROR_MISSING_PARAMETER_TYPE "cc_opt_error_vla"
 
 #define CC_CMD_OPT_PROFILE_INFO "cc_cmd_opt_profile_info"
 

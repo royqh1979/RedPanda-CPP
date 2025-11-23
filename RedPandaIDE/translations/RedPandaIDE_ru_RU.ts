@@ -8296,7 +8296,7 @@
         <location filename="../autolinkmanager.cpp" line="54"/>
         <location filename="../autolinkmanager.cpp" line="70"/>
         <location filename="../autolinkmanager.cpp" line="91"/>
-        <location filename="../settings.cpp" line="4135"/>
+        <location filename="../settings.cpp" line="4138"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="244"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
         <translation>Невозможно открыть файл &apos;%1&apos; для чтения.</translation>
@@ -8589,7 +8589,7 @@
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="92"/>
-        <location filename="../compiler/compilerinfo.cpp" line="426"/>
+        <location filename="../compiler/compilerinfo.cpp" line="427"/>
         <source>Code Generation</source>
         <translation>Генерация кода</translation>
     </message>
@@ -8719,117 +8719,122 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="233"/>
+        <location filename="../compiler/compilerinfo.cpp" line="225"/>
+        <source>Function parameter without type specifier (missing-parameter-type)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../compiler/compilerinfo.cpp" line="234"/>
         <source>Linker</source>
         <translation>Связывание</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="234"/>
+        <location filename="../compiler/compilerinfo.cpp" line="235"/>
         <source>PE Stack Size</source>
         <translation>Размер стека PE</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="236"/>
+        <location filename="../compiler/compilerinfo.cpp" line="237"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation>Использовать каналы (pipes) вместо временных файлов во время компиляции (-pipe)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="238"/>
+        <location filename="../compiler/compilerinfo.cpp" line="239"/>
         <source>Do not use standard system libraries (-nostdlib)</source>
         <translation>Не использовать стандартные системные библиотеки (-nostdlib)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="239"/>
+        <location filename="../compiler/compilerinfo.cpp" line="240"/>
         <source>Do not create a console window (-mwindows)</source>
         <translation>Не создавать консольное окно (-mwindows)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="240"/>
+        <location filename="../compiler/compilerinfo.cpp" line="241"/>
         <source>Strip executable (-s)</source>
         <translation>Удаление несущественной информации (strip) из исполнимых файлов (-s)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="445"/>
+        <location filename="../compiler/compilerinfo.cpp" line="446"/>
         <source>Processor (-m)</source>
         <translation>Процессор (-m)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="459"/>
+        <location filename="../compiler/compilerinfo.cpp" line="460"/>
         <source>Language standard (--std)</source>
         <translation>Стандарт Языка (--std)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="467"/>
+        <location filename="../compiler/compilerinfo.cpp" line="468"/>
         <source>Memory model (--model)</source>
         <translation>Модель памяти (--model)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="469"/>
+        <location filename="../compiler/compilerinfo.cpp" line="470"/>
         <source>Use external stack</source>
         <translation>Использовать внешний стек</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="470"/>
+        <location filename="../compiler/compilerinfo.cpp" line="471"/>
         <source>Use movc instead of movx to read from external ram</source>
         <translation>Использовать movc вместо movx для чтения из внешней памяти</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="471"/>
+        <location filename="../compiler/compilerinfo.cpp" line="472"/>
         <source>Replaces lcall/ljmp with acall/ajmp</source>
         <translation>Заменять lcall/ljmp на acall/ajmp</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="472"/>
+        <location filename="../compiler/compilerinfo.cpp" line="473"/>
         <source>Don&apos;t memcpy initialized xram from code</source>
         <translation>Не позволять memcpy инициализировать xram из кода</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="473"/>
+        <location filename="../compiler/compilerinfo.cpp" line="474"/>
         <source>Don&apos;t generate startup code</source>
         <translation>Не создавать код запуска</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="475"/>
+        <location filename="../compiler/compilerinfo.cpp" line="476"/>
         <source>MCU Specification</source>
         <translation>Спецификация MCU</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="477"/>
+        <location filename="../compiler/compilerinfo.cpp" line="478"/>
         <source>Internal ram size</source>
         <translation>Размер внутренней памяти</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="478"/>
+        <location filename="../compiler/compilerinfo.cpp" line="479"/>
         <source>External ram start location</source>
         <translation>Начало размещения внешней памяти</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="479"/>
+        <location filename="../compiler/compilerinfo.cpp" line="480"/>
         <source>External ram size</source>
         <translation>Размер внешней памяти</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="480"/>
+        <location filename="../compiler/compilerinfo.cpp" line="481"/>
         <source>Stack pointer initial value</source>
         <translation>Начальный адрес указателя стека</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="481"/>
+        <location filename="../compiler/compilerinfo.cpp" line="482"/>
         <source>External stack start location</source>
         <translation>Начало размещения внешнего стека</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="482"/>
+        <location filename="../compiler/compilerinfo.cpp" line="483"/>
         <source>Direct data start location</source>
         <translation>Начало размещения первичных данных (direct data)</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="483"/>
+        <location filename="../compiler/compilerinfo.cpp" line="484"/>
         <source>Code segment location</source>
         <translation>Размещение сегмента кода</translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="484"/>
+        <location filename="../compiler/compilerinfo.cpp" line="485"/>
         <source>Code segment size</source>
         <translation>Размер сегмента кода</translation>
     </message>
@@ -8891,64 +8896,64 @@
         <translation>Ошибка записи файла &quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3092"/>
+        <location filename="../settings.cpp" line="3093"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation>Компилятор Си &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3095"/>
+        <location filename="../settings.cpp" line="3096"/>
         <source>C++ Compiler &quot;%1&quot; is missing!</source>
         <translation>Компилятор Си++ &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3098"/>
+        <location filename="../settings.cpp" line="3099"/>
         <source>Debugger &quot;%1&quot; is missing!</source>
         <translation>Отладчик &quot;%1&quot; утрачен!</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3101"/>
+        <location filename="../settings.cpp" line="3102"/>
         <source>Make program &quot;%1&quot; is missing!</source>
         <translation>Программа сборки &quot;%1&quot; утрачена!</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3333"/>
+        <location filename="../settings.cpp" line="3336"/>
         <source>Error executing platform compiler hint add-on</source>
         <translatorcomment>Сомнительный перевод, надо переделать</translatorcomment>
         <translation>Ошибка при запуске дополнения с подсказкой компилятора платформы</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3472"/>
-        <location filename="../settings.cpp" line="3478"/>
+        <location filename="../settings.cpp" line="3475"/>
+        <location filename="../settings.cpp" line="3481"/>
         <source>Compiler set not configuared.</source>
         <translation>Набор компиляторов не настроен.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3474"/>
+        <location filename="../settings.cpp" line="3477"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation>Вы хотели бы, чтобы Красная Панда Си++ поискала компиляторы в следующих местах: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3480"/>
+        <location filename="../settings.cpp" line="3483"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>Вы хотели бы, чтобы Красная Панда Си++ поискала компиляторы в PATH?</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3482"/>
+        <location filename="../settings.cpp" line="3485"/>
         <source>Confirm</source>
         <translation>Подтверждение</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3491"/>
+        <location filename="../settings.cpp" line="3494"/>
         <source>No Compiler Set</source>
         <translation>Нет набора компиляторов</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3492"/>
+        <location filename="../settings.cpp" line="3495"/>
         <source>Can&apos;t find a C/C++ compiler.</source>
         <translation>Не могу найти компилятор Си/Си++.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="3494"/>
+        <location filename="../settings.cpp" line="3497"/>
         <source>You must have a compiler to compile and execute C/C++ files.</source>
         <translation>Вы должны иметь компилятор, чтобы компилировать файлы Си/Си++.</translation>
     </message>
@@ -9833,12 +9838,12 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="4107"/>
+        <location filename="../settings.cpp" line="4110"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="4108"/>
+        <location filename="../settings.cpp" line="4111"/>
         <source>Can&apos;t find terminal program!</source>
         <translation>Не найдена программа-терминал!</translation>
     </message>

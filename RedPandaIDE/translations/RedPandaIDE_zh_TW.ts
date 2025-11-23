@@ -8311,7 +8311,7 @@
         <location filename="../autolinkmanager.cpp" line="+54"/>
         <location line="+16"/>
         <location line="+21"/>
-        <location filename="../settings.cpp" line="+4135"/>
+        <location filename="../settings.cpp" line="+4138"/>
         <location filename="../widgets/ojproblemsetmodel.cpp" line="-391"/>
         <source>Can&apos;t open file &apos;%1&apos; for read.</source>
         <translation type="unfinished">無法讀取檔案&apos;%1&apos;.</translation>
@@ -8636,12 +8636,12 @@
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+334"/>
+        <location line="+335"/>
         <source>Code Generation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-242"/>
+        <location line="-243"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8696,7 +8696,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Linker</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8716,12 +8716,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-47"/>
+        <location line="-48"/>
         <source>Generate debugging information (-g3)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Use pipes instead of temporary files during compilation (-pipe)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8737,7 +8737,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-386"/>
+        <location line="-388"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8757,7 +8757,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+373"/>
+        <location line="+375"/>
         <source>Would you like Red Panda C++ to search for compilers in the following locations: &lt;BR /&gt;&apos;%1&apos;&lt;BR /&gt;&apos;%2&apos;? </source>
         <translation type="unfinished"></translation>
     </message>
@@ -8874,7 +8874,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../compiler/compilerinfo.cpp" line="-117"/>
+        <location filename="../compiler/compilerinfo.cpp" line="-118"/>
         <source>C++ Language standard (-std)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8944,7 +8944,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+226"/>
+        <location line="+227"/>
         <source>Processor (-m)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8964,7 +8964,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-281"/>
+        <location line="-282"/>
         <source>32-bit pointer, 32-bit instruction (-m32)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9001,6 +9001,11 @@
     <message>
         <location line="+1"/>
         <source>Variable lenght array (vla)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Function parameter without type specifier (missing-parameter-type)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -9707,7 +9707,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../compiler/compilerinfo.cpp" line="+92"/>
-        <location line="+334"/>
+        <location line="+335"/>
         <source>Code Generation</source>
         <translation>代码生成</translation>
     </message>
@@ -9720,7 +9720,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">完整兼容特定机器，较少优化(-tune)</translation>
     </message>
     <message>
-        <location line="-242"/>
+        <location line="-243"/>
         <source>Enable use of specific instructions (-mx)</source>
         <translation>启用特定指令集(-mx)</translation>
     </message>
@@ -9734,7 +9734,7 @@ p, li { white-space: pre-wrap; }
         <translation type="obsolete">无返回值类型的函数(return-type)</translation>
     </message>
     <message>
-        <location line="+344"/>
+        <location line="+345"/>
         <source>Processor (-m)</source>
         <translation>处理器类型(-m)</translation>
     </message>
@@ -9747,12 +9747,12 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">性能分析</translation>
     </message>
     <message>
-        <location line="-252"/>
+        <location line="-253"/>
         <source>Generate debugging information (-g3)</source>
         <translation>生成调试信息(-g3)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="+3480"/>
+        <location filename="../settings.cpp" line="+3483"/>
         <source>Would you like Red Panda C++ to search for compilers in PATH?</source>
         <translation>您同意小熊猫C++在PATH路径中寻找gcc编译器吗？</translation>
     </message>
@@ -9844,7 +9844,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">禁止兼容MSVC头文件中使用的非标准语法(-fno-ms-extentions)</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>PE Stack Size</source>
         <translation>PE 栈空间大小</translation>
     </message>
@@ -9933,7 +9933,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">检查ISO C/C++/C++0x语法一致性(-pedantic)</translation>
     </message>
     <message>
-        <location line="-289"/>
+        <location line="-290"/>
         <source>Only check the code for syntax errors (-fsyntax-only)</source>
         <translation>只进行语法检查（不编译）(-fsyntax-only)</translation>
     </message>
@@ -9966,6 +9966,11 @@ p, li { white-space: pre-wrap; }
         <location line="+1"/>
         <source>Variable lenght array (vla)</source>
         <translation>变长数组(vla)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Function parameter without type specifier (missing-parameter-type)</source>
+        <translation>未指定函数参数类型(missing-parameter-type)</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -10038,7 +10043,7 @@ p, li { white-space: pre-wrap; }
         <translation type="vanished">如果仍然保留这些设置，可能会导致编译错误。&lt;br /&gt;&lt;br /&gt;请选择“是”，除非您清楚的知道选择“否”的后果，</translation>
     </message>
     <message>
-        <location line="-390"/>
+        <location line="-392"/>
         <source>C Compiler &quot;%1&quot; is missing!</source>
         <translation>缺少C编译器程序%1</translation>
     </message>
@@ -10058,7 +10063,7 @@ p, li { white-space: pre-wrap; }
         <translation>缺少Make程序%1</translation>
     </message>
     <message>
-        <location line="+371"/>
+        <location line="+373"/>
         <location line="+6"/>
         <source>Compiler set not configuared.</source>
         <translation>未配置编译器设置。</translation>
