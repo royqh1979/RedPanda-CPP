@@ -2943,7 +2943,7 @@ bool Settings::CompilerSet::isOutputExecutable(CompilationStage stage)
 }
 
 #ifdef Q_OS_WINDOWS
-bool Settings::CompilerSet::isDebugInfoUsingUTF8()
+bool Settings::CompilerSet::isDebugInfoUsingUTF8() const
 {
     switch(mCompilerType) {
     case CompilerType::Clang:
@@ -2962,10 +2962,10 @@ bool Settings::CompilerSet::isDebugInfoUsingUTF8()
 
 bool Settings::CompilerSet::forceUTF8() const
 {
-    return CompilerInfoManager::forceUTF8InDebugger(mCompilerType);
+    return CompilerInfoManager::forceUTF8InDebugger(mCompilerType) || isDebugInfoUsingUTF8();
 }
 
-bool Settings::CompilerSet::isCompilerInfoUsingUTF8()
+bool Settings::CompilerSet::isCompilerInfoUsingUTF8() const
 {
     return isDebugInfoUsingUTF8();
 }
