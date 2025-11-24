@@ -1587,6 +1587,8 @@ public:
         // GCC ACP detection cache
         mutable bool mGccIsUtf8;
         mutable bool mGccIsUtf8Initialized;
+        mutable bool mGDBIsUtf8;
+        mutable bool mGDBIsUtf8Initialized;
         bool mGccSupportConvertingCharset;
         bool mGccSupportConvertingCharsetInitialized;
 #endif

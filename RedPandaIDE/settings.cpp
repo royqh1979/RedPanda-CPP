@@ -1677,6 +1677,7 @@ Settings::CompilerSet::CompilerSet():
     mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8Initialized{false}
+    , mGDBIsUtf8Initialized{false}
     , mGccSupportConvertingCharsetInitialized{false}
 #endif
 {
@@ -1698,6 +1699,7 @@ Settings::CompilerSet::CompilerSet(const QString& compilerFolder, const QString&
     mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8Initialized(false)
+    , mGDBIsUtf8Initialized{false}
     , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
@@ -1773,6 +1775,8 @@ Settings::CompilerSet::CompilerSet(const Settings::CompilerSet &set):
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8(set.mGccIsUtf8)
     , mGccIsUtf8Initialized(set.mGccIsUtf8Initialized)
+    , mGDBIsUtf8(set.mGDBIsUtf8)
+    , mGDBIsUtf8Initialized(set.mGDBIsUtf8Initialized)
     , mGccSupportConvertingCharset(set.mGccSupportConvertingCharset)
     , mGccSupportConvertingCharsetInitialized(set.mGccSupportConvertingCharsetInitialized)
 #endif
@@ -1822,6 +1826,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     mGccSupportNLSInitialized{false}
 #ifdef Q_OS_WINDOWS
     , mGccIsUtf8Initialized(false)
+    , mGDBIsUtf8Initialized(false)
     , mGccSupportConvertingCharsetInitialized(false)
 #endif
 {
@@ -2131,7 +2136,12 @@ const QString &Settings::CompilerSet::debugger() const
 
 void Settings::CompilerSet::setDebugger(const QString &name)
 {
-    mDebugger = name;
+    if (mDebugger!=name) {
+#ifdef Q_OS_WIN
+        mGDBIsUtf8Initialized = false;
+#endif
+        mDebugger = name;
+    }
 }
 
 const QString &Settings::CompilerSet::resourceCompiler() const
@@ -2950,11 +2960,11 @@ bool Settings::CompilerSet::isDebugInfoUsingUTF8() const
     case CompilerType::GCC_UTF8:
         return true;
     case CompilerType::GCC:
-        if (!mGccIsUtf8Initialized) {
-            mGccIsUtf8 = applicationIsUtf8(mCCompiler);
-            mGccIsUtf8Initialized = true;
+        if (!mGDBIsUtf8Initialized) {
+            mGDBIsUtf8 = applicationIsUtf8(mDebugger);
+            mGDBIsUtf8Initialized = true;
         }
-        return mGccIsUtf8;
+        return mGDBIsUtf8;
     default:
         return false;
     }
@@ -2967,7 +2977,19 @@ bool Settings::CompilerSet::forceUTF8() const
 
 bool Settings::CompilerSet::isCompilerInfoUsingUTF8() const
 {
-    return isDebugInfoUsingUTF8();
+    switch(mCompilerType) {
+    case CompilerType::Clang:
+    case CompilerType::GCC_UTF8:
+        return true;
+    case CompilerType::GCC:
+        if (!mGccIsUtf8Initialized) {
+            mGccIsUtf8 = applicationIsUtf8(mCCompiler);
+            mGccIsUtf8Initialized = true;
+        }
+        return mGccIsUtf8;
+    default:
+        return false;
+    }
 }
 #endif
 
