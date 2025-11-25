@@ -72,7 +72,7 @@ bool FileCompiler::prepareForCompile()
 
     // GCC `import std;` sources should be added before the main file to generate GCM cache
     if (mFileType == FileType::CppSource &&
-        (compilerType == CompilerType::GCC || compilerType == CompilerType::GCC_UTF8)) {
+        (compilerType == CompilerType::GCC)) {
         mArguments += getCppGccImportStdSources(mOnlyCheckSyntax);
     }
 

@@ -1501,12 +1501,10 @@ public:
         bool isOutputExecutable(Settings::CompilerSet::CompilationStage stage);
 
 #ifdef Q_OS_WINDOWS
-        bool isDebugInfoUsingUTF8() const;
-        bool forceUTF8() const;
-        bool isCompilerInfoUsingUTF8() const;
+        bool isDebuggerUsingUTF8() const;
+        bool isCompilerUsingUTF8() const;
 #else
         constexpr bool isDebugInfoUsingUTF8() const { return true; }
-        constexpr bool forceUTF8() const { return true; }
         constexpr bool isCompilerInfoUsingUTF8() const { return true; }
 #endif
 

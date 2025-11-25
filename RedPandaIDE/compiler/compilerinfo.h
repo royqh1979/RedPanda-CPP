@@ -80,7 +80,6 @@
 
 enum class CompilerType {
     GCC,
-    GCC_UTF8,
     Clang,
 #ifdef ENABLE_SDCC
     SDCC,
@@ -132,8 +131,6 @@ public:
     bool hasCompilerOption(const QString& key) const;
     void init();
 
-    virtual bool forceUTF8InDebugger()=0;
-    virtual bool forceUTF8InMakefile()=0;
     virtual bool supportStaticLink()=0;
     virtual bool supportSyntaxCheck();
 protected:
@@ -180,7 +177,6 @@ public:
     static const QList<PCompilerOption> &getCompilerOptions(CompilerType compilerType);
     static bool supportStaticLink(CompilerType compilerType);
     static bool supportSyntaxCheck(CompilerType compilerType);
-    static bool forceUTF8InDebugger(CompilerType compilerType);
     static PCompilerInfoManager getInstance();
     static void addInfo(CompilerType compilerType, PCompilerInfo info);
 private:
@@ -191,24 +187,12 @@ private:
 class ClangCompilerInfo: public CompilerInfo{
 public:
     ClangCompilerInfo();
-    bool forceUTF8InDebugger() override;
-    bool forceUTF8InMakefile() override;
     bool supportStaticLink() override;
 };
 
 class GCCCompilerInfo: public CompilerInfo{
 public:
     GCCCompilerInfo();
-    bool forceUTF8InDebugger() override;
-    bool forceUTF8InMakefile() override;
-    bool supportStaticLink() override;
-};
-
-class GCCUTF8CompilerInfo: public CompilerInfo{
-public:
-    GCCUTF8CompilerInfo();
-    bool forceUTF8InDebugger() override;
-    bool forceUTF8InMakefile() override;
     bool supportStaticLink() override;
 };
 
@@ -216,8 +200,6 @@ public:
 class SDCCCompilerInfo: public CompilerInfo{
 public:
     SDCCCompilerInfo();
-    bool forceUTF8InDebugger() override;
-    bool forceUTF8InMakefile() override;
     bool supportStaticLink() override;
     bool supportSyntaxCheck() override;
 protected:

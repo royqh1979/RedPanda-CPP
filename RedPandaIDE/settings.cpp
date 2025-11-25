@@ -1849,7 +1849,7 @@ Settings::CompilerSet::CompilerSet(const QJsonObject &set) :
     if (compilerType == "GCC") {
         mCompilerType = CompilerType::GCC;
     } else if (compilerType == "GCC_UTF8") {
-        mCompilerType = CompilerType::GCC_UTF8;
+        mCompilerType = CompilerType::GCC;
     } else if (compilerType == "Clang") {
         mCompilerType = CompilerType::Clang;
     }
@@ -2346,7 +2346,9 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
         mDumpMachine = "i386-pc-mingw32";
     }
     mTarget = mDumpMachine.mid(0, mDumpMachine.indexOf('-'));
-    QByteArray version = getCompilerOutput(binDir, c_prog, {"-dumpversion"}).trimmed();
+    QByteArray version = getCompilerOutput(binDir, c_prog, {"-dumpfullversion"}).trimmed();
+    if (version.isEmpty())
+        version = getCompilerOutput(binDir, c_prog, {"-dumpversion"}).trimmed();
     // QRegularExpression versionPattern = QRegularExpression("^[\\d]+\\.[\\d]+.*$");
     // if (auto m = versionPattern.match(version); !m.hasMatch()) {
     //     version = getCompilerOutput(binDir, c_prog, {"-dumpfullversion"}).trimmed();
@@ -2380,7 +2382,6 @@ void Settings::CompilerSet::setGCCProperties(const QString& binDir, const QStrin
         QRegularExpression mingwW64Pattern = QRegularExpression("^(.*)-w64-mingw32$");
         QRegularExpression mingwOrgPattern("^(.*)-(.*)-mingw32$");
         if (auto m = ntPosixPattern.match(mDumpMachine); m.hasMatch()) {
-            mCompilerType = CompilerType::GCC_UTF8;
             outputFormatIsPe = true;
             if (mName.isEmpty()) {
                 if (m.captured(3) == "msys")
@@ -2953,11 +2954,10 @@ bool Settings::CompilerSet::isOutputExecutable(CompilationStage stage)
 }
 
 #ifdef Q_OS_WINDOWS
-bool Settings::CompilerSet::isDebugInfoUsingUTF8() const
+bool Settings::CompilerSet::isDebuggerUsingUTF8() const
 {
     switch(mCompilerType) {
     case CompilerType::Clang:
-    case CompilerType::GCC_UTF8:
         return true;
     case CompilerType::GCC:
         if (!mGDBIsUtf8Initialized) {
@@ -2970,16 +2970,10 @@ bool Settings::CompilerSet::isDebugInfoUsingUTF8() const
     }
 }
 
-bool Settings::CompilerSet::forceUTF8() const
-{
-    return CompilerInfoManager::forceUTF8InDebugger(mCompilerType) || isDebugInfoUsingUTF8();
-}
-
-bool Settings::CompilerSet::isCompilerInfoUsingUTF8() const
+bool Settings::CompilerSet::isCompilerUsingUTF8() const
 {
     switch(mCompilerType) {
     case CompilerType::Clang:
-    case CompilerType::GCC_UTF8:
         return true;
     case CompilerType::GCC:
         if (!mGccIsUtf8Initialized) {
@@ -2996,7 +2990,7 @@ bool Settings::CompilerSet::isCompilerInfoUsingUTF8() const
 bool Settings::CompilerSet::supportConvertingCharset()
 {
 #ifdef Q_OS_WIN
-    if (mCompilerType != CompilerType::GCC && mCompilerType != CompilerType::GCC_UTF8)
+    if (mCompilerType != CompilerType::GCC)
         return false;
     if (!mGccSupportConvertingCharsetInitialized) {
         mGccSupportConvertingCharset = [this] () {
@@ -3022,7 +3016,7 @@ bool Settings::CompilerSet::supportConvertingCharset()
 
 bool Settings::CompilerSet::supportNLS()
 {
-    if (mCompilerType != CompilerType::GCC && mCompilerType != CompilerType::GCC_UTF8)
+    if (mCompilerType != CompilerType::GCC)
         return false;
     if (!mGccSupportNLSInitialized) {
         mGccSupportNLS = [this] () {
@@ -3735,7 +3729,7 @@ Settings::PCompilerSet Settings::CompilerSets::loadSet(int index)
     } else if (temp==COMPILER_GCC) {
         pSet->setCompilerType(CompilerType::GCC);
     } else if (temp==COMPILER_GCC_UTF8) {
-        pSet->setCompilerType(CompilerType::GCC_UTF8);
+        pSet->setCompilerType(CompilerType::GCC);
 #ifdef ENABLE_SDCC
     } else if (temp==COMPILER_SDCC) {
         pSet->setCompilerType(CompilerType::SDCC);

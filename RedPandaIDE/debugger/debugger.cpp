@@ -98,8 +98,8 @@ bool Debugger::startClient(int compilerSetIndex,
                               tr("No compiler set is configured.")+tr("Can't start debugging."));
         return false;
     }
-    setForceUTF8(compilerSet->forceUTF8());
-    setDebugInfosUsingUTF8(compilerSet->isDebugInfoUsingUTF8());
+    setForceUTF8(compilerSet->isDebuggerUsingUTF8());
+    setDebugInfosUsingUTF8(compilerSet->isCompilerUsingUTF8());
     if (compilerSet->debugger().endsWith(LLDB_MI_PROGRAM))
         setDebuggerType(DebuggerType::LLDB_MI);
     else

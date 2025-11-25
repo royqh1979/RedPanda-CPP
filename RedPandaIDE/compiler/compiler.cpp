@@ -726,8 +726,8 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
     bool errorOccurred = false;
     process.setProgram(cmd);
     QString cmdDir = extractFileDir(cmd);
-    bool compilerErrorUTF8=compilerSet()->isCompilerInfoUsingUTF8();
-    bool outputUTF8=compilerSet()->forceUTF8();
+    bool compilerErrorUTF8=compilerSet()->isCompilerUsingUTF8();
+    bool outputUTF8=compilerSet()->isCompilerUsingUTF8();
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 #ifdef Q_OS_WIN
     QStringList binDirs=compilerSet()->binDirs();

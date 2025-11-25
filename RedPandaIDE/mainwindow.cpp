@@ -897,8 +897,7 @@ void MainWindow::updateCompileActions(const Editor *e)
                         canDebug = set->canDebug();
                         break;
                     case FileType::GAS:
-                        if (set->compilerType()==CompilerType::GCC
-                                || set->compilerType()==CompilerType::GCC_UTF8) {
+                        if (set->compilerType()==CompilerType::GCC) {
                             canCompile = true;
                             canRun = canCompile;
                             canDebug = set->canDebug();

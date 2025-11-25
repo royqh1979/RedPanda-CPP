@@ -251,10 +251,6 @@ CompilerInfoManager::CompilerInfoManager()
     compilerInfo->init();
     mInfos.insert(CompilerType::GCC, compilerInfo);
 
-    compilerInfo = std::make_shared<GCCUTF8CompilerInfo>();
-    compilerInfo->init();
-    mInfos.insert(CompilerType::GCC_UTF8, compilerInfo);
-
 #ifdef ENABLE_SDCC
     compilerInfo = std::make_shared<SDCCCompilerInfo>();
     compilerInfo->init();
@@ -308,14 +304,6 @@ bool CompilerInfoManager::supportSyntaxCheck(CompilerType compilerType)
     return pInfo->supportSyntaxCheck();
 }
 
-bool CompilerInfoManager::forceUTF8InDebugger(CompilerType compilerType)
-{
-    PCompilerInfo pInfo = getInfo(compilerType);
-    if (!pInfo)
-        return false;
-    return pInfo->forceUTF8InDebugger();
-}
-
 PCompilerInfoManager CompilerInfoManager::instance;
 
 PCompilerInfoManager CompilerInfoManager::getInstance()
@@ -335,16 +323,6 @@ ClangCompilerInfo::ClangCompilerInfo():CompilerInfo(COMPILER_CLANG)
 {
 }
 
-bool ClangCompilerInfo::forceUTF8InDebugger()
-{
-    return true;
-}
-
-bool ClangCompilerInfo::forceUTF8InMakefile()
-{
-    return false;
-}
-
 bool ClangCompilerInfo::supportStaticLink()
 {
     return true;
@@ -354,36 +332,7 @@ GCCCompilerInfo::GCCCompilerInfo():CompilerInfo(COMPILER_GCC)
 {
 }
 
-bool GCCCompilerInfo::forceUTF8InDebugger()
-{
-    return false;
-}
-
-bool GCCCompilerInfo::forceUTF8InMakefile()
-{
-    return false;
-}
-
 bool GCCCompilerInfo::supportStaticLink()
-{
-    return true;
-}
-
-GCCUTF8CompilerInfo::GCCUTF8CompilerInfo():CompilerInfo(COMPILER_GCC_UTF8)
-{
-}
-
-bool GCCUTF8CompilerInfo::forceUTF8InDebugger()
-{
-    return true;
-}
-
-bool GCCUTF8CompilerInfo::forceUTF8InMakefile()
-{
-    return true;
-}
-
-bool GCCUTF8CompilerInfo::supportStaticLink()
 {
     return true;
 }
@@ -392,16 +341,6 @@ bool GCCUTF8CompilerInfo::supportStaticLink()
 SDCCCompilerInfo::SDCCCompilerInfo():CompilerInfo(COMPILER_SDCC)
 {
 
-}
-
-bool SDCCCompilerInfo::forceUTF8InDebugger()
-{
-    return false;
-}
-
-bool SDCCCompilerInfo::forceUTF8InMakefile()
-{
-    return false;
 }
 
 bool SDCCCompilerInfo::supportStaticLink()
