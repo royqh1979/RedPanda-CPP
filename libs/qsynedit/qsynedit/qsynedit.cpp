@@ -271,12 +271,6 @@ bool QSynEdit::getTokenAttriAtRowCol(
     if ((lineIdx >= 0) && (lineIdx < mDocument->count())) {
         lineText = mDocument->getLine(lineIdx);
         prepareSyntaxerState(*mSyntaxer, lineIdx, lineText);
-//        if (posY == 0) {
-//            mSyntaxer->resetState();
-//        } else {
-//            mSyntaxer->setState(mDocument->getSyntaxState(posY-1));
-//        }
-//        mSyntaxer->setLine(lineText, posY);
         charIdx = pos.ch;
         if ((charIdx > 0) && (charIdx <= lineText.length())) {
             while (!mSyntaxer->eol()) {
@@ -305,12 +299,6 @@ bool QSynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, i
     if ((lineIdx >= 0) && (lineIdx < mDocument->count())) {
         lineText = mDocument->getLine(lineIdx);
         prepareSyntaxerState(*mSyntaxer, lineIdx, lineText);
-//        if (posY == 0) {
-//            mSyntaxer->resetState();
-//        } else {
-//            mSyntaxer->setState(mDocument->getSyntaxState(posY-1));
-//        }
-//        mSyntaxer->setLine(lineText, posY);
         chIdx = pos.ch;
         if ((chIdx > 0) && (chIdx <= lineText.length())) {
             while (!mSyntaxer->eol()) {
@@ -2163,12 +2151,6 @@ void QSynEdit::insertLine(bool moveCaret)
     bool notInComment=true;
     QString trimmedleftLineText=trimLeft(leftLineText);
     prepareSyntaxerState(*mSyntaxer, mCaretY-1, trimmedleftLineText);
-//    if (mCaretY==1) {
-//        mSyntaxer->resetState();
-//    } else {
-//        mSyntaxer->setState(mDocument->getSyntaxState(mCaretY-2));
-//    }
-//    mSyntaxer->setLine(trimmedleftLineText, mCaretY-1);
     int indentSpaces = 0;
     if (mOptions.testFlag(EditorOption::AutoIndent)
             && mSyntaxer->getToken()=="else") {
@@ -2179,15 +2161,6 @@ void QSynEdit::insertLine(bool moveCaret)
         leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
     }
     properSetLine(mCaretY-1, leftLineText);
-//    //update range stated for line mCaretY
-//    if (mCaretY==1) {
-//        mSyntaxer->resetState();
-//    } else {
-//        mSyntaxer->setState(mDocument->getSyntaxState(mCaretY-2));
-//    }
-//    mSyntaxer->setLine(trimmedleftLineText, mCaretY-1);
-//    mSyntaxer->nextToEol();
-//    mDocument->setSyntaxState(mCaretY-1,mSyntaxer->getState());
 
     notInComment = !mSyntaxer->isCommentNotFinished(
                 mSyntaxer->getState().state)
@@ -2783,12 +2756,6 @@ void QSynEdit::decPaintLock()
 SyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText)
 {
     prepareSyntaxerState(*mSyntaxer, line, newLineText);
-//    if (line == 0) {
-//        syntaxer()->resetState();
-//    } else {
-//        syntaxer()->setState(mDocument->getSyntaxState(line-1));
-//    }
-//    syntaxer()->setLine(newLineText,line);
     syntaxer()->nextToEol();
     return syntaxer()->getState();
 }
@@ -3186,26 +3153,6 @@ int QSynEdit::reparseLines(int startLine, int endLine, bool needRescanFolds, boo
         rescanFolds();
     return line;
 }
-
-// void QSynEdit::reparseLine(int line)
-// {
-//     if (!mSyntaxer)
-//         return;
-//     line--;
-//     line = std::max(0,line);
-//     if (line >= mDocument->count())
-//         return;
-
-//     if (line == 0) {
-//         mSyntaxer->resetState();
-//     } else {
-//         mSyntaxer->setState(mDocument->getSyntaxState(line-1));
-//     }
-//     mSyntaxer->setLine(mDocument->getLine(line), line);
-//     mSyntaxer->nextToEol();
-//     SyntaxState iRange = mSyntaxer->getState();
-//     mDocument->setSyntaxState(line,iRange);
-// }
 
 void QSynEdit::reparseDocument()
 {

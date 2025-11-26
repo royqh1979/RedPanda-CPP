@@ -335,13 +335,6 @@ PSearchResultTreeItem CppRefacter::findOccurenceInFile(
         }
 
         editor.prepareSyntaxerState(*(editor.syntaxer()), posY, line);
-//        if (posY == 0) {
-//            editor.syntaxer()->resetState();
-//        } else {
-//            editor.syntaxer()->setState(
-//                        editor.document()->getSyntaxState(posY-1));
-//        }
-//        editor.syntaxer()->setLine(line,posY);
         while (!editor.syntaxer()->eol()) {
             int start = editor.syntaxer()->getTokenPos() + 1;
             QString token = editor.syntaxer()->getToken();

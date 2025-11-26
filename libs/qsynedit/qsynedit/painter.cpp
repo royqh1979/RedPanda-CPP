@@ -1084,13 +1084,6 @@ void QSynEditPainter::paintLines()
         // necessary because we probably did not scan to the end of the last
         // line - the internal highlighter range might be wrong.
         mEdit->prepareSyntaxerState(*(mEdit->mSyntaxer), vLine-1, sLine);
-//        if (vLine == 1) {
-//            mEdit->mSyntaxer->resetState();
-//        } else {
-//            mEdit->mSyntaxer->setState(
-//                        mEdit->mDocument->getSyntaxState(vLine-2));
-//        }
-//        mEdit->mSyntaxer->setLine(sLine, vLine - 1);
         // Try to concatenate as many tokens as possible to minimize the count
         // of ExtTextOut calls necessary. This depends on the selection state
         // or the line having special colors. For spaces the foreground color

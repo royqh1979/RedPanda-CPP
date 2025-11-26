@@ -2353,13 +2353,8 @@ QStringList Editor::getExpressionAtPosition(
         if (line>=lineCount() || line<0)
             break;
         QStringList tokens;
-        if (line==0) {
-            syntaxer.resetState();
-        } else {
-            syntaxer.setState(document()->getSyntaxState(line-1));
-        }
         QString sLine = document()->getLine(line);
-        syntaxer.setLine(sLine,line);
+        prepareSyntaxerState(syntaxer, line, sLine);
         while (!syntaxer.eol()) {
             int start = syntaxer.getTokenPos();
             QString token = syntaxer.getToken();
@@ -3758,11 +3753,6 @@ bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
     if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
         return false;
     prepareSyntaxerState(*(syntaxer()), y, document()->getLine(y));
-//    if (y==0)
-//        syntaxer()->resetState();
-//    else
-//        syntaxer()->setState(document()->getSyntaxState(y-1));
-//    syntaxer()->setLine(document()->getLine(y),y);
     QSynedit::SyntaxState state = syntaxer()->getState();
     while(!syntaxer()->eol()) {
         int start = syntaxer()->getTokenPos();
