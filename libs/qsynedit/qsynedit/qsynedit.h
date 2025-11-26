@@ -132,6 +132,7 @@ using PTokenAttribute = std::shared_ptr<TokenAttribute>;
 class Document;
 using PDocument = std::shared_ptr<Document>;
 struct SyntaxState;
+using PSyntaxState = std::shared_ptr<SyntaxState>;
 class Syntaxer;
 using PSyntaxer = std::shared_ptr<Syntaxer>;
 class UndoList;
@@ -276,7 +277,7 @@ public:
     bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
       PTokenAttribute& attri);
     bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
-      PTokenAttribute& attri, SyntaxState &syntaxState);
+      PTokenAttribute& attri, PSyntaxState &syntaxState);
     bool getTokenAttriAtRowColEx(const BufferCoord& pos, QString& token,
       int &start, PTokenAttribute& attri);
 
@@ -506,7 +507,7 @@ protected:
     void doSelectLine();
     void incPaintLock();
     void decPaintLock();
-    SyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
+    PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
     void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     bool dragging() const { return mDragging; }
 

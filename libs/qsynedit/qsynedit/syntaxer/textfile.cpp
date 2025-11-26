@@ -109,27 +109,27 @@ void TextSyntaxer::setLine(int lineNumber, const QString &newLine)
     next();
 }
 
-bool TextSyntaxer::isCommentNotFinished(int /*state*/) const
+bool TextSyntaxer::isCommentNotFinished(const PSyntaxState &/*state*/) const
 {
     return false;
 }
 
-bool TextSyntaxer::isStringNotFinished(int /*state*/) const
+bool TextSyntaxer::isStringNotFinished(const PSyntaxState &/*state*/) const
 {
     return false;
 }
 
-SyntaxState TextSyntaxer::getState() const
+PSyntaxState TextSyntaxer::getState() const
 {
-    SyntaxState state;
-    state.state = (int)mState;
-    state.hasTrailingSpaces = mHasTrailingSpaces;
+    PSyntaxState state = std::make_shared<SyntaxState>();
+    state->state = (int)mState;
+    state->hasTrailingSpaces = mHasTrailingSpaces;
     return state;
 }
 
-void TextSyntaxer::setState(const SyntaxState & rangeState)
+void TextSyntaxer::setState(const PSyntaxState & rangeState)
 {
-    mState = (RangeState)rangeState.state;
+    mState = (RangeState)rangeState->state;
     mHasTrailingSpaces = false;
 }
 

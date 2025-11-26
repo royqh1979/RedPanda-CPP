@@ -161,8 +161,8 @@ private:
 
     // SynHighligterBase interface
 public:
-    bool isCommentNotFinished(int state) const override;
-    bool isStringNotFinished(int state) const override;
+    bool isCommentNotFinished(const PSyntaxState &state) const override;
+    bool isStringNotFinished(const PSyntaxState &state) const override;
     bool eol() const override;
     QString getToken() const override;
     const PTokenAttribute &getTokenAttribute() const override;
@@ -170,12 +170,12 @@ public:
     void next() override;
     void setLine(int lineNumber, const QString &newLine) override;
     bool isKeyword(const QString &word) override;
-    void setState(const SyntaxState& rangeState) override;
+    void setState(const PSyntaxState& rangeState) override;
     void resetState() override;
 
     QString languageName() override;
     ProgrammingLanguage language() override;
-    SyntaxState getState() const override;
+    PSyntaxState getState() const override;
     QSet<QString> keywords() override;
     bool supportBraceLevel() override;
     QString commentSymbol() override;

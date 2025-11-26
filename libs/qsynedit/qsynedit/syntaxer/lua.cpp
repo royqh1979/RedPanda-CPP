@@ -1016,15 +1016,15 @@ QMap<QString, QSet<QString> > LuaSyntaxer::scopedKeywords()
     return StdLibTables;
 }
 
-bool LuaSyntaxer::isCommentNotFinished(int state) const
+bool LuaSyntaxer::isCommentNotFinished(const PSyntaxState &state) const
 {
-    return (state == RangeState::rsComment ||
-            state == RangeState::rsLongComment);
+    return (state->state == RangeState::rsComment ||
+            state->state == RangeState::rsLongComment);
 }
 
-bool LuaSyntaxer::isStringNotFinished(int state) const
+bool LuaSyntaxer::isStringNotFinished(const PSyntaxState &state) const
 {
-    return state == RangeState::rsString;
+    return state->state == RangeState::rsString;
 }
 
 bool LuaSyntaxer::eol() const
@@ -1141,9 +1141,9 @@ bool LuaSyntaxer::isKeyword(const QString &word)
     return Keywords.contains(word) || mCustomTypeKeywords.contains(word);
 }
 
-void LuaSyntaxer::setState(const SyntaxState& rangeState)
+void LuaSyntaxer::setState(const PSyntaxState& syntaxState)
 {
-    mRange = rangeState;
+    mRange = *syntaxState;
     // current line's left / right parenthesis count should be reset before parsing each line
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
@@ -1178,9 +1178,11 @@ ProgrammingLanguage LuaSyntaxer::language()
     return ProgrammingLanguage::LUA;
 }
 
-SyntaxState LuaSyntaxer::getState() const
+PSyntaxState LuaSyntaxer::getState() const
 {
-    return mRange;
+    PSyntaxState syntaxState = std::make_shared<SyntaxState>();
+    *syntaxState = mRange;
+    return syntaxState;
 }
 
 bool LuaSyntaxer::isIdentChar(const QChar &ch) const

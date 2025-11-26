@@ -112,10 +112,10 @@ public:
     void next() override;
     void setLine(int lineNumber, const QString &newLine) override;
 
-    bool isCommentNotFinished(int state) const override;
-    bool isStringNotFinished(int state) const override;
-    SyntaxState getState() const override;
-    void setState(const SyntaxState& rangeState) override;
+    bool isCommentNotFinished(const PSyntaxState &state) const override;
+    bool isStringNotFinished(const PSyntaxState &state) const override;
+    PSyntaxState getState() const override;
+    void setState(const PSyntaxState& rangeState) override;
     void resetState() override;
 
     bool supportFolding() override;

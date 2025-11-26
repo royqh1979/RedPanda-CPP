@@ -58,7 +58,7 @@ int Document::parenthesisLevel(int line) const
 {
     QMutexLocker locker(&mMutex);
     if (line>=0 && line < mLines.size()) {
-        return mLines[line]->syntaxState().parenthesisLevel;
+        return mLines[line]->syntaxState()->parenthesisLevel;
     } else
         return 0;
 }
@@ -67,7 +67,7 @@ int Document::bracketLevel(int line) const
 {
     QMutexLocker locker(&mMutex);
     if (line>=0 && line < mLines.size()) {
-        return mLines[line]->syntaxState().bracketLevel;
+        return mLines[line]->syntaxState()->bracketLevel;
     } else
         return 0;
 }
@@ -76,7 +76,7 @@ int Document::braceLevel(int line) const
 {
     QMutexLocker locker(&mMutex);
     if (line>=0 && line < mLines.size()) {
-        return mLines[line]->syntaxState().braceLevel;
+        return mLines[line]->syntaxState()->braceLevel;
     } else
         return 0;
 }
@@ -109,7 +109,7 @@ int Document::blockLevel(int line) const
 {
     QMutexLocker locker(&mMutex);
     if (line>=0 && line < mLines.size()) {
-        return mLines[line]->syntaxState().blockLevel;
+        return mLines[line]->syntaxState()->blockLevel;
     } else
         return 0;
 }
@@ -118,7 +118,7 @@ int Document::blockStarted(int line) const
 {
     QMutexLocker locker(&mMutex);
     if (line>=0 && line < mLines.size()) {
-        return mLines[line]->syntaxState().blockStarted;
+        return mLines[line]->syntaxState()->blockStarted;
     } else
         return 0;
 }
@@ -127,7 +127,7 @@ int Document::blockEnded(int line) const
 {
     QMutexLocker locker(&mMutex);
     if (line>=0 && line < mLines.size()) {
-        int result = mLines[line]->syntaxState().blockEnded;
+        int result = mLines[line]->syntaxState()->blockEnded;
 //        if (index+1 < mLines.size())
 //            result += mLines[index+1]->syntaxState.blockEndedLastLine;
         return result;
@@ -158,7 +158,7 @@ QString Document::lineBreak() const
     return "\n";
 }
 
-SyntaxState Document::getSyntaxState(int line) const
+PSyntaxState Document::getSyntaxState(int line) const
 {
     QMutexLocker locker(&mMutex);
     if (line>=0 && line < mLines.size()) {
@@ -166,7 +166,7 @@ SyntaxState Document::getSyntaxState(int line) const
     } else {
          listIndexOutOfBounds(line);
     }
-    return SyntaxState();
+    return PSyntaxState();
 }
 
 void Document::insertItem(int line, const QString &s)
@@ -201,7 +201,7 @@ void Document::setAppendNewLineAtEOF(bool appendNewLineAtEOF)
     mAppendNewLineAtEOF = appendNewLineAtEOF;
 }
 
-void Document::setSyntaxState(int line, const SyntaxState& state)
+void Document::setSyntaxState(int line, const PSyntaxState& state)
 {
     QMutexLocker locker(&mMutex);
     if (line<0 || line>=mLines.count()) {
@@ -1266,7 +1266,7 @@ void Document::invalidateAllNonTempLineWidth()
     QMutexLocker locker(&mMutex);
     for (PDocumentLine& line:mLines) {
         if (!line->mIsTempWidth)
-            line->mIsTempWidth;
+            line->mIsTempWidth = true;
     }
 }
 

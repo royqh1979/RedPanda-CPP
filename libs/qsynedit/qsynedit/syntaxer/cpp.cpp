@@ -1546,22 +1546,22 @@ bool CppSyntaxer::needsLineState()
     return true;
 }
 
-bool CppSyntaxer::isCommentNotFinished(int state) const
+bool CppSyntaxer::isCommentNotFinished(const PSyntaxState &state) const
 {
-    return (state == RangeState::rsAnsiC ||
-            state == RangeState::rsDirectiveComment||
-            state == RangeState::rsDocstring ||
-            state == RangeState::rsCppComment);
+    return (state->state == RangeState::rsAnsiC ||
+            state->state == RangeState::rsDirectiveComment||
+            state->state == RangeState::rsDocstring ||
+            state->state == RangeState::rsCppComment);
 }
 
-bool CppSyntaxer::isStringNotFinished(int state) const
+bool CppSyntaxer::isStringNotFinished(const PSyntaxState &state) const
 {
-    return state == RangeState::rsString || state==RangeState::rsStringNextLine || state==RangeState::rsStringUnfinished;
+    return state->state == RangeState::rsString || state->state==RangeState::rsStringNextLine || state->state==RangeState::rsStringUnfinished;
 }
 
-bool CppSyntaxer::isDocstringNotFinished(int state) const
+bool CppSyntaxer::isDocstringNotFinished(const PSyntaxState &state) const
 {
-    return state == RangeState::rsDocstring;
+    return state->state == RangeState::rsDocstring;
 }
 
 bool CppSyntaxer::eol() const
@@ -1755,14 +1755,14 @@ bool CppSyntaxer::isKeyword(const QString &word)
     return Keywords.contains(word) || mCustomTypeKeywords.contains(word);
 }
 
-void CppSyntaxer::setState(const SyntaxState& rangeState)
+void CppSyntaxer::setState(const PSyntaxState& rangeState)
 {
-    mRange = rangeState;
+    mRange = *rangeState;
     // current line's left / right parenthesis count should be reset before parsing each line
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
     mRange.blockEndedLastLine = 0;
-    mRange.lastUnindent=rangeState.lastUnindent;
+    mRange.lastUnindent=rangeState->lastUnindent;
     mRange.hasTrailingSpaces = false;
 }
 
@@ -1791,9 +1791,12 @@ ProgrammingLanguage CppSyntaxer::language()
     return ProgrammingLanguage::CPP;
 }
 
-SyntaxState CppSyntaxer::getState() const
+PSyntaxState CppSyntaxer::getState() const
 {
-    return mRange;
+    PSyntaxState syntaxstate = std::make_shared<SyntaxState>();
+    *syntaxstate = mRange;
+    return syntaxstate;
+
 }
 
 bool CppSyntaxer::isIdentChar(const QChar &ch) const

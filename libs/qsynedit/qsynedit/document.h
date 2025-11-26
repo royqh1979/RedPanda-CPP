@@ -133,12 +133,12 @@ private:
      * @brief get the state of the syntax highlighter after this line is parsed
      * @return
      */
-    const SyntaxState& syntaxState() const { return mSyntaxState; }
+    PSyntaxState syntaxState() const { return mSyntaxState; }
     /**
      * @brief set the state of the syntax highlighter after this line is parsed
      * @param newSyntaxState
      */
-    void setSyntaxState(const SyntaxState &newSyntaxState) { mSyntaxState = newSyntaxState; }
+    void setSyntaxState(const PSyntaxState &newSyntaxState) { mSyntaxState = newSyntaxState; }
 
     void setLineText(const QString &newLineText);
     void updateWidth();
@@ -168,7 +168,7 @@ private:
      * QSynedit use this state to speed up syntax highlight parsing.
      * Which is also used in auto-indent calculating and other functions.
      */
-    SyntaxState mSyntaxState;
+    PSyntaxState mSyntaxState;
     /**
      * @brief total width (pixel) of the line text
      *
@@ -390,7 +390,7 @@ public:
      * @param line line index (starts frome 0)
      * @return
      */
-    SyntaxState getSyntaxState(int line) const;
+    PSyntaxState getSyntaxState(int line) const;
 
     /**
      * @brief set state of the syntax highlighter after parsing the specified line.
@@ -400,7 +400,7 @@ public:
      * @param line line index (starts frome 0)
      * @param state the new state
      */
-    void setSyntaxState(int line, const SyntaxState& state);
+    void setSyntaxState(int line, const PSyntaxState& state);
 
     /**
      * @brief get line text of the specified line.

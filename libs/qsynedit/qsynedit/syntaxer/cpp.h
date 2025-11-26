@@ -92,12 +92,12 @@ public:
 
     static const QSet<QString> StandardAttributes;
 
-    bool isStringToNextLine(int state) { return state == RangeState::rsStringNextLine; }
-    bool isRawStringStart(int state) { return state == RangeState::rsRawString; }
-    bool isRawStringNoEscape(int state) { return state == RangeState::rsRawStringNotEscaping; }
-    bool isRawStringEnd(int state) { return state == RangeState::rsRawStringEnd; }
-    bool isCharNotFinished(int state) { return state == RangeState::rsChar || state == RangeState::rsCharEscaping; }
-    bool isCharEscaping(int state) { return state == RangeState::rsCharEscaping; }
+    bool isStringToNextLine(const PSyntaxState &state) const { return state->state == RangeState::rsStringNextLine; }
+    bool isRawStringStart(const PSyntaxState &state) const { return state->state == RangeState::rsRawString; }
+    bool isRawStringNoEscape(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringNotEscaping; }
+    bool isRawStringEnd(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringEnd; }
+    bool isCharNotFinished(const PSyntaxState &state) const { return state->state == RangeState::rsChar || state->state == RangeState::rsCharEscaping; }
+    bool isCharEscaping(const PSyntaxState &state) const { return state->state == RangeState::rsCharEscaping; }
     bool isInAttribute(const SyntaxState &state);
 
     TokenId getTokenId() { return mTokenId; }
@@ -191,9 +191,9 @@ private:
 
     // Syntaxer interface
 public:
-    bool isCommentNotFinished(int state) const override;
-    bool isStringNotFinished(int state) const override;
-    bool isDocstringNotFinished(int state) const override;
+    bool isCommentNotFinished(const PSyntaxState &state) const override;
+    bool isStringNotFinished(const PSyntaxState &state) const override;
+    bool isDocstringNotFinished(const PSyntaxState &state) const override;
     bool eol() const override;
     QString getToken() const override;
     const PTokenAttribute &getTokenAttribute() const override;
@@ -201,13 +201,13 @@ public:
     void next() override;
     void setLine(int lineNumber, const QString &newLine) override;
     bool isKeyword(const QString &word) override;
-    void setState(const SyntaxState& rangeState) override;
+    void setState(const PSyntaxState& rangeState) override;
     void resetState() override;
 
     QString languageName() override;
     ProgrammingLanguage language() override;
 
-    SyntaxState getState() const override;
+    PSyntaxState getState() const override;
     bool isIdentChar(const QChar &ch) const override;
     bool isIdentStartChar(const QChar &ch) const override;
     QSet<QString> keywords() override;

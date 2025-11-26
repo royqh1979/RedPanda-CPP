@@ -1683,24 +1683,24 @@ void ASMSyntaxer::setLine(int lineNumber, const QString &newLine)
     next();
 }
 
-bool ASMSyntaxer::isCommentNotFinished(int /*state*/) const
+bool ASMSyntaxer::isCommentNotFinished(const PSyntaxState &/*state*/) const
 {
     return false;
 }
 
-bool ASMSyntaxer::isStringNotFinished(int /*state*/) const
+bool ASMSyntaxer::isStringNotFinished(const PSyntaxState &/*state*/) const
 {
     return false;
 }
 
-SyntaxState ASMSyntaxer::getState() const
+PSyntaxState ASMSyntaxer::getState() const
 {
-    SyntaxState state;
-    state.hasTrailingSpaces = mHasTrailingSpaces;
+    PSyntaxState state = std::make_shared<SyntaxState>();
+    state->hasTrailingSpaces = mHasTrailingSpaces;
     return state;
 }
 
-void ASMSyntaxer::setState(const SyntaxState&)
+void ASMSyntaxer::setState(const PSyntaxState&)
 {
     mHasTrailingSpaces = false;
 }

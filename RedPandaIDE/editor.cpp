@@ -613,14 +613,14 @@ void Editor::undoSymbolCompletion(int pos)
 {
     QSynedit::PTokenAttribute attr;
     QString token;
-    QSynedit::SyntaxState syntaxState;
+    QSynedit::PSyntaxState syntaxState;
 
     if (!pSettings->editor().removeSymbolPairs())
         return;
     QSynedit::BufferCoord coord{pos, caretY()};
     if (!getTokenAttriAtRowCol(coord, token, attr, syntaxState))
         return;
-    if (syntaxer()->isCommentNotFinished(syntaxState.state))
+    if (syntaxer()->isCommentNotFinished(syntaxState))
         return ;
     //convert caret x to string index;
     pos--;
@@ -750,8 +750,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
             clearUserCodeInTabStops();
         } else {
             QString sLine = lineText().mid(0,caretX()-1).trimmed();
-            QSynedit::SyntaxState state = calcSyntaxStateAtLine(caretY()-1, sLine);
-            if (syntaxer()->isCommentNotFinished(state.state)) {
+            QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretY()-1, sLine);
+            if (syntaxer()->isCommentNotFinished(state)) {
                 if (sLine=="/**") { //javadoc style docstring
                     sLine = lineText().mid(caretX()-1).trimmed();
                     if (sLine=="*/") {
@@ -877,7 +877,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     return;
                 } else {
                     QSynedit::TokenType tokenType;
-                    QSynedit::TokenType currentTokenType;
                     QString lastWord = getPreviousWordAtPositionForSuggestion(ws, tokenType);
                     if (mParser && (tokenType == QSynedit::TokenType::Keyword
                                     || tokenType == QSynedit::TokenType::Identifier)) {
@@ -2612,9 +2611,9 @@ bool Editor::handleSymbolCompletion(QChar key)
     //todo: better methods to detect current caret type
     if (caretX() <= 1) {
         if (caretY()>1) {
-            if (syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 2).state))
+            if (syntaxer()->isCommentNotFinished(document()->getSyntaxState(caretY() - 2)))
                 return false;
-            if (syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 2).state)
+            if (syntaxer()->isStringNotFinished(document()->getSyntaxState(caretY() - 2))
                     && (key!='\"') && (key!='\''))
                 return false;
         }
@@ -2623,11 +2622,11 @@ bool Editor::handleSymbolCompletion(QChar key)
         // Check if that line is highlighted as  comment
         QSynedit::PTokenAttribute attr;
         QString token;
-        QSynedit::SyntaxState syntaxState;
+        QSynedit::PSyntaxState syntaxState;
         if (getTokenAttriAtRowCol(HighlightPos, token, attr, syntaxState)) {
-            if (syntaxer()->isCommentNotFinished(syntaxState.state))
+            if (syntaxer()->isCommentNotFinished(syntaxState))
                 return false;
-            if (syntaxer()->isStringNotFinished(syntaxState.state)
+            if (syntaxer()->isStringNotFinished(syntaxState)
                     && (key!='\'') && (key!='\"') && (key!='(') && (key!=')'))
                 return false;
             if (( key=='<' || key =='>') && (mParser && !mParser->isIncludeLine(lineText())))
@@ -2762,8 +2761,8 @@ bool Editor::handleParentheseSkip()
       if (lineCount()==0)
           return false;
       if (syntaxer()->supportBraceLevel()) {
-          QSynedit::SyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
-          if (lastLineState.parenthesisLevel==0) {
+          QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
+          if (lastLineState->parenthesisLevel==0) {
               setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
               return true;
           }
@@ -2809,8 +2808,8 @@ bool Editor::handleBracketSkip()
     if (lineCount()==0)
         return false;
     if (syntaxer()->supportBraceLevel()) {
-        QSynedit::SyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
-        if (lastLineState.bracketLevel==0) {
+        QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
+        if (lastLineState->bracketLevel==0) {
             setCaretXY( QSynedit::BufferCoord{caretX() + 1, caretY()}); // skip over
             return true;
         }
@@ -2923,8 +2922,8 @@ bool Editor::handleBraceSkip()
         return false;
 
     if (syntaxer()->supportBraceLevel()) {
-        QSynedit::SyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
-        if (lastLineState.braceLevel==0) {
+        QSynedit::PSyntaxState lastLineState = document()->getSyntaxState(lineCount()-1);
+        if (lastLineState->braceLevel==0) {
             bool oldInsertMode = insertMode();
             setInsertMode(false); //set mode to overwrite
             processCommand(QSynedit::EditCommand::Char,'}');
@@ -3161,25 +3160,25 @@ Editor::QuoteStatus Editor::getQuoteStatus()
     QuoteStatus Result = QuoteStatus::NotQuote;
     if (syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
         QString s = lineText().mid(0,caretX()-1);
-        QSynedit::SyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
+        QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
         std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(syntaxer());
-        if (syntaxer()->isStringNotFinished(state.state)) {
-            if (cppSyntaxer->isStringToNextLine(state.state))
+        if (syntaxer()->isStringNotFinished(state)) {
+            if (cppSyntaxer->isStringToNextLine(state))
                 return QuoteStatus::DoubleQuoteEscape;
             else
                 return QuoteStatus::DoubleQuote;
         }
-        if (cppSyntaxer->isCharNotFinished(state.state)) {
-            if (cppSyntaxer->isCharEscaping(state.state))
+        if (cppSyntaxer->isCharNotFinished(state)) {
+            if (cppSyntaxer->isCharEscaping(state))
                 return QuoteStatus::SingleQuoteEscape;
             else
                 return QuoteStatus::SingleQuote;
         }
-        if (cppSyntaxer->isRawStringNoEscape(state.state))
+        if (cppSyntaxer->isRawStringNoEscape(state))
             return QuoteStatus::RawStringNoEscape;
-        if (cppSyntaxer->isRawStringStart(state.state))
+        if (cppSyntaxer->isRawStringStart(state))
             return QuoteStatus::RawString;
-        if (cppSyntaxer->isRawStringEnd(state.state))
+        if (cppSyntaxer->isRawStringEnd(state))
             return QuoteStatus::RawStringEnd;
         return QuoteStatus::NotQuote;
     } else {
@@ -3640,7 +3639,7 @@ void Editor::showHeaderCompletion(bool autoComplete, bool forceShow)
     // Check if that line is highlighted as  comment
     QSynedit::PTokenAttribute attr;
     QString token;
-    QSynedit::SyntaxState syntaxState;
+    QSynedit::PSyntaxState syntaxState;
     if (getTokenAttriAtRowCol(HighlightPos, token, attr, syntaxState)) {
         if (attr && attr->tokenType()==QSynedit::TokenType::Comment)
             return;
@@ -3753,7 +3752,7 @@ bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
     if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
         return false;
     prepareSyntaxerState(*(syntaxer()), y, document()->getLine(y));
-    QSynedit::SyntaxState state = syntaxer()->getState();
+    QSynedit::PSyntaxState state = syntaxer()->getState();
     while(!syntaxer()->eol()) {
         int start = syntaxer()->getTokenPos();
         QString token = syntaxer()->getToken();
@@ -3764,7 +3763,7 @@ bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
         syntaxer()->next();
     }
 //    qDebug()<<state.parenthesisLevel;
-    return state.parenthesisLevel>0;
+    return state->parenthesisLevel>0;
 
 
 }
@@ -4214,13 +4213,13 @@ void Editor::updateFunctionTip(bool showTip)
 
     QSynedit::PTokenAttribute attr;
     QString token;
-    QSynedit::SyntaxState syntaxState;
+    QSynedit::PSyntaxState syntaxState;
     QSynedit::BufferCoord pos = caretPos;
     pos.ch--;
     if (getTokenAttriAtRowCol(pos, token, attr, syntaxState)) {
-        if (syntaxer()->isStringNotFinished(syntaxState.state))
+        if (syntaxer()->isStringNotFinished(syntaxState))
             return;
-        if (syntaxer()->isCommentNotFinished(syntaxState.state))
+        if (syntaxer()->isCommentNotFinished(syntaxState))
             return;
         if (attr->tokenType() == QSynedit::TokenType::Character)
             return;

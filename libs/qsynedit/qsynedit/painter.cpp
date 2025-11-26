@@ -854,7 +854,7 @@ void QSynEditPainter::paintFoldAttributes()
             if (lastNonBlank>=mEdit->lineCount())
                 continue;
             lineIndent = mEdit->getLineIndent(mEdit->mDocument->getLine(lastNonBlank));
-            int braceLevel = mEdit->mDocument->getSyntaxState(lastNonBlank).braceLevel;
+            int braceLevel = mEdit->mDocument->getSyntaxState(lastNonBlank)->braceLevel;
             int indentLevel = braceLevel ;
             tabSteps = 0;
             indentLevel = 0;
@@ -1107,19 +1107,19 @@ void QSynEditPainter::paintLines()
                     || sToken == "("
                     || sToken == "{"
                     ) {
-                SyntaxState rangeState = mEdit->mSyntaxer->getState();
-                getBraceColorAttr(rangeState.bracketLevel
-                                  +rangeState.braceLevel
-                                  +rangeState.parenthesisLevel
+                PSyntaxState rangeState = mEdit->mSyntaxer->getState();
+                getBraceColorAttr(rangeState->bracketLevel
+                                  +rangeState->braceLevel
+                                  +rangeState->parenthesisLevel
                                   ,attr);
             } else if (sToken == "]"
                        || sToken == ")"
                        || sToken == "}"
                        ){
-                SyntaxState rangeState = mEdit->mSyntaxer->getState();
-                getBraceColorAttr(rangeState.bracketLevel
-                                  +rangeState.braceLevel
-                                  +rangeState.parenthesisLevel+1,
+                PSyntaxState rangeState = mEdit->mSyntaxer->getState();
+                getBraceColorAttr(rangeState->bracketLevel
+                                  +rangeState->braceLevel
+                                  +rangeState->parenthesisLevel+1,
                                   attr);
             }
             //input method
@@ -1175,7 +1175,7 @@ void QSynEditPainter::paintLines()
             if ((foldRange) && foldRange->collapsed) {
                 addOnStr = mEdit->mSyntaxer->foldString(sLine);
                 attr = mEdit->mSyntaxer->symbolAttribute();
-                getBraceColorAttr(mEdit->mSyntaxer->getState().braceLevel,attr);
+                getBraceColorAttr(mEdit->mSyntaxer->getState()->braceLevel,attr);
             } else {
                 // Draw LineBreak glyph.
                 if (mEdit->mOptions.testFlag(EditorOption::ShowLineBreaks)
