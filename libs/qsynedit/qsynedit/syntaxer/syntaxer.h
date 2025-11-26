@@ -59,12 +59,8 @@ struct SyntaxState {
     QVector<IndentInfo> indents; // indents stack (needed by auto indent)
     IndentInfo lastUnindent;
     bool hasTrailingSpaces;
-    bool continuePrevLine;
-    QString mLastToken;
 
-    QMap<QString,QVariant> extraData;
-
-    bool operator==(const SyntaxState& s2);
+    virtual bool equals(const std::shared_ptr<SyntaxState>& s2) const;
     IndentInfo getLastIndent();
     IndentType getLastIndentType();
     SyntaxState();

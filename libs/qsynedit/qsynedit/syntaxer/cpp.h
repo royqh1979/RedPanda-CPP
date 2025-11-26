@@ -56,6 +56,17 @@ public:
         rsDefineIdentifier, rsDefineRemaining,
     };
 
+
+    struct CppSyntaxState: SyntaxState {
+        bool continuePrevLine;
+        QString lastToken;
+        QString initialDCharSeq;
+        bool inAttribute;
+        QList<int> ancestorsForIf;
+
+        bool equals(const std::shared_ptr<SyntaxState>& s2) const override;
+    };
+
     explicit CppSyntaxer();
     CppSyntaxer(const CppSyntaxer&)=delete;
     CppSyntaxer operator=(const CppSyntaxer&)=delete;
@@ -98,7 +109,6 @@ public:
     bool isRawStringEnd(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringEnd; }
     bool isCharNotFinished(const PSyntaxState &state) const { return state->state == RangeState::rsChar || state->state == RangeState::rsCharEscaping; }
     bool isCharEscaping(const PSyntaxState &state) const { return state->state == RangeState::rsCharEscaping; }
-    bool isInAttribute(const SyntaxState &state);
 
     TokenId getTokenId() { return mTokenId; }
 private:
@@ -159,7 +169,7 @@ private:
     void popStatementIndents();
 
 private:
-    SyntaxState mRange;
+    CppSyntaxState mRange;
     QString mLine;
     int mLineSize;
     int mRun;

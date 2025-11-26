@@ -3135,13 +3135,13 @@ int QSynEdit::reparseLines(int startLine, int endLine, bool needRescanFolds, boo
         mSyntaxer->setLine(line, mDocument->getLine(line));
         mSyntaxer->nextToEol();
         state = mSyntaxer->getState();
-        if (line >= endLine && state == mDocument->getSyntaxState(line)) {
+        if (line >= endLine && state->equals(mDocument->getSyntaxState(line)) ) {
             break;
         }
         mDocument->setSyntaxState(line,state);
         line++;
     } while (line < maxLine);
-
+    //qDebug()<<"parse endLine"<<endLine<<"real end"<<line;
     //don't rescan folds if only currentLine is reparsed
     if (line-startLine==1)
         return line;

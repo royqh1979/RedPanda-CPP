@@ -224,12 +224,6 @@ CppSyntaxer::CppSyntaxer(): Syntaxer()
     resetState();
 }
 
-bool CppSyntaxer::isInAttribute(const SyntaxState &state)
-{
-    return state.extraData.contains(DATA_KEY_IN_ATTRIBUTE)
-           && state.extraData[DATA_KEY_IN_ATTRIBUTE].toBool();
-}
-
 void CppSyntaxer::procAndSymbol()
 {
     mTokenId = TokenId::Symbol;
@@ -601,30 +595,10 @@ void CppSyntaxer::procIdentifier()
         mTokenId = TokenId::Key;
         if (CppStatementKeyWords.contains(word)) {
             if (word == "else") {
-                QVariant var = mRange.extraData.value(DATA_KEY_LAST_FINISHED_IFS);
-                if (var.isValid()) {
-                    int lastPopedIfs = var.toInt();
-                    if (lastPopedIfs!=0) {
-                        QList<int> ifParents;
-                        //int line = lastPopedIfs.first();
-                        lastPopedIfs--;
-                        var = mRange.extraData.value(DATA_KEY_PARENT_OF_POPED_IFS);
-                        if (var.isValid()) {
-                            ifParents = var.value<QList<int>>();
-//                            qDebug()<<ifParents<<mLineNumber<<mLine<<mRun;
-                            if (ifParents.first() != -1)
-                                pushIndents(IndentType::Statement, ifParents.first(), "");
-                            ifParents.pop_front();
-                        }
-                        if (lastPopedIfs==0) {
-                            mRange.extraData.remove(DATA_KEY_LAST_FINISHED_IFS);
-                            mRange.extraData.remove(DATA_KEY_PARENT_OF_POPED_IFS);
-                        } else {
-                            mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
-                            var = QVariant::fromValue(ifParents);
-                            mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS,var);
-                        }
-                    }
+                if (!mRange.ancestorsForIf.isEmpty()) {
+                    if (mRange.ancestorsForIf.first() != -1)
+                        pushIndents(IndentType::Statement, mRange.ancestorsForIf.first(), "");
+                    mRange.ancestorsForIf.pop_front();
                 }
                 pushIndents(IndentType::Statement, -1, word);
             } else if (word == "if" && mLastKeyword == "else") {
@@ -633,7 +607,7 @@ void CppSyntaxer::procIdentifier()
                 pushIndents(IndentType::Statement, -1, word);
             }
         }
-    } else if (isInAttribute(mRange) && StandardAttributes.contains(word)) {
+    } else if (mRange.inAttribute && StandardAttributes.contains(word)) {
         mTokenId = TokenId::Key;
     } else {
         mTokenId = TokenId::Identifier;
@@ -985,7 +959,7 @@ void CppSyntaxer::procRawString()
     mTokenId = TokenId::RawString;
     QString rawStringInitialDCharSeq;
     if (mRange.state == RangeState::rsRawString)
-        mRange.extraData[DATA_KEY_INITIAL_DCHAR_SEQ] = "";
+        mRange.initialDCharSeq = "";
     while (mRun<mLineSize) {
         if (mRange.state!=RangeState::rsRawStringNotEscaping &&
                 (mLine[mRun].isSpace()
@@ -1002,16 +976,15 @@ void CppSyntaxer::procRawString()
         case '(':
             if (mRange.state==RangeState::rsRawString) {
                 mRange.state = RangeState::rsRawStringNotEscaping;
-                mRange.extraData[DATA_KEY_INITIAL_DCHAR_SEQ] = rawStringInitialDCharSeq;
+                mRange.initialDCharSeq = rawStringInitialDCharSeq;
             }
             break;
         case ')':
             if (mRange.state == RangeState::rsRawStringNotEscaping) {
-                rawStringInitialDCharSeq = mRange.extraData[DATA_KEY_INITIAL_DCHAR_SEQ].toString();
+                rawStringInitialDCharSeq = mRange.initialDCharSeq;
                 if ( mLine.mid(mRun+1,rawStringInitialDCharSeq.length()) == rawStringInitialDCharSeq) {
                     mRun = mRun+rawStringInitialDCharSeq.length();
                     mRange.state = RangeState::rsRawStringEnd;
-                    mRange.extraData.remove(DATA_KEY_INITIAL_DCHAR_SEQ);
                 }
             }
             break;
@@ -1124,11 +1097,10 @@ void CppSyntaxer::procSquareClose()
 {
     mRun++;
     if (mRun < mLineSize && mLine[mRun]==']') {
-        if (mRange.extraData.contains(DATA_KEY_IN_ATTRIBUTE)
-                && mRange.extraData[DATA_KEY_IN_ATTRIBUTE].toBool()) {
+        if (mRange.inAttribute) {
             mTokenId = TokenId::Symbol;
             mRun++;
-            mRange.extraData.remove(DATA_KEY_IN_ATTRIBUTE);
+            mRange.inAttribute = false;
             return;
         }
     }
@@ -1145,7 +1117,7 @@ void CppSyntaxer::procSquareOpen()
     if (mRun < mLineSize && mLine[mRun]=='[') {
         mRun++;
         mTokenId = TokenId::Symbol;
-        mRange.extraData[DATA_KEY_IN_ATTRIBUTE]=true;
+        mRange.inAttribute=true;
     } else{
         mTokenId = TokenId::Symbol;
         mRange.bracketLevel++;
@@ -1477,7 +1449,6 @@ void CppSyntaxer::pushIndents(IndentType indentType, int line, const QString& ke
 
 void CppSyntaxer::popStatementIndents()
 {
-    int lastPopedIfs = 0;
     IndentInfo lastUnindent = mRange.lastUnindent;
     QList<int> ifParents;
 //    qDebug()<<"pop statement indetns"<<mLineNumber;
@@ -1489,7 +1460,6 @@ void CppSyntaxer::popStatementIndents()
         if ( lastUnindent != mRange.lastUnindent ) {
             lastUnindent = mRange.lastUnindent;
             if (lastUnindent.type == IndentType::Statement && lastUnindent.keyword == "if") {
-                lastPopedIfs++;
                 if (mRange.indents.isEmpty()
                         || mRange.indents.last().type != IndentType::Statement)
                     ifParents.append(-1);
@@ -1498,11 +1468,8 @@ void CppSyntaxer::popStatementIndents()
             }
         }
     }
-    if (lastPopedIfs!=0) {
-        mRange.extraData.insert(DATA_KEY_LAST_FINISHED_IFS,lastPopedIfs);
-        QVariant var;
-        var = QVariant::fromValue(ifParents);
-        mRange.extraData.insert(DATA_KEY_PARENT_OF_POPED_IFS, var);
+    if (!ifParents.isEmpty()) {
+        mRange.ancestorsForIf = ifParents;
     }
 }
 
@@ -1757,7 +1724,8 @@ bool CppSyntaxer::isKeyword(const QString &word)
 
 void CppSyntaxer::setState(const PSyntaxState& rangeState)
 {
-    mRange = *rangeState;
+    std::shared_ptr<CppSyntaxState> cppState = std::dynamic_pointer_cast<CppSyntaxState>(rangeState);
+    mRange = *cppState;
     // current line's left / right parenthesis count should be reset before parsing each line
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;
@@ -1779,6 +1747,11 @@ void CppSyntaxer::resetState()
     mRange.indents.clear();
     mRange.lastUnindent=IndentInfo{IndentType::None,0, ""};
     mRange.hasTrailingSpaces = false;
+    mRange.continuePrevLine = false;
+    mRange.lastToken = "";
+    mRange.initialDCharSeq = "";
+    mRange.inAttribute = false;
+    mRange.ancestorsForIf.clear();
 }
 
 QString CppSyntaxer::languageName()
@@ -1793,7 +1766,7 @@ ProgrammingLanguage CppSyntaxer::language()
 
 PSyntaxState CppSyntaxer::getState() const
 {
-    PSyntaxState syntaxstate = std::make_shared<SyntaxState>();
+    std::shared_ptr<CppSyntaxState> syntaxstate = std::make_shared<CppSyntaxState>();
     *syntaxstate = mRange;
     return syntaxstate;
 
@@ -1821,6 +1794,17 @@ QString CppSyntaxer::foldString(QString endLine)
     if (endLine.trimmed().startsWith("#"))
         return "...";
     return "...}";
+}
+
+bool CppSyntaxer::CppSyntaxState::equals(const std::shared_ptr<SyntaxState> &s2) const
+{
+    if (SyntaxState::equals(s2)) {
+        std::shared_ptr<CppSyntaxState> cppS2 = std::dynamic_pointer_cast<CppSyntaxState>(s2);
+        return initialDCharSeq == cppS2->initialDCharSeq
+                && inAttribute == cppS2->inAttribute
+                && ancestorsForIf == cppS2->ancestorsForIf;
+    } else
+        return false;
 }
 
 }

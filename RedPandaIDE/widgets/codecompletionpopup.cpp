@@ -158,17 +158,17 @@ bool CodeCompletionPopup::search(const QString &memberPhrase, bool autoHideOnSin
     if (!mCompletionStatementList.isEmpty()) {
         QString schemaName = pSettings->editor().colorScheme();
         PColorSchemeItem item = pColorManager->getItem(schemaName, COLOR_SCHEME_ACTIVE_LINE);
-        if (item)
+        if (item && item->background().isValid())
             mDelegate->setCurrentSelectionColor(item->background());
         else
             mDelegate->setCurrentSelectionColor(palette().highlight().color());
         item = pColorManager->getItem(schemaName, COLOR_SCHEME_TEXT);
-        if (item)
+        if (item && item->foreground().isValid())
             mDelegate->setNormalColor(item->foreground());
         else
             mDelegate->setNormalColor(palette().color(QPalette::Text));
         item = pColorManager->getItem(schemaName, SYNS_AttrReserveWord_Type);
-        if (item)
+        if (item && item->foreground().isValid())
             mDelegate->setMatchedColor(item->foreground());
         else
             mDelegate->setMatchedColor(palette().color(QPalette::HighlightedText));
@@ -1029,14 +1029,15 @@ void CodeCompletionPopup::getCompletionListForLabels(const QString &fileName, in
             mParser->unFreeze();
         });
         PStatement scopeStatement = mParser->findScopeStatement(fileName,line);
-        if (scopeStatement && scopeStatement->kind == StatementKind::Function
+        if (scopeStatement && (scopeStatement->kind == StatementKind::Function
                 || scopeStatement->kind == StatementKind::Constructor
                 || scopeStatement->kind == StatementKind::Destructor
-                || scopeStatement->kind == StatementKind::Lambda
-                )
-        foreach(const PStatement &child, scopeStatement->children) {
-            if (child->kind == StatementKind::Label) {
-                mFullCompletionStatementList.append(child);
+                || scopeStatement->kind == StatementKind::Lambda)
+                ) {
+            foreach(const PStatement &child, scopeStatement->children) {
+                if (child->kind == StatementKind::Label) {
+                    mFullCompletionStatementList.append(child);
+                }
             }
         }
     }

@@ -169,27 +169,26 @@ TokenAttribute::TokenAttribute(const QString &name, TokenType tokenType):
 
 }
 
-bool SyntaxState::operator==(const SyntaxState &s2)
+bool SyntaxState::equals(const std::shared_ptr<SyntaxState> &s2) const
 {
     // indents contains the information of brace/parenthesis/brackets embedded levels
-    return (state == s2.state)
-            && (blockLevel == s2.blockLevel) // needed by block folding
-            && (blockStarted == s2.blockStarted)  // needed by block folding
-            && (blockEnded == s2.blockEnded)    // needed by block folding;
-            && (blockEndedLastLine == s2.blockEndedLastLine) //needed by block folding;
-            && (braceLevel == s2.braceLevel) // current braces embedding level (needed by rainbow color)
-            && (bracketLevel == s2.bracketLevel) // current brackets embedding level (needed by rainbow color)
-            && (parenthesisLevel == s2.parenthesisLevel) // current parenthesis embedding level (needed by rainbow color)
-            && (indents == s2.indents)
-            && (lastUnindent == s2.lastUnindent)
-            && (extraData == s2.extraData)
+    return (state == s2->state)
+            && (blockLevel == s2->blockLevel) // needed by block folding
+            && (blockStarted == s2->blockStarted)  // needed by block folding
+            && (blockEnded == s2->blockEnded)    // needed by block folding;
+            && (blockEndedLastLine == s2->blockEndedLastLine) //needed by block folding;
+            && (braceLevel == s2->braceLevel) // current braces embedding level (needed by rainbow color)
+            && (bracketLevel == s2->bracketLevel) // current brackets embedding level (needed by rainbow color)
+            && (parenthesisLevel == s2->parenthesisLevel) // current parenthesis embedding level (needed by rainbow color)
+            && (indents == s2->indents)
+            && (lastUnindent == s2->lastUnindent)
             ;
 }
 
 IndentInfo SyntaxState::getLastIndent()
 {
     if (indents.isEmpty())
-        return IndentInfo{IndentType::None,0};
+        return IndentInfo{IndentType::None,0, ""};
     return indents.back();
 }
 
@@ -211,7 +210,7 @@ SyntaxState::SyntaxState():
     parenthesisLevel{0},
 //    leftBraces(0),
 //    rightBraces(0),
-    lastUnindent{IndentType::None,0},
+    lastUnindent{IndentType::None,0,""},
     hasTrailingSpaces{false}
 {
 }
