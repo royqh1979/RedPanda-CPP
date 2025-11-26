@@ -3132,7 +3132,7 @@ int QSynEdit::reparseLines(int startLine, int endLine, bool needRescanFolds, boo
     }
     int line = startLine;
     do {
-        mSyntaxer->setLine(mDocument->getLine(line), line);
+        mSyntaxer->setLine(line, mDocument->getLine(line));
         mSyntaxer->nextToEol();
         state = mSyntaxer->getState();
         if (line >= endLine && state == mDocument->getSyntaxState(line)) {
@@ -3160,7 +3160,7 @@ void QSynEdit::reparseDocument()
 //        qint64 begin=QDateTime::currentMSecsSinceEpoch();
         mSyntaxer->resetState();
         for (int i =0;i<mDocument->count();i++) {
-            mSyntaxer->setLine(mDocument->getLine(i), i);
+            mSyntaxer->setLine(i+1, mDocument->getLine(i));
             mSyntaxer->nextToEol();
             mDocument->setSyntaxState(i, mSyntaxer->getState());
         }
@@ -4559,7 +4559,7 @@ void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QSt
     } else {
         syntaxer.setState(mDocument->getSyntaxState(lineIndex-1));
     }
-    syntaxer.setLine(lineText, lineIndex);
+    syntaxer.setLine(lineIndex, lineText);
 }
 
 void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)

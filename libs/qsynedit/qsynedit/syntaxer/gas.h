@@ -49,7 +49,7 @@ protected:
     void handleIdent(int line, const QString& ident)  override;
     void setPrefixRegisterNames(bool prefix);
 public:
-    void setLine(const QString &newLine, int lineNumber) override;
+    void setLine(int lineNumber, const QString &newLine) override;
     QString languageName() override;
     ProgrammingLanguage language() override;
     QSet<QString> keywords() override;

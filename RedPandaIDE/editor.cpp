@@ -5108,7 +5108,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
     } else {
         syntaxer.setState(document()->getSyntaxState(line-1));
     }
-    syntaxer.setLine(sLine,line-1);
+    syntaxer.setLine(line-1, sLine);
     QStringList tokenList;
     QList<QSynedit::TokenType> tokenTypeList;
     while (!syntaxer.eol()) {

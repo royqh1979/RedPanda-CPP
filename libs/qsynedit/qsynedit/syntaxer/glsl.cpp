@@ -1358,7 +1358,7 @@ void GLSLSyntaxer::next()
     } while (mTokenId!=TokenId::Null && mRun<=mTokenPos);
 }
 
-void GLSLSyntaxer::setLine(const QString &newLine, int lineNumber)
+void GLSLSyntaxer::setLine(int lineNumber, const QString &newLine)
 {
     mLineString = newLine;
     mLine = getNullTerminatedStringData(mLineString);

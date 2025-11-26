@@ -66,7 +66,7 @@ namespace QSynedit {
     //            QString trimmedS = s.trimmed();
                 QString trimmedLineText = lineText.trimmed();
                 editor->syntaxer()->setState(rangePreceeding);
-                editor->syntaxer()->setLine(trimmedLineText,line-1);
+                editor->syntaxer()->setLine(line-1, trimmedLineText);
                 SyntaxState rangeAfterFirstToken = editor->syntaxer()->getState();
                 QString firstToken = editor->syntaxer()->getToken();
                 PTokenAttribute attr = editor->syntaxer()->getTokenAttribute();
@@ -90,7 +90,7 @@ namespace QSynedit {
                         ) {
                     // public: private: protecte: case: should indents like it's parent statement
                     editor->syntaxer()->setState(rangePreceeding);
-                    editor->syntaxer()->setLine("}",line-1);
+                    editor->syntaxer()->setLine(line-1, "}");
                     rangeAfterFirstToken = editor->syntaxer()->getState();
                     firstToken = editor->syntaxer()->getToken();
                     attr = editor->syntaxer()->getTokenAttribute();

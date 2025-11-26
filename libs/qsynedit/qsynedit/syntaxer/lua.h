@@ -147,7 +147,7 @@ public:
     const PTokenAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
     void next() override;
-    void setLine(const QString &newLine, int lineNumber) override;
+    void setLine(int lineNumber, const QString &newLine) override;
     bool isKeyword(const QString &word) override;
     void setState(const SyntaxState& rangeState) override;
     void resetState() override;

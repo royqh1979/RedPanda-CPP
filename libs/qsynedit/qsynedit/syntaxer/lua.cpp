@@ -1122,7 +1122,7 @@ void LuaSyntaxer::next()
     //qDebug()<<"1-1-1";
 }
 
-void LuaSyntaxer::setLine(const QString &newLine, int lineNumber)
+void LuaSyntaxer::setLine(int lineNumber, const QString &newLine)
 {
     mLine = newLine;
     mLineSize = mLine.size();

@@ -641,7 +641,7 @@ void MakefileSyntaxer::next()
     }
 }
 
-void MakefileSyntaxer::setLine(const QString &newLine, int lineNumber)
+void MakefileSyntaxer::setLine(int lineNumber, const QString &newLine)
 {
     mLineString = newLine;
     mLine = getNullTerminatedStringData(mLineString);

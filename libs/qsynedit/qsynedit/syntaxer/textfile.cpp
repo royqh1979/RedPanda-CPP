@@ -100,7 +100,7 @@ void TextSyntaxer::next()
     }
 }
 
-void TextSyntaxer::setLine(const QString &newLine, int lineNumber)
+void TextSyntaxer::setLine(int lineNumber, const QString &newLine)
 {
     mLineString = newLine;
     mLine = getNullTerminatedStringData(mLineString);

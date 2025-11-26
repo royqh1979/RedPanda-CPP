@@ -159,7 +159,7 @@ public:
     virtual void next() = 0;
     virtual void nextToEol();
     virtual void setState(const SyntaxState& rangeState) = 0;
-    virtual void setLine(const QString& newLine, int lineNumber) = 0;
+    virtual void setLine(int lineNumber, const QString& newLine) = 0;
     virtual void resetState() = 0;
     virtual QSet<QString> keywords();
     QSet<QString> keywords(const QString& prefix);

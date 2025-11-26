@@ -1674,7 +1674,7 @@ void ASMSyntaxer::next()
     }
 }
 
-void ASMSyntaxer::setLine(const QString &newLine, int lineNumber)
+void ASMSyntaxer::setLine(int lineNumber, const QString &newLine)
 {
     mLineString = newLine;
     mLine = getNullTerminatedStringData(mLineString);

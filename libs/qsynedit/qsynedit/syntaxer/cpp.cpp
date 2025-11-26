@@ -1736,7 +1736,7 @@ void CppSyntaxer::next()
     //qDebug()<<"1-1-1";
 }
 
-void CppSyntaxer::setLine(const QString &newLine, int lineNumber)
+void CppSyntaxer::setLine(int lineNumber, const QString &newLine)
 {
     mLine = newLine;
     mLineSize = mLine.size();
