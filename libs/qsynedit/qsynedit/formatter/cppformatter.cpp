@@ -66,7 +66,7 @@ namespace QSynedit {
     //            QString trimmedS = s.trimmed();
                 QString trimmedLineText = lineText.trimmed();
                 editor->syntaxer()->setState(rangePreceeding);
-                editor->syntaxer()->setLine(line-1, trimmedLineText, 0);
+                editor->syntaxer()->setLine(line-1, trimmedLineText, editor->lineSeq(line));
                 PSyntaxState rangeAfterFirstToken = editor->syntaxer()->getState();
                 QString firstToken = editor->syntaxer()->getToken();
                 PTokenAttribute attr = editor->syntaxer()->getTokenAttribute();
@@ -137,8 +137,7 @@ namespace QSynedit {
                         indentSpaces = 0;
                 } else if (firstToken=="else") {
                     IndentInfo matchingIndents = rangeAfterFirstToken->getLastIndent();
-                    int matchingLine = editor->findPrevLineBySeq(line-1, matchingIndents.lineSeq);
-                    if (matchingLine>=0 && matchingLine!=line-1) {
+                    if (matchingIndents.lineSeq == editor->lineSeq(line)) {
                         if (rangeAfterFirstToken->indents.count()>=2){
                             IndentInfo info =  rangeAfterFirstToken->indents[rangeAfterFirstToken->indents.count()-2];
                             int infoLine = editor->findPrevLineBySeq(line-1, info.lineSeq);

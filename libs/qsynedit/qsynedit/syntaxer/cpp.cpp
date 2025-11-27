@@ -22,10 +22,7 @@
 #include <QDebug>
 #include <QVariant>
 
-#define DATA_KEY_INITIAL_DCHAR_SEQ "initialDCharSeq"
-#define DATA_KEY_IN_ATTRIBUTE "inAttribute"
-#define DATA_KEY_LAST_FINISHED_IFS "lastFinishedIfs"
-#define DATA_KEY_PARENT_OF_POPED_IFS "ancestor_for_if"
+#define IF_NO_PARENT 0
 
 namespace QSynedit {
 
@@ -596,7 +593,7 @@ void CppSyntaxer::procIdentifier()
         if (CppStatementKeyWords.contains(word)) {
             if (word == "else") {
                 if (!mRange.ancestorsForIf.isEmpty()) {
-                    if (mRange.ancestorsForIf.first() != -1)
+                    if (mRange.ancestorsForIf.first() != IF_NO_PARENT)
                         pushIndents(IndentType::Statement, mRange.ancestorsForIf.first(), "");
                     mRange.ancestorsForIf.pop_front();
                 }
@@ -1448,7 +1445,7 @@ void CppSyntaxer::pushIndents(IndentType indentType, size_t lineSeq, const QStri
 void CppSyntaxer::popStatementIndents()
 {
     IndentInfo lastUnindent = mRange.lastUnindent;
-    QList<int> ifParents;
+    QList<size_t> ifParents;
 //    qDebug()<<"pop statement indetns"<<mLineNumber;
     while (mRange.getLastIndentType() == IndentType::Statement) {
 //        qDebug()<<"-----"<<mRange.indents.count();
@@ -1460,7 +1457,7 @@ void CppSyntaxer::popStatementIndents()
             if (lastUnindent.type == IndentType::Statement && lastUnindent.keyword == "if") {
                 if (mRange.indents.isEmpty()
                         || mRange.indents.last().type != IndentType::Statement)
-                    ifParents.append(0);
+                    ifParents.append(IF_NO_PARENT);
                 else
                     ifParents.append(mRange.indents.last().lineSeq);
             }

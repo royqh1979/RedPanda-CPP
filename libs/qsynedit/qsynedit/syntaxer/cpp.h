@@ -62,7 +62,7 @@ public:
         QString lastToken;
         QString initialDCharSeq;
         bool inAttribute;
-        QList<int> ancestorsForIf;
+        QList<size_t> ancestorsForIf;
 
         bool equals(const std::shared_ptr<SyntaxState>& s2) const override;
     };
