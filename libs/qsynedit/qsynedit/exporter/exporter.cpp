@@ -91,7 +91,7 @@ void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord 
 //        if ( (i = Start.Line) && (Start.Char > 1))
 //            Line.remove(0, Start.Char - 1);
         // export the line
-        mSyntaxer->setLine(i, Line);
+        mSyntaxer->setLine(i, Line, 0);
         while (!mSyntaxer->eol()) {
             PTokenAttribute attri = mSyntaxer->getTokenAttribute();
             int startPos = mSyntaxer->getTokenPos();

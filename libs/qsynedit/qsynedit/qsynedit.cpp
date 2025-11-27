@@ -270,7 +270,7 @@ bool QSynEdit::getTokenAttriAtRowCol(
     lineIdx = pos.line - 1;
     if ((lineIdx >= 0) && (lineIdx < mDocument->count())) {
         lineText = mDocument->getLine(lineIdx);
-        prepareSyntaxerState(*mSyntaxer, lineIdx, lineText);
+        prepareSyntaxerState(*mSyntaxer, lineIdx, lineText, mDocument->getLineSeq(lineIdx));
         charIdx = pos.ch;
         if ((charIdx > 0) && (charIdx <= lineText.length())) {
             while (!mSyntaxer->eol()) {
@@ -298,7 +298,7 @@ bool QSynEdit::getTokenAttriAtRowColEx(const BufferCoord &pos, QString &token, i
     lineIdx = pos.line - 1;
     if ((lineIdx >= 0) && (lineIdx < mDocument->count())) {
         lineText = mDocument->getLine(lineIdx);
-        prepareSyntaxerState(*mSyntaxer, lineIdx, lineText);
+        prepareSyntaxerState(*mSyntaxer, lineIdx, lineText, mDocument->getLineSeq(lineIdx));
         chIdx = pos.ch;
         if ((chIdx > 0) && (chIdx <= lineText.length())) {
             while (!mSyntaxer->eol()) {
@@ -2150,7 +2150,7 @@ void QSynEdit::insertLine(bool moveCaret)
               SelectionMode::Normal);
     bool notInComment=true;
     QString trimmedleftLineText=trimLeft(leftLineText);
-    prepareSyntaxerState(*mSyntaxer, mCaretY-1, trimmedleftLineText);
+    prepareSyntaxerState(*mSyntaxer, mCaretY-1, trimmedleftLineText, mDocument->getLineSeq(mCaretY-1));
     int indentSpaces = 0;
     if (mOptions.testFlag(EditorOption::AutoIndent)
             && mSyntaxer->getToken()=="else") {
@@ -2755,7 +2755,7 @@ void QSynEdit::decPaintLock()
 
 PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText)
 {
-    prepareSyntaxerState(*mSyntaxer, line, newLineText);
+    prepareSyntaxerState(*mSyntaxer, line, newLineText, mDocument->getLineSeq(line));
     syntaxer()->nextToEol();
     return syntaxer()->getState();
 }
@@ -3132,7 +3132,7 @@ int QSynEdit::reparseLines(int startLine, int endLine, bool needRescanFolds, boo
     }
     int line = startLine;
     do {
-        mSyntaxer->setLine(line, mDocument->getLine(line));
+        mSyntaxer->setLine(line, mDocument->getLine(line), mDocument->getLineSeq(line));
         mSyntaxer->nextToEol();
         state = mSyntaxer->getState();
         if (line >= endLine && state->equals(mDocument->getSyntaxState(line)) ) {
@@ -3160,7 +3160,7 @@ void QSynEdit::reparseDocument()
 //        qint64 begin=QDateTime::currentMSecsSinceEpoch();
         mSyntaxer->resetState();
         for (int i =0;i<mDocument->count();i++) {
-            mSyntaxer->setLine(i, mDocument->getLine(i));
+            mSyntaxer->setLine(i, mDocument->getLine(i), mDocument->getLineSeq(i));
             mSyntaxer->nextToEol();
             mDocument->setSyntaxState(i, mSyntaxer->getState());
         }
@@ -4513,6 +4513,18 @@ void QSynEdit::setLineText(const QString s)
         mDocument->putLine(mCaretY-1,s);
 }
 
+size_t QSynEdit::lineSeq(int line) const
+{
+    return mDocument->getLineSeq(line-1);
+}
+
+int QSynEdit::findPrevLineBySeq(int startLine, size_t lineSeq) const
+{
+    //start at 0
+    //-1 not found
+    return mDocument->findPrevLineBySeq(startLine, lineSeq);
+}
+
 PSyntaxer QSynEdit::syntaxer() const
 {
     return mSyntaxer;
@@ -4552,15 +4564,26 @@ void QSynEdit::processCommand(EditCommand Command, QChar AChar, void *pData)
     onCommandProcessed(Command, AChar, pData);
 }
 
-void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText) const
+void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex) const
 {
     if (lineIndex == 0) {
         syntaxer.resetState();
     } else {
         syntaxer.setState(mDocument->getSyntaxState(lineIndex-1));
     }
-    syntaxer.setLine(lineIndex, lineText);
+    syntaxer.setLine(lineIndex, mDocument->getLine(lineIndex), mDocument->getLineSeq(lineIndex));
 }
+
+void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText, size_t lineSeq) const
+{
+    if (lineIndex == 0) {
+        syntaxer.resetState();
+    } else {
+        syntaxer.setState(mDocument->getSyntaxState(lineIndex-1));
+    }
+    syntaxer.setLine(lineIndex, lineText, lineSeq);
+}
+
 
 void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 {

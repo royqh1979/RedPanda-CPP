@@ -129,6 +129,8 @@ private:
      */
     int width();
 
+    size_t lineSeq() const { return mLineSeq; }
+
     /**
      * @brief get the state of the syntax highlighter after this line is parsed
      * @return
@@ -178,6 +180,8 @@ private:
     int mWidth;
     bool mIsTempWidth;
     UpdateWidthFunc mUpdateWidthFunc;
+    size_t mLineSeq;
+    static size_t seqCounter;
     friend class Document;
 };
 
@@ -412,6 +416,7 @@ public:
      */
     QString getLine(int line) const;
 
+    size_t getLineSeq(int line) const;
     /**
      * @brief get count of the glyphs on the specified line.
      *
@@ -496,9 +501,11 @@ public:
     void insertLine(int index, const QString& s);
     void insertLines(int index, int numLines);
 
+    int findPrevLineBySeq(int startLine, size_t lineSeq) const;
+
     void loadFromFile(const QString& filename, const QByteArray& encoding, QByteArray& realEncoding);
     void saveToFile(QFile& file, const QByteArray& encoding,
-                    const QByteArray& defaultEncoding, QByteArray& realEncoding);
+                    const QByteArray& defaultEncoding, QByteArray& realEncoding) const;
 
     QString glyph(int line, int glyphIdx) const;
     QString glyphAt(int line, int charPos) const;
@@ -647,9 +654,8 @@ private:
     bool tryLoadFileByEncoding(QByteArray encodingName, QFile& file);
     void loadUTF16BOMFile(QFile& file);
     void loadUTF32BOMFile(QFile& file);
-    void saveUTF16File(QFile& file, TextEncoder &encoder);
-    void saveUTF32File(QFile& file, TextEncoder &encoder);
-
+    void saveUTF16File(QFile& file, TextEncoder &encoder) const;
+    void saveUTF32File(QFile& file, TextEncoder &encoder) const;
 private:
     DocumentLines mLines;
 

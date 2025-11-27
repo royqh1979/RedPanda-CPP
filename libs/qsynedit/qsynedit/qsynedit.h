@@ -317,7 +317,8 @@ public:
 
     virtual BufferCoord getMatchingBracket();
     virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
-    void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText) const;
+    void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex) const;
+    void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText, size_t lineSeq) const;
 
     QStringList contents();
     QString text();
@@ -385,6 +386,9 @@ public:
     QString lineText() const;
     QString lineText(int line) const;
     void setLineText(const QString s);
+    size_t lineSeq(int line) const;
+
+    int findPrevLineBySeq(int startLine, size_t lineSeq) const;
 
     const PDocument& document() const;
     bool empty();

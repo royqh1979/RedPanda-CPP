@@ -165,13 +165,14 @@ private:
     void procXor();
     void processChar();
     void popIndents(IndentType indentType);
-    void pushIndents(IndentType indentType, int line=-1, const QString& keyword = QString());
+    void pushIndents(IndentType indentType, size_t lineSeq, const QString& keyword = QString());
     void popStatementIndents();
 
 private:
     CppSyntaxState mRange;
     QString mLine;
     int mLineSize;
+    size_t mLineSeq;
     int mRun;
     int mStringLen;
     int mToIdent;
@@ -209,7 +210,7 @@ public:
     const PTokenAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
     void next() override;
-    void setLine(int lineNumber, const QString &newLine) override;
+    void setLine(int lineNumber, const QString &newLine, size_t lineSeq) override;
     bool isKeyword(const QString &word) override;
     void setState(const PSyntaxState& rangeState) override;
     void resetState() override;

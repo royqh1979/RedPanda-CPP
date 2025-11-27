@@ -2352,8 +2352,7 @@ QStringList Editor::getExpressionAtPosition(
         if (line>=lineCount() || line<0)
             break;
         QStringList tokens;
-        QString sLine = document()->getLine(line);
-        prepareSyntaxerState(syntaxer, line, sLine);
+        prepareSyntaxerState(syntaxer, line);
         while (!syntaxer.eol()) {
             int start = syntaxer.getTokenPos();
             QString token = syntaxer.getToken();
@@ -3751,7 +3750,7 @@ bool Editor::testInFunc(const QSynedit::BufferCoord& pos)
     int x=pos.ch;
     if (syntaxer()->language()!=QSynedit::ProgrammingLanguage::CPP)
         return false;
-    prepareSyntaxerState(*(syntaxer()), y, document()->getLine(y));
+    prepareSyntaxerState(*(syntaxer()), y);
     QSynedit::PSyntaxState state = syntaxer()->getState();
     while(!syntaxer()->eol()) {
         int start = syntaxer()->getTokenPos();
@@ -4231,7 +4230,7 @@ void Editor::updateFunctionTip(bool showTip)
             currentChar = line.length();
         QStringList tokens;
         QList<int> positions;
-        prepareSyntaxerState(*(syntaxer()), currentLine, line);
+        prepareSyntaxerState(*(syntaxer()), currentLine);
 //        if (currentLine==0)
 //            syntaxer()->resetState();
 //        else
@@ -5107,7 +5106,7 @@ QString Editor::getPreviousWordAtPositionForSuggestion(const QSynedit::BufferCoo
     } else {
         syntaxer.setState(document()->getSyntaxState(line-1));
     }
-    syntaxer.setLine(line-1, sLine);
+    syntaxer.setLine(line-1, sLine , 0);
     QStringList tokenList;
     QList<QSynedit::TokenType> tokenTypeList;
     while (!syntaxer.eol()) {

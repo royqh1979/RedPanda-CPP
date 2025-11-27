@@ -398,18 +398,18 @@ void CppSyntaxer::procBraceOpen()
     if (mRange.getLastIndentType() == IndentType::Statement) {
         // if last indent is started by 'if' 'for' etc
         // just replace it
-        int lastLine=-1;
+        size_t lastLineSeq=0;
         if (!mRange.indents.isEmpty()) {
-            lastLine=mRange.indents.back().line;
+            lastLineSeq=mRange.indents.back().lineSeq;
         } else {
-            lastLine=0;
+            lastLineSeq=mLineSeq;
         }
         popStatementIndents();
-        pushIndents(IndentType::Block, lastLine);
+        pushIndents(IndentType::Block, lastLineSeq);
     } else if (mRange.lastUnindent.type == IndentType::Parenthesis) {
-        pushIndents(IndentType::Block, mRange.lastUnindent.line);
+        pushIndents(IndentType::Block, mRange.lastUnindent.lineSeq);
     } else
-        pushIndents(IndentType::Block);
+        pushIndents(IndentType::Block, mLineSeq);
 }
 
 void CppSyntaxer::procColon()
@@ -600,11 +600,11 @@ void CppSyntaxer::procIdentifier()
                         pushIndents(IndentType::Statement, mRange.ancestorsForIf.first(), "");
                     mRange.ancestorsForIf.pop_front();
                 }
-                pushIndents(IndentType::Statement, -1, word);
+                pushIndents(IndentType::Statement, mLineSeq, word);
             } else if (word == "if" && mLastKeyword == "else") {
                 mRange.indents.last().keyword = "if";
             } else  {
-                pushIndents(IndentType::Statement, -1, word);
+                pushIndents(IndentType::Statement, mLineSeq, word);
             }
         }
     } else if (mRange.inAttribute && StandardAttributes.contains(word)) {
@@ -1019,7 +1019,7 @@ void CppSyntaxer::procRoundOpen()
     mRun += 1;
     mTokenId = TokenId::Symbol;
     mRange.parenthesisLevel++;
-    pushIndents(IndentType::Parenthesis);
+    pushIndents(IndentType::Parenthesis, mLineSeq);
 }
 
 void CppSyntaxer::procSemiColon()
@@ -1121,7 +1121,7 @@ void CppSyntaxer::procSquareOpen()
     } else{
         mTokenId = TokenId::Symbol;
         mRange.bracketLevel++;
-        pushIndents(IndentType::Bracket);
+        pushIndents(IndentType::Bracket, mLineSeq);
     }
 }
 
@@ -1436,15 +1436,13 @@ void CppSyntaxer::popIndents(IndentType indentType)
         mRange.lastUnindent=mRange.indents.back();
         mRange.indents.pop_back();
     } else {
-        mRange.lastUnindent=IndentInfo{indentType,0, ""};
+        mRange.lastUnindent=IndentInfo{indentType,mLineSeq, ""};
     }
 }
 
-void CppSyntaxer::pushIndents(IndentType indentType, int line, const QString& keyword)
+void CppSyntaxer::pushIndents(IndentType indentType, size_t lineSeq, const QString& keyword)
 {
-    if (line==-1)
-        line = mLineNumber;
-    mRange.indents.push_back(IndentInfo{indentType,line, keyword});
+    mRange.indents.push_back(IndentInfo{indentType,lineSeq, keyword});
 }
 
 void CppSyntaxer::popStatementIndents()
@@ -1462,9 +1460,9 @@ void CppSyntaxer::popStatementIndents()
             if (lastUnindent.type == IndentType::Statement && lastUnindent.keyword == "if") {
                 if (mRange.indents.isEmpty()
                         || mRange.indents.last().type != IndentType::Statement)
-                    ifParents.append(-1);
+                    ifParents.append(0);
                 else
-                    ifParents.append(mRange.indents.last().line);
+                    ifParents.append(mRange.indents.last().lineSeq);
             }
         }
     }
@@ -1703,11 +1701,12 @@ void CppSyntaxer::next()
     //qDebug()<<"1-1-1";
 }
 
-void CppSyntaxer::setLine(int lineNumber, const QString &newLine)
+void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq)
 {
     mLine = newLine;
     mLineSize = mLine.size();
     mLineNumber = lineNumber;
+    mLineSeq = lineSeq;
     mRun = 0;
     mRange.blockStarted = 0;
     mRange.blockEnded = 0;

@@ -5785,7 +5785,7 @@ bool CppParser::expandMacro(QStringList &phraseExpression, int pos, PStatement m
     used.insert(macro->command);
     QSynedit::CppSyntaxer syntaxer;
     syntaxer.resetState();
-    syntaxer.setLine(0, s);
+    syntaxer.setLine(0, s, 0);
     while (!syntaxer.eol()) {
         QString token=syntaxer.getToken();
         QSynedit::PTokenAttribute attr = syntaxer.getTokenAttribute();
@@ -6077,7 +6077,7 @@ PStatement CppParser::doParseEvalTypeInfo(
     int position = s.length()-1;
     QSynedit::CppSyntaxer syntaxer;
     syntaxer.resetState();
-    syntaxer.setLine(0,type);
+    syntaxer.setLine(0,type, 0);
     int bracketLevel = 0;
     int templateLevel  = 0;
     while(!syntaxer.eol()) {
@@ -6133,7 +6133,7 @@ PStatement CppParser::doParseEvalTypeInfo(
         level++;
         baseType="";
         syntaxer.resetState();
-        syntaxer.setLine(0, effectiveTypeStatement->type+effectiveTypeStatement->args);
+        syntaxer.setLine(0, effectiveTypeStatement->type+effectiveTypeStatement->args, 0);
         int bracketLevel = 0;
         int templateLevel  = 0;
         while(!syntaxer.eol()) {
@@ -6900,7 +6900,7 @@ QStringList CppParser::splitExpression(const QString &expr)
     syntaxer.resetState();
     QStringList lines = textToLines(expr);
     for(int i=0;i<lines.length();i++) {
-        syntaxer.setLine(i+1, lines[i]);
+        syntaxer.setLine(i+1, lines[i], 0);
         while(!syntaxer.eol()) {
             QSynedit::TokenType tokenType = syntaxer.getTokenAttribute()->tokenType();
             QString token = syntaxer.getToken();

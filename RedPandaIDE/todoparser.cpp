@@ -130,7 +130,7 @@ void TodoThread::doParseFile(const QString &filename)
     }
     syntaxer->resetState();
     for (int i =0;i<lines.count();i++) {
-        syntaxer->setLine(i+1, lines[i]);
+        syntaxer->setLine(i+1, lines[i], 0);
         while (!syntaxer->eol()) {
             QSynedit::PTokenAttribute attr;
             attr = syntaxer->getTokenAttribute();

@@ -110,7 +110,7 @@ private:
     void unknownProc();
 
     void popIndents(IndentType indentType);
-    void pushIndents(IndentType indentType, int line=-1);
+    void pushIndents(IndentType indentType, size_t lineSeq);
 
 private:
     bool mAsmStart;
@@ -118,6 +118,7 @@ private:
 //    SynRangeState mSpaceRange;
     QString mLine;
     int mLineSize;
+    size_t mLineSeq;
     int mRun;
     int mStringLen;
     int mToIdent;
@@ -147,7 +148,7 @@ public:
     const PTokenAttribute &getTokenAttribute() const override;
     int getTokenPos() override;
     void next() override;
-    void setLine(int lineNumber, const QString &newLine) override;
+    void setLine(int lineNumber, const QString &newLine,size_t lineSeq) override;
     bool isKeyword(const QString &word) override;
     void setState(const PSyntaxState& syntaxState) override;
     void resetState() override;
