@@ -171,6 +171,8 @@ TokenAttribute::TokenAttribute(const QString &name, TokenType tokenType):
 
 bool SyntaxState::equals(const std::shared_ptr<SyntaxState> &s2) const
 {
+    if (s2 == nullptr)
+        return false;
     // indents contains the information of brace/parenthesis/brackets embedded levels
     return (state == s2->state)
             && (blockLevel == s2->blockLevel) // needed by block folding

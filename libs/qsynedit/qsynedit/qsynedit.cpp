@@ -2160,7 +2160,8 @@ void QSynEdit::insertLine(bool moveCaret)
         QString indentSpacesForLeftLineText = GetLeftSpacing(indentSpaces,true);
         leftLineText = indentSpacesForLeftLineText + trimmedleftLineText;
     }
-    properSetLine(mCaretY-1, leftLineText);
+    properSetLine(mCaretY-1, leftLineText, false);
+    reparseLines(mCaretY-1, mCaretY, false, false);
 
     notInComment = !mSyntaxer->isCommentNotFinished(
                 mSyntaxer->getState())
@@ -3114,15 +3115,14 @@ void QSynEdit::updateModifiedStatusForUndoRedo()
 
 int QSynEdit::reparseLines(int startLine, int endLine, bool needRescanFolds, bool toDocumentEnd)
 {
-
     PSyntaxState state;
-    int maxLine = toDocumentEnd ? mDocument->count() : endLine+1;
+    int maxLine = toDocumentEnd ? mDocument->count() : endLine;
     startLine = std::max(0,startLine);
     endLine = std::min(endLine, mDocument->count());
     maxLine = std::min(maxLine, mDocument->count());
 
 
-    if (startLine >= endLine)
+    if (startLine >= maxLine)
         return startLine;
 
     if (startLine == 0) {
@@ -3141,14 +3141,16 @@ int QSynEdit::reparseLines(int startLine, int endLine, bool needRescanFolds, boo
         mDocument->setSyntaxState(line,state);
         line++;
     } while (line < maxLine);
-    //qDebug()<<"parse endLine"<<endLine<<"real end"<<line;
+#ifdef QT_DEBUG
+    qDebug()<<"parse endLine"<<endLine<<"real end"<<line;
+#endif
     //don't rescan folds if only currentLine is reparsed
     if (line-startLine==1)
         return line;
 
-    if (mEditingCount>0)
+    if (mEditingCount>0) {
         return line;
-
+    }
     if (needRescanFolds && useCodeFolding())
         rescanFolds();
     return line;
