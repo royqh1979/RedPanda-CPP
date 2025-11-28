@@ -91,6 +91,7 @@ public:
 
     void skipDirectoriesInSymbolSearch(const QStringList& lst) override;
     void addSymbolSearchDirectories(const QStringList& lst) override;
+    void skipStandardLibraryFunctions() override;
     // QThread interface
 protected:
     void run() override;

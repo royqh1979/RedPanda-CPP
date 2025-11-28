@@ -1255,6 +1255,13 @@ void GDBMIDebuggerClient::addSymbolSearchDirectories(const QStringList &lst)
     }
 }
 
+void GDBMIDebuggerClient::skipStandardLibraryFunctions()
+{
+    postCommand(
+                "skip",
+                QString("-rfu ^std::"));
+}
+
 void GDBMIDebuggerClient::runInferiorStoppedHook()
 {
     QMutexLocker locker(&mCmdQueueMutex);

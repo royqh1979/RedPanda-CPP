@@ -221,6 +221,9 @@ bool Debugger::startClient(int compilerSetIndex,
         includeOrSkipDirsInSymbolSearch(compilerSet->defaultCppIncludeDirs(),true);
     }
 
+    //skip C++ Stardard Libraries
+    mClient->skipStandardLibraryFunctions();
+
     sendAllBreakpointsToDebugger();
     pMainWindow->updateAppTitle();
     mInferiorHasBreakpoints = inferiorHasBreakpoints;

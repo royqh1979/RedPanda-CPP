@@ -558,6 +558,7 @@ public:
 
     virtual void skipDirectoriesInSymbolSearch(const QStringList& lst) = 0;
     virtual void addSymbolSearchDirectories(const QStringList& lst) = 0;
+    virtual void skipStandardLibraryFunctions() = 0;
 signals:
     void parseStarted();
     void invalidateAllVars();

@@ -1,5 +1,6 @@
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.
+  - enhancement: skip all std:: (C++ standard libraries) functions when debugging.
 
 Red Panda C++ Version 3.4
   - enhancement: Auto hide option "Auto clear parsed symbols when editor hidden" if "editors share one parser" is unchecked.
