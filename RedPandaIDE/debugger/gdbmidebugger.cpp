@@ -841,7 +841,6 @@ void GDBMIDebuggerClient::processResultRecord(const QByteArray &line)
                 if (disOutput.length()>=3) {
                     disOutput.pop_back();
                     disOutput.pop_front();
-                    disOutput.pop_front();
                 }
                 if (debugger()->debugInfosUsingUTF8()) {
                     QStringList newOutput;
