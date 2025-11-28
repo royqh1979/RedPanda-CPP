@@ -1507,11 +1507,11 @@ QVariant BacktraceModel::headerData(int section, Qt::Orientation orientation, in
     return QVariant();
 }
 
-void BacktraceModel::addTrace(PTrace p)
+void BacktraceModel::setTraces(QList<PTrace> traces)
 {
-    beginInsertRows(QModelIndex(),mList.size(),mList.size());
-    mList.push_back(p);
-    endInsertRows();
+    beginResetModel();
+    mList = traces;
+    endResetModel();
 }
 
 void BacktraceModel::clear()
@@ -1519,13 +1519,6 @@ void BacktraceModel::clear()
     beginResetModel();
     mList.clear();
     endResetModel();
-}
-
-void BacktraceModel::removeTrace(int row)
-{
-    beginRemoveRows(QModelIndex(),row,row);
-    mList.removeAt(row);
-    endRemoveRows();
 }
 
 const QList<PTrace> &BacktraceModel::backtraces() const

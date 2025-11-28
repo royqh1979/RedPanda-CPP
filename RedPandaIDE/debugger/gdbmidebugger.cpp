@@ -365,7 +365,7 @@ void GDBMIDebuggerClient::handleFrame(const GDBMIResultParser::ParseValue &frame
 
 void GDBMIDebuggerClient::handleStack(const QList<GDBMIResultParser::ParseValue> & stack)
 {
-    debugger()->backtraceModel()->clear();
+    QList<PTrace> traces;
     foreach (const GDBMIResultParser::ParseValue& frameValue, stack) {
         GDBMIResultParser::ParseObject frameObject = frameValue.object();
         PTrace trace = std::make_shared<Trace>();
@@ -374,8 +374,9 @@ void GDBMIDebuggerClient::handleStack(const QList<GDBMIResultParser::ParseValue>
         trace->line = frameObject["line"].intValue();
         trace->level = frameObject["level"].intValue(0);
         trace->address = frameObject["addr"].value();
-        debugger()->backtraceModel()->addTrace(trace);
+        traces.append(trace);
     }
+    debugger()->backtraceModel()->setTraces(traces);
 }
 
 void GDBMIDebuggerClient::handleLocalVariables(const QList<GDBMIResultParser::ParseValue> &variables)
