@@ -1094,6 +1094,7 @@ void QSynEditPainter::paintLines()
         while (!mEdit->mSyntaxer->eol()) {
             sToken = mEdit->mSyntaxer->getToken();
             if (sToken.isEmpty())  {
+                mEdit->mSyntaxer->next();
                 continue;
             }
             int tokenStartChar = mEdit->mSyntaxer->getTokenPos();

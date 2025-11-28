@@ -24,6 +24,13 @@ namespace QSynedit {
 class CppSyntaxer: public Syntaxer
 {
 public:
+
+    enum class ProcessStage {
+        Normal,
+        LastBackSlash,
+        SpacesAfterLastSlash,
+    };
+
     enum class TokenId {
         Comment,
         Directive,
@@ -42,13 +49,15 @@ public:
         Char,
         Float,
         HexFloat,
-        RawString
+        RawString,
+        LastBackSlash,
+        SpaceAfterBackSlash
     };
 
     enum RangeState {
         rsUnknown, rsAnsiC, rsDirective, rsDirectiveComment,
         rsString, rsStringNextLine, rsStringUnfinished,
-        rsMultiLineString, rsMultiLineDirective, rsCppComment, rsCppCommentRemaining,
+        rsMultiLineString, rsMultiLineDirective, rsCppComment,
         rsDocstring,
         rsStringEscapeSeq,
         rsRawString, rsSpace,rsRawStringNotEscaping,rsRawStringEnd,
@@ -58,11 +67,12 @@ public:
 
 
     struct CppSyntaxState: SyntaxState {
-        bool continuePrevLine;
-        QString lastToken;
         QString initialDCharSeq;
         bool inAttribute;
         QList<size_t> ancestorsForIf;
+        bool mergeWithNextLine;
+        QString lastToken;
+        RangeState stateBeforeLastToken;
 
         bool equals(const std::shared_ptr<SyntaxState>& s2) const override;
     };
@@ -173,6 +183,13 @@ private:
     QString mLine;
     int mLineSize;
     size_t mLineSeq;
+
+    int mPrevLineLastTokenSize;
+    QString mOrigLine;
+    bool mMergeWithNextLine;
+    QString mSpacesAfterLastBackSlash;
+    ProcessStage mProcessStage;
+
     int mRun;
     int mStringLen;
     int mToIdent;
