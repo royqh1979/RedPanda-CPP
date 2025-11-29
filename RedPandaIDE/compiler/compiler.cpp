@@ -748,8 +748,10 @@ void Compiler::runCommand(const QString &cmd, const QStringList &arguments, cons
         env.insert("PATH",path);
     }
 #endif
-    if (compilerSet() && compilerSet()->supportNLS() && compilerSet()->forceEnglishOutput())
-        env.insert("LANG","en");
+    if (compilerSet() && compilerSet()->supportNLS() && compilerSet()->forceEnglishOutput()) {
+        env.insert("LANGUAGE", "");
+        env.insert("LC_ALL", "C"); // https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap07.html#tag_07_02
+    }
     //env.insert("LDFLAGS","-Wl,--stack,12582912");
     env.insert("LDFLAGS","");
     env.insert("CFLAGS","");
