@@ -792,7 +792,6 @@ void CppPreprocessor::openInclude(QString fileName)
     mFileName = parsedFile->fileName;
     removeLastBackSlash(parsedFile->buffer);
     removeComments(parsedFile->buffer);
-    //qDebug()<<parsedFile->buffer;
     mBuffer = parsedFile->buffer;
 
 //    for (int i=0;i<mBuffer.count();i++) {
