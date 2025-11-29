@@ -19,4 +19,4 @@ UnitCount=1
 Type=1
 Compiler=
 CppCompiler=
-Linker=-lmysqlclient -lws2_32 -ladvapi32 -lkernel32 -lshlwapi -lcrypt32 -lz -lsecur32
+Linker=-lmysqlclient -lws2_32 -ladvapi32 -lkernel32 -lshlwapi -lcrypt32 -lz -lsecur32 -lbcrypt

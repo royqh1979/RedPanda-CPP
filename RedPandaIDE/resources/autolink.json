@@ -65,5 +65,9 @@
     {
         "header": "winsock.h",
         "links": "-lws2_32"
-    }
+    },
+    {
+        "header": "mysql.h",
+        "links": "-lmysqlclient -lws2_32 -ladvapi32 -lkernel32 -lshlwapi -lcrypt32 -lsecur32 -lbcrypt"
+    }    
 ]

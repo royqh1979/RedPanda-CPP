@@ -1,0 +1,22 @@
+[Template]
+ver=2
+Name=MySQL(MyriaDB)
+Icon=mysql.ico
+Description=A MySQL API Example
+Description[zh_CN]=MySQL数据库示例程序
+Name[ru_RU]=MySQL(MyriaDB)
+Description[ru_RU]=Пример работы с MySQL API
+Category=Database
+Category[zh_CN]=数据库
+Category[ru_RU]=Базы данных
+
+[Unit0]
+CName=main.c
+C=mysql_c.txt
+
+[Project]
+UnitCount=1
+Type=1
+Compiler=
+CppCompiler=
+Linker=-lmysqlclient -lws2_32 -ladvapi32 -lkernel32 -lshlwapi -lcrypt32 -lz -lsecur32 -lbcrypt
