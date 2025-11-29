@@ -2312,6 +2312,13 @@ static void addExistingDirectory(QStringList& dirs, const QString& directory) {
     dirs.append(dirPath);
 }
 
+static void addExistingDirectory(QStringList& dirs, const QByteArray& directory) {
+    QString dir = QString::fromLocal8Bit(directory);
+    if (!directoryExists(dir))
+        dir = QString::fromUtf8(directory);
+    addExistingDirectory(dirs,dir);
+}
+
 void Settings::CompilerSet::setProperties(const QString& binDir, const QString& c_prog)
 {
 #ifdef ENABLE_SDCC
