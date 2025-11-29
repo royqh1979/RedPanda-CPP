@@ -3159,10 +3159,10 @@ Editor::QuoteStatus Editor::getQuoteStatus()
     QuoteStatus Result = QuoteStatus::NotQuote;
     if (syntaxer()->language()==QSynedit::ProgrammingLanguage::CPP) {
         QString s = lineText().mid(0,caretX()-1);
-        QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
+        QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretY()-1, s, false);
         std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(syntaxer());
         if (syntaxer()->isStringNotFinished(state)) {
-            if (cppSyntaxer->isStringNotFinished(state))
+            if (cppSyntaxer->isStringEscaping(state))
                 return QuoteStatus::DoubleQuoteEscape;
             else
                 return QuoteStatus::DoubleQuote;

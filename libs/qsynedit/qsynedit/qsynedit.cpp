@@ -26,6 +26,7 @@
 #include <QPainter>
 #include <QTimerEvent>
 #include "syntaxer/syntaxer.h"
+#include "syntaxer/cpp.h"
 #include "syntaxer/textfile.h"
 #include "painter.h"
 #include <QClipboard>
@@ -2754,9 +2755,19 @@ void QSynEdit::decPaintLock()
     }
 }
 
-PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText)
+PSyntaxState QSynEdit::calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash)
 {
+    bool oldHandleLastBackSlash = true;
+    if (mSyntaxer->language() == ProgrammingLanguage::CPP) {
+        std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(mSyntaxer);
+        oldHandleLastBackSlash = cppSyntaxer->handleLastBackSlash();
+        cppSyntaxer->setHandleLastBackSlash(handleLastBackSlash);
+    }
     prepareSyntaxerState(*mSyntaxer, line, newLineText, mDocument->getLineSeq(line));
+    if (mSyntaxer->language() == ProgrammingLanguage::CPP) {
+        std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(mSyntaxer);
+        cppSyntaxer->setHandleLastBackSlash(oldHandleLastBackSlash);
+    }
     syntaxer()->nextToEol();
     return syntaxer()->getState();
 }

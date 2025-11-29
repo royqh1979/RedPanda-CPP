@@ -511,7 +511,7 @@ protected:
     void doSelectLine();
     void incPaintLock();
     void decPaintLock();
-    PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText);
+    PSyntaxState calcSyntaxStateAtLine(int line, const QString &newLineText, bool handleLastBackSlash = true);
     void processCommand(EditCommand Command, QChar AChar = QChar(), void * pData = nullptr);
     bool dragging() const { return mDragging; }
 

@@ -118,6 +118,7 @@ public:
     bool isRawStringEnd(const PSyntaxState &state) const { return state->state == RangeState::rsRawStringEnd; }
     bool isCharNotFinished(const PSyntaxState &state) const { return state->state == RangeState::rsChar || state->state == RangeState::rsCharEscaping; }
     bool isCharEscaping(const PSyntaxState &state) const { return state->state == RangeState::rsCharEscaping; }
+    bool isStringEscaping(const PSyntaxState &state) const { return state->state == RangeState::rsStringEscapeSeq; }
 
     TokenId getTokenId() { return mTokenId; }
 private:
@@ -198,6 +199,8 @@ private:
     int mLeftBraces;
     int mRightBraces;
 
+    bool mHandleLastBackSlash;
+
     QString mLastKeyword;
 
     QSet<QString> mCustomTypeKeywords;
@@ -249,6 +252,8 @@ public:
     QString blockCommentEndSymbol() override;
     virtual bool supportFolding() override;
     virtual bool needsLineState() override;
+    bool handleLastBackSlash() const;
+    void setHandleLastBackSlash(bool newHandleLastBackSlash);
 };
 
 }
