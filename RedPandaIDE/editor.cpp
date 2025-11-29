@@ -3162,7 +3162,7 @@ Editor::QuoteStatus Editor::getQuoteStatus()
         QSynedit::PSyntaxState state = calcSyntaxStateAtLine(caretY()-1, s);
         std::shared_ptr<QSynedit::CppSyntaxer> cppSyntaxer = std::dynamic_pointer_cast<QSynedit::CppSyntaxer>(syntaxer());
         if (syntaxer()->isStringNotFinished(state)) {
-            if (cppSyntaxer->isStringToNextLine(state))
+            if (cppSyntaxer->isStringNotFinished(state))
                 return QuoteStatus::DoubleQuoteEscape;
             else
                 return QuoteStatus::DoubleQuote;

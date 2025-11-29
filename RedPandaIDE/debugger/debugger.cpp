@@ -219,6 +219,9 @@ bool Debugger::startClient(int compilerSetIndex,
         includeOrSkipDirsInSymbolSearch(compilerSet->defaultCIncludeDirs(),true);
         includeOrSkipDirsInSymbolSearch(compilerSet->defaultCIncludeDirs(),true);
         includeOrSkipDirsInSymbolSearch(compilerSet->defaultCppIncludeDirs(),true);
+
+        //skip C++ Stardard Libraries
+        mClient->skipStandardLibraryFunctions();
     }
 
     sendAllBreakpointsToDebugger();

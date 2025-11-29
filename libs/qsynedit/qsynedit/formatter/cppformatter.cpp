@@ -22,11 +22,16 @@ namespace QSynedit {
         line = std::min(line, editor->lineCount()+1);
         if (line<=1)
             return 0;
+        // test if previous line ending with '\', keep originalSpaces
+        std::shared_ptr<CppSyntaxer::CppSyntaxState>
+                statePrevLine = std::dynamic_pointer_cast<CppSyntaxer::CppSyntaxState>(editor->document()->getSyntaxState(line-2));
+        if (statePrevLine->mergeWithNextLine)
+            return editor->leftSpaces(lineText);
         // test if last line is non-end string
         int lastLine = line-1;
         if (lastLine>=1) {
             PSyntaxState rangeLastLine = editor->document()->getSyntaxState(lastLine-1);
-            if (rangeLastLine->state == CppSyntaxer::RangeState::rsStringNextLine)
+            if (editor->syntaxer()->isStringNotFinished(rangeLastLine) )
                 return editor->leftSpaces(lineText);
         }
         // find the first non-empty preceeding line
