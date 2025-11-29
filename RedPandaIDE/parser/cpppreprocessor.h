@@ -144,7 +144,6 @@ private:
 
     static QString expandFunction(PDefine define,const QString &args);
     void preprocessBuffer();
-    void skipToEndOfPreprocessor();
     void skipToPreprocessor();
     QString getNextPreprocessor();
     void handleBranch(const QString& line);
@@ -203,9 +202,8 @@ private:
     void parseArgs(PDefine define);
 
 
-    QStringList removeComments(const QStringList& text);
-    void skipCppCommentLine(const int &lineLen, const QString& line,
-                            int &pos, ContentType &currentType);
+    void removeLastBackSlash(QStringList& text);
+    void removeComments(QStringList& text);
     /*
      * '_','a'..'z','A'..'Z','0'..'9'
      */

@@ -248,25 +248,15 @@ void CppPreprocessor::removeScannedFile(const QString &filename)
 QString CppPreprocessor::getNextPreprocessor()
 {
     skipToPreprocessor(); // skip until # at start of line
-    int preProcFrom = mIndex;
-    if (preProcFrom >= mBuffer.count())
+    if (mIndex >= mBuffer.count())
         return ""; // we've gone past the final #preprocessor line. Yay
-    skipToEndOfPreprocessor();
-    int preProcTo = mIndex;
 
     // Calculate index to insert defines in in result file
     mPreProcIndex = (mResult.count() - 1) + 1; // offset by one for #include rootfile
 
     // Assemble whole line, convert newlines to space
-    QString result;
-    for (int i=preProcFrom;i<=preProcTo;i++) {
-        if (mBuffer[i].endsWith('\\')) {
-            result+=mBuffer[i].left(mBuffer[i].size()-1)+' ';
-        } else {
-            result+=mBuffer[i]+' ';
-        }
-        mResult.append("");// defines resolve into empty files, except #define and #include
-    }
+    QString result = mBuffer[mIndex];
+    mResult.append("");// defines resolve into empty files, except #define and #include
     // Step over
     mIndex++;
     return result;
@@ -800,7 +790,9 @@ void CppPreprocessor::openInclude(QString fileName)
     // Process it
     mIndex = parsedFile->index;
     mFileName = parsedFile->fileName;
-    parsedFile->buffer = removeComments(parsedFile->buffer);
+    removeLastBackSlash(parsedFile->buffer);
+    removeComments(parsedFile->buffer);
+    //qDebug()<<parsedFile->buffer;
     mBuffer = parsedFile->buffer;
 
 //    for (int i=0;i<mBuffer.count();i++) {
@@ -933,6 +925,24 @@ void CppPreprocessor::parseArgs(PDefine define)
     define->formatValue.squeeze();
 }
 
+void CppPreprocessor::removeLastBackSlash(QStringList &text)
+{
+    if (text.isEmpty())
+        return;
+    int i = text.length()-1;
+    while (i>0) {
+        const QString& prevLineText = text[i-1];
+        int lastI=prevLineText.length()-1;
+        while (lastI>=0 && isSpaceChar(prevLineText[lastI]))
+            lastI--;
+        if (lastI>=0 && prevLineText[lastI]=='\\') {
+            text[i-1] = prevLineText.left(lastI)+text[i];
+            text[i]="";
+        }
+        i--;
+    }
+}
+
 QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
 {
     int i=0;
@@ -1009,149 +1019,126 @@ QList<PDefineArgToken> CppPreprocessor::tokenizeValue(const QString &value)
     return tokens;
 }
 
-void CppPreprocessor::skipCppCommentLine(const int &lineLen, const QString& line,
-                        int &pos, ContentType &currentType) {
-    currentType = ContentType::Other;
-    bool endWithSlash=false;
-    while (pos<lineLen) {
-        QChar ch = line[pos];
-        if (!CppPreprocessor::isSpaceChar(ch)) {
-            endWithSlash = (ch=='\\');
-        }
-        pos++;
-    }
-    if (endWithSlash)
-        currentType = ContentType::CppComment;
-}
-
-QStringList CppPreprocessor::removeComments(const QStringList &text)
+void CppPreprocessor::removeComments(QStringList &text)
 {
-    QStringList result;
     ContentType currentType = ContentType::Other;
     QString delimiter;
 
-    for (const QString& line:text) {
+    for (int lineIdx = 0; lineIdx < text.length(); lineIdx++) {
+        const QString& line = text[lineIdx];
         int pos = 0;
         int lineLen=line.length();
         QString s;
-        if (currentType == ContentType::CppComment) {
-            skipCppCommentLine(lineLen,line,pos,currentType);
-        } else {
-            s.reserve(line.length());
-            while (pos<lineLen) {
-                QChar ch =line[pos];
-                if (currentType == ContentType::CppComment) {
-                    skipCppCommentLine(lineLen,line,pos,currentType);
-                    break;
-                } else if (currentType == ContentType::AnsiCComment) {
-                    if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
-                        pos+=2;
-                        currentType = ContentType::Other;
-                    } else {
-                        pos+=1;
-                    }
-                    continue;
+        s.reserve(line.length());
+        while (pos<lineLen) {
+            QChar ch =line[pos];
+            if (currentType == ContentType::AnsiCComment) {
+                if (ch=='*' && (pos+1<lineLen) && line[pos+1]=='/') {
+                    pos+=2;
+                    currentType = ContentType::Other;
+                } else {
+                    pos+=1;
                 }
-                switch (ch.unicode()) {
-                case '"':
-                    switch (currentType) {
-                    case ContentType::String:
-                        currentType=ContentType::Other;
-                        break;
-                    case ContentType::RawString:
-                        if (QStringView(line.constData(), pos).endsWith(')'+delimiter))
-                            currentType = ContentType::Other;
-                        break;
-                    case ContentType::Other:
-                        currentType=ContentType::String;
-                        break;
-                    case ContentType::RawStringPrefix:
-                        delimiter+=ch;
-                        break;
-                    default:
-                        break;
-                    }
-                    s+=ch;
+                continue;
+            }
+            switch (ch.unicode()) {
+            case '"':
+                switch (currentType) {
+                case ContentType::String:
+                    currentType=ContentType::Other;
                     break;
-                case '\'':
-                    switch (currentType) {
-                    case ContentType::Character:
-                        currentType=ContentType::Other;
-                        break;
-                    case ContentType::Other:
-                        currentType=ContentType::Character;
-                        break;
-                    case ContentType::RawStringPrefix:
-                        delimiter+=ch;
-                        break;
-                    default:
-                        break;
-                    }
-                    s+=ch;
+                case ContentType::RawString:
+                    if (QStringView(line.constData(), pos).endsWith(')'+delimiter))
+                        currentType = ContentType::Other;
                     break;
-                case 'R':
-                    if (currentType == ContentType::Other && pos+1<lineLen && line[pos+1]=='"') {
-                        s+=ch;
+                case ContentType::Other:
+                    currentType=ContentType::String;
+                    break;
+                case ContentType::RawStringPrefix:
+                    delimiter+=ch;
+                    break;
+                default:
+                    break;
+                }
+                s+=ch;
+                break;
+            case '\'':
+                switch (currentType) {
+                case ContentType::Character:
+                    currentType=ContentType::Other;
+                    break;
+                case ContentType::Other:
+                    currentType=ContentType::Character;
+                    break;
+                case ContentType::RawStringPrefix:
+                    delimiter+=ch;
+                    break;
+                default:
+                    break;
+                }
+                s+=ch;
+                break;
+            case 'R':
+                if (currentType == ContentType::Other && pos+1<lineLen && line[pos+1]=='"') {
+                    s+=ch;
+                    pos++;
+                    ch = line[pos];
+                    currentType=ContentType::RawStringPrefix;
+                    delimiter = "";
+                }
+                if (currentType == ContentType::RawStringPrefix ) {
+                    delimiter += ch;
+                }
+                s+=ch;
+                break;
+            case '(':
+                switch(currentType) {
+                case ContentType::RawStringPrefix:
+                    currentType = ContentType::RawString;
+                    break;
+                default:
+                    break;
+                }
+                s+=ch;
+                break;
+            case '/':
+                if (currentType == ContentType::Other) {
+                    if (pos+1<lineLen && line[pos+1]=='/') {
+                        // line comment
+                        pos = lineLen+1; // skip current line
+                        break;
+                    } else if (pos+1<lineLen && line[pos+1]=='*') {
+                        /* ansi c comment */
+                        s+=' '; // replace comments with a space
                         pos++;
+                        currentType = ContentType::AnsiCComment;
+                        break;
+                    }
+                }
+                s+=ch;
+                break;
+            case '\\':
+                switch (currentType) {
+                case ContentType::String:
+                case ContentType::Character:
+                    pos++;
+                    s+=ch;
+                    if (pos<lineLen) {
                         ch = line[pos];
-                        currentType=ContentType::RawStringPrefix;
-                        delimiter = "";
-                    }
-                    if (currentType == ContentType::RawStringPrefix ) {
-                        delimiter += ch;
-                    }
-                    s+=ch;
-                    break;
-                case '(':
-                    switch(currentType) {
-                    case ContentType::RawStringPrefix:
-                        currentType = ContentType::RawString;
-                        break;
-                    default:
-                        break;
-                    }
-                    s+=ch;
-                    break;
-                case '/':
-                    if (currentType == ContentType::Other) {
-                        if (pos+1<lineLen && line[pos+1]=='/') {
-                            // line comment
-                            pos++;
-                            currentType = ContentType::CppComment;
-                            break;
-                        } else if (pos+1<lineLen && line[pos+1]=='*') {
-                            /* ansi c comment */
-                            pos++;
-                            currentType = ContentType::AnsiCComment;
-                            break;
-                        }
-                    }
-                    s+=ch;
-                    break;
-                case '\\':
-                    switch (currentType) {
-                    case ContentType::String:
-                    case ContentType::Character:
-                        pos++;
-                        s+=ch;
-                        if (pos<lineLen) {
-                            ch = line[pos];
-                            s+=ch;
-                        }
-                        break;
-                    default:
                         s+=ch;
                     }
                     break;
                 default:
                     s+=ch;
                 }
-                pos++;
+                break;
+            default:
+                s+=ch;
             }
+            pos++;
         }
-        result.append(s.trimmed());
+        text[lineIdx] = s;
     }
-    return result;
 }
 
 void CppPreprocessor::preprocessBuffer()
@@ -1169,14 +1156,6 @@ void CppPreprocessor::preprocessBuffer()
         } while (!s.isEmpty());
         closeInclude();
     }
-}
-
-void CppPreprocessor::skipToEndOfPreprocessor()
-{
-    int indexLimit = mBuffer.count()-1;
-    // Skip until last char of line is NOT \ anymore
-    while ((mIndex < indexLimit) && mBuffer[mIndex].endsWith('\\'))
-        mIndex++;
 }
 
 void CppPreprocessor::skipToPreprocessor()
