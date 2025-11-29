@@ -595,8 +595,8 @@ QString GitManager::runGit(const QString& workingFolder, const QStringList &args
     env.insert("GIT_ASKPASS",includeTrailingPathDelimiter(pSettings->dirs().appDir())+"redpanda-win-git-askpass.exe");
 #else // Unix
     env.insert(QProcessEnvironment::systemEnvironment());
-    env.insert("LANG","en");
-    env.insert("LANGUAGE","en");
+    env.insert("LC_ALL", "C");
+    env.insert("LANGUAGE","");
     env.insert("GIT_ASKPASS",includeTrailingPathDelimiter(pSettings->dirs().appLibexecDir())+"redpanda-git-askpass");
 #endif
     QString output = runAndGetOutput(

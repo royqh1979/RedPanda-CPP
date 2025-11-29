@@ -2887,7 +2887,8 @@ void Settings::CompilerSet::setIniOptions(const QByteArray &value)
 QByteArray Settings::CompilerSet::getCompilerOutput(const QString &binDir, const QString &binFile, const QStringList &arguments) const
 {
     QProcessEnvironment env;
-    env.insert("LANG","en");
+    env.insert("LANGUAGE","");
+    env.insert("LC_ALL", "C");
     QString path = binDir;
     env.insert("PATH",path);
     auto [result, _, errorMessage] = runAndGetOutput(
