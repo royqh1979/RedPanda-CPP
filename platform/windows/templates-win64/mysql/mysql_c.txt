@@ -21,7 +21,14 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%s\n", mysql_error(con));
 		exit(1);
 	}
-	
+
+    //Disable Server ssl verification
+	my_bool verify= 0;
+	mysql_optionsv(con, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&verify);
+	//Don't enforce tls
+	my_bool enforce_tls=0;
+	mysql_optionsv(con, MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
+		
 	if (mysql_real_connect(con, "localhost", "root", "",
 		"testdb", 0, NULL, 0) == NULL)
 	{
