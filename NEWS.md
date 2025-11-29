@@ -1,6 +1,6 @@
 Red Panda C++ Version 3.5
   - fix: Stacktrace table shows extra rows.
-  - fix: The fix line of disassembled code is lost in the cpu dialog.
+  - fix: The first line of disassembled code is lost in the cpu dialog.
   - enhancement: Skip all std:: (C++ standard libraries) functions when debugging.
   - enhancement: Correctly syntax lines ending with '\'
 
