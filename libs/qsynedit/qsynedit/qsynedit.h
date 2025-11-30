@@ -199,19 +199,22 @@ public:
 //    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
 //    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
-    int leftSpaces(const QString& line) const;
+    int leftSpaces(const QString& lineText) const;
     QString GetLeftSpacing(int charCount,bool wantTabs) const;
     int charToGlyphLeft(int line, int charPos) const;
+    int charToGlyphLeft(const BufferCoord& pos) const {
+        return charToGlyphLeft(pos.line, pos.ch);
+    }
     int charToGlyphLeft(int line, const QString& s, int charPos) const;
     //int charToColumn(const QString& s, int aChar) const;
     int xposToGlyphStartChar(int line, int xpos) const;
     int xposToGlyphStartChar(int line, const QString& s, int xpos) const;
     int xposToGlyphLeft(int line, int xpos) const;
     //int xposToGlyphRight(int line, int xpos) const;
-    int stringWidth(const QString& line, int left) const;
-    int getLineIndent(const QString& line) const;
-    int rowToLine(int aRow) const;
-    int lineToRow(int aLine) const;
+    int stringWidth(const QString& s, int left) const;
+    int getLineIndent(const QString& s) const;
+    int rowToLine(int row) const;
+    int lineToRow(int line) const;
     int foldRowToLine(int row) const;
     int foldLineToRow(int line) const;
     void setDefaultKeystrokes();
@@ -372,7 +375,7 @@ public:
     void setGutterWidth(int value);
 
     bool modified() const;
-    void setModified(bool Value, bool skipUndo=false);
+    void setModified(bool value, bool skipUndo=false);
 
     PSyntaxer syntaxer() const;
     void setSyntaxer(const PSyntaxer &syntaxer);

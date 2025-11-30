@@ -1063,11 +1063,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
             return;
         case '(': {
             if (!selAvail()) {
-                // QChar nextCh = nextNonSpaceChar(caretY()-1,caretX()-1);
-                // if (!isIdentChar(nextCh) && nextCh!='('
-                //         && nextCh!='"' && nextCh!='\'' ){
-                //     handled = handleSymbolCompletion(ch);
-                // }
                 handled = handleSymbolCompletion(ch);
             } else {
                 handled = handleSymbolCompletion(ch);
@@ -1680,6 +1675,7 @@ void Editor::setCaretPositionAndActivate(int line, int aChar)
 
 void Editor::addSyntaxIssues(int line, int startChar, int endChar, CompileIssueType errorType, const QString &hint)
 {
+    qDebug()<<line<<startChar<<endChar;
     PSyntaxIssue pError;
     QSynedit::BufferCoord p;
     QString token;
@@ -3809,7 +3805,7 @@ void Editor::completionInsert(bool appendFunc)
                 ||
                 (statement->kind == StatementKind::Preprocessor
                   && !statement->args.isEmpty())) {
-            QChar nextCh = nextNonSpaceChar(caretY()-1,p.ch-1);
+            QChar nextCh = nextNonSpaceChar(caretY(),p.ch);
             if (nextCh=='(') {
                 funcAddOn = "";
             } else if (isIdentChar(nextCh) || nextCh == '"'
@@ -4206,7 +4202,7 @@ void Editor::updateFunctionTip(bool showTip)
     if (currentLine>=lineCount())
         return;
 
-    QChar ch=lastNonSpaceChar(currentLine,currentChar);
+    QChar ch=lastNonSpaceChar(currentLine+1,currentChar+1);
     if (ch!='(' && ch!=',')
         return;
 

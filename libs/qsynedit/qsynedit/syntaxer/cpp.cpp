@@ -1718,7 +1718,6 @@ void CppSyntaxer::next()
 
 void CppSyntaxer::setLine(int lineNumber, const QString &newLine, size_t lineSeq)
 {
-    qDebug()<<lineNumber<<newLine<<mRange.lastToken;
     mOrigLine = newLine;
     mLineNumber = lineNumber;
     mLineSeq = lineSeq;

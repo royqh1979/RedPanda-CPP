@@ -656,7 +656,7 @@ DisplayCoord QSynEdit::bufferToDisplayPos(const BufferCoord &p) const
         return result;
     // Account for tabs and charColumns
     if (p.line-1 <mDocument->count())
-        result.x = charToGlyphLeft(p.line,p.ch);
+        result.x = charToGlyphLeft(p);
     result.row = lineToRow(result.row);
     return result;
 }
@@ -714,11 +714,11 @@ BufferCoord QSynEdit::displayToBufferPos(const DisplayCoord &p) const
 //    return getContents(pStart,pEnd).join(joinStr);
 //}
 
-int QSynEdit::leftSpaces(const QString &line) const
+int QSynEdit::leftSpaces(const QString &lineText) const
 {
     int result = 0;
     if (mOptions.testFlag(EditorOption::AutoIndent)) {
-        for (QChar ch:line) {
+        for (QChar ch:lineText) {
             if (ch == '\t') {
                 result += tabSize() - (result % tabSize());
             } else if (ch == ' ') {
@@ -783,15 +783,15 @@ int QSynEdit::xposToGlyphLeft(int line, int xpos) const
 //     return mDocument->glyphStartPostion(line-1,glyphIndex) + mDocument->glyphLength(line-1,glyphIndex)+1;
 // }
 
-int QSynEdit::stringWidth(const QString &line, int left) const
+int QSynEdit::stringWidth(const QString &s, int left) const
 {
-    return mDocument->stringWidth(line, left);
+    return mDocument->stringWidth(s, left);
 }
 
-int QSynEdit::getLineIndent(const QString &line) const
+int QSynEdit::getLineIndent(const QString &s) const
 {
     int indents = 0;
-    for (QChar ch:line) {
+    for (QChar ch:s) {
         switch(ch.unicode()) {
         case '\t':
             indents+=tabSize();
@@ -806,21 +806,21 @@ int QSynEdit::getLineIndent(const QString &line) const
     return indents;
 }
 
-int QSynEdit::rowToLine(int aRow) const
+int QSynEdit::rowToLine(int row) const
 {
     if (useCodeFolding())
-        return foldRowToLine(aRow);
+        return foldRowToLine(row);
     else
-        return aRow;
+        return row;
     //return displayToBufferPos({1, aRow}).Line;
 }
 
-int QSynEdit::lineToRow(int aLine) const
+int QSynEdit::lineToRow(int line) const
 {
     if (useCodeFolding())
-        return foldLineToRow(aLine);
+        return foldLineToRow(line);
     else
-        return aLine;
+        return line;
 }
 
 int QSynEdit::foldRowToLine(int row) const
@@ -1018,10 +1018,10 @@ QChar QSynEdit::nextNonSpaceChar(int line, int ch) const
 {
     if (ch<0)
         return QChar();
-    QString s = mDocument->getLine(line);
+    QString s = mDocument->getLine(line-1);
     if (s.isEmpty())
         return QChar();
-    int x=ch;
+    int x=ch-1;
     while (x<s.length()) {
         QChar ch = s[x];
         if (!ch.isSpace())
@@ -1035,8 +1035,8 @@ QChar QSynEdit::lastNonSpaceChar(int line, int ch) const
 {
     if (line>=mDocument->count())
         return QChar();
-    QString s = mDocument->getLine(line);
-    int x = std::min(ch-1,s.length()-1);
+    QString s = mDocument->getLine(line-1);
+    int x = std::min(ch-2,s.length()-1);
     while (line>=0) {
         while (x>=0) {
             QChar c = s[x];
@@ -4087,8 +4087,8 @@ void QSynEdit::doUndoItem()
             BufferCoord startPos = item->changeStartPos();
             BufferCoord endPos = item->changeEndPos();
             if (item->changeSelMode()==SelectionMode::Column) {
-                int xFrom = charToGlyphLeft(startPos.line, startPos.ch);
-                int xTo = charToGlyphLeft(endPos.line, endPos.ch);
+                int xFrom = charToGlyphLeft(startPos);
+                int xTo = charToGlyphLeft(endPos);
                 if (xFrom > xTo)
                     std::swap(xFrom, xTo);
                 startPos.ch = xposToGlyphStartChar(startPos.line,xFrom);
@@ -4370,9 +4370,9 @@ QString QSynEdit::selText() const
         {
             int xFrom, xTo;
             firstLine = blockBegin().line;
-            xFrom = charToGlyphLeft(blockBegin().line, blockBegin().ch);
+            xFrom = charToGlyphLeft(blockBegin());
             lastLine = blockEnd().line;
-            xTo = charToGlyphLeft(blockEnd().line, blockEnd().ch);
+            xTo = charToGlyphLeft(blockEnd());
             if (xFrom > xTo)
               std::swap(xFrom, xTo);
             if (firstLine>lastLine)
@@ -4453,9 +4453,9 @@ QStringList QSynEdit::getContent(BufferCoord startPos, BufferCoord endPos, Selec
     case SelectionMode::Column: {
         int xFrom, xTo;
         firstLine = blockBegin().line;
-        xFrom = charToGlyphLeft(blockBegin().line, blockBegin().ch);
+        xFrom = charToGlyphLeft(blockBegin());
         lastLine = blockEnd().line;
-        xTo = charToGlyphLeft(blockEnd().line, blockEnd().ch);
+        xTo = charToGlyphLeft(blockEnd());
         if (xFrom > xTo)
           std::swap(xFrom, xTo);
         if (firstLine>lastLine)
@@ -4533,9 +4533,9 @@ size_t QSynEdit::lineSeq(int line) const
 
 int QSynEdit::findPrevLineBySeq(int startLine, size_t lineSeq) const
 {
-    //start at 0
-    //-1 not found
-    return mDocument->findPrevLineBySeq(startLine, lineSeq);
+    //start at 1
+    //0 not found
+    return mDocument->findPrevLineBySeq(startLine-1, lineSeq)+1;
 }
 
 PSyntaxer QSynEdit::syntaxer() const
@@ -4869,8 +4869,8 @@ void QSynEdit::setSelTextPrimitiveEx(SelectionMode mode, const QStringList &text
         }
         doDeleteText(startPos,endPos,activeSelectionMode());
         if (mode == SelectionMode::Column) {
-            int xBegin = charToGlyphLeft(startPos.line,startPos.ch);
-            int xEnd = charToGlyphLeft(endPos.line,endPos.ch);
+            int xBegin = charToGlyphLeft(startPos);
+            int xEnd = charToGlyphLeft(endPos);
             int x;
             if (xBegin<xEnd) {
                 internalSetCaretXY(startPos);
@@ -5180,9 +5180,9 @@ void QSynEdit::doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionM
     case SelectionMode::Column:
     {
         int firstLine = startPos.line;
-        int xFrom = charToGlyphLeft(startPos.line, startPos.ch);
+        int xFrom = charToGlyphLeft(startPos);
         int lastLine = endPos.line;
-        int xTo = charToGlyphLeft(endPos.line, endPos.ch);
+        int xTo = charToGlyphLeft(endPos);
         if (xFrom > xTo)
             std::swap(xFrom, xTo);
         if (firstLine > lastLine)
