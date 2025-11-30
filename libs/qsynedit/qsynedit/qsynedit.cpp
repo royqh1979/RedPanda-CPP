@@ -4520,6 +4520,11 @@ QString QSynEdit::lineText(int line) const
     return mDocument->getLine(line-1);
 }
 
+PSyntaxState QSynEdit::lineSyntaxState(int line) const
+{
+    return mDocument->getSyntaxState(line-1);
+}
+
 void QSynEdit::setLineText(const QString s)
 {
     if (mCaretY >= 1 && mCaretY <= mDocument->count())

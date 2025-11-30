@@ -388,12 +388,12 @@ public:
     QString displayLineText();
     QString lineText() const;
     QString lineText(int line) const;
+    PSyntaxState lineSyntaxState(int line) const;
     void setLineText(const QString s);
     size_t lineSeq(int line) const;
 
     int findPrevLineBySeq(int startLine, size_t lineSeq) const;
 
-    const PDocument& document() const;
     bool empty();
 
     QString selText() const;
@@ -505,6 +505,7 @@ protected:
     virtual void onCommandProcessed(EditCommand command, QChar car, void * pData);
     virtual void executeCommand(EditCommand command, QChar ch, void * pData);
 protected:
+    const PDocument& document() const;
     void replaceAll(const QString& text);
     int clientWidth() const;
     int clientHeight() const;
