@@ -3018,7 +3018,7 @@ bool Settings::CompilerSet::supportConvertingCharset()
     return mGccSupportConvertingCharset;
 #else
     // Unix: iconv is a part of POSIX standard.
-    return mCompilerType == CompilerType::GCC || mCompilerType == CompilerType::GCC_UTF8;
+    return mCompilerType == CompilerType::GCC;
 #endif
 }
 
