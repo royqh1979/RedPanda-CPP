@@ -20,36 +20,36 @@
 
 namespace QSynedit {
 
-bool BufferCoord::operator==(const BufferCoord &coord)
+bool CharPos::operator==(const CharPos &coord)
 {
     return coord.ch == ch && coord.line == line;
 }
 
-bool BufferCoord::operator>=(const BufferCoord &coord)
+bool CharPos::operator>=(const CharPos &coord)
 {
     return (line > coord.line)
             || (line == coord.line && ch >= coord.ch);
 }
 
-bool BufferCoord::operator>(const BufferCoord &coord)
+bool CharPos::operator>(const CharPos &coord)
 {
     return (line > coord.line)
             || (line == coord.line && ch > coord.ch);
 }
 
-bool BufferCoord::operator<(const BufferCoord &coord)
+bool CharPos::operator<(const CharPos &coord)
 {
     return (line < coord.line)
             || (line == coord.line && ch < coord.ch);
 }
 
-bool BufferCoord::operator<=(const BufferCoord &coord)
+bool CharPos::operator<=(const CharPos &coord)
 {
     return (line < coord.line)
             || (line == coord.line && ch <= coord.ch);
 }
 
-bool BufferCoord::operator!=(const BufferCoord &coord)
+bool CharPos::operator!=(const CharPos &coord)
 {
     return coord.ch != ch || coord.line != line;
 }

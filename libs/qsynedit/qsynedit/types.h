@@ -42,19 +42,20 @@ enum class ProgrammingLanguage {
     Unknown
 };
 
-struct BufferCoord {
-    int ch;
-    int line;
+struct CharPos {
+    int ch; // starts from 0
+    int line; // starts from 0
 
-    BufferCoord() = default;
-    constexpr BufferCoord(qsizetype ch_, qsizetype line_) : ch(ch_), line(line_) {}
+    CharPos() = default;
+    CharPos(const CharPos& pos): ch{pos.ch}, line{pos.line} {};
+    constexpr CharPos(int ch_, int line_) : ch{ch_}, line{line_} {}
 
-    bool operator==(const BufferCoord& coord);
-    bool operator>=(const BufferCoord& coord);
-    bool operator>(const BufferCoord& coord);
-    bool operator<(const BufferCoord& coord);
-    bool operator<=(const BufferCoord& coord);
-    bool operator!=(const BufferCoord& coord);
+    bool operator==(const CharPos& coord);
+    bool operator>=(const CharPos& coord);
+    bool operator>(const CharPos& coord);
+    bool operator<(const CharPos& coord);
+    bool operator<=(const CharPos& coord);
+    bool operator!=(const CharPos& coord);
 };
 
 struct DisplayCoord {
