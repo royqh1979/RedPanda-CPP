@@ -169,8 +169,8 @@ public:
     int displayY() const {
         return displayXY().row;
     }
-    BufferCoord caretXY() const {
-        return BufferCoord{caretX(),caretY()};
+    CharPos caretXY() const {
+        return CharPos{caretX(),caretY()};
     }
     int caretX() const {
         return mCaretX;
@@ -190,12 +190,12 @@ public:
     DisplayCoord pixelsToNearestGlyphPos(int aX, int aY) const;
     DisplayCoord pixelsToGlyphPos(int aX, int aY) const;
     QPoint displayCoordToPixels(const DisplayCoord& coord) const;
-    DisplayCoord bufferToDisplayPos(const BufferCoord& p) const;
-    BufferCoord displayToBufferPos(const DisplayCoord& p) const;
+    DisplayCoord bufferToDisplayPos(const CharPos& p) const;
+    CharPos displayToBufferPos(const DisplayCoord& p) const;
 
     //normalized buffer coord operations
-//    ContentsCoord fromBufferCoord(const BufferCoord& p) const;
-//    ContentsCoord createNormalizedBufferCoord(int aChar,int aLine) const;
+//    ContentsCoord fromCharPos(const CharPos& p) const;
+//    ContentsCoord createNormalizedCharPos(int aChar,int aLine) const;
 //    QStringList getContents(const ContentsCoord& pStart,const ContentsCoord& pEnd);
 //    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
@@ -224,21 +224,21 @@ public:
     bool selAvail() const;
     bool colSelAvail() const;
     QString wordAtCursor() const;
-    QString wordAtRowCol(const BufferCoord& XY) const;
+    QString wordAtRowCol(const CharPos& XY) const;
 
-    QChar charAt(const BufferCoord& pos) const;
+    QChar charAt(const CharPos& pos) const;
     QChar nextNonSpaceChar(int line, int ch) const;
     QChar lastNonSpaceChar(int line, int ch) const;
 
-    bool isPointInSelection(const BufferCoord& pos) const;
-    BufferCoord nextWordPos();
-    BufferCoord nextWordPos(const BufferCoord& pos);
-    BufferCoord wordStart();
-    BufferCoord wordStart(const BufferCoord& pos);
-    BufferCoord wordEnd();
-    BufferCoord wordEnd(const BufferCoord& pos);
-    BufferCoord prevWordPos();
-    BufferCoord prevWordPos(const BufferCoord& pos);
+    bool isPointInSelection(const CharPos& pos) const;
+    CharPos nextWordPos();
+    CharPos nextWordPos(const CharPos& pos);
+    CharPos wordStart();
+    CharPos wordStart(const CharPos& pos);
+    CharPos wordEnd();
+    CharPos wordEnd(const CharPos& pos);
+    CharPos prevWordPos();
+    CharPos prevWordPos(const CharPos& pos);
 
     //Caret
     void showCaret();
@@ -249,11 +249,11 @@ public:
     void setCaretY(int line) {
         setCaretXY({mCaretX,line});
     }
-    void setCaretXY(const BufferCoord& pos);
-    void setCaretXYCentered(const BufferCoord& pos);
-    void setCaretAndSelection(const BufferCoord& posCaret,
-                              const BufferCoord& posSelBegin,
-                              const BufferCoord& posSelEnd);
+    void setCaretXY(const CharPos& pos);
+    void setCaretXYCentered(const CharPos& pos);
+    void setCaretAndSelection(const CharPos& posCaret,
+                              const CharPos& posSelBegin,
+                              const CharPos& posSelEnd);
 
     bool inputMethodOn() const {
         return !mInputPreeditString.isEmpty();
@@ -274,11 +274,11 @@ public:
     int maxScrollWidth() const;
     int maxScrollHeight() const;
 
-    bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
+    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
       PTokenAttribute& attri);
-    bool getTokenAttriAtRowCol(const BufferCoord& pos, QString& token,
+    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
       PTokenAttribute& attri, PSyntaxState &syntaxState);
-    bool getTokenAttriAtRowColEx(const BufferCoord& pos, QString& token,
+    bool getTokenAttriAtRowColEx(const CharPos& pos, QString& token,
       int &start, PTokenAttribute& attri);
 
     void addGroupBreak();
@@ -315,17 +315,17 @@ public:
     virtual void moveSelUp(){ processCommand(EditCommand::MoveSelUp);}
     virtual void moveSelDown(){ processCommand(EditCommand::MoveSelDown);}
 
-    virtual BufferCoord getMatchingBracket();
-    virtual BufferCoord getMatchingBracketEx(BufferCoord APoint);
+    virtual CharPos getMatchingBracket();
+    virtual CharPos getMatchingBracketEx(CharPos APoint);
     void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex) const;
     void prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QString lineText, size_t lineSeq) const;
 
     QStringList contents();
     QString text();
 
-    bool getPositionOfMouse(BufferCoord& aPos) const;
+    bool getPositionOfMouse(CharPos& aPos) const;
     bool getLineOfMouse(int& line) const;
-    bool pointToCharLine(const QPoint& point, BufferCoord& coord) const;
+    bool pointToCharLine(const QPoint& point, CharPos& coord) const;
     bool pointToLine(const QPoint& point, int& line) const;
     bool isIdentChar(const QChar& ch) const;
     bool isIdentStartChar(const QChar& ch) const;
@@ -348,14 +348,14 @@ public:
     int leftPos() const;
     void setLeftPos(int value);
 
-    BufferCoord blockBegin() const;
-    BufferCoord blockEnd() const;
+    CharPos blockBegin() const;
+    CharPos blockEnd() const;
     int selectionBeginLine() const;
     int selectionEndLine() const;
 
     void clearSelection();
-    void setBlockBegin(BufferCoord value);
-    void setBlockEnd(BufferCoord Value);
+    void setBlockBegin(CharPos value);
+    void setBlockEnd(CharPos Value);
 
     SelectionMode activeSelectionMode() const;
     void setActiveSelectionMode(const SelectionMode &Value);
@@ -396,7 +396,7 @@ public:
     QString selText() const;
     int selCount() const;
 
-    QStringList getContent(BufferCoord startPos, BufferCoord endPos, SelectionMode mode) const;
+    QStringList getContent(CharPos startPos, CharPos endPos, SelectionMode mode) const;
     void reparseDocument();
 
     QString lineBreak() const;
@@ -518,7 +518,7 @@ protected:
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
-    BufferCoord ensureBufferCoordValid(const BufferCoord& coord);
+    CharPos ensureCharPosValid(const CharPos& coord);
     void beginEditingWithoutUndo();
     void endEditingWithoutUndo();
     void clearAreaList(EditingAreaList areaList);
@@ -534,7 +534,7 @@ private:
     void ensureCaretVisibleEx(bool ForceToMiddle);
     void scrollWindow(int dx,int dy);
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
-    void internalSetCaretXY(BufferCoord value, bool ensureVisible = true);
+    void internalSetCaretXY(CharPos value, bool ensureVisible = true);
     void internalSetCaretX(int value);
     void internalSetCaretY(int value);
     void setStatusChanged(StatusChanges changes);
@@ -577,7 +577,7 @@ private:
      */
     void moveCaretHorz(int deltaX, bool isSelection);
     void moveCaretVert(int deltaY, bool isSelection);
-    void moveCaretAndSelection(const BufferCoord& ptBefore, const BufferCoord& ptAfter,
+    void moveCaretAndSelection(const CharPos& ptBefore, const CharPos& ptAfter,
                                bool isSelection, bool ensureCaretVisible = true);
     void moveCaretToLineStart(bool isSelection);
     void moveCaretToLineEnd(bool isSelection, bool ensureCaretVisible = true);
@@ -594,18 +594,18 @@ private:
     void properSetLine(int line, const QString& sLineText, bool notify = true);
 
     //primitive edit operations
-    void doDeleteText(BufferCoord startPos, BufferCoord endPos, SelectionMode mode);
-    void doInsertText(const BufferCoord& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
-    int doInsertTextByNormalMode(const BufferCoord& pos, const QStringList& text, BufferCoord &newPos);
-    int doInsertTextByColumnMode(const BufferCoord& pos, const QStringList& text, int startLine, int endLine);
+    void doDeleteText(CharPos startPos, CharPos endPos, SelectionMode mode);
+    void doInsertText(const CharPos& pos, const QStringList& text, SelectionMode mode, int startLine, int endLine);
+    int doInsertTextByNormalMode(const CharPos& pos, const QStringList& text, CharPos &newPos);
+    int doInsertTextByColumnMode(const CharPos& pos, const QStringList& text, int startLine, int endLine);
 
     void doTrimTrailingSpaces();
-    void deleteFromTo(const BufferCoord& start, const BufferCoord& end);
+    void deleteFromTo(const CharPos& start, const CharPos& end);
     void setSelWord();
-    void setWordBlock(BufferCoord value);
+    void setWordBlock(CharPos value);
 
-    void doExpandSelection(const BufferCoord& pos);
-    void doShrinkSelection(const BufferCoord& pos);
+    void doExpandSelection(const CharPos& pos);
+    void doShrinkSelection(const CharPos& pos);
 
 
     int calcIndentSpaces(int line, const QString& lineText, bool addIndent);
@@ -613,7 +613,7 @@ private:
     void processGutterClick(QMouseEvent* event);
 
     void clearUndo();
-    BufferCoord getPreviousLeftBrace(int x,int y);
+    CharPos getPreviousLeftBrace(int x,int y);
     bool canDoBlockIndent() const;
 
     QRect calculateCaretRect() const;
@@ -686,8 +686,8 @@ private:
     int mEditingCount;
     bool mUseCodeFolding;
     bool  mAlwaysShowCaret;
-    BufferCoord mBlockBegin;
-    BufferCoord mBlockEnd;
+    CharPos mBlockBegin;
+    CharPos mBlockEnd;
     int mCaretX;
     int mLastCaretColumn;
     int mCaretY;
@@ -759,9 +759,9 @@ private:
     int mMouseWheelScrollSpeed;
     int mMouseSelectionScrollSpeed;
 
-    BufferCoord mDragCaretSave;
-    BufferCoord mDragSelBeginSave;
-    BufferCoord mDragSelEndSave;
+    CharPos mDragCaretSave;
+    CharPos mDragSelBeginSave;
+    CharPos mDragSelEndSave;
     bool mDropped;
     int mWheelAccumulatedDeltaX;
     int mWheelAccumulatedDeltaY;
