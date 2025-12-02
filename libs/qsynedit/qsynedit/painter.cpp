@@ -122,8 +122,8 @@ void QSynEditPainter::paintGutter(const QRect& clip)
             textColor = mEdit->mForegroundColor;
         }
         // draw each line if it is not hidden by a fold
-        BufferCoord selectionStart = mEdit->blockBegin();
-        BufferCoord selectionEnd = mEdit->blockEnd();
+        BufferCoord selectionStart = mEdit->selBegin();
+        BufferCoord selectionEnd = mEdit->selEnd();
         for (int row = mFirstRow; row <= mLastRow; row++) {
             int line = mEdit->rowToLine(row);
             if ((line > mEdit->mDocument->count()) && (mEdit->mDocument->count() > 0 ))
@@ -972,8 +972,8 @@ void QSynEditPainter::paintLines()
     mTokenAccu.left = 0;
     mTokenAccu.style = FontStyle::fsNone;
     // Now loop through all the lines. The indices are valid for Lines.
-    BufferCoord selectionBegin = mEdit->blockBegin();
-    BufferCoord selectionEnd= mEdit->blockEnd();
+    BufferCoord selectionBegin = mEdit->selBegin();
+    BufferCoord selectionEnd= mEdit->selEnd();
     for (int row = mFirstRow; row<=mLastRow; row++) {
         int vLine = mEdit->rowToLine(row);
         bool lineTextChanged = false;

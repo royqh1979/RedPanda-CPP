@@ -59,34 +59,6 @@ bool enumTokenAttributes(PSyntaxer syntaxer,
 
 FontStyles getFontStyles(const QFont& font);
 
-/**
- * Find the first occurency of word char in s, starting from startPos
- * Note: the index of first char in s in 1
- * @return index of the char founded , 0 if not found
- */
-int findWordChar(const QString& s, int startPos);
-
-/**
- * Find the first occurency of non word char in s, starting from startPos
- * Note: the index of first char in s in 1
- * @return index of the char founded , 0 if not found
- */
-int findNonWordChar(const QString& s, int startPos);
-
-/**
- * Find the first occurency of word char in s right to left, starting from startPos
- * Note: the index of first char in s in 1
- * @return index of the char founded , 0 if not found
- */
-int findLastWordChar(const QString& s, int startPos);
-
-/**
- * Find the first occurency of non word char in s  right to left, starting from startPos
- * Note: the index of first char in s in 1
- * @return index of the char founded , 0 if not found
- */
-int findLastNonWordChar(const QString& s, int startPos);
-
 void ensureNotAfter(BufferCoord& cord1, BufferCoord& cord2);
 
 bool isWordChar(const QChar& ch);

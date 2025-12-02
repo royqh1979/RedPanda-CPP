@@ -178,7 +178,6 @@ public:
     bool hasNextSyntaxIssue() const;
     PSyntaxIssueList getSyntaxIssuesAtLine(int line);
     PSyntaxIssue getSyntaxIssueAtPosition(const QSynedit::BufferCoord& pos);
-    int gutterClickedLine() const;
     void toggleBreakpoint(int line);
     void clearBreakpoints();
     bool hasBreakpoint(int line);
@@ -361,7 +360,6 @@ private:
     QColor mCurrentHighlighWordBackground;
     int mSyntaxErrorLine;
     int mLineCount;
-    int mGutterClickedLine;
     QSet<int> mBreakpointLines;
     QSet<int> mBookmarkLines;
     int mActiveBreakpointLine;

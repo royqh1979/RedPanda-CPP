@@ -19,6 +19,8 @@ namespace QSynedit {
                                               const QSynEdit *editor)
     {
         Q_ASSERT(editor!=nullptr);
+        if (lineText.startsWith("//"))
+            return 0;
         line = std::min(line, editor->lineCount()+1);
         if (line<=1)
             return 0;

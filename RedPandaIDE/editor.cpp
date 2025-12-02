@@ -1952,7 +1952,6 @@ void Editor::onGutterClicked(Qt::MouseButton button, int , int , int line)
                 || isC_CPPHeaderFile(mFileType))
             toggleBreakpoint(line);
     }
-    mGutterClickedLine = line;
 }
 
 void Editor::onTipEvalValueReady(const QString& value)
@@ -4055,7 +4054,7 @@ Editor::TipType Editor::getTipType(QPoint point, QSynedit::BufferCoord& pos)
                     // do not allow when dragging selection
                 } else if (mParser && mParser->isIncludeLine(lineText(pos.line))) {
                     return TipType::Include;
-                } else if (selAvail() && isPointInSelection(pos)) {
+                } else if (selAvail() && inSelection(pos)) {
                         return TipType::Selection;
                 } else if (attr->tokenType() == QSynedit::TokenType::Identifier) {
                     return TipType::Identifier;
@@ -5333,11 +5332,6 @@ void Editor::tab()
         }
     }
     QSynEdit::tab();
-}
-
-int Editor::gutterClickedLine() const
-{
-    return mGutterClickedLine;
 }
 
 void Editor::toggleBreakpoint(int line)

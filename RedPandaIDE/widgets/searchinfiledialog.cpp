@@ -351,9 +351,9 @@ int SearchInFileDialog::execute(QSynedit::QSynEdit *editor, const QString &sSear
             && editor->selAvail()) {
         // start at end of selection
         if (mSearchOptions.testFlag(QSynedit::ssoBackwards)) {
-            editor->setCaretXY(editor->blockBegin());
+            editor->setCaretXY(editor->selBegin());
         } else {
-            editor->setCaretXY(editor->blockEnd());
+            editor->setCaretXY(editor->selEnd());
         }
     }
 
@@ -372,8 +372,8 @@ std::shared_ptr<SearchResultTreeItem> SearchInFileDialog::batchFindInEditor(QSyn
 {
     //backup
     QSynedit::BufferCoord caretBackup = e->caretXY();
-    QSynedit::BufferCoord blockBeginBackup = e->blockBegin();
-    QSynedit::BufferCoord blockEndBackup = e->blockEnd();
+    QSynedit::BufferCoord blockBeginBackup = e->selBegin();
+    QSynedit::BufferCoord blockEndBackup = e->selEnd();
     int topPosBackup = e->topPos();
     int leftPosBackup = e->leftPos();
 

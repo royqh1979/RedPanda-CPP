@@ -143,6 +143,10 @@ using PRedoList = std::shared_ptr<RedoList>;
 class QSynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
+    enum  class CharType {
+        WordChar,
+        NonWordChar
+    };
 public:
     explicit QSynEdit(QWidget* parent=nullptr);
     QSynEdit(const QSynEdit&)=delete;
@@ -200,7 +204,7 @@ public:
 //    QString getJoinedContents(const ContentsCoord& pStart,const ContentsCoord& pEnd, const QString& joinStr);
 
     int leftSpaces(const QString& line) const;
-    QString GetLeftSpacing(int charCount,bool wantTabs) const;
+    QString genSpaces(int charCount) const;
     int charToGlyphLeft(int line, int charPos) const;
     int charToGlyphLeft(int line, const QString& s, int charPos) const;
     //int charToColumn(const QString& s, int aChar) const;
@@ -230,15 +234,18 @@ public:
     QChar nextNonSpaceChar(int line, int ch) const;
     QChar lastNonSpaceChar(int line, int ch) const;
 
-    bool isPointInSelection(const CharPos& pos) const;
-    CharPos nextWordPos();
-    CharPos nextWordPos(const CharPos& pos);
-    CharPos wordStart();
+    bool inSelection(const CharPos& pos) const;
+    CharPos findNextChar(const CharPos &pos, CharType type) const;
+    CharPos findPrevChar(const CharPos &pos, CharType type) const;
+    CharPos nextWordChar(const CharPos &pos) const;
+    CharPos nextNonWordChar(const CharPos &pos) const;
+    CharPos prevWordChar(const CharPos &pos) const;
+    CharPos prevNonWordChar(const CharPos &pos) const;
+
+    bool inWord(const CharPos& pos);
+
     CharPos wordStart(const CharPos& pos);
-    CharPos wordEnd();
     CharPos wordEnd(const CharPos& pos);
-    CharPos prevWordPos();
-    CharPos prevWordPos(const CharPos& pos);
 
     //Caret
     void showCaret();
@@ -348,8 +355,8 @@ public:
     int leftPos() const;
     void setLeftPos(int value);
 
-    CharPos blockBegin() const;
-    CharPos blockEnd() const;
+    CharPos selBegin() const;
+    CharPos selEnd() const;
     int selectionBeginLine() const;
     int selectionEndLine() const;
 
@@ -518,7 +525,7 @@ protected:
 private:
     int calcLineAlignedTopPos(int currentValue, bool passFirstLine);
     void ensureLineAlignedWithTop(void);
-    CharPos ensureCharPosValid(const CharPos& coord);
+    CharPos ensureBufferCoordValid(const CharPos& coord);
     void beginEditingWithoutUndo();
     void endEditingWithoutUndo();
     void clearAreaList(EditingAreaList areaList);
@@ -535,6 +542,7 @@ private:
     void scrollWindow(int dx,int dy);
     void setCaretDisplayXY(const DisplayCoord& aPos, bool ensureCaretVisible = true);
     void internalSetCaretXY(CharPos value, bool ensureVisible = true);
+    void internalSetCaretXY(int x, int y, bool ensureVisible = true);
     void internalSetCaretX(int value);
     void internalSetCaretY(int value);
     void setStatusChanged(StatusChanges changes);
@@ -602,7 +610,7 @@ private:
     void doTrimTrailingSpaces();
     void deleteFromTo(const CharPos& start, const CharPos& end);
     void setSelWord();
-    void setWordBlock(CharPos value);
+    void setWordBlock(const CharPos &pos);
 
     void doExpandSelection(const CharPos& pos);
     void doShrinkSelection(const CharPos& pos);
@@ -613,7 +621,7 @@ private:
     void processGutterClick(QMouseEvent* event);
 
     void clearUndo();
-    CharPos getPreviousLeftBrace(int x,int y);
+    CharPos getPreviousLeftBrace(int ch,int line);
     bool canDoBlockIndent() const;
 
     QRect calculateCaretRect() const;

@@ -97,22 +97,22 @@ bool isWordChar(const QChar& ch) {
 
 int findWordChar(const QString &s, int startPos)
 {
-    for (int i=startPos-1;i<s.length();i++) {
+    for (int i=startPos;i<s.length();i++) {
         if (isWordChar(s[i])) {
-            return i+1;
+            return i;
         }
     }
-    return 0;
+    return -1;
 }
 
 int findNonWordChar(const QString &s, int startPos)
 {
-    for (int i=startPos-1;i<s.length();i++) {
+    for (int i=startPos;i<s.length();i++) {
         if (!isWordChar(s[i])) {
-            return i+1;
+            return i;
         }
     }
-    return 0;
+    return -1;
 }
 
 int findLastWordChar(const QString &s, int startPos)
@@ -120,10 +120,10 @@ int findLastWordChar(const QString &s, int startPos)
     int i = startPos-1;
     while (i>=0) {
         if (isWordChar(s[i]))
-            return i+1;
+            return i;
         i--;
     }
-    return 0;
+    return -1;
 }
 
 int findLastNonWordChar(const QString &s, int startPos)
@@ -131,10 +131,10 @@ int findLastNonWordChar(const QString &s, int startPos)
     int i = startPos-1;
     while (i>=0) {
         if (!isWordChar(s[i]))
-            return i+1;
+            return i;
         i--;
     }
-    return 0;
+    return -1;
 }
 
 void ensureNotAfter(BufferCoord &cord1, BufferCoord &cord2)

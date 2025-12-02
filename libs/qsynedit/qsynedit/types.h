@@ -46,8 +46,8 @@ struct CharPos {
     int ch; // starts from 0
     int line; // starts from 0
 
-    CharPos() = default;
-    CharPos(const CharPos& pos): ch{pos.ch}, line{pos.line} {};
+    CharPos(): ch{-1}, line{-1} {}
+    CharPos(const CharPos& pos): ch{pos.ch}, line{pos.line} {}
     constexpr CharPos(int ch_, int line_) : ch{ch_}, line{line_} {}
 
     bool operator==(const CharPos& coord);
@@ -56,6 +56,8 @@ struct CharPos {
     bool operator<(const CharPos& coord);
     bool operator<=(const CharPos& coord);
     bool operator!=(const CharPos& coord);
+
+    bool isValid() { return ch>=0 && line >=0; };
 };
 
 struct DisplayCoord {
