@@ -1384,8 +1384,8 @@ UndoList::UndoList():QObject()
     mLastRestoredItemChangeNumber=0;
 }
 
-void UndoList::addChange(ChangeReason reason, const BufferCoord &startPos,
-                                const BufferCoord &endPos, const QStringList& changeText,
+void UndoList::addChange(ChangeReason reason, const CharPos &startPos,
+                                const CharPos &endPos, const QStringList& changeText,
                                 SelectionMode selMode)
 {
     int changeNumber;
@@ -1405,11 +1405,13 @@ void UndoList::addChange(ChangeReason reason, const BufferCoord &startPos,
     }
 }
 
-void UndoList::restoreChange(ChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
+void UndoList::restoreChange(ChangeReason reason, const CharPos &startPos,
+                             const CharPos &endPos, const QStringList &changeText,
+                             SelectionMode selMode, size_t changeNumber)
 {
-    PUndoItem  newItem = std::make_shared<UndoItem>(AReason,
-                                                                  SelMode,AStart,AEnd,ChangeText,
-                                                                  changeNumber);
+    PUndoItem  newItem = std::make_shared<UndoItem>(reason,
+                                                    selMode,startPos,endPos,changeText,
+                                                    changeNumber);
     restoreChange(newItem);
 }
 
@@ -1560,12 +1562,12 @@ SelectionMode UndoItem::changeSelMode() const
     return mChangeSelMode;
 }
 
-BufferCoord UndoItem::changeStartPos() const
+CharPos UndoItem::changeStartPos() const
 {
     return mChangeStartPos;
 }
 
-BufferCoord UndoItem::changeEndPos() const
+CharPos UndoItem::changeEndPos() const
 {
     return mChangeEndPos;
 }
@@ -1581,7 +1583,7 @@ size_t UndoItem::changeNumber() const
 }
 
 UndoItem::UndoItem(ChangeReason reason, SelectionMode selMode,
-                                 BufferCoord startPos, BufferCoord endPos,
+                                 CharPos startPos, CharPos endPos,
                                  const QStringList& text, int number)
 {
     mChangeReason = reason;
@@ -1606,11 +1608,11 @@ RedoList::RedoList()
 
 }
 
-void RedoList::addRedo(ChangeReason AReason, const BufferCoord &AStart, const BufferCoord &AEnd, const QStringList &ChangeText, SelectionMode SelMode, size_t changeNumber)
+void RedoList::addRedo(ChangeReason reason, const CharPos &startPos, const CharPos &endPos, const QStringList &changeText, SelectionMode SelMode, size_t changeNumber)
 {
     PUndoItem  newItem = std::make_shared<UndoItem>(
-                AReason,
-                SelMode,AStart,AEnd,ChangeText,
+                reason,
+                SelMode,startPos,endPos,changeText,
                 changeNumber);
     mItems.append(newItem);
 }

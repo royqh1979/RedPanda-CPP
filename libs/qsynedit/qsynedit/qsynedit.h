@@ -185,7 +185,7 @@ public:
 
     void invalidateGutter();
     void invalidateGutterLine(int aLine);
-    void invalidateGutterLines(int FirstLine, int LastLine);
+    void invalidateGutterLines(int startLine, int endLine);
 
     int yposToRow(int y) const {
         return std::max(1, ((y + mTopPos) / mTextHeight) + 1 );
@@ -221,7 +221,7 @@ public:
     void setDefaultKeystrokes();
     void setExtraKeystrokes();
     void invalidateLine(int line);
-    void invalidateLines(int firstLine, int lastLine);
+    void invalidateLines(int startLine, int endLine);
     void invalidateSelection();
     void invalidateRect(const QRect& rect);
     void invalidate();
@@ -361,7 +361,7 @@ public:
     int selectionEndLine() const;
 
     void clearSelection();
-    void setBlockBegin(CharPos value);
+    void setSelBegin(CharPos value);
     void setBlockEnd(CharPos Value);
 
     SelectionMode activeSelectionMode() const;
@@ -556,20 +556,16 @@ private:
     void updateModifiedStatusForUndoRedo();
     int reparseLines(int startLine, int endLine, bool needRescanFolds = true,  bool toDocumentEnd = true);
     //void reparseLine(int line);
-    void uncollapse(PCodeFoldingRange FoldRange);
-    void collapse(PCodeFoldingRange FoldRange);
+    void uncollapse(PCodeFoldingRange foldRange);
+    void collapse(PCodeFoldingRange foldRange);
 
-    void foldOnLinesInserted(int Line, int Count);
-    void foldOnLinesDeleted(int Line, int Count);
-    void foldOnListCleared();
+    void foldOnLinesInserted(int line, int count);
+    void foldOnLinesDeleted(int line, int count, bool &needRescan);
+    void clearFoldRanges();
     void rescanFolds(); // rescan for folds
     void rescanForFoldRanges();
-    void scanForFoldRanges(PCodeFoldingRanges topFoldRanges);
-    void findSubFoldRange(PCodeFoldingRanges topFoldRanges,PCodeFoldingRanges& parentFoldRanges, PCodeFoldingRange Parent);
-    PCodeFoldingRange collapsedFoldStartAtLine(int Line);
-    void initializeCaret();
+    void scanForFoldRanges();
     PCodeFoldingRange foldStartAtLine(int Line) const;
-    bool foldCollapsedBetween(int startLine, int endLine) const;
     //QString substringByColumns(const QString& s, int startColumn, int& colLen);
     PCodeFoldingRange foldAroundLine(int line);
     PCodeFoldingRange foldAroundLineEx(int line, bool wantCollapsed, bool acceptFromLine, bool acceptToLine);
@@ -694,8 +690,8 @@ private:
     int mEditingCount;
     bool mUseCodeFolding;
     bool  mAlwaysShowCaret;
-    CharPos mBlockBegin;
-    CharPos mBlockEnd;
+    CharPos mSelectionBegin;
+    CharPos mSelectionEnd;
     int mCaretX;
     int mLastCaretColumn;
     int mCaretY;

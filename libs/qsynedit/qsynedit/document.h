@@ -693,22 +693,22 @@ class UndoItem {
 private:
     ChangeReason mChangeReason;
     SelectionMode mChangeSelMode;
-    BufferCoord mChangeStartPos;
-    BufferCoord mChangeEndPos;
+    CharPos mChangeStartPos;
+    CharPos mChangeEndPos;
     QStringList mChangeText;
     size_t mChangeNumber;
 public:
     UndoItem(ChangeReason reason,
         SelectionMode selMode,
-        BufferCoord startPos,
-        BufferCoord endPos,
+        CharPos startPos,
+        CharPos endPos,
         const QStringList& text,
         int number);
 
     ChangeReason changeReason() const;
     SelectionMode changeSelMode() const;
-    BufferCoord changeStartPos() const;
-    BufferCoord changeEndPos() const;
+    CharPos changeStartPos() const;
+    CharPos changeEndPos() const;
     QStringList changeText() const;
     size_t changeNumber() const;
 };
@@ -720,10 +720,10 @@ class UndoList : public QObject {
 public:
     explicit UndoList();
 
-    void addChange(ChangeReason reason, const BufferCoord& start, const BufferCoord& end,
+    void addChange(ChangeReason reason, const CharPos& start, const CharPos& end,
       const QStringList& changeText, SelectionMode selMode);
 
-    void restoreChange(ChangeReason reason, const BufferCoord& start, const BufferCoord& end,
+    void restoreChange(ChangeReason reason, const CharPos& start, const CharPos& end,
                        const QStringList& changeText, SelectionMode selMode, size_t changeNumber);
 
     void restoreChange(PUndoItem item);
@@ -773,8 +773,8 @@ class RedoList : public QObject {
 public:
     explicit RedoList();
 
-    void addRedo(ChangeReason AReason, const BufferCoord& AStart, const BufferCoord& AEnd,
-                 const QStringList& ChangeText, SelectionMode SelMode, size_t changeNumber);
+    void addRedo(ChangeReason reason, const CharPos& startPos, const CharPos& endPos,
+                 const QStringList& changeText, SelectionMode selMode, size_t changeNumber);
     void addRedo(PUndoItem item);
 
     void clear();

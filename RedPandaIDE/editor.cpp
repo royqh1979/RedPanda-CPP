@@ -756,7 +756,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     sLine = lineText().mid(caretX()-1).trimmed();
                     if (sLine=="*/") {
                         QSynedit::BufferCoord p = caretXY();
-                        setBlockBegin(p);
+                        setSelBegin(p);
                         p.ch = lineText().length()+1;
                         setBlockEnd(p);
                         setSelText("");
@@ -1651,7 +1651,7 @@ void Editor::copyAsHTML()
         exporter.setLineNumberColor(gutter().textColor());
         exporter.setLineNumberBackgroundColor(gutter().color());
     }
-    exporter.exportRange(document(),blockBegin(),blockEnd());
+    exporter.exportRange(document(),selBegin(),selEnd());
 
     //clipboard takes the owner ship
     QMimeData * mimeData = new QMimeData;
@@ -1901,8 +1901,8 @@ void Editor::onStatusChanged(QSynedit::StatusChanges changes)
             } else {
                 mCurrentHighlightedWord = "";
             }
-        } else if (selAvail() && blockBegin() == wordStart()
-                   && blockEnd() == wordEnd()){
+        } else if (selAvail() && selBegin() == wordStart()
+                   && selEnd() == wordEnd()){
             mCurrentHighlightedWord = selText();
         } else {
             mCurrentHighlightedWord = "";
@@ -2875,8 +2875,8 @@ bool Editor::handleBraceCompletion()
         setCaretXY(oldCaret);
     }  else {
         QString text = selText();
-        QSynedit::BufferCoord oldSelBegin = blockBegin();
-        QSynedit::BufferCoord oldSelEnd = blockEnd();
+        QSynedit::BufferCoord oldSelBegin = selBegin();
+        QSynedit::BufferCoord oldSelEnd = selEnd();
         bool shouldBreakLine = false;
         bool shouldAddEndLine = false;
         QString s1=lineText(oldSelBegin.line).left(oldSelBegin.ch-1).trimmed();
@@ -3366,7 +3366,7 @@ void Editor::print()
                                         ));
 
     if (dialog.testOption(QAbstractPrintDialog::PrintSelection))
-        exporter.exportRange(document(),blockBegin(),blockEnd());
+        exporter.exportRange(document(),selBegin(),selEnd());
     else
         exporter.exportAll(document());
 
@@ -3874,7 +3874,7 @@ void Editor::headerCompletionInsert()
            && (isIdentChar(sLine[posEnd]) || (sLine[posEnd]=='.') || (sLine[posBegin-1]=='+')))
         posEnd++;
     p.ch = posBegin+1;
-    setBlockBegin(p);
+    setSelBegin(p);
     p.ch = posEnd+1;
     setBlockEnd(p);
 
@@ -4442,7 +4442,7 @@ void Editor::popUserCodeInTabStops()
         newCursorPos.line = mTabStopY;
         newCursorPos.ch = tabStopBegin;
         setCaretXY(newCursorPos);
-        setBlockBegin(newCursorPos);
+        setSelBegin(newCursorPos);
         newCursorPos.ch = tabStopEnd;
         setBlockEnd(newCursorPos);
 
@@ -5326,7 +5326,7 @@ void Editor::tab()
     } else {
         if (mTabStopBegin >= 0) {
             mTabStopBegin = -1;
-            setCaretXY(blockEnd());
+            setCaretXY(selEnd());
             invalidateLine(caretY());
             return;
         }

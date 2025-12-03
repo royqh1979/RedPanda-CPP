@@ -122,11 +122,11 @@ void QSynEditPainter::paintGutter(const QRect& clip)
             textColor = mEdit->mForegroundColor;
         }
         // draw each line if it is not hidden by a fold
-        BufferCoord selectionStart = mEdit->selBegin();
-        BufferCoord selectionEnd = mEdit->selEnd();
+        CharPos selectionStart = mEdit->selBegin();
+        CharPos selectionEnd = mEdit->selEnd();
         for (int row = mFirstRow; row <= mLastRow; row++) {
             int line = mEdit->rowToLine(row);
-            if ((line > mEdit->mDocument->count()) && (mEdit->mDocument->count() > 0 ))
+            if ((line >= mEdit->mDocument->count()) && (mEdit->mDocument->count() > 0 ))
                 break;
             if (mEdit->mGutter.activeLineTextColor().isValid()) {
                 if (
@@ -145,7 +145,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
             rcLine.setTop(lineTop);
             rcLine.setBottom(rcLine.top() + mEdit->mTextHeight);
 
-            QString s = mEdit->mGutter.formatLineNumber(line);
+            QString s = mEdit->mGutter.formatLineNumber(line+1);
 
             mEdit->onGutterGetText(line,s);
             QRectF textRect;
@@ -163,7 +163,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
       int lineWidth = std::max(0.0,std::ceil(mEdit->font().pixelSize() / 15));
       for (int row = mLastRow; row>= mFirstRow; row--) {
           int line = mEdit->rowToLine(row);
-          if ((line > mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
+          if ((line >= mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
             continue;
 
         // Form a rectangle for the square the user can click on
@@ -229,7 +229,7 @@ void QSynEditPainter::paintGutter(const QRect& clip)
 
     for (int row = mFirstRow; row <= mLastRow; row++) {
         int line = mEdit->rowToLine(row);
-        if ((line > mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
+        if ((line >= mEdit->mDocument->count()) && (mEdit->mDocument->count() != 0))
             break;
         mEdit->onGutterPaint(*mPainter,line, 0, (row - mEdit->yposToRow(0)) * mEdit->mTextHeight);
     }
@@ -246,28 +246,28 @@ QColor QSynEditPainter::colEditorBG()
 
 void QSynEditPainter::computeSelectionInfo()
 {
-    BufferCoord vStart{0,0};
-    BufferCoord vEnd{0,0};
+    CharPos vStart;
+    CharPos vEnd;
     bAnySelection = false;
     // Only if selection is visible anyway.
     bAnySelection = true;
     // Get the *real* start of the selected area.
-    if (mEdit->mBlockBegin.line < mEdit->mBlockEnd.line) {
-        vStart = mEdit->mBlockBegin;
-        vEnd = mEdit->mBlockEnd;
-    } else if (mEdit->mBlockBegin.line > mEdit->mBlockEnd.line) {
-        vEnd = mEdit->mBlockBegin;
-        vStart = mEdit->mBlockEnd;
-    } else if (mEdit->mBlockBegin.ch != mEdit->mBlockEnd.ch) {
+    if (mEdit->mSelectionBegin.line < mEdit->mSelectionEnd.line) {
+        vStart = mEdit->mSelectionBegin;
+        vEnd = mEdit->mSelectionEnd;
+    } else if (mEdit->mSelectionBegin.line > mEdit->mSelectionEnd.line) {
+        vEnd = mEdit->mSelectionBegin;
+        vStart = mEdit->mSelectionEnd;
+    } else if (mEdit->mSelectionBegin.ch != mEdit->mSelectionEnd.ch) {
         // it is only on this line.
-        vStart.line = mEdit->mBlockBegin.line;
+        vStart.line = mEdit->mSelectionBegin.line;
         vEnd.line = vStart.line;
-        if (mEdit->mBlockBegin.ch < mEdit->mBlockEnd.ch) {
-            vStart.ch = mEdit->mBlockBegin.ch;
-            vEnd.ch = mEdit->mBlockEnd.ch;
+        if (mEdit->mSelectionBegin.ch < mEdit->mSelectionEnd.ch) {
+            vStart.ch = mEdit->mSelectionBegin.ch;
+            vEnd.ch = mEdit->mSelectionEnd.ch;
         } else {
-            vStart.ch = mEdit->mBlockEnd.ch;
-            vEnd.ch = mEdit->mBlockBegin.ch;
+            vStart.ch = mEdit->mSelectionEnd.ch;
+            vEnd.ch = mEdit->mSelectionBegin.ch;
         }
     } else
         bAnySelection = false;
@@ -290,16 +290,16 @@ void QSynEditPainter::computeSelectionInfo()
             mSelEnd = mEdit->bufferToDisplayPos(vEnd);
             if (mEdit->mInputPreeditString.length()
                     && vStart.line == mEdit->mCaretY) {
-                QString sLine = mEdit->lineText().left(mEdit->mCaretX-1)
+                QString sLine = mEdit->lineText().left(mEdit->mCaretX)
                         + mEdit->mInputPreeditString
-                        + mEdit->lineText().mid(mEdit->mCaretX-1);
+                        + mEdit->lineText().mid(mEdit->mCaretX);
                 mSelStart.x = mEdit->charToGlyphLeft(mEdit->mCaretY, sLine,vStart.ch);
             }
             if (mEdit->mInputPreeditString.length()
                     && vEnd.line == mEdit->mCaretY) {
-                QString sLine = mEdit->lineText().left(mEdit->mCaretX-1)
+                QString sLine = mEdit->lineText().left(mEdit->mCaretX)
                         + mEdit->mInputPreeditString
-                        + mEdit->lineText().mid(mEdit->mCaretX-1);
+                        + mEdit->lineText().mid(mEdit->mCaretX);
                 mSelEnd.x = mEdit->charToGlyphLeft(mEdit->mCaretY, sLine,vEnd.ch);
             }
             // In the column selection mode sort the begin and end of the selection,
@@ -972,12 +972,12 @@ void QSynEditPainter::paintLines()
     mTokenAccu.left = 0;
     mTokenAccu.style = FontStyle::fsNone;
     // Now loop through all the lines. The indices are valid for Lines.
-    BufferCoord selectionBegin = mEdit->selBegin();
-    BufferCoord selectionEnd= mEdit->selEnd();
+    CharPos selectionBegin = mEdit->selBegin();
+    CharPos selectionEnd= mEdit->selEnd();
     for (int row = mFirstRow; row<=mLastRow; row++) {
         int vLine = mEdit->rowToLine(row);
         bool lineTextChanged = false;
-        if (vLine > mEdit->mDocument->count() && mEdit->mDocument->count() != 0)
+        if (vLine >= mEdit->mDocument->count() && mEdit->mDocument->count() != 0)
             break;
 
         // Get the line.
@@ -989,7 +989,7 @@ void QSynEditPainter::paintLines()
             mIsCurrentLine = (mEdit->mCaretY == vLine);
         }
         if (mIsCurrentLine && !mEdit->mInputPreeditString.isEmpty()) {
-            int ch = mEdit->mDocument->charToGlyphStartChar(mEdit->mCaretY-1,mEdit->mCaretX-1);
+            int ch = mEdit->mDocument->charToGlyphStartChar(mEdit->mCaretY,mEdit->mCaretX);
             sLine = sLine.left(ch) + mEdit->mInputPreeditString
                     + sLine.mid(ch);
             lineTextChanged = true;
@@ -1065,25 +1065,25 @@ void QSynEditPainter::paintLines()
 
         QList<int> glyphStartCharList;
         if (lineTextChanged) {
-            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine-1,sLine);
+            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine,sLine);
         } else {
-            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine-1);
+            glyphStartCharList = mEdit->mDocument->getGlyphStartCharList(vLine);
         }
         // Ensure the list has the right number of elements.
         // Values in it doesn't matter, we'll recalculate them.
         QList<int> glyphStartPositionsList;
-        bool lineWidthValid = mEdit->mDocument->lineWidthValid(vLine-1);
+        bool lineWidthValid = mEdit->mDocument->lineWidthValid(vLine);
         bool calculateGlyphPositions = ( lineTextChanged || !lineWidthValid);
         if (calculateGlyphPositions) {
             glyphStartPositionsList = glyphStartCharList;
         } else {
-            glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(vLine-1);
-            mCurrentLineWidth = mEdit->mDocument->getLineWidth(vLine-1);
+            glyphStartPositionsList = mEdit->mDocument->getGlyphStartPositionList(vLine);
+            mCurrentLineWidth = mEdit->mDocument->getLineWidth(vLine);
         }
         // Initialize highlighter with line text and range info. It is
         // necessary because we probably did not scan to the end of the last
         // line - the internal highlighter range might be wrong.
-        mEdit->prepareSyntaxerState(*(mEdit->mSyntaxer), vLine-1, sLine, mEdit->lineSeq(vLine));
+        mEdit->prepareSyntaxerState(*(mEdit->mSyntaxer), vLine, sLine, mEdit->lineSeq(vLine));
         // Try to concatenate as many tokens as possible to minimize the count
         // of ExtTextOut calls necessary. This depends on the selection state
         // or the line having special colors. For spaces the foreground color
@@ -1125,7 +1125,7 @@ void QSynEditPainter::paintLines()
             }
             //input method
             if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
-                int startPos = mEdit->mSyntaxer->getTokenPos()+1;
+                int startPos = mEdit->mSyntaxer->getTokenPos();
                 int endPos = mEdit->mSyntaxer->getTokenPos() + sToken.length();
                 if (!(endPos < mEdit->mCaretX
                         || startPos >= mEdit->mCaretX+mEdit->mInputPreeditString.length())) {
@@ -1167,7 +1167,7 @@ void QSynEditPainter::paintLines()
             mEdit->mSyntaxer->next();
         }
         if (!lineWidthValid)
-            mEdit->mDocument->setLineWidth(vLine-1, tokenLeft, glyphStartPositionsList);
+            mEdit->mDocument->setLineWidth(vLine, tokenLeft, glyphStartPositionsList);
         if (tokenLeft<mRight) {
             QString addOnStr;
 
@@ -1231,9 +1231,9 @@ void QSynEditPainter::paintLines()
         if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
             PEditingArea area = std::make_shared<EditingArea>();
             int glyphIdx;
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX-1);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX);
             area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length()-1);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length());
             area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
             area->type = EditingAreaType::eatUnderLine;
             if (preeditAttr) {
