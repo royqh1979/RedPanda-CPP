@@ -256,7 +256,7 @@ int QSynEdit::maxScrollWidth() const
         return std::max(maxWidth-viewWidth()+mCharWidth, 0);
 }
 
-bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, PTokenAttribute &attri)
+bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, PTokenAttribute &attri) const
 {
     int tmpStart;
     return getTokenAttriAtRowColEx(pos, token, tmpStart, attri);
@@ -264,7 +264,7 @@ bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, PTokenA
 
 bool QSynEdit::getTokenAttriAtRowCol(
         const CharPos &pos, QString &token,
-        PTokenAttribute &attri, PSyntaxState &syntaxState)
+        PTokenAttribute &attri, PSyntaxState &syntaxState) const
 {
     int charIdx, lineIdx, endPos, start;
     QString lineText;
@@ -292,7 +292,7 @@ bool QSynEdit::getTokenAttriAtRowCol(
     return false;
 }
 
-bool QSynEdit::getTokenAttriAtRowColEx(const CharPos &pos, QString &token, int &start, PTokenAttribute &attri)
+bool QSynEdit::getTokenAttriAtRowColEx(const CharPos &pos, QString &token, int &start, PTokenAttribute &attri) const
 {
     int chIdx, lineIdx, endPos;
     QString lineText;
@@ -858,7 +858,7 @@ void QSynEdit::invalidateLines(int startLine, int endLine)
         int firstRow = lineToRow(startLine);
         int lastRow;
         if (endLine>= mDocument->count())
-            endLine = mDocument->count() + mLinesInWindow + 2; // paint empty space beyond last line
+            lastRow = lineToRow(mDocument->count() + mLinesInWindow + 2); // paint empty space beyond last line
         else
             lastRow = lineToRow(endLine-1);
 
@@ -928,30 +928,13 @@ QString QSynEdit::wordAtCursor() const
 
 QString QSynEdit::wordAtRowCol(const CharPos &pos) const
 {
-
-    if ((pos.line >= 0) && (pos.line < mDocument->count())) {
-        QString line = mDocument->getLine(pos.line);
-        int len = line.length();
-        if (len == 0)
-            return "";
-        if (pos.ch<0 || pos.ch>=len)
-            return "";
-
-        int start = pos.ch;
-        if  ((start> 0) && !isIdentChar(line[start]))
-             start--;
-
-        if (isIdentChar(line[start])) {
-            int stop = start;
-            while ((stop < len) && isIdentChar(line[stop]))
-                stop++;
-            while ((start-1 >=0) && isIdentChar(line[start - 1]))
-                start--;
-            if (stop > start)
-                return line.mid(start,stop-start);
-        }
+    int start;
+    QString token;
+    PTokenAttribute attr;
+    if (getTokenAttriAtRowColEx(pos, token, start, attr)) {
+        return token;
     }
-    return "";
+    return QString();
 }
 
 QChar QSynEdit::charAt(const CharPos &pos) const
@@ -1234,12 +1217,12 @@ CharPos QSynEdit::prevNonWordChar(const CharPos &pos) const
 }
 
 
-bool QSynEdit::inWord(const CharPos &pos)
+bool QSynEdit::inWord(const CharPos &pos) const
 {
     return isWordChar(charAt(pos));
 }
 
-CharPos QSynEdit::wordStart(const CharPos &pos)
+CharPos QSynEdit::wordStart(const CharPos &pos) const
 {
     int start;
     QString token;
@@ -1252,7 +1235,7 @@ CharPos QSynEdit::wordStart(const CharPos &pos)
 }
 
 
-CharPos QSynEdit::wordEnd(const CharPos &pos)
+CharPos QSynEdit::wordEnd(const CharPos &pos) const
 {
     int start;
     QString token;
@@ -3233,7 +3216,7 @@ void QSynEdit::scanForFoldRanges()
 
 PCodeFoldingRange QSynEdit::foldStartAtLine(int line) const
 {
-    foreach(const PCodeFoldingRange& range, mAllFoldRanges) {
+    foreach(const PCodeFoldingRange& range, mAllFoldRanges->ranges()) {
         if (range->fromLine == line ){
             return range;
         } else if (range->fromLine>line)
@@ -3280,7 +3263,7 @@ PCodeFoldingRange QSynEdit::checkFoldRange(PCodeFoldingRanges foldRangesToCheck,
 
 PCodeFoldingRange QSynEdit::foldEndAtLine(int line)
 {
-    foreach(const PCodeFoldingRange& range, mAllFoldRanges) {
+    foreach(const PCodeFoldingRange& range, mAllFoldRanges->ranges()) {
         if (range->toLine == line ){
             return range;
         } else if (range->fromLine>line)

@@ -64,7 +64,7 @@ public:
      * @param stop
      */
     void exportRange(const PDocument& doc,
-                     BufferCoord start, BufferCoord stop);
+                     CharPos start, CharPos stop);
     /**
      * @brief Saves the contents of the output buffer to a file.
      * @param AFileName

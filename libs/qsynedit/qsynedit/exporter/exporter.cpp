@@ -51,19 +51,19 @@ void Exporter::clear()
 
 void Exporter::exportAll(const PDocument& doc)
 {
-    exportRange(doc, BufferCoord{1, 1}, BufferCoord{INT_MAX, INT_MAX});
+    exportRange(doc, CharPos{1, 1}, CharPos{INT_MAX, INT_MAX});
 }
 
-void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord stop)
+void Exporter::exportRange(const PDocument& doc, CharPos start, CharPos stop)
 {
     // abort if not all necessary conditions are met
     if (!doc || (doc->count() == 0))
         return;
-    stop.line = std::max(1, std::min(stop.line, doc->count()));
-    stop.ch = std::max(1, std::min(stop.ch, doc->getLine(stop.line - 1).length() + 1));
-    start.line = std::max(1, std::min(start.line, doc->count()));
-    start.ch = std::max(1, std::min(start.ch, doc->getLine(start.line - 1).length() + 1));
-    if ( (start.line > doc->count()) || (start.line > stop.line) )
+    stop.line = std::max(0, std::min(stop.line, doc->count()-1));
+    stop.ch = std::max(0, std::min(stop.ch, doc->getLine(stop.line).length()));
+    start.line = std::max(0, std::min(start.line, doc->count()-1));
+    start.ch = std::max(0, std::min(start.ch, doc->getLine(start.line).length()));
+    if ( (start.line >= doc->count()) || (start.line > stop.line) )
         return;
     if ((start.line == stop.line) && (start.ch >= stop.ch))
         return;
@@ -77,10 +77,10 @@ void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord 
         baseStartLine = mLineNumberStartFromZero?start.line:start.line-1;
     if (mExportLineNumber)
         addData(getStartLineNumberString(start.line-baseStartLine, stop.line-baseStartLine));
-    if (start.line == 1)
+    if (start.line == 0)
         mSyntaxer->resetState();
     else
-        mSyntaxer->setState(doc->getSyntaxState(start.line-2));
+        mSyntaxer->setState(doc->getSyntaxState(start.line-1));
     for (int i = start.line; i<=stop.line; i++) {
         if (mExportLineNumber)
             addData(getLineNumberString(i-baseStartLine));
@@ -96,19 +96,19 @@ void Exporter::exportRange(const PDocument& doc, BufferCoord start, BufferCoord 
             PTokenAttribute attri = mSyntaxer->getTokenAttribute();
             int startPos = mSyntaxer->getTokenPos();
             QString token = mSyntaxer->getToken();
-            if (i==start.line && (startPos+token.length() < start.ch)) {
+            if (i==start.line && (startPos+token.length()-1 < start.ch)) {
                 mSyntaxer->next();
                 continue;
             }
-            if (i==stop.line && (startPos >= stop.ch-1)) {
+            if (i==stop.line && (startPos >= stop.ch)) {
                 mSyntaxer->next();
                 continue;
             }
-            if (i==stop.line && (startPos+token.length() > stop.ch)) {
-                token = token.left(stop.ch - startPos - 1);
+            if (i==stop.line && (startPos+token.length()-1 > stop.ch)) {
+                token = token.left(stop.ch - startPos);
             }
-            if (i==start.line && startPos < start.ch-1) {
-                token = token.mid(start.ch-1-startPos);
+            if (i==start.line && startPos < start.ch) {
+                token = token.mid(start.ch-startPos);
             }
 
             QString Token = replaceReservedChars(token);

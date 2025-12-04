@@ -137,7 +137,7 @@ int findLastNonWordChar(const QString &s, int startPos)
     return -1;
 }
 
-void ensureNotAfter(BufferCoord &cord1, BufferCoord &cord2)
+void ensureNotAfter(CharPos &cord1, CharPos &cord2)
 {
     if((cord1.line > cord2.line) || (
                 cord1.line == cord2.line &&
@@ -146,7 +146,7 @@ void ensureNotAfter(BufferCoord &cord1, BufferCoord &cord2)
     }
 }
 
-BufferCoord minBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
+const CharPos &minBufferCoord(const CharPos &P1, const CharPos &P2)
 {
     if ( (P2.line < P1.line) || ( (P2.line == P1.line) && (P2.ch < P1.ch)) ) {
       return P2;
@@ -155,7 +155,7 @@ BufferCoord minBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
     }
 }
 
-BufferCoord maxBufferCoord(const BufferCoord &P1, const BufferCoord &P2)
+const CharPos &maxBufferCoord(const CharPos &P1, const CharPos &P2)
 {
     if ( (P2.line > P1.line) || ( (P2.line == P1.line) && (P2.ch > P1.ch)) ) {
       return P2;
@@ -188,7 +188,7 @@ QStringList splitStrings(const QString &text)
     return list;
 }
 
-int calSpanLines(const BufferCoord &startPos, const BufferCoord &endPos)
+int calSpanLines(const CharPos &startPos, const CharPos &endPos)
 {
     return std::abs(endPos.line - startPos.line+1);
 }

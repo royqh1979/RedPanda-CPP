@@ -37,14 +37,14 @@ class QColor;
 namespace QSynedit {
 
 int minMax(int x, int mi, int ma);
-BufferCoord maxBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
-BufferCoord minBufferCoord(const BufferCoord& P1, const BufferCoord& P2);
+const CharPos &maxBufferCoord(const CharPos& P1, const CharPos& P2);
+const CharPos &minBufferCoord(const CharPos& P1, const CharPos& P2);
 
 int getEOL(const QString& Line, int start);
 
 QStringList splitStrings(const QString& text);
 
-int calSpanLines(const BufferCoord& startPos, const BufferCoord& endPos);
+int calSpanLines(const CharPos& startPos, const CharPos& endPos);
 
 using  TokenAttributeProc = std::function<bool(PSyntaxer syntaxer,
     PTokenAttribute attri, const QString& uniqueAttriName,
@@ -59,7 +59,7 @@ bool enumTokenAttributes(PSyntaxer syntaxer,
 
 FontStyles getFontStyles(const QFont& font);
 
-void ensureNotAfter(BufferCoord& cord1, BufferCoord& cord2);
+void ensureNotAfter(CharPos& cord1, CharPos& cord2);
 
 bool isWordChar(const QChar& ch);
 }

@@ -242,10 +242,10 @@ public:
     CharPos prevWordChar(const CharPos &pos) const;
     CharPos prevNonWordChar(const CharPos &pos) const;
 
-    bool inWord(const CharPos& pos);
+    bool inWord(const CharPos& pos) const;
 
-    CharPos wordStart(const CharPos& pos);
-    CharPos wordEnd(const CharPos& pos);
+    CharPos wordStart(const CharPos& pos) const;
+    CharPos wordEnd(const CharPos& pos) const;
 
     //Caret
     void showCaret();
@@ -282,11 +282,11 @@ public:
     int maxScrollHeight() const;
 
     bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
-      PTokenAttribute& attri);
+      PTokenAttribute& attri) const;
     bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
-      PTokenAttribute& attri, PSyntaxState &syntaxState);
+      PTokenAttribute& attri, PSyntaxState &syntaxState) const;
     bool getTokenAttriAtRowColEx(const CharPos& pos, QString& token,
-      int &start, PTokenAttribute& attri);
+      int &start, PTokenAttribute& attri) const;
 
     void addGroupBreak();
     void beginEditing();
