@@ -963,7 +963,7 @@ int Document::charToGlyphIndex(int line, int charIdx) const
 
 int Document::charToGlyphIndex(const QString& str, QList<int> glyphStartCharList, int charIdx) const
 {
-    return searchForSegmentIdx(glyphStartCharList, 0, str.length(), charIdx);
+    return searchForSegmentIdx(glyphStartCharList, str.length(), charIdx);
     // if (charIdx>=str.length())
     //     return glyphStartCharList.length();
     // for (int i=0;i<glyphStartCharList.length();i++) {
@@ -1007,7 +1007,7 @@ int Document::xposToGlyphIndex(int line, int xpos) const
 
 int Document::xposToGlyphIndex(int strWidth, QList<int> glyphPositionList, int xpos) const
 {
-    return searchForSegmentIdx(glyphPositionList,0,strWidth,xpos);
+    return searchForSegmentIdx(glyphPositionList,strWidth,xpos);
     // if (xpos>=strWidth)
     //     return glyphPositionList.length();
     // for (int i=0;i<glyphPositionList.length();i++) {
@@ -1675,9 +1675,9 @@ BinaryFileError::BinaryFileError(const QString& reason):
 
 }
 
-int searchForSegmentIdx(const QList<int> &segList, int minVal, int maxVal, int value)
+int searchForSegmentIdx(const QList<int> &segList, int maxVal, int value)
 {
-    if (value<minVal)
+    if (value<0)
         return 0;
     if (value>=maxVal)
         return segList.length();
@@ -1710,8 +1710,8 @@ int GlyphCalculator::updateGlyphStartPositionList(
         QList<int> &glyphStartPositionList, int left, int &right, int &startGlyph, int &endGlyph) const
 {
     right = std::max(0,left);
-    startGlyph = searchForSegmentIdx(glyphStartCharList,0,lineText.length(),startChar);
-    endGlyph = searchForSegmentIdx(glyphStartCharList,0,lineText.length(),endChar);
+    startGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),startChar);
+    endGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),endChar);
     for (int i=startGlyph;i<endGlyph;i++) {
         int start = glyphStartCharList[i];
         int end;
@@ -1766,10 +1766,10 @@ int calcSegmentInterval(const QList<int> &segList, int maxVal, int idx)
     return segList[idx+1]-segList[idx];
 }
 
-int segmentIntervalStart(const QList<int> &segList, int minVal, int maxVal, int idx)
+int segmentIntervalStart(const QList<int> &segList, int maxVal, int idx)
 {
     if (idx<0)
-        return minVal;
+        return 0;
     if (idx>=segList.length())
         return maxVal;
     return segList[idx];

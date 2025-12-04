@@ -12,6 +12,11 @@ int main(int argc, char *argv[]) {
         TestCharPos tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
+    //QDocument Test
+    {
+        QSynedit::TestDocumentHelpers tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
     return status;
 }

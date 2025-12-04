@@ -710,8 +710,8 @@ void QSynEditPainter::addHighlightToken(
     int startGlyph, endGlyph;
     if (!calcGlyphPosition) {
         tokenRight = std::max(0,tokenLeft);
-        startGlyph = searchForSegmentIdx(glyphStartCharList,0,lineText.length(),tokenStartChar);
-        endGlyph = searchForSegmentIdx(glyphStartCharList,0,lineText.length(),tokenEndChar);
+        startGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),tokenStartChar);
+        endGlyph = searchForSegmentIdx(glyphStartCharList,lineText.length(),tokenEndChar);
         for (int i=startGlyph;i<endGlyph;i++) {
             int gWidth = calcSegmentInterval(glyphStartPositionList, mCurrentLineWidth, i);
             tokenRight += gWidth;
@@ -1222,19 +1222,19 @@ void QSynEditPainter::paintLines()
                 }
             }
             int glyphIdx;
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->beginX-1);
-            area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), area->endX-1);
-            area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), area->beginX-1);
+            area->beginX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), area->endX-1);
+            area->endX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
         }
         //input method
         if (mIsCurrentLine && mEdit->mInputPreeditString.length()>0) {
             PEditingArea area = std::make_shared<EditingArea>();
             int glyphIdx;
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX);
-            area->beginX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
-            glyphIdx = searchForSegmentIdx(glyphStartCharList, 0, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length());
-            area->endX = segmentIntervalStart(glyphStartPositionsList, 0, tokenLeft, glyphIdx);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretX);
+            area->beginX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
+            glyphIdx = searchForSegmentIdx(glyphStartCharList, sLine.length(), mEdit->mCaretX+mEdit->mInputPreeditString.length());
+            area->endX = segmentIntervalStart(glyphStartPositionsList, tokenLeft, glyphIdx);
             area->type = EditingAreaType::eatUnderLine;
             if (preeditAttr) {
                 area->color = preeditAttr->foreground();

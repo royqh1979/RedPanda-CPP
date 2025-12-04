@@ -1,19 +1,34 @@
 #include <QtTest>
 #include <QCoreApplication>
 
-// add necessary includes here
+namespace QSynedit {
+class TestDocumentHelpers : public QObject
+{
+    Q_OBJECT
+private slots:
+    void test_calcSegmentInterval();
+    void test_segmentIntervalStart();
+    void test_searchForSegmentIdx();
+    void test_calcGlyphStartCharList();
+};
 
-class TestQDocument : public QObject
+class TestDocumentLine : public QObject
+{
+    Q_OBJECT
+private slots:
+    void test_calcSegmentInterval();
+};
+
+class TestDocument : public QObject
 {
     Q_OBJECT
 
 public:
-    TestQDocument();
-    ~TestQDocument();
+    TestDocument();
+    ~TestDocument();
 
 private slots:
     void initTestCase();
     void cleanupTestCase();
-    void test_case1();
-
 };
+}
