@@ -1,7 +1,7 @@
 #include <QtTest>
 #include <QGuiApplication>
 #include "test_charpos.h"
-#include "test_qdocument.h"
+#include "test_document.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;

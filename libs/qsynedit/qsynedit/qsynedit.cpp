@@ -69,13 +69,11 @@ QSynEdit::QSynEdit(QWidget *parent) : QAbstractScrollArea(parent),
     mUndoing = false;
     connect(mDocument.get(), &Document::changed, this, &QSynEdit::onLinesChanged);
     connect(mDocument.get(), &Document::changing, this, &QSynEdit::onLinesChanging);
-    connect(mDocument.get(), &Document::cleared, this, &QSynEdit::onLinesCleared);
     connect(mDocument.get(), &Document::deleted, this, &QSynEdit::onLinesDeleted);
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::onLinesInserted);
     connect(mDocument.get(), &Document::putted, this, &QSynEdit::onLinesPutted);
     connect(mDocument.get(), &Document::maxLineWidthChanged,
             this, &QSynEdit::onMaxLineWidthChanged);
-    connect(mDocument.get(), &Document::cleared, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::deleted, this, &QSynEdit::updateVScrollbar);
     connect(mDocument.get(), &Document::inserted, this, &QSynEdit::updateVScrollbar);
 
@@ -1633,7 +1631,7 @@ void QSynEdit::doDeleteLastChar()
         // join this line with the last line if possible
         if (mCaretY > 0) {
             QString lastLine = mDocument->getLine(mCaretY);
-            mDocument->deleteAt(mCaretY);
+            mDocument->deleteLine(mCaretY);
             doLinesDeleted(mCaretY, 1);
             internalSetCaretXY(CharPos{lastLine.length(), mCaretY - 1});
             setLineText(lastLine + tempStr);
@@ -1718,7 +1716,7 @@ void QSynEdit::doDeleteCurrentChar()
                 newCaret.line = mCaretY + 1;
                 helper.append("");
                 helper.append("");
-                mDocument->deleteAt(mCaretY + 1);
+                mDocument->deleteLine(mCaretY + 1);
                 if (mCaretX==0)
                     doLinesDeleted(mCaretY, 1);
                 else
@@ -1921,7 +1919,7 @@ void QSynEdit::doMoveSelUp()
 
         // Delete line above selection
         QString s = mDocument->getLine(origBlockBeginLine - 1); // before start, 0 based
-        mDocument->deleteAt(origBlockBeginLine - 1); // before start, 0 based
+        mDocument->deleteLine(origBlockBeginLine - 1); // before start, 0 based
         doLinesDeleted(origBlockBeginLine - 1, 1); // before start, 0 based
 
         // Insert line below selection
@@ -1965,7 +1963,7 @@ void QSynEdit::doMoveSelDown()
 
         // Delete line below selection
         QString s = mDocument->getLine(origBlockEndLine + 1); // after end, 0 based
-        mDocument->deleteAt(origBlockEndLine + 1); // after end, 0 based
+        mDocument->deleteLine(origBlockEndLine + 1); // after end, 0 based
         doLinesDeleted(origBlockEndLine + 1, 1);
 
         // Insert line above selection
@@ -3897,7 +3895,7 @@ void QSynEdit::doUndoItem()
                 if ( (mCaretX > TmpStr.length()) && (leftSpaces(s) == 0))
                     TmpStr = TmpStr + QString(mCaretX - TmpStr.length(), ' ');
                 properSetLine(mCaretY, TmpStr + s);
-                mDocument->deleteAt(mCaretY+1);
+                mDocument->deleteLine(mCaretY+1);
                 doLinesDeleted(mCaretY+1, 1);
             }
             mRedoList->addRedo(
@@ -6000,7 +5998,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
              (event->proposedAction() != Qt::DropAction::CopyAction
              && coord>=mDragSelBeginSave && coord<=mDragSelEndSave)
             ) {
-        mDocument->deleteAt(mDocument->count()-1);
+        mDocument->deleteLine(mDocument->count()-1);
         ensureLineAlignedWithTop();
         ensureCaretVisible();
         //do nothing if drag onto itself
@@ -6027,7 +6025,7 @@ void QSynEdit::dropEvent(QDropEvent *event)
                          CharPos{s.length(),line},
                          CharPos{s.length(),line}, QStringList(), SelectionMode::Normal);
     } else
-        mDocument->deleteAt(mDocument->count()-1);
+        mDocument->deleteLine(mDocument->count()-1);
     addLeftTopToUndo();
     addCaretToUndo();
     addSelectionToUndo();
@@ -6111,7 +6109,7 @@ void QSynEdit::dragMoveEvent(QDragMoveEvent *event)
 void QSynEdit::dragLeaveEvent(QDragLeaveEvent *)
 {
     mDragging = false;
-    mDocument->deleteAt(mDocument->count()-1);
+    mDocument->deleteLine(mDocument->count()-1);
 //    setCaretXY(mDragCaretSave);
 //    setBlockBegin(mDragSelBeginSave);
 //    setBlockEnd(mDragSelEndSave);
@@ -6201,21 +6199,6 @@ void QSynEdit::onLinesChanged()
 void QSynEdit::onLinesChanging()
 {
     incPaintLock();
-}
-
-void QSynEdit::onLinesCleared()
-{
-    if (useCodeFolding())
-        clearFoldRanges();
-    clearUndo();
-    // invalidate the *whole* client area
-    invalidate();
-    // set caret and selected block to start of text
-    setCaretXY({0,0});
-    // scroll to start of text
-    setTopPos(0);
-    setLeftPos(0);
-    mStatusChanges.setFlag(StatusChange::AllCleared);
 }
 
 void QSynEdit::onLinesDeleted(int line, int count)

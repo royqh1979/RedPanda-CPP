@@ -670,7 +670,6 @@ private slots:
     void onGutterChanged();
     void onLinesChanged();
     void onLinesChanging();
-    void onLinesCleared();
     void onLinesDeleted(int line, int count);
     void onLinesInserted(int line, int count);
     void onLinesPutted(int line);

@@ -497,7 +497,7 @@ public:
 
     int getTextLength() const;
     void clear();
-    void deleteAt(int index);
+    void deleteLine(int index);
     void deleteLines(int index, int numLines);
     void exchange(int index1, int index2);
     void insertLine(int index, const QString& s);
@@ -626,7 +626,6 @@ public slots:
 signals:
     void changed();
     void changing();
-    void cleared();
     void deleted(int startLine, int count);
     void inserted(int startLine, int count);
     void putted(int line);
@@ -636,7 +635,6 @@ protected:
     void setUpdateState(bool Updating);
     void insertItem(int line, const QString& s);
     void addItem(const QString& s);
-    void putTextStr(const QString& text);
     void internalClear();
 private:
     void invalidateAllLineWidth();

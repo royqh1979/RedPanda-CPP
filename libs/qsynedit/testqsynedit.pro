@@ -19,12 +19,12 @@ msvc {
 
 SOURCES += \
     test/main.cpp \
-    test/test_qdocument.cpp \
-    test/test_charpos.cpp
+    test/test_charpos.cpp \
+    test/test_document.cpp
 
 HEADERS += \
-    test/test_qdocument.h \
-    test/test_charpos.h
+    test/test_charpos.h \
+    test/test_document.h
 
 SOURCES += qsynedit/codefolding.cpp \
     qsynedit/constants.cpp \

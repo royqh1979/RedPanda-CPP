@@ -261,7 +261,33 @@ QString Document::text() const
 void Document::setText(const QString &text)
 {
     QMutexLocker locker(&mMutex);
-    putTextStr(text);
+    beginUpdate();
+    auto action = finally([this]{
+        endUpdate();
+    });
+    internalClear();
+    if (!text.isEmpty()) {
+        int pos = 0;
+        int start;
+        while (pos < text.length()) {
+            start = pos;
+            while (pos<text.length()) {
+                if (text[pos] == '\r' || text[pos] == '\n') {
+                    break;
+                }
+                pos++;
+            }
+            addItem(text.mid(start,pos-start));
+            if (pos>=text.length())
+                break;
+            if (text[pos] == '\r')
+                pos++;
+            if (text[pos] == '\n')
+                pos++;
+        }
+        mIndexOfLongestLine = -1;
+        emit inserted(0,mLines.count());
+    }
 }
 
 void Document::setContents(const QStringList &text)
@@ -273,13 +299,11 @@ void Document::setContents(const QStringList &text)
     });
     internalClear();
     if (text.count() > 0) {
-        int FirstAdded = mLines.count();
-
         foreach (const QString& s,text) {
             addItem(s);
         }
         mIndexOfLongestLine = -1;
-        emit inserted(FirstAdded,text.count());
+        emit inserted(0,text.count());
     }
 }
 
@@ -423,7 +447,7 @@ void Document::insertLine(int index, const QString &s)
     endUpdate();
 }
 
-void Document::deleteAt(int index)
+void Document::deleteLine(int index)
 {
     QMutexLocker locker(&mMutex);
     if ((index < 0) || (index >= mLines.count())) {
@@ -498,8 +522,7 @@ void Document::insertLines(int index, int numLines)
     PDocumentLine line;
     mLines.insert(index,numLines,line);
     for (int i=index;i<index+numLines;i++) {
-        line = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
-        mLines[i]=line;
+        mLines[i] = std::make_shared<DocumentLine>(mUpdateDocumentLineWidthFunc);
     }
     mIndexOfLongestLine = -1;
     emit inserted(index,numLines);
@@ -1108,32 +1131,6 @@ int Document::xposToGlyphStartChar(int line, const QString newStr, int xpos) con
 
 // }
 
-void Document::putTextStr(const QString &text)
-{
-    beginUpdate();
-    auto action = finally([this]{
-        endUpdate();
-    });
-    internalClear();
-    int pos = 0;
-    int start;
-    while (pos < text.length()) {
-        start = pos;
-        while (pos<text.length()) {
-            if (text[pos] == '\r' || text[pos] == '\n') {
-                break;
-            }
-            pos++;
-        }
-        addLine(text.mid(start,pos-start));
-        if (pos>=text.length())
-            break;
-        if (text[pos] == '\r')
-            pos++;
-        if (text[pos] == '\n')
-            pos++;
-    }
-}
 
 void Document::internalClear()
 {
