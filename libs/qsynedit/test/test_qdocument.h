@@ -16,7 +16,7 @@ class TestDocumentLine : public QObject
 {
     Q_OBJECT
 private slots:
-    void test_calcSegmentInterval();
+
 };
 
 class TestDocument : public QObject
@@ -30,5 +30,11 @@ public:
 private slots:
     void initTestCase();
     void cleanupTestCase();
+    void test_load_from_file();
+    void test_load_emoji_file();
+    void test_set_text();
+    void test_set_contents();
+    void test_add_line();
+    void test_add_lines();
 };
 }

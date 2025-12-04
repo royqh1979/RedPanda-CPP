@@ -4,6 +4,7 @@ CONFIG += c++17
 CONFIG += qt console warn_on depend_includepath testcase
 CONFIG += no_testcase_installs
 CONFIG -= app_bundle
+CONFIG += file_copies
 
 TEMPLATE = app
 
@@ -94,5 +95,8 @@ INCLUDEPATH += ../redpanda_qt_utils
 
 LIBS += -L$$OUT_PWD/../redpanda_qt_utils/$${OBJ_OUT_PWD} -lredpanda_qt_utils
 
+COPIES += testfiles
+testfiles.files = $$files(test/resources/*.*)
+testfiles.path = $$OUT_PWD/resources
 
 
