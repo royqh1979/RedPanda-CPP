@@ -204,6 +204,7 @@ void TestQSyneditCpp::test_previous_word_begin_data()
     QTest::newRow("word mid")<<mEdit->prevWordBegin(CharPos{11,10})<<CharPos{8,10};
     QTest::newRow("end of first word in line")<<mEdit->prevWordBegin(CharPos{8,10})<<CharPos{0,10};
     QTest::newRow("line start")<<mEdit->prevWordBegin(CharPos{0,10})<<CharPos{16,8};
+    QTest::newRow("in space")<<mEdit->prevWordBegin(CharPos{4,19})<<CharPos{39,18};
 }
 
 void TestQSyneditCpp::test_previous_word_begin()
@@ -226,9 +227,31 @@ void TestQSyneditCpp::test_next_word_begin_data()
     QTest::newRow("word start")<<mEdit->nextWordBegin(CharPos{8,10})<<CharPos{13,10};
     QTest::newRow("word mid")<<mEdit->nextWordBegin(CharPos{10,10})<<CharPos{13,10};
     QTest::newRow("word end")<<mEdit->nextWordBegin(CharPos{12,10})<<CharPos{13,10};
+    QTest::newRow("in space")<<mEdit->nextWordBegin(CharPos{4,19})<<CharPos{16,19};
 }
 
 void TestQSyneditCpp::test_next_word_begin()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
+}
+
+void TestQSyneditCpp::test_prev_word_end_data()
+{
+    init();
+    QTest::addColumn<CharPos>("pos");
+    QTest::addColumn<CharPos>("expect");
+
+    QTest::newRow("at file start")<<mEdit->prevWordEnd(CharPos{0,0})<<CharPos{0,0};
+    QTest::newRow("at line end")<<mEdit->prevWordEnd(CharPos{16,10})<<CharPos{12,10};
+    QTest::newRow("word mid")<<mEdit->prevWordEnd(CharPos{15,10})<<CharPos{12,10};
+    QTest::newRow("word begin")<<mEdit->prevWordEnd(CharPos{13,10})<<CharPos{12,10};
+    QTest::newRow("word end")<<mEdit->prevWordEnd(CharPos{12,10})<<CharPos{7,10};
+    QTest::newRow("in space")<<mEdit->prevWordEnd(CharPos{4,19})<<CharPos{40,18};
+}
+
+void TestQSyneditCpp::test_prev_word_end()
 {
     QFETCH(CharPos, pos);
     QFETCH(CharPos, expect);

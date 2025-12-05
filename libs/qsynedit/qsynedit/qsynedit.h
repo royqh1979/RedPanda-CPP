@@ -256,6 +256,7 @@ public:
     CharPos getTokenEnd(const CharPos& pos) const;
 
     CharPos prevWordBegin(const CharPos& pos) const;
+    CharPos prevWordEnd(const CharPos &pos) const;
     CharPos nextWordBegin(const CharPos & pos) const;
 
     //Caret

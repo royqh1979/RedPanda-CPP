@@ -1239,6 +1239,31 @@ CharPos QSynEdit::prevWordBegin(const CharPos &pos) const
     }
 }
 
+CharPos QSynEdit::prevWordEnd(const CharPos &pos) const
+{
+    if (mDocument->count() == 0 || !pos.isValid())
+        return CharPos{0,0};
+    if (pos.line>=mDocument->count()) {
+        int line = mDocument->count()-1;
+        return CharPos{mDocument->getLine(line).length(),line};
+    }
+    if (pos.ch == 0 && pos.line ==0)
+        return pos;
+
+    CharPos p;
+    if (pos.ch == 0) {
+        p = prevNonSpaceChar(pos);
+    } else if (pos.ch >= mDocument->getLine(pos.line).length()) {
+        p = prevNonSpaceChar(prevSpaceChar(CharPos{mDocument->getLine(pos.line).length()-1,pos.line}));
+    } else if (charAt(CharPos{pos.ch-1,pos.line}).isSpace()){
+        p = prevNonSpaceChar(pos);
+    } else {
+        p = prevNonSpaceChar(prevSpaceChar(pos));
+    }
+    p.ch++;
+    return p;
+}
+
 CharPos QSynEdit::nextWordBegin(const CharPos &pos) const
 {
     if (mDocument->count() == 0 || !pos.isValid())
