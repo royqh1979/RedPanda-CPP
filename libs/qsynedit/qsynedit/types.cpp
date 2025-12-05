@@ -20,36 +20,36 @@
 
 namespace QSynedit {
 
-bool CharPos::operator==(const CharPos &coord)
+bool CharPos::operator==(const CharPos &coord) const
 {
     return coord.ch == ch && coord.line == line;
 }
 
-bool CharPos::operator>=(const CharPos &coord)
+bool CharPos::operator>=(const CharPos &coord) const
 {
     return (line > coord.line)
             || (line == coord.line && ch >= coord.ch);
 }
 
-bool CharPos::operator>(const CharPos &coord)
+bool CharPos::operator>(const CharPos &coord) const
 {
     return (line > coord.line)
             || (line == coord.line && ch > coord.ch);
 }
 
-bool CharPos::operator<(const CharPos &coord)
+bool CharPos::operator<(const CharPos &coord) const
 {
     return (line < coord.line)
             || (line == coord.line && ch < coord.ch);
 }
 
-bool CharPos::operator<=(const CharPos &coord)
+bool CharPos::operator<=(const CharPos &coord) const
 {
     return (line < coord.line)
             || (line == coord.line && ch <= coord.ch);
 }
 
-bool CharPos::operator!=(const CharPos &coord)
+bool CharPos::operator!=(const CharPos &coord) const
 {
     return coord.ch != ch || coord.line != line;
 }

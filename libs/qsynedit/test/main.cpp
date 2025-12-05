@@ -2,12 +2,13 @@
 #include <QGuiApplication>
 #include "test_charpos.h"
 #include "test_document.h"
+#include "test_qsynedit.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;
     QTest::setMainSourcePath(__FILE__, QT_TESTCASE_BUILDDIR); // Optional: for source path resolution
 
-    QGuiApplication app(argc,argv);
+    QApplication app(argc,argv);
     //CharPos Test
     {
         TestCharPos tc;
@@ -21,6 +22,11 @@ int main(int argc, char *argv[]) {
     //QDocument Test
     {
         QSynedit::TestDocument tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+
+    {
+        QSynedit::TestQSynedit tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 
