@@ -3,6 +3,7 @@
 #include "test_charpos.h"
 #include "test_document.h"
 #include "test_qsynedit.h"
+#include "qsynedit/types.h"
 
 int main(int argc, char *argv[]) {
     int status = 0;
@@ -26,7 +27,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        QSynedit::TestQSynedit tc;
+        QSynedit::TestQSyneditCpp tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

@@ -257,40 +257,25 @@ int QSynEdit::maxScrollWidth() const
 bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, PTokenAttribute &attri) const
 {
     int tmpStart;
-    return getTokenAttriAtRowColEx(pos, token, tmpStart, attri);
+    PSyntaxState syntaxState;
+    return getTokenAttriAtRowCol(pos, token, tmpStart, attri,syntaxState);
 }
 
 bool QSynEdit::getTokenAttriAtRowCol(
         const CharPos &pos, QString &token,
         PTokenAttribute &attri, PSyntaxState &syntaxState) const
 {
-    int charIdx, lineIdx, endPos, start;
-    QString lineText;
-    lineIdx = pos.line;
-    if ((lineIdx >= 0) && (lineIdx < mDocument->count())) {
-        lineText = mDocument->getLine(lineIdx);
-        prepareSyntaxerState(*mSyntaxer, lineIdx, lineText, mDocument->getLineSeq(lineIdx));
-        charIdx = pos.ch;
-        if ((charIdx >= 0) && (charIdx < lineText.length())) {
-            while (!mSyntaxer->eol()) {
-                start = mSyntaxer->getTokenPos() ;
-                token = mSyntaxer->getToken();
-                endPos = start + token.length();
-                if ((charIdx >= start) && (charIdx < endPos)) {
-                    attri = mSyntaxer->getTokenAttribute();
-                    syntaxState = mSyntaxer->getState();
-                    return true;
-                }
-                mSyntaxer->next();
-            }
-        }
-    }
-    token = "";
-    attri = PTokenAttribute();
-    return false;
+    int start;
+    return getTokenAttriAtRowCol(pos, token, start, attri, syntaxState);
 }
 
-bool QSynEdit::getTokenAttriAtRowColEx(const CharPos &pos, QString &token, int &start, PTokenAttribute &attri) const
+bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, int &start, PTokenAttribute &attri) const
+{
+    PSyntaxState syntaxState;
+    return getTokenAttriAtRowCol(pos, token, start, attri, syntaxState);
+}
+
+bool QSynEdit::getTokenAttriAtRowCol(const CharPos &pos, QString &token, int &start, PTokenAttribute &attri, PSyntaxState &syntaxState) const
 {
     int chIdx, lineIdx, endPos;
     QString lineText;
@@ -299,10 +284,11 @@ bool QSynEdit::getTokenAttriAtRowColEx(const CharPos &pos, QString &token, int &
         lineText = mDocument->getLine(lineIdx);
         prepareSyntaxerState(*mSyntaxer, lineIdx, lineText, mDocument->getLineSeq(lineIdx));
         chIdx = pos.ch;
-        if ((chIdx > 0) && (chIdx <= lineText.length())) {
+        if ((chIdx >= 0) && (chIdx < lineText.length())) {
             while (!mSyntaxer->eol()) {
                 start = mSyntaxer->getTokenPos();
                 token = mSyntaxer->getToken();
+                syntaxState = mSyntaxer->getState();
                 endPos = start + token.length();
                 if ((chIdx >= start) && (chIdx < endPos)) {
                     attri = mSyntaxer->getTokenAttribute();
@@ -921,15 +907,15 @@ bool QSynEdit::colSelAvail() const
 
 QString QSynEdit::wordAtCursor() const
 {
-    return wordAtRowCol(caretXY());
+    return tokenAt(caretXY());
 }
 
-QString QSynEdit::wordAtRowCol(const CharPos &pos) const
+QString QSynEdit::tokenAt(const CharPos &pos) const
 {
     int start;
     QString token;
     PTokenAttribute attr;
-    if (getTokenAttriAtRowColEx(pos, token, start, attr)) {
+    if (getTokenAttriAtRowCol(pos, token, start, attr)) {
         return token;
     }
     return QString();
@@ -1220,12 +1206,12 @@ bool QSynEdit::inWord(const CharPos &pos) const
     return isWordChar(charAt(pos));
 }
 
-CharPos QSynEdit::wordStart(const CharPos &pos) const
+CharPos QSynEdit::getTokenStart(const CharPos &pos) const
 {
     int start;
     QString token;
     PTokenAttribute attr;
-    if (getTokenAttriAtRowColEx(pos, token, start, attr)) {
+    if (getTokenAttriAtRowCol(pos, token, start, attr)) {
         if (!token.isEmpty())
             return CharPos(start, pos.line);
     }
@@ -1233,12 +1219,12 @@ CharPos QSynEdit::wordStart(const CharPos &pos) const
 }
 
 
-CharPos QSynEdit::wordEnd(const CharPos &pos) const
+CharPos QSynEdit::getTokenEnd(const CharPos &pos) const
 {
     int start;
     QString token;
     PTokenAttribute attr;
-    if (getTokenAttriAtRowColEx(pos, token, start, attr)) {
+    if (getTokenAttriAtRowCol(pos, token, start, attr)) {
         if (!token.isEmpty())
             return CharPos(start+token.length(), pos.line);
     }
@@ -1256,7 +1242,7 @@ void QSynEdit::setWordBlock(const CharPos &pos)
     int start;
     QString token;
     PTokenAttribute attr;
-    if (getTokenAttriAtRowColEx(pos, token, start, attr)) {
+    if (getTokenAttriAtRowCol(pos, token, start, attr)) {
         if (!token.isEmpty()) {
             CharPos vWordStart{start, pos.line};
             CharPos vWordEnd{start+token.length(), pos.line};
@@ -1742,7 +1728,7 @@ void QSynEdit::doDeleteWord()
     int start;
     QString token;
     PTokenAttribute attr;
-    if (getTokenAttriAtRowColEx(pos, token, start, attr)) {
+    if (getTokenAttriAtRowCol(pos, token, start, attr)) {
         if (!token.isEmpty()) {
             CharPos wordStart{start, pos.line};
             CharPos wordEnd{start+token.length(), pos.line};
@@ -1768,7 +1754,7 @@ void QSynEdit::doDeleteToWordStart()
     if (mCaretX>lineText().length()+1)
         return;
 
-    CharPos start = wordStart(caretXY());
+    CharPos start = getTokenStart(caretXY());
     CharPos end = caretXY();
     if (start==end) {
         start = prevWordChar(start);
@@ -1784,7 +1770,7 @@ void QSynEdit::doDeleteToWordEnd()
         return;
 
     CharPos start = caretXY();
-    CharPos end = wordEnd(caretXY());
+    CharPos end = getTokenEnd(caretXY());
     if (start == end) {
         end = nextWordChar(end);
     }
@@ -4376,6 +4362,7 @@ void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QSt
 
 void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 {
+    Q_ASSERT(deltaX == 1 || deltaX == -1);
     CharPos ptDst = caretXY();
     QString s = displayLineText();
     int nLineLen = s.length();
@@ -4421,10 +4408,10 @@ void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
                 ptDst.ch = 0;
             }
         } else {
-            ptDst.ch = std::max(1, mDocument->glyphStartChar(ptDst.line-1, glyphIndex + deltaX)+1);
+            ptDst.ch = std::max(0, mDocument->glyphStartChar(ptDst.line, glyphIndex + deltaX));
             // don't go past last char when ScrollPastEol option not set
             if ((deltaX > 0) && bChangeY)
-              ptDst.ch = std::min(ptDst.ch, nLineLen + 1);
+              ptDst.ch = std::min(ptDst.ch, nLineLen);
         }
     }
     // set caret and block begin / end
@@ -5342,14 +5329,14 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
     case EditCommand::WordLeft:
     case EditCommand::SelWordLeft:
     {
-        CharPos CaretNew = wordStart(caretXY());
+        CharPos CaretNew = getTokenStart(caretXY());
         moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::SelWordLeft);
         break;
     }
     case EditCommand::WordRight:
     case EditCommand::SelWordRight:
     {
-        CharPos CaretNew = wordEnd(caretXY());
+        CharPos CaretNew = getTokenEnd(caretXY());
         moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::SelWordRight);
         break;
     }

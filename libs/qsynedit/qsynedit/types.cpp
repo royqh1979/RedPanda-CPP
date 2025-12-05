@@ -61,4 +61,23 @@ bool isAssemblyLanguage(ProgrammingLanguage lang)
             || lang == ProgrammingLanguage::NetwideAssembly;
 }
 
+QDataStream &operator<<(QDataStream &out, const CharPos &data)
+{
+    out<<data.ch;
+    out<<data.line;
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, CharPos &data)
+{
+    in>>data.ch;
+    in>>data.line;
+    return in;
+}
+
+QDebug operator<<(QDebug dbg, const CharPos& data){
+    dbg.space() << "CharPos(ch=" << data.ch << ", line=" << data.line << ")";
+    return dbg;
+}
+
 }

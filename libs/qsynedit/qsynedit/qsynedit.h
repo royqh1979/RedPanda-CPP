@@ -140,6 +140,8 @@ class RedoList;
 using PUndoList = std::shared_ptr<UndoList>;
 using PRedoList = std::shared_ptr<RedoList>;
 
+class TestQSyneditCpp;
+
 class QSynEdit : public QAbstractScrollArea
 {
     Q_OBJECT
@@ -228,7 +230,7 @@ public:
     bool selAvail() const;
     bool colSelAvail() const;
     QString wordAtCursor() const;
-    QString wordAtRowCol(const CharPos& XY) const;
+    QString tokenAt(const CharPos& XY) const;
 
     QChar charAt(const CharPos& pos) const;
     QChar nextNonSpaceChar(int line, int ch) const;
@@ -244,8 +246,8 @@ public:
 
     bool inWord(const CharPos& pos) const;
 
-    CharPos wordStart(const CharPos& pos) const;
-    CharPos wordEnd(const CharPos& pos) const;
+    CharPos getTokenStart(const CharPos& pos) const;
+    CharPos getTokenEnd(const CharPos& pos) const;
 
     //Caret
     void showCaret();
@@ -285,8 +287,10 @@ public:
       PTokenAttribute& attri) const;
     bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
       PTokenAttribute& attri, PSyntaxState &syntaxState) const;
-    bool getTokenAttriAtRowColEx(const CharPos& pos, QString& token,
+    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
       int &start, PTokenAttribute& attri) const;
+    bool getTokenAttriAtRowCol(const CharPos& pos, QString& token,
+      int &start, PTokenAttribute& attri, PSyntaxState &syntaxState) const;
 
     void addGroupBreak();
     void beginEditing();
@@ -805,6 +809,8 @@ protected:
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dragLeaveEvent(QDragLeaveEvent *event) override;
+
+    friend class TestQSyneditCpp;
 };
 
 }

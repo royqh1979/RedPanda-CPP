@@ -21,6 +21,7 @@
 #include <QList>
 #include <QFlags>
 #include <memory>
+#include <QDebug>
 
 namespace QSynedit {
 
@@ -57,8 +58,14 @@ struct CharPos {
     bool operator<=(const CharPos& coord) const;
     bool operator!=(const CharPos& coord) const;
 
-    bool isValid() { return ch>=0 && line >=0; };
+    bool isValid() const { return ch>=0 && line >=0; };
 };
+
+QDataStream &operator<<(QDataStream &out, const CharPos &data);
+
+QDataStream &operator>>(QDataStream &in, CharPos &data);
+
+QDebug operator<<(QDebug dbg, const CharPos& data);
 
 struct DisplayCoord {
     int x;
@@ -97,5 +104,7 @@ using PEditingAreaList = std::shared_ptr<EditingAreaList>;
 
 bool isAssemblyLanguage(ProgrammingLanguage lang);
 }
+
+Q_DECLARE_METATYPE(QSynedit::CharPos);
 
 #endif // TYPES_H
