@@ -147,7 +147,9 @@ class QSynEdit : public QAbstractScrollArea
     Q_OBJECT
     enum  class CharType {
         WordChar,
-        NonWordChar
+        NonWordChar,
+        SpaceChar,
+        NonSpaceChar
     };
 public:
     explicit QSynEdit(QWidget* parent=nullptr);
@@ -239,15 +241,22 @@ public:
     bool inSelection(const CharPos& pos) const;
     CharPos findNextChar(const CharPos &pos, CharType type) const;
     CharPos findPrevChar(const CharPos &pos, CharType type) const;
-    CharPos nextWordChar(const CharPos &pos) const;
-    CharPos nextNonWordChar(const CharPos &pos) const;
-    CharPos prevWordChar(const CharPos &pos) const;
-    CharPos prevNonWordChar(const CharPos &pos) const;
+    CharPos nextWordChar(const CharPos &pos) const { return findNextChar(pos, CharType::WordChar); }
+    CharPos nextNonWordChar(const CharPos &pos) const { return findNextChar(pos, CharType::NonWordChar); }
+    CharPos nextSpaceChar(const CharPos &pos) const { return findNextChar(pos, CharType::SpaceChar); }
+    CharPos nextNonSpaceChar(const CharPos &pos) const { return findNextChar(pos, CharType::NonSpaceChar); }
+    CharPos prevWordChar(const CharPos &pos) const { return findPrevChar(pos, CharType::WordChar); }
+    CharPos prevNonWordChar(const CharPos &pos) const { return findPrevChar(pos, CharType::NonWordChar); }
+    CharPos prevSpaceChar(const CharPos &pos) const { return findPrevChar(pos, CharType::SpaceChar); }
+    CharPos prevNonSpaceChar(const CharPos &pos) const { return findPrevChar(pos, CharType::NonSpaceChar); }
 
     bool inWord(const CharPos& pos) const;
 
     CharPos getTokenStart(const CharPos& pos) const;
     CharPos getTokenEnd(const CharPos& pos) const;
+
+    CharPos prevWordBegin(const CharPos& pos) const;
+    CharPos nextWordBegin(const CharPos & pos) const;
 
     //Caret
     void showCaret();
