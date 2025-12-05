@@ -1233,7 +1233,7 @@ CharPos QSynEdit::prevWordBegin(const CharPos &pos) const
             || pos.ch >= mDocument->getLine(pos.line).length()
             || charAt(pos).isSpace()
             || charAt(CharPos{pos.ch-1,pos.line}).isSpace()) {
-        return getTokenStart(prevNonWordChar(pos));
+        return getTokenStart(prevNonSpaceChar(pos));
     } else {
         return getTokenStart(pos);
     }
@@ -1241,7 +1241,18 @@ CharPos QSynEdit::prevWordBegin(const CharPos &pos) const
 
 CharPos QSynEdit::nextWordBegin(const CharPos &pos) const
 {
-
+    if (mDocument->count() == 0 || !pos.isValid())
+        return CharPos{0,0};
+    if (pos.line>=mDocument->count()) {
+        int line = mDocument->count()-1;
+        return CharPos{mDocument->getLine(line).length(),line};
+    }
+    if (pos.ch>=mDocument->getLine(pos.line).length()
+            || charAt(pos).isSpace()) {
+        return nextNonSpaceChar(pos);
+    } else {
+        return nextNonSpaceChar(nextSpaceChar(pos));
+    }
 }
 
 void QSynEdit::setSelWord()
@@ -4375,7 +4386,6 @@ void QSynEdit::prepareSyntaxerState(Syntaxer &syntaxer, int lineIndex, const QSt
 
 void QSynEdit::moveCaretHorz(int deltaX, bool isSelection)
 {
-    Q_ASSERT(deltaX == 1 || deltaX == -1);
     CharPos ptDst = caretXY();
     QString s = displayLineText();
     int nLineLen = s.length();
@@ -5339,18 +5349,18 @@ void QSynEdit::executeCommand(EditCommand command, QChar ch, void *pData)
             moveCaretAndSelection(caretXY(), *((CharPos *)(pData)), command == EditCommand::SelGotoXY);
         break;
     // word selection
-    case EditCommand::WordLeft:
-    case EditCommand::SelWordLeft:
+    case EditCommand::PrevWordBegin:
+    case EditCommand::SelPrevWordBegin:
     {
-        CharPos CaretNew = getTokenStart(caretXY());
-        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::SelWordLeft);
+        CharPos CaretNew = prevWordBegin(caretXY());
+        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::SelPrevWordBegin);
         break;
     }
-    case EditCommand::WordRight:
-    case EditCommand::SelWordRight:
+    case EditCommand::nextWordBegin:
+    case EditCommand::SelNextWordBegin:
     {
-        CharPos CaretNew = getTokenEnd(caretXY());
-        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::SelWordRight);
+        CharPos CaretNew = nextWordBegin(caretXY());
+        moveCaretAndSelection(caretXY(), CaretNew, command == EditCommand::SelNextWordBegin);
         break;
     }
     case EditCommand::SelWord:

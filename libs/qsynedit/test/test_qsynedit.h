@@ -24,7 +24,10 @@ private slots:
     void test_move_caret_x();
     void test_move_caret_y_data();
     void test_move_caret_y();
-    void test_goto
+    void test_previous_word_begin_data();
+    void test_previous_word_begin();
+    void test_next_word_begin_data();
+    void test_next_word_begin();
 };
 
 }

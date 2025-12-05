@@ -191,16 +191,49 @@ void TestQSyneditCpp::test_move_caret_y()
     QCOMPARE(pos, expect);
 }
 
-//void TestQSyneditCpp::test_test1()
-//{
-//    QByteArray encoding;
-//    mEdit->document()->loadFromFile("resources/test1.cpp",ENCODING_AUTO_DETECT,encoding);
+void TestQSyneditCpp::test_previous_word_begin_data()
+{
+    init();
+    QTest::addColumn<CharPos>("pos");
+    QTest::addColumn<CharPos>("expect");
 
-//    QString s = mEdit->wordAtRowCol(CharPos{1,0});
-//    QCOMPARE(s,"#include");
-//    QCOMPARE(mEdit->wordStart(CharPos{1,0}),CharPos(0,0));
-//    QCOMPARE(mEdit->wordEnd(CharPos{1,0}),CharPos(8,0));
-//}
+    QTest::newRow("at file start")<<mEdit->prevWordBegin(CharPos{0,0})<<CharPos{0,0};
+    QTest::newRow("line end")<<mEdit->prevWordBegin(CharPos{16,10})<<CharPos{13,10};
+    QTest::newRow("word start")<<mEdit->prevWordBegin(CharPos{13,10})<<CharPos{8,10};
+    QTest::newRow("word end")<<mEdit->prevWordBegin(CharPos{12,10})<<CharPos{8,10};
+    QTest::newRow("word mid")<<mEdit->prevWordBegin(CharPos{11,10})<<CharPos{8,10};
+    QTest::newRow("end of first word in line")<<mEdit->prevWordBegin(CharPos{8,10})<<CharPos{0,10};
+    QTest::newRow("line start")<<mEdit->prevWordBegin(CharPos{0,10})<<CharPos{16,8};
+}
+
+void TestQSyneditCpp::test_previous_word_begin()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
+}
+
+void TestQSyneditCpp::test_next_word_begin_data()
+{
+    init();
+    QTest::addColumn<CharPos>("pos");
+    QTest::addColumn<CharPos>("expect");
+
+    QTest::newRow("file end")<<mEdit->nextWordBegin(CharPos{100,100})<<CharPos{1,76};
+    QTest::newRow("file start")<<mEdit->nextWordBegin(CharPos{0,0})<<CharPos{9,0};
+    QTest::newRow("line end")<<mEdit->nextWordBegin(CharPos{17,8})<<CharPos{0,10};
+    QTest::newRow("line start")<<mEdit->nextWordBegin(CharPos{0,10})<<CharPos{8,10};
+    QTest::newRow("word start")<<mEdit->nextWordBegin(CharPos{8,10})<<CharPos{13,10};
+    QTest::newRow("word mid")<<mEdit->nextWordBegin(CharPos{10,10})<<CharPos{13,10};
+    QTest::newRow("word end")<<mEdit->nextWordBegin(CharPos{12,10})<<CharPos{13,10};
+}
+
+void TestQSyneditCpp::test_next_word_begin()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
+}
 
 }
 

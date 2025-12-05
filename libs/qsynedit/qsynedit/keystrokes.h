@@ -45,8 +45,8 @@ enum class EditCommand {
     Right           = 2,    // Move cursor right one char
     Up              = 3,    // Move cursor up one line
     Down            = 4,    // Move cursor down one line
-    WordLeft        = 5,    // Move cursor left one word
-    WordRight       = 6,    // Move cursor right one word
+    PrevWordBegin   = 5,    // Move cursor left one word
+    nextWordBegin   = 6,    // Move cursor right one word
     LineStart       = 7,    // Move cursor to beginning of line
     LineEnd         = 8,    // Move cursor to end of line
     PageUp          = 9,    // Move cursor up one page
@@ -74,8 +74,8 @@ enum class EditCommand {
     SelRight        = Right + Selection,
     SelUp           = Up + Selection,
     SelDown         = Down + Selection,
-    SelWordLeft     = WordLeft + Selection,
-    SelWordRight    = WordRight + Selection,
+    SelPrevWordBegin     = PrevWordBegin + Selection,
+    SelNextWordBegin    = nextWordBegin + Selection,
     SelLineStart    = LineStart + Selection,
     SelLineEnd      = LineEnd + Selection,
     SelPageUp       = PageUp + Selection,
