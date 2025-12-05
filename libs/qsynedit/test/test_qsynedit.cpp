@@ -178,10 +178,17 @@ void TestQSyneditCpp::test_move_caret_y_data()
         QTest::newRow("normal forward")<<mEdit->caretXY()<<CharPos{26,62};
     }
     {
-        mEdit->setCaretXY(CharPos{45,62});
+        mEdit->setCaretXY(CharPos{45,61});
         mEdit->moveCaretVert(1,false);
         QTest::newRow("forward but next line not long enough")<<mEdit->caretXY()<<CharPos{37,62};
     }
+}
+
+void TestQSyneditCpp::test_move_caret_y()
+{
+    QFETCH(CharPos, pos);
+    QFETCH(CharPos, expect);
+    QCOMPARE(pos, expect);
 }
 
 //void TestQSyneditCpp::test_test1()

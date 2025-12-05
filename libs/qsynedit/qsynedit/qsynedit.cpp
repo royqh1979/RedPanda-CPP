@@ -175,7 +175,7 @@ int QSynEdit::displayLineCount() const
     if (mDocument->empty()) {
         return 0;
     }
-    return lineToRow(mDocument->count());
+    return lineToRow(mDocument->count()-1);
 }
 
 void QSynEdit::setCaretXY(const CharPos &pos)
@@ -4434,7 +4434,7 @@ void QSynEdit::moveCaretVert(int deltaY, bool isSelection)
     ptDst.row+=deltaY;
 
     if (deltaY >= 0) {
-        if (rowToLine(ptDst.row) > mDocument->count()) {
+        if (rowToLine(ptDst.row) >= mDocument->count()) {
             ptDst.row = std::max(1, displayLineCount());
         }
     } else {

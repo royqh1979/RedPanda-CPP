@@ -12,6 +12,7 @@ private:
     std::shared_ptr<QSynEdit> mEdit;
 private slots:
     void init();
+
     void test_get_token_data();
     void test_get_token();
     void test_token_start_data();
@@ -22,6 +23,7 @@ private slots:
     void test_move_caret_x_data();
     void test_move_caret_x();
     void test_move_caret_y_data();
+    void test_move_caret_y();
 };
 
 }
