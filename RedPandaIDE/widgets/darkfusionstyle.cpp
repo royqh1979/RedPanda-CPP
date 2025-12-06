@@ -74,8 +74,8 @@ static QString uniqueName(const QString &key, const QStyleOption *option, const 
     const QStyleOptionComplex *complexOption = qstyleoption_cast<const QStyleOptionComplex *>(option);
     QString tmp = QString("%1%2%3%4%5%6%7")
             .arg(key)
-            .arg(option->state)
-            .arg(option->direction)
+            .arg(uint(option->state))
+            .arg(int(option->direction))
             .arg(complexOption ? uint(complexOption->activeSubControls) : 0u)
             .arg(option->palette.cacheKey())
             .arg(size.width())
@@ -84,8 +84,8 @@ static QString uniqueName(const QString &key, const QStyleOption *option, const 
 #if QT_CONFIG(spinbox)
     if (const QStyleOptionSpinBox *spinBox = qstyleoption_cast<const QStyleOptionSpinBox *>(option)) {
         tmp = tmp + QString("%1%2%3")
-                .arg(spinBox->buttonSymbols)
-                .arg(spinBox->stepEnabled)
+                .arg(int(spinBox->buttonSymbols))
+                .arg(uint(spinBox->stepEnabled))
                 .arg(QLatin1Char(spinBox->frame ? '1' : '0'));
     }
 #endif // QT_CONFIG(spinbox)
